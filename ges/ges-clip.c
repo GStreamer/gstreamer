@@ -581,6 +581,26 @@ _child_priority_changed (GESContainer * container, GESTimelineElement * child)
  *                    in-point                      *
  ****************************************************/
 
+GstClockTime
+ges_clip_duration_limit_with_new_children_inpoints (GESClip * clip,
+    GHashTable * child_inpoints)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+  GList *child_data = NULL;
+
+  g_hash_table_iter_init (&iter, child_inpoints);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    GESTrackElement *child = key;
+    GstClockTime *inpoint_p = value;
+    DurationLimitData *data = _duration_limit_data_new (child);
+    data->inpoint = *inpoint_p;
+    child_data = g_list_prepend (child_data, data);
+  }
+
+  return _calculate_duration_limit (clip, child_data);
+}
+
 static gboolean
 _can_set_inpoint_of_core_children (GESClip * clip, GstClockTime inpoint,
     GError ** error)
@@ -3899,6 +3919,13 @@ _convert_core_time (GESClip * clip, GstClockTime time, gboolean to_timeline,
   }
 
   return converted;
+}
+
+GstClockTime
+ges_clip_get_core_internal_time_from_timeline_time (GESClip * clip,
+    GstClockTime timeline_time, gboolean * no_core, GError ** error)
+{
+  return _convert_core_time (clip, timeline_time, FALSE, no_core, error);
 }
 
 /**

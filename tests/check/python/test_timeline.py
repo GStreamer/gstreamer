@@ -577,7 +577,7 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(effect3.inpoint, 20)
 
         self.assertTrue(
-            clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 5))
+            clip.edit_full(-1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 5))
 
         self.assertEqual(clip.start, 5)
         self.assertEqual(clip.duration, 15)
@@ -594,7 +594,7 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(effect3.inpoint, 20)
 
         self.assertTrue(
-            clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 15))
+            clip.edit_full(-1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 15))
 
         self.assertEqual(clip.start, 15)
         self.assertEqual(clip.duration, 5)
@@ -609,6 +609,83 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(effect1.inpoint, 0)
         self.assertEqual(effect2.inpoint, 13)
         self.assertEqual(effect3.inpoint, 20)
+
+    def test_trim_time_effects(self):
+        self.track_types = [GES.TrackType.VIDEO]
+        super().setUp()
+        clip = self.append_clip()
+        self.assertTrue(clip.set_inpoint(12))
+        self.assertTrue(clip.set_max_duration(30))
+        self.assertEqual(clip.get_duration_limit(), 18)
+
+        children = clip.get_children(False)
+        self.assertTrue(children)
+        self.assertEqual(len(children), 1)
+
+        source = children[0]
+        self.assertEqual(source.get_inpoint(), 12)
+        self.assertEqual(source.get_max_duration(), 30)
+
+        rate0 = GES.Effect.new("videorate rate=0.25")
+
+        overlay = GES.Effect.new("textoverlay")
+        overlay.set_has_internal_source(True)
+        self.assertTrue(overlay.set_inpoint(5))
+        self.assertTrue(overlay.set_max_duration(16))
+
+        rate1 = GES.Effect.new("videorate rate=2.0")
+
+        self.assertTrue(clip.add(rate0))
+        self.assertTrue(clip.add(overlay))
+        self.assertTrue(clip.add(rate1))
+
+        #                   source -> rate1 -> overlay -> rate0
+        # in-point/max-dur  12-30              5-16
+        # internal
+        # start/end         12-30     0-9      5-14       0-36
+        self.assertEqual(clip.get_duration_limit(), 36)
+        self.assertTrue(clip.set_start(40))
+        self.assertTrue(clip.set_duration(10))
+
+        # cannot trim to a 16 because overlay would have a negative in-point
+        error = None
+        try:
+            clip.edit_full(-1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 16)
+        except GLib.Error as err:
+            error = err
+        self.assertGESError(error, GES.Error.NEGATIVE_TIME)
+
+        self.assertEqual(clip.get_start(), 40)
+        self.assertEqual(clip.get_duration(), 10)
+        self.assertEqual(source.get_inpoint(), 12)
+        self.assertEqual(source.get_max_duration(), 30)
+        self.assertEqual(overlay.get_inpoint(), 5)
+        self.assertEqual(overlay.get_max_duration(), 16)
+
+        # trim backwards to 20
+        self.assertTrue(
+            clip.edit_full(-1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 20))
+
+        self.assertEqual(clip.get_start(), 20)
+        self.assertEqual(clip.get_duration(), 30)
+        # reduced by 10
+        self.assertEqual(source.get_inpoint(), 2)
+        self.assertEqual(source.get_max_duration(), 30)
+        # reduced by 5
+        self.assertEqual(overlay.get_inpoint(), 0)
+        self.assertEqual(overlay.get_max_duration(), 16)
+
+        # trim forwards to 28
+        self.assertTrue(
+            clip.edit_full(-1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 28))
+        self.assertEqual(clip.get_start(), 28)
+        self.assertEqual(clip.get_duration(), 22)
+        # increased by 4
+        self.assertEqual(source.get_inpoint(), 6)
+        self.assertEqual(source.get_max_duration(), 30)
+        # increased by 2
+        self.assertEqual(overlay.get_inpoint(), 2)
+        self.assertEqual(overlay.get_max_duration(), 16)
 
     def test_ripple_end(self):
         clip = self.append_clip()

@@ -429,10 +429,10 @@ GType ges_pipeline_flags_get_type (void);
  * + START-TRIM: This cuts or grows the start of the element, whilst
  *   maintaining the time at which its internal content appears in the
  *   timeline data output. If the element is made shorter, the data that
- *   appeared at the edit position and later will still appear in the
- *   timeline at the same time. If the element is made longer, the data
- *   that appeared at the previous start of the element and later will
- *   still appear in the timeline at the same time.
+ *   appeared at the edit position will still appear in the timeline at
+ *   the same time. If the element is made longer, the data that appeared
+ *   at the previous start of the element will still appear in the
+ *   timeline at the same time.
  * + END-TRIM: Similar to START-TRIM, but the end of the element is cut or
  *   grown.
  *

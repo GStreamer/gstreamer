@@ -51,6 +51,7 @@ typedef enum
   EDIT_MOVE,
   EDIT_TRIM_START,
   EDIT_TRIM_END,
+  EDIT_TRIM_INPOINT_ONLY,
 } ElementEditMode;
 
 typedef struct _EditData
@@ -385,6 +386,9 @@ get_start_end_from_offset (GESTimelineElement * element, ElementEditMode mode,
         *negative_start = FALSE;
       new_end = _clock_time_minus_diff (current_end, offset, negative_end);
       break;
+    case EDIT_TRIM_INPOINT_ONLY:
+      GST_ERROR_OBJECT (element, "Trim in-point only not handled");
+      break;
   }
   if (start)
     *start = new_start;
@@ -547,6 +551,9 @@ timeline_tree_snap (GNode * root, GESTimelineElement * element,
       g_node_traverse (node, G_IN_ORDER, G_TRAVERSE_LEAVES, -1,
           (GNodeTraverseFunc) find_source_at_edge, &data);
       break;
+    case EDIT_TRIM_INPOINT_ONLY:
+      GST_ERROR_OBJECT (element, "Trim in-point only not handled");
+      goto done;
   }
 
   for (tmp = data.sources; tmp; tmp = tmp->next) {
@@ -588,6 +595,9 @@ timeline_tree_snap (GNode * root, GESTimelineElement * element,
         /* only snap the start of the source */
         find_snap_for_element (source, end, negative_end, &data);
         break;
+      case EDIT_TRIM_INPOINT_ONLY:
+        GST_ERROR_OBJECT (element, "Trim in-point only not handled");
+        goto done;
     }
   }
 
@@ -908,6 +918,18 @@ set_breaks_duration_limit_error (GError ** error, GESClip * clip,
       GST_TIME_ARGS (duration_limit));
 }
 
+static void
+set_inpoint_breaks_max_duration_error (GError ** error,
+    GESTimelineElement * element, GstClockTime inpoint,
+    GstClockTime max_duration)
+{
+  g_set_error (error, GES_ERROR, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+      "The element \"%s\" would have an in-point of %" GST_TIME_FORMAT
+      " that would break its max-duration of %" GST_TIME_FORMAT,
+      GES_TIMELINE_ELEMENT_NAME (element), GST_TIME_ARGS (inpoint),
+      GST_TIME_ARGS (max_duration));
+}
+
 static gboolean
 set_layer_priority (GESTimelineElement * element, EditData * data,
     GError ** error)
@@ -981,60 +1003,123 @@ set_edit_move_values (GESTimelineElement * element, EditData * data,
 }
 
 static gboolean
-set_edit_trim_start_inpoint_value (GESTimelineElement * element,
-    EditData * data, GError ** error)
+set_edit_trim_start_clip_inpoints (GESClip * clip, EditData * clip_data,
+    GHashTable * edit_table, GError ** error)
 {
-  gboolean negative = FALSE;
-  GstClockTime new_inpoint = _clock_time_minus_diff (element->inpoint,
-      data->offset, &negative);
-  if (negative || !GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
-    GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
-        " with offset %" G_GINT64_FORMAT " because it would result in an "
-        "invalid in-point", GES_ARGS (element), data->offset);
-    if (negative)
-      set_negative_inpoint_error (error, element, new_inpoint);
-    return FALSE;
-  }
-  data->inpoint = new_inpoint;
-  return TRUE;
-}
-
-static gboolean
-set_edit_trim_start_non_core_children (GESTimelineElement * clip,
-    GstClockTimeDiff offset, GHashTable * edit_table, GError ** error)
-{
+  gboolean ret = FALSE;
   GList *tmp;
-  GESTimelineElement *child;
-  GESTrackElement *el;
-  EditData *data;
+  GstClockTime duration_limit;
+  GstClockTime clip_inpoint;
+  GstClockTime new_start = clip_data->start;
+  gboolean no_core = FALSE;
+  GHashTable *child_inpoints;
+
+  child_inpoints = g_hash_table_new_full (NULL, NULL, gst_object_unref, g_free);
+
+  clip_inpoint = ges_clip_get_core_internal_time_from_timeline_time (clip,
+      new_start, &no_core, error);
+
+  if (no_core) {
+    GST_INFO_OBJECT (clip, "Clip %" GES_FORMAT " has no active core "
+        "children with an internal source. Not setting in-point during "
+        "trim to start", GES_ARGS (clip));
+    clip_inpoint = GES_TIMELINE_ELEMENT_INPOINT (clip);
+  } else if (!GST_CLOCK_TIME_IS_VALID (clip_inpoint)) {
+    GST_INFO_OBJECT (clip, "Cannot trim start of %" GES_FORMAT
+        " with offset %" G_GINT64_FORMAT " because it would result in an "
+        "invalid in-point for its core children", GES_ARGS (clip),
+        clip_data->offset);
+    goto done;
+  } else {
+    GST_INFO_OBJECT (clip, "Clip %" GES_FORMAT " will have its in-point "
+        " set to %" GST_TIME_FORMAT " because its start is being trimmed "
+        "to %" GST_TIME_FORMAT, GES_ARGS (clip),
+        GST_TIME_ARGS (clip_inpoint), GST_TIME_ARGS (new_start));
+    clip_data->inpoint = clip_inpoint;
+  }
 
   /* need to set in-point of active non-core children to keep their
-   * internal content at the same timeline position. This also ensures
-   * the duration-limit will not be broken */
+   * internal content at the same timeline position */
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-    child = tmp->data;
-    el = tmp->data;
-    if (ges_track_element_has_internal_source (el)
-        && ges_track_element_is_active (el)
-        && !ges_track_element_is_core (el)) {
+    GESTimelineElement *child = tmp->data;
+    GESTrackElement *el = tmp->data;
+    GstClockTime new_inpoint = child->inpoint;
+    GstClockTime *inpoint_p;
 
-      GST_INFO_OBJECT (child, "Setting track element %s to trim in-point "
-          "with offset %" G_GINT64_FORMAT " since the parent clip %"
-          GES_FORMAT " is being trimmed at its start", child->name, offset,
-          GES_ARGS (clip));
+    if (ges_track_element_has_internal_source (el)) {
+      if (ges_track_element_is_core (el)) {
+        new_inpoint = clip_inpoint;
+      } else if (ges_track_element_is_active (el)) {
+        EditData *data;
 
-      if (g_hash_table_contains (edit_table, child)) {
-        GST_ERROR_OBJECT (child, "Already set to be edited");
-        return FALSE;
+        if (g_hash_table_contains (edit_table, child)) {
+          GST_ERROR_OBJECT (child, "Already set to be edited");
+          goto done;
+        }
+
+        new_inpoint = ges_clip_get_internal_time_from_timeline_time (clip, el,
+            new_start, error);
+
+        if (!GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
+          GST_INFO_OBJECT (clip, "Cannot trim start of %" GES_FORMAT
+              " to %" GST_TIME_FORMAT " because it would result in an "
+              "invalid in-point for the non-core child %" GES_FORMAT,
+              GES_ARGS (clip), GST_TIME_ARGS (new_start), GES_ARGS (child));
+          goto done;
+        }
+
+        GST_INFO_OBJECT (child, "Setting track element %s to trim "
+            "in-point to %" GST_TIME_FORMAT " since the parent clip %"
+            GES_FORMAT " is being trimmed to start %" GST_TIME_FORMAT,
+            child->name, GST_TIME_ARGS (new_inpoint), GES_ARGS (clip),
+            GST_TIME_ARGS (new_start));
+
+        data = new_edit_data (EDIT_TRIM_INPOINT_ONLY, 0, 0);
+        data->inpoint = new_inpoint;
+        g_hash_table_insert (edit_table, child, data);
       }
-
-      data = new_edit_data (EDIT_TRIM_START, offset, 0);
-      g_hash_table_insert (edit_table, child, data);
-      if (!set_edit_trim_start_inpoint_value (child, data, error))
-        return FALSE;
     }
+
+    if (GES_CLOCK_TIME_IS_LESS (child->maxduration, new_inpoint)) {
+      GST_INFO_OBJECT (clip, "Cannot trim start of %" GES_FORMAT
+          " to %" GST_TIME_FORMAT " because it would result in an "
+          "in-point of %" GST_TIME_FORMAT " for the child %" GES_FORMAT
+          ", which breaks its max-duration", GES_ARGS (clip),
+          GST_TIME_ARGS (new_start), GST_TIME_ARGS (new_inpoint),
+          GES_ARGS (child));
+
+      set_inpoint_breaks_max_duration_error (error, child, new_inpoint,
+          child->maxduration);
+      goto done;
+    }
+
+    inpoint_p = g_new (GstClockTime, 1);
+    *inpoint_p = new_inpoint;
+    g_hash_table_insert (child_inpoints, gst_object_ref (child), inpoint_p);
   }
-  return TRUE;
+
+  duration_limit =
+      ges_clip_duration_limit_with_new_children_inpoints (clip, child_inpoints);
+
+  if (GES_CLOCK_TIME_IS_LESS (duration_limit, clip_data->duration)) {
+    GST_INFO_OBJECT (clip, "Cannot trim start of %" GES_FORMAT
+        " to %" GST_TIME_FORMAT " because it would result in a "
+        "duration of %" GST_TIME_FORMAT " that breaks its new "
+        "duration-limit of %" GST_TIME_FORMAT, GES_ARGS (clip),
+        GST_TIME_ARGS (new_start), GST_TIME_ARGS (clip_data->duration),
+        GST_TIME_ARGS (duration_limit));
+
+    set_breaks_duration_limit_error (error, clip, clip_data->duration,
+        duration_limit);
+    goto done;
+  }
+
+  ret = TRUE;
+
+done:
+  g_hash_table_unref (child_inpoints);
+
+  return ret;
 }
 
 /* trim the start of a clip or a track element */
@@ -1076,21 +1161,23 @@ set_edit_trim_start_values (GESTimelineElement * element, EditData * data,
     return TRUE;
 
   if (GES_IS_CLIP (element)) {
-    if (!set_edit_trim_start_inpoint_value (element, data, error))
-      return FALSE;
-    if (!set_edit_trim_start_non_core_children (element, data->offset,
+    if (!set_edit_trim_start_clip_inpoints (GES_CLIP (element), data,
             edit_table, error))
       return FALSE;
   } else if (GES_IS_TRACK_ELEMENT (element)
       && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
-    if (!set_edit_trim_start_inpoint_value (element, data, error))
-      return FALSE;
-  }
+    GstClockTime new_inpoint =
+        _clock_time_minus_diff (element->inpoint, data->offset, &negative);
 
-  /* NOTE: without time effects, the duration-limit will increase with
-   * a decrease in in-point by the same amount that duration increases,
-   * and vis-versa. So the new duration-limit should remain above the
-   * new duration */
+    if (negative || !GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
+      GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
+          " with offset %" G_GINT64_FORMAT " because it would result in "
+          "an invalid in-point", GES_ARGS (element), data->offset);
+      if (negative)
+        set_negative_inpoint_error (error, element, new_inpoint);
+      return FALSE;
+    }
+  }
 
   GST_INFO_OBJECT (element, "%s will trim start by setting start to %"
       GST_TIME_FORMAT ", in-point to %" GST_TIME_FORMAT " and duration "
@@ -1155,6 +1242,9 @@ set_edit_values (GESTimelineElement * element, EditData * data,
       return set_edit_trim_start_values (element, data, edit_table, error);
     case EDIT_TRIM_END:
       return set_edit_trim_end_values (element, data, error);
+    case EDIT_TRIM_INPOINT_ONLY:
+      GST_ERROR_OBJECT (element, "Trim in-point only not handled");
+      return FALSE;
   }
   return FALSE;
 }
@@ -1504,6 +1594,9 @@ add_element_edit (GHashTable * edits, GESTimelineElement * element,
     case EDIT_TRIM_END:
       GST_LOG_OBJECT (element, "%s set to trim end", element->name);
       break;
+    case EDIT_TRIM_INPOINT_ONLY:
+      GST_ERROR_OBJECT (element, "%s set to trim in-point only", element->name);
+      return FALSE;
   }
 
   g_hash_table_insert (edits, element, new_edit_data (mode, 0, 0));
@@ -1673,6 +1766,11 @@ perform_element_edit (GESTimelineElement * element, EditData * edit)
           " to %" GST_TIME_FORMAT, element->name,
           GST_TIME_ARGS (_END (element)),
           GST_TIME_ARGS (element->start + edit->duration));
+      break;
+    case EDIT_TRIM_INPOINT_ONLY:
+      GST_INFO_OBJECT (element, "Trimming %s in-point from %"
+          GST_TIME_FORMAT " to %" GST_TIME_FORMAT, element->name,
+          GST_TIME_ARGS (element->inpoint), GST_TIME_ARGS (edit->inpoint));
       break;
   }
 
