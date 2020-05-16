@@ -896,6 +896,61 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
   return res;
 }
 
+/**
+ * gst_base_src_new_segment:
+ * @src: a #GstBaseSrc
+ * @segment: a pointer to a #GstSegment
+ *
+ * Prepare a new segment for emission downstream. This function must
+ * only be called by derived sub-classes, and only from the #GstBaseSrcClass::create function,
+ * as the stream-lock needs to be held.
+ *
+ * The format for the @segment must be identical with the current format
+ * of the source, as configured with gst_base_src_set_format().
+ *
+ * The format of @src must not be %GST_FORMAT_UNDEFINED and the format
+ * should be configured via gst_base_src_set_format() before calling this method.
+ *
+ * Returns: %TRUE if preparation of new segment succeeded.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_base_src_new_segment (GstBaseSrc * src, const GstSegment * segment)
+{
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), FALSE);
+  g_return_val_if_fail (segment != NULL, FALSE);
+
+  GST_OBJECT_LOCK (src);
+
+  if (src->segment.format == GST_FORMAT_UNDEFINED) {
+    /* subclass must set valid format before calling this method */
+    GST_WARNING_OBJECT (src, "segment format is not configured yet, ignore");
+    GST_OBJECT_UNLOCK (src);
+    return FALSE;
+  }
+
+  if (src->segment.format != segment->format) {
+    GST_WARNING_OBJECT (src, "segment format mismatched, ignore");
+    GST_OBJECT_UNLOCK (src);
+    return FALSE;
+  }
+
+  gst_segment_copy_into (segment, &src->segment);
+
+  /* Mark pending segment. Will be sent before next data */
+  src->priv->segment_pending = TRUE;
+  src->priv->segment_seqnum = gst_util_seqnum_next ();
+
+  GST_DEBUG_OBJECT (src, "Starting new segment %" GST_PTR_FORMAT, segment);
+
+  GST_OBJECT_UNLOCK (src);
+
+  src->running = TRUE;
+
+  return TRUE;
+}
+
 /* called with STREAM_LOCK */
 static gboolean
 gst_base_src_send_stream_start (GstBaseSrc * src)

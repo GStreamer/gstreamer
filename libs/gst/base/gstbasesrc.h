@@ -309,6 +309,10 @@ GST_BASE_API
 gboolean        gst_base_src_new_seamless_segment (GstBaseSrc *src, gint64 start, gint64 stop, gint64 time);
 
 GST_BASE_API
+gboolean        gst_base_src_new_segment      (GstBaseSrc *src,
+                                               const GstSegment * segment);
+
+GST_BASE_API
 gboolean        gst_base_src_set_caps         (GstBaseSrc *src, GstCaps *caps);
 
 GST_BASE_API
