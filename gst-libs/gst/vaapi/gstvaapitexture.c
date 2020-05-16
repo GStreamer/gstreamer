@@ -28,6 +28,7 @@
  */
 
 #include "sysdeps.h"
+#include "gstvaapidisplay_priv.h"
 #include "gstvaapitexture.h"
 #include "gstvaapitexture_priv.h"
 

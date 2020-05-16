@@ -25,9 +25,6 @@
 #ifndef GST_VAAPI_TEXTURE_PRIV_H
 #define GST_VAAPI_TEXTURE_PRIV_H
 
-#include "gstvaapiobject_priv.h"
-#include <gst/gstminiobject.h>
-
 G_BEGIN_DECLS
 
 /**
