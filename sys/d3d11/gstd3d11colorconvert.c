@@ -4,6 +4,7 @@
  * Copyright (C) 2012-2014 Matthew Waters <ystree00@gmail.com>
  * Copyright (C) <2019> Seungha Yang <seungha.yang@navercorp.com>
  * Copyright (C) <2019> Jeongki Kim <jeongki.kim@jeongki.kim>
+ * Copyright (C) 2020 Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,14 +23,18 @@
  */
 
 /**
- * SECTION:element-d3d11colorconvert
+ * SECTION:element-d3d11convert
  * @title: d3d11colorconvert
  *
- * Convert video frames between supported video formats.
+ * This element resizes video frames and change color space.
+ * By default the element will try to negotiate to the same size on the source
+ * and sinkpad so that no scaling is needed.
+ * It is therefore safe to insert this element in a pipeline to
+ * get more robust behaviour without any cost if no scaling is needed.
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 -v videotestsrc ! video/x-raw,format=NV12 ! d3d11upload ! d3d11videocolorconvert ! d3d11videosink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw,format=NV12 ! d3d11upload ! d3d11convert ! d3d11videosink
  * ]|
  *  This will output a test video (generated in NV12 format) in a video
  * window. If the video sink selected does not support NV12
@@ -99,7 +104,8 @@ static gboolean gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
 
 /* copies the given caps */
 static GstCaps *
-gst_d3d11_color_convert_caps_remove_format_info (GstCaps * caps)
+gst_d3d11_color_convert_caps_remove_format_and_rangify_size_info (GstCaps *
+    caps)
 {
   GstStructure *st;
   GstCapsFeatures *f;
@@ -123,9 +129,17 @@ gst_d3d11_color_convert_caps_remove_format_info (GstCaps * caps)
     st = gst_structure_copy (st);
     /* Only remove format info for the cases when we can actually convert */
     if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f, feature))
+        && gst_caps_features_is_equal (f, feature)) {
+      gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (st, "pixel-aspect-ratio")) {
+        gst_structure_set (st, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      }
       gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
           NULL);
+    }
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
@@ -148,9 +162,9 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 Colorspace converter",
-      "Filter/Converter/Video/Hardware",
-      "Converts video from one colorspace to another using D3D11",
+      "Direct3D11 colorspace converter and scaler",
+      "Filter/Converter/Scaler/Video/Hardware",
+      "Resizes video and allow color conversion using D3D11",
       "Seungha Yang <seungha.yang@navercorp.com>, "
       "Jeongki Kim <jeongki.kim@jeongki.kim>");
 
@@ -173,7 +187,7 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_set_info);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_color_convert_debug,
-      "d3d11colorconvert", 0, "Video Colorspace Convert via D3D11");
+      "d3d11convert", 0, "d3d11convert element");
 }
 
 static void
@@ -236,7 +250,7 @@ gst_d3d11_color_convert_transform_caps (GstBaseTransform *
   GstCaps *result;
 
   /* Get all possible caps that we can transform to */
-  tmp = gst_d3d11_color_convert_caps_remove_format_info (caps);
+  tmp = gst_d3d11_color_convert_caps_remove_format_and_rangify_size_info (caps);
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -298,7 +312,7 @@ gst_d3d11_color_convert_transform_caps (GstBaseTransform *
 
 /* calculate how much loss a conversion would be */
 static void
-score_value (const GstVideoFormatInfo * in_info,
+score_value (GstBaseTransform * base, const GstVideoFormatInfo * in_info,
     const GValue * val, gint * min_loss, const GstVideoFormatInfo ** out_info)
 {
   const gchar *fname;
@@ -308,7 +322,7 @@ score_value (const GstVideoFormatInfo * in_info,
 
   fname = g_value_get_string (val);
   t_info = gst_video_format_get_info (gst_video_format_from_string (fname));
-  if (!t_info)
+  if (!t_info || t_info->format == GST_VIDEO_FORMAT_UNKNOWN)
     return;
 
   /* accept input format immediately without loss */
@@ -365,53 +379,39 @@ score_value (const GstVideoFormatInfo * in_info,
       loss += SCORE_DEPTH_LOSS + (in_info->bits - t_info->bits);
   }
 
-  GST_DEBUG ("score %s -> %s = %d",
+  GST_DEBUG_OBJECT (base, "score %s -> %s = %d",
       GST_VIDEO_FORMAT_INFO_NAME (in_info),
       GST_VIDEO_FORMAT_INFO_NAME (t_info), loss);
 
   if (loss < *min_loss) {
-    GST_DEBUG ("found new best %d", loss);
+    GST_DEBUG_OBJECT (base, "found new best %d", loss);
     *out_info = t_info;
     *min_loss = loss;
   }
 }
 
-static GstCaps *
+static void
 gst_d3d11_color_convert_fixate_format (GstBaseTransform * trans,
-    GstCaps * caps, GstCaps * othercaps)
+    GstCaps * caps, GstCaps * result)
 {
   GstStructure *ins, *outs;
   const gchar *in_format;
   const GstVideoFormatInfo *in_info, *out_info = NULL;
   gint min_loss = G_MAXINT;
   guint i, capslen;
-  GstCaps *result;
-
-  result = gst_caps_intersect (othercaps, caps);
-  if (gst_caps_is_empty (result)) {
-    gst_caps_unref (result);
-    result = othercaps;
-  } else {
-    gst_caps_unref (othercaps);
-  }
-
-  result = gst_caps_make_writable (result);
 
   ins = gst_caps_get_structure (caps, 0);
   in_format = gst_structure_get_string (ins, "format");
   if (!in_format) {
-    gst_caps_unref (result);
-    return NULL;
+    return;
   }
 
-  GST_DEBUG ("source format %s", in_format);
+  GST_DEBUG_OBJECT (trans, "source format %s", in_format);
 
   in_info =
       gst_video_format_get_info (gst_video_format_from_string (in_format));
-  if (!in_info) {
-    gst_caps_unref (result);
-    return NULL;
-  }
+  if (!in_info)
+    return;
 
   outs = gst_caps_get_structure (result, 0);
 
@@ -423,6 +423,8 @@ gst_d3d11_color_convert_fixate_format (GstBaseTransform * trans,
 
     tests = gst_caps_get_structure (result, i);
     format = gst_structure_get_value (tests, "format");
+    gst_structure_remove_fields (tests, "height", "width", "pixel-aspect-ratio",
+        "display-aspect-ratio", NULL);
     /* should not happen */
     if (format == NULL)
       continue;
@@ -431,45 +433,39 @@ gst_d3d11_color_convert_fixate_format (GstBaseTransform * trans,
       gint j, len;
 
       len = gst_value_list_get_size (format);
-      GST_DEBUG ("have %d formats", len);
+      GST_DEBUG_OBJECT (trans, "have %d formats", len);
       for (j = 0; j < len; j++) {
         const GValue *val;
 
         val = gst_value_list_get_value (format, j);
         if (G_VALUE_HOLDS_STRING (val)) {
-          score_value (in_info, val, &min_loss, &out_info);
+          score_value (trans, in_info, val, &min_loss, &out_info);
           if (min_loss == 0)
             break;
         }
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
-      score_value (in_info, format, &min_loss, &out_info);
+      score_value (trans, in_info, format, &min_loss, &out_info);
     }
   }
   if (out_info)
     gst_structure_set (outs, "format", G_TYPE_STRING,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
-
-  return result;
 }
 
 static GstCaps *
-gst_d3d11_color_convert_fixate_caps (GstBaseTransform * trans,
+gst_d3d11_color_convert_get_fixed_format (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstCaps *result;
 
-  GST_DEBUG_OBJECT (trans, "trying to fixate othercaps %" GST_PTR_FORMAT
-      " based on caps %" GST_PTR_FORMAT, othercaps, caps);
+  result = gst_caps_intersect (othercaps, caps);
+  if (gst_caps_is_empty (result)) {
+    gst_caps_unref (result);
+    result = gst_caps_copy (othercaps);
+  }
 
-  result =
-      gst_d3d11_color_convert_fixate_format (trans,
-      caps, gst_caps_ref (othercaps));
-
-  if (!result)
-    result = othercaps;
-  else
-    gst_caps_unref (othercaps);
+  gst_d3d11_color_convert_fixate_format (trans, caps, result);
 
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
@@ -481,6 +477,487 @@ gst_d3d11_color_convert_fixate_caps (GstBaseTransform * trans,
   }
 
   return result;
+}
+
+static GstCaps *
+gst_d3d11_color_convert_fixate_size (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *ins, *outs;
+  const GValue *from_par, *to_par;
+  GValue fpar = { 0, }, tpar = {
+  0,};
+
+  othercaps = gst_caps_truncate (othercaps);
+  othercaps = gst_caps_make_writable (othercaps);
+  ins = gst_caps_get_structure (caps, 0);
+  outs = gst_caps_get_structure (othercaps, 0);
+
+  from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
+  to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
+
+  /* If we're fixating from the sinkpad we always set the PAR and
+   * assume that missing PAR on the sinkpad means 1/1 and
+   * missing PAR on the srcpad means undefined
+   */
+  if (direction == GST_PAD_SINK) {
+    if (!from_par) {
+      g_value_init (&fpar, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&fpar, 1, 1);
+      from_par = &fpar;
+    }
+    if (!to_par) {
+      g_value_init (&tpar, GST_TYPE_FRACTION_RANGE);
+      gst_value_set_fraction_range_full (&tpar, 1, G_MAXINT, G_MAXINT, 1);
+      to_par = &tpar;
+    }
+  } else {
+    if (!to_par) {
+      g_value_init (&tpar, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&tpar, 1, 1);
+      to_par = &tpar;
+
+      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+          NULL);
+    }
+    if (!from_par) {
+      g_value_init (&fpar, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&fpar, 1, 1);
+      from_par = &fpar;
+    }
+  }
+
+  /* we have both PAR but they might not be fixated */
+  {
+    gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
+    gint w = 0, h = 0;
+    gint from_dar_n, from_dar_d;
+    gint num, den;
+
+    /* from_par should be fixed */
+    g_return_val_if_fail (gst_value_is_fixed (from_par), othercaps);
+
+    from_par_n = gst_value_get_fraction_numerator (from_par);
+    from_par_d = gst_value_get_fraction_denominator (from_par);
+
+    gst_structure_get_int (ins, "width", &from_w);
+    gst_structure_get_int (ins, "height", &from_h);
+
+    gst_structure_get_int (outs, "width", &w);
+    gst_structure_get_int (outs, "height", &h);
+
+    /* if both width and height are already fixed, we can't do anything
+     * about it anymore */
+    if (w && h) {
+      guint n, d;
+
+      GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
+          w, h);
+      if (!gst_value_is_fixed (to_par)) {
+        if (gst_video_calculate_display_ratio (&n, &d, from_w, from_h,
+                from_par_n, from_par_d, w, h)) {
+          GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", n, d);
+          if (gst_structure_has_field (outs, "pixel-aspect-ratio"))
+            gst_structure_fixate_field_nearest_fraction (outs,
+                "pixel-aspect-ratio", n, d);
+          else if (n != d)
+            gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+                n, d, NULL);
+        }
+      }
+      goto done;
+    }
+
+    /* Calculate input DAR */
+    if (!gst_util_fraction_multiply (from_w, from_h, from_par_n, from_par_d,
+            &from_dar_n, &from_dar_d)) {
+      GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+          ("Error calculating the output scaled size - integer overflow"));
+      goto done;
+    }
+
+    GST_DEBUG_OBJECT (base, "Input DAR is %d/%d", from_dar_n, from_dar_d);
+
+    /* If either width or height are fixed there's not much we
+     * can do either except choosing a height or width and PAR
+     * that matches the DAR as good as possible
+     */
+    if (h) {
+      GstStructure *tmp;
+      gint set_w, set_par_n, set_par_d;
+
+      GST_DEBUG_OBJECT (base, "height is fixed (%d)", h);
+
+      /* If the PAR is fixed too, there's not much to do
+       * except choosing the width that is nearest to the
+       * width with the same DAR */
+      if (gst_value_is_fixed (to_par)) {
+        to_par_n = gst_value_get_fraction_numerator (to_par);
+        to_par_d = gst_value_get_fraction_denominator (to_par);
+
+        GST_DEBUG_OBJECT (base, "PAR is fixed %d/%d", to_par_n, to_par_d);
+
+        if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
+                to_par_n, &num, &den)) {
+          GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+              ("Error calculating the output scaled size - integer overflow"));
+          goto done;
+        }
+
+        w = (guint) gst_util_uint64_scale_int_round (h, num, den);
+        gst_structure_fixate_field_nearest_int (outs, "width", w);
+
+        goto done;
+      }
+
+      /* The PAR is not fixed and it's quite likely that we can set
+       * an arbitrary PAR. */
+
+      /* Check if we can keep the input width */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
+      gst_structure_get_int (tmp, "width", &set_w);
+
+      /* Might have failed but try to keep the DAR nonetheless by
+       * adjusting the PAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, h, set_w,
+              &to_par_n, &to_par_d)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        gst_structure_free (tmp);
+        goto done;
+      }
+
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+      gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
+          to_par_n, to_par_d);
+      gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
+          &set_par_d);
+      gst_structure_free (tmp);
+
+      /* Check if the adjusted PAR is accepted */
+      if (set_par_n == to_par_n && set_par_d == to_par_d) {
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "width", G_TYPE_INT, set_w,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
+              NULL);
+        goto done;
+      }
+
+      /* Otherwise scale the width to the new PAR and check if the
+       * adjusted with is accepted. If all that fails we can't keep
+       * the DAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
+              set_par_n, &num, &den)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        goto done;
+      }
+
+      w = (guint) gst_util_uint64_scale_int_round (h, num, den);
+      gst_structure_fixate_field_nearest_int (outs, "width", w);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
+
+      goto done;
+    } else if (w) {
+      GstStructure *tmp;
+      gint set_h, set_par_n, set_par_d;
+
+      GST_DEBUG_OBJECT (base, "width is fixed (%d)", w);
+
+      /* If the PAR is fixed too, there's not much to do
+       * except choosing the height that is nearest to the
+       * height with the same DAR */
+      if (gst_value_is_fixed (to_par)) {
+        to_par_n = gst_value_get_fraction_numerator (to_par);
+        to_par_d = gst_value_get_fraction_denominator (to_par);
+
+        GST_DEBUG_OBJECT (base, "PAR is fixed %d/%d", to_par_n, to_par_d);
+
+        if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
+                to_par_n, &num, &den)) {
+          GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+              ("Error calculating the output scaled size - integer overflow"));
+          goto done;
+        }
+
+        h = (guint) gst_util_uint64_scale_int_round (w, den, num);
+        gst_structure_fixate_field_nearest_int (outs, "height", h);
+
+        goto done;
+      }
+
+      /* The PAR is not fixed and it's quite likely that we can set
+       * an arbitrary PAR. */
+
+      /* Check if we can keep the input height */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", from_h);
+      gst_structure_get_int (tmp, "height", &set_h);
+
+      /* Might have failed but try to keep the DAR nonetheless by
+       * adjusting the PAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, w,
+              &to_par_n, &to_par_d)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        gst_structure_free (tmp);
+        goto done;
+      }
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+      gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
+          to_par_n, to_par_d);
+      gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
+          &set_par_d);
+      gst_structure_free (tmp);
+
+      /* Check if the adjusted PAR is accepted */
+      if (set_par_n == to_par_n && set_par_d == to_par_d) {
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "height", G_TYPE_INT, set_h,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
+              NULL);
+        goto done;
+      }
+
+      /* Otherwise scale the height to the new PAR and check if the
+       * adjusted with is accepted. If all that fails we can't keep
+       * the DAR */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
+              set_par_n, &num, &den)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scale sized - integer overflow"));
+        goto done;
+      }
+
+      h = (guint) gst_util_uint64_scale_int_round (w, den, num);
+      gst_structure_fixate_field_nearest_int (outs, "height", h);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
+
+      goto done;
+    } else if (gst_value_is_fixed (to_par)) {
+      GstStructure *tmp;
+      gint set_h, set_w, f_h, f_w;
+
+      to_par_n = gst_value_get_fraction_numerator (to_par);
+      to_par_d = gst_value_get_fraction_denominator (to_par);
+
+      /* Calculate scale factor for the PAR change */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_n,
+              to_par_d, &num, &den)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        goto done;
+      }
+
+      /* Try to keep the input height (because of interlacing) */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", from_h);
+      gst_structure_get_int (tmp, "height", &set_h);
+
+      /* This might have failed but try to scale the width
+       * to keep the DAR nonetheless */
+      w = (guint) gst_util_uint64_scale_int_round (set_h, num, den);
+      gst_structure_fixate_field_nearest_int (tmp, "width", w);
+      gst_structure_get_int (tmp, "width", &set_w);
+      gst_structure_free (tmp);
+
+      /* We kept the DAR and the height is nearest to the original height */
+      if (set_w == w) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, set_h, NULL);
+        goto done;
+      }
+
+      f_h = set_h;
+      f_w = set_w;
+
+      /* If the former failed, try to keep the input width at least */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
+      gst_structure_get_int (tmp, "width", &set_w);
+
+      /* This might have failed but try to scale the width
+       * to keep the DAR nonetheless */
+      h = (guint) gst_util_uint64_scale_int_round (set_w, den, num);
+      gst_structure_fixate_field_nearest_int (tmp, "height", h);
+      gst_structure_get_int (tmp, "height", &set_h);
+      gst_structure_free (tmp);
+
+      /* We kept the DAR and the width is nearest to the original width */
+      if (set_h == h) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, set_h, NULL);
+        goto done;
+      }
+
+      /* If all this failed, keep the dimensions with the DAR that was closest
+       * to the correct DAR. This changes the DAR but there's not much else to
+       * do here.
+       */
+      if (set_w * ABS (set_h - h) < ABS (f_w - w) * f_h) {
+        f_h = set_h;
+        f_w = set_w;
+      }
+      gst_structure_set (outs, "width", G_TYPE_INT, f_w, "height", G_TYPE_INT,
+          f_h, NULL);
+      goto done;
+    } else {
+      GstStructure *tmp;
+      gint set_h, set_w, set_par_n, set_par_d, tmp2;
+
+      /* width, height and PAR are not fixed but passthrough is not possible */
+
+      /* First try to keep the height and width as good as possible
+       * and scale PAR */
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", from_h);
+      gst_structure_get_int (tmp, "height", &set_h);
+      gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
+      gst_structure_get_int (tmp, "width", &set_w);
+
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, set_w,
+              &to_par_n, &to_par_d)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        gst_structure_free (tmp);
+        goto done;
+      }
+
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+      gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
+          to_par_n, to_par_d);
+      gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
+          &set_par_d);
+      gst_structure_free (tmp);
+
+      if (set_par_n == to_par_n && set_par_d == to_par_d) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, set_h, NULL);
+
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
+        goto done;
+      }
+
+      /* Otherwise try to scale width to keep the DAR with the set
+       * PAR and height */
+      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
+              set_par_n, &num, &den)) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        goto done;
+      }
+
+      w = (guint) gst_util_uint64_scale_int_round (set_h, num, den);
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "width", w);
+      gst_structure_get_int (tmp, "width", &tmp2);
+      gst_structure_free (tmp);
+
+      if (tmp2 == w) {
+        gst_structure_set (outs, "width", G_TYPE_INT, tmp2, "height",
+            G_TYPE_INT, set_h, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
+        goto done;
+      }
+
+      /* ... or try the same with the height */
+      h = (guint) gst_util_uint64_scale_int_round (set_w, den, num);
+      tmp = gst_structure_copy (outs);
+      gst_structure_fixate_field_nearest_int (tmp, "height", h);
+      gst_structure_get_int (tmp, "height", &tmp2);
+      gst_structure_free (tmp);
+
+      if (tmp2 == h) {
+        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+            G_TYPE_INT, tmp2, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
+        goto done;
+      }
+
+      /* If all fails we can't keep the DAR and take the nearest values
+       * for everything from the first try */
+      gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+          G_TYPE_INT, set_h, NULL);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
+    }
+  }
+
+done:
+  if (from_par == &fpar)
+    g_value_unset (&fpar);
+  if (to_par == &tpar)
+    g_value_unset (&tpar);
+
+  return othercaps;
+}
+
+static GstCaps *
+gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstCaps *format;
+
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  format = gst_d3d11_color_convert_get_fixed_format (base, direction, caps,
+      othercaps);
+
+  if (gst_caps_is_empty (format)) {
+    GST_ERROR_OBJECT (base, "Could not convert formats");
+    return format;
+  }
+
+  othercaps =
+      gst_d3d11_color_convert_fixate_size (base, direction, caps, othercaps);
+  if (gst_caps_get_size (othercaps) == 1) {
+    gint i;
+    const gchar *format_fields[] = { "format", "colorimetry", "chroma-site" };
+    GstStructure *format_struct = gst_caps_get_structure (format, 0);
+    GstStructure *fixated_struct;
+
+    othercaps = gst_caps_make_writable (othercaps);
+    fixated_struct = gst_caps_get_structure (othercaps, 0);
+
+    for (i = 0; i < G_N_ELEMENTS (format_fields); i++) {
+      if (gst_structure_has_field (format_struct, format_fields[i])) {
+        gst_structure_set (fixated_struct, format_fields[i], G_TYPE_STRING,
+            gst_structure_get_string (format_struct, format_fields[i]), NULL);
+      } else {
+        gst_structure_remove_field (fixated_struct, format_fields[i]);
+      }
+    }
+  }
+  gst_caps_unref (format);
+
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
 }
 
 static gboolean
@@ -873,22 +1350,16 @@ gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
 
-  /* these must match */
-  if (in_info->width != out_info->width || in_info->height != out_info->height
-      || in_info->fps_n != out_info->fps_n || in_info->fps_d != out_info->fps_d)
-    goto format_mismatch;
-
-  /* if present, these must match too */
-  if (in_info->par_n != out_info->par_n || in_info->par_d != out_info->par_d)
-    goto format_mismatch;
-
-  /* if present, these must match too */
+  /* if present, these must match */
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
-  /* don't need to create converter */
-  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_INFO_FORMAT (out_info))
+  /* FIXME: add support border */
+  if (in_info->width == out_info->width && in_info->height == out_info->height
+      && in_info->finfo == out_info->finfo) {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
     return TRUE;
+  }
 
   self->in_d3d11_format =
       gst_d3d11_device_format_from_gst (filter->device,
