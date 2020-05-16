@@ -250,6 +250,8 @@ gst_h264_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
   g_array_unref (priv->to_output);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
