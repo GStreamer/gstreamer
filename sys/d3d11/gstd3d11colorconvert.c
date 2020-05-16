@@ -1170,9 +1170,22 @@ create_shader_input_resource (GstD3D11ColorConvert * self,
       }
     }
   } else {
+    gboolean is_semiplanar = FALSE;
+
+    if (format->dxgi_format == DXGI_FORMAT_NV12 ||
+        format->dxgi_format == DXGI_FORMAT_P010 ||
+        format->dxgi_format == DXGI_FORMAT_P016)
+      is_semiplanar = TRUE;
+
     texture_desc.Width = GST_VIDEO_INFO_WIDTH (info);
     texture_desc.Height = GST_VIDEO_INFO_HEIGHT (info);
     texture_desc.Format = format->dxgi_format;
+
+    /* semiplanar format resolution of should be even number */
+    if (is_semiplanar) {
+      texture_desc.Width = GST_ROUND_UP_2 (texture_desc.Width);
+      texture_desc.Height = GST_ROUND_UP_2 (texture_desc.Height);
+    }
 
     hr = ID3D11Device_CreateTexture2D (device_handle,
         &texture_desc, NULL, &tex[0]);
@@ -1181,8 +1194,7 @@ create_shader_input_resource (GstD3D11ColorConvert * self,
       goto error;
     }
 
-    if (format->dxgi_format == DXGI_FORMAT_NV12 ||
-        format->dxgi_format == DXGI_FORMAT_P010) {
+    if (is_semiplanar) {
       ID3D11Resource_AddRef (tex[0]);
       tex[1] = tex[0];
     }
@@ -1274,9 +1286,22 @@ create_shader_output_resource (GstD3D11ColorConvert * self,
       }
     }
   } else {
+    gboolean is_semiplanar = FALSE;
+
+    if (format->dxgi_format == DXGI_FORMAT_NV12 ||
+        format->dxgi_format == DXGI_FORMAT_P010 ||
+        format->dxgi_format == DXGI_FORMAT_P016)
+      is_semiplanar = TRUE;
+
     texture_desc.Width = GST_VIDEO_INFO_WIDTH (info);
     texture_desc.Height = GST_VIDEO_INFO_HEIGHT (info);
     texture_desc.Format = format->dxgi_format;
+
+    /* semiplanar format resolution of should be even number */
+    if (is_semiplanar) {
+      texture_desc.Width = GST_ROUND_UP_2 (texture_desc.Width);
+      texture_desc.Height = GST_ROUND_UP_2 (texture_desc.Height);
+    }
 
     hr = ID3D11Device_CreateTexture2D (device_handle,
         &texture_desc, NULL, &tex[0]);
@@ -1285,8 +1310,7 @@ create_shader_output_resource (GstD3D11ColorConvert * self,
       goto error;
     }
 
-    if (format->dxgi_format == DXGI_FORMAT_NV12 ||
-        format->dxgi_format == DXGI_FORMAT_P010) {
+    if (is_semiplanar) {
       ID3D11Resource_AddRef (tex[0]);
       tex[1] = tex[0];
     }
@@ -1385,6 +1409,21 @@ gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
     return FALSE;
   }
 
+  /* setup D3D11_BOX struct for fallback copy */
+  self->in_src_box.left = 0;
+  self->in_src_box.top = 0;
+  self->in_src_box.front = 0;
+  self->in_src_box.back = 1;
+  self->in_src_box.right = GST_VIDEO_INFO_WIDTH (in_info);
+  self->in_src_box.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
+
+  self->out_src_box.left = 0;
+  self->out_src_box.top = 0;
+  self->out_src_box.front = 0;
+  self->out_src_box.back = 1;
+  self->out_src_box.right = GST_VIDEO_INFO_WIDTH (out_info);
+  self->out_src_box.bottom = GST_VIDEO_INFO_HEIGHT (out_info);
+
   return TRUE;
 
   /* ERRORS */
@@ -1468,7 +1507,7 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
       ID3D11DeviceContext_CopySubresourceRegion (context_handle,
           (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
           (ID3D11Resource *) d3d11_mem->texture, d3d11_mem->subresource_index,
-          NULL);
+          &self->in_src_box);
     }
     gst_d3d11_device_unlock (device);
   }
@@ -1522,7 +1561,8 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
 
       ID3D11DeviceContext_CopySubresourceRegion (context_handle,
           (ID3D11Resource *) d3d11_mem->texture, d3d11_mem->subresource_index,
-          0, 0, 0, (ID3D11Resource *) self->out_texture[i], 0, NULL);
+          0, 0, 0, (ID3D11Resource *) self->out_texture[i], 0,
+          &self->out_src_box);
     }
     gst_d3d11_device_unlock (device);
   } else {

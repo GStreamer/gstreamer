@@ -50,6 +50,10 @@ struct _GstD3D11ColorConvert
   guint num_output_view;
 
   GstD3D11ColorConverter *converter;
+
+  /* used for fallback texture copy */
+  D3D11_BOX in_src_box;
+  D3D11_BOX out_src_box;
 };
 
 struct _GstD3D11ColorConvertClass
