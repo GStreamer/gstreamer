@@ -54,7 +54,6 @@ gst_vaapi_coded_buffer_get_type (void) G_GNUC_CONST;
  * Decreases the refcount of @buf. If the refcount reaches 0, the
  * @buf will be freed.
  */
-static inline void gst_vaapi_coded_buffer_unref(GstVaapiCodedBuffer* buf);
 static inline void
 gst_vaapi_coded_buffer_unref (GstVaapiCodedBuffer * buf)
 {

@@ -103,7 +103,6 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image);
  * Decreases the refcount of the image. If the refcount reaches 0, the
  * image will be freed.
  */
-static inline void gst_vaapi_image_unref(GstVaapiImage* image);
 static inline void
 gst_vaapi_image_unref (GstVaapiImage * image)
 {

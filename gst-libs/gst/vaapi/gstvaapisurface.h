@@ -201,7 +201,6 @@ gst_vaapi_surface_get_type (void) G_GNUC_CONST;
  * Decreases the refcount of the surface. If the refcount reaches 0, the
  * surface will be freed.
  */
-static inline void gst_vaapi_surface_unref(GstVaapiSurface* surface);
 static inline void
 gst_vaapi_surface_unref (GstVaapiSurface * surface)
 {
