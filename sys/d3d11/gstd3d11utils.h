@@ -42,9 +42,6 @@ gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
 
 gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
-GstCaps *       gst_d3d11_caps_fixate_format        (GstCaps * caps,
-                                                     GstCaps * othercaps);
-
 gboolean       _gst_d3d11_result                    (HRESULT hr,
                                                      GstD3D11Device * device,
                                                      GstDebugCategory * cat,
