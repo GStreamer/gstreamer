@@ -1467,7 +1467,8 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
 
       ID3D11DeviceContext_CopySubresourceRegion (context_handle,
           (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
-          (ID3D11Resource *) d3d11_mem->texture, 0, NULL);
+          (ID3D11Resource *) d3d11_mem->texture, d3d11_mem->subresource_index,
+          NULL);
     }
     gst_d3d11_device_unlock (device);
   }
@@ -1520,8 +1521,8 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
       d3d11_mem = (GstD3D11Memory *) mem;
 
       ID3D11DeviceContext_CopySubresourceRegion (context_handle,
-          (ID3D11Resource *) d3d11_mem->texture, 0, 0, 0, 0,
-          (ID3D11Resource *) self->out_texture[i], 0, NULL);
+          (ID3D11Resource *) d3d11_mem->texture, d3d11_mem->subresource_index,
+          0, 0, 0, (ID3D11Resource *) self->out_texture[i], 0, NULL);
     }
     gst_d3d11_device_unlock (device);
   } else {
