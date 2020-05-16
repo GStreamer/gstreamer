@@ -146,6 +146,9 @@ struct _GstAppSrcPrivate
 
   GstCaps *last_caps;
   GstCaps *current_caps;
+  GstSegment last_segment;
+  GstSegment current_segment;
+  gboolean pending_custom_segment;
 
   gint64 size;
   GstClockTime duration;
@@ -166,6 +169,7 @@ struct _GstAppSrcPrivate
   guint64 max_latency;
   gboolean emit_signals;
   guint min_percent;
+  gboolean handle_segment_change;
 
   Callbacks *callbacks;
 };
@@ -201,6 +205,7 @@ enum
 #define DEFAULT_PROP_MIN_PERCENT   0
 #define DEFAULT_PROP_CURRENT_LEVEL_BYTES   0
 #define DEFAULT_PROP_DURATION      GST_CLOCK_TIME_NONE
+#define DEFAULT_PROP_HANDLE_SEGMENT_CHANGE FALSE
 
 enum
 {
@@ -218,6 +223,7 @@ enum
   PROP_MIN_PERCENT,
   PROP_CURRENT_LEVEL_BYTES,
   PROP_DURATION,
+  PROP_HANDLE_SEGMENT_CHANGE,
   PROP_LAST
 };
 
@@ -439,6 +445,29 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstAppSrc:handle-segment-change:
+   *
+   * When enabled, appsrc will check GstSegment in GstSample which was
+   * pushed via gst_app_src_push_sample() or "push-sample" signal action.
+   * If a GstSegment is changed, corresponding segment event will be followed
+   * by next data flow.
+   *
+   * FIXME: currently only GST_FORMAT_TIME format is supported and therefore
+   * GstAppSrc::format should be time. However, possibly #GstAppSrc can support
+   * other formats.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_HANDLE_SEGMENT_CHANGE,
+      g_param_spec_boolean ("handle-segment-change", "Handle Segment Change",
+          "Whether to detect and handle changed time format GstSegment in "
+          "GstSample. User should set valid GstSegment in GstSample. "
+          "Must set format property as \"time\" to enable this property",
+          DEFAULT_PROP_HANDLE_SEGMENT_CHANGE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstAppSrc::need-data:
    * @appsrc: the appsrc element that emitted the signal
    * @length: the amount of bytes needed.
@@ -614,6 +643,7 @@ gst_app_src_init (GstAppSrc * appsrc)
   priv->max_latency = DEFAULT_PROP_MAX_LATENCY;
   priv->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
   priv->min_percent = DEFAULT_PROP_MIN_PERCENT;
+  priv->handle_segment_change = DEFAULT_PROP_HANDLE_SEGMENT_CHANGE;
 
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
@@ -760,6 +790,9 @@ gst_app_src_set_property (GObject * object, guint prop_id,
     case PROP_DURATION:
       gst_app_src_set_duration (appsrc, g_value_get_uint64 (value));
       break;
+    case PROP_HANDLE_SEGMENT_CHANGE:
+      priv->handle_segment_change = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -822,6 +855,9 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DURATION:
       g_value_set_uint64 (value, gst_app_src_get_duration (appsrc));
+      break;
+    case PROP_HANDLE_SEGMENT_CHANGE:
+      g_value_set_boolean (value, priv->handle_segment_change);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -895,6 +931,9 @@ gst_app_src_start (GstBaseSrc * bsrc)
   g_mutex_unlock (&priv->mutex);
 
   gst_base_src_set_format (bsrc, priv->format);
+  gst_segment_init (&priv->last_segment, priv->format);
+  gst_segment_init (&priv->current_segment, priv->format);
+  priv->pending_custom_segment = FALSE;
 
   return TRUE;
 }
@@ -1056,6 +1095,9 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
     GST_DEBUG_OBJECT (appsrc, "flushing queue");
     g_mutex_lock (&priv->mutex);
     gst_app_src_flush_queued (appsrc, TRUE);
+    gst_segment_copy_into (segment, &priv->last_segment);
+    gst_segment_copy_into (segment, &priv->current_segment);
+    priv->pending_custom_segment = FALSE;
     g_mutex_unlock (&priv->mutex);
     priv->is_eos = FALSE;
   } else {
@@ -1258,10 +1300,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         *buf = GST_BUFFER (obj);
         buf_size = gst_buffer_get_size (*buf);
         GST_LOG_OBJECT (appsrc, "have buffer %p of size %u", *buf, buf_size);
-      } else {
+      } else if (GST_IS_BUFFER_LIST (obj)) {
         GstBufferList *buffer_list;
-
-        g_assert (GST_IS_BUFFER_LIST (obj));
 
         buffer_list = GST_BUFFER_LIST (obj);
 
@@ -1272,6 +1312,29 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
 
         gst_base_src_submit_buffer_list (bsrc, buffer_list);
         *buf = NULL;
+      } else if (GST_IS_EVENT (obj)) {
+        GstEvent *event = GST_EVENT (obj);
+        const GstSegment *segment = NULL;
+
+        gst_event_parse_segment (event, &segment);
+        g_assert (segment != NULL);
+
+        if (!gst_segment_is_equal (&priv->current_segment, segment)) {
+          GST_DEBUG_OBJECT (appsrc,
+              "Update new segment %" GST_PTR_FORMAT, event);
+          if (!gst_base_src_new_segment (bsrc, segment)) {
+            GST_ERROR_OBJECT (appsrc,
+                "Couldn't set new segment %" GST_PTR_FORMAT, event);
+            ret = GST_FLOW_ERROR;
+            break;
+          }
+          gst_segment_copy_into (segment, &priv->current_segment);
+        }
+
+        gst_event_unref (event);
+        continue;
+      } else {
+        g_assert_not_reached ();
       }
 
       priv->queued_bytes -= buf_size;
@@ -1897,6 +1960,14 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
       break;
   }
 
+  if (priv->pending_custom_segment) {
+    GstEvent *event = gst_event_new_segment (&priv->last_segment);
+
+    GST_DEBUG_OBJECT (appsrc, "enqueue new segment %" GST_PTR_FORMAT, event);
+    gst_queue_array_push_tail (priv->queue, event);
+    priv->pending_custom_segment = FALSE;
+  }
+
   if (buflist != NULL) {
     GST_DEBUG_OBJECT (appsrc, "queueing buffer list %p", buflist);
     if (!steal_ref)
@@ -1947,6 +2018,7 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
 static GstFlowReturn
 gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
 {
+  GstAppSrcPrivate *priv = appsrc->priv;
   GstBufferList *buffer_list;
   GstBuffer *buffer;
   GstCaps *caps;
@@ -1959,6 +2031,30 @@ gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
   } else {
     GST_WARNING_OBJECT (appsrc, "received sample without caps");
   }
+
+  if (priv->handle_segment_change && priv->format == GST_FORMAT_TIME) {
+    GstSegment *segment = gst_sample_get_segment (sample);
+
+    if (segment->format != GST_FORMAT_TIME) {
+      GST_LOG_OBJECT (appsrc, "format %s is not supported",
+          gst_format_get_name (segment->format));
+      goto handle_buffer;
+    }
+
+    g_mutex_lock (&priv->mutex);
+    if (gst_segment_is_equal (&priv->last_segment, segment)) {
+      GST_LOG_OBJECT (appsrc, "segment wasn't changed");
+      g_mutex_unlock (&priv->mutex);
+      goto handle_buffer;
+    }
+
+    /* will be pushed to queue with next buffer/buffer-list */
+    gst_segment_copy_into (segment, &priv->last_segment);
+    priv->pending_custom_segment = TRUE;
+    g_mutex_unlock (&priv->mutex);
+  }
+
+handle_buffer:
 
   buffer = gst_sample_get_buffer (sample);
   if (buffer != NULL)

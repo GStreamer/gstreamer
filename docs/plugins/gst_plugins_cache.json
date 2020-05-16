@@ -504,6 +504,18 @@
                         "type": "GstFormat",
                         "writable": true
                     },
+                    "handle-segment-change": {
+                        "blurb": "Whether to detect and handle changed time format GstSegment in GstSample. User should set valid GstSegment in GstSample. Must set format property as \"time\" to enable this property",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "is-live": {
                         "blurb": "Whether to act as a live source",
                         "conditionally-available": false,
