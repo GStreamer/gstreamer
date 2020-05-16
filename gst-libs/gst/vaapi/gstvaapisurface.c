@@ -61,8 +61,7 @@ gst_vaapi_surface_destroy_subpictures (GstVaapiSurface * surface)
 {
   if (surface->subpictures) {
     g_ptr_array_foreach (surface->subpictures, destroy_subpicture_cb, surface);
-    g_ptr_array_free (surface->subpictures, TRUE);
-    surface->subpictures = NULL;
+    g_clear_pointer (&surface->subpictures, g_ptr_array_unref);
   }
 }
 

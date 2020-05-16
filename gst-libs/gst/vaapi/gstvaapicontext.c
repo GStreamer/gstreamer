@@ -255,7 +255,7 @@ context_create (GstVaapiContext * context)
 
 cleanup:
   if (surfaces)
-    g_array_free (surfaces, TRUE);
+    g_array_unref (surfaces);
   return success;
 }
 

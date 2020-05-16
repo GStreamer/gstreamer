@@ -898,35 +898,12 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
 
-  if (priv->decoders) {
-    g_ptr_array_free (priv->decoders, TRUE);
-    priv->decoders = NULL;
-  }
-
-  if (priv->encoders) {
-    g_ptr_array_free (priv->encoders, TRUE);
-    priv->encoders = NULL;
-  }
-
-  if (priv->codecs) {
-    g_array_free (priv->codecs, TRUE);
-    priv->codecs = NULL;
-  }
-
-  if (priv->image_formats) {
-    g_array_free (priv->image_formats, TRUE);
-    priv->image_formats = NULL;
-  }
-
-  if (priv->subpicture_formats) {
-    g_array_free (priv->subpicture_formats, TRUE);
-    priv->subpicture_formats = NULL;
-  }
-
-  if (priv->properties) {
-    g_array_free (priv->properties, TRUE);
-    priv->properties = NULL;
-  }
+  g_clear_pointer (&priv->decoders, g_ptr_array_unref);
+  g_clear_pointer (&priv->encoders, g_ptr_array_unref);
+  g_clear_pointer (&priv->codecs, g_array_unref);
+  g_clear_pointer (&priv->image_formats, g_array_unref);
+  g_clear_pointer (&priv->subpicture_formats, g_array_unref);
+  g_clear_pointer (&priv->properties, g_array_unref);
 
   if (priv->display) {
     if (!priv->parent)

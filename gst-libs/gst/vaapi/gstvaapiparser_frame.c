@@ -60,7 +60,7 @@ free_units (GArray ** units_ptr)
           &g_array_index (units, GstVaapiDecoderUnit, i);
       gst_vaapi_decoder_unit_clear (unit);
     }
-    g_array_free (units, TRUE);
+    g_array_unref (units);
     *units_ptr = NULL;
   }
 }

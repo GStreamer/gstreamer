@@ -156,10 +156,7 @@ gst_vaapi_display_x11_close_display (GstVaapiDisplay * display)
   GstVaapiDisplayX11Private *const priv =
       GST_VAAPI_DISPLAY_X11_PRIVATE (display);
 
-  if (priv->pixmap_formats) {
-    g_array_free (priv->pixmap_formats, TRUE);
-    priv->pixmap_formats = NULL;
-  }
+  g_clear_pointer (&priv->pixmap_formats, g_array_unref);
 
   if (priv->x11_display) {
     if (!priv->use_foreign_display)
