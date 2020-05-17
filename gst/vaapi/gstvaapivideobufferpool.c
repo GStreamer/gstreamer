@@ -385,6 +385,7 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
     goto error_create_meta;
 
   buffer = gst_vaapi_video_buffer_new (meta);
+  GST_META_FLAG_SET (meta, GST_META_FLAG_POOLED);
 
   if (!buffer)
     goto error_create_buffer;
@@ -428,10 +429,15 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
       vmeta->map = gst_video_meta_map_vaapi_memory;
       vmeta->unmap = gst_video_meta_unmap_vaapi_memory;
     }
+
+    GST_META_FLAG_SET (vmeta, GST_META_FLAG_POOLED);
   }
 #if (USE_GLX || USE_EGL)
-  if (priv->options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD)
-    gst_buffer_add_texture_upload_meta (buffer);
+  if (priv->options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD) {
+    GstMeta *tex_meta = gst_buffer_add_texture_upload_meta (buffer);
+    if (tex_meta)
+      GST_META_FLAG_SET (tex_meta, GST_META_FLAG_POOLED);
+  }
 #endif
 
   *out_buffer_ptr = buffer;

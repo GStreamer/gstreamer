@@ -218,10 +218,9 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
       gst_vaapi_video_meta_get_render_flags (vmeta));
 }
 
-gboolean
+GstMeta *
 gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
 {
-  GstVideoGLTextureUploadMeta *meta = NULL;
   GstVaapiVideoMetaTexture *meta_texture;
 
   if (!buffer)
@@ -234,20 +233,16 @@ gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
   if (!meta_texture_ensure_info_from_buffer (meta_texture, buffer))
     goto error;
 
-  meta = gst_buffer_add_video_gl_texture_upload_meta (buffer,
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
-      1, meta_texture->texture_type, gst_vaapi_texture_upload,
-      meta_texture, (GBoxedCopyFunc) meta_texture_copy,
-      (GBoxedFreeFunc) meta_texture_free);
-  if (!meta)
-    goto error;
-  return TRUE;
+  return (GstMeta *) gst_buffer_add_video_gl_texture_upload_meta (buffer,
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL, 1,
+      meta_texture->texture_type, gst_vaapi_texture_upload, meta_texture,
+      (GBoxedCopyFunc) meta_texture_copy, (GBoxedFreeFunc) meta_texture_free);
 
   /* ERRORS */
 error:
   {
     meta_texture_free (meta_texture);
-    return FALSE;
+    return NULL;
   }
 }
 
@@ -259,6 +254,6 @@ gst_buffer_ensure_texture_upload_meta (GstBuffer * buffer)
 
   return meta ?
       meta_texture_ensure_info_from_buffer (meta->user_data, buffer) :
-      gst_buffer_add_texture_upload_meta (buffer);
+      (gst_buffer_add_texture_upload_meta (buffer) != NULL);
 }
 #endif
