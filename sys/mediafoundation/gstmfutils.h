@@ -57,6 +57,17 @@ gboolean       _gst_mf_result              (HRESULT hr,
 #define gst_mf_result(result) \
     _gst_mf_result (result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
 
+void           _gst_mf_dump_attributes (IMFAttributes * attr,
+                                       const gchar * msg,
+                                       GstDebugLevel level,
+                                       GstDebugCategory * cat,
+                                       const gchar * file,
+                                       const gchar * function,
+                                       gint line);
+
+#define gst_mf_dump_attributes(attr,msg,level) \
+    _gst_mf_dump_attributes (attr, msg, level, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+
 G_END_DECLS
 
 #endif /* __GST_MF_UTILS_H__ */

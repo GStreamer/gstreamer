@@ -52,9 +52,10 @@ mfplat_lib = cc.find_library('mfplat', required : mf_option)
 mfreadwrite_lib = cc.find_library('mfreadwrite', required : mf_option)
 mfuuid_lib = cc.find_library('mfuuid', required : mf_option)
 strmiids_lib = cc.find_library('strmiids', required : mf_option)
+ole32_dep = cc.find_library('ole32', required : mf_option)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 
-have_mf_lib = mf_lib.found() and mfplat_lib.found() and mfreadwrite_lib.found() and mfuuid_lib.found() and strmiids_lib.found()
+have_mf_lib = mf_lib.found() and mfplat_lib.found() and mfreadwrite_lib.found() and mfuuid_lib.found() and strmiids_lib.found() and ole32_dep.found()
 if not have_mf_lib
   if mf_option.enabled()
     error('The mediafoundation plugin was enabled explicitly, but required libraries were not found.')
@@ -62,7 +63,7 @@ if not have_mf_lib
   subdir_done()
 endif
 
-mf_lib_deps += [mf_lib, mfplat_lib, mfreadwrite_lib, mfuuid_lib, strmiids_lib]
+mf_lib_deps += [mf_lib, mfplat_lib, mfreadwrite_lib, mfuuid_lib, strmiids_lib, ole32_dep]
 
 have_mf_header = true
 foreach h: mf_header_deps
