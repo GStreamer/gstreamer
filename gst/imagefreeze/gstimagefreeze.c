@@ -282,8 +282,10 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
   for (i = 0; i < n; i++) {
     GstCaps *candidate = gst_caps_new_empty ();
     GstStructure *s = gst_structure_copy (gst_caps_get_structure (caps, i));
+    GstCapsFeatures *f =
+        gst_caps_features_copy (gst_caps_get_features (caps, i));
 
-    gst_caps_append_structure (candidate, s);
+    gst_caps_append_structure_full (candidate, s, f);
     if (gst_structure_has_field_typed (s, "framerate", GST_TYPE_FRACTION) ||
         gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1)) {
       gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
