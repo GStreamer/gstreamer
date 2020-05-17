@@ -363,6 +363,13 @@ set_headers:
     sink->header_list = curl_slist_append (sink->header_list, tmp);
     g_free (tmp);
   }
+
+  /* set 'Expect: 100-continue'-header explicitly */
+  if (sink->use_content_length) {
+    sink->header_list =
+        curl_slist_append (sink->header_list, "Expect: 100-continue");
+  }
+
   res = curl_easy_setopt (bcsink->curl, CURLOPT_HTTPHEADER, sink->header_list);
   if (res != CURLE_OK) {
     bcsink->error = g_strdup_printf ("failed to set HTTP headers: %s",
