@@ -73,12 +73,15 @@
  * a SEGMENT_START have posted a SEGMENT_DONE.
  *
  * * GST_MESSAGE_DURATION_CHANGED: Is posted by an element that detected a change
- * in the stream duration. The default bin behaviour is to clear any
- * cached duration values so that the next duration query will perform
- * a full duration recalculation. The duration change is posted to the
+ * in the stream duration. The duration change is posted to the
  * application so that it can refetch the new duration with a duration
  * query. Note that these messages can be posted before the bin is
- * prerolled, in which case the duration query might fail.
+ * prerolled, in which case the duration query might fail. Note also that
+ * there might be a discrepancy (due to internal buffering/queueing) between the
+ * stream being currently displayed and the returned duration query.
+ * Applications might want to also query for duration (and changes) by
+ * listening to the GST_MESSAGE_STREAM_START message, signaling the active start
+ * of a (new) stream.
  *
  * * GST_MESSAGE_CLOCK_LOST: This message is posted by an element when it
  * can no longer provide a clock. The default bin behaviour is to
@@ -103,11 +106,8 @@
  * A #GstBin implements the following default behaviour for answering to a
  * #GstQuery:
  *
- * * GST_QUERY_DURATION:If the query has been asked before with the same format
- * and the bin is a toplevel bin (ie. has no parent),
- * use the cached previous value. If no previous value was cached, the
- * query is sent to all sink elements in the bin and the MAXIMUM of all
- * values is returned. If the bin is a toplevel bin the value is cached.
+ * * GST_QUERY_DURATION: The bin will forward the query to all sink
+ * elements contained within and will return the maximum value.
  * If no sinks are available in the bin, the query fails.
  *
  * * GST_QUERY_POSITION:The query is sent to all sink elements in the bin and the
@@ -3678,14 +3678,6 @@ gst_bin_update_context_unlocked (GstBin * bin, GstContext * context)
  *     with the segment_done message. If there are no more segment_start
  *     messages, post segment_done message upwards.
  *
- * GST_MESSAGE_DURATION_CHANGED: clear any cached durations.
- *     Whenever someone performs a duration query on the bin, we store the
- *     result so we can answer it quicker the next time. Any element that
- *     changes its duration marks our cached values invalid.
- *     This message is also posted upwards. This is currently disabled
- *     because too many elements don't post DURATION_CHANGED messages when
- *     the duration changes.
- *
  * GST_MESSAGE_CLOCK_LOST: This message is posted by an element when it
  *     can no longer provide a clock. The default bin behaviour is to
  *     check if the lost clock was the one provided by the bin. If so and
@@ -3842,17 +3834,6 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
       }
       break;
-    }
-    case GST_MESSAGE_DURATION_CHANGED:
-    {
-      /* FIXME: remove all cached durations, next time somebody asks
-       * for duration, we will recalculate. */
-#if 0
-      GST_OBJECT_LOCK (bin);
-      bin_remove_messages (bin, NULL, GST_MESSAGE_DURATION_CHANGED);
-      GST_OBJECT_UNLOCK (bin);
-#endif
-      goto forward;
     }
     case GST_MESSAGE_CLOCK_LOST:
     {
@@ -4142,15 +4123,6 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
   gst_query_set_duration (fold->query, format, fold->max);
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
-
-  /* FIXME: re-implement duration caching */
-#if 0
-  /* and cache now */
-  GST_OBJECT_LOCK (bin);
-  bin->messages = g_list_prepend (bin->messages,
-      gst_message_new_duration (GST_OBJECT_CAST (bin), format, fold->max));
-  GST_OBJECT_UNLOCK (bin);
-#endif
 }
 
 static gboolean
@@ -4318,52 +4290,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
-      /* FIXME: implement duration caching in GstBin again */
-#if 0
-      GList *cached;
-      GstFormat qformat;
-
-      gst_query_parse_duration (query, &qformat, NULL);
-
-      /* find cached duration query */
-      GST_OBJECT_LOCK (bin);
-      for (cached = bin->messages; cached; cached = g_list_next (cached)) {
-        GstMessage *message = (GstMessage *) cached->data;
-
-        if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION_CHANGED &&
-            GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (bin)) {
-          GstFormat format;
-          gint64 duration;
-
-          gst_message_parse_duration (message, &format, &duration);
-
-          /* if cached same format, copy duration in query result */
-          if (format == qformat) {
-            GST_DEBUG_OBJECT (bin, "return cached duration %" G_GINT64_FORMAT,
-                duration);
-            GST_OBJECT_UNLOCK (bin);
-
-            gst_query_set_duration (query, qformat, duration);
-            res = TRUE;
-            goto exit;
-          }
-        }
-      }
-      GST_OBJECT_UNLOCK (bin);
-#else
-#ifndef GST_DISABLE_GST_DEBUG
-      G_STMT_START {
-        /* Quieten this particularly annoying FIXME a bit: */
-        static gboolean printed_fixme = FALSE;
-        if (!printed_fixme) {
-          GST_FIXME ("implement duration caching in GstBin again");
-          printed_fixme = TRUE;
-        }
-      }
-      G_STMT_END;
-#endif
-#endif
-      /* no cached value found, iterate and collect durations */
+      /* iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
       fold_init = bin_query_min_max_init;
       fold_done = bin_query_duration_done;
