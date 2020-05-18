@@ -2197,6 +2197,7 @@ ges_clip_get_property (GObject * object, guint property_id,
       break;
     case PROP_DURATION_LIMIT:
       g_value_set_uint64 (value, clip->priv->duration_limit);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
