@@ -35,6 +35,7 @@ base_tests = [
   [['elements/id3mux.c']],
   [['elements/jpeg2000parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/mfvideosrc.c'], host_machine.system() != 'windows', ],
+  [['elements/mpegtsdemux.c'], false, [gstmpegts_dep]],
   [['elements/mpegtsmux.c'], false, [gstmpegts_dep]],
   [['elements/mpeg4videoparse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/mpegvideoparse.c'], false, [libparser_dep, gstcodecparsers_dep]],
