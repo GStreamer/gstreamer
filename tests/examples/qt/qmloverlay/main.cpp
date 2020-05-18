@@ -37,10 +37,11 @@ SetPlaying::run ()
 }
 
 static void
-on_overlay_scene_initialized (GstElement * overlay, gpointer root_item, gpointer unused)
+on_overlay_scene_initialized (GstElement * overlay, gpointer unused)
 {
+  QQuickItem *rootObject;
   GST_INFO ("scene initialized");
-  QQuickItem *rootObject = static_cast<QQuickItem *> (root_item);
+  g_object_get (overlay, "root-item", &rootObject, NULL);
   QQuickItem *videoItem = rootObject->findChild<QQuickItem *> ("inputVideoItem");
   g_object_set (overlay, "widget", videoItem, NULL);
 }

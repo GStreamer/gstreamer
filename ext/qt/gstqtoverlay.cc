@@ -62,12 +62,14 @@ enum
   PROP_0,
   PROP_WIDGET,
   PROP_QML_SCENE,
+  PROP_ROOT_ITEM,
 };
 
 enum
 {
   SIGNAL_0,
   SIGNAL_QML_SCENE_INITIALIZED,
+  SIGNAL_QML_SCENE_DESTROYED,
   LAST_SIGNAL
 };
 
@@ -113,15 +115,28 @@ gst_qt_overlay_class_init (GstQtOverlayClass * klass)
           "The QQuickItem to place the input video in the object hierarchy",
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_ROOT_ITEM,
+      g_param_spec_pointer ("root-item", "QQuickItem",
+          "The root QQuickItem from the qml-scene used to render",
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   /**
    * GstQmlGLOverlay::qml-scene-initialized
    * @element: the #GstQmlGLOverlay
-   * @root_item: the `QQuickItem` found to be the root item
    * @user_data: user provided data
    */
   gst_qt_overlay_signals[SIGNAL_QML_SCENE_INITIALIZED] =
       g_signal_new ("qml-scene-initialized", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_POINTER);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  /**
+   * GstQmlGLOverlay::qml-scene-destroyed
+   * @element: the #GstQmlGLOverlay
+   * @user_data: user provided data
+   */
+  gst_qt_overlay_signals[SIGNAL_QML_SCENE_DESTROYED] =
+      g_signal_new ("qml-scene-destroyed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   gst_gl_filter_add_rgba_pad_templates (glfilter_class);
 
@@ -195,6 +210,19 @@ gst_qt_overlay_get_property (GObject * object, guint prop_id,
     case PROP_QML_SCENE:
       g_value_set_string (value, qt_overlay->qml_scene);
       break;
+    case PROP_ROOT_ITEM:
+      GST_OBJECT_LOCK (qt_overlay);
+      if (qt_overlay->renderer) {
+        QQuickItem *root = qt_overlay->renderer->rootItem();
+        if (root)
+          g_value_set_pointer (value, root);
+        else
+          g_value_set_pointer (value, NULL);
+      } else {
+        g_value_set_pointer (value, NULL);
+      }
+      GST_OBJECT_UNLOCK (qt_overlay);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -218,16 +246,22 @@ gst_qt_overlay_gl_start (GstGLBaseFilter * bfilter)
   if (!GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (bfilter))
     return FALSE;
 
+  GST_OBJECT_LOCK (bfilter);
   qt_overlay->renderer = new GstQuickRenderer;
   if (!qt_overlay->renderer->init (bfilter->context, &error)) {
     GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
         ("%s", error->message), (NULL));
+    delete qt_overlay->renderer;
+    qt_overlay->renderer = NULL;
+    GST_OBJECT_UNLOCK (bfilter);
     return FALSE;
   }
+
   /* FIXME: Qml may do async loading and we need to propagate qml errors in that case as well */
   if (!qt_overlay->renderer->setQmlScene (qt_overlay->qml_scene, &error)) {
     GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
         ("%s", error->message), (NULL));
+    goto fail_renderer;
     return FALSE;
   }
 
@@ -235,27 +269,48 @@ gst_qt_overlay_gl_start (GstGLBaseFilter * bfilter)
   if (!root) {
     GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
         ("Qml scene does not have a root item"), (NULL));
-    return FALSE;
+    goto fail_renderer;
   }
+  GST_OBJECT_UNLOCK (bfilter);
 
-  g_signal_emit (qt_overlay, gst_qt_overlay_signals[SIGNAL_QML_SCENE_INITIALIZED], 0, root);
+  g_object_notify (G_OBJECT (qt_overlay), "root-item");
+  g_signal_emit (qt_overlay, gst_qt_overlay_signals[SIGNAL_QML_SCENE_INITIALIZED], 0);
 
   return TRUE;
+
+fail_renderer:
+  {
+    qt_overlay->renderer->cleanup();
+    delete qt_overlay->renderer;
+    qt_overlay->renderer = NULL;
+    GST_OBJECT_UNLOCK (bfilter);
+    return FALSE;
+  }
 }
 
 static void
 gst_qt_overlay_gl_stop (GstGLBaseFilter * bfilter)
 {
   GstQtOverlay *qt_overlay = GST_QT_OVERLAY (bfilter);
+  GstQuickRenderer *renderer = NULL;
+
+  /* notify before actually destroying anything */
+  GST_OBJECT_LOCK (qt_overlay);
+  if (qt_overlay->renderer)
+    renderer = qt_overlay->renderer;
+  qt_overlay->renderer = NULL;
+  GST_OBJECT_UNLOCK (qt_overlay);
+
+  g_signal_emit (qt_overlay, gst_qt_overlay_signals[SIGNAL_QML_SCENE_DESTROYED], 0);
+  g_object_notify (G_OBJECT (qt_overlay), "root-item");
 
   if (qt_overlay->widget)
     qt_overlay->widget->setBuffer (NULL);
 
-  if (qt_overlay->renderer) {
-    qt_overlay->renderer->cleanup();
-    delete qt_overlay->renderer;
+  if (renderer) {
+    renderer->cleanup();
+    delete renderer;
   }
-  qt_overlay->renderer = NULL;
 
   GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (bfilter);
 }

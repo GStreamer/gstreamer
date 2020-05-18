@@ -52,8 +52,9 @@ struct _GstQtOverlay
   GstGLFilter           parent;
 
   gchar                *qml_scene;
+  QQuickItem           *root_item;
 
-  GstQuickRenderer        *renderer;
+  GstQuickRenderer     *renderer;
 
   QSharedPointer<QtGLVideoItemInterface> widget;
 };
