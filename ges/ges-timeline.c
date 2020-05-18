@@ -1734,6 +1734,12 @@ ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
   g_signal_connect (clip, "child-removed",
       G_CALLBACK (clip_track_element_removed_cb), timeline);
 
+  GST_DEBUG ("Making sure that the asset is in our project");
+  project =
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
+  ges_project_add_asset (project,
+      ges_extractable_get_asset (GES_EXTRACTABLE (clip)));
+
   if (ges_clip_is_moving_from_layer (clip)) {
     GST_DEBUG ("Clip %p moving from one layer to another, not creating "
         "TrackElement", clip);
@@ -1742,12 +1748,6 @@ ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
   } else {
     ret = add_object_to_tracks (timeline, clip, NULL);
   }
-
-  GST_DEBUG ("Making sure that the asset is in our project");
-  project =
-      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
-  ges_project_add_asset (project,
-      ges_extractable_get_asset (GES_EXTRACTABLE (clip)));
 
   GST_DEBUG ("Done");
 
