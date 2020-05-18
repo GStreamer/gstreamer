@@ -385,7 +385,6 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
     goto error_create_meta;
 
   buffer = gst_vaapi_video_buffer_new (meta);
-  GST_META_FLAG_SET (meta, GST_META_FLAG_POOLED);
 
   if (!buffer)
     goto error_create_buffer;
