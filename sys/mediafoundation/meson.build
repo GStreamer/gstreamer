@@ -8,6 +8,8 @@ mf_sources = [
   'gstmfvideosrc.c',
   'gstmfsourceobject.c',
   'gstmfdevice.c',
+  'gstmfaudioenc.cpp',
+  'gstmfaacenc.cpp',
 ]
 
 mf_desktop_sources = [
@@ -127,7 +129,7 @@ gstmediafoundation = library('gstmediafoundation',
   c_args : gst_plugins_bad_args + ['-DCOBJMACROS'],
   cpp_args : gst_plugins_bad_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep] + mf_lib_deps,
+  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstpbutils_dep] + mf_lib_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

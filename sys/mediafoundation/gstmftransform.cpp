@@ -65,7 +65,7 @@ struct _GstMFTransform
   DWORD input_id;
   DWORD output_id;
 
-  gboolean need_start;
+  gboolean running;
 
   gint pending_need_input;
   gint pending_have_output;
@@ -512,7 +512,7 @@ gst_mf_transform_process_input (GstMFTransform * object,
   if (!object->transform)
     return FALSE;
 
-  if (object->need_start) {
+  if (!object->running) {
     hr = object->transform->ProcessMessage (MFT_MESSAGE_NOTIFY_START_OF_STREAM,
         0);
     if (!gst_mf_result (hr)) {
@@ -527,7 +527,7 @@ gst_mf_transform_process_input (GstMFTransform * object,
       return FALSE;
     }
 
-    object->need_start = FALSE;
+    object->running = TRUE;
   }
 
   gst_mf_transform_drain_all_events (object);
@@ -601,14 +601,14 @@ gst_mf_transform_flush (GstMFTransform * object)
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
 
   if (object->transform) {
-    if (!object->need_start)
+    if (object->running)
       object->transform->ProcessMessage (MFT_MESSAGE_COMMAND_FLUSH, 0);
 
     object->pending_have_output = 0;
     object->pending_need_input = 0;
   }
 
-  object->need_start = TRUE;
+  object->running = FALSE;
 
   while (!g_queue_is_empty (object->output_queue)) {
     IMFSample *sample = (IMFSample *) g_queue_pop_head (object->output_queue);
@@ -628,7 +628,7 @@ gst_mf_transform_drain (GstMFTransform * object)
   if (!object->transform)
     return TRUE;
 
-  object->need_start = TRUE;
+  object->running = FALSE;
   object->transform->ProcessMessage (MFT_MESSAGE_COMMAND_DRAIN, 0);
 
   if (object->hardware) {
@@ -939,6 +939,56 @@ gst_mf_transform_set_output_type (GstMFTransform * object,
   }
 
   hr = transform->SetOutputType (object->output_id, output_type, 0);
+  if (!gst_mf_result (hr)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_mf_transform_get_input_current_type (GstMFTransform * object,
+    IMFMediaType ** input_type)
+{
+  IMFTransform *transform;
+  HRESULT hr;
+
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
+  g_return_val_if_fail (input_type != NULL, FALSE);
+
+  transform = object->transform;
+
+  if (!transform) {
+    GST_ERROR_OBJECT (object, "Should open first");
+    return FALSE;
+  }
+
+  hr = transform->GetInputCurrentType (object->input_id, input_type);
+  if (!gst_mf_result (hr)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_mf_transform_get_output_current_type (GstMFTransform * object,
+    IMFMediaType ** output_type)
+{
+  IMFTransform *transform;
+  HRESULT hr;
+
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
+  g_return_val_if_fail (output_type != NULL, FALSE);
+
+  transform = object->transform;
+
+  if (!transform) {
+    GST_ERROR_OBJECT (object, "Should open first");
+    return FALSE;
+  }
+
+  hr = transform->GetOutputCurrentType (object->output_id, output_type);
   if (!gst_mf_result (hr)) {
     return FALSE;
   }

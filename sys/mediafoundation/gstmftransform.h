@@ -76,6 +76,12 @@ gboolean        gst_mf_transform_set_input_type  (GstMFTransform * object,
 gboolean        gst_mf_transform_set_output_type (GstMFTransform * object,
                                                   IMFMediaType * output_type);
 
+gboolean        gst_mf_transform_get_input_current_type  (GstMFTransform * object,
+                                                          IMFMediaType ** input_type);
+
+gboolean        gst_mf_transform_get_output_current_type (GstMFTransform * object,
+                                                          IMFMediaType ** output_type);
+
 gboolean        gst_mf_transform_set_codec_api_uint32  (GstMFTransform * object,
                                                         const GUID * api,
                                                         guint32 value);
