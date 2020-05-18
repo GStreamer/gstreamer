@@ -863,6 +863,8 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
  * configured with gst_base_src_set_format()
  *
  * Returns: %TRUE if preparation of the seamless segment succeeded.
+ *
+ * Deprecated: 1.18: Use gst_base_src_new_segment()
  */
 gboolean
 gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
