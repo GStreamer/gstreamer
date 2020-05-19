@@ -166,6 +166,9 @@ enum
 #define PROP_CROP_TOP_DEFAULT            0
 #define PROP_CROP_BOTTOM_DEFAULT         0
 
+/* 8 should enough for a normal encoder */
+#define SRC_POOL_SIZE_DEFAULT            8
+
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
 
@@ -399,8 +402,9 @@ gst_msdkvpp_create_buffer_pool (GstMsdkVPP * thiz, GstPadDirection direction,
     goto error_no_allocator;
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+  /* we do not support dynamic buffer count change */
   gst_buffer_pool_config_set_params (config, caps, info.size, min_num_buffers,
-      0);
+      min_num_buffers);
 
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_add_option (config,
@@ -467,18 +471,76 @@ _gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
   return FALSE;
 }
 
+static GstBufferPool *
+create_src_pool (GstMsdkVPP * thiz, GstQuery * query, GstCaps * caps)
+{
+  GstBufferPool *pool = NULL;
+  guint size = 0, min_buffers = 0, max_buffers = 0;
+  gboolean update_pool = FALSE;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
+  mfxFrameAllocRequest request;
+
+  /* Check whether the query has pool */
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    update_pool = TRUE;
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  }
+  if (pool) {
+    GstStructure *config = NULL;
+    /* get the configured pool properties inorder to set in query */
+    config = gst_buffer_pool_get_config (pool);
+    gst_object_unref (pool);
+
+    gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+        &max_buffers);
+    if (gst_buffer_pool_config_get_allocator (config, &allocator, &params))
+      gst_query_add_allocation_param (query, allocator, &params);
+    gst_structure_free (config);
+  } else {
+    /* if we have tee after msdkvpp, we will not have pool for src pad,
+       we need assign size for the internal pool
+       gst-launch-1.0 -v videotestsrc  ! msdkvpp ! tee ! msdkh264enc ! fakesink silent=false
+     */
+    min_buffers = SRC_POOL_SIZE_DEFAULT;
+  }
+
+  /* Always create a pool for vpp out buffers. Each of the msdk element
+   * has to create it's own mfxsurfacepool which is an msdk constraint.
+   * For eg: Each Msdk component (vpp, dec and enc) will invoke the external
+   * Frame allocator for video-memory usage.So sharing the pool between
+   * gst-msdk elements might not be a good idea, rather each element
+   * can check the buffer type (whether it is from msdk-buffer pool)
+   * to make sure there is no copy. Since we share the context between
+   * msdk elements, using buffers from one sdk's framealloator in another
+   * sdk-components is perfectly fine */
+  gst_msdk_frame_free (thiz->context, &thiz->out_alloc_resp);
+
+  request = thiz->request[1];
+  min_buffers += thiz->async_depth + request.NumFrameSuggested;
+  request.NumFrameSuggested = min_buffers;
+  gst_msdk_frame_alloc (thiz->context, &request, &thiz->out_alloc_resp);
+
+  pool = gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, caps, min_buffers);
+  if (!pool)
+    return NULL;
+  /* we do not support dynamic buffer count change */
+  max_buffers = min_buffers;
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min_buffers,
+        max_buffers);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min_buffers, max_buffers);
+
+  return pool;
+}
+
 static gboolean
 gst_msdkvpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstMsdkVPP *thiz = GST_MSDKVPP (trans);
   GstVideoInfo info;
-  GstBufferPool *pool = NULL;
-  GstStructure *config = NULL;
   GstCaps *caps;
-  guint size = 0, min_buffers = 0, max_buffers = 0;
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params;
-  gboolean update_pool = FALSE;
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps) {
@@ -501,42 +563,10 @@ gst_msdkvpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   else
     thiz->add_video_meta = FALSE;
 
-  /* Check whether the query has pool */
-  if (gst_query_get_n_allocation_pools (query) > 0)
-    update_pool = TRUE;
-
-  /* increase the min_buffers with number of concurrent vpp operations */
-  min_buffers += thiz->async_depth;
-
-  /* invalidate the cached pool if there is an allocation_query */
-  if (thiz->srcpad_buffer_pool)
-    gst_object_unref (thiz->srcpad_buffer_pool);
-
-  /* Always create a pool for vpp out buffers. Each of the msdk element
-   * has to create it's own mfxsurfacepool which is an msdk constraint.
-   * For eg: Each Msdk component (vpp, dec and enc) will invoke the external
-   * Frame allocator for video-memory usage.So sharing the pool between
-   * gst-msdk elements might not be a good idea, rather each element
-   * can check the buffer type (whether it is from msdk-buffer pool)
-   * to make sure there is no copy. Since we share the context between
-   * msdk elements, using buffers from one sdk's framealloator in another
-   * sdk-components is perfectly fine */
-  pool = gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, caps, min_buffers);
-  thiz->srcpad_buffer_pool = pool;
-
-  /* get the configured pool properties inorder to set in query */
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
-      &max_buffers);
-  if (gst_buffer_pool_config_get_allocator (config, &allocator, &params))
-    gst_query_add_allocation_param (query, allocator, &params);
-  gst_structure_free (config);
-
-  if (update_pool)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min_buffers,
-        max_buffers);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min_buffers, max_buffers);
+  gst_clear_object (&thiz->srcpad_buffer_pool);
+  thiz->srcpad_buffer_pool = create_src_pool (thiz, query, caps);
+  if (!thiz->srcpad_buffer_pool)
+    return FALSE;
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
@@ -1048,7 +1078,7 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
 {
   mfxSession session;
   mfxStatus status;
-  mfxFrameAllocRequest request[2];
+  mfxFrameAllocRequest *request = &thiz->request[0];
 
   if (!thiz->context) {
     GST_WARNING_OBJECT (thiz, "No MSDK Context");
@@ -1065,7 +1095,6 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
   if (thiz->initialized) {
     if (thiz->use_video_memory) {
       gst_msdk_frame_free (thiz->context, &thiz->in_alloc_resp);
-      gst_msdk_frame_free (thiz->context, &thiz->out_alloc_resp);
     }
 
     MFXVideoVPP_Close (session);
@@ -1154,12 +1183,9 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
     request[1].Type |= MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET;
     if (thiz->use_srcpad_dmabuf)
       request[1].Type |= MFX_MEMTYPE_EXPORT_FRAME;
-    gst_msdk_frame_alloc (thiz->context, &(request[1]), &thiz->out_alloc_resp);
   }
 
   thiz->in_num_surfaces = request[0].NumFrameSuggested;
-  thiz->out_num_surfaces = request[1].NumFrameSuggested;
-
 
   status = MFXVideoVPP_Init (session, &thiz->param);
   if (status < MFX_ERR_NONE) {
@@ -1236,17 +1262,6 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
       thiz->in_num_surfaces);
   if (!thiz->sinkpad_buffer_pool) {
     GST_ERROR_OBJECT (thiz, "Failed to ensure the sinkpad buffer pool");
-    return FALSE;
-  }
-  /* Ensure a srcpad buffer pool */
-  if (thiz->srcpad_buffer_pool)
-    gst_object_unref (thiz->srcpad_buffer_pool);
-
-  thiz->srcpad_buffer_pool =
-      gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, out_caps,
-      thiz->out_num_surfaces);
-  if (!thiz->srcpad_buffer_pool) {
-    GST_ERROR_OBJECT (thiz, "Failed to ensure the srcpad buffer pool");
     return FALSE;
   }
 

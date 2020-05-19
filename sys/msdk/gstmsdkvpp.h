@@ -92,7 +92,6 @@ struct _GstMsdkVPP
   GstMsdkContext *old_context;
   mfxVideoParam param;
   guint in_num_surfaces;
-  guint out_num_surfaces;
   mfxFrameAllocResponse in_alloc_resp;
   mfxFrameAllocResponse out_alloc_resp;
 
@@ -144,6 +143,7 @@ struct _GstMsdkVPP
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
 
+  mfxFrameAllocRequest request[2];
   GList* locked_msdk_surfaces;
 };
 
