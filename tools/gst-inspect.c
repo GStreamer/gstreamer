@@ -1946,6 +1946,7 @@ main (int argc, char *argv[])
   gboolean print_aii = FALSE;
   gboolean uri_handlers = FALSE;
   gboolean check_exists = FALSE;
+  gboolean color_always = FALSE;
   gchar *min_version = NULL;
   guint minver_maj = GST_VERSION_MAJOR;
   guint minver_min = GST_VERSION_MINOR;
@@ -1984,6 +1985,9 @@ main (int argc, char *argv[])
           N_
           ("Disable colors in output. You can also achieve the same by setting"
               "'GST_INSPECT_NO_COLORS' environment variable to any value."),
+        NULL},
+    {"color", 'C', 0, G_OPTION_ARG_NONE, &color_always,
+          N_("Color output, even when not sending to a tty."),
         NULL},
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
@@ -2079,7 +2083,7 @@ main (int argc, char *argv[])
     if (redirect_stdout ())
       loop = g_main_loop_new (NULL, FALSE);
   } else {
-    colored_output = FALSE;
+    colored_output = (color_always) ? TRUE : FALSE;
   }
 #elif defined(G_OS_WIN32)
   {
