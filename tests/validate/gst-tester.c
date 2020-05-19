@@ -154,6 +154,7 @@ main (int argc, gchar ** argv)
   gchar **args = g_new0 (gchar *, argc + 2);
   gint i;
   GError *err = NULL;
+  gchar *filename;
   gboolean is_tty = isatty (STDOUT_FILENO);
 
   if (argc < 2) {
@@ -164,8 +165,10 @@ main (int argc, gchar ** argv)
   app.testname = argv[1];
 
   dirname = g_path_get_dirname (argv[0]);
-  f = g_file_new_build_filename ("subprojects", "gst-devtools",
+  filename = g_build_filename ("subprojects", "gst-devtools",
       "validate", "tools", VALIDATE_NAME, NULL);
+  f = g_file_new_for_path (filename);
+  g_free (filename);
 
   if (g_file_query_exists (f, NULL)) {
     /* Try to find `gst-validate` as a meson subproject */
