@@ -1,7 +1,7 @@
 Moving around plug-ins between source modules
 ---------------------------------------------
 
-Last updated: 2013-12-13
+Last updated: 2020-05-19
 
 Contents:
   1. How to get your plug-in out of -bad and into -good or -ugly (ie. policies)
@@ -30,11 +30,11 @@ PEOPLE
   The three roles can be filled by two people, but not just one.
 
   In addition, an admin needs to perform the actual move, which involves
-  CVS surgery.
+  GIT surgery.
 
 PROCESS
 -------
-- bug in bugzilla gets filed by someone requesting a move from bad
+- Issue in gitlab gets filed by someone requesting a move from bad
   to good/ugly
   This is "requesting" the move.
 - a second person reviews the request and code, and verifies that the
@@ -66,15 +66,9 @@ CHECKLIST
     embedded systems).
 
 - The plug-in's build:
-  - should be correctly integrated with configure.ac
+  - should be correctly integrated with Meson buildsystem
   - files implementing elements should be named according to their class name,
     e.g GstBaseSink -> gstbasesink.c
-  - should list libs and cflags in stack order, with lowest in the stack first
-    (so one can link against highest in the stack somewhere else without
-     picking up everything from the somewhere else)
-    e.g. $(GST_PLUGINS_BASE_CFLAGS) \
-         $(GST_BASE_CFLAGS) \
-         $(GST_CFLAGS) $(CAIRO_CFLAGS)
 
 - The compiled plug-in:
   - should show up correct in gst-inspect output; no warnings, no unknown
@@ -191,8 +185,8 @@ For safety, it is recommended to do all this work in a temporary branch
 At this point, we have all the commits related to gst/weneedthis/ in -bad.
 
 We also need to move the other related parts in:
-* configure.ac
-* Makefile.am from intermediary directories (if needed)
+* meson.build
+* meson_options.txt
 * i18n
 * documentation
 
