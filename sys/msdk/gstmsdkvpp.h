@@ -143,6 +143,8 @@ struct _GstMsdkVPP
   /* Extended buffers */
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
+
+  GList* locked_msdk_surfaces;
 };
 
 struct _GstMsdkVPPClass

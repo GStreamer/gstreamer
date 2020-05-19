@@ -176,11 +176,50 @@ typedef struct
 } MsdkSurface;
 
 static void
-free_msdk_surface (MsdkSurface * surface)
+free_msdk_surface (gpointer p)
 {
+  MsdkSurface *surface = (MsdkSurface *) p;
   if (surface->buf)
     gst_buffer_unref (surface->buf);
   g_slice_free (MsdkSurface, surface);
+}
+
+static void
+release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+{
+  if (surface->surface) {
+    if (surface->surface->Data.Locked) {
+      thiz->locked_msdk_surfaces =
+          g_list_append (thiz->locked_msdk_surfaces, surface);
+    } else {
+      free_msdk_surface (surface);
+    }
+  }
+}
+
+static void
+free_unlocked_msdk_surfaces (GstMsdkVPP * thiz)
+{
+  GList *l;
+  MsdkSurface *surface;
+
+  for (l = thiz->locked_msdk_surfaces; l;) {
+    GList *next = l->next;
+    surface = l->data;
+    if (surface->surface->Data.Locked == 0) {
+      free_msdk_surface (surface);
+      thiz->locked_msdk_surfaces =
+          g_list_delete_link (thiz->locked_msdk_surfaces, l);
+    }
+    l = next;
+  }
+}
+
+static void
+free_all_msdk_surfaces (GstMsdkVPP * thiz)
+{
+  g_list_free_full (thiz->locked_msdk_surfaces, free_msdk_surface);
+  thiz->locked_msdk_surfaces = NULL;
 }
 
 static void
@@ -755,6 +794,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   MsdkSurface *out_surface = NULL;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  free_unlocked_msdk_surfaces (thiz);
 
   in_surface = get_msdk_surface_from_input_buffer (thiz, inbuf);
   if (!in_surface)
@@ -855,8 +895,8 @@ error_push_buffer:
       gst_flow_get_name (ret));
 
 transform_end:
-  free_msdk_surface (in_surface);
-  free_msdk_surface (out_surface);
+  release_msdk_surface (thiz, in_surface);
+  release_msdk_surface (thiz, out_surface);
 
   return ret;
 }
@@ -880,6 +920,7 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
     GST_WARNING_OBJECT (thiz, "VPP close failed (%s)",
         msdk_status_to_string (status));
   }
+  free_all_msdk_surfaces (thiz);
 
   gst_clear_object (&thiz->context);
 
