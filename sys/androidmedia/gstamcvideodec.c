@@ -758,14 +758,6 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
-  if (!gst_amc_format_get_int (format, "stride", &stride, &err) ||
-      !gst_amc_format_get_int (format, "slice-height", &slice_height, &err)) {
-    GST_ERROR_OBJECT (self, "Failed to get stride and slice-height: %s",
-        err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
   if (gst_amc_format_get_int (format, "crop-left", &crop_left, NULL) &&
       gst_amc_format_get_int (format, "crop-right", &crop_right, NULL)) {
     width = crop_right + 1 - crop_left;
@@ -833,6 +825,14 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     self->color_format_info.crop_bottom = crop_bottom;
 
     goto out;
+  }
+
+  if (!gst_amc_format_get_int (format, "stride", &stride, &err) ||
+      !gst_amc_format_get_int (format, "slice-height", &slice_height, &err)) {
+    GST_ERROR_OBJECT (self, "Failed to get stride and slice-height: %s",
+        err->message);
+    g_clear_error (&err);
+    return FALSE;
   }
 
   self->format = gst_format;
