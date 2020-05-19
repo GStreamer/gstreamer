@@ -1956,6 +1956,13 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
       gst_query_parse_duration (query, &fmt, NULL);
 
+      if (gst_adaptive_demux_is_live (demux)) {
+        /* We are able to answer this query: the duration is unknown */
+        gst_query_set_duration (query, fmt, -1);
+        ret = TRUE;
+        break;
+      }
+
       if (fmt == GST_FORMAT_TIME
           && g_atomic_int_get (&demux->priv->have_manifest)) {
         duration = demux_class->get_duration (demux);
