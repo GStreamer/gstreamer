@@ -350,6 +350,7 @@ _add_properties (GString * json, GObject * object, GObjectClass * klass)
         "\"%s\": {"
         "\"construct-only\": %s,"
         "\"construct\": %s,"
+        "\"readable\": %s,"
         "\"writable\": %s,"
         "\"blurb\": \"%s\","
         "\"type-name\": \"%s\"",
@@ -357,6 +358,7 @@ _add_properties (GString * json, GObject * object, GObjectClass * klass)
         spec->name,
         spec->flags & G_PARAM_CONSTRUCT_ONLY ? "true" : "false",
         spec->flags & G_PARAM_CONSTRUCT ? "true" : "false",
+        spec->flags & G_PARAM_READABLE ? "true" : "false",
         spec->flags & G_PARAM_WRITABLE ? "true" : "false",
         tmpstr, g_type_name (G_PARAM_SPEC_VALUE_TYPE (spec)));
     g_free (tmpstr);
