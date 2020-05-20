@@ -978,7 +978,9 @@ retry:
   /* use generated offset values only if there are not already valid ones
    * set by the v4l2 device */
   if (!GST_BUFFER_OFFSET_IS_VALID (*buf)
-      || !GST_BUFFER_OFFSET_END_IS_VALID (*buf)) {
+      || !GST_BUFFER_OFFSET_END_IS_VALID (*buf)
+      || GST_BUFFER_OFFSET (*buf) <=
+      (v4l2src->offset - v4l2src->renegotiation_adjust)) {
     GST_BUFFER_OFFSET (*buf) = v4l2src->offset;
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset + 1;
     if (!half_frame || !v4l2src->next_offset_same)
