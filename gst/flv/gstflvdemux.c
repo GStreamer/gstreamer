@@ -107,6 +107,8 @@ static gboolean flv_demux_handle_seek_push (GstFlvDemux * demux,
 static gboolean gst_flv_demux_handle_seek_pull (GstFlvDemux * demux,
     GstEvent * event, gboolean seeking);
 
+static gboolean gst_flv_demux_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_flv_demux_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_flv_demux_src_event (GstPad * pad, GstObject * parent,
@@ -372,11 +374,13 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       } else if (!strcmp (tag_name, "framerate")) {
         demux->framerate = d;
       } else if (!strcmp (tag_name, "audiodatarate")) {
+        demux->audio_bitrate = (guint) (d * 1024);
         gst_tag_list_add (demux->audio_tags, GST_TAG_MERGE_REPLACE,
-            GST_TAG_NOMINAL_BITRATE, (guint) (d * 1024), NULL);
+            GST_TAG_NOMINAL_BITRATE, demux->audio_bitrate, NULL);
       } else if (!strcmp (tag_name, "videodatarate")) {
+        demux->video_bitrate = (guint) (d * 1024);
         gst_tag_list_add (demux->video_tags, GST_TAG_MERGE_REPLACE,
-            GST_TAG_NOMINAL_BITRATE, (guint) (d * 1024), NULL);
+            GST_TAG_NOMINAL_BITRATE, demux->video_bitrate, NULL);
       } else {
         GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
@@ -2055,6 +2059,9 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
     demux->filepositions = NULL;
   }
 
+  demux->video_bitrate = 0;
+  demux->audio_bitrate = 0;
+
   gst_flv_demux_clear_tags (demux);
 }
 
@@ -3283,6 +3290,54 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
+gst_flv_demux_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstFlvDemux *demux;
+  gboolean ret = FALSE;
+
+  demux = GST_FLV_DEMUX (parent);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_BITRATE:
+    {
+      guint total_bitrate = 0;
+
+      if (demux->audio_pad) {
+        if (!demux->audio_bitrate) {
+          GST_DEBUG_OBJECT (demux,
+              "Have audio pad but no audio bitrate, can't answer BITRATE query");
+          break;
+        }
+        total_bitrate = demux->audio_bitrate;
+      }
+      if (demux->video_pad) {
+        if (!demux->video_bitrate) {
+          GST_DEBUG_OBJECT (demux,
+              "Have video pad but no video bitrate, can't answer BITRATE query");
+          break;
+        }
+        total_bitrate += demux->video_bitrate;
+      }
+
+      GST_DEBUG_OBJECT (demux,
+          "bitrate query. total_bitrate:%" G_GUINT32_FORMAT, total_bitrate);
+
+      if (total_bitrate) {
+        /* Padding of 2kbit/s for container overhead */
+        gst_query_set_bitrate (query, total_bitrate + 2048);
+        ret = TRUE;
+      }
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
 gst_flv_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFlvDemux *demux;
@@ -3655,6 +3710,8 @@ gst_flv_demux_init (GstFlvDemux * demux)
       GST_DEBUG_FUNCPTR (gst_flv_demux_sink_activate));
   gst_pad_set_activatemode_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flv_demux_sink_activate_mode));
+  gst_pad_set_query_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flv_demux_sink_query));
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
