@@ -22,22 +22,20 @@
 #include "config.h"
 #endif
 
+#include "gstmfconfig.h"
+
 #include <winapifamily.h>
 
 #include <gst/gst.h>
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #include "gstmfvideosrc.h"
 #include "gstmfdevice.h"
-#endif
 #include "gstmfutils.h"
 #include "gstmfh264enc.h"
 #include "gstmfh265enc.h"
 
 GST_DEBUG_CATEGORY (gst_mf_debug);
 GST_DEBUG_CATEGORY (gst_mf_utils_debug);
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 GST_DEBUG_CATEGORY (gst_mf_source_object_debug);
-#endif
 GST_DEBUG_CATEGORY (gst_mf_transform_debug);
 
 #define GST_CAT_DEFAULT gst_mf_debug
@@ -46,14 +44,13 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   HRESULT hr;
+  GstRank rank = GST_RANK_SECONDARY;
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_debug, "mf", 0, "media foundation");
   GST_DEBUG_CATEGORY_INIT (gst_mf_utils_debug,
       "mfutils", 0, "media foundation utility functions");
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
   GST_DEBUG_CATEGORY_INIT (gst_mf_source_object_debug,
       "mfsourceobject", 0, "mfsourceobject");
-#endif
   GST_DEBUG_CATEGORY_INIT (gst_mf_transform_debug,
       "mftransform", 0, "mftransform");
 
@@ -62,12 +59,15 @@ plugin_init (GstPlugin * plugin)
     GST_WARNING ("MFStartup failure, hr: 0x%x", hr);
     return TRUE;
   }
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-  gst_element_register (plugin,
-      "mfvideosrc", GST_RANK_SECONDARY, GST_TYPE_MF_VIDEO_SRC);
-  gst_device_provider_register (plugin, "mfdeviceprovider",
-      GST_RANK_SECONDARY, GST_TYPE_MF_DEVICE_PROVIDER);
+
+  /* mfvideosrc should be primary rank for UWP */
+#if GST_MF_WINAPI_ONLY_APP
+  rank = GST_RANK_PRIMARY + 1;
 #endif
+
+  gst_element_register (plugin, "mfvideosrc", rank, GST_TYPE_MF_VIDEO_SRC);
+  gst_device_provider_register (plugin, "mfdeviceprovider",
+      rank, GST_TYPE_MF_DEVICE_PROVIDER);
 
   gst_mf_h264_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_h265_enc_plugin_init (plugin, GST_RANK_SECONDARY);

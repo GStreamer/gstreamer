@@ -5,13 +5,18 @@ mf_sources = [
   'gstmfvideoenc.cpp',
   'gstmfh264enc.cpp',
   'gstmfh265enc.cpp',
+  'gstmfvideosrc.c',
+  'gstmfsourceobject.c',
+  'gstmfdevice.c',
 ]
 
 mf_desktop_sources = [
-  'gstmfvideosrc.c',
-  'gstmfsourceobject.c',
   'gstmfsourcereader.cpp',
-  'gstmfdevice.c'
+]
+
+mf_app_sources = [
+  'gstmfcapturewinrt.cpp',
+  'mediacapturewrapper.cpp',
 ]
 
 mf_header_deps = [
@@ -25,8 +30,8 @@ mf_header_deps = [
 ]
 
 winapi_desktop = false
+winapi_app = false
 have_capture_engine = false
-extra_c_args = ['-DCOBJMACROS']
 mf_lib_deps = []
 mf_config = configuration_data()
 
@@ -47,6 +52,7 @@ mfplat_lib = cc.find_library('mfplat', required : mf_option)
 mfreadwrite_lib = cc.find_library('mfreadwrite', required : mf_option)
 mfuuid_lib = cc.find_library('mfuuid', required : mf_option)
 strmiids_lib = cc.find_library('strmiids', required : mf_option)
+runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 
 have_mf_lib = mf_lib.found() and mfplat_lib.found() and mfreadwrite_lib.found() and mfuuid_lib.found() and strmiids_lib.found()
 if not have_mf_lib
@@ -80,7 +86,26 @@ winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     dependencies: mf_lib_deps,
     name: 'checking if building for Win32')
 
-if winapi_desktop
+if runtimeobject_lib.found()
+  winapi_app = cxx.compiles('''#include <winapifamily.h>
+      #include <windows.applicationmodel.core.h>
+      #include <wrl.h>
+      #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+      #error "not winrt"
+      #endif''',
+      dependencies: [mf_lib_deps, runtimeobject_lib],
+      name: 'checking if building for WinRT')
+endif
+
+if not winapi_desktop and not winapi_app
+  error('Neither Desktop partition nor App partition')
+endif
+
+winapi_app_only = winapi_app and not winapi_desktop
+if winapi_app_only
+  mf_sources += mf_app_sources
+  mf_lib_deps += [runtimeobject_lib]
+else
   mf_sources += mf_desktop_sources
   have_capture_engine = cc.has_header('mfcaptureengine.h')
   if have_capture_engine
@@ -88,7 +113,8 @@ if winapi_desktop
   endif
 endif
 
-mf_config.set10('HAVE_CAPTURE_ENGINE', have_capture_engine)
+mf_config.set10('GST_MF_HAVE_CAPTURE_ENGINE', have_capture_engine)
+mf_config.set10('GST_MF_WINAPI_ONLY_APP', winapi_app_only)
 
 configure_file(
   output: 'gstmfconfig.h',
@@ -97,7 +123,7 @@ configure_file(
 
 gstmediafoundation = library('gstmediafoundation',
   mf_sources,
-  c_args : gst_plugins_bad_args + extra_c_args,
+  c_args : gst_plugins_bad_args + ['-DCOBJMACROS'],
   cpp_args : gst_plugins_bad_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep] + mf_lib_deps,

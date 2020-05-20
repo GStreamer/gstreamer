@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include "gstmfconfig.h"
+
 #include "gstmfsourceobject.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
@@ -81,10 +83,12 @@ static void gst_mf_source_object_get_property (GObject * object, guint prop_id,
 static void gst_mf_source_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
+#if !(GST_MF_WINAPI_ONLY_APP)
 static gpointer gst_mf_source_object_thread_func (GstMFSourceObject * self);
 static gboolean gst_mf_source_enum_device_activate (GstMFSourceObject * self,
     GstMFSourceType source_type, GList ** device_activates);
 static void gst_mf_device_activate_free (GstMFDeviceActivate * activate);
+#endif
 
 #define gst_mf_source_object_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstMFSourceObject, gst_mf_source_object,
@@ -132,16 +136,17 @@ gst_mf_source_object_init (GstMFSourceObject * self)
 
   g_mutex_init (&priv->lock);
   g_cond_init (&priv->cond);
-
-  priv->context = g_main_context_new ();
-  priv->loop = g_main_loop_new (priv->context, FALSE);
 }
 
 static void
 gst_mf_source_object_constructed (GObject * object)
 {
+#if !(GST_MF_WINAPI_ONLY_APP)
   GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
   GstMFSourceObjectPrivate *priv = self->priv;
+
+  priv->context = g_main_context_new ();
+  priv->loop = g_main_loop_new (priv->context, FALSE);
 
   /* Create a new thread to ensure that COM thread can be MTA thread */
   g_mutex_lock (&priv->lock);
@@ -151,6 +156,7 @@ gst_mf_source_object_constructed (GObject * object)
     g_cond_wait (&priv->cond, &priv->lock);
   g_mutex_unlock (&priv->lock);
 
+#endif
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
@@ -254,6 +260,92 @@ gst_mf_source_object_main_loop_running_cb (GstMFSourceObject * self)
   return G_SOURCE_REMOVE;
 }
 
+gboolean
+gst_mf_source_object_start (GstMFSourceObject * object)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->start != NULL);
+
+  return klass->start (object);
+}
+
+gboolean
+gst_mf_source_object_stop (GstMFSourceObject * object)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->stop != NULL);
+
+  return klass->stop (object);
+}
+
+GstFlowReturn
+gst_mf_source_object_fill (GstMFSourceObject * object, GstBuffer * buffer)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->fill != NULL);
+
+  return klass->fill (object, buffer);
+}
+
+void
+gst_mf_source_object_set_flushing (GstMFSourceObject * object,
+    gboolean flushing)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_if_fail (GST_IS_MF_SOURCE_OBJECT (object));
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+
+  if (flushing) {
+    if (klass->unlock)
+      klass->unlock (object);
+  } else {
+    if (klass->unlock_stop)
+      klass->unlock_stop (object);
+  }
+}
+
+gboolean
+gst_mf_source_object_set_caps (GstMFSourceObject * object, GstCaps * caps)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->set_caps != NULL);
+
+  return klass->set_caps (object, caps);
+}
+
+GstCaps *
+gst_mf_source_object_get_caps (GstMFSourceObject * object)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), NULL);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->get_caps != NULL);
+
+  return klass->get_caps (object);
+}
+
+#if !(GST_MF_WINAPI_ONLY_APP)
 static gpointer
 gst_mf_source_object_thread_func (GstMFSourceObject * self)
 {
@@ -342,91 +434,6 @@ run_loop:
   CoUninitialize ();
 
   return NULL;
-}
-
-gboolean
-gst_mf_source_object_start (GstMFSourceObject * object)
-{
-  GstMFSourceObjectClass *klass;
-
-  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
-
-  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->start != NULL);
-
-  return klass->start (object);
-}
-
-gboolean
-gst_mf_source_object_stop (GstMFSourceObject * object)
-{
-  GstMFSourceObjectClass *klass;
-
-  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
-
-  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->stop != NULL);
-
-  return klass->stop (object);
-}
-
-GstFlowReturn
-gst_mf_source_object_fill (GstMFSourceObject * object, GstBuffer * buffer)
-{
-  GstMFSourceObjectClass *klass;
-
-  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
-
-  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->fill != NULL);
-
-  return klass->fill (object, buffer);
-}
-
-void
-gst_mf_source_object_set_flushing (GstMFSourceObject * object,
-    gboolean flushing)
-{
-  GstMFSourceObjectClass *klass;
-
-  g_return_if_fail (GST_IS_MF_SOURCE_OBJECT (object));
-
-  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-
-  if (flushing) {
-    if (klass->unlock)
-      klass->unlock (object);
-  } else {
-    if (klass->unlock_stop)
-      klass->unlock_stop (object);
-  }
-}
-
-gboolean
-gst_mf_source_object_set_caps (GstMFSourceObject * object, GstCaps * caps)
-{
-  GstMFSourceObjectClass *klass;
-
-  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
-
-  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->set_caps != NULL);
-
-  return klass->set_caps (object, caps);
-}
-
-GstCaps *
-gst_mf_source_object_get_caps (GstMFSourceObject * object)
-{
-  GstMFSourceObjectClass *klass;
-
-  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), NULL);
-
-  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->get_caps != NULL);
-
-  return klass->get_caps (object);
 }
 
 static gboolean
@@ -522,3 +529,4 @@ gst_mf_device_activate_free (GstMFDeviceActivate * activate)
   g_free (activate->path);
   g_free (activate);
 }
+#endif
