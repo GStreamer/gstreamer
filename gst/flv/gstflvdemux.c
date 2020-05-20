@@ -1028,6 +1028,51 @@ gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 dts, gboolean discont,
   return ret;
 }
 
+static void
+gst_flv_demux_sync_streams (GstFlvDemux * demux)
+{
+  /* Check if the audio or video stream are more than 3s behind the other
+   * stream, and if so send a gap event accordingly */
+
+  if (demux->audio_pad && GST_CLOCK_TIME_IS_VALID (demux->segment.position) &&
+      demux->last_audio_pts * GST_MSECOND + demux->audio_time_offset +
+      3 * GST_SECOND < demux->segment.position) {
+    GstEvent *event;
+    guint64 start =
+        demux->last_audio_pts * GST_MSECOND + demux->audio_time_offset;
+    guint64 stop = demux->segment.position - 3 * GST_SECOND;
+
+    GST_DEBUG_OBJECT (demux,
+        "Synchronizing audio stream with video stream by advancing time from %"
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+        GST_TIME_ARGS (stop));
+
+    demux->last_audio_pts = (stop - demux->audio_time_offset) / GST_MSECOND;
+
+    event = gst_event_new_gap (start, stop - start);
+    gst_pad_push_event (demux->audio_pad, event);
+  }
+
+  if (demux->video_pad && GST_CLOCK_TIME_IS_VALID (demux->segment.position) &&
+      demux->last_video_dts * GST_MSECOND + demux->video_time_offset +
+      3 * GST_SECOND < demux->segment.position) {
+    GstEvent *event;
+    guint64 start =
+        demux->last_video_dts * GST_MSECOND + demux->video_time_offset;
+    guint64 stop = demux->segment.position - 3 * GST_SECOND;
+
+    GST_DEBUG_OBJECT (demux,
+        "Synchronizing video stream with audio stream by advancing time from %"
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+        GST_TIME_ARGS (stop));
+
+    demux->last_video_dts = (stop - demux->video_time_offset) / GST_MSECOND;
+
+    event = gst_event_new_gap (start, stop - start);
+    gst_pad_push_event (demux->video_pad, event);
+  }
+}
+
 static GstFlowReturn
 gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 {
@@ -1324,6 +1369,10 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner,
       demux->audio_pad, ret);
+
+  if (ret == GST_FLOW_OK) {
+    gst_flv_demux_sync_streams (demux);
+  }
 
 beach:
   gst_buffer_unmap (buffer, &map);
@@ -1759,6 +1808,10 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner,
       demux->video_pad, ret);
+
+  if (ret == GST_FLOW_OK) {
+    gst_flv_demux_sync_streams (demux);
+  }
 
 beach:
   gst_buffer_unmap (buffer, &map);
