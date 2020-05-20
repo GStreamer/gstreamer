@@ -211,6 +211,7 @@ get_pixel_bitdepth (GstV4l2CodecH264Dec * self)
     case 3:
       /* 4:4:4 */
       depth = 3 * self->bitdepth;
+      break;
     default:
       GST_WARNING_OBJECT (self, "Unsupported chroma format %i",
           self->chroma_format_idc);
