@@ -101,7 +101,6 @@ struct _GstFlvDemux
   guint64 audio_offset;
   gboolean audio_need_discont;
   gboolean audio_need_segment;
-  gboolean audio_linked;
   GstBuffer * audio_codec_data;
   GstClockTime audio_start;
   guint32 last_audio_pts;
@@ -117,7 +116,6 @@ struct _GstFlvDemux
   guint64 video_offset;
   gboolean video_need_discont;
   gboolean video_need_segment;
-  gboolean video_linked;
   gboolean got_par;
   GstBuffer * video_codec_data;
   GstClockTime video_start;
