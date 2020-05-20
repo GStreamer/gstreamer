@@ -3645,7 +3645,7 @@ gst_flv_demux_init (GstFlvDemux * demux)
 {
   demux->sinkpad =
       gst_pad_new_from_static_template (&flv_sink_template, "sink");
-
+  GST_PAD_SET_ACCEPT_TEMPLATE (demux->sinkpad);
   gst_pad_set_event_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flv_demux_sink_event));
   gst_pad_set_chain_function (demux->sinkpad,
