@@ -124,6 +124,85 @@
  * child, it will become in-active as well. Note, in contrast, setting a
  * core child to be active, or an effect to be in-active will *not* change
  * the other children in the same track.
+ *
+ * ### Time Effects
+ *
+ * Some effects also change the timing of their data (see #GESBaseEffect
+ * for what counts as a time effect). Note that a #GESBaseEffectClip will
+ * refuse time effects, but a #GESSource will allow them.
+ *
+ * When added to a clip, time effects may adjust the timing of other
+ * children in the same track. Similarly, when changing the order of
+ * effects, making them (in)-active, setting their time property values
+ * or removing time effects. These can cause the #GESClip:duration-limit
+ * to change in value. However, if such an operation would ever cause the
+ * #GESTimelineElement:duration to shrink such that a clip's #GESSource is
+ * totally overlapped in the timeline, the operation would be prevented.
+ * Note that the same can happen when adding non-time effects with a
+ * finite #GESTimelineElement:max-duration.
+ *
+ * Therefore, when working with time effects, you should -- more so than
+ * usual -- not assume that setting the properties of the clip's children
+ * will succeed. In particular, you should use
+ * ges_timeline_element_set_child_property_full() when setting the time
+ * properties.
+ *
+ * If you wish to preserve the *internal* duration of a source in a clip
+ * during these time effect operations, you can do something like the
+ * following.
+ *
+ * ```c
+ * void
+ * do_time_effect_change (GESClip * clip)
+ * {
+ *   GList *tmp, *children;
+ *   GESTrackElement *source;
+ *   GstClockTime source_outpoint;
+ *   GstClockTime new_end;
+ *   GError *error = NULL;
+ *
+ *   // choose some active source in a track to preserve the internal
+ *   // duration of
+ *   source = ges_clip_get_track_element (clip, NULL, GES_TYPE_SOURCE);
+ *
+ *   // note its current internal end time
+ *   source_outpoint = ges_clip_get_internal_time_from_timeline_time (
+ *         clip, source, GES_TIMELINE_ELEMENT_END (clip), NULL);
+ *
+ *   // handle invalid out-point
+ *
+ *   // stop the children's control sources from clamping when their
+ *   // out-point changes with a change in the time effects
+ *   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
+ *
+ *   for (tmp = children; tmp; tmp = tmp->next)
+ *     ges_track_element_set_auto_clamp_control_source (tmp->data, FALSE);
+ *
+ *   // add time effect, or set their children properties, or move them around
+ *   ...
+ *   // user can make sure that if a time effect changes one source, we should
+ *   // also change the time effect for another source. E.g. if
+ *   // "GstVideorate::rate" is set to 2.0, we also set "GstPitch::rate" to
+ *   // 2.0
+ *
+ *   // Note the duration of the clip may have already changed if the
+ *   // duration-limit of the clip dropped below its current value
+ *
+ *   new_end = ges_clip_get_timeline_time_from_internal_time (
+ *         clip, source, source_outpoint, &error);
+ *   // handle error
+ *
+ *   if (!ges_timeline_elemnet_edit_full (GES_TIMELINE_ELEMENT (clip),
+ *         -1, GES_EDIT_MODE_TRIM, GES_EDGE_END, new_end, &error))
+ *     // handle error
+ *
+ *   for (tmp = children; tmp; tmp = tmp->next)
+ *     ges_track_element_set_auto_clamp_control_source (tmp->data, TRUE);
+ *
+ *   g_list_free_full (children, gst_object_unref);
+ *   gst_object_unref (source);
+ * }
+ * ```
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -3856,7 +3935,11 @@ _active_time_effects_in_track_after_priority (GESClip * clip,
  *
  * In either case, the returned time would be appropriate to use in
  * ges_timeline_element_edit() for #GES_EDIT_MODE_TRIM, and similar, if
- * you wish to use a particular internal point as a reference.
+ * you wish to use a particular internal point as a reference. For
+ * example, you could choose to end a clip at a certain internal
+ * 'out-point', similar to the #GESTimelineElement:in-point, by
+ * translating the desired end time into the timeline coordinates, and
+ * using this position to trim the end of a clip.
  *
  * See ges_clip_get_internal_time_from_timeline_time(), which performs the
  * reverse, or ges_clip_get_timeline_time_from_source_frame() which does
