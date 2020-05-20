@@ -60,7 +60,7 @@ gst_mf_source_type_get_type (void)
 
 struct _GstMFSourceObjectPrivate
 {
-  GstMFSourceType soure_type;
+  GstMFSourceType source_type;
 
   gchar *device_path;
   gchar *device_name;
@@ -128,7 +128,7 @@ gst_mf_source_object_init (GstMFSourceObject * self)
   self->priv = priv = gst_mf_source_object_get_instance_private (self);
 
   priv->device_index = DEFAULT_DEVICE_INDEX;
-  priv->soure_type = DEFAULT_SOURCE_TYPE;
+  priv->source_type = DEFAULT_SOURCE_TYPE;
 
   g_mutex_init (&priv->lock);
   g_cond_init (&priv->cond);
@@ -143,7 +143,7 @@ gst_mf_source_object_constructed (GObject * object)
   GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
   GstMFSourceObjectPrivate *priv = self->priv;
 
-  /* Create thread so that ensure COM thread can be MTA thread */
+  /* Create a new thread to ensure that COM thread can be MTA thread */
   g_mutex_lock (&priv->lock);
   priv->thread = g_thread_new ("GstMFSourceObject",
       (GThreadFunc) gst_mf_source_object_thread_func, self);
@@ -204,7 +204,7 @@ gst_mf_source_object_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, priv->device_index);
       break;
     case PROP_SOURCE_TYPE:
-      g_value_set_enum (value, priv->soure_type);
+      g_value_set_enum (value, priv->source_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -232,7 +232,7 @@ gst_mf_source_object_set_property (GObject * object, guint prop_id,
       priv->device_index = g_value_get_int (value);
       break;
     case PROP_SOURCE_TYPE:
-      priv->soure_type = g_value_get_enum (value);
+      priv->source_type = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -278,7 +278,7 @@ gst_mf_source_object_thread_func (GstMFSourceObject * self)
   g_source_unref (source);
 
   if (!gst_mf_source_enum_device_activate (self,
-          priv->soure_type, &activate_list)) {
+          priv->source_type, &activate_list)) {
     GST_WARNING_OBJECT (self, "No available video capture device");
     goto run_loop;
   }
@@ -314,7 +314,7 @@ gst_mf_source_object_thread_func (GstMFSourceObject * self)
   }
 
   if (target) {
-    self->opend = klass->open (self, target->handle);
+    self->opened = klass->open (self, target->handle);
 
     g_free (priv->device_path);
     priv->device_path = g_strdup (target->path);

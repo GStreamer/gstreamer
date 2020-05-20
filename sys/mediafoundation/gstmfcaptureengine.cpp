@@ -842,7 +842,7 @@ gst_mf_capture_engine_new (GstMFSourceType type, gint device_index,
   g_free (name);
   g_free (path);
 
-  if (!self->opend) {
+  if (!self->opened) {
     GST_WARNING_OBJECT (self, "Couldn't open device");
     gst_object_unref (self);
     return NULL;

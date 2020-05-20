@@ -57,7 +57,7 @@ struct _GstMFSourceObject
 {
   GstObject parent;
 
-  gboolean opend;
+  gboolean opened;
 
   GstMFSourceObjectPrivate *priv;
 };
