@@ -59,6 +59,10 @@ struct _GstMFSourceObject
 
   gboolean opened;
 
+  gchar *device_path;
+  gchar *device_name;
+  gint device_index;
+
   GstMFSourceObjectPrivate *priv;
 };
 

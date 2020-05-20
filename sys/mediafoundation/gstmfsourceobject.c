@@ -127,7 +127,7 @@ gst_mf_source_object_init (GstMFSourceObject * self)
 
   self->priv = priv = gst_mf_source_object_get_instance_private (self);
 
-  priv->device_index = DEFAULT_DEVICE_INDEX;
+  self->device_index = DEFAULT_DEVICE_INDEX;
   priv->source_type = DEFAULT_SOURCE_TYPE;
 
   g_mutex_init (&priv->lock);
@@ -180,8 +180,8 @@ gst_mf_source_object_finalize (GObject * object)
   g_mutex_clear (&priv->lock);
   g_cond_clear (&priv->cond);
 
-  g_free (priv->device_path);
-  g_free (priv->device_name);
+  g_free (self->device_path);
+  g_free (self->device_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -195,13 +195,13 @@ gst_mf_source_object_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
-      g_value_set_string (value, priv->device_path);
+      g_value_set_string (value, self->device_path);
       break;
     case PROP_DEVICE_NAME:
-      g_value_set_string (value, priv->device_name);
+      g_value_set_string (value, self->device_name);
       break;
     case PROP_DEVICE_INDEX:
-      g_value_set_int (value, priv->device_index);
+      g_value_set_int (value, self->device_index);
       break;
     case PROP_SOURCE_TYPE:
       g_value_set_enum (value, priv->source_type);
@@ -221,15 +221,15 @@ gst_mf_source_object_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
-      g_free (priv->device_path);
-      priv->device_path = g_value_dup_string (value);
+      g_free (self->device_path);
+      self->device_path = g_value_dup_string (value);
       break;
     case PROP_DEVICE_NAME:
-      g_free (priv->device_name);
-      priv->device_name = g_value_dup_string (value);
+      g_free (self->device_name);
+      self->device_name = g_value_dup_string (value);
       break;
     case PROP_DEVICE_INDEX:
-      priv->device_index = g_value_get_int (value);
+      self->device_index = g_value_get_int (value);
       break;
     case PROP_SOURCE_TYPE:
       priv->source_type = g_value_get_enum (value);
@@ -296,12 +296,12 @@ gst_mf_source_object_thread_func (GstMFSourceObject * self)
     GstMFDeviceActivate *activate = (GstMFDeviceActivate *) iter->data;
     gboolean match;
 
-    if (priv->device_path && strlen (priv->device_path) > 0) {
-      match = g_ascii_strcasecmp (activate->path, priv->device_path) == 0;
-    } else if (priv->device_name && strlen (priv->device_name) > 0) {
-      match = g_ascii_strcasecmp (activate->name, priv->device_name) == 0;
-    } else if (priv->device_index >= 0) {
-      match = activate->index == priv->device_index;
+    if (self->device_path && strlen (self->device_path) > 0) {
+      match = g_ascii_strcasecmp (activate->path, self->device_path) == 0;
+    } else if (self->device_name && strlen (self->device_name) > 0) {
+      match = g_ascii_strcasecmp (activate->name, self->device_name) == 0;
+    } else if (self->device_index >= 0) {
+      match = activate->index == self->device_index;
     } else {
       /* pick the first entry */
       match = TRUE;
@@ -316,13 +316,13 @@ gst_mf_source_object_thread_func (GstMFSourceObject * self)
   if (target) {
     self->opened = klass->open (self, target->handle);
 
-    g_free (priv->device_path);
-    priv->device_path = g_strdup (target->path);
+    g_free (self->device_path);
+    self->device_path = g_strdup (target->path);
 
-    g_free (priv->device_name);
-    priv->device_name = g_strdup (target->name);
+    g_free (self->device_name);
+    self->device_name = g_strdup (target->name);
 
-    priv->device_index = target->index;
+    self->device_index = target->index;
   }
 
   if (activate_list)
