@@ -2202,7 +2202,6 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 
         g_mutex_lock (&queue->buffering_post_lock);
         post_ok = gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
-        g_mutex_unlock (&queue->buffering_post_lock);
 
         GST_QUEUE2_MUTEX_LOCK (queue);
 
@@ -2214,8 +2213,10 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
           queue->last_posted_buffering_percent = queue->percent_changed;
           queue->percent_changed = FALSE;
           GST_DEBUG_OBJECT (queue, "successfully posted buffering message");
-        } else
+        } else {
           GST_DEBUG_OBJECT (queue, "could not post buffering message");
+        }
+        g_mutex_unlock (&queue->buffering_post_lock);
       }
     }
 
@@ -3785,14 +3786,6 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
       gst_event_replace (&queue->stream_start_event, NULL);
       GST_QUEUE2_MUTEX_UNLOCK (queue);
       query_downstream_bitrate (queue);
-
-      /* Post a buffering message now to make sure the application receives
-       * a buffering message as early as possible. This prevents situations
-       * where the pipeline's state is set to PLAYING too early, before
-       * buffering actually finished. */
-      update_buffering (queue);
-      gst_queue2_post_buffering (queue);
-
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

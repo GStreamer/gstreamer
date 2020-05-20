@@ -698,11 +698,13 @@ GST_START_TEST (test_ready_paused_buffering_message)
   fail_unless (fakesink != NULL);
 
   gst_bin_add_many (GST_BIN (pipe), fakesrc, queue2, fakesink, NULL);
+  gst_element_link_many (fakesrc, queue2, fakesink, NULL);
 
   /* Set the pipeline to PAUSED. This should cause queue2 to attempt to post
    * a buffering message during its READY->PAUSED state change. And this should
    * succeed, since queue2 has been added to pipe by now. */
   gst_element_set_state (pipe, GST_STATE_PAUSED);
+  gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   /* Look for the expected 0% buffering message. */
   CHECK_FOR_BUFFERING_MSG (pipe, 0);
