@@ -202,7 +202,8 @@ FLV_GET_STRING (GstByteReader * reader)
   }
 
   memcpy (string, str, string_size);
-  if (!g_utf8_validate (string, string_size, NULL)) {
+  /* Check utf-8 validity if it's not an empty string */
+  if (string[0] && !g_utf8_validate (string, string_size, NULL)) {
     g_free (string);
     return NULL;
   }
