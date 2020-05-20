@@ -161,6 +161,16 @@ ges_track_element_set_control_source          (GESTrackElement *object,
                                                const gchar *property_name,
                                                const gchar *binding_type);
 
+GES_API void
+ges_track_element_clamp_control_source        (GESTrackElement * object,
+                                               const gchar * property_name);
+
+GES_API void
+ges_track_element_set_auto_clamp_control_sources (GESTrackElement * object,
+                                                  gboolean auto_clamp);
+GES_API gboolean
+ges_track_element_get_auto_clamp_control_sources (GESTrackElement * object);
+
 GES_API GstControlBinding *
 ges_track_element_get_control_binding         (GESTrackElement *object,
                                                const gchar *property_name);

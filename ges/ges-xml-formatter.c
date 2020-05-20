@@ -1511,6 +1511,8 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
         append_escaped (str, g_markup_printf_escaped ("'/>\n"), depth);
       } else
         GST_DEBUG ("control source not in [interpolation]");
+
+      gst_object_unref (source);
     } else
       GST_DEBUG ("Binding type not in [direct, direct-absolute]");
   }

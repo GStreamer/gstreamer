@@ -1863,11 +1863,24 @@ timeline_tree_perform_edits (GNode * root, GHashTable * edits)
 
   g_hash_table_iter_init (&iter, edits);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (GES_IS_TRACK_ELEMENT (key))
+      ges_track_element_freeze_control_sources (GES_TRACK_ELEMENT (key), TRUE);
+  }
+
+  g_hash_table_iter_init (&iter, edits);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
     GESTimelineElement *element = key;
     EditData *edit_data = value;
     if (!perform_element_edit (element, edit_data))
       no_errors = FALSE;
   }
+
+  g_hash_table_iter_init (&iter, edits);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (GES_IS_TRACK_ELEMENT (key))
+      ges_track_element_freeze_control_sources (GES_TRACK_ELEMENT (key), FALSE);
+  }
+
   /* allow the transitions to update if they can */
   ges_timeline_freeze_auto_transitions (root->data, FALSE);
 

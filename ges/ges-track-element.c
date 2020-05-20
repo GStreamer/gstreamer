@@ -40,6 +40,16 @@
  * tracks and take responsibility for updating them. The only track
  * elements that are not automatically created by clips, but a user is
  * likely to want to create, are #GESEffect-s.
+ *
+ * ## Control Bindings for Children Properties
+ *
+ * You can set up control bindings for a track element child property
+ * using ges_track_element_set_control_source(). A
+ * #GstTimedValueControlSource should specify the timed values using the
+ * internal source coordinates (see #GESTimelineElement). By default,
+ * these will be updated to lie between the #GESTimelineElement:in-point
+ * and out-point of the element. This can be switched off by setting
+ * #GESTrackElement:auto-clamp-control-sources to %FALSE.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -62,13 +72,15 @@ struct _GESTrackElementPrivate
   gboolean has_internal_source_forbidden;
   gboolean has_internal_source;
 
-  gboolean locked;              /* If TRUE, then moves in sync with its controlling
-                                 * GESClip */
   gboolean layer_active;
 
   GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
                                            and deserialize keyframes */
   GESAsset *creator_asset;
+
+  GstClockTime outpoint;
+  gboolean freeze_control_sources;
+  gboolean auto_clamp_control_sources;
 };
 
 enum
@@ -78,6 +90,7 @@ enum
   PROP_TRACK_TYPE,
   PROP_TRACK,
   PROP_HAS_INTERNAL_SOURCE,
+  PROP_AUTO_CLAMP_CONTROL_SOURCES,
   PROP_LAST
 };
 
@@ -119,10 +132,6 @@ static gboolean _set_max_duration (GESTimelineElement * element,
     GstClockTime max_duration);
 static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
 GESTrackType _get_track_types (GESTimelineElement * object);
-
-static void
-_update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
-    GstClockTime duration);
 
 static gboolean
 _lookup_child (GESTrackElement * object,
@@ -197,6 +206,10 @@ ges_track_element_get_property (GObject * object, guint property_id,
       g_value_set_boolean (value,
           ges_track_element_has_internal_source (track_element));
       break;
+    case PROP_AUTO_CLAMP_CONTROL_SOURCES:
+      g_value_set_boolean (value,
+          ges_track_element_get_auto_clamp_control_sources (track_element));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -218,6 +231,10 @@ ges_track_element_set_property (GObject * object, guint property_id,
       break;
     case PROP_HAS_INTERNAL_SOURCE:
       ges_track_element_set_has_internal_source (track_element,
+          g_value_get_boolean (value));
+      break;
+    case PROP_AUTO_CLAMP_CONTROL_SOURCES:
+      ges_track_element_set_auto_clamp_control_sources (track_element,
           g_value_get_boolean (value));
       break;
     default:
@@ -413,6 +430,28 @@ ges_track_element_class_init (GESTrackElementClass * klass)
       properties[PROP_HAS_INTERNAL_SOURCE]);
 
   /**
+   * GESTrackElement:auto-clamp-control-sources:
+   *
+   * Whether the control sources on the element (see
+   * ges_track_element_set_control_source()) will be automatically
+   * updated whenever the #GESTimelineElement:in-point or out-point of the
+   * element change in value.
+   *
+   * See ges_track_element_clamp_control_source() for how this is done
+   * per control source.
+   *
+   * Default value: %TRUE
+   */
+  properties[PROP_AUTO_CLAMP_CONTROL_SOURCES] =
+      g_param_spec_boolean ("auto-clamp-control-sources",
+      "Auto-Clamp Control Sources", "Whether to automatically update the "
+      "control sources with a change in in-point or out-point", TRUE,
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+  g_object_class_install_property (object_class,
+      PROP_AUTO_CLAMP_CONTROL_SOURCES,
+      properties[PROP_AUTO_CLAMP_CONTROL_SOURCES]);
+
+  /**
    * GESTrackElement::control-binding-added:
    * @track_element: A #GESTrackElement
    * @control_binding: The control binding that has been added
@@ -483,6 +522,9 @@ ges_track_element_init (GESTrackElement * self)
    * because it calls g_object_new_with_properties.
    */
   self->priv->has_internal_source = TRUE;
+
+  self->priv->outpoint = GST_CLOCK_TIME_NONE;
+  self->priv->auto_clamp_control_sources = TRUE;
 }
 
 static gfloat
@@ -504,6 +546,7 @@ interpolate_values_for_position (GstTimedValue * first_value,
   diff = second_value->value - first_value->value;
   interval = second_value->timestamp - first_value->timestamp;
 
+  /* FIXME: properly support non-linear timed control sources */
   if (position > first_value->timestamp)
     value_at_pos =
         first_value->value + ((float) (position -
@@ -520,98 +563,116 @@ interpolate_values_for_position (GstTimedValue * first_value,
 }
 
 static void
-_update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
-    GstClockTime duration)
+_update_control_source (GstTimedValueControlSource * source, gboolean absolute,
+    GstClockTime inpoint, GstClockTime outpoint)
 {
-  GParamSpec **specs;
-  guint n, n_specs;
-  GstControlBinding *binding;
-  GstTimedValueControlSource *source;
-  GESTrackElement *self = GES_TRACK_ELEMENT (element);
+  GList *values, *tmp;
+  GstTimedValue *last, *first, *prev = NULL, *next = NULL;
+  gfloat value_at_pos;
 
-  specs = ges_track_element_list_children_properties (self, &n_specs);
+  if (inpoint == outpoint) {
+    gst_timed_value_control_source_unset_all (source);
+    return;
+  }
 
-  for (n = 0; n < n_specs; ++n) {
-    GList *values, *tmp;
-    gboolean absolute;
-    GstTimedValue *last, *first, *prev = NULL, *next = NULL;
-    gfloat value_at_pos;
+  values = gst_timed_value_control_source_get_all (source);
 
-    binding = ges_track_element_get_control_binding (self, specs[n]->name);
+  if (g_list_length (values) == 0)
+    return;
 
-    if (!binding)
-      continue;
+  first = values->data;
 
-    g_object_get (binding, "control_source", &source, NULL);
+  for (tmp = values->next; tmp; tmp = tmp->next) {
+    next = tmp->data;
 
-    g_object_get (binding, "absolute", &absolute, NULL);
-    if (duration == 0) {
-      gst_timed_value_control_source_unset_all (GST_TIMED_VALUE_CONTROL_SOURCE
-          (source));
-      continue;
+    if (next->timestamp == inpoint) {
+      /* just leave this value in place */
+      first = NULL;
+      break;
     }
+    if (next->timestamp > inpoint)
+      break;
+  }
+  g_list_free (values);
 
-    values =
-        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-        (source));
-
-    if (g_list_length (values) == 0)
-      continue;
-
-    first = values->data;
-
-    for (tmp = values->next; tmp; tmp = tmp->next) {
-      next = tmp->data;
-
-      if (next->timestamp > inpoint)
-        break;
-    }
-    g_list_free (values);
-
+  if (first) {
     value_at_pos =
         interpolate_values_for_position (first, next, inpoint, absolute);
     gst_timed_value_control_source_unset (source, first->timestamp);
     gst_timed_value_control_source_set (source, inpoint, value_at_pos);
-
-    values =
-        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-        (source));
-
-    if (duration != GST_CLOCK_TIME_NONE) {
-      last = g_list_last (values)->data;
-
-      for (tmp = g_list_last (values)->prev; tmp; tmp = tmp->prev) {
-        prev = tmp->data;
-
-        if (prev->timestamp < duration + inpoint)
-          break;
-      }
-      g_list_free (values);
-
-      value_at_pos =
-          interpolate_values_for_position (prev, last, duration + inpoint,
-          absolute);
-
-      gst_timed_value_control_source_unset (source, last->timestamp);
-      gst_timed_value_control_source_set (source, duration + inpoint,
-          value_at_pos);
-      values =
-          gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
-          (source));
-    }
-
-    for (tmp = values; tmp; tmp = tmp->next) {
-      GstTimedValue *value = tmp->data;
-      if (value->timestamp < inpoint)
-        gst_timed_value_control_source_unset (source, value->timestamp);
-      else if (duration != GST_CLOCK_TIME_NONE
-          && value->timestamp > duration + inpoint)
-        gst_timed_value_control_source_unset (source, value->timestamp);
-    }
-    g_list_free (values);
   }
 
-  g_free (specs);
+  if (GST_CLOCK_TIME_IS_VALID (outpoint)) {
+    values = gst_timed_value_control_source_get_all (source);
+
+    last = g_list_last (values)->data;
+
+    for (tmp = g_list_last (values)->prev; tmp; tmp = tmp->prev) {
+      prev = tmp->data;
+
+      if (prev->timestamp == outpoint) {
+        /* leave this value in place */
+        last = NULL;
+        break;
+      }
+      if (prev->timestamp < outpoint)
+        break;
+    }
+    g_list_free (values);
+
+    if (last) {
+      value_at_pos =
+          interpolate_values_for_position (prev, last, outpoint, absolute);
+
+      gst_timed_value_control_source_unset (source, last->timestamp);
+      gst_timed_value_control_source_set (source, outpoint, value_at_pos);
+    }
+  }
+
+  values = gst_timed_value_control_source_get_all (source);
+
+  for (tmp = values; tmp; tmp = tmp->next) {
+    GstTimedValue *value = tmp->data;
+    if (value->timestamp < inpoint)
+      gst_timed_value_control_source_unset (source, value->timestamp);
+    else if (GST_CLOCK_TIME_IS_VALID (outpoint) && value->timestamp > outpoint)
+      gst_timed_value_control_source_unset (source, value->timestamp);
+  }
+  g_list_free (values);
+}
+
+static void
+_update_control_bindings (GESTrackElement * self, GstClockTime inpoint,
+    GstClockTime outpoint)
+{
+  gchar *name;
+  GstControlBinding *binding;
+  GstControlSource *source;
+  gboolean absolute;
+  gpointer value, key;
+  GHashTableIter iter;
+
+  if (self->priv->freeze_control_sources)
+    return;
+
+  g_hash_table_iter_init (&iter, self->priv->bindings_hashtable);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    binding = value;
+    name = key;
+    g_object_get (binding, "control-source", &source, "absolute", &absolute,
+        NULL);
+
+    if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
+      GST_INFO_OBJECT (self, "Not updating %s because it does not have a"
+          " timed value control source", name);
+      gst_object_unref (source);
+      continue;
+    }
+
+    _update_control_source (GST_TIMED_VALUE_CONTROL_SOURCE (source), absolute,
+        inpoint, outpoint);
+    gst_object_unref (source);
+  }
 }
 
 static gboolean
@@ -624,6 +685,45 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   g_object_set (object->priv->nleobject, "start", start, NULL);
 
   return TRUE;
+}
+
+static void
+ges_track_element_update_outpoint_full (GESTrackElement * self,
+    GstClockTime inpoint, GstClockTime duration)
+{
+  GstClockTime current_inpoint = _INPOINT (self);
+  gboolean increase = (inpoint > current_inpoint);
+  GstClockTime outpoint = GST_CLOCK_TIME_NONE;
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (self);
+  GESTrackElementPrivate *priv = self->priv;
+
+  if (GES_IS_CLIP (parent) && ges_track_element_get_track (self)
+      && ges_track_element_is_active (self)
+      && GST_CLOCK_TIME_IS_VALID (duration)) {
+    outpoint =
+        ges_clip_get_internal_time_from_timeline_time (GES_CLIP (parent), self,
+        _START (self) + duration, NULL);
+
+    if (!GST_CLOCK_TIME_IS_VALID (outpoint))
+      GST_ERROR_OBJECT (self, "Got an invalid out-point");
+    else if (increase)
+      outpoint += (inpoint - current_inpoint);
+    else
+      outpoint -= (current_inpoint - inpoint);
+  }
+
+  if ((priv->outpoint != outpoint || inpoint != current_inpoint)
+      && self->priv->auto_clamp_control_sources)
+    _update_control_bindings (self, inpoint, outpoint);
+
+  priv->outpoint = outpoint;
+}
+
+void
+ges_track_element_update_outpoint (GESTrackElement * self)
+{
+  GESTimelineElement *el = GES_TIMELINE_ELEMENT (self);
+  ges_track_element_update_outpoint_full (self, el->inpoint, el->duration);
 }
 
 static gboolean
@@ -652,7 +752,8 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   }
 
   g_object_set (object->priv->nleobject, "inpoint", inpoint, NULL);
-  _update_control_bindings (element, inpoint, GST_CLOCK_TIME_NONE);
+
+  ges_track_element_update_outpoint_full (object, inpoint, element->duration);
 
   return TRUE;
 }
@@ -663,16 +764,11 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
   GESTrackElementPrivate *priv = object->priv;
 
-  g_return_val_if_fail (object->priv->nleobject, FALSE);
-
-  if (GST_CLOCK_TIME_IS_VALID (_MAXDURATION (element)) &&
-      duration > _INPOINT (object) + _MAXDURATION (element))
-    duration = _MAXDURATION (element) - _INPOINT (object);
+  g_return_val_if_fail (priv->nleobject, FALSE);
 
   g_object_set (priv->nleobject, "duration", duration, NULL);
 
-  _update_control_bindings (element, ges_timeline_element_get_inpoint (element),
-      duration);
+  ges_track_element_update_outpoint_full (object, element->inpoint, duration);
 
   return TRUE;
 }
@@ -1626,15 +1722,16 @@ ges_track_element_copy_bindings (GESTrackElement * element,
     if (!binding)
       continue;
 
-    g_object_get (binding, "control_source", &source, NULL);
+    g_object_get (binding, "control-source", &source, "absolute", &absolute,
+        NULL);
     if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
       GST_FIXME_OBJECT (element,
           "Implement support for control source type: %s",
           G_OBJECT_TYPE_NAME (source));
+      gst_object_unref (source);
       continue;
     }
 
-    g_object_get (binding, "absolute", &absolute, NULL);
     g_object_get (source, "mode", &mode, NULL);
 
     new_source =
@@ -1656,6 +1753,9 @@ ges_track_element_copy_bindings (GESTrackElement * element,
     else
       ges_track_element_set_control_source (new_element,
           GST_CONTROL_SOURCE (new_source), specs[n]->name, "direct");
+
+    gst_object_unref (source);
+    gst_object_unref (new_source);
   }
 
   g_free (specs);
@@ -1765,9 +1865,9 @@ ges_track_element_set_control_source (GESTrackElement * object,
     GstControlSource * source,
     const gchar * property_name, const gchar * binding_type)
 {
+  gboolean ret = FALSE;
   GESTrackElementPrivate *priv;
   GstElement *element;
-  GParamSpec *pspec;
   GstControlBinding *binding;
   gboolean direct, direct_absolute;
 
@@ -1780,7 +1880,7 @@ ges_track_element_set_control_source (GESTrackElement * object,
     return FALSE;
   }
 
-  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec)) {
+  if (!ges_track_element_lookup_child (object, property_name, &element, NULL)) {
     GST_WARNING ("You need to provide a valid and controllable property name");
     return FALSE;
   }
@@ -1789,39 +1889,55 @@ ges_track_element_set_control_source (GESTrackElement * object,
   direct = !g_strcmp0 (binding_type, "direct");
   direct_absolute = !g_strcmp0 (binding_type, "direct-absolute");
 
-  if (direct || direct_absolute) {
-    /* First remove existing binding */
-    if (ges_track_element_remove_control_binding (object, property_name)) {
-      GST_LOG ("Removed old binding for property %s", property_name);
-    }
-
-    if (direct_absolute)
-      binding =
-          gst_direct_control_binding_new_absolute (GST_OBJECT (element),
-          property_name, source);
-    else
-      binding =
-          gst_direct_control_binding_new (GST_OBJECT (element), property_name,
-          source);
-
-    gst_object_add_control_binding (GST_OBJECT (element), binding);
-    /* FIXME: maybe we should force the
-     * "ChildTypeName:property-name"
-     * format convention for child property names in bindings_hashtable.
-     * Currently the table may also contain
-     * "property-name"
-     * as keys.
-     */
-    g_hash_table_insert (priv->bindings_hashtable, g_strdup (property_name),
-        binding);
-    g_signal_emit (object, ges_track_element_signals[CONTROL_BINDING_ADDED],
-        0, binding);
-    return TRUE;
+  if (!direct && !direct_absolute) {
+    GST_WARNING_OBJECT (object, "Binding type must be in "
+        "[direct, direct-absolute]");
+    goto done;
   }
 
-  GST_WARNING ("Binding type must be in [direct]");
+  /* First remove existing binding */
+  if (ges_track_element_remove_control_binding (object, property_name))
+    GST_LOG_OBJECT (object, "Removed old binding for property %s",
+        property_name);
 
-  return FALSE;
+  if (direct_absolute)
+    binding = gst_direct_control_binding_new_absolute (GST_OBJECT (element),
+        property_name, source);
+  else
+    binding = gst_direct_control_binding_new (GST_OBJECT (element),
+        property_name, source);
+
+  gst_object_add_control_binding (GST_OBJECT (element), binding);
+  /* FIXME: maybe we should force the
+   * "ChildTypeName:property-name"
+   * format convention for child property names in bindings_hashtable.
+   * Currently the table may also contain
+   * "property-name"
+   * as keys.
+   */
+  g_hash_table_insert (priv->bindings_hashtable, g_strdup (property_name),
+      binding);
+
+  if (GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)
+      && priv->auto_clamp_control_sources) {
+    /* Make sure we have the control source used by the binding */
+    g_object_get (binding, "control-source", &source, NULL);
+
+    _update_control_source (GST_TIMED_VALUE_CONTROL_SOURCE (source),
+        direct_absolute, _INPOINT (object), priv->outpoint);
+
+    gst_object_unref (source);
+  }
+
+  g_signal_emit (object, ges_track_element_signals[CONTROL_BINDING_ADDED],
+      0, binding);
+
+  ret = TRUE;
+
+done:
+  gst_object_unref (element);
+
+  return ret;
 }
 
 /**
@@ -1857,6 +1973,105 @@ ges_track_element_get_control_binding (GESTrackElement * object,
   return binding;
 }
 
+/**
+ * ges_track_element_clamp_control_source:
+ * @object: A #GESTrackElement
+ * @property_name: The name of the child property to clamp the control
+ * source of
+ *
+ * Clamp the #GstTimedValueControlSource for the specified child property
+ * to lie between the #GESTimelineElement:in-point and out-point of the
+ * element. The out-point is the #GES_TIMELINE_ELEMENT_END of the element
+ * translated from the timeline coordinates to the internal source
+ * coordinates of the element.
+ *
+ * If the property does not have a #GstTimedValueControlSource set by
+ * ges_track_element_set_control_source(), nothing happens. Otherwise, if
+ * a timed value for the control source lies before the in-point of the
+ * element, or after its out-point, then it will be removed. At the
+ * in-point and out-point times, a new interpolated value will be placed.
+ */
+void
+ges_track_element_clamp_control_source (GESTrackElement * object,
+    const gchar * property_name)
+{
+  GstControlBinding *binding;
+  GstControlSource *source;
+  gboolean absolute;
+
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
+
+  binding = ges_track_element_get_control_binding (object, property_name);
+
+  if (!binding)
+    return;
+
+  g_object_get (binding, "control-source", &source, "absolute", &absolute,
+      NULL);
+
+  if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
+    gst_object_unref (source);
+    return;
+  }
+
+  _update_control_source (GST_TIMED_VALUE_CONTROL_SOURCE (source), absolute,
+      _INPOINT (object), object->priv->outpoint);
+  gst_object_unref (source);
+}
+
+/**
+ * ges_track_element_set_auto_clamp_control_sources:
+ * @object: A #GESTrackElement
+ * @auto_clamp: Whether to automatically clamp the control sources for the
+ * child properties of @object
+ *
+ * Sets #GESTrackElement:auto-clamp-control-sources. If set to %TRUE, this
+ * will immediately clamp all the control sources.
+ */
+void
+ges_track_element_set_auto_clamp_control_sources (GESTrackElement * object,
+    gboolean auto_clamp)
+{
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
+
+  if (auto_clamp == object->priv->auto_clamp_control_sources)
+    return;
+
+  object->priv->auto_clamp_control_sources = auto_clamp;
+  if (auto_clamp)
+    _update_control_bindings (object, _INPOINT (object),
+        object->priv->outpoint);
+
+  g_object_notify_by_pspec (G_OBJECT (object),
+      properties[PROP_AUTO_CLAMP_CONTROL_SOURCES]);
+}
+
+/**
+ * ges_track_element_get_auto_clamp_control_sources:
+ * @object: A #GESTrackElement
+ *
+ * Gets #GESTrackElement:auto-clamp-control-sources.
+ *
+ * Returns: Whether the control sources for the child properties of
+ * @object are automatically clamped.
+ */
+gboolean
+ges_track_element_get_auto_clamp_control_sources (GESTrackElement * object)
+{
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
+  return object->priv->auto_clamp_control_sources;
+}
+
+void
+ges_track_element_freeze_control_sources (GESTrackElement * object,
+    gboolean freeze)
+{
+  object->priv->freeze_control_sources = freeze;
+  if (!freeze && object->priv->auto_clamp_control_sources)
+    _update_control_bindings (object, _INPOINT (object),
+        object->priv->outpoint);
+}
 
 /**
  * ges_track_element_is_core:

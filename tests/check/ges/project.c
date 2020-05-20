@@ -342,6 +342,8 @@ _add_properties (GESTimeline * timeline)
                 (source), 5 * GST_SECOND, 0.);
             gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
                 (source), 10 * GST_SECOND, 1.);
+
+            gst_object_unref (source);
           } else if (GES_IS_VIDEO_SOURCE (element)) {
             /* Adding children properties */
             gint64 posx = 42;
@@ -412,6 +414,7 @@ _check_properties (GESTimeline * timeline)
             fail_unless (value->value == 1.);
             fail_unless (value->timestamp == 10 * GST_SECOND);
             g_list_free (timed_values);
+            gst_object_unref (source);
           }
           /* Checking children properties */
           else if (GES_IS_VIDEO_SOURCE (element)) {

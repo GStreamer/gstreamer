@@ -203,7 +203,10 @@ GST_START_TEST (test_split_direct_bindings)
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
+
   gst_object_unref (timeline);
+  gst_object_unref (source);
+  gst_object_unref (splitsource);
 
   ges_deinit ();
 }
@@ -303,6 +306,9 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   check_layer (clip, 0);
 
   gst_object_unref (timeline);
+  gst_object_unref (source);
+  gst_object_unref (splitsource);
+
   ges_deinit ();
 }
 
@@ -4573,11 +4579,12 @@ _new_timed_value (GstClockTime time, gdouble val)
   GstControlBinding *binding = ges_track_element_get_control_binding ( \
       GES_TRACK_ELEMENT (element), prop_name); \
   fail_unless (binding, "No control binding found for %s on %s", \
-      prop_name, element->name); \
+      prop_name, GES_TIMELINE_ELEMENT_NAME (element)); \
   g_object_get (G_OBJECT (binding), "control-source", &source, \
       "object", &found_object, NULL); \
   \
-  fail_unless (found_object == child); \
+  if (child) \
+    fail_unless (found_object == child); \
   g_object_unref (found_object); \
   \
   fail_unless (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)); \
@@ -4587,17 +4594,19 @@ _new_timed_value (GstClockTime time, gdouble val)
   for (i = 0, tmp1 = timed_vals, tmp2 = found_timed_vals; tmp1 && tmp2; \
       tmp1 = tmp1->next, tmp2 = tmp2->next, i++) { \
     GstTimedValue *val1 = tmp1->data, *val2 = tmp2->data; \
-    fail_unless (val1->timestamp == val2->timestamp && \
-        val1->value == val2->value, "The %ith timed value (%lu: %g) " \
-        "does not match the found timed value (%lu: %g)", \
-        i, val1->timestamp, val1->value, val2->timestamp, val2->value); \
+    gdouble diff = (val1->value > val2->value) ? \
+        val1->value - val2->value : val2->value - val1->value; \
+    fail_unless (val1->timestamp == val2->timestamp && diff < 0.0001, \
+        "The %ith timed value (%lu: %g) does not match the found timed " \
+        "value (%lu: %g)", i, val1->timestamp, val1->value, \
+        val2->timestamp, val2->value); \
   } \
   fail_unless (tmp1 == NULL, "Found too few timed values"); \
   fail_unless (tmp2 == NULL, "Found too many timed values"); \
   \
   g_list_free (found_timed_vals); \
   g_object_get (G_OBJECT (source), "mode", &found_mode, NULL); \
-  fail_unless (found_mode == GST_INTERPOLATION_MODE_CUBIC); \
+  fail_unless (found_mode == mode); \
   g_object_unref (source); \
 }
 
@@ -4641,6 +4650,8 @@ GST_START_TEST (test_copy_paste_children_properties)
   /* find the track element where the child property comes from */
   fail_unless (track_el = _el_with_child_prop (clip, sub_child, prop));
   _assert_int_val_child_prop (track_el, val, 30, prop, "posx");
+  ges_track_element_set_auto_clamp_control_sources (GES_TRACK_ELEMENT
+      (track_el), FALSE);
 
   /* set a control binding */
   timed_vals = g_slist_prepend (NULL, _new_timed_value (200, 5));
@@ -4703,6 +4714,279 @@ GST_START_TEST (test_copy_paste_children_properties)
   g_object_unref (pasted_sub_child);
   g_object_unref (sub_child);
   gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+#define _THREE_TIMED_VALS(timed_vals, tm1, val1, tm2, val2, tm3, val3) \
+  if (timed_vals) \
+    g_slist_free_full (timed_vals, g_free); \
+  timed_vals = g_slist_prepend (NULL, _new_timed_value (tm3, val3)); \
+  timed_vals = g_slist_prepend (timed_vals, _new_timed_value (tm2, val2)); \
+  timed_vals = g_slist_prepend (timed_vals, _new_timed_value (tm1, val1));
+
+#define _TWO_TIMED_VALS(timed_vals, tm1, val1, tm2, val2) \
+  if (timed_vals) \
+    g_slist_free_full (timed_vals, g_free); \
+  timed_vals = g_slist_prepend (NULL, _new_timed_value (tm2, val2)); \
+  timed_vals = g_slist_prepend (timed_vals, _new_timed_value (tm1, val1));
+
+#define _assert_control_source(obj, prop, vals) \
+  _assert_binding (obj, prop, NULL, vals, GST_INTERPOLATION_MODE_LINEAR);
+
+GST_START_TEST (test_children_property_bindings_with_rate_effects)
+{
+  GESTimeline *timeline;
+  GESTrack *track;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *video_source, *rate0, *rate1, *overlay;
+  GstControlSource *ctrl_source;
+  GSList *video_source_vals = NULL, *overlay_vals = NULL;
+  GValue value = G_VALUE_INIT;
+  GstControlBinding *binding;
+
+  ges_init ();
+
+  g_value_init (&value, G_TYPE_DOUBLE);
+
+  timeline = ges_timeline_new ();
+  track = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_test_clip_new ());
+  assert_set_duration (clip, 4);
+  assert_set_start (clip, 20);
+  assert_set_inpoint (clip, 3);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  video_source = ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
+  fail_unless (video_source);
+  gst_object_unref (video_source);
+
+  rate0 = GES_TRACK_ELEMENT (ges_effect_new ("videorate rate=0.5"));
+  rate1 = GES_TRACK_ELEMENT (ges_effect_new ("videorate rate=4.0"));
+  overlay = GES_TRACK_ELEMENT (ges_effect_new ("textoverlay"));
+  ges_track_element_set_has_internal_source (overlay, TRUE);
+  assert_set_inpoint (overlay, 9);
+
+  fail_unless (ges_clip_add_top_effect (clip, GES_BASE_EFFECT (rate0), -1,
+          NULL));
+  fail_unless (ges_clip_add_top_effect (clip, GES_BASE_EFFECT (overlay), 0,
+          NULL));
+  fail_unless (ges_clip_add_top_effect (clip, GES_BASE_EFFECT (rate1), 0,
+          NULL));
+
+  fail_unless (ges_track_element_get_auto_clamp_control_sources (video_source));
+  fail_unless (ges_track_element_get_auto_clamp_control_sources (overlay));
+
+  /* source's alpha property */
+  _THREE_TIMED_VALS (video_source_vals, 1, 0.7, 7, 1.0, 15, 0.2);
+
+  ctrl_source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  g_object_set (G_OBJECT (ctrl_source), "mode",
+      GST_INTERPOLATION_MODE_LINEAR, NULL);
+  fail_unless (gst_timed_value_control_source_set_from_list
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), video_source_vals));
+
+  fail_unless (ges_track_element_set_control_source (video_source, ctrl_source,
+          "alpha", "direct"));
+  gst_object_unref (ctrl_source);
+
+  /* values have been clamped between its in-point:3 and its
+   * out-point:11 (4ns in timeline is 8ns in source) */
+  _THREE_TIMED_VALS (video_source_vals, 3, 0.8, 7, 1.0, 11, 0.6);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* overlay's xpos property */
+  _THREE_TIMED_VALS (overlay_vals, 9, 12, 17, 16, 25, 8);
+
+  ctrl_source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  g_object_set (G_OBJECT (ctrl_source), "mode",
+      GST_INTERPOLATION_MODE_LINEAR, NULL);
+  fail_unless (gst_timed_value_control_source_set_from_list
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), overlay_vals));
+
+  fail_unless (ges_track_element_set_control_source (overlay, ctrl_source,
+          "xpos", "direct-absolute"));
+  gst_object_unref (ctrl_source);
+
+  /* unchanged since values are at the edges already
+   * in-point:9 out-point:25 (4ns in timeline is 16ns in source) */
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* setting the in-point changes the in-point and out-point */
+  /* increase in-point */
+  assert_set_inpoint (video_source, 5);
+
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 13, 0.4);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* decrease in-point */
+  assert_set_inpoint (overlay, 7);
+
+  _THREE_TIMED_VALS (overlay_vals, 7, 11, 17, 16, 23, 10);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* when trimming start, out-point should stay the same */
+  fail_unless (ges_timeline_element_edit_full (GES_TIMELINE_ELEMENT (clip),
+          -1, GES_EDIT_MODE_TRIM, GES_EDGE_START, 19, NULL));
+
+  /* in-point of video_source now 3 */
+  _THREE_TIMED_VALS (video_source_vals, 3, 0.8, 7, 1.0, 13, 0.4);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* in-point of video_source now 3 */
+  _THREE_TIMED_VALS (overlay_vals, 3, 9, 17, 16, 23, 10);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* trim forwards */
+  fail_unless (ges_timeline_element_edit_full (GES_TIMELINE_ELEMENT (clip),
+          -1, GES_EDIT_MODE_TRIM, GES_EDGE_START, 20, NULL));
+
+  /* in-point of video_source now 5 again */
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 13, 0.4);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* in-point of overlay now 7 again */
+  _THREE_TIMED_VALS (overlay_vals, 7, 11, 17, 16, 23, 10);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* trim end */
+  fail_unless (ges_timeline_element_edit_full (GES_TIMELINE_ELEMENT (clip),
+          -1, GES_EDIT_MODE_TRIM, GES_EDGE_END, 25, NULL));
+
+  /* out-point of video_source now 15 */
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 15, 0.2);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* out-point of overlay now 27 */
+  _THREE_TIMED_VALS (overlay_vals, 7, 11, 17, 16, 27, 6);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* trim backwards */
+  fail_unless (ges_timeline_element_edit_full (GES_TIMELINE_ELEMENT (clip),
+          -1, GES_EDIT_MODE_TRIM, GES_EDGE_END, 23, NULL));
+
+  /* out-point of video_source now 11 */
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 11, 0.6);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* in-point of overlay now 19 */
+  _THREE_TIMED_VALS (overlay_vals, 7, 11, 17, 16, 19, 14);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* changing the rate changes the out-point */
+  _assert_set_rate (rate0, "rate", 1.0, value);
+
+  /* out-point of video_source now 17 */
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 17, 0.0);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* unchanged for overlay, which is after rate0 */
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* change back */
+  _assert_set_rate (rate0, "rate", 0.5, value);
+
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 11, 0.6);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* unchanged for overlay, which is after rate0 */
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* make inactive */
+  fail_unless (ges_track_element_set_active (rate0, FALSE));
+
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 17, 0.0);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* unchanged for overlay, which is after rate0 */
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* make active again */
+  fail_unless (ges_track_element_set_active (rate0, TRUE));
+
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 11, 0.6);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* unchanged for overlay, which is after rate0 */
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* change order */
+  fail_unless (ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (overlay),
+          2));
+
+  /* video source unchanged */
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* new out-point is 13
+   * new value is interpolated between the previous value
+   * (at time 7, value 11) and the *final* value (at time 19, value 14)
+   * Not the middle value at time 17, value 16! */
+  _TWO_TIMED_VALS (overlay_vals, 7, 11, 13, 12.5);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* removing time effect changes out-point */
+  gst_object_ref (rate0);
+  fail_unless (ges_clip_remove_top_effect (clip, GES_BASE_EFFECT (rate0),
+          NULL));
+
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 17, 0.0);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  _TWO_TIMED_VALS (overlay_vals, 7, 11, 19, 14);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* adding also changes it */
+  fail_unless (ges_clip_add_top_effect (clip, GES_BASE_EFFECT (rate0), 2,
+          NULL));
+
+  _THREE_TIMED_VALS (video_source_vals, 5, 0.9, 7, 1.0, 11, 0.6);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* unchanged for overlay */
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  /* new value will use the value already set at in-point if possible */
+
+  assert_set_inpoint (video_source, 7);
+
+  _TWO_TIMED_VALS (video_source_vals, 7, 1.0, 13, 0.4);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* same with out-point for overlay */
+  binding = ges_track_element_get_control_binding (overlay, "xpos");
+  fail_unless (binding);
+  g_object_get (binding, "control-source", &ctrl_source, NULL);
+
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 11, 5));
+  gst_object_unref (ctrl_source);
+  _THREE_TIMED_VALS (overlay_vals, 7, 11, 11, 5, 19, 14);
+
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  fail_unless (ges_timeline_element_edit_full (GES_TIMELINE_ELEMENT (clip),
+          -1, GES_EDIT_MODE_TRIM, GES_EDGE_END, 21, NULL));
+
+  _TWO_TIMED_VALS (video_source_vals, 7, 1.0, 9, 0.8);
+  _assert_control_source (video_source, "alpha", video_source_vals);
+
+  /* overlay uses existing value, rather than an interpolation */
+  _TWO_TIMED_VALS (overlay_vals, 7, 11, 11, 5);
+  _assert_control_source (overlay, "xpos", overlay_vals);
+
+  g_slist_free_full (video_source_vals, g_free);
+  g_slist_free_full (overlay_vals, g_free);
+
+  gst_object_unref (timeline);
+  g_value_unset (&value);
 
   ges_deinit ();
 }
@@ -5257,6 +5541,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);
+  tcase_add_test (tc_chain, test_children_property_bindings_with_rate_effects);
   tcase_add_test (tc_chain, test_unchanged_after_layer_add_failure);
   tcase_add_test (tc_chain, test_convert_time);
 

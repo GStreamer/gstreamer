@@ -167,6 +167,7 @@ struct _GESClipPrivate
 
   GstClockTime duration_limit;
   gboolean prevent_duration_limit_update;
+  gboolean prevent_children_outpoint_update;
 
   gboolean allow_any_remove;
 
@@ -444,6 +445,19 @@ _calculate_duration_limit (GESClip * self, GList * child_data)
   g_list_free_full (child_data, _duration_limit_data_free);
 
   return limit;
+}
+
+static void
+_update_children_outpoints (GESClip * self)
+{
+  GList *tmp;
+
+  if (self->priv->prevent_children_outpoint_update)
+    return;
+
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+    ges_track_element_update_outpoint (tmp->data);
+  }
 }
 
 static void
@@ -864,6 +878,7 @@ _child_active_changed (GESClip * self, GESTrackElement * child)
   gboolean active = ges_track_element_is_active (child);
   gboolean is_core = _IS_CORE_CHILD (child);
   gboolean prev_prevent = self->priv->prevent_duration_limit_update;
+  gboolean prev_prevent_outpoint = self->priv->prevent_children_outpoint_update;
 
   /* We want to ensure that each active non-core element has a
    * corresponding active core element in the same track */
@@ -872,6 +887,7 @@ _child_active_changed (GESClip * self, GESTrackElement * child)
 
   self->priv->setting_active = TRUE;
   self->priv->prevent_duration_limit_update = TRUE;
+  self->priv->prevent_children_outpoint_update = TRUE;
 
   /* If we are core, make all the non-core elements in-active
    * If we are non-core, make the core element active (should only be one) */
@@ -895,6 +911,7 @@ _child_active_changed (GESClip * self, GESTrackElement * child)
 
   self->priv->setting_active = FALSE;
   self->priv->prevent_duration_limit_update = prev_prevent;
+  self->priv->prevent_children_outpoint_update = prev_prevent_outpoint;
 }
 
 /****************************************************
@@ -1025,6 +1042,7 @@ _update_active_for_track (GESClip * self, GESTrackElement * child)
   GESTrackElement *core;
   gboolean active;
   gboolean prev_prevent = self->priv->prevent_duration_limit_update;
+  gboolean prev_prevent_outpoint = self->priv->prevent_children_outpoint_update;
 
   if (self->priv->allow_any_track || _IS_CORE_CHILD (child) || !track)
     return;
@@ -1050,6 +1068,7 @@ _update_active_for_track (GESClip * self, GESTrackElement * child)
 
     self->priv->setting_active = TRUE;
     self->priv->prevent_duration_limit_update = TRUE;
+    self->priv->prevent_children_outpoint_update = TRUE;
 
     if (!ges_track_element_set_active (child, FALSE))
       GST_ERROR_OBJECT (self, "Failed to de-activate child %" GES_FORMAT,
@@ -1057,6 +1076,7 @@ _update_active_for_track (GESClip * self, GESTrackElement * child)
 
     self->priv->setting_active = FALSE;
     self->priv->prevent_duration_limit_update = prev_prevent;
+    self->priv->prevent_children_outpoint_update = prev_prevent_outpoint;
   }
 }
 
@@ -1066,29 +1086,36 @@ static void
 _child_property_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
     GESClip * self)
 {
-  gboolean update = FALSE;
+  gboolean update_limit = FALSE;
+  gboolean update_outpoint = FALSE;
   const gchar *name = pspec->name;
 
   if (_IS_PROP ("track")) {
-    update = TRUE;
+    update_limit = TRUE;
+    update_outpoint = TRUE;
     _update_active_for_track (self, GES_TRACK_ELEMENT (child));
   } else if (_IS_PROP ("active")) {
-    update = TRUE;
+    update_limit = TRUE;
+    update_outpoint = TRUE;
     _child_active_changed (self, GES_TRACK_ELEMENT (child));
   } else if (_IS_PROP ("priority")) {
-    update = TRUE;
+    update_limit = TRUE;
+    update_outpoint = TRUE;
     _child_priority_changed (GES_CONTAINER (self), child);
   } else if (_IS_PROP ("in-point")) {
-    update = _child_inpoint_changed (self, child);
+    /* update outpoint already handled by the track element */
+    update_limit = _child_inpoint_changed (self, child);
   } else if (_IS_PROP ("max-duration")) {
-    update = TRUE;
+    update_limit = TRUE;
     _child_max_duration_changed (GES_CONTAINER (self), child);
   } else if (_IS_PROP ("has-internal-source")) {
     _child_has_internal_source_changed (self, child);
   }
 
-  if (update)
+  if (update_limit)
     _update_duration_limit (self);
+  if (update_outpoint)
+    _update_children_outpoints (self);
 }
 
 /****************************************************
@@ -1140,6 +1167,7 @@ _child_time_property_changed_cb (GESTimelineElement * child,
   if (time_prop) {
     g_free (time_prop);
     _update_duration_limit (self);
+    _update_children_outpoints (self);
   }
 }
 
@@ -1346,6 +1374,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   GList *tmp;
   guint32 min_prio, max_prio, min_child_prio = G_MAXUINT32;
   gboolean prev_prevent = priv->prevent_duration_limit_update;
+  gboolean prev_prevent_outpoint = priv->prevent_children_outpoint_update;
   GESContainer *container = GES_CONTAINER (element);
 
   for (tmp = container->children; tmp; tmp = g_list_next (tmp))
@@ -1358,6 +1387,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   /* offsets will remain constant for the children */
   priv->prevent_resort = TRUE;
   priv->prevent_duration_limit_update = TRUE;
+  priv->prevent_children_outpoint_update = TRUE;
   priv->setting_priority = TRUE;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = tmp->data;
@@ -1378,6 +1408,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   priv->prevent_resort = FALSE;
   priv->setting_priority = FALSE;
   priv->prevent_duration_limit_update = prev_prevent;
+  priv->prevent_children_outpoint_update = prev_prevent_outpoint;
 
   return TRUE;
 }
@@ -1480,6 +1511,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   GESClipPrivate *priv = self->priv;
   GESAsset *asset, *creator_asset;
   gboolean prev_prevent = priv->prevent_duration_limit_update;
+  gboolean prev_prevent_outpoint = priv->prevent_children_outpoint_update;
   GList *tmp;
   GError *error = NULL;
 
@@ -1664,6 +1696,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     priv->prevent_resort = TRUE;
     priv->setting_priority = TRUE;
     priv->prevent_duration_limit_update = TRUE;
+    priv->prevent_children_outpoint_update = TRUE;
 
     /* increase the priority of anything with a lower priority */
     for (tmp = container->children; tmp; tmp = tmp->next) {
@@ -1676,6 +1709,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     priv->prevent_resort = FALSE;
     priv->setting_priority = FALSE;
     priv->prevent_duration_limit_update = prev_prevent;
+    priv->prevent_children_outpoint_update = prev_prevent_outpoint;
     /* no need to call _ges_container_sort_children (container) since
      * there is no change to the ordering yet (this happens after the
      * child is actually added) */
@@ -1776,12 +1810,14 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
   if (_IS_TOP_EFFECT (element)) {
     GList *tmp;
     gboolean prev_prevent = priv->prevent_duration_limit_update;
+    gboolean prev_prevent_outpoint = priv->prevent_children_outpoint_update;
     GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
 
     /* changing priorities, so preventing a re-sort */
     priv->prevent_resort = TRUE;
     priv->setting_priority = TRUE;
     priv->prevent_duration_limit_update = TRUE;
+    priv->prevent_children_outpoint_update = TRUE;
     for (tmp = container->children; tmp; tmp = tmp->next) {
       guint32 sibling_prio = GES_TIMELINE_ELEMENT_PRIORITY (tmp->data);
       if (sibling_prio > element->priority)
@@ -1792,6 +1828,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
     priv->prevent_resort = FALSE;
     priv->setting_priority = FALSE;
     priv->prevent_duration_limit_update = prev_prevent;
+    priv->prevent_children_outpoint_update = prev_prevent_outpoint;
     /* no need to re-sort the children since the rest keep the same
      * relative priorities */
     /* height may have changed */
@@ -1817,6 +1854,7 @@ _child_added (GESContainer * container, GESTimelineElement * element)
     _update_max_duration (container);
 
   _update_duration_limit (self);
+  _update_children_outpoints (self);
 }
 
 static void
@@ -1835,6 +1873,8 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
     _update_max_duration (container);
 
   _update_duration_limit (self);
+  _update_children_outpoints (self);
+  ges_track_element_update_outpoint (GES_TRACK_ELEMENT (element));
 }
 
 static void
@@ -1862,6 +1902,10 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (to_clip);
   gboolean prev_prevent_from = from_clip->priv->prevent_duration_limit_update;
   gboolean prev_prevent_to = to_clip->priv->prevent_duration_limit_update;
+  gboolean prev_prevent_outpoint_from =
+      from_clip->priv->prevent_children_outpoint_update;
+  gboolean prev_prevent_outpoint_to =
+      to_clip->priv->prevent_children_outpoint_update;
 
   /* We need to bump the refcount to avoid the object to be destroyed */
   gst_object_ref (child);
@@ -1871,6 +1915,8 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
 
   from_clip->priv->prevent_duration_limit_update = TRUE;
   to_clip->priv->prevent_duration_limit_update = TRUE;
+  from_clip->priv->prevent_children_outpoint_update = TRUE;
+  to_clip->priv->prevent_children_outpoint_update = TRUE;
 
   from_clip->priv->allow_any_remove = TRUE;
   ges_container_remove (GES_CONTAINER (from_clip),
@@ -1887,6 +1933,9 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
 
   from_clip->priv->prevent_duration_limit_update = prev_prevent_from;
   to_clip->priv->prevent_duration_limit_update = prev_prevent_to;
+  from_clip->priv->prevent_children_outpoint_update =
+      prev_prevent_outpoint_from;
+  to_clip->priv->prevent_children_outpoint_update = prev_prevent_outpoint_to;
 
   gst_object_unref (child);
 }
@@ -2115,12 +2164,14 @@ ges_clip_empty_from_track (GESClip * clip, GESTrack * track)
 {
   GList *tmp;
   gboolean prev_prevent = clip->priv->prevent_duration_limit_update;
+  gboolean prev_prevent_outpoint = clip->priv->prevent_children_outpoint_update;
 
   if (track == NULL)
     return;
   /* allow us to remove in any order */
   clip->priv->allow_any_track = TRUE;
   clip->priv->prevent_duration_limit_update = TRUE;
+  clip->priv->prevent_children_outpoint_update = TRUE;
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *child = tmp->data;
@@ -2132,7 +2183,9 @@ ges_clip_empty_from_track (GESClip * clip, GESTrack * track)
   }
   clip->priv->allow_any_track = FALSE;
   clip->priv->prevent_duration_limit_update = prev_prevent;
+  clip->priv->prevent_children_outpoint_update = prev_prevent_outpoint;
   _update_duration_limit (clip);
+  _update_children_outpoints (clip);
 }
 
 static GESTrackElement *
@@ -3193,8 +3246,7 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
   GList *tmp, *transitions = NULL;
   GESClip *new_object;
   gboolean no_core = FALSE;
-  GstClockTime start, inpoint, duration, old_duration, new_duration,
-      new_inpoint;
+  GstClockTime start, duration, old_duration, new_duration, new_inpoint;
   GESTimelineElement *element;
   GESTimeline *timeline;
   GHashTable *track_for_copy;
@@ -3210,7 +3262,6 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
 
   duration = element->duration;
   start = element->start;
-  inpoint = element->inpoint;
 
   if (position >= start + duration || position <= start) {
     GST_WARNING_OBJECT (clip, "Can not split %" GST_TIME_FORMAT
@@ -3259,6 +3310,7 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
   /* Create the new Clip */
   new_object = GES_CLIP (ges_timeline_element_copy (element, FALSE));
   new_object->priv->prevent_duration_limit_update = TRUE;
+  new_object->priv->prevent_children_outpoint_update = TRUE;
 
   GST_DEBUG_OBJECT (new_object, "New 'splitted' clip");
   /* Set new timing properties on the Clip */
@@ -3293,11 +3345,7 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
     GESTrack *track = ges_track_element_get_track (orig);
     GESAutoTransition *trans;
 
-    /* FIXME: is position - start + inpoint always the correct splitting
-     * point for control bindings? What coordinate system are control
-     * bindings given in? */
-    copy = ges_clip_copy_track_element_into (new_object, orig,
-        position - start + inpoint);
+    copy = ges_clip_copy_track_element_into (new_object, orig, new_inpoint);
 
     if (!copy)
       continue;
@@ -3347,7 +3395,9 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
   g_list_free_full (transitions, gst_object_unref);
 
   new_object->priv->prevent_duration_limit_update = FALSE;
+  new_object->priv->prevent_children_outpoint_update = FALSE;
   _update_duration_limit (new_object);
+  _update_children_outpoints (new_object);
 
   return new_object;
 }

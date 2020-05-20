@@ -1081,8 +1081,7 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
   if (priv->state != STATE_LOADING_CLIPS) {
     GST_DEBUG_OBJECT (self, "Not loading control bindings in %s state.",
         loading_state_name (priv->state));
-    g_slist_free_full (timed_values, g_free);
-    return;
+    goto done;
   }
 
   if (track_id[0] != '-' && priv->current_clip)
@@ -1092,23 +1091,28 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
 
   if (element == NULL) {
     GST_WARNING ("No current track element to which we can append a binding");
-    return;
+    goto done;
   }
 
   if (!g_strcmp0 (source_type, "interpolation")) {
     GstControlSource *source;
 
     source = gst_interpolation_control_source_new ();
+
+    /* add first before setting values to avoid clamping */
     ges_track_element_set_control_source (element, source,
         property_name, binding_type);
 
     g_object_set (source, "mode", mode, NULL);
-
     gst_timed_value_control_source_set_from_list (GST_TIMED_VALUE_CONTROL_SOURCE
         (source), timed_values);
-    g_slist_free_full (timed_values, g_free);
+
+    gst_object_unref (source);
   } else
     GST_WARNING ("This interpolation type is not supported\n");
+
+done:
+  g_slist_free_full (timed_values, g_free);
 }
 
 void

@@ -454,6 +454,9 @@ G_GNUC_INTERNAL void ges_track_element_set_layer_active         (GESTrackElement
 G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
                                                       GESTrackElement *new_element,
                                                       guint64 position);
+G_GNUC_INTERNAL void ges_track_element_freeze_control_sources   (GESTrackElement * object,
+                                                                 gboolean freeze);
+G_GNUC_INTERNAL void ges_track_element_update_outpoint          (GESTrackElement * self);
 
 G_GNUC_INTERNAL void
 ges_track_element_set_creator_asset                    (GESTrackElement * self,
