@@ -106,6 +106,7 @@ static gboolean gst_rtmp2_src_unlock (GstBaseSrc * src);
 static gboolean gst_rtmp2_src_unlock_stop (GstBaseSrc * src);
 static GstFlowReturn gst_rtmp2_src_create (GstBaseSrc * src, guint64 offset,
     guint size, GstBuffer ** outbuf);
+static gboolean gst_rtmp2_src_query (GstBaseSrc * src, GstQuery * query);
 
 /* Internal API */
 static void gst_rtmp2_src_task_func (gpointer user_data);
@@ -178,6 +179,7 @@ gst_rtmp2_src_class_init (GstRtmp2SrcClass * klass)
   base_src_class->unlock = GST_DEBUG_FUNCPTR (gst_rtmp2_src_unlock);
   base_src_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_rtmp2_src_unlock_stop);
   base_src_class->create = GST_DEBUG_FUNCPTR (gst_rtmp2_src_create);
+  base_src_class->query = GST_DEBUG_FUNCPTR (gst_rtmp2_src_query);
 
   g_object_class_override_property (gobject_class, PROP_LOCATION, "location");
   g_object_class_override_property (gobject_class, PROP_SCHEME, "scheme");
@@ -689,6 +691,33 @@ out:
     g_source_destroy (timeout);
     g_source_unref (timeout);
   }
+
+  return ret;
+}
+
+static gboolean
+gst_rtmp2_src_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:{
+      gst_query_set_scheduling (query,
+          GST_SCHEDULING_FLAG_SEQUENTIAL |
+          GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
+
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = FALSE;
+      break;
+  }
+
+  if (!ret)
+    ret =
+        GST_BASE_SRC_CLASS (gst_rtmp2_src_parent_class)->query (basesrc, query);
 
   return ret;
 }
