@@ -939,7 +939,7 @@ build gst-omx zynq fedora x86_64:
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/'
   before_script:
-    - git clone https://github.com/Xilinx/vcu-omx-il.git --branch=release-2019.2 ${CI_PROJECT_DIR}/vcu-omx-il
+    - git clone https://github.com/Xilinx/vcu-omx-il.git --branch=release-2020.1 ${CI_PROJECT_DIR}/vcu-omx-il
 
 build gst-omx tizonia fedora x86_64:
   extends: '.build fedora x86_64'
