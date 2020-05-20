@@ -30,7 +30,6 @@ enum
 {
   GST_VAAPI_DECODER_H264_PROP_FORCE_LOW_LATENCY = 1,
   GST_VAAPI_DECODER_H264_PROP_BASE_ONLY,
-  GST_VAAPI_DECODER_H264_PROP_BASELINE_AS_CONSTRAINED,
 };
 
 static gint h264_private_offset;
@@ -49,9 +48,6 @@ gst_vaapi_decode_h264_get_property (GObject * object, guint prop_id,
       break;
     case GST_VAAPI_DECODER_H264_PROP_BASE_ONLY:
       g_value_set_boolean (value, priv->base_only);
-      break;
-    case GST_VAAPI_DECODER_H264_PROP_BASELINE_AS_CONSTRAINED:
-      g_value_set_boolean (value, priv->baseline_as_constrained);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -81,13 +77,6 @@ gst_vaapi_decode_h264_set_property (GObject * object, guint prop_id,
       if (decoder)
         gst_vaapi_decoder_h264_set_base_only (decoder, priv->base_only);
       break;
-    case GST_VAAPI_DECODER_H264_PROP_BASELINE_AS_CONSTRAINED:
-      priv->baseline_as_constrained = g_value_get_boolean (value);
-      decoder = GST_VAAPI_DECODER_H264 (GST_VAAPIDECODE (object)->decoder);
-      if (decoder)
-        gst_vaapi_decoder_h264_set_baseline_as_constrained (decoder,
-            priv->baseline_as_constrained);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -113,13 +102,6 @@ gst_vaapi_decode_h264_install_properties (GObjectClass * klass)
   g_object_class_install_property (klass, GST_VAAPI_DECODER_H264_PROP_BASE_ONLY,
       g_param_spec_boolean ("base-only", "Decode base view only",
           "Drop any NAL unit not defined in Annex.A", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (klass,
-      GST_VAAPI_DECODER_H264_PROP_BASELINE_AS_CONSTRAINED,
-      g_param_spec_boolean ("baseline-as-constrained",
-          "Baseline as Constrained",
-          "Assume all baseline content is also constrained.", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

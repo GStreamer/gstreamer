@@ -73,10 +73,6 @@ void
 gst_vaapi_decoder_h264_set_base_only(GstVaapiDecoderH264 * decoder,
     gboolean base_only);
 
-void
-gst_vaapi_decoder_h264_set_baseline_as_constrained(GstVaapiDecoderH264 * decoder,
-    gboolean baseline_as_constrained);
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoderH264, gst_object_unref)
 
 G_END_DECLS

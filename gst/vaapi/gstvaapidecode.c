@@ -909,9 +909,6 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
               (decode->decoder), priv->is_low_latency);
           gst_vaapi_decoder_h264_set_base_only (GST_VAAPI_DECODER_H264
               (decode->decoder), priv->base_only);
-          gst_vaapi_decoder_h264_set_baseline_as_constrained
-              (GST_VAAPI_DECODER_H264 (decode->decoder),
-              priv->baseline_as_constrained);
         }
       }
       break;
@@ -1233,8 +1230,6 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
   gboolean have_high = FALSE;
   gboolean have_mvc = FALSE;
   gboolean have_svc = FALSE;
-  GstVaapiDecodeH264Private *priv =
-      gst_vaapi_decode_h264_get_instance_private (decode);
 
   profiles = gst_vaapi_display_get_decode_profiles (display);
   if (!profiles)
@@ -1303,8 +1298,9 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
     have_svc |= is_svc_profile (profile);
     have_high |= profile == GST_VAAPI_PROFILE_H264_HIGH;
 
-    if (priv && priv->baseline_as_constrained &&
-        profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE)
+    /* XXX: artificially adding baseline if constrained_baseline is
+     * available. */
+    if (profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE)
       allowed_sinkpad_caps =
           add_h264_profile_in_caps (allowed_sinkpad_caps, "baseline");
   }
