@@ -496,7 +496,7 @@ new_session_pad (GstElement * session, GstPad * pad, GstSDPDemux * demux)
 {
   gchar *name, *pad_name;
   GstPadTemplate *template;
-  gint id, ssrc, pt;
+  guint id, ssrc, pt;
   GList *lstream;
   GstSDPStream *stream;
   gboolean all_added;
@@ -509,10 +509,10 @@ new_session_pad (GstElement * session, GstPad * pad, GstSDPDemux * demux)
   if (sscanf (name, "recv_rtp_src_%u_%u_%u", &id, &ssrc, &pt) != 3)
     goto unknown_stream;
 
-  GST_DEBUG_OBJECT (demux, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
+  GST_DEBUG_OBJECT (demux, "stream: %u, SSRC %u, PT %u", id, ssrc, pt);
 
   stream =
-      find_stream (demux, GINT_TO_POINTER (id), (gpointer) find_stream_by_id);
+      find_stream (demux, GUINT_TO_POINTER (id), (gpointer) find_stream_by_id);
   if (stream == NULL)
     goto unknown_stream;
 
