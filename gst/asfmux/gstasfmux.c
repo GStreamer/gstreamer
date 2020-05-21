@@ -2282,7 +2282,7 @@ gst_asf_mux_request_new_pad (GstElement * element,
   guint collect_size = 0;
   gchar *name = NULL;
   const gchar *pad_name = NULL;
-  gint pad_id;
+  guint pad_id;
 
   GST_DEBUG_OBJECT (asfmux, "Requested pad: %s", GST_STR_NULL (req_name));
 
