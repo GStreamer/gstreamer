@@ -33,6 +33,7 @@
 #include "gstmfh264enc.h"
 #include "gstmfh265enc.h"
 #include "gstmfaacenc.h"
+#include "gstmfmp3enc.h"
 
 GST_DEBUG_CATEGORY (gst_mf_debug);
 GST_DEBUG_CATEGORY (gst_mf_utils_debug);
@@ -73,6 +74,7 @@ plugin_init (GstPlugin * plugin)
   gst_mf_h264_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_h265_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_aac_enc_plugin_init (plugin, GST_RANK_SECONDARY);
+  gst_mf_mp3_enc_plugin_init (plugin, GST_RANK_SECONDARY);
 
   return TRUE;
 }

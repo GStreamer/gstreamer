@@ -10,6 +10,7 @@ mf_sources = [
   'gstmfdevice.c',
   'gstmfaudioenc.cpp',
   'gstmfaacenc.cpp',
+  'gstmfmp3enc.cpp',
 ]
 
 mf_desktop_sources = [
