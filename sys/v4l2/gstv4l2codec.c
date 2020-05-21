@@ -34,15 +34,14 @@
 
 #include <gst/gst.h>
 
-static GValue *
-probe_controls (gint video_fd, guint32 cid,
-    const gchar * (transform_control) (gint))
+GValue *
+gst_v4l2_codec_probe_profiles (const GstV4l2Codec * codec, gint video_fd)
 {
   GValue *controls = NULL;
   struct v4l2_queryctrl query_ctrl;
 
   memset (&query_ctrl, 0, sizeof (query_ctrl));
-  query_ctrl.id = cid;
+  query_ctrl.id = codec->profile_cid;
 
   if (ioctl (video_fd, VIDIOC_QUERYCTRL, &query_ctrl) == 0) {
     if (query_ctrl.flags & V4L2_CTRL_FLAG_DISABLED) {
@@ -63,7 +62,8 @@ probe_controls (gint video_fd, guint32 cid,
           GValue value = G_VALUE_INIT;
 
           g_value_init (&value, G_TYPE_STRING);
-          g_value_set_string (&value, transform_control (query_menu.index));
+          g_value_set_string (&value,
+              codec->profile_to_string (query_menu.index));
           gst_value_list_append_and_take_value (controls, &value);
         }
       }
@@ -75,13 +75,6 @@ probe_controls (gint video_fd, guint32 cid,
   }
 
   return controls;
-}
-
-GValue *
-gst_v4l2_codec_probe_profiles (const GstV4l2Codec * codec, gint video_fd)
-{
-  return probe_controls (video_fd, codec->profile_cid,
-      codec->profile_to_string);
 }
 
 GValue *
