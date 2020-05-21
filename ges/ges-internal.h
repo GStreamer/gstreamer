@@ -377,7 +377,10 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFo
                                                                     GESTimeline *timeline,
                                                                     const gchar *properties,
                                                                     const gchar *metadatas);
-G_GNUC_INTERNAL void ges_xml_formatter_deinit                       (void);
+
+G_GNUC_INTERNAL void ges_base_xml_formatter_end_current_clip       (GESBaseXmlFormatter *self);
+
+G_GNUC_INTERNAL void ges_xml_formatter_deinit                      (void);
 
 G_GNUC_INTERNAL gboolean set_property_foreach                   (GQuark field_id,
                                                                  const GValue * value,

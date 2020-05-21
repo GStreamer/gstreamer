@@ -94,6 +94,7 @@ struct _GESBaseXmlFormatterPrivate
   GESTrackElement *current_track_element;
 
   GESClip *current_clip;
+  GstClockTime current_clip_duration;
 
   gboolean timeline_auto_transition;
 
@@ -416,6 +417,7 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
       g_direct_equal, NULL, (GDestroyNotify) _free_layer_entry);
   priv->current_track_element = NULL;
   priv->current_clip = NULL;
+  priv->current_clip_duration = GST_CLOCK_TIME_NONE;
   priv->timeline_auto_transition = FALSE;
 }
 
@@ -636,8 +638,16 @@ _add_track_element (GESFormatter * self, GESClip * clip,
       (GstStructureForeachFunc) _set_child_property, trackelement);
 
   if (properties) {
+    gboolean has_internal_source;
     /* We do not serialize the priority anymore, and we should never have. */
     gst_structure_remove_field (properties, "priority");
+
+    /* Ensure that has-internal-source is set before inpoint as otherwise
+     * the inpoint will be ignored */
+    if (gst_structure_get_boolean (properties, "has-internal-source",
+            &has_internal_source) && has_internal_source)
+      g_object_set (trackelement, "has-internal-source", has_internal_source,
+          NULL);
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, trackelement);
   }
@@ -915,6 +925,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
   if (!nclip)
     return;
 
+  priv->current_clip_duration = duration;
   priv->current_clip = nclip;
 }
 
@@ -1334,4 +1345,25 @@ ges_base_xml_formatter_last_group_add_child (GESBaseXmlFormatter * self,
 
   GST_DEBUG_OBJECT (self, "Adding %s to %s", child_id,
       GES_TIMELINE_ELEMENT_NAME (((PendingGroup *) priv->groups->data)->group));
+}
+
+void
+ges_base_xml_formatter_end_current_clip (GESBaseXmlFormatter * self)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->state != STATE_LOADING_CLIPS) {
+    GST_DEBUG_OBJECT (self, "Not ending clip in %s state.",
+        loading_state_name (priv->state));
+    return;
+  }
+
+  g_return_if_fail (priv->current_clip);
+
+  if (_DURATION (priv->current_clip) != priv->current_clip_duration)
+    _set_duration0 (GES_TIMELINE_ELEMENT (priv->current_clip),
+        priv->current_clip_duration);
+
+  priv->current_clip = NULL;
+  priv->current_clip_duration = GST_CLOCK_TIME_NONE;
 }

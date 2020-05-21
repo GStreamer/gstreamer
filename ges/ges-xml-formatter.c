@@ -1021,6 +1021,9 @@ _parse_element_end (GMarkupParseContext * context,
     if (!priv->subproject_depth) {
       g_clear_pointer (&priv->subproject, g_free);
     }
+  } else if (!g_strcmp0 (element_name, "clip")) {
+    if (!priv->subproject)
+      ges_base_xml_formatter_end_current_clip (GES_BASE_XML_FORMATTER (self));
   }
 }
 
@@ -1553,8 +1556,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   g_list_free_full (tracks, gst_object_unref);
 
   properties = _serialize_properties (G_OBJECT (trackelement), NULL, "start",
-      "in-point", "duration", "locked", "max-duration", "name", "priority",
-      NULL);
+      "duration", "locked", "name", "priority", NULL);
   metas =
       ges_meta_container_metas_to_string (GES_META_CONTAINER (trackelement));
   extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (trackelement));

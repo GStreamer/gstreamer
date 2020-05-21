@@ -613,9 +613,8 @@ class TestEditing(common.GESSimpleTimelineTest):
     def test_trim_time_effects(self):
         self.track_types = [GES.TrackType.VIDEO]
         super().setUp()
-        clip = self.append_clip()
+        clip = self.append_clip(asset_id="max-duration=30")
         self.assertTrue(clip.set_inpoint(12))
-        self.assertTrue(clip.set_max_duration(30))
         self.assertEqual(clip.get_duration_limit(), 18)
 
         children = clip.get_children(False)
@@ -646,6 +645,7 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(clip.get_duration_limit(), 36)
         self.assertTrue(clip.set_start(40))
         self.assertTrue(clip.set_duration(10))
+        self.check_reload_timeline()
 
         # cannot trim to a 16 because overlay would have a negative in-point
         error = None
@@ -661,6 +661,8 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(source.get_max_duration(), 30)
         self.assertEqual(overlay.get_inpoint(), 5)
         self.assertEqual(overlay.get_max_duration(), 16)
+
+        self.check_reload_timeline()
 
         # trim backwards to 20
         self.assertTrue(
@@ -686,6 +688,7 @@ class TestEditing(common.GESSimpleTimelineTest):
         # increased by 2
         self.assertEqual(overlay.get_inpoint(), 2)
         self.assertEqual(overlay.get_max_duration(), 16)
+        self.check_reload_timeline()
 
     def test_ripple_end(self):
         clip = self.append_clip()

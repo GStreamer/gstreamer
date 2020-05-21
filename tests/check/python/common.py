@@ -213,11 +213,11 @@ class GESSimpleTimelineTest(GESTest):
 
         return clip
 
-    def append_clip(self, layer=0, asset_type=GES.TestClip):
+    def append_clip(self, layer=0, asset_type=GES.TestClip, asset_id=None):
         while len(self.timeline.get_layers()) < layer + 1:
             self.timeline.append_layer()
         layer = self.timeline.get_layers()[layer]
-        clip = GES.Asset.request(asset_type, None).extract()
+        clip = GES.Asset.request(asset_type, asset_id).extract()
         clip.props.start = layer.get_duration()
         clip.props.duration = 10
         self.assertTrue(layer.add_clip(clip))
@@ -231,16 +231,16 @@ class GESSimpleTimelineTest(GESTest):
             and not GObject.type_is_a(p.value_type, GObject.Object)]
         for p in props:
             pname = p.name
-            v0 = GObject.Value()
-            v0.init(p.value_type)
-            v0.set_value(ref.get_property(pname))
+            refval = GObject.Value()
+            refval.init(p.value_type)
+            refval.set_value(ref.get_property(pname))
 
-            v1 = GObject.Value()
-            v1.init(p.value_type)
-            v1.set_value(element.get_property(pname))
+            value = GObject.Value()
+            value.init(p.value_type)
+            value.set_value(element.get_property(pname))
 
-            self.assertTrue(Gst.value_compare(v0, v1) == Gst.VALUE_EQUAL,
-                "%s are not equal: %s != %s" % (pname, v0, v1))
+            self.assertTrue(Gst.value_compare(refval, value) == Gst.VALUE_EQUAL,
+                "%s are not equal: %s != %s\n    %s != %s" % (pname, value, refval, element, ref))
 
         if isinstance(ref, GES.TrackElement):
             self.assertElementAreEqual(ref.get_nleobject(), element.get_nleobject())
@@ -275,7 +275,7 @@ class GESSimpleTimelineTest(GESTest):
                 if not isinstance(ref_child, GES.Effect):
                     child = tmpchild
                     break
-                elif ref_child.props.bin_description == child.props.bin_description:
+                elif ref_child.props.bin_description == tmpchild.props.bin_description:
                     child = tmpchild
                     break
 
