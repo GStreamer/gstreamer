@@ -231,34 +231,38 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GESUriClip *uriclip = GES_URI_CLIP (self);
   GESUriClipAsset *uri_clip_asset;
   GESClip *clip = GES_CLIP (self);
+  GESContainer *container = GES_CONTAINER (clip);
+  GESTimelineElement *element = GES_TIMELINE_ELEMENT (self);
   GESLayer *layer = ges_clip_get_layer (clip);
   GList *tmp, *children;
   GHashTable *source_by_track;
+  GstClockTime max_duration;
+  GESAsset *prev_asset;
 
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
 
   uri_clip_asset = GES_URI_CLIP_ASSET (asset);
-  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (self)) &&
-      ges_uri_clip_asset_get_duration (uri_clip_asset) <
-      GES_TIMELINE_ELEMENT_INPOINT (self) +
-      GES_TIMELINE_ELEMENT_DURATION (self)) {
-    GST_INFO_OBJECT (self,
-        "Can not set asset to %p as its duration is %" GST_TIME_FORMAT
-        " < to inpoint %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = %"
-        GST_TIME_FORMAT, asset,
-        GST_TIME_ARGS (ges_uri_clip_asset_get_duration (uri_clip_asset)),
-        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (self)),
-        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_DURATION (self)),
-        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (self) +
-            GES_TIMELINE_ELEMENT_DURATION (self)));
 
+  /* new sources elements will have their max-duration set to
+   * max_duration. Check that this is possible with the new uri
+   * NOTE: we are assuming that all the new core children will end up
+   * in the same tracks as the previous core children */
+  max_duration = ges_uri_clip_asset_get_max_duration (uri_clip_asset);
+  if (!ges_clip_can_set_max_duration_of_all_core (clip, max_duration, NULL)) {
+    GST_INFO_OBJECT (self, "Can not set asset to %p as its max-duration %"
+        GST_TIME_FORMAT " is too low", asset, GST_TIME_ARGS (max_duration));
 
     return FALSE;
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (clip)) == FALSE)
-    _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
-        ges_uri_clip_asset_get_duration (uri_clip_asset));
+  if (!container->children && !GST_CLOCK_TIME_IS_VALID (element->duration)) {
+    if (!ges_timeline_element_set_duration (element,
+            ges_uri_clip_asset_get_duration (uri_clip_asset))) {
+      GST_ERROR_OBJECT (self, "Failed to set the duration using a new "
+          "uri asset when we have no children. This should not happen");
+      return FALSE;
+    }
+  }
 
   ges_uri_clip_set_is_image (uriclip,
       ges_uri_clip_asset_is_image (uri_clip_asset));
@@ -268,11 +272,35 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
         ges_clip_asset_get_supported_formats (GES_CLIP_ASSET (uri_clip_asset)));
   }
 
-  GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
+  prev_asset = element->asset;
+  element->asset = asset;
+
+  /* FIXME: it would be much better if we could have a way to replace
+   * each source one-to-one with a new source in the same track, e.g.
+   * a user supplied
+   * GESSource * ges_uri_clip_swap_source (
+   *   GESClip * clip, GESSource * replace, GList * new_sources,
+   *   gpointer user_data)
+   *
+   * and they select a new source from new_sources to replace @replace, or
+   * %NULL to remove it without a replacement. The default would swap
+   * one video for another video, etc.
+   *
+   * Then we could use this information with
+   * ges_clip_can_update_duration_limit, using the new max-duration and
+   * replacing each source in the same track, to test that the operation
+   * can succeed (basically extending
+   * ges_clip_can_set_max_duration_of_all_core, but with the added
+   * information that sources without a replacement will not contribute
+   * to the duration-limit, and all of the siblings in the same track will
+   * also be removed from the track).
+   *
+   * Then we can perform the replacement, whilst avoiding track-selection
+   * (similar to GESClip's _transfer_child). */
 
   source_by_track = g_hash_table_new_full (NULL, NULL,
       gst_object_unref, gst_object_unref);
-  children = ges_container_get_children (GES_CONTAINER (self), TRUE);
+  children = ges_container_get_children (container, FALSE);
 
   for (tmp = children; tmp; tmp = tmp->next) {
     GESTrackElement *child = tmp->data;
@@ -287,39 +315,51 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
        * timeline will remove it from its track */
       /* removing the core element will also empty its non-core siblings
        * from the same track */
-      ges_container_remove (GES_CONTAINER (self), GES_TIMELINE_ELEMENT (child));
+      ges_container_remove (container, GES_TIMELINE_ELEMENT (child));
     }
   }
   g_list_free_full (children, g_object_unref);
 
   contains_core = FALSE;
 
+  /* keep alive */
+  gst_object_ref (self);
   if (layer) {
-    gst_object_ref (clip);
 
-    ges_layer_remove_clip (layer, clip);
-    /* adding back to the layer will trigger the re-creation of the core
-     * children */
-    res = ges_layer_add_clip (layer, clip);
+    res = ges_layer_remove_clip (layer, clip);
 
-    /* NOTE: assume that core children in the same tracks correspond to
-     * the same source! */
-    for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-      GESTrackElement *child = tmp->data;
-      if (ges_track_element_is_core (child)) {
-        GESTrackElement *orig_source = g_hash_table_lookup (source_by_track,
-            ges_track_element_get_track (child));
-        contains_core = TRUE;
+    if (res) {
+      /* adding back to the layer will trigger the re-creation of the core
+       * children */
+      res = ges_layer_add_clip (layer, clip);
 
-        if (orig_source) {
-          ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (orig_source),
-              GES_TIMELINE_ELEMENT (child));
-          ges_track_element_copy_bindings (orig_source, child,
-              GST_CLOCK_TIME_NONE);
+      if (!res)
+        GST_ERROR_OBJECT (self, "Failed to add the uri clip %s back into "
+            "its layer. This is likely caused by track-selection for the "
+            "core sources and effects failing because the core sources "
+            "were not replaced in the same tracks", element->name);
+
+      /* NOTE: assume that core children in the same tracks correspond to
+       * the same source! */
+      for (tmp = container->children; tmp; tmp = tmp->next) {
+        GESTrackElement *child = tmp->data;
+        if (ges_track_element_is_core (child)) {
+          GESTrackElement *orig_source = g_hash_table_lookup (source_by_track,
+              ges_track_element_get_track (child));
+          contains_core = TRUE;
+
+          if (orig_source) {
+            ges_track_element_copy_properties (GES_TIMELINE_ELEMENT
+                (orig_source), GES_TIMELINE_ELEMENT (child));
+            ges_track_element_copy_bindings (orig_source, child,
+                GST_CLOCK_TIME_NONE);
+          }
         }
       }
+    } else {
+      GST_ERROR_OBJECT (self, "Failed to remove from the layer. This "
+          "should not happen");
     }
-    gst_object_unref (clip);
     gst_object_unref (layer);
   }
   g_hash_table_unref (source_by_track);
@@ -327,11 +367,18 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   if (res) {
     g_free (uriclip->priv->uri);
     uriclip->priv->uri = g_strdup (ges_asset_get_id (asset));
+
+    if (!contains_core) {
+      if (!ges_timeline_element_set_max_duration (element, max_duration))
+        GST_ERROR_OBJECT (self, "Failed to set the max-duration on the uri "
+            "clip when it has no children. This should not happen");
+    }
+  } else {
+    element->asset = prev_asset;
   }
 
-  if (!contains_core)
-    ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
-        ges_uri_clip_asset_get_max_duration (uri_clip_asset));
+  /* if re-adding failed, clip may be destroyed */
+  gst_object_unref (self);
 
   return res;
 }

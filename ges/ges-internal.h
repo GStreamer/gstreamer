@@ -423,6 +423,7 @@ G_GNUC_INTERNAL void              ges_clip_set_moving_from_layer  (GESClip *clip
 G_GNUC_INTERNAL GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTrackElement * child, GstClockTime inpoint, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_max_duration_of_all_core (GESClip * clip, GstClockTime max_duration, GError ** error);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_max_duration_of_child (GESClip * clip, GESTrackElement * child, GstClockTime max_duration, GError ** error);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_active_of_child (GESClip * clip, GESTrackElement * child, gboolean active, GError ** error);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_priority_of_child (GESClip * clip, GESTrackElement * child, guint32 priority, GError ** error);

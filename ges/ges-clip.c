@@ -863,6 +863,55 @@ ges_clip_can_set_max_duration_of_child (GESClip * clip, GESTrackElement * child,
   return TRUE;
 }
 
+gboolean
+ges_clip_can_set_max_duration_of_all_core (GESClip * clip,
+    GstClockTime max_duration, GError ** error)
+{
+  GList *tmp;
+  GList *child_data = NULL;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTimelineElement *child = tmp->data;
+    DurationLimitData *data =
+        _duration_limit_data_new (GES_TRACK_ELEMENT (child));
+
+    if (_IS_CORE_CHILD (child)) {
+      /* don't check that it has an internal-source, since we are assuming
+       * we will have one if the max-duration is valid */
+      if (GES_CLOCK_TIME_IS_LESS (max_duration, child->inpoint)) {
+        GST_INFO_OBJECT (clip, "Cannot set the max-duration from %"
+            GST_TIME_FORMAT " to %" GST_TIME_FORMAT " because it would "
+            "cause the in-point of its core child %" GES_FORMAT
+            " to exceed its max-duration",
+            GST_TIME_ARGS (child->maxduration),
+            GST_TIME_ARGS (max_duration), GES_ARGS (child));
+        g_set_error (error, GES_ERROR, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+            "Cannot set the max-duration of the child \"%s\" under the "
+            "clip \"%s\" to %" GST_TIME_FORMAT " because it would be "
+            "below the in-point of %" GST_TIME_FORMAT " of the child",
+            child->name, GES_TIMELINE_ELEMENT_NAME (clip),
+            GST_TIME_ARGS (max_duration), GST_TIME_ARGS (child->inpoint));
+
+        _duration_limit_data_free (data);
+        g_list_free_full (child_data, _duration_limit_data_free);
+        return FALSE;
+      }
+      data->max_duration = max_duration;
+    }
+
+    child_data = g_list_prepend (child_data, data);
+  }
+
+  if (!_can_update_duration_limit (clip, child_data, error)) {
+    GST_INFO_OBJECT (clip, "Cannot set the max-duration of the core "
+        "children to %" GST_TIME_FORMAT " because the duration-limit "
+        "cannot be adjusted", GST_TIME_ARGS (max_duration));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 _child_max_duration_changed (GESContainer * container,
     GESTimelineElement * child)
