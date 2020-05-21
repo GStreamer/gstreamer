@@ -404,8 +404,7 @@ gst_planar_audio_adapter_get_buffer (GstPlanarAudioAdapter * adapter,
       gsize cur_skip = skip;
       gsize take_from_cur;
       GSList *cur_node = adapter->buflist;
-
-      while (need > 0) {
+      while (cur_node && need > 0) {
         cur = cur_node->data;
         meta = gst_buffer_get_audio_meta (cur);
         take_from_cur = need > (meta->samples - cur_skip) ?
