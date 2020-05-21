@@ -1176,19 +1176,19 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
   GstV4l2VideoEncCData *cdata;
   GValue value = G_VALUE_INIT;
 
+  filtered_caps = gst_caps_intersect (src_caps, codec_caps);
+
   if (codec != NULL && video_fd != -1) {
     if (gst_v4l2_codec_probe_levels (codec, video_fd, &value)) {
-      gst_caps_set_value (src_caps, "level", &value);
+      gst_caps_set_value (filtered_caps, "level", &value);
       g_value_unset (&value);
     }
 
     if (gst_v4l2_codec_probe_profiles (codec, video_fd, &value)) {
-      gst_caps_set_value (src_caps, "profile", &value);
+      gst_caps_set_value (filtered_caps, "profile", &value);
       g_value_unset (&value);
     }
   }
-
-  filtered_caps = gst_caps_intersect (src_caps, codec_caps);
 
   cdata = g_new0 (GstV4l2VideoEncCData, 1);
   cdata->device = g_strdup (device_path);
