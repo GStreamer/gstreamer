@@ -7,6 +7,7 @@
 #include <locale.h>
 #include <glib/gprintf.h>
 #include <gst/gst.h>
+#include <gio/gio.h>
 #include "gst/gst-i18n-app.h"
 
 static GRegex *cleanup_caps_field = NULL;
@@ -116,22 +117,26 @@ flags_to_string (GFlagsValue * values, guint flags)
   return g_string_free (s, FALSE);
 }
 
+static void
+_serialize_flags_default (GString * json, GType gtype, GValue * value)
+{
+  GFlagsValue *values = G_FLAGS_CLASS (g_type_class_ref (gtype))->values;
+  gchar *cur;
+
+  cur = flags_to_string (values, g_value_get_flags (value));
+  g_string_append_printf (json, ",\"default\": \"%s\"", cur);
+  g_free (cur);
+}
 
 static void
-_serialize_flags (GString * json, const gchar * key_name, GType gtype,
-    GValue * value)
+_serialize_flags (GString * json, const gchar * key_name, GType gtype)
 {
   GFlagsValue *values = G_FLAGS_CLASS (g_type_class_ref (gtype))->values;
 
-  if (value) {
-    gchar *cur;
+  g_string_append_printf (json, "\"%s\": {", key_name);
 
-    cur = flags_to_string (values, g_value_get_flags (value));
-    g_string_append_printf (json, ",\"default\": \"%s\",", cur);
-    g_free (cur);
-  }
-
-  g_string_append_printf (json, "\"%s\": [", key_name);
+  g_string_append_printf (json, "\"name\": \"%s\", "
+      "\"kind\": \"flags\"," "\"values\": [", g_type_name (gtype));
 
   while (values[0].value_name) {
     gchar *value_name = json_strescape (values[0].value_name);
@@ -148,12 +153,12 @@ _serialize_flags (GString * json, const gchar * key_name, GType gtype,
     g_free (value_name);
     g_free (value_nick);
   }
-  g_string_append_c (json, ']');
+
+  g_string_append (json, "]}");
 }
 
 static void
-_serialize_enum (GString * json, const gchar * key_name, GType gtype,
-    GValue * value)
+_serialize_enum_default (GString * json, GType gtype, GValue * value)
 {
   GEnumValue *values;
   guint j = 0;
@@ -162,24 +167,34 @@ _serialize_enum (GString * json, const gchar * key_name, GType gtype,
 
   values = G_ENUM_CLASS (g_type_class_ref (gtype))->values;
 
-  if (value) {
-    enum_value = g_value_get_enum (value);
-    while (values[j].value_name) {
-      if (values[j].value == enum_value) {
-        g_free (value_nick);
-        value_nick = json_strescape (values[j].value_nick);
-      }
-
-      j++;
+  enum_value = g_value_get_enum (value);
+  while (values[j].value_name) {
+    if (values[j].value == enum_value) {
+      g_free (value_nick);
+      value_nick = json_strescape (values[j].value_nick);
+      break;
     }
-    g_string_append_printf (json, ",\"default\": \"%s (%d)\","
-        "\"enum\": true,", value_nick, enum_value);;
-    g_free (value_nick);
+
+    j++;
   }
+  g_string_append_printf (json, ",\"default\": \"%s (%d)\"", value_nick,
+      enum_value);;
+  g_free (value_nick);
+}
 
-  g_string_append_printf (json, "\"%s\": [", key_name);
+static void
+_serialize_enum (GString * json, const gchar * key_name, GType gtype)
+{
+  GEnumValue *values;
+  guint j = 0;
 
-  j = 0;
+  values = G_ENUM_CLASS (g_type_class_ref (gtype))->values;
+
+  g_string_append_printf (json, "\"%s\": {", key_name);
+
+  g_string_append_printf (json, "\"name\": \"%s\", "
+      "\"kind\": \"enum\"," "\"values\": [", g_type_name (gtype));
+
   while (values[j].value_name) {
     gchar *value_name = json_strescape (values[j].value_name);
     gchar *value_nick = json_strescape (values[j].value_nick);
@@ -195,10 +210,39 @@ _serialize_enum (GString * json, const gchar * key_name, GType gtype,
     g_free (value_nick);
   }
 
-
-  g_string_append_c (json, ']');
+  g_string_append (json, "]}");
 }
 
+static const gchar *ignore_objects[] = {
+  "GstGLShader",                /* causes critical warnings */
+  "SoupSession",                /* causes critical warnings */
+  "GESTimeline",                /* causes critical warnings */
+  NULL,
+};
+
+static void
+_serialize_object (GString * json, const gchar * key_name, GType gtype)
+{
+  GObject *tmpobj;
+
+  g_string_append_printf (json, "\"%s\": {", key_name);
+
+  g_string_append_printf (json, "\"name\": \"%s\", "
+      "\"kind\": \"object\"", g_type_name (gtype));
+
+  if (!G_TYPE_IS_ABSTRACT (gtype) && !G_TYPE_IS_INTERFACE (gtype)
+      && G_TYPE_IS_INSTANTIATABLE (gtype)
+      && !g_type_is_a (gtype, G_TYPE_INITABLE)
+      && !g_type_is_a (gtype, G_TYPE_ASYNC_INITABLE)
+      && !g_strv_contains (ignore_objects, g_type_name (gtype))) {
+    g_string_append_c (json, ',');
+    tmpobj = g_object_new (gtype, NULL);
+    _add_object_details (json, tmpobj);
+    gst_object_unref (tmpobj);
+  }
+
+  g_string_append_c (json, '}');
+}
 
 static void
 _add_signals (GString * json, GObject * object)
@@ -261,18 +305,45 @@ _add_signals (GString * json, GObject * object)
       query = (GSignalQuery *) l->data;
 
       g_string_append_printf (json,
-          "%s\"%s\" : {"
-          "\"retval\": \"%s\","
-          "\"args\": [",
-          opened ? "," : ",\"signals\": {",
-          query->signal_name, g_type_name (query->return_type));
+          "%s\"%s\" : {", opened ? "," : ",\"signals\": {", query->signal_name);
 
       opened = TRUE;
+
+      g_string_append (json, "\"args\": [");
       for (j = 0; j < query->n_params; j++) {
-        g_string_append_printf (json, "%s\"%s\"",
-            j ? "," : "", g_type_name (query->param_types[j]));
+        gchar *arg_name = g_strdup_printf ("arg%u", j);
+        if (j) {
+          g_string_append_c (json, ',');
+        }
+
+        g_string_append_printf (json, "{ \"name\": \"%s\",", arg_name);
+
+        if (g_type_is_a (query->param_types[j], G_TYPE_ENUM)) {
+          _serialize_enum (json, "type", query->param_types[j]);
+        } else if (g_type_is_a (query->param_types[j], G_TYPE_FLAGS)) {
+          _serialize_flags (json, "type", query->param_types[j]);
+        } else if (g_type_is_a (query->param_types[j], G_TYPE_OBJECT)) {
+          _serialize_object (json, "type", query->param_types[j]);
+        } else {
+          g_string_append_printf (json, "\"type\": \"%s\"",
+              g_type_name (query->param_types[j]));
+        }
+
+        g_string_append_c (json, '}');
       }
       g_string_append_c (json, ']');
+
+      g_string_append_c (json, ',');
+      if (g_type_is_a (query->return_type, G_TYPE_ENUM)) {
+        _serialize_enum (json, "return-type", query->return_type);
+      } else if (g_type_is_a (query->return_type, G_TYPE_FLAGS)) {
+        _serialize_flags (json, "return-type", query->return_type);
+      } else if (g_type_is_a (query->return_type, G_TYPE_OBJECT)) {
+        _serialize_object (json, "return-type", query->return_type);
+      } else {
+        g_string_append_printf (json,
+            "\"return-type\": \"%s\"", g_type_name (query->return_type));
+      }
 
       if (query->signal_flags & G_SIGNAL_RUN_FIRST)
         g_string_append (json, ",\"when\": \"first\"");
@@ -292,14 +363,6 @@ _add_signals (GString * json, GObject * object)
 
       if (query->signal_flags & G_SIGNAL_NO_HOOKS)
         g_string_append (json, ",\"no-hooks\": true");
-
-      if (g_type_is_a (query->return_type, G_TYPE_ENUM)) {
-        g_string_append_c (json, ',');
-        _serialize_enum (json, "return-values", query->return_type, NULL);
-      } else if (g_type_is_a (query->return_type, G_TYPE_FLAGS)) {
-        g_string_append_c (json, ',');
-        _serialize_flags (json, "return-values", query->return_type, NULL);
-      }
 
       g_string_append_c (json, '}');
     }
@@ -352,16 +415,26 @@ _add_properties (GString * json, GObject * object, GObjectClass * klass)
         "\"construct\": %s,"
         "\"readable\": %s,"
         "\"writable\": %s,"
-        "\"blurb\": \"%s\","
-        "\"type-name\": \"%s\"",
+        "\"blurb\": \"%s\"",
         opened ? "," : "",
         spec->name,
         spec->flags & G_PARAM_CONSTRUCT_ONLY ? "true" : "false",
         spec->flags & G_PARAM_CONSTRUCT ? "true" : "false",
         spec->flags & G_PARAM_READABLE ? "true" : "false",
-        spec->flags & G_PARAM_WRITABLE ? "true" : "false",
-        tmpstr, g_type_name (G_PARAM_SPEC_VALUE_TYPE (spec)));
+        spec->flags & G_PARAM_WRITABLE ? "true" : "false", tmpstr);
     g_free (tmpstr);
+
+    g_string_append_c (json, ',');
+    if (G_IS_PARAM_SPEC_ENUM (spec)) {
+      _serialize_enum (json, "type", spec->value_type);
+    } else if (G_IS_PARAM_SPEC_FLAGS (spec)) {
+      _serialize_flags (json, "type", spec->value_type);
+    } else if (G_IS_PARAM_SPEC_OBJECT (spec)) {
+      _serialize_object (json, "type", spec->value_type);
+    } else {
+      g_string_append_printf (json,
+          "\"type\": \"%s\"", g_type_name (G_PARAM_SPEC_VALUE_TYPE (spec)));
+    }
 
     switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING:
@@ -495,10 +568,6 @@ _add_properties (GString * json, GObject * object, GObjectClass * klass)
             g_free (capsstr);
             g_free (tmpcapsstr);
           }
-        } else if (G_IS_PARAM_SPEC_ENUM (spec)) {
-          _serialize_enum (json, "values", spec->value_type, &value);
-        } else if (G_IS_PARAM_SPEC_FLAGS (spec)) {
-          _serialize_flags (json, "values", spec->value_type, &value);
         } else if (G_IS_PARAM_SPEC_BOXED (spec)) {
           if (spec->value_type == GST_TYPE_STRUCTURE) {
             const GstStructure *s = gst_value_get_structure (&value);
@@ -522,6 +591,10 @@ _add_properties (GString * json, GObject * object, GObjectClass * klass)
               gst_value_get_fraction_denominator (&value),
               pfraction->min_num, pfraction->min_den,
               pfraction->max_num, pfraction->max_den);
+        } else if (G_IS_PARAM_SPEC_ENUM (spec)) {
+          _serialize_enum_default (json, spec->value_type, &value);
+        } else if (G_IS_PARAM_SPEC_FLAGS (spec)) {
+          _serialize_flags_default (json, spec->value_type, &value);
         }
         break;
     }
@@ -641,18 +714,13 @@ _add_element_pad_templates (GString * json, GstElement * element,
         padtemplate->name_template);
     pad_type = GST_PAD_TEMPLATE_GTYPE (tmpl);
     if (pad_type != G_TYPE_NONE && pad_type != GST_TYPE_PAD) {
-      GObject *tmpobj;
-
-      g_string_append (json, ",\"object-type\": {");
-      tmpobj = g_object_new (pad_type, NULL);
-      _add_object_details (json, tmpobj);
-      gst_object_unref (tmpobj);
-      g_string_append (json, "}");
+      g_string_append_c (json, ',');
+      _serialize_object (json, "type", pad_type);
     }
-    g_string_append (json, "}");
+    g_string_append_c (json, '}');
   }
   if (opened)
-    g_string_append (json, "}");
+    g_string_append_c (json, '}');
 
   g_regex_unref (re);
 }
