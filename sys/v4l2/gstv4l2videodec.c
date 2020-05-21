@@ -1180,16 +1180,16 @@ gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
     }
 
     if (cdata->codec != NULL) {
-      GValue *value = gst_v4l2_codec_probe_levels (cdata->codec, video_fd);
-      if (value != NULL) {
-        gst_caps_set_value (cdata->sink_caps, "level", value);
-        g_value_unset (value);
+      GValue value = G_VALUE_INIT;
+
+      if (gst_v4l2_codec_probe_levels (cdata->codec, video_fd, &value)) {
+        gst_caps_set_value (cdata->sink_caps, "level", &value);
+        g_value_unset (&value);
       }
 
-      value = gst_v4l2_codec_probe_profiles (cdata->codec, video_fd);
-      if (value != NULL) {
-        gst_caps_set_value (cdata->sink_caps, "profile", value);
-        g_value_unset (value);
+      if (gst_v4l2_codec_probe_profiles (cdata->codec, video_fd, &value)) {
+        gst_caps_set_value (cdata->sink_caps, "profile", &value);
+        g_value_unset (&value);
       }
     }
 

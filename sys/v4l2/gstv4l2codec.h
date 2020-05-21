@@ -40,8 +40,10 @@ struct _GstV4l2Codec {
 
 };
 
-GValue * gst_v4l2_codec_probe_profiles(const GstV4l2Codec * codec, gint video_fd);
-GValue * gst_v4l2_codec_probe_levels(const GstV4l2Codec * codec, gint video_fd);
+gboolean gst_v4l2_codec_probe_profiles(const GstV4l2Codec * codec, gint video_fd,
+                                       GValue * value);
+gboolean gst_v4l2_codec_probe_levels(const GstV4l2Codec * codec, gint video_fd,
+                                       GValue * value);
 
 G_END_DECLS
 

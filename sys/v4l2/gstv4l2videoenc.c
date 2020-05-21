@@ -1174,18 +1174,17 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
   GType subtype;
   gchar *type_name;
   GstV4l2VideoEncCData *cdata;
+  GValue value = G_VALUE_INIT;
 
   if (codec != NULL && video_fd != -1) {
-    GValue *value = gst_v4l2_codec_probe_levels (codec, video_fd);
-    if (value != NULL) {
-      gst_caps_set_value (src_caps, "level", value);
-      g_value_unset (value);
+    if (gst_v4l2_codec_probe_levels (codec, video_fd, &value)) {
+      gst_caps_set_value (src_caps, "level", &value);
+      g_value_unset (&value);
     }
 
-    value = gst_v4l2_codec_probe_profiles (codec, video_fd);
-    if (value != NULL) {
-      gst_caps_set_value (src_caps, "profile", value);
-      g_value_unset (value);
+    if (gst_v4l2_codec_probe_profiles (codec, video_fd, &value)) {
+      gst_caps_set_value (src_caps, "profile", &value);
+      g_value_unset (&value);
     }
   }
 
