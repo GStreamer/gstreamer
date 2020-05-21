@@ -22,13 +22,13 @@ gstreamer-vaapi consists in a collection of VA-API based plugins for
 GStreamer and helper libraries.
 
   * `vaapi<CODEC>dec' is used to decode JPEG, MPEG-2, MPEG-4:2, H.264
-    AVC, H.264 MVC, VP8, VC-1, WMV3, HEVC videos to VA surfaces,
+    AVC, H.264 MVC, VP8, VP9, VC-1, WMV3, HEVC videos to VA surfaces,
     depending on the actual value of <CODEC> and the underlying
     hardware capabilities.  This plugin is also able to implicitly
     download the decoded surface to raw YUV buffers.
 
   * `vaapi<CODEC>enc' is used to encode into MPEG-2, H.264 AVC, H.264
-    MVC, JPEG, VP8, HEVC videos, depending on the actual value of
+    MVC, JPEG, VP8, VP9, HEVC videos, depending on the actual value of
     <CODEC> (mpeg2, h264, etc.) and the hardware capabilities. By
     default, raw format bitstreams are generated, so the result may be
     piped to a muxer, e.g. qtmux for MP4 containers.
@@ -52,7 +52,8 @@ Features
   * VA-API support from 0.39
   * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1, HEVC and
     VP9 ad-hoc decoders
-  * MPEG-2, H.264 AVC,H.264 MVC, JPEG, VP8 and HEVC ad-hoc encoders
+  * MPEG-2, H.264 AVC,H.264 MVC, JPEG, VP8, VP9 and HEVC ad-hoc
+    encoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
   * Support for EGL backend
   * Support for the Wayland display server
