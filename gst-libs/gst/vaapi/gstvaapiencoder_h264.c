@@ -2310,7 +2310,7 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
         sizeof (slice_param->delta_pic_order_cnt));
 
     /* only works for B frames */
-    slice_param->direct_spatial_mv_pred_flag = FALSE;
+    slice_param->direct_spatial_mv_pred_flag = TRUE;
     /* default equal to picture parameters */
     slice_param->num_ref_idx_active_override_flag = reflist_0_count
         || reflist_1_count;
