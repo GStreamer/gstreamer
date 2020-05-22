@@ -2075,7 +2075,6 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   gdouble playback_time;
   gboolean is_config = FALSE;
   GstValidateActionType *action_type;
-  const gchar *str_playback_time = NULL;
   GstValidateScenarioPrivate *priv = scenario ? scenario->priv : NULL;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_NONE;
   gboolean optional, needs_parsing = FALSE;
@@ -2093,10 +2092,10 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   if (gst_structure_get_double (structure, "playback-time", &playback_time) ||
       gst_structure_get_double (structure, "playback_time", &playback_time)) {
     action->playback_time = playback_time * GST_SECOND;
-  } else if ((str_playback_time =
-          gst_structure_get_string (structure, "playback-time")) ||
-      (str_playback_time =
-          gst_structure_get_string (structure, "playback_time"))) {
+  } else if (gst_structure_has_field_typed (structure, "playback-time",
+          G_TYPE_STRING)
+      || gst_structure_has_field_typed (structure, "playback_time",
+          G_TYPE_STRING)) {
 
     if (add_to_lists && priv) {
       action->priv->needs_playback_parsing = TRUE;
