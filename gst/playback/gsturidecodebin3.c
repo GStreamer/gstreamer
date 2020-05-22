@@ -237,6 +237,15 @@ struct _GstURIDecodeBin3
   gboolean posted_about_to_finish;
 };
 
+static gint
+gst_uridecodebin3_select_stream (GstURIDecodeBin3 * dbin,
+    GstStreamCollection * collection, GstStream * stream)
+{
+  GST_LOG_OBJECT (dbin, "default select-stream, returning -1");
+
+  return -1;
+}
+
 struct _GstURIDecodeBin3Class
 {
   GstBinClass parent_class;
@@ -521,6 +530,7 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
 
   gstelement_class->change_state = gst_uri_decode_bin3_change_state;
 
+  klass->select_stream = gst_uridecodebin3_select_stream;
 }
 
 static GstPadProbeReturn
