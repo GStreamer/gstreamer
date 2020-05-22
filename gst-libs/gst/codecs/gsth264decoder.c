@@ -438,17 +438,28 @@ gst_h264_decoder_parse_pps (GstH264Decoder * self, GstH264NalUnit * nalu)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264PPS pps;
   GstH264ParserResult pres;
+  gboolean ret = TRUE;
 
-  pres = gst_h264_parser_parse_pps (priv->parser, nalu, &pps);
+  pres = gst_h264_parse_pps (priv->parser, nalu, &pps);
   if (pres != GST_H264_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to parse PPS, result %d", pres);
     return FALSE;
   }
 
   GST_LOG_OBJECT (self, "PPS parsed");
+
+  if (pps.num_slice_groups_minus1 > 0) {
+    GST_FIXME_OBJECT (self, "FMO is not supported");
+    ret = FALSE;
+  } else if (gst_h264_parser_update_pps (priv->parser, &pps)
+      != GST_H264_PARSER_OK) {
+    GST_WARNING_OBJECT (self, "Failed to update PPS");
+    ret = FALSE;
+  }
+
   gst_h264_pps_clear (&pps);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
