@@ -104,6 +104,7 @@ struct _GstClockEntryFutex
   GDestroyNotify destroy_entry;
 
   gboolean initialized;
+  gboolean signalled;
 
   GMutex lock;
   guint cond_val;
@@ -177,6 +178,7 @@ struct _GstClockEntryPThread
   GDestroyNotify destroy_entry;
 
   gboolean initialized;
+  gboolean signalled;
 
   pthread_cond_t cond;
   pthread_mutex_t lock;
@@ -309,6 +311,7 @@ struct _GstClockEntryGLib
   GDestroyNotify destroy_entry;
 
   gboolean initialized;
+  gboolean signalled;
 
   GMutex lock;
   GCond cond;
@@ -341,6 +344,7 @@ ensure_entry_initialized (GstClockEntryImpl * entry_impl)
   if (!entry_impl->initialized) {
     init_entry (entry_impl);
     entry_impl->initialized = TRUE;
+    entry_impl->signalled = FALSE;
   }
 }
 
@@ -497,7 +501,10 @@ gst_system_clock_dispose (GObject * object)
   if (priv->entries) {
     GstClockEntryImpl *entry = (GstClockEntryImpl *) priv->entries->data;
     ensure_entry_initialized (entry);
+    GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
+    ((GstClockEntryImpl *) entry)->signalled = TRUE;
     GST_SYSTEM_CLOCK_ENTRY_BROADCAST (entry);
+    GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
   }
   GST_SYSTEM_CLOCK_UNLOCK (clock);
 
@@ -934,15 +941,20 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
 #endif
 
     while (TRUE) {
-      gboolean waitret;
+      gboolean waitret = TRUE;
 
       /* now wait on the entry, it either times out or the cond is signalled.
        * The status of the entry is BUSY only around the wait. */
 
       GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
-      waitret =
-          GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL ((GstClockEntryImpl *) entry,
-          mono_ts * 1000 + diff);
+      while (!((GstClockEntryImpl *) entry)->signalled) {
+        waitret =
+            GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL ((GstClockEntryImpl *) entry,
+            mono_ts * 1000 + diff);
+        if (!waitret)
+          break;
+      }
+      ((GstClockEntryImpl *) entry)->signalled = FALSE;
       GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
 
       /* get the new status, mark as DONE. We do this so that the unschedule
@@ -1194,7 +1206,10 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
          * looks at the new head entry instead, we only need to do this once */
         GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
             "head entry was busy. Wakeup async thread");
+        GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) head);
+        ((GstClockEntryImpl *) head)->signalled = TRUE;
         GST_SYSTEM_CLOCK_ENTRY_BROADCAST ((GstClockEntryImpl *) head);
+        GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) head);
       }
     }
   }
@@ -1244,7 +1259,10 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "entry was BUSY, doing wakeup");
     if (!entry->unscheduled) {
       ensure_entry_initialized ((GstClockEntryImpl *) entry);
+      GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
+      ((GstClockEntryImpl *) entry)->signalled = TRUE;
       GST_SYSTEM_CLOCK_ENTRY_BROADCAST ((GstClockEntryImpl *) entry);
+      GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
     }
   }
   GST_SYSTEM_CLOCK_UNLOCK (clock);
