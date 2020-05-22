@@ -1106,6 +1106,7 @@ update_requested_selection (GstDecodebin3 * dbin)
 {
   guint i, nb;
   GList *tmp = NULL;
+  gboolean all_user_selected = TRUE;
   GstStreamType used_types = 0;
   GstStreamCollection *collection;
 
@@ -1140,6 +1141,9 @@ update_requested_selection (GstDecodebin3 * dbin)
         gst_decodebin3_signals[SIGNAL_SELECT_STREAM], 0, collection, stream,
         &request);
     GST_DEBUG_OBJECT (dbin, "stream %s , request:%d", sid, request);
+
+    if (request == -1)
+      all_user_selected = FALSE;
     if (request == 1 || (request == -1
             && (stream_in_list (dbin->requested_selection, sid)
                 || stream_in_list (dbin->active_selection, sid)))) {
@@ -1156,16 +1160,18 @@ update_requested_selection (GstDecodebin3 * dbin)
     }
   }
 
-  /* 4. If not, match one stream of each type */
-  for (i = 0; i < nb; i++) {
-    GstStream *stream = gst_stream_collection_get_stream (collection, i);
-    GstStreamType curtype = gst_stream_get_stream_type (stream);
-    if (!(used_types & curtype)) {
-      const gchar *sid = gst_stream_get_stream_id (stream);
-      GST_DEBUG_OBJECT (dbin, "Selecting stream '%s' of type %s",
-          sid, gst_stream_type_get_name (curtype));
-      tmp = g_list_append (tmp, (gchar *) sid);
-      used_types |= curtype;
+  /* 4. If the user didn't explicitly selected all streams, match one stream of each type */
+  if (!all_user_selected && !dbin->requested_selection) {
+    for (i = 0; i < nb; i++) {
+      GstStream *stream = gst_stream_collection_get_stream (collection, i);
+      GstStreamType curtype = gst_stream_get_stream_type (stream);
+      if (!(used_types & curtype)) {
+        const gchar *sid = gst_stream_get_stream_id (stream);
+        GST_ERROR_OBJECT (dbin, "Selecting stream '%s' of type %s",
+            sid, gst_stream_type_get_name (curtype));
+        tmp = g_list_append (tmp, (gchar *) sid);
+        used_types |= curtype;
+      }
     }
   }
 
