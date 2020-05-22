@@ -10,7 +10,7 @@ async-std = "1"
 structopt = { version = "0.3", default-features = false }
 anyhow = "1"
 rand = "0.7"
-async-tungstenite = { version = "0.4", features = ["async-std-runtime", "async-native-tls"] }
+async-tungstenite = { version = "0.5", features = ["async-std-runtime", "async-native-tls"] }
 gst = { package = "gstreamer", version = "0.15", features = ["v1_14"] }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.15" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.15", features = ["v1_14"] }
