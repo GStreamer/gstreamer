@@ -3800,7 +3800,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 {
   gchar **scenarios = NULL;
   guint i;
-  gboolean found_actions = FALSE, is_config, ret = TRUE;
+  gboolean found_actions = FALSE, is_config, ret = FALSE;
   gchar **include_paths = gst_validate_scenario_get_include_paths (NULL);
 
   if (!scenario_name)
@@ -3811,6 +3811,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   for (i = 0; scenarios[i]; i++) {
     guint include_i;
     gchar *lfilename = NULL, *tldir = NULL, *scenario_file = NULL;
+
+    ret = FALSE;
 
     /* First check if the scenario name is not a full path to the
      * actual scenario */
