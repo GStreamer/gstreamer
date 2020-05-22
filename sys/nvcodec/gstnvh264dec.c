@@ -716,6 +716,29 @@ gst_nv_h264_dec_get_decoder_frame_from_picture (GstNvH264Dec * self,
 }
 
 static void
+gst_nv_h264_dec_fill_scaling_list_4x4 (const GstH264PPS * pps,
+    CUVIDH264PICPARAMS * params)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (params->WeightScale4x4); i++)
+    gst_h264_quant_matrix_4x4_get_raster_from_zigzag (params->WeightScale4x4[i],
+        pps->scaling_lists_4x4[i]);
+}
+
+static void
+gst_nv_h264_dec_fill_scaling_list_8x8 (const GstH264PPS * pps,
+    CUVIDH264PICPARAMS * params)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (params->WeightScale8x8); i++) {
+    gst_h264_quant_matrix_8x8_get_raster_from_zigzag (params->WeightScale8x8[i],
+        pps->scaling_lists_8x8[i]);
+  }
+}
+
+static void
 gst_nv_h264_dec_picture_params_from_sps (GstNvH264Dec * self,
     const GstH264SPS * sps, gboolean field_pic, CUVIDH264PICPARAMS * params)
 {
@@ -764,17 +787,8 @@ gst_nv_h264_dec_picture_params_from_pps (GstNvH264Dec * self,
   COPY_FIELD (chroma_qp_index_offset);
 #undef COPY_FIELD
 
-  /* h264parser will copy scaling list from sps to pps regardless of
-   * pic_scaling_matrix_present_flag */
-  g_assert (sizeof (params->WeightScale4x4) == sizeof (pps->scaling_lists_4x4));
-  g_assert (sizeof (params->WeightScale8x8[0]) ==
-      sizeof (pps->scaling_lists_8x8[0]));
-  memcpy (params->WeightScale4x4, pps->scaling_lists_4x4,
-      sizeof (params->WeightScale4x4));
-  memcpy (params->WeightScale8x8[0], pps->scaling_lists_8x8[0],
-      sizeof (params->WeightScale8x8[0]));
-  memcpy (params->WeightScale8x8[1], pps->scaling_lists_8x8[3],
-      sizeof (params->WeightScale8x8[0]));
+  gst_nv_h264_dec_fill_scaling_list_4x4 (pps, params);
+  gst_nv_h264_dec_fill_scaling_list_8x8 (pps, params);
 }
 
 static void
