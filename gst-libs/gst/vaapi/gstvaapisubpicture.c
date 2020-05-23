@@ -37,8 +37,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-typedef struct _GstVaapiSubpictureClass GstVaapiSubpictureClass;
-
 /**
  * GstVaapiSubpicture:
  *
@@ -47,55 +45,56 @@ typedef struct _GstVaapiSubpictureClass GstVaapiSubpictureClass;
 struct _GstVaapiSubpicture
 {
   /*< private > */
-  GstVaapiObject parent_instance;
+  GstMiniObject mini_object;
+  GstVaapiDisplay *display;
+  GstVaapiID object_id;
 
   GstVaapiImage *image;
   guint flags;
   gfloat global_alpha;
 };
 
-/**
- * GstVaapiSubpictureClass:
- *
- * A VA subpicture wrapper class
- */
-struct _GstVaapiSubpictureClass
-{
-  /*< private > */
-  GstVaapiObjectClass parent_class;
-};
-
 static void
-gst_vaapi_subpicture_destroy (GstVaapiSubpicture * subpicture)
+gst_vaapi_subpicture_free_image (GstVaapiSubpicture * subpicture)
 {
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (subpicture);
+  GstVaapiDisplay *const display = subpicture->display;
   VASubpictureID subpicture_id;
   VAStatus status;
 
-  subpicture_id = GST_VAAPI_OBJECT_ID (subpicture);
+  subpicture_id = subpicture->object_id;
   GST_DEBUG ("subpicture %" GST_VAAPI_ID_FORMAT,
       GST_VAAPI_ID_ARGS (subpicture_id));
 
   if (subpicture_id != VA_INVALID_ID) {
-    if (display) {
-      GST_VAAPI_DISPLAY_LOCK (display);
-      status = vaDestroySubpicture (GST_VAAPI_DISPLAY_VADISPLAY (display),
-          subpicture_id);
-      GST_VAAPI_DISPLAY_UNLOCK (display);
-      if (!vaapi_check_status (status, "vaDestroySubpicture()"))
-        GST_WARNING ("failed to destroy subpicture %" GST_VAAPI_ID_FORMAT,
-            GST_VAAPI_ID_ARGS (subpicture_id));
-    }
-    GST_VAAPI_OBJECT_ID (subpicture) = VA_INVALID_ID;
+    GST_VAAPI_DISPLAY_LOCK (display);
+    status = vaDestroySubpicture (GST_VAAPI_DISPLAY_VADISPLAY (display),
+        subpicture_id);
+    GST_VAAPI_DISPLAY_UNLOCK (display);
+    if (!vaapi_check_status (status, "vaDestroySubpicture()"))
+      GST_WARNING ("failed to destroy subpicture %" GST_VAAPI_ID_FORMAT,
+          GST_VAAPI_ID_ARGS (subpicture_id));
+    subpicture->object_id = VA_INVALID_ID;
   }
-  gst_mini_object_replace ((GstMiniObject **) & subpicture->image, NULL);
+
+  if (subpicture->image)
+    gst_mini_object_replace ((GstMiniObject **) & subpicture->image, NULL);
 }
 
+static void
+gst_vaapi_subpicture_free (GstVaapiSubpicture * subpicture)
+{
+  gst_vaapi_subpicture_free_image (subpicture);
+  gst_vaapi_display_replace (&subpicture->display, NULL);
+  g_slice_free1 (sizeof (GstVaapiSubpicture), subpicture);
+}
+
+GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiSubpicture, gst_vaapi_subpicture);
+
 static gboolean
-gst_vaapi_subpicture_create (GstVaapiSubpicture * subpicture,
+gst_vaapi_subpicture_bind_image (GstVaapiSubpicture * subpicture,
     GstVaapiImage * image)
 {
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (subpicture);
+  GstVaapiDisplay *const display = subpicture->display;
   VASubpictureID subpicture_id;
   VAStatus status;
 
@@ -108,14 +107,11 @@ gst_vaapi_subpicture_create (GstVaapiSubpicture * subpicture,
 
   GST_DEBUG ("subpicture %" GST_VAAPI_ID_FORMAT,
       GST_VAAPI_ID_ARGS (subpicture_id));
-  GST_VAAPI_OBJECT_ID (subpicture) = subpicture_id;
+  subpicture->object_id = subpicture_id;
   subpicture->image =
       (GstVaapiImage *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (image));
   return TRUE;
 }
-
-#define gst_vaapi_subpicture_finalize gst_vaapi_subpicture_destroy
-GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiSubpicture, gst_vaapi_subpicture)
 
 /**
  * gst_vaapi_subpicture_new:
@@ -127,8 +123,8 @@ GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiSubpicture, gst_vaapi_subpicture)
  *
  * Return value: the newly allocated #GstVaapiSubpicture object
  */
-     GstVaapiSubpicture *gst_vaapi_subpicture_new (GstVaapiImage * image,
-    guint flags)
+GstVaapiSubpicture *
+gst_vaapi_subpicture_new (GstVaapiImage * image, guint flags)
 {
   GstVaapiSubpicture *subpicture;
   GstVaapiDisplay *display;
@@ -147,19 +143,26 @@ GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiSubpicture, gst_vaapi_subpicture)
   if (flags & ~va_flags)
     return NULL;
 
-  subpicture = gst_vaapi_object_new (gst_vaapi_subpicture_class (), display);
+  subpicture = g_slice_new (GstVaapiSubpicture);
   if (!subpicture)
     return NULL;
 
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (subpicture), 0,
+      GST_TYPE_VAAPI_SUBPICTURE, NULL, NULL,
+      (GstMiniObjectFreeFunction) gst_vaapi_subpicture_free);
+  subpicture->display = gst_object_ref (display);
+  subpicture->object_id = VA_INVALID_ID;
+  subpicture->flags = flags;
   subpicture->global_alpha = 1.0f;
-  if (!gst_vaapi_subpicture_set_image (subpicture, image))
+
+  if (!gst_vaapi_subpicture_bind_image (subpicture, image))
     goto error;
   return subpicture;
 
   /* ERRORS */
 error:
   {
-    gst_vaapi_object_unref (subpicture);
+    gst_vaapi_subpicture_unref (subpicture);
     return NULL;
   }
 }
@@ -194,12 +197,8 @@ gst_vaapi_subpicture_new_from_overlay_rectangle (GstVaapiDisplay * display,
 
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rect), NULL);
 
-  /* XXX: use gst_vaapi_image_format_from_video() */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  format = GST_VIDEO_FORMAT_BGRA;
-#else
-  format = GST_VIDEO_FORMAT_ARGB;
-#endif
+  format = GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB;
+
   if (!gst_vaapi_display_has_subpicture_format (display, format, &hw_flags))
     return NULL;
 
@@ -235,12 +234,12 @@ gst_vaapi_subpicture_new_from_overlay_rectangle (GstVaapiDisplay * display,
   raw_image.stride[0] = stride;
   if (!gst_vaapi_image_update_from_raw (image, &raw_image, NULL)) {
     GST_WARNING ("could not update VA image with subtitle data");
-    gst_vaapi_object_unref (image);
+    gst_vaapi_image_unref (image);
     return NULL;
   }
 
   subpicture = gst_vaapi_subpicture_new (image, flags);
-  gst_vaapi_object_unref (image);
+  gst_vaapi_image_unref (image);
   gst_video_meta_unmap (vmeta, 0, &map_info);
   if (!subpicture)
     return NULL;
@@ -266,7 +265,7 @@ gst_vaapi_subpicture_get_id (GstVaapiSubpicture * subpicture)
 {
   g_return_val_if_fail (subpicture != NULL, VA_INVALID_ID);
 
-  return GST_VAAPI_OBJECT_ID (subpicture);
+  return subpicture->object_id;
 }
 
 /**
@@ -318,8 +317,8 @@ gst_vaapi_subpicture_set_image (GstVaapiSubpicture * subpicture,
   g_return_val_if_fail (subpicture != NULL, FALSE);
   g_return_val_if_fail (image != NULL, FALSE);
 
-  gst_vaapi_subpicture_destroy (subpicture);
-  return gst_vaapi_subpicture_create (subpicture, image);
+  gst_vaapi_subpicture_free_image (subpicture);
+  return gst_vaapi_subpicture_bind_image (subpicture, image);
 }
 
 /**
@@ -364,11 +363,11 @@ gst_vaapi_subpicture_set_global_alpha (GstVaapiSubpicture * subpicture,
   if (subpicture->global_alpha == global_alpha)
     return TRUE;
 
-  display = GST_VAAPI_OBJECT_DISPLAY (subpicture);
+  display = subpicture->display;
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaSetSubpictureGlobalAlpha (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      GST_VAAPI_OBJECT_ID (subpicture), global_alpha);
+      subpicture->object_id, global_alpha);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaSetSubpictureGlobalAlpha()"))
     return FALSE;

@@ -52,6 +52,26 @@ typedef enum {
     GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA           = (1 << 1),
 } GstVaapiSubpictureFlags;
 
+#define GST_TYPE_VAAPI_SUBPICTURE (gst_vaapi_subpicture_get_type ())
+
+#define GST_VAAPI_SUBPICTURE_ID(subpicture)      (gst_vaapi_subpicture_get_id (subpicture))
+
+GType
+gst_vaapi_subpicture_get_type (void) G_GNUC_CONST;
+
+/**
+ * gst_vaapi_subpicture_unref: (skip)
+ * @subpicture: (transfer full): a #GstVaapiSubpicture.
+ *
+ * Decreases the refcount of the subpicture. If the refcount reaches 0, the
+ * subpicture will be freed.
+ */
+static inline void
+gst_vaapi_subpicture_unref (GstVaapiSubpicture *subpicture)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (subpicture));
+}
+
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags);
 
@@ -80,6 +100,8 @@ gst_vaapi_subpicture_get_global_alpha(GstVaapiSubpicture *subpicture);
 gboolean
 gst_vaapi_subpicture_set_global_alpha(GstVaapiSubpicture *subpicture,
     gfloat global_alpha);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiSubpicture, gst_vaapi_subpicture_unref)
 
 G_END_DECLS
 

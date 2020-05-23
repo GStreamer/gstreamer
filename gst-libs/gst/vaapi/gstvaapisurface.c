@@ -53,7 +53,7 @@ static void
 destroy_subpicture_cb (gpointer subpicture, gpointer surface)
 {
   _gst_vaapi_surface_deassociate_subpicture (surface, subpicture);
-  gst_vaapi_object_unref (subpicture);
+  gst_vaapi_subpicture_unref (subpicture);
 }
 
 static void
@@ -804,7 +804,7 @@ gst_vaapi_surface_associate_subpicture (GstVaapiSurface * surface,
 
   if (g_ptr_array_remove_fast (surface->subpictures, subpicture)) {
     success = _gst_vaapi_surface_deassociate_subpicture (surface, subpicture);
-    gst_vaapi_object_unref (subpicture);
+    gst_vaapi_subpicture_unref (subpicture);
     if (!success)
       return FALSE;
   }
@@ -814,7 +814,8 @@ gst_vaapi_surface_associate_subpicture (GstVaapiSurface * surface,
   if (!success)
     return FALSE;
 
-  g_ptr_array_add (surface->subpictures, gst_vaapi_object_ref (subpicture));
+  g_ptr_array_add (surface->subpictures,
+      gst_mini_object_ref (GST_MINI_OBJECT_CAST (subpicture)));
   return TRUE;
 }
 
@@ -858,7 +859,7 @@ _gst_vaapi_surface_associate_subpicture (GstVaapiSurface * surface,
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaAssociateSubpicture (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      GST_VAAPI_OBJECT_ID (subpicture), &surface_id, 1,
+      GST_VAAPI_SUBPICTURE_ID (subpicture), &surface_id, 1,
       src_rect->x, src_rect->y, src_rect->width, src_rect->height,
       dst_rect->x, dst_rect->y, dst_rect->width, dst_rect->height,
       from_GstVaapiSubpictureFlags (gst_vaapi_subpicture_get_flags
@@ -895,13 +896,13 @@ gst_vaapi_surface_deassociate_subpicture (GstVaapiSurface * surface,
   if (!g_ptr_array_remove_fast (surface->subpictures, subpicture)) {
     GST_DEBUG ("subpicture %" GST_VAAPI_ID_FORMAT " was not bound to "
         "surface %" GST_VAAPI_ID_FORMAT,
-        GST_VAAPI_ID_ARGS (GST_VAAPI_OBJECT_ID (subpicture)),
+        GST_VAAPI_ID_ARGS (GST_VAAPI_SUBPICTURE_ID (subpicture)),
         GST_VAAPI_ID_ARGS (GST_VAAPI_SURFACE_ID (surface)));
     return TRUE;
   }
 
   success = _gst_vaapi_surface_deassociate_subpicture (surface, subpicture);
-  gst_vaapi_object_unref (subpicture);
+  gst_vaapi_subpicture_unref (subpicture);
   return success;
 }
 
@@ -923,7 +924,7 @@ _gst_vaapi_surface_deassociate_subpicture (GstVaapiSurface * surface,
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaDeassociateSubpicture (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      GST_VAAPI_OBJECT_ID (subpicture), &surface_id, 1);
+      GST_VAAPI_SUBPICTURE_ID (subpicture), &surface_id, 1);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaDeassociateSubpicture()"))
     return FALSE;
@@ -1047,10 +1048,10 @@ gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
     if (!gst_vaapi_surface_associate_subpicture (surface, subpicture,
             NULL, &sub_rect)) {
       GST_WARNING ("could not render overlay rectangle %p", rect);
-      gst_vaapi_object_unref (subpicture);
+      gst_vaapi_subpicture_unref (subpicture);
       return FALSE;
     }
-    gst_vaapi_object_unref (subpicture);
+    gst_vaapi_subpicture_unref (subpicture);
   }
   return TRUE;
 }

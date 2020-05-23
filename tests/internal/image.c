@@ -395,6 +395,6 @@ image_upload (GstVaapiImage * image, GstVaapiSurface * surface)
     g_error ("could not associate subpicture to surface");
 
   /* The surface holds a reference to the subpicture. This is safe */
-  gst_vaapi_object_unref (subpicture);
+  gst_vaapi_subpicture_unref (subpicture);
   return TRUE;
 }
