@@ -1036,6 +1036,10 @@ gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
     rect = gst_video_overlay_composition_get_rectangle (composition, n);
     subpicture = gst_vaapi_subpicture_new_from_overlay_rectangle (display,
         rect);
+    if (subpicture == NULL) {
+      GST_WARNING ("could not create subpicture for rectangle %p", rect);
+      return FALSE;
+    }
 
     gst_video_overlay_rectangle_get_render_rectangle (rect,
         (gint *) & sub_rect.x, (gint *) & sub_rect.y,
