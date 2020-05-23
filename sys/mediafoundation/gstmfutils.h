@@ -48,6 +48,8 @@ const GUID *   gst_mf_video_subtype_from_video_format (GstVideoFormat format);
 
 GstCaps *      gst_mf_media_type_to_caps  (IMFMediaType * media_type);
 
+void           gst_mf_media_type_release  (IMFMediaType * media_type);
+
 gboolean       _gst_mf_result              (HRESULT hr,
                                             GstDebugCategory * cat,
                                             const gchar * file,

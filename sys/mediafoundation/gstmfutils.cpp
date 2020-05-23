@@ -346,6 +346,13 @@ gst_mf_media_type_to_caps (IMFMediaType * media_type)
   return NULL;
 }
 
+void
+gst_mf_media_type_release (IMFMediaType * media_type)
+{
+  if (media_type)
+    media_type->Release ();
+}
+
 static gchar *
 gst_mf_hr_to_string (HRESULT hr)
 {

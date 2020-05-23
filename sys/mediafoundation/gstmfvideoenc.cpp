@@ -109,13 +109,6 @@ gst_mf_video_enc_close (GstVideoEncoder * enc)
   return TRUE;
 }
 
-static void
-gst_mf_media_type_release (IMFMediaType * type)
-{
-  if (type)
-    type->Release ();
-}
-
 static gboolean
 gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 {
