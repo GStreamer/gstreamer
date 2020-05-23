@@ -33,7 +33,6 @@
 #include "gstvaapidecoder_dpb.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
-#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

@@ -25,6 +25,7 @@
 #ifndef GST_VAAPI_PROFILE_H
 #define GST_VAAPI_PROFILE_H
 
+#include <va/va.h>
 #include <gst/gstvalue.h>
 
 G_BEGIN_DECLS

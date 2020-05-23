@@ -32,7 +32,6 @@
 #include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
-#include "gstvaapiobject_priv.h"
 #include "gstvaapiutils_h264_priv.h"
 
 #define DEBUG 1

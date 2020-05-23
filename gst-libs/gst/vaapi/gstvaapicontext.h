@@ -25,8 +25,6 @@
 #ifndef GST_VAAPI_CONTEXT_H
 #define GST_VAAPI_CONTEXT_H
 
-#include "gstvaapiobject.h"
-#include "gstvaapiobject_priv.h"
 #include "gstvaapiprofile.h"
 #include "gstvaapidisplay.h"
 #include "gstvaapisurface.h"

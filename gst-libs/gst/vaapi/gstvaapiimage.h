@@ -26,7 +26,6 @@
 #define GST_VAAPI_IMAGE_H
 
 #include <gst/gstbuffer.h>
-#include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/video-format.h>
 

@@ -27,7 +27,6 @@
 
 #include "gstvaapiminiobject.h"
 #include "gstvaapisurfaceproxy.h"
-#include "gstvaapiobject_priv.h"
 #include "gstvaapisurface_priv.h"
 
 #define GST_VAAPI_SURFACE_PROXY(obj) \

@@ -26,7 +26,6 @@
 #include "gstvaapibufferproxy_priv.h"
 #include "gstvaapisurface_priv.h"
 #include "gstvaapiutils.h"
-#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

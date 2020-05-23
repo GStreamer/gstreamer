@@ -24,7 +24,6 @@
 #define GST_VAAPI_BUFFER_PROXY_PRIV_H
 
 #include "gstvaapibufferproxy.h"
-#include "gstvaapiobject.h"
 #include "gstvaapiminiobject.h"
 
 G_BEGIN_DECLS

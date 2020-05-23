@@ -30,7 +30,6 @@
 #include "sysdeps.h"
 #include "gstvaapivideopool.h"
 #include "gstvaapivideopool_priv.h"
-#include "gstvaapiobject.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

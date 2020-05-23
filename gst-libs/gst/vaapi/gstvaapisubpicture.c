@@ -31,7 +31,6 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisubpicture.h"
-#include "gstvaapiobject_priv.h"
 #include "gstvaapiimage_priv.h"
 
 #define DEBUG 1
