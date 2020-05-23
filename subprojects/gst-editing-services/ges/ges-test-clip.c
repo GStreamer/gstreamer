@@ -532,7 +532,7 @@ ges_test_clip_create_track_element (GESClip * clip, GESTrackType type)
           gst_structure_from_string (ges_asset_get_id (asset), NULL);
 
       if (structure) {
-        id = g_strdup (gst_structure_get_name (structure));
+        id = gst_structure_to_string (structure);
         gst_structure_free (structure);
       }
     }
