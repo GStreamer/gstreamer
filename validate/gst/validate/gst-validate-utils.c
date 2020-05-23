@@ -574,6 +574,21 @@ setup_quarks (void)
   debug_quark = g_quark_from_static_string ("__debug__");
 }
 
+gboolean
+gst_validate_has_colored_output (void)
+{
+#if GLIB_CHECK_VERSION(2,50,0)
+  return g_log_writer_supports_color (fileno (stdout));
+#endif
+
+#ifdef G_OS_UNIX
+  if (!isatty (STDOUT_FILENO))
+    return FALSE;
+#elif defined(G_OS_WIN32)
+  return FALSE;
+#endif
+}
+
 /* Parse file that contains a list of GStructures */
 #define GST_STRUCT_LINE_CONTINUATION_CHARS ",{\\["
 static GList *
@@ -594,14 +609,11 @@ _file_get_structures (GFile * file, gchar ** err,
   if (err)
     errstr = g_string_new (NULL);
 
-#if GLIB_CHECK_VERSION(2,50,0)
-  if (g_log_writer_supports_color (fileno (stderr))) {
+  if (gst_validate_has_colored_output ()) {
     red = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
     bold = gst_debug_construct_term_color (GST_DEBUG_BOLD);
     endcolor = "\033[0m";
-  } else
-#endif
-  {
+  } else {
     red = g_strdup ("");
     bold = g_strdup ("");
   }

@@ -86,5 +86,6 @@ void gst_validate_structure_set_variables_from_struct_file(GstStructure* vars, c
 void gst_validate_set_globals(GstStructure* structure);
 GST_VALIDATE_API
 gboolean gst_validate_fail_on_missing_plugin(void);
+GST_VALIDATE_API gboolean gst_validate_has_colored_output(void);
 
 #endif

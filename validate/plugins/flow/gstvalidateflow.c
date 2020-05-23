@@ -396,7 +396,36 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
   g_subprocess_communicate_utf8 (process, NULL, NULL, &stdout_text, NULL,
       &error);
   if (!error) {
-    fprintf (stderr, "%s\n", stdout_text);
+    gboolean colored = gst_validate_has_colored_output ();
+    GSubprocess *process;
+    gchar *fname = NULL;
+    gint f = g_file_open_tmp ("XXXXXX.diff", &fname, NULL);
+
+    if (f > 0) {
+      gchar *tmpstdout;
+      g_file_set_contents (fname, stdout_text, -1, NULL);
+      close (f);
+
+      process =
+          g_subprocess_new (G_SUBPROCESS_FLAGS_STDOUT_PIPE, &error, "bat", "-l",
+          "diff", "--paging", "never", "--color", colored ? "always" : "never",
+          fname, NULL);
+
+      g_subprocess_communicate_utf8 (process, NULL, NULL, &tmpstdout, NULL,
+          &error);
+      if (!error) {
+        g_free (stdout_text);
+        stdout_text = tmpstdout;
+      } else {
+        colored = FALSE;
+        GST_DEBUG ("Could not use bat: %s", error->message);
+        g_clear_error (&error);
+      }
+      g_free (fname);
+    }
+
+    fprintf (stderr, "%s%s%s\n",
+        !colored ? "``` diff\n" : "", stdout_text, !colored ? "\n```" : "");
   } else {
     fprintf (stderr, "Cannot show more details, failed to run diff: %s",
         error->message);
@@ -483,9 +512,7 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
     g_free (contents);
   }
 
-  gst_validate_printf (flow, "Checking that flow %s matches expected flow %s\n"
-      " $ diff %s %s\n",
-      flow->expectations_file_path, flow->actual_results_file_path,
+  gst_validate_printf (flow, "Checking that flow %s matches expected flow %s\n",
       flow->expectations_file_path, flow->actual_results_file_path);
 
   for (i = 0; lines_expected[i] && lines_actual[i]; i++) {
