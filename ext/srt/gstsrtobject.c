@@ -1111,6 +1111,7 @@ gst_srt_object_close (GstSRTObject * srtobject)
   if (srtobject->listener_poll_id != SRT_ERROR) {
     srt_epoll_remove_usock (srtobject->listener_poll_id,
         srtobject->listener_sock);
+    srt_epoll_release (srtobject->listener_poll_id);
     srtobject->listener_poll_id = SRT_ERROR;
   }
   if (srtobject->thread) {
