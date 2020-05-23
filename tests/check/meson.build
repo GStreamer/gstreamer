@@ -131,15 +131,6 @@ test_deps = [gst_dep, gst_base_dep, gst_net_dep, gst_check_dep, audio_dep,
   video_dep, pbutils_dep, rtp_dep, rtsp_dep, tag_dep, allocators_dep, app_dep,
   fft_dep, riff_dep, sdp_dep, gio_dep, valgrind_dep] + glib_deps
 
-pluginsdirs = []
-if gst_dep.type_name() == 'pkgconfig'
-  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')]
-  gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
-else
-  gst_plugin_scanner_dir = gst_proj.get_variable('gst_scanner_dir')
-endif
-gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
-
 foreach t : base_tests
   fname = t.get(0)
   test_name = fname.split('.').get(0).underscorify()

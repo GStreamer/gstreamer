@@ -1489,10 +1489,10 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
     next_sample = src->sample_stop;
     src->eos_reached = TRUE;
   } else if (src->check_seek_stop && src->reverse &&
-      (src->sample_stop > src->next_sample)
+      (src->sample_stop >= (src->next_sample - samples))
       ) {
     /* calculate only partial buffer */
-    src->generate_samples_per_buffer = src->sample_stop - src->next_sample;
+    src->generate_samples_per_buffer = src->next_sample - src->sample_stop;
     next_sample = src->sample_stop;
     src->eos_reached = TRUE;
   } else {
