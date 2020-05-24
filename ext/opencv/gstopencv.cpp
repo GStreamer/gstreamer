@@ -44,6 +44,7 @@
 #include "gstdewarp.h"
 #include "gstcameracalibrate.h"
 #include "gstcameraundistort.h"
+#include "gstcvtracker.h"
 
 
 static gboolean
@@ -72,6 +73,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (dewarp, plugin);
   ret |= GST_ELEMENT_REGISTER (cameracalibrate, plugin);
   ret |= GST_ELEMENT_REGISTER (cameraundistort, plugin);
+  ret |= GST_ELEMENT_REGISTER (cvtracker, plugin);
 
   return ret;
 }

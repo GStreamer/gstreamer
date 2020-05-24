@@ -30,7 +30,8 @@ gstopencv_sources = [
   'camerautils.cpp',
   'cameraevent.cpp',
   'gstcameracalibrate.cpp',
-  'gstcameraundistort.cpp'
+  'gstcameraundistort.cpp',
+  'gstcvtracker.cpp'
 ]
 
 libopencv_headers = [
@@ -41,6 +42,7 @@ libopencv_headers = [
   'opencv2/objdetect.hpp',
   'opencv2/opencv.hpp',
   'opencv2/video.hpp',
+  'opencv2/tracking.hpp',
 ]
 
 libopencv4_headers = [
@@ -51,6 +53,7 @@ libopencv4_headers = [
   'opencv4/opencv2/objdetect.hpp',
   'opencv4/opencv2/opencv.hpp',
   'opencv4/opencv2/video.hpp',
+  'opencv4/opencv2/tracking.hpp',
 ]
 
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
@@ -115,7 +118,7 @@ if opencv_found
   gstopencv = library('gstopencv',
     gstopencv_sources,
     cpp_args : gst_plugins_bad_args + gstopencv_cargs + [ '-DGST_USE_UNSTABLE_API' ],
-    link_args : noseh_link_args,
+    link_args : [noseh_link_args, '-lopencv_tracking'],
     include_directories : [configinc, libsinc],
     dependencies : [gstbase_dep, gstvideo_dep, opencv_dep, gstopencv_dep],
     install : true,
