@@ -296,7 +296,6 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
 
   if (!gst_video_frame_map (&vframe, info, frame->input_buffer, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Couldn't map input frame");
-    gst_video_codec_frame_unref (frame);
     return FALSE;
   }
 
@@ -522,11 +521,12 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame)
 {
   GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!gst_mf_video_enc_process_input (self, frame)) {
     GST_ERROR_OBJECT (self, "Failed to process input");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
   do {
@@ -535,6 +535,9 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
 
   if (ret == GST_MF_TRANSFORM_FLOW_NEED_DATA)
     ret = GST_FLOW_OK;
+
+done:
+  gst_video_codec_frame_unref (frame);
 
   return ret;
 }
