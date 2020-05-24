@@ -5,6 +5,7 @@ mf_sources = [
   'gstmfvideoenc.cpp',
   'gstmfh264enc.cpp',
   'gstmfh265enc.cpp',
+  'gstmfvp9enc.cpp',
   'gstmfvideosrc.c',
   'gstmfsourceobject.c',
   'gstmfdevice.c',

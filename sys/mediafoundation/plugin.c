@@ -32,6 +32,7 @@
 #include "gstmfutils.h"
 #include "gstmfh264enc.h"
 #include "gstmfh265enc.h"
+#include "gstmfvp9enc.h"
 #include "gstmfaacenc.h"
 #include "gstmfmp3enc.h"
 
@@ -73,6 +74,8 @@ plugin_init (GstPlugin * plugin)
 
   gst_mf_h264_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_h265_enc_plugin_init (plugin, GST_RANK_SECONDARY);
+  gst_mf_vp9_enc_plugin_init (plugin, GST_RANK_SECONDARY);
+
   gst_mf_aac_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_mp3_enc_plugin_init (plugin, GST_RANK_SECONDARY);
 
