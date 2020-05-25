@@ -384,13 +384,18 @@ gst_mf_source_object_thread_func (GstMFSourceObject * self)
   }
 #endif
 
+  GST_DEBUG_OBJECT (self,
+      "Requested device index: %d, name: \"%s\", path \"%s\"",
+      self->device_index, GST_STR_NULL (self->device_name),
+      GST_STR_NULL (self->device_path));
+
   for (iter = activate_list; iter; iter = g_list_next (iter)) {
     GstMFDeviceActivate *activate = (GstMFDeviceActivate *) iter->data;
     gboolean match;
 
-    if (self->device_path && strlen (self->device_path) > 0) {
+    if (self->device_path) {
       match = g_ascii_strcasecmp (activate->path, self->device_path) == 0;
-    } else if (self->device_name && strlen (self->device_name) > 0) {
+    } else if (self->device_name) {
       match = g_ascii_strcasecmp (activate->name, self->device_name) == 0;
     } else if (self->device_index >= 0) {
       match = activate->index == self->device_index;

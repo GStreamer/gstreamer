@@ -827,22 +827,15 @@ gst_mf_capture_engine_new (GstMFSourceType type, gint device_index,
     const gchar * device_name, const gchar * device_path)
 {
   GstMFSourceObject *self;
-  gchar *name;
-  gchar *path;
 
   /* TODO: add more type */
   g_return_val_if_fail (type == GST_MF_SOURCE_TYPE_VIDEO, NULL);
 
-  name = device_name ? g_strdup (device_name) : g_strdup ("");
-  path = device_path ? g_strdup (device_path) : g_strdup ("");
-
   self = (GstMFSourceObject *) g_object_new (GST_TYPE_MF_CAPTURE_ENGINE,
-      "source-type", type, "device-index", device_index, "device-name", name,
-      "device-path", path, NULL);
+      "source-type", type, "device-index", device_index, "device-name",
+      device_name, "device-path", device_path, NULL);
 
   gst_object_ref_sink (self);
-  g_free (name);
-  g_free (path);
 
   if (!self->opened) {
     GST_WARNING_OBJECT (self, "Couldn't open device");
