@@ -36,10 +36,12 @@ using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::Media::Devices;
 using namespace ABI::Windows::Media::MediaProperties;
 
-extern "C" {
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
-}
+
+G_END_DECLS
 
 static std::string
 convert_hstring_to_string (HString * hstr)

@@ -34,10 +34,12 @@ using namespace ABI::Windows::Media::MediaProperties;
 using namespace ABI::Windows::Graphics::Imaging;
 using namespace ABI::Windows::Foundation;
 
-extern "C" {
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
-}
+
+G_END_DECLS
 
 struct _GstMFCaptureWinRT
 {

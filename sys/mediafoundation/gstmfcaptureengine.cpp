@@ -31,10 +31,12 @@
 
 using namespace Microsoft::WRL;
 
-extern "C" {
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
-}
+
+G_END_DECLS
 
 static HRESULT gst_mf_capture_engine_on_event (GstMFCaptureEngine * engine,
     IMFMediaEvent * event);

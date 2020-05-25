@@ -30,10 +30,12 @@
 
 using namespace Microsoft::WRL;
 
-extern "C" {
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_transform_debug);
 #define GST_CAT_DEFAULT gst_mf_transform_debug
-}
+
+G_END_DECLS
 
 enum
 {
