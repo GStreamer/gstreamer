@@ -767,9 +767,8 @@ gst_system_clock_async_thread (GstClock * clock)
       }
       case GST_CLOCK_BUSY:
         /* somebody unlocked the entry but is was not canceled, This means that
-         * either a new entry was added in front of the queue or some other entry
-         * was canceled. Whatever it is, pick the head entry of the list and
-         * continue waiting. */
+         * a new entry was added in front of the queue. Pick the new head
+         * entry of the list and continue waiting. */
         GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
             "async entry %p needs restart", entry);
 
