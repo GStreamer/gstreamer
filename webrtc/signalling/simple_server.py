@@ -17,9 +17,10 @@ import argparse
 import http
 import concurrent
 
+
 class WebRTCSimpleServer(object):
 
-    def __init__(self, addr, port, keepalive_timeout, disable_ssl, certpath, health_path=None):
+    def __init__(self, options):
         ############### Global data ###############
 
         # Format: {uid: (Peer WebSocketServerProtocol,
@@ -34,17 +35,18 @@ class WebRTCSimpleServer(object):
         # Room dict with a set of peers in each room
         self.rooms = dict()
 
-        self.keepalive_timeout = keepalive_timeout
-        self.addr = addr
-        self.port = port
-        self.disable_ssl = disable_ssl
-        self.certpath = certpath
-        self.health_path = health_path
+        # Options
+        self.addr = options.addr
+        self.port = options.port
+        self.keepalive_timeout = options.keepalive_timeout
+        self.cert_path = options.cert_path
+        self.disable_ssl = options.disable_ssl
+        self.health_path = options.health
 
     ############### Helper functions ###############
 
     async def health_check(self, path, request_headers):
-        if path == self.health_part:
+        if path == self.health_path:
             return http.HTTPStatus.OK, [], b"OK\n"
         return None
 
@@ -280,7 +282,7 @@ def main():
 
     loop = asyncio.get_event_loop()
 
-    r = WebRTCSimpleServer(options.addr, options.port, options.keepalive_timeout, options.disable_ssl, options.cert_path)
+    r = WebRTCSimpleServer(options)
 
     loop.run_until_complete (r.run())
     loop.run_forever ()
