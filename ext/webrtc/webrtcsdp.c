@@ -144,9 +144,8 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
   return TRUE;
 }
 
-#if 0
-static gboolean
-_session_has_attribute_key (const GstSDPMessage * msg, const gchar * key)
+gboolean
+_message_has_attribute_key (const GstSDPMessage * msg, const gchar * key)
 {
   int i;
   for (i = 0; i < gst_sdp_message_attributes_len (msg); i++) {
@@ -159,6 +158,7 @@ _session_has_attribute_key (const GstSDPMessage * msg, const gchar * key)
   return FALSE;
 }
 
+#if 0
 static gboolean
 _session_has_attribute_key_value (const GstSDPMessage * msg, const gchar * key,
     const gchar * value)

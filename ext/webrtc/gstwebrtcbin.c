@@ -2756,9 +2756,6 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
   /* FIXME: pre-emptively setup receiving elements when needed */
 
-  /* XXX: only true for the initial offerer */
-  g_object_set (webrtc->priv->ice, "controller", TRUE, NULL);
-
   g_list_free (seen_transceivers);
 
   if (webrtc->priv->last_generated_answer)
@@ -4465,7 +4462,25 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     signalling_state_changed = TRUE;
   }
 
-  if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
+  {
+    gboolean ice_controller = FALSE;
+
+    /* we control ice negotiation if we send the initial offer */
+    ice_controller |=
+        new_signaling_state == GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_OFFER
+        && webrtc->current_remote_description == NULL;
+    /* or, if the remote is an ice-lite peer */
+    ice_controller |= new_signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE
+        && webrtc->current_remote_description->type == GST_WEBRTC_SDP_TYPE_OFFER
+        && _message_has_attribute_key (webrtc->current_remote_description->sdp,
+        "ice-lite");
+
+    GST_DEBUG_OBJECT (webrtc, "we are in ice controlling mode: %s",
+        ice_controller ? "true" : "false");
+    g_object_set (webrtc->priv->ice, "controller", ice_controller, NULL);
+  }
+
+  if (new_signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
     GList *tmp;
 
     /* media modifications */

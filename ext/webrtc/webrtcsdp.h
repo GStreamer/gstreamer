@@ -91,6 +91,9 @@ gboolean                            _message_media_is_datachannel           (con
                                                                              guint media_id);
 G_GNUC_INTERNAL
 guint                               _message_get_datachannel_index          (const GstSDPMessage * msg);
+G_GNUC_INTERNAL
+gboolean                            _message_has_attribute_key              (const GstSDPMessage * msg,
+                                                                             const gchar * key);
 
 G_GNUC_INTERNAL
 gboolean                            _get_bundle_index                       (GstSDPMessage * sdp,
