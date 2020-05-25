@@ -1334,6 +1334,62 @@ gst_video_rate_switch_mode_if_needed (GstVideoRate * videorate)
   return skip;
 }
 
+static gboolean
+gst_video_rate_do_max_duplicate (GstVideoRate * videorate, GstBuffer * buffer,
+    GstClockTime intime, GstClockTime prevtime, gint * count)
+{
+  if (videorate->max_duplication_time <= 0)
+    return TRUE;
+
+  /* We already know that intime and prevtime are not out of order, based
+   * on the previous condition. Using ABS in case rate < 0, in which case
+   * the order is reversed. */
+  if (ABS (GST_CLOCK_DIFF (intime, prevtime)) > videorate->max_duplication_time) {
+    GST_DEBUG_OBJECT (videorate,
+        "The new buffer (%" GST_TIME_FORMAT
+        ") is further away from previous buffer (%" GST_TIME_FORMAT
+        ") than max-duplication-time (%" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (intime), GST_TIME_ARGS (prevtime),
+        GST_TIME_ARGS (videorate->max_duplication_time));
+    /* First send out enough buffers to actually reach the time of the
+     * previous buffer */
+    if (videorate->segment.rate < 0.0) {
+      while (videorate->next_ts > prevtime) {
+        gst_video_rate_flush_prev (videorate, *count > 0, GST_CLOCK_TIME_NONE);
+        *count += 1;
+      }
+    } else {
+      while (videorate->next_ts <= prevtime) {
+        gst_video_rate_flush_prev (videorate, *count > 0, GST_CLOCK_TIME_NONE);
+        *count += 1;
+      }
+    }
+
+    if (*count > 1) {
+      videorate->dup += *count - 1;
+      if (!videorate->silent)
+        gst_video_rate_notify_duplicate (videorate);
+    }
+
+    /* The gap between the two buffers is too large. Don't fill it, just
+     * let a discont through */
+    videorate->discont = TRUE;
+
+    if (videorate->segment.rate < 0.0) {
+      videorate->base_ts -= prevtime - intime;
+    } else {
+      videorate->base_ts += intime - prevtime;
+    }
+    videorate->next_ts = intime;
+    /* Swap in new buffer and get rid of old buffer so that starting with
+     * the next input buffer we output from the new position */
+    gst_video_rate_swap_prev (videorate, buffer, intime);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
@@ -1489,56 +1545,9 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       goto done;
     }
 
-    if (videorate->max_duplication_time > 0) {
-      /* We already know that intime and prevtime are not out of order, based
-       * on the previous condition. Using ABS in case rate < 0, in which case
-       * the order is reversed. */
-      if (ABS (GST_CLOCK_DIFF (intime,
-                  prevtime)) > videorate->max_duplication_time) {
-        GST_DEBUG_OBJECT (videorate,
-            "The new buffer (%" GST_TIME_FORMAT
-            ") is further away from previous buffer (%"
-            GST_TIME_FORMAT ") than max-duplication-time (%" GST_TIME_FORMAT
-            ")", GST_TIME_ARGS (intime), GST_TIME_ARGS (prevtime),
-            GST_TIME_ARGS (videorate->max_duplication_time));
-        /* First send out enough buffers to actually reach the time of the
-         * previous buffer */
-        if (videorate->segment.rate < 0.0) {
-          while (videorate->next_ts > prevtime) {
-            gst_video_rate_flush_prev (videorate, count > 0,
-                GST_CLOCK_TIME_NONE);
-            count += 1;
-          }
-        } else {
-          while (videorate->next_ts <= prevtime) {
-            gst_video_rate_flush_prev (videorate, count > 0,
-                GST_CLOCK_TIME_NONE);
-            count += 1;
-          }
-        }
-
-        if (count > 1) {
-          videorate->dup += count - 1;
-          if (!videorate->silent)
-            gst_video_rate_notify_duplicate (videorate);
-        }
-
-        /* The gap between the two buffers is too large. Don't fill it, just
-         * let a discont through */
-        videorate->discont = TRUE;
-
-        if (videorate->segment.rate < 0.0) {
-          videorate->base_ts -= prevtime - intime;
-        } else {
-          videorate->base_ts += intime - prevtime;
-        }
-        videorate->next_ts = intime;
-        /* Swap in new buffer and get rid of old buffer so that starting with
-         * the next input buffer we output from the new position */
-        gst_video_rate_swap_prev (videorate, buffer, intime);
-        goto done;
-      }
-    }
+    if (!gst_video_rate_do_max_duplicate (videorate, buffer, intime, prevtime,
+            &count))
+      goto done;
 
     /* got 2 buffers, see which one is the best */
     do {
