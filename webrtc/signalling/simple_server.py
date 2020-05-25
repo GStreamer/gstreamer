@@ -261,9 +261,9 @@ class WebRTCSimpleServer(object):
                                # https://websockets.readthedocs.io/en/stable/api.html#websockets.protocol.WebSocketCommonProtocol
                                max_queue=16)
 
-        logger = logging.getLogger('websockets.server')
-
-        logger.setLevel(logging.ERROR)
+        # Setup logging
+        logger = logging.getLogger('websockets')
+        logger.setLevel(logging.INFO)
         logger.addHandler(logging.StreamHandler())
 
         return wsd
