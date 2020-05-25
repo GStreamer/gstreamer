@@ -1293,14 +1293,54 @@ done:
     gst_object_unref (pad);
 }
 
+static gboolean
+gst_video_rate_switch_mode_if_needed (GstVideoRate * videorate)
+{
+  gboolean switch_mode;
+  GstClockTime avg_period;
+  gboolean skip = FALSE;
+
+  GST_OBJECT_LOCK (videorate);
+  avg_period = videorate->average_period_set;
+  GST_OBJECT_UNLOCK (videorate);
+
+  /* MT-safe switching between modes */
+  if (G_LIKELY (avg_period == videorate->average_period))
+    return skip;
+
+  switch_mode = (avg_period == 0 || videorate->average_period == 0);
+
+  if (!switch_mode)
+    return skip;
+
+
+  videorate->average_period = avg_period;
+  videorate->last_ts = GST_CLOCK_TIME_NONE;
+  if (avg_period) {
+    /* enabling average mode */
+    videorate->average = 0;
+    /* make sure no cached buffers from regular mode are left */
+    gst_video_rate_swap_prev (videorate, NULL, 0);
+  } else {
+    /* enable regular mode */
+    videorate->next_ts = GST_CLOCK_TIME_NONE;
+    skip = TRUE;
+  }
+
+  /* max averaging mode has no latency, normal mode does */
+  gst_element_post_message (GST_ELEMENT (videorate),
+      gst_message_new_latency (GST_OBJECT (videorate)));
+
+  return skip;
+}
+
 static GstFlowReturn
 gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
   GstVideoRate *videorate;
   GstFlowReturn res = GST_BASE_TRANSFORM_FLOW_DROPPED;
   GstClockTime intime, in_ts, in_dur, last_ts;
-  GstClockTime avg_period;
-  gboolean skip = FALSE;
+  gboolean skip;
 
   videorate = GST_VIDEO_RATE (trans);
 
@@ -1314,33 +1354,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     gst_video_rate_check_variable_rate (videorate, buffer);
   }
 
-  GST_OBJECT_LOCK (videorate);
-  avg_period = videorate->average_period_set;
-  GST_OBJECT_UNLOCK (videorate);
-
-  /* MT-safe switching between modes */
-  if (G_UNLIKELY (avg_period != videorate->average_period)) {
-    gboolean switch_mode = (avg_period == 0 || videorate->average_period == 0);
-    videorate->average_period = avg_period;
-    videorate->last_ts = GST_CLOCK_TIME_NONE;
-
-    if (switch_mode) {
-      if (avg_period) {
-        /* enabling average mode */
-        videorate->average = 0;
-        /* make sure no cached buffers from regular mode are left */
-        gst_video_rate_swap_prev (videorate, NULL, 0);
-      } else {
-        /* enable regular mode */
-        videorate->next_ts = GST_CLOCK_TIME_NONE;
-        skip = TRUE;
-      }
-
-      /* max averaging mode has a no latency, normal mode does */
-      gst_element_post_message (GST_ELEMENT (videorate),
-          gst_message_new_latency (GST_OBJECT (videorate)));
-    }
-  }
+  skip = gst_video_rate_switch_mode_if_needed (videorate);
 
   if (videorate->average_period > 0)
     return gst_video_rate_trans_ip_max_avg (videorate, buffer);
