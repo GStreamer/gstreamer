@@ -22,6 +22,7 @@ subdir('tinyalsa')
 subdir('uvch264')
 subdir('v4l2codecs')
 subdir('wasapi')
+subdir('wasapi2')
 subdir('winks')
 subdir('winscreencap')
 
