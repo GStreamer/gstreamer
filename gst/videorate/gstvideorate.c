@@ -1362,14 +1362,13 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   in_ts = GST_BUFFER_TIMESTAMP (buffer);
   in_dur = GST_BUFFER_DURATION (buffer);
 
-  if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE)) {
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (in_ts))) {
     /* For reverse playback, we need all input timestamps as we can't
      * guess from the previous buffers timestamp and duration */
-    if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE
-            && videorate->segment.rate < 0.0))
+    if (G_UNLIKELY (videorate->segment.rate < 0.0))
       goto invalid_buffer;
     in_ts = videorate->last_ts;
-    if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE))
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (in_ts)))
       goto invalid_buffer;
   }
 
@@ -1377,7 +1376,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
    * next buffer has -1 as a timestamp */
   last_ts = videorate->last_ts;
   videorate->last_ts = in_ts;
-  if (in_dur != GST_CLOCK_TIME_NONE && videorate->segment.rate > 0.0)
+  if (GST_CLOCK_TIME_IS_VALID (in_dur) && videorate->segment.rate > 0.0)
     videorate->last_ts += in_dur;
 
   GST_DEBUG_OBJECT (videorate, "got buffer with timestamp %" GST_TIME_FORMAT,
