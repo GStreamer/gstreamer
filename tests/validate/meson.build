@@ -11,6 +11,10 @@ tests = [
     'audiotestsrc/reverse',
     'videorate/10_to_1fps',
     'videorate/reverse.10_to_1fps',
+    'videorate/reverse.10_to_30fps',
+    'videorate/reverse.1_to_10fps',
+    'videorate/reverse.30fps',
+    'videorate/reverse.variable_to_10fps',
 ]
 
 env = environment()

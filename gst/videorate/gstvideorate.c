@@ -1586,22 +1586,16 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           break;
         }
 
-        prev_endtime =
-            MAX (prevtime + GST_BUFFER_DURATION (videorate->prevbuf),
-            videorate->segment.stop);
-        in_endtime =
-            MAX (intime + GST_BUFFER_DURATION (buffer),
-            videorate->segment.stop);
+        prev_endtime = prevtime + GST_BUFFER_DURATION (videorate->prevbuf);
+        in_endtime = intime + GST_BUFFER_DURATION (buffer);
 
         if (videorate->to_rate_numerator) {
           GstClockTime frame_duration = gst_util_uint64_scale (1,
               videorate->to_rate_denominator * GST_SECOND,
               videorate->to_rate_numerator);
-          next_end_ts = MAX (next_ts + frame_duration, videorate->segment.stop);
+          next_end_ts = next_ts + frame_duration;
         } else {
-          next_end_ts =
-              MAX (next_ts + GST_BUFFER_DURATION (videorate->prevbuf),
-              videorate->segment.stop);
+          next_end_ts = next_ts + GST_BUFFER_DURATION (videorate->prevbuf);
         }
         next_ts *= videorate->rate;
         next_end_ts *= videorate->rate;

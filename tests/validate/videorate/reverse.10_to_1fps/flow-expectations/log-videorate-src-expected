@@ -6,8 +6,17 @@ event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:05.000000000, rate=-1.000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:05.000000000
 buffer: checksum=1d2741e8fc312f50417c99f6deecb6220c75efaa, pts=0:00:04.000000000, dur=0:00:01.000000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=6f2d5d8f9551083a65889a7d7b87e25348612604, pts=0:00:03.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
-buffer: checksum=87c6573e1f3cc6a14bca871f675ff66822e2863e, pts=0:00:02.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
-buffer: checksum=302581fc1fdd332a6702cc3b4d6a3f3f87d0c78f, pts=0:00:01.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
-buffer: checksum=e085fff613289df868f63ca7142ce0d342ab3d4c, pts=0:00:00.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=e1d19911a0a9b7a6a97dceedc96c66f81d187591, pts=0:00:03.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=012c04214b70c28c823991e5502c0dde653e576e, pts=0:00:02.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=2bd35f37780e5c7bf173bc1c29598ab7f110e168, pts=0:00:01.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=d0a85177ea2e35014a69c6290895090c9cdd6af4, pts=0:00:00.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:05.000000000, offset=0:00:00.000000000, stop=0:00:10.000000000, rate=-1.000000, flags=0x01, time=0:00:05.000000000, base=0:00:00.000000000, position=0:00:10.000000000
+buffer: checksum=b60987b39a20770d5bfe06ffcd1969bf056a41a9, pts=0:00:09.000000000, dur=0:00:01.000000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=b2bd19d13a53ecd9b6ce8dc13d58889145f2e300, pts=0:00:08.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=778c9e60a7ab01a76d3a701f6deee65db56dac5e, pts=0:00:07.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=9363bed68761bd39a332ae06969be26b88b24ce0, pts=0:00:06.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
+buffer: checksum=12743d9ab352a75f9100424ad43f70d01fbfaee9, pts=0:00:05.000000000, dur=0:00:01.000000000, meta=GstVideoMeta
 event eos: (no structure)
