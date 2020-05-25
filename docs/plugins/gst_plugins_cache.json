@@ -33,7 +33,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "ANY",
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": true
                     },
                     "caps-change-mode": {
@@ -41,35 +42,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "immediate (0)",
-                        "enum": true,
-                        "type-name": "GstCapsFilterCapsChangeMode",
-                        "values": [
-                            {
-                                "desc": "Only accept the current filter caps",
-                                "name": "immediate",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Temporarily accept previous filter caps",
-                                "name": "delayed",
-                                "value": "1"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "GstCapsFilterCapsChangeMode",
                         "writable": true
                     },
                     "qos": {
@@ -77,7 +51,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -108,20 +83,13 @@
                     }
                 },
                 "properties": {
-                    "signal-handoffs": {
-                        "blurb": "Send a signal before pushing the buffer",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
                     "sync": {
                         "blurb": "Synchronize to pipeline clock",
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "ts-offset": {
@@ -131,25 +99,12 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "-9223372036854775808",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     }
                 },
-                "rank": "none",
-                "signals": {
-                    "handoff": {
-                        "args": [
-                            "GstBuffer"
-                        ],
-                        "retval": "void"
-                    },
-                    "handoff-list": {
-                        "args": [
-                            "GstBufferList"
-                        ],
-                        "retval": "void"
-                    }
-                }
+                "rank": "none"
             },
             "concat": {
                 "author": "Sebastian Dröge <sebastian@centricular.com>",
@@ -180,7 +135,8 @@
                         "blurb": "Currently active src pad",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstPad",
+                        "readable": true,
+                        "type": "GstPad",
                         "writable": false
                     },
                     "adjust-base": {
@@ -188,22 +144,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -219,6 +161,9 @@
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
                 ],
                 "klass": "Source",
                 "long-name": "data: URI source element",
@@ -237,7 +182,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "do-timestamp": {
@@ -245,15 +191,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "num-buffers": {
@@ -263,14 +202,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "typefind": {
@@ -278,7 +211,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "uri": {
@@ -286,7 +220,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     }
                 },
@@ -324,7 +259,8 @@
                         "default": "99",
                         "max": "100",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "low-percent": {
@@ -334,7 +270,8 @@
                         "default": "10",
                         "max": "100",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "max-size-bytes": {
@@ -344,7 +281,8 @@
                         "default": "2097152",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-time": {
@@ -354,22 +292,8 @@
                         "default": "2000000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "temp-location": {
@@ -377,7 +301,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": false
                     },
                     "temp-remove": {
@@ -385,7 +310,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "temp-template": {
@@ -393,7 +319,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     }
                 },
@@ -425,7 +352,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "blocksize": {
@@ -435,7 +363,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "can-activate-pull": {
@@ -443,7 +372,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "can-activate-push": {
@@ -451,7 +381,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "drop-out-of-segment": {
@@ -459,7 +390,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "dump": {
@@ -467,7 +399,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "enable-last-sample": {
@@ -475,7 +408,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "last-message": {
@@ -483,14 +417,16 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": false
                     },
                     "last-sample": {
                         "blurb": "The last sample received in the sink",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstSample",
+                        "readable": true,
+                        "type": "GstSample",
                         "writable": false
                     },
                     "max-bitrate": {
@@ -500,7 +436,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "max-lateness": {
@@ -510,15 +447,8 @@
                         "default": "18446744073709551615",
                         "max": "9223372036854775807",
                         "min": "-1",
-                        "type-name": "gint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "num-buffers": {
@@ -528,14 +458,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "processing-deadline": {
@@ -545,7 +469,8 @@
                         "default": "20000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "qos": {
@@ -553,7 +478,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "render-delay": {
@@ -563,7 +489,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "signal-handoffs": {
@@ -571,7 +498,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "silent": {
@@ -579,7 +507,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "state-error": {
@@ -587,45 +516,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstFakeSinkStateError",
-                        "values": [
-                            {
-                                "desc": "No state change errors",
-                                "name": "none",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Fail state change from NULL to READY",
-                                "name": "null-to-ready",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Fail state change from READY to PAUSED",
-                                "name": "ready-to-paused",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Fail state change from PAUSED to PLAYING",
-                                "name": "paused-to-playing",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "Fail state change from PLAYING to PAUSED",
-                                "name": "playing-to-paused",
-                                "value": "4"
-                            },
-                            {
-                                "desc": "Fail state change from PAUSED to READY",
-                                "name": "paused-to-ready",
-                                "value": "5"
-                            },
-                            {
-                                "desc": "Fail state change from READY to NULL",
-                                "name": "ready-to-null",
-                                "value": "6"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstFakeSinkStateError",
                         "writable": true
                     },
                     "stats": {
@@ -633,7 +525,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "type-name": "GstStructure",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": false
                     },
                     "sync": {
@@ -641,7 +534,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "throttle-time": {
@@ -651,7 +545,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "ts-offset": {
@@ -661,7 +556,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "-9223372036854775808",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -669,18 +565,30 @@
                 "signals": {
                     "handoff": {
                         "args": [
-                            "GstBuffer",
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstBuffer"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     },
                     "preroll-handoff": {
                         "args": [
-                            "GstBuffer",
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstBuffer"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     }
                 }
@@ -713,7 +621,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "can-activate-pull": {
@@ -721,7 +630,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "can-activate-push": {
@@ -729,7 +639,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "data": {
@@ -737,20 +648,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "allocate (1)",
-                        "enum": true,
-                        "type-name": "GstFakeSrcDataType",
-                        "values": [
-                            {
-                                "desc": "Allocate data",
-                                "name": "allocate",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Subbuffer data",
-                                "name": "subbuffer",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstFakeSrcDataType",
                         "writable": true
                     },
                     "datarate": {
@@ -760,7 +659,8 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "do-timestamp": {
@@ -768,7 +668,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "dump": {
@@ -776,7 +677,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "filltype": {
@@ -784,35 +686,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "nothing (1)",
-                        "enum": true,
-                        "type-name": "GstFakeSrcFillType",
-                        "values": [
-                            {
-                                "desc": "Leave data as malloced",
-                                "name": "nothing",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Fill buffers with zeros",
-                                "name": "zero",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Fill buffers with random data",
-                                "name": "random",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "Fill buffers with pattern 0x00 -> 0xff",
-                                "name": "pattern",
-                                "value": "4"
-                            },
-                            {
-                                "desc": "Fill buffers with pattern 0x00 -> 0xff that spans buffers",
-                                "name": "pattern-span",
-                                "value": "5"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstFakeSrcFillType",
                         "writable": true
                     },
                     "format": {
@@ -820,40 +695,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "bytes (2)",
-                        "enum": true,
-                        "type-name": "GstFormat",
-                        "values": [
-                            {
-                                "desc": "GST_FORMAT_UNDEFINED",
-                                "name": "undefined",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "GST_FORMAT_DEFAULT",
-                                "name": "default",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "GST_FORMAT_BYTES",
-                                "name": "bytes",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "GST_FORMAT_TIME",
-                                "name": "time",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "GST_FORMAT_BUFFERS",
-                                "name": "buffers",
-                                "value": "4"
-                            },
-                            {
-                                "desc": "GST_FORMAT_PERCENT",
-                                "name": "percent",
-                                "value": "5"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstFormat",
                         "writable": true
                     },
                     "is-live": {
@@ -861,7 +704,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "last-message": {
@@ -869,16 +713,9 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": false
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
                     },
                     "num-buffers": {
                         "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
@@ -887,14 +724,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "parentsize": {
@@ -904,7 +735,8 @@
                         "default": "40960",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "pattern": {
@@ -912,7 +744,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "signal-handoffs": {
@@ -920,7 +753,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "silent": {
@@ -928,7 +762,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "sizemax": {
@@ -938,7 +773,8 @@
                         "default": "4096",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "sizemin": {
@@ -948,7 +784,8 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "sizetype": {
@@ -956,25 +793,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "empty (1)",
-                        "enum": true,
-                        "type-name": "GstFakeSrcSizeType",
-                        "values": [
-                            {
-                                "desc": "Send empty buffers",
-                                "name": "empty",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Fixed size buffers (sizemax sized)",
-                                "name": "fixed",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Random sized buffers (sizemin <= size <= sizemax)",
-                                "name": "random",
-                                "value": "3"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstFakeSrcSizeType",
                         "writable": true
                     },
                     "sync": {
@@ -982,7 +802,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "typefind": {
@@ -990,7 +811,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -998,10 +820,16 @@
                 "signals": {
                     "handoff": {
                         "args": [
-                            "GstBuffer",
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstBuffer"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     }
                 }
@@ -1016,6 +844,9 @@
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
                 ],
                 "klass": "Sink/File",
                 "long-name": "Filedescriptor Sink",
@@ -1032,7 +863,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "blocksize": {
@@ -1042,7 +874,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "enable-last-sample": {
@@ -1050,7 +883,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "fd": {
@@ -1060,14 +894,16 @@
                         "default": "1",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "last-sample": {
                         "blurb": "The last sample received in the sink",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstSample",
+                        "readable": true,
+                        "type": "GstSample",
                         "writable": false
                     },
                     "max-bitrate": {
@@ -1077,7 +913,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "max-lateness": {
@@ -1087,22 +924,8 @@
                         "default": "18446744073709551615",
                         "max": "9223372036854775807",
                         "min": "-1",
-                        "type-name": "gint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "processing-deadline": {
@@ -1112,7 +935,8 @@
                         "default": "20000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "qos": {
@@ -1120,7 +944,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "render-delay": {
@@ -1130,7 +955,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stats": {
@@ -1138,7 +964,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "type-name": "GstStructure",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": false
                     },
                     "sync": {
@@ -1146,7 +973,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "throttle-time": {
@@ -1156,7 +984,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "ts-offset": {
@@ -1166,7 +995,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "-9223372036854775808",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -1183,6 +1013,9 @@
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
                 ],
                 "klass": "Source/File",
                 "long-name": "Filedescriptor Source",
@@ -1201,7 +1034,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "do-timestamp": {
@@ -1209,7 +1043,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "fd": {
@@ -1219,15 +1054,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "num-buffers": {
@@ -1237,14 +1065,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "timeout": {
@@ -1254,7 +1076,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "typefind": {
@@ -1262,7 +1085,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1279,6 +1103,9 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstURIHandler"
+                ],
                 "klass": "Sink/File",
                 "long-name": "File Sink",
                 "pad-templates": {
@@ -1294,7 +1121,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "async": {
@@ -1302,7 +1130,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "blocksize": {
@@ -1312,7 +1141,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "buffer-mode": {
@@ -1320,30 +1150,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "default (-1)",
-                        "enum": true,
-                        "type-name": "GstFileSinkBufferMode",
-                        "values": [
-                            {
-                                "desc": "Default buffering",
-                                "name": "default",
-                                "value": "-1"
-                            },
-                            {
-                                "desc": "Fully buffered",
-                                "name": "full",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Line buffered (deprecated, like full)",
-                                "name": "line",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Unbuffered",
-                                "name": "unbuffered",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstFileSinkBufferMode",
                         "writable": true
                     },
                     "buffer-size": {
@@ -1353,7 +1161,8 @@
                         "default": "65536",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "enable-last-sample": {
@@ -1361,14 +1170,16 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "last-sample": {
                         "blurb": "The last sample received in the sink",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstSample",
+                        "readable": true,
+                        "type": "GstSample",
                         "writable": false
                     },
                     "location": {
@@ -1376,7 +1187,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "max-bitrate": {
@@ -1386,7 +1198,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "max-lateness": {
@@ -1396,7 +1209,8 @@
                         "default": "18446744073709551615",
                         "max": "9223372036854775807",
                         "min": "-1",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "max-transient-error-timeout": {
@@ -1406,15 +1220,8 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "o-sync": {
@@ -1422,14 +1229,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "processing-deadline": {
@@ -1439,7 +1240,8 @@
                         "default": "20000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "qos": {
@@ -1447,7 +1249,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "render-delay": {
@@ -1457,7 +1260,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stats": {
@@ -1465,7 +1269,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "type-name": "GstStructure",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": false
                     },
                     "sync": {
@@ -1473,7 +1278,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "throttle-time": {
@@ -1483,7 +1289,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "ts-offset": {
@@ -1493,7 +1300,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "-9223372036854775808",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -1509,6 +1317,9 @@
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
                 ],
                 "klass": "Source/File",
                 "long-name": "File Source",
@@ -1527,7 +1338,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "do-timestamp": {
@@ -1535,7 +1347,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "location": {
@@ -1543,15 +1356,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "num-buffers": {
@@ -1561,14 +1367,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "typefind": {
@@ -1576,7 +1376,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1612,22 +1413,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1664,7 +1451,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "check-imperfect-timestamp": {
@@ -1672,7 +1460,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "datarate": {
@@ -1682,7 +1471,8 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "drop-allocation": {
@@ -1690,7 +1480,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "drop-buffer-flags": {
@@ -1698,79 +1489,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "(none)",
-                        "type-name": "GstBufferFlags",
-                        "values": [
-                            {
-                                "desc": "GST_BUFFER_FLAG_LIVE",
-                                "name": "live",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_DECODE_ONLY",
-                                "name": "decode-only",
-                                "value": "0x00000020"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_DISCONT",
-                                "name": "discont",
-                                "value": "0x00000040"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_RESYNC",
-                                "name": "resync",
-                                "value": "0x00000080"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_CORRUPTED",
-                                "name": "corrupted",
-                                "value": "0x00000100"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_MARKER",
-                                "name": "marker",
-                                "value": "0x00000200"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_HEADER",
-                                "name": "header",
-                                "value": "0x00000400"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_GAP",
-                                "name": "gap",
-                                "value": "0x00000800"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_DROPPABLE",
-                                "name": "droppable",
-                                "value": "0x00001000"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_DELTA_UNIT",
-                                "name": "delta-unit",
-                                "value": "0x00002000"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_TAG_MEMORY",
-                                "name": "tag-memory",
-                                "value": "0x00004000"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_SYNC_AFTER",
-                                "name": "sync-after",
-                                "value": "0x00008000"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_NON_DROPPABLE",
-                                "name": "non-droppable",
-                                "value": "0x00010000"
-                            },
-                            {
-                                "desc": "GST_BUFFER_FLAG_LAST",
-                                "name": "last",
-                                "value": "0x00100000"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstBufferFlags",
                         "writable": true
                     },
                     "drop-probability": {
@@ -1780,7 +1500,8 @@
                         "default": "0",
                         "max": "1",
                         "min": "0",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "dump": {
@@ -1788,7 +1509,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "eos-after": {
@@ -1798,7 +1520,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "error-after": {
@@ -1808,7 +1531,8 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "last-message": {
@@ -1816,30 +1540,17 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": false
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
                     },
                     "qos": {
                         "blurb": "Handle Quality-of-Service events",
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "signal-handoffs": {
@@ -1847,7 +1558,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "silent": {
@@ -1855,7 +1567,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "single-segment": {
@@ -1863,7 +1576,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "sleep-time": {
@@ -1873,7 +1587,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "sync": {
@@ -1881,7 +1596,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "ts-offset": {
@@ -1891,7 +1607,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "-9223372036854775808",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -1899,9 +1616,12 @@
                 "signals": {
                     "handoff": {
                         "args": [
-                            "GstBuffer"
+                            {
+                                "name": "arg0",
+                                "type": "GstBuffer"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     }
                 }
@@ -1922,51 +1642,8 @@
                     "sink_%%u": {
                         "caps": "ANY",
                         "direction": "sink",
-                        "object-type": {
-                            "hierarchy": [
-                                "GstSelectorPad",
-                                "GstPad",
-                                "GstObject",
-                                "GInitiallyUnowned",
-                                "GObject"
-                            ],
-                            "properties": {
-                                "active": {
-                                    "blurb": "If the pad is currently active",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "false",
-                                    "type-name": "gboolean",
-                                    "writable": false
-                                },
-                                "always-ok": {
-                                    "blurb": "Make an inactive pad return OK instead of NOT_LINKED",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "true",
-                                    "type-name": "gboolean",
-                                    "writable": true
-                                },
-                                "running-time": {
-                                    "blurb": "Running time of stream on pad",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "9223372036854775807",
-                                    "min": "0",
-                                    "type-name": "gint64",
-                                    "writable": false
-                                },
-                                "tags": {
-                                    "blurb": "The currently active tags on the pad",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "type-name": "GstTagList",
-                                    "writable": false
-                                }
-                            }
-                        },
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstSelectorPad"
                     },
                     "src": {
                         "caps": "ANY",
@@ -1979,7 +1656,8 @@
                         "blurb": "The currently active sink pad",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstPad",
+                        "readable": true,
+                        "type": "GstPad",
                         "writable": true
                     },
                     "cache-buffers": {
@@ -1987,7 +1665,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "n-pads": {
@@ -1997,43 +1676,17 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": false
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
                     },
                     "sync-mode": {
                         "blurb": "Behavior in sync-streams mode",
                         "construct": false,
                         "construct-only": false,
                         "default": "active-segment (0)",
-                        "enum": true,
-                        "type-name": "GstInputSelectorSyncMode",
-                        "values": [
-                            {
-                                "desc": "Sync using the current active segment",
-                                "name": "active-segment",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Sync using the clock",
-                                "name": "clock",
-                                "value": "1"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstInputSelectorSyncMode",
                         "writable": true
                     },
                     "sync-streams": {
@@ -2041,7 +1694,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -2063,114 +1717,14 @@
                     "sink_%%u": {
                         "caps": "ANY",
                         "direction": "sink",
-                        "object-type": {
-                            "hierarchy": [
-                                "GstMultiQueuePad",
-                                "GstPad",
-                                "GstObject",
-                                "GInitiallyUnowned",
-                                "GObject"
-                            ],
-                            "properties": {
-                                "current-level-buffers": {
-                                    "blurb": "Current level buffers",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "-1",
-                                    "min": "0",
-                                    "type-name": "guint",
-                                    "writable": false
-                                },
-                                "current-level-bytes": {
-                                    "blurb": "Current level bytes",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "-1",
-                                    "min": "0",
-                                    "type-name": "guint",
-                                    "writable": false
-                                },
-                                "current-level-time": {
-                                    "blurb": "Current level time",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "18446744073709551615",
-                                    "min": "0",
-                                    "type-name": "guint64",
-                                    "writable": false
-                                },
-                                "group-id": {
-                                    "blurb": "Group to which this pad belongs",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "-1",
-                                    "min": "0",
-                                    "type-name": "guint",
-                                    "writable": true
-                                }
-                            }
-                        },
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMultiQueuePad"
                     },
                     "src_%%u": {
                         "caps": "ANY",
                         "direction": "src",
-                        "object-type": {
-                            "hierarchy": [
-                                "GstMultiQueuePad",
-                                "GstPad",
-                                "GstObject",
-                                "GInitiallyUnowned",
-                                "GObject"
-                            ],
-                            "properties": {
-                                "current-level-buffers": {
-                                    "blurb": "Current level buffers",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "-1",
-                                    "min": "0",
-                                    "type-name": "guint",
-                                    "writable": false
-                                },
-                                "current-level-bytes": {
-                                    "blurb": "Current level bytes",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "-1",
-                                    "min": "0",
-                                    "type-name": "guint",
-                                    "writable": false
-                                },
-                                "current-level-time": {
-                                    "blurb": "Current level time",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "18446744073709551615",
-                                    "min": "0",
-                                    "type-name": "guint64",
-                                    "writable": false
-                                },
-                                "group-id": {
-                                    "blurb": "Group to which this pad belongs",
-                                    "construct": false,
-                                    "construct-only": false,
-                                    "default": "0",
-                                    "max": "-1",
-                                    "min": "0",
-                                    "type-name": "guint",
-                                    "writable": true
-                                }
-                            }
-                        },
-                        "presence": "sometimes"
+                        "presence": "sometimes",
+                        "type": "GstMultiQueuePad"
                     }
                 },
                 "properties": {
@@ -2181,7 +1735,8 @@
                         "default": "5",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "extra-size-bytes": {
@@ -2191,7 +1746,8 @@
                         "default": "10485760",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "extra-size-time": {
@@ -2201,7 +1757,8 @@
                         "default": "3000000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "high-percent": {
@@ -2211,7 +1768,8 @@
                         "default": "99",
                         "max": "100",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "high-watermark": {
@@ -2221,7 +1779,8 @@
                         "default": "0.99",
                         "max": "1",
                         "min": "0",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "low-percent": {
@@ -2231,7 +1790,8 @@
                         "default": "1",
                         "max": "100",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "low-watermark": {
@@ -2241,7 +1801,8 @@
                         "default": "0.01",
                         "max": "1",
                         "min": "0",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "max-size-buffers": {
@@ -2251,7 +1812,8 @@
                         "default": "5",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-bytes": {
@@ -2261,7 +1823,8 @@
                         "default": "10485760",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-time": {
@@ -2271,7 +1834,8 @@
                         "default": "2000000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "min-interleave-time": {
@@ -2281,22 +1845,8 @@
                         "default": "250000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stats": {
@@ -2304,7 +1854,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "application/x-gst-multi-queue-stats;",
-                        "type-name": "GstStructure",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": false
                     },
                     "sync-by-running-time": {
@@ -2312,7 +1863,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "unlinked-cache-time": {
@@ -2322,7 +1874,8 @@
                         "default": "250000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "use-buffering": {
@@ -2330,7 +1883,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "use-interleave": {
@@ -2338,7 +1892,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -2346,31 +1901,37 @@
                 "signals": {
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     },
                     "overrun": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "first"
                     },
                     "pad-added": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     },
                     "pad-removed": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     },
                     "underrun": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "first"
                     }
                 }
@@ -2404,15 +1965,8 @@
                         "blurb": "Currently active src pad",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstPad",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "GstPad",
                         "writable": true
                     },
                     "pad-negotiation-mode": {
@@ -2420,32 +1974,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "all (1)",
-                        "enum": true,
-                        "type-name": "GstOutputSelectorPadNegotiationMode",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "All",
-                                "name": "all",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Active",
-                                "name": "active",
-                                "value": "2"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "GstOutputSelectorPadNegotiationMode",
                         "writable": true
                     },
                     "resend-latest": {
@@ -2453,7 +1983,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -2491,7 +2022,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": false
                     },
                     "current-level-bytes": {
@@ -2501,7 +2033,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": false
                     },
                     "current-level-time": {
@@ -2511,7 +2044,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     },
                     "flush-on-eos": {
@@ -2519,7 +2053,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "leaky": {
@@ -2527,25 +2062,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "no (0)",
-                        "enum": true,
-                        "type-name": "GstQueueLeaky",
-                        "values": [
-                            {
-                                "desc": "Not Leaky",
-                                "name": "no",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Leaky on upstream (new buffers)",
-                                "name": "upstream",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Leaky on downstream (old buffers)",
-                                "name": "downstream",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstQueueLeaky",
                         "writable": true
                     },
                     "max-size-buffers": {
@@ -2555,7 +2073,8 @@
                         "default": "200",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-bytes": {
@@ -2565,7 +2084,8 @@
                         "default": "10485760",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-time": {
@@ -2575,7 +2095,8 @@
                         "default": "1000000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "min-threshold-buffers": {
@@ -2585,7 +2106,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "min-threshold-bytes": {
@@ -2595,7 +2117,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "min-threshold-time": {
@@ -2605,22 +2128,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "silent": {
@@ -2628,7 +2137,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -2636,22 +2146,22 @@
                 "signals": {
                     "overrun": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "first"
                     },
                     "pushing": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "first"
                     },
                     "running": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "first"
                     },
                     "underrun": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "first"
                     }
                 }
@@ -2688,7 +2198,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": false
                     },
                     "bitrate": {
@@ -2698,7 +2209,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     },
                     "current-level-buffers": {
@@ -2708,7 +2220,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": false
                     },
                     "current-level-bytes": {
@@ -2718,7 +2231,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": false
                     },
                     "current-level-time": {
@@ -2728,7 +2242,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     },
                     "high-percent": {
@@ -2738,7 +2253,8 @@
                         "default": "99",
                         "max": "100",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "high-watermark": {
@@ -2748,7 +2264,8 @@
                         "default": "0.99",
                         "max": "1",
                         "min": "0",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "low-percent": {
@@ -2758,7 +2275,8 @@
                         "default": "1",
                         "max": "100",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "low-watermark": {
@@ -2768,7 +2286,8 @@
                         "default": "0.01",
                         "max": "1",
                         "min": "0",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "max-size-buffers": {
@@ -2778,7 +2297,8 @@
                         "default": "100",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-bytes": {
@@ -2788,7 +2308,8 @@
                         "default": "2097152",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-time": {
@@ -2798,22 +2319,8 @@
                         "default": "2000000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "ring-buffer-max-size": {
@@ -2823,7 +2330,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "temp-location": {
@@ -2831,7 +2339,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": false
                     },
                     "temp-remove": {
@@ -2839,7 +2348,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "temp-template": {
@@ -2847,7 +2357,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "use-bitrate-query": {
@@ -2855,7 +2366,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "use-buffering": {
@@ -2863,7 +2375,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "use-rate-estimate": {
@@ -2871,7 +2384,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "use-tags-bitrate": {
@@ -2879,7 +2393,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -2914,44 +2429,36 @@
                         "blurb": "The currently active src pad",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstPad",
+                        "readable": true,
+                        "type": "GstPad",
                         "writable": false
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
                     }
                 },
                 "rank": "primary",
                 "signals": {
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     },
                     "pad-added": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     },
                     "pad-removed": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     }
                 }
@@ -2985,7 +2492,8 @@
                         "blurb": "The pad ALLOCATION queries will be proxied to (DEPRECATED, has no effect)",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstPad",
+                        "readable": true,
+                        "type": "GstPad",
                         "writable": true
                     },
                     "allow-not-linked": {
@@ -2993,7 +2501,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "has-chain": {
@@ -3001,7 +2510,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "last-message": {
@@ -3009,16 +2519,9 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": false
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
                     },
                     "num-src-pads": {
                         "blurb": "The number of source pads",
@@ -3027,35 +2530,17 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": false
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
                     },
                     "pull-mode": {
                         "blurb": "Behavior of tee in pull mode",
                         "construct": true,
                         "construct-only": false,
                         "default": "never (0)",
-                        "enum": true,
-                        "type-name": "GstTeePullMode",
-                        "values": [
-                            {
-                                "desc": "Never activate in pull mode",
-                                "name": "never",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Only one src pad can be active in pull mode",
-                                "name": "single",
-                                "value": "1"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstTeePullMode",
                         "writable": true
                     },
                     "silent": {
@@ -3063,7 +2548,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -3098,14 +2584,16 @@
                         "blurb": "detected capabilities in stream",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": false
                     },
                     "force-caps": {
                         "blurb": "force caps without doing a typefind",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": true
                     },
                     "minimum": {
@@ -3115,22 +2603,8 @@
                         "default": "1",
                         "max": "100",
                         "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     }
                 },
@@ -3138,10 +2612,16 @@
                 "signals": {
                     "have-type": {
                         "args": [
-                            "guint",
-                            "GstCaps"
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstCaps"
+                            }
                         ],
-                        "retval": "void",
+                        "return-type": "void",
                         "when": "last"
                     }
                 }
@@ -3176,22 +2656,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -3200,6 +2666,328 @@
         },
         "filename": "gstcoreelements",
         "license": "LGPL",
+        "other-types": {
+            "GstCapsFilterCapsChangeMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Only accept the current filter caps",
+                        "name": "immediate",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Temporarily accept previous filter caps",
+                        "name": "delayed",
+                        "value": "1"
+                    }
+                ]
+            },
+            "GstFakeSinkStateError": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "No state change errors",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Fail state change from NULL to READY",
+                        "name": "null-to-ready",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Fail state change from READY to PAUSED",
+                        "name": "ready-to-paused",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Fail state change from PAUSED to PLAYING",
+                        "name": "paused-to-playing",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "Fail state change from PLAYING to PAUSED",
+                        "name": "playing-to-paused",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Fail state change from PAUSED to READY",
+                        "name": "paused-to-ready",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "Fail state change from READY to NULL",
+                        "name": "ready-to-null",
+                        "value": "6"
+                    }
+                ]
+            },
+            "GstFakeSrcDataType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Allocate data",
+                        "name": "allocate",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Subbuffer data",
+                        "name": "subbuffer",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstFakeSrcFillType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Leave data as malloced",
+                        "name": "nothing",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Fill buffers with zeros",
+                        "name": "zero",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Fill buffers with random data",
+                        "name": "random",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "Fill buffers with pattern 0x00 -> 0xff",
+                        "name": "pattern",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Fill buffers with pattern 0x00 -> 0xff that spans buffers",
+                        "name": "pattern-span",
+                        "value": "5"
+                    }
+                ]
+            },
+            "GstFakeSrcSizeType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Send empty buffers",
+                        "name": "empty",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Fixed size buffers (sizemax sized)",
+                        "name": "fixed",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Random sized buffers (sizemin <= size <= sizemax)",
+                        "name": "random",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstFileSinkBufferMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Default buffering",
+                        "name": "default",
+                        "value": "-1"
+                    },
+                    {
+                        "desc": "Fully buffered",
+                        "name": "full",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Line buffered (deprecated, like full)",
+                        "name": "line",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Unbuffered",
+                        "name": "unbuffered",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstInputSelectorSyncMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Sync using the current active segment",
+                        "name": "active-segment",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Sync using the clock",
+                        "name": "clock",
+                        "value": "1"
+                    }
+                ]
+            },
+            "GstMultiQueuePad": {
+                "hierarchy": [
+                    "GstMultiQueuePad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "current-level-buffers": {
+                        "blurb": "Current level buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "current-level-bytes": {
+                        "blurb": "Current level bytes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "current-level-time": {
+                        "blurb": "Current level time",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "group-id": {
+                        "blurb": "Group to which this pad belongs",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                }
+            },
+            "GstOutputSelectorPadNegotiationMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "All",
+                        "name": "all",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Active",
+                        "name": "active",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstQueueLeaky": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Not Leaky",
+                        "name": "no",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Leaky on upstream (new buffers)",
+                        "name": "upstream",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Leaky on downstream (old buffers)",
+                        "name": "downstream",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstSelectorPad": {
+                "hierarchy": [
+                    "GstSelectorPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "active": {
+                        "blurb": "If the pad is currently active",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": false
+                    },
+                    "always-ok": {
+                        "blurb": "Make an inactive pad return OK instead of NOT_LINKED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "running-time": {
+                        "blurb": "Running time of stream on pad",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "0",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": false
+                    },
+                    "tags": {
+                        "blurb": "The currently active tags on the pad",
+                        "construct": false,
+                        "construct-only": false,
+                        "readable": true,
+                        "type": "GstTagList",
+                        "writable": false
+                    }
+                }
+            },
+            "GstTeePullMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Never activate in pull mode",
+                        "name": "never",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Only one src pad can be active in pull mode",
+                        "name": "single",
+                        "value": "1"
+                    }
+                ]
+            }
+        },
         "package": "GStreamer git",
         "source": "gstreamer",
         "tracers": {},
@@ -3210,6 +2998,7 @@
         "elements": {},
         "filename": "gstcoretracers",
         "license": "LGPL",
+        "other-types": {},
         "package": "GStreamer git",
         "source": "gstreamer",
         "tracers": {
