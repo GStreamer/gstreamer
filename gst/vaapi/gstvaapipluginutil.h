@@ -162,6 +162,11 @@ gst_vaapi_encoder_get_profiles_from_caps (GstCaps * caps,
     GstVaapiStrToProfileFunc func);
 
 G_GNUC_INTERNAL
+void
+gst_vaapi_caps_set_width_and_height_range (GstCaps * caps, gint min_width,
+    gint min_height, gint max_width, gint max_height);
+
+G_GNUC_INTERNAL
 GstCaps *
 gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
     gint min_height, gint max_width, gint max_height, guint mem_type);
