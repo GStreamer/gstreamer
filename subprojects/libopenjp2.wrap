@@ -1,5 +1,5 @@
 [wrap-file]
-directory = libopenjp2
+directory = openjpeg-2.3.1
 
 source_url = https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz
 source_filename = openjpeg-2.3.1.tar.gz
