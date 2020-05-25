@@ -65,7 +65,9 @@ if opencv_found
       opencv_found = false
     endif
   endforeach
-else
+endif
+
+if not opencv_found
   opencv_dep = dependency('opencv4', version : ['>= 4.0.0', '< 4.6.0'], required : false)
   opencv_found = opencv_dep.found()
   if opencv_found
