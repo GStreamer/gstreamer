@@ -397,6 +397,9 @@ gst_vaapi_frame_store_split_fields (GstVaapiFrameStore * fs, gboolean tff)
   second_field = gst_vaapi_picture_h264_new_field (first_field);
   if (!second_field)
     return FALSE;
+  gst_vaapi_picture_h264_set_reference (second_field,
+      GST_VAAPI_PICTURE_FLAGS (first_field) & GST_VAAPI_PICTURE_FLAGS_REFERENCE,
+      FALSE);
   gst_vaapi_picture_replace (&fs->buffers[fs->num_buffers++], second_field);
   gst_vaapi_picture_unref (second_field);
 
