@@ -330,6 +330,7 @@ init_entry (GstClockEntryImpl * entry)
 G_STATIC_ASSERT (sizeof (GstClockEntryImpl) <=
     sizeof (struct _GstClockEntryImpl));
 
+/* Must be called with clock lock */
 static inline void
 ensure_entry_initialized (GstClockEntryImpl * entry_impl)
 {
@@ -488,7 +489,6 @@ gst_system_clock_dispose (GObject * object)
     /* We don't need to take the entry lock here because the async thread
      * would only ever look at the head entry, which is locked below and only
      * accesses new entries with the clock lock, which we hold here.
-     * This makes it unnecessary to initialize mutex/conds for all entries.
      */
     GST_CLOCK_ENTRY_STATUS ((GstClockEntry *) entry) = GST_CLOCK_UNSCHEDULED;
 
@@ -499,7 +499,9 @@ gst_system_clock_dispose (GObject * object)
      * entries are unscheduled, would remove them one by one from the list and
      * then shut down. */
     if (!entries->prev) {
-      ensure_entry_initialized (entry);
+      /* it was initialized before adding to the list */
+      g_assert (entry->initialized);
+
       GST_SYSTEM_CLOCK_ENTRY_LOCK (entry);
       GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "unscheduling entry %p",
           entry);
@@ -687,7 +689,8 @@ gst_system_clock_async_thread (GstClock * clock)
     /* pick the next entry */
     entry = priv->entries->data;
 
-    ensure_entry_initialized ((GstClockEntryImpl *) entry);
+    /* it was initialized before adding to the list */
+    g_assert (((GstClockEntryImpl *) entry)->initialized);
 
     /* unlocked before the next loop iteration at latest */
     GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
@@ -1170,7 +1173,9 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
     } else {
       GstClockReturn status;
 
-      ensure_entry_initialized ((GstClockEntryImpl *) head);
+      /* it was initialized before adding to the list */
+      g_assert (((GstClockEntryImpl *) head)->initialized);
+
       GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) head);
       status = GST_CLOCK_ENTRY_STATUS (head);
       GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "head entry %p status %d",
