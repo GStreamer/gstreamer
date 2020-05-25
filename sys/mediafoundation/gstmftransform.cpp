@@ -394,6 +394,7 @@ gst_mf_transform_process_output (GstMFTransform * self)
   DWORD stream_id = self->output_id;
   MFT_OUTPUT_STREAM_INFO out_stream_info = { 0 };
   MFT_OUTPUT_DATA_BUFFER out_data = { 0 };
+  GstFlowReturn ret = GST_FLOW_OK;
 
   hr = transform->GetOutputStreamInfo (stream_id, &out_stream_info);
   if (!gst_mf_result (hr)) {
@@ -437,7 +438,7 @@ gst_mf_transform_process_output (GstMFTransform * self)
 
   if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
     GST_LOG_OBJECT (self, "Need more input data");
-    return GST_MF_TRANSFORM_FLOW_NEED_DATA;
+    ret = GST_MF_TRANSFORM_FLOW_NEED_DATA;
   } else if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
     ComPtr<IMFMediaType> output_type;
 
@@ -447,21 +448,29 @@ gst_mf_transform_process_output (GstMFTransform * self)
         0, output_type.GetAddressOf ());
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't get available output type");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     hr = transform->SetOutputType (stream_id, output_type.Get (), 0);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't set output type");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
-    return GST_MF_TRANSFORM_FLOW_NEED_DATA;
+    ret = GST_MF_TRANSFORM_FLOW_NEED_DATA;
   } else if (!gst_mf_result (hr)) {
     GST_ERROR_OBJECT (self, "ProcessOutput error");
+    ret = GST_FLOW_ERROR;
+  }
+
+done:
+  if (ret != GST_FLOW_OK) {
     if (out_data.pSample)
-      out_data.pSample->Release ();
-    return GST_FLOW_ERROR;
+      out_data.pSample->Release();
+
+    return ret;
   }
 
   if (!out_data.pSample) {
