@@ -1832,6 +1832,12 @@ parse_pps (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
     return get_status (result);
 
   priv->parser_state |= GST_H264_VIDEO_STATE_GOT_PPS;
+
+  if (pps->num_slice_groups_minus1 > 0) {
+    GST_FIXME ("FMO is not supported");
+    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+  }
+
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
