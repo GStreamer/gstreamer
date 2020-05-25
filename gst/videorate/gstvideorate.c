@@ -879,9 +879,8 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
                     && GST_CLOCK_TIME_IS_VALID (videorate->next_ts)
                     && videorate->next_ts - videorate->segment.base >=
                     videorate->segment.start)
-                || count < 1)) {
-          res =
-              gst_video_rate_flush_prev (videorate, count > 0,
+            )) {
+          res = gst_video_rate_flush_prev (videorate, count > 0,
               GST_CLOCK_TIME_NONE);
           count++;
         }
@@ -914,7 +913,8 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         videorate->dup += count - 1;
         if (!videorate->silent)
           gst_video_rate_notify_duplicate (videorate);
-      } else if (count == 0) {
+      } else if (count == 0
+          && !GST_CLOCK_TIME_IS_VALID (videorate->segment.stop)) {
         videorate->drop++;
         if (!videorate->silent)
           gst_video_rate_notify_drop (videorate);
@@ -1451,7 +1451,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   } else {
     GstClockTime prevtime;
     gint count = 0;
-    gint64 diff1, diff2;
+    gint64 diff1 = 0, diff2 = 0;
 
     prevtime = videorate->prev_ts;
 
@@ -1557,6 +1557,12 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         GstClockTime in_endtime;
 
         next_ts = videorate->next_ts;
+
+        if (!GST_CLOCK_TIME_IS_VALID (next_ts)) {
+          GST_DEBUG_OBJECT (videorate, "Already reached segment start,"
+              "ignoring buffer");
+          break;
+        }
 
         prev_endtime =
             MAX (prevtime + GST_BUFFER_DURATION (videorate->prevbuf),

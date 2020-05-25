@@ -9,6 +9,8 @@ endif
 
 tests = [
     'audiotestsrc/reverse',
+    'videorate/10_to_1fps',
+    'videorate/reverse.10_to_1fps',
 ]
 
 env = environment()
