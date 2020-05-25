@@ -20,7 +20,7 @@ import concurrent
 
 class WebRTCSimpleServer(object):
 
-    def __init__(self, options):
+    def __init__(self, loop, options):
         ############### Global data ###############
 
         # Format: {uid: (Peer WebSocketServerProtocol,
@@ -34,6 +34,11 @@ class WebRTCSimpleServer(object):
         # Format: {room_id: {peer1_id, peer2_id, peer3_id, ...}}
         # Room dict with a set of peers in each room
         self.rooms = dict()
+
+        # Event loop
+        self.loop = loop
+        # Websocket Server Instance
+        self.server = None
 
         # Options
         self.addr = options.addr
@@ -266,7 +271,8 @@ class WebRTCSimpleServer(object):
         logger.setLevel(logging.INFO)
         logger.addHandler(logging.StreamHandler())
 
-        return wsd
+        # Run the server
+        self.server = self.loop.run_until_complete(wsd)
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -282,11 +288,12 @@ def main():
 
     loop = asyncio.get_event_loop()
 
-    r = WebRTCSimpleServer(options)
+    r = WebRTCSimpleServer(loop, options)
 
-    loop.run_until_complete (r.run())
-    loop.run_forever ()
-    print ("Goodbye!")
+    print('Starting server...')
+    r.run()
+    loop.run_forever()
+    print("Goodbye!")
 
 if __name__ == "__main__":
     main()
