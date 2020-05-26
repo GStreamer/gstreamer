@@ -221,6 +221,34 @@ gst_v4l2_video_dec_stop (GstVideoDecoder * decoder)
 }
 
 static gboolean
+compatible_caps (GstV4l2VideoDec * self, GstCaps * new_caps)
+{
+  GstCaps *current_caps, *caps1, *caps2;
+  GstStructure *s;
+  gboolean ret;
+
+  current_caps = gst_v4l2_object_get_current_caps (self->v4l2output);
+  if (!current_caps)
+    return FALSE;
+
+  caps1 = gst_caps_copy (current_caps);
+  s = gst_caps_get_structure (caps1, 0);
+  gst_structure_remove_field (s, "framerate");
+
+  caps2 = gst_caps_copy (new_caps);
+  s = gst_caps_get_structure (caps2, 0);
+  gst_structure_remove_field (s, "framerate");
+
+  ret = gst_caps_is_equal (caps1, caps2);
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (current_caps);
+
+  return ret;
+}
+
+static gboolean
 gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state)
 {
@@ -231,7 +259,7 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
   if (self->input_state) {
-    if (gst_v4l2_object_caps_equal (self->v4l2output, state->caps)) {
+    if (compatible_caps (self, state->caps)) {
       GST_DEBUG_OBJECT (self, "Compatible caps");
       goto done;
     }
