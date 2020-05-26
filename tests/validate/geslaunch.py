@@ -157,7 +157,8 @@ class GESTest(GstValidateTest):
     def set_sink_args(self):
         if self.testfile:
             # testfile should be self contained and --mute should give required infos.
-            self.add_arguments("--mute")
+            if self.options.mute:
+                self.add_arguments("--mute")
             return
 
         if self.options.mute:
