@@ -314,6 +314,7 @@ static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
 static void update_in_rates (GstQueue2 * queue, gboolean force);
 static GstMessage *gst_queue2_get_buffering_message (GstQueue2 * queue,
     gint * percent);
+static void update_buffering (GstQueue2 * queue);
 static void gst_queue2_post_buffering (GstQueue2 * queue);
 
 typedef enum
@@ -833,6 +834,7 @@ query_downstream_bitrate (GstQueue2 * queue)
 {
   GstQuery *query = gst_query_new_bitrate ();
   guint downstream_bitrate = 0;
+  gboolean changed;
 
   if (gst_pad_peer_query (queue->srcpad, query)) {
     gst_query_parse_bitrate (query, &downstream_bitrate);
@@ -845,10 +847,17 @@ query_downstream_bitrate (GstQueue2 * queue)
   gst_query_unref (query);
 
   GST_QUEUE2_MUTEX_LOCK (queue);
+  changed = queue->downstream_bitrate != downstream_bitrate;
   queue->downstream_bitrate = downstream_bitrate;
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-  g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
+  if (changed) {
+    if (queue->use_buffering)
+      update_buffering (queue);
+    gst_queue2_post_buffering (queue);
+
+    g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
+  }
 }
 
 /* take a buffer and update segment, updating the time level of the queue. */
@@ -3052,6 +3061,11 @@ next:
   GST_QUEUE2_MUTEX_UNLOCK (queue);
   gst_queue2_post_buffering (queue);
 
+  if (gst_pad_check_reconfigure (queue->srcpad)) {
+    /* If the pad was reconfigured, do a new bitrate query */
+    query_downstream_bitrate (queue);
+  }
+
   if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER) {
     GstBuffer *buffer;
 
@@ -3274,6 +3288,10 @@ gst_queue2_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_QUEUE2_MUTEX_LOCK (queue);
       /* assume downstream is linked now and try to push again */
       if (queue->srcresult == GST_FLOW_NOT_LINKED) {
+        /* Mark the pad as needing reconfiguration, and
+         * the loop will re-query downstream bitrate
+         */
+        gst_pad_mark_reconfigure (pad);
         queue->srcresult = GST_FLOW_OK;
         queue->sinkresult = GST_FLOW_OK;
         if (GST_PAD_MODE (pad) == GST_PAD_MODE_PUSH) {
@@ -3283,9 +3301,6 @@ gst_queue2_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       }
       GST_QUEUE2_MUTEX_UNLOCK (queue);
-
-      /* force a new bitrate query to be performed */
-      query_downstream_bitrate (queue);
 
       res = gst_pad_push_event (queue->sinkpad, event);
       break;
@@ -3787,7 +3802,10 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
       queue->starting_segment = NULL;
       gst_event_replace (&queue->stream_start_event, NULL);
       GST_QUEUE2_MUTEX_UNLOCK (queue);
-      query_downstream_bitrate (queue);
+
+      /* Mark the srcpad as reconfigured to trigger querying
+       * the downstream bitrate next time it tries to push */
+      gst_pad_mark_reconfigure (queue->srcpad);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
