@@ -1948,6 +1948,24 @@ gst_vaapi_filter_append_caps (GstVaapiFilter * filter, GstStructure * structure)
 }
 
 /**
+ * gst_vaapi_filter_get_memory_types:
+ * @filter: a #GstVaapiFilter
+ *
+ * Gets the surface's memory types available in @filter's context.
+ *
+ * Returns: surface's memory types available in @filter context.
+ **/
+guint
+gst_vaapi_filter_get_memory_types (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  if (!ensure_attributes (filter))
+    return 0;
+  return filter->attribs->mem_types;
+}
+
+/**
  * gst_vaapi_filter_set_cropping_rectangle:
  * @filter: a #GstVaapiFilter
  * @rect: the cropping region
