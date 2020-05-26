@@ -194,6 +194,7 @@ create_config (const gchar * config, const gchar * suffix)
   GstStructure *local_vars;
   GList *structures = NULL, *result = NULL;
   gchar *config_file = NULL;
+  GFile *f;
 
   if (!suffix) {
     GST_WARNING ("suffix is NULL");
@@ -201,10 +202,11 @@ create_config (const gchar * config, const gchar * suffix)
   }
 
   local_vars = gst_structure_new_empty ("vars");
-  structures =
-      gst_validate_utils_structs_parse_from_filename (config, NULL,
-      &config_file);
-  if (!structures) {
+  f = g_file_new_for_path (config);
+  if (g_file_query_exists (f, NULL)) {
+    structures = gst_validate_utils_structs_parse_from_filename (config, NULL,
+        &config_file);
+  } else {
     GstCaps *confs = NULL;
 
     if (gst_structure_validate_name (config))
@@ -224,7 +226,7 @@ create_config (const gchar * config, const gchar * suffix)
       gst_caps_unref (confs);
     }
   }
-
+  g_object_unref (f);
   gst_validate_structure_set_variables_from_struct_file (local_vars,
       config_file);
   g_free (config_file);
