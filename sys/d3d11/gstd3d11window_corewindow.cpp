@@ -98,6 +98,8 @@ gst_d3d11_window_core_window_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static void
 gst_d3d11_window_core_window_on_resize_sync (GstD3D11Window * window);
+static void
+gst_d3d11_window_core_window_unprepare (GstD3D11Window * window);
 
 static float
 get_logical_dpi (void)
@@ -259,6 +261,8 @@ gst_d3d11_window_core_window_class_init (GstD3D11WindowCoreWindowClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_unlock_stop);
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_on_resize);
+  window_class->unprepare =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_unprepare);
 }
 
 static void
@@ -333,7 +337,15 @@ error:
 static void
 gst_d3d11_window_core_window_dispose (GObject * object)
 {
-  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (object);
+  gst_d3d11_window_core_window_unprepare (GST_D3D11_WINDOW (object));
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_window_core_window_unprepare (GstD3D11Window * window)
+{
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
   CoreWindowWinRTStorage *storage = self->storage;
 
   if (storage) {
@@ -356,8 +368,6 @@ gst_d3d11_window_core_window_dispose (GObject * object)
   }
 
   self->storage = NULL;
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

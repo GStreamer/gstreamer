@@ -96,6 +96,9 @@ gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11Window * window,
 static void
 gst_d3d11_window_swap_chain_panel_on_resize_sync (GstD3D11Window *
     window);
+static void
+gst_d3d11_window_swap_chain_panel_unprepare (GstD3D11Window * window);
+
 class PanelResizeHandler
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
         Xaml::ISizeChangedEventHandler>
@@ -224,6 +227,8 @@ gst_d3d11_window_swap_chain_panel_class_init (GstD3D11WindowSwapChainPanelClass
       GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_unlock_stop);
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_on_resize);
+  window_class->unprepare =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_unprepare);
 }
 
 static void
@@ -304,8 +309,16 @@ error:
 static void
 gst_d3d11_window_swap_chain_panel_dispose (GObject * object)
 {
+  gst_d3d11_window_swap_chain_panel_unprepare (GST_D3D11_WINDOW (object));
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_window_swap_chain_panel_unprepare (GstD3D11Window * window)
+{
   GstD3D11WindowSwapChainPanel *self =
-      GST_D3D11_WINDOW_SWAP_CHAIN_PANEL (object);
+      GST_D3D11_WINDOW_SWAP_CHAIN_PANEL (window);
   SwapChainPanelWinRTStorage *storage = self->storage;
 
   if (storage) {
@@ -329,8 +342,6 @@ gst_d3d11_window_swap_chain_panel_dispose (GObject * object)
   }
 
   self->storage = NULL;
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

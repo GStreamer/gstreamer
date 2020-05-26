@@ -118,6 +118,7 @@ gst_d3d11_window_win32_set_window_handle (GstD3D11WindowWin32 * self,
 static void
 gst_d3d11_window_win32_on_resize (GstD3D11Window * window,
     guint width, guint height);
+static void gst_d3d11_window_win32_unprepare (GstD3D11Window * window);
 
 static void
 gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
@@ -139,6 +140,8 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
   window_class->present = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_present);
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_on_resize);
+  window_class->unprepare =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_unprepare);
 }
 
 static void
@@ -171,11 +174,19 @@ gst_d3d11_window_win32_constructed (GObject * object)
 static void
 gst_d3d11_window_win32_dispose (GObject * object)
 {
-  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (object);
+  gst_d3d11_window_win32_unprepare (GST_D3D11_WINDOW (object));
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
 
   gst_d3d11_window_win32_release_external_handle (self);
 
-  if (self->loop) {
+   if (self->loop) {
     g_main_loop_quit (self->loop);
   }
 
@@ -193,8 +204,6 @@ gst_d3d11_window_win32_dispose (GObject * object)
     g_main_context_unref (self->main_context);
     self->main_context = NULL;
   }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void

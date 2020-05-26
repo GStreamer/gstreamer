@@ -594,6 +594,9 @@ gst_d3d11_video_sink_stop (GstBaseSink * sink)
     self->fallback_pool = NULL;
   }
 
+  if (self->window)
+    gst_d3d11_window_unprepare (self->window);
+
   gst_clear_object (&self->device);
   gst_clear_object (&self->window);
 
