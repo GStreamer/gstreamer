@@ -210,6 +210,7 @@ mpegts_parse_init (MpegTSParse2 * parse)
   base->program_size = sizeof (MpegTSParseProgram);
   base->push_data = TRUE;
   base->push_section = TRUE;
+  base->push_unknown = TRUE;
 
   parse->user_pcr_pid = parse->pcr_pid = -1;
 

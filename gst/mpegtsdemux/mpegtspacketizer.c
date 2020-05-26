@@ -994,7 +994,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
    *  If it is not a PUSI
    *    Accumulate the expected data and check for complete section
    *    (loop)
-   *    
+   *
    **/
 
   if (packet->payload_unit_start_indicator) {
@@ -1950,7 +1950,7 @@ record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
     GList *tmp;
     /* No current estimator. This happens for the initial value, or after
      * discont and flushes. Figure out where we need to record this position.
-     * 
+     *
      * Possible choices:
      * 1) No groups at all:
      *    Create a new group with pcr/offset

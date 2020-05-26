@@ -1491,6 +1491,8 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       if (base->push_section)
         res = klass->push (base, &packet, section);
 
+    } else if (base->push_unknown) {
+      res = klass->push (base, &packet, NULL);
     } else if (packet.payload && packet.pid != 0x1fff)
       GST_LOG ("PID 0x%04x Saw packet on a pid we don't handle", packet.pid);
 

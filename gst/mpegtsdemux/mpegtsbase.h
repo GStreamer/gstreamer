@@ -160,6 +160,7 @@ struct _MpegTSBase {
   /* Whether to push data and/or sections to subclasses */
   gboolean push_data;
   gboolean push_section;
+  gboolean push_unknown;
 
   /* Whether the parent bin is streams-aware, meaning we can
    * add/remove streams at any point in time */
