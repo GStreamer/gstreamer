@@ -1061,9 +1061,7 @@ class GstValidateTest(Test):
         if self.result in [Result.FAILED, Result.PASSED, Result.SKIPPED]:
             return
 
-
         self.debug("%s returncode: %s", self, self.process.returncode)
-
         expected_issues = copy.deepcopy(self.expected_issues)
         if self.options.rr:
             # signal.SIGPPIPE is 13 but it sometimes isn't present in python for some reason.
@@ -1740,6 +1738,9 @@ class _TestsLauncher(Loggable):
                               testsuite)
                     self.options.wanted_tests.append(testsuite)
                 else:
+                    if testsuite in testsuites:
+                        self.info('Testuite %s was loaded previously', testsuite)
+                        continue
                     printc("Could not load testsuite: %s, reasons: %s" % (
                         testsuite, loaded_module[1]), Colors.FAIL)
                 continue
