@@ -652,7 +652,9 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
       resample->samples_out = 0;
       resample->need_discont = TRUE;
       break;
+    case GST_EVENT_STREAM_START:
     case GST_EVENT_SEGMENT:
+    case GST_EVENT_EOS:
       if (resample->converter) {
         gsize latency =
             gst_audio_converter_get_max_latency (resample->converter);
@@ -667,14 +669,6 @@ gst_audio_resample_sink_event (GstBaseTransform * base, GstEvent * event)
       resample->samples_in = 0;
       resample->samples_out = 0;
       resample->need_discont = TRUE;
-      break;
-    case GST_EVENT_EOS:
-      if (resample->converter) {
-        gsize latency =
-            gst_audio_converter_get_max_latency (resample->converter);
-        gst_audio_resample_push_drain (resample, latency);
-      }
-      gst_audio_resample_reset_state (resample);
       break;
     default:
       break;
