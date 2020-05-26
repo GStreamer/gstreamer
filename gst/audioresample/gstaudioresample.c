@@ -127,6 +127,9 @@ static gboolean gst_audio_resample_stop (GstBaseTransform * base);
 static gboolean gst_audio_resample_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
+static void gst_audio_resample_push_drain (GstAudioResample * resample,
+    guint history_len);
+
 #define gst_audio_resample_parent_class parent_class
 G_DEFINE_TYPE (GstAudioResample, gst_audio_resample, GST_TYPE_BASE_TRANSFORM);
 
@@ -497,7 +500,27 @@ gst_audio_resample_set_caps (GstBaseTransform * base, GstCaps * incaps,
   if (!gst_audio_info_from_caps (&out, outcaps))
     goto invalid_outcaps;
 
-  /* FIXME do some checks */
+  /* Reset timestamp tracking and drain the resampler if the audio format is
+   * changing. Especially when changing the sample rate our timestamp tracking
+   * will be completely off, but even otherwise we would usually lose the last
+   * few samples if we don't drain here */
+  if (!gst_audio_info_is_equal (&in, &resample->in) ||
+      !gst_audio_info_is_equal (&out, &resample->out)) {
+    if (resample->converter) {
+      gsize latency = gst_audio_converter_get_max_latency (resample->converter);
+      gst_audio_resample_push_drain (resample, latency);
+    }
+    gst_audio_resample_reset_state (resample);
+    resample->num_gap_samples = 0;
+    resample->num_nongap_samples = 0;
+    resample->t0 = GST_CLOCK_TIME_NONE;
+    resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
+    resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
+    resample->samples_in = 0;
+    resample->samples_out = 0;
+    resample->need_discont = TRUE;
+  }
+
   gst_audio_resample_update_state (resample, &in, &out);
 
   resample->in = in;
