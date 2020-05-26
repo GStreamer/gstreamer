@@ -743,13 +743,11 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   /**
    * GstGLImageSink::client-draw:
    * @object: the #GstGLImageSink
-   * @texture: the #guint id of the texture.
-   * @width: the #guint width of the texture.
-   * @height: the #guint height of the texture.
+   * @context: the #GstGLContext
+   * @sample: the #GstSample
    *
    * Will be emitted before actually drawing the texture.  The client should
-   * redraw the surface/contents with the @texture, @width and @height and
-   * and return %TRUE.
+   * redraw the surface/contents of @sample and return %TRUE.
    *
    * Returns: whether the texture was redrawn by the signal.  If not, a
    *          default redraw will occur.
@@ -762,6 +760,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   /**
    * GstGLImageSink::client-reshape:
    * @object: the #GstGLImageSink
+   * @context: the #GstGLContext
    * @width: the #guint width of the texture.
    * @height: the #guint height of the texture.
    *
