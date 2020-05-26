@@ -452,11 +452,21 @@ GST_END_VALIDATE_ACTION;
 
 
 static void
-_commit_done_cb (GstBus * bus, GstMessage * message, GstValidateAction * action)
+_state_changed_cb (GstBus * bus, GstMessage * message,
+    GstValidateAction * action)
 {
-  gst_validate_action_set_done (action);
+  GstState next_state;
 
-  g_signal_handlers_disconnect_by_func (bus, _commit_done_cb, action);
+  if (!GST_IS_PIPELINE (GST_MESSAGE_SRC (message)))
+    return;
+
+  gst_message_parse_state_changed (message, NULL, NULL, &next_state);
+
+  if (next_state == GST_STATE_VOID_PENDING) {
+    gst_validate_action_set_done (action);
+
+    g_signal_handlers_disconnect_by_func (bus, _state_changed_cb, action);
+  }
 }
 
 GES_START_VALIDATE_ACTION (_commit)
@@ -469,12 +479,12 @@ GES_START_VALIDATE_ACTION (_commit)
   gst_validate_printf (action, "Committing timeline %s\n",
       GST_OBJECT_NAME (timeline));
 
-  g_signal_connect (bus, "message::async-done", G_CALLBACK (_commit_done_cb),
-      action);
+  g_signal_connect (bus, "message::state-changed",
+      G_CALLBACK (_state_changed_cb), action);
 
   gst_element_get_state (pipeline, &state, NULL, 0);
   if (!ges_timeline_commit (timeline) || state < GST_STATE_PAUSED) {
-    g_signal_handlers_disconnect_by_func (bus, G_CALLBACK (_commit_done_cb),
+    g_signal_handlers_disconnect_by_func (bus, G_CALLBACK (_state_changed_cb),
         action);
     gst_object_unref (bus);
     goto done;
