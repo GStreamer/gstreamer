@@ -317,14 +317,14 @@ valgrind core:
   variables:
     TEST_SUITE: "check.gstreamer\\..*"
   rules:
-    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-ci)$/'
+    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-ci|gst-devtools)$/'
 
 valgrind base:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-base\\..*"
   rules:
-    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-ci)$/'
+    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-ci|gst-devtools)$/'
 
 valgrind good:
   extends: '.valgrind fedora x86_64'
@@ -333,21 +333,21 @@ valgrind good:
     # take longer time due to splitmux unit test
     TIMEOUT_FACTOR: "4"
   rules:
-    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-ci)$/'
+    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-ci|gst-devtools)$/'
 
 valgrind ugly:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-ugly\\..*"
   rules:
-    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-ugly|gst-ci)$/'
+    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-ugly|gst-ci|gst-devtools)$/'
 
 valgrind bad:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-bad\\..*"
   rules:
-    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-plugins-bad|gst-ci)$/'
+    - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-plugins-bad|gst-ci|gst-devtools)$/'
 
 valgrind ges:
   extends: '.valgrind fedora x86_64'
