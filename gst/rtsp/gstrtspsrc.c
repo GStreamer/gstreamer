@@ -6476,6 +6476,10 @@ again:
         goto again;
     }
   }
+
+  if (res < 0)
+    goto receive_error;
+
   gst_rtsp_ext_list_after_send (src->extensions, request, response);
 
   return res;
@@ -6489,6 +6493,20 @@ send_error:
           ("Could not send message. (%s)", str));
     } else {
       GST_WARNING_OBJECT (src, "send interrupted");
+    }
+    g_free (str);
+    return res;
+  }
+
+receive_error:
+  {
+    gchar *str = gst_rtsp_strresult (res);
+
+    if (res != GST_RTSP_EINTR) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Could not receive message. (%s)", str));
+    } else {
+      GST_WARNING_OBJECT (src, "receive interrupted");
     }
     g_free (str);
     return res;
