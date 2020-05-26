@@ -6,6 +6,7 @@ short-description: Collection of GStreamer-related multimedia content
 
 ## GStreamer Conference Videos and Slides
 
+* [GStreamer Conference 2019: Videos and Slides] [(PDF slides)][2019]
 * [GStreamer Conference 2018: Videos and Slides] [(PDF slides)][2018]
 * [GStreamer Conference 2017: Videos and Slides] [(PDF slides)][2017]
 * [GStreamer Conference 2016: Videos and Slides] [(PDF slides)][2016]
@@ -16,6 +17,7 @@ short-description: Collection of GStreamer-related multimedia content
 * [GStreamer Conference 2011: Videos and Slides] [(PDF slides)][2011]
 * [GStreamer Conference 2010: Videos and Slides] [(PDF slides)][2010]
 
+[GStreamer Conference 2019: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2019
 [GStreamer Conference 2018: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2018
 [GStreamer Conference 2017: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2017
 [GStreamer Conference 2016: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2016
@@ -25,6 +27,7 @@ short-description: Collection of GStreamer-related multimedia content
 [GStreamer Conference 2012: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2012
 [GStreamer Conference 2011: Videos and Slides]: http://gstconf.ubicast.tv/channels/#conferences2011
 [GStreamer Conference 2010: Videos and Slides]: http://gstconf.ubicast.tv/channels/#conferences2010
+[2019]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2019/
 [2018]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2018/
 [2017]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2017/
 [2016]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2016/
