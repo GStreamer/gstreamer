@@ -871,6 +871,11 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
    * flag to resync timestamp and offset counters and send event
    * downstream */
   if (G_UNLIKELY (gst_audio_resample_check_discont (resample, inbuf))) {
+    if (resample->converter) {
+      gsize latency = gst_audio_converter_get_max_latency (resample->converter);
+      gst_audio_resample_push_drain (resample, latency);
+    }
+
     gst_audio_resample_reset_state (resample);
     resample->need_discont = TRUE;
   }
