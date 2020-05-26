@@ -19,7 +19,7 @@ has_sometimes_template (GObject * object)
   GstElementClass *klass;
   GList *l;
 
-  if (!GST_IS_OBJECT (object))
+  if (!GST_IS_ELEMENT (object))
     return FALSE;
 
   klass = GST_ELEMENT_GET_CLASS (object);
