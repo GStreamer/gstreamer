@@ -496,7 +496,7 @@ main (int argc, char **argv)
 {
   Suite *s;
   g_setenv ("GST_TRACERS", "leaks(name=plain,log-leaks-on-deinit=false);"
-      "leaks(name=more,filters=GstPad,check-refs=true,stack-traces-flags=full,log-leaks-on-deinit=false);",
+      "leaks(name=more,filters=GstPad,check-refs=true,stack-traces-flags=none,log-leaks-on-deinit=false);",
       TRUE);
   gst_check_init (&argc, &argv);
   s = leakstracer_suite ();
