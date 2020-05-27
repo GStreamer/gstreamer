@@ -284,8 +284,8 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
         "width", G_TYPE_INT, context->width,
         "height", G_TYPE_INT, context->height, NULL);
 
-    num = context->time_base.den / context->ticks_per_frame;
-    denom = context->time_base.num;
+    num = context->framerate.num;
+    denom = context->framerate.den;
 
     if (!denom) {
       GST_LOG ("invalid framerate: %d/0, -> %d/1", num, num);
