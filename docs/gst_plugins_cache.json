@@ -1,7 +1,6 @@
 {
     "ges": {
         "description": "GStreamer Editing Services Plugin",
-        "device-providers": {},
         "elements": {
             "gesdemux": {
                 "author": "Thibault Saunier <tsaunier@igalia.com",
@@ -14,6 +13,9 @@
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
                 ],
                 "klass": "Codec/Demux/Editing",
                 "long-name": "GStreamer Editing Services based 'demuxer'",
@@ -40,7 +42,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "message-forward": {
@@ -48,14 +51,16 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "timeline": {
                         "blurb": "Timeline to use in this src.",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GESTimeline",
+                        "readable": true,
+                        "type": "GESTimeline",
                         "writable": true
                     }
                 },
@@ -63,19 +68,28 @@
                 "signals": {
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     },
                     "pad-added": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     },
                     "pad-removed": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     }
                 }
             },
@@ -90,6 +104,10 @@
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy",
+                    "GstURIHandler"
                 ],
                 "klass": "Codec/Source/Editing",
                 "long-name": "GStreamer Editing Services based 'source'",
@@ -111,7 +129,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "message-forward": {
@@ -119,14 +138,16 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "timeline": {
                         "blurb": "Timeline to use in this src.",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GESTimeline",
+                        "readable": true,
+                        "type": "GESTimeline",
                         "writable": true
                     }
                 },
@@ -134,25 +155,35 @@
                 "signals": {
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     },
                     "pad-added": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     },
                     "pad-removed": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     }
                 }
             }
         },
         "filename": "gstges",
         "license": "LGPL",
+        "other-types": {},
         "package": "GStreamer Editing Services",
         "source": "gst-editing-services",
         "tracers": {},
@@ -173,9 +204,11 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
                 "klass": "Filter/Editor",
                 "long-name": "GNonLin Composition",
-                "name": "nlecomposition",
                 "pad-templates": {
                     "src": {
                         "caps": "ANY",
@@ -189,7 +222,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "async-handling": {
@@ -197,7 +231,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "caps": {
@@ -205,7 +240,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "ANY",
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": true
                     },
                     "duration": {
@@ -215,7 +251,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "expandable": {
@@ -223,15 +260,17 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "id": {
                         "blurb": "The stream-id of the composition",
                         "construct": false,
                         "construct-only": false,
-                        "default": "08b803d370ed02669347d0152504d701",
-                        "type-name": "gchararray",
+                        "default": "6a0fa13827e3ac0bd51c97439086d1d9",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "inpoint": {
@@ -241,7 +280,8 @@
                         "default": "18446744073709551615",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "media-duration-factor": {
@@ -251,7 +291,8 @@
                         "default": "1",
                         "max": "1.79769e+308",
                         "min": "0.01",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "message-forward": {
@@ -259,23 +300,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "priority": {
@@ -285,7 +311,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "start": {
@@ -295,7 +322,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stop": {
@@ -305,27 +333,33 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     }
                 },
                 "rank": "none",
                 "signals": {
                     "commit": {
+                        "action": true,
                         "args": [
-                            "gboolean"
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
                         ],
-                        "retval": "gboolean"
+                        "return-type": "gboolean",
+                        "when": "last"
                     },
                     "commited": {
                         "args": [
-                            "gboolean"
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
                         ],
-                        "retval": "void"
-                    },
-                    "query-position": {
-                        "args": [],
-                        "retval": "guint64"
+                        "return-type": "void",
+                        "when": "first"
                     }
                 }
             },
@@ -341,9 +375,11 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
                 "klass": "Filter/Editor",
                 "long-name": "GNonLin Operation",
-                "name": "nleoperation",
                 "pad-templates": {
                     "sink%%d": {
                         "caps": "ANY",
@@ -362,7 +398,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "async-handling": {
@@ -370,7 +407,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "caps": {
@@ -378,7 +416,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "ANY",
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": true
                     },
                     "duration": {
@@ -388,7 +427,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "expandable": {
@@ -396,7 +436,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "inpoint": {
@@ -406,7 +447,8 @@
                         "default": "18446744073709551615",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "media-duration-factor": {
@@ -416,7 +458,8 @@
                         "default": "1",
                         "max": "1.79769e+308",
                         "min": "0.01",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "message-forward": {
@@ -424,23 +467,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "priority": {
@@ -450,7 +478,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "sinks": {
@@ -460,7 +489,8 @@
                         "default": "1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "start": {
@@ -470,7 +500,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stop": {
@@ -480,24 +511,37 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     }
                 },
                 "rank": "none",
                 "signals": {
                     "commit": {
+                        "action": true,
                         "args": [
-                            "gboolean"
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
                         ],
-                        "retval": "gboolean"
+                        "return-type": "gboolean",
+                        "when": "last"
                     },
                     "input-priority-changed": {
                         "args": [
-                            "GstPad",
-                            "guint"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     }
                 }
             },
@@ -513,9 +557,11 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
                 "klass": "Filter/Editor",
                 "long-name": "GNonLin Source",
-                "name": "nlesource",
                 "pad-templates": {
                     "src": {
                         "caps": "ANY",
@@ -529,7 +575,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "async-handling": {
@@ -537,7 +584,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "caps": {
@@ -545,7 +593,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "ANY",
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": true
                     },
                     "duration": {
@@ -555,7 +604,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "expandable": {
@@ -563,7 +613,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "inpoint": {
@@ -573,7 +624,8 @@
                         "default": "18446744073709551615",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "media-duration-factor": {
@@ -583,7 +635,8 @@
                         "default": "1",
                         "max": "1.79769e+308",
                         "min": "0.01",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "message-forward": {
@@ -591,23 +644,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "priority": {
@@ -617,7 +655,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "start": {
@@ -627,7 +666,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stop": {
@@ -637,17 +677,23 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     }
                 },
                 "rank": "none",
                 "signals": {
                     "commit": {
+                        "action": true,
                         "args": [
-                            "gboolean"
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
                         ],
-                        "retval": "gboolean"
+                        "return-type": "gboolean",
+                        "when": "last"
                     }
                 }
             },
@@ -664,9 +710,11 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
                 "klass": "Filter/Editor",
                 "long-name": "GNonLin URI Source",
-                "name": "nleurisource",
                 "pad-templates": {
                     "src": {
                         "caps": "ANY",
@@ -680,7 +728,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "async-handling": {
@@ -688,7 +737,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "caps": {
@@ -696,7 +746,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "ANY",
-                        "type-name": "GstCaps",
+                        "readable": true,
+                        "type": "GstCaps",
                         "writable": true
                     },
                     "duration": {
@@ -706,7 +757,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "expandable": {
@@ -714,7 +766,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "inpoint": {
@@ -724,7 +777,8 @@
                         "default": "18446744073709551615",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "media-duration-factor": {
@@ -734,7 +788,8 @@
                         "default": "1",
                         "max": "1.79769e+308",
                         "min": "0.01",
-                        "type-name": "gdouble",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "message-forward": {
@@ -742,23 +797,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "priority": {
@@ -768,7 +808,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "start": {
@@ -778,7 +819,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "stop": {
@@ -788,7 +830,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": false
                     },
                     "uri": {
@@ -796,39 +839,55 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     }
                 },
                 "rank": "none",
                 "signals": {
                     "commit": {
+                        "action": true,
                         "args": [
-                            "gboolean"
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
                         ],
-                        "retval": "gboolean"
+                        "return-type": "gboolean",
+                        "when": "last"
                     },
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     },
                     "pad-added": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     },
                     "pad-removed": {
                         "args": [
-                            "GstPad"
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     }
                 }
             }
         },
         "filename": "gstnle",
         "license": "LGPL",
+        "other-types": {},
         "package": "GStreamer Editing Services",
         "source": "gst-editing-services",
         "tracers": {},
