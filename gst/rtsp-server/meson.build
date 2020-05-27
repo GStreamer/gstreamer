@@ -79,7 +79,6 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     includes : ['Gst-1.0', 'GstRtsp-1.0', 'GstNet-1.0'],
-    sources_top_dir: meson.current_source_dir(),
     dependencies : gst_rtsp_server_deps,
   )
   rtsp_server_gen_sources += [rtsp_server_gir]
