@@ -313,6 +313,23 @@ play_set_relative_volume (GstPlay * play, gdouble volume_step)
   gst_print ("                  \n");
 }
 
+static void
+play_toggle_audio_mute (GstPlay * play)
+{
+  gboolean mute;
+
+  mute = gst_stream_volume_get_mute (GST_STREAM_VOLUME (play->playbin));
+
+  mute = !mute;
+  gst_stream_volume_set_mute (GST_STREAM_VOLUME (play->playbin), mute);
+
+  if (mute)
+    gst_print (_("Mute: on"));
+  else
+    gst_print (_("Mute: off"));
+  gst_print ("                  \n");
+}
+
 /* returns TRUE if something was installed and we should restart playback */
 static gboolean
 play_install_missing_plugins (GstPlay * play)
@@ -1316,6 +1333,7 @@ print_keyboard_help (void)
     "\342\206\220", N_("seek backward")}, {
     "\342\206\221", N_("volume up")}, {
     "\342\206\223", N_("volume down")}, {
+    "m", N_("toggle audio mute on/off")}, {
     "+", N_("increase playback rate")}, {
     "-", N_("decrease playback rate")}, {
     "d", N_("change playback direction")}, {
@@ -1418,6 +1436,9 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       break;
     case '0':
       play_do_seek (play, 0, play->rate, play->trick_mode);
+      break;
+    case 'm':
+      play_toggle_audio_mute (play);
       break;
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
