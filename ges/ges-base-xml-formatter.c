@@ -1115,8 +1115,11 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
         property_name, binding_type);
 
     g_object_set (source, "mode", mode, NULL);
-    gst_timed_value_control_source_set_from_list (GST_TIMED_VALUE_CONTROL_SOURCE
-        (source), timed_values);
+    if (!gst_timed_value_control_source_set_from_list
+        (GST_TIMED_VALUE_CONTROL_SOURCE (source), timed_values)) {
+      GST_ERROR_OBJECT (self, "Could not set timed values on %" GES_FORMAT,
+          GES_ARGS (source));
+    }
 
     gst_object_unref (source);
   } else
