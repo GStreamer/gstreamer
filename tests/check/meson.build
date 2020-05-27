@@ -6,7 +6,12 @@ if gst_dep.type_name() == 'pkgconfig'
   pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
                  pbase.get_pkgconfig_variable('pluginsdir'),
                  pbad.get_pkgconfig_variable('pluginsdir')]
+
+  gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+else
+  gst_plugin_scanner_dir = subproject('gstreamer').get_variable('gst_scanner_dir')
 endif
+gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 test_c_args = [
   '-UG_DISABLE_ASSERT',
@@ -40,8 +45,9 @@ foreach test_name : rtsp_server_tests
     env.set('GST_STATE_IGNORE_ELEMENTS', '')
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server@' + meson.build_root())
     env.set('CK_DEFAULT_TIMEOUT', '120')
-    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
 
   fname = '@0@.c'.format(test_name)
   test_name = test_name.underscorify()
