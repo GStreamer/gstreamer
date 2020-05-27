@@ -13,19 +13,18 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstChildProxy",
+                    "GstURIHandler"
+                ],
                 "klass": "Sink/Network",
                 "long-name": "RTSP RECORD client",
-                "name": "rtspclientsink",
                 "pad-templates": {
                     "sink_%%u": {
                         "caps": "ANY",
                         "direction": "sink",
-                        "presence": "request"
-                    },
-                    "stream_%%u": {
-                        "caps": "ANY",
-                        "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstRtspClientSinkPad"
                     }
                 },
                 "properties": {
@@ -34,7 +33,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "debug": {
@@ -42,7 +42,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "do-rtsp-keep-alive": {
@@ -50,7 +51,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "latency": {
@@ -60,7 +62,8 @@
                         "default": "2000",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "location": {
@@ -68,7 +71,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "message-forward": {
@@ -76,7 +80,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "multicast-iface": {
@@ -84,16 +89,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "ntp-time-source": {
@@ -101,37 +98,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "ntp (0)",
-                        "enum": true,
-                        "type-name": "GstRTSPClientSinkNtpTimeSource",
-                        "values": [
-                            {
-                                "desc": "NTP time based on realtime clock",
-                                "name": "ntp",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "UNIX time based on realtime clock",
-                                "name": "unix",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Running time based on pipeline clock",
-                                "name": "running-time",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Pipeline clock time",
-                                "name": "clock-time",
-                                "value": "3"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "GstRTSPClientSinkNtpTimeSource",
                         "writable": true
                     },
                     "port-range": {
@@ -139,7 +107,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "profiles": {
@@ -147,34 +116,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "avp",
-                        "type-name": "GstRTSPProfile",
-                        "values": [
-                            {
-                                "desc": "GST_RTSP_PROFILE_UNKNOWN",
-                                "name": "unknown",
-                                "value": "0x00000000"
-                            },
-                            {
-                                "desc": "GST_RTSP_PROFILE_AVP",
-                                "name": "avp",
-                                "value": "0x00000001"
-                            },
-                            {
-                                "desc": "GST_RTSP_PROFILE_SAVP",
-                                "name": "savp",
-                                "value": "0x00000002"
-                            },
-                            {
-                                "desc": "GST_RTSP_PROFILE_AVPF",
-                                "name": "avpf",
-                                "value": "0x00000004"
-                            },
-                            {
-                                "desc": "GST_RTSP_PROFILE_SAVPF",
-                                "name": "savpf",
-                                "value": "0x00000008"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstRTSPProfile",
                         "writable": true
                     },
                     "protocols": {
@@ -182,39 +125,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "tcp+udp-mcast+udp",
-                        "type-name": "GstRTSPLowerTrans",
-                        "values": [
-                            {
-                                "desc": "GST_RTSP_LOWER_TRANS_UNKNOWN",
-                                "name": "unknown",
-                                "value": "0x00000000"
-                            },
-                            {
-                                "desc": "GST_RTSP_LOWER_TRANS_UDP",
-                                "name": "udp",
-                                "value": "0x00000001"
-                            },
-                            {
-                                "desc": "GST_RTSP_LOWER_TRANS_UDP_MCAST",
-                                "name": "udp-mcast",
-                                "value": "0x00000002"
-                            },
-                            {
-                                "desc": "GST_RTSP_LOWER_TRANS_TCP",
-                                "name": "tcp",
-                                "value": "0x00000004"
-                            },
-                            {
-                                "desc": "GST_RTSP_LOWER_TRANS_HTTP",
-                                "name": "http",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "GST_RTSP_LOWER_TRANS_TLS",
-                                "name": "tls",
-                                "value": "0x00000020"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstRTSPLowerTrans",
                         "writable": true
                     },
                     "proxy": {
@@ -222,7 +134,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "proxy-id": {
@@ -230,7 +143,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "proxy-pw": {
@@ -238,7 +152,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "retry": {
@@ -248,7 +163,8 @@
                         "default": "20",
                         "max": "65535",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "rtp-blocksize": {
@@ -258,7 +174,8 @@
                         "default": "0",
                         "max": "65536",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "rtx-time": {
@@ -268,14 +185,16 @@
                         "default": "500",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "sdes": {
                         "blurb": "The SDES items of this session",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstStructure",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": true
                     },
                     "tcp-timeout": {
@@ -285,7 +204,8 @@
                         "default": "20000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "timeout": {
@@ -295,21 +215,24 @@
                         "default": "5000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "tls-database": {
                         "blurb": "TLS database with anchor certificate authorities used to validate the server certificate",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GTlsDatabase",
+                        "readable": true,
+                        "type": "GTlsDatabase",
                         "writable": true
                     },
                     "tls-interaction": {
                         "blurb": "A GTlsInteraction object to prompt the user for password or certificate",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GTlsInteraction",
+                        "readable": true,
+                        "type": "GTlsInteraction",
                         "writable": true
                     },
                     "tls-validation-flags": {
@@ -317,49 +240,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "validate-all",
-                        "type-name": "GTlsCertificateFlags",
-                        "values": [
-                            {
-                                "desc": "G_TLS_CERTIFICATE_UNKNOWN_CA",
-                                "name": "unknown-ca",
-                                "value": "0x00000001"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_BAD_IDENTITY",
-                                "name": "bad-identity",
-                                "value": "0x00000002"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_NOT_ACTIVATED",
-                                "name": "not-activated",
-                                "value": "0x00000004"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_EXPIRED",
-                                "name": "expired",
-                                "value": "0x00000008"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_REVOKED",
-                                "name": "revoked",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_INSECURE",
-                                "name": "insecure",
-                                "value": "0x00000020"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_GENERIC_ERROR",
-                                "name": "generic-error",
-                                "value": "0x00000040"
-                            },
-                            {
-                                "desc": "G_TLS_CERTIFICATE_VALIDATE_ALL",
-                                "name": "validate-all",
-                                "value": "0x0000007f"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GTlsCertificateFlags",
                         "writable": true
                     },
                     "udp-buffer-size": {
@@ -369,7 +251,8 @@
                         "default": "524288",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "udp-reconnect": {
@@ -377,16 +260,17 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "user-agent": {
-                        "unstable-values": true,
                         "blurb": "The User-Agent string to send to the server",
                         "construct": false,
                         "construct-only": false,
-                        "default": "GStreamer/@GSTREAMER_VERSION@",
-                        "type-name": "gchararray",
+                        "default": "GStreamer/1.17.0.1",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "user-id": {
@@ -394,7 +278,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "user-pw": {
@@ -402,7 +287,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     }
                 },
@@ -410,44 +296,133 @@
                 "signals": {
                     "accept-certificate": {
                         "args": [
-                            "GTlsConnection",
-                            "GTlsCertificate",
-                            "GTlsCertificateFlags"
+                            {
+                                "name": "arg0",
+                                "type": "GTlsConnection"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GTlsCertificate"
+                            },
+                            {
+                                "name": "arg2",
+                                "type": "GTlsCertificateFlags"
+                            }
                         ],
-                        "retval": "gboolean"
+                        "return-type": "gboolean",
+                        "when": "last"
                     },
                     "handle-request": {
                         "args": [
-                            "gpointer",
-                            "gpointer"
+                            {
+                                "name": "arg0",
+                                "type": "gpointer"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "gpointer"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void"
                     },
                     "new-manager": {
                         "args": [
-                            "GstElement"
+                            {
+                                "name": "arg0",
+                                "type": "GstElement"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "first"
                     },
                     "new-payloader": {
                         "args": [
-                            "GstElement"
+                            {
+                                "name": "arg0",
+                                "type": "GstElement"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "first"
                     },
                     "request-rtcp-key": {
                         "args": [
-                            "guint"
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            }
                         ],
-                        "retval": "GstCaps"
+                        "return-type": "GstCaps",
+                        "when": "last"
                     }
                 }
             }
         },
         "filename": "gstrtspclientsink",
         "license": "LGPL",
+        "other-types": {
+            "GstRTSPClientSinkNtpTimeSource": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "NTP time based on realtime clock",
+                        "name": "ntp",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "UNIX time based on realtime clock",
+                        "name": "unix",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Running time based on pipeline clock",
+                        "name": "running-time",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Pipeline clock time",
+                        "name": "clock-time",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstRtspClientSinkPad": {
+                "hierarchy": [
+                    "GstRtspClientSinkPad",
+                    "GstGhostPad",
+                    "GstProxyPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "payloader": {
+                        "blurb": "The payloader element to use (NULL = default automatically selected)",
+                        "construct": false,
+                        "construct-only": false,
+                        "readable": true,
+                        "type": "GstElement",
+                        "writable": true
+                    },
+                    "ulpfec-percentage": {
+                        "blurb": "The percentage of ULP redundancy to apply",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "100",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                }
+            }
+        },
         "package": "GStreamer RTSP Server Library git",
         "source": "gst-rtsp-server",
+        "tracers": {},
         "url": "Unknown package origin"
     }
 }
