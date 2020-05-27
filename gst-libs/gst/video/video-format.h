@@ -625,6 +625,13 @@ const GstVideoFormat * gst_video_formats_raw (guint * len);
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE
 
+GST_VIDEO_API
+GstCaps * gst_video_make_raw_caps (const GstVideoFormat formats[], guint len);
+
+GST_VIDEO_API
+GstCaps * gst_video_make_raw_caps_with_features (const GstVideoFormat formats[], guint len,
+                                                 GstCapsFeatures * features);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_FORMAT_H__ */

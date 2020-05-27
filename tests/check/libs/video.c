@@ -3786,6 +3786,43 @@ GST_START_TEST (test_video_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_make_raw_caps)
+{
+  GstCaps *caps, *expected;
+  GstVideoFormat f1[] = { GST_VIDEO_FORMAT_NV12 };
+  GstVideoFormat f2[] = { GST_VIDEO_FORMAT_NV12, GST_VIDEO_FORMAT_NV16 };
+
+  caps = gst_video_make_raw_caps (f1, G_N_ELEMENTS (f1));
+  expected = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("NV12"));
+  fail_unless (gst_caps_is_equal (caps, expected));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected);
+
+  caps = gst_video_make_raw_caps (f2, G_N_ELEMENTS (f2));
+  expected = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("{ NV12, NV16 }"));
+  fail_unless (gst_caps_is_equal (caps, expected));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected);
+
+  caps = gst_video_make_raw_caps (NULL, 0);
+  expected = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL));
+  fail_unless (gst_caps_is_equal (caps, expected));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected);
+
+  caps =
+      gst_video_make_raw_caps_with_features (NULL, 0,
+      gst_caps_features_new_any ());
+  expected =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY",
+          GST_VIDEO_FORMATS_ALL));
+  fail_unless (gst_caps_is_equal (caps, expected));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -3837,6 +3874,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_info_align);
   tcase_add_test (tc_chain, test_video_meta_align);
   tcase_add_test (tc_chain, test_video_flags);
+  tcase_add_test (tc_chain, test_video_make_raw_caps);
 
   return s;
 }

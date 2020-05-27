@@ -7093,3 +7093,86 @@ gst_video_formats_raw (guint * len)
   *len = all->n;
   return all->formats;
 }
+
+/**
+ * gst_video_make_raw_caps:
+ * @formats: (array length=len) (nullable): an array of raw #GstVideoFormat, or %NULL
+ * @len: the size of @formats
+ *
+ * Return a generic raw video caps for formats defined in @formats.
+ * If @formats is %NULL returns a caps for all the supported raw video formats,
+ * see gst_video_formats_raw().
+ *
+ * Returns: (transfer full): a video @GstCaps
+ * Since: 1.18
+ */
+GstCaps *
+gst_video_make_raw_caps (const GstVideoFormat formats[], guint len)
+{
+  return gst_video_make_raw_caps_with_features (formats, len, NULL);
+}
+
+/**
+ * gst_video_make_raw_caps_with_features:
+ * @formats: (array length=len) (nullable): an array of raw #GstVideoFormat, or %NULL
+ * @len: the size of @formats
+ * @features: (transfer full) (allow-none): the #GstCapsFeatures to set on the caps
+ *
+ * Return a generic raw video caps for formats defined in @formats with features
+ * @features.
+ * If @formats is %NULL returns a caps for all the supported video formats,
+ * see gst_video_formats_raw().
+ *
+ * Returns: (transfer full): a video @GstCaps
+ * Since: 1.18
+ */
+GstCaps *
+gst_video_make_raw_caps_with_features (const GstVideoFormat formats[],
+    guint len, GstCapsFeatures * features)
+{
+  GstStructure *s;
+  GValue format = G_VALUE_INIT;
+  GstCaps *caps;
+
+  g_return_val_if_fail ((formats && len > 0) || (!formats && len == 0), NULL);
+
+  if (!formats) {
+    formats = gst_video_formats_raw (&len);
+  }
+
+  if (len > 1) {
+    guint i;
+
+    g_value_init (&format, GST_TYPE_LIST);
+
+    for (i = 0; i < len; i++) {
+      GValue v = G_VALUE_INIT;
+
+      g_return_val_if_fail (formats[i] != GST_VIDEO_FORMAT_UNKNOWN
+          && formats[i] != GST_VIDEO_FORMAT_ENCODED, NULL);
+
+      g_value_init (&v, G_TYPE_STRING);
+      g_value_set_static_string (&v, gst_video_format_to_string (formats[i]));
+      gst_value_list_append_and_take_value (&format, &v);
+    }
+  } else {
+    g_value_init (&format, G_TYPE_STRING);
+
+    g_value_set_static_string (&format,
+        gst_video_format_to_string (formats[0]));
+  }
+
+  s = gst_structure_new ("video/x-raw",
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+  gst_structure_take_value (s, "format", &format);
+
+  caps = gst_caps_new_full (s, NULL);
+
+  if (features)
+    gst_caps_set_features (caps, 0, features);
+
+  return caps;
+}
