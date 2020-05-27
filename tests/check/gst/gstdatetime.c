@@ -256,6 +256,7 @@ GST_START_TEST (test_GstDateTime_new_local_time)
   gst_date_time_unref (dt);
 
   /* Month */
+  dt = NULL;
   ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 0, 28, 12, 0, 0));
   fail_unless (dt == NULL);
 
@@ -275,6 +276,7 @@ GST_START_TEST (test_GstDateTime_new_local_time)
   gst_date_time_unref (dt);
 
   /* Day */
+  dt = NULL;
   ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 0, 12, 0, 0));
   fail_unless (dt == NULL);
 
@@ -294,6 +296,7 @@ GST_START_TEST (test_GstDateTime_new_local_time)
   gst_date_time_unref (dt);
 
   /* Hour */
+  dt = NULL;
   ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, -10, 0, 0)); // -1 has special meaning!
   fail_unless (dt == NULL);
 
@@ -309,6 +312,7 @@ GST_START_TEST (test_GstDateTime_new_local_time)
   gst_date_time_unref (dt);
 
   /* Min */
+  dt = NULL;
   ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 12, -10, 0));        // -1 has special meaning!
   fail_unless (dt == NULL);
 
@@ -324,6 +328,7 @@ GST_START_TEST (test_GstDateTime_new_local_time)
   gst_date_time_unref (dt);
 
   /* Sec */
+  dt = NULL;
   ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, -10));        // -1 has special meaning!
   fail_unless (dt == NULL);
 
