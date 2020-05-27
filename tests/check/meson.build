@@ -40,17 +40,18 @@ if not get_option('rtspclientsink').disabled()
 endif
 
 foreach test_name : rtsp_server_tests
-    env = environment()
-    env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
-    env.set('GST_STATE_IGNORE_ELEMENTS', '')
-    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server@' + meson.build_root())
-    env.set('CK_DEFAULT_TIMEOUT', '120')
-    env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
-    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
-    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
-
   fname = '@0@.c'.format(test_name)
   test_name = test_name.underscorify()
+
+  env = environment()
+  env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+  env.set('GST_STATE_IGNORE_ELEMENTS', '')
+  env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server@' + meson.build_root())
+  env.set('CK_DEFAULT_TIMEOUT', '120')
+  env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
+  env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+  env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
+
   exe = executable(test_name, fname,
     include_directories : rtspserver_incs,
     c_args : rtspserver_args + test_c_args,
