@@ -1,4 +1,3 @@
-# FIXME: something is wrong with plugin paths / whitelisting here
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
   pbase = dependency('gstreamer-plugins-base-' + api_version, required : false)
@@ -39,7 +38,7 @@ foreach test_name : rtsp_server_tests
     env = environment()
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', '')
-    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server')
+    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server@' + meson.build_root())
     env.set('CK_DEFAULT_TIMEOUT', '120')
     env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
