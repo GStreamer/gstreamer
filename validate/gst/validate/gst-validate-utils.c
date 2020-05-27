@@ -582,8 +582,7 @@ gst_validate_has_colored_output (void)
 #endif
 
 #ifdef G_OS_UNIX
-  if (!isatty (STDOUT_FILENO))
-    return FALSE;
+  return isatty (STDOUT_FILENO);
 #elif defined(G_OS_WIN32)
   return FALSE;
 #endif
