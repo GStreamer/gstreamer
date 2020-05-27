@@ -957,6 +957,19 @@ print_action_parameter_prototype (GString * string,
     g_string_append (string, "]");
 }
 
+static int
+sort_parameters (const GstValidateActionParameter * param1,
+    const GstValidateActionParameter * param2)
+{
+  if (param1->mandatory && !param2->mandatory)
+    return -1;
+
+  if (!param1->mandatory && param2->mandatory)
+    return 1;
+
+  return g_strcmp0 (param1->name, param2->name);
+}
+
 void
 gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 {
@@ -975,6 +988,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
+      gint n_params;
       gboolean has_parameters = FALSE;
       gboolean is_first = TRUE;
 
@@ -1009,14 +1023,17 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       g_string_append_printf (string, "\n``` validate-scenario\n%s,",
           type->name);
 
-      if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
-        print_action_parameter_prototype (string, &playback_time_param,
+      for (n_params = 0; type->parameters[n_params].name != NULL; n_params++);
+      qsort (type->parameters, n_params, sizeof (GstValidateActionParameter),
+          (GCompareFunc) sort_parameters);
+      for (i = 0; type->parameters[i].name; i++) {
+        print_action_parameter_prototype (string, &type->parameters[i],
             is_first);
         is_first = FALSE;
       }
 
-      for (i = 0; type->parameters[i].name; i++) {
-        print_action_parameter_prototype (string, &type->parameters[i],
+      if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
+        print_action_parameter_prototype (string, &playback_time_param,
             is_first);
         is_first = FALSE;
       }
@@ -1036,18 +1053,18 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       if (type->parameters || !IS_CONFIG_ACTION_TYPE (type->flags))
         g_string_append_printf (string, "\n\n### Parameters");
 
-      if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
-        print_action_parameter (string, type, &playback_time_param);
-        print_action_parameter (string, type, &on_message_param);
-      }
-
       if (type->parameters) {
         has_parameters = TRUE;
         for (i = 0; type->parameters[i].name; i++) {
           print_action_parameter (string, type, &type->parameters[i]);
         }
-
       }
+
+      if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
+        print_action_parameter (string, type, &playback_time_param);
+        print_action_parameter (string, type, &on_message_param);
+      }
+
 
       if ((type->flags & GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL)) {
         has_parameters = TRUE;

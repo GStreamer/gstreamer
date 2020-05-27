@@ -1,36 +1,53 @@
 # GstValidate action types
-## description
+
+## meta
 
 
 ``` validate-scenario
-description,
-    [summary=(string)],
-    [is-config=(boolean)],
-    [handles-states=(boolean)],
-    [seek=(boolean)],
-    [reverse-playback=(boolean)],
-    [need-clock-sync=(boolean)],
-    [min-media-duration=(double)],
-    [min-audio-track=(int)],
-    [min-video-track=(int)],
+meta,
     [duration=(double, int)],
-    [pipeline-name=(string)],
-    [max-latency=(double, int)],
+    [handles-states=(boolean)],
+    [ignore-eos=(boolean)],
+    [is-config=(boolean)],
     [max-dropped=(int)],
-    [ignore-eos=(boolean)];
+    [max-latency=(double, int)],
+    [min-audio-track=(int)],
+    [min-media-duration=(double)],
+    [min-video-track=(int)],
+    [need-clock-sync=(boolean)],
+    [pipeline-name=(string)],
+    [reverse-playback=(boolean)],
+    [seek=(boolean)],
+    [summary=(string)];
 ```
 
-Allows to describe the scenario in various ways
+Scenario metadata.
+NOTE: it used to be called "description"
  * Implementer namespace: core
  * Is config action (meaning it will be executing right at the beginning of the execution of the pipeline)
 
 ### Parameters
 
-* `summary`:(optional): Whether the scenario is a config only scenario (ie. explain what it does)
+* `duration`:(optional): Lets the user know the time the scenario needs to be fully executed
 
-  Possible types: `string`
+  Possible types: `double, int`
 
-  Default: 'Nothing'
+  Default: infinite (GST_CLOCK_TIME_NONE)
+
+* `handles-states`:(optional): Whether the scenario handles pipeline state changes from the beginning
+in that case the application should not set the state of the pipeline to anything
+and the scenario action will be executed from the beginning
+
+  Possible types: `boolean`
+
+  Default: false
+
+* `ignore-eos`:(optional): Ignore EOS and keep executing the scenario when it happens.
+ By default a 'stop' action is generated one EOS
+
+  Possible types: `boolean`
+
+  Default: false
 
 * `is-config`:(optional): Whether the scenario is a config only scenario
 
@@ -38,9 +55,56 @@ Allows to describe the scenario in various ways
 
   Default: false
 
-* `handles-states`:(optional): Whether the scenario handles pipeline state changes from the beginning
-in that case the application should not set the state of the pipeline to anything
-and the scenario action will be executed from the beginning
+* `max-dropped`:(optional): The maximum number of buffers which can be dropped by the QoS system allowed for this pipeline.
+It can be overridden using core configuration, like for example by defining the env variable GST_VALIDATE_CONFIG=core,max-dropped=100
+
+  Possible types: `int`
+
+  Default: infinite (-1)
+
+* `max-latency`:(optional): The maximum latency in nanoseconds allowed for this pipeline.
+It can be overridden using core configuration, like for example by defining the env variable GST_VALIDATE_CONFIG=core,max-latency=33000000
+
+  Possible types: `double, int`
+
+  Default: infinite (GST_CLOCK_TIME_NONE)
+
+* `min-audio-track`:(optional): Lets the user know the minimum number of audio tracks the stream needs to contain
+for the scenario to be usable
+
+  Possible types: `int`
+
+  Default: 0
+
+* `min-media-duration`:(optional): Lets the user know the minimum duration of the stream for the scenario
+to be usable
+
+  Possible types: `double`
+
+  Default: 0.0
+
+* `min-video-track`:(optional): Lets the user know the minimum number of video tracks the stream needs to contain
+for the scenario to be usable
+
+  Possible types: `int`
+
+  Default: 0
+
+* `need-clock-sync`:(optional): Whether the scenario needs the execution to be synchronized with the pipeline's
+clock. Letting the user know if it can be used with a 'fakesink sync=false' sink
+
+  Possible types: `boolean`
+
+  Default: true if some action requires a playback-time false otherwise
+
+* `pipeline-name`:(optional): The name of the GstPipeline on which the scenario should be executed.
+It has the same effect as setting the pipeline using pipeline_name->scenario_name.
+
+  Possible types: `string`
+
+  Default: NULL
+
+* `reverse-playback`:(optional): Whether the scenario plays the stream backward
 
   Possible types: `boolean`
 
@@ -52,86 +116,24 @@ and the scenario action will be executed from the beginning
 
   Default: false
 
-* `reverse-playback`:(optional): Whether the scenario plays the stream backward
-
-  Possible types: `boolean`
-
-  Default: false
-
-* `need-clock-sync`:(optional): Whether the scenario needs the execution to be synchronized with the pipeline's
-clock. Letting the user know if it can be used with a 'fakesink sync=false' sink
-
-  Possible types: `boolean`
-
-  Default: false
-
-* `min-media-duration`:(optional): Lets the user know the minimum duration of the stream for the scenario
-to be usable
-
-  Possible types: `double`
-
-  Default: 0.0
-
-* `min-audio-track`:(optional): Lets the user know the minimum number of audio tracks the stream needs to contain
-for the scenario to be usable
-
-  Possible types: `int`
-
-  Default: 0
-
-* `min-video-track`:(optional): Lets the user know the minimum number of video tracks the stream needs to contain
-for the scenario to be usable
-
-  Possible types: `int`
-
-  Default: 0
-
-* `duration`:(optional): Lets the user know the time the scenario needs to be fully executed
-
-  Possible types: `double, int`
-
-  Default: infinite (GST_CLOCK_TIME_NONE)
-
-* `pipeline-name`:(optional): The name of the GstPipeline on which the scenario should be executed.
-It has the same effect as setting the pipeline using pipeline_name->scenario_name.
+* `summary`:(optional): Whether the scenario is a config only scenario (ie. explain what it does)
 
   Possible types: `string`
 
-  Default: NULL
-
-* `max-latency`:(optional): The maximum latency in nanoseconds allowed for this pipeline.
-It can be overriden using core configuration, like for example by defining the env variable GST_VALIDATE_CONFIG=core,max-latency=33000000
-
-  Possible types: `double, int`
-
-  Default: infinite (GST_CLOCK_TIME_NONE)
-
-* `max-dropped`:(optional): The maximum number of buffers which can be dropped by the QoS system allowed for this pipeline.
-It can be overriden using core configuration, like for example by defining the env variable GST_VALIDATE_CONFIG=core,max-dropped=100
-
-  Possible types: `int`
-
-  Default: infinite (-1)
-
-* `ignore-eos`:(optional): Ignore EOS and keep executing the scenario when it happens.
- By default a 'stop' action is generated one EOS
-
-  Possible types: `boolean`
-
-  Default: false
+  Default: 'Nothing'
 
 ## seek
 
 
 ``` validate-scenario
 seek,
-    [playback-time=(double,string)],
-    start=(double or string (GstClockTime)),
     flags=(string describing the GstSeekFlags to set),
+    start=(double or string (GstClockTime)),
     [rate=(double)],
     [start_type=(string)],
+    [stop=(double or string (GstClockTime))],
     [stop_type=(string)],
-    [stop=(double or string (GstClockTime))];
+    [playback-time=(double,string)];
 ```
 
 Seeks into the stream. This is an example of a seek happening when the stream reaches 5 seconds
@@ -141,25 +143,9 @@ or 1 eighth of its duration and seeks to 10s or 2 eighths of its duration:
 
 ### Parameters
 
-* `playback-time`:(optional): The playback time at which the action will be executed
+* `flags`:(mandatory): The GstSeekFlags to use
 
-  Possible variables:
-
-  * `position`: The current position in the stream
-
-  * `duration`: The duration of the stream
-
-  Possible types: `double,string`
-
-  Default: 0.0
-
-* `on-message`:(optional): Specify on what message type the action will be executed.
- If both 'playback-time' and 'on-message' is specified, the action will be executed
- on whatever happens first.
-
-  Possible types: `string`
-
-  Default: (null)
+  Possible types: `string describing the GstSeekFlags to set`
 
 * `start`:(mandatory): The starting value of the seek
 
@@ -171,10 +157,6 @@ or 1 eighth of its duration and seeks to 10s or 2 eighths of its duration:
 
   Possible types: `double or string (GstClockTime)`
 
-* `flags`:(mandatory): The GstSeekFlags to use
-
-  Possible types: `string describing the GstSeekFlags to set`
-
 * `rate`:(optional): The rate value of the seek
 
   Possible types: `double`
@@ -182,13 +164,6 @@ or 1 eighth of its duration and seeks to 10s or 2 eighths of its duration:
   Default: 1.0
 
 * `start_type`:(optional): The GstSeekType to use for the start of the seek, in:
-  [none, set, end]
-
-  Possible types: `string`
-
-  Default: set
-
-* `stop_type`:(optional): The GstSeekType to use for the stop of the seek, in:
   [none, set, end]
 
   Possible types: `string`
@@ -207,21 +182,12 @@ or 1 eighth of its duration and seeks to 10s or 2 eighths of its duration:
 
   Default: GST_CLOCK_TIME_NONE
 
-## pause
+* `stop_type`:(optional): The GstSeekType to use for the stop of the seek, in:
+  [none, set, end]
 
+  Possible types: `string`
 
-``` validate-scenario
-pause,
-    [playback-time=(double,string)],
-    [duration=(double or string (GstClockTime))];
-```
-
-Sets pipeline to PAUSED. You can add a 'duration'
-parameter so the pipeline goes back to playing after that duration
-(in second)
- * Implementer namespace: core
-
-### Parameters
+  Default: set
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
@@ -243,11 +209,47 @@ parameter so the pipeline goes back to playing after that duration
 
   Default: (null)
 
+## pause
+
+
+``` validate-scenario
+pause,
+    [duration=(double or string (GstClockTime))],
+    [playback-time=(double,string)];
+```
+
+Sets pipeline to PAUSED. You can add a 'duration'
+parameter so the pipeline goes back to playing after that duration
+(in second)
+ * Implementer namespace: core
+
+### Parameters
+
 * `duration`:(optional): The duration during which the stream will be paused
 
   Possible types: `double or string (GstClockTime)`
 
   Default: 0.0
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
 
 ## play
 
@@ -353,42 +355,16 @@ Sends an EOS event to the pipeline
 
 ``` validate-scenario
 switch-track,
-    [playback-time=(double,string)],
-    [type=(string)],
     [index=(string: to switch track relatively
-int: To use the actual index to use)];
+int: To use the actual index to use)],
+    [type=(string)],
+    [playback-time=(double,string)];
 ```
 
 The 'switch-track' command can be used to switch tracks.
  * Implementer namespace: core
 
 ### Parameters
-
-* `playback-time`:(optional): The playback time at which the action will be executed
-
-  Possible variables:
-
-  * `position`: The current position in the stream
-
-  * `duration`: The duration of the stream
-
-  Possible types: `double,string`
-
-  Default: 0.0
-
-* `on-message`:(optional): Specify on what message type the action will be executed.
- If both 'playback-time' and 'on-message' is specified, the action will be executed
- on whatever happens first.
-
-  Possible types: `string`
-
-  Default: (null)
-
-* `type`:(optional): Selects which track type to change (can be 'audio', 'video', or 'text').
-
-  Possible types: `string`
-
-  Default: audio
 
 * `index`:(optional): Selects which track of this type to use: it can be either a number,
 which will be the Nth track of the given type, or a number with a '+' or
@@ -400,22 +376,11 @@ int: To use the actual index to use`
 
   Default: +1
 
-## wait
+* `type`:(optional): Selects which track type to change (can be 'audio', 'video', or 'text').
 
+  Possible types: `string`
 
-``` validate-scenario
-wait,
-    [playback-time=(double,string)],
-    [duration=(double or string (GstClockTime))],
-    [target-element-name=(string)],
-    [signal-name=(string)],
-    [message-type=(string)];
-```
-
-Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds
- * Implementer namespace: core
-
-### Parameters
+  Default: audio
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
@@ -437,13 +402,30 @@ Waits for signal 'signal-name', message 'message-type', or during 'duration' sec
 
   Default: (null)
 
+## wait
+
+
+``` validate-scenario
+wait,
+    [duration=(double or string (GstClockTime))],
+    [message-type=(string)],
+    [signal-name=(string)],
+    [target-element-name=(string)],
+    [playback-time=(double,string)];
+```
+
+Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds
+ * Implementer namespace: core
+
+### Parameters
+
 * `duration`:(optional): the duration while no other action will be executed
 
   Possible types: `double or string (GstClockTime)`
 
   Default: (null)
 
-* `target-element-name`:(optional): The name of the GstElement to wait @signal-name on.
+* `message-type`:(optional): The name of the message type to wait for (on @target-element-name if specified)
 
   Possible types: `string`
 
@@ -455,7 +437,27 @@ Waits for signal 'signal-name', message 'message-type', or during 'duration' sec
 
   Default: (null)
 
-* `message-type`:(optional): The name of the message type to wait for (on @target-element-name if specified)
+* `target-element-name`:(optional): The name of the GstElement to wait @signal-name on.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
 
   Possible types: `string`
 
@@ -547,14 +549,19 @@ Changes the ranking of a particular plugin feature
 
 ``` validate-scenario
 set-state,
-    [playback-time=(double,string)],
-    state=(string);
+    state=(string),
+    [playback-time=(double,string)];
 ```
 
 Changes the state of the pipeline to any GstState
  * Implementer namespace: core
 
 ### Parameters
+
+* `state`:(mandatory): A GstState as a string, should be in:
+    * ['null', 'ready', 'paused', 'playing']
+
+  Possible types: `string`
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
@@ -575,11 +582,6 @@ Changes the state of the pipeline to any GstState
   Possible types: `string`
 
   Default: (null)
-
-* `state`:(mandatory): A GstState as a string, should be in: 
-    * ['null', 'ready', 'paused', 'playing']
-
-  Possible types: `string`
 
 ## set-vars
 
@@ -626,12 +628,12 @@ For example you can define vars for buffer checksum to be used in the "check-las
 
 ``` validate-scenario
 set-property,
-    [playback-time=(double,string)],
-    [target-element-name=(string)],
+    property-name=(string),
+    property-value=(The same type of @property-name),
     [target-element-factory-name=(string)],
     [target-element-klass=(string)],
-    property-name=(string),
-    property-value=(The same type of @property-name);
+    [target-element-name=(string)],
+    [playback-time=(double,string)];
 ```
 
 Sets a property of an element or klass of elements in the pipeline.
@@ -641,31 +643,13 @@ Besides property-name and value, either 'target-element-name' or
 
 ### Parameters
 
-* `playback-time`:(optional): The playback time at which the action will be executed
-
-  Possible variables:
-
-  * `position`: The current position in the stream
-
-  * `duration`: The duration of the stream
-
-  Possible types: `double,string`
-
-  Default: 0.0
-
-* `on-message`:(optional): Specify on what message type the action will be executed.
- If both 'playback-time' and 'on-message' is specified, the action will be executed
- on whatever happens first.
+* `property-name`:(mandatory): The name of the property to set on @target-element-name
 
   Possible types: `string`
 
-  Default: (null)
+* `property-value`:(mandatory): The value of @property-name to be set on the element
 
-* `target-element-name`:(optional): The name of the GstElement to set a property on
-
-  Possible types: `string`
-
-  Default: (null)
+  Possible types: `The same type of @property-name`
 
 * `target-element-factory-name`:(optional): The name factory for which to set a property on built elements
 
@@ -679,25 +663,109 @@ Besides property-name and value, either 'target-element-name' or
 
   Default: (null)
 
-* `property-name`:(mandatory): The name of the property to set on @target-element-name
+* `target-element-name`:(optional): The name of the GstElement to set a property on
 
   Possible types: `string`
 
-* `property-value`:(mandatory): The value of @property-name to be set on the element
+  Default: (null)
 
-  Possible types: `The same type of @property-name`
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
      optional                   : Don't raise an error if this action hasn't been executed or failed
                                   ### Possible types:
                                     boolean
                                   Default: false
+
+## check-property
+
+
+``` validate-scenario
+check-property,
+    property-name=(string),
+    property-value=(The same type of @property-name),
+    [target-element-factory-name=(string)],
+    [target-element-klass=(string)],
+    [target-element-name=(string)],
+    [playback-time=(double,string)];
+```
+
+Check the value of property of an element or klass of elements in the pipeline.
+Besides property-name and value, either 'target-element-name' or
+'target-element-klass' needs to be defined
+ * Implementer namespace: core
+
+### Parameters
+
+* `property-name`:(mandatory): The name of the property to set on @target-element-name
+
+  Possible types: `string`
+
+* `property-value`:(mandatory): The expected value of @property-name
+
+  Possible types: `The same type of @property-name`
+
+* `target-element-factory-name`:(optional): The name factory for which to check a property value on built elements
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `target-element-klass`:(optional): The klass of the GstElements to check a property on
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `target-element-name`:(optional): The name of the GstElement to check a property value
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
 
 ## set-debug-threshold
 
 
 ``` validate-scenario
 set-debug-threshold,
-    [playback-time=(double,string)],
-    debug-threshold=(string);
+    debug-threshold=(string),
+    [playback-time=(double,string)];
 ```
 
 Sets the debug level to be used, same format as
@@ -706,6 +774,11 @@ setting the GST_DEBUG env variable
 
 ### Parameters
 
+* `debug-threshold`:(mandatory): String defining debug threshold
+See gst_debug_set_threshold_from_string
+
+  Possible types: `string`
+
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -726,37 +799,14 @@ setting the GST_DEBUG env variable
 
   Default: (null)
 
-* `debug-threshold`:(mandatory): String defining debug threshold
-See gst_debug_set_threshold_from_string
-
-  Possible types: `string`
-
-## include
-
-
-``` validate-scenario
-include,
-    location=(string);
-```
-
-Include a sub scenario file.
- * Implementer namespace: core
- * Is config action (meaning it will be executing right at the beginning of the execution of the pipeline)
-
-### Parameters
-
-* `location`:(mandatory): The location of the sub scenario to include.
-
-  Possible types: `string`
-
 ## emit-signal
 
 
 ``` validate-scenario
 emit-signal,
-    [playback-time=(double,string)],
+    signal-name=(string),
     target-element-name=(string),
-    signal-name=(string);
+    [playback-time=(double,string)];
 ```
 
 Emits a signal to an element in the pipeline
@@ -764,6 +814,14 @@ Emits a signal to an element in the pipeline
 
 ### Parameters
 
+* `signal-name`:(mandatory): The name of the signal to emit on @target-element-name
+
+  Possible types: `string`
+
+* `target-element-name`:(mandatory): The name of the GstElement to emit a signal on
+
+  Possible types: `string`
+
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -784,25 +842,17 @@ Emits a signal to an element in the pipeline
 
   Default: (null)
 
-* `target-element-name`:(mandatory): The name of the GstElement to emit a signal on
-
-  Possible types: `string`
-
-* `signal-name`:(mandatory): The name of the signal to emit on @target-element-name
-
-  Possible types: `string`
-
 ## appsrc-push
 
 
 ``` validate-scenario
 appsrc-push,
-    [playback-time=(double,string)],
-    target-element-name=(string),
     file-name=(string),
+    target-element-name=(string),
+    [caps=(caps)],
     [offset=(uint64)],
     [size=(uint64)],
-    [caps=(caps)];
+    [playback-time=(double,string)];
 ```
 
 Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the next action is not run until the buffer has been pushed.
@@ -810,33 +860,19 @@ Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the 
 
 ### Parameters
 
-* `playback-time`:(optional): The playback time at which the action will be executed
-
-  Possible variables:
-
-  * `position`: The current position in the stream
-
-  * `duration`: The duration of the stream
-
-  Possible types: `double,string`
-
-  Default: 0.0
-
-* `on-message`:(optional): Specify on what message type the action will be executed.
- If both 'playback-time' and 'on-message' is specified, the action will be executed
- on whatever happens first.
+* `file-name`:(mandatory): Relative path to a file whose contents will be pushed as a buffer
 
   Possible types: `string`
-
-  Default: (null)
 
 * `target-element-name`:(mandatory): The name of the appsrc to push data on
 
   Possible types: `string`
 
-* `file-name`:(mandatory): Relative path to a file whose contents will be pushed as a buffer
+* `caps`:(optional): Caps for the buffer to be pushed
 
-  Possible types: `string`
+  Possible types: `caps`
+
+  Default: (null)
 
 * `offset`:(optional): Offset within the file where the buffer will start
 
@@ -850,9 +886,23 @@ Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the 
 
   Default: (null)
 
-* `caps`:(optional): Caps for the buffer to be pushed
+* `playback-time`:(optional): The playback time at which the action will be executed
 
-  Possible types: `caps`
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
 
   Default: (null)
 
@@ -861,8 +911,8 @@ Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the 
 
 ``` validate-scenario
 appsrc-eos,
-    [playback-time=(double,string)],
-    target-element-name=(string);
+    target-element-name=(string),
+    [playback-time=(double,string)];
 ```
 
 Queues a EOS event in an appsrc.
@@ -870,6 +920,10 @@ Queues a EOS event in an appsrc.
 
 ### Parameters
 
+* `target-element-name`:(mandatory): The name of the appsrc to emit EOS on
+
+  Possible types: `string`
+
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -889,45 +943,21 @@ Queues a EOS event in an appsrc.
   Possible types: `string`
 
   Default: (null)
-
-* `target-element-name`:(mandatory): The name of the appsrc to emit EOS on
-
-  Possible types: `string`
 
 ## flush
 
 
 ``` validate-scenario
 flush,
-    [playback-time=(double,string)],
     target-element-name=(string),
-    [reset-time=(boolean)];
+    [reset-time=(boolean)],
+    [playback-time=(double,string)];
 ```
 
 Sends FLUSH_START and FLUSH_STOP events.
  * Implementer namespace: core
 
 ### Parameters
-
-* `playback-time`:(optional): The playback time at which the action will be executed
-
-  Possible variables:
-
-  * `position`: The current position in the stream
-
-  * `duration`: The duration of the stream
-
-  Possible types: `double,string`
-
-  Default: 0.0
-
-* `on-message`:(optional): Specify on what message type the action will be executed.
- If both 'playback-time' and 'on-message' is specified, the action will be executed
- on whatever happens first.
-
-  Possible types: `string`
-
-  Default: (null)
 
 * `target-element-name`:(mandatory): The name of the appsrc to flush on
 
@@ -939,21 +969,6 @@ Sends FLUSH_START and FLUSH_STOP events.
 
   Default: TRUE
 
-## disable-plugin
-
-
-``` validate-scenario
-disable-plugin,
-    [playback-time=(double,string)],
-    plugin-name=(string),
-    [as-config=(boolean)];
-```
-
-Disables a GstPlugin
- * Implementer namespace: core
-
-### Parameters
-
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -973,6 +988,21 @@ Disables a GstPlugin
   Possible types: `string`
 
   Default: (null)
+
+## disable-plugin
+
+
+``` validate-scenario
+disable-plugin,
+    plugin-name=(string),
+    [as-config=(boolean)],
+    [playback-time=(double,string)];
+```
+
+Disables a GstPlugin
+ * Implementer namespace: core
+
+### Parameters
 
 * `plugin-name`:(mandatory): The name of the GstPlugin to disable
 
@@ -984,23 +1014,6 @@ Disables a GstPlugin
 
   Default: false
 
-## check-last-sample
-
-
-``` validate-scenario
-check-last-sample,
-    [playback-time=(double,string)],
-    [sink-name=(string)],
-    [sink-factory-name=(string)],
-    [sinkpad-caps=(string)],
-    checksum=(string);
-```
-
-Checks the last-sample checksum on declared Sink element. This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit' for example
- * Implementer namespace: core
-
-### Parameters
-
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -1021,7 +1034,25 @@ Checks the last-sample checksum on declared Sink element. This allows checking t
 
   Default: (null)
 
-* `sink-name`:(optional): The name of the sink element to check sample on.
+## check-last-sample
+
+
+``` validate-scenario
+check-last-sample,
+    [checksum=(string)],
+    [sink-factory-name=(string)],
+    [sink-name=(string)],
+    [sinkpad-caps=(string)],
+    [timecode-frame-number=(string)],
+    [playback-time=(double,string)];
+```
+
+Checks the last-sample checksum or frame number (set on its  GstVideoTimeCodeMeta) on declared Sink element. This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit' for example
+ * Implementer namespace: core
+
+### Parameters
+
+* `checksum`:(optional): The reference checksum of the buffer.
 
   Possible types: `string`
 
@@ -1033,37 +1064,23 @@ Checks the last-sample checksum on declared Sink element. This allows checking t
 
   Default: (null)
 
+* `sink-name`:(optional): The name of the sink element to check sample on.
+
+  Possible types: `string`
+
+  Default: (null)
+
 * `sinkpad-caps`:(optional): The caps (as string) of the sink to check.
 
   Possible types: `string`
 
   Default: (null)
 
-* `checksum`:(mandatory): The reference checksum of the buffer.
+* `timecode-frame-number`:(optional): The frame number of the buffer as specified on its GstVideoTimeCodeMeta
 
   Possible types: `string`
 
-## video-request-key-unit
-
-
-``` validate-scenario
-video-request-key-unit,
-    [playback-time=(double,string)],
-    direction=(string),
-    [running-time=(double or string)],
-    [all-headers=(boolean)],
-    [count=(int)],
-    [target-element-name=(string)],
-    [target-element-factory-name=(string)],
-    [target-element-klass=(string)],
-    [pad=(string)],
-    [srcpad=(string)];
-```
-
-Request a video key unit
- * Implementer namespace: core
-
-### Parameters
+  Default: (null)
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
@@ -1085,10 +1102,118 @@ Request a video key unit
 
   Default: (null)
 
+## crank-clock
+
+
+``` validate-scenario
+crank-clock,
+    [checksum=(string)],
+    [expected-elapsed-time=(GstClockTime)],
+    [expected-time=(GstClockTime)],
+    [sinkpad-caps=(string)],
+    [timecode-frame-number=(string)],
+    [playback-time=(double,string)];
+```
+
+Crank the clock, possibly checking how much time was supposed to be waited on the clock and/or the clock running time after the crank. Using one `crank-clock` action in a scenario implies that the scenario is driving the  clock and a #GstTestClock will be used. The user will need to crank it the number of  time required (using the `repeat` parameter comes handy here).
+ * Implementer namespace: core
+
+### Parameters
+
+* `checksum`:(optional): The reference checksum of the buffer.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `expected-elapsed-time`:(optional): Check time elapsed during the clock cranking
+
+  Possible types: `GstClockTime`
+
+  Default: (null)
+
+* `expected-time`:(optional): Expected clock time after cranking
+
+  Possible types: `GstClockTime`
+
+  Default: (null)
+
+* `sinkpad-caps`:(optional): The caps (as string) of the sink to check.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `timecode-frame-number`:(optional): The frame number of the buffer as specified on its GstVideoTimeCodeMeta
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## video-request-key-unit
+
+
+``` validate-scenario
+video-request-key-unit,
+    direction=(string),
+    [all-headers=(boolean)],
+    [count=(int)],
+    [pad=(string)],
+    [running-time=(double or string)],
+    [srcpad=(string)],
+    [target-element-factory-name=(string)],
+    [target-element-klass=(string)],
+    [target-element-name=(string)],
+    [playback-time=(double,string)];
+```
+
+Request a video key unit
+ * Implementer namespace: core
+
+### Parameters
+
 * `direction`:(mandatory): The direction for the event to travel, should be in
   * [upstream, downstream]
 
   Possible types: `string`
+
+* `all-headers`:(optional): TRUE to produce headers when starting a new key unit
+
+  Possible types: `boolean`
+
+  Default: FALSE
+
+* `count`:(optional): integer that can be used to number key units
+
+  Possible types: `int`
+
+  Default: 0
+
+* `pad`:(optional): The name of the GstPad to send a send force-key-unit to
+
+  Possible types: `string`
+
+  Default: sink
 
 * `running-time`:(optional): The running_time can be set to request a new key unit at a specific running_time.
 If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit as soon as possible.
@@ -1103,23 +1228,11 @@ If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a
 
   Default: (null)
 
-* `all-headers`:(optional): TRUE to produce headers when starting a new key unit
-
-  Possible types: `boolean`
-
-  Default: FALSE
-
-* `count`:(optional): integer that can be used to number key units
-
-  Possible types: `int`
-
-  Default: 0
-
-* `target-element-name`:(optional): The name of the GstElement to send a send force-key-unit to
+* `srcpad`:(optional): The name of the GstPad to send a send force-key-unit to
 
   Possible types: `string`
 
-  Default: (null)
+  Default: src
 
 * `target-element-factory-name`:(optional): The factory name of the GstElements to send a send force-key-unit to
 
@@ -1133,11 +1246,89 @@ If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a
 
   Default: Video/Encoder
 
+* `target-element-name`:(optional): The name of the GstElement to send a send force-key-unit to
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## check-position
+
+
+``` validate-scenario
+check-position,
+    expected-position=(GstClockTime),
+    [all-headers=(boolean)],
+    [count=(int)],
+    [pad=(string)],
+    [running-time=(double or string)],
+    [srcpad=(string)],
+    [target-element-factory-name=(string)],
+    [target-element-klass=(string)],
+    [target-element-name=(string)],
+    [playback-time=(double,string)];
+```
+
+Check current pipeline position.
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `expected-position`:(mandatory): The expected pipeline position
+
+  Possible types: `GstClockTime`
+
+* `all-headers`:(optional): TRUE to produce headers when starting a new key unit
+
+  Possible types: `boolean`
+
+  Default: FALSE
+
+* `count`:(optional): integer that can be used to number key units
+
+  Possible types: `int`
+
+  Default: 0
+
 * `pad`:(optional): The name of the GstPad to send a send force-key-unit to
 
   Possible types: `string`
 
   Default: sink
+
+* `running-time`:(optional): The running_time can be set to request a new key unit at a specific running_time.
+If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit as soon as possible.
+
+  Possible variables:
+
+  * position: The current position in the stream
+
+  * duration: The duration of the stream
+
+  Possible types: `double or string`
+
+  Default: (null)
 
 * `srcpad`:(optional): The name of the GstPad to send a send force-key-unit to
 
@@ -1145,15 +1336,53 @@ If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a
 
   Default: src
 
+* `target-element-factory-name`:(optional): The factory name of the GstElements to send a send force-key-unit to
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `target-element-klass`:(optional): The klass of the GstElements to send a send force-key-unit to
+
+  Possible types: `string`
+
+  Default: Video/Encoder
+
+* `target-element-name`:(optional): The name of the GstElement to send a send force-key-unit to
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
 ## corrupt-socket-recv
 
 
 ``` validate-scenario
 corrupt-socket-recv,
-    [playback-time=(double,string)],
-    port=(int),
     errno=(string),
-    [times=(int)];
+    port=(int),
+    [times=(int)],
+    [playback-time=(double,string)];
 ```
 
 corrupt the next socket receive
@@ -1161,33 +1390,13 @@ corrupt the next socket receive
 
 ### Parameters
 
-* `playback-time`:(optional): The playback time at which the action will be executed
-
-  Possible variables:
-
-  * `position`: The current position in the stream
-
-  * `duration`: The duration of the stream
-
-  Possible types: `double,string`
-
-  Default: 0.0
-
-* `on-message`:(optional): Specify on what message type the action will be executed.
- If both 'playback-time' and 'on-message' is specified, the action will be executed
- on whatever happens first.
+* `errno`:(mandatory): errno to set when failing
 
   Possible types: `string`
-
-  Default: (null)
 
 * `port`:(mandatory): The port the socket to be corrupted listens on
 
   Possible types: `int`
-
-* `errno`:(mandatory): errno to set when failing
-
-  Possible types: `string`
 
 * `times`:(optional): Number of times to corrupt recv, default is one
 
@@ -1195,23 +1404,6 @@ corrupt the next socket receive
 
   Default: 1
 
-## gtk-put-event
-
-
-``` validate-scenario
-gtk-put-event,
-    [playback-time=(double,string)],
-    [keys=(string)],
-    [string=(string)],
-    [type=(string)],
-    [widget-name=(string)];
-```
-
-Put a GdkEvent on the event list using gdk_put_event
- * Implementer namespace: validategtk
-
-### Parameters
-
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -1231,6 +1423,23 @@ Put a GdkEvent on the event list using gdk_put_event
   Possible types: `string`
 
   Default: (null)
+
+## gtk-put-event
+
+
+``` validate-scenario
+gtk-put-event,
+    [keys=(string)],
+    [string=(string)],
+    [type=(string)],
+    [widget-name=(string)],
+    [playback-time=(double,string)];
+```
+
+Put a GdkEvent on the event list using gdk_put_event
+ * Implementer namespace: validategtk
+
+### Parameters
 
 * `keys`:(optional): The keyboard keys to be used for the event, parsed with gtk_accelerator_parse_with_keycode, so refer to its documentation for more information
 
@@ -1256,27 +1465,6 @@ Put a GdkEvent on the event list using gdk_put_event
 
   Default: (null)
 
-## set-subtitle
-
-
-``` validate-scenario
-set-subtitle,
-    [playback-time=(double,string)],
-    subtitle-file=(string (A URI));
-```
-
-Action to set a subtitle file to use on a playbin pipeline.
-The subtitles file that will be used should be specified
-relative to the playbin URI in use thanks to the subtitle-file
-action property. You can also specify a folder with subtitle-dir
-For example if playbin.uri='file://some/uri.mov'
-and action looks like 'set-subtitle, subtitle-file=en.srt'
-the subtitle URI will be set to 'file:///some/uri.mov.en.srt'
-
- * Implementer namespace: validate-launcher
-
-### Parameters
-
 * `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
@@ -1297,6 +1485,47 @@ the subtitle URI will be set to 'file:///some/uri.mov.en.srt'
 
   Default: (null)
 
+## set-subtitle
+
+
+``` validate-scenario
+set-subtitle,
+    subtitle-file=(string (A URI)),
+    [playback-time=(double,string)];
+```
+
+Action to set a subtitle file to use on a playbin pipeline.
+The subtitles file that will be used should be specified
+relative to the playbin URI in use thanks to the subtitle-file
+action property. You can also specify a folder with subtitle-dir
+For example if playbin.uri='file://some/uri.mov'
+and action looks like 'set-subtitle, subtitle-file=en.srt'
+the subtitle URI will be set to 'file:///some/uri.mov.en.srt'
+
+ * Implementer namespace: validate-launcher
+
+### Parameters
+
 * `subtitle-file`:(mandatory): Sets a subtitles file on a playbin pipeline
 
   Possible types: `string (A URI)`
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)

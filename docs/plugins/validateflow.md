@@ -117,7 +117,7 @@ event caps: video/x-h264, stream-format=(string)avc, alignment=(string)au, level
 
 ## Configuration
 
-In order to use the plugin a validate configuration file must be provided,
+In order to use the plugin a validate configuration must be provided,
 containing a line starting by `validateflow` followed by a number of settings.
 Every `validateflow` line creates a `ValidateFlowOverride`, which listens to a
 given pad. A test may have several `validateflow` lines, therefore having

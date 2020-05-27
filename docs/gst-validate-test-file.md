@@ -24,8 +24,6 @@ do:
 set-globals, media_dir=$(test_dir)/../../media
 ```
 
-The `meta` format:
-
 ## Tool arguments
 
 In the case of [`gst-validate`](gst-validate.md) it **has to** contain an
@@ -91,7 +89,7 @@ array as strings/within quotes.
 * `issue-url`: (string): The url of the issue in the bug tracker if the issue is
                a bug.
 
-# Variables
+### Variables
 
 The same way
 
