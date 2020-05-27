@@ -1,5 +1,3 @@
-# version: '1.17.0.1' - we're putting this in here to trick the dist-hook check
-# in release.mak in the common submodule without having to update it
 inc_dirs = include_directories('.')
 
 cdata = configuration_data()

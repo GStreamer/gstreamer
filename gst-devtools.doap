@@ -5,13 +5,14 @@
   xmlns:foaf="http://xmlns.com/foaf/0.1/"
   xmlns:admin="http://webns.net/mvcb/">
 
- <name>GStreamer</name>
+ <name>GStreamer development and validation tools</name>
  <shortname>gstreamer</shortname>
- <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gstreamer.html" />
+ <homepage rdf:resource="https://gstreamer.freedesktop.org/modules/gstreamer.html" />
  <created>1999-10-31</created>
  <shortdesc xml:lang="en">
- GstValidate is a testing framework aiming at providing GStreamer developers
- tools that check the GstElements they write behave the way they are supposed to.
+ GStreamer development and validation tools including GstValidate, a testing
+ framework aiming at providing GStreamer developers tools that check the
+ GstElements they write behave the way they are supposed to.
 </shortdesc>
  <description xml:lang="en">
  GstValidate is a tool that allows GStreamer developers to check that the
@@ -38,12 +39,12 @@
  world interactive cases and reproduce existing issues in a convenient way.
  </description>
  <category></category>
- <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-devtools" />
+ <bug-database rdf:resource="https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-devtools" />
  <screenshots></screenshots>
- <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
+ <mailing-list rdf:resource="https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl" />
- <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
+ <download-page rdf:resource="https://gstreamer.freedesktop.org/download/" />
 
  <repository>
    <GitRepository>
@@ -128,7 +129,7 @@
    <branch>master</branch>
    <name></name>
    <created>2018-02-15</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.13.1.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.13.1.tar.xz" />
   </Version>
  </release>
 
@@ -138,7 +139,7 @@
    <branch>1.12</branch>
    <name></name>
    <created>2017-12-07</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.4.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.4.tar.xz" />
   </Version>
  </release>
 
@@ -148,7 +149,7 @@
    <branch>1.12</branch>
    <name></name>
    <created>2017-09-18</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.3.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.3.tar.xz" />
   </Version>
  </release>
 
@@ -158,7 +159,7 @@
    <branch>1.12</branch>
    <name></name>
    <created>2017-07-14</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.2.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.2.tar.xz" />
   </Version>
  </release>
 
@@ -168,7 +169,7 @@
    <branch>1.12</branch>
    <name></name>
    <created>2017-06-20</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.1.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.1.tar.xz" />
   </Version>
  </release>
 
@@ -178,7 +179,7 @@
    <branch>master</branch>
    <name></name>
    <created>2017-05-04</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.0.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.12.0.tar.xz" />
   </Version>
  </release>
 
@@ -188,7 +189,7 @@
    <branch>master</branch>
    <name></name>
    <created>2017-04-27</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.91.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.91.tar.xz" />
   </Version>
  </release>
 
@@ -198,7 +199,7 @@
    <branch>master</branch>
    <name></name>
    <created>2017-04-07</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.90.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.90.tar.xz" />
   </Version>
  </release>
 
@@ -208,7 +209,7 @@
    <branch>master</branch>
    <name></name>
    <created>2017-02-24</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.2.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.2.tar.xz" />
   </Version>
  </release>
 
@@ -218,7 +219,7 @@
    <branch>master</branch>
    <name></name>
    <created>2017-01-12</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.1.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.1.tar.xz" />
   </Version>
  </release>
 
@@ -226,7 +227,7 @@
    <revision>1.10.0</revision>
    <branch>master</branch>
    <created>2016-11-01</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.10.0.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.10.0.tar.xz" />
   </Version>
  </release>
 
@@ -234,7 +235,7 @@
    <revision>1.9.90</revision>
    <branch>master</branch>
    <created>2016-09-30</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.9.90.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.9.90.tar.xz" />
   </Version>
  </release>
 
@@ -242,7 +243,7 @@
    <revision>1.9.2</revision>
    <branch>master</branch>
    <created>2016-09-01</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.9.2.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.9.2.tar.xz" />
   </Version>
  </release>
 
@@ -250,7 +251,7 @@
    <revision>1.9.1</revision>
    <branch>master</branch>
    <created>2016-06-06</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.9.1.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.9.1.tar.xz" />
   </Version>
  </release>
 
@@ -258,7 +259,7 @@
    <revision>1.8.0</revision>
    <branch>master</branch>
    <created>2016-03-24</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.8.0.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.8.0.tar.xz" />
   </Version>
  </release>
 
@@ -266,7 +267,7 @@
    <revision>1.7.91</revision>
    <branch>master</branch>
    <created>2016-03-15</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.7.91.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.7.91.tar.xz" />
   </Version>
  </release>
 
@@ -274,7 +275,7 @@
    <revision>1.7.90</revision>
    <branch>master</branch>
    <created>2016-03-01</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.7.90.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.7.90.tar.xz" />
   </Version>
  </release>
 
@@ -282,7 +283,7 @@
    <revision>1.6.0</revision>
    <branch>1.6</branch>
    <created>2015-09-25</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.6.0.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.6.0.tar.xz" />
   </Version>
  </release>
 
@@ -290,7 +291,7 @@
    <revision>1.5.90</revision>
    <branch>1.5</branch>
    <created>2015-08-20</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.5.90.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.5.90.tar.xz" />
   </Version>
  </release>
 
@@ -300,7 +301,7 @@
    <branch>1.5</branch>
    <name></name>
    <created>2014-09-29</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.5.2.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.5.2.tar.xz" />
   </Version>
  </release>
 
@@ -310,7 +311,7 @@
    <branch>1.4</branch>
    <name></name>
    <created>2014-09-29</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.4.0.tar.xz" />
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.4.0.tar.xz" />
   </Version>
  </release>
 
