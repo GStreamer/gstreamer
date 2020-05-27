@@ -25,6 +25,7 @@
 
 #include "gstwasapi2sink.h"
 #include "gstwasapi2src.h"
+#include "gstwasapi2device.h"
 
 GST_DEBUG_CATEGORY (gst_wasapi2_debug);
 GST_DEBUG_CATEGORY (gst_wasapi2_client_debug);
@@ -45,6 +46,9 @@ plugin_init (GstPlugin * plugin)
 
   gst_element_register (plugin, "wasapi2sink", rank, GST_TYPE_WASAPI2_SINK);
   gst_element_register (plugin, "wasapi2src", rank, GST_TYPE_WASAPI2_SRC);
+
+  gst_device_provider_register (plugin, "wasapi2deviceprovider",
+      rank, GST_TYPE_WASAPI2_DEVICE_PROVIDER);
 
   return TRUE;
 }

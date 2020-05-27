@@ -3,6 +3,7 @@ wasapi2_sources = [
   'gstwasapi2sink.c',
   'gstwasapi2util.c',
   'gstwasapi2client.cpp',
+  'gstwasapi2device.c',
   'plugin.c',
 ]
 
