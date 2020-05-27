@@ -542,9 +542,10 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
           g_hash_table_lookup (props_table, (gchar *) "effect_props");
 
       if (!ges_container_add (GES_CONTAINER (src),
-              GES_TIMELINE_ELEMENT (effect)))
-        GST_ERROR ("%" GES_FORMAT " could not add %p while"
-            " reloading, this should never happen", GES_ARGS (src), effect);
+              GES_TIMELINE_ELEMENT (effect))) {
+        GST_ERROR ("%p could not add %p while"
+            " reloading, this should never happen", src, effect);
+      }
 
       if (!g_strcmp0 (active, (gchar *) "(bool)False"))
         ges_track_element_set_active (GES_TRACK_ELEMENT (effect), FALSE);
