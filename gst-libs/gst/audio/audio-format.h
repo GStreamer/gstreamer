@@ -336,6 +336,9 @@ void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info
     "S18LE, S18BE, U18LE, U18BE, " \
     "F32LE, F32BE, F64LE, F64BE }"
 
+GST_AUDIO_API
+const GstAudioFormat * gst_audio_formats_raw (guint * len);
+
 /**
  * GST_AUDIO_CAPS_MAKE:
  * @format: string format that describes the sample layout, as string
