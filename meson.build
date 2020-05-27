@@ -148,7 +148,7 @@ if not get_option('validate').disabled()
   subdir('validate')
 endif
 
-if get_option('debug_viewer')
+if not get_option('debug_viewer').disabled()
   subdir('debug-viewer')
 endif
 subdir('docs')
