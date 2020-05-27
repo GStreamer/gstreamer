@@ -570,6 +570,179 @@ GST_START_TEST (test_live_switch)
 
 GST_END_TEST;
 
+static gint current_rate = 0;
+
+static gboolean
+live_switch_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *acceptable_caps;
+      GstCaps *caps;
+
+      acceptable_caps = gst_pad_get_current_caps (mysrcpad);
+      acceptable_caps = gst_caps_make_writable (acceptable_caps);
+      gst_caps_set_simple (acceptable_caps, "rate", G_TYPE_INT, current_rate,
+          NULL);
+
+      gst_query_parse_accept_caps (query, &caps);
+
+      gst_query_set_accept_caps_result (query, gst_caps_can_intersect (caps,
+              acceptable_caps));
+
+      gst_caps_unref (acceptable_caps);
+
+      return TRUE;
+    }
+    case GST_QUERY_CAPS:{
+      GstCaps *acceptable_caps;
+      GstCaps *filter;
+      GstCaps *caps;
+
+      acceptable_caps = gst_pad_get_current_caps (mysrcpad);
+      acceptable_caps = gst_caps_make_writable (acceptable_caps);
+      gst_caps_set_simple (acceptable_caps, "rate", G_TYPE_INT, current_rate,
+          NULL);
+
+      gst_query_parse_caps (query, &filter);
+
+      if (filter)
+        caps =
+            gst_caps_intersect_full (filter, acceptable_caps,
+            GST_CAPS_INTERSECT_FIRST);
+      else
+        caps = gst_caps_ref (acceptable_caps);
+
+      gst_query_set_caps_result (query, caps);
+
+      gst_caps_unref (caps);
+      gst_caps_unref (acceptable_caps);
+
+      return TRUE;
+    }
+    default:
+      return gst_pad_query_default (pad, parent, query);
+  }
+}
+
+static void
+live_switch_push_downstream (gint pts, gint rate)
+{
+  GstBuffer *inbuffer;
+
+  current_rate = rate;
+  gst_pad_push_event (mysinkpad, gst_event_new_reconfigure ());
+
+  inbuffer = gst_buffer_new_and_alloc (48000 * 4 * 2);
+  gst_buffer_memset (inbuffer, 0, 0, 48000 * 4 * 2);
+
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
+  GST_BUFFER_TIMESTAMP (inbuffer) = pts * GST_SECOND;
+  GST_BUFFER_OFFSET (inbuffer) = 0;
+  GST_BUFFER_OFFSET_END (inbuffer) = 47999;
+
+  /* pushing gives away my reference ... */
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
+
+  /* ... but it ends up being collected on the global buffer list */
+}
+
+GST_START_TEST (test_live_switch_downstream)
+{
+  GstElement *audioresample;
+  GstEvent *newseg;
+  GstCaps *caps;
+  GstSegment segment;
+  GList *l;
+  guint i;
+
+  audioresample =
+      setup_audioresample (4, 0xf, 48000, 48000, GST_AUDIO_NE (S16));
+
+  gst_pad_set_query_function (mysinkpad, live_switch_sink_query);
+
+  caps = gst_pad_get_current_caps (mysrcpad);
+  fail_unless (gst_caps_is_fixed (caps));
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  newseg = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
+
+  /* buffer is directly passed through */
+  live_switch_push_downstream (0, 48000);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  /* Reconfigure downstream to 40000 Hz */
+  live_switch_push_downstream (1, 40000);
+
+  /* one additional buffer is provided with the new sample rate */
+  fail_unless_equals_int (g_list_length (buffers), 2);
+
+  /* Reconfigure downstream to 50000 Hz */
+  live_switch_push_downstream (2, 50000);
+
+  /* two additional buffers are provided. One is the drained remainder of
+   * the previous sample rate, the second is the buffer with the new sample
+   * rate */
+  fail_unless_equals_int (g_list_length (buffers), 4);
+
+  /* Send EOS to drain the remaining samples */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 5);
+
+  /* Now test that each buffer has the expected samples. We simply check this
+   * by checking whether the timestamps, durations and sizes are matching */
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    GstBuffer *buffer = GST_BUFFER (l->data);
+
+    switch (i) {
+      case 0:
+        fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0 * GST_SECOND);
+        fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
+            1 * GST_SECOND);
+        fail_unless_equals_int (gst_buffer_get_size (buffer), 48000 * 4 * 2);
+        break;
+      case 1:
+        fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 1 * GST_SECOND);
+        fail_unless_equals_int (gst_buffer_get_size (buffer), 39966 * 4 * 2);
+        break;
+      case 2:
+        fail_unless (G_APPROX_VALUE (GST_BUFFER_PTS (buffer) +
+                GST_BUFFER_DURATION (buffer), 2 * GST_SECOND,
+                GST_SECOND / 40000 + 1));
+        fail_unless_equals_int (gst_buffer_get_size (buffer), 34 * 4 * 2);
+        break;
+      case 3:
+        fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 2 * GST_SECOND);
+        fail_unless_equals_int (gst_buffer_get_size (buffer), 49966 * 4 * 2);
+        break;
+      case 4:
+        fail_unless (G_APPROX_VALUE (GST_BUFFER_PTS (buffer) +
+                GST_BUFFER_DURATION (buffer), 3 * GST_SECOND,
+                GST_SECOND / 50000 + 1));
+        fail_unless_equals_int (gst_buffer_get_size (buffer), 33 * 4 * 2);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    gst_buffer_unref (buffer);
+  }
+
+  g_list_free (buffers);
+  buffers = NULL;
+
+  cleanup_audioresample (audioresample);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 #ifndef GST_DISABLE_PARSE
 
 static GMainLoop *loop;
@@ -1099,6 +1272,7 @@ audioresample_suite (void)
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_shutdown);
   tcase_add_test (tc_chain, test_live_switch);
+  tcase_add_test (tc_chain, test_live_switch_downstream);
   tcase_add_test (tc_chain, test_timestamp_drift);
   tcase_add_test (tc_chain, test_fft);
 
