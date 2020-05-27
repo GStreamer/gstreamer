@@ -371,6 +371,22 @@ const GstAudioFormat * gst_audio_formats_raw (guint * len);
  */
 #define GST_AUDIO_DEF_FORMAT "S16LE"
 
+/**
+ * GstAudioLayout:
+ * @GST_AUDIO_LAYOUT_INTERLEAVED: interleaved audio
+ * @GST_AUDIO_LAYOUT_NON_INTERLEAVED: non-interleaved audio
+ *
+ * Layout of the audio samples for the different channels.
+ */
+typedef enum {
+  GST_AUDIO_LAYOUT_INTERLEAVED = 0,
+  GST_AUDIO_LAYOUT_NON_INTERLEAVED
+} GstAudioLayout;
+
+GST_AUDIO_API
+GstCaps * gst_audio_make_raw_caps (const GstAudioFormat formats[], guint len,
+                                   GstAudioLayout layout);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_FORMAT_H__ */

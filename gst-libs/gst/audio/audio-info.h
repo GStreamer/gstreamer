@@ -44,18 +44,6 @@ typedef enum {
 } GstAudioFlags;
 
 /**
- * GstAudioLayout:
- * @GST_AUDIO_LAYOUT_INTERLEAVED: interleaved audio
- * @GST_AUDIO_LAYOUT_NON_INTERLEAVED: non-interleaved audio
- *
- * Layout of the audio samples for the different channels.
- */
-typedef enum {
-  GST_AUDIO_LAYOUT_INTERLEAVED = 0,
-  GST_AUDIO_LAYOUT_NON_INTERLEAVED
-} GstAudioLayout;
-
-/**
  * GstAudioInfo:
  * @finfo: the format info of the audio
  * @flags: additional audio flags
