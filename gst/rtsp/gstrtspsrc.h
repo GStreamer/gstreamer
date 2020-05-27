@@ -266,7 +266,7 @@ struct _GstRTSPSrc {
   gboolean          do_retransmission;
   gint              ntp_time_source;
   gchar            *user_agent;
-  GstClockTime      max_rtcp_rtp_time_diff;
+  gint              max_rtcp_rtp_time_diff;
   gboolean          rfc7273_sync;
   guint64           max_ts_offset_adjustment;
   gint64            max_ts_offset;
