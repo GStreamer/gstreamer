@@ -42,7 +42,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
  * A #GstPromise is created with gst_promise_new() by the consumer and passed
  * to the producer to avoid thread safety issues with the change callback.
  * A #GstPromise can be replied to with a value (or an error) by the producer
- * with gst_promise_reply(). gst_promise_interrupt() is for the consumer to
+ * with gst_promise_reply(). The exact value returned is defined by the API
+ * contract of the producer and %NULL may be a valid reply.
+ * gst_promise_interrupt() is for the consumer to
  * indicate to the producer that the value is not needed anymore and producing
  * that value can stop.  The @GST_PROMISE_RESULT_EXPIRED state set by a call
  * to gst_promise_expire() indicates to the consumer that a value will never
@@ -147,7 +149,7 @@ gst_promise_wait (GstPromise * promise)
 /**
  * gst_promise_reply:
  * @promise: (allow-none): a #GstPromise
- * @s: (transfer full): a #GstStructure with the the reply contents
+ * @s: (transfer full) (nullable): a #GstStructure with the the reply contents
  *
  * Set a reply on @promise.  This will wake up any waiters with
  * %GST_PROMISE_RESULT_REPLIED.  Called by the producer of the value to
@@ -218,7 +220,7 @@ gst_promise_reply (GstPromise * promise, GstStructure * s)
  * Retrieve the reply set on @promise.  @promise must be in
  * %GST_PROMISE_RESULT_REPLIED and the returned structure is owned by @promise
  *
- * Returns: (transfer none): The reply set on @promise
+ * Returns: (transfer none) (nullable): The reply set on @promise
  *
  * Since: 1.14
  */
