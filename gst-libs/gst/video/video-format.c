@@ -7031,3 +7031,65 @@ gst_video_format_info_component (const GstVideoFormatInfo * info, guint plane,
   for (c = i; c < GST_VIDEO_MAX_COMPONENTS; c++)
     components[c] = -1;
 }
+
+struct RawVideoFormats
+{
+  GstVideoFormat *formats;
+  guint n;
+};
+
+static gpointer
+generate_raw_video_formats (gpointer data)
+{
+  GValue list = G_VALUE_INIT;
+  struct RawVideoFormats *all = g_new (struct RawVideoFormats, 1);
+  gchar *tmp;
+  guint i;
+
+  g_value_init (&list, GST_TYPE_LIST);
+  /* Workaround a bug in our parser that would lead to segfaults
+   * when deserializing container types using static strings,
+   * see https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/446 */
+  tmp = g_strdup (GST_VIDEO_FORMATS_ALL);
+  g_assert (gst_value_deserialize (&list, tmp));
+  g_free (tmp);
+
+  all->n = gst_value_list_get_size (&list);
+  all->formats = g_new (GstVideoFormat, all->n);
+
+  for (i = 0; i < all->n; i++) {
+    const GValue *v = gst_value_list_get_value (&list, i);
+
+    all->formats[i] = gst_video_format_from_string (g_value_get_string (v));
+    g_assert (all->formats[i] != GST_VIDEO_FORMAT_UNKNOWN
+        && all->formats[i] != GST_VIDEO_FORMAT_ENCODED);
+  }
+
+  g_value_unset (&list);
+
+  return all;
+}
+
+/**
+ * gst_video_formats_raw:
+ * @len: (out): the number of elements in the returned array
+ *
+ * Return all the raw video formats supported by GStreamer.
+ *
+ * Returns: (transfer none) (array length=len): an array of #GstVideoFormat
+ * Since: 1.18
+ */
+const GstVideoFormat *
+gst_video_formats_raw (guint * len)
+{
+  static GOnce raw_video_formats_once = G_ONCE_INIT;
+  struct RawVideoFormats *all;
+
+  g_return_val_if_fail (len, NULL);
+
+  g_once (&raw_video_formats_once, generate_raw_video_formats, NULL);
+
+  all = raw_video_formats_once.retval;
+  *len = all->n;
+  return all->formats;
+}

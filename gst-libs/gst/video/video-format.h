@@ -590,6 +590,9 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
   "Y412_BE, Y412_LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, " \
   "Y444_16BE, Y444_16LE, P016_BE, P016_LE }"
 
+GST_VIDEO_API
+const GstVideoFormat * gst_video_formats_raw (guint * len);
+
 /**
  * GST_VIDEO_CAPS_MAKE:
  * @format: string format that describes the pixel layout, as string
