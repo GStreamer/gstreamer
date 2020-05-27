@@ -147,8 +147,13 @@ pluginsdirs = [  ]
 if gst_dep.type_name() == 'pkgconfig'
   pbase = dependency('gstreamer-plugins-base-' + api_version)
 
-  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')] + [pbase.get_pkgconfig_variable('pluginsdir')]
+  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
+                 pbase.get_pkgconfig_variable('pluginsdir')]
+  gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+else
+  gst_plugin_scanner_dir = subproject('gstreamer').get_variable('gst_scanner_dir')
 endif
+gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 foreach t : base_tests
   fnames = t.get(0)
@@ -183,6 +188,7 @@ foreach t : base_tests
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
       'gst-plugins-good', 'gst-plugins-ugly','gst-libav', 'libnice',
       'gst-plugins-bad@' + meson.build_root())
+    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
 endforeach
