@@ -951,6 +951,10 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
     case AVMEDIA_TYPE_VIDEO:
       templ = oclass->videosrctempl;
       num = demux->videopads++;
+      /* These are not part of the codec parameters we built the
+       * context from */
+      ctx->framerate.num = avstream->r_frame_rate.num;
+      ctx->framerate.den = avstream->r_frame_rate.den;
       break;
     case AVMEDIA_TYPE_AUDIO:
       templ = oclass->audiosrctempl;
