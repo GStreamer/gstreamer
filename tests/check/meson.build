@@ -151,10 +151,14 @@ test_defines = [
 
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
-  pbase = dependency('gstreamer-plugins-base-' + api_version, required : false)
+  pbase = dependency('gstreamer-plugins-base-' + api_version, required: true)
   pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
                  pbase.get_pkgconfig_variable('pluginsdir')]
+  gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+else
+  gst_plugin_scanner_dir = subproject('gstreamer').get_variable('gst_scanner_dir')
 endif
+gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 # fake device drivers: we could run hardware element tests against dummy drivers
 # v4l2: vivo (part of normal kernel)
@@ -196,6 +200,7 @@ foreach t : good_tests
     env.set('GSETTINGS_BACKEND', 'memory')
 
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
+    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
     exe = executable(test_name, fname, extra_sources,
       include_directories : [configinc, libsinc],
       c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
