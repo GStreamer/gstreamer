@@ -1396,7 +1396,7 @@ static gboolean
 gst_dvd_read_src_do_duration_query (GstDvdReadSrc * src, GstQuery * query)
 {
   GstFormat format;
-  gint64 val;
+  gint64 val = 0;
 
   gst_query_parse_duration (query, &format, NULL);
 
