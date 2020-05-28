@@ -213,13 +213,6 @@ _serialize_enum (GString * json, const gchar * key_name, GType gtype)
   g_string_append (json, "]}");
 }
 
-static const gchar *ignore_objects[] = {
-  "GstGLShader",                /* causes critical warnings */
-  "SoupSession",                /* causes critical warnings */
-  "GESTimeline",                /* causes critical warnings */
-  NULL,
-};
-
 static void
 _serialize_object (GString * json, const gchar * key_name, GType gtype)
 {
@@ -233,8 +226,7 @@ _serialize_object (GString * json, const gchar * key_name, GType gtype)
   if (!G_TYPE_IS_ABSTRACT (gtype) && !G_TYPE_IS_INTERFACE (gtype)
       && G_TYPE_IS_INSTANTIATABLE (gtype)
       && !g_type_is_a (gtype, G_TYPE_INITABLE)
-      && !g_type_is_a (gtype, G_TYPE_ASYNC_INITABLE)
-      && !g_strv_contains (ignore_objects, g_type_name (gtype))) {
+      && !g_type_is_a (gtype, G_TYPE_ASYNC_INITABLE)) {
     g_string_append_c (json, ',');
     tmpobj = g_object_new (gtype, NULL);
     _add_object_details (json, tmpobj);
@@ -318,11 +310,14 @@ _add_signals (GString * json, GObject * object)
 
         g_string_append_printf (json, "{ \"name\": \"%s\",", arg_name);
 
-        if (g_type_is_a (query->param_types[j], G_TYPE_ENUM)) {
+        if (g_type_is_a (query->param_types[j], G_TYPE_ENUM)
+            && gst_type_is_plugin_api (query->param_types[j])) {
           _serialize_enum (json, "type", query->param_types[j]);
-        } else if (g_type_is_a (query->param_types[j], G_TYPE_FLAGS)) {
+        } else if (g_type_is_a (query->param_types[j], G_TYPE_FLAGS)
+            && gst_type_is_plugin_api (query->param_types[j])) {
           _serialize_flags (json, "type", query->param_types[j]);
-        } else if (g_type_is_a (query->param_types[j], G_TYPE_OBJECT)) {
+        } else if (g_type_is_a (query->param_types[j], G_TYPE_OBJECT)
+            && gst_type_is_plugin_api (query->param_types[j])) {
           _serialize_object (json, "type", query->param_types[j]);
         } else {
           g_string_append_printf (json, "\"type\": \"%s\"",
@@ -334,11 +329,14 @@ _add_signals (GString * json, GObject * object)
       g_string_append_c (json, ']');
 
       g_string_append_c (json, ',');
-      if (g_type_is_a (query->return_type, G_TYPE_ENUM)) {
+      if (g_type_is_a (query->return_type, G_TYPE_ENUM)
+          && gst_type_is_plugin_api (query->return_type)) {
         _serialize_enum (json, "return-type", query->return_type);
-      } else if (g_type_is_a (query->return_type, G_TYPE_FLAGS)) {
+      } else if (g_type_is_a (query->return_type, G_TYPE_FLAGS)
+          && gst_type_is_plugin_api (query->return_type)) {
         _serialize_flags (json, "return-type", query->return_type);
-      } else if (g_type_is_a (query->return_type, G_TYPE_OBJECT)) {
+      } else if (g_type_is_a (query->return_type, G_TYPE_OBJECT)
+          && gst_type_is_plugin_api (query->return_type)) {
         _serialize_object (json, "return-type", query->return_type);
       } else {
         g_string_append_printf (json,
@@ -425,11 +423,14 @@ _add_properties (GString * json, GObject * object, GObjectClass * klass)
     g_free (tmpstr);
 
     g_string_append_c (json, ',');
-    if (G_IS_PARAM_SPEC_ENUM (spec)) {
+    if (G_IS_PARAM_SPEC_ENUM (spec)
+        && gst_type_is_plugin_api (spec->value_type)) {
       _serialize_enum (json, "type", spec->value_type);
-    } else if (G_IS_PARAM_SPEC_FLAGS (spec)) {
+    } else if (G_IS_PARAM_SPEC_FLAGS (spec)
+        && gst_type_is_plugin_api (spec->value_type)) {
       _serialize_flags (json, "type", spec->value_type);
-    } else if (G_IS_PARAM_SPEC_OBJECT (spec)) {
+    } else if (G_IS_PARAM_SPEC_OBJECT (spec)
+        && gst_type_is_plugin_api (spec->value_type)) {
       _serialize_object (json, "type", spec->value_type);
     } else {
       g_string_append_printf (json,
@@ -713,7 +714,8 @@ _add_element_pad_templates (GString * json, GstElement * element,
     tmpl = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
         padtemplate->name_template);
     pad_type = GST_PAD_TEMPLATE_GTYPE (tmpl);
-    if (pad_type != G_TYPE_NONE && pad_type != GST_TYPE_PAD) {
+    if (pad_type != G_TYPE_NONE && pad_type != GST_TYPE_PAD
+        && gst_type_is_plugin_api (pad_type)) {
       g_string_append_c (json, ',');
       _serialize_object (json, "type", pad_type);
     }
