@@ -820,7 +820,7 @@ _file_get_structures (GFile * file, gchar ** err,
         gst_structure_id_set (structure,
             lineno_quark, G_TYPE_INT, current_lineno,
             filename_quark, G_TYPE_STRING, filename,
-            filename_quark, G_TYPE_STRING, debug_line->str, NULL);
+            debug_quark, G_TYPE_STRING, debug_line->str, NULL);
         structures = g_list_append (structures, structure);
       }
     }
