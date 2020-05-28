@@ -831,7 +831,7 @@ typedef struct _AtomTRAF
 
   AtomTFDT tfdt;
 
-  /* list of AtomTRUN */
+  /* list of AtomTRUN. */
   GList *truns;
   /* list of AtomSDTP */
   GList *sdtps;
@@ -845,6 +845,8 @@ typedef struct _AtomMOOF
 
   /* list of AtomTRAF */
   GList *trafs;
+
+  guint64 traf_offset;
 } AtomMOOF;
 
 
@@ -989,13 +991,15 @@ guint64    atom_stco64_copy_data       (AtomSTCO64 *atom, guint8 **buffer,
 AtomMOOF*  atom_moof_new               (AtomsContext *context, guint32 sequence_number);
 void       atom_moof_free              (AtomMOOF *moof);
 guint64    atom_moof_copy_data         (AtomMOOF *moof, guint8 **buffer, guint64 *size, guint64* offset);
+void       atom_moof_set_base_offset   (AtomMOOF * moof, guint64 offset);
 AtomTRAF * atom_traf_new               (AtomsContext * context, guint32 track_ID);
 void       atom_traf_free              (AtomTRAF * traf);
 void       atom_traf_set_base_decode_time (AtomTRAF * traf, guint64 base_decode_time);
-void       atom_traf_add_samples       (AtomTRAF * traf, guint32 delta,
-                                        guint32 size, gboolean sync, gint64 pts_offset,
-                                        gboolean sdtp_sync);
+void       atom_traf_add_samples       (AtomTRAF * traf, guint32 nsamples, guint32 delta,
+                                        guint32 size, gint32 data_offset, gboolean sync,
+                                        gint64 pts_offset, gboolean sdtp_sync);
 guint32    atom_traf_get_sample_num    (AtomTRAF * traf);
+void       atom_trun_set_offset        (AtomTRUN * trun, gint32 offset);
 void       atom_moof_add_traf          (AtomMOOF *moof, AtomTRAF *traf);
 
 AtomMFRA*  atom_mfra_new               (AtomsContext *context);

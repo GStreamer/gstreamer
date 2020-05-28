@@ -197,11 +197,25 @@ typedef enum _GstQTMuxState
 typedef enum _GstQtMuxMode {
     GST_QT_MUX_MODE_MOOV_AT_END,
     GST_QT_MUX_MODE_FRAGMENTED,
-    GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE,
     GST_QT_MUX_MODE_FAST_START,
     GST_QT_MUX_MODE_ROBUST_RECORDING,
     GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL,
 } GstQtMuxMode;
+
+/**
+ * GstQTMuxFragmentMode:
+ * GST_QT_MUX_FRAGMENT_DASH_OR_MSS: dash-or-mss
+ * GST_QT_MUX_FRAGMENT_FIRST_MOOV_THEN_FINALISE: first-moov-then-finalise
+ * GST_QT_MUX_FRAGMENT_STREAMABLE: streamable (private value)
+ *
+ * Since: 1.20
+ */
+typedef enum _GstQTMuxFragmentMode
+{
+  GST_QT_MUX_FRAGMENT_DASH_OR_MSS = 0,
+  GST_QT_MUX_FRAGMENT_FIRST_MOOV_THEN_FINALISE,
+  GST_QT_MUX_FRAGMENT_STREAMABLE = G_MAXUINT32, /* internal value */
+} GstQTMuxFragmentMode;
 
 struct _GstQTMux
 {
@@ -213,6 +227,9 @@ struct _GstQTMux
   /* Mux mode, inferred from property
    * set in gst_qt_mux_start_file() */
   GstQtMuxMode mux_mode;
+  /* fragment_mode, controls how fragments are created.  Only if
+   * @mux_mode == GST_QT_MUX_MODE_FRAGMENTED */
+  GstQTMuxFragmentMode fragment_mode;
 
   /* size of header (prefix, atoms (ftyp, possibly moov, mdat header)) */
   guint64 header_size;
@@ -224,6 +241,10 @@ struct _GstQTMux
   /* position of mdat atom header (for later updating of size) in
    * moov-at-end, fragmented and robust-muxing modes */
   guint64 mdat_pos;
+  /* position of the mdat atom header of the latest fragment for writing
+   * the default base offset in fragmented mode first-moov-then-finalise and
+   * any other future non-streaming fragmented mode */
+  guint64 moof_mdat_pos;
 
   /* keep track of the largest chunk to fine-tune brands */
   GstClockTime longest_chunk;
@@ -276,7 +297,7 @@ struct _GstQTMux
   guint32 fragment_duration;
   /* Whether or not to work in 'streamable' mode and not
    * seek to rewrite headers - only valid for fragmented
-   * mode. */
+   * mode. Deprecated */
   gboolean streamable;
 
   /* Requested target maximum duration */

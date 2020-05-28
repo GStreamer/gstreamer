@@ -2953,8 +2953,11 @@ atom_mvex_copy_data (AtomMVEX * mvex, guint8 ** buffer, guint64 * size,
     return 0;
   }
 
-  if (!atom_mehd_copy_data (&mvex->mehd, buffer, size, offset)) {
-    return 0;
+  if (mvex->mehd.fragment_duration > 0) {
+    /* only write mehd if we have anything extra to add */
+    if (!atom_mehd_copy_data (&mvex->mehd, buffer, size, offset)) {
+      return 0;
+    }
   }
 
   walker = g_list_first (mvex->trexs);
@@ -4457,6 +4460,25 @@ atom_moof_new (AtomsContext * context, guint32 sequence_number)
   return moof;
 }
 
+void
+atom_moof_set_base_offset (AtomMOOF * moof, guint64 offset)
+{
+  GList *trafs = moof->trafs;
+
+  if (offset == moof->traf_offset)
+    return;                     /* Nothing to do */
+
+  while (trafs) {
+    AtomTRAF *traf = (AtomTRAF *) trafs->data;
+
+    traf->tfhd.header.flags[2] |= TF_BASE_DATA_OFFSET;
+    traf->tfhd.base_data_offset = offset;
+    trafs = g_list_next (trafs);
+  }
+
+  moof->traf_offset = offset;
+}
+
 static void
 atom_trun_free (AtomTRUN * trun)
 {
@@ -4581,20 +4603,12 @@ atom_tfdt_copy_data (AtomTFDT * tfdt, guint8 ** buffer, guint64 * size,
 
 static guint64
 atom_trun_copy_data (AtomTRUN * trun, guint8 ** buffer, guint64 * size,
-    guint64 * offset, guint32 * data_offset)
+    guint64 * offset)
 {
   guint64 original_offset = *offset;
   guint32 flags, i;
 
   flags = atom_full_get_flags_as_uint (&trun->header);
-
-  /* if first trun in moof, forcibly add data_offset and record
-   * where it must be written later on */
-  if (data_offset && !*data_offset) {
-    flags |= TR_DATA_OFFSET;
-  } else {
-    flags &= ~TR_DATA_OFFSET;
-  }
 
   atom_full_set_flags_as_uint (&trun->header, flags);
 
@@ -4605,7 +4619,6 @@ atom_trun_copy_data (AtomTRUN * trun, guint8 ** buffer, guint64 * size,
   prop_copy_uint32 (trun->sample_count, buffer, size, offset);
 
   if (flags & TR_DATA_OFFSET) {
-    *data_offset = *offset;
     prop_copy_int32 (trun->data_offset, buffer, size, offset);
   }
   if (flags & TR_FIRST_SAMPLE_FLAGS)
@@ -4649,7 +4662,7 @@ atom_sdtp_copy_data (AtomSDTP * sdtp, guint8 ** buffer, guint64 * size,
 
 static guint64
 atom_traf_copy_data (AtomTRAF * traf, guint8 ** buffer, guint64 * size,
-    guint64 * offset, guint32 * data_offset)
+    guint64 * offset)
 {
   guint64 original_offset = *offset;
   GList *walker;
@@ -4663,11 +4676,9 @@ atom_traf_copy_data (AtomTRAF * traf, guint8 ** buffer, guint64 * size,
   if (!atom_tfdt_copy_data (&traf->tfdt, buffer, size, offset)) {
     return 0;
   }
-
   walker = g_list_first (traf->truns);
   while (walker != NULL) {
-    if (!atom_trun_copy_data ((AtomTRUN *) walker->data, buffer, size, offset,
-            data_offset)) {
+    if (!atom_trun_copy_data ((AtomTRUN *) walker->data, buffer, size, offset)) {
       return 0;
     }
     walker = g_list_next (walker);
@@ -4693,7 +4704,6 @@ atom_moof_copy_data (AtomMOOF * moof, guint8 ** buffer,
 {
   guint64 original_offset = *offset;
   GList *walker;
-  guint32 data_offset = 0;
 
   if (!atom_copy_data (&moof->header, buffer, size, offset))
     return 0;
@@ -4703,20 +4713,13 @@ atom_moof_copy_data (AtomMOOF * moof, guint8 ** buffer,
 
   walker = g_list_first (moof->trafs);
   while (walker != NULL) {
-    if (!atom_traf_copy_data ((AtomTRAF *) walker->data, buffer, size, offset,
-            &data_offset)) {
+    if (!atom_traf_copy_data ((AtomTRAF *) walker->data, buffer, size, offset)) {
       return 0;
     }
     walker = g_list_next (walker);
   }
 
   atom_write_size (buffer, size, offset, original_offset);
-
-  if (*buffer && data_offset) {
-    /* first trun needs a data-offset relative to moof start
-     *   = moof size + mdat prefix */
-    GST_WRITE_UINT32_BE (*buffer + data_offset, *offset - original_offset + 8);
-  }
 
   return *offset - original_offset;
 }
@@ -4797,21 +4800,62 @@ atom_sdtp_add_samples (AtomSDTP * sdtp, guint8 val)
   atom_array_append (&sdtp->entries, val, 256);
 }
 
-static void
-atom_trun_add_samples (AtomTRUN * trun, guint32 delta, guint32 size,
-    guint32 flags, gint64 pts_offset)
+void
+atom_trun_set_offset (AtomTRUN * trun, gint32 offset)
 {
-  TRUNSampleEntry nentry;
+  trun->header.flags[2] |= TR_DATA_OFFSET;
+  trun->data_offset = offset;
+}
+
+static gboolean
+atom_trun_can_append_samples_to_entry (AtomTRUN * trun,
+    TRUNSampleEntry * nentry, guint32 nsamples, guint32 delta, guint32 size,
+    guint32 flags, gint32 data_offset, gint64 pts_offset)
+{
+  if (pts_offset != 0)
+    return FALSE;
+  if (nentry->sample_flags != flags)
+    return FALSE;
+  if (trun->data_offset + nentry->sample_size != data_offset)
+    return FALSE;
+  if (nentry->sample_size != size)
+    return FALSE;
+  if (nentry->sample_duration != delta)
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+atom_trun_append_samples (AtomTRUN * trun, TRUNSampleEntry * nentry,
+    guint32 nsamples, guint32 delta, guint32 size)
+{
+  trun->sample_count += nsamples;
+}
+
+static void
+atom_trun_add_samples (AtomTRUN * trun, guint32 nsamples, guint32 delta,
+    guint32 size, guint32 flags, gint64 pts_offset)
+{
+  int i;
 
   if (pts_offset != 0)
     trun->header.flags[1] |= (TR_COMPOSITION_TIME_OFFSETS >> 8);
 
-  nentry.sample_duration = delta;
-  nentry.sample_size = size;
-  nentry.sample_flags = flags;
-  nentry.sample_composition_time_offset = pts_offset;
-  atom_array_append (&trun->entries, nentry, 256);
-  trun->sample_count++;
+  for (i = 0; i < nsamples; i++) {
+    TRUNSampleEntry nentry;
+
+    nentry.sample_duration = delta;
+    nentry.sample_size = size;
+    nentry.sample_flags = flags;
+    if (pts_offset != 0) {
+      nentry.sample_composition_time_offset = pts_offset + i * delta;
+    } else {
+      nentry.sample_composition_time_offset = 0;
+    }
+    atom_array_append (&trun->entries, nentry, 256);
+    trun->sample_count++;
+  }
 }
 
 static void
@@ -4851,41 +4895,67 @@ atom_traf_add_trun (AtomTRAF * traf, AtomTRUN * trun)
 }
 
 void
-atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
-    gboolean sync, gint64 pts_offset, gboolean sdtp_sync)
+atom_traf_add_samples (AtomTRAF * traf, guint32 nsamples,
+    guint32 delta, guint32 size, gint32 data_offset, gboolean sync,
+    gint64 pts_offset, gboolean sdtp_sync)
 {
-  AtomTRUN *trun;
+  GList *l = NULL;
+  AtomTRUN *prev_trun, *trun = NULL;
+  TRUNSampleEntry *nentry = NULL;
   guint32 flags;
 
   /* 0x10000 is sample-is-difference-sample flag
    * low byte stuff is what ismv uses */
   flags = (sync ? 0x0 : 0x10000) | (sdtp_sync ? 0x40 : 0xc0);
 
-  if (G_UNLIKELY (!traf->truns)) {
-    trun = atom_trun_new ();
-    atom_traf_add_trun (traf, trun);
+  if (traf->truns) {
+    trun = g_list_last (traf->truns)->data;
+    nentry =
+        &atom_array_index (&trun->entries,
+        atom_array_get_len (&trun->entries) - 1);
+
+    if (!atom_trun_can_append_samples_to_entry (trun, nentry, nsamples, delta,
+            size, flags, data_offset, pts_offset)) {
+      /* if we can't add to the previous trun, write a new one */
+      trun = NULL;
+      nentry = NULL;
+    }
+  }
+  prev_trun = trun;
+
+  if (!traf->truns) {
     /* optimistic; indicate all defaults present in tfhd */
     traf->tfhd.header.flags[2] = TF_DEFAULT_SAMPLE_DURATION |
         TF_DEFAULT_SAMPLE_SIZE | TF_DEFAULT_SAMPLE_FLAGS;
     traf->tfhd.default_sample_duration = delta;
     traf->tfhd.default_sample_size = size;
     traf->tfhd.default_sample_flags = flags;
-    trun->first_sample_flags = flags;
   }
 
-  trun = traf->truns->data;
+  if (!trun) {
+    trun = atom_trun_new ();
+    atom_traf_add_trun (traf, trun);
+    trun->first_sample_flags = flags;
+    trun->data_offset = data_offset;
+    if (data_offset != 0)
+      trun->header.flags[2] |= TR_DATA_OFFSET;
+  }
 
   /* check if still matching defaults,
    * if not, abandon default and need entry for each sample */
-  if (traf->tfhd.default_sample_duration != delta) {
+  if (traf->tfhd.default_sample_duration != delta || prev_trun == trun) {
     traf->tfhd.header.flags[2] &= ~TF_DEFAULT_SAMPLE_DURATION;
-    trun->header.flags[1] |= (TR_SAMPLE_DURATION >> 8);
+    for (l = traf->truns; l; l = g_list_next (l)) {
+      ((AtomTRUN *) l->data)->header.flags[1] |= (TR_SAMPLE_DURATION >> 8);
+    }
   }
-  if (traf->tfhd.default_sample_size != size) {
+  if (traf->tfhd.default_sample_size != size || prev_trun == trun) {
     traf->tfhd.header.flags[2] &= ~TF_DEFAULT_SAMPLE_SIZE;
-    trun->header.flags[1] |= (TR_SAMPLE_SIZE >> 8);
+    for (l = traf->truns; l; l = g_list_next (l)) {
+      ((AtomTRUN *) l->data)->header.flags[1] |= (TR_SAMPLE_SIZE >> 8);
+    }
   }
-  if (traf->tfhd.default_sample_flags != flags) {
+  if (traf->tfhd.default_sample_flags != flags || prev_trun == trun) {
     if (trun->sample_count == 1) {
       /* at least will need first sample flag */
       traf->tfhd.default_sample_flags = flags;
@@ -4898,7 +4968,11 @@ atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
     }
   }
 
-  atom_trun_add_samples (traf->truns->data, delta, size, flags, pts_offset);
+  if (prev_trun == trun) {
+    atom_trun_append_samples (trun, nentry, nsamples, delta, size);
+  } else {
+    atom_trun_add_samples (trun, nsamples, delta, size, flags, pts_offset);
+  }
 
   if (traf->sdtps)
     atom_sdtp_add_samples (traf->sdtps->data, 0x10 | ((flags & 0xff) >> 4));
@@ -4912,6 +4986,7 @@ atom_traf_get_sample_num (AtomTRAF * traf)
   if (G_UNLIKELY (!traf->truns))
     return 0;
 
+  /* FIXME: only one trun? */
   trun = traf->truns->data;
   return atom_array_get_len (&trun->entries);
 }

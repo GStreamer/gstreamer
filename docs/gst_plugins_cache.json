@@ -9188,6 +9188,21 @@
                     }
                 ]
             },
+            "GstQTMuxFragmentMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "dash-or-mss",
+                        "name": "Dash or Smoothstreaming",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "first-moov-then-finalise",
+                        "name": "First MOOV Fragment Then Finalise",
+                        "value": "1"
+                    }
+                ]
+            },
             "GstQTMuxPad": {
                 "hierarchy": [
                     "GstQTMuxPad",
