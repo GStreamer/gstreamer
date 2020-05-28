@@ -30,8 +30,8 @@
 
 GST_START_TEST (test_buffer_tstamp_valid)
 {
-  struct avtp_stream_pdu pdu;
-  GstMapInfo info;
+  struct avtp_stream_pdu pdu = { 0, };
+  GstMapInfo info = { 0, };
   gboolean result;
 
   info.data = (guint8 *) & pdu;
