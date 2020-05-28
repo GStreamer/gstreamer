@@ -147,6 +147,28 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 
 #ifdef HAVE_DW
 #include <elfutils/libdwfl.h>
+static Dwfl *_global_dwfl = NULL;
+static GMutex _dwfl_mutex;
+
+#define GST_DWFL_LOCK() g_mutex_lock(&_dwfl_mutex);
+#define GST_DWFL_UNLOCK() g_mutex_unlock(&_dwfl_mutex);
+
+static Dwfl *
+get_global_dwfl (void)
+{
+  if (g_once_init_enter (&_global_dwfl)) {
+    static Dwfl_Callbacks callbacks = {
+      .find_elf = dwfl_linux_proc_find_elf,
+      .find_debuginfo = dwfl_standard_find_debuginfo,
+    };
+    Dwfl *_dwfl = dwfl_begin (&callbacks);
+    g_mutex_init (&_dwfl_mutex);
+    g_once_init_leave (&_global_dwfl, _dwfl);
+  }
+
+  return _global_dwfl;
+}
+
 #endif /* HAVE_DW */
 #endif /* HAVE_UNWIND */
 
@@ -2800,12 +2822,6 @@ append_debug_info (GString * trace, Dwfl * dwfl, const void *ip)
   Dwfl_Module *module;
   const gchar *function_name;
 
-  if (dwfl_linux_proc_report (dwfl, getpid ()) != 0)
-    return FALSE;
-
-  if (dwfl_report_end (dwfl, NULL, NULL))
-    return FALSE;
-
   addr = (uintptr_t) ip;
   module = dwfl_addrmodule (dwfl, addr);
   function_name = dwfl_module_addrname (module, addr);
@@ -2843,13 +2859,15 @@ generate_unwind_trace (GstStackTraceFlags flags)
 
 #ifdef HAVE_DW
   Dwfl *dwfl = NULL;
-  Dwfl_Callbacks callbacks = {
-    .find_elf = dwfl_linux_proc_find_elf,
-    .find_debuginfo = dwfl_standard_find_debuginfo,
-  };
 
-  if ((flags & GST_STACK_TRACE_SHOW_FULL))
-    dwfl = dwfl_begin (&callbacks);
+  if ((flags & GST_STACK_TRACE_SHOW_FULL)) {
+    dwfl = get_global_dwfl ();
+    if (G_UNLIKELY (dwfl == NULL)) {
+      GST_WARNING ("Failed to initialize dwlf");
+      goto done;
+    }
+    GST_DWFL_LOCK ();
+  }
 #endif /* HAVE_DW */
 
   unret = unw_getcontext (&uc);
@@ -2864,6 +2882,12 @@ generate_unwind_trace (GstStackTraceFlags flags)
 
     goto done;
   }
+#ifdef HAVE_DW
+  /* Due to plugins being loaded, mapping of process might have changed,
+   * so always scan it. */
+  if (dwfl_linux_proc_report (dwfl, getpid ()) != 0)
+    goto done;
+#endif
 
   while (unw_step (&cursor) > 0) {
 #ifdef HAVE_DW
@@ -2897,7 +2921,7 @@ generate_unwind_trace (GstStackTraceFlags flags)
 done:
 #ifdef HAVE_DW
   if (dwfl)
-    dwfl_end (dwfl);
+    GST_DWFL_UNLOCK ();
 #endif
 
   return g_string_free (trace, FALSE);
