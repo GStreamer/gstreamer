@@ -124,14 +124,13 @@ _run_app (Application * app)
     g_source_remove (app->signal_watch_intr_id);
 #endif
 
+  if (skipped || bailed_out)
+    goto done;
+
   if (g_subprocess_get_if_signaled (app->subproc))
     app->exitcode = g_subprocess_get_term_sig (app->subproc);
   else
     app->exitcode = g_subprocess_get_exit_status (app->subproc);
-  g_object_unref (app->subproc);
-
-  if (skipped || bailed_out)
-    goto done;
 
   if (app->exitcode == 0) {
     g_print ("ok 1 %s\n", app->testname);
@@ -142,6 +141,7 @@ _run_app (Application * app)
   }
 
 done:
+  g_clear_object (&app->subproc);
   g_main_loop_quit (app->ml);
 }
 
