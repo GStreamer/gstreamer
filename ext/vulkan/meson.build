@@ -10,7 +10,8 @@ if not gstvulkan_dep.found()
   endif
 endif
 
-assert(glslc.found())
+# Should already have checked for this
+assert(glslc.found(), 'Expected glslc to be available')
 
 subdir('shaders')
 
