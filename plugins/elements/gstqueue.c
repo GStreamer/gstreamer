@@ -419,6 +419,8 @@ gst_queue_class_init (GstQueueClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_query);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain_list);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QUEUE_LEAKY);
 }
 
 static void

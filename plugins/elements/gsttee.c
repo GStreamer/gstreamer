@@ -297,6 +297,8 @@ gst_tee_class_init (GstTeeClass * klass)
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_tee_release_pad);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_TEE_PULL_MODE);
 }
 
 static void

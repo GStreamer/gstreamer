@@ -287,6 +287,8 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
     GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT "!",
         sizeof (off_t));
   }
+
+  gst_type_mark_as_plugin_api (GST_TYPE_FILE_SINK_BUFFER_MODE);
 }
 
 static void

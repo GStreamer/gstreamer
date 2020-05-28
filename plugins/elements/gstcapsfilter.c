@@ -157,6 +157,8 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
       GST_DEBUG_FUNCPTR (gst_capsfilter_prepare_buf);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_capsfilter_sink_event);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_capsfilter_stop);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CAPS_FILTER_CAPS_CHANGE_MODE);
 }
 
 static void
