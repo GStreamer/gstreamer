@@ -176,6 +176,7 @@ GST_START_TEST (test_crf_cvf_data)
   avtpcrfbase = (GstAvtpCrfBase *) gst_harness_find_element (h, "avtpcrfcheck");
   avtpcrfbase->thread_data.average_period = 3300;
   avtpcrfbase->thread_data.current_ts = 110000;
+  gst_object_unref (avtpcrfbase);
 
   test_crf_tstamps (h, buf, 110000, 109204, 1);
   test_crf_tstamps (h, buf, 113600, 119400, 2);
@@ -199,6 +200,7 @@ GST_START_TEST (test_crf_aaf_data)
   avtpcrfbase = (GstAvtpCrfBase *) gst_harness_find_element (h, "avtpcrfcheck");
   avtpcrfbase->thread_data.average_period = 3300;
   avtpcrfbase->thread_data.current_ts = 110000;
+  gst_object_unref (avtpcrfbase);
 
   test_crf_tstamps (h, buf, 113300, 0, 1);
   test_crf_tstamps (h, buf, 112900, 0, 2);
@@ -221,6 +223,7 @@ GST_START_TEST (test_crf_period_zero)
   avtpcrfbase = (GstAvtpCrfBase *) gst_harness_find_element (h, "avtpcrfcheck");
   avtpcrfbase->thread_data.average_period = 0.0;
   avtpcrfbase->thread_data.current_ts = 110;
+  gst_object_unref (avtpcrfbase);
 
   test_crf_tstamps (h, buf, 112, 110, 1);
 

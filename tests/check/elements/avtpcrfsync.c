@@ -169,6 +169,8 @@ test_crf_tstamps (GstHarness * h, GstBuffer * buf, struct buffer_tstamps *orig,
   bufout = gst_harness_push_and_pull (h, buf);
 
   validate_tstamps (avtpcrfbase, bufout, expected);
+
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_START_TEST (test_properties)
@@ -258,6 +260,7 @@ GST_START_TEST (test_crf_cvf_data)
   avtpcrfbase = (GstAvtpCrfBase *) gst_harness_find_element (h, "avtpcrfsync");
   avtpcrfbase->thread_data.average_period = 3300;
   avtpcrfbase->thread_data.current_ts = 110000;
+  gst_object_unref (avtpcrfbase);
 
   orig = (struct buffer_tstamps) {
   .buf_pts = 103000,.buf_dts = 100000,.avtp_ts = 110000,.h264_ts = 108000};
@@ -280,6 +283,7 @@ GST_START_TEST (test_crf_cvf_data)
         113300,.h264_ts = 119900};
   test_crf_tstamps (h, buf, &orig, &expected);
 
+  gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
 
@@ -298,6 +302,7 @@ GST_START_TEST (test_crf_aaf_data)
   avtpcrfbase = (GstAvtpCrfBase *) gst_harness_find_element (h, "avtpcrfsync");
   avtpcrfbase->thread_data.average_period = 3300;
   avtpcrfbase->thread_data.current_ts = 110000;
+  gst_object_unref (avtpcrfbase);
 
   orig = (struct buffer_tstamps) {
   .buf_pts = 108000,.buf_dts = 0,.avtp_ts = 110000,.h264_ts = 0};
@@ -311,6 +316,7 @@ GST_START_TEST (test_crf_aaf_data)
   .buf_pts = 110300,.buf_dts = 0,.avtp_ts = 113300,.h264_ts = 0};
   test_crf_tstamps (h, buf, &orig, &expected);
 
+  gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
 
@@ -329,6 +335,7 @@ GST_START_TEST (test_crf_period_zero)
   avtpcrfbase = (GstAvtpCrfBase *) gst_harness_find_element (h, "avtpcrfsync");
   avtpcrfbase->thread_data.average_period = 0.0;
   avtpcrfbase->thread_data.current_ts = 110;
+  gst_object_unref (avtpcrfbase);
 
   orig = (struct buffer_tstamps) {
   .buf_pts = 100,.buf_dts = 105,.avtp_ts = 112,.h264_ts = 110};
@@ -336,6 +343,7 @@ GST_START_TEST (test_crf_period_zero)
   .buf_pts = 100,.buf_dts = 105,.avtp_ts = 112,.h264_ts = 110};
   test_crf_tstamps (h, buf, &orig, &expected);
 
+  gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
 

@@ -68,6 +68,7 @@ GST_START_TEST (test_validate_crf_pdu_success)
   fail_unless (thread_data->timestamp_interval == 160);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -101,6 +102,7 @@ GST_START_TEST (test_validate_crf_pdu_multiple_packets_success)
 
   g_free (crf_pdu1);
   g_free (crf_pdu2);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -122,6 +124,7 @@ GST_START_TEST (test_validate_crf_pdu_wrong_subtype)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -142,6 +145,7 @@ GST_START_TEST (test_validate_crf_pdu_streamid_invalid)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -160,6 +164,7 @@ GST_START_TEST (test_validate_crf_pdu_streamid_different)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -178,6 +183,7 @@ GST_START_TEST (test_validate_crf_pdu_data_len_too_long)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -198,6 +204,7 @@ GST_START_TEST (test_validate_crf_pdu_timestamp_interval_zero)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -218,6 +225,7 @@ GST_START_TEST (test_validate_crf_pdu_base_freq_zero)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -238,6 +246,7 @@ GST_START_TEST (test_validate_crf_pdu_pull_invalid)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -258,6 +267,7 @@ GST_START_TEST (test_validate_crf_pdu_type_invalid)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -278,6 +288,7 @@ GST_START_TEST (test_validate_crf_pdu_data_len_invalid)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -302,6 +313,7 @@ GST_START_TEST (test_validate_crf_pdu_timestamp_interval_mismatch)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -326,6 +338,7 @@ GST_START_TEST (test_validate_crf_pdu_base_freq_mismatch)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -350,6 +363,7 @@ GST_START_TEST (test_validate_crf_pdu_pull_mismatch)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -374,6 +388,7 @@ GST_START_TEST (test_validate_crf_pdu_type_mismatch)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -401,6 +416,7 @@ GST_START_TEST (test_validate_crf_pdu_data_len_mismatch)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -428,6 +444,7 @@ GST_START_TEST (test_validate_crf_pdu_tstamps_not_monotonic)
   fail_unless (ret == FALSE);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -457,6 +474,7 @@ GST_START_TEST (test_gst_base_freq_multiplier)
 
   ret = get_base_freq_multiplier (avtpcrfbase, 6);
   fail_unless_equals_float (ret, -1);
+  gst_object_unref (avtpcrfbase);
 
 }
 
@@ -499,6 +517,7 @@ GST_START_TEST (test_calculate_average_period_multiple_crf_tstamps)
   fail_unless_equals_uint64 (thread_data->past_periods[2], 20833);
   fail_unless_equals_uint64 (thread_data->current_ts, 1000);
 
+  gst_object_unref (avtpcrfbase);
   g_free (crf_pdu);
 }
 
@@ -531,6 +550,7 @@ GST_START_TEST
   fail_unless_equals_uint64 (thread_data->current_ts, 18446744073709501615ULL);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -566,6 +586,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp)
   fail_unless_equals_uint64 (thread_data->current_ts, 21833);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -605,6 +626,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_init)
 
   g_free (crf_pdu1);
   g_free (crf_pdu2);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -640,6 +662,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_64_bit_overflow)
   fail_unless_equals_uint64 (thread_data->current_ts, 20833);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
@@ -676,6 +699,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_seq_num_skip)
   fail_unless_equals_uint64 (thread_data->current_ts, 21833);
 
   g_free (crf_pdu);
+  gst_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;
