@@ -10,10 +10,7 @@ if not gstvulkan_dep.found()
   endif
 endif
 
-glslc = find_program('glslc', required: get_option('vulkan'))
-if not glslc.found()
-  subdir_done()
-endif
+assert(glslc.found())
 
 subdir('shaders')
 
