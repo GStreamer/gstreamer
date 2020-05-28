@@ -133,7 +133,7 @@ gst_speex_dec_reset (GstSpeexDec * dec)
   dec->frame_size = 0;
   dec->frame_duration = 0;
   dec->mode = NULL;
-  free (dec->header);
+  speex_header_free (dec->header);
   dec->header = NULL;
   speex_bits_destroy (&dec->bits);
   speex_bits_set_bit_buffer (&dec->bits, NULL, 0);
