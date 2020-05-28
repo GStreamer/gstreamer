@@ -44,6 +44,7 @@
 #include "gstinfo.h"
 #include "gstparse.h"
 #include "gstvalue.h"
+#include "gstquark.h"
 #include "gst-i18n-lib.h"
 #include "glib-compat-private.h"
 #include <math.h>
@@ -4515,4 +4516,44 @@ invalid:
       g_free (newx);
     return FALSE;
   }
+}
+
+/**
+ * gst_type_mark_as_plugin_api:
+ * @type: a GType
+ *
+ * Marks @type as plugin API. This should be called in `class_init` of
+ * elements that expose new types (i.e. enums, flags or internal GObjects) via
+ * properties, signals or pad templates.
+ *
+ * Types exposed by plugins are not automatically added to the documentation
+ * as they might originate from another library and should in that case be
+ * documented via that library instead.
+ *
+ * By marking a type as plugin API it will be included in the documentation of
+ * the plugin that defines it.
+ *
+ * Since: 1.18
+ */
+void
+gst_type_mark_as_plugin_api (GType type)
+{
+  g_type_set_qdata (type, GST_QUARK (PLUGIN_API), GINT_TO_POINTER (TRUE));
+}
+
+/**
+ * gst_type_is_plugin_api:
+ * @type: a GType
+ *
+ * Checks if @type is plugin API. See gst_type_mark_as_plugin_api() for
+ * details.
+ *
+ * Returns: %TRUE if @type is plugin API or %FALSE otherwise.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_type_is_plugin_api (GType type)
+{
+  return ! !GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
 }

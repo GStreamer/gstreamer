@@ -1204,6 +1204,11 @@ gboolean      gst_calculate_linear_regression   (const GstClockTime * xy,
                                                  GstClockTime * b, GstClockTime * xbase,
                                                  gdouble * r_squared);
 
+GST_API
+void          gst_type_mark_as_plugin_api       (GType type);
+
+GST_API
+gboolean      gst_type_is_plugin_api            (GType type);
 
 G_END_DECLS
 
