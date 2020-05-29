@@ -448,6 +448,7 @@ gst_vaapi_utils_h265_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       chroma_format_idc = 2;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV444:
+    case GST_VAAPI_CHROMA_TYPE_YUV444_10BPP:
       chroma_format_idc = 3;
       break;
     default:
