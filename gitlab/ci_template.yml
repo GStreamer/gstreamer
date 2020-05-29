@@ -478,8 +478,10 @@ valgrind ges:
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
 
-    - git clone -b $GST_UPSTREAM_BRANCH https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR\gst-build
+    - Invoke-WebRequest -Uri "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/$env:GST_UPSTREAM_BRANCH/gitlab/clone_manifest_ref.py" -OutFile $env:CI_PROJECT_DIR/clone_manifest_ref.py
+    - python clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination $env:CI_PROJECT_DIR/gst-build
     - cd $env:CI_PROJECT_DIR/gst-build
+
     - cp -r C:/subprojects/* subprojects/
     # Run the git-update script and feed it the manifest to setup the environment
     - cd $env:CI_PROJECT_DIR/gst-build;  python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
@@ -533,8 +535,10 @@ build msys2 :
     - C:\msys64\usr\bin\bash -c "pacman -Syuu --noconfirm"
     - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
 
-    - git clone -b $GST_UPSTREAM_BRANCH https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR\gst-build
-    - cd $env:CI_PROJECT_DIR\gst-build
+    - Invoke-WebRequest -Uri "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/$env:GST_UPSTREAM_BRANCH/gitlab/clone_manifest_ref.py" -OutFile $env:CI_PROJECT_DIR/clone_manifest_ref.py
+    - python clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination $env:CI_PROJECT_DIR/gst-build
+    - cd $env:CI_PROJECT_DIR/gst-build
+
     - cp -r C:\subprojects\* subprojects\
 
     # Run the git-update script and feed it the manifest to setup the environment
