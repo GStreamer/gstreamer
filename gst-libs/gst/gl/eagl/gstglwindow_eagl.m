@@ -49,6 +49,7 @@ static void gst_gl_window_eagl_set_preferred_size (GstGLWindow * window,
 static void gst_gl_window_eagl_draw (GstGLWindow * window);
 static void gst_gl_window_eagl_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
+static void gst_gl_window_eagl_quit (GstGLWindow *window);
 
 struct _GstGLWindowEaglPrivate
 {
@@ -61,6 +62,9 @@ struct _GstGLWindowEaglPrivate
   gpointer gl_queue;
   GMutex draw_lock;
   GCond cond;
+
+  gboolean shutting_down;
+  GstGLContext *last_context;
 };
 
 #define DEBUG_INIT \
@@ -88,6 +92,7 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_set_preferred_size);
   window_class->send_message_async =
       GST_DEBUG_FUNCPTR (gst_gl_window_eagl_send_message_async);
+  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_eagl_quit);
 }
 
 static void
@@ -223,6 +228,16 @@ gst_gl_window_eagl_set_window_handle (GstGLWindow * window, guintptr handle)
 }
 
 static void
+gst_gl_window_eagl_quit (GstGLWindow * window)
+{
+  GstGLWindowEagl *window_eagl = (GstGLWindowEagl *) window;
+
+  window_eagl->priv->shutting_down = TRUE;
+
+  GST_GL_WINDOW_CLASS (parent_class)->quit (window);
+}
+
+static void
 gst_gl_window_eagl_set_preferred_size (GstGLWindow * window, gint width, gint height)
 {
   GstGLWindowEagl *window_eagl = GST_GL_WINDOW_EAGL (window);
@@ -237,19 +252,35 @@ gst_gl_window_eagl_send_message_async (GstGLWindow * window,
 {
   GstGLWindowEagl *window_eagl = (GstGLWindowEagl *) window;
   GstGLContext *context = gst_gl_window_get_context (window);
-  GThread *thread = gst_gl_context_get_thread (context);
+  GstGLContext *unref_context = NULL;
+  GThread *thread;
+
+  if (context)
+    window_eagl->priv->last_context = unref_context = context;
+
+  /* we may not have a context if we are shutting down */
+  if (!context && window_eagl->priv->shutting_down) {
+    context = window_eagl->priv->last_context;
+    window_eagl->priv->shutting_down = FALSE;
+  }
+
+  g_return_if_fail (context != NULL);
+
+  thread = gst_gl_context_get_thread (context);
 
   if (thread == g_thread_self()) {
     /* this case happens for nested calls happening from inside the GCD queue */
     callback (data);
     if (destroy)
       destroy (data);
-    gst_object_unref (context);
+    if (unref_context)
+      gst_object_unref (unref_context);
   } else {
     dispatch_async ((__bridge dispatch_queue_t)(window_eagl->priv->gl_queue), ^{
       gst_gl_context_activate (context, TRUE);
       callback (data);
-      gst_object_unref (context);
+      if (unref_context)
+        gst_object_unref (unref_context);
       if (destroy)
         destroy (data);
     });
