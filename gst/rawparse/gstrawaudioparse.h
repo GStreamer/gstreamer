@@ -101,6 +101,7 @@ struct _GstRawAudioParse
   GstRawAudioParseConfig *current_config;
 };
 
+#define GST_TYPE_RAW_AUDIO_PARSE_FORMAT (gst_raw_audio_parse_format_get_type())
 GType gst_raw_audio_parse_format_get_type (void);
 
 G_END_DECLS

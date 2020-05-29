@@ -142,6 +142,29 @@ gst_compositor_operator_get_type (void)
   return compositor_operator_type;
 }
 
+#define GST_TYPE_COMPOSITOR_BACKGROUND (gst_compositor_background_get_type())
+static GType
+gst_compositor_background_get_type (void)
+{
+  static GType compositor_background_type = 0;
+
+  static const GEnumValue compositor_background[] = {
+    {COMPOSITOR_BACKGROUND_CHECKER, "Checker pattern", "checker"},
+    {COMPOSITOR_BACKGROUND_BLACK, "Black", "black"},
+    {COMPOSITOR_BACKGROUND_WHITE, "White", "white"},
+    {COMPOSITOR_BACKGROUND_TRANSPARENT,
+        "Transparent Background to enable further compositing", "transparent"},
+    {0, NULL, NULL},
+  };
+
+  if (!compositor_background_type) {
+    compositor_background_type =
+        g_enum_register_static ("GstCompositorBackground",
+        compositor_background);
+  }
+  return compositor_background_type;
+}
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_WIDTH  0
@@ -521,29 +544,6 @@ enum
   PROP_0,
   PROP_BACKGROUND,
 };
-
-#define GST_TYPE_COMPOSITOR_BACKGROUND (gst_compositor_background_get_type())
-static GType
-gst_compositor_background_get_type (void)
-{
-  static GType compositor_background_type = 0;
-
-  static const GEnumValue compositor_background[] = {
-    {COMPOSITOR_BACKGROUND_CHECKER, "Checker pattern", "checker"},
-    {COMPOSITOR_BACKGROUND_BLACK, "Black", "black"},
-    {COMPOSITOR_BACKGROUND_WHITE, "White", "white"},
-    {COMPOSITOR_BACKGROUND_TRANSPARENT,
-        "Transparent Background to enable further compositing", "transparent"},
-    {0, NULL, NULL},
-  };
-
-  if (!compositor_background_type) {
-    compositor_background_type =
-        g_enum_register_static ("GstCompositorBackground",
-        compositor_background);
-  }
-  return compositor_background_type;
-}
 
 static void
 gst_compositor_get_property (GObject * object,
@@ -1116,6 +1116,10 @@ gst_compositor_class_init (GstCompositorClass * klass)
       "Filter/Editor/Video/Compositor",
       "Composite multiple video streams", "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_OPERATOR);
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_BACKGROUND);
 }
 
 static void

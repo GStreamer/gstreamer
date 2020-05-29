@@ -225,7 +225,7 @@ gst_raw_audio_parse_class_init (GstRawAudioParseClass * klass)
       g_param_spec_enum ("format",
           "Format",
           "Format of the raw audio stream",
-          gst_raw_audio_parse_format_get_type (),
+          GST_TYPE_RAW_AUDIO_PARSE_FORMAT,
           GST_RAW_AUDIO_PARSE_FORMAT_PCM,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
@@ -280,6 +280,8 @@ gst_raw_audio_parse_class_init (GstRawAudioParseClass * klass)
       "Codec/Parser/Audio",
       "Converts unformatted data streams into timestamped raw audio frames",
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RAW_AUDIO_PARSE_FORMAT);
 }
 
 static void

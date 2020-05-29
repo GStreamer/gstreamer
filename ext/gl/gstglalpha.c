@@ -545,6 +545,8 @@ gst_gl_alpha_class_init (GstGLAlphaClass * klass)
 
   filter_class->filter_texture =
       GST_DEBUG_FUNCPTR (gst_gl_alpha_filter_texture);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_ALPHA_METHOD);
 }
 
 static void

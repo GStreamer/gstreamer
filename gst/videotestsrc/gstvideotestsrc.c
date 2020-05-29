@@ -376,6 +376,10 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class->decide_allocation = gst_video_test_src_decide_allocation;
 
   gstpushsrc_class->fill = gst_video_test_src_fill;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_TEST_SRC_ANIMATION_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_TEST_SRC_MOTION_TYPE);
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_TEST_SRC_PATTERN);
 }
 
 static void

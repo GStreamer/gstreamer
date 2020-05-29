@@ -41,6 +41,7 @@ typedef enum
   GST_GL_MIXER_BIN_START_TIME_SELECTION_SET
 } GstGLMixerBinStartTimeSelection;
 
+#define GST_TYPE_GL_MIXER_BIN_START_TIME_SELECTION (gst_gl_mixer_bin_start_time_selection_get_type())
 static GType
 gst_gl_mixer_bin_start_time_selection_get_type (void)
 {
@@ -195,7 +196,7 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
       g_param_spec_enum ("start-time-selection", "Start Time Selection",
           "Decides which start time is output",
-          gst_gl_mixer_bin_start_time_selection_get_type (),
+          GST_TYPE_GL_MIXER_BIN_START_TIME_SELECTION,
           DEFAULT_START_TIME_SELECTION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -234,6 +235,8 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
   gst_element_class_set_metadata (element_class, "OpenGL video_mixer empty bin",
       "Bin/Filter/Effect/Video/Mixer", "OpenGL video_mixer empty bin",
       "Matthew Waters <matthew@centricular.com>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER_BIN_START_TIME_SELECTION);
 }
 
 static void

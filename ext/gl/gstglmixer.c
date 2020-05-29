@@ -437,6 +437,8 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
 
   klass->set_caps = NULL;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER_PAD);
 }
 
 static void

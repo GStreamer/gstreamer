@@ -1341,6 +1341,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
   gstbin_klass->deep_element_added =
       GST_DEBUG_FUNCPTR (gst_play_bin_deep_element_added);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_PLAY_FLAGS);
 }
 
 static void

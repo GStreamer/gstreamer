@@ -210,6 +210,10 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_resample_submit_input_buffer);
 
   GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_RESAMPLER_METHOD);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_RESAMPLER_FILTER_INTERPOLATION);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE);
 }
 
 static void

@@ -226,6 +226,10 @@ gst_text_render_class_init (GstTextRenderClass * klass)
           "Alignment of text lines relative to each other.",
           GST_TYPE_TEXT_RENDER_LINE_ALIGN, DEFAULT_PROP_LINE_ALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_TEXT_RENDER_HALIGN);
+  gst_type_mark_as_plugin_api (GST_TYPE_TEXT_RENDER_VALIGN);
+  gst_type_mark_as_plugin_api (GST_TYPE_TEXT_RENDER_LINE_ALIGN);
 }
 
 static void

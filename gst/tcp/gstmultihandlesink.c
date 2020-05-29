@@ -484,6 +484,10 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (multihandlesink_debug, "multihandlesink", 0,
       "Multi socket sink");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RECOVER_POLICY);
+  gst_type_mark_as_plugin_api (GST_TYPE_SYNC_METHOD);
+  gst_type_mark_as_plugin_api (GST_TYPE_CLIENT_STATUS);
 }
 
 static void

@@ -194,6 +194,8 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstCdParanoiaSrcClass, uncorrected_error),
       NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CD_PARANOIA_MODE);
 }
 
 static gboolean

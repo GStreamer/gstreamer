@@ -297,6 +297,8 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 
   _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
   _scale_quark = gst_video_meta_transform_scale_get_quark ();
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_SCALE_METHOD);
 }
 
 static void

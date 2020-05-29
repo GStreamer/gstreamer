@@ -1044,6 +1044,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_remove_element);
 
   g_type_class_ref (GST_TYPE_DECODE_PAD);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUTOPLUG_SELECT_RESULT);
 }
 
 /* Must be called with factories lock! */

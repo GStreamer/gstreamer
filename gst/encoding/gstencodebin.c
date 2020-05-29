@@ -445,6 +445,8 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
       "Generic/Bin/Encoder",
       "Convenience encoding/muxing element",
       "Edward Hervey <edward.hervey@collabora.co.uk>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ENCODEBIN_FLAGS);
 }
 
 static void

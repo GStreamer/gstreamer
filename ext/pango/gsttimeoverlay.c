@@ -237,6 +237,8 @@ gst_time_overlay_class_init (GstTimeOverlayClass * klass)
           "Whether to display times, counted from datetime-epoch, as dates",
           DEFAULT_SHOW_TIMES_AS_DATES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_TIME_OVERLAY_TIME_LINE);
 }
 
 static void

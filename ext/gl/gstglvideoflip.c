@@ -156,6 +156,8 @@ gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
   gst_element_class_set_metadata (element_class, "OpenGL video flip filter",
       "Filter/Effect/Video", "Flip video on the GPU",
       "Matthew Waters <matthew@centricular.com>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_FLIP_METHOD);
 }
 
 static void

@@ -666,6 +666,8 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   g_type_class_ref (GST_TYPE_STREAM_SYNCHRONIZER);
   g_type_class_ref (GST_TYPE_COLOR_BALANCE_CHANNEL);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_PLAY_SINK_SEND_EVENT_MODE);
 }
 
 static void

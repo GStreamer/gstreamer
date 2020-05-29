@@ -297,6 +297,8 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_BOOLEAN, 3,
       GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_ROTATE_METHOD);
 }
 
 #define GST_GLIMAGE_SINK_GET_LOCK(glsink) \
