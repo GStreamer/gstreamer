@@ -981,6 +981,43 @@ gst_video_rate_src_event (GstBaseTransform * trans, GstEvent * event)
       res = gst_pad_push_event (sinkpad, event);
       break;
     }
+    case GST_EVENT_QOS:
+    {
+      GstQOSType type;
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
+
+      if (GST_CLOCK_TIME_IS_VALID (timestamp) && videorate->rate != 1.0) {
+        GST_OBJECT_LOCK (trans);
+        GST_DEBUG_OBJECT (trans, "Rescaling QoS event taking our rate into"
+            "account. Timestamp:  %" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT
+            " - diff %" G_GINT64_FORMAT "-> %" G_GINT64_FORMAT,
+            GST_TIME_ARGS (timestamp),
+            GST_TIME_ARGS (videorate->base_ts + ((timestamp -
+                        videorate->base_ts) * videorate->rate)), diff,
+            (GstClockTimeDiff) (diff * videorate->rate));
+
+        if (videorate->segment.rate < 0.0)
+          timestamp =
+              (videorate->segment.stop - videorate->base_ts) -
+              ((videorate->segment.stop - videorate->base_ts -
+                  timestamp) * videorate->rate);
+        else
+          timestamp =
+              videorate->base_ts + ((timestamp -
+                  videorate->base_ts) * videorate->rate);
+
+        diff *= videorate->rate;
+        GST_OBJECT_UNLOCK (trans);
+
+        gst_event_unref (event);
+        event = gst_event_new_qos (type, proportion, diff, timestamp);
+      }
+      /* Fallthrough */
+    }
     default:
       res = gst_pad_push_event (sinkpad, event);
       break;
