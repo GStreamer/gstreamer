@@ -940,13 +940,8 @@ MediaCaptureWrapper::findCoreDispatcher()
   if (!gst_mf_result(hr))
     return;
 
-  ComPtr<ICoreImmersiveApplication> core_immersive_app;
-  hr = core_app.As(&core_immersive_app);
-  if (!gst_mf_result(hr))
-    return;
-
   ComPtr<ICoreApplicationView> core_app_view;
-  hr = core_immersive_app->get_MainView (&core_app_view);
+  hr = core_app->GetCurrentView (&core_app_view);
   if (!gst_mf_result(hr))
     return;
 
