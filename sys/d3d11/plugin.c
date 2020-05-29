@@ -92,7 +92,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin,
       "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
   gst_element_register (plugin,
-      "d3d11videosink", GST_RANK_SECONDARY - 1, GST_TYPE_D3D11_VIDEO_SINK_BIN);
+      "d3d11videosink", GST_RANK_PRIMARY, GST_TYPE_D3D11_VIDEO_SINK_BIN);
 
 #ifdef HAVE_DXVA_H
   /* DXVA2 API is availble since Windows 8 */
