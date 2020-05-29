@@ -97,6 +97,8 @@ GST_START_TEST (test_get_avtp_tstamp)
       AVTP_SUBTYPE_TSCF);
   tstamp = get_avtp_tstamp (avtpcrfbase, &pdu);
   fail_unless_equals_uint64 (tstamp, GST_CLOCK_TIME_NONE);
+
+  g_object_unref (avtpcrfbase);
 }
 
 GST_END_TEST;

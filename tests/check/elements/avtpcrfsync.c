@@ -197,6 +197,8 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (element), "streamid", streamid, NULL);
   g_object_get (G_OBJECT (element), "streamid", &val64, NULL);
   fail_unless_equals_uint64_hex (val64, streamid);
+
+  gst_object_unref (element);
 }
 
 GST_END_TEST;
@@ -221,6 +223,8 @@ GST_START_TEST (test_set_avtp_tstamp)
   res = avtp_cvf_pdu_get (&pdu, AVTP_CVF_FIELD_TIMESTAMP, &tstamp);
   fail_unless (res == 0);
   fail_unless_equals_uint64 (tstamp, 12345);
+
+  g_object_unref (avtpcrfsync);
 }
 
 GST_END_TEST;
@@ -243,6 +247,8 @@ GST_START_TEST (test_set_avtp_mr_bit)
   res = avtp_cvf_pdu_get (&pdu, AVTP_CVF_FIELD_MR, &mr_bit);
   fail_unless (res == 0);
   fail_unless_equals_uint64 (mr_bit, 1);
+
+  g_object_unref (avtpcrfsync);
 }
 
 GST_END_TEST;

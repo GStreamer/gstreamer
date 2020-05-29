@@ -182,6 +182,7 @@ GST_START_TEST (test_payloader_spread_ts)
   for (i = 0; i < 10; i++) {
     out = gst_harness_pull (h);
     fail_unless_equals_uint64 (GST_BUFFER_DTS (out), first_tx_time);
+    gst_buffer_unref (out);
 
     first_tx_time += measurement_interval / max_interval_frames;
   }

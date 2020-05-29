@@ -160,6 +160,8 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (element), "drop-invalid", drop_invalid, NULL);
   g_object_get (G_OBJECT (element), "drop-invalid", &val, NULL);
   fail_unless (val == drop_invalid);
+
+  gst_object_unref (element);
 }
 
 GST_END_TEST;
@@ -183,6 +185,7 @@ GST_START_TEST (test_crf_cvf_data)
   test_crf_tstamps (h, buf, 218000, 119400, 2);
   test_crf_tstamps (h, buf, 218000, 102000, 2);
 
+  gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
 
@@ -206,6 +209,7 @@ GST_START_TEST (test_crf_aaf_data)
   test_crf_tstamps (h, buf, 112900, 0, 2);
   test_crf_tstamps (h, buf, 210000, 0, 2);
 
+  gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
 
@@ -227,6 +231,7 @@ GST_START_TEST (test_crf_period_zero)
 
   test_crf_tstamps (h, buf, 112, 110, 1);
 
+  gst_buffer_unref (buf);
   gst_harness_teardown (h);
 }
 
