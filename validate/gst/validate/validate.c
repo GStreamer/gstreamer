@@ -155,11 +155,11 @@ get_test_file_meta (void)
   return NULL;
 }
 
-static GList *
+static void
 create_config (const gchar * config)
 {
   GstStructure *local_vars;
-  GList *structures = NULL, *result = NULL, *tmp;
+  GList *structures = NULL, *tmp;
   gchar *config_file = NULL;
   GFile *f;
 
@@ -212,7 +212,7 @@ create_config (const gchar * config)
 
   loaded_globals = TRUE;
   gst_structure_free (local_vars);
-  return result;
+  g_list_free (structures);
 }
 
 static GList *
@@ -457,7 +457,10 @@ void
 gst_validate_deinit (void)
 {
   g_mutex_lock (&_gst_validate_registry_mutex);
-  _free_plugin_config (core_config);
+
+  g_list_free (core_config);
+  core_config = NULL;
+
   g_list_free_full (all_configs, (GDestroyNotify) gst_structure_free);
   gst_validate_deinit_runner ();
 
@@ -470,7 +473,6 @@ gst_validate_deinit (void)
   g_clear_pointer (&global_testfile, g_free);
 
   _priv_validate_override_registry_deinit ();
-  core_config = NULL;
   validate_initialized = FALSE;
   gst_validate_report_deinit ();
 

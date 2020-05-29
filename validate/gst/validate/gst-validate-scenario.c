@@ -2588,10 +2588,17 @@ _execute_wait_for_message (GstValidateScenario * scenario,
 static GstValidateExecuteActionReturn
 _execute_wait (GstValidateScenario * scenario, GstValidateAction * action)
 {
+  gboolean on_clock = FALSE;
+
+  gst_structure_get_boolean (action->structure, "on-clock", &on_clock);
   if (gst_structure_has_field (action->structure, "signal-name")) {
     return _execute_wait_for_signal (scenario, action);
   } else if (gst_structure_has_field (action->structure, "message-type")) {
     return _execute_wait_for_message (scenario, action);
+  } else if (on_clock) {
+    gst_test_clock_wait_for_next_pending_id (scenario->priv->clock, NULL);
+
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
   } else {
     return _execute_timed_wait (scenario, action);
   }
@@ -3675,6 +3682,7 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
     GstValidateAction *action;
     GstValidateActionType *action_type;
     const gchar *type;
+    gboolean on_clock = FALSE;
     GstStructure *structure = (GstStructure *) tmp->data;
 
     type = gst_structure_get_name (structure);
@@ -3714,7 +3722,8 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       goto failed;
     }
 
-    if (!g_strcmp0 (type, "crank-clock") && !priv->clock)
+    gst_structure_get_boolean (structure, "on-clock", &on_clock);
+    if ((!g_strcmp0 (type, "crank-clock") || on_clock) && !priv->clock)
       priv->clock = GST_TEST_CLOCK (gst_test_clock_new ());
 
     if (action_type->parameters) {
@@ -5870,6 +5879,14 @@ register_action_types (void)
           .types = "string",
           NULL
         },
+        {
+          .name = "on-clock",
+          .description = "Wait until the test clock get a new pending entry"
+            " see #gst_test_clock_wait_for_next_pending_id.",
+          .mandatory = FALSE,
+          .types = "boolean",
+          NULL
+        },
         {NULL}
       }),
       "Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds",
@@ -6219,6 +6236,7 @@ register_action_types (void)
           .types = "GstClockTime",
           NULL
         },
+        {NULL}
       }), "Crank the clock, possibly checking how much time was supposed to be waited on the clock"
           " and/or the clock running time after the crank."
           " Using one `crank-clock` action in a scenario implies that the scenario is driving the "
@@ -6312,6 +6330,7 @@ register_action_types (void)
               .mandatory = TRUE,
               .types = "GstClockTime",
               NULL },
+        {NULL}
       }),
       "Check current pipeline position.\n", GST_VALIDATE_ACTION_TYPE_NONE);
   /*  *INDENT-ON* */
