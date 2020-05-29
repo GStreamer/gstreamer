@@ -598,6 +598,8 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
       GST_DEBUG_FUNCPTR (gst_rippletv_transform_frame);
 
   setTable ();
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RIPPLETV_MODE);
 }
 
 static void

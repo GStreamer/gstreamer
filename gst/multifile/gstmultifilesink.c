@@ -274,6 +274,8 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
       "Sink/File",
       "Write buffers to a sequentially named set of files",
       "David Schleef <ds@schleef.org>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_MULTI_FILE_SINK_NEXT);
 }
 
 static void

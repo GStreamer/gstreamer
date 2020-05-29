@@ -361,6 +361,8 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_flac_enc_getcaps);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_flac_enc_sink_event);
   base_class->sink_query = GST_DEBUG_FUNCPTR (gst_flac_enc_sink_query);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_FLAC_ENC_QUALITY);
 }
 
 static void

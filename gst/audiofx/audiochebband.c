@@ -191,6 +191,8 @@ gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_band_setup);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND_MODE);
 }
 
 static void

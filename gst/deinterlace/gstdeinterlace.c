@@ -617,6 +617,12 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_deinterlace_change_state);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_METHODS);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_FIELDS);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_FIELD_LAYOUT);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_MODES);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_LOCKING);
 }
 
 #if 0

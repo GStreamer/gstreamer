@@ -1217,6 +1217,11 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   klass->set_parameter = GST_DEBUG_FUNCPTR (set_parameter);
 
   gst_rtsp_ext_list_init ();
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_SRC_BUFFER_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_SRC_NTP_TIME_SOURCE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_BACKCHANNEL);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_NAT_METHOD);
 }
 
 static gboolean

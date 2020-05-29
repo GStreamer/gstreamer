@@ -619,6 +619,10 @@ gst_aatv_class_init (GstAATvClass * klass)
   transform_class->transform_caps = GST_DEBUG_FUNCPTR (gst_aatv_transform_caps);
   videofilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_aatv_transform_frame);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AATV_RAIN_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_AADITHER);
+  gst_type_mark_as_plugin_api (GST_TYPE_AAFONT);
 }
 
 static void

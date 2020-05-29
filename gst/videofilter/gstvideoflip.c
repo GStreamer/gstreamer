@@ -1335,6 +1335,8 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_flip_set_info);
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_flip_transform_frame);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_FLIP_METHOD);
 }
 
 static void

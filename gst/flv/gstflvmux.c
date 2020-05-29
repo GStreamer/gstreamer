@@ -270,6 +270,8 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   GST_DEBUG_CATEGORY_INIT (flvmux_debug, "flvmux", 0, "FLV muxer");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_FLV_MUX_PAD);
 }
 
 static void

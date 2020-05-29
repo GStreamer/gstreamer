@@ -977,6 +977,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   GST_DEBUG_CATEGORY_INIT
       (rtpjitterbuffer_debug, "rtpjitterbuffer", 0, "RTP Jitter Buffer");
   GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_jitter_buffer_chain_rtcp);
+
+  gst_type_mark_as_plugin_api (RTP_TYPE_JITTER_BUFFER_MODE);
 }
 
 static void

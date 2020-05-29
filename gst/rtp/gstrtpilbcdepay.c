@@ -124,6 +124,8 @@ gst_rtp_ilbc_depay_class_init (GstRTPiLBCDepayClass * klass)
 
   gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_ilbc_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_ilbc_depay_setcaps;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ILBC_MODE);
 }
 
 static void

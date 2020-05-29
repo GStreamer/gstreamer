@@ -183,6 +183,8 @@ gst_audio_cheb_limit_class_init (GstAudioChebLimitClass * klass)
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_limit_setup);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT_MODE);
 }
 
 static void

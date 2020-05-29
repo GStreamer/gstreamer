@@ -287,6 +287,8 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
       "Tim-Philipp Müller <tim centricular net>");
   GST_DEBUG_CATEGORY_INIT (gdkpixbufoverlay_debug, "gdkpixbufoverlay", 0,
       "debug category for gdkpixbufoverlay element");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GDK_PIXBUF_POSITIONING_MODE);
 }
 
 static void

@@ -263,6 +263,10 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           "Use this joint-stereo mode.", GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE,
           GST_WAVPACK_JS_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_WAVPACK_ENC_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_WAVPACK_ENC_CORRECTION_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE);
 }
 
 static void

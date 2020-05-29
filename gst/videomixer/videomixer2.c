@@ -2235,6 +2235,8 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_VIDEO_MIXER2_PAD);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_MIXER2_BACKGROUND);
 }
 
 static void

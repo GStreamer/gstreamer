@@ -223,6 +223,8 @@ gst_rtp_h265_pay_class_init (GstRtpH265PayClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (rtph265pay_debug, "rtph265pay", 0,
       "H265 RTP Payloader");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RTP_H265_AGGREGATE_MODE);
 }
 
 static void

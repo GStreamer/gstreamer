@@ -115,6 +115,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_session_debug);
 #define GST_CAT_DEFAULT gst_rtp_session_debug
 
+#define GST_TYPE_RTP_NTP_TIME_SOURCE (gst_rtp_ntp_time_source_get_type ())
 GType
 gst_rtp_ntp_time_source_get_type (void)
 {
@@ -792,7 +793,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   g_object_class_install_property (gobject_class, PROP_NTP_TIME_SOURCE,
       g_param_spec_enum ("ntp-time-source", "NTP Time Source",
           "NTP time source for RTCP packets",
-          gst_rtp_ntp_time_source_get_type (), DEFAULT_NTP_TIME_SOURCE,
+          GST_TYPE_RTP_NTP_TIME_SOURCE, DEFAULT_NTP_TIME_SOURCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_SYNC_SEND_TIME,
@@ -842,6 +843,9 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_send_rtp);
   GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_send_rtp_list);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_RTP_NTP_TIME_SOURCE);
+  gst_type_mark_as_plugin_api (RTP_TYPE_SESSION);
+  gst_type_mark_as_plugin_api (RTP_TYPE_SOURCE);
 }
 
 static void

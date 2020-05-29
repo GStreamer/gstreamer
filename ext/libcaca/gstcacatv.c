@@ -298,6 +298,8 @@ gst_cacatv_class_init (GstCACATvClass * klass)
   videofilter_class->set_info = GST_DEBUG_FUNCPTR (gst_cacatv_setcaps);
   transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cacatv_transform_caps);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CACADITHER);
 }
 
 static void

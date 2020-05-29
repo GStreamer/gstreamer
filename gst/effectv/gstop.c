@@ -407,6 +407,8 @@ gst_optv_class_init (GstOpTVClass * klass)
   vfilter_class->transform_frame = GST_DEBUG_FUNCPTR (gst_optv_transform_frame);
 
   initPalette ();
+
+  gst_type_mark_as_plugin_api (GST_TYPE_OPTV_MODE);
 }
 
 static void

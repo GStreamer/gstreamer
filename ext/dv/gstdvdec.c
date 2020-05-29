@@ -183,6 +183,8 @@ gst_dvdec_class_init (GstDVDecClass * klass)
       "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (dvdec_debug, "dvdec", 0, "DV decoding element");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_DVDEC_QUALITY);
 }
 
 static void

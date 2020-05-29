@@ -273,6 +273,9 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
       g_param_spec_boolean ("mono", "Mono", "Enforce mono encoding",
           DEFAULT_MONO,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_LAMEMP3ENC_TARGET);
+  gst_type_mark_as_plugin_api (GST_TYPE_LAMEMP3ENC_ENCODING_ENGINE_QUALITY);
 }
 
 static void

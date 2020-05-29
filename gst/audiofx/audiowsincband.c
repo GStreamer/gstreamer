@@ -205,6 +205,9 @@ gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_wsincband_setup);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_BAND_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_BAND_WINDOW);
 }
 
 static void
