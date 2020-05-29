@@ -83,23 +83,28 @@ struct _GstGLColorConvertClass
 };
 
 /**
+ * GST_GL_COLOR_CONVERT_EXT_FORMATS: (skip)
+ *
+ */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define GST_GL_COLOR_CONVERT_EXT_FORMATS \
+    ", BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE"
+#else
+#define GST_GL_COLOR_CONVERT_EXT_FORMATS \
+    ", P010_10BE, P012_BE, P016_BE, Y212_BE, Y412_BE"
+#endif
+
+/**
  * GST_GL_COLOR_CONVERT_FORMATS:
  *
  * The currently supported formats that can be converted
  */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define COLOR_CONVERT_EXT_FORMATS \
-    ", BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE"
-#else
-#define COLOR_CONVERT_EXT_FORMATS \
-    ", P010_10BE, P012_BE, P016_BE, Y212_BE, Y412_BE"
-#endif
-
 #define GST_GL_COLOR_CONVERT_FORMATS "{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
                                "Y41B, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, AYUV, " \
                                "VUYA, Y410, GRAY8, GRAY16_LE, GRAY16_BE, " \
-                               "RGB16, BGR16, ARGB64 " COLOR_CONVERT_EXT_FORMATS "}"
+                               "RGB16, BGR16, ARGB64 " \
+                               GST_GL_COLOR_CONVERT_EXT_FORMATS "}"
 
 /**
  * GST_GL_COLOR_CONVERT_VIDEO_CAPS:
