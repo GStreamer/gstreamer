@@ -2712,17 +2712,22 @@ gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
     /* Frame Cropping */
     if ((GST_VAAPI_ENCODER_WIDTH (encoder) & 15) ||
         (GST_VAAPI_ENCODER_HEIGHT (encoder) & 15)) {
+      /* 6.1, Table 6-1 */
       static const guint SubWidthC[] = { 1, 2, 2, 1 };
       static const guint SubHeightC[] = { 1, 2, 1, 1 };
+      guint index = gst_vaapi_utils_h265_get_chroma_format_idc
+          (gst_vaapi_video_format_get_chroma_type (GST_VIDEO_INFO_FORMAT
+              (GST_VAAPI_ENCODER_VIDEO_INFO (encoder))));
+
       encoder->conformance_window_flag = 1;
       encoder->conf_win_left_offset = 0;
       encoder->conf_win_right_offset =
           (encoder->luma_width -
-          GST_VAAPI_ENCODER_WIDTH (encoder)) / SubWidthC[1];
+          GST_VAAPI_ENCODER_WIDTH (encoder)) / SubWidthC[index];
       encoder->conf_win_top_offset = 0;
       encoder->conf_win_bottom_offset =
           (encoder->luma_height -
-          GST_VAAPI_ENCODER_HEIGHT (encoder)) / SubHeightC[1];
+          GST_VAAPI_ENCODER_HEIGHT (encoder)) / SubHeightC[index];
     }
   }
 
