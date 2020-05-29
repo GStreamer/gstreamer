@@ -55,6 +55,10 @@ GST_DEBUG_CATEGORY (gstvalidate_debug);
 static GMutex _gst_validate_registry_mutex;
 static GstRegistry *_gst_validate_registry_default = NULL;
 
+G_LOCK_DEFINE_STATIC (all_configs_lock);
+static GList *all_configs = NULL;
+static gboolean got_configs = FALSE;
+
 static GList *core_config = NULL;
 static GList *testfile_structs = NULL;
 static gchar *global_testfile = NULL;
@@ -97,7 +101,7 @@ gst_validate_registry_get (void)
 static void
 _free_plugin_config (gpointer data)
 {
-  g_list_free_full (data, (GDestroyNotify) gst_structure_free);
+  g_list_free (data);
 }
 
 /* Copied from gststructure.c to avoid assertion */
@@ -151,55 +155,13 @@ get_test_file_meta (void)
   return NULL;
 }
 
-/* Takes ownership of @structures */
 static GList *
-get_config_from_structures (GList * structures, GstStructure * local_vars,
-    const gchar * suffix)
-{
-  GList *tmp, *result = NULL;
-
-  for (tmp = structures; tmp; tmp = tmp->next) {
-    GstStructure *structure = tmp->data;
-
-    if (gst_structure_has_name (structure, suffix)) {
-      if (gst_structure_has_field (structure, "set-vars")) {
-        gst_structure_remove_field (structure, "set-vars");
-        if (!local_vars) {
-          GST_WARNING ("Unused `set-vars` config: %" GST_PTR_FORMAT, structure);
-          continue;
-        }
-        gst_structure_foreach (structure,
-            (GstStructureForeachFunc) _set_vars_func, local_vars);
-        gst_structure_free (structure);
-      } else {
-        gst_validate_structure_resolve_variables (NULL, structure, local_vars);
-        result = g_list_append (result, structure);
-      }
-    } else {
-      if (!loaded_globals && gst_structure_has_name (structure, "set-globals")) {
-        gst_validate_structure_resolve_variables (NULL, structure, local_vars);
-        gst_validate_set_globals (structure);
-      }
-      gst_structure_free (structure);
-    }
-  }
-  g_list_free (structures);
-
-  return result;
-}
-
-static GList *
-create_config (const gchar * config, const gchar * suffix)
+create_config (const gchar * config)
 {
   GstStructure *local_vars;
-  GList *structures = NULL, *result = NULL;
+  GList *structures = NULL, *result = NULL, *tmp;
   gchar *config_file = NULL;
   GFile *f;
-
-  if (!suffix) {
-    GST_WARNING ("suffix is NULL");
-    return NULL;
-  }
 
   local_vars = gst_structure_new_empty ("vars");
   f = g_file_new_for_path (config);
@@ -218,9 +180,7 @@ create_config (const gchar * config, const gchar * suffix)
       for (i = 0; i < gst_caps_get_size (confs); i++) {
         GstStructure *structure = gst_caps_get_structure (confs, i);
 
-        if (gst_structure_has_name (structure, suffix))
-          structures =
-              g_list_append (structures, gst_structure_copy (structure));
+        structures = g_list_append (structures, gst_structure_copy (structure));
       }
 
       gst_caps_unref (confs);
@@ -231,7 +191,24 @@ create_config (const gchar * config, const gchar * suffix)
       config_file);
   g_free (config_file);
 
-  result = get_config_from_structures (structures, local_vars, suffix);
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    GstStructure *structure = tmp->data;
+
+    if (gst_structure_has_field (structure, "set-vars")) {
+      gst_structure_remove_field (structure, "set-vars");
+      gst_structure_foreach (structure,
+          (GstStructureForeachFunc) _set_vars_func, local_vars);
+      gst_structure_free (structure);
+    } else if (!loaded_globals
+        && gst_structure_has_name (structure, "set-globals")) {
+      gst_validate_structure_resolve_variables (NULL, structure, local_vars);
+      gst_validate_set_globals (structure);
+      gst_structure_free (structure);
+    } else {
+      gst_validate_structure_resolve_variables (NULL, structure, local_vars);
+      all_configs = g_list_append (all_configs, structure);
+    }
+  }
 
   loaded_globals = TRUE;
   gst_structure_free (local_vars);
@@ -281,14 +258,6 @@ get_structures_from_array_in_meta (const gchar * fieldname)
   return res;
 }
 
-static GList *
-gst_validate_get_testfile_configs (const gchar * suffix)
-{
-  GList *res = get_structures_from_array_in_meta ("configs");
-
-  return get_config_from_structures (res, NULL, suffix);
-}
-
 /**
  * gst_validate_plugin_get_config:
  * @plugin: a #GstPlugin, or #NULL
@@ -327,37 +296,56 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
   return plugin_conf;
 }
 
-GList *
-gst_validate_get_config (const gchar * structname)
+static void
+gst_validate_ensure_all_configs (void)
 {
-
-  const gchar *config;
   GStrv tmp;
-  guint i;
-  GList *testfile_configs = NULL, *configs = NULL;
+  gint i;
+  const gchar *config;
 
+  if (got_configs)
+    return;
 
-  testfile_configs = gst_validate_get_testfile_configs (structname);
+  got_configs = TRUE;
+  all_configs = get_structures_from_array_in_meta ("configs");
   config = g_getenv ("GST_VALIDATE_CONFIG");
-  if (!config) {
-    return testfile_configs;
-  }
+  if (!config)
+    return;
 
   tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
   for (i = 0; tmp[i] != NULL; i++) {
-    GList *l;
-
     if (tmp[i][0] == '\0')
       continue;
 
-    l = create_config (tmp[i], structname);
-    if (l)
-      configs = g_list_concat (configs, l);
+    create_config (tmp[i]);
   }
   g_strfreev (tmp);
-  configs = g_list_concat (configs, testfile_configs);
+}
 
-  return configs;
+GList *
+gst_validate_get_config (const gchar * structname)
+{
+  GList *tmp, *res = NULL;
+
+  G_LOCK (all_configs_lock);
+  gst_validate_ensure_all_configs ();
+
+  for (tmp = all_configs; tmp; tmp = tmp->next) {
+    gint n_usages = 0;
+
+    if (structname && !gst_structure_has_name (tmp->data, structname)) {
+      continue;
+    } else if (structname) {
+      gst_structure_get (tmp->data, "__n_usages__", G_TYPE_INT, &n_usages,
+          NULL);
+      n_usages++;
+      gst_structure_set (tmp->data, "__n_usages__", G_TYPE_INT, n_usages, NULL);
+    }
+    res = g_list_append (res, tmp->data);
+  }
+  G_UNLOCK (all_configs_lock);
+
+  return res;
 }
 
 static void
@@ -470,6 +458,7 @@ gst_validate_deinit (void)
 {
   g_mutex_lock (&_gst_validate_registry_mutex);
   _free_plugin_config (core_config);
+  g_list_free_full (all_configs, (GDestroyNotify) gst_structure_free);
   gst_validate_deinit_runner ();
 
   gst_validate_scenario_deinit ();
@@ -554,6 +543,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   const gchar *tool;
   GstStructure *res = NULL;
 
+  g_assert (!got_configs);
   if (global_testfile)
     gst_validate_abort ("A testfile was already loaded: %s", global_testfile);
 

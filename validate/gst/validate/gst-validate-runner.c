@@ -892,7 +892,7 @@ int
 gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
 {
   gint ret = 0;
-  GList *tmp;
+  GList *tmp, *configs;
 
   g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner), 1);
 
@@ -908,19 +908,28 @@ gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
     }
   }
 
+  configs = gst_validate_get_config (NULL);
+  for (tmp = configs; tmp; tmp = tmp->next) {
+    if (!gst_structure_has_field (tmp->data, "__n_usages__")) {
+      gst_validate_error_structure (tmp->data,
+          "Unused config: '%" GST_PTR_FORMAT "'", tmp->data);
+    }
+  }
+  g_list_free (configs);
+
   for (tmp = runner->priv->expected_issues; tmp; tmp = tmp->next) {
     GstStructure *known_issue = tmp->data;
     gboolean is_sometimes;
 
     if (!gst_structure_get_boolean (known_issue, "sometimes", &is_sometimes)
         || !is_sometimes) {
-      GstStructure *tmp = gst_structure_copy (known_issue);
-      gst_structure_remove_fields (tmp, "__debug__", "__lineno__",
+      GstStructure *tmpstruct = gst_structure_copy (known_issue);
+      gst_structure_remove_fields (tmpstruct, "__debug__", "__lineno__",
           "__filename__", NULL);
       /* Ideally we should report an issue here.. but we do not have a reporter */
       gst_validate_error_structure (known_issue,
-          "Expected issue didn't happen: '%" GST_PTR_FORMAT "'", tmp);
-      gst_structure_free (tmp);
+          "Expected issue didn't happen: '%" GST_PTR_FORMAT "'", tmpstruct);
+      gst_structure_free (tmpstruct);
     }
   }
 
