@@ -33,9 +33,9 @@ G_BEGIN_DECLS
 #define GST_IS_GL_WINDOW_EAGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WINDOW_EAGL))
 #define GST_GL_WINDOW_EAGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WINDOW_EAGL, GstGLWindowEaglClass))
 
-#define GS_GL_WINDOW_EAGL_VIEW(obj) \
+#define GST_GL_WINDOW_EAGL_VIEW(obj) \
     ((__bridge UIView *)(obj->priv->view))
-#define GS_GL_WINDOW_EAGL_QUEUE(obj) \
+#define GST_GL_WINDOW_EAGL_QUEUE(obj) \
     ((__bridge dispatch_queue_t)(obj->priv->gl_queue))
 
 typedef struct _GstGLWindowEagl        GstGLWindowEagl;

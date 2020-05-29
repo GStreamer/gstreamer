@@ -33,9 +33,9 @@ G_BEGIN_DECLS
 #define GST_IS_GL_CONTEXT_EAGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_CONTEXT_EAGL))
 #define GST_GL_CONTEXT_EAGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_CONTEXT_EAGL, GstGLContextEaglClass))
 
-#define GS_GL_CONTEXT_EAGL_CONTEXT(obj) \
+#define GST_GL_CONTEXT_EAGL_CONTEXT(obj) \
     ((__bridge EAGLContext *)(obj->priv->eagl_context))
-#define GS_GL_CONTEXT_EAGL_LAYER(obj) \
+#define GST_GL_CONTEXT_EAGL_LAYER(obj) \
     ((__bridge CAEAGLLayer *)(obj->priv->eagl_layer))
 
 typedef struct _GstGLContextEagl        GstGLContextEagl;

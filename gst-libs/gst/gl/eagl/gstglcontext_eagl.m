@@ -108,7 +108,7 @@ gst_gl_context_eagl_resize (GstGLContextEagl * eagl_context)
   int width, height;
 
   glBindRenderbuffer (GL_RENDERBUFFER, eagl_context->priv->color_renderbuffer);
-  [GS_GL_CONTEXT_EAGL_CONTEXT(eagl_context) renderbufferStorage:GL_RENDERBUFFER fromDrawable:GS_GL_CONTEXT_EAGL_LAYER(eagl_context)];
+  [GST_GL_CONTEXT_EAGL_CONTEXT(eagl_context) renderbufferStorage:GL_RENDERBUFFER fromDrawable:GST_GL_CONTEXT_EAGL_LAYER(eagl_context)];
   glGetRenderbufferParameteriv (GL_RENDERBUFFER,
       GL_RENDERBUFFER_WIDTH, &width);
   glGetRenderbufferParameteriv (GL_RENDERBUFFER,
@@ -128,7 +128,7 @@ gst_gl_context_eagl_release_layer (GstGLContext * context)
   if (context_eagl->priv->eagl_layer) {
     gst_gl_context_eagl_activate (context, TRUE);
 
-    [GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl) renderbufferStorage: GL_RENDERBUFFER fromDrawable:nil];
+    [GST_GL_CONTEXT_EAGL_CONTEXT(context_eagl) renderbufferStorage: GL_RENDERBUFFER fromDrawable:nil];
 
     glDeleteFramebuffers (1, &context_eagl->priv->framebuffer);
     context_eagl->priv->framebuffer = 0;
@@ -172,7 +172,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
     gst_gl_context_eagl_release_layer (context);
 
   eagl_layer = (CAEAGLLayer *)[window_handle layer];
-  [EAGLContext setCurrentContext:GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl)];
+  [EAGLContext setCurrentContext:GST_GL_CONTEXT_EAGL_CONTEXT(context_eagl)];
 
   /* Allocate framebuffer */
   glGenFramebuffers (1, &framebuffer);
@@ -180,7 +180,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
   /* Allocate color render buffer */
   glGenRenderbuffers (1, &color_renderbuffer);
   glBindRenderbuffer (GL_RENDERBUFFER, color_renderbuffer);
-  [GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl) renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
+  [GST_GL_CONTEXT_EAGL_CONTEXT(context_eagl) renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
   glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_RENDERBUFFER, color_renderbuffer);
   /* Get renderbuffer width/height */
@@ -340,7 +340,7 @@ gst_gl_context_eagl_swap_buffers (GstGLContext * context)
   if (!context_eagl->priv->eagl_layer)
     return;
 
-  [GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl) presentRenderbuffer:GL_RENDERBUFFER];
+  [GST_GL_CONTEXT_EAGL_CONTEXT(context_eagl) presentRenderbuffer:GL_RENDERBUFFER];
 }
 
 static gboolean
@@ -359,7 +359,7 @@ gst_gl_context_eagl_activate (GstGLContext * context, gboolean activate)
     }
 
     GST_DEBUG ("Attaching context to thread %p", g_thread_self ());
-    if ([EAGLContext setCurrentContext:GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl)] == NO) {
+    if ([EAGLContext setCurrentContext:GST_GL_CONTEXT_EAGL_CONTEXT(context_eagl)] == NO) {
       GST_ERROR ("Couldn't make context current");
       return FALSE;
     }
