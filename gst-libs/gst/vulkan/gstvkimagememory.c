@@ -549,6 +549,7 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
   guint index;
 
   g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
+  g_return_if_fail (image == view->image);
 
   g_mutex_lock (&image->lock);
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "image %p removing view %p",
@@ -561,8 +562,9 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
     g_warning ("GstVulkanImageMemory:%p attempt to remove a view %p "
         "that we do not own", image, view);
   }
-  gst_clear_mini_object ((GstMiniObject **) & view->image);
+  view->image = NULL;
   g_mutex_unlock (&image->lock);
+  gst_memory_unref ((GstMemory *) image);
 }
 
 /**
