@@ -414,7 +414,7 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "freeing image memory:%p "
       "id:%" G_GUINT64_FORMAT, mem, (guint64) mem->image);
 
-  g_warn_if_fail (mem->outstanding_views > 0);
+  g_warn_if_fail (mem->outstanding_views->len == 0);
   g_ptr_array_unref (mem->outstanding_views);
 
   g_ptr_array_foreach (mem->views, (GFunc) _free_view, NULL);
