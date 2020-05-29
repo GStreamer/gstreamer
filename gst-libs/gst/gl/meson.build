@@ -809,13 +809,15 @@ if host_system == 'ios' and need_platform_eagl != 'no' and need_win_eagl != 'no'
   foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : false)
   corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : false)
   coregraphics_dep = dependency('appleframeworks', modules : ['CoreGraphics'], required : false)
+  quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : false)
   uikit_dep = dependency('appleframeworks', modules : ['UIkit'], required : false)
 
-  if foundation_dep.found() and corefoundation_dep.found() and coregraphics_dep.found() and uikit_dep.found()
+  if foundation_dep.found() and corefoundation_dep.found() and coregraphics_dep.found() and quartzcore_dep.found() and uikit_dep.found()
     gl_platform_deps += [
       corefoundation_dep,
       foundation_dep,
       coregraphics_dep,
+      quartzcore_dep,
       uikit_dep,
     ]
     gl_sources += [

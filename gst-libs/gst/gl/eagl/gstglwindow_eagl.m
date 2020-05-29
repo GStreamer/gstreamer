@@ -28,9 +28,15 @@
 
 #include "gstglwindow_eagl.h"
 #include "gstglcontext_eagl.h"
+#include "gstglios_utils.h"
 
 #define GST_CAT_DEFAULT gst_gl_window_eagl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
+#define GST_GL_WINDOW_EAGL_LAYER(obj) \
+    ((__bridge CAEAGLLayer *)(obj->priv->layer))
+#define GST_GL_WINDOW_EAGL_QUEUE(obj) \
+    ((__bridge dispatch_queue_t)(obj->priv->gl_queue))
 
 static void gst_gl_window_eagl_finalize (GObject * object);
 
@@ -46,10 +52,15 @@ static void gst_gl_window_eagl_send_message_async (GstGLWindow * window,
 
 struct _GstGLWindowEaglPrivate
 {
-  gpointer view;
+  gboolean pending_set_window_handle;
+  gpointer external_view;
+  gpointer internal_view;
+  gpointer layer;
   gint window_width, window_height;
   gint preferred_width, preferred_height;
   gpointer gl_queue;
+  GMutex draw_lock;
+  GCond cond;
 };
 
 #define DEBUG_INIT \
@@ -85,13 +96,22 @@ gst_gl_window_eagl_init (GstGLWindowEagl * window)
   window->priv = gst_gl_window_eagl_get_instance_private (window);
   window->priv->gl_queue =
       (__bridge_retained gpointer)dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL);
+  g_mutex_init (&window->priv->draw_lock);
+  g_cond_init (&window->priv->cond);
 }
 
 static void
 gst_gl_window_eagl_finalize (GObject * object)
 {
   GstGLWindowEagl *window = GST_GL_WINDOW_EAGL (object);
+
+  if (window->priv->layer)
+    CFRelease (window->priv->layer);
+  window->priv->layer = NULL;
   CFRelease(window->priv->gl_queue);
+  g_mutex_clear (&window->priv->draw_lock);
+  g_cond_clear (&window->priv->cond);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -117,23 +137,89 @@ gst_gl_window_eagl_get_display (GstGLWindow * window)
 static guintptr
 gst_gl_window_eagl_get_window_handle (GstGLWindow * window)
 {
-  return (guintptr) GST_GL_WINDOW_EAGL (window)->priv->view;
+  return (guintptr) GST_GL_WINDOW_EAGL (window)->priv->internal_view;
+}
+
+static void
+_create_gl_window (GstGLWindowEagl * window_eagl)
+{
+  GstGLWindowEaglPrivate *priv = window_eagl->priv;
+  UIView *external_view;
+  CGRect rect;
+  GstGLUIView *view;
+
+  g_mutex_lock (&priv->draw_lock);
+
+  external_view = (__bridge UIView *) priv->external_view;
+  rect = CGRectMake (0, 0, external_view.frame.size.width, external_view.frame.size.height);
+
+  window_eagl->priv->window_width = rect.size.width;
+  window_eagl->priv->window_height = rect.size.height;
+
+  view = [[GstGLUIView alloc] initWithFrame:rect];
+  [view setGstWindow:window_eagl];
+  view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  view.contentMode = UIViewContentModeRedraw;
+
+  priv->internal_view = (__bridge_retained gpointer) view;
+  [external_view addSubview:view];
+  priv->internal_view = (__bridge_retained gpointer) view;
+  priv->layer = (__bridge_retained gpointer) [view layer];
+
+  NSDictionary * dict = [NSDictionary dictionaryWithObjectsAndKeys:
+      [NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking,
+      kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
+
+  [[view layer] setOpaque:YES];
+  [(CAEAGLLayer *) [view layer] setDrawableProperties:dict];
+
+  g_cond_broadcast (&priv->cond);
+  g_mutex_unlock (&priv->draw_lock);
+}
+
+static void
+ensure_window_handle_is_set_unlocked (GstGLWindowEagl * window_eagl)
+{
+  GstGLContext *context;
+
+  if (!window_eagl->priv->pending_set_window_handle)
+    return;
+
+  context = gst_gl_window_get_context (GST_GL_WINDOW (window_eagl));
+  if (!context) {
+    g_critical ("Window does not have a GstGLContext attached!. "
+        "Aborting set window handle.");
+    g_mutex_unlock (&window_eagl->priv->draw_lock);
+    return;
+  }
+
+  while (!window_eagl->priv->internal_view)
+    g_cond_wait (&window_eagl->priv->cond, &window_eagl->priv->draw_lock);
+
+  GST_INFO_OBJECT (context, "handle set, updating layer");
+  gst_gl_context_eagl_update_layer (context, window_eagl->priv->layer);
+  gst_object_unref (context);
+
+  window_eagl->priv->pending_set_window_handle = FALSE;
 }
 
 static void
 gst_gl_window_eagl_set_window_handle (GstGLWindow * window, guintptr handle)
 {
   GstGLWindowEagl *window_eagl;
-  GstGLContext *context;
 
   window_eagl = GST_GL_WINDOW_EAGL (window);
-  context = gst_gl_window_get_context (window);
 
-  window_eagl->priv->view = (gpointer)handle;
-  GST_INFO_OBJECT (context, "handle set, updating layer");
-  gst_gl_context_eagl_update_layer (context);
+  g_mutex_lock (&window_eagl->priv->draw_lock);
+  if (window_eagl->priv->external_view)
+    CFRelease (window_eagl->priv->external_view);
+  window_eagl->priv->external_view = (gpointer)handle;
+  window_eagl->priv->pending_set_window_handle = TRUE;
+  g_mutex_unlock (&window_eagl->priv->draw_lock);
 
-  gst_object_unref (context);
+  /* XXX: Maybe we need an async set_window_handle? */
+  _gl_invoke_on_main ((GstGLWindowEaglFunc) _create_gl_window,
+      gst_object_ref (window_eagl), gst_object_unref);
 }
 
 static void
@@ -180,20 +266,21 @@ draw_cb (gpointer data)
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEagl *eagl_context = GST_GL_CONTEXT_EAGL (context);
 
-  if (window_eagl->priv->view) {
+  g_mutex_lock (&window_eagl->priv->draw_lock);
+
+  ensure_window_handle_is_set_unlocked (window_eagl);
+
+  if (window_eagl->priv->internal_view) {
     CGSize size;
     CAEAGLLayer *eagl_layer;
 
-    eagl_layer = (CAEAGLLayer *)[GST_GL_WINDOW_EAGL_VIEW(window_eagl) layer];
+    eagl_layer = GST_GL_WINDOW_EAGL_LAYER (window_eagl);
     size = eagl_layer.frame.size;
 
-    size = CGSizeMake (size.width * eagl_layer.contentsScale,  size.height * eagl_layer.contentsScale);
+    size = CGSizeMake (size.width * eagl_layer.contentsScale, size.height * eagl_layer.contentsScale);
 
     if (window->queue_resize || window_eagl->priv->window_width != size.width ||
         window_eagl->priv->window_height != size.height) {
-
-      window_eagl->priv->window_width = size.width;
-      window_eagl->priv->window_height = size.height;
 
       gst_gl_context_eagl_resize (eagl_context);
 
@@ -211,6 +298,8 @@ draw_cb (gpointer data)
 
   gst_gl_context_eagl_finish_draw (eagl_context);
 
+  g_mutex_unlock (&window_eagl->priv->draw_lock);
+
   gst_object_unref (context);
 }
 
@@ -218,4 +307,60 @@ static void
 gst_gl_window_eagl_draw (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
+}
+
+gpointer
+gst_gl_window_eagl_get_layer (GstGLWindowEagl * window_eagl)
+{
+  gpointer layer;
+
+  g_mutex_lock (&window_eagl->priv->draw_lock);
+  if (window_eagl->priv->layer)
+    CFRetain (window_eagl->priv->layer);
+  layer = window_eagl->priv->layer;
+  g_mutex_unlock (&window_eagl->priv->draw_lock);
+
+  return layer;
+}
+
+@implementation GstGLUIView {
+    GstGLWindowEagl * window_eagl;
+};
+
++(Class) layerClass
+{
+  return [CAEAGLLayer class];
+}
+
+-(void) setGstWindow:(GstGLWindowEagl *) window
+{
+  window_eagl = window;
+}
+
+-(void) layoutSubViews
+{
+  g_mutex_lock (&window_eagl->priv->draw_lock);
+  [super layoutSubviews];
+  CGSize rect = self.bounds.size;
+  self->window_eagl->priv->window_width = rect.width;
+  self->window_eagl->priv->window_height = rect.height;
+  g_mutex_unlock (&window_eagl->priv->draw_lock);
+}
+
+@end
+
+void
+_gl_invoke_on_main (GstGLWindowEaglFunc func, gpointer data, GDestroyNotify notify)
+{
+  if ([NSThread isMainThread]) {
+    func (data);
+    if (notify)
+      notify (data);
+  } else {
+    dispatch_async (dispatch_get_main_queue (), ^{
+      func (data);
+      if (notify)
+        notify (data);
+    });
+  }
 }
