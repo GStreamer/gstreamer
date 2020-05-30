@@ -1204,6 +1204,14 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   gst_element_class_add_pad_template (element_class, sink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
+
+  gst_type_mark_as_plugin_api (GST_X264_ENC_ANALYSE_TYPE);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_FRAME_PACKING_TYPE);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_ME_TYPE);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_PASS_TYPE);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_PSY_TUNE_TYPE);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_SPEED_PRESET_TYPE);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_TUNE_TYPE);
 }
 
 static void

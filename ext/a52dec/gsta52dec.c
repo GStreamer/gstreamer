@@ -217,6 +217,8 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 #endif
 
   GST_LOG ("CPU flags: a52=%08x, orc=%08x", klass->a52_cpuflags, cpuflags);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_A52DEC_MODE);
 }
 
 static void

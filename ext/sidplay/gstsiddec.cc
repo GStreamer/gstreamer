@@ -202,6 +202,9 @@ gst_siddec_class_init (GstSidDecClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_siddec_debug, "siddec", 0,
       "C64 sid song player");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SID_CLOCK);
+  gst_type_mark_as_plugin_api (GST_TYPE_SID_MEMORY);
 }
 
 static void
