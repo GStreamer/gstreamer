@@ -820,6 +820,9 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
       "Jan Schmidt <jan@centricular.com>");
 
   gstbin_class->handle_message = gst_rtsp_client_sink_handle_message;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_CLIENT_SINK_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_CLIENT_SINK_NTP_TIME_SOURCE);
 }
 
 static void
