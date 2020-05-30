@@ -37,6 +37,8 @@
 #include "../../gst/validate/gst-validate-utils.h"
 
 typedef void (*Uint64Formatter) (gchar * dest, guint64 time);
+G_LOCK_DEFINE (checksums_as_id_lock);
+static GstStructure *checksums_as_id = NULL;
 
 #define CONSTIFY(strv) ((const gchar * const *) strv)
 
@@ -226,7 +228,7 @@ buffer_get_meta_string (GstBuffer * buffer)
 }
 
 gchar *
-validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum,
+validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
     GstStructure * logged_fields_struct, GstStructure * ignored_fields_struct)
 {
   gchar *flags_str, *meta_str, *buffer_str;
@@ -241,15 +243,35 @@ validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum,
       ignored_fields_struct ?
       gst_validate_utils_get_strv (ignored_fields_struct, "buffer") : NULL;
 
-  if (add_checksum || (logged_fields
+  if (checksum_type != CHECKSUM_TYPE_NONE || (logged_fields
           && g_strv_contains (CONSTIFY (logged_fields), "checksum"))) {
     if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
       GST_ERROR ("Buffer could not be mapped.");
     } else {
-      sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
+      sum =
+          g_compute_checksum_for_data (checksum_type ==
+          CHECKSUM_TYPE_AS_ID ? G_CHECKSUM_SHA1 : checksum_type, map.data,
+          map.size);
       gst_buffer_unmap (buffer, &map);
 
-      buffer_parts[buffer_parts_index++] = g_strdup_printf ("checksum=%s", sum);
+      if (checksum_type == CHECKSUM_TYPE_AS_ID) {
+        gint id;
+
+        G_LOCK (checksums_as_id_lock);
+        if (!checksums_as_id)
+          checksums_as_id = gst_structure_new_empty ("checksums-id");
+        if (!gst_structure_get_int (checksums_as_id, sum, &id)) {
+          id = gst_structure_n_fields (checksums_as_id);
+          gst_structure_set (checksums_as_id, sum, G_TYPE_INT, id, NULL);
+        }
+        G_UNLOCK (checksums_as_id_lock);
+
+        buffer_parts[buffer_parts_index++] =
+            g_strdup_printf ("content-id=%d", id);
+      } else {
+        buffer_parts[buffer_parts_index++] =
+            g_strdup_printf ("checksum=%s", sum);
+      }
       g_free (sum);
     }
   }

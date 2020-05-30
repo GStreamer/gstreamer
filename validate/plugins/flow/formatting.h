@@ -25,6 +25,9 @@
 
 #include <gst/gst.h>
 
+#define CHECKSUM_TYPE_NONE -2
+#define CHECKSUM_TYPE_AS_ID -1
+
 void format_time(gchar* dest_str, guint64 time);
 
 gchar* validate_flow_format_segment(const GstSegment* segment, gchar** logged_fields, gchar** ignored_fields);

@@ -48,13 +48,35 @@ typedef enum _ValidateFlowMode
   VALIDATE_FLOW_MODE_WRITING_ACTUAL_RESULTS
 } ValidateFlowMode;
 
+#define GST_TYPE_VALIDATE_FLOW_CHECKSUM_TYPE (validate_flow_checksum_type_get_type ())
+static GType
+validate_flow_checksum_type_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {CHECKSUM_TYPE_NONE, "NONE", "none"},
+      {CHECKSUM_TYPE_AS_ID, "AS-ID", "as-id"},
+      {G_CHECKSUM_MD5, "MD5", "md5"},
+      {G_CHECKSUM_SHA1, "SHA-1", "sha1"},
+      {G_CHECKSUM_SHA256, "SHA-256", "sha256"},
+      {G_CHECKSUM_SHA512, "SHA-512", "sha512"},
+      {0, NULL, NULL},
+    };
+
+    gtype = g_enum_register_static ("ValidateFlowChecksumType", values);
+  }
+  return gtype;
+}
+
 struct _ValidateFlowOverride
 {
   GstValidateOverride parent;
 
   const gchar *pad_name;
   gboolean record_buffers;
-  gboolean buffers_checksum;
+  gint checksum_type;
   gchar *expectations_dir;
   gchar *actual_results_dir;
   gboolean error_writing_file;
@@ -186,7 +208,7 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   if (flow->error_writing_file || !flow->record_buffers)
     return;
 
-  buffer_str = validate_flow_format_buffer (buffer, flow->buffers_checksum,
+  buffer_str = validate_flow_format_buffer (buffer, flow->checksum_type,
       flow->logged_fields, flow->ignored_fields);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
@@ -220,6 +242,7 @@ validate_flow_override_new (GstStructure * config)
 {
   ValidateFlowOverride *flow;
   GstValidateOverride *override;
+  gboolean use_checksum = FALSE;
   gchar *ignored_fields = NULL, *logged_fields;
   const GValue *tmpval;
 
@@ -240,11 +263,25 @@ validate_flow_override_new (GstStructure * config)
   flow->record_buffers = FALSE;
   gst_structure_get_boolean (config, "record-buffers", &flow->record_buffers);
 
-  flow->buffers_checksum = FALSE;
-  gst_structure_get_boolean (config, "buffers-checksum",
-      &flow->buffers_checksum);
+  flow->checksum_type = CHECKSUM_TYPE_NONE;
+  gst_structure_get_boolean (config, "buffers-checksum", &use_checksum);
 
-  if (flow->buffers_checksum)
+  if (use_checksum) {
+    flow->checksum_type = G_CHECKSUM_SHA1;
+  } else {
+    const gchar *checksum_type =
+        gst_structure_get_string (config, "buffers-checksum");
+
+    if (checksum_type) {
+      if (!gst_validate_utils_enum_from_str
+          (GST_TYPE_VALIDATE_FLOW_CHECKSUM_TYPE, checksum_type,
+              (guint *) & flow->checksum_type))
+        gst_validate_error_structure (config,
+            "Invalid value for buffers-checksum: %s", checksum_type);
+    }
+  }
+
+  if (flow->checksum_type != CHECKSUM_TYPE_NONE)
     flow->record_buffers = TRUE;
 
   /* caps-properties: Caps events can include many dfferent properties, but

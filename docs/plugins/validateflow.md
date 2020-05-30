@@ -126,8 +126,17 @@ several overrides and listening to different pads with different settings.
  * `pad`: Required. Name of the pad that will be monitored.
  * `record-buffers`: Default: false. Whether buffers will be logged. By default
    only events are logged.
- * `buffers-checksum`: Default: false. Whether a checkum of the buffer data is
-   logged. Implies `record-buffers`.
+ * `buffers-checksum`: Default: 'none'. Define the type of checksums to be used
+   valid values are:
+       - none: No checksum recorded
+       - as-id: Record checksum as 'ids' IDs are incremented on each new checksum
+         passed in
+       - md5: md5 checksum
+       - sha1: sha1 checksum
+       - sha256: sha256 checksum
+       - sha512: sha512 checksum
+    Note that for backward compatibility reasons, this can be passed as a boolean
+    and it will default to 'sha1' if true, 'none' if false.
  * `ignored-fields`: Default: `"stream-start={ stream-id }"` (as they are often
    non reproducible). Key with a serialized GstValueList(str) of fields to not
    record.
