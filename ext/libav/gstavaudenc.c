@@ -289,7 +289,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
     if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_EXPERIMENTAL) &&
         ffmpegaudenc->context->strict_std_compliance !=
-        GST_FFMPEG_EXPERIMENTAL) {
+        FF_COMPLIANCE_EXPERIMENTAL) {
       GST_ELEMENT_ERROR (ffmpegaudenc, LIBRARY, SETTINGS,
           ("Codec is experimental, but settings don't allow encoders to "
               "produce output of experimental quality"),

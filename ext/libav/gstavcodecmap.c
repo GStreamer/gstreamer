@@ -66,28 +66,6 @@ static const struct
   AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
 };
 
-GType
-gst_ffmpeg_compliance_get_type (void)
-{
-  static GType ffmpeg_compliance_type = 0;
-  static const GEnumValue compliance_types[] = {
-    {GST_FFMPEG_VERY_STRICT, "Strictly conform to older spec",
-        "verystrict"},
-    {GST_FFMPEG_STRICT, "Strictly conform to current spec", "strict"},
-    {GST_FFMPEG_NORMAL, "Normal behavior", "normal"},
-    {GST_FFMPEG_UNOFFICIAL, "Allow unofficial extensions", "unofficial"},
-    {GST_FFMPEG_EXPERIMENTAL, "Allow nonstandardized experimental things",
-        "experimental"},
-    {0, NULL, NULL}
-  };
-
-  if (!ffmpeg_compliance_type) {
-    ffmpeg_compliance_type =
-        g_enum_register_static ("GstFFMpegCompliance", compliance_types);
-  }
-  return ffmpeg_compliance_type;
-}
-
 static guint64
 gst_ffmpeg_channel_positions_to_layout (GstAudioChannelPosition * pos,
     gint channels)

@@ -26,48 +26,6 @@
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 
-/**
- * GstFFMpegCompliance:
- * @GST_FFMPEG_VERY_STRICT: Strictly conform to an older
- * more strict version of the spec or reference software
- * @GST_FFMPEG_STRICT: Strictly conform to all the things
- * in the spec no matter what consequences.
- * @GST_FFMPEG_NORMAL:
- * @GST_FFMPEG_UNOFFICIAL: Allow unofficial extensions
- * @GST_FFMPEG_EXPERIMENTAL: Allow nonstandardized
- * experimental things.
- *
- * This setting instructs libav on how strictly it should follow the
- * associated standard.
- *
- * From avcodec.h:
- * Setting this to STRICT or higher means the encoder and decoder will
- * generally do stupid things, whereas setting it to unofficial or lower
- * will mean the encoder might produce output that is not supported by all
- * spec-compliant decoders. Decoders don't differentiate between normal,
- * unofficial and experimental (that is, they always try to decode things
- * when they can) unless they are explicitly asked to behave stupidly
- * (=strictly conform to the specs)
- */
-typedef enum {
-  GST_FFMPEG_VERY_STRICT = FF_COMPLIANCE_VERY_STRICT,
-  GST_FFMPEG_STRICT = FF_COMPLIANCE_STRICT,
-  GST_FFMPEG_NORMAL = FF_COMPLIANCE_NORMAL,
-  GST_FFMPEG_UNOFFICIAL = FF_COMPLIANCE_UNOFFICIAL,
-  GST_FFMPEG_EXPERIMENTAL = FF_COMPLIANCE_EXPERIMENTAL,
-} GstFFMpegCompliance;
-
-/*
- * _compliance_get_type () Returns an enum type that can be
- * used as a property to indicate desired FFMpeg adherence to
- * an associated specification
- */
-
-GType
-gst_ffmpeg_compliance_get_type (void);
-#define GST_TYPE_FFMPEG_COMPLIANCE (gst_ffmpeg_compliance_get_type ())
-#define FFMPEG_DEFAULT_COMPLIANCE GST_FFMPEG_NORMAL
-
 /*
  * _codecid_is_image() returns TRUE for image formats
  */
