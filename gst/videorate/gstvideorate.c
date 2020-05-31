@@ -633,6 +633,7 @@ gst_video_rate_init (GstVideoRate * videorate)
   videorate->average_period_set = DEFAULT_AVERAGE_PERIOD;
   videorate->max_rate = DEFAULT_MAX_RATE;
   videorate->rate = DEFAULT_RATE;
+  videorate->pending_rate = DEFAULT_RATE;
   videorate->max_duplication_time = DEFAULT_MAX_DUPLICATION_TIME;
 
   videorate->from_rate_numerator = 0;
@@ -1071,7 +1072,7 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
         break;
 
       GST_OBJECT_LOCK (videorate);
-      rate = videorate->rate;
+      rate = videorate->pending_rate;
       GST_OBJECT_UNLOCK (videorate);
 
       if (rate == 1.0)
@@ -1390,6 +1391,28 @@ gst_video_rate_do_max_duplicate (GstVideoRate * videorate, GstBuffer * buffer,
   return TRUE;
 }
 
+static gboolean
+gst_video_rate_apply_pending_rate (GstVideoRate * videorate)
+{
+  gboolean ret = FALSE;
+
+  GST_OBJECT_LOCK (videorate);
+  if (videorate->pending_rate == videorate->rate)
+    goto done;
+
+  ret = TRUE;
+  videorate->base_ts += gst_util_uint64_scale (videorate->out_frame_count,
+      videorate->to_rate_denominator * GST_SECOND,
+      videorate->to_rate_numerator);
+  videorate->rate = videorate->pending_rate;
+  videorate->out_frame_count = 0;
+
+done:
+  GST_OBJECT_UNLOCK (videorate);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 {
@@ -1415,6 +1438,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   if (videorate->average_period > 0)
     return gst_video_rate_trans_ip_max_avg (videorate, buffer);
 
+  gst_video_rate_apply_pending_rate (videorate);
   in_ts = GST_BUFFER_TIMESTAMP (buffer);
   in_dur = GST_BUFFER_DURATION (buffer);
 
@@ -1553,6 +1577,9 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     do {
       GstClockTime next_ts;
 
+      if (gst_video_rate_apply_pending_rate (videorate))
+        goto done;
+
       if (videorate->segment.rate < 0.0) {
         /* Make sure that we have a duration for this buffer. The previous
          * buffer already has a duration given by either exactly this code,
@@ -1576,7 +1603,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       if (videorate->segment.rate < 0.0) {
         GstClockTime next_end_ts;
         GstClockTime prev_endtime;
-        GstClockTime in_endtime;
+        GstClockTime in_endtime, base_ts_in_segment;
 
         next_ts = videorate->next_ts;
 
@@ -1597,8 +1624,12 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         } else {
           next_end_ts = next_ts + GST_BUFFER_DURATION (videorate->prevbuf);
         }
-        next_ts *= videorate->rate;
-        next_end_ts *= videorate->rate;
+
+        base_ts_in_segment = videorate->segment.stop - videorate->base_ts;
+        next_ts = base_ts_in_segment - (
+            (base_ts_in_segment - next_ts) * videorate->rate);
+        next_end_ts = base_ts_in_segment - (MAX (0,
+                (base_ts_in_segment - next_end_ts)) * videorate->rate);
 
         diff1 = ABSDIFF (prev_endtime, next_end_ts);
         diff2 = ABSDIFF (in_endtime, next_end_ts);
@@ -1609,7 +1640,9 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
             GST_TIME_ARGS (diff1), GST_TIME_ARGS (diff2),
             GST_TIME_ARGS (next_end_ts));
       } else {
-        next_ts = videorate->next_ts * videorate->rate;
+        next_ts =
+            videorate->base_ts + ((videorate->next_ts -
+                videorate->base_ts) * videorate->rate);
 
         diff1 = ABSDIFF (prevtime, next_ts);
         diff2 = ABSDIFF (intime, next_ts);
@@ -1743,7 +1776,7 @@ gst_video_rate_set_property (GObject * object,
       g_atomic_int_set (&videorate->max_rate, g_value_get_int (value));
       goto reconfigure;
     case PROP_RATE:
-      videorate->rate = g_value_get_double (value);
+      videorate->pending_rate = g_value_get_double (value);
       GST_OBJECT_UNLOCK (videorate);
 
       gst_videorate_update_duration (videorate);
@@ -1808,7 +1841,7 @@ gst_video_rate_get_property (GObject * object,
       g_value_set_int (value, g_atomic_int_get (&videorate->max_rate));
       break;
     case PROP_RATE:
-      g_value_set_double (value, videorate->rate);
+      g_value_set_double (value, videorate->pending_rate);
       break;
     case PROP_MAX_DUPLICATION_TIME:
       g_value_set_uint64 (value, videorate->max_duplication_time);

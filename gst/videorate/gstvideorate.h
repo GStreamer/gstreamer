@@ -72,6 +72,7 @@ struct _GstVideoRate
 
   volatile int max_rate;
   gdouble rate;
+  gdouble pending_rate;
 };
 
 G_END_DECLS

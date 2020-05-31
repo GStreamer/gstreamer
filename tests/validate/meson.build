@@ -15,6 +15,8 @@ tests = [
     'videorate/reverse.1_to_10fps',
     'videorate/reverse.30fps',
     'videorate/reverse.variable_to_10fps',
+    'videorate/change_rate_while_playing',
+    'videorate/change_rate_reverse_playback',
 ]
 
 env = environment()
