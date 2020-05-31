@@ -281,6 +281,10 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
 
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+
+  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_LOWRES);
+  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_SKIPFRAME);
+  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE);
 }
 
 static void

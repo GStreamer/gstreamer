@@ -153,6 +153,8 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
     res =
         g_enum_register_static (enum_name, &g_array_index (values, GEnumValue,
             0));
+
+    gst_type_mark_as_plugin_api (res);
   }
 
 done:
@@ -211,6 +213,8 @@ register_flags (const AVClass ** obj, const AVOption * top_opt)
     res =
         g_flags_register_static (flags_name, &g_array_index (values,
             GFlagsValue, 0));
+
+    gst_type_mark_as_plugin_api (res);
   }
 
 done:

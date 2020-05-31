@@ -196,6 +196,8 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
   venc_class->flush = gst_ffmpegvidenc_flush;
 
   gobject_class->finalize = gst_ffmpegvidenc_finalize;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_FFMPEG_PASS);
 }
 
 static void
