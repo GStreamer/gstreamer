@@ -463,6 +463,8 @@ adpcmenc_class_init (ADPCMEncClass * klass)
           MIN_ADPCM_BLOCK_SIZE, MAX_ADPCM_BLOCK_SIZE,
           DEFAULT_ADPCM_BLOCK_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ADPCMENC_LAYOUT);
 }
 
 static gboolean

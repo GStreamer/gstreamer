@@ -309,6 +309,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_srtp_dec_plugin_init (plugin))
     return FALSE;
 
+  gst_type_mark_as_plugin_api (GST_TYPE_SRTP_AUTH_TYPE);
+  gst_type_mark_as_plugin_api (GST_TYPE_SRTP_CIPHER_TYPE);
+
   return TRUE;
 }
 

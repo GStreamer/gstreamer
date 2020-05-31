@@ -2055,6 +2055,15 @@ plugin_init (GstPlugin * plugin)
   gst_device_provider_register (plugin, "decklinkdeviceprovider",
       GST_RANK_PRIMARY, GST_TYPE_DECKLINK_DEVICE_PROVIDER);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CHANNELS);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CONNECTION);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_DUPLEX_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_KEYER_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_TIMECODE_FORMAT);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_VIDEO_FORMAT);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_CONNECTION);
+
   return TRUE;
 }
 

@@ -225,6 +225,9 @@ gst_lcms_class_init (GstLcmsClass * klass)
   vfilter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_lcms_transform_frame_ip);
   vfilter_class->transform_frame = GST_DEBUG_FUNCPTR (gst_lcms_transform_frame);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_LCMS_INTENT);
+  gst_type_mark_as_plugin_api (GST_TYPE_LCMS_LOOKUP_METHOD);
 }
 
 static void

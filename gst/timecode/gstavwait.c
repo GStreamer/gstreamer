@@ -230,6 +230,8 @@ gst_avwait_class_init (GstAvWaitClass * klass)
       &video_src_template);
   gst_element_class_add_static_pad_template (gstelement_class,
       &video_sink_template);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AVWAIT_MODE);
 }
 
 static void

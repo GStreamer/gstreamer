@@ -184,6 +184,8 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_parse_debug, "audioparse", 0,
       "audioparse element");
+
+  gst_type_mark_as_plugin_api (GST_AUDIO_PARSE_FORMAT);
 }
 
 static void

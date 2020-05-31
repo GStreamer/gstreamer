@@ -24,7 +24,7 @@
 #endif
 
 #include "gstmplexjob.hh"
-
+#include <gst/gst.h>
 
 enum
 {
@@ -161,6 +161,8 @@ GstMplexJob::initProperties (GObjectClass * klass)
           "Specify sector size in bytes for generic formats",
           256, 16384, 2048,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_MPLEX_FORMAT);
 }
 
 /*

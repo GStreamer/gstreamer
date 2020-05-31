@@ -164,6 +164,8 @@ gst_skin_detect_class_init (GstSkinDetectClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   gstopencvbasefilter_class->cv_set_caps = gst_skin_detect_set_caps;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SKIN_DETECT_METHOD);
 }
 
 /* initialize the new element

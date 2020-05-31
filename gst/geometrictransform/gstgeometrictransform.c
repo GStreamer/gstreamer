@@ -388,6 +388,8 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
           "What to do with off edge pixels",
           GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE, DEFAULT_OFF_EDGE_PIXELS,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE);
 }
 
 static void

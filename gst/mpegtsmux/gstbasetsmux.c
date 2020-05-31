@@ -1990,6 +1990,8 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
 
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_base_ts_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TS_MUX_PAD);
 }
 
 static void

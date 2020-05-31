@@ -315,4 +315,6 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
   gst_element_class_set_static_metadata (element_class, "Fake Video Sink",
       "Video/Sink", "Fake video display that allows zero-copy",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS);
 }

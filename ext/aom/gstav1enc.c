@@ -397,6 +397,10 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
           "Partition into separate horizontal tile rows from image frame which "
           "can enable parallel encoding",
           0, 6, DEFAULT_TILE_ROWS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_END_USAGE_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RESIZE_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_SUPERRES_MODE);
 }
 
 static void

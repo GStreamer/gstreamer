@@ -185,6 +185,8 @@ gst_mxf_mux_class_init (GstMXFMuxClass * klass)
       "Codec/Muxer",
       "Muxes video/audio streams into a MXF stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_MXF_MUX_PAD);
 }
 
 static void

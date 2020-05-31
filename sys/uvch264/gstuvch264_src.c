@@ -459,6 +459,11 @@ gst_uvc_h264_src_class_init (GstUvcH264SrcClass * klass)
       G_CALLBACK (gst_uvc_h264_src_get_int_setting), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 4, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER,
       G_TYPE_POINTER, 0);
+
+  gst_type_mark_as_plugin_api (UVC_H264_ENTROPY_TYPE);
+  gst_type_mark_as_plugin_api (UVC_H264_RATECONTROL_TYPE);
+  gst_type_mark_as_plugin_api (UVC_H264_SLICEMODE_TYPE);
+  gst_type_mark_as_plugin_api (UVC_H264_USAGETYPE_TYPE);
 }
 
 static void

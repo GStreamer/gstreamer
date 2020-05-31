@@ -1113,6 +1113,10 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_GAIN_CONTROL_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_NOISE_SUPPRESSION_LEVEL);
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_ECHO_SUPPRESSION_LEVEL);
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_VOICE_DETECTION_LIKELIHOOD);
 }
 
 static gboolean

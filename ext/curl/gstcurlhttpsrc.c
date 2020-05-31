@@ -489,6 +489,8 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
       "Source/Network",
       "Receiver data as a client over a network via HTTP using cURL",
       "Sam Hurst <samuelh@rd.bbc.co.uk>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CURL_HTTP_VERSION);
 }
 
 static void

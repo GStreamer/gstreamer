@@ -152,6 +152,8 @@ gst_wave_scope_class_init (GstWaveScopeClass * g_class)
       &gst_wave_scope_src_template);
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_wave_scope_sink_template);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_WAVE_SCOPE_STYLE);
 }
 
 static void

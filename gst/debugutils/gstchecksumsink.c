@@ -100,6 +100,8 @@ gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
   gst_element_class_set_static_metadata (element_class, "Checksum sink",
       "Debug/Sink", "Calculates a checksum for buffers",
       "David Schleef <ds@schleef.org>");
+
+  gst_type_mark_as_plugin_api (gst_checksum_sink_hash_get_type ());
 }
 
 static void

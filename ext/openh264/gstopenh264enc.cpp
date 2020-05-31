@@ -365,6 +365,12 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
       g_param_spec_enum ("complexity", "Complexity / quality / speed tradeoff",
           "Complexity", GST_TYPE_OPENH264ENC_COMPLEXITY, DEFAULT_COMPLEXITY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_OPENH264ENC_COMPLEXITY);
+  gst_type_mark_as_plugin_api (GST_TYPE_OPENH264ENC_DEBLOCKING_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_OPENH264ENC_SLICE_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RC_MODES);
+  gst_type_mark_as_plugin_api (GST_TYPE_USAGE_TYPE);
 }
 
 static void

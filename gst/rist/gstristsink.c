@@ -1422,4 +1422,6 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
           "Sequence Number Extension",
           "Add sequence number extension to packets.", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
+
+  gst_type_mark_as_plugin_api (gst_rist_bonding_method_get_type ());
 }

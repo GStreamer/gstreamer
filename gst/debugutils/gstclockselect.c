@@ -117,6 +117,8 @@ gst_clock_select_class_init (GstClockSelectClass * klass)
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_clock_select_provide_clock);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CLOCK_SELECT_CLOCK_ID);
 }
 
 static void

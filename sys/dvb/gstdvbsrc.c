@@ -1012,6 +1012,17 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       G_STRUCT_OFFSET (GstDvbSrcClass, do_tune), NULL, NULL, NULL,
       G_TYPE_NONE, 0);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_BANDWIDTH);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_CODE_RATE);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_DELSYS);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_GUARD);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_HIERARCHY);
+  gst_type_mark_as_plugin_api (GST_TYPE_INTERLEAVING);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_INVERSION);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_MODULATION);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_PILOT);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_ROLLOFF);
+  gst_type_mark_as_plugin_api (GST_TYPE_DVBSRC_TRANSMISSION_MODE);
 }
 
 /* initialize the new element

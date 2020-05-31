@@ -288,6 +288,8 @@ gst_camera_calibrate_class_init (GstCameraCalibrateClass * klass)
   gst_element_class_add_pad_template (element_class, templ);
   templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (element_class, templ);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CAMERA_CALIBRATION_PATTERN);
 }
 
 /* initialize the new element

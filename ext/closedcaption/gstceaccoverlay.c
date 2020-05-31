@@ -285,6 +285,8 @@ gst_base_cea_cc_overlay_class_init (GstCeaCcOverlayClass * klass)
       "Chengjun Wang <cjun.wang@samsung.com>");
   gst_cea708_decoder_init_debug ();
 
+  gst_type_mark_as_plugin_api (GST_TYPE_CC_OVERLAY_WIN_H_POS);
+
 }
 
 static void

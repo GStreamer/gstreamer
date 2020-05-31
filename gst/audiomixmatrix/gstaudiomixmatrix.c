@@ -216,6 +216,8 @@ gst_audio_mix_matrix_class_init (GstAudioMixMatrixClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_audio_mix_matrix_change_state);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_MIX_MATRIX_MODE);
 }
 
 static void

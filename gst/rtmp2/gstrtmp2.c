@@ -26,6 +26,8 @@
 #include "gstrtmp2src.h"
 #include "gstrtmp2sink.h"
 
+#include "rtmp/rtmpclient.h"
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -33,6 +35,9 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_RTMP2_SRC);
   gst_element_register (plugin, "rtmp2sink", GST_RANK_PRIMARY + 1,
       GST_TYPE_RTMP2_SINK);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_SCHEME);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_AUTHMOD);
 
   return TRUE;
 }

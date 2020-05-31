@@ -183,6 +183,8 @@ gst_voamrwbenc_class_init (GstVoAmrWbEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_voamrwbenc_debug, "voamrwbenc", 0,
       "voamrwb encoder");
+
+  gst_type_mark_as_plugin_api (GST_VOAMRWBENC_BANDMODE_TYPE);
 }
 
 static void

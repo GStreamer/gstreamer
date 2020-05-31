@@ -6453,6 +6453,9 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_create_data_channel), NULL, NULL,
       NULL, GST_TYPE_WEBRTC_DATA_CHANNEL, 2, G_TYPE_STRING, GST_TYPE_STRUCTURE);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_BIN_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_ICE);
 }
 
 static void

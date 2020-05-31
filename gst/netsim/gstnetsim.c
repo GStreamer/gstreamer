@@ -756,6 +756,8 @@ gst_net_sim_class_init (GstNetSimClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (netsim_debug, "netsim", 0, "Network simulator");
+
+  gst_type_mark_as_plugin_api (distribution_get_type ());
 }
 
 static gboolean
