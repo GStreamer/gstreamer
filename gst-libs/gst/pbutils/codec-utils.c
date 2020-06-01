@@ -448,7 +448,7 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
   else
     rcu += (rcu_ref + (rcu_ref - 1) * ((2 * num_cpe) - 1));
 
-  num_channels = num_sce + (2 * num_cpe) + num_lfe;
+  num_channels = num_sce + (2 * num_cpe);
 
   if (audio_object_type == 2) {
     /* AAC LC => return the level as per the 'AAC Profile' */
