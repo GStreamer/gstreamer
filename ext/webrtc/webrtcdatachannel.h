@@ -17,68 +17,56 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_WEBRTC_DATA_CHANNEL_H__
-#define __GST_WEBRTC_DATA_CHANNEL_H__
+#ifndef __WEBRTC_DATA_CHANNEL_H__
+#define __WEBRTC_DATA_CHANNEL_H__
 
 #include <gst/gst.h>
 #include <gst/webrtc/webrtc_fwd.h>
 #include <gst/webrtc/dtlstransport.h>
+#include <gst/webrtc/datachannel.h>
 #include "sctptransport.h"
 
 G_BEGIN_DECLS
 
-GType gst_webrtc_data_channel_get_type(void);
-#define GST_TYPE_WEBRTC_DATA_CHANNEL            (gst_webrtc_data_channel_get_type())
-#define GST_WEBRTC_DATA_CHANNEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WEBRTC_DATA_CHANNEL,GstWebRTCDataChannel))
-#define GST_IS_WEBRTC_DATA_CHANNEL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WEBRTC_DATA_CHANNEL))
-#define GST_WEBRTC_DATA_CHANNEL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_WEBRTC_DATA_CHANNEL,GstWebRTCDataChannelClass))
-#define GST_IS_WEBRTC_DATA_CHANNEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_WEBRTC_DATA_CHANNEL))
-#define GST_WEBRTC_DATA_CHANNEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_WEBRTC_DATA_CHANNEL,GstWebRTCDataChannelClass))
+GType webrtc_data_channel_get_type(void);
+#define WEBRTC_TYPE_DATA_CHANNEL            (webrtc_data_channel_get_type())
+#define WEBRTC_DATA_CHANNEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),WEBRTC_TYPE_DATA_CHANNEL,WebRTCDataChannel))
+#define WEBRTC_IS_DATA_CHANNEL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),WEBRTC_TYPE_DATA_CHANNEL))
+#define WEBRTC_DATA_CHANNEL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,WEBRTC_TYPE_DATA_CHANNEL,WebRTCDataChannelClass))
+#define WEBRTC_IS_DATA_CHANNEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,WEBRTC_TYPE_DATA_CHANNEL))
+#define WEBRTC_DATA_CHANNEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,WEBRTC_TYPE_DATA_CHANNEL,WebRTCDataChannelClass))
 
-typedef struct _GstWebRTCDataChannel GstWebRTCDataChannel;
-typedef struct _GstWebRTCDataChannelClass GstWebRTCDataChannelClass;
+typedef struct _WebRTCDataChannel WebRTCDataChannel;
+typedef struct _WebRTCDataChannelClass WebRTCDataChannelClass;
 
-struct _GstWebRTCDataChannel
+struct _WebRTCDataChannel
 {
-  GObject                         parent;
+  GstWebRTCDataChannel              parent;
 
   GstWebRTCSCTPTransport           *sctp_transport;
   GstElement                       *appsrc;
   GstElement                       *appsink;
 
-  gchar                            *label;
-  gboolean                          ordered;
-  guint                             max_packet_lifetime;
-  guint                             max_retransmits;
-  gchar                            *protocol;
-  gboolean                          negotiated;
-  gint                              id;
-  GstWebRTCPriorityType             priority;
-  GstWebRTCDataChannelState         ready_state;
-  guint64                           buffered_amount;
-  guint64                           buffered_amount_low_threshold;
-
   GstWebRTCBin                     *webrtcbin;
   gboolean                          opened;
   gulong                            src_probe;
   GError                           *stored_error;
-  GMutex                            lock;
 
   gpointer                          _padding[GST_PADDING];
 };
 
-struct _GstWebRTCDataChannelClass
+struct _WebRTCDataChannelClass
 {
-  GObjectClass            parent_class;
+  GstWebRTCDataChannelClass  parent_class;
 
   gpointer                  _padding[GST_PADDING];
 };
 
-void    gst_webrtc_data_channel_start_negotiation   (GstWebRTCDataChannel       *channel);
+void    webrtc_data_channel_start_negotiation   (WebRTCDataChannel       *channel);
 G_GNUC_INTERNAL
-void    gst_webrtc_data_channel_link_to_sctp (GstWebRTCDataChannel              *channel,
-                                              GstWebRTCSCTPTransport            *sctp_transport);
+void    webrtc_data_channel_link_to_sctp (WebRTCDataChannel                 *channel,
+                                          GstWebRTCSCTPTransport            *sctp_transport);
 
 G_END_DECLS
 
-#endif /* __GST_WEBRTC_DATA_CHANNEL_H__ */
+#endif /* __WEBRTC_DATA_CHANNEL_H__ */

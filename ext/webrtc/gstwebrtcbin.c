@@ -545,17 +545,17 @@ _find_pad (GstWebRTCBin * webrtc, gconstpointer data, FindPadFunc func)
   return NULL;
 }
 
-typedef gboolean (*FindDataChannelFunc) (GstWebRTCDataChannel * p1,
+typedef gboolean (*FindDataChannelFunc) (WebRTCDataChannel * p1,
     gconstpointer data);
 
-static GstWebRTCDataChannel *
+static WebRTCDataChannel *
 _find_data_channel (GstWebRTCBin * webrtc, gconstpointer data,
     FindDataChannelFunc func)
 {
   int i;
 
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
-    GstWebRTCDataChannel *channel =
+    WebRTCDataChannel *channel =
         g_ptr_array_index (webrtc->priv->data_channels, i);
 
     if (func (channel, data))
@@ -566,15 +566,15 @@ _find_data_channel (GstWebRTCBin * webrtc, gconstpointer data,
 }
 
 static gboolean
-data_channel_match_for_id (GstWebRTCDataChannel * channel, gint * id)
+data_channel_match_for_id (WebRTCDataChannel * channel, gint * id)
 {
-  return channel->id == *id;
+  return channel->parent.id == *id;
 }
 
-static GstWebRTCDataChannel *
+static WebRTCDataChannel *
 _find_data_channel_for_id (GstWebRTCBin * webrtc, gint id)
 {
-  GstWebRTCDataChannel *channel;
+  WebRTCDataChannel *channel;
 
   channel = _find_data_channel (webrtc, &id,
       (FindDataChannelFunc) data_channel_match_for_id);
@@ -1737,7 +1737,7 @@ _get_or_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
 
 /* this is called from the webrtc thread with the pc lock held */
 static void
-_on_data_channel_ready_state (GstWebRTCDataChannel * channel,
+_on_data_channel_ready_state (WebRTCDataChannel * channel,
     GParamSpec * pspec, GstWebRTCBin * webrtc)
 {
   GstWebRTCDataChannelState ready_state;
@@ -1749,7 +1749,7 @@ _on_data_channel_ready_state (GstWebRTCDataChannel * channel,
     gboolean found = FALSE;
 
     for (i = 0; i < webrtc->priv->pending_data_channels->len; i++) {
-      GstWebRTCDataChannel *c;
+      WebRTCDataChannel *c;
 
       c = g_ptr_array_index (webrtc->priv->pending_data_channels, i);
       if (c == channel) {
@@ -1774,7 +1774,7 @@ static void
 _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     GstWebRTCBin * webrtc)
 {
-  GstWebRTCDataChannel *channel;
+  WebRTCDataChannel *channel;
   guint stream_id;
   GstPad *sink_pad;
 
@@ -1784,8 +1784,8 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
   PC_LOCK (webrtc);
   channel = _find_data_channel_for_id (webrtc, stream_id);
   if (!channel) {
-    channel = g_object_new (GST_TYPE_WEBRTC_DATA_CHANNEL, NULL);
-    channel->id = stream_id;
+    channel = g_object_new (WEBRTC_TYPE_DATA_CHANNEL, NULL);
+    channel->parent.id = stream_id;
     channel->webrtcbin = webrtc;
 
     gst_bin_add (GST_BIN (webrtc), channel->appsrc);
@@ -1794,8 +1794,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     gst_element_sync_state_with_parent (channel->appsrc);
     gst_element_sync_state_with_parent (channel->appsink);
 
-    gst_webrtc_data_channel_link_to_sctp (channel,
-        webrtc->priv->sctp_transport);
+    webrtc_data_channel_link_to_sctp (channel, webrtc->priv->sctp_transport);
 
     g_ptr_array_add (webrtc->priv->pending_data_channels, channel);
   }
@@ -1826,15 +1825,14 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
     GST_DEBUG_OBJECT (webrtc, "SCTP association established");
 
     for (i = 0; i < webrtc->priv->data_channels->len; i++) {
-      GstWebRTCDataChannel *channel;
+      WebRTCDataChannel *channel;
 
       channel = g_ptr_array_index (webrtc->priv->data_channels, i);
 
-      gst_webrtc_data_channel_link_to_sctp (channel,
-          webrtc->priv->sctp_transport);
+      webrtc_data_channel_link_to_sctp (channel, webrtc->priv->sctp_transport);
 
-      if (!channel->negotiated && !channel->opened)
-        gst_webrtc_data_channel_start_negotiation (channel);
+      if (!channel->parent.negotiated && !channel->opened)
+        webrtc_data_channel_start_negotiation (channel);
     }
     PC_UNLOCK (webrtc);
   }
@@ -1993,12 +1991,11 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
       g_warn_if_reached ();
 
     for (i = 0; i < webrtc->priv->data_channels->len; i++) {
-      GstWebRTCDataChannel *channel;
+      WebRTCDataChannel *channel;
 
       channel = g_ptr_array_index (webrtc->priv->data_channels, i);
 
-      gst_webrtc_data_channel_link_to_sctp (channel,
-          webrtc->priv->sctp_transport);
+      webrtc_data_channel_link_to_sctp (channel, webrtc->priv->sctp_transport);
     }
 
     gst_element_sync_state_with_parent (GST_ELEMENT (stream->send_bin));
@@ -4001,7 +3998,7 @@ _generate_data_channel_id (GstWebRTCBin * webrtc)
 
   /* TODO: a better search algorithm */
   do {
-    GstWebRTCDataChannel *channel;
+    WebRTCDataChannel *channel;
 
     new_id++;
 
@@ -4087,21 +4084,20 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   }
 
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
-    GstWebRTCDataChannel *channel;
+    WebRTCDataChannel *channel;
 
     channel = g_ptr_array_index (webrtc->priv->data_channels, i);
 
-    if (channel->id == -1)
-      channel->id = _generate_data_channel_id (webrtc);
-    if (channel->id == -1)
+    if (channel->parent.id == -1)
+      channel->parent.id = _generate_data_channel_id (webrtc);
+    if (channel->parent.id == -1)
       GST_ELEMENT_WARNING (webrtc, RESOURCE, NOT_FOUND,
           ("%s", "Failed to generate an identifier for a data channel"), NULL);
 
     if (webrtc->priv->sctp_transport->association_established
-        && !channel->negotiated && !channel->opened) {
-      gst_webrtc_data_channel_link_to_sctp (channel,
-          webrtc->priv->sctp_transport);
-      gst_webrtc_data_channel_start_negotiation (channel);
+        && !channel->parent.negotiated && !channel->opened) {
+      webrtc_data_channel_link_to_sctp (channel, webrtc->priv->sctp_transport);
+      webrtc_data_channel_start_negotiation (channel);
     }
   }
 
@@ -5049,7 +5045,7 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   return TRUE;
 }
 
-static GstWebRTCDataChannel *
+static WebRTCDataChannel *
 gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     GstStructure * init_params)
 {
@@ -5060,7 +5056,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
   gboolean negotiated;
   gint id;
   GstWebRTCPriorityType priority;
-  GstWebRTCDataChannel *ret;
+  WebRTCDataChannel *ret;
   gint max_channels = 65534;
 
   g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), NULL);
@@ -5125,7 +5121,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
   PC_LOCK (webrtc);
   /* check if the id has been used already */
   if (id != -1) {
-    GstWebRTCDataChannel *channel = _find_data_channel_for_id (webrtc, id);
+    WebRTCDataChannel *channel = _find_data_channel_for_id (webrtc, id);
     if (channel) {
       GST_ELEMENT_WARNING (webrtc, LIBRARY, SETTINGS,
           ("Attempting to add a data channel with a duplicate ID: %i", id),
@@ -5147,7 +5143,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     }
   }
 
-  ret = g_object_new (GST_TYPE_WEBRTC_DATA_CHANNEL, "label", label,
+  ret = g_object_new (WEBRTC_TYPE_DATA_CHANNEL, "label", label,
       "ordered", ordered, "max-packet-lifetime", max_packet_lifetime,
       "max-retransmits", max_retransmits, "protocol", protocol,
       "negotiated", negotiated, "id", id, "priority", priority, NULL);
@@ -5162,11 +5158,11 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     ret = gst_object_ref (ret);
     ret->webrtcbin = webrtc;
     g_ptr_array_add (webrtc->priv->data_channels, ret);
-    gst_webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
+    webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
     if (webrtc->priv->sctp_transport &&
         webrtc->priv->sctp_transport->association_established
-        && !ret->negotiated) {
-      gst_webrtc_data_channel_start_negotiation (ret);
+        && !ret->parent.negotiated) {
+      webrtc_data_channel_start_negotiation (ret);
     } else {
       _update_need_negotiation (webrtc);
     }

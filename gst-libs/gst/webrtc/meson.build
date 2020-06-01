@@ -5,6 +5,7 @@ webrtc_sources = [
   'rtpreceiver.c',
   'rtpsender.c',
   'rtptransceiver.c',
+  'datachannel.c',
 ]
 
 webrtc_headers = [
@@ -14,6 +15,7 @@ webrtc_headers = [
   'rtpreceiver.h',
   'rtpsender.h',
   'rtptransceiver.h',
+  'datachannel.h',
   'webrtc_fwd.h',
   'webrtc.h',
 ]

@@ -59,6 +59,9 @@ typedef struct _GstWebRTCSessionDescription GstWebRTCSessionDescription;
 typedef struct _GstWebRTCRTPTransceiver GstWebRTCRTPTransceiver;
 typedef struct _GstWebRTCRTPTransceiverClass GstWebRTCRTPTransceiverClass;
 
+typedef struct _GstWebRTCDataChannel GstWebRTCDataChannel;
+typedef struct _GstWebRTCDataChannelClass GstWebRTCDataChannelClass;
+
 /**
  * GstWebRTCDTLSTransportState:
  * @GST_WEBRTC_DTLS_TRANSPORT_STATE_NEW: new
