@@ -3171,6 +3171,7 @@ not_enough_data:
 static const gchar *
 gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
 {
+  /* *INDENT-OFF* */
   const struct
   {
     const gchar *asf_name;
@@ -3186,6 +3187,7 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
     "WM/Year", GST_TAG_DATE_TIME}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
   };
+  /* *INDENT-ON* */
   gsize out;
   guint i;
 
@@ -3304,6 +3306,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
   guint16 blockcount, i;
   gboolean content3D = FALSE;
 
+  /* *INDENT-OFF* */
   struct
   {
     const gchar *interleave_name;
@@ -3316,6 +3319,8 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
     "OverUnderLT", GST_ASF_3D_TOP_AND_BOTTOM_HALF_LR}, {
     "DualStream", GST_ASF_3D_DUAL_STREAM}
   };
+  /* *INDENT-ON* */
+
   GST_INFO_OBJECT (demux, "object is an extended content description");
 
   taglist = gst_tag_list_new_empty ();
@@ -3783,6 +3788,7 @@ not_enough_data:
 static GstFlowReturn
 gst_asf_demux_process_comment (GstASFDemux * demux, guint8 * data, guint64 size)
 {
+  /* *INDENT-OFF* */
   struct
   {
     const gchar *gst_tag;
@@ -3796,6 +3802,7 @@ gst_asf_demux_process_comment (GstASFDemux * demux, guint8 * data, guint64 size)
     GST_TAG_DESCRIPTION, 0, NULL}, {
     GST_TAG_COMMENT, 0, NULL}
   };
+  /* *INDENT-ON* */
   GstTagList *taglist;
   GValue value = { 0 };
   gsize in, out;
