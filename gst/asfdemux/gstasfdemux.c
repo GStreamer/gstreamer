@@ -3181,6 +3181,7 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
     "WM/Genre", GST_TAG_GENRE}, {
     "WM/AlbumTitle", GST_TAG_ALBUM}, {
     "WM/AlbumArtist", GST_TAG_ARTIST}, {
+    "WM/PartOfSet", GST_TAG_ALBUM_VOLUME_COUNT}, {
     "WM/Picture", GST_TAG_IMAGE}, {
     "WM/Track", GST_TAG_TRACK_NUMBER}, {
     "WM/TrackNumber", GST_TAG_TRACK_NUMBER}, {
@@ -3398,6 +3399,22 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
                   GST_DEBUG ("Genre: %s -> %s", value_utf8, genre_str);
                   g_free (value_utf8);
                   value_utf8 = g_strdup (genre_str);
+                }
+              } else if (!strcmp (gst_tag_name, GST_TAG_ALBUM_VOLUME_COUNT)) {
+                guint num = 0, count = 0;
+
+                if (sscanf (value_utf8, "%u/%u", &num, &count) == 2
+                    && num > 0 && num <= 99999 && count > 0 && count <= 99999) {
+                  GST_DEBUG ("Disc %u of %u (%s)", num, count, value_utf8);
+                  g_value_init (&tag_value, G_TYPE_UINT);
+                  /* disc number */
+                  g_value_set_uint (&tag_value, num);
+                  gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+                      GST_TAG_ALBUM_VOLUME_NUMBER, &tag_value, NULL);
+                  /* disc count (will be added to the taglist below) */
+                  g_value_set_uint (&tag_value, count);
+                } else {
+                  GST_DEBUG ("Couldn't parse PartOfSet value %s", value_utf8);
                 }
               } else {
                 GType tag_type;
