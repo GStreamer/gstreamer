@@ -1780,7 +1780,7 @@ GST_END_TEST;
     expected_flags) \
 G_STMT_START { \
   GstBin *bin = GST_BIN (gst_bin_new ("test-bin")); \
-  GstElement *element = gst_element_factory_make ("identity", "test-i"); \
+  GstElement *element = gst_element_factory_make ("queue", "test-q"); \
   GstElementFlags natural_flags = GST_OBJECT_FLAGS (bin); \
   GST_OBJECT_FLAG_SET (element, element_flags); \
   gst_bin_set_suppressed_flags (bin, suppressed_flags); \

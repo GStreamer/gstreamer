@@ -98,6 +98,7 @@ static gboolean gst_clock_sync_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstStateChangeReturn gst_clocksync_change_state (GstElement * element,
     GstStateChange transition);
+static GstClock *gst_clocksync_provide_clock (GstElement * element);
 
 static void
 gst_clock_sync_class_init (GstClockSyncClass * klass)
@@ -124,6 +125,8 @@ gst_clock_sync_class_init (GstClockSyncClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_clocksync_change_state);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_clocksync_provide_clock);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "ClockSync",
@@ -167,6 +170,9 @@ gst_clock_sync_init (GstClockSync * clocksync)
   clocksync->ts_offset = DEFAULT_TS_OFFSET;
   clocksync->sync = DEFAULT_SYNC;
   g_cond_init (&clocksync->blocked_cond);
+
+  GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
 }
 
 static void
@@ -528,4 +534,11 @@ gst_clocksync_change_state (GstElement * element, GstStateChange transition)
     ret = GST_STATE_CHANGE_NO_PREROLL;
 
   return ret;
+}
+
+/* FIXME: GStreamer 2.0 */
+static GstClock *
+gst_clocksync_provide_clock (GstElement * element)
+{
+  return gst_system_clock_obtain ();
 }

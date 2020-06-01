@@ -125,6 +125,7 @@ static gboolean gst_identity_accept_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_identity_query (GstBaseTransform * base,
     GstPadDirection direction, GstQuery * query);
+static GstClock *gst_identity_provide_clock (GstElement * element);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -277,6 +278,8 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_identity_change_state);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_identity_provide_clock);
 
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_identity_sink_event);
   gstbasetrans_class->src_event = GST_DEBUG_FUNCPTR (gst_identity_src_event);
@@ -312,6 +315,9 @@ gst_identity_init (GstIdentity * identity)
   identity->eos_after_counter = DEFAULT_EOS_AFTER;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
+
+  GST_OBJECT_FLAG_SET (identity, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  GST_OBJECT_FLAG_SET (identity, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
 }
 
 static void
@@ -1119,4 +1125,11 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
     ret = GST_STATE_CHANGE_NO_PREROLL;
 
   return ret;
+}
+
+/* FIXME: GStreamer 2.0 */
+static GstClock *
+gst_identity_provide_clock (GstElement * element)
+{
+  return gst_system_clock_obtain ();
 }
