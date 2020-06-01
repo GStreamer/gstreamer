@@ -327,7 +327,7 @@ void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info
  *
  * List of all audio formats, for use in template caps strings.
  */
-#define GST_AUDIO_FORMATS_ALL " { S8, U8, " \
+#define GST_AUDIO_FORMATS_ALL "{ S8, U8, " \
     "S16LE, S16BE, U16LE, U16BE, " \
     "S24_32LE, S24_32BE, U24_32LE, U24_32BE, " \
     "S32LE, S32BE, U32LE, U32BE, " \
