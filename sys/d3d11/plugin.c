@@ -30,6 +30,8 @@
 #include "gstd3d11colorconvert.h"
 #include "gstd3d11videosinkbin.h"
 #include "gstd3d11shader.h"
+#include "gstd3d11compositor.h"
+#include "gstd3d11compositorbin.h"
 #ifdef HAVE_DXVA_H
 #include "gstd3d11utils.h"
 #include "gstd3d11h264dec.h"
@@ -47,6 +49,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_overlay_compositor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_window_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_video_processor_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_compositor_debug);
 
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
 GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
@@ -90,6 +93,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11window", 0, "d3d11window");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_video_processor_debug,
       "d3d11videoprocessor", 0, "d3d11videoprocessor");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_compositor_debug,
+      "d3d11compositor", 0, "d3d11compositor element");
 
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
   /* NOTE: enabled only for debug build */
@@ -136,6 +141,11 @@ plugin_init (GstPlugin * plugin)
 
   gst_element_register (plugin,
       "d3d11videosink", video_sink_rank, GST_TYPE_D3D11_VIDEO_SINK_BIN);
+
+  gst_element_register (plugin,
+      "d3d11compositorelement", GST_RANK_NONE, GST_TYPE_D3D11_COMPOSITOR);
+  gst_element_register (plugin,
+      "d3d11compositor", GST_RANK_SECONDARY, GST_TYPE_D3D11_COMPOSITOR_BIN);
 
 #ifdef HAVE_DXVA_H
   /* DXVA2 API is availble since Windows 8 */

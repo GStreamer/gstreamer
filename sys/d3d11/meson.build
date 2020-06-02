@@ -16,6 +16,8 @@ d3d11_sources = [
   'gstd3d11colorconverter.c',
   'gstd3d11overlaycompositor.c',
   'gstd3d11videoprocessor.c',
+  'gstd3d11compositor.c',
+  'gstd3d11compositorbin.c',
 ]
 
 d3d11_dec_sources = [
@@ -192,7 +194,7 @@ gstd3d11 = library('gstd3d11',
   c_args : gst_plugins_bad_args + extra_c_args,
   cpp_args: gst_plugins_bad_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib] + extra_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstcontroller_dep, d3d11_lib, dxgi_lib] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
