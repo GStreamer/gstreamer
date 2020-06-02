@@ -730,7 +730,7 @@ combine_cc_data (GstCCConverter * self, gboolean pad_cea608,
       cea608_1_i++;
       i++;
     } else if (cea608_1_i < total_cea608_1_count) {
-      out[out_i++] = 0xfc;
+      out[out_i++] = 0xf8;
       out[out_i++] = 0x80;
       out[out_i++] = 0x80;
       cea608_1_i++;
@@ -744,7 +744,7 @@ combine_cc_data (GstCCConverter * self, gboolean pad_cea608,
       cea608_2_i++;
       i++;
     } else if (cea608_2_i < total_cea608_2_count) {
-      out[out_i++] = 0xfd;
+      out[out_i++] = 0xf9;
       out[out_i++] = 0x80;
       out[out_i++] = 0x80;
       cea608_2_i++;
