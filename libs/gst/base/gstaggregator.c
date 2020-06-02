@@ -91,14 +91,7 @@
 
 #include "gstaggregator.h"
 
-typedef enum
-{
-  GST_AGGREGATOR_START_TIME_SELECTION_ZERO,
-  GST_AGGREGATOR_START_TIME_SELECTION_FIRST,
-  GST_AGGREGATOR_START_TIME_SELECTION_SET
-} GstAggregatorStartTimeSelection;
-
-static GType
+GType
 gst_aggregator_start_time_selection_get_type (void)
 {
   static GType gtype = 0;

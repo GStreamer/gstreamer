@@ -389,6 +389,26 @@ GST_BASE_API
 void            gst_aggregator_update_segment       (GstAggregator                * self,
                                                      const GstSegment             * segment);
 
+/**
+ * GstAggregatorStartTimeSelection:
+ * @GST_AGGREGATOR_START_TIME_SELECTION_ZERO: Start at running time 0.
+ * @GST_AGGREGATOR_START_TIME_SELECTION_FIRST: Start at the running time of
+ * the first buffer that is received.
+ * @GST_AGGREGATOR_START_TIME_SELECTION_SET: Start at the running time
+ * selected by the `start-time` property.
+ *
+ * Since: 1.14
+ */
+typedef enum
+{
+  GST_AGGREGATOR_START_TIME_SELECTION_ZERO,
+  GST_AGGREGATOR_START_TIME_SELECTION_FIRST,
+  GST_AGGREGATOR_START_TIME_SELECTION_SET
+} GstAggregatorStartTimeSelection;
+
+GST_BASE_API
+GType           gst_aggregator_start_time_selection_get_type (void);
+
 G_END_DECLS
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAggregator, gst_object_unref)
