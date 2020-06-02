@@ -592,7 +592,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    *
    * * #guint   `seqnum`: Seqnum of dropped packet.
    * * #guint64 `timestamp`: PTS timestamp of dropped packet.
-   * * #gstring `reason`: Reason for dropping the packet.
+   * * #GString `reason`: Reason for dropping the packet.
    * * #guint   `num-too-late`: Number of packets arriving too late since
    *    last drop message.
    * * #guint   `num-drop-on-latency`: Number of packets dropped due to the
