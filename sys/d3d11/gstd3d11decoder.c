@@ -1250,7 +1250,7 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     gst_d3d11_color_converter_update_src_rect (priv->converter, &rect);
 
     if (!gst_d3d11_color_converter_convert_unlocked (priv->converter,
-            srv, priv->fallback_render_target_view)) {
+            srv, priv->fallback_render_target_view, NULL, NULL)) {
       GST_ERROR_OBJECT (self, "Failed to convert");
       goto error;
     }
@@ -1386,7 +1386,8 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
 
     gst_d3d11_color_converter_update_src_rect (priv->converter, &rect);
 
-    if (!gst_d3d11_color_converter_convert_unlocked (priv->converter, srv, rtv)) {
+    if (!gst_d3d11_color_converter_convert_unlocked (priv->converter,
+            srv, rtv, NULL, NULL)) {
       GST_ERROR_OBJECT (self, "Failed to convert");
       goto error;
     }

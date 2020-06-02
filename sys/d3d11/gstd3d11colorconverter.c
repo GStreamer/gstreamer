@@ -1506,7 +1506,8 @@ gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
 gboolean
 gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES],
+    ID3D11BlendState * blend, gfloat blend_factor[4])
 {
   gboolean ret;
 
@@ -1515,7 +1516,8 @@ gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
   g_return_val_if_fail (rtv != NULL, FALSE);
 
   gst_d3d11_device_lock (converter->device);
-  ret = gst_d3d11_color_converter_convert_unlocked (converter, srv, rtv);
+  ret = gst_d3d11_color_converter_convert_unlocked (converter,
+      srv, rtv, blend, blend_factor);
   gst_d3d11_device_unlock (converter->device);
 
   return ret;
@@ -1524,7 +1526,8 @@ gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
 gboolean
 gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES],
+    ID3D11BlendState * blend, gfloat blend_factor[4])
 {
   gboolean ret;
   ID3D11Resource *resource;
@@ -1555,7 +1558,7 @@ gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
   }
 
   ret = gst_d3d11_draw_quad_unlocked (converter->quad[0], converter->viewport,
-      1, srv, converter->num_input_view, rtv, 1, NULL);
+      1, srv, converter->num_input_view, rtv, 1, NULL, blend, blend_factor);
 
   if (!ret)
     return FALSE;
@@ -1564,7 +1567,7 @@ gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
     ret = gst_d3d11_draw_quad_unlocked (converter->quad[1],
         &converter->viewport[1], converter->num_output_view - 1,
         srv, converter->num_input_view, &rtv[1], converter->num_output_view - 1,
-        NULL);
+        NULL, blend, blend_factor);
 
     if (!ret)
       return FALSE;

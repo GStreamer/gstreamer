@@ -36,11 +36,15 @@ void                     gst_d3d11_color_converter_free (GstD3D11ColorConverter 
 
 gboolean                 gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
                                                             ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
-                                                            ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
+                                                            ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
+                                                            ID3D11BlendState *blend,
+                                                            gfloat blend_factor[4]);
 
 gboolean                 gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
                                                                      ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
-                                                                     ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
+                                                                     ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
+                                                                     ID3D11BlendState *blend,
+                                                                     gfloat blend_factor[4]);
 
 gboolean                 gst_d3d11_color_converter_update_viewport  (GstD3D11ColorConverter * converter,
                                                                      D3D11_VIEWPORT * viewport);

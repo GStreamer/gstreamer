@@ -667,7 +667,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
         (GstD3D11CompositionOverlay *) iter->data;
 
     ret = gst_d3d11_draw_quad_unlocked (overlay->quad,
-        &compositor->viewport, 1, &overlay->srv, 1, rtv, 1, NULL);
+        &compositor->viewport, 1, &overlay->srv, 1, rtv, 1, NULL, NULL, NULL);
 
     if (!ret)
       break;

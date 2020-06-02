@@ -349,7 +349,8 @@ gst_d3d11_draw_quad (GstD3D11Quad * quad,
     D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES], guint num_viewport,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES], guint num_srv,
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES], guint num_rtv,
-    ID3D11DepthStencilView * dsv)
+    ID3D11DepthStencilView * dsv, ID3D11BlendState * blend,
+    gfloat blend_factor[4])
 {
   gboolean ret;
 
@@ -357,7 +358,7 @@ gst_d3d11_draw_quad (GstD3D11Quad * quad,
 
   gst_d3d11_device_lock (quad->device);
   ret = gst_d3d11_draw_quad_unlocked (quad, viewport, num_viewport,
-      srv, num_srv, rtv, num_viewport, dsv);
+      srv, num_srv, rtv, num_viewport, dsv, blend, blend_factor);
   gst_d3d11_device_unlock (quad->device);
 
   return ret;
@@ -368,11 +369,13 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
     D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES], guint num_viewport,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES], guint num_srv,
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES], guint num_rtv,
-    ID3D11DepthStencilView * dsv)
+    ID3D11DepthStencilView * dsv, ID3D11BlendState * blend,
+    gfloat blend_factor[4])
 {
   ID3D11DeviceContext *context_handle;
   UINT offsets = 0;
   ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { NULL, };
+  ID3D11BlendState *blend_state = blend;
 
   g_return_val_if_fail (quad != NULL, FALSE);
   g_return_val_if_fail (viewport != NULL, FALSE);
@@ -403,8 +406,10 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
 
   ID3D11DeviceContext_PSSetShaderResources (context_handle, 0, num_srv, srv);
   ID3D11DeviceContext_OMSetRenderTargets (context_handle, num_rtv, rtv, dsv);
+  if (!blend_state)
+    blend_state = quad->blend;
   ID3D11DeviceContext_OMSetBlendState (context_handle,
-      quad->blend, NULL, 0xffffffff);
+      blend_state, blend_factor, 0xffffffff);
   ID3D11DeviceContext_OMSetDepthStencilState (context_handle,
       quad->depth_stencil, 1);
 

@@ -937,7 +937,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
       }
     } else {
       if (!gst_d3d11_color_converter_convert_unlocked (self->converter,
-          srv, &self->rtv)) {
+          srv, &self->rtv, NULL, NULL)) {
         GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
         return GST_FLOW_ERROR;
       } else {

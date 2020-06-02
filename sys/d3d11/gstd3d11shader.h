@@ -66,7 +66,9 @@ gboolean gst_d3d11_draw_quad (GstD3D11Quad * quad,
                               guint num_srv,
                               ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
                               guint num_rtv,
-                              ID3D11DepthStencilView *dsv);
+                              ID3D11DepthStencilView *dsv,
+                              ID3D11BlendState *blend,
+                              gfloat blend_factor[4]);
 
 gboolean gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
                                        D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES],
@@ -75,7 +77,9 @@ gboolean gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
                                        guint num_srv,
                                        ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
                                        guint num_rtv,
-                                       ID3D11DepthStencilView *dsv);
+                                       ID3D11DepthStencilView *dsv,
+                                       ID3D11BlendState *blend,
+                                       gfloat blend_factor[4]);
 
 G_END_DECLS
 

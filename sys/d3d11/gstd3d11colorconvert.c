@@ -1566,7 +1566,7 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
 
   if (!gst_d3d11_color_converter_convert (self->converter,
           copy_input ? self->shader_resource_view : resource_view,
-          copy_output ? self->render_target_view : render_view)) {
+          copy_output ? self->render_target_view : render_view, NULL, NULL)) {
     GST_ERROR_OBJECT (self, "Failed to convert");
 
     return GST_FLOW_ERROR;
