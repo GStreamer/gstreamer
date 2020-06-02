@@ -271,13 +271,17 @@ _add_signals (GString * json, GString * other_types,
     }
 
     for (type = G_OBJECT_TYPE (object); type; type = g_type_parent (type)) {
-      if (type == GST_TYPE_ELEMENT || type == GST_TYPE_OBJECT)
+      if (type == GST_TYPE_ELEMENT || type == GST_TYPE_OBJECT
+          || type == G_TYPE_OBJECT)
         break;
 
       if (type == GST_TYPE_PAD)
         break;
 
       if (type == GST_TYPE_BIN && G_OBJECT_TYPE (object) != GST_TYPE_BIN)
+        continue;
+      if (type == GST_TYPE_PIPELINE
+          && G_OBJECT_TYPE (object) != GST_TYPE_PIPELINE)
         continue;
 
       signals = g_signal_list_ids (type, &nsignals);
@@ -402,7 +406,7 @@ _add_properties (GString * json, GString * other_types,
       continue;
 
     g_value_init (&value, spec->value_type);
-    if (object && !!(spec->flags & G_PARAM_READABLE) &&
+    if (object && ! !(spec->flags & G_PARAM_READABLE) &&
         !(spec->flags & GST_PARAM_DOC_SHOW_DEFAULT)) {
       g_object_get_property (G_OBJECT (object), spec->name, &value);
     } else {
