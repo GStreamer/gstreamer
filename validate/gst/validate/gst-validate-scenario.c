@@ -96,6 +96,33 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED; \
   }
 
+#ifdef G_HAVE_ISO_VARARGS
+#define REPORT_UNLESS(condition, errpoint, ...)                                \
+  G_STMT_START {                                                               \
+    if (!(condition)) {                                                        \
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                        \
+      gst_validate_report_action(GST_VALIDATE_REPORTER(scenario), action,      \
+                                 SCENARIO_ACTION_EXECUTION_ERROR,              \
+                                 __VA_ARGS__);                                 \
+      goto errpoint;                                                           \
+    }                                                                          \
+  }                                                                            \
+  G_STMT_END
+#else /* G_HAVE_GNUC_VARARGS */
+#ifdef G_HAVE_GNUC_VARARGS
+#define REPORT_UNLESS(condition, errpoint, args...)                            \
+  G_STMT_START {                                                               \
+    if (!(condition)) {                                                        \
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                        \
+      gst_validate_report_action(GST_VALIDATE_REPORTER(scenario), action,      \
+                                 SCENARIO_ACTION_EXECUTION_ERROR, ##args);     \
+      goto errpoint;                                                           \
+    }                                                                          \
+  }                                                                            \
+  G_STMT_END
+#endif /* G_HAVE_ISO_VARARGS */
+#endif /* G_HAVE_GNUC_VARARGS */
+
 enum
 {
   PROP_0,
@@ -3027,16 +3054,21 @@ static gint
 _execute_appsrc_push (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
-  GstElement *target;
-  gchar *file_name;
-  gchar *file_contents;
-  gsize file_length;
+  GstElement *target = NULL;
+  gchar *file_name = NULL;
+  gchar *file_contents = NULL;
   GError *error = NULL;
   GstBuffer *buffer;
   guint64 offset = 0;
-  guint64 size = -1;
+  guint64 size = 0, read;
   gint push_buffer_ret;
   gboolean wait;
+  GFileInfo *finfo = NULL;
+  GFile *f = NULL;
+  GstPad *appsrc_pad = NULL;
+  GstPad *peer_pad = NULL;
+  GInputStream *stream = NULL;
+  GstValidateExecuteActionReturn res;
 
   /* We will only wait for the the buffer to be pushed if we are in a state
    * that allows flow of buffers (>=PAUSED). Otherwise the buffer will just
@@ -3044,93 +3076,105 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   wait = scenario->priv->target_state >= GST_STATE_PAUSED;
 
   target = _get_target_element (scenario, action);
-  if (target == NULL) {
-    gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR, "No element found for action: %s",
-        structure_string);
-    g_free (structure_string);
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
-
+  REPORT_UNLESS (target, err, "No element found.");
   file_name =
       g_strdup (gst_structure_get_string (action->structure, "file-name"));
-  if (file_name == NULL) {
-    gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR, "Missing file-name property: %s",
-        structure_string);
-    g_free (structure_string);
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
+  REPORT_UNLESS (file_name, err, "Missing file-name property.");
 
   structure_get_uint64_permissive (action->structure, "offset", &offset);
   structure_get_uint64_permissive (action->structure, "size", &size);
 
-  g_file_get_contents (file_name, &file_contents, &file_length, &error);
-  if (error != NULL) {
-    gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR,
-        "Could not open file for action: %s. Error: %s", structure_string,
+  f = g_file_new_for_path (file_name);
+  stream = G_INPUT_STREAM (g_file_read (f, NULL, &error));
+  REPORT_UNLESS (!error, err, "Could not open file for action. Error: %s",
+      error->message);
+
+  if (offset > 0) {
+    read = g_input_stream_skip (stream, offset, NULL, &error);
+    REPORT_UNLESS (!error, err, "Could not skip to offset. Error: %s",
         error->message);
-    g_free (structure_string);
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    REPORT_UNLESS (read == offset, err,
+        "Could not skip to offset, only skipped: %" G_GUINT64_FORMAT, read);
   }
-  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, file_contents,
-      file_length, offset, (size == -1 ? file_length : size), NULL, g_free);
+
+  if (size <= 0) {
+    finfo =
+        g_file_query_info (f, G_FILE_ATTRIBUTE_STANDARD_SIZE,
+        G_FILE_QUERY_INFO_NONE, NULL, &error);
+
+    REPORT_UNLESS (!error, err, "Could not query file size. Error: %s",
+        error->message);
+    size = g_file_info_get_size (finfo);
+  }
+
+  file_contents = g_malloc (size);
+  read = g_input_stream_read (stream, file_contents, size, NULL, &error);
+  REPORT_UNLESS (!error, err, "Could not read input file. Error: %s",
+      error->message);
+  REPORT_UNLESS (read == size, err,
+      "Could read enough data, only read: %" G_GUINT64_FORMAT, read);
+
+  buffer = gst_buffer_new_wrapped (file_contents, size);
+  file_contents = NULL;
 
   {
     const GValue *caps_value;
+    GstCaps *caps = NULL;
     caps_value = gst_structure_get_value (action->structure, "caps");
-    if (caps_value)
-      g_object_set (target, "caps", gst_value_get_caps (caps_value), NULL);
+    if (caps_value) {
+      if (G_VALUE_HOLDS_STRING (caps_value)) {
+        caps = gst_caps_from_string (g_value_get_string (caps_value));
+        REPORT_UNLESS (caps, err, "Invalid caps string: %s",
+            g_value_get_string (caps_value));
+      } else {
+        caps = gst_caps_copy (gst_value_get_caps (caps_value));
+      }
+
+      REPORT_UNLESS (caps, err, "Could not get caps value");
+      g_object_set (target, "caps", caps, NULL);
+      gst_caps_unref (caps);
+    }
   }
 
   /* We temporarily override the peer pad chain function to finish the action
    * once the buffer chain actually ends. */
-  {
-    GstPad *appsrc_pad = gst_element_get_static_pad (target, "src");
-    GstPad *peer_pad = gst_pad_get_peer (appsrc_pad);
-    if (!peer_pad) {
-      gchar *structure_string = gst_structure_to_string (action->structure);
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          SCENARIO_ACTION_EXECUTION_ERROR, "Action failed, pad not linked: %s",
-          structure_string);
-      g_free (structure_string);
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    }
+  appsrc_pad = gst_element_get_static_pad (target, "src");
+  peer_pad = gst_pad_get_peer (appsrc_pad);
+  REPORT_UNLESS (peer_pad, err, "Action failed, pad not linked");
 
-    wrap_pad_chain_function (peer_pad, appsrc_push_chain_wrapper, action);
-
-    gst_object_unref (appsrc_pad);
-    gst_object_unref (peer_pad);
-  }
+  wrap_pad_chain_function (peer_pad, appsrc_push_chain_wrapper, action);
 
   /* Keep the action alive until set done is called. */
   gst_validate_action_ref (action);
 
   g_signal_emit_by_name (target, "push-buffer", buffer, &push_buffer_ret);
   gst_buffer_unref (buffer);
-  if (push_buffer_ret != GST_FLOW_OK) {
-    gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR,
-        "push-buffer signal failed in action: %s", structure_string);
-    g_free (structure_string);
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
-
-  g_free (file_name);
-  gst_object_unref (target);
+  REPORT_UNLESS (push_buffer_ret == GST_FLOW_OK, err,
+      "push-buffer signal failed in action.");
 
   if (wait) {
-    return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+    res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
   } else {
     gst_validate_printf (NULL,
         "Pipeline is not ready to push buffers, interlacing appsrc-push action...");
-    return GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
+    res = GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
   }
+done:
+  gst_clear_object (&target);
+  gst_clear_object (&appsrc_pad);
+  gst_clear_object (&peer_pad);
+  g_clear_pointer (&file_name, g_free);
+  g_clear_pointer (&file_contents, g_free);
+  g_clear_error (&error);
+  g_clear_object (&f);
+  g_clear_object (&finfo);
+  g_clear_object (&stream);
+
+  return res;
+
+err:
+  res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  goto done;
 }
 
 static gint
