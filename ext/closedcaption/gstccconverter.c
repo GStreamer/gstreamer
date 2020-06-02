@@ -954,8 +954,8 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   gst_byte_writer_put_uint8_unchecked (&bw, fps_entry->fps_idx);
 
   if (cc_data_len / 3 > fps_entry->max_cc_count) {
-    GST_WARNING_OBJECT (self, "Too many cc_data triplet for framerate: %u > %u",
-        cc_data_len / 3, fps_entry->max_cc_count);
+    GST_WARNING_OBJECT (self, "Too many cc_data triplets for framerate: %u. "
+        "Truncating to %u", cc_data_len / 3, fps_entry->max_cc_count);
     cc_data_len = 3 * fps_entry->max_cc_count;
   }
 
@@ -1248,8 +1248,8 @@ cc_data_to_cea608_ccp (GstCCConverter * self, guint8 * cc_data,
     cc_data_len = compact_cc_data (cc_data, cc_data_len);
 
     if (cc_data_len / 3 > in_fps_entry->max_cc_count) {
-      GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u",
-          cc_data_len / 3);
+      GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u. "
+          "Truncating to %u", cc_data_len / 3, in_fps_entry->max_cc_count);
       cc_data_len = 3 * in_fps_entry->max_cc_count;
     }
 
@@ -1262,8 +1262,9 @@ cc_data_to_cea608_ccp (GstCCConverter * self, guint8 * cc_data,
 
     if ((new_cea608_1_len + new_cea608_2_len) / 2 >
         in_fps_entry->max_cea608_count) {
-      GST_WARNING_OBJECT (self, "Too many cea608 triples in CDP packet %u",
-          (new_cea608_1_len + new_cea608_2_len) / 2);
+      GST_WARNING_OBJECT (self, "Too many cea608 triples in CDP packet %u. "
+          "Truncating to %u", (new_cea608_1_len + new_cea608_2_len) / 2,
+          in_fps_entry->max_cea608_count);
       if ((new_cea608_1_len + new_cea608_2_len) / 2 >
           in_fps_entry->max_cea608_count) {
         new_cea608_1_len = 2 * in_fps_entry->max_cea608_count;
@@ -1346,7 +1347,8 @@ convert_cea608_raw_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   n /= 2;
 
   if (n > 3) {
-    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
+    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u.  Truncating to %u", n,
+        3);
     n = 3;
   }
 
@@ -1386,7 +1388,8 @@ convert_cea608_raw_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
   n /= 2;
 
   if (n > 3) {
-    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
+    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u. Truncating to %u", n,
+        3);
     n = 3;
   }
 
@@ -1440,8 +1443,9 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     n /= 2;
 
     if (n > in_fps_entry->max_cea608_count) {
-      GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
-      n = 3;
+      GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u. Truncating to %u",
+          n, in_fps_entry->max_cea608_count);
+      n = in_fps_entry->max_cea608_count;
     }
 
     gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -1593,7 +1597,7 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
     if (n > in_fps_entry->max_cea608_count) {
       GST_WARNING_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
-      n = 3;
+      n = in_fps_entry->max_cea608_count;
     }
 
     gst_buffer_map (inbuf, &in, GST_MAP_READ);
