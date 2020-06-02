@@ -2195,6 +2195,7 @@ reset_counters (GstCCConverter * self)
 static GstFlowReturn
 drain_input (GstCCConverter * self)
 {
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (self);
   GstBaseTransform *trans = GST_BASE_TRANSFORM (self);
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2202,7 +2203,21 @@ drain_input (GstCCConverter * self)
       || self->scratch_cea608_2_len > 0 || can_generate_output (self)) {
     GstBuffer *outbuf;
 
+    if (!self->previous_buffer) {
+      GST_WARNING_OBJECT (self, "Attempt to draining without a previous "
+          "buffer.  Aborting");
+      return GST_FLOW_OK;
+    }
+
     outbuf = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+
+    if (bclass->copy_metadata) {
+      if (!bclass->copy_metadata (trans, self->previous_buffer, outbuf)) {
+        /* something failed, post a warning */
+        GST_ELEMENT_WARNING (self, STREAM, NOT_IMPLEMENTED,
+            ("could not copy metadata"), (NULL));
+      }
+    }
 
     ret = gst_cc_converter_transform (self, NULL, outbuf);
     if (gst_buffer_get_size (outbuf) <= 0) {
