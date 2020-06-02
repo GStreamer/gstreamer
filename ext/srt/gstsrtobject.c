@@ -1264,6 +1264,17 @@ gst_srt_object_read (GstSRTObject * srtobject,
 
 
     len = srt_recvmsg (rsock, (char *) (data), size);
+
+    if (len == SRT_ERROR) {
+      gint srt_errno = srt_getlasterror (NULL);
+      if (srt_errno == SRT_EASYNCRCV) {
+        continue;
+      } else {
+        g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+            "Failed to receive from SRT socket: %s", srt_getlasterror_str ());
+        return -1;
+      }
+    }
     break;
   }
 
