@@ -326,7 +326,7 @@ struct _GstD3D11ColorConverter
 
   D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
 
-  RECT crop_rect;
+  RECT src_rect;
   gint input_texture_width;
   gint input_texture_height;
   ID3D11Buffer *vertex_buffer;
@@ -1232,10 +1232,10 @@ gst_d3d11_color_convert_setup_shader (GstD3D11ColorConverter * self,
   self->vertex_buffer = vertex_buffer;
   ID3D11Buffer_AddRef (vertex_buffer);
 
-  self->crop_rect.left = 0;
-  self->crop_rect.top = 0;
-  self->crop_rect.right = GST_VIDEO_INFO_WIDTH (in_info);
-  self->crop_rect.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
+  self->src_rect.left = 0;
+  self->src_rect.top = 0;
+  self->src_rect.right = GST_VIDEO_INFO_WIDTH (in_info);
+  self->src_rect.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
 
   self->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
   self->input_texture_height = GST_VIDEO_INFO_HEIGHT (in_info);
@@ -1412,7 +1412,7 @@ gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
   ID3D11DeviceContext *context_handle;
   HRESULT hr;
   FLOAT u, v;
-  const RECT *crop_rect = &self->crop_rect;
+  const RECT *src_rect = &self->src_rect;
   gint texture_width = self->input_texture_width;
   gint texture_height = self->input_texture_height;
 
@@ -1430,8 +1430,8 @@ gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
   vertex_data = (VertexData *) map.pData;
 
   /* bottom left */
-  u = (crop_rect->left / (gfloat) texture_width) - 0.5f / texture_width;
-  v = (crop_rect->bottom / (gfloat) texture_height) - 0.5f / texture_height;
+  u = (src_rect->left / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (src_rect->bottom / (gfloat) texture_height) - 0.5f / texture_height;
 
   vertex_data[0].position.x = -1.0f;
   vertex_data[0].position.y = -1.0f;
@@ -1440,8 +1440,8 @@ gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
   vertex_data[0].texture.y = v;
 
   /* top left */
-  u = (crop_rect->left / (gfloat) texture_width) - 0.5f / texture_width;
-  v = (crop_rect->top / (gfloat) texture_height) - 0.5f / texture_height;
+  u = (src_rect->left / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (src_rect->top / (gfloat) texture_height) - 0.5f / texture_height;
 
   vertex_data[1].position.x = -1.0f;
   vertex_data[1].position.y = 1.0f;
@@ -1450,8 +1450,8 @@ gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
   vertex_data[1].texture.y = v;
 
   /* top right */
-  u = (crop_rect->right / (gfloat) texture_width) - 0.5f / texture_width;
-  v = (crop_rect->top / (gfloat) texture_height) - 0.5f / texture_height;
+  u = (src_rect->right / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (src_rect->top / (gfloat) texture_height) - 0.5f / texture_height;
 
   vertex_data[2].position.x = 1.0f;
   vertex_data[2].position.y = 1.0f;
@@ -1460,8 +1460,8 @@ gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
   vertex_data[2].texture.y = v;
 
   /* bottom right */
-  u = (crop_rect->right / (gfloat) texture_width) - 0.5f / texture_width;
-  v = (crop_rect->bottom / (gfloat) texture_height) - 0.5f / texture_height;
+  u = (src_rect->right / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (src_rect->bottom / (gfloat) texture_height) - 0.5f / texture_height;
 
   vertex_data[3].position.x = 1.0f;
   vertex_data[3].position.y = -1.0f;
@@ -1548,16 +1548,13 @@ gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
 }
 
 gboolean
-gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
-    RECT * rect)
+gst_d3d11_color_converter_update_viewport (GstD3D11ColorConverter * converter,
+    D3D11_VIEWPORT * viewport)
 {
   g_return_val_if_fail (converter != NULL, FALSE);
-  g_return_val_if_fail (rect != NULL, FALSE);
+  g_return_val_if_fail (viewport != NULL, FALSE);
 
-  converter->viewport[0].TopLeftX = rect->left;
-  converter->viewport[0].TopLeftY = rect->top;
-  converter->viewport[0].Width = rect->right - rect->left;
-  converter->viewport[0].Height = rect->bottom - rect->top;
+  converter->viewport[0] = *viewport;
 
   switch (GST_VIDEO_INFO_FORMAT (&converter->out_info)) {
     case GST_VIDEO_FORMAT_NV12:
@@ -1586,17 +1583,17 @@ gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
 }
 
 gboolean
-gst_d3d11_color_converter_update_crop_rect (GstD3D11ColorConverter * converter,
-    RECT * crop_rect)
+gst_d3d11_color_converter_update_src_rect (GstD3D11ColorConverter * converter,
+    RECT * src_rect)
 {
   g_return_val_if_fail (converter != NULL, FALSE);
-  g_return_val_if_fail (crop_rect != NULL, FALSE);
+  g_return_val_if_fail (src_rect != NULL, FALSE);
 
-  if (converter->crop_rect.left != crop_rect->left ||
-      converter->crop_rect.top != crop_rect->top ||
-      converter->crop_rect.right != crop_rect->right ||
-      converter->crop_rect.bottom != crop_rect->bottom) {
-    converter->crop_rect = *crop_rect;
+  if (converter->src_rect.left != src_rect->left ||
+      converter->src_rect.top != src_rect->top ||
+      converter->src_rect.right != src_rect->right ||
+      converter->src_rect.bottom != src_rect->bottom) {
+    converter->src_rect = *src_rect;
 
     /* vertex buffer will be updated on next convert() call */
     converter->update_vertex = TRUE;

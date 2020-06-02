@@ -913,10 +913,18 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
     }
 
     if (self->first_present) {
-      gst_d3d11_color_converter_update_rect (self->converter,
-          &self->render_rect);
-      gst_d3d11_overlay_compositor_update_rect (self->compositor,
-          &self->render_rect);
+      D3D11_VIEWPORT viewport;
+
+      viewport.TopLeftX = self->render_rect.left;
+      viewport.TopLeftY = self->render_rect.top;
+      viewport.Width = self->render_rect.right - self->render_rect.left;
+      viewport.Height = self->render_rect.bottom - self->render_rect.top;
+      viewport.MinDepth = 0.0f;
+      viewport.MaxDepth = 1.0f;
+      gst_d3d11_color_converter_update_viewport (self->converter,
+          &viewport);
+      gst_d3d11_overlay_compositor_update_viewport (self->compositor,
+          &viewport);
     }
 
     if (self->processor && piv && self->pov) {

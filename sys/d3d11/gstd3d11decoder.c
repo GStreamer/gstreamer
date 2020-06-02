@@ -849,15 +849,17 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     D3D11_RENDER_TARGET_VIEW_DESC render_desc = { 0, };
     D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc = { 0, };
     ID3D11Device *device_handle;
-    RECT rect;
+    D3D11_VIEWPORT viewport;
 
     priv->converter = gst_d3d11_color_converter_new (priv->device, info, info);
 
-    rect.left = 0;
-    rect.top = 0;
-    rect.right = priv->display_width;
-    rect.bottom = priv->display_height;
-    gst_d3d11_color_converter_update_rect (priv->converter, &rect);
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = priv->display_width;
+    viewport.Height = priv->display_height;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    gst_d3d11_color_converter_update_viewport (priv->converter, &viewport);
 
     device_handle = gst_d3d11_device_get_device_handle (priv->device);
 
@@ -1245,7 +1247,7 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     rect.right = display_width;
     rect.bottom = display_height;
 
-    gst_d3d11_color_converter_update_crop_rect (priv->converter, &rect);
+    gst_d3d11_color_converter_update_src_rect (priv->converter, &rect);
 
     if (!gst_d3d11_color_converter_convert_unlocked (priv->converter,
             srv, priv->fallback_render_target_view)) {
@@ -1382,7 +1384,7 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     rect.right = display_width;
     rect.bottom = display_height;
 
-    gst_d3d11_color_converter_update_crop_rect (priv->converter, &rect);
+    gst_d3d11_color_converter_update_src_rect (priv->converter, &rect);
 
     if (!gst_d3d11_color_converter_convert_unlocked (priv->converter, srv, rtv)) {
       GST_ERROR_OBJECT (self, "Failed to convert");

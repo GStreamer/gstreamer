@@ -625,16 +625,13 @@ gst_d3d11_overlay_compositor_free_overlays (GstD3D11OverlayCompositor *
 }
 
 gboolean
-gst_d3d11_overlay_compositor_update_rect (GstD3D11OverlayCompositor *
-    compositor, RECT * rect)
+gst_d3d11_overlay_compositor_update_viewport (GstD3D11OverlayCompositor *
+    compositor, D3D11_VIEWPORT * viewport)
 {
   g_return_val_if_fail (compositor != NULL, FALSE);
-  g_return_val_if_fail (rect != NULL, FALSE);
+  g_return_val_if_fail (viewport != NULL, FALSE);
 
-  compositor->viewport.TopLeftX = rect->left;
-  compositor->viewport.TopLeftY = rect->top;
-  compositor->viewport.Width = rect->right - rect->left;
-  compositor->viewport.Height = rect->bottom - rect->top;
+  compositor->viewport = *viewport;
 
   return TRUE;
 }

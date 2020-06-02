@@ -42,11 +42,11 @@ gboolean                 gst_d3d11_color_converter_convert_unlocked (GstD3D11Col
                                                                      ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
                                                                      ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
 
-gboolean                 gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
-                                                                RECT *rect);
+gboolean                 gst_d3d11_color_converter_update_viewport  (GstD3D11ColorConverter * converter,
+                                                                     D3D11_VIEWPORT * viewport);
 
-gboolean                 gst_d3d11_color_converter_update_crop_rect (GstD3D11ColorConverter * converter,
-                                                                     RECT *crop_rect);
+gboolean                 gst_d3d11_color_converter_update_src_rect (GstD3D11ColorConverter * converter,
+                                                                    RECT * src_rect);
 
 G_END_DECLS
 
