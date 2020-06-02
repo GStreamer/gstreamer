@@ -1022,7 +1022,7 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
 
   /**
    * GstWebRTCICE::add-local-ip-address:
-   * @object: the #GstWebRtcICE
+   * @object: the #GstWebRTCICE
    * @address: The local IP address
    *
    * Add a local IP address to use for ICE candidate gathering.  If none
