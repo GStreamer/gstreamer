@@ -1225,6 +1225,7 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
       "The display contrast value", 0.0, 2.0, 1.0, G_PARAM_READWRITE);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
+  gst_type_mark_as_plugin_api (gst_vaapi_display_type_get_type ());
 }
 
 /**

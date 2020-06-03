@@ -4045,6 +4045,12 @@ gst_vaapi_encoder_h264_class_init (GstVaapiEncoderH264Class * klass)
 
   g_object_class_install_properties (object_class, ENCODER_H264_N_PROPERTIES,
       properties);
+
+  gst_type_mark_as_plugin_api (GST_VAAPI_TYPE_ENCODER_MBBRC);
+  gst_type_mark_as_plugin_api (gst_vaapi_encoder_h264_prediction_type ());
+  gst_type_mark_as_plugin_api (g_class_data.rate_control_get_type ());
+  gst_type_mark_as_plugin_api (g_class_data.encoder_tune_get_type ());
+  gst_type_mark_as_plugin_api (gst_vaapi_encoder_h264_compliance_mode_type ());
 }
 
 /**

@@ -2315,6 +2315,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
           DEFAULT_DEINTERLACE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+
   filter_ops = gst_vaapi_filter_get_operations (NULL);
   if (!filter_ops)
     return;

@@ -56,6 +56,7 @@ gst_vaapi_point_get_type (void)
     GType type =
         g_boxed_type_register_static (g_intern_static_string ("GstVaapiPoint"),
         default_copy_func, default_free_func);
+    gst_type_mark_as_plugin_api (type);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
@@ -73,6 +74,7 @@ gst_vaapi_rectangle_get_type (void)
         g_boxed_type_register_static (g_intern_static_string
         ("GstVaapiRectangle"),
         default_copy_func, default_free_func);
+    gst_type_mark_as_plugin_api (type);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
@@ -95,6 +97,7 @@ gst_vaapi_render_mode_get_type (void)
 
   if (g_once_init_enter (&g_type)) {
     GType type = g_enum_register_static ("GstVaapiRenderMode", render_modes);
+    gst_type_mark_as_plugin_api (type);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
@@ -123,6 +126,7 @@ gst_vaapi_rotation_get_type (void)
 
   if (g_once_init_enter (&g_type)) {
     GType type = g_enum_register_static ("GstVaapiRotation", rotation_values);
+    gst_type_mark_as_plugin_api (type);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
@@ -160,6 +164,7 @@ gst_vaapi_rate_control_get_type (void)
   if (g_once_init_enter (&g_type)) {
     GType type = g_enum_register_static ("GstVaapiRateControl",
         rate_control_values);
+    gst_type_mark_as_plugin_api (type);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
