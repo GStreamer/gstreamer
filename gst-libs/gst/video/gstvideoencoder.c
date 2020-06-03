@@ -1527,43 +1527,55 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_OBJECT_LOCK (encoder);
   if (priv->force_key_unit.head) {
-    ForcedKeyUnitEvent *fevt = NULL;
     GstClockTime running_time;
     GList *l;
+    GQueue matching_fevt = G_QUEUE_INIT;
 
     running_time =
         gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
         cstart);
 
     for (l = priv->force_key_unit.head; l; l = l->next) {
-      ForcedKeyUnitEvent *tmp = l->data;
+      ForcedKeyUnitEvent *fevt = l->data;
 
       /* Skip pending keyunits */
-      if (tmp->pending)
+      if (fevt->pending)
         continue;
 
       /* Simple case, keyunit ASAP */
-      if (tmp->running_time == GST_CLOCK_TIME_NONE) {
-        fevt = tmp;
-        break;
+      if (fevt->running_time == GST_CLOCK_TIME_NONE) {
+        g_queue_push_tail (&matching_fevt, fevt);
+        continue;
       }
 
       /* Event for before this frame */
-      if (tmp->running_time <= running_time) {
-        fevt = tmp;
-        break;
+      if (fevt->running_time <= running_time) {
+        g_queue_push_tail (&matching_fevt, fevt);
+        continue;
       }
+
+      /* Otherwise all following events are in the future */
+      break;
     }
 
-    if (fevt) {
-      fevt->frame_id = frame->system_frame_number;
+    if (matching_fevt.length > 0) {
+      ForcedKeyUnitEvent *fevt;
+      gboolean all_headers = FALSE;
+
       GST_DEBUG_OBJECT (encoder,
           "Forcing a key unit at running time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (running_time));
+
+      while ((fevt = g_queue_pop_head (&matching_fevt))) {
+        fevt->pending = TRUE;
+        fevt->frame_id = frame->system_frame_number;
+        if (fevt->all_headers)
+          all_headers = TRUE;
+      }
+
       GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
-      if (fevt->all_headers)
+      if (all_headers)
         GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME_HEADERS (frame);
-      fevt->pending = TRUE;
     }
   }
   GST_OBJECT_UNLOCK (encoder);
@@ -2267,48 +2279,58 @@ gst_video_encoder_send_key_unit_unlocked (GstVideoEncoder * encoder,
   GstVideoEncoderPrivate *priv = encoder->priv;
   GstClockTime stream_time, running_time;
   GstEvent *ev;
-  ForcedKeyUnitEvent *fevt = NULL;
-  GList *l, *fevt_link = NULL;
+  GList *l;
+  GQueue matching_fevt = G_QUEUE_INIT;
+  ForcedKeyUnitEvent *fevt;
 
   running_time =
       gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
       frame->pts);
 
   GST_OBJECT_LOCK (encoder);
-  for (l = priv->force_key_unit.head; l; l = l->next) {
-    ForcedKeyUnitEvent *tmp = l->data;
+  for (l = priv->force_key_unit.head; l;) {
+    fevt = l->data;
 
     /* Skip non-pending keyunits */
-    if (!tmp->pending)
+    if (!fevt->pending) {
+      l = l->next;
       continue;
+    }
 
     /* Exact match using the frame id */
-    if (frame->system_frame_number == tmp->frame_id) {
-      fevt_link = l;
-      fevt = tmp;
-      break;
+    if (frame->system_frame_number == fevt->frame_id) {
+      GList *next = l->next;
+      g_queue_push_tail (&matching_fevt, fevt);
+      g_queue_delete_link (&priv->force_key_unit, l);
+      l = next;
+      continue;
     }
 
     /* Simple case, keyunit ASAP */
-    if (tmp->running_time == GST_CLOCK_TIME_NONE) {
-      fevt_link = l;
-      fevt = tmp;
-      break;
+    if (fevt->running_time == GST_CLOCK_TIME_NONE) {
+      GList *next = l->next;
+      g_queue_push_tail (&matching_fevt, fevt);
+      g_queue_delete_link (&priv->force_key_unit, l);
+      l = next;
+      continue;
     }
 
     /* Event for before this frame */
-    if (tmp->running_time <= running_time) {
-      fevt_link = l;
-      fevt = tmp;
-      break;
+    if (fevt->running_time <= running_time) {
+      GList *next = l->next;
+      g_queue_push_tail (&matching_fevt, fevt);
+      g_queue_delete_link (&priv->force_key_unit, l);
+      l = next;
+      continue;
     }
+
+    /* Otherwise all following events are in the future */
+    break;
   }
 
-  if (fevt_link)
-    g_queue_delete_link (&priv->force_key_unit, fevt_link);
   GST_OBJECT_UNLOCK (encoder);
 
-  if (fevt) {
+  while ((fevt = g_queue_pop_head (&matching_fevt))) {
     stream_time =
         gst_segment_to_stream_time (&encoder->output_segment, GST_FORMAT_TIME,
         frame->pts);
