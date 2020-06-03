@@ -2198,7 +2198,7 @@ gst_video_encoder_send_header_unlocked (GstVideoEncoder * encoder,
   GstVideoEncoderPrivate *priv = encoder->priv;
 
   if (G_UNLIKELY (priv->new_headers)) {
-    GList *tmp, *copy = NULL;
+    GList *tmp;
 
     GST_DEBUG_OBJECT (encoder, "Sending headers");
 
@@ -2206,13 +2206,7 @@ gst_video_encoder_send_header_unlocked (GstVideoEncoder * encoder,
     for (tmp = priv->headers; tmp; tmp = tmp->next) {
       GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
 
-      copy = g_list_append (copy, gst_buffer_make_writable (tmpbuf));
-    }
-    g_list_free (priv->headers);
-    priv->headers = copy;
-
-    for (tmp = priv->headers; tmp; tmp = tmp->next) {
-      GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
+      tmp->data = tmpbuf = gst_buffer_make_writable (tmpbuf);
 
       GST_OBJECT_LOCK (encoder);
       priv->bytes += gst_buffer_get_size (tmpbuf);
