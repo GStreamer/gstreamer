@@ -132,16 +132,17 @@ struct _GstVideoEncoderPrivate
   gint64 min_latency;
   gint64 max_latency;
 
+  /* FIXME 2.0: Use a GQueue or similar, see GstVideoCodecFrame::events */
   GList *current_frame_events;
 
   GList *headers;
   gboolean new_headers;         /* Whether new headers were just set */
 
-  GList *force_key_unit;        /* List of pending forced keyunits */
+  GQueue force_key_unit;        /* List of pending forced keyunits */
 
   guint32 system_frame_number;
 
-  GList *frames;                /* Protected with OBJECT_LOCK */
+  GQueue frames;                /* Protected with OBJECT_LOCK */
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
   gboolean output_state_changed;
@@ -386,6 +387,18 @@ _flush_events (GstPad * pad, GList * events)
   return NULL;
 }
 
+#if !GLIB_CHECK_VERSION(2, 60, 0)
+#define g_queue_clear_full queue_clear_full
+static void
+queue_clear_full (GQueue * queue, GDestroyNotify free_func)
+{
+  gpointer data;
+
+  while ((data = g_queue_pop_head (queue)) != NULL)
+    free_func (data);
+}
+#endif
+
 static gboolean
 gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 {
@@ -397,10 +410,8 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
   priv->presentation_frame_number = 0;
   priv->distance_from_sync = 0;
 
-  g_list_foreach (priv->force_key_unit, (GFunc) forced_key_unit_event_free,
-      NULL);
-  g_list_free (priv->force_key_unit);
-  priv->force_key_unit = NULL;
+  g_queue_clear_full (&priv->force_key_unit,
+      (GDestroyNotify) forced_key_unit_event_free);
 
   priv->drained = TRUE;
 
@@ -457,7 +468,7 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
   } else {
     GList *l;
 
-    for (l = priv->frames; l; l = l->next) {
+    for (l = priv->frames.head; l; l = l->next) {
       GstVideoCodecFrame *frame = l->data;
 
       frame->events = _flush_events (encoder->srcpad, frame->events);
@@ -466,9 +477,8 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
         encoder->priv->current_frame_events);
   }
 
-  g_list_foreach (priv->frames, (GFunc) gst_video_codec_frame_unref, NULL);
-  g_list_free (priv->frames);
-  priv->frames = NULL;
+  g_queue_clear_full (&priv->frames,
+      (GDestroyNotify) gst_video_codec_frame_unref);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
@@ -531,6 +541,9 @@ gst_video_encoder_init (GstVideoEncoder * encoder, GstVideoEncoderClass * klass)
 
   priv->headers = NULL;
   priv->new_headers = FALSE;
+
+  g_queue_init (&priv->frames);
+  g_queue_init (&priv->force_key_unit);
 
   priv->min_latency = 0;
   priv->max_latency = 0;
@@ -1094,8 +1107,7 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
 
           GST_OBJECT_LOCK (encoder);
           fevt = forced_key_unit_event_new (running_time, all_headers, count);
-          encoder->priv->force_key_unit =
-              g_list_append (encoder->priv->force_key_unit, fevt);
+          g_queue_push_tail (&encoder->priv->force_key_unit, fevt);
           GST_OBJECT_UNLOCK (encoder);
 
           GST_DEBUG_OBJECT (encoder,
@@ -1240,8 +1252,7 @@ gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
 
           GST_OBJECT_LOCK (encoder);
           fevt = forced_key_unit_event_new (running_time, all_headers, count);
-          encoder->priv->force_key_unit =
-              g_list_append (encoder->priv->force_key_unit, fevt);
+          g_queue_push_tail (&encoder->priv->force_key_unit, fevt);
           GST_OBJECT_UNLOCK (encoder);
 
           GST_DEBUG_OBJECT (encoder,
@@ -1498,7 +1509,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_CLOCK_TIME_NONE, duration);
 
   GST_OBJECT_LOCK (encoder);
-  if (priv->force_key_unit) {
+  if (priv->force_key_unit.head) {
     ForcedKeyUnitEvent *fevt = NULL;
     GstClockTime running_time;
     GList *l;
@@ -1507,7 +1518,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
         cstart);
 
-    for (l = priv->force_key_unit; l; l = l->next) {
+    for (l = priv->force_key_unit.head; l; l = l->next) {
       ForcedKeyUnitEvent *tmp = l->data;
 
       /* Skip pending keyunits */
@@ -1540,8 +1551,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
   GST_OBJECT_UNLOCK (encoder);
 
-  gst_video_codec_frame_ref (frame);
-  priv->frames = g_list_append (priv->frames, frame);
+  g_queue_push_tail (&priv->frames, gst_video_codec_frame_ref (frame));
 
   /* new data, more finish needed */
   priv->drained = FALSE;
@@ -1759,7 +1769,7 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
 
   /* Push all pending pre-caps events of the oldest frame before
    * setting caps */
-  frame = encoder->priv->frames ? encoder->priv->frames->data : NULL;
+  frame = encoder->priv->frames.head ? encoder->priv->frames.head->data : NULL;
   if (frame || encoder->priv->current_frame_events) {
     GList **events, *l;
 
@@ -1984,10 +1994,10 @@ gst_video_encoder_release_frame (GstVideoEncoder * enc,
   GList *link;
 
   /* unref once from the list */
-  link = g_list_find (enc->priv->frames, frame);
+  link = g_queue_find (&enc->priv->frames, frame);
   if (link) {
     gst_video_codec_frame_unref (frame);
-    enc->priv->frames = g_list_delete_link (enc->priv->frames, link);
+    g_queue_delete_link (&enc->priv->frames, link);
   }
   /* unref because this function takes ownership */
   gst_video_codec_frame_unref (frame);
@@ -2122,7 +2132,7 @@ gst_video_encoder_push_pending_unlocked (GstVideoEncoder * encoder,
   GList *l;
 
   /* Push all pending events that arrived before this frame */
-  for (l = priv->frames; l; l = l->next) {
+  for (l = priv->frames.head; l; l = l->next) {
     GstVideoCodecFrame *tmp = l->data;
 
     if (tmp->events) {
@@ -2154,7 +2164,7 @@ gst_video_encoder_infer_dts_unlocked (GstVideoEncoder * encoder,
   gboolean seen_none = FALSE;
 
   /* some maintenance regardless */
-  for (l = priv->frames; l; l = l->next) {
+  for (l = priv->frames.head; l; l = l->next) {
     GstVideoCodecFrame *tmp = l->data;
 
     if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts)) {
@@ -2247,14 +2257,14 @@ gst_video_encoder_send_key_unit_unlocked (GstVideoEncoder * encoder,
   GstClockTime stream_time, running_time;
   GstEvent *ev;
   ForcedKeyUnitEvent *fevt = NULL;
-  GList *l;
+  GList *l, *fevt_link = NULL;
 
   running_time =
       gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
       frame->pts);
 
   GST_OBJECT_LOCK (encoder);
-  for (l = priv->force_key_unit; l; l = l->next) {
+  for (l = priv->force_key_unit.head; l; l = l->next) {
     ForcedKeyUnitEvent *tmp = l->data;
 
     /* Skip non-pending keyunits */
@@ -2263,26 +2273,28 @@ gst_video_encoder_send_key_unit_unlocked (GstVideoEncoder * encoder,
 
     /* Exact match using the frame id */
     if (frame->system_frame_number == tmp->frame_id) {
+      fevt_link = l;
       fevt = tmp;
       break;
     }
 
     /* Simple case, keyunit ASAP */
     if (tmp->running_time == GST_CLOCK_TIME_NONE) {
+      fevt_link = l;
       fevt = tmp;
       break;
     }
 
     /* Event for before this frame */
     if (tmp->running_time <= running_time) {
+      fevt_link = l;
       fevt = tmp;
       break;
     }
   }
 
-  if (fevt) {
-    priv->force_key_unit = g_list_remove (priv->force_key_unit, fevt);
-  }
+  if (fevt_link)
+    g_queue_delete_link (&priv->force_key_unit, fevt_link);
   GST_OBJECT_UNLOCK (encoder);
 
   if (fevt) {
@@ -2366,9 +2378,8 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   priv->processed++;
 
-  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit)
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit.head)
     gst_video_encoder_send_key_unit_unlocked (encoder, frame, &send_headers);
-
 
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)
       && frame->abidata.ABI.num_subframes == 0) {
@@ -2502,7 +2513,7 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
   if (ret != GST_FLOW_OK)
     goto done;
 
-  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit)
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit.head)
     gst_video_encoder_send_key_unit_unlocked (encoder, frame, &send_headers);
 
   /* Push pending events only for the first subframe ie segment event.
@@ -2708,8 +2719,8 @@ gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
   GstVideoCodecFrame *frame = NULL;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  if (encoder->priv->frames)
-    frame = gst_video_codec_frame_ref (encoder->priv->frames->data);
+  if (encoder->priv->frames.head)
+    frame = gst_video_codec_frame_ref (encoder->priv->frames.head->data);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return (GstVideoCodecFrame *) frame;
@@ -2733,7 +2744,7 @@ gst_video_encoder_get_frame (GstVideoEncoder * encoder, int frame_number)
   GST_DEBUG_OBJECT (encoder, "frame_number : %d", frame_number);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  for (g = encoder->priv->frames; g; g = g->next) {
+  for (g = encoder->priv->frames.head; g; g = g->next) {
     GstVideoCodecFrame *tmp = g->data;
 
     if (tmp->system_frame_number == frame_number) {
@@ -2760,8 +2771,9 @@ gst_video_encoder_get_frames (GstVideoEncoder * encoder)
   GList *frames;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  frames = g_list_copy (encoder->priv->frames);
-  g_list_foreach (frames, (GFunc) gst_video_codec_frame_ref, NULL);
+  frames =
+      g_list_copy_deep (encoder->priv->frames.head,
+      (GCopyFunc) gst_video_codec_frame_ref, NULL);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return frames;

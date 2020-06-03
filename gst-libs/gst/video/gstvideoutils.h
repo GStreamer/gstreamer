@@ -252,6 +252,7 @@ struct _GstVideoCodecFrame
 
   /* Events that should be pushed downstream *before*
    * the next output_buffer */
+  /* FIXME 2.0: Use a GQueue or similar */
   GList *events;		/* ED */
 
   gpointer       user_data;
