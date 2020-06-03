@@ -40,15 +40,15 @@ G_BEGIN_DECLS
  * @GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE: The formatted files was malformed
  * @GES_ERROR_INVALID_FRAME_NUMBER: The frame number is invalid
  * @GES_ERROR_NEGATIVE_LAYER: The operation would lead to a negative
- * #GES_TIMELINE_ELEMENT_LAYER_PRIORITY
+ * #GES_TIMELINE_ELEMENT_LAYER_PRIORITY. (Since: 1.18)
  * @GES_ERROR_NEGATIVE_TIME: The operation would lead to a negative time.
  * E.g. for the #GESTimelineElement:start #GESTimelineElement:duration or
- * #GESTimelineElement:in-point.
+ * #GESTimelineElement:in-point. (Since: 1.18)
  * @GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT: Some #GESTimelineElement does
  * not have a large enough #GESTimelineElement:max-duration to cover the
- * desired operation
+ * desired operation. (Since: 1.18)
  * @GES_ERROR_INVALID_OVERLAP_IN_TRACK: The operation would break one of
- * the overlap conditions for the #GESTimeline
+ * the overlap conditions for the #GESTimeline. (Since: 1.18)
  */
 typedef enum
 {

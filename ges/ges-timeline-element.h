@@ -221,7 +221,7 @@ struct _GESTimelineElement
  * setting can fail, with the @error being optionally set. Default
  * implementation will call @set_child_property and return %TRUE.
  * @get_layer_priority: Get the #GESLayer:priority of the layer that this
- * element is part of.
+ * element is part of. (Since: 1.18)
  * @list_children_properties: List the children properties that have been
  * registered for the element. The default implementation is able to fetch
  * all of these, so should be sufficient. If you overwrite this, you

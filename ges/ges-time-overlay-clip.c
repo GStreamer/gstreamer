@@ -38,6 +38,7 @@
  *
  * Returns: (transfer floating) (nullable): The newly created #GESSourceClip,
  * or %NULL if there was an error.
+ * Since: 1.18
  */
 GESSourceClip *
 ges_source_clip_new_time_overlay (void)

@@ -201,6 +201,7 @@ _child_property_removed (GESTimelineElement * element, GObject * child,
  * #GESTrackElement:has-internal-source set to %TRUE.
  *
  * Returns: %TRUE if the child property was found and newly registered.
+ * Since: 1.18
  */
 gboolean
 ges_base_effect_register_time_property (GESBaseEffect * effect,
@@ -288,6 +289,7 @@ ges_base_effect_register_time_property (GESBaseEffect * effect,
  * #GESTrackElement:has-internal-source set to %TRUE.
  *
  * Returns: %TRUE if the translation functions were set.
+ * Since: 1.18
  */
 gboolean
 ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
@@ -331,6 +333,7 @@ ges_base_effect_set_time_translation_funcs (GESBaseEffect * effect,
  * considered a time effect.
  *
  * Returns: %TRUE if @effect is considered a time effect.
+ * Since: 1.18
  */
 gboolean
 ges_base_effect_is_time_effect (GESBaseEffect * effect)

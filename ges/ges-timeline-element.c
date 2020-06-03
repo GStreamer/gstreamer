@@ -1847,6 +1847,7 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
  * property name (and type name) are left unchanged!
  *
  * Returns: %TRUE if the property was found and set.
+ * Since: 1.18
  */
 gboolean
 ges_timeline_element_set_child_property_full (GESTimelineElement * self,
@@ -2384,6 +2385,7 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
  * timeline.
  *
  * Returns: %TRUE if the edit of @self completed, %FALSE on failure.
+ * Since: 1.18
  */
 
 gboolean

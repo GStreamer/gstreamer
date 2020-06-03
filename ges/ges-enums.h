@@ -522,6 +522,15 @@ typedef enum {
     GES_EDIT_MODE_SLIDE
 } GESEditMode;
 
+/**
+ * ges_edit_mode_name:
+ * @mode: a #GESEditMode
+ *
+ * Return a string representation of @mode.
+ *
+ * Returns: (transfer none): a string representation of @mode.
+ * Since: 1.18
+ */
 GES_API
 const gchar * ges_edit_mode_name (GESEditMode mode);
 

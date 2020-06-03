@@ -2808,6 +2808,7 @@ ges_clip_is_moving_from_layer (GESClip * clip)
  * layer.
  *
  * Returns: %TRUE if @clip was successfully moved to @layer.
+ * Since: 1.18
  */
 gboolean
 ges_clip_move_to_layer_full (GESClip * clip, GESLayer * layer, GError ** error)
@@ -2972,6 +2973,7 @@ ges_clip_get_layer (GESClip * clip)
  * Gets the #GESClip:duration-limit of the clip.
  *
  * Returns: The duration-limit of @clip.
+ * Since: 1.18
  */
 GstClockTime
 ges_clip_get_duration_limit (GESClip * clip)
@@ -3013,6 +3015,7 @@ _cmp_children_by_priority (gconstpointer a_p, gconstpointer b_p)
  * would not be able to adapt itself once the effect is added.
  *
  * Returns: %TRUE if @effect was successfully added to @clip at @index.
+ * Since: 1.18
  */
 gboolean
 ges_clip_add_top_effect (GESClip * clip, GESBaseEffect * effect, gint index,
@@ -3107,6 +3110,7 @@ _is_added_effect (GESClip * clip, GESBaseEffect * effect)
  * would not be able to adapt itself once the effect is removed.
  *
  * Returns: %TRUE if @effect was successfully added to @clip at @index.
+ * Since: 1.18
  */
 gboolean
 ges_clip_remove_top_effect (GESClip * clip, GESBaseEffect * effect,
@@ -3221,6 +3225,7 @@ ges_clip_set_top_effect_priority (GESClip * clip,
  * ordering.
  *
  * Returns: %TRUE if @effect was successfully moved to @newindex.
+ * Since: 1.18
  */
 gboolean
 ges_clip_set_top_effect_index_full (GESClip * clip, GESBaseEffect * effect,
@@ -3367,6 +3372,7 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
  *
  * Returns: (transfer none) (nullable): The newly created clip resulting
  * from the splitting @clip, or %NULL if @clip can't be split.
+ * Since: 1.18
  */
 GESClip *
 ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
@@ -4142,6 +4148,7 @@ ges_clip_get_timeline_time_from_internal_time (GESClip * clip,
  * Returns: The time in the internal coordinates of @child corresponding
  * to @timeline_time, or #GST_CLOCK_TIME_NONE if the conversion could not
  * be performed.
+ * Since: 1.18
  */
 GstClockTime
 ges_clip_get_internal_time_from_timeline_time (GESClip * clip,
@@ -4346,6 +4353,7 @@ ges_clip_get_core_internal_time_from_timeline_time (GESClip * clip,
  * Returns: The timestamp corresponding to @frame_number in the core
  * children of @clip, in the timeline coordinates, or #GST_CLOCK_TIME_NONE
  * if the conversion could not be performed.
+ * Since: 1.18
  */
 GstClockTime
 ges_clip_get_timeline_time_from_source_frame (GESClip * clip,

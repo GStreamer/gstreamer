@@ -1148,6 +1148,7 @@ remove_element_internal (GESTrack * track, GESTrackElement * object,
  * Note that a #GESTrackElement can only be added to one track.
  *
  * Returns: %TRUE if @object was successfully added to @track.
+ * Since: 1.18
  */
 gboolean
 ges_track_add_element_full (GESTrack * track, GESTrackElement * object,
@@ -1275,6 +1276,7 @@ ges_track_get_elements (GESTrack * track)
  * ownership of the element.
  *
  * Returns: %TRUE if @object was successfully removed from @track.
+ * Since: 1.18
  */
 gboolean
 ges_track_remove_element_full (GESTrack * track, GESTrackElement * object,

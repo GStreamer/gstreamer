@@ -665,6 +665,7 @@ ges_layer_is_empty (GESLayer * layer)
  *
  * Returns: %TRUE if @clip was properly added to @layer, or %FALSE
  * if @layer refused to add @clip.
+ * Since: 1.18
  */
 gboolean
 ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
@@ -851,6 +852,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
  * the given properties.
  *
  * Returns: (transfer none): The newly created clip.
+ * Since: 1.18
  */
 GESClip *
 ges_layer_add_asset_full (GESLayer * layer,

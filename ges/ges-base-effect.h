@@ -72,6 +72,7 @@ struct _GESBaseEffectClass
  * values given in @time_properties before using the currently set values.
  *
  * Returns: The translated time.
+ * Since: 1.18
  */
 typedef GstClockTime (*GESBaseEffectTimeTranslationFunc) (GESBaseEffect * effect,
                                                           GstClockTime time,

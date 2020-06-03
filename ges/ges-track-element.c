@@ -1990,6 +1990,8 @@ ges_track_element_get_control_binding (GESTrackElement * object,
  * a timed value for the control source lies before the in-point of the
  * element, or after its out-point, then it will be removed. At the
  * in-point and out-point times, a new interpolated value will be placed.
+ *
+ * Since: 1.18
  */
 void
 ges_track_element_clamp_control_source (GESTrackElement * object,
@@ -2027,6 +2029,8 @@ ges_track_element_clamp_control_source (GESTrackElement * object,
  *
  * Sets #GESTrackElement:auto-clamp-control-sources. If set to %TRUE, this
  * will immediately clamp all the control sources.
+ *
+ * Since: 1.18
  */
 void
 ges_track_element_set_auto_clamp_control_sources (GESTrackElement * object,
@@ -2054,6 +2058,7 @@ ges_track_element_set_auto_clamp_control_sources (GESTrackElement * object,
  *
  * Returns: Whether the control sources for the child properties of
  * @object are automatically clamped.
+ * Since: 1.18
  */
 gboolean
 ges_track_element_get_auto_clamp_control_sources (GESTrackElement * object)
@@ -2093,6 +2098,7 @@ ges_track_element_freeze_control_sources (GESTrackElement * object,
  * will be a core child of its parent clip.
  *
  * Returns: %TRUE if @element is a core track element.
+ * Since: 1.18
  */
 gboolean
 ges_track_element_is_core (GESTrackElement * object)
