@@ -52,14 +52,78 @@
  * Fields can be removed with gst_structure_remove_field() or
  * gst_structure_remove_fields().
  *
- * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
- * not allowed. Strings may be %NULL however.
+ * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are not
+ * allowed. Strings may be %NULL however.
  *
- * Be aware that the current #GstCaps / #GstStructure serialization into string
- * has limited support for nested #GstCaps / #GstStructure fields. It can only
- * support one level of nesting. Using more levels will lead to unexpected
- * behavior when using serialization features, such as gst_caps_to_string() or
- * gst_value_serialize() and their counterparts.
+ * ## The serialization format
+ *
+ * GstStructure serialization format serialize the GstStructure name,
+ * keys/GType/values in a comma separated list with the structure name as first
+ * field without value followed by separated key/value pairs in the form
+ * `key=value`, for example:
+ *
+ * ```
+ * a-structure, key=value
+ * ````
+ *
+ * The values type will be inferred if not explicitly specified with the
+ * `(GTypeName)value` syntax, for example the following struct will have one
+ * field called 'is-string' which has the string 'true' as a value:
+ *
+ * ```
+ * a-struct, field-is-string=(string)true, field-is-boolean=true
+ * ```
+ *
+ * *Note*: without specifying `(string), `field-is-string` type would have been
+ * inferred as boolean.
+ *
+ * *Note*: we specified `(string)` as a type even if `gchararray` is the actual
+ * GType name as for convenience some well known types have been aliased or
+ * abbreviated.
+ *
+ * To avoid specifying the type, you can give some hints to the "type system".
+ * For example to specify a value as a double, you should add a decimal (ie. `1`
+ * is an `int` while `1.0` is a `double`).
+ *
+ * *Note*: when a structure is serialized with #gst_structure_to_string, all
+ * values are explicitly typed.
+ *
+ * Some types have special delimiters:
+ *
+ * - [GstValueArray](GST_TYPE_ARRAY) are inside curly brackets (`{` and `}`).
+ *   For example `a-structure, array={1, 2, 3}`
+ * - Ranges are inside brackets (`[` and `]`). For example `a-structure,
+ *   range=[1, 6, 2]` 1 being the min value, 6 the maximum and 2 the step. To
+ *   specify a #GST_TYPE_INT64_RANGE you need to explicitly specify it like:
+ *   `a-structure, a-int64-range=(gint64) [1, 5]`
+ * - [GstValueList](GST_TYPE_LIST) are inside "less and greater than" (`<` and
+ *   `>`). For example `a-structure, list=<1, 2, 3>
+ *
+ * Structures are delimited either by a null character `\0` or a semicolumn `;`
+ * the latter allowing to store multiple structures in the same string (see
+ * #GstCaps).
+ *
+ * Quotes are used as "default" delimiters and can be used around any types that
+ * don't use other delimiters (for example `a-struct, i=(int)"1"`). They are use
+ * to allow adding spaces or special characters (such as delimiters,
+ * semicolumns, etc..) inside strings and you can use backslashes `\` to escape
+ * characters inside them, for example:
+ *
+ * ```
+ * a-struct, special="\"{[(;)]}\" can be used inside quotes"
+ * ```
+ *
+ * They also allow for nested structure, such as:
+ *
+ * ```
+ * a-struct, nested=(GstStructure)"nested-struct, nested=true"
+ * ```
+ *
+ * > *Note*: Be aware that the current #GstCaps / #GstStructure serialization
+ * > into string has limited support for nested #GstCaps / #GstStructure fields.
+ * > It can only support one level of nesting. Using more levels will lead to
+ * > unexpected behavior when using serialization features, such as
+ * > gst_caps_to_string() or gst_value_serialize() and their counterparts.
  */
 
 #ifdef HAVE_CONFIG_H
