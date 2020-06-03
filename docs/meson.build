@@ -40,6 +40,17 @@ if not hotdoc_p.found()
     subdir_done()
 endif
 
+hotdoc_req = '>= 0.11.0'
+hotdoc_version = run_command(hotdoc_p, '--version').stdout()
+if not hotdoc_version.version_compare(hotdoc_req)
+    if get_option('doc').enabled()
+        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
+    else
+        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
+        subdir_done()
+    endif
+endif
+
 hotdoc = import('hotdoc')
 required_hotdoc_extensions = ['gi-extension', 'gst-extension']
 foreach extension: required_hotdoc_extensions
