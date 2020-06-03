@@ -2507,7 +2507,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
    * GstVaapiPostproc:video-direction:
    *
    * The video-direction to use, expressed as an enum value. See
-   * #GstVideoDirectionMethod.
+   * #GstVideoDirection.
    */
   filter_op = find_filter_op (filter_ops, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION);
   if (filter_op)
