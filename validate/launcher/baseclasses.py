@@ -246,9 +246,16 @@ class Test(Loggable):
         if not self.options.redirect_logs:
             self.out.flush()
             for logfile in self.extra_logfiles:
-                self.out.write('\n\n## %s:\n\n```\n%s\n```\n' % (
-                    os.path.basename(logfile), self.get_extra_log_content(logfile))
-                )
+                # Only copy over extra logfile content if it's below a certain threshold
+                # Avoid copying gigabytes of data if a lot of debugging is activated
+                if os.path.getsize(logfile) < 500 * 1024:
+                    self.out.write('\n\n## %s:\n\n```\n%s\n```\n' % (
+                        os.path.basename(logfile), self.get_extra_log_content(logfile))
+                    )
+                else:
+                    self.out.write('\n\n## %s:\n\n**Log file too big.**\n  %s\n\n Check file content directly\n\n' % (
+                        os.path.basename(logfile), logfile)
+                    )
 
             if self.rr_logdir:
                 self.out.write('\n\n## rr trace:\n\n```\nrr replay %s/latest-trace\n```\n' % (
