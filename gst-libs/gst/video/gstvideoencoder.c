@@ -2222,7 +2222,7 @@ gst_video_encoder_infer_dts_unlocked (GstVideoEncoder * encoder,
 
 static void
 gst_video_encoder_send_header_unlocked (GstVideoEncoder * encoder,
-    gboolean * discont)
+    gboolean * discont, gboolean key_unit)
 {
   GstVideoEncoderPrivate *priv = encoder->priv;
 
@@ -2240,10 +2240,20 @@ gst_video_encoder_send_header_unlocked (GstVideoEncoder * encoder,
       GST_OBJECT_LOCK (encoder);
       priv->bytes += gst_buffer_get_size (tmpbuf);
       GST_OBJECT_UNLOCK (encoder);
+
+      if (G_UNLIKELY (key_unit)) {
+        key_unit = FALSE;
+        GST_BUFFER_FLAG_UNSET (tmpbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+      } else {
+        GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+      }
+
       if (G_UNLIKELY (*discont)) {
         GST_LOG_OBJECT (encoder, "marking discont");
         GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
         *discont = FALSE;
+      } else {
+        GST_BUFFER_FLAG_UNSET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
       }
 
       gst_pad_push (encoder->srcpad, gst_buffer_ref (tmpbuf));
@@ -2376,6 +2386,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoEncoderClass *encoder_class;
   gboolean send_headers = FALSE;
+  gboolean key_unit = FALSE;
   gboolean discont = FALSE;
   GstBuffer *buffer;
 
@@ -2417,13 +2428,11 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)
       && frame->abidata.ABI.num_subframes == 0) {
     priv->distance_from_sync = 0;
-    GST_BUFFER_FLAG_UNSET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    key_unit = TRUE;
     /* For keyframes, DTS = PTS, if encoder doesn't decide otherwise */
     if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       frame->dts = frame->pts;
     }
-  } else {
-    GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
   gst_video_encoder_infer_dts_unlocked (encoder, frame);
@@ -2455,7 +2464,13 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (G_UNLIKELY (send_headers))
     priv->new_headers = TRUE;
 
-  gst_video_encoder_send_header_unlocked (encoder, &discont);
+  gst_video_encoder_send_header_unlocked (encoder, &discont, key_unit);
+
+  if (key_unit) {
+    GST_BUFFER_FLAG_UNSET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
 
   if (G_UNLIKELY (discont)) {
     GST_LOG_OBJECT (encoder, "marking discont");
@@ -2524,6 +2539,7 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
   GstBuffer *subframe_buffer = NULL;
   gboolean discont = FALSE;
   gboolean send_headers = FALSE;
+  gboolean key_unit = FALSE;
 
   g_return_val_if_fail (frame, GST_FLOW_ERROR);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
@@ -2557,13 +2573,12 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
 
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)
       && frame->abidata.ABI.num_subframes == 0) {
-    GST_BUFFER_FLAG_UNSET (subframe_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    priv->distance_from_sync = 0;
+    key_unit = TRUE;
     /* For keyframes, DTS = PTS, if encoder doesn't decide otherwise */
     if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       frame->dts = frame->pts;
     }
-  } else {
-    GST_BUFFER_FLAG_SET (subframe_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
   gst_video_encoder_infer_dts_unlocked (encoder, frame);
@@ -2580,7 +2595,13 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
   if (G_UNLIKELY (send_headers))
     priv->new_headers = TRUE;
 
-  gst_video_encoder_send_header_unlocked (encoder, &discont);
+  gst_video_encoder_send_header_unlocked (encoder, &discont, key_unit);
+
+  if (key_unit) {
+    GST_BUFFER_FLAG_UNSET (subframe_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    GST_BUFFER_FLAG_SET (subframe_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
 
   if (G_UNLIKELY (discont)) {
     GST_LOG_OBJECT (encoder, "marking discont buffer: %" GST_PTR_FORMAT,
