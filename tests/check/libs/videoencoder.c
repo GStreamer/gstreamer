@@ -115,7 +115,8 @@ gst_video_encoder_push_subframe (GstVideoEncoder * enc,
   input_num = *((guint64 *) map.data);
   gst_buffer_unmap (frame->input_buffer, &map);
 
-  if (!enc_tester->key_frame_sent) {
+  if (!enc_tester->key_frame_sent
+      || GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     enc_tester->key_frame_sent = TRUE;
   }
@@ -854,10 +855,9 @@ GST_START_TEST (videoencoder_playback_events_subframes)
   fail_unless (g_list_length (buffers) == 13 && g_list_length (events) == 5);
 
   /* push a force key-unit event */
-  enc_tester->key_frame_sent = FALSE;
-  fail_unless (gst_pad_push_event (mysrcpad,
-          gst_video_event_new_downstream_force_key_unit (GST_CLOCK_TIME_NONE,
-              GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, TRUE, 1)));
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 1)));
 
   /* Create a new buffer which should be a key unit -> no new buffer and no new event */
   buffer = create_test_buffer (3);
@@ -869,7 +869,7 @@ GST_START_TEST (videoencoder_playback_events_subframes)
       enc_tester->last_frame, 2);
   fail_unless (g_list_length (buffers) == 16 && g_list_length (events) == 7);
 
-  /*  output 2 subframes -> 2 new buffer correspong the two last subframes */
+  /*  output 2 subframes -> 2 new buffer corresponding the two last subframes */
   gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
       enc_tester->last_frame, 2);
   fail_unless (g_list_length (buffers) == 18 && g_list_length (events) == 7);
@@ -885,9 +885,8 @@ GST_START_TEST (videoencoder_playback_events_subframes)
                   7)->data)) == GST_EVENT_EOS);
 
   /* check that only last subframe owns the GST_VIDEO_BUFFER_FLAG_MARKER flag */
-  i = 0;
   header_found = 0;
-  for (iter = g_list_next (buffers); iter; iter = g_list_next (iter)) {
+  for (iter = buffers, i = 0; iter; iter = g_list_next (iter), i++) {
     buffer = (GstBuffer *) (iter->data);
     if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
       if ((i - header_found) % subframes == (subframes - 1))
@@ -901,7 +900,13 @@ GST_START_TEST (videoencoder_playback_events_subframes)
               GST_VIDEO_BUFFER_FLAG_MARKER));
       header_found++;
     }
-    i++;
+
+    /* Only the 0th (header), 1st, 13th (header) and 14th buffer should be keyframes */
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      fail_if (i == 0 || i == 1 || i == 13 || i == 14);
+    } else {
+      fail_unless (i == 0 || i == 1 || i == 13 || i == 14);
+    }
   }
 
   g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
