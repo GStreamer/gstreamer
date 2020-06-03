@@ -4,7 +4,6 @@
         "elements": {
             "vaapidecodebin": {
                 "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Victor Jaquez <victorx.jaquez@intel.com>",
-                "classification": "Codec/Decoder/Video",
                 "description": "A VA-API based bin with a decoder and a postprocessor",
                 "hierarchy": [
                     "GstVaapiDecodeBin",
@@ -14,9 +13,11 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Video",
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API Decode Bin",
-                "name": "vaapidecodebin",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\nvideo/mpeg:\n    mpegversion: 4\nvideo/x-divx:\nvideo/x-xvid:\nvideo/x-h263:\nvideo/x-h264:\nvideo/x-h265:\nvideo/x-wmv:\nvideo/x-vp8:\nvideo/x-vp9:\n",
@@ -24,7 +25,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, P012_BE, P012_LE, I420_12BE, I420_12LE, Y212_BE, Y212_LE, I422_12BE, I422_12LE, Y412_BE, Y412_LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -35,43 +36,17 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "deinterlace-method": {
                         "blurb": "Deinterlace method to use",
                         "construct": false,
                         "construct-only": false,
-                        "default": "bob (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiDeinterlaceMethod",
-                        "values": [
-                            {
-                                "desc": "Disable deinterlacing",
-                                "name": "none",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Bob deinterlacing",
-                                "name": "bob",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Weave deinterlacing",
-                                "name": "weave",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Motion adaptive deinterlacing",
-                                "name": "motion-adaptive",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "Motion compensated deinterlacing",
-                                "name": "motion-compensated",
-                                "value": "4"
-                            }
-                        ],
+                        "default": "none (0)",
+                        "readable": true,
+                        "type": "GstVaapiDeinterlaceMethod",
                         "writable": true
                     },
                     "disable-vpp": {
@@ -79,17 +54,19 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "max-size-buffers": {
                         "blurb": "Max. number of buffers in the queue (0=disable)",
                         "construct": false,
                         "construct-only": false,
-                        "default": "0",
+                        "default": "1",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-bytes": {
@@ -99,7 +76,8 @@
                         "default": "0",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-size-time": {
@@ -109,7 +87,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "message-forward": {
@@ -117,23 +96,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -141,7 +105,6 @@
             },
             "vaapih264dec": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
                 "description": "A VA-API based H264 video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_h264",
@@ -153,7 +116,6 @@
                 ],
                 "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API H264 decoder",
-                "name": "vaapih264dec",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-h264:\n",
@@ -161,7 +123,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -172,7 +134,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "low-latency": {
@@ -180,23 +143,17 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstObject",
+                        "default": "true",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -204,7 +161,6 @@
             },
             "vaapih264enc": {
                 "author": "Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Encoder/Video",
                 "description": "A VA-API based H264 video encoder",
                 "hierarchy": [
                     "GstVaapiEncodeH264",
@@ -215,12 +171,14 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstPreset"
+                ],
                 "klass": "Codec/Encoder/Video/Hardware",
                 "long-name": "VA-API H264 encoder",
-                "name": "vaapih264enc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -231,22 +189,15 @@
                     }
                 },
                 "properties": {
-                    "aud": {
-                        "blurb": "Use AU (Access Unit) delimeter",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
                     "bitrate": {
                         "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
-                        "max": "102400",
+                        "max": "2048000",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "cabac": {
@@ -254,7 +205,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "compliance-mode": {
@@ -262,20 +214,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "strict (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderH264ComplianceMode",
-                        "values": [
-                            {
-                                "desc": "Strict compliance to the H264 Specification ",
-                                "name": "strict",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Restrict the allocation size of coded-buffer",
-                                "name": "restrict-buf-alloc",
-                                "value": "1"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiEncoderH264ComplianceMode",
                         "writable": true
                     },
                     "cpb-length": {
@@ -285,7 +225,8 @@
                         "default": "1500",
                         "max": "10000",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "dct8x8": {
@@ -293,7 +234,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "default-roi-delta-qp": {
@@ -303,7 +245,8 @@
                         "default": "-10",
                         "max": "10",
                         "min": "-10",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "init-qp": {
@@ -313,7 +256,8 @@
                         "default": "26",
                         "max": "51",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "keyframe-period": {
@@ -323,7 +267,8 @@
                         "default": "30",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "max-bframes": {
@@ -333,7 +278,19 @@
                         "default": "0",
                         "max": "10",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-qp": {
+                        "blurb": "Maximum quantizer value",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "51",
+                        "max": "51",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "mbbrc": {
@@ -341,25 +298,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "auto (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderMbbrc",
-                        "values": [
-                            {
-                                "desc": "Auto",
-                                "name": "auto",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "On",
-                                "name": "on",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Off",
-                                "name": "off",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiEncoderMbbrc",
                         "writable": true
                     },
                     "min-qp": {
@@ -369,16 +309,8 @@
                         "default": "1",
                         "max": "51",
                         "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "num-slices": {
@@ -388,7 +320,8 @@
                         "default": "1",
                         "max": "200",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "num-views": {
@@ -398,14 +331,8 @@
                         "default": "1",
                         "max": "10",
                         "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "prediction-type": {
@@ -413,25 +340,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "default (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderH264PredictionType",
-                        "values": [
-                            {
-                                "desc": "Default encode, prev/next frame as ref ",
-                                "name": "default",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Hierarchical P frame encode",
-                                "name": "hierarchical-p",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Hierarchical B frame encode",
-                                "name": "hierarchical-b",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiEncoderH264PredictionType",
                         "writable": true
                     },
                     "qos": {
@@ -439,7 +349,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "qp-ib": {
@@ -449,7 +360,8 @@
                         "default": "0",
                         "max": "51",
                         "min": "-51",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "qp-ip": {
@@ -459,7 +371,19 @@
                         "default": "0",
                         "max": "51",
                         "min": "-51",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "quality-factor": {
+                        "blurb": "quality factor for ICQ/QVBR bitrate control mode(low value means higher-quality, higher value means lower-quality)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "26",
+                        "max": "51",
+                        "min": "1",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "quality-level": {
@@ -469,7 +393,8 @@
                         "default": "4",
                         "max": "7",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "rate-control": {
@@ -477,30 +402,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "cqp (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiRateControlH264",
-                        "values": [
-                            {
-                                "desc": "Constant QP",
-                                "name": "cqp",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Constant bitrate",
-                                "name": "cbr",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Variable bitrate",
-                                "name": "vbr",
-                                "value": "4"
-                            },
-                            {
-                                "desc": "Variable bitrate - Constrained",
-                                "name": "vbr_constrained",
-                                "value": "5"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiRateControlH264",
                         "writable": true
                     },
                     "refs": {
@@ -510,7 +413,8 @@
                         "default": "1",
                         "max": "8",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "target-percentage": {
@@ -520,7 +424,8 @@
                         "default": "70",
                         "max": "100",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "temporal-levels": {
@@ -530,7 +435,8 @@
                         "default": "1",
                         "max": "4",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "trellis": {
@@ -538,7 +444,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "tune": {
@@ -546,32 +453,16 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderTuneH264",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "High compression",
-                                "name": "high-compression",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Low power mode",
-                                "name": "low-power",
-                                "value": "3"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiEncoderTuneH264",
                         "writable": true
                     },
                     "view-ids": {
                         "blurb": "Set of View Ids used for MVC encoding",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstValueArray",
+                        "readable": true,
+                        "type": "GstValueArray",
                         "writable": true
                     }
                 },
@@ -579,7 +470,6 @@
             },
             "vaapih265dec": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
                 "description": "A VA-API based H265 video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_h265",
@@ -591,7 +481,6 @@
                 ],
                 "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API H265 decoder",
-                "name": "vaapih265dec",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-h265:\n",
@@ -599,26 +488,19 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstObject",
+                        "default": "true",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -626,7 +508,6 @@
             },
             "vaapih265enc": {
                 "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>",
-                "classification": "Codec/Encoder/Video",
                 "description": "A VA-API based H265 video encoder",
                 "hierarchy": [
                     "GstVaapiEncodeH265",
@@ -637,17 +518,19 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstPreset"
+                ],
                 "klass": "Codec/Encoder/Video/Hardware",
                 "long-name": "VA-API H265 encoder",
-                "name": "vaapih265enc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h265:\n  stream-format: { (string)hvc1, (string)byte-stream }\n      alignment: au\n        profile: { (string)main, (string)main-10 }\n",
+                        "caps": "video/x-h265:\n  stream-format: { (string)hvc1, (string)byte-stream }\n      alignment: au\n        profile: { (string)main, (string)main-10, (string)main-444, (string)main-444-10 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -658,9 +541,10 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
-                        "max": "102400",
+                        "max": "2048000",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "cpb-length": {
@@ -670,7 +554,8 @@
                         "default": "1500",
                         "max": "10000",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "default-roi-delta-qp": {
@@ -680,7 +565,8 @@
                         "default": "-10",
                         "max": "10",
                         "min": "-10",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "init-qp": {
@@ -690,7 +576,8 @@
                         "default": "26",
                         "max": "51",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "keyframe-period": {
@@ -700,7 +587,8 @@
                         "default": "30",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "low-delay-b": {
@@ -708,7 +596,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "max-bframes": {
@@ -718,7 +607,19 @@
                         "default": "0",
                         "max": "10",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-qp": {
+                        "blurb": "Maximum quantizer value",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "51",
+                        "max": "51",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "mbbrc": {
@@ -726,25 +627,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "auto (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderMbbrc",
-                        "values": [
-                            {
-                                "desc": "Auto",
-                                "name": "auto",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "On",
-                                "name": "on",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Off",
-                                "name": "off",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiEncoderMbbrc",
                         "writable": true
                     },
                     "min-qp": {
@@ -754,16 +638,8 @@
                         "default": "1",
                         "max": "51",
                         "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "num-slices": {
@@ -773,14 +649,8 @@
                         "default": "1",
                         "max": "200",
                         "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "qos": {
@@ -788,7 +658,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "qp-ib": {
@@ -798,7 +669,8 @@
                         "default": "0",
                         "max": "51",
                         "min": "-51",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     },
                     "qp-ip": {
@@ -808,7 +680,19 @@
                         "default": "0",
                         "max": "51",
                         "min": "-51",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "quality-factor": {
+                        "blurb": "quality factor for ICQ/QBVR bitrate control mode (lower value means higher quality, higher value means lower quality)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "26",
+                        "max": "51",
+                        "min": "1",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "quality-level": {
@@ -818,7 +702,8 @@
                         "default": "4",
                         "max": "7",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "rate-control": {
@@ -826,25 +711,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "cqp (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiRateControlH265",
-                        "values": [
-                            {
-                                "desc": "Constant QP",
-                                "name": "cqp",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Constant bitrate",
-                                "name": "cbr",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Variable bitrate",
-                                "name": "vbr",
-                                "value": "4"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiRateControlH265",
                         "writable": true
                     },
                     "refs": {
@@ -854,7 +722,8 @@
                         "default": "1",
                         "max": "3",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "target-percentage": {
@@ -864,7 +733,8 @@
                         "default": "70",
                         "max": "100",
                         "min": "1",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "trellis": {
@@ -872,7 +742,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "tune": {
@@ -880,20 +751,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderTuneH265",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Low power mode",
-                                "name": "low-power",
-                                "value": "3"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiEncoderTuneH265",
                         "writable": true
                     }
                 },
@@ -901,7 +760,6 @@
             },
             "vaapijpegdec": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
                 "description": "A VA-API based JPEG video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_jpeg",
@@ -913,7 +771,6 @@
                 ],
                 "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API JPEG decoder",
-                "name": "vaapijpegdec",
                 "pad-templates": {
                     "sink": {
                         "caps": "image/jpeg:\n",
@@ -921,172 +778,26 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstObject",
+                        "default": "true",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
                 "rank": "marginal"
             },
-            "vaapijpegenc": {
-                "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>",
-                "classification": "Codec/Encoder/Image",
-                "description": "A VA-API based JPEG video encoder",
-                "hierarchy": [
-                    "GstVaapiEncodeJpeg",
-                    "GstVaapiEncode",
-                    "GstVideoEncoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Encoder/Image",
-                "long-name": "VA-API JPEG encoder",
-                "name": "vaapijpegenc",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "image/jpeg:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "bitrate": {
-                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "102400",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "default-roi-delta-qp": {
-                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "-10",
-                        "max": "10",
-                        "min": "-10",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "keyframe-period": {
-                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "30",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "vaapiencodejpeg0",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "quality": {
-                        "blurb": "Quality factor",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "50",
-                        "max": "100",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "quality-level": {
-                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "4",
-                        "max": "7",
-                        "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "rate-control": {
-                        "blurb": "Rate control mode",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiRateControlJPEG",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "tune": {
-                        "blurb": "Encoder tuning option",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderTuneJPEG",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            }
-                        ],
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
             "vaapimpeg2dec": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
                 "description": "A VA-API based MPEG2 video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_mpeg2",
@@ -1098,7 +809,6 @@
                 ],
                 "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API MPEG2 decoder",
-                "name": "vaapimpeg2dec",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\n",
@@ -1106,179 +816,19 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
-            "vaapimpeg2enc": {
-                "author": "Guangxin Xu <guangxin.xu@intel.com>",
-                "classification": "Codec/Encoder/Video",
-                "description": "A VA-API based MPEG-2 video encoder",
-                "hierarchy": [
-                    "GstVaapiEncodeMpeg2",
-                    "GstVaapiEncode",
-                    "GstVideoEncoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Encoder/Video",
-                "long-name": "VA-API MPEG-2 encoder",
-                "name": "vaapimpeg2enc",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "bitrate": {
-                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "102400",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "default-roi-delta-qp": {
-                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "-10",
-                        "max": "10",
-                        "min": "-10",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "keyframe-period": {
-                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "30",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "max-bframes": {
-                        "blurb": "Number of B-frames between I and P",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "16",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "vaapiencodempeg2-0",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    },
                     "qos": {
                         "blurb": "Handle Quality-of-Service events from downstream",
                         "construct": false,
                         "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "quality-level": {
-                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "4",
-                        "max": "7",
-                        "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "quantizer": {
-                        "blurb": "Constant quantizer (if rate-control mode is CQP)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "8",
-                        "max": "62",
-                        "min": "2",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "rate-control": {
-                        "blurb": "Rate control mode",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "cqp (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiRateControlMPEG2",
-                        "values": [
-                            {
-                                "desc": "Constant QP",
-                                "name": "cqp",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Constant bitrate",
-                                "name": "cbr",
-                                "value": "2"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "tune": {
-                        "blurb": "Encoder tuning option",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderTuneMPEG2",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            }
-                        ],
+                        "default": "true",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1286,7 +836,6 @@
             },
             "vaapipostproc": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>",
-                "classification": "Filter/Converter/Video;Filter/Converter/Video/Scaler;Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
                 "description": "A VA-API video postprocessing filter",
                 "hierarchy": [
                     "GstVaapiPostproc",
@@ -1296,17 +845,19 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstColorBalance"
+                ],
                 "klass": "Filter/Converter/Effect/Video/Scaler/Deinterlace/Hardware",
                 "long-name": "VA-API video postprocessing",
-                "name": "vaapipostproc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -1319,7 +870,8 @@
                         "default": "0",
                         "max": "1",
                         "min": "-1",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "contrast": {
@@ -1329,7 +881,52 @@
                         "default": "1",
                         "max": "2",
                         "min": "0",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "crop-bottom": {
+                        "blurb": "Pixels to crop at bottom",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "crop-left": {
+                        "blurb": "Pixels to crop at left",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "crop-right": {
+                        "blurb": "Pixels to crop at right",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "crop-top": {
+                        "blurb": "Pixels to crop at top",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "deinterlace-method": {
@@ -1337,35 +934,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "bob (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiDeinterlaceMethod",
-                        "values": [
-                            {
-                                "desc": "Disable deinterlacing",
-                                "name": "none",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Bob deinterlacing",
-                                "name": "bob",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Weave deinterlacing",
-                                "name": "weave",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Motion adaptive deinterlacing",
-                                "name": "motion-adaptive",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "Motion compensated deinterlacing",
-                                "name": "motion-compensated",
-                                "value": "4"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiDeinterlaceMethod",
                         "writable": true
                     },
                     "deinterlace-mode": {
@@ -1373,25 +943,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "auto (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiDeinterlaceMode",
-                        "values": [
-                            {
-                                "desc": "Auto detection",
-                                "name": "auto",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Force deinterlacing",
-                                "name": "interlaced",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Never deinterlace",
-                                "name": "disabled",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiDeinterlaceMode",
                         "writable": true
                     },
                     "denoise": {
@@ -1401,7 +954,8 @@
                         "default": "0",
                         "max": "1",
                         "min": "0",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "force-aspect-ratio": {
@@ -1409,7 +963,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "format": {
@@ -1417,445 +972,17 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "encoded (1)",
-                        "enum": true,
-                        "type-name": "GstVideoFormat",
-                        "values": [
-                            {
-                                "desc": "GST_VIDEO_FORMAT_UNKNOWN",
-                                "name": "unknown",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_ENCODED",
-                                "name": "encoded",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I420",
-                                "name": "i420",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_YV12",
-                                "name": "yv12",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_YUY2",
-                                "name": "yuy2",
-                                "value": "4"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_UYVY",
-                                "name": "uyvy",
-                                "value": "5"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_AYUV",
-                                "name": "ayuv",
-                                "value": "6"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGBx",
-                                "name": "rgbx",
-                                "value": "7"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_BGRx",
-                                "name": "bgrx",
-                                "value": "8"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_xRGB",
-                                "name": "xrgb",
-                                "value": "9"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_xBGR",
-                                "name": "xbgr",
-                                "value": "10"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGBA",
-                                "name": "rgba",
-                                "value": "11"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_BGRA",
-                                "name": "bgra",
-                                "value": "12"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_ARGB",
-                                "name": "argb",
-                                "value": "13"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_ABGR",
-                                "name": "abgr",
-                                "value": "14"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGB",
-                                "name": "rgb",
-                                "value": "15"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_BGR",
-                                "name": "bgr",
-                                "value": "16"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y41B",
-                                "name": "y41b",
-                                "value": "17"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y42B",
-                                "name": "y42b",
-                                "value": "18"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_YVYU",
-                                "name": "yvyu",
-                                "value": "19"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y444",
-                                "name": "y444",
-                                "value": "20"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_v210",
-                                "name": "v210",
-                                "value": "21"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_v216",
-                                "name": "v216",
-                                "value": "22"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV12",
-                                "name": "nv12",
-                                "value": "23"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV21",
-                                "name": "nv21",
-                                "value": "24"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GRAY8",
-                                "name": "gray8",
-                                "value": "25"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GRAY16_BE",
-                                "name": "gray16-be",
-                                "value": "26"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GRAY16_LE",
-                                "name": "gray16-le",
-                                "value": "27"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_v308",
-                                "name": "v308",
-                                "value": "28"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGB16",
-                                "name": "rgb16",
-                                "value": "29"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_BGR16",
-                                "name": "bgr16",
-                                "value": "30"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGB15",
-                                "name": "rgb15",
-                                "value": "31"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_BGR15",
-                                "name": "bgr15",
-                                "value": "32"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_UYVP",
-                                "name": "uyvp",
-                                "value": "33"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A420",
-                                "name": "a420",
-                                "value": "34"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGB8P",
-                                "name": "rgb8p",
-                                "value": "35"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_YUV9",
-                                "name": "yuv9",
-                                "value": "36"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_YVU9",
-                                "name": "yvu9",
-                                "value": "37"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_IYU1",
-                                "name": "iyu1",
-                                "value": "38"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_ARGB64",
-                                "name": "argb64",
-                                "value": "39"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_AYUV64",
-                                "name": "ayuv64",
-                                "value": "40"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_r210",
-                                "name": "r210",
-                                "value": "41"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I420_10BE",
-                                "name": "i420-10be",
-                                "value": "42"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I420_10LE",
-                                "name": "i420-10le",
-                                "value": "43"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I422_10BE",
-                                "name": "i422-10be",
-                                "value": "44"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I422_10LE",
-                                "name": "i422-10le",
-                                "value": "45"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y444_10BE",
-                                "name": "y444-10be",
-                                "value": "46"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y444_10LE",
-                                "name": "y444-10le",
-                                "value": "47"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBR",
-                                "name": "gbr",
-                                "value": "48"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBR_10BE",
-                                "name": "gbr-10be",
-                                "value": "49"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBR_10LE",
-                                "name": "gbr-10le",
-                                "value": "50"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV16",
-                                "name": "nv16",
-                                "value": "51"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV24",
-                                "name": "nv24",
-                                "value": "52"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV12_64Z32",
-                                "name": "nv12-64z32",
-                                "value": "53"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A420_10BE",
-                                "name": "a420-10be",
-                                "value": "54"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A420_10LE",
-                                "name": "a420-10le",
-                                "value": "55"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A422_10BE",
-                                "name": "a422-10be",
-                                "value": "56"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A422_10LE",
-                                "name": "a422-10le",
-                                "value": "57"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A444_10BE",
-                                "name": "a444-10be",
-                                "value": "58"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_A444_10LE",
-                                "name": "a444-10le",
-                                "value": "59"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV61",
-                                "name": "nv61",
-                                "value": "60"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_P010_10BE",
-                                "name": "p010-10be",
-                                "value": "61"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_P010_10LE",
-                                "name": "p010-10le",
-                                "value": "62"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_IYU2",
-                                "name": "iyu2",
-                                "value": "63"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_VYUY",
-                                "name": "vyuy",
-                                "value": "64"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBRA",
-                                "name": "gbra",
-                                "value": "65"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBRA_10BE",
-                                "name": "gbra-10be",
-                                "value": "66"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBRA_10LE",
-                                "name": "gbra-10le",
-                                "value": "67"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBR_12BE",
-                                "name": "gbr-12be",
-                                "value": "68"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBR_12LE",
-                                "name": "gbr-12le",
-                                "value": "69"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBRA_12BE",
-                                "name": "gbra-12be",
-                                "value": "70"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GBRA_12LE",
-                                "name": "gbra-12le",
-                                "value": "71"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I420_12BE",
-                                "name": "i420-12be",
-                                "value": "72"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I420_12LE",
-                                "name": "i420-12le",
-                                "value": "73"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I422_12BE",
-                                "name": "i422-12be",
-                                "value": "74"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_I422_12LE",
-                                "name": "i422-12le",
-                                "value": "75"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y444_12BE",
-                                "name": "y444-12be",
-                                "value": "76"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y444_12LE",
-                                "name": "y444-12le",
-                                "value": "77"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_GRAY10_LE32",
-                                "name": "gray10-le32",
-                                "value": "78"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV12_10LE32",
-                                "name": "nv12-10le32",
-                                "value": "79"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV16_10LE32",
-                                "name": "nv16-10le32",
-                                "value": "80"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_NV12_10LE40",
-                                "name": "nv12-10le40",
-                                "value": "81"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y210",
-                                "name": "y210",
-                                "value": "82"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_Y410",
-                                "name": "y410",
-                                "value": "83"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_VUYA",
-                                "name": "vuya",
-                                "value": "84"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_BGR10A2_LE",
-                                "name": "bgr10a2-le",
-                                "value": "85"
-                            },
-                            {
-                                "desc": "GST_VIDEO_FORMAT_RGB10A2_LE",
-                                "name": "rgb10a2-le",
-                                "value": "86"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVideoFormat",
+                        "writable": true
+                    },
+                    "hdr-tone-map": {
+                        "blurb": "Apply HDR tone mapping algorithm",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "auto (0)",
+                        "readable": true,
+                        "type": "GstVaapiHDRToneMap",
                         "writable": true
                     },
                     "height": {
@@ -1865,7 +992,8 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "hue": {
@@ -1875,23 +1003,8 @@
                         "default": "0",
                         "max": "180",
                         "min": "-180",
-                        "type-name": "gfloat",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "qos": {
@@ -1899,7 +1012,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "saturation": {
@@ -1909,7 +1023,8 @@
                         "default": "1",
                         "max": "2",
                         "min": "0",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "scale-method": {
@@ -1917,25 +1032,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "default (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiScaleMethod",
-                        "values": [
-                            {
-                                "desc": "Default scaling mode",
-                                "name": "default",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Fast scaling mode",
-                                "name": "fast",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "High quality scaling mode",
-                                "name": "hq",
-                                "value": "2"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiScaleMethod",
                         "writable": true
                     },
                     "sharpen": {
@@ -1945,7 +1043,8 @@
                         "default": "0",
                         "max": "1",
                         "min": "-1",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "skin-tone-enhancement": {
@@ -1953,7 +1052,28 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "skin-tone-enhancement-level": {
+                        "blurb": "Apply the skin tone enhancement algorithm with specified level",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "3",
+                        "max": "9",
+                        "min": "0",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "video-direction": {
+                        "blurb": "Video direction: rotation and flipping",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "identity (0)",
+                        "readable": true,
+                        "type": "GstVideoOrientationMethod",
                         "writable": true
                     },
                     "width": {
@@ -1963,7 +1083,8 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     }
                 },
@@ -1971,7 +1092,6 @@
             },
             "vaapisink": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>",
-                "classification": "Sink/Video",
                 "description": "A VA-API based videosink",
                 "hierarchy": [
                     "GstVaapiSink",
@@ -1982,12 +1102,16 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
+                "interfaces": [
+                    "GstVideoOverlay",
+                    "GstColorBalance",
+                    "GstNavigation"
+                ],
                 "klass": "Sink/Video",
                 "long-name": "VA-API sink",
-                "name": "vaapisink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, P012_BE, P012_LE, I420_12BE, I420_12LE, Y212_BE, Y212_LE, I422_12BE, I422_12LE, Y412_BE, Y412_LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, P012_BE, P012_LE, I420_12BE, I420_12LE, Y212_BE, Y212_LE, I422_12BE, I422_12LE, Y412_BE, Y412_LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -1998,7 +1122,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "blocksize": {
@@ -2008,7 +1133,8 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "type-name": "guint",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "brightness": {
@@ -2018,7 +1144,8 @@
                         "default": "0",
                         "max": "1",
                         "min": "-1",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "contrast": {
@@ -2028,7 +1155,8 @@
                         "default": "1",
                         "max": "2",
                         "min": "0",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "display": {
@@ -2036,40 +1164,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "any (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiDisplayType",
-                        "values": [
-                            {
-                                "desc": "Auto detection",
-                                "name": "any",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "VA/X11 display",
-                                "name": "x11",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "VA/GLX display",
-                                "name": "glx",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "VA/EGL display",
-                                "name": "egl",
-                                "value": "5"
-                            },
-                            {
-                                "desc": "VA/Wayland display",
-                                "name": "wayland",
-                                "value": "3"
-                            },
-                            {
-                                "desc": "VA/DRM display",
-                                "name": "drm",
-                                "value": "4"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiDisplayType",
                         "writable": true
                     },
                     "display-name": {
@@ -2077,7 +1173,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",
-                        "type-name": "gchararray",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "enable-last-sample": {
@@ -2085,7 +1182,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "force-aspect-ratio": {
@@ -2093,7 +1191,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "fullscreen": {
@@ -2101,7 +1200,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "hue": {
@@ -2111,14 +1211,16 @@
                         "default": "0",
                         "max": "180",
                         "min": "-180",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "last-sample": {
                         "blurb": "The last sample received in the sink",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GstSample",
+                        "readable": true,
+                        "type": "GstSample",
                         "writable": false
                     },
                     "max-bitrate": {
@@ -2128,7 +1230,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "max-lateness": {
@@ -2138,33 +1241,19 @@
                         "default": "5000000",
                         "max": "9223372036854775807",
                         "min": "-1",
-                        "type-name": "gint64",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "processing-deadline": {
-                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "blurb": "Maximum processing time for a buffer in nanoseconds",
                         "construct": false,
                         "construct-only": false,
                         "default": "15000000",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "qos": {
@@ -2172,7 +1261,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "render-delay": {
@@ -2182,7 +1272,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "rotation": {
@@ -2190,35 +1281,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "0 (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiRotation",
-                        "values": [
-                            {
-                                "desc": "Unrotated mode",
-                                "name": "0",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Rotated by 90\u00b0, clockwise",
-                                "name": "90",
-                                "value": "90"
-                            },
-                            {
-                                "desc": "Rotated by 180\u00b0, clockwise",
-                                "name": "180",
-                                "value": "180"
-                            },
-                            {
-                                "desc": "Rotated by 270\u00b0, clockwise",
-                                "name": "270",
-                                "value": "270"
-                            },
-                            {
-                                "desc": "Rotated by image-orientating tag\u00b0",
-                                "name": "Automatic",
-                                "value": "360"
-                            }
-                        ],
+                        "readable": true,
+                        "type": "GstVaapiRotation",
                         "writable": true
                     },
                     "saturation": {
@@ -2228,7 +1292,8 @@
                         "default": "1",
                         "max": "2",
                         "min": "0",
-                        "type-name": "gfloat",
+                        "readable": true,
+                        "type": "gfloat",
                         "writable": true
                     },
                     "show-preroll-frame": {
@@ -2236,7 +1301,8 @@
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "signal-handoffs": {
@@ -2244,7 +1310,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "stats": {
@@ -2252,7 +1319,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "type-name": "GstStructure",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": false
                     },
                     "sync": {
@@ -2260,7 +1328,8 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
-                        "type-name": "gboolean",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "throttle-time": {
@@ -2270,7 +1339,8 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "type-name": "guint64",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "ts-offset": {
@@ -2280,7 +1350,8 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "-9223372036854775808",
-                        "type-name": "gint64",
+                        "readable": true,
+                        "type": "gint64",
                         "writable": true
                     },
                     "view-id": {
@@ -2290,23 +1361,27 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "type-name": "gint",
+                        "readable": true,
+                        "type": "gint",
                         "writable": true
                     }
                 },
-                "rank": "marginal",
+                "rank": "primary",
                 "signals": {
                     "handoff": {
                         "args": [
-                            "GstBuffer"
+                            {
+                                "name": "arg0",
+                                "type": "GstBuffer"
+                            }
                         ],
-                        "retval": "void"
+                        "return-type": "void",
+                        "when": "last"
                     }
                 }
             },
             "vaapivc1dec": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
                 "description": "A VA-API based VC1 video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_vc1",
@@ -2318,7 +1393,6 @@
                 ],
                 "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API VC1 decoder",
-                "name": "vaapivc1dec",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-wmv:\n     wmvversion: 3\n         format: { WMV3, WVC1 }\n",
@@ -2326,487 +1400,19 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
-            "vaapivp8dec": {
-                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
-                "description": "A VA-API based VP8 video decoder",
-                "hierarchy": [
-                    "GstVaapiDecode_vp8",
-                    "GstVideoDecoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Decoder/Video",
-                "long-name": "VA-API VP8 decoder",
-                "name": "vaapivp8dec",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-vp8:\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "vaapidecode_vp8-0",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
-            "vaapivp8enc": {
-                "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>",
-                "classification": "Codec/Encoder/Video",
-                "description": "A VA-API based VP8 video encoder",
-                "hierarchy": [
-                    "GstVaapiEncodeVP8",
-                    "GstVaapiEncode",
-                    "GstVideoEncoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Encoder/Video",
-                "long-name": "VA-API VP8 encoder",
-                "name": "vaapivp8enc",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/x-vp8:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "bitrate": {
-                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "102400",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "default-roi-delta-qp": {
-                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "-10",
-                        "max": "10",
-                        "min": "-10",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "keyframe-period": {
-                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "30",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "loop-filter-level": {
-                        "blurb": "Controls the deblocking filter strength",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "63",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "vaapiencodevp8-0",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    },
                     "qos": {
                         "blurb": "Handle Quality-of-Service events from downstream",
                         "construct": false,
                         "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "quality-level": {
-                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "4",
-                        "max": "7",
-                        "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "rate-control": {
-                        "blurb": "Rate control mode",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "cqp (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiRateControlVP8",
-                        "values": [
-                            {
-                                "desc": "Constant QP",
-                                "name": "cqp",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Constant bitrate",
-                                "name": "cbr",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Variable bitrate",
-                                "name": "vbr",
-                                "value": "4"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "sharpness-level": {
-                        "blurb": "Controls the deblocking filter sensitivity",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "7",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "tune": {
-                        "blurb": "Encoder tuning option",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderTuneVP8",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "yac-qi": {
-                        "blurb": "Quantization Table index for Luma AC Coefficients, (in default case, yac_qi=4 for key frames and yac_qi=40 for P frames)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "40",
-                        "max": "127",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
-            "vaapivp9dec": {
-                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
-                "classification": "Codec/Decoder/Video",
-                "description": "A VA-API based VP9 video decoder",
-                "hierarchy": [
-                    "GstVaapiDecode_vp9",
-                    "GstVideoDecoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Decoder/Video",
-                "long-name": "VA-API VP9 decoder",
-                "name": "vaapivp9dec",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-vp9:\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "vaapidecode_vp9-0",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
-            "vaapivp9enc": {
-                "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>",
-                "classification": "Codec/Encoder/Video",
-                "description": "A VA-API based VP9 video encoder",
-                "hierarchy": [
-                    "GstVaapiEncodeVP9",
-                    "GstVaapiEncode",
-                    "GstVideoEncoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Encoder/Video",
-                "long-name": "VA-API VP9 encoder",
-                "name": "vaapivp9enc",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/x-vp9:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "bitrate": {
-                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "102400",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "cpb-length": {
-                        "blurb": "Length of the CPB_buffer/window_size in milliseconds",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "1500",
-                        "max": "10000",
-                        "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "default-roi-delta-qp": {
-                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "-10",
-                        "max": "10",
-                        "min": "-10",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "keyframe-period": {
-                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "30",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "loop-filter-level": {
-                        "blurb": "Controls the deblocking filter strength",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "10",
-                        "max": "63",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "vaapiencodevp9-0",
-                        "hotdoc-fixed-default": true,
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "quality-level": {
-                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "4",
-                        "max": "7",
-                        "min": "1",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "rate-control": {
-                        "blurb": "Rate control mode",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "cqp (1)",
-                        "enum": true,
-                        "type-name": "GstVaapiRateControlVP9",
-                        "values": [
-                            {
-                                "desc": "Constant QP",
-                                "name": "cqp",
-                                "value": "1"
-                            },
-                            {
-                                "desc": "Constant bitrate",
-                                "name": "cbr",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "Variable bitrate",
-                                "name": "vbr",
-                                "value": "4"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "ref-pic-mode": {
-                        "blurb": "Reference Picture Selection Modes",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "mode-0 (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderVP9RefPicMode",
-                        "values": [
-                            {
-                                "desc": "Use Keyframe(Alt & Gold) and Previousframe(Last) for prediction ",
-                                "name": "mode-0",
-                                "value": "0"
-                            },
-                            {
-                                "desc": "Use last three frames for prediction (n:Last n-1:Gold n-2:Alt)",
-                                "name": "mode-1",
-                                "value": "1"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "sharpness-level": {
-                        "blurb": "Controls the deblocking filter sensitivity",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "7",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "tune": {
-                        "blurb": "Encoder tuning option",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "none (0)",
-                        "enum": true,
-                        "type-name": "GstVaapiEncoderTuneVP9",
-                        "values": [
-                            {
-                                "desc": "None",
-                                "name": "none",
-                                "value": "0"
-                            }
-                        ],
-                        "writable": true
-                    },
-                    "yac-qi": {
-                        "blurb": "Quantization Table index for Luma AC Coefficients",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "60",
-                        "max": "255",
-                        "min": "0",
-                        "type-name": "guint",
+                        "default": "true",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -2815,8 +1421,316 @@
         },
         "filename": "gstvaapi",
         "license": "LGPL",
+        "other-types": {
+            "GstVaapiDeinterlaceMethod": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Disable deinterlacing",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Bob deinterlacing",
+                        "name": "bob",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Weave deinterlacing",
+                        "name": "weave",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Motion adaptive deinterlacing",
+                        "name": "motion-adaptive",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "Motion compensated deinterlacing",
+                        "name": "motion-compensated",
+                        "value": "4"
+                    }
+                ]
+            },
+            "GstVaapiDeinterlaceMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto detection",
+                        "name": "auto",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Force deinterlacing",
+                        "name": "interlaced",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Never deinterlace",
+                        "name": "disabled",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiDisplayType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto detection",
+                        "name": "any",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "VA/X11 display",
+                        "name": "x11",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "VA/GLX display",
+                        "name": "glx",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "VA/EGL display",
+                        "name": "egl",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "VA/Wayland display",
+                        "name": "wayland",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "VA/DRM display",
+                        "name": "drm",
+                        "value": "4"
+                    }
+                ]
+            },
+            "GstVaapiEncoderH264ComplianceMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Strict compliance to the H264 Specification ",
+                        "name": "strict",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Restrict the allocation size of coded-buffer",
+                        "name": "restrict-buf-alloc",
+                        "value": "1"
+                    }
+                ]
+            },
+            "GstVaapiEncoderH264PredictionType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Default encode, prev/next frame as ref ",
+                        "name": "default",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Hierarchical P frame encode",
+                        "name": "hierarchical-p",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Hierarchical B frame encode",
+                        "name": "hierarchical-b",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiEncoderMbbrc": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto",
+                        "name": "auto",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "On",
+                        "name": "on",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Off",
+                        "name": "off",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiEncoderTuneH264": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "High compression",
+                        "name": "high-compression",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Low power mode",
+                        "name": "low-power",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstVaapiEncoderTuneH265": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Low power mode",
+                        "name": "low-power",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstVaapiHDRToneMap": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto detection",
+                        "name": "auto",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Disable HDR tone mapping",
+                        "name": "disabled",
+                        "value": "1"
+                    }
+                ]
+            },
+            "GstVaapiRateControlH264": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant QP",
+                        "name": "cqp",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Variable bitrate",
+                        "name": "vbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Variable bitrate - Constrained",
+                        "name": "vbr_constrained",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "Constant QP - Intelligent",
+                        "name": "icq",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "Variable bitrate - Quality defined",
+                        "name": "qvbr",
+                        "value": "8"
+                    }
+                ]
+            },
+            "GstVaapiRateControlH265": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant QP",
+                        "name": "cqp",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Variable bitrate",
+                        "name": "vbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Constant QP - Intelligent",
+                        "name": "icq",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "Variable bitrate - Quality defined",
+                        "name": "qvbr",
+                        "value": "8"
+                    }
+                ]
+            },
+            "GstVaapiRotation": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Unrotated mode",
+                        "name": "0",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Rotated by 90°, clockwise",
+                        "name": "90",
+                        "value": "90"
+                    },
+                    {
+                        "desc": "Rotated by 180°, clockwise",
+                        "name": "180",
+                        "value": "180"
+                    },
+                    {
+                        "desc": "Rotated by 270°, clockwise",
+                        "name": "270",
+                        "value": "270"
+                    },
+                    {
+                        "desc": "Rotated by image-orientating tag°",
+                        "name": "Automatic",
+                        "value": "360"
+                    }
+                ]
+            },
+            "GstVaapiScaleMethod": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Default scaling mode",
+                        "name": "default",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Fast scaling mode",
+                        "name": "fast",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "High quality scaling mode",
+                        "name": "hq",
+                        "value": "2"
+                    }
+                ]
+            }
+        },
         "package": "gstreamer-vaapi",
         "source": "gstreamer-vaapi",
-        "url": "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"
+        "tracers": {},
+        "url": "https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues"
     }
 }
