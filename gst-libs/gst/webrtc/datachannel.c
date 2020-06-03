@@ -24,6 +24,8 @@
  * @title: GstWebRTCDataChannel
  *
  * <https://www.w3.org/TR/webrtc/#rtcdatachannel>
+ *
+ * Since: 1.18
  */
 
 #ifdef HAVE_CONFIG_H

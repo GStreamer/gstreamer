@@ -41,6 +41,8 @@ GType gst_webrtc_data_channel_get_type(void);
 
 /**
  * GstWebRTCDataChannel:
+ *
+ * Since: 1.18
  */
 struct _GstWebRTCDataChannel
 {
@@ -63,6 +65,11 @@ struct _GstWebRTCDataChannel
   gpointer                         _padding[GST_PADDING];
 };
 
+/**
+ * GstWebRTCDataChannelClass:
+ *
+ * Since: 1.18
+ */
 struct _GstWebRTCDataChannelClass
 {
   GObjectClass        parent_class;
