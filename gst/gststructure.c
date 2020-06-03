@@ -25,22 +25,23 @@
  * @short_description: Generic structure containing fields of names and values
  * @see_also: #GstCaps, #GstMessage, #GstEvent, #GstQuery
  *
- * A #GstStructure is a collection of key/value pairs. The keys are expressed
- * as GQuarks and the values can be of any GType.
+ * A #GstStructure is a collection of key/value pairs. The keys are expressed as
+ * GQuarks and the values can be of any GType.
  *
  * In addition to the key/value pairs, a #GstStructure also has a name. The name
- * starts with a letter and can be filled by letters, numbers and any of "/-_.:".
+ * starts with a letter and can be filled by letters, numbers and any of
+ * "/-_.:".
  *
- * #GstStructure is used by various GStreamer subsystems to store information
- * in a flexible and extensible way. A #GstStructure does not have a refcount
+ * #GstStructure is used by various GStreamer subsystems to store information in
+ * a flexible and extensible way. A #GstStructure does not have a refcount
  * because it usually is part of a higher level object such as #GstCaps,
  * #GstMessage, #GstEvent, #GstQuery. It provides a means to enforce mutability
  * using the refcount of the parent with the gst_structure_set_parent_refcount()
  * method.
  *
  * A #GstStructure can be created with gst_structure_new_empty() or
- * gst_structure_new(), which both take a name and an optional set of
- * key/value pairs along with the types of the values.
+ * gst_structure_new(), which both take a name and an optional set of key/value
+ * pairs along with the types of the values.
  *
  * Field values can be changed with gst_structure_set_value() or
  * gst_structure_set().
