@@ -28,9 +28,10 @@
 #endif
 
 #include <gst/gst.h>
-#include "../../gst/validate/validate.h"
-#include "../../gst/validate/gst-validate-utils.h"
-#include "../../gst/validate/gst-validate-report.h"
+#include "../validate.h"
+#include "../gst-validate-utils.h"
+#include "../gst-validate-report.h"
+#include "../gst-validate-internal.h"
 #include "formatting.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -644,12 +645,12 @@ _execute_checkpoint (GstValidateScenario * scenario, GstValidateAction * action)
   return TRUE;
 }
 
-static gboolean
-gst_validate_flow_init (GstPlugin * plugin)
+gboolean
+gst_validate_flow_init ()
 {
   GList *tmp;
   gint default_generate = -1;
-  GList *config_list = gst_validate_plugin_get_config (plugin);
+  GList *config_list = gst_validate_get_config ("validateflow");
 
   if (!config_list)
     return TRUE;
@@ -672,13 +673,14 @@ gst_validate_flow_init (GstPlugin * plugin)
     flow = validate_flow_override_new (config);
     all_overrides = g_list_append (all_overrides, flow);
   }
+  g_list_free (config_list);
 
   for (tmp = all_overrides; tmp; tmp = tmp->next)
     validate_flow_setup_files (tmp->data, default_generate);
 
 /*  *INDENT-OFF* */
-  gst_validate_register_action_type_dynamic (plugin, "checkpoint",
-      GST_RANK_PRIMARY, _execute_checkpoint, ((GstValidateActionParameter [])
+  gst_validate_register_action_type ("checkpoint", "validateflow",
+      _execute_checkpoint, ((GstValidateActionParameter [])
       {
         {
           .name = "text",
@@ -694,10 +696,3 @@ gst_validate_flow_init (GstPlugin * plugin)
 
   return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    validateflow,
-    "GstValidate plugin that records buffers and events on specified pads and matches the log with expectation files.",
-    gst_validate_flow_init, VERSION, "LGPL", GST_PACKAGE_NAME,
-    GST_PACKAGE_ORIGIN)

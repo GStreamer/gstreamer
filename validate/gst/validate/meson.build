@@ -17,6 +17,9 @@ gstvalidate_sources = [
     'media-descriptor-writer.c',
     'media-descriptor-parser.c',
     'gst-validate-media-info.c',
+    'gst-validate-extra-checks.c',
+    'flow/gstvalidateflow.c',
+    'flow/formatting.c',
     'validate.c',
 ]
 

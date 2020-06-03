@@ -1,6 +1,7 @@
 #include <gst/gst.h>
-#include "../../gst/validate/validate.h"
-#include "../../gst/validate/gst-validate-utils.h"
+#include "validate.h"
+#include "gst-validate-utils.h"
+#include "gst-validate-internal.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -135,11 +136,11 @@ gst_validate_add_num_instances_check (GstStructure * structure)
   gst_object_unref (o);
 }
 
-static gboolean
-gst_validate_extra_checks_init (GstPlugin * plugin)
+gboolean
+gst_validate_extra_checks_init ()
 {
   GList *config, *tmp;
-  config = gst_validate_plugin_get_config (plugin);
+  config = gst_validate_get_config ("extrachecks");
 
   if (!config)
     return TRUE;
@@ -150,6 +151,7 @@ gst_validate_extra_checks_init (GstPlugin * plugin)
     if (gst_structure_has_field (check, "num-instances"))
       gst_validate_add_num_instances_check (check);
   }
+  g_list_free (config);
 
   gst_validate_issue_register (gst_validate_issue_new
       (EXTRA_CHECKS_WRONG_NUMBER_OF_INSTANCES,
@@ -162,10 +164,3 @@ gst_validate_extra_checks_init (GstPlugin * plugin)
 
   return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    extrachecks,
-    "GstValidate plugin that implements extra, configurable tests.",
-    gst_validate_extra_checks_init, VERSION, "LGPL", GST_PACKAGE_NAME,
-    GST_PACKAGE_ORIGIN)

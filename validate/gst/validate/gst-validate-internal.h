@@ -65,6 +65,9 @@ G_GNUC_INTERNAL void gst_validate_set_test_file_globals (GstStructure* meta, con
 G_GNUC_INTERNAL gboolean gst_validate_get_test_file_scenario (GList** structs, const gchar** scenario_name, gchar** original_name);
 G_GNUC_INTERNAL GstValidateScenario* gst_validate_scenario_from_structs (GstValidateRunner* runner, GstElement* pipeline, GList* structures,
     gchar* origin_file);
-G_GNUC_INTERNAL GList* gst_validate_get_config(const gchar *structname);
+G_GNUC_INTERNAL GList* gst_validate_get_config (const gchar *structname);
 G_GNUC_INTERNAL GList * gst_validate_get_test_file_expected_issues (void);
+
+G_GNUC_INTERNAL gboolean gst_validate_extra_checks_init (void);
+G_GNUC_INTERNAL gboolean gst_validate_flow_init (void);
 #endif

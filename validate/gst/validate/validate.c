@@ -449,6 +449,8 @@ gst_validate_init (void)
 
   validate_initialized = TRUE;
 
+  gst_validate_extra_checks_init ();
+  gst_validate_flow_init ();
   gst_validate_init_plugins ();
   gst_validate_init_runner ();
 }
