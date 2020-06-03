@@ -1813,8 +1813,8 @@ gst_input_selector_request_new_pad (GstElement * element,
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_CAPS);
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_ALLOCATION);
   gst_pad_set_active (sinkpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
   GST_INPUT_SELECTOR_UNLOCK (sel);
+  gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
 
   return sinkpad;
 }
