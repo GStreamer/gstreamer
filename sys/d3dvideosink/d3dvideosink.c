@@ -651,7 +651,7 @@ plugin_init (GstPlugin * plugin)
 {
   /* PRIMARY: this is the best videosink to use on windows */
   if (!gst_element_register (plugin, ELEMENT_NAME,
-          GST_RANK_PRIMARY, GST_TYPE_D3DVIDEOSINK))
+          GST_RANK_SECONDARY, GST_TYPE_D3DVIDEOSINK))
     return FALSE;
 
   return TRUE;
