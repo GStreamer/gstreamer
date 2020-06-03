@@ -113,11 +113,13 @@ GST_DEBUG_CATEGORY (videoencoder_debug);
 /* properties */
 
 #define DEFAULT_QOS                 FALSE
+#define DEFAULT_MIN_FORCE_KEY_UNIT_INTERVAL 0
 
 enum
 {
   PROP_0,
   PROP_QOS,
+  PROP_MIN_FORCE_KEY_UNIT_INTERVAL,
   PROP_LAST
 };
 
@@ -139,6 +141,8 @@ struct _GstVideoEncoderPrivate
   gboolean new_headers;         /* Whether new headers were just set */
 
   GQueue force_key_unit;        /* List of pending forced keyunits */
+  GstClockTime min_force_key_unit_interval;
+  GstClockTime last_force_key_unit_request;
 
   guint32 system_frame_number;
 
@@ -323,6 +327,10 @@ gst_video_encoder_set_property (GObject * object, guint prop_id,
     case PROP_QOS:
       gst_video_encoder_set_qos_enabled (sink, g_value_get_boolean (value));
       break;
+    case PROP_MIN_FORCE_KEY_UNIT_INTERVAL:
+      gst_video_encoder_set_min_force_key_unit_interval (sink,
+          g_value_get_uint64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -338,6 +346,10 @@ gst_video_encoder_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_QOS:
       g_value_set_boolean (value, gst_video_encoder_is_qos_enabled (sink));
+      break;
+    case PROP_MIN_FORCE_KEY_UNIT_INTERVAL:
+      g_value_set_uint64 (value,
+          gst_video_encoder_get_min_force_key_unit_interval (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -381,6 +393,22 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   g_object_class_install_property (gobject_class, PROP_QOS,
       g_param_spec_boolean ("qos", "Qos",
           "Handle Quality-of-Service events from downstream", DEFAULT_QOS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoEncoder:min-force-key-unit-interval:
+   *
+   * Minimum interval between force-keyunit requests in nanoseconds. See
+   * gst_video_encoder_set_min_force_key_unit_interval() for more details.
+   *
+   * Since: 1.18
+   **/
+  g_object_class_install_property (gobject_class,
+      PROP_MIN_FORCE_KEY_UNIT_INTERVAL,
+      g_param_spec_uint64 ("min-force-key-unit-interval",
+          "Minimum Force Keyunit Interval",
+          "Minimum interval between force-keyunit requests in nanoseconds", 0,
+          G_MAXUINT64, DEFAULT_MIN_FORCE_KEY_UNIT_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -427,6 +455,7 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 
   g_queue_clear_full (&priv->force_key_unit,
       (GDestroyNotify) forced_key_unit_event_free);
+  priv->last_force_key_unit_request = GST_CLOCK_TIME_NONE;
 
   priv->drained = TRUE;
 
@@ -1527,15 +1556,23 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_OBJECT_LOCK (encoder);
   if (priv->force_key_unit.head) {
-    GstClockTime running_time;
     GList *l;
+    GstClockTime running_time;
+    gboolean throttled = FALSE, have_fevt = FALSE;
     GQueue matching_fevt = G_QUEUE_INIT;
 
     running_time =
         gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
         cstart);
 
-    for (l = priv->force_key_unit.head; l; l = l->next) {
+    throttled = (priv->min_force_key_unit_interval != 0 &&
+        priv->min_force_key_unit_interval != GST_CLOCK_TIME_NONE &&
+        priv->last_force_key_unit_request != GST_CLOCK_TIME_NONE &&
+        priv->last_force_key_unit_request + priv->min_force_key_unit_interval >
+        running_time);
+
+    for (l = priv->force_key_unit.head; l && (!throttled || !have_fevt);
+        l = l->next) {
       ForcedKeyUnitEvent *fevt = l->data;
 
       /* Skip pending keyunits */
@@ -1544,18 +1581,32 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
       /* Simple case, keyunit ASAP */
       if (fevt->running_time == GST_CLOCK_TIME_NONE) {
-        g_queue_push_tail (&matching_fevt, fevt);
+        have_fevt = TRUE;
+        if (!throttled)
+          g_queue_push_tail (&matching_fevt, fevt);
         continue;
       }
 
       /* Event for before this frame */
       if (fevt->running_time <= running_time) {
-        g_queue_push_tail (&matching_fevt, fevt);
+        have_fevt = TRUE;
+        if (!throttled)
+          g_queue_push_tail (&matching_fevt, fevt);
         continue;
       }
 
       /* Otherwise all following events are in the future */
       break;
+    }
+
+    if (throttled && have_fevt) {
+      GST_DEBUG_OBJECT (encoder,
+          "Not requesting a new key unit yet due to throttling (%"
+          GST_TIME_FORMAT " + %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (priv->last_force_key_unit_request),
+          GST_TIME_ARGS (priv->min_force_key_unit_interval),
+          GST_TIME_ARGS (running_time));
+      g_queue_clear (&matching_fevt);
     }
 
     if (matching_fevt.length > 0) {
@@ -1576,6 +1627,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
       if (all_headers)
         GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME_HEADERS (frame);
+      priv->last_force_key_unit_request = running_time;
     }
   }
   GST_OBJECT_UNLOCK (encoder);
@@ -3003,4 +3055,51 @@ gst_video_encoder_is_qos_enabled (GstVideoEncoder * encoder)
   res = g_atomic_int_get (&encoder->priv->qos_enabled);
 
   return res;
+}
+
+/**
+ * gst_video_encoder_set_min_force_key_unit_interval:
+ * @encoder: the encoder
+ * @interval: minimum interval
+ *
+ * Sets the minimum interval for requesting keyframes based on force-keyunit
+ * events. Setting this to 0 will allow to handle every event, setting this to
+ * %GST_CLOCK_TIME_NONE causes force-keyunit events to be ignored.
+ *
+ * Since: 1.18
+ */
+void
+gst_video_encoder_set_min_force_key_unit_interval (GstVideoEncoder * encoder,
+    GstClockTime interval)
+{
+  g_return_if_fail (GST_IS_VIDEO_ENCODER (encoder));
+
+  GST_OBJECT_LOCK (encoder);
+  encoder->priv->min_force_key_unit_interval = interval;
+  GST_OBJECT_UNLOCK (encoder);
+}
+
+/**
+ * gst_video_encoder_get_min_force_key_unit_interval:
+ * @encoder: the encoder
+ *
+ * Returns the minimum force-keyunit interval, see gst_video_encoder_set_min_force_key_unit_interval()
+ * for more details.
+ *
+ * Returns: the minimum force-keyunit interval
+ *
+ * Since: 1.18
+ */
+GstClockTime
+gst_video_encoder_get_min_force_key_unit_interval (GstVideoEncoder * encoder)
+{
+  GstClockTime interval;
+
+  g_return_val_if_fail (GST_IS_VIDEO_ENCODER (encoder), GST_CLOCK_TIME_NONE);
+
+  GST_OBJECT_LOCK (encoder);
+  interval = encoder->priv->min_force_key_unit_interval;
+  GST_OBJECT_UNLOCK (encoder);
+
+  return interval;
 }
