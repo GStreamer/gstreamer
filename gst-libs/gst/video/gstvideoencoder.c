@@ -206,6 +206,21 @@ forced_key_unit_event_new (GstClockTime running_time, gboolean all_headers,
   return evt;
 }
 
+static gint
+forced_key_unit_event_compare (const ForcedKeyUnitEvent * a,
+    const ForcedKeyUnitEvent * b, gpointer user_data)
+{
+  if (a->running_time == b->running_time)
+    return 0;
+  if (a->running_time == GST_CLOCK_TIME_NONE)
+    return -1;
+  if (b->running_time == GST_CLOCK_TIME_NONE)
+    return 1;
+  if (a->running_time < b->running_time)
+    return -1;
+  return 1;
+}
+
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
 
@@ -1107,7 +1122,8 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
 
           GST_OBJECT_LOCK (encoder);
           fevt = forced_key_unit_event_new (running_time, all_headers, count);
-          g_queue_push_tail (&encoder->priv->force_key_unit, fevt);
+          g_queue_insert_sorted (&encoder->priv->force_key_unit, fevt,
+              (GCompareDataFunc) forced_key_unit_event_compare, NULL);
           GST_OBJECT_UNLOCK (encoder);
 
           GST_DEBUG_OBJECT (encoder,
@@ -1252,7 +1268,8 @@ gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
 
           GST_OBJECT_LOCK (encoder);
           fevt = forced_key_unit_event_new (running_time, all_headers, count);
-          g_queue_push_tail (&encoder->priv->force_key_unit, fevt);
+          g_queue_insert_sorted (&encoder->priv->force_key_unit, fevt,
+              (GCompareDataFunc) forced_key_unit_event_compare, NULL);
           GST_OBJECT_UNLOCK (encoder);
 
           GST_DEBUG_OBJECT (encoder,
