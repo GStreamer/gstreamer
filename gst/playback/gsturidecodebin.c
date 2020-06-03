@@ -2148,6 +2148,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   GstElement *decoder;
   gboolean is_raw;
   GstCaps *rawcaps;
+  GstPad *sinkpad;
 
   GST_URI_DECODE_BIN_LOCK (bin);
   GST_DEBUG_OBJECT (bin, "Found new pad %s.%s in source element %s",
@@ -2173,10 +2174,12 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
     goto no_decodebin;
 
   /* and link to decoder */
-  if (!gst_element_link_pads (bin->source, NULL, decoder, "sink"))
+  sinkpad = gst_element_get_static_pad (decoder, "sink");
+  if (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)
     goto could_not_link;
+  gst_object_unref (sinkpad);
 
-  GST_DEBUG_OBJECT (bin, "linked decoder to new pad");
+  GST_DEBUG_OBJECT (bin, "linked decoder to new source pad");
 
   gst_element_sync_state_with_parent (decoder);
   GST_URI_DECODE_BIN_UNLOCK (bin);
@@ -2192,6 +2195,7 @@ no_decodebin:
   }
 could_not_link:
   {
+    gst_object_unref (sinkpad);
     GST_ELEMENT_ERROR (bin, CORE, NEGOTIATION,
         (NULL), ("Can't link source to decoder element"));
     GST_URI_DECODE_BIN_UNLOCK (bin);
