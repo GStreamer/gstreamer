@@ -10,7 +10,7 @@ to setup its plugins and core behaviour. The config format is very similar
 to the [scenario](gst-validate-scenarios.md) file format.
 
 You can check the [ssim plugin](plugins/ssim.md)
-and the [validate flow plugin](plugins/validateflow.md)
+and the [validate flow plugin](gst-validate-flow.md)
 for examples.
 
 ## Core settings parameters

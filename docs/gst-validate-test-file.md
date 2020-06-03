@@ -104,7 +104,7 @@ Validate testfile will define some variables to make those files relocable:
 
 * `$(validateflow)`: The validateflow structure name with the default/right
                      values for the `expectations-dir` and `actual-results-dir`
-                     fields. See [validateflow](plugins/validateflow.md) for more
+                     fields. See [validateflow](gst-validate-flow.md) for more
                      information.
 
 * `$(videosink)`: The GStreamer videosink to use if the test can work with
