@@ -135,7 +135,7 @@ gst indent:
   -Dsharp=enabled
   -Domx=enabled
   -Dgst-omx:target=generic
-  -Ddoc=enabled
+  -Ddoc=disabled
   -Drs=disabled
   ${MESON_BUILDTYPE_ARGS}
   --werror
@@ -867,6 +867,7 @@ documentation:
   stage: integrate
   variables:
     MESON_ARGS: *simple_build
+    MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
   script:
   - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc.git
   - *gst_build
