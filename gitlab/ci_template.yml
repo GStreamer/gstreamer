@@ -868,17 +868,44 @@ documentation:
   variables:
     MESON_ARGS: *simple_build
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
+    CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
   - pip3 install --upgrade hotdoc==0.11.0
   - *gst_build
+  - ./gst-uninstalled.py ninja -C build/ plugins_doc_caches
+  - |
+    python3 -c "import os, subprocess, sys
+    subprojects = [os.environ['CI_PROJECT_NAME']]
+    if subprojects[0]  == 'gst-ci':
+        subprojects = ['gstreamer', 'gst-plugins-ugly', 'gst-omx', 'gst-plugins-good', 'gst-plugins-base', 'gstreamer-vaapi', 'gst-libav', 'gst-editing-services', 'gst-rtsp-server', 'gst-plugins-bad',]
+
+    diffsdir = '../plugins-cache-diffs'
+    os.makedirs(diffsdir, exist_ok=True)
+    res = 0
+    for subproject in subprojects:
+        cwd = os.path.join('subprojects', subproject)
+        try:
+            subprocess.check_call(['git', 'diff', '--quiet'], cwd=cwd)
+        except subprocess.CalledProcessError:
+            diffname = os.path.join(diffsdir, '%s_cache.diff' % subproject)
+            res += 1
+            with open(diffname, 'w') as diff:
+                subprocess.check_call(['git', 'diff'], stdout=diff, cwd=cwd)
+                print('\033[91mYou have a diff in the %s documentation cache. Please update with:\033[0m' % subproject)
+                print('     $ curl %s/%s | git apply -' % (os.environ['CI_ARTIFACTS_URL'], diffname.replace('../', '')))
+    if res != 0:
+        print('(note that it might take a few minutes for artefacts to be available on the server)\n')
+        sys.exit(res)"
 
   - ./gst-uninstalled.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
   - cd -
   - mv gst-build/build/subprojects/gst-docs/GStreamer-doc/html documentation/
 
   artifacts:
+    when: always
     paths:
     - documentation/
+    - plugins-cache-diffs/
 
 #
 # Build an iOS App using the iOS binaries
