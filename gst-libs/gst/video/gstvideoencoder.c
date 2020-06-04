@@ -214,8 +214,15 @@ static gint
 forced_key_unit_event_compare (const ForcedKeyUnitEvent * a,
     const ForcedKeyUnitEvent * b, gpointer user_data)
 {
-  if (a->running_time == b->running_time)
+  if (a->running_time == b->running_time) {
+    /* Sort pending ones before non-pending ones */
+    if (a->pending && !b->pending)
+      return -1;
+    if (!a->pending && b->pending)
+      return 1;
     return 0;
+  }
+
   if (a->running_time == GST_CLOCK_TIME_NONE)
     return -1;
   if (b->running_time == GST_CLOCK_TIME_NONE)
@@ -1558,7 +1565,8 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (priv->force_key_unit.head) {
     GList *l;
     GstClockTime running_time;
-    gboolean throttled = FALSE, have_fevt = FALSE;
+    gboolean throttled = FALSE, have_fevt = FALSE, have_pending_none_fevt =
+        FALSE;
     GQueue matching_fevt = G_QUEUE_INIT;
 
     running_time =
@@ -1576,8 +1584,11 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       ForcedKeyUnitEvent *fevt = l->data;
 
       /* Skip pending keyunits */
-      if (fevt->pending)
+      if (fevt->pending) {
+        if (fevt->running_time == GST_CLOCK_TIME_NONE)
+          have_pending_none_fevt = TRUE;
         continue;
+      }
 
       /* Simple case, keyunit ASAP */
       if (fevt->running_time == GST_CLOCK_TIME_NONE) {
@@ -1612,22 +1623,37 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (matching_fevt.length > 0) {
       ForcedKeyUnitEvent *fevt;
       gboolean all_headers = FALSE;
-
-      GST_DEBUG_OBJECT (encoder,
-          "Forcing a key unit at running time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (running_time));
+      gboolean force_keyunit = FALSE;
 
       while ((fevt = g_queue_pop_head (&matching_fevt))) {
         fevt->pending = TRUE;
-        fevt->frame_id = frame->system_frame_number;
-        if (fevt->all_headers)
-          all_headers = TRUE;
+
+        if ((fevt->running_time == GST_CLOCK_TIME_NONE
+                && have_pending_none_fevt)
+            || (priv->last_force_key_unit_request != GST_CLOCK_TIME_NONE
+                && fevt->running_time != GST_CLOCK_TIME_NONE
+                && fevt->running_time <= priv->last_force_key_unit_request)) {
+          GST_DEBUG_OBJECT (encoder,
+              "Not requesting another key unit at running time %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (fevt->running_time));
+        } else {
+          force_keyunit = TRUE;
+          fevt->frame_id = frame->system_frame_number;
+          if (fevt->all_headers)
+            all_headers = TRUE;
+        }
       }
 
-      GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
-      if (all_headers)
-        GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME_HEADERS (frame);
-      priv->last_force_key_unit_request = running_time;
+      if (force_keyunit) {
+        GST_DEBUG_OBJECT (encoder,
+            "Forcing a key unit at running time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time));
+
+        GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
+        if (all_headers)
+          GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME_HEADERS (frame);
+        priv->last_force_key_unit_request = running_time;
+      }
     }
   }
   GST_OBJECT_UNLOCK (encoder);
