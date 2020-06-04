@@ -143,6 +143,7 @@ struct _GstVideoEncoderPrivate
   GQueue force_key_unit;        /* List of pending forced keyunits */
   GstClockTime min_force_key_unit_interval;
   GstClockTime last_force_key_unit_request;
+  GstClockTime last_key_unit;
 
   guint32 system_frame_number;
 
@@ -463,6 +464,7 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
   g_queue_clear_full (&priv->force_key_unit,
       (GDestroyNotify) forced_key_unit_event_free);
   priv->last_force_key_unit_request = GST_CLOCK_TIME_NONE;
+  priv->last_key_unit = GST_CLOCK_TIME_NONE;
 
   priv->drained = TRUE;
 
@@ -1565,8 +1567,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (priv->force_key_unit.head) {
     GList *l;
     GstClockTime running_time;
-    gboolean throttled = FALSE, have_fevt = FALSE, have_pending_none_fevt =
-        FALSE;
+    gboolean throttled, have_fevt = FALSE, have_pending_none_fevt = FALSE;
     GQueue matching_fevt = G_QUEUE_INIT;
 
     running_time =
@@ -1575,9 +1576,12 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     throttled = (priv->min_force_key_unit_interval != 0 &&
         priv->min_force_key_unit_interval != GST_CLOCK_TIME_NONE &&
-        priv->last_force_key_unit_request != GST_CLOCK_TIME_NONE &&
-        priv->last_force_key_unit_request + priv->min_force_key_unit_interval >
-        running_time);
+        ((priv->last_force_key_unit_request != GST_CLOCK_TIME_NONE &&
+                priv->last_force_key_unit_request +
+                priv->min_force_key_unit_interval > running_time)
+            || (priv->last_key_unit != GST_CLOCK_TIME_NONE
+                && priv->last_key_unit + priv->min_force_key_unit_interval >
+                running_time)));
 
     for (l = priv->force_key_unit.head; l && (!throttled || !have_fevt);
         l = l->next) {
@@ -1611,10 +1615,20 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
 
     if (throttled && have_fevt) {
+      GstClockTime last_time;
+
+      if (priv->last_force_key_unit_request != GST_CLOCK_TIME_NONE &&
+          priv->last_force_key_unit_request +
+          priv->min_force_key_unit_interval > running_time) {
+        last_time = priv->last_force_key_unit_request;
+      } else {
+        last_time = priv->last_key_unit;
+      }
+
       GST_DEBUG_OBJECT (encoder,
           "Not requesting a new key unit yet due to throttling (%"
           GST_TIME_FORMAT " + %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (priv->last_force_key_unit_request),
+          GST_TIME_ARGS (last_time),
           GST_TIME_ARGS (priv->min_force_key_unit_interval),
           GST_TIME_ARGS (running_time));
       g_queue_clear (&matching_fevt);
@@ -1632,7 +1646,10 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
                 && have_pending_none_fevt)
             || (priv->last_force_key_unit_request != GST_CLOCK_TIME_NONE
                 && fevt->running_time != GST_CLOCK_TIME_NONE
-                && fevt->running_time <= priv->last_force_key_unit_request)) {
+                && fevt->running_time <= priv->last_force_key_unit_request) ||
+            (priv->last_key_unit != GST_CLOCK_TIME_NONE
+                && fevt->running_time != GST_CLOCK_TIME_NONE
+                && fevt->running_time <= priv->last_key_unit)) {
           GST_DEBUG_OBJECT (encoder,
               "Not requesting another key unit at running time %"
               GST_TIME_FORMAT, GST_TIME_ARGS (fevt->running_time));
@@ -2511,6 +2528,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       frame->dts = frame->pts;
     }
+    priv->last_key_unit =
+        gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
+        frame->pts);
   }
 
   gst_video_encoder_infer_dts_unlocked (encoder, frame);
@@ -2657,6 +2677,9 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
     if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       frame->dts = frame->pts;
     }
+    priv->last_key_unit =
+        gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
+        frame->pts);
   }
 
   gst_video_encoder_infer_dts_unlocked (encoder, frame);

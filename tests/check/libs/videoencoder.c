@@ -1065,6 +1065,13 @@ GST_START_TEST (videoencoder_force_keyunit_handling)
 
   fail_unless_equals_int (g_list_length (buffers), 13);
 
+  /* we already received a keyframe after the given time, so the next frame
+   * is not going to be another keyframe */
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit
+          (gst_util_uint64_scale_round (12, GST_SECOND * TEST_VIDEO_FPS_D,
+                  TEST_VIDEO_FPS_N), TRUE, 1)));
+
   buffer = create_test_buffer (13);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   buffer = NULL;
