@@ -9,7 +9,7 @@ stages:
 variables:
   ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2020-04-06-2193279-master'
   CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:2020-04-06-2193307-master'
-  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2020-02-24-1712085-master'
+  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2020-06-04-2958178-master'
   INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:2020-02-10-1589542-master'
   WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v10'
