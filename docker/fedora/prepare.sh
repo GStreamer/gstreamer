@@ -68,6 +68,7 @@ dnf install -y \
     llvm-devel \
     log4c-devel \
     make \
+    nasm \
     neon \
     neon-devel \
     nunit \
@@ -128,7 +129,6 @@ dnf debuginfo-install -y gtk3 \
     glib-networking \
     libcurl \
     libsoup \
-    nasm \
     nss \
     nss-softokn \
     nss-softokn-freebl \
