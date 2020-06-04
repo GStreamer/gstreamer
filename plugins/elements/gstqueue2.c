@@ -312,7 +312,8 @@ static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
 static void update_in_rates (GstQueue2 * queue, gboolean force);
-static GstMessage *gst_queue2_get_buffering_message (GstQueue2 * queue);
+static GstMessage *gst_queue2_get_buffering_message (GstQueue2 * queue,
+    gint * percent);
 static void gst_queue2_post_buffering (GstQueue2 * queue);
 
 typedef enum
@@ -1114,7 +1115,7 @@ get_buffering_stats (GstQueue2 * queue, gint percent, GstBufferingMode * mode,
 
 /* Called with the lock taken */
 static GstMessage *
-gst_queue2_get_buffering_message (GstQueue2 * queue)
+gst_queue2_get_buffering_message (GstQueue2 * queue, gint * percent)
 {
   GstMessage *msg = NULL;
   if (queue->percent_changed) {
@@ -1131,10 +1132,10 @@ gst_queue2_get_buffering_message (GstQueue2 * queue)
      * the queue becomes empty for a short period of time. */
     if (!queue->waiting_del
         && queue->last_posted_buffering_percent != queue->buffering_percent) {
-      gint percent = queue->buffering_percent;
+      *percent = queue->buffering_percent;
 
-      GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", percent);
-      msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
+      GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", *percent);
+      msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), *percent);
 
       gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
           queue->avg_out, queue->buffering_left);
@@ -1148,10 +1149,11 @@ static void
 gst_queue2_post_buffering (GstQueue2 * queue)
 {
   GstMessage *msg = NULL;
+  gint percent = -1;
 
   g_mutex_lock (&queue->buffering_post_lock);
   GST_QUEUE2_MUTEX_LOCK (queue);
-  msg = gst_queue2_get_buffering_message (queue);
+  msg = gst_queue2_get_buffering_message (queue, &percent);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   if (msg != NULL) {
@@ -1161,10 +1163,12 @@ gst_queue2_post_buffering (GstQueue2 * queue)
        * this post attempt failed, and the next one won't be done, because
        * gst_queue2_get_buffering_message() checks these states and decides
        * based on their values that it won't produce a message. */
-      queue->last_posted_buffering_percent = queue->percent_changed;
-      queue->percent_changed = FALSE;
+      queue->last_posted_buffering_percent = percent;
+      if (percent == queue->buffering_percent)
+        queue->percent_changed = FALSE;
       GST_QUEUE2_MUTEX_UNLOCK (queue);
-      GST_DEBUG_OBJECT (queue, "successfully posted buffering message");
+      GST_DEBUG_OBJECT (queue, "successfully posted %d%% buffering message",
+          percent);
     } else
       GST_DEBUG_OBJECT (queue, "could not post buffering message");
   }
@@ -2183,8 +2187,9 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     /* update the buffering status */
     if (queue->use_buffering) {
       GstMessage *msg;
+      gint percent = -1;
       update_buffering (queue);
-      msg = gst_queue2_get_buffering_message (queue);
+      msg = gst_queue2_get_buffering_message (queue, &percent);
       if (msg) {
         gboolean post_ok;
 
@@ -2200,9 +2205,11 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
            * this post attempt failed, and the next one won't be done, because
            * gst_queue2_get_buffering_message() checks these states and decides
            * based on their values that it won't produce a message. */
-          queue->last_posted_buffering_percent = queue->percent_changed;
-          queue->percent_changed = FALSE;
-          GST_DEBUG_OBJECT (queue, "successfully posted buffering message");
+          queue->last_posted_buffering_percent = percent;
+          if (percent == queue->buffering_percent)
+            queue->percent_changed = FALSE;
+          GST_DEBUG_OBJECT (queue, "successfully posted %d%% buffering message",
+              percent);
         } else {
           GST_DEBUG_OBJECT (queue, "could not post buffering message");
         }
