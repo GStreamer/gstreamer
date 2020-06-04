@@ -1,5 +1,9 @@
 set -eux
 
+# Fedora base image disable installing documentation files. See https://pagure.io/atomic-wg/issue/308
+# We need them to cleanly build our doc.
+sed -i "s/tsflags=nodocs//g" /etc/dnf/dnf.conf
+
 dnf install -y git-core ninja-build dnf-plugins-core
 
 # Configure git for various usage
