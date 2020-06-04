@@ -55,7 +55,6 @@ dnf install -y \
     procps-ng \
     patch \
     redhat-rpm-config \
-    intel-mediasdk-devel \
     json-glib \
     json-glib-devel \
     libnice \
