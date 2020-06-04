@@ -869,7 +869,7 @@ documentation:
     MESON_ARGS: *simple_build
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
   script:
-  - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc.git@a8bb7483d473885b9dbb84eb34252f425d43d3ff
+  - pip3 install --upgrade hotdoc==0.11.0
   - *gst_build
 
   - ./gst-uninstalled.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
