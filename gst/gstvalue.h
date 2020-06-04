@@ -225,6 +225,12 @@ G_BEGIN_DECLS
 GST_API GType _gst_int_range_type;
 
 /**
+ * GstIntRange:
+ *
+ * A fundamental type that describes a #gint range
+ */
+
+/**
  * GST_TYPE_INT_RANGE:
  *
  * a #GValue type that represents an integer range
@@ -234,6 +240,12 @@ GST_API GType _gst_int_range_type;
 #define GST_TYPE_INT_RANGE               (_gst_int_range_type)
 
 GST_API GType _gst_int64_range_type;
+
+/**
+ * GstInt64Range:
+ *
+ * A fundamental type that describes a #gint64 range
+ */
 
 /**
  * GST_TYPE_INT64_RANGE:
@@ -247,6 +259,12 @@ GST_API GType _gst_int64_range_type;
 GST_API GType _gst_double_range_type;
 
 /**
+ * GstDoubleRange:
+ *
+ * A fundamental type that describes a #gdouble range
+ */
+
+/**
  * GST_TYPE_DOUBLE_RANGE:
  *
  * a #GValue type that represents a floating point range with double precision
@@ -258,6 +276,12 @@ GST_API GType _gst_double_range_type;
 GST_API GType _gst_fraction_range_type;
 
 /**
+ * GstFractionRange:
+ *
+ * A fundamental type that describes a #GstFractionRange range
+ */
+
+/**
  * GST_TYPE_FRACTION_RANGE:
  *
  * a #GValue type that represents a GstFraction range
@@ -267,6 +291,12 @@ GST_API GType _gst_fraction_range_type;
 #define GST_TYPE_FRACTION_RANGE           (_gst_fraction_range_type)
 
 GST_API GType _gst_value_list_type;
+
+/**
+ * GstValueList:
+ *
+ * A fundamental type that describes an unordered list of #GValue
+ */
 
 /**
  * GST_TYPE_LIST:
@@ -282,6 +312,12 @@ GST_API GType _gst_value_list_type;
 #define GST_TYPE_LIST                    (_gst_value_list_type)
 
 GST_API GType _gst_value_array_type;
+
+/**
+ * GstValueArray:
+ *
+ * A fundamental type that describes an ordered list of #GValue
+ */
 
 /**
  * GST_TYPE_ARRAY:
@@ -300,6 +336,13 @@ GST_API GType _gst_value_array_type;
 GST_API GType _gst_fraction_type;
 
 /**
+ * GstFraction:
+ *
+ * A fundamental type that describes a fraction of an integer numerator
+ * over an integer denominator
+ */
+
+/**
  * GST_TYPE_FRACTION:
  *
  * a #GValue type that represents a fraction of an integer numerator over
@@ -313,6 +356,12 @@ GST_API GType _gst_fraction_type;
 GST_API GType _gst_bitmask_type;
 
 /**
+ * GstBitmask:
+ *
+ * A fundamental type that describes a 64-bit bitmask
+ */
+
+/**
  * GST_TYPE_BITMASK:
  *
  * a #GValue type that represents a 64-bit bitmask.
@@ -323,6 +372,13 @@ GST_API GType _gst_bitmask_type;
 #define GST_TYPE_BITMASK                 (_gst_bitmask_type)
 
 GST_API GType _gst_flagset_type;
+
+/**
+ * GstFlagSet:
+ *
+ * A fundamental type that describes a 32-bit flag bitfield, with 32-bit
+ * mask indicating which of the bits in the field are explicitly set.
+ */
 
 /**
  * GST_TYPE_FLAG_SET:
