@@ -1095,6 +1095,105 @@ GST_START_TEST (videoencoder_force_keyunit_handling)
 
 GST_END_TEST;
 
+GST_START_TEST (videoencoder_force_keyunit_min_interval)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  GList *l;
+  gint i;
+
+  setup_videoencodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  /* Only one keyframe request every 3 frames at most */
+  g_object_set (enc, "min-force-key-unit-interval", 100 * GST_MSECOND, NULL);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push the first two buffers */
+  buffer = create_test_buffer (0);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  buffer = create_test_buffer (1);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* send a force-keyunit event, the next buffer should not be a keyframe yet */
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 1)));
+
+  buffer = create_test_buffer (2);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* this buffer should be a keyframe */
+  buffer = create_test_buffer (3);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* send two force-keyunit event, the 6th buffer should be a keyframe */
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 1)));
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 1)));
+
+  buffer = create_test_buffer (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = create_test_buffer (5);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = create_test_buffer (6);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* send a force-keyunit event for the 9th buffer, this should happen */
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit
+          (gst_util_uint64_scale_round (9, GST_SECOND * TEST_VIDEO_FPS_D,
+                  TEST_VIDEO_FPS_N), TRUE, 1)));
+  buffer = create_test_buffer (7);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = create_test_buffer (8);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = create_test_buffer (9);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* send a force-keyunit event for the 11th buffer, this should happen on the
+   * 12th */
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_video_event_new_upstream_force_key_unit
+          (gst_util_uint64_scale_round (11, GST_SECOND * TEST_VIDEO_FPS_D,
+                  TEST_VIDEO_FPS_N), TRUE, 1)));
+  buffer = create_test_buffer (10);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = create_test_buffer (11);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = create_test_buffer (12);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  fail_unless_equals_int (g_list_length (buffers), 13);
+
+  /* every third buffer should be a keyframe */
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    if (i % 3 == 0)
+      fail_if (GST_BUFFER_FLAG_IS_SET (l->data, GST_BUFFER_FLAG_DELTA_UNIT));
+    else
+      fail_unless (GST_BUFFER_FLAG_IS_SET (l->data,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videoencodertest ();
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoencoder_suite (void)
 {
@@ -1112,6 +1211,7 @@ gst_videoencoder_suite (void)
   tcase_add_test (tc, videoencoder_playback_subframes);
   tcase_add_test (tc, videoencoder_playback_events_subframes);
   tcase_add_test (tc, videoencoder_force_keyunit_handling);
+  tcase_add_test (tc, videoencoder_force_keyunit_min_interval);
 
   return s;
 }
