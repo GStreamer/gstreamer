@@ -1112,7 +1112,8 @@ nle_composition_class_init (NleCompositionClass * klass)
 
   properties[PROP_ID] =
       g_param_spec_string ("id", "Id", "The stream-id of the composition",
-      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      NULL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT);
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   _signals[COMMITED_SIGNAL] =

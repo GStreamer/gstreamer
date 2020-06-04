@@ -771,7 +771,8 @@ ges_track_class_init (GESTrackClass * klass)
    */
   properties[ARG_ID] =
       g_param_spec_string ("id", "Id", "The stream-id of the composition",
-      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      NULL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT);
   g_object_class_install_property (object_class, ARG_ID, properties[ARG_ID]);
 
   gst_element_class_add_static_pad_template (gstelement_class,

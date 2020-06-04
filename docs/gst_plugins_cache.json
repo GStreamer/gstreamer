@@ -268,7 +268,7 @@
                         "blurb": "The stream-id of the composition",
                         "construct": false,
                         "construct-only": false,
-                        "default": "6a0fa13827e3ac0bd51c97439086d1d9",
+                        "default": "NULL",
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
