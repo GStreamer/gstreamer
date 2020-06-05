@@ -4521,7 +4521,7 @@ invalid:
 /**
  * gst_type_mark_as_plugin_api:
  * @type: a GType
- * @flags: a set of #GstPluginApiFlags to further inform cache generation.
+ * @flags: a set of #GstPluginAPIFlags to further inform cache generation.
  *
  * Marks @type as plugin API. This should be called in `class_init` of
  * elements that expose new types (i.e. enums, flags or internal GObjects) via
@@ -4547,7 +4547,7 @@ gst_type_mark_as_plugin_api (GType type, GstPluginAPIFlags flags)
 /**
  * gst_type_is_plugin_api:
  * @type: a GType
- * @flags: (out) (nullable): What #GstPluginApiFlags the plugin was marked with
+ * @flags: (out) (nullable): What #GstPluginAPIFlags the plugin was marked with
  *
  * Checks if @type is plugin API. See gst_type_mark_as_plugin_api() for
  * details.
