@@ -3,7 +3,7 @@ meta,
     args = {
         --track-types, video,
         --videosink, "$(videosink) name=videosink",
-        --video-caps, "video/x-raw,width=1280,height=720,framerate=10/1",
+        --video-caps, "video/x-raw,format=I420,width=1280,height=720,framerate=10/1,chroma-site=mpeg2,colorimetry=bt709;",
     },
     handles-states=true,
     ignore-eos=true,

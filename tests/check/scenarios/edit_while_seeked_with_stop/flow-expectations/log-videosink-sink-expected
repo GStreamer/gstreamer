@@ -17,7 +17,6 @@ buffer: pts=0:00:00.400000000, dur=0:00:00.100000000
 event eos: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
-event caps: video/x-raw, format=(string)I420, width=(int)1280, height=(int)720, framerate=(fraction)10/1, chroma-site=(string)jpeg, colorimetry=(string)bt601;
 event segment: format=TIME, start=0:00:00.500000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.500000000, base=0:00:00.000000000, position=none
 buffer: pts=0:00:00.500000000, dur=0:00:00.100000000
 event flush-start: (no structure)
@@ -31,7 +30,6 @@ buffer: pts=0:00:00.900000000, dur=0:00:00.100000000
 event eos: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
-event caps: video/x-raw, format=(string)I420, width=(int)1280, height=(int)720, framerate=(fraction)10/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709;
 event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=none
 event eos: (no structure)
 event flush-start: (no structure)
@@ -46,7 +44,6 @@ buffer: pts=0:00:01.100000000, dur=0:00:00.100000000
 buffer: pts=0:00:01.200000000, dur=0:00:00.100000000
 buffer: pts=0:00:01.300000000, dur=0:00:00.100000000
 buffer: pts=0:00:01.400000000, dur=0:00:00.100000000
-event caps: video/x-raw, format=(string)I420, width=(int)1280, height=(int)720, framerate=(fraction)10/1, chroma-site=(string)jpeg, colorimetry=(string)bt601;
 event segment: format=TIME, start=0:00:01.500000000, offset=0:00:00.000000000, stop=0:00:01.500000001, flags=0x01, time=0:00:01.500000000, base=0:00:00.500000000, position=none
 buffer: pts=0:00:01.500000000, dur=0:00:00.000000001
 event eos: (no structure)
