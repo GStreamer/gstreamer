@@ -709,15 +709,21 @@ _add_element_pad_templates (GString * json, GString * other_types,
 
   pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
+    GstCaps *documentation_caps;
     gchar *name, *caps;
     GType pad_type;
     GstPadTemplate *tmpl;
     padtemplate = (GstStaticPadTemplate *) (pads->data);
     pads = g_list_next (pads);
 
+    tmpl = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+        padtemplate->name_template);
+
     name = g_regex_replace (re, padtemplate->name_template,
         -1, 0, "%%", 0, NULL);;
-    caps = _build_caps (gst_static_caps_get (&padtemplate->static_caps));
+    documentation_caps = gst_pad_template_get_documentation_caps (tmpl);
+    caps = _build_caps (documentation_caps);
+    gst_caps_replace (&documentation_caps, NULL);
     g_string_append_printf (json, "%s"
         "\"%s\": {"
         "\"caps\": \"%s\","
@@ -735,8 +741,6 @@ _add_element_pad_templates (GString * json, GString * other_types,
     opened = TRUE;
     g_free (name);
 
-    tmpl = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
-        padtemplate->name_template);
     pad_type = GST_PAD_TEMPLATE_GTYPE (tmpl);
     if (pad_type != G_TYPE_NONE && pad_type != GST_TYPE_PAD) {
       g_string_append_printf (json, ", \"type\": \"%s\"",

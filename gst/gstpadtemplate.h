@@ -141,6 +141,7 @@ struct _GstPadTemplate {
     gpointer _gst_reserved[GST_PADDING];
     struct {
       GType gtype;
+      GstCaps *documentation_caps;
     } abi;
   } ABI;
 };
@@ -227,6 +228,12 @@ GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);
 
 GST_API
 GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
+
+GST_API
+void        gst_pad_template_set_documentation_caps (GstPadTemplate *templ, GstCaps *caps);
+
+GST_API
+GstCaps*    gst_pad_template_get_documentation_caps (GstPadTemplate *templ);
 
 GST_API
 void                    gst_pad_template_pad_created            (GstPadTemplate * templ, GstPad * pad);

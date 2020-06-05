@@ -230,6 +230,8 @@ gst_pad_template_dispose (GObject * object)
     gst_caps_unref (GST_PAD_TEMPLATE_CAPS (templ));
   }
 
+  gst_pad_template_set_documentation_caps (templ, NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -476,6 +478,50 @@ gst_pad_template_get_caps (GstPadTemplate * templ)
   caps = GST_PAD_TEMPLATE_CAPS (templ);
 
   return (caps ? gst_caps_ref (caps) : NULL);
+}
+
+/**
+ * gst_pad_template_set_documentation_caps:
+ * @templ: the pad template to set documented capabilities on
+ * @caps: the documented capabilities
+ *
+ * Certain elements will dynamically construct the caps of their
+ * pad templates. In order not to let environment-specific information
+ * into the documentation, element authors should use this method to
+ * expose "stable" caps to the reader.
+ *
+ * Since: 1.18
+ */
+void
+gst_pad_template_set_documentation_caps (GstPadTemplate * templ, GstCaps * caps)
+{
+  g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  gst_caps_replace (&(((GstPadTemplate *) (templ))->ABI.abi.documentation_caps),
+      caps);
+}
+
+/**
+ * gst_pad_template_get_documentation_caps:
+ * @templ: the pad template to get documented capabilities on
+ *
+ * See gst_pad_template_set_documentation_caps().
+ *
+ * Returns: The caps to document. For convenience, this will return
+ *   gst_pad_template_get_caps() when no documentation caps were set.
+ * Since: 1.18
+ */
+GstCaps *
+gst_pad_template_get_documentation_caps (GstPadTemplate * templ)
+{
+  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
+
+  if (((GstPadTemplate *) (templ))->ABI.abi.documentation_caps)
+    return gst_caps_ref (((GstPadTemplate *) (templ))->ABI.abi.
+        documentation_caps);
+  else
+    return gst_pad_template_get_caps (templ);
 }
 
 /**
