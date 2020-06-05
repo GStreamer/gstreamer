@@ -78,7 +78,7 @@ $ gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstrea
 #### Running the Python version
 
 * python3 -m pip install --user websockets
-* run `python3 sendrecv/gst/webrtc-sendrecv.py ID` with the `id` from the browser. You will see state changes and an SDP exchange.
+* run `python3 sendrecv/gst/webrtc_sendrecv.py ID` with the `id` from the browser. You will see state changes and an SDP exchange.
 
 > The python version requires at least version 1.14.2 of gstreamer and its plugins.
 
