@@ -4521,6 +4521,7 @@ invalid:
 /**
  * gst_type_mark_as_plugin_api:
  * @type: a GType
+ * @flags: a set of #GstPluginApiFlags to further inform cache generation.
  *
  * Marks @type as plugin API. This should be called in `class_init` of
  * elements that expose new types (i.e. enums, flags or internal GObjects) via
@@ -4536,14 +4537,17 @@ invalid:
  * Since: 1.18
  */
 void
-gst_type_mark_as_plugin_api (GType type)
+gst_type_mark_as_plugin_api (GType type, GstPluginAPIFlags flags)
 {
   g_type_set_qdata (type, GST_QUARK (PLUGIN_API), GINT_TO_POINTER (TRUE));
+  g_type_set_qdata (type, GST_QUARK (PLUGIN_API_FLAGS),
+      GINT_TO_POINTER (flags));
 }
 
 /**
  * gst_type_is_plugin_api:
  * @type: a GType
+ * @flags: (out) (nullable): What #GstPluginApiFlags the plugin was marked with
  *
  * Checks if @type is plugin API. See gst_type_mark_as_plugin_api() for
  * details.
@@ -4553,7 +4557,15 @@ gst_type_mark_as_plugin_api (GType type)
  * Since: 1.18
  */
 gboolean
-gst_type_is_plugin_api (GType type)
+gst_type_is_plugin_api (GType type, GstPluginAPIFlags * flags)
 {
-  return ! !GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
+  gboolean ret =
+      ! !GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
+
+  if (ret && flags) {
+    *flags =
+        GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API_FLAGS)));
+  }
+
+  return ret;
 }

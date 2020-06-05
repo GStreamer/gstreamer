@@ -242,7 +242,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gstbase_sink_class->render = GST_DEBUG_FUNCPTR (gst_fake_sink_render);
   gstbase_sink_class->query = GST_DEBUG_FUNCPTR (gst_fake_sink_query);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SINK_STATE_ERROR);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SINK_STATE_ERROR, 0);
 }
 
 static void

@@ -1953,6 +1953,26 @@ GST_START_TEST (test_regression)
 
 GST_END_TEST;
 
+GST_START_TEST (test_mark_as_plugin_api)
+{
+  GstPluginAPIFlags api_flags;
+
+  fail_unless (!gst_type_is_plugin_api (GST_TYPE_ELEMENT, NULL));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ELEMENT, 0);
+
+  fail_unless (gst_type_is_plugin_api (GST_TYPE_ELEMENT, &api_flags));
+  fail_unless_equals_int (api_flags, 0);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ELEMENT,
+      GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS);
+
+  fail_unless (gst_type_is_plugin_api (GST_TYPE_ELEMENT, &api_flags));
+  fail_unless_equals_int (api_flags, GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -1993,6 +2013,8 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_read_macros);
   tcase_add_test (tc_chain, test_write_macros);
   tcase_add_test (tc_chain, test_regression);
+
+  tcase_add_test (tc_chain, test_mark_as_plugin_api);
 
   return s;
 }

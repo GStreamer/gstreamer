@@ -1305,8 +1305,8 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
   gstelement_class->release_pad = gst_input_selector_release_pad;
   gstelement_class->change_state = gst_input_selector_change_state;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_SELECTOR_PAD);
-  gst_type_mark_as_plugin_api (GST_TYPE_INPUT_SELECTOR_SYNC_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_SELECTOR_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_INPUT_SELECTOR_SYNC_MODE, 0);
 }
 
 static void

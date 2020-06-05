@@ -183,7 +183,7 @@ _serialize_enum_default (GString * json, GType gtype, GValue * value)
 }
 
 static void
-_serialize_enum (GString * json, GType gtype)
+_serialize_enum (GString * json, GType gtype, GstPluginAPIFlags api_flags)
 {
   GEnumValue *values;
   guint j = 0;
@@ -191,25 +191,30 @@ _serialize_enum (GString * json, GType gtype)
   values = G_ENUM_CLASS (g_type_class_ref (gtype))->values;
 
   g_string_append_printf (json, "%s\"%s\": { "
-      "\"kind\": \"enum\"," "\"values\": [", json->len ? "," : "",
-      g_type_name (gtype));
+      "\"kind\": \"enum\"", json->len ? "," : "", g_type_name (gtype));
 
-  while (values[j].value_name) {
-    gchar *value_name = json_strescape (values[j].value_name);
-    gchar *value_nick = json_strescape (values[j].value_nick);
+  if (api_flags & GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS) {
+    g_string_append (json, ",\"ignore-enum-members\": true}");
+  } else {
+    g_string_append (json, ",\"values\": [");
 
-    g_string_append_printf (json, "{\"name\": \"%s\","
-        "\"value\": \"%d\","
-        "\"desc\": \"%s\"}", value_nick, values[j].value, value_name);
-    j++;
-    if (values[j].value_name)
-      g_string_append_c (json, ',');
+    while (values[j].value_name) {
+      gchar *value_name = json_strescape (values[j].value_name);
+      gchar *value_nick = json_strescape (values[j].value_nick);
 
-    g_free (value_name);
-    g_free (value_nick);
+      g_string_append_printf (json, "{\"name\": \"%s\","
+          "\"value\": \"%d\","
+          "\"desc\": \"%s\"}", value_nick, values[j].value, value_name);
+      j++;
+      if (values[j].value_name)
+        g_string_append_c (json, ',');
+
+      g_free (value_name);
+      g_free (value_nick);
+    }
+
+    g_string_append (json, "]}");
   }
-
-  g_string_append (json, "]}");
 }
 
 static void
@@ -250,6 +255,7 @@ _add_signals (GString * json, GString * other_types,
   gint i = 0, j, k;
   GSignalQuery *query = NULL;
   GType type;
+  GstPluginAPIFlags api_flags;
   GSList *found_signals, *l;
 
   for (k = 0; k < 2; k++) {
@@ -323,12 +329,12 @@ _add_signals (GString * json, GString * other_types,
 
         if (!g_hash_table_contains (seen_other_types,
                 g_type_name (query->param_types[j]))
-            && gst_type_is_plugin_api (query->param_types[j])) {
+            && gst_type_is_plugin_api (query->param_types[j], &api_flags)) {
           g_hash_table_insert (seen_other_types,
               (gpointer) g_type_name (query->param_types[j]), NULL);
 
           if (g_type_is_a (query->param_types[j], G_TYPE_ENUM)) {
-            _serialize_enum (other_types, query->param_types[j]);
+            _serialize_enum (other_types, query->param_types[j], api_flags);
           } else if (g_type_is_a (query->param_types[j], G_TYPE_FLAGS)) {
             _serialize_flags (other_types, query->param_types[j]);
           } else if (g_type_is_a (query->param_types[j], G_TYPE_OBJECT)) {
@@ -341,11 +347,11 @@ _add_signals (GString * json, GString * other_types,
 
       if (!g_hash_table_contains (seen_other_types,
               g_type_name (query->return_type))
-          && gst_type_is_plugin_api (query->return_type)) {
+          && gst_type_is_plugin_api (query->return_type, &api_flags)) {
         g_hash_table_insert (seen_other_types,
             (gpointer) g_type_name (query->return_type), NULL);
         if (g_type_is_a (query->return_type, G_TYPE_ENUM)) {
-          _serialize_enum (other_types, query->return_type);
+          _serialize_enum (other_types, query->return_type, api_flags);
         } else if (g_type_is_a (query->return_type, G_TYPE_FLAGS)) {
           _serialize_flags (other_types, query->return_type);
         } else if (g_type_is_a (query->return_type, G_TYPE_OBJECT)) {
@@ -395,6 +401,7 @@ _add_properties (GString * json, GString * other_types,
   guint i, n_props;
   gboolean opened = FALSE;
   GParamSpec **specs, *spec;
+  GstPluginAPIFlags api_flags;
 
   specs = g_object_class_list_properties (klass, &n_props);
 
@@ -440,11 +447,11 @@ _add_properties (GString * json, GString * other_types,
 
     if (!g_hash_table_contains (seen_other_types,
             g_type_name (spec->value_type))
-        && gst_type_is_plugin_api (spec->value_type)) {
+        && gst_type_is_plugin_api (spec->value_type, &api_flags)) {
       g_hash_table_insert (seen_other_types,
           (gpointer) g_type_name (spec->value_type), NULL);
       if (G_IS_PARAM_SPEC_ENUM (spec)) {
-        _serialize_enum (other_types, spec->value_type);
+        _serialize_enum (other_types, spec->value_type, api_flags);
       } else if (G_IS_PARAM_SPEC_FLAGS (spec)) {
         _serialize_flags (other_types, spec->value_type);
       } else if (G_IS_PARAM_SPEC_OBJECT (spec)) {
@@ -698,6 +705,7 @@ _add_element_pad_templates (GString * json, GString * other_types,
   const GList *pads;
   GstStaticPadTemplate *padtemplate;
   GRegex *re = g_regex_new ("%", 0, 0, NULL);
+  GstPluginAPIFlags api_flags;
 
   pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
@@ -735,7 +743,7 @@ _add_element_pad_templates (GString * json, GString * other_types,
           g_type_name (pad_type));
 
       if (!g_hash_table_contains (seen_other_types, g_type_name (pad_type))
-          && gst_type_is_plugin_api (pad_type)) {
+          && gst_type_is_plugin_api (pad_type, &api_flags)) {
         g_hash_table_insert (seen_other_types,
             (gpointer) g_type_name (pad_type), NULL);
         _serialize_object (other_types, seen_other_types, pad_type);

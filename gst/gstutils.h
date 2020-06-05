@@ -1168,6 +1168,18 @@ typedef enum {
   GST_SEARCH_MODE_AFTER
 } GstSearchMode;
 
+/**
+ * GstPluginAPIFlags:
+ * @GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS: Ignore enum members when generating
+ *   the plugins cache. This is useful if the members of the enum are generated
+ *   dynamically, in order not to expose incorrect documentation to the end user.
+ *
+ * Since: 1.18
+ */
+typedef enum {
+  GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS = (1 << 0),
+} GstPluginAPIFlags;
+
 GST_API
 gpointer      gst_util_array_binary_search      (gpointer array, guint num_elements,
                                                  gsize element_size, GCompareDataFunc search_func,
@@ -1205,10 +1217,10 @@ gboolean      gst_calculate_linear_regression   (const GstClockTime * xy,
                                                  gdouble * r_squared);
 
 GST_API
-void          gst_type_mark_as_plugin_api       (GType type);
+void          gst_type_mark_as_plugin_api       (GType type, GstPluginAPIFlags flags);
 
 GST_API
-gboolean      gst_type_is_plugin_api            (GType type);
+gboolean      gst_type_is_plugin_api            (GType type, GstPluginAPIFlags *flags);
 
 G_END_DECLS
 

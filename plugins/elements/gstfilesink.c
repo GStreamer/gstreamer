@@ -288,7 +288,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
         sizeof (off_t));
   }
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FILE_SINK_BUFFER_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_FILE_SINK_BUFFER_MODE, 0);
 }
 
 static void

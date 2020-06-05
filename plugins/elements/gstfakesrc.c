@@ -349,9 +349,9 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   gstbase_src_class->get_times = GST_DEBUG_FUNCPTR (gst_fake_src_get_times);
   gstbase_src_class->create = GST_DEBUG_FUNCPTR (gst_fake_src_create);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SRC_DATA);
-  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SRC_SIZETYPE);
-  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SRC_FILLTYPE);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SRC_DATA, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SRC_SIZETYPE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_SRC_FILLTYPE, 0);
 }
 
 static void

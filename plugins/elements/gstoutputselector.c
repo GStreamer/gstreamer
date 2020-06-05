@@ -148,7 +148,8 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
 
   gstelement_class->change_state = gst_output_selector_change_state;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE,
+      0);
 }
 
 static void

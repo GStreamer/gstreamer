@@ -841,7 +841,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_multi_queue_change_state);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MULTIQUEUE_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_MULTIQUEUE_PAD, 0);
 }
 
 static void
