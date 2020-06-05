@@ -2691,7 +2691,23 @@ GST_START_TEST (test_video_convert)
           320));
   gst_video_frame_map (&inframe, &ininfo, inbuffer, GST_MAP_READ);
   ASSERT_CRITICAL (gst_video_converter_frame (convert, &inframe, &outframe));
+  gst_video_converter_free (convert);
 
+  /* Make sure we can crop the entire frame away without dying */
+  convert = gst_video_converter_new (&ininfo, &outinfo,
+      gst_structure_new ("options",
+          GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
+          GST_TYPE_VIDEO_RESAMPLER_METHOD, 3,
+          GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, -500,
+          GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, -500,
+          GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, 300,
+          GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, 220,
+          GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 800,
+          GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 600,
+          GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 310,
+          GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 230, NULL));
+
+  gst_video_converter_frame (convert, &inframe, &outframe);
   gst_video_converter_free (convert);
 
   gst_video_frame_unmap (&outframe);
