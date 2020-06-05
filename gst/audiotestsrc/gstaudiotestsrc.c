@@ -308,7 +308,7 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_audio_test_src_stop);
   gstbasesrc_class->fill = GST_DEBUG_FUNCPTR (gst_audio_test_src_fill);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_TEST_SRC_WAVE);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_TEST_SRC_WAVE, 0);
 }
 
 static void

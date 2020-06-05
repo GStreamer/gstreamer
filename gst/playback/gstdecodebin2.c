@@ -1045,7 +1045,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   g_type_class_ref (GST_TYPE_DECODE_PAD);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUTOPLUG_SELECT_RESULT);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUTOPLUG_SELECT_RESULT, 0);
 }
 
 /* Must be called with factories lock! */

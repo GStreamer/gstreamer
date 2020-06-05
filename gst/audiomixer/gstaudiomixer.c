@@ -239,7 +239,7 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
 
   aagg_class->aggregate_one_buffer = gst_audiomixer_aggregate_one_buffer;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_MIXER_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_MIXER_PAD, 0);
 }
 
 static void

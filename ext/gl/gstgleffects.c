@@ -347,7 +347,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_EFFECTS_EFFECT);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_EFFECTS_EFFECT, 0);
 }
 
 static void

@@ -631,11 +631,11 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           1, 100, 100, 1, DEFAULT_PROP_SCALE_PAR_N, DEFAULT_PROP_SCALE_PAR_D,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_HALIGN);
-  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_VALIGN);
-  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_LINE_ALIGN);
-  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_SCALE_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_WRAP_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_HALIGN, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_VALIGN, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_LINE_ALIGN, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_SCALE_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_WRAP_MODE, 0);
 }
 
 static void

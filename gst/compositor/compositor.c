@@ -1117,9 +1117,9 @@ gst_compositor_class_init (GstCompositorClass * klass)
       "Composite multiple video streams", "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_PAD);
-  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_OPERATOR);
-  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_BACKGROUND);
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_OPERATOR, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_BACKGROUND, 0);
 }
 
 static void

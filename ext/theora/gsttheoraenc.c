@@ -302,7 +302,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MULTIPASS_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_MULTIPASS_MODE, 0);
 }
 
 static void

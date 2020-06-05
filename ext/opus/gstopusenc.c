@@ -345,10 +345,10 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (opusenc_debug, "opusenc", 0, "Opus encoder");
 
-  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_AUDIO_TYPE);
-  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_BANDWIDTH);
-  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_BITRATE_TYPE);
-  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_FRAME_SIZE);
+  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_AUDIO_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_BANDWIDTH, 0);
+  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_BITRATE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_OPUS_ENC_TYPE_FRAME_SIZE, 0);
 }
 
 static void

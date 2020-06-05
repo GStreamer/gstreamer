@@ -933,10 +933,10 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GST_GL_BASE_MIXER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BACKGROUND);
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_PAD);
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION);
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BACKGROUND, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION, 0);
 }
 
 static void

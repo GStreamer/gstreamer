@@ -163,7 +163,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   gstglbasesrc_class->gl_stop = gst_gl_test_src_gl_stop;
   gstglbasesrc_class->fill_gl_memory = gst_gl_test_src_fill_memory;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_TEST_SRC_PATTERN);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_TEST_SRC_PATTERN, 0);
 }
 
 static void

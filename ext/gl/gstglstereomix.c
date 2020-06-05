@@ -211,8 +211,8 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
   base_mix_class->supported_gl_api =
       GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_STEREO_DOWNMIX);
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_STEREO_MIX_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_STEREO_DOWNMIX, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_STEREO_MIX_PAD, 0);
 }
 
 static void

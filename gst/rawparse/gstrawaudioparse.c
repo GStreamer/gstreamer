@@ -281,7 +281,7 @@ gst_raw_audio_parse_class_init (GstRawAudioParseClass * klass)
       "Converts unformatted data streams into timestamped raw audio frames",
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_RAW_AUDIO_PARSE_FORMAT);
+  gst_type_mark_as_plugin_api (GST_TYPE_RAW_AUDIO_PARSE_FORMAT, 0);
 }
 
 static void

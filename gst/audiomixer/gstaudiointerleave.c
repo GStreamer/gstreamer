@@ -621,7 +621,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
           "Take channel positions from the input", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_INTERLEAVE_PAD);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_INTERLEAVE_PAD, 0);
 }
 
 static void
