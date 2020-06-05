@@ -2674,6 +2674,27 @@ gst_video_converter_frame (GstVideoConverter * convert,
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
 
+  /* Check the frames we've been passed match the layout
+   * we were configured for or we might go out of bounds */
+  if (G_UNLIKELY (GST_VIDEO_INFO_FORMAT (&convert->in_info) !=
+          GST_VIDEO_FRAME_FORMAT (src)
+          || GST_VIDEO_INFO_WIDTH (&convert->in_info) !=
+          GST_VIDEO_FRAME_WIDTH (src)
+          || GST_VIDEO_INFO_HEIGHT (&convert->in_info) !=
+          GST_VIDEO_FRAME_HEIGHT (src))) {
+    g_critical ("Input video frame does not match configuration");
+    return;
+  }
+  if (G_UNLIKELY (GST_VIDEO_INFO_FORMAT (&convert->out_info) !=
+          GST_VIDEO_FRAME_FORMAT (dest)
+          || GST_VIDEO_INFO_WIDTH (&convert->out_info) !=
+          GST_VIDEO_FRAME_WIDTH (dest)
+          || GST_VIDEO_INFO_HEIGHT (&convert->out_info) !=
+          GST_VIDEO_FRAME_HEIGHT (dest))) {
+    g_critical ("Output video frame does not match configuration");
+    return;
+  }
+
   convert->convert (convert, src, dest);
 }
 

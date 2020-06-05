@@ -2683,6 +2683,15 @@ GST_START_TEST (test_video_convert)
           GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 230, NULL));
 
   gst_video_converter_frame (convert, &inframe, &outframe);
+
+  /* Check that video convert doesn't crash if we give it frames with different info
+   * than we configured it with by swapping width/height */
+  gst_video_frame_unmap (&inframe);
+  fail_unless (gst_video_info_set_format (&ininfo, GST_VIDEO_FORMAT_ARGB, 240,
+          320));
+  gst_video_frame_map (&inframe, &ininfo, inbuffer, GST_MAP_READ);
+  ASSERT_CRITICAL (gst_video_converter_frame (convert, &inframe, &outframe));
+
   gst_video_converter_free (convert);
 
   gst_video_frame_unmap (&outframe);
