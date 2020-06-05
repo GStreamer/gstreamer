@@ -182,7 +182,7 @@ gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
 
   gobject_class->dispose = gst_ffmpegdeinterlace_dispose;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FFMPEGDEINTERLACE_MODES);
+  gst_type_mark_as_plugin_api (GST_TYPE_FFMPEGDEINTERLACE_MODES, 0);
 }
 
 static void

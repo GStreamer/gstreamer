@@ -282,9 +282,9 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
 
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
-  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_LOWRES);
-  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_SKIPFRAME);
-  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE);
+  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_LOWRES, 0);
+  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_SKIPFRAME, 0);
+  gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE, 0);
 }
 
 static void

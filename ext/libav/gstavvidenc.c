@@ -197,7 +197,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
 
   gobject_class->finalize = gst_ffmpegvidenc_finalize;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FFMPEG_PASS);
+  gst_type_mark_as_plugin_api (GST_TYPE_FFMPEG_PASS, 0);
 }
 
 static void
