@@ -913,33 +913,55 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
 
-  for (i = 0; i < height; i += v_samp[0] * DCTSIZE) {
-    for (j = 0; j < (v_samp[0] * DCTSIZE); ++j) {
-      /* Y */
-      line[0][j] = base[0] + (i + j) * stride[0];
-      if (G_UNLIKELY (line[0][j] > last[0]))
-        line[0][j] = dec->scratch;
-      /* U */
-      if (v_samp[1] == v_samp[0]) {
-        line[1][j] = base[1] + ((i + j) / 2) * stride[1];
-      } else if (j < (v_samp[1] * DCTSIZE)) {
-        line[1][j] = base[1] + ((i / 2) + j) * stride[1];
-      }
-      if (G_UNLIKELY (line[1][j] > last[1]))
-        line[1][j] = dec->scratch;
-      /* V */
-      if (v_samp[2] == v_samp[0]) {
-        line[2][j] = base[2] + ((i + j) / 2) * stride[2];
-      } else if (j < (v_samp[2] * DCTSIZE)) {
-        line[2][j] = base[2] + ((i / 2) + j) * stride[2];
-      }
-      if (G_UNLIKELY (line[2][j] > last[2]))
-        line[2][j] = dec->scratch;
+#ifdef JCS_EXTENSIONS
+  if (dec->format_convert) {
+    gint row_stride = dec->cinfo.output_width * dec->cinfo.output_components;
+    guchar *bufbase = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+
+    if (num_fields == 2) {
+      row_stride *= 2;
     }
 
-    lines = jpeg_read_raw_data (&dec->cinfo, line, v_samp[0] * DCTSIZE);
-    if (G_UNLIKELY (!lines)) {
-      GST_INFO_OBJECT (dec, "jpeg_read_raw_data() returned 0");
+    if (field == 2) {
+      bufbase += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+    }
+
+    while (dec->cinfo.output_scanline < dec->cinfo.output_height) {
+      JSAMPARRAY buffer = { &bufbase, };
+      jpeg_read_scanlines (&dec->cinfo, buffer, 1);
+      bufbase += row_stride;
+    }
+  } else
+#endif
+  {
+    for (i = 0; i < height; i += v_samp[0] * DCTSIZE) {
+      for (j = 0; j < (v_samp[0] * DCTSIZE); ++j) {
+        /* Y */
+        line[0][j] = base[0] + (i + j) * stride[0];
+        if (G_UNLIKELY (line[0][j] > last[0]))
+          line[0][j] = dec->scratch;
+        /* U */
+        if (v_samp[1] == v_samp[0]) {
+          line[1][j] = base[1] + ((i + j) / 2) * stride[1];
+        } else if (j < (v_samp[1] * DCTSIZE)) {
+          line[1][j] = base[1] + ((i / 2) + j) * stride[1];
+        }
+        if (G_UNLIKELY (line[1][j] > last[1]))
+          line[1][j] = dec->scratch;
+        /* V */
+        if (v_samp[2] == v_samp[0]) {
+          line[2][j] = base[2] + ((i + j) / 2) * stride[2];
+        } else if (j < (v_samp[2] * DCTSIZE)) {
+          line[2][j] = base[2] + ((i / 2) + j) * stride[2];
+        }
+        if (G_UNLIKELY (line[2][j] > last[2]))
+          line[2][j] = dec->scratch;
+      }
+
+      lines = jpeg_read_raw_data (&dec->cinfo, line, v_samp[0] * DCTSIZE);
+      if (G_UNLIKELY (!lines)) {
+        GST_INFO_OBJECT (dec, "jpeg_read_raw_data() returned 0");
+      }
     }
   }
   return GST_FLOW_OK;
@@ -957,6 +979,37 @@ format_not_supported:
   }
 }
 
+#ifdef JCS_EXTENSIONS
+static J_COLOR_SPACE
+gst_fmt_to_jpeg_turbo_ext_fmt (GstVideoFormat gstfmt)
+{
+  switch (gstfmt) {
+    case GST_VIDEO_FORMAT_RGB:
+      return JCS_EXT_RGB;
+    case GST_VIDEO_FORMAT_RGBx:
+      return JCS_EXT_RGBX;
+    case GST_VIDEO_FORMAT_xRGB:
+      return JCS_EXT_XRGB;
+    case GST_VIDEO_FORMAT_RGBA:
+      return JCS_EXT_RGBA;
+    case GST_VIDEO_FORMAT_ARGB:
+      return JCS_EXT_ARGB;
+    case GST_VIDEO_FORMAT_BGR:
+      return JCS_EXT_BGR;
+    case GST_VIDEO_FORMAT_BGRx:
+      return JCS_EXT_BGRX;
+    case GST_VIDEO_FORMAT_xBGR:
+      return JCS_EXT_XBGR;
+    case GST_VIDEO_FORMAT_BGRA:
+      return JCS_EXT_BGRA;
+    case GST_VIDEO_FORMAT_ABGR:
+      return JCS_EXT_ABGR;
+    default:
+      return 0;
+  }
+}
+#endif
+
 static void
 gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
     gboolean interlaced)
@@ -964,17 +1017,25 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
   GstVideoCodecState *outstate;
   GstVideoInfo *info;
   GstVideoFormat format;
+  GstCaps *peer_caps, *dec_caps;
 
-  switch (clrspc) {
-    case JCS_RGB:
-      format = GST_VIDEO_FORMAT_RGB;
-      break;
-    case JCS_GRAYSCALE:
-      format = GST_VIDEO_FORMAT_GRAY8;
-      break;
-    default:
-      format = GST_VIDEO_FORMAT_I420;
-      break;
+#ifdef JCS_EXTENSIONS
+  if (dec->format_convert) {
+    format = dec->format;
+  } else
+#endif
+  {
+    switch (clrspc) {
+      case JCS_RGB:
+        format = GST_VIDEO_FORMAT_RGB;
+        break;
+      case JCS_GRAYSCALE:
+        format = GST_VIDEO_FORMAT_GRAY8;
+        break;
+      default:
+        format = GST_VIDEO_FORMAT_I420;
+        break;
+    }
   }
 
   /* Compare to currently configured output state */
@@ -990,6 +1051,50 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
     }
     gst_video_codec_state_unref (outstate);
   }
+#ifdef JCS_EXTENSIONS
+  dec_caps = gst_static_caps_get (&gst_jpeg_dec_src_pad_template.static_caps);
+  peer_caps =
+      gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (dec), dec_caps);
+  gst_caps_unref (dec_caps);
+
+  GST_DEBUG ("Received caps from peer: %" GST_PTR_FORMAT, peer_caps);
+  dec->format_convert = FALSE;
+  if (!gst_caps_is_empty (peer_caps)) {
+    GstStructure *peerstruct;
+    const gchar *peerformat;
+    GstVideoFormat peerfmt;
+
+    if (!gst_caps_is_fixed (peer_caps))
+      peer_caps = gst_caps_fixate (peer_caps);
+
+    peerstruct = gst_caps_get_structure (peer_caps, 0);
+    peerformat = gst_structure_get_string (peerstruct, "format");
+    peerfmt = gst_video_format_from_string (peerformat);
+
+    switch (peerfmt) {
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_RGBx:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_RGBA:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_BGR:
+      case GST_VIDEO_FORMAT_BGRx:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_ABGR:
+        clrspc = JCS_RGB;
+        format = peerfmt;
+        dec->format_convert = TRUE;
+        dec->libjpeg_ext_format = gst_fmt_to_jpeg_turbo_ext_fmt (peerfmt);
+        break;
+      default:
+        break;
+    }
+  }
+  dec->format = format;
+  gst_caps_unref (peer_caps);
+  GST_DEBUG_OBJECT (dec, "format_convert=%d", dec->format_convert);
+#endif
 
   outstate =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
@@ -1072,9 +1177,17 @@ gst_jpeg_dec_prepare_decode (GstJpegDec * dec)
   /* prepare for raw output */
   dec->cinfo.do_fancy_upsampling = FALSE;
   dec->cinfo.do_block_smoothing = FALSE;
-  dec->cinfo.out_color_space = dec->cinfo.jpeg_color_space;
   dec->cinfo.dct_method = dec->idct_method;
-  dec->cinfo.raw_data_out = TRUE;
+#ifdef JCS_EXTENSIONS
+  if (dec->format_convert) {
+    dec->cinfo.out_color_space = dec->libjpeg_ext_format;
+    dec->cinfo.raw_data_out = FALSE;
+  } else
+#endif
+  {
+    dec->cinfo.out_color_space = dec->cinfo.jpeg_color_space;
+    dec->cinfo.raw_data_out = TRUE;
+  }
 
   GST_LOG_OBJECT (dec, "starting decompress");
   guarantee_huff_tables (&dec->cinfo);
@@ -1347,16 +1460,23 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
     }
 
     /* check if format has changed for the second field */
-    switch (dec->cinfo.jpeg_color_space) {
-      case JCS_RGB:
-        field2_format = GST_VIDEO_FORMAT_RGB;
-        break;
-      case JCS_GRAYSCALE:
-        field2_format = GST_VIDEO_FORMAT_GRAY8;
-        break;
-      default:
-        field2_format = GST_VIDEO_FORMAT_I420;
-        break;
+#ifdef JCS_EXTENSIONS
+    if (dec->format_convert) {
+      field2_format = dec->format;
+    } else
+#endif
+    {
+      switch (dec->cinfo.jpeg_color_space) {
+        case JCS_RGB:
+          field2_format = GST_VIDEO_FORMAT_RGB;
+          break;
+        case JCS_GRAYSCALE:
+          field2_format = GST_VIDEO_FORMAT_GRAY8;
+          break;
+        default:
+          field2_format = GST_VIDEO_FORMAT_I420;
+          break;
+      }
     }
 
     GST_LOG_OBJECT (dec,
@@ -1510,6 +1630,9 @@ gst_jpeg_dec_start (GstVideoDecoder * bdec)
 {
   GstJpegDec *dec = (GstJpegDec *) bdec;
 
+#ifdef JCS_EXTENSIONS
+  dec->format_convert = FALSE;
+#endif
   dec->saw_header = FALSE;
   dec->parse_entropy_len = 0;
   dec->parse_resync = FALSE;
@@ -1528,6 +1651,9 @@ gst_jpeg_dec_flush (GstVideoDecoder * bdec)
   dec->parse_entropy_len = 0;
   dec->parse_resync = FALSE;
   dec->saw_header = FALSE;
+#ifdef JCS_EXTENSIONS
+  dec->format_convert = FALSE;
+#endif
 
   return TRUE;
 }

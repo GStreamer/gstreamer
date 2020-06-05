@@ -74,6 +74,13 @@ struct _GstJpegDec {
   GstVideoCodecFrame *current_frame;
   GstMapInfo current_frame_map;
 
+  /* libjpeg-turbo colorspace conversion */
+#ifdef JCS_EXTENSIONS
+  GstVideoFormat format;
+  J_COLOR_SPACE libjpeg_ext_format;
+  gboolean format_convert;
+#endif
+
   /* parse state */
   gboolean saw_header;
   gint     parse_entropy_len;
