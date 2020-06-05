@@ -1580,7 +1580,7 @@ GST_START_TEST (test_obscured_skipped)
   gdouble alpha0, alpha1;
   const gchar *caps_str;
 
-  caps_str = "video/x-raw";
+  caps_str = "video/x-raw, format=I420";
   buffer_mapped = FALSE;
   /* Set else to compositor defaults */
   alpha0 = alpha1 = 1.0;
@@ -1602,7 +1602,7 @@ GST_START_TEST (test_obscured_skipped)
   _test_obscured (caps_str, xpos0, ypos0, width0, height0, alpha0, xpos1, ypos1,
       width1, height1, alpha1, out_width, out_height);
   fail_unless (buffer_mapped == TRUE);
-  caps_str = "video/x-raw";
+  caps_str = "video/x-raw, format=I420";
   buffer_mapped = FALSE;
 
   alpha1 = 0.0;

@@ -3,7 +3,7 @@ meta,
     ignore-eos=true,
     args = {
         # We just want each frame to be different, and we just check their content by 'id'
-        "videotestsrc ! video/x-raw,framerate=10/1,width=320,height=240 ! videorate name=videorate ! fakesink sync=true qos=true",
+        "videotestsrc ! video/x-raw,format=I420,framerate=10/1,width=320,height=240 ! videorate name=videorate ! fakesink sync=true qos=true",
     },
     configs = {
         # Check dataflow on both videorate pads
