@@ -158,7 +158,7 @@ gst_webp_enc_class_init (GstWebpEncClass * klass)
   GST_DEBUG_CATEGORY_INIT (webpenc_debug, "webpenc", 0,
       "WEBP encoding element");
 
-  gst_type_mark_as_plugin_api (GST_WEBP_ENC_PRESET_TYPE);
+  gst_type_mark_as_plugin_api (GST_WEBP_ENC_PRESET_TYPE, 0);
 }
 
 static void

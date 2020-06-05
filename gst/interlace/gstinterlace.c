@@ -260,7 +260,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
 
   element_class->change_state = gst_interlace_change_state;
 
-  gst_type_mark_as_plugin_api (GST_INTERLACE_PATTERN);
+  gst_type_mark_as_plugin_api (GST_INTERLACE_PATTERN, 0);
 }
 
 static void

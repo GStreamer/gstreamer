@@ -160,7 +160,7 @@ gst_yadif_class_init (GstYadifClass * klass)
           DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_MODES);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_MODES, 0);
 }
 
 static void

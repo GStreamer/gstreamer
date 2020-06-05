@@ -757,7 +757,7 @@ gst_net_sim_class_init (GstNetSimClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (netsim_debug, "netsim", 0, "Network simulator");
 
-  gst_type_mark_as_plugin_api (distribution_get_type ());
+  gst_type_mark_as_plugin_api (distribution_get_type (), 0);
 }
 
 static gboolean

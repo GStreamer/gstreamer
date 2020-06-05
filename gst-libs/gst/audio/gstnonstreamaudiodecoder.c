@@ -458,8 +458,9 @@ gst_nonstream_audio_decoder_class_init (GstNonstreamAudioDecoderClass * klass)
           DEFAULT_OUTPUT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
-  gst_type_mark_as_plugin_api (GST_TYPE_NONSTREAM_AUDIO_DECODER_OUTPUT_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_NONSTREAM_AUDIO_DECODER_SUBSONG_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_NONSTREAM_AUDIO_DECODER_OUTPUT_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NONSTREAM_AUDIO_DECODER_SUBSONG_MODE,
+      0);
 }
 
 

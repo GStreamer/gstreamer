@@ -846,8 +846,8 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
       G_STRUCT_OFFSET (GstCameraBin2Class, stop_capture),
       NULL, NULL, NULL, G_TYPE_NONE, 0);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_CAM_FLAGS);
-  gst_type_mark_as_plugin_api (GST_TYPE_CAMERABIN_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_CAM_FLAGS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_CAMERABIN_MODE, 0);
 }
 
 static void

@@ -162,7 +162,7 @@ GstMplexJob::initProperties (GObjectClass * klass)
           256, 16384, 2048,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MPLEX_FORMAT);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPLEX_FORMAT, (GstPluginAPIFlags) 0);
 }
 
 /*

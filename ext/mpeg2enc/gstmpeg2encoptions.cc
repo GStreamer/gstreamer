@@ -503,13 +503,13 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 #endif
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_ASPECT);
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FORMAT);
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FRAMERATE);
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_INTERLACE_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_VIDEO_NORM);
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_PLAYBACK_FIELD_ORDER);
-  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_QUANTISATION_MATRIX);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_ASPECT, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FORMAT, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FRAMERATE, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_INTERLACE_MODE, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_VIDEO_NORM, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_PLAYBACK_FIELD_ORDER, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_QUANTISATION_MATRIX, (GstPluginAPIFlags) 0);
 }
 
 /*

@@ -183,7 +183,7 @@ gst_dc1394_src_class_init (GstDC1394SrcClass * klass)
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dc1394_src_create);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_DC1394_ISO_SPEED);
+  gst_type_mark_as_plugin_api (GST_TYPE_DC1394_ISO_SPEED, 0);
 }
 
 

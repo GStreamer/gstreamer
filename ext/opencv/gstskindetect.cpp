@@ -165,7 +165,7 @@ gst_skin_detect_class_init (GstSkinDetectClass * klass)
 
   gstopencvbasefilter_class->cv_set_caps = gst_skin_detect_set_caps;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_SKIN_DETECT_METHOD);
+  gst_type_mark_as_plugin_api (GST_TYPE_SKIN_DETECT_METHOD, (GstPluginAPIFlags) 0);
 }
 
 /* initialize the new element

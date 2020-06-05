@@ -219,7 +219,7 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_openjpeg_enc_debug, "openjpegenc", 0,
       "OpenJPEG Encoder");
 
-  gst_type_mark_as_plugin_api (GST_OPENJPEG_ENC_TYPE_PROGRESSION_ORDER);
+  gst_type_mark_as_plugin_api (GST_OPENJPEG_ENC_TYPE_PROGRESSION_ORDER, 0);
 }
 
 static void

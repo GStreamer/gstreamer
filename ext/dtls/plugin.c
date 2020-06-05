@@ -38,7 +38,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_type_mark_as_plugin_api (GST_DTLS_TYPE_CONNECTION_STATE);
+  gst_type_mark_as_plugin_api (GST_DTLS_TYPE_CONNECTION_STATE, 0);
 
   return gst_element_register (plugin, "dtlsenc", GST_RANK_NONE,
       GST_TYPE_DTLS_ENC)

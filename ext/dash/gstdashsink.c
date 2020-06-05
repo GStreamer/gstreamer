@@ -445,7 +445,7 @@ gst_dash_sink_class_init (GstDashSinkClass * klass)
           G_MAXUINT64, DEFAULT_MPD_PERIOD_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_DASH_SINK_MUXER);
+  gst_type_mark_as_plugin_api (GST_TYPE_DASH_SINK_MUXER, 0);
 }
 
 static gboolean

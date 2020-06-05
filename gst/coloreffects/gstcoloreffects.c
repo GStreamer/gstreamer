@@ -595,7 +595,7 @@ gst_color_effects_class_init (GstColorEffectsClass * klass)
   gst_element_class_add_static_pad_template (element_class,
       &gst_color_effects_src_template);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_COLOR_EFFECTS_PRESET);
+  gst_type_mark_as_plugin_api (GST_TYPE_COLOR_EFFECTS_PRESET, 0);
 }
 
 static void

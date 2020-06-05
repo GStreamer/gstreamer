@@ -177,7 +177,7 @@ gst_compare_class_init (GstCompareClass * klass)
       "Filter/Debug", "Compares incoming buffers",
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 
-  gst_type_mark_as_plugin_api (GST_COMPARE_METHOD_TYPE);
+  gst_type_mark_as_plugin_api (GST_COMPARE_METHOD_TYPE, 0);
 }
 
 static void

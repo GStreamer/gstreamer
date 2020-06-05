@@ -234,7 +234,7 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
   gst_element_class_add_pad_template (element_class, templ);
   gst_caps_unref (caps);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_CV_SMOOTH_TYPE);
+  gst_type_mark_as_plugin_api (GST_TYPE_CV_SMOOTH_TYPE, (GstPluginAPIFlags) 0);
 }
 
 /* initialize the new element

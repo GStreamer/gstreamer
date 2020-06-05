@@ -316,5 +316,6 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
       "Video/Sink", "Fake video display that allows zero-copy",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
+      0);
 }

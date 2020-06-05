@@ -287,9 +287,9 @@ gst_field_analysis_class_init (GstFieldAnalysisClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FIELDANALYSIS_COMB_METHOD);
-  gst_type_mark_as_plugin_api (GST_TYPE_FIELDANALYSIS_FIELD_METRIC);
-  gst_type_mark_as_plugin_api (GST_TYPE_FIELDANALYSIS_FRAME_METRIC);
+  gst_type_mark_as_plugin_api (GST_TYPE_FIELDANALYSIS_COMB_METHOD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FIELDANALYSIS_FIELD_METRIC, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FIELDANALYSIS_FRAME_METRIC, 0);
 }
 
 static gfloat same_parity_sad (GstFieldAnalysis * filter,

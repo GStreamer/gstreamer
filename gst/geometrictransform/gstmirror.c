@@ -227,7 +227,7 @@ gst_mirror_class_init (GstMirrorClass * klass)
 
   gstgt_class->map_func = mirror_map;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MIRROR_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_MIRROR_MODE, 0);
 }
 
 static void

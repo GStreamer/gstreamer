@@ -332,8 +332,8 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
   trans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_timecodestamper_transform_ip);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_TIME_CODE_STAMPER_SOURCE);
-  gst_type_mark_as_plugin_api (GST_TYPE_TIME_CODE_STAMPER_SET);
+  gst_type_mark_as_plugin_api (GST_TYPE_TIME_CODE_STAMPER_SOURCE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_TIME_CODE_STAMPER_SET, 0);
 }
 
 static void
