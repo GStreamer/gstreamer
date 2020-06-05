@@ -3219,7 +3219,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
                 streams = g_slist_next (streams)) {
               GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
               GstElement *element = stream->buffer;
-              guint64 last_out;
+              guint64 last_out = -1;
 
               if (g_signal_lookup ("set-active", G_OBJECT_TYPE (element)) != 0) {
                 g_signal_emit_by_name (element, "set-active", active, offset,
