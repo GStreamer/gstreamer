@@ -122,7 +122,7 @@ gst_vaapi_scale_method_get_type (void)
         g_enum_register_static ("GstVaapiScaleMethod", enum_values);
     g_once_init_leave (&g_type, type);
 
-    gst_type_mark_as_plugin_api (type);
+    gst_type_mark_as_plugin_api (type, 0);
   }
   return g_type;
 }
@@ -149,7 +149,7 @@ gst_vaapi_deinterlace_method_get_type (void)
   if (g_once_init_enter (&g_type)) {
     const GType type =
         g_enum_register_static ("GstVaapiDeinterlaceMethod", enum_values);
-    gst_type_mark_as_plugin_api (type);
+    gst_type_mark_as_plugin_api (type, 0);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
@@ -173,7 +173,7 @@ gst_vaapi_deinterlace_flags_get_type (void)
   if (g_once_init_enter (&g_type)) {
     const GType type =
         g_enum_register_static ("GstVaapiDeinterlaceFlags", enum_values);
-    gst_type_mark_as_plugin_api (type);
+    gst_type_mark_as_plugin_api (type, 0);
     g_once_init_leave (&g_type, type);
   }
   return g_type;
