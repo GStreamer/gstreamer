@@ -137,7 +137,7 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_amrnbdec_debug, "amrnbdec", 0,
       "AMR-NB audio decoder");
 
-  gst_type_mark_as_plugin_api (GST_AMRNB_VARIANT_TYPE);
+  gst_type_mark_as_plugin_api (GST_AMRNB_VARIANT_TYPE, 0);
 }
 
 static void
