@@ -131,6 +131,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstD3D11Device *device = self->device;
   const guint index_count = 2 * 3;
   FLOAT x1, y1, x2, y2;
+  gdouble val;
 
   g_return_val_if_fail (overlay_rect != NULL, NULL);
 
@@ -221,32 +222,45 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   }
 
   vertex_data = (VertexData *) map.pData;
-  x1 = (x / (gfloat) GST_VIDEO_INFO_WIDTH (&self->out_info)) * 2.0f - 1.0f;
-  y1 = (y / (gfloat) GST_VIDEO_INFO_HEIGHT (&self->out_info)) * 2.0f - 1.0f;
+  /* bottom left */
+  gst_util_fraction_to_double (x, GST_VIDEO_INFO_WIDTH (&self->out_info), &val);
+  x1 = (val * 2.0f) - 1.0f;
 
-  x2 = ((x + width) /
-      (gfloat) GST_VIDEO_INFO_WIDTH (&self->out_info)) * 2.0f - 1.0f;
-  y2 = ((y + height) /
-      (gfloat) GST_VIDEO_INFO_HEIGHT (&self->out_info)) * 2.0f - 1.0f;
+  gst_util_fraction_to_double (y + height,
+      GST_VIDEO_INFO_HEIGHT (&self->out_info), &val);
+  y1 = (val * -2.0f) + 1.0f;
 
+  /* top right */
+  gst_util_fraction_to_double (x + width,
+      GST_VIDEO_INFO_WIDTH (&self->out_info), &val);
+  x2 = (val * 2.0f) - 1.0f;
+
+  gst_util_fraction_to_double (y,
+      GST_VIDEO_INFO_HEIGHT (&self->out_info), &val);
+  y2 = (val * -2.0f) + 1.0f;
+
+  /* bottom left */
   vertex_data[0].position.x = x1;
   vertex_data[0].position.y = y1;
   vertex_data[0].position.z = 0.0f;
   vertex_data[0].texture.x = 0.0f;
   vertex_data[0].texture.y = 1.0f;
 
+  /* top left */
   vertex_data[1].position.x = x1;
   vertex_data[1].position.y = y2;
   vertex_data[1].position.z = 0.0f;
   vertex_data[1].texture.x = 0.0f;
   vertex_data[1].texture.y = 0.0f;
 
+  /* top right */
   vertex_data[2].position.x = x2;
   vertex_data[2].position.y = y2;
   vertex_data[2].position.z = 0.0f;
   vertex_data[2].texture.x = 1.0f;
   vertex_data[2].texture.y = 0.0f;
 
+  /* bottom right */
   vertex_data[3].position.x = x2;
   vertex_data[3].position.y = y1;
   vertex_data[3].position.z = 0.0f;
