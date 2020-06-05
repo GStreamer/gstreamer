@@ -21,4 +21,4 @@ option('introspection', type : 'feature', value : 'auto', description : 'Generat
 option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', description : 'Enable Optimized Inner Loop Runtime Compiler')
 option('doc', type : 'feature', value : 'auto', description : 'Generate API documentation with hotdoc')
-option('gtk_doc', type : 'feature', value : 'auto', description : 'Generate API documentation with gtk-doc')
+option('gtk_doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with gtk-doc')
