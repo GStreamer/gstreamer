@@ -499,9 +499,8 @@ GST_START_TEST (test_h265_format_range_profiles_exact_match)
 
   ptl.profile_idc = 11;
   set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1);
-  /* identical to screen-extended-main-444-10 */
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
-      GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
 }
 
 GST_END_TEST;

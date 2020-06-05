@@ -3582,14 +3582,6 @@ get_screen_content_coding_extensions_profile (GstH265ProfileTierLevel * ptl)
         1, 1, 1, 1, 0, 0, 0, 0, 0, TRUE, 2},
     {GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10,
         1, 1, 1, 0, 0, 0, 0, 0, 0, TRUE, 3},
-    /* identical to screen-extended-main-444 */
-    {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444,
-        1, 1, 1, 1, 0, 0, 0, 0, 0, TRUE, 4},
-    /* identical to screen-extended-main-444-10 */
-    {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10,
-        1, 1, 1, 0, 0, 0, 0, 0, 0, TRUE, 5},
-    {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, TRUE, 6},
   };
 
   return get_extension_profile (profiles, G_N_ELEMENTS (profiles), ptl);
@@ -3607,6 +3599,22 @@ get_scalable_format_range_extensions_profile (GstH265ProfileTierLevel * ptl)
         0, 0, 0, 0, 1, 1, 1, 0, 0, TRUE, 2},
     {GST_H265_PROFILE_SCALABLE_MAIN_444,
         1, 1, 1, 1, 0, 0, 0, 0, 0, TRUE, 3},
+  };
+
+  return get_extension_profile (profiles, G_N_ELEMENTS (profiles), ptl);
+}
+
+static GstH265Profile
+    get_screen_content_coding_extensions_high_throughput_profile
+    (GstH265ProfileTierLevel * ptl)
+{
+  static H265ExtensionProfile profiles[] = {
+    {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444,
+        1, 1, 1, 1, 0, 0, 0, 0, 0, TRUE, 0},
+    {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10,
+        1, 1, 1, 0, 0, 0, 0, 0, 0, TRUE, 1},
+    {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, TRUE, 2},
   };
 
   return get_extension_profile (profiles, G_N_ELEMENTS (profiles), ptl);
@@ -3657,15 +3665,17 @@ gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
     return get_3d_profile (ptl);
 
   if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING
-      || ptl->profile_compatibility_flag[9]
-      || ptl->profile_idc ==
-      GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION
-      || ptl->profile_compatibility_flag[11])
+      || ptl->profile_compatibility_flag[9])
     return get_screen_content_coding_extensions_profile (ptl);
 
   if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION
       || ptl->profile_compatibility_flag[10])
     return get_scalable_format_range_extensions_profile (ptl);
+
+  if (ptl->profile_idc ==
+      GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION
+      || ptl->profile_compatibility_flag[11])
+    return get_screen_content_coding_extensions_high_throughput_profile (ptl);
 
   return GST_H265_PROFILE_INVALID;
 }
