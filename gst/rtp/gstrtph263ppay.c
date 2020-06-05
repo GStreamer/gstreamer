@@ -152,7 +152,7 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
   GST_DEBUG_CATEGORY_INIT (rtph263ppay_debug, "rtph263ppay",
       0, "rtph263ppay (RFC 4629)");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_FRAGMENTATION_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_FRAGMENTATION_MODE, 0);
 }
 
 static void

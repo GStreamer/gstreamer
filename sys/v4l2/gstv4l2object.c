@@ -425,9 +425,9 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           "When enabled, the pixel aspect ratio will be enforced", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_V4L2_DEVICE_FLAGS);
-  gst_type_mark_as_plugin_api (GST_TYPE_V4L2_TV_NORM);
-  gst_type_mark_as_plugin_api (GST_TYPE_V4L2_IO_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_V4L2_DEVICE_FLAGS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_V4L2_TV_NORM, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_V4L2_IO_MODE, 0);
 }
 
 void

@@ -408,7 +408,7 @@ gst_optv_class_init (GstOpTVClass * klass)
 
   initPalette ();
 
-  gst_type_mark_as_plugin_api (GST_TYPE_OPTV_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_OPTV_MODE, 0);
 }
 
 static void

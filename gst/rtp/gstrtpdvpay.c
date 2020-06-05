@@ -133,7 +133,7 @@ gst_rtp_dv_pay_class_init (GstRTPDVPayClass * klass)
   gstrtpbasepayload_class->set_caps = gst_rtp_dv_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_dv_pay_handle_buffer;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_DV_PAY_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_DV_PAY_MODE, 0);
 }
 
 static void

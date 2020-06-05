@@ -120,7 +120,7 @@ gst_video_median_class_init (GstVideoMedianClass * klass)
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_median_transform_frame);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_MEDIAN_SIZE);
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_MEDIAN_SIZE, 0);
 }
 
 void

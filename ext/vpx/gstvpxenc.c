@@ -651,13 +651,13 @@ gst_vpx_enc_class_init (GstVPXEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_vpxenc_debug, "vpxenc", 0, "VPX Encoder");
 
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_END_USAGE_TYPE);
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_MULTIPASS_MODE_TYPE);
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_KF_MODE_TYPE);
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_TUNING_TYPE);
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_SCALING_MODE_TYPE);
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_TOKEN_PARTITIONS_TYPE);
-  gst_type_mark_as_plugin_api (GST_VPX_ENC_ER_FLAGS_TYPE);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_END_USAGE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_MULTIPASS_MODE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_KF_MODE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_TUNING_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_SCALING_MODE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_TOKEN_PARTITIONS_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_VPX_ENC_ER_FLAGS_TYPE, 0);
 }
 
 static void

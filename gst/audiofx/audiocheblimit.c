@@ -184,7 +184,7 @@ gst_audio_cheb_limit_class_init (GstAudioChebLimitClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_limit_setup);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT_MODE, 0);
 }
 
 static void

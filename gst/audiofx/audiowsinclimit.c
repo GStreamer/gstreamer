@@ -202,8 +202,8 @@ gst_audio_wsinclimit_class_init (GstAudioWSincLimitClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_wsinclimit_setup);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_LIMIT_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_LIMIT_WINDOW);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_LIMIT_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_LIMIT_WINDOW, 0);
 }
 
 static void

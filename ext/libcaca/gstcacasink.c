@@ -158,7 +158,7 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_cacasink_render);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_cacasink_render);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_CACADITHER);
+  gst_type_mark_as_plugin_api (GST_TYPE_CACADITHER, 0);
 }
 
 static void

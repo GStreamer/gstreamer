@@ -135,7 +135,7 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
   GST_DEBUG_CATEGORY_INIT (gst_rtp_vp8_pay_debug, "rtpvp8pay", 0,
       "VP8 Video RTP Payloader");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE, 0);
 }
 
 static void

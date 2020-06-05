@@ -274,8 +274,8 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
           DEFAULT_MONO,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_LAMEMP3ENC_TARGET);
-  gst_type_mark_as_plugin_api (GST_TYPE_LAMEMP3ENC_ENCODING_ENGINE_QUALITY);
+  gst_type_mark_as_plugin_api (GST_TYPE_LAMEMP3ENC_TARGET, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_LAMEMP3ENC_ENCODING_ENGINE_QUALITY, 0);
 }
 
 static void

@@ -178,8 +178,8 @@ gst_jack_ring_buffer_class_init (GstJackRingBufferClass * klass)
 
   gstringbuffer_class->delay = GST_DEBUG_FUNCPTR (gst_jack_ring_buffer_delay);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_JACK_CONNECT);
-  gst_type_mark_as_plugin_api (GST_TYPE_JACK_TRANSPORT);
+  gst_type_mark_as_plugin_api (GST_TYPE_JACK_CONNECT, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_JACK_TRANSPORT, 0);
 }
 
 /* this is the callback of jack. This should RT-safe.

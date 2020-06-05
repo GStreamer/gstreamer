@@ -843,9 +843,9 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_send_rtp);
   GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_send_rtp_list);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_RTP_NTP_TIME_SOURCE);
-  gst_type_mark_as_plugin_api (RTP_TYPE_SESSION);
-  gst_type_mark_as_plugin_api (RTP_TYPE_SOURCE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTP_NTP_TIME_SOURCE, 0);
+  gst_type_mark_as_plugin_api (RTP_TYPE_SESSION, 0);
+  gst_type_mark_as_plugin_api (RTP_TYPE_SOURCE, 0);
 }
 
 static void

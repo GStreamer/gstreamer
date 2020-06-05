@@ -336,9 +336,9 @@ gst_two_lame_class_init (GstTwoLameClass * klass)
       "High-quality free MP2 encoder",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_TWO_LAME_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_TWO_LAME_PADDING);
-  gst_type_mark_as_plugin_api (GST_TYPE_TWO_LAME_EMPHASIS);
+  gst_type_mark_as_plugin_api (GST_TYPE_TWO_LAME_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_TWO_LAME_PADDING, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_TWO_LAME_EMPHASIS, 0);
 }
 
 static gboolean

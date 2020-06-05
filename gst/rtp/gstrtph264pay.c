@@ -200,7 +200,7 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   GST_DEBUG_CATEGORY_INIT (rtph264pay_debug, "rtph264pay", 0,
       "H264 RTP Payloader");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_RTP_H264_AGGREGATE_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTP_H264_AGGREGATE_MODE, 0);
 }
 
 static void

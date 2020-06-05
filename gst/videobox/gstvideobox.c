@@ -2534,7 +2534,7 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
   gst_element_class_add_static_pad_template (element_class,
       &gst_video_box_src_template);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_BOX_FILL);
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_BOX_FILL, 0);
 }
 
 static void

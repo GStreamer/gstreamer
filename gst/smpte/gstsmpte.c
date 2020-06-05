@@ -200,7 +200,7 @@ gst_smpte_class_init (GstSMPTEClass * klass)
       "Apply the standard SMPTE transitions on video images",
       "Wim Taymans <wim.taymans@chello.be>");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_SMPTE_TRANSITION_TYPE);
+  gst_type_mark_as_plugin_api (GST_TYPE_SMPTE_TRANSITION_TYPE, 0);
 }
 
 /*                              wht  yel  cya  grn  mag  red  blu  blk   -I    Q */

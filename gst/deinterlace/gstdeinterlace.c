@@ -618,11 +618,11 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_deinterlace_change_state);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_METHODS);
-  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_FIELDS);
-  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_FIELD_LAYOUT);
-  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_MODES);
-  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_LOCKING);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_METHODS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_FIELDS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_FIELD_LAYOUT, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_MODES, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DEINTERLACE_LOCKING, 0);
 }
 
 #if 0

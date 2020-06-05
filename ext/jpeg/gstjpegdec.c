@@ -182,7 +182,7 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
   GST_DEBUG_CATEGORY_INIT (jpeg_dec_debug, "jpegdec", 0, "JPEG decoder");
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_IDCT_METHOD);
+  gst_type_mark_as_plugin_api (GST_TYPE_IDCT_METHOD, 0);
 }
 
 static boolean

@@ -206,8 +206,8 @@ gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_wsincband_setup);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_BAND_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_BAND_WINDOW);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_BAND_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_WSINC_BAND_WINDOW, 0);
 }
 
 static void

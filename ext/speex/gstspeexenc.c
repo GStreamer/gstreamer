@@ -218,7 +218,7 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (speexenc_debug, "speexenc", 0, "Speex encoder");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_SPEEX_ENC_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_SPEEX_ENC_MODE, 0);
 }
 
 static void

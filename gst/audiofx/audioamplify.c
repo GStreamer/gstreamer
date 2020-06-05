@@ -304,7 +304,7 @@ gst_audio_amplify_class_init (GstAudioAmplifyClass * klass)
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_amplify_setup);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_AMPLIFY_CLIPPING_METHOD);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_AMPLIFY_CLIPPING_METHOD, 0);
 }
 
 static void

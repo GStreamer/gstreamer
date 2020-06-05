@@ -242,7 +242,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_SHOUT_PROTOCOL);
+  gst_type_mark_as_plugin_api (GST_TYPE_SHOUT_PROTOCOL, 0);
 }
 
 static void

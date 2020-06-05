@@ -192,7 +192,7 @@ gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_band_setup);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND_MODE, 0);
 }
 
 static void

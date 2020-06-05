@@ -2687,7 +2687,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_bin_debug, "rtpbin", 0, "RTP bin");
 
-  gst_type_mark_as_plugin_api (GST_RTP_BIN_RTCP_SYNC_TYPE);
+  gst_type_mark_as_plugin_api (GST_RTP_BIN_RTCP_SYNC_TYPE, 0);
 }
 
 static void

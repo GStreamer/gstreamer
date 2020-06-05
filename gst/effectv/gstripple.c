@@ -599,7 +599,7 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
 
   setTable ();
 
-  gst_type_mark_as_plugin_api (GST_TYPE_RIPPLETV_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_RIPPLETV_MODE, 0);
 }
 
 static void

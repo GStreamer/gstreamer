@@ -211,7 +211,7 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (gst_audio_panorama_transform);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_PANORAMA_METHOD);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_PANORAMA_METHOD, 0);
 }
 
 static void

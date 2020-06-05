@@ -299,7 +299,7 @@ gst_cacatv_class_init (GstCACATvClass * klass)
   transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cacatv_transform_caps);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_CACADITHER);
+  gst_type_mark_as_plugin_api (GST_TYPE_CACADITHER, 0);
 }
 
 static void

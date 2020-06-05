@@ -620,9 +620,9 @@ gst_aatv_class_init (GstAATvClass * klass)
   videofilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_aatv_transform_frame);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AATV_RAIN_MODE);
-  gst_type_mark_as_plugin_api (GST_TYPE_AADITHER);
-  gst_type_mark_as_plugin_api (GST_TYPE_AAFONT);
+  gst_type_mark_as_plugin_api (GST_TYPE_AATV_RAIN_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AADITHER, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AAFONT, 0);
 }
 
 static void

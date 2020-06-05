@@ -255,8 +255,8 @@ gst_audio_dynamic_class_init (GstAudioDynamicClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_dynamic_transform_ip);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip_on_passthrough = FALSE;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_DYNAMIC_CHARACTERISTICS);
-  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_DYNAMIC_MODE);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_DYNAMIC_CHARACTERISTICS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_DYNAMIC_MODE, 0);
 }
 
 static void
