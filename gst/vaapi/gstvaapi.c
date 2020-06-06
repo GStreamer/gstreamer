@@ -212,7 +212,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vaapidecodebin",
       GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
 
-  rank = GST_RANK_PRIMARY;
+  rank = GST_RANK_SECONDARY;
   if (g_getenv ("WAYLAND_DISPLAY"))
     rank = GST_RANK_MARGINAL;
   gst_element_register (plugin, "vaapisink", rank, GST_TYPE_VAAPISINK);
