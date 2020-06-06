@@ -230,7 +230,7 @@ gst_pad_template_dispose (GObject * object)
     gst_caps_unref (GST_PAD_TEMPLATE_CAPS (templ));
   }
 
-  gst_pad_template_set_documentation_caps (templ, NULL);
+  gst_caps_replace (&templ->ABI.abi.documentation_caps, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
