@@ -173,6 +173,14 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     return FALSE;
   }
 
+  hr = MFSetAttributeRatio (out_type.Get (), MF_MT_PIXEL_ASPECT_RATIO,
+      GST_VIDEO_INFO_PAR_N (info), GST_VIDEO_INFO_PAR_D (info));
+  if (!gst_mf_result (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't set par %d/%d",
+        GST_VIDEO_INFO_PAR_N (info), GST_VIDEO_INFO_PAR_D (info));
+    return FALSE;
+  }
+
   hr = out_type->SetUINT32 (MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
   if (!gst_mf_result (hr)) {
     GST_ERROR_OBJECT (self,
