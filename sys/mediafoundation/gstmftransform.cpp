@@ -625,7 +625,7 @@ gst_mf_transform_drain (GstMFTransform * object)
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
 
-  if (!object->transform)
+  if (!object->transform || !object->running)
     return TRUE;
 
   object->running = FALSE;
