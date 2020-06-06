@@ -3348,10 +3348,10 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
   if (v1->sink && v2->sink) {
     fs1 = (GstPluginFeature *) v1->sink;
     fs2 = (GstPluginFeature *) v2->sink;
-    v1_rank =
-        gst_plugin_feature_get_rank (fd1) * gst_plugin_feature_get_rank (fs1);
-    v2_rank =
-        gst_plugin_feature_get_rank (fd2) * gst_plugin_feature_get_rank (fs2);
+    v1_rank = (gint64) gst_plugin_feature_get_rank (fd1) *
+        gst_plugin_feature_get_rank (fs1);
+    v2_rank = (gint64) gst_plugin_feature_get_rank (fd2) *
+        gst_plugin_feature_get_rank (fs2);
   } else {
     v1_rank = gst_plugin_feature_get_rank (fd1);
     v2_rank = gst_plugin_feature_get_rank (fd2);
