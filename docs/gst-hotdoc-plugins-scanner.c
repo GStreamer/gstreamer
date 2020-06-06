@@ -239,7 +239,7 @@ _serialize_object (GString * json, GHashTable * seen_other_types, GType gtype)
 
   g_string_append_c (json, '}');
 
-  if (other_types->len) {
+  if (other_types && other_types->len) {
     g_string_append_printf (json, ",%s", other_types->str);
   }
   g_string_free (other_types, TRUE);
