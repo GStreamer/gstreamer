@@ -169,6 +169,9 @@ GST_START_TEST (test_get_live_objects)
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pipe);
 
+  /* Force all leftover tasks to stop */
+  gst_task_cleanup_all ();
+
   /* Check the live-objects data returned by the tracer */
   {
     guint ii, size;
@@ -250,6 +253,9 @@ GST_START_TEST (test_get_live_objects_filtered_detailed)
   fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pipe);
+
+  /* Force all leftover tasks to stop */
+  gst_task_cleanup_all ();
 
   /* Check the live-objects data returned by the tracer */
   {
@@ -431,6 +437,9 @@ GST_START_TEST (test_activity_get_checkpoint)
   fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pipe);
+
+  /* Force all leftover tasks to stop */
+  gst_task_cleanup_all ();
 
   {
     GstStructure *cpoint;
