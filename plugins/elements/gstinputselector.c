@@ -1547,9 +1547,8 @@ gst_input_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
   iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
 
   GST_INPUT_SELECTOR_LOCK (sel);
-  eventpad = gst_input_selector_get_active_sinkpad (sel);
-  if (eventpad) {
-    gst_object_ref (eventpad);
+  if (sel->active_sinkpad) {
+    eventpad = gst_object_ref (sel->active_sinkpad);
     GST_INPUT_SELECTOR_UNLOCK (sel);
 
     gst_event_ref (event);
