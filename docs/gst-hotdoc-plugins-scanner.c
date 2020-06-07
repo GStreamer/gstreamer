@@ -407,6 +407,7 @@ _add_properties (GString * json, GString * other_types,
 
   for (i = 0; i < n_props; i++) {
     GValue value = { 0, };
+    const gchar *mutable_str = NULL;
     spec = specs[i];
 
     if (spec->owner_type == GST_TYPE_PAD || spec->owner_type == GST_TYPE_OBJECT)
@@ -426,6 +427,16 @@ _add_properties (GString * json, GString * other_types,
     if (!opened)
       g_string_append (json, ",\"properties\": {");
 
+    if ((spec->flags & GST_PARAM_MUTABLE_PLAYING)) {
+      mutable_str = "\"playing\"";
+    } else if ((spec->flags & GST_PARAM_MUTABLE_PAUSED)) {
+      mutable_str = "\"paused\"";
+    } else if ((spec->flags & GST_PARAM_MUTABLE_READY)) {
+      mutable_str = "\"ready\"";
+    } else {
+      mutable_str = "\"playing\"";
+    }
+
     tmpstr = json_strescape (g_param_spec_get_blurb (spec));
     g_string_append_printf (json,
         "%s"
@@ -435,6 +446,9 @@ _add_properties (GString * json, GString * other_types,
         "\"readable\": %s,"
         "\"writable\": %s,"
         "\"blurb\": \"%s\","
+        "\"controllable\": %s,"
+        "\"conditionally-available\": %s,"
+        "\"mutable\": %s,"
         "\"type\": \"%s\"",
         opened ? "," : "",
         spec->name,
@@ -442,7 +456,9 @@ _add_properties (GString * json, GString * other_types,
         spec->flags & G_PARAM_CONSTRUCT ? "true" : "false",
         spec->flags & G_PARAM_READABLE ? "true" : "false",
         spec->flags & G_PARAM_WRITABLE ? "true" : "false", tmpstr,
-        g_type_name (G_PARAM_SPEC_VALUE_TYPE (spec)));
+        spec->flags & GST_PARAM_CONTROLLABLE ? "true" : "false",
+        spec->flags & GST_PARAM_CONDITIONALLY_AVAILABLE ? "true" : "false",
+        mutable_str, g_type_name (G_PARAM_SPEC_VALUE_TYPE (spec)));
     g_free (tmpstr);
 
     if (!g_hash_table_contains (seen_other_types,
