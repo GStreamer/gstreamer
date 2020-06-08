@@ -723,6 +723,7 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, GObjectClass * object_class,
       type_name = g_strdup_printf ("%s%s",
           g_type_name (G_TYPE_FROM_CLASS (object_class)), name);
       enum_type = g_enum_register_static (type_name, enums);
+      gst_type_mark_as_plugin_api (enum_type, 0);
       g_free (type_name);
     } else {
       g_free (enums);
