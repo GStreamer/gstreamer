@@ -70,7 +70,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
 #define GST_CAT_DEFAULT gst_validate_scenario_debug
 
 #define REGISTER_ACTION_TYPE(_tname, _function, _params, _desc, _is_config) G_STMT_START { \
-  gst_validate_register_action_type ((_tname), "core", (_function), (_params), (_desc), (_is_config)); \
+  type = gst_validate_register_action_type ((_tname), "core", (_function), (_params), (_desc), (_is_config)); \
 } G_STMT_END
 
 #define ACTION_EXPECTED_STREAM_QUARK g_quark_from_static_string ("ACTION_EXPECTED_STREAM_QUARK")
@@ -3336,6 +3336,15 @@ err:
   goto done;
 }
 
+static GstValidateExecuteActionReturn
+gst_validate_set_property_prepare_func (GstValidateAction * action)
+{
+  action->priv->optional = gst_structure_has_field_typed (action->structure,
+      "on-all-instances", G_TYPE_BOOLEAN);
+
+  return gst_validate_action_default_prepare_func (action);
+}
+
 static void
 _check_waiting_for_message (GstValidateScenario * scenario,
     GstMessage * message)
@@ -4247,11 +4256,16 @@ _element_added_cb (GstBin * bin, GstElement * element,
       action_type = _find_action_type (action->type);
       GST_DEBUG_OBJECT (element, "Executing set-property action");
       if (gst_validate_execute_action (action_type, action)) {
-        priv->on_addition_actions =
-            g_list_remove_link (priv->on_addition_actions, tmp);
-        gst_mini_object_unref (GST_MINI_OBJECT (action));
-        g_list_free (tmp);
-        tmp = priv->on_addition_actions;
+        if (!gst_structure_has_field_typed (action->structure,
+                "on-all-instances", G_TYPE_BOOLEAN)) {
+          priv->on_addition_actions =
+              g_list_remove_link (priv->on_addition_actions, tmp);
+          gst_mini_object_unref (GST_MINI_OBJECT (action));
+          g_list_free (tmp);
+          tmp = priv->on_addition_actions;
+        } else {
+          tmp = tmp->next;
+        }
       } else
         tmp = tmp->next;
     } else
@@ -5638,6 +5652,7 @@ init_scenarios (void)
 void
 register_action_types (void)
 {
+  GstValidateActionType *type;
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
 
@@ -6046,6 +6061,14 @@ register_action_types (void)
           .types = "The same type of @property-name",
           NULL
         },
+        {
+          .name = "on-all-instances",
+          .description = "Whether to set property on all instances matching "
+                         "the requirements",
+          .mandatory = FALSE,
+          .types = "boolean",
+          NULL
+        },
         {NULL}
       }),
       "Sets a property of an element or klass of elements in the pipeline.\n"
@@ -6054,6 +6077,7 @@ register_action_types (void)
       GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION |
           GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL |
           GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG);
+  type->prepare = gst_validate_set_property_prepare_func;
 
   REGISTER_ACTION_TYPE("check-property", _execute_set_or_check_property,
       ((GstValidateActionParameter[]) {
