@@ -43,7 +43,7 @@ GST_START_TEST (test_encode_lag_in_frames)
   gint i;
 
   gst_harness_add_src_parse (h, "videotestsrc is-live=true pattern=black ! "
-      "capsfilter caps=\"video/x-raw,width=320,height=240,framerate=25/1\"",
+      "capsfilter caps=\"video/x-raw,format=I420,width=320,height=240,framerate=25/1\"",
       TRUE);
 
   /* Push 20 buffers into the encoder */
