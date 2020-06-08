@@ -524,7 +524,7 @@ struct _GstClockEntryImpl
   GstClockEntry entry;
   GWeakRef clock;
   GDestroyNotify destroy_entry;
-  gpointer padding[16];                 /* padding for allowing e.g. systemclock
+  gpointer padding[19];                 /* padding for allowing e.g. systemclock
                                          * to add data in lieu of overridable
                                          * virtual functions on the clock */
 };
