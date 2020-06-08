@@ -127,12 +127,11 @@ pad_added_plug_fakesink_cb (GstElement * decodebin, GstPad * srcpad,
   fail_unless (sink != NULL, "Failed to create fakesink element");
 
   gst_bin_add (GST_BIN (pipeline), sink);
+  gst_element_sync_state_with_parent (sink);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
   gst_object_unref (sinkpad);
-
-  gst_element_set_state (sink, GST_STATE_PLAYING);
 }
 
 GST_START_TEST (test_reuse_without_decoders)
