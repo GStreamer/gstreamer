@@ -66,6 +66,8 @@ G_BEGIN_DECLS
  * Use this flag on GObject properties of GstObject to indicate that
  * during `gst-inspect` and friends, the default value should be used
  * as default instead of the current value.
+ *
+ * Since: 1.18
  */
 #define GST_PARAM_DOC_SHOW_DEFAULT  (1 << (G_PARAM_USER_SHIFT + 5))
 
@@ -76,6 +78,8 @@ G_BEGIN_DECLS
  * they might not be available depending on environment such as OS, device, etc,
  * so such properties will be installed conditionally only if the GstObject is
  * able to support it.
+ *
+ * Since: 1.18
  */
 #define GST_PARAM_CONDITIONALLY_AVAILABLE  (1 << (G_PARAM_USER_SHIFT + 6))
 
