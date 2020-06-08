@@ -165,6 +165,12 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH264DecoderClass *h264decoder_class = GST_H264_DECODER_CLASS (klass);
 
+  /**
+   * GstNvH264Dec
+   *
+   * Since: 1.18
+   */
+
   object_class->finalize = gst_nv_h264_decoder_finalize;
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_set_context);
@@ -826,6 +832,12 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   gboolean is_default = TRUE;
   const GValue *value;
   GstStructure *s;
+
+  /**
+   * element-nvh264sldec
+   *
+   * Since: 1.18
+   */
 
   cdata = g_new0 (GstNvH264DecClassData, 1);
   cdata->sink_caps = gst_caps_from_string ("video/x-h264, "

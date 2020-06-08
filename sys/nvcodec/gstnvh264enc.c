@@ -59,6 +59,27 @@ enum
 #define DEFAULT_BFRAMES 0
 #define DEFAULT_B_ADAPT FALSE
 
+/* captured using RTX 2080 */
+#define DOCUMENTATION_SINK_CAPS_COMM \
+    "format = (string) { NV12, YV12, I420, BGRA, RGBA, Y444, VUYA }, " \
+    "width = (int) [ 145, 4096 ], " \
+    "height = (int) [ 49, 4096 ], " \
+    "framerate = " GST_VIDEO_FPS_RANGE ", " \
+    "interlace-mode = (string) { progressive } "
+
+#define DOCUMENTATION_SINK_CAPS \
+    "video/x-raw, " DOCUMENTATION_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:GLMemory), " DOCUMENTATION_SINK_CAPS_COMM
+
+#define DOCUMENTATION_SRC_CAPS \
+    "video/x-h264, "  \
+    "width = (int) [ 145, 4096 ], " \
+    "height = (int) [ 49, 4096 ], " \
+    "framerate = " GST_VIDEO_FPS_RANGE ", " \
+    "stream-format = (string) byte-stream, " \
+    "alignment = (string) au, " \
+    "profile = (string) { main, high, high-4:4:4, baseline }"
+
 static gboolean gst_nv_h264_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h264_enc_close (GstVideoEncoder * enc);
 static gboolean gst_nv_h264_enc_set_src_caps (GstNvBaseEnc * nvenc,
@@ -83,6 +104,8 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass, gpointer data)
   GstNvEncDeviceCaps *device_caps = &nvenc_class->device_caps;
   GstNvH264EncClassData *cdata = (GstNvH264EncClassData *) data;
   gchar *long_name;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -98,6 +121,13 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass, gpointer data)
   nvenc_class->set_src_caps = gst_nv_h264_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h264_enc_set_pic_params;
 
+  /**
+   * GstNvH264Enc:aud:
+   *
+   * Use AU (Access Unit) delimiter
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_AUD,
       g_param_spec_boolean ("aud", "AUD",
           "Use AU (Access Unit) delimiter", DEFAULT_AUD,
@@ -105,60 +135,96 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass, gpointer data)
           G_PARAM_STATIC_STRINGS));
 
   if (device_caps->weighted_prediction) {
+    /**
+     * GstNvH264Enc:weighted-pred:
+     *
+     * Weighted Prediction
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_WEIGHTED_PRED,
         g_param_spec_boolean ("weighted-pred", "Weighted Pred",
-            "Weighted Prediction "
-            "(Exposed only if supported by device)", DEFAULT_WEIGHTED_PRED,
+            "Weighted Prediction", DEFAULT_WEIGHTED_PRED,
             G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-            G_PARAM_STATIC_STRINGS));
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
   }
 
   if (device_caps->custom_vbv_bufsize) {
+    /**
+     * GstNvH264Enc:vbv-buffer-size:
+     *
+     * VBV(HRD) Buffer Size in kbits (0 = NVENC default)
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class,
         PROP_VBV_BUFFER_SIZE,
         g_param_spec_uint ("vbv-buffer-size", "VBV Buffer Size",
-            "VBV(HRD) Buffer Size in kbits (0 = NVENC default) "
-            "(Exposed only if supported by device)", 0, G_MAXUINT,
-            DEFAULT_VBV_BUFFER_SIZE,
+            "VBV(HRD) Buffer Size in kbits (0 = NVENC default)",
+            0, G_MAXUINT, DEFAULT_VBV_BUFFER_SIZE,
             G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-            G_PARAM_STATIC_STRINGS));
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
   }
 
   if (device_caps->lookahead) {
+    /**
+     * GstNvH264Enc:rc-lookahead:
+     *
+     * Number of frames for frame type lookahead
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_RC_LOOKAHEAD,
         g_param_spec_uint ("rc-lookahead", "Rate Control Lookahead",
-            "Number of frames for frame type lookahead "
-            "(Exposed only if supported by device)", 0, 32,
-            DEFAULT_RC_LOOKAHEAD,
+            "Number of frames for frame type lookahead",
+            0, 32, DEFAULT_RC_LOOKAHEAD,
             G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-            G_PARAM_STATIC_STRINGS));
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
   }
 
   if (device_caps->temporal_aq) {
+    /**
+     * GstNvH264Enc:temporal-aq:
+     *
+     * Temporal Adaptive Quantization
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_TEMPORAL_AQ,
         g_param_spec_boolean ("temporal-aq", "Temporal AQ",
-            "Temporal Adaptive Quantization "
-            "(Exposed only if supported by device)", DEFAULT_TEMPORAL_AQ,
+            "Temporal Adaptive Quantization", DEFAULT_TEMPORAL_AQ,
             G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-            G_PARAM_STATIC_STRINGS));
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
   }
 
   if (device_caps->bframes > 0) {
+    /**
+     * GstNvH264Enc:bframes:
+     *
+     * Number of B-frames between I and P
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_BFRAMES,
         g_param_spec_uint ("bframes", "B-Frames",
-            "Number of B-frames between I and P "
-            "(Exposed only if supported by device)", 0, device_caps->bframes,
+            "Number of B-frames between I and P", 0, device_caps->bframes,
             DEFAULT_BFRAMES,
             G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-            G_PARAM_STATIC_STRINGS));
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
 
+    /**
+     * GstNvH264Enc:b-adapt:
+     *
+     * Enable adaptive B-frame insert when lookahead is enabled
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_B_ADAPT,
         g_param_spec_boolean ("b-adapt", "B Adapt",
-            "Enable adaptive B-frame insert when lookahead is enabled "
-            "(Exposed only if supported by device)",
+            "Enable adaptive B-frame insert when lookahead is enabled",
             DEFAULT_B_ADAPT,
             G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-            G_PARAM_STATIC_STRINGS));
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
   }
 
   if (cdata->is_default)
@@ -178,12 +244,19 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass, gpointer data)
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_enc_debug,
       "nvh264enc", 0, "Nvidia H.264 encoder");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOCUMENTATION_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOCUMENTATION_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);

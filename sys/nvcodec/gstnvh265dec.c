@@ -164,6 +164,12 @@ gst_nv_h265_dec_class_init (GstNvH265DecClass * klass)
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH265DecoderClass *h265decoder_class = GST_H265_DECODER_CLASS (klass);
 
+  /**
+   * GstNvH265Dec
+   *
+   * Since: 1.18
+   */
+
   object_class->finalize = gst_nv_h265_decoder_finalize;
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h265_dec_set_context);
@@ -1011,6 +1017,12 @@ gst_nv_h265_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   gboolean is_default = TRUE;
   GValue value_list = G_VALUE_INIT;
   GValue value = G_VALUE_INIT;
+
+  /**
+   * element-nvh265sldec
+   *
+   * Since: 1.18
+   */
 
   cdata = g_new0 (GstNvH265DecClassData, 1);
   cdata->sink_caps = gst_caps_copy (sink_caps);
