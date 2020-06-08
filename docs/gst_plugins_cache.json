@@ -34322,7 +34322,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "299638488",
+                        "default": "0",
                         "max": "-1",
                         "min": "0",
                         "mutable": "playing",
