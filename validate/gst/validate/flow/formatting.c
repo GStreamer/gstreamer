@@ -247,6 +247,17 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
           && g_strv_contains (CONSTIFY (logged_fields), "checksum"))) {
     if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
       GST_ERROR ("Buffer could not be mapped.");
+    } else if (checksum_type == CHECKSUM_TYPE_CONTENT_HEX) {
+      gint i;
+      GString *content = g_string_new ("content=");
+
+      for (i = 0; i < map.size; i++) {
+        if (i)
+          g_string_append_c (content, ' ');
+        g_string_append_printf (content, "0x%02x", map.data[i]);
+      }
+
+      buffer_parts[buffer_parts_index++] = g_string_free (content, FALSE);
     } else {
       sum =
           g_compute_checksum_for_data (checksum_type ==

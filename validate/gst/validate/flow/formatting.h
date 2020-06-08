@@ -25,8 +25,9 @@
 
 #include <gst/gst.h>
 
-#define CHECKSUM_TYPE_NONE -2
 #define CHECKSUM_TYPE_AS_ID -1
+#define CHECKSUM_TYPE_NONE -2
+#define CHECKSUM_TYPE_CONTENT_HEX -3
 
 void format_time(gchar* dest_str, guint64 time);
 
