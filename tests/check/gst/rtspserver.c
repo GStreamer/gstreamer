@@ -34,7 +34,7 @@
   "ignore-notnegotiated=false convert-to=ok"
 #define VIDEO_PIPELINE "videotestsrc ! " \
   ERRORIGNORE " ! " \
-  "video/x-raw,width=352,height=288 ! " \
+  "video/x-raw,format=I420,width=352,height=288 ! " \
   "rtpgstpay name=pay0 pt=96"
 #define AUDIO_PIPELINE "audiotestsrc ! " \
   ERRORIGNORE " ! " \
