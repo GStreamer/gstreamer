@@ -539,6 +539,8 @@ gst_mf_transform_process_input (GstMFTransform * object,
   gst_mf_transform_drain_all_events (object);
 
   if (object->hardware) {
+  process_output:
+    /* Process pending output first */
     while (object->pending_have_output > 0) {
       GST_TRACE_OBJECT (object,
           "Pending have output %d", object->pending_have_output);
@@ -580,6 +582,14 @@ gst_mf_transform_process_input (GstMFTransform * object,
         default:
           GST_DEBUG_OBJECT (object, "Unhandled event %d", type);
           break;
+      }
+
+      /* If MFT doesn't want to handle input yet but we have pending output,
+       * process output again */
+      if (object->pending_have_output > 0 && object->pending_need_input == 0) {
+        GST_TRACE_OBJECT (object,
+            "Only have pending output, process output again");
+        goto process_output;
       }
     }
   }
