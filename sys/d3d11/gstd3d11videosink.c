@@ -173,6 +173,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
 
   videosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_show_frame);
+
+  gst_type_mark_as_plugin_api (GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, 0);
 }
 
 static void

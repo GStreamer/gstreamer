@@ -58,6 +58,8 @@ gst_mf_video_enc_class_init (GstMFVideoEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_mf_video_enc_handle_frame);
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_mf_video_enc_finish);
   videoenc_class->flush = GST_DEBUG_FUNCPTR (gst_mf_video_enc_flush);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_MF_VIDEO_ENC, (GstPluginAPIFlags) 0);
 }
 
 static void

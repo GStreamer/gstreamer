@@ -49,6 +49,12 @@ plugin_init (GstPlugin * plugin)
   HRESULT hr;
   GstRank rank = GST_RANK_SECONDARY;
 
+  /**
+   * plugin-gstmediafoundation:
+   *
+   * Since: 1.18
+   */
+
   GST_DEBUG_CATEGORY_INIT (gst_mf_debug, "mf", 0, "media foundation");
   GST_DEBUG_CATEGORY_INIT (gst_mf_utils_debug,
       "mfutils", 0, "media foundation utility functions");

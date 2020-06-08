@@ -35,6 +35,12 @@ plugin_init (GstPlugin * plugin)
 {
   GstRank rank = GST_RANK_SECONDARY;
 
+  /**
+   * plugin-gstwasapi2:
+   *
+   * Since: 1.18
+   */
+
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
   /* If we are building for UWP, wasapi2 plugin should have the highest rank */
   rank = GST_RANK_PRIMARY + 1;

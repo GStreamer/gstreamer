@@ -576,6 +576,11 @@ gst_dxgi_screen_cap_src_register (GstPlugin * plugin, GstRank rank)
     return;
   }
 
+  /**
+   * element-dxgiscreencapsrc:
+   *
+   * Since: 1.18
+   */
   gst_element_register (plugin, "dxgiscreencapsrc",
       rank, GST_TYPE_DXGI_SCREEN_CAP_SRC);
 }

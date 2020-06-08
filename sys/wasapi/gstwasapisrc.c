@@ -168,6 +168,8 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_wasapi_src_debug, "wasapisrc",
       0, "Windows audio session API source");
+
+  gst_type_mark_as_plugin_api (GST_WASAPI_DEVICE_TYPE_ROLE, 0);
 }
 
 static void

@@ -71,6 +71,13 @@ gst_d3d11_base_filter_class_init (GstD3D11BaseFilterClass * klass)
   gobject_class->get_property = gst_d3d11_base_filter_get_property;
   gobject_class->dispose = gst_d3d11_base_filter_dispose;
 
+  /**
+   * GstD3D11BaseFilter:adapter:
+   *
+   * Adapter index for creating device (-1 for default)
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_ADAPTER,
       g_param_spec_int ("adapter", "Adapter",
           "Adapter index for creating device (-1 for default)",
@@ -89,6 +96,8 @@ gst_d3d11_base_filter_class_init (GstD3D11BaseFilterClass * klass)
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_get_unit_size);
   trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_query);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_FILTER, 0);
 }
 
 static void

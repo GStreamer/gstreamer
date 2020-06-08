@@ -58,6 +58,8 @@ gst_mf_audio_enc_class_init (GstMFAudioEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_mf_audio_enc_handle_frame);
   audioenc_class->flush =
       GST_DEBUG_FUNCPTR (gst_mf_audio_enc_flush);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_MF_AUDIO_ENC, (GstPluginAPIFlags) 0);
 }
 
 static void

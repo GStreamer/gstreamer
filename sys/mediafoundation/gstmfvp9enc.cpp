@@ -163,6 +163,7 @@ typedef struct
   guint32 enum_flags;
   guint device_index;
   GstMFVP9EncDeviceCaps device_caps;
+  gboolean is_default;
 } GstMFVP9EncClassData;
 
 static GstElementClass *parent_class = NULL;
@@ -201,68 +202,80 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   if (device_caps->rc_mode) {
     g_object_class_install_property (gobject_class, PROP_RC_MODE,
         g_param_spec_enum ("rc-mode", "Rate Control Mode",
-            "Rate Control Mode "
-            "(Exposed only if supported by device)",
+            "Rate Control Mode",
             GST_TYPE_MF_VP9_ENC_RC_MODE, DEFAULT_RC_MODE,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    /* NOTE: documentation will be done by only for default device */
+    if (cdata->is_default) {
+      gst_type_mark_as_plugin_api (GST_TYPE_MF_VP9_ENC_RC_MODE,
+          (GstPluginAPIFlags) 0);
+    }
   }
 
   if (device_caps->max_bitrate) {
     g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
         g_param_spec_uint ("max-bitrate", "Max Bitrate",
             "The maximum bitrate applied when rc-mode is \"pcvbr\" in kbit/sec "
-            "(0 = MFT default) (Exposed only if supported by device)", 0,
-            (G_MAXUINT >> 10),
+            "(0 = MFT default)", 0, (G_MAXUINT >> 10),
             DEFAULT_MAX_BITRATE,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->quality_vs_speed) {
     g_object_class_install_property (gobject_class, PROP_QUALITY_VS_SPEED,
         g_param_spec_uint ("quality-vs-speed", "Quality Vs Speed",
             "Quality and speed tradeoff, [0, 33]: Low complexity, "
-            "[34, 66]: Medium complexity, [67, 100]: High complexity "
-            "(Exposed only if supported by device)", 0, 100,
+            "[34, 66]: Medium complexity, [67, 100]: High complexity", 0, 100,
             DEFAULT_QUALITY_VS_SPEED,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->gop_size) {
     g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
         g_param_spec_uint ("gop-size", "GOP size",
             "The number of pictures from one GOP header to the next, "
-            "(0 = MFT default) "
-            "(Exposed only if supported by device)", 0, G_MAXUINT - 1,
+            "(0 = MFT default)", 0, G_MAXUINT - 1,
             DEFAULT_GOP_SIZE,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->threads) {
     g_object_class_install_property (gobject_class, PROP_THREADS,
         g_param_spec_uint ("threads", "Threads",
             "The number of worker threads used by a encoder, "
-            "(0 = MFT default) "
-            "(Exposed only if supported by device)", 0, 16,
+            "(0 = MFT default)", 0, 16,
             DEFAULT_THREADS,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->content_type) {
     g_object_class_install_property (gobject_class, PROP_CONTENT_TYPE,
         g_param_spec_enum ("content-type", "Content Type",
-            "Indicates the type of video content "
-            "(Exposed only if supported by device)",
+            "Indicates the type of video content",
             GST_TYPE_MF_VP9_ENC_CONTENT_TYPE, DEFAULT_CONTENT_TYPE,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    /* NOTE: documentation will be done by only for default device */
+    if (cdata->is_default) {
+      gst_type_mark_as_plugin_api (GST_TYPE_MF_VP9_ENC_CONTENT_TYPE,
+          (GstPluginAPIFlags) 0);
+    }
   }
 
   if (device_caps->low_latency) {
     g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
         g_param_spec_boolean ("low-latency", "Low Latency",
-            "Enable low latency encoding "
-            "(Exposed only if supported by device)",
+            "Enable low latency encoding",
             DEFAULT_LOW_LATENCY,
-            (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   long_name = g_strdup_printf ("Media Foundation %s", cdata->device_name);
@@ -571,6 +584,8 @@ gst_mf_vp9_enc_register (GstPlugin * plugin, guint rank,
     is_default = FALSE;
     i++;
   }
+
+  cdata->is_default = is_default;
 
   type =
       g_type_register_static (GST_TYPE_MF_VIDEO_ENC, type_name, &type_info,

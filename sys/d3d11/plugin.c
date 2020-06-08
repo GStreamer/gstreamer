@@ -67,6 +67,12 @@ plugin_init (GstPlugin * plugin)
   GstD3D11Device *device = NULL;
   GstRank video_sink_rank = GST_RANK_NONE;
 
+  /**
+   * plugin-gstd3d11:
+   *
+   * Since: 1.18
+   */
+
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug, "d3d11", 0, "direct3d 11 plugin");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_shader_debug,
       "d3d11shader", 0, "d3d11shader");

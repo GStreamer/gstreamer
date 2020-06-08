@@ -164,6 +164,8 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_wasapi_sink_debug, "wasapisink",
       0, "Windows audio session API sink");
+
+  gst_type_mark_as_plugin_api (GST_WASAPI_DEVICE_TYPE_ROLE, 0);
 }
 
 static void
