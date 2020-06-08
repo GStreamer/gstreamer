@@ -398,6 +398,8 @@ gst_mf_transform_process_output (GstMFTransform * self)
   MFT_OUTPUT_DATA_BUFFER out_data = { 0 };
   GstFlowReturn ret = GST_FLOW_OK;
 
+  GST_TRACE_OBJECT (self, "Process output");
+
   hr = transform->GetOutputStreamInfo (stream_id, &out_stream_info);
   if (!gst_mf_result (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't get output stream info");
@@ -509,6 +511,8 @@ gst_mf_transform_process_input (GstMFTransform * object,
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
   g_return_val_if_fail (sample != NULL, FALSE);
 
+  GST_TRACE_OBJECT (object, "Process input");
+
   if (!object->transform)
     return FALSE;
 
@@ -527,6 +531,8 @@ gst_mf_transform_process_input (GstMFTransform * object,
       return FALSE;
     }
 
+    GST_DEBUG_OBJECT (object, "MFT is running now");
+
     object->running = TRUE;
   }
 
@@ -534,12 +540,17 @@ gst_mf_transform_process_input (GstMFTransform * object,
 
   if (object->hardware) {
     while (object->pending_have_output > 0) {
+      GST_TRACE_OBJECT (object,
+          "Pending have output %d", object->pending_have_output);
       ret = gst_mf_transform_process_output (object);
       if (ret != GST_FLOW_OK) {
         if (ret == GST_VIDEO_ENCODER_FLOW_NEED_DATA) {
+          GST_TRACE_OBJECT (object, "Need more data");
           ret = GST_FLOW_OK;
           break;
         } else {
+          GST_WARNING_OBJECT (object,
+              "Couldn't process output, ret %s", gst_flow_get_name (ret));
           return FALSE;
         }
       }
@@ -549,11 +560,15 @@ gst_mf_transform_process_input (GstMFTransform * object,
       MediaEventType type;
       HRESULT hr;
 
+      GST_TRACE_OBJECT (object, "No pending need input, waiting event");
+
       hr = gst_mf_transform_pop_event (object, FALSE, &type);
       if (hr != MF_E_NO_EVENTS_AVAILABLE && !gst_mf_result (hr)) {
         GST_DEBUG_OBJECT (object, "failed to pop event, hr: 0x%x", (guint) hr);
         return FALSE;
       }
+
+      GST_TRACE_OBJECT (object, "Got event type %d", (gint) type);
 
       switch (type) {
         case METransformNeedInput:
