@@ -2484,21 +2484,28 @@ static GstElement *_get_target_element (GstValidateScenario * scenario,
     GstValidateAction * action);
 
 static void
-stop_waiting_signal (GstBin * bin, GstElement * element,
-    GstValidateAction * action)
+stop_waiting_signal (GstStructure * data)
 {
-  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
-  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstElement *target;
+  GstValidateAction *action;
+  GstValidateScenario *scenario;
+
+  gst_structure_get (data, "target", G_TYPE_POINTER, &target,
+      "action", G_TYPE_POINTER, &action, NULL);
+  gst_structure_free (data);
+
+  scenario = gst_validate_action_get_scenario (action);
 
   g_assert (scenario);
   gst_validate_printf (scenario, "Stop waiting for signal\n");
 
-  g_signal_handler_disconnect (bin, priv->signal_handler_id);
+  g_signal_handler_disconnect (target, scenario->priv->signal_handler_id);
 
-  priv->signal_handler_id = 0;
+  scenario->priv->signal_handler_id = 0;
   gst_validate_action_set_done (action);
   _add_execute_actions_gsource (scenario);
   gst_object_unref (scenario);
+  gst_object_unref (target);
 }
 
 static GstValidateExecuteActionReturn
@@ -2581,10 +2588,10 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
   }
 
   priv->signal_handler_id =
-      g_signal_connect (target, signal_name, (GCallback) stop_waiting_signal,
-      action);
+      g_signal_connect_swapped (target, signal_name,
+      (GCallback) stop_waiting_signal, gst_structure_new ("a", "action",
+          G_TYPE_POINTER, action, "target", G_TYPE_POINTER, target, NULL));
 
-  gst_object_unref (target);
   gst_object_unref (pipeline);
 
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
