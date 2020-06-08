@@ -204,6 +204,9 @@ gst_faac_class_init (GstFaacClass * klass)
       "Free MPEG-2/4 AAC encoder",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
+  gst_type_mark_as_plugin_api (GST_TYPE_FAAC_RATE_CONTROL, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAAC_SHORTCTL, 0);
+
   base_class->stop = GST_DEBUG_FUNCPTR (gst_faac_stop);
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_faac_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_faac_handle_frame);

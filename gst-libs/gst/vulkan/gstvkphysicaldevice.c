@@ -112,7 +112,8 @@ gst_vulkan_physical_device_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE_ID:{
       guint device_id = g_value_get_uint (value);
-      if (device_id >= device->instance->n_physical_devices) {
+      if (device->instance == VK_NULL_HANDLE
+          || device_id >= device->instance->n_physical_devices) {
         g_critical ("%s: Cannot set device-index larger than the "
             "number of physical devices", GST_OBJECT_NAME (device));
       } else {
@@ -158,6 +159,11 @@ gst_vulkan_physical_device_constructed (GObject * object)
 {
   GstVulkanPhysicalDevice *device = GST_VULKAN_PHYSICAL_DEVICE (object);
   GError *error = NULL;
+
+  if (device->instance == VK_NULL_HANDLE) {
+    GST_ERROR_OBJECT (object, "Constructed without any instance set");
+    return;
+  }
 
   device->device = device->instance->physical_devices[device->device_index];
 
