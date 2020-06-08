@@ -391,22 +391,25 @@ rtp_timer_queue_new (void)
 /**
  * rtp_timer_queue_insert:
  * @queue: the #RtpTimerQueue object
- * @timer: the #RtpTimer to insert
+ * @timer: (transfer full): the #RtpTimer to insert
  *
  * Insert a timer into the queue. Earliest timer are at the head and then
  * timer are sorted by seqnum (smaller seqnum first). This function is o(n)
  * but it is expected that most timers added are schedule later, in which case
  * the insertion will be faster.
  *
- * Returns: %FLASE is a timer with the same seqnum already existed
+ * Returns: %FALSE if a timer with the same seqnum already existed
  */
 gboolean
 rtp_timer_queue_insert (RtpTimerQueue * queue, RtpTimer * timer)
 {
   g_return_val_if_fail (timer->queued == FALSE, FALSE);
 
-  if (rtp_timer_queue_find (queue, timer->seqnum))
+  if (rtp_timer_queue_find (queue, timer->seqnum)) {
+    rtp_timer_free (timer);
+    GST_WARNING ("Timer queue collision, freeing duplicate.");
     return FALSE;
+  }
 
   if (timer->timeout == -1)
     rtp_timer_queue_insert_head (queue, timer);
