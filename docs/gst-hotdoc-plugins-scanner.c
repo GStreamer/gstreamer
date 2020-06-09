@@ -434,7 +434,7 @@ _add_properties (GString * json, GString * other_types,
     } else if ((spec->flags & GST_PARAM_MUTABLE_READY)) {
       mutable_str = "\"ready\"";
     } else {
-      mutable_str = "\"playing\"";
+      mutable_str = "\"null\"";
     }
 
     tmpstr = json_strescape (g_param_spec_get_blurb (spec));
