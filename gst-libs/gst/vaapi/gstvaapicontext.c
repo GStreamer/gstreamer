@@ -486,7 +486,7 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
     goto error;
 
 done:
-  GST_DEBUG ("context 0x%08lx / config 0x%08x",
+  GST_DEBUG ("context 0x%08" G_GSIZE_MODIFIER "x / config 0x%08x",
       GST_VAAPI_CONTEXT_ID (context), context->va_config);
   return context;
 
