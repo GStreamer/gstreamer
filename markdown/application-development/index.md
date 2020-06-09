@@ -29,9 +29,6 @@ view; it describes how to write a GStreamer application using the
 GStreamer libraries and tools. For an explanation about writing plugins,
 we suggest the [Plugin Writer's Guide](plugin-development/index.md).
 
-Also check out the other documentation available on the [GStreamer web
-site](http://gstreamer.freedesktop.org/documentation/).
-
 ### Preliminary reading
 
 In order to understand this manual, you need to have a basic
