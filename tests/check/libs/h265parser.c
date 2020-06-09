@@ -331,6 +331,15 @@ set_format_range_fields (GstH265ProfileTierLevel * ptl,
   ptl->lower_bit_rate_constraint_flag = lower_bit_rate_constraint_flag;
 }
 
+static void
+set_chroma_idc_and_depth (GstH265SPS * sps, guint8 chroma_idc,
+    guint8 depth_luma, guint8 depth_chroma)
+{
+  sps->chroma_format_idc = chroma_idc;
+  sps->bit_depth_luma_minus8 = depth_luma - 8;
+  sps->bit_depth_chroma_minus8 = depth_chroma - 8;
+}
+
 GST_START_TEST (test_h265_format_range_profiles_exact_match)
 {
   /* Test all the combinations from Table A.2 */
@@ -508,72 +517,81 @@ GST_END_TEST;
 GST_START_TEST (test_h265_format_range_profiles_partial_match)
 {
   /* Test matching compatible profiles from non-standard bitstream */
-  GstH265ProfileTierLevel ptl;
+  GstH265SPS sps;
+  GstH265ProfileTierLevel *ptl = &sps.profile_tier_level;
 
-  memset (&ptl, 0, sizeof (ptl));
-  ptl.profile_idc = 4;
-  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  memset (&sps, 0, sizeof (sps));
+  ptl->profile_idc = 4;
+  set_format_range_fields (ptl, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_MAIN_444);
 
-  ptl.profile_idc = 5;
+  ptl->profile_idc = 5;
   /* wrong max_monochrome_constraint_flag, should still be compatible
      with GST_H265_PROFILE_HIGH_THROUGHPUT_444_10 */
-  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_HIGH_THROUGHPUT_444_10);
   /* wrong max_12bit_constraint_flag, should still be compatible
      with GST_H265_PROFILE_HIGH_THROUGHPUT_444_14 */
-  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_HIGH_THROUGHPUT_444_14);
   /* wrong intra_constraint_flag, GST_H265_PROFILE_HIGH_THROUGHPUT_444_14
      and GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA are both compatible,
      but GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA should be chosen
      because of the higher priority. */
-  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA);
 
-  ptl.profile_idc = 6;
+  ptl->profile_idc = 6;
   /* wrong max_12bit_constraint_flag, should not be compatible with any */
-  set_format_range_fields (&ptl, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_INVALID);
 
-  ptl.profile_idc = 7;
+  ptl->profile_idc = 7;
   /* wrong max_monochrome_constraint_flag, and intra_constraint_flag,
      still compatible with GST_H265_PROFILE_SCALABLE_MAIN_10 */
-  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_SCALABLE_MAIN_10);
 
-  ptl.profile_idc = 8;
+  ptl->profile_idc = 8;
   /* wrong one_picture_only_constraint_flag, still compatible
      with GST_H265_PROFILE_3D_MAIN */
-  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_3D_MAIN);
 
-  ptl.profile_idc = 9;
+  ptl->profile_idc = 9;
   /* wrong one_picture_only_constraint_flag, still compatible
      with GST_H265_PROFILE_SCREEN_EXTENDED_MAIN */
-  set_format_range_fields (&ptl, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_SCREEN_EXTENDED_MAIN);
+  /* wrong indications but have right chroma_format_idc and bit_depth in SPS,
+     should be recognized as GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444 */
+  set_format_range_fields (ptl, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
+      GST_H265_PROFILE_INVALID);
+  set_chroma_idc_and_depth (&sps, 3, 8, 8);
+  g_assert_cmpuint (gst_h265_get_profile_from_sps (&sps), ==,
+      GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
 
-  ptl.profile_idc = 10;
+  ptl->profile_idc = 10;
   /* wrong max_10bit_constraint_flag, still compatible
      with GST_H265_PROFILE_SCALABLE_MONOCHROME_16 */
-  set_format_range_fields (&ptl, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_SCALABLE_MONOCHROME_16);
 
-  ptl.profile_idc = 11;
+  ptl->profile_idc = 11;
   /* wrong max_12bit_constraint_flag and max_422chroma_constraint_flag,
      should be recognized as GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14 */
-  set_format_range_fields (&ptl, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1);
-  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+  set_format_range_fields (ptl, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
 }
 

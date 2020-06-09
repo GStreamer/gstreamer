@@ -2194,7 +2194,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       const gchar *profile, *tier, *level;
       GstH265Profile p;
 
-      p = gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
+      p = gst_h265_get_profile_from_sps (sps);
+
       profile = gst_h265_profile_to_string (p);
       if (profile != NULL)
         gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);

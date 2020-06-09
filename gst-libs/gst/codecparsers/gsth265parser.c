@@ -4289,3 +4289,91 @@ gst_h265_parser_insert_sei_hevc (GstH265Parser * parser, guint8 nal_length_size,
   return gst_h265_parser_insert_sei_internal (parser, nal_length_size, TRUE,
       au, sei);
 }
+
+/**
+ * gst_h265_get_profile_from_sps:
+ * @sps: a #GstH265SPS
+ *
+ * Return the H265 profile from @sps.
+ *
+ * Returns: a #GstH265Profile
+ * Since: 1.20
+ */
+GstH265Profile
+gst_h265_get_profile_from_sps (GstH265SPS * sps)
+{
+  GstH265Profile p;
+
+  p = gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
+
+  if (p == GST_H265_PROFILE_INVALID) {
+    GstH265ProfileTierLevel tmp_ptl = sps->profile_tier_level;
+    guint chroma_format_idc = sps->chroma_format_idc;
+    guint bit_depth_luma = sps->bit_depth_luma_minus8 + 8;
+    guint bit_depth_chroma = sps->bit_depth_chroma_minus8 + 8;
+
+    /* Set the conformance indicators based on chroma_format_idc / bit_depth */
+    switch (chroma_format_idc) {
+      case 0:
+        tmp_ptl.max_monochrome_constraint_flag = 1;
+        tmp_ptl.max_420chroma_constraint_flag = 1;
+        tmp_ptl.max_422chroma_constraint_flag = 1;
+        break;
+
+      case 1:
+        tmp_ptl.max_monochrome_constraint_flag = 0;
+        tmp_ptl.max_420chroma_constraint_flag = 1;
+        tmp_ptl.max_422chroma_constraint_flag = 1;
+        break;
+
+      case 2:
+        tmp_ptl.max_monochrome_constraint_flag = 0;
+        tmp_ptl.max_420chroma_constraint_flag = 0;
+        tmp_ptl.max_422chroma_constraint_flag = 1;
+        break;
+
+      case 3:
+        tmp_ptl.max_monochrome_constraint_flag = 0;
+        tmp_ptl.max_420chroma_constraint_flag = 0;
+        tmp_ptl.max_422chroma_constraint_flag = 0;
+        break;
+
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    tmp_ptl.max_8bit_constraint_flag = 1;
+    tmp_ptl.max_10bit_constraint_flag = 1;
+    tmp_ptl.max_12bit_constraint_flag = 1;
+    tmp_ptl.max_14bit_constraint_flag = 1;
+
+    if (bit_depth_luma > 8 || bit_depth_chroma > 8)
+      tmp_ptl.max_8bit_constraint_flag = 0;
+
+    if (bit_depth_luma > 10 || bit_depth_chroma > 10)
+      tmp_ptl.max_10bit_constraint_flag = 0;
+
+    if (bit_depth_luma > 12 || bit_depth_chroma > 12)
+      tmp_ptl.max_12bit_constraint_flag = 0;
+
+    if (tmp_ptl.profile_idc == GST_H265_PROFILE_IDC_HIGH_THROUGHPUT
+        || tmp_ptl.profile_idc == GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING
+        || tmp_ptl.profile_idc ==
+        GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION
+        || tmp_ptl.profile_idc ==
+        GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION
+        || tmp_ptl.profile_compatibility_flag[5]
+        || tmp_ptl.profile_compatibility_flag[9]
+        || tmp_ptl.profile_compatibility_flag[10]
+        || tmp_ptl.profile_compatibility_flag[11]) {
+      if (bit_depth_luma > 14 || bit_depth_chroma > 14)
+        tmp_ptl.max_14bit_constraint_flag = 0;
+    } else
+      tmp_ptl.max_14bit_constraint_flag = 0;
+
+    p = gst_h265_profile_tier_level_get_profile (&tmp_ptl);
+  }
+
+  return p;
+}

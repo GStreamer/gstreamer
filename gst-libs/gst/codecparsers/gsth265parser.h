@@ -1808,5 +1808,8 @@ GstBuffer * gst_h265_parser_insert_sei_hevc (GstH265Parser * parser,
                                              GstBuffer * au,
                                              GstMemory * sei);
 
+GST_CODEC_PARSERS_API
+GstH265Profile gst_h265_get_profile_from_sps (GstH265SPS * sps);
+
 G_END_DECLS
 #endif
