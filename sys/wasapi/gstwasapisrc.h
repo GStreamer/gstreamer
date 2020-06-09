@@ -46,6 +46,7 @@ struct _GstWasapiSrc
   guint64 client_clock_freq;
   IAudioCaptureClient *capture_client;
   HANDLE event_handle;
+  HANDLE cancellable;
   /* Smooth frames captured from WASAPI, which can be irregular sometimes */
   GstAdapter *adapter;
   /* Client was reset, so it needs to be started again */
