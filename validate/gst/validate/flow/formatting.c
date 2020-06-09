@@ -387,7 +387,6 @@ validate_flow_format_event (GstEvent * event,
 
         for (field = ignored_fields[i]; field; field = ignored_fields[++i])
           gst_structure_remove_field (printable, field);
-        g_strfreev (ignored_fields);
       }
     }
 
@@ -397,6 +396,7 @@ validate_flow_format_event (GstEvent * event,
 
   event_string = g_strdup_printf ("%s: %s", event_type, structure_string);
   g_strfreev (logged_fields);
+  g_strfreev (ignored_fields);
   g_free (structure_string);
   return event_string;
 }
