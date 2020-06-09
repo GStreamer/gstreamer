@@ -173,7 +173,7 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
-pip3 install meson==0.53.1 hotdoc
+pip3 install meson==0.54.3 hotdoc
 
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
