@@ -115,13 +115,9 @@ gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
   struct v4l2_ext_control control[] = {
     {
       .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_MODE,
-      .ptr = &self->decode_mode,
-      .size = sizeof (self->decode_mode),
     },
     {
       .id = V4L2_CID_MPEG_VIDEO_H264_START_CODE,
-      .ptr = &self->start_code,
-      .size = sizeof (self->start_code),
     },
   };
   /* *INDENT-ON* */
@@ -140,6 +136,9 @@ gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
         ("gst_v4l2_decoder_get_controls() failed: %s", g_strerror (errno)));
     return FALSE;
   }
+
+  self->decode_mode = control[0].value;
+  self->start_code = control[1].value;
 
   GST_INFO_OBJECT (self, "Opened H264 %s decoder %s",
       is_frame_based (self) ? "frame based" : "slice based",
