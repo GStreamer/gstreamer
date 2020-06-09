@@ -195,7 +195,7 @@ foreach t : good_tests
     env.set('GST_STATE_IGNORE_ELEMENTS', state_ignore_elements)
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
-      'gst-plugins-bad', 'gst-plugins-good@' + meson.build_root())
+      'timecode', 'gst-plugins-good@' + meson.build_root())
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
     env.set('GSETTINGS_BACKEND', 'memory')
 
