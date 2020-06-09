@@ -147,22 +147,22 @@ build fedora x86_64 local:
   <<: *local_template
 
 build cerbero fedora x86_64 local:
-  extends: '.cerbero fedora x86_64'
+  extends: 'build cerbero fedora x86_64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
   <<: *local_template
 
 build cerbero cross-android universal local:
-  extends: '.cerbero cross-android universal'
+  extends: 'build cerbero cross-android universal'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
   <<: *local_template
 
 build cerbero cross win32 local:
-  extends: '.cerbero cross win32'
+  extends: 'build cerbero cross win32'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
   <<: *local_template
 
 build cerbero cross win64 local:
-  extends: '.cerbero cross win64'
+  extends: 'build cerbero cross win64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
   <<: *local_template
 

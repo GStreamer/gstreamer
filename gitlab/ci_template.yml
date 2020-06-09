@@ -363,6 +363,15 @@ valgrind ges:
 # ARCH: The cerbero <os>_<cpu> (used in cache key)
 #
 # Produces runtime and devel tarball packages for linux/android or .pkg for macos
+.cerbero template: &cerbero_package_and_check
+  - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
+  # Run gst-inspect-1.0 for some basic checks. Can't do this for cross-(android|ios)-universal, of course.
+  - |-
+      [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX --version
+  - |-
+      [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX
+  - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
+
 .cerbero:
   stage: "build"
   image: $CERBERO_IMAGE
@@ -396,7 +405,6 @@ valgrind ges:
     CERBERO_OVERRIDDEN_DIST_DIR: ""
     # location where cerbero is cached on the host
     CERBERO_HOST_DIR: "/cerbero/"
-    CERBERO_DEPS: "${CERBERO_HOME}/cerbero-deps.tar.xz"
   before_script:
     # FIXME Wrong namespace
     # Workaround build-tools having hardcoded internal path
@@ -406,12 +414,6 @@ valgrind ges:
     - mkdir -p ../../${CI_PROJECT_NAMESPACE}
     - ln -sf $(pwd) ../../${CI_PROJECT_NAMESPACE}/cerbero
     - rsync -aH ${CERBERO_HOST_DIR} .
-    - |
-      if test -f ${CERBERO_DEPS} ; then
-          echo "Extracting xz deps tarball"
-          export XZ_OPT="--threads=0" # pushing a command through sh variable and into tar correctly seems impossible
-          time tar -C ${CERBERO_HOME} --use-compress-program=xzcat -xf ${CERBERO_DEPS}
-      fi
     - echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" >> localconf.cbc
     - echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
     - ./cerbero-uninstalled --self-update manifest.xml
@@ -420,19 +422,13 @@ valgrind ges:
     - $CERBERO $CERBERO_ARGS show-config
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
     - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
-    - test -f ${CERBERO_DEPS} || $CERBERO $CERBERO_ARGS fetch-cache --branch ${GST_UPSTREAM_BRANCH}
+    - $CERBERO $CERBERO_ARGS fetch-cache --branch ${GST_UPSTREAM_BRANCH}
     - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
           && test -d ${CERBERO_HOME}/dist/${ARCH}
           && mkdir -p ${CERBERO_OVERRIDDEN_DIST_DIR}
           && rsync -aH ${CERBERO_HOME}/dist/${ARCH}/ ${CERBERO_OVERRIDDEN_DIST_DIR}
     - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
-    - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
-    # Run gst-inspect-1.0 for some basic checks. Can't do this for cross-(android|ios)-universal, of course.
-    - |-
-        [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX --version
-    - |-
-        [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX
-    - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
+    - *cerbero_package_and_check
   cache:
     key: "${CI_JOB_NAME}"
     paths:
@@ -569,8 +565,8 @@ build msys2 :
   extends: .cerbero
   rules:
     - if: '$CI_PROJECT_NAME == "cerbero"'
-  stage: "pre-build"
   script:
+    - test "x${HAVE_CCACHE}" = "xyes" && ccache --show-stats
     - $CERBERO $CERBERO_ARGS show-config
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
     - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
@@ -585,15 +581,7 @@ build msys2 :
     - $CERBERO $CERBERO_ARGS gen-cache --branch ${GST_UPSTREAM_BRANCH}
     - test "x${CERBERO_PRIVATE_SSH_KEY}" = "x"
           || $CERBERO $CERBERO_ARGS upload-cache --branch ${GST_UPSTREAM_BRANCH}
-  artifacts:
-    name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
-    expire_in: '10 days'
-    when: 'always'
-    paths:
-      - "manifest.xml"
-      - "${CERBERO_HOME}/logs"
-      - "${CERBERO_HOME}/cerbero-deps.log"
-      - "${CERBERO_DEPS}"
+    - *cerbero_package_and_check
 
 #
 # Cerbero Linux X86_64 build
@@ -604,34 +592,20 @@ cerbero deps fedora x86_64:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
 
-.cerbero fedora x86_64:
-  extends: '.cerbero'
-  variables:
-    CONFIG: "linux.config"
-
-cerbero fedora x86_64:
-  extends: '.cerbero fedora x86_64'
-  needs:
-    - "cerbero deps fedora x86_64"
-
 build cerbero fedora x86_64:
-  extends: '.cerbero fedora x86_64'
+  extends: '.cerbero'
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+  variables:
+    CONFIG: "linux.config"
 
 #
 # Cerbero Android Universal build
 #
-cerbero deps cross-android universal:
-  extends: '.cerbero deps'
+.cerbero cross-android universal:
   variables:
     CONFIG: "cross-android-universal.cbc"
     ARCH: "android_universal"
-
-.cerbero cross-android universal:
-  extends: '.cerbero'
-  variables:
-    CONFIG: "cross-android-universal.cbc"
   artifacts:
     name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
     expire_in: '5 days'
@@ -641,13 +615,15 @@ cerbero deps cross-android universal:
       - "${CERBERO_HOME}/logs"
       - "*[0-9].tar.*"
 
-cerbero cross-android universal:
-  extends: '.cerbero cross-android universal'
-  needs:
-    - "cerbero deps cross-android universal"
+cerbero deps cross-android universal:
+  extends:
+    - '.cerbero deps'
+    - '.cerbero cross-android universal'
 
 build cerbero cross-android universal:
-  extends: '.cerbero cross-android universal'
+  extends:
+    - '.cerbero'
+    - '.cerbero cross-android universal'
   rules:
     - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
@@ -661,22 +637,15 @@ cerbero deps cross-windows x86:
     CONFIG: "cross-win32.cbc"
     ARCH: "mingw_x86"
 
-.cerbero cross win32:
+build cerbero cross win32:
   extends: '.cerbero'
+  rules:
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
   variables:
     CONFIG: "cross-win32.cbc"
     CERBERO_RUN_WRAPPER: "wine"
     CERBERO_RUN_SUFFIX: ".exe"
 
-cerbero cross win32:
-  extends: '.cerbero cross win32'
-  needs:
-    - "cerbero deps cross-windows x86"
-
-build cerbero cross win32:
-  extends: '.cerbero cross win32'
-  rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
@@ -684,22 +653,14 @@ cerbero deps cross-windows x86_64:
     CONFIG: "cross-win64.cbc"
     ARCH: "mingw_x86_64"
 
-.cerbero cross win64:
+build cerbero cross win64:
   extends: '.cerbero'
+  rules:
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
   variables:
     CONFIG: "cross-win64.cbc"
     CERBERO_RUN_WRAPPER: "wine"
     CERBERO_RUN_SUFFIX: ".exe"
-
-cerbero cross win64:
-  extends: '.cerbero cross win64'
-  needs:
-    - "cerbero deps cross-windows x86_64"
-
-build cerbero cross win64:
-  extends: '.cerbero cross win64'
-  rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Build an Android App using the android binaries
@@ -763,24 +724,12 @@ cerbero cross-android universal examples:
   rules:
     - if: '$CI_PROJECT_NAME == "cerbero"'
   needs:
-    - "cerbero cross-android universal"
+    - "cerbero deps cross-android universal"
 
 #
 # Cerbero macOS X86_64 build
 #
-cerbero deps macos x86_64:
-  extends: '.cerbero deps'
-  variables:
-    ARCH: "darwin_x86_64"
-    CONFIG: "osx-x86-64.cbc"
-    HAVE_CCACHE: ""
-    CERBERO_OVERRIDDEN_DIST_DIR: "/Library/Frameworks/GStreamer.framework/Versions/1.0"
-    CERBERO_HOST_DIR: "/Users/gst-ci/cerbero/"
-  tags:
-    - gst-macos-10.15
-
 .cerbero macos x86_64:
-  extends: '.cerbero'
   variables:
     ARCH: "darwin_x86_64"
     CONFIG: "osx-x86-64.cbc"
@@ -800,32 +749,22 @@ cerbero deps macos x86_64:
       - "gstreamer-1.0-1.*.pkg"
       - "gstreamer-1.0-devel-1.*.pkg"
 
-cerbero macos x86_64:
-  extends: '.cerbero macos x86_64'
-  needs:
-    - "cerbero deps macos x86_64"
+cerbero deps macos x86_64:
+  extends:
+    - '.cerbero deps'
+    - '.cerbero macos x86_64'
 
 build cerbero macos x86_64:
-  extends: '.cerbero macos x86_64'
+  extends:
+    - '.cerbero'
+    - '.cerbero macos x86_64'
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Cerbero iOS build
 #
-cerbero deps cross-ios universal:
-  extends: '.cerbero deps'
-  variables:
-    ARCH: "ios_universal"
-    CONFIG: "cross-ios-universal.cbc"
-    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
-    HAVE_CCACHE: ""
-    CERBERO_HOST_DIR: "/Users/gst-ci/cerbero/"
-  tags:
-    - gst-ios-13.2
-
 .cerbero cross-ios universal:
-  extends: '.cerbero'
   variables:
     ARCH: "ios_universal"
     CONFIG: "cross-ios-universal.cbc"
@@ -844,13 +783,15 @@ cerbero deps cross-ios universal:
       - "${CERBERO_HOME}/logs"
       - "gstreamer-1.0-*-ios-universal.pkg"
 
-cerbero cross-ios universal:
-  extends: '.cerbero cross-ios universal'
-  needs:
-    - "cerbero deps cross-ios universal"
+cerbero deps cross-ios universal:
+  extends:
+    - '.cerbero deps'
+    - '.cerbero cross-ios universal'
 
 build cerbero cross-ios universal:
-  extends: '.cerbero cross-ios universal'
+  extends:
+    - '.cerbero'
+    - '.cerbero cross-ios universal'
   rules:
     - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
@@ -962,7 +903,7 @@ cerbero cross-ios universal examples:
   rules:
     - if: '$CI_PROJECT_NAME == "cerbero"'
   needs:
-    - "cerbero cross-ios universal"
+    - "cerbero deps cross-ios universal"
 
 build gst-omx zynq fedora x86_64:
   extends: '.build fedora x86_64'
