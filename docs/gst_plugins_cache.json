@@ -35,7 +35,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -47,7 +47,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -61,7 +61,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -73,7 +73,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": " (0)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstA52DecMode",
                         "writable": true
@@ -85,7 +85,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -99,7 +99,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -200,7 +200,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -212,7 +212,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -226,7 +226,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -238,7 +238,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "IF1 (0)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstAmrnbVariant",
                         "writable": true
@@ -282,7 +282,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "MR122 (7)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstAmrnbEncBandMode",
                         "writable": true
@@ -294,7 +294,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -306,7 +306,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": false
@@ -318,7 +318,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -332,7 +332,7 @@
                         "default": "40000000",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -453,7 +453,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -465,7 +465,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -479,7 +479,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -592,7 +592,7 @@
                         "default": "100",
                         "max": "2147483647",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -604,7 +604,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -616,7 +616,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "application/x-rtp-depayload-stats, clock_rate=(uint)0, npt-start=(guint64)0, npt-stop=(guint64)18446744073709551615, play-speed=(double)1, play-scale=(double)1, running-time-dts=(guint64)18446744073709551615, running-time-pts=(guint64)18446744073709551615, seqnum=(uint)0, timestamp=(uint)0;",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstStructure",
                         "writable": false
@@ -688,7 +688,7 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -700,7 +700,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "/dev/cdrom",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
@@ -712,7 +712,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -724,7 +724,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "normal (0)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstAudioCdSrcMode",
                         "writable": true
@@ -738,7 +738,7 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -752,7 +752,7 @@
                         "default": "-1",
                         "max": "100",
                         "min": "-1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -766,7 +766,7 @@
                         "default": "1",
                         "max": "99",
                         "min": "1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -778,7 +778,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -833,7 +833,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -845,7 +845,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -859,7 +859,7 @@
                         "default": "0",
                         "max": "9223372036854775807",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint64",
                         "writable": true
@@ -913,7 +913,7 @@
                         "default": "1",
                         "max": "999",
                         "min": "1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -927,7 +927,7 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -941,7 +941,7 @@
                         "default": "1",
                         "max": "999",
                         "min": "1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -953,7 +953,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "/dev/dvd",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
@@ -965,7 +965,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -979,7 +979,7 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -993,7 +993,7 @@
                         "default": "1",
                         "max": "999",
                         "min": "1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -1005,7 +1005,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1122,7 +1122,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1176,7 +1176,7 @@
                         "default": "4096",
                         "max": "-1",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -1188,7 +1188,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1200,7 +1200,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "NULL",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
@@ -1214,7 +1214,7 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "-1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -1226,7 +1226,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1357,7 +1357,7 @@
                         "default": "200",
                         "max": "-1",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -1750,7 +1750,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "(none)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncAnalyse",
                         "writable": true
@@ -1762,7 +1762,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1774,7 +1774,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1786,7 +1786,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1800,7 +1800,7 @@
                         "default": "0",
                         "max": "16",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -1826,7 +1826,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1838,7 +1838,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1850,7 +1850,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1862,7 +1862,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "auto (-1)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncFramePacking",
                         "writable": true
@@ -1874,7 +1874,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1886,7 +1886,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1898,7 +1898,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1912,7 +1912,7 @@
                         "default": "1.4",
                         "max": "2",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gfloat",
                         "writable": true
@@ -1926,7 +1926,7 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -1938,7 +1938,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -1950,7 +1950,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "hex (1)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncMe",
                         "writable": true
@@ -1964,7 +1964,7 @@
                         "default": "0",
                         "max": "18446744073709551615",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint64",
                         "writable": true
@@ -1976,7 +1976,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "x264.log",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
@@ -1990,7 +1990,7 @@
                         "default": "0",
                         "max": "100000",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2002,7 +2002,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
@@ -2014,7 +2014,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "cbr (0)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncPass",
                         "writable": true
@@ -2028,7 +2028,7 @@
                         "default": "1.3",
                         "max": "2",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gfloat",
                         "writable": true
@@ -2040,7 +2040,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "none (0)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncPsyTune",
                         "writable": true
@@ -2052,7 +2052,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -2066,7 +2066,7 @@
                         "default": "51",
                         "max": "51",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2080,7 +2080,7 @@
                         "default": "10",
                         "max": "51",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2094,7 +2094,7 @@
                         "default": "4",
                         "max": "50",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2108,7 +2108,7 @@
                         "default": "21",
                         "max": "50",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2122,7 +2122,7 @@
                         "default": "40",
                         "max": "250",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -2136,7 +2136,7 @@
                         "default": "3",
                         "max": "16",
                         "min": "1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2148,7 +2148,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -2160,7 +2160,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "medium (6)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncPreset",
                         "writable": true
@@ -2174,7 +2174,7 @@
                         "default": "0",
                         "max": "31",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2188,7 +2188,7 @@
                         "default": "1",
                         "max": "10",
                         "min": "1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2202,7 +2202,7 @@
                         "default": "-1",
                         "max": "250",
                         "min": "-1",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -2216,7 +2216,7 @@
                         "default": "0",
                         "max": "2147483647",
                         "min": "0",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
@@ -2228,7 +2228,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "true",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
@@ -2240,7 +2240,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "(none)",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncTune",
                         "writable": true
@@ -2266,7 +2266,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "playing",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
