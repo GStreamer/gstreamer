@@ -156,6 +156,11 @@ static GESCommandLineOption options[] = {
         "The name of the element to apply the effect on."
       },
       {
+        "inpoint", "i", GST_TYPE_CLOCK_TIME, NULL,
+        "Implies that the effect has a internal content"
+        "(see [ges_track_element_set_has_internal_source](ges_track_element_set_has_internal_source))",
+      },
+      {
         "name", "n", 0, "child-name",
         "The name to be given to the effect."
       },

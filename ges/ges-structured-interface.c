@@ -567,7 +567,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   const gchar *container_name, *child_name, *child_type, *id;
 
   gboolean res = TRUE;
-  const gchar *valid_fields[] = { "container-name", "asset-id",
+  const gchar *valid_fields[] = { "container-name", "asset-id", "inpoint",
     "child-type", "child-name", "project-uri", NULL
   };
 
@@ -636,6 +636,45 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
     ges_timeline_element_set_name (child, child_name);
   else
     child_name = GES_TIMELINE_ELEMENT_NAME (child);
+
+  if (gst_structure_has_field (structure, "inpoint")) {
+    GstClockTime inpoint;
+    GESFrameNumber finpoint;
+
+    if (!GES_IS_TRACK_ELEMENT (child)) {
+      *error = g_error_new (GES_ERROR, 0, "Child %s is not a trackelement"
+          ", can't set inpoint.", child_name);
+
+      gst_object_unref (child);
+
+      goto beach;
+    }
+
+    if (!ges_util_structure_get_clocktime (structure, "inpoint", &inpoint,
+            &finpoint)) {
+      *error = g_error_new (GES_ERROR, 0, "Could not use inpoint.");
+      gst_object_unref (child);
+
+      goto beach;
+    }
+
+    if (!ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child),
+            TRUE)) {
+      *error =
+          g_error_new (GES_ERROR, 0,
+          "Could not set inpoint as %s can't have an internal source",
+          child_name);
+      gst_object_unref (child);
+
+      goto beach;
+    }
+
+    if (GES_FRAME_NUMBER_IS_VALID (finpoint))
+      inpoint = ges_timeline_get_frame_time (timeline, finpoint);
+
+    ges_timeline_element_set_inpoint (child, inpoint);
+
+  }
 
   res = ges_container_add (container, child);
   if (res == FALSE) {
