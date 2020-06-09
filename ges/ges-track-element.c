@@ -900,26 +900,29 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
  * set to %FALSE, this method will also set the
  * #GESTimelineElement:in-point of the element to 0 and its
  * #GESTimelineElement:max-duration to #GST_CLOCK_TIME_NONE.
+ *
+ * Returns: %FALSE if @has_internal_source is forbidden for @object and
+ * %TRUE in any other case.
  */
-void
+gboolean
 ges_track_element_set_has_internal_source (GESTrackElement * object,
     gboolean has_internal_source)
 {
   GESTimelineElement *element;
 
-  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   GST_DEBUG_OBJECT (object, "object:%p, has-internal-source: %s", object,
       has_internal_source ? "TRUE" : "FALSE");
 
-  if (G_UNLIKELY (has_internal_source == object->priv->has_internal_source))
-    return;
-
   if (has_internal_source && object->priv->has_internal_source_forbidden) {
     GST_WARNING_OBJECT (object, "Setting an internal source for this "
         "element is forbidden");
-    return;
+    return FALSE;
   }
+
+  if (G_UNLIKELY (has_internal_source == object->priv->has_internal_source))
+    return TRUE;
 
   object->priv->has_internal_source = has_internal_source;
 
@@ -931,6 +934,8 @@ ges_track_element_set_has_internal_source (GESTrackElement * object,
 
   g_object_notify_by_pspec (G_OBJECT (object),
       properties[PROP_HAS_INTERNAL_SOURCE]);
+
+  return TRUE;
 }
 
 void
@@ -1008,7 +1013,7 @@ ges_track_element_create_gnl_object_func (GESTrackElement * self)
     if (!gst_bin_add (GST_BIN (nleobject), child))
       goto add_failure;
 
-    GST_DEBUG ("Succesfully got the element to put in the nleobject");
+    GST_DEBUG ("Successfully got the element to put in the nleobject");
     self->priv->element = child;
   }
 
@@ -1147,7 +1152,7 @@ ges_track_element_add_children_props (GESTrackElement * self,
     return;
   }
 
-  /*  We go over child elements recursivly, and add writable properties to the
+  /*  We go over child elements recursively, and add writable properties to the
    *  hashtable */
   it = gst_bin_iterate_recurse (GST_BIN (element));
   while (!done) {
@@ -1552,7 +1557,7 @@ ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
  * intended for language bindings, #ges_track_element_set_child_properties
  * is much more convenient for C programming.
  *
- * Returns: %TRUE if the property was set, %FALSE otherwize.
+ * Returns: %TRUE if the property was set, %FALSE otherwise.
  *
  * Deprecated: use #ges_timeline_element_set_child_property instead
  */
@@ -1581,7 +1586,7 @@ ges_track_element_set_child_property (GESTrackElement * object,
  * intended for language bindings, #ges_track_element_get_child_properties
  * is much more convenient for C programming.
  *
- * Returns: %TRUE if the property was found, %FALSE otherwize.
+ * Returns: %TRUE if the property was found, %FALSE otherwise.
  *
  * Deprecated: Use #ges_timeline_element_get_child_property
  */

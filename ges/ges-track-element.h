@@ -143,9 +143,9 @@ gboolean ges_track_element_set_active          (GESTrackElement * object,
 GES_API
 gboolean ges_track_element_is_active           (GESTrackElement * object);
 
-GES_API
-void ges_track_element_set_has_internal_source (GESTrackElement * object,
-                                                gboolean has_internal_source);
+GES_API gboolean
+ges_track_element_set_has_internal_source      (GESTrackElement * object,
+                                               gboolean has_internal_source);
 
 GES_API
 gboolean ges_track_element_has_internal_source (GESTrackElement * object);
