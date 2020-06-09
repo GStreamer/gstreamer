@@ -157,7 +157,7 @@ static GESCommandLineOption options[] = {
       },
       {
         "inpoint", "i", GST_TYPE_CLOCK_TIME, NULL,
-        "Implies that the effect has a internal content"
+        "Implies that the effect has 'internal content'"
         "(see [ges_track_element_set_has_internal_source](ges_track_element_set_has_internal_source))",
       },
       {

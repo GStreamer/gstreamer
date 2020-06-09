@@ -80,7 +80,7 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 
   for (i = 0; effects_desc[i] && i < 2; i++) {
     bin_desc =
-        ges_effect_assect_id_get_type_and_bindesc (effects_desc[i], &ttype,
+        ges_effect_asset_id_get_type_and_bindesc (effects_desc[i], &ttype,
         NULL);
 
     if (ttype == GES_TRACK_TYPE_AUDIO) {

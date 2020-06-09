@@ -219,9 +219,9 @@ G_GNUC_INTERNAL gboolean
 ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,
     GError *error);
 G_GNUC_INTERNAL gchar *
-ges_effect_assect_id_get_type_and_bindesc (const char    *id,
-                                           GESTrackType  *track_type,
-                                           GError       **error);
+ges_effect_asset_id_get_type_and_bindesc (const char    *id,
+                                          GESTrackType  *track_type,
+                                          GError       **error);
 
 G_GNUC_INTERNAL void _ges_uri_asset_cleanup (void);
 
@@ -488,7 +488,7 @@ G_GNUC_INTERNAL GESTitleSource     * ges_title_source_new      (void);
 G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
 
 /****************************************************
- *                GESBaseEffect                     *
+ *                GES*Effect                     *
  ****************************************************/
 G_GNUC_INTERNAL gchar *
 ges_base_effect_get_time_property_name        (GESBaseEffect * effect,
@@ -504,6 +504,10 @@ G_GNUC_INTERNAL GstClockTime
 ges_base_effect_translate_sink_to_source_time (GESBaseEffect * effect,
                                                GstClockTime time,
                                                GHashTable * time_property_values);
+G_GNUC_INTERNAL GstElement *
+ges_effect_from_description                   (const gchar *bin_desc,
+                                               GESTrackType type,
+                                               GError **error);
 
 /****************************************************
  *              GESTimelineElement                  *

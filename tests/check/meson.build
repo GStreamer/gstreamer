@@ -82,6 +82,7 @@ if gstvalidate_dep.found()
     'seek_with_stop': true,
     'seek_with_stop.check_clock_sync': true,
     'edit_while_seeked_with_stop': true,
+    'complex_effect_bin_desc': true,
   }
 
   foreach scenario, is_validatetest: scenarios
@@ -107,7 +108,7 @@ if gstvalidate_dep.found()
 endif
 
 if build_gir
-  # Make sure to use the subproject gst-validate-launcher if avalaible.
+  # Make sure to use the subproject gst-validate-launcher if available.
   if gstvalidate_dep.found() and gstvalidate_dep.type_name() == 'internal'
     runtests = subproject('gst-devtools').get_variable('launcher')
   else
