@@ -1577,7 +1577,6 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   JBUF_SIGNAL_EVENT (priv);
   JBUF_SIGNAL_QUERY (priv, FALSE);
   JBUF_SIGNAL_QUEUE (priv);
-  JBUF_SIGNAL_TIMER (priv);
   JBUF_UNLOCK (priv);
 }
 
@@ -3503,8 +3502,6 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       /* Stopping timers */
       unschedule_current_timer (jitterbuffer);
       JBUF_WAIT_TIMER (priv);
-      if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))
-        goto early_out;
     }
   }
 
@@ -3527,7 +3524,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       GST_BUFFER_DTS (outbuf) = GST_CLOCK_TIME_NONE;
       result = gst_pad_push (priv->srcpad, outbuf);
 
-      JBUF_LOCK_CHECK (priv, early_out);
+      JBUF_LOCK_CHECK (priv, out_flushing);
       break;
     case ITEM_TYPE_LOST:
     case ITEM_TYPE_EVENT:
@@ -3549,7 +3546,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
 
       result = GST_FLOW_OK;
 
-      JBUF_LOCK_CHECK (priv, early_out);
+      JBUF_LOCK_CHECK (priv, out_flushing);
       break;
     case ITEM_TYPE_QUERY:
     {
@@ -3557,7 +3554,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
 
       res = gst_pad_peer_query (priv->srcpad, outquery);
 
-      JBUF_LOCK_CHECK (priv, early_out);
+      JBUF_LOCK_CHECK (priv, out_flushing);
       result = GST_FLOW_OK;
       GST_LOG_OBJECT (jitterbuffer, "did query %p, return %d", outquery, res);
       JBUF_SIGNAL_QUERY (priv, res);
@@ -3567,7 +3564,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
   return result;
 
   /* ERRORS */
-early_out:
+out_flushing:
   {
     return priv->srcresult;
   }
