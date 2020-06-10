@@ -25,7 +25,7 @@ test manifest:
         - "junit.xml"
 
 .base:
-  image: 'registry.fedoraproject.org/fedora:31'
+  image: 'registry.fedoraproject.org/fedora:32'
   extends:
     - '.global_ci_policy'
   tags: ['gstreamer']
@@ -35,42 +35,58 @@ test manifest:
   variables:
     STORAGE_DRIVER: 'vfs'
     BUILDAH_FORMAT: 'docker'
+    BUILDAH_ISOLATION: 'chroot'
     GIT_STRATEGY: fetch
   script:
     - export DATE=$(date +"%Y-%m-%d")
-    - export IMAGE="${CI_REGISTRY_IMAGE}/${ARCH}/${TAG}"
-    - export _UID="${IMAGE}:${DATE}-${CI_JOB_ID}"
-    - export LATEST="${IMAGE}:latest"
+    - export IMAGE="$CI_REGISTRY_IMAGE/${ARCH:=amd64}/$TAG"
+    - export _UID="$IMAGE:$DATE-$GST_UPSTREAM_BRANCH"
+    - export LATEST="$IMAGE:latest"
 
     - dnf install -y buildah runc
     # Newer versions of podman/buildah try to set overlayfs mount options when
     # using the vfs driver, and this causes errors.
     - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
-    - buildah bud --build-arg DEFAULT_BRANCH=${GST_UPSTREAM_BRANCH} -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
+    - echo "Building image $_UID"
+
+    - >
+      buildah bud
+      --build-arg DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH
+      --arch=${ARCH:=amd64}
+      --label ci.job_id=$CI_JOB_ID
+      --label pipeline.url=$CI_PIPELINE_URL
+      --label git.ref_name=$CI_COMMIT_REF_NAME
+      --label git.sha=$CI_COMMIT_SHA
+      --label gitlab.project_path=$CI_PROJECT_PATH
+      --label gitlab.project_url=$CI_PROJECT_URL
+      -f $DOCKERFILE
+      -t $IMAGE
+      $CONTEXT_DIR
+
+    - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
     # If we are in a fork, push the image to the reigstry regardless the branch
     - |
       if [ "$CI_PROJECT_NAMESPACE" != "gstreamer" ]; then
-        buildah login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        buildah push ${LATEST}
+        # Tag the image with the git ref
+        buildah tag $_UID $LATEST
+        # Only push the :latest so with each push the previous
+        # image in the forked registry gets overrwritten
+        # to avoid bloating the registry and making
+        # pruning easier for the gitlab admins
+        buildah push $LATEST
       fi
 
     # Push the images to the upstream registry
     - |
       if [ "$CI_PROJECT_NAMESPACE" = "gstreamer" ]; then
-        # Tag the image with the git ref
-        buildah tag ${LATEST} ${_UID}-${CI_COMMIT_REF_NAME}
-        # Push the tags
-        buildah login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        buildah push ${_UID}-${CI_COMMIT_REF_NAME}
-        buildah push ${LATEST}
+        buildah push $_UID
       fi
 
 alpine amd64 manifest builder docker:
   stage: "build docker"
   variables:
-    ARCH: "amd64"
     TAG: "build-manifest"
     CONTEXT_DIR: "docker/build_manifest/"
     DOCKERFILE: "docker/build_manifest/Dockerfile"
@@ -79,7 +95,6 @@ alpine amd64 manifest builder docker:
 test manifest amd64 docker:
   stage: "build docker"
   variables:
-    ARCH: "amd64"
     TAG: "test-manifest"
     CONTEXT_DIR: "docker/test_manifest/"
     DOCKERFILE: "docker/test_manifest/Dockerfile"
@@ -88,7 +103,6 @@ test manifest amd64 docker:
 gst-indent amd64 docker:
   stage: "build docker"
   variables:
-    ARCH: "amd64"
     TAG: "gst-indent"
     CONTEXT_DIR: "docker/indent/"
     DOCKERFILE: "docker/indent/Dockerfile"
@@ -97,7 +111,6 @@ gst-indent amd64 docker:
 fedora amd64 docker:
   stage: "build docker"
   variables:
-    ARCH: "amd64"
     TAG: "fedora"
     CONTEXT_DIR: "docker/fedora/"
     DOCKERFILE: "docker/fedora/Dockerfile"
@@ -106,7 +119,6 @@ fedora amd64 docker:
 cerbero fedora amd64 docker:
   stage: "build docker"
   variables:
-    ARCH: "amd64"
     TAG: "cerbero-fedora"
     CONTEXT_DIR: "docker/cerbero/"
     DOCKERFILE: "docker/cerbero/Dockerfile-fedora"
@@ -115,7 +127,6 @@ cerbero fedora amd64 docker:
 android docker:
   stage: "build docker"
   variables:
-    ARCH: "amd64"
     TAG: "android"
     CONTEXT_DIR: "docker/android/"
     DOCKERFILE: "docker/android/Dockerfile"
