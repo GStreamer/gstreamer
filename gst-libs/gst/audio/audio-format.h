@@ -341,7 +341,7 @@ void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info
     "S20BE, S20LE, U20BE, U20LE, " \
     "S18BE, S18LE, U18BE, U18LE, " \
     "S16BE, S16LE, U16BE, U16LE, " \
-    "S8,U8 }"
+    "S8, U8 }"
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GST_AUDIO_FORMATS_ALL "{ F64LE, F64BE, " \
     "F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, " \
