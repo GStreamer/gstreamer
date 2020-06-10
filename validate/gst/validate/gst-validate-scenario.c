@@ -1172,7 +1172,8 @@ _set_timed_value (GQuark field_id, const GValue * gvalue,
   const gchar *field = g_quark_to_string (field_id);
   const gchar *unused_fields[] =
       { "binding-type", "source-type", "interpolation-mode",
-    "timestamp", "__scenario__", "__action__", "__res__", NULL
+    "timestamp", "__scenario__", "__action__", "__res__", "repeat",
+    "sub-action", "playback-time", NULL
   };
 
   if (g_strv_contains (unused_fields, field))
@@ -1283,6 +1284,96 @@ _set_timed_value_property (GstValidateScenario * scenario,
 
   gst_structure_foreach (action->structure,
       (GstStructureForeachFunc) _set_timed_value, action->structure);
+  gst_structure_get_int (action->structure, "__res__", &res);
+  gst_structure_remove_fields (action->structure, "__action__", "__scenario__",
+      "__res__", NULL);
+
+  return res;
+}
+
+
+static GstValidateExecuteActionReturn
+_check_property (GstValidateScenario * scenario, GstValidateAction * action,
+    gpointer object, const gchar * propname, const GValue * expected_value)
+{
+  GValue cvalue = G_VALUE_INIT;
+
+  g_value_init (&cvalue, G_VALUE_TYPE (expected_value));
+  g_object_get_property (object, propname, &cvalue);
+
+  if (gst_value_compare (&cvalue, expected_value) != GST_VALUE_EQUAL) {
+    gchar *expected = gst_value_serialize (expected_value), *observed =
+        gst_value_serialize (&cvalue);
+
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "%" GST_PTR_FORMAT
+        "::%s expected value: '(%s)%s' different than observed: '(%s)%s'",
+        object, propname, G_VALUE_TYPE_NAME (&cvalue), expected,
+        G_VALUE_TYPE_NAME (expected_value), observed);
+
+    g_free (expected);
+    g_free (observed);
+
+    g_value_reset (&cvalue);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+  g_value_reset (&cvalue);
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+
+}
+
+static GstValidateExecuteActionReturn
+_set_or_check_properties (GQuark field_id, const GValue * value,
+    GstStructure * structure)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  GstValidateScenario *scenario;
+  GstValidateAction *action;
+  GstObject *obj = NULL;
+  GParamSpec *paramspec = NULL;
+  const gchar *field = g_quark_to_string (field_id);
+  const gchar *unused_fields[] = { "__scenario__", "__action__", "__res__",
+    "sub-action", "playback-time", "repeat", NULL
+  };
+
+  if (g_strv_contains (unused_fields, field))
+    return TRUE;
+
+  gst_structure_get (structure, "__scenario__", G_TYPE_POINTER, &scenario,
+      "__action__", G_TYPE_POINTER, &action, NULL);
+
+  obj = _get_target_object_property (scenario, action, field, &paramspec);
+  if (!obj || !paramspec) {
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+  if (gst_structure_has_name (action->structure, "set-properties"))
+    res = gst_validate_object_set_property (GST_VALIDATE_REPORTER (scenario),
+        G_OBJECT (obj), paramspec->name, value, action->priv->optional);
+  else
+    res = _check_property (scenario, action, obj, paramspec->name, value);
+
+done:
+  gst_clear_object (&obj);
+  if (!gst_structure_has_field (structure, "__res__")
+      || res != GST_VALIDATE_EXECUTE_ACTION_OK)
+    gst_structure_set (structure, "__res__", G_TYPE_INT, res, NULL);
+  return TRUE;
+}
+
+static GstValidateExecuteActionReturn
+_execute_set_or_check_properties (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+
+  gst_structure_set (action->structure, "__action__", G_TYPE_POINTER,
+      action, "__scenario__", G_TYPE_POINTER, scenario, NULL);
+
+  gst_structure_foreach (action->structure,
+      (GstStructureForeachFunc) _set_or_check_properties, action->structure);
   gst_structure_get_int (action->structure, "__res__", &res);
   gst_structure_remove_fields (action->structure, "__action__", "__scenario__",
       "__res__", NULL);
@@ -3101,26 +3192,8 @@ _execute_set_or_check_property (GstValidateScenario * scenario,
       if (!tmpres)
         ret = tmpres;
     } else {
-      GValue cvalue = G_VALUE_INIT;
-
-      g_value_init (&cvalue, G_VALUE_TYPE (property_value));
-      g_object_get_property (l->data, property, &cvalue);
-
-      if (gst_value_compare (&cvalue, property_value) != GST_VALUE_EQUAL) {
-        gchar *expected = gst_value_serialize (property_value), *observed =
-            gst_value_serialize (&cvalue);
-
-        GST_VALIDATE_REPORT_ACTION (scenario, action,
-            SCENARIO_ACTION_EXECUTION_ERROR,
-            "%s::%s expected value: '%s' different than observed: '%s'",
-            GST_OBJECT_NAME (l->data), property, expected, observed);
-
-        g_free (expected);
-        g_free (observed);
-
-        ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-      }
-      g_value_reset (&cvalue);
+      ret =
+          _check_property (scenario, action, l->data, property, property_value);
     }
   }
 
@@ -6289,6 +6362,26 @@ register_action_types (void)
         "    element-name.padname::property-name=new-value\n\n"
         "> NOTE: `.padname` is not needed if setting a property on an element\n\n"
         "This action also adds necessary control source/control bindings.\n",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("check-properties", _execute_set_or_check_properties,
+      ((GstValidateActionParameter []) {
+        {NULL}
+      }),
+        "Check elements and pads properties values.\n"
+        "The properties values to check will be defined as:\n\n"
+        "    element-name.padname::property-name\n\n"
+        "> NOTE: `.padname` is not needed if checking an element property\n\n",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("set-properties", _execute_set_or_check_properties,
+      ((GstValidateActionParameter []) {
+        {NULL}
+      }),
+        "Set elements and pads properties values.\n"
+        "The properties values to set will be defined as:\n\n"
+        "    element-name.padname::property-name\n\n"
+        "> NOTE: `.padname` is not needed if checking an element property\n\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_or_check_property,
