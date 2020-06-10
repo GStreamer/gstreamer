@@ -1186,7 +1186,7 @@ _set_timed_value (GQuark field_id, const GValue * gvalue,
   if (G_VALUE_HOLDS_DOUBLE (gvalue))
     value = g_value_get_double (gvalue);
   else if (G_VALUE_HOLDS_INT (gvalue))
-    value = g_value_get_int (gvalue);
+    value = (gdouble) g_value_get_int (gvalue);
   else {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
         "Invalid value type for property '%s': %s",
