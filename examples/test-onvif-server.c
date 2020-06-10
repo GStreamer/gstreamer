@@ -524,7 +524,7 @@ fail:
 
 struct _OnvifFactory
 {
-  GstRTSPMediaFactory parent;
+  GstRTSPOnvifMediaFactory parent;
 };
 
 G_DEFINE_TYPE (OnvifFactory, onvif_factory, GST_TYPE_RTSP_MEDIA_FACTORY);

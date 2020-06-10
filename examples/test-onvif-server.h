@@ -27,6 +27,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (ReplayBin, replay_bin, REPLAY, BIN, GstBin);
 
 G_DECLARE_FINAL_TYPE (OnvifFactory, onvif_factory, ONVIF, FACTORY,
-    GstRTSPMediaFactory);
+    GstRTSPOnvifMediaFactory);
 
 G_END_DECLS
