@@ -96,18 +96,20 @@ gst_aggregator_start_time_selection_get_type (void)
 {
   static GType gtype = 0;
 
-  if (gtype == 0) {
+  if (g_once_init_enter (&gtype)) {
     static const GEnumValue values[] = {
       {GST_AGGREGATOR_START_TIME_SELECTION_ZERO,
-          "Start at 0 running time (default)", "zero"},
+          "GST_AGGREGATOR_START_TIME_SELECTION_ZERO", "zero"},
       {GST_AGGREGATOR_START_TIME_SELECTION_FIRST,
-          "Start at first observed input running time", "first"},
+          "GST_AGGREGATOR_START_TIME_SELECTION_FIRST", "first"},
       {GST_AGGREGATOR_START_TIME_SELECTION_SET,
-          "Set start time with start-time property", "set"},
+          "GST_AGGREGATOR_START_TIME_SELECTION_SET", "set"},
       {0, NULL, NULL}
     };
+    GType new_type =
+        g_enum_register_static ("GstAggregatorStartTimeSelection", values);
 
-    gtype = g_enum_register_static ("GstAggregatorStartTimeSelection", values);
+    g_once_init_leave (&gtype, new_type);
   }
   return gtype;
 }
