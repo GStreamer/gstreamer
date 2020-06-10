@@ -4,7 +4,7 @@ set -eux
 # We need them to cleanly build our doc.
 sed -i "s/tsflags=nodocs//g" /etc/dnf/dnf.conf
 
-dnf install -y git-core ninja-build dnf-plugins-core
+dnf install -y git-core ninja-build dnf-plugins-core python3-pip
 
 # Configure git for various usage
 git config --global user.email "gst-build@gstreamer.net"
@@ -21,7 +21,6 @@ dnf upgrade -y
 dnf install -y \
     aalib-devel \
     aom \
-    aom-extra-tools \
     bat \
     libaom \
     libaom-devel \
@@ -47,6 +46,7 @@ dnf install -y \
     graphene-devel \
     gsl \
     gsl-devel \
+    faac-devel \
     ffmpeg \
     ffmpeg-libs \
     ffmpeg-devel \
@@ -184,7 +184,6 @@ dnf builddep -y gstreamer1 \
     gstreamer1-plugins-good-extras \
     gstreamer1-plugins-ugly \
     gstreamer1-plugins-ugly-free \
-    gstreamer1-plugins-bad-nonfree \
     gstreamer1-plugins-bad-free \
     gstreamer1-plugins-bad-free-extras \
     gstreamer1-plugins-bad-freeworld \
