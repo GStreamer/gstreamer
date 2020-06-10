@@ -56,6 +56,7 @@
 #include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
 #include "validate.h"
+#include <gst/controller/controller.h>
 #include <gst/validate/gst-validate-override.h>
 #include <gst/validate/gst-validate-override-registry.h>
 #include <gst/validate/gst-validate-pipeline-monitor.h>
@@ -641,8 +642,95 @@ _update_well_known_vars (GstValidateScenario * scenario)
   } else {
     GST_WARNING_OBJECT (scenario, "Could not query position");
   }
+}
 
-  gst_object_unref (pipeline);
+static GstElement *_get_target_element (GstValidateScenario * scenario,
+    GstValidateAction * action);
+
+static GstObject *
+_get_target_object_property (GstValidateScenario * scenario,
+    GstValidateAction * action, const gchar * property_path,
+    GParamSpec ** pspec)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gchar **elem_pad_name = NULL;
+  gchar **object_prop_name = NULL;
+  const gchar *elemname;
+  const gchar *propname;
+  const gchar *padname = NULL;
+  GstObject *target = NULL;
+
+  elem_pad_name = g_strsplit (property_path, ".", 2);
+  object_prop_name =
+      g_strsplit (elem_pad_name[1] ? elem_pad_name[1] : elem_pad_name[0], "::",
+      2);
+  REPORT_UNLESS (object_prop_name[1], err,
+      "Property specification %s is missing a `:propename` part",
+      property_path);
+  propname = object_prop_name[1];
+
+  if (elem_pad_name[1]) {
+    elemname = elem_pad_name[0];
+    padname = object_prop_name[0];
+  } else {
+    elemname = object_prop_name[0];
+  }
+
+  gst_structure_set (action->structure, "target-element-name", G_TYPE_STRING,
+      elemname, NULL);
+
+  target = (GstObject *) _get_target_element (scenario, action);
+  gst_structure_remove_field (action->structure, "target-element-name");
+  REPORT_UNLESS (target, err, "Target element with given name (%s) not found",
+      elemname);
+
+  if (padname) {
+    gboolean done = FALSE;
+    GstIterator *it = gst_element_iterate_pads (GST_ELEMENT (target));
+    GValue v = G_VALUE_INIT;
+
+    gst_clear_object (&target);
+    while (!done) {
+      switch (gst_iterator_next (it, &v)) {
+        case GST_ITERATOR_OK:{
+          GstPad *pad = g_value_get_object (&v);
+          gchar *name = gst_object_get_name (GST_OBJECT (pad));
+
+          if (!g_strcmp0 (name, padname)) {
+            done = TRUE;
+            gst_clear_object (&target);
+
+            target = gst_object_ref (pad);
+          }
+          g_free (name);
+          g_value_reset (&v);
+          break;
+        }
+        case GST_ITERATOR_RESYNC:
+          gst_iterator_resync (it);
+          break;
+        case GST_ITERATOR_ERROR:
+        case GST_ITERATOR_DONE:
+          done = TRUE;
+      }
+    }
+  }
+  REPORT_UNLESS (target, err, "Could not find pad: %s::%s", elemname, padname);
+
+  *pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (target), propname);
+
+  REPORT_UNLESS (*pspec, err,
+      "Could not find property from: %" GST_PTR_FORMAT ":%s", target, propname);
+  REPORT_UNLESS (res == GST_VALIDATE_EXECUTE_ACTION_OK, err, "Something fishy");
+
+done:
+  g_strfreev (elem_pad_name);
+  g_strfreev (object_prop_name);
+  return target;
+
+err:
+  gst_clear_object (&target);
+  goto done;
 }
 
 static gboolean
@@ -1066,6 +1154,140 @@ _execute_define_vars (GstValidateScenario * scenario,
       (GstStructureForeachFunc) _set_const_func, scenario->priv->vars);
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
+static GstValidateExecuteActionReturn
+_set_timed_value (GQuark field_id, const GValue * gvalue,
+    GstStructure * structure)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gdouble value;
+  GstClockTime timestamp;
+  GstTimedValueControlSource *source = NULL;
+  GstControlBinding *binding;
+  GstValidateScenario *scenario;
+  GstValidateAction *action;
+  GstObject *obj = NULL;
+  GParamSpec *paramspec = NULL;
+  const gchar *field = g_quark_to_string (field_id);
+  const gchar *unused_fields[] =
+      { "binding-type", "source-type", "interpolation-mode",
+    "timestamp", "__scenario__", "__action__", "__res__", NULL
+  };
+
+  if (g_strv_contains (unused_fields, field))
+    return TRUE;
+
+  gst_structure_get (structure, "__scenario__", G_TYPE_POINTER, &scenario,
+      "__action__", G_TYPE_POINTER, &action, NULL);
+
+
+  if (G_VALUE_HOLDS_DOUBLE (gvalue))
+    value = g_value_get_double (gvalue);
+  else if (G_VALUE_HOLDS_INT (gvalue))
+    value = g_value_get_int (gvalue);
+  else {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Invalid value type for property '%s': %s",
+        field, G_VALUE_TYPE_NAME (gvalue));
+    goto err;
+  }
+
+  obj = _get_target_object_property (scenario, action, field, &paramspec);
+  if (!obj || !paramspec) {
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto err;
+  }
+
+  REPORT_UNLESS (gst_validate_action_get_clocktime (scenario, action,
+          "timestamp", &timestamp), err,
+      "Could get timestamp on %" GST_PTR_FORMAT, action->structure);
+
+  binding = gst_object_get_control_binding (obj, paramspec->name);
+  if (!binding) {
+    guint mode;
+    GType source_type;
+    const gchar *interpolation_mode =
+        gst_structure_get_string (action->structure, "interpolation-mode");
+    const gchar *source_type_name =
+        gst_structure_get_string (action->structure, "source-type");
+
+    if (source_type_name) {
+      source_type = g_type_from_name (source_type_name);
+
+      REPORT_UNLESS (g_type_is_a (source_type,
+              GST_TYPE_TIMED_VALUE_CONTROL_SOURCE), err,
+          "Source type '%s' is not supported", source_type_name);
+    } else {
+      source_type = GST_TYPE_INTERPOLATION_CONTROL_SOURCE;
+    }
+
+    source = g_object_new (source_type, NULL);
+    gst_object_ref_sink (source);
+    if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
+      if (interpolation_mode)
+        REPORT_UNLESS (gst_validate_utils_enum_from_str
+            (GST_TYPE_INTERPOLATION_MODE, interpolation_mode, &mode), err,
+            "Could not convert interpolation-mode '%s'", interpolation_mode);
+
+      else
+        mode = GST_INTERPOLATION_MODE_LINEAR;
+
+      g_object_set (source, "mode", mode, NULL);
+    }
+
+    if (!g_strcmp0 (gst_structure_get_string (action->structure,
+                "binding-type"), "direct-absolute")) {
+      binding =
+          gst_direct_control_binding_new_absolute (obj, paramspec->name,
+          GST_CONTROL_SOURCE (source));
+    } else {
+      binding =
+          gst_direct_control_binding_new (obj, paramspec->name,
+          GST_CONTROL_SOURCE (source));
+    }
+
+    gst_object_add_control_binding (obj, binding);
+  } else {
+    g_object_get (binding, "control-source", &source, NULL);
+  }
+
+  REPORT_UNLESS (GST_IS_TIMED_VALUE_CONTROL_SOURCE (source), err,
+      "Could not find timed value control source on %s", field);
+
+  REPORT_UNLESS (gst_timed_value_control_source_set (source, timestamp, value),
+      err, "Could not set %s=%f at %" GST_TIME_FORMAT, field, value,
+      GST_TIME_ARGS (timestamp));
+
+  gst_object_unref (obj);
+  gst_structure_set (structure, "__res__", G_TYPE_INT, res, NULL);
+
+  return TRUE;
+
+err:
+  gst_clear_object (&obj);
+  gst_structure_set (structure, "__res__", G_TYPE_INT,
+      GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED, NULL);
+
+  return FALSE;
+}
+
+static GstValidateExecuteActionReturn
+_set_timed_value_property (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+
+  gst_structure_set (action->structure, "__action__", G_TYPE_POINTER,
+      action, "__scenario__", G_TYPE_POINTER, scenario, NULL);
+
+  gst_structure_foreach (action->structure,
+      (GstStructureForeachFunc) _set_timed_value, action->structure);
+  gst_structure_get_int (action->structure, "__res__", &res);
+  gst_structure_remove_fields (action->structure, "__action__", "__scenario__",
+      "__res__", NULL);
+
+  return res;
 }
 
 static GstValidateExecuteActionReturn
@@ -2479,9 +2701,6 @@ stop_waiting (GstValidateAction * action)
 
   return G_SOURCE_REMOVE;
 }
-
-static GstElement *_get_target_element (GstValidateScenario * scenario,
-    GstValidateAction * action);
 
 static void
 stop_waiting_signal (GstStructure * data)
@@ -6029,6 +6248,47 @@ register_action_types (void)
       " set-vars, frame1=SomeRandomHash1,frame2=Anotherhash...\n"
       " check-last-sample, checksum=frame1\n"
       "```\n",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  GST_TYPE_INTERPOLATION_CONTROL_SOURCE;
+  GST_TYPE_TRIGGER_CONTROL_SOURCE;
+  REGISTER_ACTION_TYPE ("set-timed-value-properties", _set_timed_value_property,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "binding-type",
+          .description = "The name of the type of binding to use",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "direct",
+        },
+        {
+          .name = "source-type",
+          .description = "The name of the type of ControlSource to use",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "GstInterpolationControlSource",
+        },
+        {
+          .name = "interpolation-mode",
+          .description = "The name of the GstInterpolationMode to on the source",
+          .types = "string",
+          .mandatory = FALSE,
+          .def = "linear",
+        },
+        {
+          .name = "timestamp",
+          .description = "The timestamp of the keyframe",
+          .types = "string or float (GstClockTime)",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }),
+        "Sets GstTimedValue on pads on elements properties using GstControlBindings \n"
+        "and GstControlSource as defined in the parameters.\n"
+        "The properties values to set will be defined as:\n\n"
+        "    element-name.padname::property-name=new-value\n\n"
+        "> NOTE: `.padname` is not needed if setting a property on an element\n\n"
+        "This action also adds necessary control source/control bindings.\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_or_check_property,

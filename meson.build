@@ -67,6 +67,8 @@ gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_re
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
+gst_controller_dep = dependency('gstreamer-controller-' + apiversion, version : gst_req,
+    fallback : ['gstreamer', 'gst_controller_dep'])
 gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
   required : get_option('validate'),
   fallback : ['gstreamer', 'gst_check_dep'])

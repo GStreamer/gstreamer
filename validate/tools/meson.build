@@ -2,24 +2,22 @@ executable('gst-validate-' + apiversion,
            'gst-validate.c',
             install: true,
             include_directories : inc_dirs,
-            dependencies : [gst_dep, glib_dep, gst_pbutils_dep, gio_dep],
+            dependencies : validate_dep,
             c_args : [gst_c_args],
-            link_with : [gstvalidate]
           )
 executable('gst-validate-transcoding-' + apiversion,
-           'gst-validate-transcoding.c',            install: true,
+           'gst-validate-transcoding.c',
+            install: true,
             include_directories : inc_dirs,
-            dependencies : [gst_dep, glib_dep, gst_pbutils_dep, gst_video_dep, gio_dep],
+            dependencies : validate_dep,
             c_args : [gst_c_args],
-            link_with : [gstvalidate]
           )
 executable('gst-validate-media-check-' + apiversion,
            'gst-validate-media-check.c',
             install: true,
             include_directories : inc_dirs,
-            dependencies : [gst_dep, glib_dep, gst_pbutils_dep, gio_dep],
+            dependencies : validate_dep,
             c_args : [gst_c_args],
-            link_with : [gstvalidate]
         )
 
 rtsp_server_dep = dependency('gstreamer-rtsp-server-' + apiversion,
@@ -32,20 +30,19 @@ if rtsp_server_dep.found()
                'gst-validate-rtsp-server.c',
                install: true,
                include_directories: inc_dirs,
-               dependencies: [rtsp_server_dep, gst_dep, glib_dep],
+               dependencies : [rtsp_server_dep, validate_dep],
                c_args: [gst_c_args],
-               link_with: [gstvalidate]
     )
 endif
 
 if cairo_dep.found()
     executable('gst-validate-images-check-' + apiversion,
-            'gst-validate-images-check.c',
+               'gst-validate-images-check.c',
                 install: true,
                 include_directories : inc_dirs,
-                dependencies : [gst_dep, glib_dep, gst_pbutils_dep, gio_dep],
+                dependencies : validate_dep,
                 c_args : [gst_c_args],
-                link_with : [gstvalidate, video]
+                link_with: [video],
             )
 endif
 
