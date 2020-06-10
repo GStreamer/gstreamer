@@ -1165,12 +1165,24 @@ gst_wasapi2_client_initialize_audio_client (GstWasapi2Client * self,
 
   rate = GST_AUDIO_INFO_RATE (&spec->info);
 
-  /* Clamp values to integral multiples of an appropriate period */
-  gst_wasapi2_util_get_best_buffer_sizes (spec,
-      default_period, min_period, &device_period, &device_buffer_duration);
+  if (self->low_latency) {
+    device_period = default_period;
+    /* this should be same as hnsPeriodicity
+     * when AUDCLNT_STREAMFLAGS_EVENTCALLBACK is used
+     * And in case of shared mode, hnsPeriodicity should be zero, so
+     * this value should be zero as well */
+    device_buffer_duration = 0;
+  } else {
+    /* Clamp values to integral multiples of an appropriate period */
+    gst_wasapi2_util_get_best_buffer_sizes (spec,
+        default_period, min_period, &device_period, &device_buffer_duration);
+  }
 
   hr = audio_client->Initialize (AUDCLNT_SHAREMODE_SHARED, stream_flags,
-      device_buffer_duration, 0, self->mix_format, nullptr);
+      device_buffer_duration,
+      /* This must always be 0 in shared mode */
+      0,
+      self->mix_format, nullptr);
   if (!gst_wasapi2_result (hr)) {
     GST_WARNING_OBJECT (self, "Couldn't initialize audioclient");
     return FALSE;
@@ -1220,7 +1232,14 @@ gst_wasapi2_client_open (GstWasapi2Client * client, GstAudioRingBufferSpec * spe
    * https://bugzilla.gnome.org/show_bug.cgi?id=794497 */
   if (client->low_latency)
     initialized = gst_wasapi2_client_initialize_audio_client3 (client);
-  else
+
+  /* Try again if IAudioClinet3 API is unavailable.
+   * NOTE: IAudioClinet3:: methods might not be available for default device
+   * NOTE: The default device is a special device which is needed for supporting
+   * automatic stream routing
+   * https://docs.microsoft.com/en-us/windows/win32/coreaudio/automatic-stream-routing
+   */
+  if (!initialized)
     initialized = gst_wasapi2_client_initialize_audio_client (client, spec);
 
   if (!initialized) {
