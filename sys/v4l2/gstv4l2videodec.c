@@ -1050,7 +1050,7 @@ gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
 
-  gst_element_class_set_static_metadata (element_class, cdata->longname,
+  gst_element_class_set_metadata (element_class, cdata->longname,
       "Codec/Decoder/Video/Hardware", cdata->description,
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 

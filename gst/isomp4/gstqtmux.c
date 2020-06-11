@@ -459,7 +459,7 @@ gst_qt_mux_base_init (gpointer g_class)
   longname = g_strdup_printf ("%s Muxer", params->prop->long_name);
   description = g_strdup_printf ("Multiplex audio and video into a %s file",
       params->prop->long_name);
-  gst_element_class_set_static_metadata (element_class, longname,
+  gst_element_class_set_metadata (element_class, longname,
       "Codec/Muxer", description,
       "Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>");
   g_free (longname);
