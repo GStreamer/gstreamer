@@ -106,7 +106,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
     gst_element_class_add_static_pad_template (element_class, &src_template);
     gst_element_class_add_static_pad_template (element_class, &sink_template);
 
-    gst_element_class_set_static_metadata (element_class,
+    gst_element_class_set_metadata (element_class,
         longname, "Visualization",
         klass->plugin->info->about, "Benjamin Otte <otte@gnome.org>");
 
