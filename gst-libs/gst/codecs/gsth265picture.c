@@ -171,6 +171,7 @@ gst_h265_dpb_free (GstH265Dpb * dpb)
   g_return_if_fail (dpb != NULL);
 
   gst_h265_dpb_clear (dpb);
+  g_array_unref (dpb->pic_list);
   g_free (dpb);
 }
 
