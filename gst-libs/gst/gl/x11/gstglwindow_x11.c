@@ -450,8 +450,8 @@ draw_cb (gpointer data)
     GST_TRACE_OBJECT (window, "window size %ux%u", attr.width, attr.height);
 
     if (window_x11->parent_win &&
-        (window_x11->priv->render_rect.w < 0 ||
-            window_x11->priv->render_rect.h < 0)) {
+        (window_x11->priv->render_rect.w <= 0 ||
+            window_x11->priv->render_rect.h <= 0)) {
       XWindowAttributes attr_parent;
       XGetWindowAttributes (window_x11->device, window_x11->parent_win,
           &attr_parent);
