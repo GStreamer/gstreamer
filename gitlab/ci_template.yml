@@ -1,3 +1,6 @@
+include:
+  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/7ea696055e322cc7aa4bcbe5422b56a198c4bdff/templates/ci-fairy.yml"
+
 stages:
   - 'build docker'
   - 'preparation'
@@ -387,6 +390,18 @@ gst indent:
           echo 'style diverges, please run gst-indent first'
           exit 1
       fi
+
+#
+# Check commit messages with ci-fairy
+#
+check commits:
+  extends: '.fdo.ci-fairy'
+  needs: []
+  stage: 'preparation'
+  variables:
+    GIT_STRATEGY: 'fetch'
+  script:
+    - ci-fairy check-commits --textwidth 0 --no-signed-off-by
 
 #
 # gst-build setup templates
