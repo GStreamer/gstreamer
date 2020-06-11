@@ -37,7 +37,7 @@ GStreamer modules and certain dependencies in one go.
 First clone `gst-build`:
 
 ``` shell
-git clone https://gitlab.freedesktop.org:gstreamer/gst-build.git
+git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git
 cd gst-build
 ```
 
