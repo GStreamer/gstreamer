@@ -228,13 +228,13 @@
  * ## GstVideoOverlay and Qt
  *
  * |[
- * #include &lt;glib.h&gt;
- * #include &lt;gst/gst.h&gt;
- * #include &lt;gst/video/videooverlay.h&gt;
+ * #include <glib.h>;
+ * #include <gst/gst.h>;
+ * #include <gst/video/videooverlay.h>;
  *
- * #include &lt;QApplication&gt;
- * #include &lt;QTimer&gt;
- * #include &lt;QWidget&gt;
+ * #include <QApplication>;
+ * #include <QTimer>;
+ * #include <QWidget>;
  *
  * int main(int argc, char *argv[])
  * {
