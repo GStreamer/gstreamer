@@ -900,6 +900,7 @@ static void
 gst_vaapi_display_destroy (GstVaapiDisplay * display)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
+  GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
 
   g_clear_pointer (&priv->decoders, g_ptr_array_unref);
   g_clear_pointer (&priv->encoders, g_ptr_array_unref);
@@ -914,11 +915,8 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
     priv->display = NULL;
   }
 
-  if (!priv->use_foreign_display) {
-    GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
-    if (klass->close_display)
-      klass->close_display (display);
-  }
+  if (klass->close_display)
+    klass->close_display (display);
 
   g_clear_pointer (&priv->display_name, g_free);
   g_clear_pointer (&priv->vendor_string, g_free);
