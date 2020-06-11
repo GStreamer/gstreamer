@@ -427,8 +427,14 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   src_peer_caps = gst_pad_peer_query_caps (interlace->srcpad, othercaps);
   gst_caps_unref (othercaps);
   othercaps = gst_caps_fixate (src_peer_caps);
-  if (!gst_video_info_from_caps (&out_info, othercaps))
+  if (gst_caps_is_empty (othercaps)) {
+    gst_caps_unref (othercaps);
     goto caps_error;
+  }
+  if (!gst_video_info_from_caps (&out_info, othercaps)) {
+    gst_caps_unref (othercaps);
+    goto caps_error;
+  }
 
   alternate =
       GST_VIDEO_INFO_INTERLACE_MODE (&out_info) ==
