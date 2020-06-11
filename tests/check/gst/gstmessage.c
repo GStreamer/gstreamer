@@ -612,6 +612,21 @@ GST_START_TEST (test_parsing)
     gst_structure_free (test_structure);
     gst_tag_list_unref (test_tag_list);
   }
+  /* GST_MESSAGE_RATE_CHANGE */
+  {
+    gdouble rate_multiplier;
+
+    message = gst_message_new_instant_rate_request (NULL, 1.5);
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) ==
+        GST_MESSAGE_INSTANT_RATE_REQUEST);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    gst_message_parse_instant_rate_request (message, &rate_multiplier);
+    fail_unless (rate_multiplier == 1.5);
+
+    gst_message_unref (message);
+  }
 }
 
 GST_END_TEST;
