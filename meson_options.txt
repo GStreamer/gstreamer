@@ -87,5 +87,3 @@ option('package-origin', type : 'string', value : 'Unknown package origin', yiel
        description : 'package origin URL to use in plugins')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
-option('validate', type : 'feature', value : 'auto', yield: true,
-       description: 'Enable validate tests.')

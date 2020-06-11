@@ -1,7 +1,13 @@
 if gst_dep.type_name() == 'internal'
-    gst_tester = gst_proj.get_variable('gst_tester')
+    gst_tester = gst_proj.get_variable('gst_tester', false)
+    if gst_tester == false
+        if get_option('tests').enabled()
+            error('Tests are enabled for gst-plugins-base but were not enabled for the gstreamer subproject')
+        endif
+        subdir_done()
+    endif
 else
-    gst_tester = find_program('gst-tester-@0@'.format(api_version), required: get_option('validate'))
+    gst_tester = find_program('gst-tester-@0@'.format(api_version), required: get_option('tests'))
     if not gst_tester.found()
         subdir_done()
     endif
