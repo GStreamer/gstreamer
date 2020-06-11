@@ -16,6 +16,7 @@ option('gst-full-libraries', type : 'array', value : [],
   description : '''List of libraries to expose in gstreamer-full's ABI. gstreamer, glib and gobject are always included.''')
 
 # Common options, automatically inherited by subprojects
+option('tests', type : 'feature', value : 'auto', description : 'Build tests')
 option('examples', type : 'feature', value : 'auto', description : 'Build examples')
 option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
 option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
