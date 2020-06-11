@@ -429,6 +429,53 @@ GST_START_TEST (create_events)
     gst_event_unref (event);
     gst_event_unref (event2);
   }
+
+  /* GST_EVENT_INSTANT_RATE_CHANGE */
+  {
+    GstSeekFlags flags = GST_SEEK_FLAG_INSTANT_RATE_CHANGE;
+    GstSegmentFlags new_flags;
+    gdouble rate_multiplier;
+
+    event = gst_event_new_instant_rate_change (1.5, (GstSegmentFlags) flags);
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_CHANGE);
+    fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
+    fail_unless (GST_EVENT_IS_STICKY (event));
+
+    gst_event_parse_instant_rate_change (event, &rate_multiplier, &new_flags);
+    fail_unless (rate_multiplier == 1.5);
+    fail_unless (new_flags == (flags & GST_SEGMENT_INSTANT_FLAGS));
+
+    gst_event_unref (event);
+  }
+
+  /* GST_EVENT_INSTANT_RATE_SYNC_TIME */
+  {
+    GstClockTime running_time;
+    GstClockTime upstream_running_time;
+    gdouble rate_multiplier;
+
+    running_time = 1 * GST_SECOND;
+    upstream_running_time = 2 * GST_SECOND;
+
+    event =
+        gst_event_new_instant_rate_sync_time (1.5, running_time,
+        upstream_running_time);
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_SYNC_TIME);
+    fail_unless (GST_EVENT_IS_UPSTREAM (event));
+
+    /* set some wrong values to check if the parse method overwrites them
+     * with the good values */
+    running_time = upstream_running_time = 3 * GST_SECOND;
+    gst_event_parse_instant_rate_sync_time (event, &rate_multiplier,
+        &running_time, &upstream_running_time);
+    fail_unless (rate_multiplier == 1.5);
+    fail_unless (running_time == 1 * GST_SECOND);
+    fail_unless (upstream_running_time == 2 * GST_SECOND);
+
+    gst_event_unref (event);
+  }
 }
 
 GST_END_TEST;
