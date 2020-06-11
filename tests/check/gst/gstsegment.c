@@ -675,6 +675,19 @@ GST_START_TEST (segment_seek_noupdate)
   fail_unless_equals_uint64 (segment.position, 50);
   fail_unless_equals_uint64 (segment.base, 0);
   fail_unless_equals_uint64 (segment.offset, 50);
+
+  /* FALSE should be returned when GST_SEEK_FLAG_INSTANT_RATE_CHANGE */
+  fail_unless (gst_segment_do_seek (&segment, 1.5,
+          GST_FORMAT_TIME,
+          GST_SEEK_FLAG_INSTANT_RATE_CHANGE,
+          GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0, NULL) == FALSE);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless_equals_uint64 (segment.start, 0);
+  fail_unless_equals_uint64 (segment.stop, 200);
+  fail_unless_equals_uint64 (segment.time, 0);
+  fail_unless_equals_uint64 (segment.position, 50);
+  fail_unless_equals_uint64 (segment.base, 0);
+  fail_unless_equals_uint64 (segment.offset, 50);
 }
 
 GST_END_TEST;
