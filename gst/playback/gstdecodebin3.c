@@ -1167,7 +1167,7 @@ update_requested_selection (GstDecodebin3 * dbin)
       GstStreamType curtype = gst_stream_get_stream_type (stream);
       if (!(used_types & curtype)) {
         const gchar *sid = gst_stream_get_stream_id (stream);
-        GST_ERROR_OBJECT (dbin, "Selecting stream '%s' of type %s",
+        GST_DEBUG_OBJECT (dbin, "Selecting stream '%s' of type %s",
             sid, gst_stream_type_get_name (curtype));
         tmp = g_list_append (tmp, (gchar *) sid);
         used_types |= curtype;
