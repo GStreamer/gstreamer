@@ -41,6 +41,7 @@ subprojects/dssim
 subprojects/gtk-sharp
 subprojects/libffi
 subprojects/libnice
+subprojects/libpsl
 subprojects/libunwind
 subprojects/proxy-libintl
 subprojects/zlib

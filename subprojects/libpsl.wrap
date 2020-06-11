@@ -1,5 +1,5 @@
 [wrap-git]
 directory=libpsl
 url=https://github.com/rockdaboot/libpsl.git
-revision=master
+revision=72365d3036e6e3ffde33daefbeb7a885e38b19d7
 clone-recursive=true

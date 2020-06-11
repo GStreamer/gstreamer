@@ -1,4 +1,4 @@
 [wrap-git]
 directory=bindinator
 url=https://github.com/GLibSharp/bindinator.git
-revision=master
+revision=063a3750bd4bea8c7984e8955989aaf372d3a39b
