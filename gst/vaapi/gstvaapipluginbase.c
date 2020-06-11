@@ -314,6 +314,7 @@ void
 gst_vaapi_plugin_base_finalize (GstVaapiPluginBase * plugin)
 {
   gst_vaapi_plugin_base_close (plugin);
+  gst_vaapi_display_replace (&plugin->display, NULL);
   g_free (plugin->display_name);
 
   if (plugin->sinkpriv)
@@ -339,6 +340,7 @@ gst_vaapi_plugin_base_finalize (GstVaapiPluginBase * plugin)
 gboolean
 gst_vaapi_plugin_base_open (GstVaapiPluginBase * plugin)
 {
+  gst_caps_replace (&plugin->allowed_raw_caps, NULL);
   return TRUE;
 }
 
@@ -355,7 +357,6 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
   /* Release vaapi textures first if exist, which refs display object */
   plugin_reset_texture_map (plugin);
 
-  gst_vaapi_display_replace (&plugin->display, NULL);
   gst_object_replace (&plugin->gl_context, NULL);
   gst_object_replace (&plugin->gl_display, NULL);
   gst_object_replace (&plugin->gl_other_context, NULL);
