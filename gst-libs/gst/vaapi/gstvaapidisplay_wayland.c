@@ -122,8 +122,10 @@ registry_handle_global (void *data,
         wl_registry_bind (registry, id, &xdg_wm_base_interface, 1);
     xdg_wm_base_add_listener (priv->xdg_wm_base, &xdg_wm_base_listener, priv);
   } else if (strcmp (interface, "wl_output") == 0) {
-    priv->output = wl_registry_bind (registry, id, &wl_output_interface, 1);
-    wl_output_add_listener (priv->output, &output_listener, priv);
+    if (!priv->output) {
+      priv->output = wl_registry_bind (registry, id, &wl_output_interface, 1);
+      wl_output_add_listener (priv->output, &output_listener, priv);
+    }
   }
 }
 
