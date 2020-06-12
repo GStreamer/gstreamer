@@ -223,7 +223,7 @@ filter_edges (guint8 * dst,
     const int colors, int y_alternates_every)
 {
   int x;
-  const int edge = colors * (MAX_ALIGN / bpp - 1);
+  const int edge = colors * (MAX_ALIGN / bpp);
   const int border = 3 * colors;
 
   /* Only edge pixels need to be processed here.  A constant value of false
@@ -283,7 +283,7 @@ filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
   guint8 *dst = out;
   const int bpp = 1;            // Hard code 8-bit atm
   int w = size / bpp;
-  int edge = colors * MAX_ALIGN / bpp - 1;
+  int edge = colors * MAX_ALIGN / bpp;
   GstDeinterlaceScanlineData s = *s_orig;
 
   int mode = (s.tt1 == NULL || s.bb1 == NULL || s.ttp == NULL
