@@ -2044,51 +2044,58 @@ _execute_switch_track (GstValidateScenario * scenario,
 }
 
 static GstValidateExecuteActionReturn
-_execute_set_rank (GstValidateScenario * scenario, GstValidateAction * action)
+_execute_set_rank_or_disable_feature (GstValidateScenario * scenario,
+    GstValidateAction * action)
 {
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   guint rank;
   GList *features, *origlist;
   GstPlugin *plugin;
   GstPluginFeature *feature;
   const gchar *name;
+  gboolean removing_feature =
+      gst_structure_has_name (action->structure, "remove-plugin-feature");
+  GstRegistry *registry = gst_registry_get ();
 
-  if (!(name = gst_structure_get_string (action->structure, "feature-name")) &&
-      !(name = gst_structure_get_string (action->structure, "name"))) {
-    GST_ERROR ("Could not find the name of the plugin feature(s) to tweak");
+  REPORT_UNLESS (
+      (name = gst_structure_get_string (action->structure, "feature-name")) ||
+      (name = gst_structure_get_string (action->structure, "name")), done,
+      "Could not find the name of the plugin/feature(s) to tweak");
 
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-  }
+  if (removing_feature)
+    REPORT_UNLESS (
+        (gst_structure_get_uint (action->structure, "rank", &rank)) ||
+        (gst_structure_get_int (action->structure, "rank", (gint *) & rank)),
+        done, "Could not get rank to set on %s", name);
 
-  if (!(gst_structure_get_uint (action->structure, "rank", &rank) ||
-          gst_structure_get_int (action->structure, "rank", (gint *) & rank))) {
-    GST_ERROR ("Could not get rank to set on %s", name);
-
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-  }
-
-  feature = gst_registry_lookup_feature (gst_registry_get (), name);
+  feature = gst_registry_lookup_feature (registry, name);
   if (feature) {
-    gst_plugin_feature_set_rank (feature, rank);
+    if (removing_feature)
+      gst_plugin_feature_set_rank (feature, rank);
+    else
+      gst_registry_remove_feature (registry, feature);
     gst_object_unref (feature);
 
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
+    goto done;
   }
 
-  plugin = gst_registry_find_plugin (gst_registry_get (), name);
-  if (!plugin) {
-    GST_ERROR ("Could not find %s", name);
+  REPORT_UNLESS ((plugin = gst_registry_find_plugin (registry, name)),
+      done, "Could not find %s", name);
 
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  if (removing_feature) {
+    gst_registry_remove_plugin (registry, plugin);
+    goto done;
   }
 
   origlist = features =
-      gst_registry_get_feature_list_by_plugin (gst_registry_get (),
+      gst_registry_get_feature_list_by_plugin (registry,
       gst_plugin_get_name (plugin));
   for (; features; features = features->next)
     gst_plugin_feature_set_rank (features->data, rank);
   gst_plugin_feature_list_free (origlist);
 
-  return GST_VALIDATE_EXECUTE_ACTION_OK;
+done:
+  return res;
 }
 
 static inline gboolean
@@ -6258,7 +6265,7 @@ register_action_types (void)
       "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
-  REGISTER_ACTION_TYPE ("set-rank", _execute_set_rank,
+  REGISTER_ACTION_TYPE ("set-rank", _execute_set_rank_or_disable_feature,
       ((GstValidateActionParameter []) {
         {
           .name = "name",
@@ -6277,7 +6284,21 @@ register_action_types (void)
       "Changes the ranking of a particular plugin feature(s)",
       GST_VALIDATE_ACTION_TYPE_CONFIG);
 
-  REGISTER_ACTION_TYPE ("set-feature-rank", _execute_set_rank,
+  REGISTER_ACTION_TYPE ("remove-feature", _execute_set_rank_or_disable_feature,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "name",
+          .description = "The name of a GstFeature or GstPlugin to remove",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      }),
+      "Remove a plugin feature(s) or a plugin from the registry",
+      GST_VALIDATE_ACTION_TYPE_CONFIG);
+
+  REGISTER_ACTION_TYPE ("set-feature-rank", _execute_set_rank_or_disable_feature,
       ((GstValidateActionParameter []) {
         {
           .name = "feature-name",
