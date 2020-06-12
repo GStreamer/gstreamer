@@ -740,6 +740,8 @@ gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
   gboolean ret;
   gint i;
 
+  GST_LOG_OBJECT (self, "Copy to fallback buffer");
+
   if (!gst_video_frame_map (&in_frame, &self->info, inbuf,
           GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
     goto invalid_buffer;
@@ -844,6 +846,18 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       GST_ERROR_OBJECT (self, "fallback pool is unavailable");
 
       return GST_FLOW_ERROR;
+    }
+
+    for (i = 0; i < gst_buffer_n_memory (render_buf); i++) {
+      GstD3D11Memory *dmem;
+
+      dmem = (GstD3D11Memory *) gst_buffer_peek_memory (render_buf, i);
+      if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
+        GST_ERROR_OBJECT (self, "fallback shader resource view is unavailable");
+        gst_buffer_unref (render_buf);
+
+        return GST_FLOW_ERROR;
+      }
     }
 
     if (!gst_d3d11_video_sink_upload_frame (self, buf, render_buf)) {
