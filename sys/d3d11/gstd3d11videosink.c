@@ -784,6 +784,45 @@ invalid_buffer:
   }
 }
 
+static gboolean
+gst_d3d11_video_sink_copy_d3d11_to_d3d11 (GstD3D11VideoSink * self,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  gint i;
+  ID3D11DeviceContext *context_handle =
+      gst_d3d11_device_get_device_context_handle (self->device);
+
+  g_return_val_if_fail (gst_buffer_n_memory (inbuf) ==
+      gst_buffer_n_memory (outbuf), FALSE);
+
+  GST_LOG_OBJECT (self, "Copy to fallback buffer using device memory copy");
+
+  gst_d3d11_device_lock (self->device);
+  for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
+    GstD3D11Memory *in_mem =
+        (GstD3D11Memory *) gst_buffer_peek_memory (inbuf, i);
+    GstD3D11Memory *out_mem =
+        (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
+    D3D11_BOX src_box;
+
+    /* input buffer might be larger than render size */
+    src_box.left = 0;
+    src_box.top = 0;
+    src_box.front = 0;
+    src_box.back = 1;
+    src_box.right = out_mem->desc.Width;
+    src_box.bottom = out_mem->desc.Height;
+
+    ID3D11DeviceContext_CopySubresourceRegion (context_handle,
+        (ID3D11Resource *) out_mem->texture, 0, 0, 0, 0,
+        (ID3D11Resource *) in_mem->texture, in_mem->subresource_index,
+        &src_box);
+  }
+  gst_d3d11_device_unlock (self->device);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
@@ -793,6 +832,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   GstVideoRectangle rect = { 0, };
   GstBuffer *render_buf;
   gboolean need_unref = FALSE;
+  gboolean do_device_copy = TRUE;
   gint i;
 
   render_buf = buf;
@@ -805,6 +845,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     if (!gst_is_d3d11_memory (mem)) {
       GST_LOG_OBJECT (sink, "not a d3d11 memory, need fallback");
       render_buf = NULL;
+      do_device_copy = FALSE;
       break;
     }
 
@@ -812,6 +853,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     if (dmem->device != self->device) {
       GST_LOG_OBJECT (sink, "different d3d11 device, need fallback");
       render_buf = NULL;
+      do_device_copy = FALSE;
       break;
     }
 
@@ -834,7 +876,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       GST_LOG_OBJECT (sink,
           "shader resource view is unavailable, need fallback");
       render_buf = NULL;
-      break;
+      /* keep run loop in order to upload staging memory to device memory */
     }
   }
 
@@ -860,7 +902,14 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       }
     }
 
-    if (!gst_d3d11_video_sink_upload_frame (self, buf, render_buf)) {
+    if (do_device_copy) {
+      if (!gst_d3d11_video_sink_copy_d3d11_to_d3d11 (self, buf, render_buf)) {
+        GST_ERROR_OBJECT (self, "cannot copy frame");
+        gst_buffer_unref (render_buf);
+
+        return GST_FLOW_ERROR;
+      }
+    } else if (!gst_d3d11_video_sink_upload_frame (self, buf, render_buf)) {
       GST_ERROR_OBJECT (self, "cannot upload frame");
       gst_buffer_unref (render_buf);
 
