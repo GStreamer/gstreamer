@@ -555,6 +555,8 @@ void GstQuickRenderer::ensureFbo()
 void
 GstQuickRenderer::renderGstGL ()
 {
+    const GstGLFuncs *gl = gl_context->gl_vtable;
+
     GST_TRACE ("%p current QOpenGLContext %p", this,
         QOpenGLContext::currentContext());
     m_quickWindow->resetOpenGLState();
@@ -585,6 +587,11 @@ GstQuickRenderer::renderGstGL ()
     gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (gl_allocator, gl_params);
 
     m_fbo = nullptr;
+
+    m_quickWindow->resetOpenGLState ();
+    /* Qt doesn't seem to reset this, breaking glimagesink */
+    if (gl->DrawBuffer)
+      gl->DrawBuffer (GL_BACK);
 }
 
 GstGLMemory *GstQuickRenderer::generateOutput(GstClockTime input_ns)
