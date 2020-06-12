@@ -680,7 +680,11 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
    * But... where it is? */
   switch (codec) {
     case GST_D3D11_CODEC_H265:
-      alignment = 128;
+      /* See directx_va_Setup() impl. in vlc */
+      if (!gst_d3d11_is_xbox_device (priv->device))
+        alignment = 128;
+      else
+        alignment = 16;
       break;
     default:
       alignment = 16;
