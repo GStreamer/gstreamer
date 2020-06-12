@@ -342,6 +342,27 @@ gst_d3d11_is_windows_8_or_greater (void)
   return ret;
 }
 
+gboolean
+gst_d3d11_is_xbox_device (GstD3D11Device * device)
+{
+  guint device_id = 0;
+  guint vendor_id = 0;
+  gchar *desc = NULL;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+
+  g_object_get (device, "device-id", &device_id, "vendor-id", &vendor_id,
+      "description", &desc, NULL);
+
+  if (device_id == 0 && vendor_id == 0 && desc && g_strrstr (desc, "SraKmd"))
+    ret = TRUE;
+
+  g_free (desc);
+
+  return ret;
+}
+
 static gchar *
 gst_d3d11_hres_to_string (HRESULT hr)
 {
