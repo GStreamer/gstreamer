@@ -1689,7 +1689,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Check if caps have changed */
   if (G_UNLIKELY (codec_tag != demux->video_codec_tag || demux->got_par)) {
-    GST_ERROR_OBJECT (demux, "video settings have changed, changing caps");
+    GST_DEBUG_OBJECT (demux, "video settings have changed, changing caps");
     if (codec_tag != demux->video_codec_tag)
       gst_buffer_replace (&demux->video_codec_data, NULL);
 
