@@ -63,7 +63,7 @@ gio open build/subprojects/gst-docs/GStreamer-doc/html/index.html
 You can also generate a release tarball of the portal with:
 
 ```
-ninja -C build gst-docs@release
+ninja -C build gst-docs@@release
 ```
 
 ### Adding a newly written plugin to the documentation
