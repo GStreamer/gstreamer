@@ -1,5 +1,6 @@
 subdir('cocoa')
 subdir('generic')
 subdir('gtk', if_found : gtk_dep)
-# FIXME: subdir('qt')
+qt5core_dep = dependency('qt5', modules : ['Core'], required : false)
+subdir('qt', if_found: qt5core_dep)
 subdir('sdl')

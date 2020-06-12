@@ -29,6 +29,7 @@
 
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 
 #if GST_GL_HAVE_PLATFORM_GLX
 #include <QX11Info>

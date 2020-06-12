@@ -20,6 +20,7 @@
  */
 
 #include "pipeline.h"
+#include <gst/gl/gl.h>
 
 
 Pipeline::Pipeline (GstGLDisplay *display,
