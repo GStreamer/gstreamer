@@ -568,8 +568,8 @@ onvif_factory_create_element (GstRTSPMediaFactory * factory,
   gst_element_add_pad (pbin, gst_ghost_pad_new ("src", srcpad));
   gst_object_unref (srcpad);
 
-  g_object_set (onvifts, "set-t-bit", TRUE, "set-e-bit", TRUE, "ntp-offset", 0,
-      "drop-out-of-segment", FALSE, NULL);
+  g_object_set (onvifts, "set-t-bit", TRUE, "set-e-bit", TRUE, "ntp-offset",
+      G_GUINT64_CONSTANT (0), "drop-out-of-segment", FALSE, NULL);
 
   gst_element_set_clock (onvifts, gst_system_clock_obtain ());
 
