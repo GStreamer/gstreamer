@@ -30,6 +30,7 @@
 #include "formatting.h"
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <string.h>
 #include <stdio.h>
 #include <glib/gprintf.h>
@@ -221,7 +222,15 @@ buffer_get_meta_string (GstBuffer * buffer)
     else
       g_string_append (s, ", ");
 
-    g_string_append (s, desc);
+    if (meta->info->api == GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE) {
+      GstVideoRegionOfInterestMeta *roi = (GstVideoRegionOfInterestMeta *) meta;
+      g_string_append_printf (s,
+          "GstVideoRegionOfInterestMeta[x=%" G_GUINT32_FORMAT ", y=%"
+          G_GUINT32_FORMAT ", width=%" G_GUINT32_FORMAT ", height=%"
+          G_GUINT32_FORMAT "]", roi->x, roi->y, roi->w, roi->h);
+    } else {
+      g_string_append (s, desc);
+    }
   }
 
   return (s != NULL) ? g_string_free (s, FALSE) : NULL;
