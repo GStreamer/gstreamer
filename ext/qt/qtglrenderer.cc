@@ -636,6 +636,12 @@ void GstQuickRenderer::initializeGstGL ()
         m_sharedRenderData->m_animationDriver->install();
     }
     g_mutex_unlock (&m_sharedRenderData->lock);
+    /* XXX: reset the OpenGL context drawable as Qt may have clobbered it.
+     * Fixes glimagesink output where Qt replaces the Surface to use in its
+     * own MakeCurrent call.  Qt does this on it's OpenGL initialisation
+     * the the rendering engine. */
+    gst_gl_context_activate (gl_context, FALSE);
+    gst_gl_context_activate (gl_context, TRUE);
 }
 
 void GstQuickRenderer::initializeQml()
