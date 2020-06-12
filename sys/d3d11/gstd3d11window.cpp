@@ -703,7 +703,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
       gst_d3d11_video_processor_free (window->processor);
       window->processor = NULL;
     } else {
-      gboolean processor_input_configureed = FALSE;
+      gboolean processor_input_configured = FALSE;
       gboolean processor_output_configured = FALSE;
 
       GST_DEBUG_OBJECT (window, "IVideoProcessor interface available");
@@ -740,7 +740,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
         GST_DEBUG_OBJECT (window,
             "Set color space on video processor, in %d, out %d",
             in_native_cs, native_colorspace_type);
-        processor_input_configureed =
+        processor_input_configured =
             gst_d3d11_video_processor_set_input_dxgi_color_space
             (window->processor, in_native_cs);
         processor_output_configured =
@@ -748,7 +748,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
             (window->processor, native_colorspace_type);
       }
 #endif
-      if (!processor_input_configureed) {
+      if (!processor_input_configured) {
         gst_d3d11_video_processor_set_input_color_space (window->processor,
             &window->info.colorimetry);
       }
