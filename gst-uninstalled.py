@@ -295,6 +295,11 @@ def get_subprocess_env(options, gst_version):
                                                          'pkgconfig'),
                     options.sysroot)
 
+    # Check if meson has generated -uninstalled pkgconfig files
+    meson_uninstalled = pathlib.Path(options.builddir) / 'meson-uninstalled'
+    if meson_uninstalled.is_dir():
+        prepend_env_var(env, 'PKG_CONFIG_PATH', str(meson_uninstalled), options.sysroot)
+
     for python_dir in python_dirs:
         prepend_env_var(env, 'PYTHONPATH', python_dir, options.sysroot)
 
