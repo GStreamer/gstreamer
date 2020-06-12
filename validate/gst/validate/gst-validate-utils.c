@@ -1300,6 +1300,42 @@ typedef struct
   GstStructure *local_vars;
 } ReplaceData;
 
+static void
+_resolve_expression (gpointer source, GValue * value)
+{
+  gdouble new_value;
+  GMatchInfo *match_info = NULL;
+  gchar *error = NULL;
+  gchar *v, *expr, *tmp;
+
+  g_assert (G_VALUE_HOLDS_STRING (value));
+
+  tmp = expr = v = g_value_dup_string (value);
+  tmp = skip_spaces (tmp);
+  expr = strstr (v, "expr(");
+  if (expr != tmp)
+    return;
+
+  expr = &expr[5];
+  tmp = &expr[strlen (expr) - 1];
+  while (g_ascii_isspace (*tmp) && tmp != expr)
+    tmp--;
+
+  if (tmp == expr || *tmp != ')')
+    return;
+
+  *tmp = '\0';
+  new_value = gst_validate_utils_parse_expression (expr, NULL, NULL, &error);
+  if (error)
+    gst_validate_error_structure (source, "Could not parse expression %s: %s",
+        expr, error);
+  g_value_unset (value);
+  g_value_init (value, G_TYPE_DOUBLE);
+  g_value_set_double (value, new_value);
+  g_free (v);
+  g_match_info_free (match_info);
+}
+
 static gboolean
 _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
 {
@@ -1329,6 +1365,8 @@ _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
     g_value_set_string (value, str);
     g_free (str);
   }
+
+  _resolve_expression (data->source, value);
 
   return TRUE;
 }
