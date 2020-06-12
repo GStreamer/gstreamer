@@ -1207,6 +1207,21 @@ gst_validate_element_matches_target (GstElement * element, GstStructure * s)
   return FALSE;
 }
 
+static gchar *
+gst_structure_get_value_as_string (GstStructure * structure,
+    const gchar * field)
+{
+  const GValue *val = gst_structure_get_value (structure, field);
+
+  if (!val)
+    return NULL;
+
+  if (G_VALUE_HOLDS_STRING (val))
+    return g_value_dup_string (val);
+
+  return gst_value_serialize (val);
+}
+
 gchar *
 gst_validate_replace_variables_in_string (gpointer source,
     GstStructure * local_vars, const gchar * in_string)
@@ -1221,7 +1236,7 @@ gst_validate_replace_variables_in_string (gpointer source,
   gst_validate_set_globals (NULL);
 
   while (g_regex_match (_variables_regex, string, 0, &match_info)) {
-    const gchar *var_value = NULL;
+    gchar *var_value = NULL;
 
     if (g_match_info_matches (match_info)) {
       GRegex *replace_regex;
@@ -1234,13 +1249,13 @@ gst_validate_replace_variables_in_string (gpointer source,
 
       if (local_vars && gst_structure_has_field_typed (local_vars, varname,
               G_TYPE_DOUBLE)) {
-        var_value = varname;
+        var_value = g_strdup (varname);
       } else {
         if (local_vars)
-          var_value = gst_structure_get_string (local_vars, varname);
+          var_value = gst_structure_get_value_as_string (local_vars, varname);
 
         if (!var_value)
-          var_value = gst_structure_get_string (global_vars, varname);
+          var_value = gst_structure_get_value_as_string (global_vars, varname);
 
         if (!var_value) {
           gst_validate_error_structure (source,
@@ -1265,6 +1280,7 @@ gst_validate_replace_variables_in_string (gpointer source,
 
       GST_INFO ("Setting variable %s to %s", varname, var_value);
       g_free (tmpstring);
+      g_free (var_value);
       g_regex_unref (replace_regex);
       g_free (pvarname);
       g_free (varname);
