@@ -116,7 +116,7 @@ readme = configure_file(input: 'scripts/RELEASE_README.md',
 run_target('release',
   command: [find_program('scripts/release.py'),
             gstreamer_doc.full_path(),
-            'GStreamer-doc-@0@'.format(meson.project_version()),
+            'gstreamer-docs-@0@'.format(meson.project_version()),
             join_paths(meson.current_build_dir(), 'README.md')],
   depends: [gstreamer_doc]
 )
