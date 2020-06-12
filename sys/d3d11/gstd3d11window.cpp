@@ -665,11 +665,17 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
   }
 
-  window->processor =
-      gst_d3d11_video_processor_new (window->device,
-      GST_VIDEO_INFO_WIDTH (&window->info),
-      GST_VIDEO_INFO_HEIGHT (&window->info),
-      display_width, display_height);
+  /* FIXME: need to verify video processor on Xbox
+   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1312
+   */
+  if (!gst_d3d11_is_xbox_device (window->device)) {
+      window->processor =
+          gst_d3d11_video_processor_new (window->device,
+          GST_VIDEO_INFO_WIDTH (&window->info),
+          GST_VIDEO_INFO_HEIGHT (&window->info),
+          display_width, display_height);
+  }
+
   if (window->processor) {
     const GstD3D11Format *in_format;
     const GstD3D11Format *out_format;
