@@ -111,13 +111,8 @@ if winapi_app_only
   mf_lib_deps += [runtimeobject_lib]
 else
   mf_sources += mf_desktop_sources
-  have_capture_engine = cc.has_header('mfcaptureengine.h')
-  if have_capture_engine
-    mf_sources += ['gstmfcaptureengine.cpp']
-  endif
 endif
 
-mf_config.set10('GST_MF_HAVE_CAPTURE_ENGINE', have_capture_engine)
 mf_config.set10('GST_MF_WINAPI_ONLY_APP', winapi_app_only)
 
 configure_file(

@@ -46,9 +46,6 @@
 #include "gstmfcapturewinrt.h"
 #else /* GST_MF_WINAPI_ONLY_APP */
 #include "gstmfsourcereader.h"
-#if GST_MF_HAVE_CAPTURE_ENGINE
-#include "gstmfcaptureengine.h"
-#endif /* GST_MF_HAVE_CAPTURE_ENGINE */
 #endif /* !GST_MF_WINAPI_ONLY_APP */
 #include <string.h>
 
@@ -238,14 +235,8 @@ gst_mf_video_src_start (GstBaseSrc * src)
   self->source = gst_mf_capture_winrt_new (GST_MF_SOURCE_TYPE_VIDEO,
       self->device_index, self->device_name, self->device_path);
 #else /* GST_MF_WINAPI_ONLY_APP */
-#if GST_MF_HAVE_CAPTURE_ENGINE
-  if (!self->source)
-    self->source = gst_mf_capture_engine_new (GST_MF_SOURCE_TYPE_VIDEO,
-        self->device_index, self->device_name, self->device_path);
-#endif /* GST_MF_HAVE_CAPTURE_ENGINE */
-  if (!self->source)
-    self->source = gst_mf_source_reader_new (GST_MF_SOURCE_TYPE_VIDEO,
-        self->device_index, self->device_name, self->device_path);
+  self->source = gst_mf_source_reader_new (GST_MF_SOURCE_TYPE_VIDEO,
+      self->device_index, self->device_name, self->device_path);
 #endif /* GST_MF_WINAPI_ONLY_APP */
 
   self->first_pts = GST_CLOCK_TIME_NONE;

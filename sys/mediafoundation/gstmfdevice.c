@@ -29,9 +29,6 @@
 #include "gstmfcapturewinrt.h"
 #else /* GST_MF_WINAPI_ONLY_APP */
 #include "gstmfsourcereader.h"
-#if GST_MF_HAVE_CAPTURE_ENGINE
-#include "gstmfcaptureengine.h"
-#endif /* GST_MF_HAVE_CAPTURE_ENGINE */
 #endif /* GST_MF_WINAPI_ONLY_APP */
 
 #include "gstmfdevice.h"
@@ -186,12 +183,7 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
 #if GST_MF_WINAPI_ONLY_APP
     obj = gst_mf_capture_winrt_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
 #else /* !GST_MF_WINAPI_ONLY_APP */
-#if GST_MF_HAVE_CAPTURE_ENGINE
-    if (!obj)
-      obj = gst_mf_capture_engine_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
-#endif /* GST_MF_HAVE_CAPTURE_ENGINE */
-    if (!obj)
-      obj = gst_mf_source_reader_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
+    obj = gst_mf_source_reader_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
 #endif /* GST_MF_WINAPI_ONLY_APP  */
 
     if (!obj)
