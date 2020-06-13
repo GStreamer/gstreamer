@@ -53,6 +53,14 @@ static void gst_vulkan_physical_device_finalize (GObject * object);
 struct _GstVulkanPhysicalDevicePrivate
 {
   guint dummy;
+#if defined (VK_API_VERSION_1_2)
+  VkPhysicalDeviceFeatures2 features10;
+  VkPhysicalDeviceProperties2 properties10;
+  VkPhysicalDeviceVulkan11Features features11;
+  VkPhysicalDeviceVulkan11Properties properties11;
+  VkPhysicalDeviceVulkan12Features features12;
+  VkPhysicalDeviceVulkan12Properties properties12;
+#endif
 };
 
 static void
@@ -152,6 +160,25 @@ gst_vulkan_physical_device_get_property (GObject * object, guint prop_id,
 static void
 gst_vulkan_physical_device_init (GstVulkanPhysicalDevice * device)
 {
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
+
+#if defined (VK_API_VERSION_1_2)
+  priv->properties10.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+  priv->properties11.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+  priv->properties12.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+  priv->properties10.pNext = &priv->properties11;
+  priv->properties11.pNext = &priv->properties12;
+
+  priv->features10.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+  priv->features11.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+  priv->features12.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+  priv->features10.pNext = &priv->features11;
+  priv->features11.pNext = &priv->features12;
+#endif
 }
 
 static void
@@ -221,72 +248,211 @@ gst_vulkan_physical_device_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-#define DEBUG_BOOL(prefix, name, value)                             \
-  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name) ": %s",    \
+#define DEBUG_BOOL(prefix, name, value)                                     \
+  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name) ": %s",            \
     value ? "YES" : "NO")
+#define DEBUG_1(prefix, s, name, format, type)                              \
+  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name) ": %" format,      \
+    (type) (s)->name)
+#define DEBUG_2(prefix, s, name, format, type)                              \
+  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(name)                    \
+    ": %" format ", %" format,                                              \
+    (type) (s)->name[0],                                                    \
+    (type) (s)->name[1])
+#define DEBUG_3(prefix, s, name, format, type)                              \
+  GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(limit)                   \
+    ": %" format ", %" format ", %" format,                                 \
+    (type) (s)->name[0],                                                    \
+    (type) (s)->name[1],                                                    \
+    (type) (s)->name[2])
 
+#define DEBUG_UINT32(prefix, s, var) DEBUG_1(prefix, s, var, G_GUINT32_FORMAT, guint32)
+#define DEBUG_UINT32_2(prefix, s, var) DEBUG_2(prefix, s, var, G_GUINT32_FORMAT, guint32)
+#define DEBUG_UINT32_3(prefix, s, var) DEBUG_3(prefix, s, var, G_GUINT32_FORMAT, guint32)
+
+#define DEBUG_UINT64(prefix, s, var) DEBUG_1(prefix, s, var, G_GUINT64_FORMAT, guint64)
+
+#define DEBUG_INT32(prefix, s, var) DEBUG_1(prefix, s, var, G_GINT32_FORMAT, gint32)
+
+#define DEBUG_FLOAT(prefix, s, var) DEBUG_1(prefix, s, var, "f", gfloat)
+#define DEBUG_FLOAT_2(prefix, s, var) DEBUG_2(prefix, s, var, "f", gfloat)
+
+#define DEBUG_SIZE(prefix, s, var) DEBUG_1(prefix, s, var, G_GSIZE_FORMAT, gsize)
+#define DEBUG_FLAGS(prefix, s, limit, under_name_type)                      \
+  G_STMT_START {                                                            \
+    gchar *str = G_PASTE(G_PASTE(gst_vulkan_,under_name_type),_flags_to_string) ((s)->limit); \
+    GST_DEBUG_OBJECT (device, prefix " " G_STRINGIFY(limit) ": (0x%x) %s",  \
+        (s)->limit, str);                                                   \
+    g_free (str);                                                           \
+  } G_STMT_END
+
+#define DEBUG_BOOL_STRUCT(prefix, s, name) DEBUG_BOOL(prefix, name, (s)->name)
+
+#define DEBUG_STRING(prefix, s, str) DEBUG_1(prefix, s, str, "s", gchar *);
+
+static void
+dump_features10 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceFeatures * features)
+{
+  /* *INDENT-OFF* */
+  DEBUG_BOOL_STRUCT ("support for", features, robustBufferAccess);
+  DEBUG_BOOL_STRUCT ("support for", features, fullDrawIndexUint32);
+  DEBUG_BOOL_STRUCT ("support for", features, imageCubeArray);
+  DEBUG_BOOL_STRUCT ("support for", features, independentBlend);
+  DEBUG_BOOL_STRUCT ("support for", features, geometryShader);
+  DEBUG_BOOL_STRUCT ("support for", features, tessellationShader);
+  DEBUG_BOOL_STRUCT ("support for", features, sampleRateShading);
+  DEBUG_BOOL_STRUCT ("support for", features, sampleRateShading);
+  DEBUG_BOOL_STRUCT ("support for", features, dualSrcBlend);
+  DEBUG_BOOL_STRUCT ("support for", features, logicOp);
+  DEBUG_BOOL_STRUCT ("support for", features, multiDrawIndirect);
+  DEBUG_BOOL_STRUCT ("support for", features, drawIndirectFirstInstance);
+  DEBUG_BOOL_STRUCT ("support for", features, depthClamp);
+  DEBUG_BOOL_STRUCT ("support for", features, depthBiasClamp);
+  DEBUG_BOOL_STRUCT ("support for", features, fillModeNonSolid);
+  DEBUG_BOOL_STRUCT ("support for", features, depthBounds);
+  DEBUG_BOOL_STRUCT ("support for", features, wideLines);
+  DEBUG_BOOL_STRUCT ("support for", features, largePoints);
+  DEBUG_BOOL_STRUCT ("support for", features, alphaToOne);
+  DEBUG_BOOL_STRUCT ("support for", features, multiViewport);
+  DEBUG_BOOL_STRUCT ("support for", features, samplerAnisotropy);
+  DEBUG_BOOL_STRUCT ("support for", features, textureCompressionETC2);
+  DEBUG_BOOL_STRUCT ("support for", features, textureCompressionASTC_LDR);
+  DEBUG_BOOL_STRUCT ("support for", features, textureCompressionBC);
+  DEBUG_BOOL_STRUCT ("support for", features, occlusionQueryPrecise);
+  DEBUG_BOOL_STRUCT ("support for", features, pipelineStatisticsQuery);
+  DEBUG_BOOL_STRUCT ("support for", features, vertexPipelineStoresAndAtomics);
+  DEBUG_BOOL_STRUCT ("support for", features, fragmentStoresAndAtomics);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderTessellationAndGeometryPointSize);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderImageGatherExtended);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderStorageImageExtendedFormats);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderStorageImageMultisample);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderStorageImageReadWithoutFormat);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderStorageImageWriteWithoutFormat);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderUniformBufferArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderSampledImageArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderStorageBufferArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderStorageImageArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderClipDistance);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderCullDistance);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderFloat64);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderInt64);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderInt16);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderResourceResidency);
+  DEBUG_BOOL_STRUCT ("support for", features, shaderResourceMinLod);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseBinding);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidencyBuffer);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidencyImage2D);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidencyImage3D);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidency2Samples);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidency4Samples);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidency8Samples);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidency16Samples);
+  DEBUG_BOOL_STRUCT ("support for", features, sparseResidencyAliased);
+  DEBUG_BOOL_STRUCT ("support for", features, variableMultisampleRate);
+  DEBUG_BOOL_STRUCT ("support for", features, inheritedQueries);
+  /* *INDENT-ON* */
+}
+
+#if defined (VK_API_VERSION_1_2)
+static void
+dump_features11 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan11Features * features)
+{
+  /* *INDENT-OFF* */
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, storageBuffer16BitAccess);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, uniformAndStorageBuffer16BitAccess);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, storagePushConstant16);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, storageInputOutput16);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, multiview);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, multiviewGeometryShader);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, multiviewTessellationShader);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, variablePointersStorageBuffer);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, variablePointers);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, protectedMemory);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, samplerYcbcrConversion);
+  DEBUG_BOOL_STRUCT ("support for (1.1)", features, shaderDrawParameters);
+  /* *INDENT-ON* */
+}
+
+static void
+dump_features12 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan12Features * features)
+{
+  /* *INDENT-OFF* */
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, samplerMirrorClampToEdge);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, drawIndirectCount);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, storageBuffer8BitAccess);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, uniformAndStorageBuffer8BitAccess);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderBufferInt64Atomics);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderSharedInt64Atomics);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderFloat16);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderInt8);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderInputAttachmentArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderUniformTexelBufferArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderStorageTexelBufferArrayDynamicIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderUniformBufferArrayNonUniformIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderSampledImageArrayNonUniformIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderStorageBufferArrayNonUniformIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderStorageImageArrayNonUniformIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderInputAttachmentArrayNonUniformIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderUniformTexelBufferArrayNonUniformIndexing);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingUniformBufferUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingSampledImageUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingStorageImageUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingStorageBufferUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingUniformTexelBufferUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingStorageTexelBufferUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingUpdateUnusedWhilePending);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingPartiallyBound);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, descriptorBindingVariableDescriptorCount);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, runtimeDescriptorArray);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, samplerFilterMinmax);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, scalarBlockLayout);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, imagelessFramebuffer);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, uniformBufferStandardLayout);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderSubgroupExtendedTypes);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, separateDepthStencilLayouts);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, hostQueryReset);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, timelineSemaphore);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, bufferDeviceAddress);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, bufferDeviceAddressCaptureReplay);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, bufferDeviceAddressMultiDevice);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, vulkanMemoryModel);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, vulkanMemoryModelDeviceScope);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, vulkanMemoryModelAvailabilityVisibilityChains);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderOutputViewportIndex);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, shaderOutputLayer);
+  DEBUG_BOOL_STRUCT ("support for (1.2)", features, subgroupBroadcastDynamicId);
+  /* *INDENT-ON* */
+}
+#endif
 static gboolean
 dump_features (GstVulkanPhysicalDevice * device, GError ** error)
 {
-#define DEBUG_BOOL_FEATURE(name) DEBUG_BOOL("support for", name, device->features.name)
-  DEBUG_BOOL_FEATURE (robustBufferAccess);
-  DEBUG_BOOL_FEATURE (fullDrawIndexUint32);
-  DEBUG_BOOL_FEATURE (imageCubeArray);
-  DEBUG_BOOL_FEATURE (independentBlend);
-  DEBUG_BOOL_FEATURE (geometryShader);
-  DEBUG_BOOL_FEATURE (tessellationShader);
-  DEBUG_BOOL_FEATURE (sampleRateShading);
-  DEBUG_BOOL_FEATURE (sampleRateShading);
-  DEBUG_BOOL_FEATURE (dualSrcBlend);
-  DEBUG_BOOL_FEATURE (logicOp);
-  DEBUG_BOOL_FEATURE (multiDrawIndirect);
-  DEBUG_BOOL_FEATURE (drawIndirectFirstInstance);
-  DEBUG_BOOL_FEATURE (depthClamp);
-  DEBUG_BOOL_FEATURE (depthBiasClamp);
-  DEBUG_BOOL_FEATURE (fillModeNonSolid);
-  DEBUG_BOOL_FEATURE (depthBounds);
-  DEBUG_BOOL_FEATURE (wideLines);
-  DEBUG_BOOL_FEATURE (largePoints);
-  DEBUG_BOOL_FEATURE (alphaToOne);
-  DEBUG_BOOL_FEATURE (multiViewport);
-  DEBUG_BOOL_FEATURE (samplerAnisotropy);
-  DEBUG_BOOL_FEATURE (textureCompressionETC2);
-  DEBUG_BOOL_FEATURE (textureCompressionASTC_LDR);
-  DEBUG_BOOL_FEATURE (textureCompressionBC);
-  DEBUG_BOOL_FEATURE (occlusionQueryPrecise);
-  DEBUG_BOOL_FEATURE (pipelineStatisticsQuery);
-  DEBUG_BOOL_FEATURE (vertexPipelineStoresAndAtomics);
-  DEBUG_BOOL_FEATURE (fragmentStoresAndAtomics);
-  DEBUG_BOOL_FEATURE (shaderTessellationAndGeometryPointSize);
-  DEBUG_BOOL_FEATURE (shaderImageGatherExtended);
-  DEBUG_BOOL_FEATURE (shaderStorageImageExtendedFormats);
-  DEBUG_BOOL_FEATURE (shaderStorageImageMultisample);
-  DEBUG_BOOL_FEATURE (shaderStorageImageReadWithoutFormat);
-  DEBUG_BOOL_FEATURE (shaderStorageImageWriteWithoutFormat);
-  DEBUG_BOOL_FEATURE (shaderUniformBufferArrayDynamicIndexing);
-  DEBUG_BOOL_FEATURE (shaderSampledImageArrayDynamicIndexing);
-  DEBUG_BOOL_FEATURE (shaderStorageBufferArrayDynamicIndexing);
-  DEBUG_BOOL_FEATURE (shaderStorageImageArrayDynamicIndexing);
-  DEBUG_BOOL_FEATURE (shaderClipDistance);
-  DEBUG_BOOL_FEATURE (shaderCullDistance);
-  DEBUG_BOOL_FEATURE (shaderFloat64);
-  DEBUG_BOOL_FEATURE (shaderInt64);
-  DEBUG_BOOL_FEATURE (shaderInt16);
-  DEBUG_BOOL_FEATURE (shaderResourceResidency);
-  DEBUG_BOOL_FEATURE (shaderResourceMinLod);
-  DEBUG_BOOL_FEATURE (sparseBinding);
-  DEBUG_BOOL_FEATURE (sparseResidencyBuffer);
-  DEBUG_BOOL_FEATURE (sparseResidencyImage2D);
-  DEBUG_BOOL_FEATURE (sparseResidencyImage3D);
-  DEBUG_BOOL_FEATURE (sparseResidency2Samples);
-  DEBUG_BOOL_FEATURE (sparseResidency4Samples);
-  DEBUG_BOOL_FEATURE (sparseResidency8Samples);
-  DEBUG_BOOL_FEATURE (sparseResidency16Samples);
-  DEBUG_BOOL_FEATURE (sparseResidencyAliased);
-  DEBUG_BOOL_FEATURE (variableMultisampleRate);
-  DEBUG_BOOL_FEATURE (inheritedQueries);
+#if defined (VK_API_VERSION_1_2)
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
+  VkBaseOutStructure *iter;
 
-#undef DEBUG_BOOL_FEATURE
+  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+    for (iter = (VkBaseOutStructure *) & priv->features10; iter;
+        iter = iter->pNext) {
+      if (iter->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2)
+        dump_features10 (device,
+            &((VkPhysicalDeviceFeatures2 *) iter)->features);
+      else if (iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES)
+        dump_features11 (device, (VkPhysicalDeviceVulkan11Features *) iter);
+      else if (iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
+        dump_features12 (device, (VkPhysicalDeviceVulkan12Features *) iter);
+    }
+  } else
+#endif
+  {
+    dump_features10 (device, &device->features);
+  }
 
   return TRUE;
 }
@@ -355,164 +521,117 @@ dump_queue_properties (GstVulkanPhysicalDevice * device, GError ** error)
 static gboolean
 dump_limits (GstVulkanPhysicalDevice * device, GError ** error)
 {
-#define DEBUG_LIMIT(limit, format, type)                                \
-  GST_DEBUG_OBJECT (device, "limit " G_STRINGIFY(limit) ": %" format,   \
-    (type) device->properties.limits.limit)
-#define DEBUG_LIMIT_2(limit, format, type)                                  \
-  GST_DEBUG_OBJECT (device, "limit " G_STRINGIFY(limit)                     \
-    ": %" format ", %" format,                                              \
-    (type) device->properties.limits.limit[0],                                           \
-    (type) device->properties.limits.limit[1])
-#define DEBUG_LIMIT_3(limit, format, type)                                  \
-  GST_DEBUG_OBJECT (device, "limit " G_STRINGIFY(limit)                     \
-    ": %" format ", %" format ", %" format,                                 \
-    (type) device->properties.limits.limit[0],                                           \
-    (type) device->properties.limits.limit[1],                                           \
-    (type) device->properties.limits.limit[2])
-#define DEBUG_BOOL_LIMIT(limit) DEBUG_BOOL("limit", limit, device->properties.limits.limit)
+  VkPhysicalDeviceLimits *limits = &device->properties.limits;
 
-#define DEBUG_UINT32_LIMIT(limit) DEBUG_LIMIT(limit, G_GUINT32_FORMAT, guint32)
-#define DEBUG_UINT32_2_LIMIT(limit) DEBUG_LIMIT_2(limit, G_GUINT32_FORMAT, guint32)
-#define DEBUG_UINT32_3_LIMIT(limit) DEBUG_LIMIT_3(limit, G_GUINT32_FORMAT, guint32)
-
-#define DEBUG_INT32_LIMIT(limit) DEBUG_LIMIT(limit, G_GINT32_FORMAT, gint32)
-
-#define DEBUG_UINT64_LIMIT(limit) DEBUG_LIMIT(limit, G_GUINT64_FORMAT, guint64)
-
-#define DEBUG_SIZE_LIMIT(limit) DEBUG_LIMIT(limit, G_GSIZE_FORMAT, gsize)
-
-#define DEBUG_FLOAT_LIMIT(limit) DEBUG_LIMIT(limit, "f", float)
-#define DEBUG_FLOAT_2_LIMIT(limit) DEBUG_LIMIT_2(limit, "f", float)
-
-#define DEBUG_FLAGS_LIMIT(limit, under_name_type)                           \
-  G_STMT_START {                                                            \
-    gchar *str = G_PASTE(G_PASTE(gst_vulkan_,under_name_type),_flags_to_string) (device->properties.limits.limit); \
-    GST_DEBUG_OBJECT (device, "limit " G_STRINGIFY(limit) ": (0x%x) %s",    \
-        device->properties.limits.limit, str);                              \
-    g_free (str);                                                           \
-  } G_STMT_END
-
-  DEBUG_UINT32_LIMIT (maxImageDimension1D);
-  DEBUG_UINT32_LIMIT (maxImageDimension2D);
-  DEBUG_UINT32_LIMIT (maxImageDimension3D);
-  DEBUG_UINT32_LIMIT (maxImageDimensionCube);
-  DEBUG_UINT32_LIMIT (maxImageArrayLayers);
-  DEBUG_UINT32_LIMIT (maxTexelBufferElements);
-  DEBUG_UINT32_LIMIT (maxUniformBufferRange);
-  DEBUG_UINT32_LIMIT (maxStorageBufferRange);
-  DEBUG_UINT32_LIMIT (maxPushConstantsSize);
-  DEBUG_UINT32_LIMIT (maxMemoryAllocationCount);
-  DEBUG_UINT32_LIMIT (maxSamplerAllocationCount);
-  DEBUG_UINT64_LIMIT (bufferImageGranularity);
-  DEBUG_UINT64_LIMIT (sparseAddressSpaceSize);
-  DEBUG_UINT32_LIMIT (maxBoundDescriptorSets);
-  DEBUG_UINT32_LIMIT (maxPerStageDescriptorSamplers);
-  DEBUG_UINT32_LIMIT (maxPerStageDescriptorUniformBuffers);
-  DEBUG_UINT32_LIMIT (maxPerStageDescriptorStorageBuffers);
-  DEBUG_UINT32_LIMIT (maxPerStageDescriptorSampledImages);
-  DEBUG_UINT32_LIMIT (maxPerStageDescriptorStorageImages);
-  DEBUG_UINT32_LIMIT (maxPerStageDescriptorInputAttachments);
-  DEBUG_UINT32_LIMIT (maxPerStageResources);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetSamplers);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetUniformBuffers);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetUniformBuffersDynamic);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetStorageBuffers);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetStorageBuffersDynamic);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetSampledImages);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetStorageImages);
-  DEBUG_UINT32_LIMIT (maxDescriptorSetInputAttachments);
-  DEBUG_UINT32_LIMIT (maxVertexInputAttributes);
-  DEBUG_UINT32_LIMIT (maxVertexInputBindings);
-  DEBUG_UINT32_LIMIT (maxVertexInputBindings);
-  DEBUG_UINT32_LIMIT (maxVertexInputAttributeOffset);
-  DEBUG_UINT32_LIMIT (maxVertexInputBindingStride);
-  DEBUG_UINT32_LIMIT (maxVertexOutputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationGenerationLevel);
-  DEBUG_UINT32_LIMIT (maxTessellationPatchSize);
-  DEBUG_UINT32_LIMIT (maxTessellationControlPerVertexInputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationControlPerVertexOutputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationControlPerPatchOutputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationControlTotalOutputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationControlTotalOutputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationEvaluationInputComponents);
-  DEBUG_UINT32_LIMIT (maxTessellationEvaluationOutputComponents);
-  DEBUG_UINT32_LIMIT (maxGeometryShaderInvocations);
-  DEBUG_UINT32_LIMIT (maxGeometryInputComponents);
-  DEBUG_UINT32_LIMIT (maxGeometryOutputComponents);
-  DEBUG_UINT32_LIMIT (maxGeometryOutputVertices);
-  DEBUG_UINT32_LIMIT (maxGeometryTotalOutputComponents);
-  DEBUG_UINT32_LIMIT (maxFragmentInputComponents);
-  DEBUG_UINT32_LIMIT (maxFragmentOutputAttachments);
-  DEBUG_UINT32_LIMIT (maxFragmentDualSrcAttachments);
-  DEBUG_UINT32_LIMIT (maxFragmentCombinedOutputResources);
-  DEBUG_UINT32_LIMIT (maxComputeSharedMemorySize);
-  DEBUG_UINT32_3_LIMIT (maxComputeWorkGroupCount);
-  DEBUG_UINT32_LIMIT (maxComputeWorkGroupInvocations);
-  DEBUG_UINT32_3_LIMIT (maxComputeWorkGroupSize);
-  DEBUG_UINT32_LIMIT (subPixelPrecisionBits);
-  DEBUG_UINT32_LIMIT (subTexelPrecisionBits);
-  DEBUG_UINT32_LIMIT (mipmapPrecisionBits);
-  DEBUG_UINT32_LIMIT (maxDrawIndexedIndexValue);
-  DEBUG_UINT32_LIMIT (maxDrawIndirectCount);
-  DEBUG_FLOAT_LIMIT (maxSamplerLodBias);
-  DEBUG_FLOAT_LIMIT (maxSamplerAnisotropy);
-  DEBUG_UINT32_LIMIT (maxViewports);
-  DEBUG_UINT32_2_LIMIT (maxViewportDimensions);
-  DEBUG_FLOAT_2_LIMIT (viewportBoundsRange);
-  DEBUG_UINT32_LIMIT (viewportSubPixelBits);
-  DEBUG_SIZE_LIMIT (minMemoryMapAlignment);
-  DEBUG_UINT64_LIMIT (minTexelBufferOffsetAlignment);
-  DEBUG_UINT64_LIMIT (minUniformBufferOffsetAlignment);
-  DEBUG_UINT64_LIMIT (minStorageBufferOffsetAlignment);
-  DEBUG_INT32_LIMIT (minTexelOffset);
-  DEBUG_UINT32_LIMIT (maxTexelOffset);
-  DEBUG_INT32_LIMIT (minTexelGatherOffset);
-  DEBUG_UINT32_LIMIT (maxTexelGatherOffset);
-  DEBUG_FLOAT_LIMIT (minInterpolationOffset);
-  DEBUG_FLOAT_LIMIT (maxInterpolationOffset);
-  DEBUG_UINT32_LIMIT (subPixelInterpolationOffsetBits);
-  DEBUG_UINT32_LIMIT (maxFramebufferWidth);
-  DEBUG_UINT32_LIMIT (maxFramebufferHeight);
-  DEBUG_UINT32_LIMIT (maxFramebufferLayers);
-  DEBUG_FLAGS_LIMIT (framebufferColorSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (framebufferDepthSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (framebufferStencilSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (framebufferNoAttachmentsSampleCounts, sample_count);
-  DEBUG_UINT32_LIMIT (maxColorAttachments);
-  DEBUG_FLAGS_LIMIT (sampledImageColorSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (sampledImageIntegerSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (sampledImageDepthSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (sampledImageStencilSampleCounts, sample_count);
-  DEBUG_FLAGS_LIMIT (storageImageSampleCounts, sample_count);
-  DEBUG_BOOL_LIMIT (timestampComputeAndGraphics);
-  DEBUG_FLOAT_LIMIT (timestampPeriod);
-  DEBUG_UINT32_LIMIT (maxClipDistances);
-  DEBUG_UINT32_LIMIT (maxCullDistances);
-  DEBUG_UINT32_LIMIT (maxCombinedClipAndCullDistances);
-  DEBUG_UINT32_LIMIT (discreteQueuePriorities);
-  DEBUG_FLOAT_2_LIMIT (pointSizeRange);
-  DEBUG_FLOAT_2_LIMIT (lineWidthRange);
-  DEBUG_FLOAT_LIMIT (pointSizeGranularity);
-  DEBUG_FLOAT_LIMIT (lineWidthGranularity);
-  DEBUG_BOOL_LIMIT (strictLines);
-  DEBUG_BOOL_LIMIT (standardSampleLocations);
-  DEBUG_UINT64_LIMIT (optimalBufferCopyOffsetAlignment);
-  DEBUG_UINT64_LIMIT (optimalBufferCopyRowPitchAlignment);
-  DEBUG_UINT64_LIMIT (nonCoherentAtomSize);
-
-#undef DEBUG_LIMIT
-#undef DEBUG_LIMIT_2
-#undef DEBUG_LIMIT_3
-#undef DEBUG_BOOL_LIMIT
-#undef DEBUG_UINT32_LIMIT
-#undef DEBUG_UINT32_2_LIMIT
-#undef DEBUG_UINT32_3_LIMIT
-#undef DEBUG_INT32_LIMIT
-#undef DEBUG_UINT64_LIMIT
-#undef DEBUG_SIZE_LIMIT
-#undef DEBUG_FLOAT_LIMIT
-#undef DEBUG_FLOAT_2_LIMIT
-#undef DEBUG_FLAGS_LIMIT
+  /* *INDENT-OFF* */
+  DEBUG_UINT32 ("limit", limits, maxImageDimension1D);
+  DEBUG_UINT32 ("limit", limits, maxImageDimension2D);
+  DEBUG_UINT32 ("limit", limits, maxImageDimension3D);
+  DEBUG_UINT32 ("limit", limits, maxImageDimensionCube);
+  DEBUG_UINT32 ("limit", limits, maxImageArrayLayers);
+  DEBUG_UINT32 ("limit", limits, maxTexelBufferElements);
+  DEBUG_UINT32 ("limit", limits, maxUniformBufferRange);
+  DEBUG_UINT32 ("limit", limits, maxStorageBufferRange);
+  DEBUG_UINT32 ("limit", limits, maxPushConstantsSize);
+  DEBUG_UINT32 ("limit", limits, maxMemoryAllocationCount);
+  DEBUG_UINT32 ("limit", limits, maxSamplerAllocationCount);
+  DEBUG_UINT64 ("limit", limits, bufferImageGranularity);
+  DEBUG_UINT64 ("limit", limits, sparseAddressSpaceSize);
+  DEBUG_UINT32 ("limit", limits, maxBoundDescriptorSets);
+  DEBUG_UINT32 ("limit", limits, maxPerStageDescriptorSamplers);
+  DEBUG_UINT32 ("limit", limits, maxPerStageDescriptorUniformBuffers);
+  DEBUG_UINT32 ("limit", limits, maxPerStageDescriptorStorageBuffers);
+  DEBUG_UINT32 ("limit", limits, maxPerStageDescriptorSampledImages);
+  DEBUG_UINT32 ("limit", limits, maxPerStageDescriptorStorageImages);
+  DEBUG_UINT32 ("limit", limits, maxPerStageDescriptorInputAttachments);
+  DEBUG_UINT32 ("limit", limits, maxPerStageResources);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetSamplers);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetUniformBuffers);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetUniformBuffersDynamic);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetStorageBuffers);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetStorageBuffersDynamic);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetSampledImages);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetStorageImages);
+  DEBUG_UINT32 ("limit", limits, maxDescriptorSetInputAttachments);
+  DEBUG_UINT32 ("limit", limits, maxVertexInputAttributes);
+  DEBUG_UINT32 ("limit", limits, maxVertexInputBindings);
+  DEBUG_UINT32 ("limit", limits, maxVertexInputBindings);
+  DEBUG_UINT32 ("limit", limits, maxVertexInputAttributeOffset);
+  DEBUG_UINT32 ("limit", limits, maxVertexInputBindingStride);
+  DEBUG_UINT32 ("limit", limits, maxVertexOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationGenerationLevel);
+  DEBUG_UINT32 ("limit", limits, maxTessellationPatchSize);
+  DEBUG_UINT32 ("limit", limits, maxTessellationControlPerVertexInputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationControlPerVertexOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationControlPerPatchOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationControlTotalOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationControlTotalOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationEvaluationInputComponents);
+  DEBUG_UINT32 ("limit", limits, maxTessellationEvaluationOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxGeometryShaderInvocations);
+  DEBUG_UINT32 ("limit", limits, maxGeometryInputComponents);
+  DEBUG_UINT32 ("limit", limits, maxGeometryOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxGeometryOutputVertices);
+  DEBUG_UINT32 ("limit", limits, maxGeometryTotalOutputComponents);
+  DEBUG_UINT32 ("limit", limits, maxFragmentInputComponents);
+  DEBUG_UINT32 ("limit", limits, maxFragmentOutputAttachments);
+  DEBUG_UINT32 ("limit", limits, maxFragmentDualSrcAttachments);
+  DEBUG_UINT32 ("limit", limits, maxFragmentCombinedOutputResources);
+  DEBUG_UINT32 ("limit", limits, maxComputeSharedMemorySize);
+  DEBUG_UINT32_3 ("limit", limits, maxComputeWorkGroupCount);
+  DEBUG_UINT32 ("limit", limits, maxComputeWorkGroupInvocations);
+  DEBUG_UINT32_3 ("limit", limits, maxComputeWorkGroupSize);
+  DEBUG_UINT32 ("limit", limits, subPixelPrecisionBits);
+  DEBUG_UINT32 ("limit", limits, subTexelPrecisionBits);
+  DEBUG_UINT32 ("limit", limits, mipmapPrecisionBits);
+  DEBUG_UINT32 ("limit", limits, maxDrawIndexedIndexValue);
+  DEBUG_UINT32 ("limit", limits, maxDrawIndirectCount);
+  DEBUG_FLOAT ("limit", limits, maxSamplerLodBias);
+  DEBUG_FLOAT ("limit", limits, maxSamplerAnisotropy);
+  DEBUG_UINT32 ("limit", limits, maxViewports);
+  DEBUG_UINT32_2 ("limit", limits, maxViewportDimensions);
+  DEBUG_FLOAT_2 ("limit", limits, viewportBoundsRange);
+  DEBUG_UINT32 ("limit", limits, viewportSubPixelBits);
+  DEBUG_SIZE ("limit", limits, minMemoryMapAlignment);
+  DEBUG_UINT64 ("limit", limits, minTexelBufferOffsetAlignment);
+  DEBUG_UINT64 ("limit", limits, minUniformBufferOffsetAlignment);
+  DEBUG_UINT64 ("limit", limits, minStorageBufferOffsetAlignment);
+  DEBUG_INT32 ("limit", limits, minTexelOffset);
+  DEBUG_UINT32 ("limit", limits, maxTexelOffset);
+  DEBUG_INT32 ("limit", limits, minTexelGatherOffset);
+  DEBUG_UINT32 ("limit", limits, maxTexelGatherOffset);
+  DEBUG_FLOAT ("limit", limits, minInterpolationOffset);
+  DEBUG_FLOAT ("limit", limits, maxInterpolationOffset);
+  DEBUG_UINT32 ("limit", limits, subPixelInterpolationOffsetBits);
+  DEBUG_UINT32 ("limit", limits, maxFramebufferWidth);
+  DEBUG_UINT32 ("limit", limits, maxFramebufferHeight);
+  DEBUG_UINT32 ("limit", limits, maxFramebufferLayers);
+  DEBUG_FLAGS ("limit", limits, framebufferColorSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, framebufferDepthSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, framebufferStencilSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, framebufferNoAttachmentsSampleCounts, sample_count);
+  DEBUG_UINT32 ("limit", limits, maxColorAttachments);
+  DEBUG_FLAGS ("limit", limits, sampledImageColorSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, sampledImageIntegerSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, sampledImageDepthSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, sampledImageStencilSampleCounts, sample_count);
+  DEBUG_FLAGS ("limit", limits, storageImageSampleCounts, sample_count);
+  DEBUG_BOOL_STRUCT ("limit", limits, timestampComputeAndGraphics);
+  DEBUG_FLOAT ("limit", limits, timestampPeriod);
+  DEBUG_UINT32 ("limit", limits, maxClipDistances);
+  DEBUG_UINT32 ("limit", limits, maxCullDistances);
+  DEBUG_UINT32 ("limit", limits, maxCombinedClipAndCullDistances);
+  DEBUG_UINT32 ("limit", limits, discreteQueuePriorities);
+  DEBUG_FLOAT_2 ("limit", limits, pointSizeRange);
+  DEBUG_FLOAT_2 ("limit", limits, lineWidthRange);
+  DEBUG_FLOAT ("limit", limits, pointSizeGranularity);
+  DEBUG_FLOAT ("limit", limits, lineWidthGranularity);
+  DEBUG_BOOL_STRUCT ("limit", limits, strictLines);
+  DEBUG_BOOL_STRUCT ("limit", limits, standardSampleLocations);
+  DEBUG_UINT64 ("limit", limits, optimalBufferCopyOffsetAlignment);
+  DEBUG_UINT64 ("limit", limits, optimalBufferCopyRowPitchAlignment);
+  DEBUG_UINT64 ("limit", limits, nonCoherentAtomSize);
+  /* *INDENT-ON* */
 
   return TRUE;
 }
@@ -520,20 +639,114 @@ dump_limits (GstVulkanPhysicalDevice * device, GError ** error)
 static gboolean
 dump_sparse_properties (GstVulkanPhysicalDevice * device, GError ** error)
 {
-#define DEBUG_BOOL_SPARSE_PROPERTY(name) DEBUG_BOOL("sparse property", name, device->properties.sparseProperties.name)
-  DEBUG_BOOL_SPARSE_PROPERTY (residencyStandard2DBlockShape);
-  DEBUG_BOOL_SPARSE_PROPERTY (residencyStandard2DMultisampleBlockShape);
-  DEBUG_BOOL_SPARSE_PROPERTY (residencyStandard3DBlockShape);
-  DEBUG_BOOL_SPARSE_PROPERTY (residencyAlignedMipSize);
-  DEBUG_BOOL_SPARSE_PROPERTY (residencyNonResidentStrict);
-#undef DEBUG_BOOL_SPARSE_PROPERTY
+  VkPhysicalDeviceSparseProperties *props =
+      &device->properties.sparseProperties;
+
+  /* *INDENT-OFF* */
+  DEBUG_BOOL_STRUCT ("sparse property", props, residencyStandard2DBlockShape);
+  DEBUG_BOOL_STRUCT ("sparse property", props, residencyStandard2DMultisampleBlockShape);
+  DEBUG_BOOL_STRUCT ("sparse property", props, residencyStandard3DBlockShape);
+  DEBUG_BOOL_STRUCT ("sparse property", props, residencyAlignedMipSize);
+  DEBUG_BOOL_STRUCT ("sparse property", props, residencyNonResidentStrict);
+  /* *INDENT-ON* */
 
   return TRUE;
 }
 
+#if defined (VK_API_VERSION_1_2)
+static void
+dump_properties11 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan11Properties * properties)
+{
+  /* *INDENT-OFF* */
+/*    uint8_t                    deviceUUID[VK_UUID_SIZE];
+    uint8_t                    driverUUID[VK_UUID_SIZE];
+    uint8_t                    deviceLUID[VK_LUID_SIZE];*/
+  DEBUG_UINT32 ("properties (1.1)", properties, deviceNodeMask);
+/*    VkBool32                   deviceLUIDValid;*/
+  DEBUG_UINT32 ("properties (1.1)", properties, subgroupSize);
+/*    VkShaderStageFlags         subgroupSupportedStages;
+    VkSubgroupFeatureFlags     subgroupSupportedOperations;*/
+  DEBUG_BOOL_STRUCT ("properties (1.1)", properties, subgroupQuadOperationsInAllStages);
+/*    VkPointClippingBehavior    pointClippingBehavior;*/
+  DEBUG_UINT32 ("properties (1.1)", properties, maxMultiviewViewCount);
+  DEBUG_UINT32 ("properties (1.1)", properties, maxMultiviewInstanceIndex);
+  DEBUG_BOOL_STRUCT ("properties (1.1)", properties, protectedNoFault);
+  DEBUG_UINT32 ("properties (1.1)", properties, maxPerSetDescriptors);
+  DEBUG_SIZE ("properties (1.1)", properties, maxMemoryAllocationSize);
+  /* *INDENT-ON* */
+}
+
+static void
+dump_properties12 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan12Properties * properties)
+{
+  /* *INDENT-OFF* */
+/*    VkDriverId                           driverID;*/
+  DEBUG_STRING ("properties (1.2)", properties, driverName);
+  DEBUG_STRING ("properties (1.2)", properties, driverInfo);
+/*    VkConformanceVersion                 conformanceVersion;
+    VkShaderFloatControlsIndependence    denormBehaviorIndependence;
+    VkShaderFloatControlsIndependence    roundingModeIndependence;*/
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSignedZeroInfNanPreserveFloat16);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSignedZeroInfNanPreserveFloat32);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSignedZeroInfNanPreserveFloat64);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderDenormPreserveFloat16);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderDenormPreserveFloat32);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderDenormPreserveFloat64);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderDenormFlushToZeroFloat16);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderDenormFlushToZeroFloat16);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderDenormFlushToZeroFloat32);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderRoundingModeRTEFloat16);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderRoundingModeRTEFloat32);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderRoundingModeRTEFloat64);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderRoundingModeRTZFloat16);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderRoundingModeRTZFloat32);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderRoundingModeRTZFloat64);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxUpdateAfterBindDescriptorsInAllPools);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderUniformBufferArrayNonUniformIndexingNative);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSampledImageArrayNonUniformIndexingNative);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderSampledImageArrayNonUniformIndexingNative);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderStorageBufferArrayNonUniformIndexingNative);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderStorageImageArrayNonUniformIndexingNative);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, shaderInputAttachmentArrayNonUniformIndexingNative);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, robustBufferAccessUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, quadDivergentImplicitLod);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageDescriptorUpdateAfterBindSamplers);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageDescriptorUpdateAfterBindUniformBuffers);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageDescriptorUpdateAfterBindStorageBuffers);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageDescriptorUpdateAfterBindSampledImages);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageDescriptorUpdateAfterBindStorageImages);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageDescriptorUpdateAfterBindInputAttachments);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxPerStageUpdateAfterBindResources);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindSamplers);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindUniformBuffers);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindUniformBuffersDynamic);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindStorageBuffers);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindStorageBuffersDynamic);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindSampledImages);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindStorageImages);
+  DEBUG_UINT32 ("properties (1.2)", properties, maxDescriptorSetUpdateAfterBindInputAttachments);
+/*    VkResolveModeFlags                   supportedDepthResolveModes;
+    VkResolveModeFlags                   supportedStencilResolveModes;*/
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, independentResolveNone);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, independentResolve);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, filterMinmaxSingleComponentFormats);
+  DEBUG_BOOL_STRUCT ("properties (1.2)", properties, filterMinmaxImageComponentMapping);
+  DEBUG_UINT64 ("properties (1.2)", properties, maxTimelineSemaphoreValueDifference);
+  DEBUG_FLAGS ("properties (1.2)", properties, framebufferIntegerColorSampleCounts, sample_count);
+  /* *INDENT-ON* */
+}
+#endif
+
 static gboolean
 physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
 {
+#if defined (VK_API_VERSION_1_2)
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
+  VkBaseOutStructure *iter;
+#endif
+
   GST_INFO_OBJECT (device, "physical device %i name \'%s\' type \'%s\' "
       "api version %u.%u.%u, driver version %u.%u.%u vendor ID 0x%x, "
       "device ID 0x%x", device->device_index, device->properties.deviceName,
@@ -557,6 +770,20 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
   if (!dump_sparse_properties (device, error))
     return FALSE;
 
+#if defined (VK_API_VERSION_1_2)
+  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+    for (iter = (VkBaseOutStructure *) & priv->properties10; iter;
+        iter = iter->pNext) {
+      if (iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES)
+        dump_properties11 (device, (VkPhysicalDeviceVulkan11Properties *) iter);
+      else if (iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES)
+        dump_properties12 (device, (VkPhysicalDeviceVulkan12Properties *) iter);
+    }
+  }
+#endif
+
   return TRUE;
 }
 
@@ -564,6 +791,7 @@ static gboolean
 gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
     GError ** error)
 {
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
   VkResult err;
 
   device->device = gst_vulkan_physical_device_get_handle (device);
@@ -609,16 +837,78 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
   }
 
   vkGetPhysicalDeviceProperties (device->device, &device->properties);
-  vkGetPhysicalDeviceMemoryProperties (device->device,
-      &device->memory_properties);
-  vkGetPhysicalDeviceFeatures (device->device, &device->features);
-  vkGetPhysicalDeviceQueueFamilyProperties (device->device,
-      &device->n_queue_families, NULL);
-  if (device->n_queue_families > 0) {
-    device->queue_family_props =
-        g_new0 (VkQueueFamilyProperties, device->n_queue_families);
+#if defined (VK_API_VERSION_1_2)
+  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+    PFN_vkGetPhysicalDeviceProperties2 get_props2;
+    PFN_vkGetPhysicalDeviceMemoryProperties2 get_mem_props2;
+    PFN_vkGetPhysicalDeviceFeatures2 get_features2;
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties2 get_queue_props2;
+    VkPhysicalDeviceMemoryProperties2 mem_properties10;
+
+    /* *INDENT-OFF* */
+    mem_properties10 = (VkPhysicalDeviceMemoryProperties2) {
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2,
+      .pNext = NULL,
+    };
+    /* *INDENT-ON* */
+
+    get_props2 = (PFN_vkGetPhysicalDeviceProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceProperties2");
+    get_props2 (device->device, &priv->properties10);
+
+    get_mem_props2 = (PFN_vkGetPhysicalDeviceMemoryProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceMemoryProperties2");
+    get_mem_props2 (device->device, &mem_properties10);
+    memcpy (&device->memory_properties, &mem_properties10.memoryProperties,
+        sizeof (device->memory_properties));
+
+    get_features2 = (PFN_vkGetPhysicalDeviceFeatures2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceFeatures2");
+    get_features2 (device->device, &priv->features10);
+    memcpy (&device->features, &priv->features10.features,
+        sizeof (device->features));
+
+    get_queue_props2 = (PFN_vkGetPhysicalDeviceQueueFamilyProperties2)
+        gst_vulkan_instance_get_proc_address (device->instance,
+        "vkGetPhysicalDeviceQueueFamilyProperties2");
+    get_queue_props2 (device->device, &device->n_queue_families, NULL);
+    if (device->n_queue_families > 0) {
+      VkQueueFamilyProperties2 *props;
+      int i;
+
+      props = g_new0 (VkQueueFamilyProperties2, device->n_queue_families);
+      for (i = 0; i < device->n_queue_families; i++) {
+        props[i].sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+        props[i].pNext = NULL;
+      }
+
+      get_queue_props2 (device->device, &device->n_queue_families, props);
+
+      device->queue_family_props =
+          g_new0 (VkQueueFamilyProperties, device->n_queue_families);
+      for (i = 0; i < device->n_queue_families; i++) {
+        memcpy (&device->queue_family_props[i], &props[i].queueFamilyProperties,
+            sizeof (device->queue_family_props[i]));
+      }
+      g_free (props);
+    }
+  } else
+#endif
+  {
+    vkGetPhysicalDeviceMemoryProperties (device->device,
+        &device->memory_properties);
+    vkGetPhysicalDeviceFeatures (device->device, &device->features);
     vkGetPhysicalDeviceQueueFamilyProperties (device->device,
-        &device->n_queue_families, device->queue_family_props);
+        &device->n_queue_families, NULL);
+    if (device->n_queue_families > 0) {
+      device->queue_family_props =
+          g_new0 (VkQueueFamilyProperties, device->n_queue_families);
+      vkGetPhysicalDeviceQueueFamilyProperties (device->device,
+          &device->n_queue_families, device->queue_family_props);
+    }
   }
 
   if (!physical_device_info (device, error))
