@@ -76,6 +76,7 @@ base_tests = [
   [['elements/vkdeviceprovider.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkcommandpool.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkimage.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/vkinstance.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
 ]
 
 # FIXME: unistd dependency, unstable or not tested yet on windows

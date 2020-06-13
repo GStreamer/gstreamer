@@ -82,6 +82,16 @@ gboolean            gst_vulkan_instance_handle_context_query    (GstElement * el
 GST_VULKAN_API
 gboolean            gst_vulkan_instance_run_context_query       (GstElement * element,
                                                                  GstVulkanInstance ** instance);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_check_version           (GstVulkanInstance * instance,
+                                                                 guint major,
+                                                                 guint minor,
+                                                                 guint patch);
+GST_VULKAN_API
+void                gst_vulkan_instance_get_version             (GstVulkanInstance * instance,
+                                                                 guint * major,
+                                                                 guint * minor,
+                                                                 guint * patch);
 
 G_END_DECLS
 
