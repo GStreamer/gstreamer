@@ -34,21 +34,33 @@
 #define GST_CAT_DEFAULT gst_vulkan_window_wayland_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define gst_vulkan_window_wayland_parent_class parent_class
-G_DEFINE_TYPE (GstVulkanWindowWayland, gst_vulkan_window_wayland,
-    GST_TYPE_VULKAN_WINDOW)
+static void
+_init_debug (void)
+{
+  static volatile gsize _init = 0;
 
-     static void gst_vulkan_window_wayland_close (GstVulkanWindow * window);
-     static gboolean gst_vulkan_window_wayland_open (GstVulkanWindow * window,
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanwindowxcb", 0,
+        "Vulkan XCB Window");
+    g_once_init_leave (&_init, 1);
+  }
+}
+
+#define gst_vulkan_window_wayland_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanWindowWayland, gst_vulkan_window_wayland,
+    GST_TYPE_VULKAN_WINDOW, _init_debug ());
+
+static void gst_vulkan_window_wayland_close (GstVulkanWindow * window);
+static gboolean gst_vulkan_window_wayland_open (GstVulkanWindow * window,
     GError ** error);
-     static VkSurfaceKHR gst_vulkan_window_wayland_get_surface (GstVulkanWindow
+static VkSurfaceKHR gst_vulkan_window_wayland_get_surface (GstVulkanWindow
     * window, GError ** error);
-     static gboolean
-         gst_vulkan_window_wayland_get_presentation_support (GstVulkanWindow *
+static gboolean
+gst_vulkan_window_wayland_get_presentation_support (GstVulkanWindow *
     window, GstVulkanDevice * device, guint32 queue_family_idx);
 
-     static void
-         handle_ping (void *data, struct wl_shell_surface *shell_surface,
+static void
+handle_ping (void *data, struct wl_shell_surface *shell_surface,
     uint32_t serial)
 {
   GstVulkanWindowWayland *window_wl = data;
@@ -174,6 +186,8 @@ gst_vulkan_window_wayland_new (GstVulkanDisplay * display)
       == 0)
     /* we require a wayland display to create wayland surfaces */
     return NULL;
+
+  _init_debug ();
 
   GST_DEBUG ("creating Wayland window");
 
