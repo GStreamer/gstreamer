@@ -76,6 +76,9 @@ gst_media_capture_subtype_to_video_format (const std::string &subtype)
     return "YV12";
   else if (g_ascii_strcasecmp (subtype.c_str(), "IYUV") == 0)
     return "I420";
+  else if (g_ascii_strcasecmp (subtype.c_str(), "YUY2") == 0)
+    return "YUY2";
+
   /* FIXME: add more */
 
   return std::string();
