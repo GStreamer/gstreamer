@@ -631,6 +631,7 @@ class Buffer(Gst.Buffer):
         raise MapError('MappingError','Buffer mapping was not successfull')
 
     def unmap(self, mapinfo):
+        mapinfo.__parent__ = None
         if _gi_gst.buffer_override_unmap(self, mapinfo) is not True:
             raise MapError('UnmappingError','Buffer unmapping was not successfull')
 
@@ -647,6 +648,7 @@ class Memory(Gst.Memory):
         raise MapError('MappingError','Memory mapping was not successfull')
 
     def unmap(self, mapinfo):
+        mapinfo.__parent__ = None
         return _gi_gst.memory_override_unmap(self, mapinfo)
 
 Memory = override(Memory)
