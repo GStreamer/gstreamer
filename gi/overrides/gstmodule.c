@@ -736,7 +736,7 @@ _remap (GstMapInfo * mapinfo, PyObject * py_mapinfo)
       PyMemoryView_FromMemory ((char *) mapinfo->data, mapinfo->size, flags);
 
   /* Box GstMemory into a Gst.Memory */
-  py_memory = pyg_boxed_new (_gst_memory_type, mapinfo->memory, TRUE, TRUE);
+  py_memory = pyg_boxed_new (_gst_memory_type, mapinfo->memory, FALSE, FALSE);
   /* Fill out Gst.MapInfo with values corresponding to GstMapInfo */
   if (PyObject_SetAttrString (py_mapinfo, "memory", py_memory) == -1)
     return NULL;
