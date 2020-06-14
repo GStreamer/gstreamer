@@ -72,10 +72,18 @@ static void gst_vulkan_instance_finalize (GObject * object);
 
 struct _GstVulkanInstancePrivate
 {
+  gboolean info_collected;
   gboolean opened;
   guint requested_api_major;
   guint requested_api_minor;
   uint32_t supported_instance_api;
+
+  guint n_available_layers;
+  VkLayerProperties *available_layers;
+  guint n_available_extensions;
+  VkExtensionProperties *available_extensions;
+  GPtrArray *enabled_layers;
+  GPtrArray *enabled_extensions;
 };
 
 static void
@@ -169,6 +177,9 @@ gst_vulkan_instance_init (GstVulkanInstance * instance)
   priv->requested_api_major = DEFAULT_REQUESTED_API_VERSION_MAJOR;
   priv->requested_api_minor = DEFAULT_REQUESTED_API_VERSION_MINOR;
 
+  priv->enabled_layers = g_ptr_array_new_with_free_func (g_free);
+  priv->enabled_extensions = g_ptr_array_new_with_free_func (g_free);
+
 #if !defined (GST_DISABLE_DEBUG)
   {
     const gchar *api_override = g_getenv ("GST_VULKAN_INSTANCE_API_VERSION");
@@ -251,6 +262,18 @@ gst_vulkan_instance_finalize (GObject * object)
     vkDestroyInstance (instance->instance, NULL);
   instance->instance = NULL;
 
+  g_free (priv->available_layers);
+  priv->available_layers = NULL;
+
+  g_free (priv->available_extensions);
+  priv->available_extensions = NULL;
+
+  g_ptr_array_unref (priv->enabled_layers);
+  priv->enabled_layers = NULL;
+
+  g_ptr_array_unref (priv->enabled_extensions);
+  priv->enabled_extensions = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -291,6 +314,369 @@ _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
   return FALSE;
 }
 
+static gboolean
+gst_vulkan_instance_get_layer_info_unlocked (GstVulkanInstance * instance,
+    const gchar * name, gchar ** description, guint32 * spec_version,
+    guint32 * implementation_version)
+{
+  GstVulkanInstancePrivate *priv;
+  int i;
+
+  priv = GET_PRIV (instance);
+
+  for (i = 0; i < priv->n_available_layers; i++) {
+    if (g_strcmp0 (name, priv->available_layers[i].layerName) == 0) {
+      if (description)
+        *description = g_strdup (priv->available_layers[i].description);
+      if (spec_version)
+        *spec_version = priv->available_layers[i].specVersion;
+      if (implementation_version)
+        *spec_version = priv->available_layers[i].implementationVersion;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_vulkan_instance_get_layer_info:
+ * @instance: a #GstVulkanInstance
+ * @name: the layer name to look for
+ * @description: (out) (nullable): return value for the layer description or %NULL
+ * @spec_version: (out) (nullable): return value for the layer specification version
+ * @implementation_version: (out) (nullable): return value for the layer implementation version
+ *
+ * Retrieves information about a layer.
+ *
+ * Will not find any layers before gst_vulkan_instance_fill_info() has been
+ * called.
+ *
+ * Returns: whether layer @name is available
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_vulkan_instance_get_layer_info (GstVulkanInstance * instance,
+    const gchar * name, gchar ** description, guint32 * spec_version,
+    guint32 * implementation_version)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret =
+      gst_vulkan_instance_get_layer_info_unlocked (instance, name, description,
+      spec_version, implementation_version);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
+G_GNUC_INTERNAL gboolean
+gst_vulkan_instance_get_extension_info_unlocked (GstVulkanInstance * instance,
+    const gchar * name, guint32 * spec_version);
+
+G_GNUC_INTERNAL gboolean
+gst_vulkan_instance_get_extension_info_unlocked (GstVulkanInstance * instance,
+    const gchar * name, guint32 * spec_version)
+{
+  GstVulkanInstancePrivate *priv;
+  int i;
+
+  priv = GET_PRIV (instance);
+
+  for (i = 0; i < priv->n_available_extensions; i++) {
+    if (g_strcmp0 (name, priv->available_extensions[i].extensionName) == 0) {
+      if (spec_version)
+        *spec_version = priv->available_extensions[i].specVersion;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_vulkan_instance_get_extension_info:
+ * @instance: a #GstVulkanInstance
+ * @name: the layer name to look for
+ * @spec_version: (out) (nullable): return value for the layer specification version
+ *
+ * Retrieves information about an extension.
+ *
+ * Will not find any extensions before gst_vulkan_instance_fill_info() has been
+ * called.
+ *
+ * Returns: whether extension @name is available
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_vulkan_instance_get_extension_info (GstVulkanInstance * instance,
+    const gchar * name, guint32 * spec_version)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret =
+      gst_vulkan_instance_get_extension_info_unlocked (instance, name,
+      spec_version);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
+/* reimplement a specfic case of g_ptr_array_find_with_equal_func as that
+ * requires Glib 2.54 */
+static gboolean
+ptr_array_find_string (GPtrArray * array, const gchar * str, guint * index)
+{
+  guint i;
+
+  for (i = 0; i < array->len; i++) {
+    gchar *val = (gchar *) g_ptr_array_index (array, i);
+    if (g_strcmp0 (val, str) == 0) {
+      if (index)
+        *index = i;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_vulkan_instance_is_extension_enabled_unlocked (GstVulkanInstance * instance,
+    const gchar * name, guint * index)
+{
+  GstVulkanInstancePrivate *priv = GET_PRIV (instance);
+
+  return ptr_array_find_string (priv->enabled_extensions, name, index);
+}
+
+/**
+ * gst_vulkan_instance_is_extension_enabled:
+ * @instance: a # GstVulkanInstance
+ * @name: extension name
+ *
+ * Returns: whether extension @name is enabled
+ */
+gboolean
+gst_vulkan_instance_is_extension_enabled (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret =
+      gst_vulkan_instance_is_extension_enabled_unlocked (instance, name, NULL);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_instance_enable_extension_unlocked (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  GstVulkanInstancePrivate *priv = GET_PRIV (instance);
+  gboolean extension_is_available = FALSE;
+  guint i;
+
+  if (gst_vulkan_instance_is_extension_enabled_unlocked (instance, name, NULL))
+    /* extension is already enabled */
+    return TRUE;
+
+  for (i = 0; i < priv->n_available_extensions; i++) {
+    if (g_strcmp0 (name, priv->available_extensions[i].extensionName) == 0) {
+      extension_is_available = TRUE;
+      break;
+    }
+  }
+
+  if (!extension_is_available)
+    return FALSE;
+
+  g_ptr_array_add (priv->enabled_extensions, g_strdup (name));
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_instance_enable_extension:
+ * @instance: a #GstVulkanInstance
+ * @name: extension name to enable
+ *
+ * Enable an Vulkan extension by @name.  Extensions cannot be enabled until
+ * gst_vulkan_instance_fill_info() has been called.  Enabling an extension will
+ * only have an effect before the call to gst_vulkan_instance_open().
+ *
+ * Returns: whether the Vulkan extension could be enabled.
+ */
+gboolean
+gst_vulkan_instance_enable_extension (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret = gst_vulkan_instance_enable_extension_unlocked (instance, name);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_instance_disable_extension_unlocked (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  GstVulkanInstancePrivate *priv = GET_PRIV (instance);
+  gboolean extension_is_available = FALSE;
+  guint i;
+
+  for (i = 0; i < priv->n_available_extensions; i++) {
+    if (g_strcmp0 (name, priv->available_extensions[i].extensionName) == 0) {
+      extension_is_available = TRUE;
+      break;
+    }
+  }
+
+  if (!extension_is_available)
+    return FALSE;
+
+  if (!gst_vulkan_instance_is_extension_enabled_unlocked (instance, name, &i))
+    /* extension is already enabled */
+    return TRUE;
+
+  g_ptr_array_remove_index_fast (priv->enabled_extensions, i);
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_instance_disable_extension:
+ * @instance: a #GstVulkanInstance
+ * @name: extension name to enable
+ *
+ * Disable an Vulkan extension by @name.  Disabling an extension will only have
+ * an effect before the call to gst_vulkan_instance_open().
+ *
+ * Returns: whether the Vulkan extension could be disabled.
+ */
+gboolean
+gst_vulkan_instance_disable_extension (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret = gst_vulkan_instance_disable_extension_unlocked (instance, name);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_instance_is_layer_enabled_unlocked (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  GstVulkanInstancePrivate *priv = GET_PRIV (instance);
+
+  return ptr_array_find_string (priv->enabled_layers, name, NULL);
+}
+
+/**
+ * gst_vulkan_instance_is_layer_enabled:
+ * @instance: a # GstVulkanInstance
+ * @name: layer name
+ *
+ * Returns: whether layer @name is enabled
+ */
+gboolean
+gst_vulkan_instance_is_layer_enabled (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret = gst_vulkan_instance_is_layer_enabled_unlocked (instance, name);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_instance_enable_layer_unlocked (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  GstVulkanInstancePrivate *priv = GET_PRIV (instance);
+  gboolean layer_is_available = FALSE;
+  guint i;
+
+  if (gst_vulkan_instance_is_layer_enabled_unlocked (instance, name))
+    /* layer is already enabled */
+    return TRUE;
+
+  for (i = 0; i < priv->n_available_layers; i++) {
+    if (g_strcmp0 (name, priv->available_layers[i].layerName) == 0) {
+      layer_is_available = TRUE;
+      break;
+    }
+  }
+
+  if (!layer_is_available)
+    return FALSE;
+
+  g_ptr_array_add (priv->enabled_layers, g_strdup (name));
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_instance_enable_layer:
+ * @instance: a #GstVulkanInstance
+ * @name: layer name to enable
+ *
+ * Enable an Vulkan layer by @name.  Layer cannot be enabled until
+ * gst_vulkan_instance_fill_info() has been called.  Enabling a layer will
+ * only have an effect before the call to gst_vulkan_instance_open().
+ *
+ * Returns: whether the Vulkan layer could be enabled.
+ */
+gboolean
+gst_vulkan_instance_enable_layer (GstVulkanInstance * instance,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret = gst_vulkan_instance_enable_layer_unlocked (instance, name);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
 static void
 gst_vulkan_get_supported_api_version_unlocked (GstVulkanInstance * instance)
 {
@@ -311,6 +697,122 @@ gst_vulkan_get_supported_api_version_unlocked (GstVulkanInstance * instance)
   }
 }
 
+G_GNUC_INTERNAL GstVulkanDisplayType
+gst_vulkan_display_choose_type_unlocked (GstVulkanInstance * instance);
+
+static gboolean
+gst_vulkan_instance_fill_info_unlocked (GstVulkanInstance * instance,
+    GError ** error)
+{
+  GstVulkanInstancePrivate *priv;
+  VkResult err;
+
+  priv = GET_PRIV (instance);
+
+  if (priv->info_collected)
+    return TRUE;
+  priv->info_collected = TRUE;
+
+  gst_vulkan_get_supported_api_version_unlocked (instance);
+
+  /* Look for validation layers */
+  err = vkEnumerateInstanceLayerProperties (&priv->n_available_layers, NULL);
+  if (gst_vulkan_error_to_g_error (err, error,
+          "vKEnumerateInstanceLayerProperties") < 0) {
+    return FALSE;
+  }
+
+  priv->available_layers = g_new0 (VkLayerProperties, priv->n_available_layers);
+  err =
+      vkEnumerateInstanceLayerProperties (&priv->n_available_layers,
+      priv->available_layers);
+  if (gst_vulkan_error_to_g_error (err, error,
+          "vKEnumerateInstanceLayerProperties") < 0) {
+    return FALSE;
+  }
+
+  err =
+      vkEnumerateInstanceExtensionProperties (NULL,
+      &priv->n_available_extensions, NULL);
+  if (gst_vulkan_error_to_g_error (err, error,
+          "vkEnumerateInstanceExtensionProperties") < 0) {
+    return FALSE;
+  }
+
+  priv->available_extensions =
+      g_new0 (VkExtensionProperties, priv->n_available_extensions);
+  err =
+      vkEnumerateInstanceExtensionProperties (NULL,
+      &priv->n_available_extensions, priv->available_extensions);
+  if (gst_vulkan_error_to_g_error (err, error,
+          "vkEnumerateInstanceExtensionProperties") < 0) {
+    return FALSE;
+  }
+
+  /* configure default extensions */
+  {
+    GstVulkanDisplayType display_type;
+    const gchar *winsys_ext_name;
+    GstDebugLevel vulkan_debug_level;
+
+    display_type = gst_vulkan_display_choose_type_unlocked (instance);
+
+    winsys_ext_name =
+        gst_vulkan_display_type_to_extension_string (display_type);
+    if (!winsys_ext_name) {
+      GST_WARNING_OBJECT (instance, "No window system extension enabled");
+    } else if (gst_vulkan_instance_get_extension_info_unlocked (instance,
+            VK_KHR_SURFACE_EXTENSION_NAME, NULL)
+        && gst_vulkan_instance_get_extension_info_unlocked (instance,
+            winsys_ext_name, NULL)) {
+      gst_vulkan_instance_enable_extension_unlocked (instance,
+          VK_KHR_SURFACE_EXTENSION_NAME);
+      gst_vulkan_instance_enable_extension_unlocked (instance, winsys_ext_name);
+    }
+#if !defined (GST_DISABLE_DEBUG)
+    vulkan_debug_level =
+        gst_debug_category_get_threshold (GST_VULKAN_DEBUG_CAT);
+
+    if (vulkan_debug_level >= GST_LEVEL_ERROR) {
+      if (gst_vulkan_instance_get_extension_info_unlocked (instance,
+              VK_EXT_DEBUG_REPORT_EXTENSION_NAME, NULL)) {
+        gst_vulkan_instance_enable_extension_unlocked (instance,
+            VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+      }
+    }
+#endif
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_instance_fill_info:
+ * @instance: a #GstVulkanInstance
+ * @error: #GError
+ *
+ * Retrieve as much information about the available Vulkan instance without
+ * actually creating an Vulkan instance.  Will not do anything while @instance
+ * is open.
+ *
+ * Returns: whether the instance information could be retrieved
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_vulkan_instance_fill_info (GstVulkanInstance * instance, GError ** error)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+
+  GST_OBJECT_LOCK (instance);
+  ret = gst_vulkan_instance_fill_info_unlocked (instance, error);
+  GST_OBJECT_UNLOCK (instance);
+
+  return ret;
+}
+
 /**
  * gst_vulkan_instance_open:
  * @instance: a #GstVulkanInstance
@@ -324,14 +826,8 @@ gboolean
 gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 {
   GstVulkanInstancePrivate *priv;
-  VkExtensionProperties *instance_extensions;
-  char *extension_names[64];    /* FIXME: make dynamic */
-  VkLayerProperties *instance_layers;
-  uint32_t instance_extension_count = 0;
-  uint32_t enabled_extension_count = 0;
-  uint32_t instance_layer_count = 0;
   uint32_t requested_instance_api;
-  gboolean have_debug_extension = FALSE;
+  GstDebugLevel vulkan_debug_level;
   VkResult err;
 
   g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
@@ -344,7 +840,9 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     return TRUE;
   }
 
-  gst_vulkan_get_supported_api_version_unlocked (instance);
+  if (!gst_vulkan_instance_fill_info_unlocked (instance, error))
+    goto error;
+
   if (priv->requested_api_major) {
     requested_instance_api =
         VK_MAKE_VERSION (priv->requested_api_major, priv->requested_api_minor,
@@ -370,100 +868,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     goto error;
   }
 
-  /* Look for validation layers */
-  err = vkEnumerateInstanceLayerProperties (&instance_layer_count, NULL);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vKEnumerateInstanceLayerProperties") < 0)
-    goto error;
-
-  instance_layers = g_new0 (VkLayerProperties, instance_layer_count);
-  err =
-      vkEnumerateInstanceLayerProperties (&instance_layer_count,
-      instance_layers);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vKEnumerateInstanceLayerProperties") < 0) {
-    g_free (instance_layers);
-    goto error;
-  }
-
-  g_free (instance_layers);
-
-  err =
-      vkEnumerateInstanceExtensionProperties (NULL, &instance_extension_count,
-      NULL);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkEnumerateInstanceExtensionProperties") < 0) {
-    goto error;
-  }
-  GST_DEBUG_OBJECT (instance, "Found %u extensions", instance_extension_count);
-
-  memset (extension_names, 0, sizeof (extension_names));
-  instance_extensions =
-      g_new0 (VkExtensionProperties, instance_extension_count);
-  err =
-      vkEnumerateInstanceExtensionProperties (NULL, &instance_extension_count,
-      instance_extensions);
-  if (gst_vulkan_error_to_g_error (err, error,
-          "vkEnumerateInstanceExtensionProperties") < 0) {
-    g_free (instance_extensions);
-    goto error;
-  }
-
-  {
-    GstVulkanDisplayType display_type;
-    gboolean swapchain_ext_found = FALSE;
-    gboolean winsys_ext_found = FALSE;
-    const gchar *winsys_ext_name;
-    uint32_t i;
-
-    display_type = gst_vulkan_display_choose_type (instance);
-
-    winsys_ext_name =
-        gst_vulkan_display_type_to_extension_string (display_type);
-    if (!winsys_ext_name) {
-      GST_WARNING_OBJECT (instance, "No window system extension enabled");
-      winsys_ext_found = TRUE;  /* Don't error out completely */
-    }
-
-    /* TODO: allow outside selection */
-    for (i = 0; i < instance_extension_count; i++) {
-      GST_TRACE_OBJECT (instance, "checking instance extension %s",
-          instance_extensions[i].extensionName);
-
-      if (!g_strcmp0 (VK_KHR_SURFACE_EXTENSION_NAME,
-              instance_extensions[i].extensionName)) {
-        swapchain_ext_found = TRUE;
-        extension_names[enabled_extension_count++] =
-            (gchar *) VK_KHR_SURFACE_EXTENSION_NAME;
-      }
-      if (!g_strcmp0 (VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-              instance_extensions[i].extensionName)) {
-        extension_names[enabled_extension_count++] =
-            (gchar *) VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-        have_debug_extension = TRUE;
-      }
-      if (!g_strcmp0 (winsys_ext_name, instance_extensions[i].extensionName)) {
-        winsys_ext_found = TRUE;
-        extension_names[enabled_extension_count++] = (gchar *) winsys_ext_name;
-      }
-      g_assert (enabled_extension_count < 64);
-    }
-    if (!swapchain_ext_found) {
-      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-          "vkEnumerateInstanceExtensionProperties failed to find the required "
-          "\"" VK_KHR_SURFACE_EXTENSION_NAME "\" extension");
-      g_free (instance_extensions);
-      goto error;
-    }
-    if (!winsys_ext_found) {
-      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-          "vkEnumerateInstanceExtensionProperties failed to find the required "
-          "\"%s\" window system extension", winsys_ext_name);
-      g_free (instance_extensions);
-      goto error;
-    }
-  }
-
   {
     VkApplicationInfo app = { 0, };
     VkInstanceCreateInfo inst_info = { 0, };
@@ -483,21 +887,18 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = NULL,
         .pApplicationInfo = &app,
-        .enabledLayerCount = 0,
-        .ppEnabledLayerNames = NULL,
-        .enabledExtensionCount = enabled_extension_count,
-        .ppEnabledExtensionNames = (const char *const *) extension_names
+        .enabledLayerCount = priv->enabled_layers->len,
+        .ppEnabledLayerNames = (const char *const *) priv->enabled_layers->pdata,
+        .enabledExtensionCount = priv->enabled_extensions->len,
+        .ppEnabledExtensionNames = (const char *const *) priv->enabled_extensions->pdata,
     };
     /* *INDENT-ON* */
 
     err = vkCreateInstance (&inst_info, NULL, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
-      g_free (instance_extensions);
       goto error;
     }
   }
-
-  g_free (instance_extensions);
 
   err =
       vkEnumeratePhysicalDevices (instance->instance,
@@ -515,7 +916,12 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
           "vkEnumeratePhysicalDevices") < 0)
     goto error;
 
-  if (have_debug_extension) {
+#if !defined (GST_DISABLE_DEBUG)
+  vulkan_debug_level = gst_debug_category_get_threshold (GST_VULKAN_DEBUG_CAT);
+
+  if (vulkan_debug_level >= GST_LEVEL_ERROR
+      && gst_vulkan_instance_is_extension_enabled_unlocked (instance,
+          VK_EXT_DEBUG_REPORT_EXTENSION_NAME, NULL)) {
     VkDebugReportCallbackCreateInfoEXT info = { 0, };
 
     instance->dbgCreateDebugReportCallback =
@@ -561,6 +967,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
             "vkCreateDebugReportCallback") < 0)
       goto error;
   }
+#endif
 
   priv->opened = TRUE;
   GST_OBJECT_UNLOCK (instance);

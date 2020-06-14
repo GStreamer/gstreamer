@@ -514,20 +514,12 @@ gst_context_get_vulkan_display (GstContext * context,
   return ret;
 }
 
-/**
- * gst_vulkan_display_choose_type:
- * @instance: a #GstVulkanInstance
- *
- * This function will read the %GST_VULKAN_WINDOW environment variable for
- * a user choice or choose the first supported implementation.
- *
- * Returns: the default #GstVulkanDisplayType #GstVulkanInstance will choose
- *          on creation
- *
- * Since: 1.18
- */
-GstVulkanDisplayType
-gst_vulkan_display_choose_type (GstVulkanInstance * instance)
+typedef gboolean (*InstanceGetExtensionInfo) (GstVulkanInstance * instance,
+    const gchar * name, guint32 * spec_version);
+
+static GstVulkanDisplayType
+gst_vulkan_display_choose_type_full (GstVulkanInstance * instance,
+    InstanceGetExtensionInfo get_ext_info)
 {
   const gchar *window_str;
   GstVulkanDisplayType type = GST_VULKAN_DISPLAY_TYPE_NONE;
@@ -535,14 +527,17 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
 
   window_str = g_getenv ("GST_VULKAN_WINDOW");
 
-  /* FIXME: enumerate instance extensions for the supported winsys' */
+  if (!get_ext_info (instance, VK_KHR_SURFACE_EXTENSION_NAME, NULL))
+    /* Vulkan doesn't have support for surfaces */
+    return GST_VULKAN_DISPLAY_TYPE_NONE;
 
 #define CHOOSE_WINSYS(lname,uname) \
   G_STMT_START { \
     if (!type && g_strcmp0 (window_str, G_STRINGIFY (lname)) == 0) { \
       type = G_PASTE(GST_VULKAN_DISPLAY_TYPE_,uname); \
     } \
-    if (!first_supported) \
+    if (!first_supported && get_ext_info (instance, \
+        gst_vulkan_display_type_to_extension_string (G_PASTE(GST_VULKAN_DISPLAY_TYPE_,uname)), NULL)) \
       first_supported = G_PASTE(GST_VULKAN_DISPLAY_TYPE_,uname); \
   } G_STMT_END
 
@@ -567,7 +562,9 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
     type = GST_VULKAN_DISPLAY_TYPE_WIN32;
   }
 
-  if (!first_supported)
+  if (!first_supported && get_ext_info (instance,
+          gst_vulkan_display_type_to_extension_string
+          (GST_VULKAN_DISPLAY_TYPE_WIN32), NULL))
     first_supported = GST_VULKAN_DISPLAY_TYPE_WIN32;
 #endif
 
@@ -577,7 +574,9 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
     type = GST_VULKAN_DISPLAY_TYPE_ANDROID;
   }
 
-  if (!first_supported)
+  if (!first_supported && get_ext_info (instance,
+          gst_vulkan_display_type_to_extension_string
+          (GST_VULKAN_DISPLAY_TYPE_ANDROID), NULL))
     first_supported = GST_VULKAN_DISPLAY_TYPE_ANDROID;
 #endif
 
@@ -592,6 +591,42 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
     return first_supported;
 
   return GST_VULKAN_DISPLAY_TYPE_NONE;
+}
+
+G_GNUC_INTERNAL GstVulkanDisplayType
+gst_vulkan_display_choose_type_unlocked (GstVulkanInstance * instance);
+
+G_GNUC_INTERNAL gboolean
+gst_vulkan_instance_get_extension_info_unlocked (GstVulkanInstance * instance,
+    const gchar * name, guint32 * spec_version);
+
+G_GNUC_INTERNAL GstVulkanDisplayType
+gst_vulkan_display_choose_type_unlocked (GstVulkanInstance * instance)
+{
+  return gst_vulkan_display_choose_type_full (instance,
+      (InstanceGetExtensionInfo)
+      gst_vulkan_instance_get_extension_info_unlocked);
+}
+
+/**
+ * gst_vulkan_display_choose_type:
+ * @instance: a #GstVulkanInstance
+ *
+ * This function will read the %GST_VULKAN_WINDOW environment variable for
+ * a user choice or choose the first supported implementation.
+ *
+ * gst_vulkan_instance_fill_info() must have been called prior to this function.
+ *
+ * Returns: the default #GstVulkanDisplayType #GstVulkanInstance will choose
+ *          on creation
+ *
+ * Since: 1.18
+ */
+GstVulkanDisplayType
+gst_vulkan_display_choose_type (GstVulkanInstance * instance)
+{
+  return gst_vulkan_display_choose_type_full (instance,
+      (InstanceGetExtensionInfo) gst_vulkan_instance_get_extension_info);
 }
 
 /**
@@ -613,7 +648,6 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
   if (type & GST_VULKAN_DISPLAY_TYPE_XCB)
     return VK_KHR_XCB_SURFACE_EXTENSION_NAME;
 #endif
-
 #if GST_VULKAN_HAVE_WINDOW_WAYLAND
   if (type & GST_VULKAN_DISPLAY_TYPE_WAYLAND)
     return VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;

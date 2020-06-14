@@ -58,6 +58,9 @@ struct _GstVulkanInstanceClass
 GST_VULKAN_API
 GstVulkanInstance * gst_vulkan_instance_new                     (void);
 GST_VULKAN_API
+gboolean            gst_vulkan_instance_fill_info               (GstVulkanInstance * instance,
+                                                                 GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_instance_open                    (GstVulkanInstance * instance,
                                                                  GError ** error);
 
@@ -92,6 +95,32 @@ void                gst_vulkan_instance_get_version             (GstVulkanInstan
                                                                  guint * major,
                                                                  guint * minor,
                                                                  guint * patch);
+
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_get_extension_info      (GstVulkanInstance * instance,
+                                                                 const gchar * name,
+                                                                 guint32 * spec_version);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_enable_extension        (GstVulkanInstance * instance,
+                                                                 const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_disable_extension       (GstVulkanInstance * instance,
+                                                                 const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_is_extension_enabled    (GstVulkanInstance * instance,
+                                                                 const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_get_layer_info          (GstVulkanInstance * instance,
+                                                                 const gchar * name,
+                                                                 gchar ** description,
+                                                                 guint32 * spec_version,
+                                                                 guint32 * implementation_version);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_enable_layer            (GstVulkanInstance * instance,
+                                                                 const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_instance_is_layer_enabled        (GstVulkanInstance * instance,
+                                                                 const gchar * name);
 
 G_END_DECLS
 

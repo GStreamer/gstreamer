@@ -107,6 +107,43 @@ GST_START_TEST (test_instance_request_version)
 
 GST_END_TEST;
 
+GST_START_TEST (test_instance_enable_extension)
+{
+  GstVulkanInstance *instance;
+  /* test with a very common extension */
+  const gchar *test_ext_name = VK_KHR_SURFACE_EXTENSION_NAME;
+
+  instance = gst_vulkan_instance_new ();
+  fail_unless (instance != NULL);
+  fail_unless (gst_vulkan_instance_fill_info (instance, NULL));
+
+  /* only run the test if the extension is available. otherwise, skip. */
+  if (gst_vulkan_instance_get_extension_info (instance, test_ext_name, NULL)) {
+    /* ensure it has been disabled */
+    if (gst_vulkan_instance_is_extension_enabled (instance, test_ext_name))
+      gst_vulkan_instance_disable_extension (instance, test_ext_name);
+
+    fail_unless (gst_vulkan_instance_enable_extension (instance,
+            test_ext_name));
+    fail_unless (gst_vulkan_instance_is_extension_enabled (instance,
+            test_ext_name));
+    fail_unless (gst_vulkan_instance_disable_extension (instance,
+            test_ext_name));
+    fail_unless (!gst_vulkan_instance_is_extension_enabled (instance,
+            test_ext_name));
+
+    fail_unless (gst_vulkan_instance_enable_extension (instance,
+            test_ext_name));
+    fail_unless (gst_vulkan_instance_open (instance, NULL));
+    fail_unless (gst_vulkan_instance_is_extension_enabled (instance,
+            test_ext_name));
+  }
+
+  gst_object_unref (instance);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkinstance_suite (void)
 {
@@ -128,10 +165,10 @@ vkinstance_suite (void)
     tcase_add_test (tc_basic, test_instance_open);
     tcase_add_test (tc_basic, test_instance_default_max_version);
     tcase_add_test (tc_basic, test_instance_request_version);
+    tcase_add_test (tc_basic, test_instance_enable_extension);
   }
 
   return s;
 }
-
 
 GST_CHECK_MAIN (vkinstance);
