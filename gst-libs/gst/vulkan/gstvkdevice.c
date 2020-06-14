@@ -54,6 +54,9 @@ static void gst_vulkan_device_finalize (GObject * object);
 
 struct _GstVulkanDevicePrivate
 {
+  GPtrArray *enabled_layers;
+  GPtrArray *enabled_extensions;
+
   gboolean opened;
   guint queue_family_id;
   guint n_queues;
@@ -163,6 +166,10 @@ gst_vulkan_device_get_property (GObject * object, guint prop_id,
 static void
 gst_vulkan_device_init (GstVulkanDevice * device)
 {
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  priv->enabled_layers = g_ptr_array_new_with_free_func (g_free);
+  priv->enabled_extensions = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -171,6 +178,10 @@ gst_vulkan_device_constructed (GObject * object)
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
 
   g_object_get (device->physical_device, "instance", &device->instance, NULL);
+
+  /* by default allow vkswapper to work for rendering to an output window.
+   * Ignore the failure if the extension does not exist. */
+  gst_vulkan_device_enable_extension (device, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
@@ -219,6 +230,7 @@ static void
 gst_vulkan_device_finalize (GObject * object)
 {
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
 
   if (device->device) {
     vkDeviceWaitIdle (device->device);
@@ -228,6 +240,12 @@ gst_vulkan_device_finalize (GObject * object)
 
   gst_clear_object (&device->physical_device);
   gst_clear_object (&device->instance);
+
+  g_ptr_array_unref (priv->enabled_layers);
+  priv->enabled_layers = NULL;
+
+  g_ptr_array_unref (priv->enabled_extensions);
+  priv->enabled_extensions = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -247,9 +265,6 @@ gboolean
 gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
 {
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
-  const char *extension_names[64];
-  uint32_t enabled_extension_count = 0;
-  gboolean have_swapchain_ext;
   VkPhysicalDevice gpu;
   VkResult err;
   guint i;
@@ -264,29 +279,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   }
 
   gpu = gst_vulkan_device_get_physical_device (device);
-
-  have_swapchain_ext = 0;
-  enabled_extension_count = 0;
-  memset (extension_names, 0, sizeof (extension_names));
-
-  for (i = 0; i < device->physical_device->n_device_extensions; i++) {
-    GST_TRACE_OBJECT (device, "checking device extension %s",
-        device->physical_device->device_extensions[i].extensionName);
-    if (!strcmp (VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            device->physical_device->device_extensions[i].extensionName)) {
-      have_swapchain_ext = TRUE;
-      extension_names[enabled_extension_count++] =
-          (gchar *) VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-    }
-    g_assert (enabled_extension_count < 64);
-  }
-  if (!have_swapchain_ext) {
-    g_set_error_literal (error, GST_VULKAN_ERROR,
-        VK_ERROR_EXTENSION_NOT_PRESENT,
-        "Failed to find required extension, \"" VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        "\"");
-    goto error;
-  }
 
   /* FIXME: allow overriding/selecting */
   for (i = 0; i < device->physical_device->n_queue_families; i++) {
@@ -317,10 +309,12 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     device_info.pNext = NULL;
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
-    device_info.enabledLayerCount = 0;
-    device_info.ppEnabledLayerNames = NULL;
-    device_info.enabledExtensionCount = enabled_extension_count;
-    device_info.ppEnabledExtensionNames = (const char *const *) extension_names;
+    device_info.enabledLayerCount = priv->enabled_layers->len;
+    device_info.ppEnabledLayerNames =
+        (const char *const *) priv->enabled_layers->pdata;
+    device_info.enabledExtensionCount = priv->enabled_extensions->len;
+    device_info.ppEnabledExtensionNames =
+        (const char *const *) priv->enabled_extensions->pdata;
     device_info.pEnabledFeatures = NULL;
 
     err = vkCreateDevice (gpu, &device_info, NULL, &device->device);
@@ -628,4 +622,222 @@ gst_vulkan_device_create_fence (GstVulkanDevice * device, GError ** error)
   priv = GET_PRIV (device);
 
   return gst_vulkan_fence_cache_acquire (priv->fence_cache, error);
+}
+
+/* reimplement a specfic case of g_ptr_array_find_with_equal_func as that
+ * requires Glib 2.54 */
+static gboolean
+ptr_array_find_string (GPtrArray * array, const gchar * str, guint * index)
+{
+  guint i;
+
+  for (i = 0; i < array->len; i++) {
+    gchar *val = (gchar *) g_ptr_array_index (array, i);
+    if (g_strcmp0 (val, str) == 0) {
+      if (index)
+        *index = i;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_vulkan_device_is_extension_enabled_unlocked (GstVulkanDevice * device,
+    const gchar * name, guint * index)
+{
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  return ptr_array_find_string (priv->enabled_extensions, name, index);
+}
+
+/**
+ * gst_vulkan_device_is_extension_enabled:
+ * @device: a # GstVulkanDevice
+ * @name: extension name
+ *
+ * Returns: whether extension @name is enabled
+ */
+gboolean
+gst_vulkan_device_is_extension_enabled (GstVulkanDevice * device,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret = gst_vulkan_device_is_extension_enabled_unlocked (device, name, NULL);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_device_enable_extension_unlocked (GstVulkanDevice * device,
+    const gchar * name)
+{
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  if (gst_vulkan_device_is_extension_enabled_unlocked (device, name, NULL))
+    /* extension is already enabled */
+    return TRUE;
+
+  if (!gst_vulkan_physical_device_get_extension_info (device->physical_device,
+          name, NULL))
+    return FALSE;
+
+  g_ptr_array_add (priv->enabled_extensions, g_strdup (name));
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_device_enable_extension:
+ * @device: a #GstVulkanDevice
+ * @name: extension name to enable
+ *
+ * Enable an Vulkan extension by @name.  Enabling an extension will
+ * only have an effect before the call to gst_vulkan_device_open().
+ *
+ * Returns: whether the Vulkan extension could be enabled.
+ */
+gboolean
+gst_vulkan_device_enable_extension (GstVulkanDevice * device,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret = gst_vulkan_device_enable_extension_unlocked (device, name);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_device_disable_extension_unlocked (GstVulkanDevice * device,
+    const gchar * name)
+{
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+  guint i;
+
+  if (!gst_vulkan_physical_device_get_extension_info (device->physical_device,
+          name, NULL))
+    return FALSE;
+
+  if (!gst_vulkan_device_is_extension_enabled_unlocked (device, name, &i))
+    /* extension is already disabled */
+    return TRUE;
+
+  g_ptr_array_remove_index_fast (priv->enabled_extensions, i);
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_device_disable_extension:
+ * @device: a #GstVulkanDevice
+ * @name: extension name to enable
+ *
+ * Disable an Vulkan extension by @name.  Disabling an extension will only have
+ * an effect before the call to gst_vulkan_device_open().
+ *
+ * Returns: whether the Vulkan extension could be disabled.
+ */
+gboolean
+gst_vulkan_device_disable_extension (GstVulkanDevice * device,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret = gst_vulkan_device_disable_extension_unlocked (device, name);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_device_is_layer_enabled_unlocked (GstVulkanDevice * device,
+    const gchar * name)
+{
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  return ptr_array_find_string (priv->enabled_layers, name, NULL);
+}
+
+/**
+ * gst_vulkan_device_is_layer_enabled:
+ * @device: a # GstVulkanDevice
+ * @name: layer name
+ *
+ * Returns: whether layer @name is enabled
+ */
+gboolean
+gst_vulkan_device_is_layer_enabled (GstVulkanDevice * device,
+    const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret = gst_vulkan_device_is_layer_enabled_unlocked (device, name);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_device_enable_layer_unlocked (GstVulkanDevice * device,
+    const gchar * name)
+{
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  if (gst_vulkan_device_is_layer_enabled_unlocked (device, name))
+    /* layer is already enabled */
+    return TRUE;
+
+  if (!gst_vulkan_physical_device_get_layer_info (device->physical_device,
+          name, NULL, NULL, NULL))
+    return FALSE;
+
+  g_ptr_array_add (priv->enabled_layers, g_strdup (name));
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_device_enable_layer:
+ * @device: a #GstVulkanDevice
+ * @name: layer name to enable
+ *
+ * Enable an Vulkan layer by @name.  Enabling a layer will
+ * only have an effect before the call to gst_vulkan_device_open().
+ *
+ * Returns: whether the Vulkan layer could be enabled.
+ */
+gboolean
+gst_vulkan_device_enable_layer (GstVulkanDevice * device, const gchar * name)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret = gst_vulkan_device_enable_layer_unlocked (device, name);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
 }

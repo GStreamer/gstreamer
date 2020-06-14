@@ -52,7 +52,12 @@ static void gst_vulkan_physical_device_finalize (GObject * object);
 
 struct _GstVulkanPhysicalDevicePrivate
 {
-  guint dummy;
+  guint32 n_available_layers;
+  VkLayerProperties *available_layers;
+
+  guint32 n_available_extensions;
+  VkExtensionProperties *available_extensions;
+
 #if defined (VK_API_VERSION_1_2)
   VkPhysicalDeviceFeatures2 features10;
   VkPhysicalDeviceProperties2 properties10;
@@ -162,6 +167,9 @@ gst_vulkan_physical_device_init (GstVulkanPhysicalDevice * device)
 {
   GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
 
+  priv->n_available_layers = 0;
+  priv->n_available_extensions = 0;
+
 #if defined (VK_API_VERSION_1_2)
   priv->properties10.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
   priv->properties11.sType =
@@ -231,12 +239,13 @@ static void
 gst_vulkan_physical_device_finalize (GObject * object)
 {
   GstVulkanPhysicalDevice *device = GST_VULKAN_PHYSICAL_DEVICE (object);
+  GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
 
-  g_free (device->device_layers);
-  device->device_layers = NULL;
+  g_free (priv->available_layers);
+  priv->available_layers = NULL;
 
-  g_free (device->device_extensions);
-  device->device_extensions = NULL;
+  g_free (priv->available_extensions);
+  priv->available_extensions = NULL;
 
   g_free (device->queue_family_props);
   device->queue_family_props = NULL;
@@ -803,15 +812,15 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 
   err =
       vkEnumerateDeviceLayerProperties (device->device,
-      &device->n_device_layers, NULL);
+      &priv->n_available_layers, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceLayerProperties") < 0)
     goto error;
 
-  device->device_layers = g_new0 (VkLayerProperties, device->n_device_layers);
+  priv->available_layers = g_new0 (VkLayerProperties, priv->n_available_layers);
   err =
       vkEnumerateDeviceLayerProperties (device->device,
-      &device->n_device_layers, device->device_layers);
+      &priv->n_available_layers, priv->available_layers);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceLayerProperties") < 0) {
     goto error;
@@ -819,18 +828,19 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 
   err =
       vkEnumerateDeviceExtensionProperties (device->device, NULL,
-      &device->n_device_extensions, NULL);
+      &priv->n_available_extensions, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0) {
     goto error;
   }
-  GST_DEBUG_OBJECT (device, "Found %u extensions", device->n_device_extensions);
+  GST_DEBUG_OBJECT (device, "Found %u extensions",
+      priv->n_available_extensions);
 
-  device->device_extensions =
-      g_new0 (VkExtensionProperties, device->n_device_extensions);
+  priv->available_extensions =
+      g_new0 (VkExtensionProperties, priv->n_available_extensions);
   err =
       vkEnumerateDeviceExtensionProperties (device->device, NULL,
-      &device->n_device_extensions, device->device_extensions);
+      &priv->n_available_extensions, priv->available_extensions);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0) {
     goto error;
@@ -950,4 +960,118 @@ gst_vulkan_physical_device_get_instance (GstVulkanPhysicalDevice * device)
   g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), NULL);
 
   return device->instance ? gst_object_ref (device->instance) : NULL;
+}
+
+static gboolean
+gst_vulkan_physical_device_get_layer_info_unlocked (GstVulkanPhysicalDevice *
+    device, const gchar * name, gchar ** description, guint32 * spec_version,
+    guint32 * implementation_version)
+{
+  GstVulkanPhysicalDevicePrivate *priv;
+  int i;
+
+  priv = GET_PRIV (device);
+
+  for (i = 0; i < priv->n_available_layers; i++) {
+    if (g_strcmp0 (name, priv->available_layers[i].layerName) == 0) {
+      if (description)
+        *description = g_strdup (priv->available_layers[i].description);
+      if (spec_version)
+        *spec_version = priv->available_layers[i].specVersion;
+      if (implementation_version)
+        *spec_version = priv->available_layers[i].implementationVersion;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_vulkan_physical_device_get_layer_info:
+ * @device: a #GstVulkanPhysicalDevice
+ * @name: the layer name to look for
+ * @description: (out) (nullable): return value for the layer description or %NULL
+ * @spec_version: (out) (nullable): return value for the layer specification version
+ * @implementation_version: (out) (nullable): return value for the layer implementation version
+ *
+ * Retrieves information about a layer.
+ *
+ * Will not find any layers before gst_vulkan_instance_fill_info() has been
+ * called.
+ *
+ * Returns: whether layer @name is available
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_vulkan_physical_device_get_layer_info (GstVulkanPhysicalDevice * device,
+    const gchar * name, gchar ** description, guint32 * spec_version,
+    guint32 * implementation_version)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret =
+      gst_vulkan_physical_device_get_layer_info_unlocked (device, name,
+      description, spec_version, implementation_version);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
+}
+
+static gboolean
+gst_vulkan_physical_device_get_extension_info_unlocked (GstVulkanPhysicalDevice
+    * device, const gchar * name, guint32 * spec_version)
+{
+  GstVulkanPhysicalDevicePrivate *priv;
+  int i;
+
+  priv = GET_PRIV (device);
+
+  for (i = 0; i < priv->n_available_extensions; i++) {
+    if (g_strcmp0 (name, priv->available_extensions[i].extensionName) == 0) {
+      if (spec_version)
+        *spec_version = priv->available_extensions[i].specVersion;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_vulkan_physical_device_get_extension_info:
+ * @device: a #GstVulkanPhysicalDevice
+ * @name: the extension name to look for
+ * @spec_version: (out) (nullable): return value for the exteion specification version
+ *
+ * Retrieves information about a device extension.
+ *
+ * Will not find any extensions before gst_vulkan_instance_fill_info() has been
+ * called.
+ *
+ * Returns: whether extension @name is available
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_vulkan_physical_device_get_extension_info (GstVulkanPhysicalDevice * device,
+    const gchar * name, guint32 * spec_version)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  GST_OBJECT_LOCK (device);
+  ret =
+      gst_vulkan_physical_device_get_extension_info_unlocked (device, name,
+      spec_version);
+  GST_OBJECT_UNLOCK (device);
+
+  return ret;
 }

@@ -64,6 +64,22 @@ gboolean            gst_vulkan_device_open                  (GstVulkanDevice * d
                                                              GError ** error);
 
 GST_VULKAN_API
+gboolean            gst_vulkan_device_enable_extension      (GstVulkanDevice * device,
+                                                             const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_device_disable_extension     (GstVulkanDevice * device,
+                                                             const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_device_is_extension_enabled  (GstVulkanDevice * device,
+                                                             const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_device_enable_layer          (GstVulkanDevice * device,
+                                                             const gchar * name);
+GST_VULKAN_API
+gboolean            gst_vulkan_device_is_layer_enabled      (GstVulkanDevice * device,
+                                                             const gchar * name);
+
+GST_VULKAN_API
 gpointer            gst_vulkan_device_get_proc_address      (GstVulkanDevice * device,
                                                              const gchar * name);
 GST_VULKAN_API

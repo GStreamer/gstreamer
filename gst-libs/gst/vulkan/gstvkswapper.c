@@ -132,6 +132,13 @@ _get_function_table (GstVulkanSwapper * swapper)
     GST_ERROR_OBJECT (swapper, "Failed to get instance from the device");
     return FALSE;
   }
+
+  if (!gst_vulkan_device_is_extension_enabled (device,
+          VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
+    GST_ERROR_OBJECT (swapper, "Required extension \'%s\' is not enabled on "
+        "device %" GST_PTR_FORMAT, VK_KHR_SWAPCHAIN_EXTENSION_NAME, device);
+    return FALSE;
+  }
 #define GET_PROC_ADDRESS_REQUIRED(type, name) \
   G_STMT_START { \
     priv->G_PASTE (, name) = G_PASTE(G_PASTE(gst_vulkan_, type), _get_proc_address) (type, "vk" G_STRINGIFY(name)); \

@@ -44,12 +44,6 @@ struct _GstVulkanPhysicalDevice
   guint device_index;
   VkPhysicalDevice device; /* hides a pointer */
 
-  VkLayerProperties *device_layers;
-  guint32 n_device_layers;
-
-  VkExtensionProperties *device_extensions;
-  guint32 n_device_extensions;
-
   VkPhysicalDeviceProperties properties;
   VkPhysicalDeviceFeatures features;
   VkPhysicalDeviceMemoryProperties memory_properties;
@@ -64,12 +58,25 @@ struct _GstVulkanPhysicalDeviceClass
 };
 
 GST_VULKAN_API
-GstVulkanPhysicalDevice *   gst_vulkan_physical_device_new              (GstVulkanInstance * instance, guint device_index);
+GstVulkanPhysicalDevice *   gst_vulkan_physical_device_new                  (GstVulkanInstance * instance,
+                                                                             guint device_index);
 GST_VULKAN_API
-GstVulkanInstance *         gst_vulkan_physical_device_get_instance     (GstVulkanPhysicalDevice * device);
+GstVulkanInstance *         gst_vulkan_physical_device_get_instance         (GstVulkanPhysicalDevice * device);
 
 GST_VULKAN_API
-VkPhysicalDevice            gst_vulkan_physical_device_get_handle       (GstVulkanPhysicalDevice * device);
+VkPhysicalDevice            gst_vulkan_physical_device_get_handle           (GstVulkanPhysicalDevice * device);
+
+GST_VULKAN_API
+gboolean                    gst_vulkan_physical_device_get_extension_info   (GstVulkanPhysicalDevice * device,
+                                                                             const gchar * name,
+                                                                             guint32 * spec_version);
+GST_VULKAN_API
+gboolean                    gst_vulkan_physical_device_get_layer_info       (GstVulkanPhysicalDevice * device,
+                                                                             const gchar * name,
+                                                                             gchar ** description,
+                                                                             guint32 * spec_version,
+                                                                             guint32 * implementation_version);
+
 
 G_END_DECLS
 
