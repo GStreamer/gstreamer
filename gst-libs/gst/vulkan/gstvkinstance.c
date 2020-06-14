@@ -84,6 +84,13 @@ struct _GstVulkanInstancePrivate
   VkExtensionProperties *available_extensions;
   GPtrArray *enabled_layers;
   GPtrArray *enabled_extensions;
+
+#if !defined (GST_DISABLE_DEBUG)
+  VkDebugReportCallbackEXT msg_callback;
+  PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback;
+  PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback;
+  PFN_vkDebugReportMessageEXT dbgReportMessage;
+#endif
 };
 
 static void
@@ -250,9 +257,9 @@ gst_vulkan_instance_finalize (GObject * object)
   GstVulkanInstancePrivate *priv = GET_PRIV (instance);
 
   if (priv->opened) {
-    if (instance->dbgDestroyDebugReportCallback)
-      instance->dbgDestroyDebugReportCallback (instance->instance,
-          instance->msg_callback, NULL);
+    if (priv->dbgDestroyDebugReportCallback)
+      priv->dbgDestroyDebugReportCallback (instance->instance,
+          priv->msg_callback, NULL);
 
     g_free (instance->physical_devices);
   }
@@ -924,28 +931,26 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
           VK_EXT_DEBUG_REPORT_EXTENSION_NAME, NULL)) {
     VkDebugReportCallbackCreateInfoEXT info = { 0, };
 
-    instance->dbgCreateDebugReportCallback =
-        (PFN_vkCreateDebugReportCallbackEXT)
+    priv->dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)
         gst_vulkan_instance_get_proc_address (instance,
         "vkCreateDebugReportCallbackEXT");
-    if (!instance->dbgCreateDebugReportCallback) {
+    if (!priv->dbgCreateDebugReportCallback) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "Failed to retrieve vkCreateDebugReportCallback");
       goto error;
     }
-    instance->dbgDestroyDebugReportCallback =
-        (PFN_vkDestroyDebugReportCallbackEXT)
+    priv->dbgDestroyDebugReportCallback = (PFN_vkDestroyDebugReportCallbackEXT)
         gst_vulkan_instance_get_proc_address (instance,
         "vkDestroyDebugReportCallbackEXT");
-    if (!instance->dbgDestroyDebugReportCallback) {
+    if (!priv->dbgDestroyDebugReportCallback) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "Failed to retrieve vkDestroyDebugReportCallback");
       goto error;
     }
-    instance->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
+    priv->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
         gst_vulkan_instance_get_proc_address (instance,
         "vkDebugReportMessageEXT");
-    if (!instance->dbgReportMessage) {
+    if (!priv->dbgReportMessage) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "Failed to retrieve vkDebugReportMessage");
       goto error;
@@ -953,16 +958,24 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 
     info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
     info.pNext = NULL;
-    info.flags =
-        VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT |
-        VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT |
-        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+    info.flags = 0;
     info.pfnCallback = (PFN_vkDebugReportCallbackEXT) _gst_vk_debug_callback;
     info.pUserData = NULL;
+    /* matches the conditions in _gst_vk_debug_callback() */
+    if (vulkan_debug_level >= GST_LEVEL_ERROR)
+      info.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
+    if (vulkan_debug_level >= GST_LEVEL_WARNING)
+      info.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
+    if (vulkan_debug_level >= GST_LEVEL_FIXME)
+      info.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+    if (vulkan_debug_level >= GST_LEVEL_LOG)
+      info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+    if (vulkan_debug_level >= GST_LEVEL_TRACE)
+      info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
 
     err =
-        instance->dbgCreateDebugReportCallback (instance->instance, &info, NULL,
-        &instance->msg_callback);
+        priv->dbgCreateDebugReportCallback (instance->instance, &info, NULL,
+        &priv->msg_callback);
     if (gst_vulkan_error_to_g_error (err, error,
             "vkCreateDebugReportCallback") < 0)
       goto error;

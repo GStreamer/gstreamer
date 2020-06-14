@@ -43,11 +43,6 @@ struct _GstVulkanInstance
   VkInstance instance; /* hides a pointer */
   VkPhysicalDevice *physical_devices; /* hides a pointer */
   guint32 n_physical_devices;
-
-  VkDebugReportCallbackEXT msg_callback;
-  PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback;
-  PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback;
-  PFN_vkDebugReportMessageEXT dbgReportMessage;
 };
 
 struct _GstVulkanInstanceClass
