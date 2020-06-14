@@ -649,7 +649,8 @@ class Memory(Gst.Memory):
 
     def unmap(self, mapinfo):
         mapinfo.__parent__ = None
-        return _gi_gst.memory_override_unmap(self, mapinfo)
+        if _gi_gst.memory_override_unmap(self, mapinfo) is not True:
+            raise MapError('UnmappingError','Memory unmapping was not successfull')
 
 Memory = override(Memory)
 __all__.append('Memory')
