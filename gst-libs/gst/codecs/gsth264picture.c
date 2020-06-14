@@ -227,7 +227,7 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
     if (picture->outputted && !picture->ref) {
       GST_TRACE ("remove picture %p (frame num %d) from dpb",
           picture, picture->frame_num);
-      g_array_remove_index (dpb->pic_list, i);
+      g_array_remove_index_fast (dpb->pic_list, i);
       i--;
     }
   }
@@ -255,7 +255,7 @@ gst_h264_dpb_delete_by_poc (GstH264Dpb * dpb, gint poc)
       GST_TRACE ("remove picture %p for poc %d (frame num %d) from dpb",
           picture, poc, picture->frame_num);
 
-      g_array_remove_index (dpb->pic_list, i);
+      g_array_remove_index_fast (dpb->pic_list, i);
       return;
     }
   }
