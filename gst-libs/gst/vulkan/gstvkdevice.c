@@ -294,6 +294,17 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   priv->queue_family_id = i;
   priv->n_queues = 1;
 
+  GST_INFO_OBJECT (device, "Creating a device from physical %" GST_PTR_FORMAT
+      " with %u layers and %u extensions", device->physical_device,
+      priv->enabled_layers->len, priv->enabled_extensions->len);
+
+  for (i = 0; i < priv->enabled_layers->len; i++)
+    GST_DEBUG_OBJECT (device, "layer %u: %s", i,
+        (gchar *) g_ptr_array_index (priv->enabled_layers, i));
+  for (i = 0; i < priv->enabled_extensions->len; i++)
+    GST_DEBUG_OBJECT (device, "extension %u: %s", i,
+        (gchar *) g_ptr_array_index (priv->enabled_extensions, i));
+
   {
     VkDeviceQueueCreateInfo queue_info = { 0, };
     VkDeviceCreateInfo device_info = { 0, };

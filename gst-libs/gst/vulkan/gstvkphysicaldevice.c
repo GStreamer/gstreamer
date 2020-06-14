@@ -802,6 +802,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 {
   GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
   VkResult err;
+  guint i;
 
   device->device = gst_vulkan_physical_device_get_handle (device);
   if (!device->device) {
@@ -833,8 +834,6 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
           "vkEnumerateDeviceExtensionProperties") < 0) {
     goto error;
   }
-  GST_DEBUG_OBJECT (device, "Found %u extensions",
-      priv->n_available_extensions);
 
   priv->available_extensions =
       g_new0 (VkExtensionProperties, priv->n_available_extensions);
@@ -845,6 +844,16 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
           "vkEnumerateDeviceExtensionProperties") < 0) {
     goto error;
   }
+
+  GST_INFO_OBJECT (device, "found %u layers and %u extensions",
+      priv->n_available_layers, priv->n_available_extensions);
+
+  for (i = 0; i < priv->n_available_layers; i++)
+    GST_DEBUG_OBJECT (device, "available layer %u: %s", i,
+        priv->available_layers[i].layerName);
+  for (i = 0; i < priv->n_available_extensions; i++)
+    GST_DEBUG_OBJECT (device, "available extension %u: %s", i,
+        priv->available_extensions[i].extensionName);
 
   vkGetPhysicalDeviceProperties (device->device, &device->properties);
 #if defined (VK_API_VERSION_1_2)

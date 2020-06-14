@@ -713,6 +713,7 @@ gst_vulkan_instance_fill_info_unlocked (GstVulkanInstance * instance,
 {
   GstVulkanInstancePrivate *priv;
   VkResult err;
+  guint i;
 
   priv = GET_PRIV (instance);
 
@@ -755,6 +756,16 @@ gst_vulkan_instance_fill_info_unlocked (GstVulkanInstance * instance,
           "vkEnumerateInstanceExtensionProperties") < 0) {
     return FALSE;
   }
+
+  GST_INFO_OBJECT (instance, "found %u layers and %u extensions",
+      priv->n_available_layers, priv->n_available_extensions);
+
+  for (i = 0; i < priv->n_available_layers; i++)
+    GST_DEBUG_OBJECT (instance, "available layer %u: %s", i,
+        priv->available_layers[i].layerName);
+  for (i = 0; i < priv->n_available_extensions; i++)
+    GST_DEBUG_OBJECT (instance, "available extension %u: %s", i,
+        priv->available_extensions[i].extensionName);
 
   /* configure default extensions */
   {
@@ -854,15 +865,8 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     requested_instance_api =
         VK_MAKE_VERSION (priv->requested_api_major, priv->requested_api_minor,
         0);
-    GST_INFO_OBJECT (instance, "requesting Vulkan API %u.%u, max supported "
-        "%u.%u", priv->requested_api_major, priv->requested_api_minor,
-        VK_VERSION_MAJOR (priv->supported_instance_api),
-        VK_VERSION_MINOR (priv->supported_instance_api));
   } else {
     requested_instance_api = priv->supported_instance_api;
-    GST_INFO_OBJECT (instance, "requesting maximum supported API %u.%u",
-        VK_VERSION_MAJOR (priv->supported_instance_api),
-        VK_VERSION_MINOR (priv->supported_instance_api));
   }
 
   if (requested_instance_api > priv->supported_instance_api) {
@@ -873,6 +877,37 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         VK_VERSION_MAJOR (priv->supported_instance_api),
         VK_VERSION_MINOR (priv->supported_instance_api));
     goto error;
+  }
+
+  /* list of known vulkan loader environment variables taken from:
+   * https://github.com/KhronosGroup/Vulkan-LoaderAndValidationLayers/blob/master/loader/LoaderAndLayerInterface.md#table-of-debug-environment-variables */
+  GST_DEBUG_OBJECT (instance, "VK_ICD_FILENAMES: %s",
+      g_getenv ("VK_ICD_FILENAMES"));
+  GST_DEBUG_OBJECT (instance, "VK_INSTANCE_LAYERS: %s",
+      g_getenv ("VK_INSTANCE_LAYERS"));
+  GST_DEBUG_OBJECT (instance, "VK_LAYER_PATH: %s", g_getenv ("VK_LAYER_PATH"));
+  GST_DEBUG_OBJECT (instance, "VK_LOADER_DISABLE_INST_EXT_FILTER: %s",
+      g_getenv ("VK_LOADER_DISABLE_INST_EXT_FILTER"));
+  GST_DEBUG_OBJECT (instance, "VK_LOADER_DEBUG: %s",
+      g_getenv ("VK_LOADER_DEBUG"));
+
+  {
+    guint i;
+
+    GST_INFO_OBJECT (instance, "attempting to create instance for Vulkan API "
+        "%u.%u, max supported %u.%u with %u layers and %u extensions",
+        VK_VERSION_MAJOR (requested_instance_api),
+        VK_VERSION_MINOR (requested_instance_api),
+        VK_VERSION_MAJOR (priv->supported_instance_api),
+        VK_VERSION_MINOR (priv->supported_instance_api),
+        priv->enabled_layers->len, priv->enabled_extensions->len);
+
+    for (i = 0; i < priv->enabled_layers->len; i++)
+      GST_DEBUG_OBJECT (instance, "layer %u: %s", i,
+          (gchar *) g_ptr_array_index (priv->enabled_layers, i));
+    for (i = 0; i < priv->enabled_extensions->len; i++)
+      GST_DEBUG_OBJECT (instance, "extension %u: %s", i,
+          (gchar *) g_ptr_array_index (priv->enabled_extensions, i));
   }
 
   {
