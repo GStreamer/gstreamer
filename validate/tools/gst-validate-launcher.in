@@ -24,35 +24,11 @@ import sys
 LIBDIR = r'@LIBDIR@'
 BUILDDIR = r'@BUILDDIR@'
 SRCDIR = r'@SRCDIR@'
-GIT_FIRST_HASH = 'da962d096af9460502843e41b7d25fdece7ff1c2'
-
-
-def _get_git_first_hash(path):
-    cdir = os.path.abspath(os.curdir)
-    try:
-        os.chdir(path)
-        res = subprocess.check_output(['git', 'rev-list', '--max-parents=0', 'HEAD']).decode().rstrip('\n')
-    except (subprocess.CalledProcessError, OSError):
-        res = ''
-    finally:
-        os.chdir(cdir)
-
-    return res
-
-
-def _in_devel():
-    root_dir = os.path.abspath(os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                            "..", "..", "..")))
-    return _get_git_first_hash(root_dir) == GIT_FIRST_HASH
 
 
 def _add_gst_launcher_path():
     f = os.path.abspath(__file__)
-    if _in_devel():
-        print("Running with development path")
-        dir_ = os.path.dirname(os.path.abspath(__file__))
-        root = os.path.split(dir_)[0]
-    elif f.startswith(BUILDDIR):
+    if f.startswith(BUILDDIR):
         # Make sure to have the configured config.py in the python path
         sys.path.insert(0, os.path.abspath(os.path.join(BUILDDIR, "..")))
         root = os.path.abspath(os.path.join(SRCDIR, "../"))
