@@ -477,8 +477,8 @@ gst_validate_action_return_get_name (GstValidateActionReturn r)
       return "IN_PROGRESS";
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
       return "NONE";
-    case GST_VALIDATE_EXECUTE_ACTION_SKIP:
-      return "SKIP";
+    case GST_VALIDATE_EXECUTE_ACTION_DONE:
+      return "DONE";
   }
   g_assert_not_reached ();
   return "???";
@@ -2443,7 +2443,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 
   if (action_type->prepare) {
     res = action_type->prepare (action);
-    if (res == GST_VALIDATE_EXECUTE_ACTION_SKIP) {
+    if (res == GST_VALIDATE_EXECUTE_ACTION_DONE) {
       gst_validate_print_action (action, NULL);
       return GST_VALIDATE_EXECUTE_ACTION_OK;
     }
@@ -2636,55 +2636,10 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 
   switch (act->priv->state) {
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
+    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
       break;
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
-      GST_INFO_OBJECT (scenario, "Action %s:%d still running",
-          GST_VALIDATE_ACTION_FILENAME (act), GST_VALIDATE_ACTION_LINENO (act));
       return G_SOURCE_CONTINUE;
-    case GST_VALIDATE_EXECUTE_ACTION_ERROR:
-      GST_VALIDATE_REPORT_ACTION (scenario, act,
-          SCENARIO_ACTION_EXECUTION_ERROR, "Action %s failed", act->type);
-    case GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
-    case GST_VALIDATE_EXECUTE_ACTION_OK:
-    {
-      gchar *repeat = NULL;
-
-      if (GST_VALIDATE_ACTION_N_REPEATS (act))
-        repeat =
-            g_strdup_printf ("[%d/%d]", act->repeat,
-            GST_VALIDATE_ACTION_N_REPEATS (act));
-
-      gst_validate_printf (NULL,
-          "%*c⇨ Action %s '%s' %s (duration: %" GST_TIME_FORMAT ")\n\n",
-          (act->priv->subaction_level * 2) - 1, ' ',
-          gst_structure_get_name (act->priv->main_structure),
-          gst_validate_action_return_get_name (act->priv->state),
-          repeat ? repeat : "", GST_TIME_ARGS (act->priv->execution_duration));
-      g_free (repeat);
-
-      priv->actions = g_list_remove (priv->actions, act);
-      gst_validate_action_unref (act);
-
-      if (!gst_validate_parse_next_action_playback_time (scenario)) {
-        gst_validate_error_structure (priv->actions ? priv->
-            actions->data : NULL,
-            "Could not determine next action playback time!");
-
-        return G_SOURCE_REMOVE;
-      }
-
-
-      GST_INFO_OBJECT (scenario, "Action %" GST_PTR_FORMAT " is DONE now"
-          " executing next", act->structure);
-
-      if (scenario->priv->actions) {
-        act = scenario->priv->actions->data;
-      } else {
-        _check_scenario_is_done (scenario);
-        act = NULL;
-      }
-      break;
-    }
     case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
       if (GST_CLOCK_TIME_IS_VALID (act->priv->timeout)) {
         GstClockTime etime =
@@ -2706,6 +2661,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 
       return G_SOURCE_CONTINUE;
     default:
+      GST_ERROR ("State is %d", act->priv->state);
       g_assert_not_reached ();
   }
 
@@ -2746,9 +2702,12 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
       SCENARIO_UNLOCK (scenario);
 
       return G_SOURCE_CONTINUE;
+    case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
+      return G_SOURCE_CONTINUE;
     case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
       SCENARIO_LOCK (scenario);
       priv->interlaced_actions = g_list_append (priv->interlaced_actions, act);
+      priv->actions = g_list_remove (priv->actions, act);
       SCENARIO_UNLOCK (scenario);
       return gst_validate_scenario_execute_next_or_restart_looping (scenario);
     default:
@@ -3485,7 +3444,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
     res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
   } else {
     gst_validate_printf (NULL,
-        "Pipeline is not ready to push buffers, interlacing appsrc-push action...");
+        "Pipeline is not ready to push buffers, interlacing appsrc-push action...\n");
     res = GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
   }
 done:
@@ -3640,7 +3599,6 @@ done:
   action->repeat = 0;
   GST_VALIDATE_ACTION_N_REPEATS (action) = repeat;
 
-  SCENARIO_LOCK (scenario);
   position = g_list_index (scenario->priv->actions, action);
   g_assert (position >= 0);
   for (i = 1; i < repeat; i++) {
@@ -3650,7 +3608,7 @@ done:
     scenario->priv->actions =
         g_list_insert (scenario->priv->actions, copy, position + i);
   }
-  SCENARIO_UNLOCK (scenario);
+
   return TRUE;
 }
 
@@ -3821,6 +3779,8 @@ gst_validate_foreach_prepare (GstValidateAction * action)
       GST_VALIDATE_ACTION_N_REPEATS (subaction) = max;
       scenario->priv->actions =
           g_list_insert (scenario->priv->actions, subaction, i++);
+
+      gst_structure_free (nstruct);
     }
   }
   g_list_free_full (actions, (GDestroyNotify) gst_structure_free);
@@ -3829,7 +3789,7 @@ gst_validate_foreach_prepare (GstValidateAction * action)
   gst_structure_remove_field (action->structure, "actions");
 
   gst_object_unref (scenario);
-  return GST_VALIDATE_EXECUTE_ACTION_SKIP;
+  return GST_VALIDATE_EXECUTE_ACTION_DONE;
 }
 
 static void
@@ -5756,6 +5716,7 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _action_set_done (GstValidateAction * action)
 {
+  gchar *repeat_message = NULL;
   JsonBuilder *jbuild;
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
@@ -5781,17 +5742,53 @@ _action_set_done (GstValidateAction * action)
 
   action->priv->pending_set_done = FALSE;
   switch (action->priv->state) {
+    case GST_VALIDATE_EXECUTE_ACTION_ERROR:
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR, "Action %s failed", action->type);
     case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
-    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
-      action->priv->state = GST_VALIDATE_EXECUTE_ACTION_OK;
+    case GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
+    case GST_VALIDATE_EXECUTE_ACTION_OK:
+    {
+      scenario->priv->actions = g_list_remove (scenario->priv->actions, action);
+
+      _check_scenario_is_done (scenario);
+
+      if (!gst_validate_parse_next_action_playback_time (scenario)) {
+        gst_validate_error_structure (scenario->priv->actions ? scenario->
+            priv->actions->data : NULL,
+            "Could not determine next action playback time!");
+      }
+
+      GST_INFO_OBJECT (scenario, "Action %" GST_PTR_FORMAT " is DONE now"
+          " executing next", action->structure);
+
       break;
-    default:
+    }
+    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
       break;
   }
-  gst_structure_free (action->structure);
-  action->structure = gst_structure_copy (action->priv->main_structure);
+
+  if (GST_VALIDATE_ACTION_N_REPEATS (action))
+    repeat_message =
+        g_strdup_printf ("[%d/%d]", action->repeat,
+        GST_VALIDATE_ACTION_N_REPEATS (action));
+
+  gst_validate_printf (NULL,
+      "%*c⇨ Action %s done '%s' %s (duration: %" GST_TIME_FORMAT ")\n\n",
+      (action->priv->subaction_level * 2) - 1, ' ',
+      gst_structure_get_name (action->priv->main_structure),
+      gst_validate_action_return_get_name (action->priv->state),
+      repeat_message ? repeat_message : "",
+      GST_TIME_ARGS (action->priv->execution_duration));
+  g_free (repeat_message);
+
+  if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
+    /* We took the 'scenario' reference... unreffing it now */
+    gst_validate_action_unref (action);
+
+  action->priv->state = GST_VALIDATE_EXECUTE_ACTION_DONE;
   gst_validate_scenario_execute_next_or_restart_looping (scenario);
   gst_object_unref (scenario);
   return G_SOURCE_REMOVE;

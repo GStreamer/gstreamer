@@ -1,0 +1,12 @@
+meta,
+    handles-states=true,
+    args = {
+        "appsrc name=src ! typefind ! fakesink",
+    }
+
+# Let push ourself into the pipeline :-)
+appsrc-push, file-name="$(test_dir)/$(test_name).validatetest", target-element-name=src
+priv_check-action-type-calls, type=appsrc-push, n=1
+appsrc-eos, target-element-name=src
+pause;
+stop
