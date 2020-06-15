@@ -5012,6 +5012,11 @@ gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)
       g_mutex_unlock (&priv->lock);
       return FALSE;
     }
+
+    if (!gst_rtsp_stream_add_transport (stream, transport)) {
+      g_mutex_unlock (&priv->lock);
+      return FALSE;
+    }
   }
 
   priv->complete = TRUE;
