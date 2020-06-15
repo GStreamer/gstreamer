@@ -57,7 +57,10 @@ typedef enum
   GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED,
   GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS,
   GST_VALIDATE_EXECUTE_ACTION_NONE,
+  GST_VALIDATE_EXECUTE_ACTION_SKIP,
 } GstValidateActionReturn;
+
+const gchar *gst_validate_action_return_get_name (GstValidateActionReturn r);
 
 /* TODO 2.0 -- Make it an actual enum type */
 #define GstValidateExecuteActionReturn gint
@@ -93,6 +96,7 @@ typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
 #define GST_VALIDATE_ACTION_FILENAME(action) (((GstValidateAction*) action)->ABI.abi.filename)
 #define GST_VALIDATE_ACTION_DEBUG(action) (((GstValidateAction*) action)->ABI.abi.debug)
 #define GST_VALIDATE_ACTION_N_REPEATS(action) (((GstValidateAction*) action)->ABI.abi.n_repeats)
+#define GST_VALIDATE_ACTION_RANGE_NAME(action) (((GstValidateAction*) action)->ABI.abi.rangename)
 
 /**
  * GstValidateAction:
@@ -133,6 +137,7 @@ struct _GstValidateAction
       gchar *filename;
       gchar *debug;
       gint n_repeats;
+      const gchar *rangename;
     } abi;
   } ABI;
 };

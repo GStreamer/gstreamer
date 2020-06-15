@@ -374,9 +374,11 @@ struct _GstValidateActionPrivate
   GstValidateExecuteActionReturn state; /* Actually ActionState */
   gboolean printed;
   gboolean executing_last_subaction;
+  gboolean subaction_level;
   gboolean optional;
 
   GstClockTime execution_time;
+  GstClockTime execution_duration;
   GstClockTime timeout;
 
   GWeakRef scenario;
@@ -457,6 +459,31 @@ _action_copy (GstValidateAction * act)
   return copy;
 }
 
+const gchar *
+gst_validate_action_return_get_name (GstValidateActionReturn r)
+{
+  switch (r) {
+    case GST_VALIDATE_EXECUTE_ACTION_ERROR:
+      return "ERROR";
+    case GST_VALIDATE_EXECUTE_ACTION_OK:
+      return "OK";
+    case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
+      return "ASYNC";
+    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+      return "INTERLACED";
+    case GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
+      return "ERROR(reported)";
+    case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
+      return "IN_PROGRESS";
+    case GST_VALIDATE_EXECUTE_ACTION_NONE:
+      return "NONE";
+    case GST_VALIDATE_EXECUTE_ACTION_SKIP:
+      return "SKIP";
+  }
+  g_assert_not_reached ();
+  return "???";
+}
+
 static void
 _action_free (GstValidateAction * action)
 {
@@ -508,6 +535,7 @@ gst_validate_action_new (GstValidateScenario * scenario,
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
   action->priv->timeout = GST_CLOCK_TIME_NONE;
+  action->priv->state = GST_VALIDATE_EXECUTE_ACTION_NONE;
   action->type = action_type->name;
   action->repeat = -1;
 
@@ -541,11 +569,10 @@ _action_check_and_set_printed (GstValidateAction * action)
   return TRUE;
 }
 
-gboolean
-gst_validate_action_is_subaction (GstValidateAction * action)
+gint
+gst_validate_action_get_level (GstValidateAction * action)
 {
-  return !gst_structure_is_equal (action->structure,
-      action->priv->main_structure);
+  return action->priv->subaction_level;
 }
 
 /* GstValidateActionType implementation */
@@ -1186,7 +1213,7 @@ _set_timed_value (GQuark field_id, const GValue * gvalue,
   const gchar *unused_fields[] =
       { "binding-type", "source-type", "interpolation-mode",
     "timestamp", "__scenario__", "__action__", "__res__", "repeat",
-    "sub-action", "playback-time", NULL
+    "playback-time", NULL
   };
 
   if (g_strv_contains (unused_fields, field))
@@ -1348,7 +1375,7 @@ _set_or_check_properties (GQuark field_id, const GValue * value,
   GParamSpec *paramspec = NULL;
   const gchar *field = g_quark_to_string (field_id);
   const gchar *unused_fields[] = { "__scenario__", "__action__", "__res__",
-    "sub-action", "playback-time", "repeat", NULL
+    "playback-time", "repeat", NULL
   };
 
   if (g_strv_contains (unused_fields, field))
@@ -2381,6 +2408,27 @@ gst_validate_parse_next_action_playback_time (GstValidateScenario * self)
   return TRUE;
 }
 
+static gboolean
+_foreach_find_iterator (GQuark field_id, GValue * value,
+    GstValidateAction * action)
+{
+  if (!g_strcmp0 (g_quark_to_string (field_id), "actions"))
+    return TRUE;
+
+  if (!GST_VALUE_HOLDS_INT_RANGE (value))
+    return TRUE;
+
+  if (GST_VALIDATE_ACTION_RANGE_NAME (action)) {
+    gst_validate_error_structure (action, "Found several ranges in structure, "
+        "it is not supported");
+    return FALSE;
+  }
+
+  GST_VALIDATE_ACTION_RANGE_NAME (action) = g_quark_to_string (field_id);
+  return TRUE;
+}
+
+
 GstValidateExecuteActionReturn
 gst_validate_execute_action (GstValidateActionType * action_type,
     GstValidateAction * action)
@@ -2395,6 +2443,11 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 
   if (action_type->prepare) {
     res = action_type->prepare (action);
+    if (res == GST_VALIDATE_EXECUTE_ACTION_SKIP) {
+      gst_validate_print_action (action, NULL);
+      return GST_VALIDATE_EXECUTE_ACTION_OK;
+    }
+
     if (res != GST_VALIDATE_EXECUTE_ACTION_OK) {
       GST_ERROR_OBJECT (scenario, "Action %" GST_PTR_FORMAT
           " could not be prepared", action->structure);
@@ -2411,18 +2464,6 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   action_type->priv->n_calls++;
   res = action_type->execute (scenario, action);
   gst_object_unref (scenario);
-
-  if (!gst_structure_has_field (action->structure, "sub-action")) {
-    gst_structure_free (action->structure);
-    action->priv->printed = FALSE;
-    action->structure = gst_structure_copy (action->priv->main_structure);
-
-    if (!(action->name = gst_structure_get_string (action->structure, "name")))
-      action->name = "";
-
-    if (res == GST_VALIDATE_EXECUTE_ACTION_ASYNC)
-      action->priv->executing_last_subaction = TRUE;
-  }
 
   return res;
 }
@@ -2540,74 +2581,23 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   return res;
 }
 
-static GstValidateExecuteActionReturn
-_execute_sub_action_action (GstValidateAction * action)
+static gboolean
+gst_validate_scenario_execute_next_or_restart_looping (GstValidateScenario *
+    scenario)
 {
-  const gchar *subaction_str;
-  GstStructure *subaction_struct = NULL;
-  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
-  GstValidateScenario *scenario = NULL;
+  /* Recurse to the next action if it is possible
+   * to execute right away */
+  if (!scenario->priv->execute_on_idle) {
+    GST_DEBUG_OBJECT (scenario, "linking next action execution");
 
-  if (action->priv->executing_last_subaction) {
-    action->priv->executing_last_subaction = FALSE;
-
-    goto done;
-  }
-
-  scenario = gst_validate_action_get_scenario (action);
-  g_assert (scenario);
-  subaction_str = gst_structure_get_string (action->structure, "sub-action");
-  if (subaction_str) {
-    subaction_struct = gst_structure_from_string (subaction_str, NULL);
-
-    if (subaction_struct == NULL) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action, SCENARIO_FILE_MALFORMED,
-          "Sub action %s could not be parsed", subaction_str);
-
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
-      goto done;
-    }
-
+    return execute_next_action (scenario);
   } else {
-    gst_structure_get (action->structure, "sub-action", GST_TYPE_STRUCTURE,
-        &subaction_struct, NULL);
+    _add_execute_actions_gsource (scenario);
+    GST_DEBUG_OBJECT (scenario, "Executing only on idle, waiting for"
+        " next dispatch");
   }
-
-  if (subaction_struct) {
-    if (action->structure) {
-      GST_INFO_OBJECT (scenario, "Clearing old action structure");
-      gst_structure_free (action->structure);
-    }
-
-    res = _fill_action (scenario, action, subaction_struct, FALSE);
-    if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          SCENARIO_ACTION_EXECUTION_ERROR,
-          "Sub action %" GST_PTR_FORMAT " could not be filled",
-          subaction_struct);
-
-      goto done;
-    }
-
-    if (!GST_CLOCK_TIME_IS_VALID (action->playback_time)) {
-      GstValidateActionType *action_type = _find_action_type (action->type);
-
-      action->priv->printed = FALSE;
-      res = gst_validate_execute_action (action_type, action);
-
-      goto done;
-    }
-
-  }
-
-done:
-  if (scenario)
-    gst_object_unref (scenario);
-  if (subaction_struct)
-    gst_structure_free (subaction_struct);
-  return res;
+  return G_SOURCE_CONTINUE;
 }
-
 
 /* This is the main action execution function
  * it checks whether it is time to run the next action
@@ -2620,7 +2610,6 @@ done:
 static gboolean
 execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 {
-  GList *tmp;
   gdouble rate = 1.0;
   GstClockTime position = -1;
   GstValidateAction *act = NULL;
@@ -2642,13 +2631,39 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
   if (scenario->priv->actions)
     act = scenario->priv->actions->data;
 
-  if (act) {
+  if (!act)
+    return G_SOURCE_CONTINUE;
 
-    if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS) {
+  switch (act->priv->state) {
+    case GST_VALIDATE_EXECUTE_ACTION_NONE:
+      break;
+    case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
+      GST_INFO_OBJECT (scenario, "Action %s:%d still running",
+          GST_VALIDATE_ACTION_FILENAME (act), GST_VALIDATE_ACTION_LINENO (act));
       return G_SOURCE_CONTINUE;
-    } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
-      tmp = priv->actions;
-      priv->actions = g_list_remove_link (priv->actions, tmp);
+    case GST_VALIDATE_EXECUTE_ACTION_ERROR:
+      GST_VALIDATE_REPORT_ACTION (scenario, act,
+          SCENARIO_ACTION_EXECUTION_ERROR, "Action %s failed", act->type);
+    case GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
+    case GST_VALIDATE_EXECUTE_ACTION_OK:
+    {
+      gchar *repeat = NULL;
+
+      if (GST_VALIDATE_ACTION_N_REPEATS (act))
+        repeat =
+            g_strdup_printf ("[%d/%d]", act->repeat,
+            GST_VALIDATE_ACTION_N_REPEATS (act));
+
+      gst_validate_printf (NULL,
+          "%*c⇨ Action %s '%s' %s (duration: %" GST_TIME_FORMAT ")\n\n",
+          (act->priv->subaction_level * 2) - 1, ' ',
+          gst_structure_get_name (act->priv->main_structure),
+          gst_validate_action_return_get_name (act->priv->state),
+          repeat ? repeat : "", GST_TIME_ARGS (act->priv->execution_duration));
+      g_free (repeat);
+
+      priv->actions = g_list_remove (priv->actions, act);
+      gst_validate_action_unref (act);
 
       if (!gst_validate_parse_next_action_playback_time (scenario)) {
         gst_validate_error_structure (priv->actions ? priv->
@@ -2662,16 +2677,15 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
       GST_INFO_OBJECT (scenario, "Action %" GST_PTR_FORMAT " is DONE now"
           " executing next", act->structure);
 
-      gst_validate_action_unref (act);
-      g_list_free (tmp);
-
       if (scenario->priv->actions) {
         act = scenario->priv->actions->data;
       } else {
         _check_scenario_is_done (scenario);
         act = NULL;
       }
-    } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+      break;
+    }
+    case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
       if (GST_CLOCK_TIME_IS_VALID (act->priv->timeout)) {
         GstClockTime etime =
             gst_util_get_timestamp () - act->priv->execution_time;
@@ -2691,7 +2705,8 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
           act->structure);
 
       return G_SOURCE_CONTINUE;
-    }
+    default:
+      g_assert_not_reached ();
   }
 
   if (message) {
@@ -2721,68 +2736,25 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     gst_structure_remove_field (act->structure, "on-message");
 
   act->priv->state = gst_validate_execute_action (type, act);
-  if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
-    gchar *str = gst_structure_to_string (act->structure);
+  switch (act->priv->state) {
+    case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
+      GST_DEBUG_OBJECT (scenario, "Remove source, waiting for action"
+          " to be done.");
 
-    GST_VALIDATE_REPORT_ACTION (scenario, act,
-        SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
+      SCENARIO_LOCK (scenario);
+      priv->execute_actions_source_id = 0;
+      SCENARIO_UNLOCK (scenario);
 
-    g_free (str);
-  }
-
-  if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
-    act->priv->state = _execute_sub_action_action (act);
-  }
-
-  if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
-    tmp = priv->actions;
-    priv->actions = g_list_remove_link (priv->actions, tmp);
-
-    if (!gst_validate_parse_next_action_playback_time (scenario)) {
-      gst_validate_error_structure (priv->actions ? priv->actions->data : NULL,
-          "Could not determine next action playback time!");
-
-      return G_SOURCE_REMOVE;
-    }
-
-    if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
-      gst_validate_action_unref (act);
-    else {
+      return G_SOURCE_CONTINUE;
+    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
       SCENARIO_LOCK (scenario);
       priv->interlaced_actions = g_list_append (priv->interlaced_actions, act);
       SCENARIO_UNLOCK (scenario);
-    }
-
-    if (priv->actions == NULL)
-      _check_scenario_is_done (scenario);
-
-    g_list_free (tmp);
-
-    /* Recurse to the next action if it is possible
-     * to execute right away */
-    if (!scenario->priv->execute_on_idle) {
-      GST_DEBUG_OBJECT (scenario, "linking next action execution");
-
-      return execute_next_action (scenario);
-    } else {
-      _add_execute_actions_gsource (scenario);
-      GST_DEBUG_OBJECT (scenario, "Executing only on idle, waiting for"
-          " next dispatch");
-
+      return gst_validate_scenario_execute_next_or_restart_looping (scenario);
+    default:
+      gst_validate_action_set_done (act);
       return G_SOURCE_CONTINUE;
-    }
-  } else {
-    GST_DEBUG_OBJECT (scenario, "Remove source, waiting for action"
-        " to be done.");
-
-    SCENARIO_LOCK (scenario);
-    priv->execute_actions_source_id = 0;
-    SCENARIO_UNLOCK (scenario);
-
-    return G_SOURCE_CONTINUE;
   }
-
-  return G_SOURCE_CONTINUE;
 }
 
 static gboolean
@@ -3155,6 +3127,24 @@ _execute_check_action_type_calls (GstValidateScenario * scenario,
           _find_action_type (type)), done, "Can't find `%s`!", type);
   REPORT_UNLESS (t->priv->n_calls == n, done,
       "%s called %d times instead of expected %d", type, t->priv->n_calls, n);
+
+
+done:
+  return res;
+}
+
+static GstValidateExecuteActionReturn
+_execute_check_subaction_level (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gint n;
+
+  REPORT_UNLESS (gst_structure_get_int (action->structure, "level", &n),
+      done, "No `n`!");
+  REPORT_UNLESS (gst_validate_action_get_level (action) == n, done,
+      "Expected subaction level %d, got %d", n,
+      gst_validate_action_get_level (action));
 
 
 done:
@@ -3679,7 +3669,9 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
 
   if (GST_VALIDATE_ACTION_N_REPEATS (action))
     gst_structure_set (scenario->priv->vars,
-        "repeat", G_TYPE_INT, action->repeat, NULL);
+        GST_VALIDATE_ACTION_RANGE_NAME (action) ?
+        GST_VALIDATE_ACTION_RANGE_NAME (action) : "repeat", G_TYPE_INT,
+        action->repeat, NULL);
   gst_validate_structure_resolve_variables (action, action->structure,
       scenario->priv->vars);
   for (i = 0; type->parameters[i].name; i++) {
@@ -3708,6 +3700,136 @@ gst_validate_set_property_prepare_func (GstValidateAction * action)
       "on-all-instances", G_TYPE_BOOLEAN);
 
   return gst_validate_action_default_prepare_func (action);
+}
+
+static GList *
+add_gvalue_to_list_as_struct (gpointer source, GList * list, const GValue * v)
+{
+  if (G_VALUE_HOLDS_STRING (v)) {
+    GstStructure *structure =
+        gst_structure_new_from_string (g_value_get_string (v));
+
+    if (!structure)
+      gst_validate_error_structure (source, "Invalid structure: %s",
+          g_value_get_string (v));
+
+    return g_list_append (list, structure);
+  }
+
+  if (GST_VALUE_HOLDS_STRUCTURE (v))
+    return g_list_append (list,
+        gst_structure_copy (gst_value_get_structure (v)));
+
+
+  gst_validate_error_structure (source, "Expected a string or a structure,"
+      " got %s instead", gst_value_serialize (v));
+  return NULL;
+}
+
+static GList *
+gst_validate_utils_get_structures (gpointer source,
+    GstStructure * str, const gchar * fieldname)
+{
+  guint i, size;
+  GList *res = NULL;
+  const GValue *value = gst_structure_get_value (str, fieldname);
+
+  if (!value)
+    return NULL;
+
+  if (G_VALUE_HOLDS_STRING (value) || GST_VALUE_HOLDS_STRUCTURE (value))
+    return add_gvalue_to_list_as_struct (source, res, value);
+
+  if (!GST_VALUE_HOLDS_LIST (value)) {
+    g_error ("%s must have type list of structure/string (or a string), "
+        "e.g. %s={ [struct1, a=val1], [struct2, a=val2] }, got: \"%s\" in %s",
+        fieldname, fieldname, gst_value_serialize (value),
+        gst_structure_to_string (str));
+    return NULL;
+  }
+
+  size = gst_value_list_get_size (value);
+  for (i = 0; i < size; i++)
+    res =
+        add_gvalue_to_list_as_struct (source, res,
+        gst_value_list_get_value (value, i));
+
+  return res;
+}
+
+static GstValidateExecuteActionReturn
+gst_validate_foreach_prepare (GstValidateAction * action)
+{
+  gint it, i;
+  gint min = 0, max = 1, step = 1;
+  GstValidateScenario *scenario;
+  GList *actions, *tmp;
+
+  scenario = gst_validate_action_get_scenario (action);
+  g_assert (scenario);
+  _update_well_known_vars (scenario);
+  gst_validate_action_setup_repeat (scenario, action);
+
+  GST_VALIDATE_ACTION_RANGE_NAME (action) = NULL;
+  gst_structure_foreach (action->structure,
+      (GstStructureForeachFunc) _foreach_find_iterator, action);
+
+  /* Allow using the repeat field here too */
+  if (!GST_VALIDATE_ACTION_RANGE_NAME (action)
+      && !GST_VALIDATE_ACTION_N_REPEATS (action))
+    gst_validate_error_structure (action, "Missing range specifier field.");
+
+  if (GST_VALIDATE_ACTION_RANGE_NAME (action)) {
+    const GValue *range = gst_structure_get_value (action->structure,
+        GST_VALIDATE_ACTION_RANGE_NAME (action));
+    min = gst_value_get_int_range_min (range);
+    max = gst_value_get_int_range_max (range);
+    step = gst_value_get_int_range_step (range);
+
+    if (min % step != 0)
+      gst_validate_error_structure (action,
+          "Range min[%d] must be a multiple of step[%d].", min, step);
+
+    if (max % step != 0)
+      gst_validate_error_structure (action,
+          "Range max[%d] must be a multiple of step[%d].", max, step);
+  } else {
+    min = action->repeat;
+    max = action->repeat + 1;
+  }
+
+  actions = gst_validate_utils_get_structures (action, action->structure,
+      "actions");
+  i = g_list_index (scenario->priv->actions, action);
+  for (it = min; it < max; it = it + step) {
+    for (tmp = actions; tmp; tmp = tmp->next) {
+      GstValidateAction *subaction;
+      GstStructure *nstruct = gst_structure_copy (tmp->data);
+
+      subaction = gst_validate_action_new (scenario,
+          _find_action_type (gst_structure_get_name (nstruct)), nstruct, FALSE);
+      GST_VALIDATE_ACTION_RANGE_NAME (subaction) =
+          GST_VALIDATE_ACTION_RANGE_NAME (action);
+      GST_VALIDATE_ACTION_FILENAME (subaction) =
+          g_strdup (GST_VALIDATE_ACTION_FILENAME (action));
+      GST_VALIDATE_ACTION_DEBUG (subaction) =
+          g_strdup (GST_VALIDATE_ACTION_DEBUG (action));
+      GST_VALIDATE_ACTION_LINENO (subaction) =
+          GST_VALIDATE_ACTION_LINENO (action);
+      subaction->repeat = it;
+      subaction->priv->subaction_level = action->priv->subaction_level + 1;
+      GST_VALIDATE_ACTION_N_REPEATS (subaction) = max;
+      scenario->priv->actions =
+          g_list_insert (scenario->priv->actions, subaction, i++);
+    }
+  }
+  g_list_free_full (actions, (GDestroyNotify) gst_structure_free);
+
+  scenario->priv->actions = g_list_remove (scenario->priv->actions, action);
+  gst_structure_remove_field (action->structure, "actions");
+
+  gst_object_unref (scenario);
+  return GST_VALIDATE_EXECUTE_ACTION_SKIP;
 }
 
 static void
@@ -4138,7 +4260,7 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       }
 
       gst_validate_error_structure (structure,
-          "We do not handle action types %s", type);
+          "Unknown action type: '%s'", type);
       goto failed;
     }
 
@@ -5635,13 +5757,13 @@ static gboolean
 _action_set_done (GstValidateAction * action)
 {
   JsonBuilder *jbuild;
-  GstClockTime execution_duration;
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
   if (scenario == NULL || !action->priv->pending_set_done)
     return G_SOURCE_REMOVE;
 
-  execution_duration = gst_util_get_timestamp () - action->priv->execution_time;
+  action->priv->execution_duration =
+      gst_util_get_timestamp () - action->priv->execution_time;
 
   jbuild = json_builder_new ();
   json_builder_begin_object (jbuild);
@@ -5651,25 +5773,27 @@ _action_set_done (GstValidateAction * action)
   json_builder_add_string_value (jbuild, action->type);
   json_builder_set_member_name (jbuild, "execution-duration");
   json_builder_add_double_value (jbuild,
-      ((gdouble) execution_duration / GST_SECOND));
+      ((gdouble) action->priv->execution_duration / GST_SECOND));
   json_builder_end_object (jbuild);
 
   gst_validate_send (json_builder_get_root (jbuild));
   g_object_unref (jbuild);
 
-  gst_validate_printf (NULL, "  -> Action %s done (duration: %" GST_TIME_FORMAT
-      ")\n", action->type, GST_TIME_ARGS (execution_duration));
-  action->priv->execution_time = GST_CLOCK_TIME_NONE;
-  action->priv->state = _execute_sub_action_action (action);
-
-  if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
-
-    GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
-    execute_next_action (scenario);
-  }
-  gst_object_unref (scenario);
-
   action->priv->pending_set_done = FALSE;
+  switch (action->priv->state) {
+    case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
+    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+    case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
+    case GST_VALIDATE_EXECUTE_ACTION_NONE:
+      action->priv->state = GST_VALIDATE_EXECUTE_ACTION_OK;
+      break;
+    default:
+      break;
+  }
+  gst_structure_free (action->structure);
+  action->structure = gst_structure_copy (action->priv->main_structure);
+  gst_validate_scenario_execute_next_or_restart_looping (scenario);
+  gst_object_unref (scenario);
   return G_SOURCE_REMOVE;
 }
 
@@ -6844,9 +6968,25 @@ register_action_types (void)
       }),
       "Check current pipeline position.\n", GST_VALIDATE_ACTION_TYPE_NONE);
 
+    REGISTER_ACTION_TYPE("foreach", NULL,
+        ((GstValidateActionParameter[]) {
+            { .name = "actions",
+                .description = "The array of actions to repeat",
+                .mandatory = TRUE,
+                .types = "strv",
+                NULL },
+            { NULL } }),
+        "Run actions defined in the `actions` array the number of times specified\n"
+        " with a GstIntRange `i=[start, end, step]` parameter passed in, one and only\n"
+        " range is required as parameter.",
+        GST_VALIDATE_ACTION_TYPE_NONE);
+    type->prepare = gst_validate_foreach_prepare;
+
     /* Internal actions types to test the validate scenario implementation */
     REGISTER_ACTION_TYPE("priv_check-action-type-calls",
       _execute_check_action_type_calls, NULL, NULL, 0);
+    REGISTER_ACTION_TYPE("priv_check-subaction-level",
+      _execute_check_subaction_level, NULL, NULL, 0);
     /*  *INDENT-ON* */
 }
 

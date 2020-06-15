@@ -834,27 +834,36 @@ gst_validate_printf (gpointer source, const gchar * format, ...)
   va_end (var_args);
 }
 
+typedef struct
+{
+  GString *str;
+  gint indent;
+  gint printed;
+} PrintActionFieldData;
+
 static gboolean
-_append_value (GQuark field_id, const GValue * value, GString * string)
+_append_value (GQuark field_id, const GValue * value, PrintActionFieldData * d)
 {
   gchar *val_str = NULL;
+  const gchar *fieldname = g_quark_to_string (field_id);
 
-  if (g_strcmp0 (g_quark_to_string (field_id), "sub-action") == 0)
+  if (g_str_has_prefix (fieldname, "__") && g_str_has_suffix (fieldname, "__"))
     return TRUE;
 
-  if (g_strcmp0 (g_quark_to_string (field_id), "repeat") == 0)
+  if (g_strcmp0 (fieldname, "repeat") == 0)
     return TRUE;
 
+  d->printed++;
   if (G_VALUE_TYPE (value) == GST_TYPE_CLOCK_TIME)
     val_str = g_strdup_printf ("%" GST_TIME_FORMAT,
         GST_TIME_ARGS (g_value_get_uint64 (value)));
   else
     val_str = gst_value_serialize (value);
 
-  g_string_append (string, "\n    - ");
-  g_string_append (string, g_quark_to_string (field_id));
-  g_string_append_len (string, "=", 1);
-  g_string_append (string, val_str);
+  g_string_append_printf (d->str, "\n%*c   - ", d->indent, ' ');
+  g_string_append (d->str, fieldname);
+  g_string_append_len (d->str, "=", 1);
+  g_string_append (d->str, val_str);
 
   g_free (val_str);
 
@@ -874,26 +883,24 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
   GString *string = NULL;
 
   if (message == NULL) {
-    gint nrepeats;
-
-    string = g_string_new (NULL);
-
-    if (gst_validate_action_is_subaction (action))
-      g_string_append_printf (string, "(subaction)");
-
-    if (gst_structure_get_int (action->structure, "repeat", &nrepeats))
-      g_string_append_printf (string, "(%d/%d)", nrepeats - action->repeat + 1,
-          nrepeats);
+    gint indent = (gst_validate_action_get_level (action) * 2);
+    PrintActionFieldData d = { NULL, indent, 0 };
+    d.str = string = g_string_new (NULL);
 
     g_string_append_printf (string, "%s",
         gst_structure_get_name (action->structure));
 
-    g_string_append_len (string, " ( ", 3);
-    gst_structure_foreach (action->structure,
-        (GstStructureForeachFunc) _append_value, string);
+    if (GST_VALIDATE_ACTION_N_REPEATS (action))
+      g_string_append_printf (string, " [%s=%d/%d]",
+          GST_VALIDATE_ACTION_RANGE_NAME (action) ?
+          GST_VALIDATE_ACTION_RANGE_NAME (action) : "repeat", action->repeat,
+          GST_VALIDATE_ACTION_N_REPEATS (action));
 
-    if (gst_structure_n_fields (action->structure))
-      g_string_append (string, "\n)\n");
+    g_string_append (string, " ( ");
+    gst_structure_foreach (action->structure,
+        (GstStructureForeachFunc) _append_value, &d);
+    if (d.printed)
+      g_string_append_printf (string, "\n%*c)\n", indent, ' ');
     else
       g_string_append (string, ")\n");
     message = string->str;
@@ -980,12 +987,15 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
   if (source) {
     if (*(GType *) source == GST_TYPE_VALIDATE_ACTION) {
       GstValidateAction *action = (GstValidateAction *) source;
+      gint indent = gst_validate_action_get_level (action) * 2;
 
       if (_action_check_and_set_printed (action))
         goto out;
 
-      g_string_assign (string, "\nExecuting ");
-
+      if (!indent)
+        g_string_assign (string, "Executing ");
+      else
+        g_string_append_printf (string, "%*c↳ Executing ", indent - 2, ' ');
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
       gint n_params;

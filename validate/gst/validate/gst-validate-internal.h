@@ -47,7 +47,7 @@ void register_action_types (void);
  * as we used to have to print actions in the action execution function
  * and this is done by the scenario itself now */
 G_GNUC_INTERNAL gboolean _action_check_and_set_printed (GstValidateAction *action);
-G_GNUC_INTERNAL gboolean gst_validate_action_is_subaction (GstValidateAction *action);
+G_GNUC_INTERNAL gboolean gst_validate_action_get_level (GstValidateAction *action);
 G_GNUC_INTERNAL gboolean gst_validate_scenario_check_and_set_needs_clock_sync (GList *structures, GstStructure **meta);
 
 #define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"

@@ -345,28 +345,37 @@ gst_validate_report_action (GstValidateReporter * reporter,
     const gchar * format, ...)
 {
   va_list var_args;
-  gint nrepeats;
-  gchar *f, *repeat = NULL;
+  GString *f;
 
-  if (action && gst_structure_get_int (action->structure, "repeat", &nrepeats))
-    repeat =
-        g_strdup_printf (" (repeat: %d/%d)", nrepeats - action->repeat + 1,
-        nrepeats);
+  if (!action) {
+    f = g_string_new (format);
+    goto done;
+  }
 
-  f = action ? g_strdup_printf ("\n> %s:%d%s\n> %d | %s\n>  %*c|\n",
-      GST_VALIDATE_ACTION_FILENAME (action),
-      GST_VALIDATE_ACTION_LINENO (action), repeat ? repeat : "",
-      GST_VALIDATE_ACTION_LINENO (action), format,
-      (gint) floor (log10 (abs ((GST_VALIDATE_ACTION_LINENO (action))))) + 1,
-      ' ')
-      : g_strdup (format);
+  f = g_string_new (NULL);
+  g_string_append_printf (f, "\n> %s:%d", GST_VALIDATE_ACTION_FILENAME (action),
+      GST_VALIDATE_ACTION_LINENO (action));
 
+  if (GST_VALIDATE_ACTION_N_REPEATS (action))
+    g_string_append_printf (f, " (repeat: %d/%d)",
+        action->repeat, GST_VALIDATE_ACTION_N_REPEATS (action));
+
+  g_string_append_printf (f, "\n%s", GST_VALIDATE_ACTION_DEBUG (action));
+  if (gst_validate_action_get_level (action)) {
+    gchar *subaction_str = gst_structure_to_string (action->structure);
+
+    g_string_append_printf (f, "\n       |-> %s", subaction_str);
+    g_free (subaction_str);
+  }
+
+  g_string_append_printf (f, "\n       >\n       > %s", format);
+
+done:
   va_start (var_args, format);
-  gst_validate_report_valist (reporter, issue_id, f, var_args);
+  gst_validate_report_valist (reporter, issue_id, f->str, var_args);
   va_end (var_args);
 
-  g_free (f);
-  g_free (repeat);
+  g_string_free (f, TRUE);
 }
 
 void
