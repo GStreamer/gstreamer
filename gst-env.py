@@ -144,7 +144,7 @@ def setup_gdb(options):
     if not shutil.which('gdb'):
         return python_paths
 
-    bdir = os.path.realpath(options.builddir)
+    bdir = pathlib.Path(options.builddir).resolve()
     for libpath, gdb_path in [
             (os.path.join("subprojects", "gstreamer", "gst"),
              os.path.join("subprojects", "gstreamer", "libs", "gst", "helpers")),
@@ -154,17 +154,17 @@ def setup_gdb(options):
         if not gdb_path:
             gdb_path = libpath
 
-        autoload_path = os.path.join(bdir, "gdb-auto-load/", bdir[1:], libpath)
-        os.makedirs(autoload_path, exist_ok=True)
-        for gdb_helper in glob.glob(os.path.join(bdir, gdb_path, "*-gdb.py")):
-            python_paths.add(os.path.join(bdir, gdb_path))
+        autoload_path = (pathlib.Path(bdir) / 'gdb-auto-load').joinpath(*bdir.parts[1:]) / libpath
+        autoload_path.mkdir(parents=True, exist_ok=True)
+        for gdb_helper in glob.glob(str(bdir / gdb_path / "*-gdb.py")):
+            python_paths.add(str(bdir / gdb_path))
             python_paths.add(os.path.join(options.srcdir, gdb_path))
             try:
-                os.symlink(gdb_helper, os.path.join(autoload_path, os.path.basename(gdb_helper)))
+                os.symlink(gdb_helper, str(autoload_path / os.path.basename(gdb_helper)))
             except FileExistsError:
                 pass
 
-    gdbinit_line = 'add-auto-load-scripts-directory %s' % os.path.join(bdir, 'gdb-auto-load\n')
+    gdbinit_line = 'add-auto-load-scripts-directory {}\n'.format(bdir / 'gdb-auto-load')
     try:
         with open(os.path.join(options.srcdir, '.gdbinit'), 'r') as f:
             if gdbinit_line in f.readlines():
