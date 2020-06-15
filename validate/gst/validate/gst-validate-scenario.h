@@ -190,6 +190,8 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG = 1 << 9,
 } GstValidateActionTypeFlags;
 
+typedef struct _GstValidateActionTypePrivate GstValidateActionTypePrivate;
+
 /**
  * GstValidateActionType:
  * @name: The name of the new action type to add
@@ -217,9 +219,10 @@ struct _GstValidateActionType
   GstRank rank;
 
   GstValidateActionType *overriden_type;
+  GstValidateActionTypePrivate* priv;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank) - 1];
+  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank) - 2];
 };
 
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())

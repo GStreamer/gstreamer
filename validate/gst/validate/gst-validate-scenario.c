@@ -552,6 +552,11 @@ GType _gst_validate_action_type_type;
 GST_DEFINE_MINI_OBJECT_TYPE (GstValidateActionType, gst_validate_action_type);
 static GstValidateActionType *gst_validate_action_type_new (void);
 
+struct _GstValidateActionTypePrivate
+{
+  gint n_calls;
+};
+
 static void
 _action_type_free (GstValidateActionType * type)
 {
@@ -559,6 +564,7 @@ _action_type_free (GstValidateActionType * type)
   g_free (type->description);
   g_free (type->name);
   g_free (type->implementer_namespace);
+  g_free (type->priv);
 
   if (type->overriden_type)
     gst_mini_object_unref (GST_MINI_OBJECT (type->overriden_type));
@@ -569,6 +575,8 @@ _action_type_free (GstValidateActionType * type)
 static void
 gst_validate_action_type_init (GstValidateActionType * type)
 {
+  type->priv = g_new0 (GstValidateActionTypePrivate, 1);
+
   gst_mini_object_init ((GstMiniObject *) type, 0,
       _gst_validate_action_type_type, NULL, NULL,
       (GstMiniObjectFreeFunction) _action_type_free);
@@ -2396,6 +2404,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
 
   action->priv->execution_time = gst_util_get_timestamp ();
   action->priv->state = GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS;
+  action_type->priv->n_calls++;
   res = action_type->execute (scenario, action);
   gst_object_unref (scenario);
 
@@ -2480,6 +2489,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
       (gst_structure_get_boolean (action->structure, "as-config",
               &is_config) && is_config == TRUE)) {
 
+    action_type->priv->n_calls++;
     res = action_type->execute (scenario, action);
     gst_validate_print_action (action, NULL);
 
@@ -3127,6 +3137,29 @@ _find_elements_defined_in_action (GstValidateScenario * scenario,
   }
 
   return targets;
+}
+
+static GstValidateExecuteActionReturn
+_execute_check_action_type_calls (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  const gchar *type;
+  GstValidateActionType *t;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gint n;
+
+  REPORT_UNLESS (gst_structure_get_int (action->structure, "n", &n),
+      done, "No `n`!");
+  REPORT_UNLESS ((type = gst_structure_get_string (action->structure, "type")),
+      done, "No `type`!");
+  REPORT_UNLESS ((t =
+          _find_action_type (type)), done, "Can't find `%s`!", type);
+  REPORT_UNLESS (t->priv->n_calls == n, done,
+      "%s called %d times instead of expected %d", type, t->priv->n_calls, n);
+
+
+done:
+  return res;
 }
 
 static GstValidateExecuteActionReturn
@@ -6785,7 +6818,11 @@ register_action_types (void)
         {NULL}
       }),
       "Check current pipeline position.\n", GST_VALIDATE_ACTION_TYPE_NONE);
-  /*  *INDENT-ON* */
+
+    /* Internal actions types to test the validate scenario implementation */
+    REGISTER_ACTION_TYPE("priv_check-action-type-calls",
+      _execute_check_action_type_calls, NULL, NULL, 0);
+    /*  *INDENT-ON* */
 }
 
 void

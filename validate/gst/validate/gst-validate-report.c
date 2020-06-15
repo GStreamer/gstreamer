@@ -1018,6 +1018,10 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
+      /* Ignore private action types */
+      if (g_str_has_prefix (type->name, "priv_"))
+        return;
+
       g_string_append_printf (string, "\n## %s\n\n", type->name);
 
       g_string_append_printf (string, "\n``` validate-scenario\n%s,",
