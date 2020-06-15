@@ -1314,7 +1314,7 @@ _resolve_expression (gpointer source, GValue * value)
   tmp = skip_spaces (tmp);
   expr = strstr (v, "expr(");
   if (expr != tmp)
-    return;
+    goto done;
 
   expr = &expr[5];
   tmp = &expr[strlen (expr) - 1];
@@ -1322,7 +1322,7 @@ _resolve_expression (gpointer source, GValue * value)
     tmp--;
 
   if (tmp == expr || *tmp != ')')
-    return;
+    goto done;
 
   *tmp = '\0';
   new_value = gst_validate_utils_parse_expression (expr, NULL, NULL, &error);
@@ -1332,8 +1332,10 @@ _resolve_expression (gpointer source, GValue * value)
   g_value_unset (value);
   g_value_init (value, G_TYPE_DOUBLE);
   g_value_set_double (value, new_value);
+
+done:
   g_free (v);
-  g_match_info_free (match_info);
+  g_clear_pointer (&match_info, g_match_info_free);
 }
 
 static gboolean

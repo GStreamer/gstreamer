@@ -310,6 +310,13 @@ gst_validate_g_enum_to_string (GType g_enum_type, gint value)
 #endif
 
 static void
+gst_validate_sink_information_free (GstValidateSinkInformation * info)
+{
+  gst_object_unref (info->sink);
+  g_free (info);
+}
+
+static void
 gst_validate_seek_information_free (GstValidateSeekInformation * info)
 {
   gst_validate_action_unref (info->action);
@@ -4580,6 +4587,8 @@ gst_validate_scenario_finalize (GObject * object)
 
   g_list_free_full (priv->seeks,
       (GDestroyNotify) gst_validate_seek_information_free);
+  g_list_free_full (priv->sinks,
+      (GDestroyNotify) gst_validate_sink_information_free);
   g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->interlaced_actions,
       (GDestroyNotify) gst_mini_object_unref);
@@ -4670,8 +4679,7 @@ _element_removed_cb (GstBin * bin, GstElement * element,
       GST_DEBUG_OBJECT (scenario, "Removing sink information for %s",
           GST_ELEMENT_NAME (element));
       priv->sinks = g_list_remove (priv->sinks, sink_info);
-      gst_object_unref (sink_info->sink);
-      g_free (sink_info);
+      gst_validate_sink_information_free (sink_info);
     }
     SCENARIO_UNLOCK (scenario);
   }

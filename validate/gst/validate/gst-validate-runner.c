@@ -662,9 +662,11 @@ check_report_expected (GstValidateRunner * runner, GstValidateReport * report)
               gboolean is_sometimes;
 
               if (!gst_structure_get_boolean (known_issue, "sometimes",
-                      &is_sometimes) || !is_sometimes)
+                      &is_sometimes) || !is_sometimes) {
                 runner->priv->expected_issues =
                     g_list_remove (runner->priv->expected_issues, known_issue);
+                gst_structure_free (known_issue);
+              }
               return TRUE;
             }
           }
