@@ -17,15 +17,6 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-env = environment()
-env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
-env.set('GST_STATE_IGNORE_ELEMENTS', '')
-env.set('CK_DEFAULT_TIMEOUT', '20')
-env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
-if gst_dep.type_name() == 'pkgconfig'
-  env.append('GST_PLUGIN_PATH_1_0', gst_dep.get_pkgconfig_variable('pluginsdir'))
-endif
-
 foreach t : validate_tests
   fname = '@0@.c'.format(t.get(0))
   test_name = t.get(0).underscorify()
@@ -36,6 +27,13 @@ foreach t : validate_tests
   endif
 
   if not skip_test
+    env = environment()
+    env.set('GST_STATE_IGNORE_ELEMENTS', '')
+    env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
+
     exe = executable(test_name, fname,
         'validate/test-utils.c',
         c_args : gst_c_args + test_defines,
