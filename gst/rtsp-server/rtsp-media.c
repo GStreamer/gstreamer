@@ -4692,16 +4692,17 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
   } else {
     GST_INFO ("state %s media %p", gst_element_state_get_name (state), media);
     set_target_state (media, state, FALSE);
+
+    if (state == GST_STATE_PLAYING) {
+      /* make sure pads are not blocking anymore when going to PLAYING */
+      media_streams_set_blocked (media, FALSE);
+    }
+
     /* when we are buffering, don't update the state yet, this will be done
      * when buffering finishes */
     if (priv->buffering) {
       GST_INFO ("Buffering busy, delay state change");
     } else {
-      if (state == GST_STATE_PLAYING) {
-        /* make sure pads are not blocking anymore when going to PLAYING */
-        media_streams_set_blocked (media, FALSE);
-      }
-
       if (state == GST_STATE_PAUSED) {
         set_state_ret = set_state (media, state);
         if (set_state_ret == GST_STATE_CHANGE_ASYNC)
