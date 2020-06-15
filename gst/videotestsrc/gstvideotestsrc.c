@@ -1029,10 +1029,12 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
             gint64 dur;
 
             GST_OBJECT_LOCK (src);
-            dur = gst_util_uint64_scale_int_round (bsrc->num_buffers
-                * GST_SECOND, src->info.fps_d, src->info.fps_n);
-            res = TRUE;
-            gst_query_set_duration (query, GST_FORMAT_TIME, dur);
+            if (src->info.fps_n) {
+              dur = gst_util_uint64_scale_int_round (bsrc->num_buffers
+                  * GST_SECOND, src->info.fps_d, src->info.fps_n);
+              res = TRUE;
+              gst_query_set_duration (query, GST_FORMAT_TIME, dur);
+            }
             GST_OBJECT_UNLOCK (src);
             goto done;
           }
