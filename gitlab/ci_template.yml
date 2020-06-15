@@ -337,9 +337,7 @@ gst indent:
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
-    - curl -L -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/${GST_UPSTREAM_BRANCH}/tools/gst-indent
-    - chmod +x gst-indent
-    - find . -name '*.c' -exec ./gst-indent {} +
+    - find . -name '*.c' -exec gst-indent {} +
     - |
       if git diff --quiet; then
           echo "Code is properly formatted"
