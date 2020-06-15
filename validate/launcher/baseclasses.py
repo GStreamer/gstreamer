@@ -2107,7 +2107,7 @@ class _TestsLauncher(Loggable):
                 current_test_num += 1
                 res = test.test_end(retry_on_failure=retry_on_failures)
                 to_report = True
-                if res not in [Result.PASSED, Result.SKIPPED]:
+                if res not in [Result.PASSED, Result.SKIPPED, Result.KNOWN_ERROR]:
                     if self.options.forever or self.options.fatal_error:
                         self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures)
                         self.reporter.after_test(test)
