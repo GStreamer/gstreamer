@@ -152,6 +152,8 @@ gboolean          gst_d3d11_decoder_decide_allocation   (GstVideoDecoder * decod
                                                          GstD3D11Codec codec,
                                                          gboolean use_d3d11_pool);
 
+gboolean          gst_d3d11_decoder_supports_direct_rendering (GstD3D11Decoder * decoder);
+
 /* Utils for class registration */
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
 

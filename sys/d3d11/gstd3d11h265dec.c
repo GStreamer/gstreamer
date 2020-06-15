@@ -671,6 +671,7 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
   if (self->use_d3d11_output &&
+      gst_d3d11_decoder_supports_direct_rendering (self->d3d11_decoder) &&
       GST_VIDEO_DECODER (self)->input_segment.rate > 0) {
     GstMemory *mem;
 

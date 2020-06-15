@@ -502,6 +502,7 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
   if (self->use_d3d11_output &&
+      gst_d3d11_decoder_supports_direct_rendering (self->d3d11_decoder) &&
       GST_VIDEO_DECODER (self)->input_segment.rate > 0 &&
       GST_VIDEO_INFO_WIDTH (&self->output_state->info) ==
       picture->frame_hdr.width

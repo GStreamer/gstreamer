@@ -92,6 +92,9 @@ struct _GstD3D11DecoderPrivate
 
   GUID decoder_profile;
 
+  /* For device specific workaround */
+  gboolean is_xbox_device;
+
   /* for internal shader */
   GstD3D11ColorConverter *converter;
   ID3D11Texture2D *shader_resource_texture;
@@ -673,6 +676,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   gst_d3d11_decoder_reset_unlocked (decoder);
 
+  priv->is_xbox_device = gst_d3d11_is_xbox_device (priv->device);
+
   /* NOTE: other dxva implementations (ffmpeg and vlc) do this
    * and they say the required alignment were mentioned by dxva spec.
    * See ff_dxva2_common_frame_params() in dxva.c of ffmpeg and
@@ -681,7 +686,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   switch (codec) {
     case GST_D3D11_CODEC_H265:
       /* See directx_va_Setup() impl. in vlc */
-      if (!gst_d3d11_is_xbox_device (priv->device))
+      if (!priv->is_xbox_device)
         alignment = 128;
       else
         alignment = 16;
@@ -1591,6 +1596,20 @@ gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
   return TRUE;
 }
 
+gboolean
+gst_d3d11_decoder_supports_direct_rendering (GstD3D11Decoder * decoder)
+{
+  GstD3D11DecoderPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+
+  priv = decoder->priv;
+
+  /* FIXME: Need to figure out Xbox device's behavior
+   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1312
+   */
+  return !priv->is_xbox_device;
+}
 
 /* Keep sync with chromium and keep in sorted order.
  * See supported_profile_helpers.cc in chromium */
