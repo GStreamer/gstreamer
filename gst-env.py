@@ -160,8 +160,11 @@ def setup_gdb(options):
             python_paths.add(str(bdir / gdb_path))
             python_paths.add(os.path.join(options.srcdir, gdb_path))
             try:
-                os.symlink(gdb_helper, str(autoload_path / os.path.basename(gdb_helper)))
-            except FileExistsError:
+                if os.name == 'nt':
+                    shutil.copy(gdb_helper, str(autoload_path / os.path.basename(gdb_helper)))
+                else:
+                    os.symlink(gdb_helper, str(autoload_path / os.path.basename(gdb_helper)))
+            except (FileExistsError, shutil.SameFileError):
                 pass
 
     gdbinit_line = 'add-auto-load-scripts-directory {}\n'.format(bdir / 'gdb-auto-load')
