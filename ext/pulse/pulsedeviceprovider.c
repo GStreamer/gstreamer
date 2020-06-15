@@ -341,8 +341,6 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
   if (facility == PA_SUBSCRIPTION_EVENT_SERVER ||
       facility != PA_SUBSCRIPTION_EVENT_CHANGE) {
     pa_context_get_server_info (self->context, get_server_info_cb, self);
-
-    return;
   }
 
   if (facility != PA_SUBSCRIPTION_EVENT_SOURCE &&
