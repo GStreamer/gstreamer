@@ -1359,7 +1359,7 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
  * calling ges_init().
  *
  * Example of an asynchronous asset request:
- * |[
+ * ``` c
  * // The request callback
  * static void
  * asset_loaded_cb (GESAsset * source, GAsyncResult * res, gpointer user_data)
@@ -1369,20 +1369,20 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
  *
  *   asset = ges_asset_request_finish (res, &error);
  *   if (asset) {
- *    g_print ("The file: %s is usable as a FileSource",
+ *    g_print ("The file: %s is usable as a GESUriClip",
  *        ges_asset_get_id (asset));
  *   } else {
- *    g_print ("The file: %s is *not* usable as a FileSource because: %s",
+ *    g_print ("The file: %s is *not* usable as a GESUriClip because: %s",
  *        ges_asset_get_id (source), error->message);
  *   }
  *
- *   gst_object_unref (mfs);
+ *   gst_object_unref (asset);
  * }
  *
  * // The request:
  * ges_asset_request_async (GES_TYPE_URI_CLIP, some_uri, NULL,
  *    (GAsyncReadyCallback) asset_loaded_cb, user_data);
- * ]|
+ * ```
  */
 void
 ges_asset_request_async (GType extractable_type,

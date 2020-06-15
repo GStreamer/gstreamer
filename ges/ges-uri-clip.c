@@ -541,6 +541,11 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
  *
  * Creates a new #GESUriClip for the provided @uri.
  *
+ * > **WARNING**: This function might 'discover` @uri **synchrounously**, it is
+ * > an IO and processing intensive task that you probably don't want to run in
+ * > an application mainloop. Have a look at #ges_asset_request_async to see how
+ * > to make that operation happen **asynchronously**.
+ *
  * Returns: (transfer floating) (nullable): The newly created #GESUriClip, or
  * %NULL if there was an error.
  */
