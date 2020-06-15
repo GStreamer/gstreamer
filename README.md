@@ -47,8 +47,8 @@ ninja -C builddir
 This will automatically create the `build` directory and build everything
 inside it.
 
-NOTE: On Windows, you *must* run this from inside the Visual Studio command
-prompt of the appropriate architecture and version.
+NOTE: On Windows, you *must* run this from [inside the Visual Studio command
+prompt](#running-meson-on-windows) of the appropriate architecture and version.
 
 ### External dependencies
 
@@ -318,6 +318,15 @@ pip3 install meson
 Note that Meson is written entirely in Python, so you can also run it as-is
 from the [git repository](https://github.com/mesonbuild/meson/) if you want to
 use the latest master branch for some reason.
+
+### Running Meson on Windows
+
+At present, to build with Visual Studio, you need to run Meson from inside the
+VS 2019 command prompt. Press `Start`, and search for `VS 2019`, and click on
+`x64 Native Tools Command Prompt for VS 2019`, or a prompt named similar to
+that:
+
+![x64 Native Tools Command Prompt for VS 2019](/data/images/vs-2019-dev-prompt.png)
 
 
 ### Setup a mingw/wine based development environment on linux
