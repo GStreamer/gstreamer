@@ -4791,7 +4791,7 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
         deactivate = TRUE;
       break;
     case GST_STATE_PAUSED:
-      /* we're going from PLAYING to PAUSED, READY or NULL, deactivate */
+      /* we're going from PLAYING to PAUSED, deactivate */
       if (priv->target_state == GST_STATE_PLAYING)
         deactivate = TRUE;
       break;
