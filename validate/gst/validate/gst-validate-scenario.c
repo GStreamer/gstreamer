@@ -509,17 +509,18 @@ gst_validate_action_new (GstValidateScenario * scenario,
   action->priv->timeout = GST_CLOCK_TIME_NONE;
   action->type = action_type->name;
   action->repeat = -1;
-  gst_structure_get (structure,
-      "__lineno__", G_TYPE_INT, &GST_VALIDATE_ACTION_LINENO (action),
-      "__filename__", G_TYPE_STRING, &GST_VALIDATE_ACTION_FILENAME (action),
-      "__debug__", G_TYPE_STRING, &GST_VALIDATE_ACTION_DEBUG (action), NULL);
-  gst_structure_remove_fields (structure, "__lineno__", "__filename__",
-      "__debug__", NULL);
 
   g_weak_ref_set (&action->priv->scenario, scenario);
-  if (structure)
+  if (structure) {
+    gst_structure_get (structure,
+        "__lineno__", G_TYPE_INT, &GST_VALIDATE_ACTION_LINENO (action),
+        "__filename__", G_TYPE_STRING, &GST_VALIDATE_ACTION_FILENAME (action),
+        "__debug__", G_TYPE_STRING, &GST_VALIDATE_ACTION_DEBUG (action), NULL);
+    gst_structure_remove_fields (structure, "__lineno__", "__filename__",
+        "__debug__", NULL);
     action->priv->state =
         _fill_action (scenario, action, structure, add_to_lists);
+  }
 
   return action;
 }
