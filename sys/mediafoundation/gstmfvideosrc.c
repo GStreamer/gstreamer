@@ -52,11 +52,22 @@
 GST_DEBUG_CATEGORY (gst_mf_video_src_debug);
 #define GST_CAT_DEFAULT gst_mf_video_src_debug
 
+#if GST_MF_WINAPI_ONLY_APP
+/* FIXME: need support JPEG for UWP */
+#define SRC_TEMPLATE_CAPS \
+    GST_VIDEO_CAPS_MAKE (GST_MF_VIDEO_FORMATS)
+#else
+#define SRC_TEMPLATE_CAPS \
+    GST_VIDEO_CAPS_MAKE (GST_MF_VIDEO_FORMATS) "; " \
+        "image/jpeg, width = " GST_VIDEO_SIZE_RANGE ", " \
+        "height = " GST_VIDEO_SIZE_RANGE ", " \
+        "framerate = " GST_VIDEO_FPS_RANGE
+#endif
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_MF_VIDEO_FORMATS))
-    );
+    GST_STATIC_CAPS (SRC_TEMPLATE_CAPS));
 
 struct _GstMFVideoSrc
 {
@@ -101,8 +112,8 @@ static GstCaps *gst_mf_video_src_fixate (GstBaseSrc * src, GstCaps * caps);
 static gboolean gst_mf_video_src_unlock (GstBaseSrc * src);
 static gboolean gst_mf_video_src_unlock_stop (GstBaseSrc * src);
 
-static GstFlowReturn gst_mf_video_src_fill (GstPushSrc * pushsrc,
-    GstBuffer * buffer);
+static GstFlowReturn gst_mf_video_src_create (GstPushSrc * pushsrc,
+    GstBuffer ** buffer);
 
 #define gst_mf_video_src_parent_class parent_class
 G_DEFINE_TYPE (GstMFVideoSrc, gst_mf_video_src, GST_TYPE_PUSH_SRC);
@@ -151,7 +162,7 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_mf_video_src_unlock);
   basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_mf_video_src_unlock_stop);
 
-  pushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_mf_video_src_fill);
+  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_mf_video_src_create);
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_video_src_debug, "mfvideosrc", 0,
       "mfvideosrc");
@@ -281,7 +292,8 @@ gst_mf_video_src_set_caps (GstBaseSrc * src, GstCaps * caps)
   }
 
   gst_video_info_from_caps (&self->info, caps);
-  gst_base_src_set_blocksize (src, GST_VIDEO_INFO_SIZE (&self->info));
+  if (GST_VIDEO_INFO_FORMAT (&self->info) != GST_VIDEO_FORMAT_ENCODED)
+    gst_base_src_set_blocksize (src, GST_VIDEO_INFO_SIZE (&self->info));
 
   return TRUE;
 }
@@ -355,10 +367,11 @@ gst_mf_video_src_unlock_stop (GstBaseSrc * src)
 }
 
 static GstFlowReturn
-gst_mf_video_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
+gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
   GstMFVideoSrc *self = GST_MF_VIDEO_SRC (pushsrc);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *buf = NULL;
 
   if (!self->started) {
     if (!gst_mf_source_object_start (self->source)) {
@@ -370,13 +383,26 @@ gst_mf_video_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
     self->started = TRUE;
   }
 
-  ret = gst_mf_source_object_fill (self->source, buffer);
+  if (GST_VIDEO_INFO_FORMAT (&self->info) != GST_VIDEO_FORMAT_ENCODED) {
+    ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (self), 0,
+        GST_VIDEO_INFO_SIZE (&self->info), &buf);
+
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    ret = gst_mf_source_object_fill (self->source, buf);
+  } else {
+    ret = gst_mf_source_object_create (self->source, &buf);
+  }
+
   if (ret != GST_FLOW_OK)
     return ret;
 
-  GST_BUFFER_OFFSET (buffer) = self->n_frames;
-  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + 1;
+  GST_BUFFER_OFFSET (buf) = self->n_frames;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
   self->n_frames++;
+
+  *buffer = buf;
 
   return GST_FLOW_OK;
 }

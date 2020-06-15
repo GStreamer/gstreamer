@@ -82,6 +82,9 @@ struct _GstMFSourceObjectClass
   GstFlowReturn (*fill)        (GstMFSourceObject * object,
                                 GstBuffer * buffer);
 
+  GstFlowReturn (*create)      (GstMFSourceObject * object,
+                                GstBuffer ** buffer);
+
   gboolean      (*unlock)      (GstMFSourceObject * object);
 
   gboolean      (*unlock_stop) (GstMFSourceObject * object);
@@ -98,8 +101,13 @@ gboolean        gst_mf_source_object_start        (GstMFSourceObject * object);
 
 gboolean        gst_mf_source_object_stop         (GstMFSourceObject * object);
 
+/* Used for raw format */
 GstFlowReturn   gst_mf_source_object_fill         (GstMFSourceObject * object,
                                                    GstBuffer * buffer);
+
+/* Used for compressed/raw format */
+GstFlowReturn   gst_mf_source_object_create       (GstMFSourceObject * object,
+                                                   GstBuffer ** buffer);
 
 void            gst_mf_source_object_set_flushing (GstMFSourceObject * object,
                                                    gboolean flushing);

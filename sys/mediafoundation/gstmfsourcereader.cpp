@@ -78,6 +78,8 @@ static gboolean gst_mf_source_reader_stop  (GstMFSourceObject * object);
 static gboolean gst_mf_source_reader_close (GstMFSourceObject * object);
 static GstFlowReturn gst_mf_source_reader_fill (GstMFSourceObject * object,
     GstBuffer * buffer);
+static GstFlowReturn gst_mf_source_reader_create (GstMFSourceObject * object,
+    GstBuffer ** buffer);
 static gboolean gst_mf_source_reader_unlock (GstMFSourceObject * object);
 static gboolean gst_mf_source_reader_unlock_stop (GstMFSourceObject * object);
 static GstCaps * gst_mf_source_reader_get_caps (GstMFSourceObject * object);
@@ -101,6 +103,7 @@ gst_mf_source_reader_class_init (GstMFSourceReaderClass * klass)
   source_class->stop = GST_DEBUG_FUNCPTR (gst_mf_source_reader_stop);
   source_class->close = GST_DEBUG_FUNCPTR (gst_mf_source_reader_close);
   source_class->fill = GST_DEBUG_FUNCPTR (gst_mf_source_reader_fill);
+  source_class->create = GST_DEBUG_FUNCPTR (gst_mf_source_reader_create);
   source_class->unlock = GST_DEBUG_FUNCPTR (gst_mf_source_reader_unlock);
   source_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_mf_source_reader_unlock_stop);
@@ -291,10 +294,12 @@ gst_mf_source_reader_start (GstMFSourceObject * object)
 
   type = self->cur_type;
 
-  hr = type->media_type->SetUINT32 (MF_MT_DEFAULT_STRIDE,
-      GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0));
-  if (!gst_mf_result (hr))
-    return FALSE;
+  if (GST_VIDEO_INFO_FORMAT (&self->info) != GST_VIDEO_FORMAT_ENCODED) {
+    hr = type->media_type->SetUINT32 (MF_MT_DEFAULT_STRIDE,
+        GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0));
+    if (!gst_mf_result (hr))
+      return FALSE;
+  }
 
   hr = self->reader->SetStreamSelection (type->stream_index, TRUE);
   if (!gst_mf_result (hr))
@@ -360,15 +365,10 @@ gst_mf_source_reader_read_sample (GstMFSourceReader * self)
 }
 
 static GstFlowReturn
-gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
+gst_mf_source_reader_get_media_buffer (GstMFSourceReader * self,
+    IMFMediaBuffer ** media_buffer)
 {
-  GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
   GstFlowReturn ret = GST_FLOW_OK;
-  HRESULT hr;
-  GstVideoFrame frame;
-  BYTE *data;
-  gint i, j;
-  ComPtr<IMFMediaBuffer> media_buffer;
 
   while (g_queue_is_empty (self->queue)) {
     ret = gst_mf_source_reader_read_sample (self);
@@ -383,7 +383,25 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
     g_mutex_unlock (&self->lock);
   }
 
-  media_buffer.Attach ((IMFMediaBuffer *) g_queue_pop_head (self->queue));
+  *media_buffer = (IMFMediaBuffer *) g_queue_pop_head (self->queue);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
+{
+  GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
+  GstFlowReturn ret = GST_FLOW_OK;
+  ComPtr<IMFMediaBuffer> media_buffer;
+  GstVideoFrame frame;
+  BYTE *data;
+  gint i, j;
+  HRESULT hr;
+
+  ret = gst_mf_source_reader_get_media_buffer (self, &media_buffer);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   hr = media_buffer->Lock (&data, NULL, NULL);
   if (!gst_mf_result (hr)) {
@@ -420,7 +438,47 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
   gst_video_frame_unmap (&frame);
   media_buffer->Unlock ();
 
-  return ret;
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mf_source_reader_create (GstMFSourceObject * object, GstBuffer ** buffer)
+{
+  GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
+  GstFlowReturn ret = GST_FLOW_OK;
+  ComPtr<IMFMediaBuffer> media_buffer;
+  HRESULT hr;
+  BYTE *data;
+  DWORD len = 0;
+  GstBuffer *buf;
+  GstMapInfo info;
+
+  ret = gst_mf_source_reader_get_media_buffer (self, &media_buffer);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  hr = media_buffer->Lock (&data, NULL, &len);
+  if (!gst_mf_result (hr) || len == 0) {
+    GST_ERROR_OBJECT (self, "Failed to lock media buffer");
+    return GST_FLOW_ERROR;
+  }
+
+  buf = gst_buffer_new_and_alloc (len);
+  if (!buf) {
+    GST_ERROR_OBJECT (self, "Cannot allocate buffer");
+    media_buffer->Unlock ();
+    return GST_FLOW_ERROR;
+  }
+
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  memcpy (info.data, data, len);
+  gst_buffer_unmap (buf, &info);
+
+  media_buffer->Unlock ();
+
+  *buffer = buf;
+
+  return GST_FLOW_OK;
 }
 
 static gboolean

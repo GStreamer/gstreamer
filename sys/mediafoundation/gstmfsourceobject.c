@@ -300,6 +300,20 @@ gst_mf_source_object_fill (GstMFSourceObject * object, GstBuffer * buffer)
   return klass->fill (object, buffer);
 }
 
+GstFlowReturn
+gst_mf_source_object_create (GstMFSourceObject * object, GstBuffer ** buffer)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->create != NULL);
+
+  return klass->create (object, buffer);
+}
+
 void
 gst_mf_source_object_set_flushing (GstMFSourceObject * object,
     gboolean flushing)

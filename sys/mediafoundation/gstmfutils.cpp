@@ -78,6 +78,7 @@ static struct
   {MFVideoFormat_H265, "video/x-h265"},
   {MFVideoFormat_VP80, "video/x-vp8"},
   {MFVideoFormat_VP90, "video/x-vp9"},
+  {MFVideoFormat_MJPG, "image/jpeg"},
 };
 
 GstVideoFormat
@@ -149,10 +150,10 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
     return NULL;
   }
 
-  if (raw_format) {
-    hr = MFGetAttributeSize (media_type, MF_MT_FRAME_SIZE, &width, &height);
-    if (FAILED (hr) || !width || !height) {
-      GST_WARNING ("Couldn't get frame size, hr: 0x%x", (guint) hr);
+  hr = MFGetAttributeSize (media_type, MF_MT_FRAME_SIZE, &width, &height);
+  if (FAILED (hr) || !width || !height) {
+    GST_WARNING ("Couldn't get frame size, hr: 0x%x", (guint) hr);
+    if (raw_format) {
       gst_caps_unref (caps);
 
       return NULL;
