@@ -92,6 +92,7 @@ typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
 #define GST_VALIDATE_ACTION_LINENO(action) (((GstValidateAction*) action)->ABI.abi.lineno)
 #define GST_VALIDATE_ACTION_FILENAME(action) (((GstValidateAction*) action)->ABI.abi.filename)
 #define GST_VALIDATE_ACTION_DEBUG(action) (((GstValidateAction*) action)->ABI.abi.debug)
+#define GST_VALIDATE_ACTION_N_REPEATS(action) (((GstValidateAction*) action)->ABI.abi.n_repeats)
 
 /**
  * GstValidateAction:
@@ -131,6 +132,7 @@ struct _GstValidateAction
       gint lineno;
       gchar *filename;
       gchar *debug;
+      gint n_repeats;
     } abi;
   } ABI;
 };

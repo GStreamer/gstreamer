@@ -452,6 +452,7 @@ _action_copy (GstValidateAction * act)
   GST_VALIDATE_ACTION_FILENAME (copy) =
       g_strdup (GST_VALIDATE_ACTION_FILENAME (act));
   GST_VALIDATE_ACTION_DEBUG (copy) = g_strdup (GST_VALIDATE_ACTION_DEBUG (act));
+  GST_VALIDATE_ACTION_N_REPEATS (copy) = GST_VALIDATE_ACTION_N_REPEATS (act);
 
   return copy;
 }
@@ -2645,8 +2646,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 
     if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS) {
       return G_SOURCE_CONTINUE;
-    } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK
-        && act->repeat <= 0) {
+    } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
       tmp = priv->actions;
       priv->actions = g_list_remove_link (priv->actions, tmp);
 
@@ -2730,15 +2730,11 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     g_free (str);
   }
 
-  if (act->repeat > 0 && !gst_validate_action_is_subaction (act)) {
-    act->repeat--;
-  }
-
   if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
     act->priv->state = _execute_sub_action_action (act);
   }
 
-  if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC && act->repeat <= 0) {
+  if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
 
@@ -3611,62 +3607,88 @@ _execute_disable_plugin (GstValidateScenario * scenario,
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
 
+static gboolean
+gst_validate_action_setup_repeat (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  gchar *repeat_expr;
+  gchar *error = NULL;
+  gint repeat, position, i;
+
+  if (!gst_structure_has_field (action->structure, "repeat"))
+    return TRUE;
+
+  if (gst_structure_get_int (action->structure, "repeat", &repeat))
+    goto done;
+
+  if (gst_structure_get_double (action->structure, "repeat",
+          (gdouble *) & repeat))
+    goto done;
+
+  repeat_expr = gst_validate_replace_variables_in_string (action,
+      scenario->priv->vars, gst_structure_get_string (action->structure,
+          "repeat"));
+  if (!repeat_expr) {
+    gst_validate_error_structure (action, "Invalid value for 'repeat'");
+    return FALSE;
+  }
+
+  repeat = gst_validate_utils_parse_expression (repeat_expr, _set_variable_func,
+      scenario, &error);
+  if (error) {
+    gst_validate_error_structure (action, "Invalid value for 'repeat': %s",
+        error);
+    g_free (error);
+    return FALSE;
+  }
+  g_free (repeat_expr);
+
+done:
+  gst_structure_remove_field (action->structure, "repeat");
+  gst_structure_remove_field (action->priv->main_structure, "repeat");
+
+  action->repeat = 0;
+  GST_VALIDATE_ACTION_N_REPEATS (action) = repeat;
+
+  SCENARIO_LOCK (scenario);
+  position = g_list_index (scenario->priv->actions, action);
+  g_assert (position >= 0);
+  for (i = 1; i < repeat; i++) {
+    GstValidateAction *copy = _action_copy (action);
+
+    copy->repeat = i;
+    scenario->priv->actions =
+        g_list_insert (scenario->priv->actions, copy, position + i);
+  }
+  SCENARIO_UNLOCK (scenario);
+  return TRUE;
+}
+
 static GstValidateExecuteActionReturn
 gst_validate_action_default_prepare_func (GstValidateAction * action)
 {
   gint i;
   GstClockTime tmp;
-  gchar *repeat_expr;
-  gchar *error = NULL;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   GstValidateActionType *type = gst_validate_get_action_type (action->type);
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
-  g_assert (scenario);
-
   _update_well_known_vars (scenario);
+  if (!gst_validate_action_setup_repeat (scenario, action))
+    goto err;
+
+  if (GST_VALIDATE_ACTION_N_REPEATS (action))
+    gst_structure_set (scenario->priv->vars,
+        "repeat", G_TYPE_INT, action->repeat, NULL);
   gst_validate_structure_resolve_variables (action, action->structure,
       scenario->priv->vars);
   for (i = 0; type->parameters[i].name; i++) {
-    if (type->parameters[i].types &&
-        g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))
+    if (type->parameters[i].types
+        && g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))
       gst_validate_action_get_clocktime (scenario, action,
           type->parameters[i].name, &tmp);
   }
 
-  if (action->repeat > 0)
-    goto done;
-
-  if (!gst_structure_has_field (action->structure, "repeat"))
-    goto done;
-
-  if (gst_structure_get_int (action->structure, "repeat", &action->repeat))
-    goto done;
-
-  if (gst_structure_get_double (action->structure, "repeat",
-          (gdouble *) & action->repeat))
-    goto done;
-
-  repeat_expr =
-      g_strdup (gst_structure_get_string (action->structure, "repeat"));
-  if (!repeat_expr) {
-    gst_validate_error_structure (action, "Invalid value for 'repeat'");
-    goto err;
-  }
-
-  action->repeat =
-      gst_validate_utils_parse_expression (repeat_expr, _set_variable_func,
-      scenario, &error);
-  if (error) {
-    gst_validate_error_structure (action, "Invalid value for 'repeat'");
-    goto err;
-  }
-  g_free (repeat_expr);
-
-  gst_structure_set (action->structure, "repeat", G_TYPE_INT, action->repeat,
-      NULL);
-  gst_structure_set (action->priv->main_structure, "repeat", G_TYPE_INT,
-      action->repeat, NULL);
 
 done:
   gst_clear_mini_object ((GstMiniObject **) & type);
