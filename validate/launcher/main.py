@@ -240,6 +240,7 @@ class LauncherConfig(Loggable):
 
         # Get absolute path for main_dir and base everything on that
         self.main_dir = os.path.abspath(self.main_dir)
+        os.makedirs(self.main_dir, exist_ok=True)
         os.environ['GST_VALIDATE_LAUNCHER_MAIN_DIR'] = self.main_dir
 
         # default for output_dir is MAINDIR
