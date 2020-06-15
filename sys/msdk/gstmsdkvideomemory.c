@@ -499,18 +499,22 @@ gst_msdk_dmabuf_memory_new_with_surface (GstAllocator * allocator,
   g_return_val_if_fail (GST_IS_MSDK_DMABUF_ALLOCATOR (allocator), NULL);
 
   mem_id = surface->Data.MemId;
-  fd = mem_id->info.handle;
-  size = mem_id->info.mem_size;
 
-  if (fd < 0 || (fd = dup (fd)) < 0) {
+  g_assert (mem_id->desc.num_objects == 1);
+
+  fd = mem_id->desc.objects[0].fd;
+  size = mem_id->desc.objects[0].size;
+
+  if (fd < 0) {
     GST_ERROR ("Failed to get dmabuf handle");
     return NULL;
   }
 
-  mem = gst_dmabuf_allocator_alloc (allocator, fd, size);
+  mem = gst_fd_allocator_alloc (allocator, fd, size,
+      GST_FD_MEMORY_FLAG_DONT_CLOSE);
+
   if (!mem) {
     GST_ERROR ("failed ! dmabuf fd: %d", fd);
-    close (fd);
     return NULL;
   }
 

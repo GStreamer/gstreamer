@@ -36,6 +36,7 @@
 #include "msdk.h"
 #ifndef _WIN32
 #include <va/va.h>
+#include <va/va_drmcommon.h>
 #endif
 
 G_BEGIN_DECLS
