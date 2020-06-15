@@ -218,7 +218,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   prev_report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
 
   runner = gst_validate_reporter_get_runner (reporter);
-  if (prev_report) {
+  if (prev_report && prev_report->level != GST_VALIDATE_REPORT_LEVEL_EXPECTED) {
     GstValidateReportingDetails reporter_level =
         gst_validate_reporter_get_reporting_level (reporter);
     GstValidateReportingDetails runner_level = GST_VALIDATE_SHOW_UNKNOWN;

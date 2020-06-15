@@ -688,8 +688,10 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
   if (report->level == GST_VALIDATE_REPORT_LEVEL_IGNORE)
     return;
 
-  if (check_report_expected (runner, report))
+  if (check_report_expected (runner, report)) {
+    GST_INFO_OBJECT (runner, "Found expected issue: %p", report);
     report->level = GST_VALIDATE_REPORT_LEVEL_EXPECTED;
+  }
 
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
@@ -824,7 +826,8 @@ _do_report_synthesis (GstValidateRunner * runner)
 
       if ((report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) ||
           (report->issue->flags & GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS)) {
-        criticals = g_list_append (criticals, report);
+        if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+          criticals = g_list_append (criticals, report);
         gst_validate_report_print_details (report);
       }
     }
