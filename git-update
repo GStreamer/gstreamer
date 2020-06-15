@@ -12,6 +12,8 @@ from scripts.common import get_meson
 
 
 SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
+# Force a checkout to happen and throw away local changes
+FORCE_CHECKOUT = False
 
 
 def manifest_get_commits(manifest):
@@ -90,7 +92,9 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], re
         if revision:
             print("Checking out %s in %s" % (revision, repo_name))
             git("fetch", *fetch_args, repository_path=repo_dir)
-            git("checkout", "--detach", revision, repository_path=repo_dir)
+            checkout_args = ["--force"] if FORCE_CHECKOUT else []
+            checkout_args += ["--detach", revision]
+            git("checkout", *checkout_args, repository_path=repo_dir)
         else:
             print("Updating branch %s in %s" % (get_branch_name(repo_dir), repo_name))
             git("pull", "--rebase", repository_path=repo_dir)
@@ -187,6 +191,7 @@ if __name__ == "__main__":
         meson = get_meson()
         targets_s = subprocess.check_output(meson + ['subprojects', 'download'])
         repos_commits = manifest_get_commits(options.manifest)
+        FORCE_CHECKOUT = True
     else:
         repos_commits = {}
 
