@@ -307,7 +307,8 @@ gst_mf_capture_winrt_stop (GstMFSourceObject * object)
   hr = self->capture->StopCapture();
 
   while (!g_queue_is_empty (self->queue)) {
-    IMFMediaBuffer *buffer = (IMFMediaBuffer *) g_queue_pop_head (self->queue);
+    ISoftwareBitmap *buffer =
+        (ISoftwareBitmap *) g_queue_pop_head (self->queue);
     buffer->Release ();
   }
 
