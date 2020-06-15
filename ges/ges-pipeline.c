@@ -1086,7 +1086,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   CHECK_THREAD (pipeline);
 
   /*  FIXME Properly handle multi track, for now GESPipeline
-   *  only hanles single track per type, so we should just set the
+   *  only handles single track per type, so we should just set the
    *  presence to 1.
    */
   if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
@@ -1179,9 +1179,14 @@ ges_pipeline_get_mode (GESPipeline * pipeline)
  *
  * Sets the #GESPipeline:mode of the pipeline.
  *
- * Note that the pipeline will be set to #GST_STATE_NULL during this call
- * to perform the necessary changes. You will need to set the state again
- * yourself after calling this.
+ * Note that the pipeline will be set to #GST_STATE_NULL during this call to
+ * perform the necessary changes. You will need to set the state again yourself
+ * after calling this.
+ *
+ * > **NOTE**: [Rendering settings](ges_pipeline_set_render_settings) need to be
+ * > set before setting @mode to #GES_PIPELINE_MODE_RENDER or
+ * > #GES_PIPELINE_MODE_SMART_RENDER, the call to this method will fail
+ * > otherwise.
  *
  * Returns: %TRUE if the mode of @pipeline was successfully set to @mode.
  **/
