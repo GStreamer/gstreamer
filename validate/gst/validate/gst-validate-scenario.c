@@ -848,7 +848,10 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     } else if (val == -1.0) {
       *retval = GST_CLOCK_TIME_NONE;
     } else {
-      *retval = val * GST_SECOND;
+      gint n, d;
+
+      gst_util_double_to_fraction (val, &n, &d);
+      *retval = gst_util_uint64_scale_int_round (n, GST_SECOND, d);
     }
     gst_structure_set (action->structure, name, G_TYPE_UINT64, *retval, NULL);
     g_free (strval);
