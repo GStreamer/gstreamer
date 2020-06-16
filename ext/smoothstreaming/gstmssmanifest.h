@@ -77,6 +77,7 @@ const gchar * gst_mss_stream_type_name (GstMssStreamType streamtype);
 void gst_mss_manifest_live_adapter_push(GstMssStream * stream, GstBuffer * buffer);
 gsize gst_mss_manifest_live_adapter_available(GstMssStream * stream);
 GstBuffer * gst_mss_manifest_live_adapter_take_buffer(GstMssStream * stream, gsize nbytes);
+void gst_mss_manifest_live_adapter_clear (GstMssStream * stream);
 gboolean gst_mss_stream_fragment_parsing_needed(GstMssStream * stream);
 void gst_mss_stream_parse_fragment(GstMssStream * stream, GstBuffer * buffer);
 

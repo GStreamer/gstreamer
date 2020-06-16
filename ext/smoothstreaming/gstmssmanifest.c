@@ -1223,7 +1223,10 @@ gst_mss_manifest_seek (GstMssManifest * manifest, gboolean forward,
   GSList *iter;
 
   for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
-    gst_mss_stream_seek (iter->data, forward, 0, time, NULL);
+    GstMssStream *stream = iter->data;
+
+    gst_mss_manifest_live_adapter_clear (stream);
+    gst_mss_stream_seek (stream, forward, 0, time, NULL);
   }
 }
 
@@ -1610,6 +1613,13 @@ GstBuffer *
 gst_mss_manifest_live_adapter_take_buffer (GstMssStream * stream, gsize nbytes)
 {
   return gst_adapter_take_buffer (stream->live_adapter, nbytes);
+}
+
+void
+gst_mss_manifest_live_adapter_clear (GstMssStream * stream)
+{
+  if (stream->live_adapter)
+    gst_adapter_clear (stream->live_adapter);
 }
 
 gboolean
