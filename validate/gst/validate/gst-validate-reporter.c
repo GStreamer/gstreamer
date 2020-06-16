@@ -30,6 +30,7 @@
 #  include "config.h"
 #endif
 
+#include <stdio.h>
 #include <math.h>
 #include "gst-validate-internal.h"
 #include "gst-validate-reporter.h"
@@ -344,7 +345,7 @@ gst_validate_report_action (GstValidateReporter * reporter,
     GstValidateAction * action, GstValidateIssueId issue_id,
     const gchar * format, ...)
 {
-  va_list var_args;
+  va_list var_args, var_copy;
   GString *f;
 
   if (!action) {
@@ -372,8 +373,33 @@ gst_validate_report_action (GstValidateReporter * reporter,
 
 done:
   va_start (var_args, format);
+  G_VA_COPY (var_copy, var_args);
   gst_validate_report_valist (reporter, issue_id, f->str, var_args);
+  if (action) {
+    gint i, indent = gst_validate_action_get_level (action) * 2;
+    gchar *message, **lines, *color = NULL;
+    const gchar *endcolor = "";
+
+#if GLIB_CHECK_VERSION(2,50,0)
+    if (g_log_writer_supports_color (fileno (stderr))) {
+      color = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
+      endcolor = "\033[0m";
+    }
+#endif
+    gst_validate_printf (NULL, "%*s%s> Error%s:\n", indent, "",
+        color ? color : "", endcolor);
+
+    message = gst_info_strdup_vprintf (f->str, var_copy);
+    lines = g_strsplit (message, "\n", -1);
+    for (i = 1; lines[i]; i++)
+      gst_validate_printf (NULL, "%*s%s>%s %s\n", indent, "", color, endcolor,
+          lines[i]);
+    g_strfreev (lines);
+    g_free (message);
+    g_free (color);
+  }
   va_end (var_args);
+  va_end (var_copy);
 
   g_string_free (f, TRUE);
 }
