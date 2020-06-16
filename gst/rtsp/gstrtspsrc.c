@@ -3057,7 +3057,7 @@ gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
   GstRTSPSrc *src;
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
 
@@ -3079,9 +3079,9 @@ gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstObject * parent,
       switch (format) {
         case GST_FORMAT_TIME:
           gst_query_set_duration (query, format, src->segment.duration);
+          res = TRUE;
           break;
         default:
-          res = FALSE;
           break;
       }
       break;
@@ -3091,6 +3091,7 @@ gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstObject * parent,
       /* we are live with a min latency of 0 and unlimited max latency, this
        * result will be updated by the session manager if there is any. */
       gst_query_set_latency (query, src->is_live, 0, -1);
+      res = TRUE;
       break;
     }
     default:
