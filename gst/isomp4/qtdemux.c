@@ -1925,6 +1925,16 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
             &CUR_STREAM (stream)->n_channels);
         gst_structure_get_int (structure, "rate", &rate);
         CUR_STREAM (stream)->rate = rate;
+      } else if (gst_structure_has_name (structure, "application/x-cenc")) {
+        if (gst_structure_has_field (structure, "original-media-type")) {
+          const gchar *media_type =
+              gst_structure_get_string (structure, "original-media-type");
+          if (g_str_has_prefix (media_type, "video")) {
+            stream->subtype = FOURCC_vide;
+          } else if (g_str_has_prefix (media_type, "audio")) {
+            stream->subtype = FOURCC_soun;
+          }
+        }
       }
     }
     gst_caps_replace (&demux->media_caps, (GstCaps *) mediacaps);
