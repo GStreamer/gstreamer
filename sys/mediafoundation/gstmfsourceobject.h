@@ -54,6 +54,8 @@ struct _GstMFSourceObject
   gchar *device_path;
   gchar *device_name;
   gint device_index;
+
+  GWeakRef client;
 };
 
 struct _GstMFSourceObjectClass
@@ -101,6 +103,11 @@ GstCaps *       gst_mf_source_object_get_caps     (GstMFSourceObject * object);
 
 gboolean        gst_mf_source_object_set_caps     (GstMFSourceObject * object,
                                                    GstCaps * caps);
+
+gboolean        gst_mf_source_object_set_client   (GstMFSourceObject * object,
+                                                   GstElement * element);
+
+GstClockTime    gst_mf_source_object_get_running_time (GstMFSourceObject * object);
 
 /* A factory method for subclass impl. selection */
 GstMFSourceObject * gst_mf_source_object_new      (GstMFSourceType type,

@@ -73,8 +73,8 @@ struct _GstMFVideoSrc
   gboolean started;
   GstVideoInfo info;
 
-  GstClockTime first_pts;
   guint64 n_frames;
+  GstClockTime latency;
 
   /* properties */
   gchar *device_path;
@@ -109,6 +109,7 @@ static GstCaps *gst_mf_video_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static GstCaps *gst_mf_video_src_fixate (GstBaseSrc * src, GstCaps * caps);
 static gboolean gst_mf_video_src_unlock (GstBaseSrc * src);
 static gboolean gst_mf_video_src_unlock_stop (GstBaseSrc * src);
+static gboolean gst_mf_video_src_query (GstBaseSrc * src, GstQuery * query);
 
 static GstFlowReturn gst_mf_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buffer);
@@ -178,6 +179,7 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
   basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_mf_video_src_fixate);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_mf_video_src_unlock);
   basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_mf_video_src_unlock_stop);
+  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_mf_video_src_query);
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_mf_video_src_create);
 
@@ -190,7 +192,6 @@ gst_mf_video_src_init (GstMFVideoSrc * self)
 {
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
-  gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
 
   self->device_index = DEFAULT_DEVICE_INDEX;
 }
@@ -267,10 +268,17 @@ gst_mf_video_src_start (GstBaseSrc * src)
   self->source = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
       self->device_index, self->device_name, self->device_path, NULL);
 
-  self->first_pts = GST_CLOCK_TIME_NONE;
   self->n_frames = 0;
+  self->latency = 0;
 
-  return ! !self->source;
+  if (!self->source) {
+    GST_ERROR_OBJECT (self, "Couldn't create capture object");
+    return FALSE;
+  }
+
+  gst_mf_source_object_set_client (self->source, GST_ELEMENT (self));
+
+  return TRUE;
 }
 
 static gboolean
@@ -383,12 +391,35 @@ gst_mf_video_src_unlock_stop (GstBaseSrc * src)
   return TRUE;
 }
 
+static gboolean
+gst_mf_video_src_query (GstBaseSrc * src, GstQuery * query)
+{
+  GstMFVideoSrc *self = GST_MF_VIDEO_SRC (src);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+      if (self->started) {
+        gst_query_set_latency (query, TRUE, 0, self->latency);
+
+        return TRUE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+}
+
 static GstFlowReturn
 gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
   GstMFVideoSrc *self = GST_MF_VIDEO_SRC (pushsrc);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf = NULL;
+  GstClock *clock;
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
+  GstClockTimeDiff diff;
 
   if (!self->started) {
     if (!gst_mf_source_object_start (self->source)) {
@@ -418,6 +449,28 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GST_BUFFER_OFFSET (buf) = self->n_frames;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
   self->n_frames++;
+
+  GST_LOG_OBJECT (self,
+      "Captured buffer timestamp %" GST_TIME_FORMAT ", duration %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+  /* Update latency */
+  clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
+  if (clock) {
+    GstClockTime now;
+
+    now = gst_clock_get_time (clock);
+    running_time = now - GST_ELEMENT_CAST (self)->base_time;
+    gst_object_unref (clock);
+  }
+
+  diff = GST_CLOCK_DIFF (GST_BUFFER_PTS (buf), running_time);
+  if (diff > self->latency) {
+    self->latency = (GstClockTime) diff;
+    GST_DEBUG_OBJECT (self, "Updated latency value %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (self->latency));
+  }
 
   *buffer = buf;
 

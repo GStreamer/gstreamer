@@ -110,6 +110,8 @@ gst_mf_source_object_init (GstMFSourceObject * self)
 {
   self->device_index = DEFAULT_DEVICE_INDEX;
   self->source_type = DEFAULT_SOURCE_TYPE;
+
+  g_weak_ref_init (&self->client, NULL);
 }
 
 static void
@@ -119,6 +121,8 @@ gst_mf_source_object_finalize (GObject * object)
 
   g_free (self->device_path);
   g_free (self->device_name);
+
+  g_weak_ref_clear (&self->client);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -272,6 +276,45 @@ gst_mf_source_object_get_caps (GstMFSourceObject * object)
   g_assert (klass->get_caps != NULL);
 
   return klass->get_caps (object);
+}
+
+gboolean
+gst_mf_source_object_set_client (GstMFSourceObject * object,
+    GstElement * client)
+{
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
+
+  g_weak_ref_set (&object->client, client);
+
+  return TRUE;
+}
+
+GstClockTime
+gst_mf_source_object_get_running_time (GstMFSourceObject * object)
+{
+  GstElement *client = NULL;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_CLOCK_TIME_NONE);
+
+  client = (GstElement *) g_weak_ref_get (&object->client);
+  if (client) {
+    GstClockTime basetime = client->base_time;
+    GstClock *clock;
+
+    clock = gst_element_get_clock (client);
+    if (clock) {
+      GstClockTime now;
+
+      now = gst_clock_get_time (clock);
+      timestamp = now - basetime;
+      gst_object_unref (clock);
+    }
+
+    gst_object_unref (client);
+  }
+
+  return timestamp;
 }
 
 static gboolean

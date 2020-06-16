@@ -1047,19 +1047,11 @@ MediaCaptureWrapper::onFrameArrived(IMediaFrameReader *reader,
   if (!frame_ref)
     return S_OK;
 
-  hr = frame_ref->get_VideoMediaFrame (&video_frame);
-  if (!gst_mf_result (hr))
-    return hr;
-
-  hr = video_frame->get_SoftwareBitmap (&bitmap);
-  if (!gst_mf_result (hr) || !bitmap)
-    return hr;
-
   /* nothing to do if no callback was installed */
   if (!user_cb_.frame_arrived)
     return S_OK;
 
-  return user_cb_.frame_arrived (bitmap.Get(), user_data_);
+  return user_cb_.frame_arrived (frame_ref.Get(), user_data_);
 }
 
 HRESULT

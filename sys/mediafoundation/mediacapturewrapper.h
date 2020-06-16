@@ -112,7 +112,8 @@ public:
 
 typedef struct
 {
-  HRESULT (*frame_arrived) (ISoftwareBitmap * bitmap, void * user_data);
+  HRESULT (*frame_arrived) (IMediaFrameReference * frame,
+                            void * user_data);
   HRESULT (*failed)        (const std::string &error,
                             UINT32 error_code,
                             void * user_data);

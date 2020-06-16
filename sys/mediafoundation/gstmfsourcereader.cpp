@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <gst/base/base.h>
 #include <gst/video/video.h>
 #include "gstmfsourcereader.h"
 #include <string.h>
@@ -71,7 +72,7 @@ struct _GstMFSourceReader
   GMainLoop *loop;
 
   /* protected by lock */
-  GQueue *queue;
+  GstQueueArray *queue;
 
   IMFMediaSource *source;
   IMFSourceReader *reader;
@@ -83,6 +84,12 @@ struct _GstMFSourceReader
 
   gboolean flushing;
 };
+
+typedef struct _GstMFSourceReaderSample
+{
+  IMFSample *sample;
+  GstClockTime clock_time;
+} GstMFSourceReaderSample;
 
 static void gst_mf_source_reader_constructed (GObject * object);
 static void gst_mf_source_reader_finalize (GObject * object);
@@ -98,6 +105,8 @@ static gboolean gst_mf_source_reader_unlock_stop (GstMFSourceObject * object);
 static GstCaps * gst_mf_source_reader_get_caps (GstMFSourceObject * object);
 static gboolean gst_mf_source_reader_set_caps (GstMFSourceObject * object,
     GstCaps * caps);
+static void
+gst_mf_source_reader_sample_clear (GstMFSourceReaderSample * reader_sample);
 
 static gboolean gst_mf_source_reader_open (GstMFSourceReader * object,
     IMFActivate * activate);
@@ -134,7 +143,10 @@ gst_mf_source_reader_class_init (GstMFSourceReaderClass * klass)
 static void
 gst_mf_source_reader_init (GstMFSourceReader * self)
 {
-  self->queue = g_queue_new ();
+  self->queue =
+      gst_queue_array_new_for_struct (sizeof (GstMFSourceReaderSample), 2);
+  gst_queue_array_set_clear_func (self->queue,
+      (GDestroyNotify) gst_mf_source_reader_sample_clear);
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
 }
@@ -343,7 +355,7 @@ gst_mf_source_reader_finalize (GObject * object)
   g_main_loop_unref (self->loop);
   g_main_context_unref (self->context);
 
-  g_queue_free (self->queue);
+  gst_queue_array_free (self->queue);
   gst_clear_caps (&self->supported_caps);
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
@@ -384,15 +396,23 @@ gst_mf_source_reader_start (GstMFSourceObject * object)
   return TRUE;
 }
 
+static GstMFSourceReaderSample *
+gst_mf_source_reader_sample_new (IMFSample * sample, GstClockTime timestamp)
+{
+  GstMFSourceReaderSample *reader_sample = g_new0 (GstMFSourceReaderSample, 1);
+
+  reader_sample->sample = sample;
+  reader_sample->clock_time = timestamp;
+
+  return reader_sample;
+}
+
 static gboolean
 gst_mf_source_reader_stop (GstMFSourceObject * object)
 {
   GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
 
-  while (!g_queue_is_empty (self->queue)) {
-    IMFMediaBuffer *buffer = (IMFMediaBuffer *) g_queue_pop_head (self->queue);
-    buffer->Release ();
-  }
+  gst_queue_array_clear (self->queue);
 
   return TRUE;
 }
@@ -401,47 +421,55 @@ static GstFlowReturn
 gst_mf_source_reader_read_sample (GstMFSourceReader * self)
 {
   HRESULT hr;
-  DWORD count = 0, i;
   DWORD stream_flags = 0;
   GstMFStreamMediaType *type = self->cur_type;
-  ComPtr<IMFSample> sample;
+  IMFSample *sample = nullptr;
+  GstMFSourceReaderSample reader_sample;
 
   hr = self->reader->ReadSample (type->stream_index, 0, NULL, &stream_flags,
     NULL, &sample);
 
-  if (!gst_mf_result (hr))
+  if (!gst_mf_result (hr)) {
+    GST_ERROR_OBJECT (self, "Failed to read sample");
     return GST_FLOW_ERROR;
-
-  if ((stream_flags & MF_SOURCE_READERF_ERROR) == MF_SOURCE_READERF_ERROR)
-    return GST_FLOW_ERROR;
-
-  if (!sample)
-    return GST_FLOW_OK;
-
-  hr = sample->GetBufferCount (&count);
-  if (!gst_mf_result (hr) || !count)
-    return GST_FLOW_OK;
-
-  for (i = 0; i < count; i++) {
-    IMFMediaBuffer *buffer = NULL;
-
-    hr = sample->GetBufferByIndex (i, &buffer);
-    if (!gst_mf_result (hr) || !buffer)
-      continue;
-
-    g_queue_push_tail (self->queue, buffer);
   }
+
+  if ((stream_flags & MF_SOURCE_READERF_ERROR) == MF_SOURCE_READERF_ERROR) {
+    GST_ERROR_OBJECT (self, "Error while reading sample, sample flags 0x%x",
+        stream_flags);
+    return GST_FLOW_ERROR;
+  }
+
+  if (!sample) {
+    GST_WARNING_OBJECT (self, "Empty sample");
+    return GST_FLOW_OK;
+  }
+
+  reader_sample.sample = sample;
+  reader_sample.clock_time =
+      gst_mf_source_object_get_running_time (GST_MF_SOURCE_OBJECT (self));
+
+  gst_queue_array_push_tail_struct (self->queue, &reader_sample);
 
   return GST_FLOW_OK;
 }
 
 static GstFlowReturn
 gst_mf_source_reader_get_media_buffer (GstMFSourceReader * self,
-    IMFMediaBuffer ** media_buffer)
+    IMFMediaBuffer ** buffer, GstClockTime * timestamp, GstClockTime * duration)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  IMFSample *sample = nullptr;
+  HRESULT hr;
+  DWORD count = 0;
+  LONGLONG mf_timestamp;
+  GstMFSourceReaderSample *reader_sample = nullptr;
 
-  while (g_queue_is_empty (self->queue)) {
+  *buffer = nullptr;
+  *timestamp = GST_CLOCK_TIME_NONE;
+  *duration = GST_CLOCK_TIME_NONE;
+
+  while (gst_queue_array_is_empty (self->queue)) {
     ret = gst_mf_source_reader_read_sample (self);
     if (ret != GST_FLOW_OK)
       return ret;
@@ -454,7 +482,37 @@ gst_mf_source_reader_get_media_buffer (GstMFSourceReader * self,
     g_mutex_unlock (&self->lock);
   }
 
-  *media_buffer = (IMFMediaBuffer *) g_queue_pop_head (self->queue);
+  reader_sample =
+      (GstMFSourceReaderSample *) gst_queue_array_pop_head_struct (self->queue);
+  sample = reader_sample->sample;
+  g_assert (sample);
+
+  hr = sample->GetBufferCount (&count);
+  if (!gst_mf_result (hr) || count == 0) {
+    GST_WARNING_OBJECT (self, "Empty IMFSample, read again");
+    goto done;
+  }
+
+  /* XXX: read the first buffer and ignore the others for now */
+  hr = sample->GetBufferByIndex (0, buffer);
+  if (!gst_mf_result (hr)) {
+    GST_WARNING_OBJECT (self, "Couldn't get IMFMediaBuffer from sample");
+    goto done;
+  }
+
+  hr = sample->GetSampleDuration (&mf_timestamp);
+  if (!gst_mf_result (hr)) {
+    GST_WARNING_OBJECT (self, "Couldn't get sample duration");
+    *duration = GST_CLOCK_TIME_NONE;
+  } else {
+    /* Media Foundation uses 100 nano seconds unit */
+    *duration = mf_timestamp * 100;
+  }
+
+  *timestamp = reader_sample->clock_time;
+
+done:
+  gst_mf_source_reader_sample_clear (reader_sample);
 
   return GST_FLOW_OK;
 }
@@ -469,8 +527,14 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
   BYTE *data;
   gint i, j;
   HRESULT hr;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-  ret = gst_mf_source_reader_get_media_buffer (self, &media_buffer);
+  do {
+    ret = gst_mf_source_reader_get_media_buffer (self,
+        media_buffer.ReleaseAndGetAddressOf (), &timestamp, &duration);
+  } while (ret == GST_FLOW_OK && !media_buffer);
+
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -509,6 +573,10 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
   gst_video_frame_unmap (&frame);
   media_buffer->Unlock ();
 
+  GST_BUFFER_PTS (buffer) = timestamp;
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buffer) = duration;
+
   return GST_FLOW_OK;
 }
 
@@ -523,8 +591,14 @@ gst_mf_source_reader_create (GstMFSourceObject * object, GstBuffer ** buffer)
   DWORD len = 0;
   GstBuffer *buf;
   GstMapInfo info;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-  ret = gst_mf_source_reader_get_media_buffer (self, &media_buffer);
+  do {
+    ret = gst_mf_source_reader_get_media_buffer (self,
+        media_buffer.ReleaseAndGetAddressOf (), &timestamp, &duration);
+  } while (ret == GST_FLOW_OK && !media_buffer);
+
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -546,6 +620,11 @@ gst_mf_source_reader_create (GstMFSourceObject * object, GstBuffer ** buffer)
   gst_buffer_unmap (buf, &info);
 
   media_buffer->Unlock ();
+
+  GST_BUFFER_PTS (buffer) = timestamp;
+  /* Set DTS since this is compressed format */
+  GST_BUFFER_DTS (buffer) = timestamp;
+  GST_BUFFER_DURATION (buffer) = duration;
 
   *buffer = buf;
 
@@ -809,6 +888,19 @@ gst_mf_device_activate_free (GstMFDeviceActivate * activate)
   g_free (activate->name);
   g_free (activate->path);
   g_free (activate);
+}
+
+static void
+gst_mf_source_reader_sample_clear (GstMFSourceReaderSample * reader_sample)
+{
+  if (!reader_sample)
+    return;
+
+  if (reader_sample->sample)
+    reader_sample->sample->Release ();
+
+  reader_sample->sample = nullptr;
+  reader_sample->clock_time = GST_CLOCK_TIME_NONE;
 }
 
 GstMFSourceObject *
