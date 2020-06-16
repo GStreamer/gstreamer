@@ -193,7 +193,7 @@ G_GNUC_INTERNAL
 void priv_gst_caps_features_append_to_gstring (const GstCapsFeatures * features, GString *s);
 
 G_GNUC_INTERNAL
-gboolean priv_gst_structure_parse_name (gchar * str, gchar **start, gchar ** end, gchar ** next);
+gboolean priv_gst_structure_parse_name (gchar * str, gchar **start, gchar ** end, gchar ** next, gboolean check_valid);
 G_GNUC_INTERNAL
 gboolean priv_gst_structure_parse_fields (gchar *str, gchar ** end, GstStructure *structure);
 

@@ -3583,6 +3583,94 @@ GST_START_TEST (test_deserialize_with_pspec)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_serialize_nested_structures)
+{
+  gint i;
+  gchar *structure_str;
+  GstStructure *structure, *structure2;
+
+  /* *INDENT-OFF* */
+  struct
+  {
+    const gchar *serialized_struct;
+    gboolean should_fail;
+    const gchar *path_to_bool;
+    const gchar *subcaps_str;
+  } tests_data[] = {
+      {"s, substruct=[sub, is-deepest=true]", FALSE, "substruct"},
+      {"s, substruct=(structure) [sub, is-deepest=true]", FALSE, "substruct"},
+      {"s, substruct=[sub, is-substruct=true, subsubstruct=[subsub, is-deepest=true]]", FALSE, "substruct/subsubstruct"},
+      {"s, substruct=[sub, is-substruct=true, subsubstruct=[subsub, subsubsubstruct=[subsubsub, is-deepest=true]]]", FALSE, "substruct/subsubstruct/subsubsubstruct"},
+      {"s, substruct=[sub, an-array={a, b}, subsubstruct=[subsub, a-range=[1,2], a-string=\"this is a \\\"string\\\"\"]]", FALSE, NULL},
+      {"s, sub-caps=[nested-caps(some:Feature), is-caps=true; second, caps-structure=true]", FALSE, NULL, "nested-caps(some:Feature), is-caps=true; second, caps-structure=true"},
+      {"s, sub-caps=[nested-caps(some:Feature)]", FALSE, NULL, "nested-caps(some:Feature)"},
+      {"s, array=(structure){[struct, n=1], [struct, n=2]}"},
+      /* Broken structure with substructures */
+      {"s, substruct=[sub, is-substruct=true", TRUE},
+      {"s, substruct=[sub, is-substruct=true, sub=\"yes]", TRUE},
+      {"s, substruct=[sub, a-broken-string=$broken]", TRUE},
+      {"s, sub-caps=(int)[nested-caps(some:Feature)]", TRUE},
+  };
+  /* *INDENT-ON* */
+
+  for (i = 0; i < G_N_ELEMENTS (tests_data); i++) {
+    structure = gst_structure_new_from_string (tests_data[i].serialized_struct);
+    if (tests_data[i].should_fail) {
+      fail_if (structure, "%s not be deserialized",
+          tests_data[i].serialized_struct);
+      continue;
+    }
+    fail_unless (structure, "%s could not be deserialized",
+        tests_data[i].serialized_struct);
+    structure_str = gst_structure_to_string (structure);
+    structure2 = gst_structure_new_from_string (structure_str);
+    fail_unless (gst_structure_is_equal (structure, structure2));
+    g_free (structure_str);
+
+    if (tests_data[i].path_to_bool) {
+      const GstStructure *tmpstruct = structure;
+      gchar **tmpstrv = g_strsplit (tests_data[i].path_to_bool, "/", -1);
+      gint j;
+
+      for (j = 0; tmpstrv[j]; j++) {
+        const GValue *v = gst_structure_get_value (tmpstruct, tmpstrv[j]);
+
+        fail_unless (v, "Could not find '%s' in %s", tmpstrv[j],
+            gst_structure_to_string (tmpstruct));
+        tmpstruct = gst_value_get_structure (v);
+
+        fail_unless (GST_IS_STRUCTURE (tmpstruct));
+        if (!tmpstrv[j + 1]) {
+          gboolean tmp;
+
+          fail_unless (gst_structure_get_boolean (tmpstruct, "is-deepest", &tmp)
+              && tmp);
+        }
+      }
+      g_strfreev (tmpstrv);
+    }
+    if (tests_data[i].subcaps_str) {
+      const GValue *v = gst_structure_get_value (structure, "sub-caps");
+      const GstCaps *caps = gst_value_get_caps (v);
+      GstCaps *caps2 = gst_caps_from_string (tests_data[i].subcaps_str);
+
+      fail_unless (gst_caps_is_equal (caps, caps2));
+      gst_caps_unref (caps2);
+    }
+
+    /* Ensure that doing a round trip works as expected */
+    structure_str = gst_structure_to_string (structure2);
+    gst_structure_free (structure2);
+    structure2 = gst_structure_new_from_string (structure_str);
+    fail_unless (gst_structure_is_equal (structure, structure2));
+    gst_structure_free (structure);
+    gst_structure_free (structure2);
+    g_free (structure_str);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -3638,6 +3726,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_transform_list);
   tcase_add_test (tc_chain, test_serialize_null_aray);
   tcase_add_test (tc_chain, test_deserialize_with_pspec);
+  tcase_add_test (tc_chain, test_deserialize_serialize_nested_structures);
 
   return s;
 }

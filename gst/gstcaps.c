@@ -2400,7 +2400,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
       break;
     }
 
-    if (!priv_gst_structure_parse_name (s, &s, &end, &next)) {
+    if (!priv_gst_structure_parse_name (s, &s, &end, &next, FALSE)) {
       g_free (copy);
       return FALSE;
     }

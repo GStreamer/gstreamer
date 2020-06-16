@@ -2644,6 +2644,87 @@ _priv_gst_value_parse_simple_string (gchar * str, gchar ** end)
   return (s != str);
 }
 
+static gboolean
+_priv_gst_value_parse_struct_or_caps (gchar * str, gchar ** after, GType type,
+    GValue * value)
+{
+  gint openers = 1;
+  gboolean ret = FALSE;
+  gchar *s = str, t, *start, *end, *next;
+
+  if (*s != '[')
+    return FALSE;
+
+  s++;
+  str = s;
+  for (; *s; s++) {
+    if (*s == ']')
+      openers--;
+    else if (*s == '[')
+      openers++;
+
+    if (openers == 0) {
+      *after = s + 1;
+      break;
+    }
+  }
+
+  if (*after == NULL)
+    return FALSE;
+
+  t = *s;
+  *s = '\0';
+  g_value_init (value, type);
+  if (priv_gst_structure_parse_name (str, &start, &end, &next, TRUE))
+    ret = gst_value_deserialize (value, str);
+  if (G_UNLIKELY (!ret)) {
+    *s = t;
+    g_value_unset (value);
+  }
+
+  return ret;
+}
+
+static gboolean
+_priv_gst_value_parse_range_struct_caps (gchar * s, gchar ** after,
+    GValue * value, GType type)
+{
+  gint i;
+  gchar *tmp = s;
+  gboolean ret = FALSE;
+  GType try_types[] = {
+    GST_TYPE_STRUCTURE,
+    GST_TYPE_CAPS,
+  };
+
+  if (type == GST_TYPE_CAPS || type == GST_TYPE_STRUCTURE)
+    ret = _priv_gst_value_parse_struct_or_caps (tmp, &tmp, type, value);
+
+  if (ret)
+    goto ok;
+
+  tmp = s;
+  ret = _priv_gst_value_parse_range (tmp, &tmp, value, type);
+  if (ret)
+    goto ok;
+
+  if (type != G_TYPE_INVALID)
+    return ret;
+
+  for (i = 0; i < G_N_ELEMENTS (try_types); i++) {
+    tmp = s;
+    ret = _priv_gst_value_parse_struct_or_caps (tmp, &tmp, try_types[i], value);
+    if (ret)
+      goto ok;
+  }
+
+  return ret;
+
+ok:
+  *after = tmp;
+  return ret;
+}
+
 gboolean
 _priv_gst_value_parse_value (gchar * str,
     gchar ** after, GValue * value, GType default_type, GParamSpec * pspec)
@@ -2697,7 +2778,7 @@ _priv_gst_value_parse_value (gchar * str,
   while (g_ascii_isspace (*s))
     s++;
   if (*s == '[') {
-    ret = _priv_gst_value_parse_range (s, &s, value, type);
+    ret = _priv_gst_value_parse_range_struct_caps (s, &s, value, type);
   } else if (*s == '{') {
     g_value_init (value, GST_TYPE_LIST);
     ret = _priv_gst_value_parse_list (s, &s, value, type, pspec);

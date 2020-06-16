@@ -119,11 +119,15 @@
  * a-struct, nested=(GstStructure)"nested-struct, nested=true"
  * ```
  *
- * > *Note*: Be aware that the current #GstCaps / #GstStructure serialization
- * > into string has limited support for nested #GstCaps / #GstStructure fields.
- * > It can only support one level of nesting. Using more levels will lead to
- * > unexpected behavior when using serialization features, such as
- * > gst_caps_to_string() or gst_value_serialize() and their counterparts.
+ * Since 1.20, nested structures and caps can be specified using brackets
+ * (`[` and `]`), for example:
+ *
+ * ```
+ * a-struct, nested=[nested-struct, nested=true]
+ * ```
+ *
+ * > *note*: For backward compatility reason, the serialization functions won't
+ * > use that synthax.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -307,7 +311,6 @@ gst_structure_new_id_empty (GQuark quark)
   return gst_structure_new_id_empty_with_size (quark, 0);
 }
 
-#ifndef G_DISABLE_CHECKS
 static gboolean
 gst_structure_validate_name (const gchar * name)
 {
@@ -341,7 +344,6 @@ gst_structure_validate_name (const gchar * name)
 
   return TRUE;
 }
-#endif
 
 /**
  * gst_structure_new_empty:
@@ -2215,7 +2217,7 @@ gst_structure_parse_field (gchar * str,
 
 gboolean
 priv_gst_structure_parse_name (gchar * str, gchar ** start, gchar ** end,
-    gchar ** next)
+    gchar ** next, gboolean check_valid)
 {
   char *w;
   char *r;
@@ -2232,6 +2234,17 @@ priv_gst_structure_parse_name (gchar * str, gchar ** start, gchar ** end,
   if (G_UNLIKELY (!_priv_gst_value_parse_string (r, &w, &r, TRUE))) {
     GST_WARNING ("Failed to parse structure string '%s'", str);
     return FALSE;
+  }
+
+  if (check_valid) {
+    gchar save = *w;
+
+    *w = '\0';
+    if (!gst_structure_validate_name (*start)) {
+      *w = save;
+      return FALSE;
+    }
+    *w = save;
   }
 
   *end = w;
@@ -2339,7 +2352,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   copy = g_strdup (string);
   r = copy;
 
-  if (!priv_gst_structure_parse_name (r, &name, &w, &r))
+  if (!priv_gst_structure_parse_name (r, &name, &w, &r, FALSE))
     goto error;
 
   save = *w;
