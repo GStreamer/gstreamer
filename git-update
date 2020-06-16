@@ -52,7 +52,7 @@ def ensure_revision_if_necessary(repo_dir, revision):
     return revision
 
 
-def update_subprojects(manifest, no_interaction=False, check_status=False):
+def update_subprojects(manifest, no_interaction=False, status=False):
     subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
     for repo_name in os.listdir(subprojects_dir):
         repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
@@ -60,7 +60,7 @@ def update_subprojects(manifest, no_interaction=False, check_status=False):
             continue
 
         revision, args = repos_commits.get(repo_name, [None, []])
-        if not update_repo(repo_name, repo_dir, revision, no_interaction, args, check_status=check_status):
+        if not update_repo(repo_name, repo_dir, revision, no_interaction, args, status=status):
           return False
 
     return True
@@ -83,8 +83,8 @@ def check_repo_status(repo_name, worktree_dir):
                                     branch_message[0].strip(), repo_status(commit_message)))
     return True
 
-def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], recurse_i=0, check_status=False):
-    if check_status:
+def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], recurse_i=0, status=False):
+    if status:
       return check_repo_status(repo_name, repo_dir)
     revision = ensure_revision_if_necessary(repo_dir, revision)
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                         default=False,
                         action='store_true',
                         help="Do not allow interaction with the user.")
-    parser.add_argument("--check-status",
+    parser.add_argument("--status",
                         default=False,
                         action='store_true',
                         help="Check repositories status only.")
@@ -196,11 +196,11 @@ if __name__ == "__main__":
         repos_commits = {}
 
     revision, args = repos_commits.get('gst-build', [None, []])
-    if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction, args, check_status=options.check_status):
+    if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction, args, status=options.status):
         exit(1)
-    if not update_subprojects(options.manifest, options.no_interaction, check_status=options.check_status):
+    if not update_subprojects(options.manifest, options.no_interaction, status=options.status):
         exit(1)
-    if not options.check_status:
+    if not options.status:
       update_cargo(options.builddir)
 
     if options.builddir:
