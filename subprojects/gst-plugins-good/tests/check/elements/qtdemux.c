@@ -988,6 +988,218 @@ GST_START_TEST (test_qtdemux_pad_names)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstPad *sinkpad;
+  guint sample_cnt;
+  guint expected_sample_cnt;
+} MssModeTestData;
+
+static GstPadProbeReturn
+qtdemux_probe_for_mss_mode (GstPad * pad, GstPadProbeInfo * info,
+    MssModeTestData * data)
+{
+  data->sample_cnt++;
+  GST_LOG ("samples received: %u", data->sample_cnt);
+  return GST_PAD_PROBE_OK;
+}
+
+static void
+qtdemux_pad_added_cb_in_mss_mode (GstElement * element, GstPad * pad,
+    MssModeTestData * data)
+{
+  GST_DEBUG_OBJECT (pad, "New pad added");
+
+  if (!data->sinkpad) {
+    GstPad *sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
+
+    gst_pad_set_event_function (sinkpad, _sink_event);
+    gst_pad_set_chain_function (sinkpad, _sink_chain);
+
+    gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BUFFER,
+        (GstPadProbeCallback) qtdemux_probe_for_mss_mode, data, NULL);
+    gst_pad_set_active (sinkpad, TRUE);
+    data->sinkpad = sinkpad;
+    gst_pad_link (pad, sinkpad);
+  }
+}
+
+/* Fragment taken from
+ * http://amssamples.streaming.mediaservices.windows.net/b6822ec8-5c2b-4ae0-a851-fd46a78294e9/ElephantsDream.ism/QualityLevels(53644)/Fragments(AAC_und_ch2_56kbps=0)
+ */
+#define MSS_FRAGMENT TEST_FILE_PREFIX "mss-fragment.m4f"
+static guint8 *mss_fragment;
+static const guint mss_fragment_len = 14400;
+
+GST_START_TEST (test_qtdemux_compensate_data_offset)
+{
+  /* Same fragment as above, but with modified trun box data offset field
+   * from 871 to 791 to mimic an mss fragment with data offset smaller
+   * than the moof size. */
+  const guint mss_fragment_wrong_data_offset_len = 14400;
+  guint8 *mss_fragment_wrong_data_offset;
+  GstElement *qtdemux;
+  GstPad *sinkpad;
+  GstBuffer *inbuf;
+  GstSegment segment;
+  GstEvent *event;
+  GstCaps *caps;
+  GstCaps *mediacaps;
+  MssModeTestData data = { 0, };
+
+  data.expected_sample_cnt = 87;
+
+  g_assert (load_file (MSS_FRAGMENT, &mss_fragment, mss_fragment_len));
+
+  /* Change trun box data offset field from 871 to 791 to mimic an MSS fragment
+   * with data offset smaller than the moof size. */
+  mss_fragment_wrong_data_offset = g_memdup2 (mss_fragment, mss_fragment_len);
+  g_assert (GST_READ_UINT32_BE (&mss_fragment_wrong_data_offset[64]) == 871);
+  GST_WRITE_UINT32_BE (&mss_fragment_wrong_data_offset[64], 791);
+
+  /* The goal of this test is to check that qtdemux can compensate
+   * wrong data offset in trun boxes and allow proper parsing of samples
+   * in mss mode.
+   */
+
+  qtdemux = gst_element_factory_make ("qtdemux", NULL);
+  gst_element_set_state (qtdemux, GST_STATE_PLAYING);
+  sinkpad = gst_element_get_static_pad (qtdemux, "sink");
+
+  /* We'll want to know when the source pad is added */
+  g_signal_connect (qtdemux, "pad-added", (GCallback)
+      qtdemux_pad_added_cb_in_mss_mode, &data);
+
+  /* Send the initial STREAM_START and segment (TIME) event */
+  event = gst_event_new_stream_start ("TEST");
+  GST_DEBUG ("Pushing stream-start event");
+  fail_unless (gst_pad_send_event (sinkpad, event) == TRUE);
+
+  /* Send CAPS event* */
+  mediacaps = gst_caps_new_simple ("audio/mpeg",
+      "mpegversion", G_TYPE_INT, 4,
+      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
+  caps =
+      gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
+      "mss-fragmented", "timescale", G_TYPE_UINT64, 10000000, "media-caps",
+      GST_TYPE_CAPS, mediacaps, NULL);
+
+  /* Send segment event* */
+  event = gst_event_new_caps (caps);
+  GST_DEBUG ("Pushing caps event");
+  fail_unless (gst_pad_send_event (sinkpad, event) == TRUE);
+  gst_caps_unref (mediacaps);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  GST_DEBUG ("Pushing segment event");
+  fail_unless (gst_pad_send_event (sinkpad, event) == TRUE);
+
+  /* Send the first fragment */
+  /* NOTE: mss streams don't have moov */
+  inbuf = gst_buffer_new_and_alloc (mss_fragment_wrong_data_offset_len);
+  gst_buffer_fill (inbuf, 0, mss_fragment_wrong_data_offset,
+      mss_fragment_wrong_data_offset_len);
+  GST_BUFFER_PTS (inbuf) = 0;
+  GST_BUFFER_OFFSET (inbuf) = 0;
+  GST_BUFFER_FLAG_SET (inbuf, GST_BUFFER_FLAG_DISCONT);
+  GST_DEBUG ("Pushing fragment");
+  fail_unless (gst_pad_chain (sinkpad, inbuf) == GST_FLOW_OK);
+  fail_if (data.sinkpad == NULL);
+
+  /* If data offset has been compensated samples will be pushed as normal */
+  fail_unless (data.sample_cnt == data.expected_sample_cnt);
+
+  gst_object_unref (sinkpad);
+  gst_pad_set_active (data.sinkpad, FALSE);
+  gst_object_unref (data.sinkpad);
+  gst_element_set_state (qtdemux, GST_STATE_NULL);
+  gst_object_unref (qtdemux);
+
+  g_free (mss_fragment_wrong_data_offset);
+  g_clear_pointer (&mss_fragment, (GDestroyNotify) g_free);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_qtdemux_mss_fragment)
+{
+  GstElement *qtdemux;
+  GstPad *sinkpad;
+  GstBuffer *inbuf;
+  GstSegment segment;
+  GstEvent *event;
+  GstCaps *caps;
+  GstCaps *mediacaps;
+  MssModeTestData data = { 0, };
+
+  data.expected_sample_cnt = 87;
+
+  g_assert (load_file (MSS_FRAGMENT, &mss_fragment, mss_fragment_len));
+
+  /* The goal of this test is to check that qtdemux can handle a normal
+   * mss fragment.
+   */
+
+  qtdemux = gst_element_factory_make ("qtdemux", NULL);
+  gst_element_set_state (qtdemux, GST_STATE_PLAYING);
+  sinkpad = gst_element_get_static_pad (qtdemux, "sink");
+
+  /* We'll want to know when the source pad is added */
+  g_signal_connect (qtdemux, "pad-added", (GCallback)
+      qtdemux_pad_added_cb_in_mss_mode, &data);
+
+  /* Send the initial STREAM_START and segment (TIME) event */
+  event = gst_event_new_stream_start ("TEST");
+  GST_DEBUG ("Pushing stream-start event");
+  fail_unless (gst_pad_send_event (sinkpad, event) == TRUE);
+
+  /* Send CAPS event* */
+  mediacaps = gst_caps_new_simple ("audio/mpeg",
+      "mpegversion", G_TYPE_INT, 4,
+      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
+  caps =
+      gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
+      "mss-fragmented", "timescale", G_TYPE_UINT64, 10000000, "media-caps",
+      GST_TYPE_CAPS, mediacaps, NULL);
+
+  /* Send segment event* */
+  event = gst_event_new_caps (caps);
+  GST_DEBUG ("Pushing caps event");
+  fail_unless (gst_pad_send_event (sinkpad, event) == TRUE);
+  gst_caps_unref (mediacaps);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  GST_DEBUG ("Pushing segment event");
+  fail_unless (gst_pad_send_event (sinkpad, event) == TRUE);
+
+  /* Send the first fragment */
+  /* NOTE: mss streams don't have moov */
+  inbuf = gst_buffer_new_and_alloc (mss_fragment_len);
+  gst_buffer_fill (inbuf, 0, mss_fragment, mss_fragment_len);
+  GST_BUFFER_PTS (inbuf) = 0;
+  GST_BUFFER_OFFSET (inbuf) = 0;
+  GST_BUFFER_FLAG_SET (inbuf, GST_BUFFER_FLAG_DISCONT);
+  GST_DEBUG ("Pushing fragment");
+  fail_unless (gst_pad_chain (sinkpad, inbuf) == GST_FLOW_OK);
+  fail_if (data.sinkpad == NULL);
+
+  fail_unless (data.sample_cnt == data.expected_sample_cnt);
+
+  gst_object_unref (sinkpad);
+  gst_pad_set_active (data.sinkpad, FALSE);
+  gst_object_unref (data.sinkpad);
+  gst_element_set_state (qtdemux, GST_STATE_NULL);
+  gst_object_unref (qtdemux);
+
+  g_clear_pointer (&mss_fragment, (GDestroyNotify) g_free);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtdemux_suite (void)
 {
@@ -1001,6 +1213,8 @@ qtdemux_suite (void)
   tcase_add_test (tc_chain, test_qtdemux_duplicated_moov);
   tcase_add_test (tc_chain, test_qtdemux_stream_change);
   tcase_add_test (tc_chain, test_qtdemux_pad_names);
+  tcase_add_test (tc_chain, test_qtdemux_compensate_data_offset);
+  tcase_add_test (tc_chain, test_qtdemux_mss_fragment);
 
   return s;
 }
