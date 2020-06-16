@@ -588,6 +588,53 @@ GST_START_TEST (test_message_timestamps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_audio_level_meta)
+{
+  GstElement *level;
+  GstBuffer *inbuffer, *outbuffer;
+  GstAudioLevelMeta *meta;
+
+  level = setup_level (LEVEL_S16_CAPS_STRING);
+  g_object_set (level, "post-messages", FALSE, "audio-level-meta", TRUE, NULL);
+  gst_element_set_state (level, GST_STATE_PLAYING);
+
+  /* create a fake 0.1 sec buffer with a half-amplitude block signal */
+  inbuffer = create_s16_buffer (16536, 16536);
+
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  /* level added the meta */
+  meta = gst_buffer_get_audio_level_meta (outbuffer);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->voice_activity, 0);
+  fail_unless_equals_int (meta->level, 5);
+
+  /* same but with input buffer already having the meta so level will update it */
+  inbuffer = create_s16_buffer (16536, 16536);
+  gst_buffer_add_audio_level_meta (inbuffer, 0, TRUE);
+
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  fail_if ((outbuffer = (GstBuffer *) buffers->next->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  /* level updated the meta */
+  meta = gst_buffer_get_audio_level_meta (outbuffer);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->voice_activity, 1);
+  fail_unless_equals_int (meta->level, 5);
+
+  /* clean up */
+  /* flush current messages,and future state change messages */
+  gst_element_set_state (level, GST_STATE_NULL);
+  cleanup_level (level);
+}
+
+GST_END_TEST;
+
 static Suite *
 level_suite (void)
 {
@@ -603,6 +650,7 @@ level_suite (void)
   tcase_add_test (tc_chain, test_message_on_eos);
   tcase_add_test (tc_chain, test_message_count);
   tcase_add_test (tc_chain, test_message_timestamps);
+  tcase_add_test (tc_chain, test_rtp_audio_level_meta);
 
   return s;
 }

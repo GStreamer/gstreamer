@@ -98,7 +98,8 @@ enum
   PROP_MESSAGE,
   PROP_INTERVAL,
   PROP_PEAK_TTL,
-  PROP_PEAK_FALLOFF
+  PROP_PEAK_FALLOFF,
+  PROP_AUDIO_LEVEL_META,
 };
 
 #define gst_level_parent_class parent_class
@@ -171,6 +172,17 @@ gst_level_class_init (GstLevelClass * klass)
       g_param_spec_double ("peak-falloff", "Peak Falloff",
           "Decay rate of decay peak after TTL (in dB/sec)",
           0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstLevel:audio-level-meta:
+   *
+   * If %TRUE, generate or update GstAudioLevelMeta on output buffers.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_AUDIO_LEVEL_META,
+      g_param_spec_boolean ("audio-level-meta", "Audio Level Meta",
+          "Set GstAudioLevelMeta on buffers", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 
@@ -262,6 +274,9 @@ gst_level_set_property (GObject * object, guint prop_id,
     case PROP_PEAK_FALLOFF:
       filter->decay_peak_falloff = g_value_get_double (value);
       break;
+    case PROP_AUDIO_LEVEL_META:
+      filter->audio_level_meta = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -288,6 +303,9 @@ gst_level_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PEAK_FALLOFF:
       g_value_set_double (value, filter->decay_peak_falloff);
+      break;
+    case PROP_AUDIO_LEVEL_META:
+      g_value_set_boolean (value, filter->audio_level_meta);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -546,6 +564,24 @@ gst_level_message_append_channel (GstMessage * m, gdouble rms, gdouble peak,
   g_value_unset (&v);
 }
 
+static void
+gst_level_rtp_audio_level_meta (GstLevel * self, GstBuffer * buffer,
+    guint8 level)
+{
+  GstAudioLevelMeta *meta;
+
+  /* Update the existing meta, if any, so we can have an upstream element
+   * filling the voice activity part of the meta. */
+  meta = gst_buffer_get_audio_level_meta (buffer);
+  if (meta) {
+    meta->level = level;
+  } else {
+    /* Assume audio does not contain voice, it can be detected by another
+     * downstream element. */
+    gst_buffer_add_audio_level_meta (buffer, level, FALSE);
+  }
+}
+
 static GstFlowReturn
 gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
@@ -562,6 +598,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
                                          * intervals */
   GstClockTimeDiff falloff_time;
   gint channels, rate, bps;
+  gdouble CS_tot = 0;           /* Total Cumulative Square on all samples */
 
   filter = GST_LEVEL (trans);
 
@@ -598,6 +635,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       if (!GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_GAP)) {
         filter->process (in_data + (bps * i), block_int_size, channels, &CS,
             &filter->peak[i]);
+        CS_tot += CS;
         GST_LOG_OBJECT (filter,
             "[%d]: cumulative squares %lf, over %d samples/%d channels",
             i, CS, block_int_size, channels);
@@ -663,6 +701,13 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   }
 
   gst_buffer_unmap (in, &map);
+
+  if (filter->audio_level_meta) {
+    gdouble RMS = sqrt (CS_tot / num_int_samples);
+    gdouble RMSdB = 20 * log10 (RMS + EPSILON);
+
+    gst_level_rtp_audio_level_meta (filter, in, -RMSdB);
+  }
 
   return GST_FLOW_OK;
 }

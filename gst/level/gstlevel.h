@@ -67,6 +67,7 @@ struct _GstLevel {
                                  * since last emit */
   gint interval_frames;         /* after how many frame to sent a message */
   GstClockTime message_ts;      /* starttime for next message */
+  gboolean audio_level_meta; /* whether or not generate GstAudioLevelMeta */
 
   /* per-channel arrays for intermediate values */
   gdouble *CS;                  /* normalized Cumulative Square */
