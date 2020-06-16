@@ -25,4 +25,24 @@
 
 GType gst_deinterlace_method_yadif_get_type (void);
 
+void
+gst_yadif_filter_line_mode0_sse2 (void *dst, const void *tzero, const void *bzero,
+    const void *mone, const void *mp, const void *ttwo, const void *btwo, const void *tptwo, const void *bptwo,
+    const void *ttone, const void *ttp, const void *bbone, const void *bbp, int w);
+
+void
+gst_yadif_filter_line_mode2_sse2 (void *dst, const void *tzero, const void *bzero,
+    const void *mone, const void *mp, const void *ttwo, const void *btwo, const void *tptwo, const void *bptwo,
+    const void *ttone, const void *ttp, const void *bbone, const void *bbp, int w);
+
+void
+gst_yadif_filter_line_mode0_ssse3 (void *dst, const void *tzero, const void *bzero,
+    const void *mone, const void *mp, const void *ttwo, const void *btwo, const void *tptwo, const void *bptwo,
+    const void *ttone, const void *ttp, const void *bbone, const void *bbp, int w);
+
+void
+gst_yadif_filter_line_mode2_ssse3 (void *dst, const void *tzero, const void *bzero,
+    const void *mone, const void *mp, const void *ttwo, const void *btwo, const void *tptwo, const void *bptwo,
+    const void *ttone, const void *ttp, const void *bbone, const void *bbp, int w);
+
 #endif

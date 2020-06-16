@@ -97,6 +97,7 @@ option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
        description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
 option('glib-checks', type : 'feature', value : 'enabled', yield : true,
        description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
+option('asm', type : 'feature', value : 'auto', yield : true)
 
 # Common options
 option('package-name', type : 'string', yield : true,

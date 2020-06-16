@@ -335,6 +335,22 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
+have_nasm=false
+# FIXME: nasm path needs testing on non-Linux, esp. Windows
+host_cpu = host_machine.cpu_family()
+if host_cpu == 'x86_64'
+  if cc.get_id() == 'msvc'
+    message('Nasm disabled on MSVC')
+  else
+    nasm = find_program('nasm', native: true, version : '>= 2.13', required: get_option('asm'))
+    if nasm.found()
+      message('Nasm found on x86-64')
+      cdata.set('HAVE_NASM', 1)
+      have_nasm = true
+    endif
+  endif
+endif
+
 # Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'
   gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
@@ -378,6 +394,7 @@ if find_program('xgettext', required : get_option('nls')).found()
   subdir('po')
 endif
 
+cdata.set10('ARCH_X86_64', host_cpu == 'x86_64')
 configure_file(output : 'config.h', configuration : cdata)
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

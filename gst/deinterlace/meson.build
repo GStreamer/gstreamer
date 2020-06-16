@@ -33,8 +33,60 @@ else
     copy : true)
 endif
 
+asm_gen_objs = []
+if have_nasm
+  if host_system == 'windows'
+    outputname = '@PLAINNAME@.obj'
+  else
+    outputname = '@PLAINNAME@.o'
+  endif
+
+  if get_option('b_staticpic')
+    asm_pic_def = '-DPIC'
+  else
+    asm_pic_def = '-UPIC'
+  endif
+
+  # Assembly has to be told when the symbols have to be prefixed with _
+  if cc.symbols_have_underscore_prefix()
+    asm_prefix_def = '-DPREFIX'
+  else
+    asm_prefix_def = '-UPREFIX'
+  endif
+
+  asm_arch_def = '-DARCH_X86_64=1'
+  if host_system == 'windows'
+    asm_outformat = 'win64'
+  elif ['darwin', 'ios'].contains(host_system)
+    asm_outformat = 'macho64'
+  elif host_system.endswith('bsd')
+    asm_outformat = 'aoutb'
+  else
+    asm_outformat = 'elf64'
+  endif
+  asm_x = files('x86/yadif.asm',
+                'x86/x86inc.asm')
+
+  asm_stackalign_def = '-DSTACK_ALIGNMENT=64'
+  asm_incdir = 'x86'
+
+  message('Nasm configured on x86-64')
+  asm_gen = generator(nasm,
+    output: outputname,
+    arguments: ['-I@CURRENT_SOURCE_DIR@',
+                '-I@CURRENT_SOURCE_DIR@/@0@/'.format(asm_incdir),
+                asm_arch_def,
+                asm_stackalign_def,
+                asm_pic_def,
+                asm_prefix_def,
+                '-f', asm_outformat,
+                '-o', '@OUTPUT@',
+                '@INPUT@'])
+  asm_gen_objs = asm_gen.process(asm_x)
+endif
+
 gstdeinterlace = library('gstdeinterlace',
-  interlace_sources, orc_c, orc_h,
+  interlace_sources, asm_gen_objs, orc_c, orc_h,
   c_args : gst_plugins_good_args,
   include_directories : [configinc],
   dependencies : [orc_dep, gstbase_dep, gstvideo_dep],

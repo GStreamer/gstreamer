@@ -31,6 +31,7 @@
 #include <gst/gst.h>
 #ifdef HAVE_ORC
 #include <orc/orc.h>
+#include <orc/orcsse.h>
 #endif
 #include "gstdeinterlacemethod.h"
 #include "yadif.h"
@@ -87,6 +88,41 @@ filter_scanline_yadif_packed_3 (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
 
 static void
+filter_line_c_planar_mode0 (void *ORC_RESTRICT dst,
+    const void *ORC_RESTRICT tzero, const void *ORC_RESTRICT bzero,
+    const void *ORC_RESTRICT mone, const void *ORC_RESTRICT mp,
+    const void *ORC_RESTRICT ttwo, const void *ORC_RESTRICT btwo,
+    const void *ORC_RESTRICT tptwo, const void *ORC_RESTRICT bptwo,
+    const void *ORC_RESTRICT ttone, const void *ORC_RESTRICT ttp,
+    const void *ORC_RESTRICT bbone, const void *ORC_RESTRICT bbp, int w);
+
+static void
+filter_line_c_planar_mode2 (void *ORC_RESTRICT dst,
+    const void *ORC_RESTRICT tzero, const void *ORC_RESTRICT bzero,
+    const void *ORC_RESTRICT mone, const void *ORC_RESTRICT mp,
+    const void *ORC_RESTRICT ttwo, const void *ORC_RESTRICT btwo,
+    const void *ORC_RESTRICT tptwo, const void *ORC_RESTRICT bptwo,
+    const void *ORC_RESTRICT ttone, const void *ORC_RESTRICT ttp,
+    const void *ORC_RESTRICT bbone, const void *ORC_RESTRICT bbp, int w);
+
+static void (*filter_mode2) (void *ORC_RESTRICT dst,
+    const void *ORC_RESTRICT tzero, const void *ORC_RESTRICT bzero,
+    const void *ORC_RESTRICT mone, const void *ORC_RESTRICT mp,
+    const void *ORC_RESTRICT ttwo, const void *ORC_RESTRICT btwo,
+    const void *ORC_RESTRICT tptwo, const void *ORC_RESTRICT bptwo,
+    const void *ORC_RESTRICT ttone, const void *ORC_RESTRICT ttp,
+    const void *ORC_RESTRICT bbone, const void *ORC_RESTRICT bbp, int w);
+
+static void (*filter_mode0) (void *ORC_RESTRICT dst,
+    const void *ORC_RESTRICT tzero, const void *ORC_RESTRICT bzero,
+    const void *ORC_RESTRICT mone, const void *ORC_RESTRICT mp,
+    const void *ORC_RESTRICT ttwo, const void *ORC_RESTRICT btwo,
+    const void *ORC_RESTRICT tptwo, const void *ORC_RESTRICT bptwo,
+    const void *ORC_RESTRICT ttone, const void *ORC_RESTRICT ttp,
+    const void *ORC_RESTRICT bbone, const void *ORC_RESTRICT bbp, int w);
+
+
+static void
 copy_scanline (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines, guint size)
 {
@@ -139,36 +175,31 @@ static void
   dism_class->interpolate_scanline_nv21 = filter_scanline_yadif_semiplanar;
 }
 
-static void
-gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
-{
-}
-
 #define FFABS(a) ABS(a)
 #define FFMIN(a,b) MIN(a,b)
 #define FFMAX(a,b) MAX(a,b)
 #define FFMAX3(a,b,c) FFMAX(FFMAX(a,b),c)
 #define FFMIN3(a,b,c) FFMIN(FFMIN(a,b),c)
 
-#define CHECK(j)\
-    {   int score = FFABS(s->t0[x - colors2 * (1 + (j))] - s->b0[x - colors2 * (1 - (j))])\
-                  + FFABS(s->t0[x  + colors2 * (j)] - s->b0[x  -colors2 * (j)])\
-                  + FFABS(s->t0[x + colors2 * (1 + (j))] - s->b0[x + colors2 * (1 - (j))]);\
+#define CHECK(j1, j2, j3)\
+    {   int score = FFABS(stzero[x - j1] - sbzero[x - j2])\
+                  + FFABS(stzero[x + j3] - sbzero[x - j3])\
+                  + FFABS(stzero[x + j1] - sbzero[x + j2]);\
         if (score < spatial_score) {\
             spatial_score= score;\
-            spatial_pred= (s->t0[x  +colors2 * ((j))] + s->b0[x - colors2 * (j)])>>1;\
+            spatial_pred= (stzero[x + j3] + sbzero[x - j3])>>1;\
 
 /* The is_not_edge argument here controls when the code will enter a branch
  * which reads up to and including x-3 and x+3. */
 
 #define FILTER(start, end, is_not_edge) \
     for (x = start;  x < end; x++) { \
-        int c = s->t0[x]; \
-        int d = (s->m1[x] + s->mp[x])>>1; \
-        int e = s->b0[x]; \
-        int temporal_diff0 = FFABS(s->m1[x] - s->mp[x]); \
-        int temporal_diff1 =(FFABS(s->t2[x] - c) + FFABS(s->b2[x] - e) )>>1; \
-        int temporal_diff2 =(FFABS(s->tp2[x] - c) + FFABS(s->bp2[x] - e) )>>1; \
+        int c = stzero[x]; \
+        int d = (smone[x] + smp[x])>>1; \
+        int e = sbzero[x]; \
+        int temporal_diff0 = FFABS(smone[x] - smp[x]); \
+        int temporal_diff1 =(FFABS(sttwo[x] - c) + FFABS(sbtwo[x] - e) )>>1; \
+        int temporal_diff2 =(FFABS(stptwo[x] - c) + FFABS(sbptwo[x] - e) )>>1; \
         int diff = FFMAX3(temporal_diff0 >> 1, temporal_diff1, temporal_diff2); \
         int spatial_pred = (c+e) >> 1; \
         int colors2 = colors; \
@@ -177,15 +208,21 @@ gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
           colors2 = 2; \
  \
         if (is_not_edge) {\
-            int spatial_score = FFABS(s->t0[x-colors2] - s->b0[x-colors2]) + FFABS(c-e) \
-                              + FFABS(s->t0[x+colors2] - s->b0[x+colors2]); \
-            CHECK(-1) CHECK(-2) }} }} \
-            CHECK( 1) CHECK( 2) }} }} \
+            int spatial_score = FFABS(stzero[x-colors2] - sbzero[x-colors2]) + FFABS(c-e) \
+                              + FFABS(stzero[x+colors2] - sbzero[x+colors2]); \
+            int twice_colors2 = colors2 << 1; \
+            int minus_colors2 = -colors2; \
+            int thrice_colors2 = colors2 * 3; \
+            int minus2_colors2 = colors2 * -2; \
+            CHECK(0, twice_colors2, minus_colors2) \
+              CHECK(-colors2, thrice_colors2, minus2_colors2) }} }} \
+            CHECK(twice_colors2, 0, colors2) \
+              CHECK(thrice_colors2, minus_colors2, twice_colors2) }} }} \
         }\
  \
         if (!(mode&2)) { \
-            int b = (s->tt1[x] + s->ttp[x])>>1; \
-            int f = (s->bb1[x] + s->bbp[x])>>1; \
+            int b = (sttone[x] + sttp[x])>>1; \
+            int f = (sbbone[x] + sbbp[x])>>1; \
             int max = FFMAX3(d - e, d - c, FFMIN(b - c, f - e)); \
             int min = FFMIN3(d - e, d - c, FFMAX(b - c, f - e)); \
  \
@@ -197,16 +234,20 @@ gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
         else if (spatial_pred < d - diff) \
            spatial_pred = d - diff; \
  \
-        dst[x] = spatial_pred; \
+        sdst[x] = spatial_pred; \
  \
     }
 
 ALWAYS_INLINE static void
-filter_line_c (guint8 * dst,
-    const GstDeinterlaceScanlineData * s, int start, int end, int mode,
-    int colors, int y_alternates_every)
+filter_line_c (guint8 * sdst, const guint8 * stzero, const guint8 * sbzero,
+    const guint8 * smone, const guint8 * smp, const guint8 * sttwo,
+    const guint8 * sbtwo, const guint8 * stptwo, const guint8 * sbptwo,
+    const guint8 * sttone, const guint8 * sttp, const guint8 * sbbone,
+    const guint8 * sbbp, int w, int colors, int y_alternates_every, int start,
+    int end, int mode)
 {
   int x;
+
   /* The function is called for processing the middle
    * pixels of each line, excluding 3 at each end.
    * This allows the FILTER macro to be
@@ -218,9 +259,74 @@ filter_line_c (guint8 * dst,
 #define MAX_ALIGN 8
 
 ALWAYS_INLINE static void
-filter_edges (guint8 * dst,
-    const GstDeinterlaceScanlineData * s, int w, int mode, const int bpp,
-    const int colors, int y_alternates_every)
+filter_line_c_planar (void *ORC_RESTRICT dst, const void *ORC_RESTRICT tzero,
+    const void *ORC_RESTRICT bzero, const void *ORC_RESTRICT mone,
+    const void *ORC_RESTRICT mp, const void *ORC_RESTRICT ttwo,
+    const void *ORC_RESTRICT btwo, const void *ORC_RESTRICT tptwo,
+    const void *ORC_RESTRICT bptwo, const void *ORC_RESTRICT ttone,
+    const void *ORC_RESTRICT ttp, const void *ORC_RESTRICT bbone,
+    const void *ORC_RESTRICT bbp, int w, int mode)
+{
+  int x;
+  const int start = 0;
+  const int colors = 1;
+  const int y_alternates_every = 0;
+  /* hardcode colors = 1, bpp = 1 */
+  const int end = w;
+  guint8 *sdst = (guint8 *) dst + 3;
+  guint8 *stzero = (guint8 *) tzero + 3;
+  guint8 *sbzero = (guint8 *) bzero + 3;
+  guint8 *smone = (guint8 *) mone + 3;
+  guint8 *smp = (guint8 *) mp + 3;
+  guint8 *sttwo = (guint8 *) ttwo + 3;
+  guint8 *sbtwo = (guint8 *) btwo + 3;
+  guint8 *stptwo = (guint8 *) tptwo + 3;
+  guint8 *sbptwo = (guint8 *) bptwo + 3;
+  guint8 *sttone = (guint8 *) ttone + 3;
+  guint8 *sttp = (guint8 *) ttp + 3;
+  guint8 *sbbone = (guint8 *) bbone + 3;
+  guint8 *sbbp = (guint8 *) bbp + 3;
+  /* The function is called for processing the middle
+   * pixels of each line, excluding 3 at each end.
+   * This allows the FILTER macro to be
+   * called so that it processes all the pixels normally.  A constant value of
+   * true for is_not_edge lets the compiler ignore the if statement. */
+  FILTER (start, end, 1)
+}
+
+ALWAYS_INLINE G_GNUC_UNUSED static void
+filter_line_c_planar_mode0 (void *ORC_RESTRICT dst,
+    const void *ORC_RESTRICT tzero, const void *ORC_RESTRICT bzero,
+    const void *ORC_RESTRICT mone, const void *ORC_RESTRICT mp,
+    const void *ORC_RESTRICT ttwo, const void *ORC_RESTRICT btwo,
+    const void *ORC_RESTRICT tptwo, const void *ORC_RESTRICT bptwo,
+    const void *ORC_RESTRICT ttone, const void *ORC_RESTRICT ttp,
+    const void *ORC_RESTRICT bbone, const void *ORC_RESTRICT bbp, int w)
+{
+  filter_line_c_planar (dst, tzero, bzero, mone, mp, ttwo, btwo, tptwo, bptwo,
+      ttone, ttp, bbone, bbp, w, 0);
+}
+
+ALWAYS_INLINE G_GNUC_UNUSED static void
+filter_line_c_planar_mode2 (void *ORC_RESTRICT dst,
+    const void *ORC_RESTRICT tzero, const void *ORC_RESTRICT bzero,
+    const void *ORC_RESTRICT mone, const void *ORC_RESTRICT mp,
+    const void *ORC_RESTRICT ttwo, const void *ORC_RESTRICT btwo,
+    const void *ORC_RESTRICT tptwo, const void *ORC_RESTRICT bptwo,
+    const void *ORC_RESTRICT ttone, const void *ORC_RESTRICT ttp,
+    const void *ORC_RESTRICT bbone, const void *ORC_RESTRICT bbp, int w)
+{
+  filter_line_c_planar (dst, tzero, bzero, mone, mp, ttwo, btwo, tptwo, bptwo,
+      ttone, ttp, bbone, bbp, w, 2);
+}
+
+ALWAYS_INLINE static void
+filter_edges (guint8 * sdst, const guint8 * stzero, const guint8 * sbzero,
+    const guint8 * smone, const guint8 * smp, const guint8 * sttwo,
+    const guint8 * sbtwo, const guint8 * stptwo, const guint8 * sbptwo,
+    const guint8 * sttone, const guint8 * sttp, const guint8 * sbbone,
+    const guint8 * sbbp, int w, int colors, int y_alternates_every,
+    int mode, const int bpp)
 {
   int x;
   const int edge = colors * (MAX_ALIGN / bpp);
@@ -231,13 +337,6 @@ filter_edges (guint8 * dst,
   FILTER (0, border, 0)
       FILTER (w - edge, w - border, 1)
       FILTER (w - border, w, 0)
-}
-
-static void
-filter_scanline_yadif_planar (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
-{
-  filter_scanline_yadif (self, out, s_orig, size, 1, 0);
 }
 
 static void
@@ -301,7 +400,78 @@ filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
   if (s.b2 == NULL)
     s.b2 = s.bp2;
 
-  filter_edges (dst, &s, w, mode, bpp, colors, y_alternates_every);
-  filter_line_c (dst, &s, colors * 3, w - edge, mode, colors,
-      y_alternates_every);
+  filter_edges (dst, s.t0, s.b0, s.m1, s.mp, s.t2, s.b2, s.tp2, s.bp2, s.tt1,
+      s.ttp, s.bb1, s.bbp, w, colors, y_alternates_every, mode, bpp);
+  filter_line_c (dst, s.t0, s.b0, s.m1, s.mp, s.t2, s.b2, s.tp2, s.bp2, s.tt1,
+      s.ttp, s.bb1, s.bbp, w, colors, y_alternates_every, colors * 3, w - edge,
+      mode);
+}
+
+ALWAYS_INLINE static void
+filter_scanline_yadif_planar (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
+{
+  guint8 *dst = out;
+  const int bpp = 1;            // Hard code 8-bit atm
+  int w = size / bpp;
+  int edge = MAX_ALIGN / bpp;
+  GstDeinterlaceScanlineData s = *s_orig;
+
+  int mode = (s.tt1 == NULL || s.bb1 == NULL || s.ttp == NULL
+      || s.bbp == NULL) ? 2 : 0;
+
+  /* When starting up, some data might not yet be available, so use the current frame */
+  if (s.m1 == NULL)
+    s.m1 = s.mp;
+  if (s.tt1 == NULL)
+    s.tt1 = s.ttp;
+  if (s.bb1 == NULL)
+    s.bb1 = s.bbp;
+  if (s.t2 == NULL)
+    s.t2 = s.tp2;
+  if (s.b2 == NULL)
+    s.b2 = s.bp2;
+
+  filter_edges (dst, s.t0, s.b0, s.m1, s.mp, s.t2, s.b2, s.tp2, s.bp2, s.tt1,
+      s.ttp, s.bb1, s.bbp, w, 1, 0, mode, bpp);
+  if (mode == 0)
+    filter_mode0 (dst, (void *) s.t0, (void *) s.b0, (void *) s.m1,
+        (void *) s.mp, (void *) s.t2, (void *) s.b2, (void *) s.tp2,
+        (void *) s.bp2, (void *) s.tt1, (void *) s.ttp, (void *) s.bb1,
+        (void *) s.bbp, w - edge);
+  else
+    filter_mode2 (dst, (void *) s.t0, (void *) s.b0, (void *) s.m1,
+        (void *) s.mp, (void *) s.t2, (void *) s.b2, (void *) s.tp2,
+        (void *) s.bp2, (void *) s.tt1, (void *) s.ttp, (void *) s.bb1,
+        (void *) s.bbp, w - edge);
+}
+
+static void
+gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
+{
+#if (defined __x86_64__ || defined _M_X64) && defined HAVE_NASM
+  if (
+#  if defined HAVE_ORC
+      orc_sse_get_cpu_flags () & ORC_TARGET_SSE_SSSE3
+#  elif defined __SSSE3__
+      TRUE
+#  else
+      FALSE
+#  endif
+      ) {
+    GST_DEBUG ("SSSE3 optimization enabled");
+    filter_mode0 = gst_yadif_filter_line_mode0_ssse3;
+    filter_mode2 = gst_yadif_filter_line_mode2_ssse3;
+  } else {
+    GST_DEBUG ("SSE2 optimization enabled");
+    filter_mode0 = gst_yadif_filter_line_mode0_sse2;
+    filter_mode2 = gst_yadif_filter_line_mode2_sse2;
+  }
+#else
+  {
+    GST_DEBUG ("SSE optimization disabled");
+    filter_mode0 = filter_line_c_planar_mode0;
+    filter_mode2 = filter_line_c_planar_mode2;
+  }
+#endif
 }
