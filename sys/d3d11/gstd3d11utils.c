@@ -210,7 +210,7 @@ static void
 run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
 {
   GstQuery *query;
-  GstContext *ctxt;
+  GstContext *ctxt = NULL;
 
   /* 1) Query downstream with GST_QUERY_CONTEXT for the context and
    *    check if downstream already has a context of the specific type
@@ -218,18 +218,22 @@ run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
   query = gst_query_new_context (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE);
   if (run_query (element, query, GST_PAD_SRC)) {
     gst_query_parse_context (query, &ctxt);
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "found context (%" GST_PTR_FORMAT ") in downstream query", ctxt);
-    gst_element_set_context (element, ctxt);
+    if (ctxt) {
+      GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+          "found context (%" GST_PTR_FORMAT ") in downstream query", ctxt);
+      gst_element_set_context (element, ctxt);
+    }
   }
 
   /* 2) although we found d3d11 device context above, the element does not want
    *    to use the context. Then try to find from the other direction */
   if (*device == NULL && run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "found context (%" GST_PTR_FORMAT ") in upstream query", ctxt);
-    gst_element_set_context (element, ctxt);
+    if (ctxt) {
+      GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+          "found context (%" GST_PTR_FORMAT ") in upstream query", ctxt);
+      gst_element_set_context (element, ctxt);
+    }
   }
 
   if (*device == NULL) {
