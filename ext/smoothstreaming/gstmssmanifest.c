@@ -54,6 +54,8 @@ GST_DEBUG_CATEGORY_EXTERN (mssdemux_debug);
 #define MSS_PROP_TIMESCALE            "TimeScale"
 #define MSS_PROP_URL                  "Url"
 
+#define GST_MSSMANIFEST_LIVE_MIN_FRAGMENT_DISTANCE 3
+
 typedef struct _GstMssStreamFragment
 {
   guint number;
@@ -286,7 +288,21 @@ _gst_mss_stream_init (GstMssManifest * manifest, GstMssStream * stream,
 
   if (builder.fragments) {
     stream->fragments = g_list_reverse (builder.fragments);
-    stream->current_fragment = stream->fragments;
+    if (manifest->is_live) {
+      GList *iter = g_list_last (stream->fragments);
+      gint i;
+
+      for (i = 0; i < GST_MSSMANIFEST_LIVE_MIN_FRAGMENT_DISTANCE; i++) {
+        if (g_list_previous (iter)) {
+          iter = g_list_previous (iter);
+        } else {
+          break;
+        }
+      }
+      stream->current_fragment = iter;
+    } else {
+      stream->current_fragment = stream->fragments;
+    }
   }
 
   /* order them from smaller to bigger based on bitrates */
