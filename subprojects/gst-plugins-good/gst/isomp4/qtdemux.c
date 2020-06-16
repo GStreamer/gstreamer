@@ -3320,7 +3320,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
     gint64 * base_offset, gint64 * running_offset, gint64 decode_ts,
-    gboolean has_tfdt)
+    gboolean has_tfdt, guint trun_node_total)
 {
   GstClockTime gst_ts = GST_CLOCK_TIME_NONE;
   guint64 timestamp;
@@ -3364,6 +3364,17 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     /* note this is really signed */
     if (!gst_byte_reader_get_int32_be (trun, &data_offset))
       goto fail;
+
+    if (qtdemux->variant == VARIANT_MSS_FRAGMENTED
+        && data_offset <= moof_length
+        && *base_offset == -1 && trun_node_total == 1) {
+      /* MSS spec states that, if only one TrunBox is specified, then the
+       * DataOffset field MUST be the sum of the lengths of the MoofBox and all
+       * the fields in the MdatBox field */
+      GST_WARNING_OBJECT (qtdemux,
+          "trun offset is less than the moof size, assuming offset is after moof");
+      data_offset = moof_length + 8;
+    }
     GST_LOG_OBJECT (qtdemux, "trun data offset %d", data_offset);
     /* default base offset = first byte of moof */
     if (*base_offset == -1) {
@@ -4130,6 +4141,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
   traf_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_traf);
   while (traf_node) {
     guint64 decode_time = 0;
+    guint trun_node_total = 0;
 
     /* Fragment Header node */
     tfhd_node =
@@ -4249,6 +4261,20 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     stream->duration_last_moof = stream->duration_moof;
     stream->duration_moof = 0;
 
+    /* Count the number of trun nodes */
+    if (qtdemux->variant == VARIANT_MSS_FRAGMENTED) {
+      trun_node =
+          qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
+          &trun_data);
+      while (trun_node) {
+        trun_node_total++;
+        trun_node =
+            qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
+            &trun_data);
+      }
+      GST_LOG_OBJECT (qtdemux, "%u trun node(s) available", trun_node_total);
+    }
+
     /* Track Run node */
     trun_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
@@ -4256,7 +4282,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     while (trun_node) {
       qtdemux_parse_trun (qtdemux, &trun_data, stream,
           ds_duration, ds_size, ds_flags, moof_offset, length, &base_offset,
-          &running_offset, decode_time, (tfdt_node != NULL));
+          &running_offset, decode_time, (tfdt_node != NULL), trun_node_total);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
