@@ -8,12 +8,12 @@ while [ "$1" ] ; do
   case $1 in
     --help)
       cat <<-EOF
-Usage: gst-project-maker [OPTIONS] PROJECT_NAME
+Usage: $(basename "$0") [OPTIONS] PROJECT_NAME
 Create an autotools project based on GStreamer from a template.
 Options:
   --help             Print this information
   --prefix PREFIX    Use PREFIX instead of "gst"
-Example: 'gst-project-maker my_project' will create the project gst-my-project.
+Example: '$(basename "$0") my_project' will create the project gst-my-project.
 EOF
       exit 0
       ;;
@@ -36,7 +36,7 @@ EOF
 done
 
 if [ "$name" = "" ] ; then
-  echo "Usage: gst-project-maker [OPTIONS] PROJECT_NAME"
+  echo "Usage: $(basename "$0") [OPTIONS] PROJECT_NAME"
   exit 1
 fi
 
