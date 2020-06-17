@@ -35,6 +35,30 @@ namespace Gst.Controller {
 			GLib.Marshaller.Free (native_ref_property_name);
 		}
 
+
+		// Internal representation of the wrapped structure ABI.
+		static GLib.AbiStruct _class_abi = null;
+		static public new GLib.AbiStruct class_abi {
+			get {
+				if (_class_abi == null)
+					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
+						new GLib.AbiField("_padding"
+							, Gst.ControlBinding.class_abi.Fields
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
+							, null
+							, null
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+					});
+
+				return _class_abi;
+			}
+		}
+
+
+		// End of the ABI representation.
+
 		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_proxy_control_binding_get_type();
 
@@ -51,6 +75,46 @@ namespace Gst.Controller {
 		{
 			GtkSharp.GstreamerSharp.ObjectManager.Initialize ();
 		}
+
+		// Internal representation of the wrapped structure ABI.
+		static GLib.AbiStruct _abi_info = null;
+		static public new GLib.AbiStruct abi_info {
+			get {
+				if (_abi_info == null)
+					_abi_info = new GLib.AbiStruct (new List<GLib.AbiField>{ 
+						new GLib.AbiField("ref_object"
+							, Gst.ControlBinding.abi_info.Fields
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // ref_object
+							, null
+							, "property_name"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("property_name"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // property_name
+							, "ref_object"
+							, "_padding"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("_padding"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
+							, "property_name"
+							, null
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+					});
+
+				return _abi_info;
+			}
+		}
+
+
+		// End of the ABI representation.
+
 #endregion
 	}
 }

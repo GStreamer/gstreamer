@@ -53,6 +53,10 @@ namespace Gst {
 			gst_promise_reply(Handle, s == null ? IntPtr.Zero : s.Handle);
 		}
 
+		public void Reply() {
+			Reply (null);
+		}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_promise_wait(IntPtr raw);
 

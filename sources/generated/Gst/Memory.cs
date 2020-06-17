@@ -215,6 +215,51 @@ namespace Gst {
 			Raw = gst_memory_new_wrapped((int) flags, data, new UIntPtr (maxsize), new UIntPtr (offset), new UIntPtr (size), user_data, notify);
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_memory_ref(IntPtr raw);
+
+		protected override void Ref (IntPtr raw)
+		{
+			if (!Owned) {
+				gst_memory_ref (raw);
+				Owned = true;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_memory_unref(IntPtr raw);
+
+		protected override void Unref (IntPtr raw)
+		{
+			if (Owned) {
+				gst_memory_unref (raw);
+				Owned = false;
+			}
+		}
+
+		class FinalizerInfo {
+			IntPtr handle;
+
+			public FinalizerInfo (IntPtr handle)
+			{
+				this.handle = handle;
+			}
+
+			public bool Handler ()
+			{
+				gst_memory_unref (handle);
+				return false;
+			}
+		}
+
+		~Memory ()
+		{
+			if (!Owned)
+				return;
+			FinalizerInfo info = new FinalizerInfo (Handle);
+			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _abi_info = null;

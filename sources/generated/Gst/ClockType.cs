@@ -13,6 +13,7 @@ namespace Gst {
 		Realtime = 0,
 		Monotonic = 1,
 		Other = 2,
+		Tai = 3,
 	}
 
 	internal class ClockTypeGType {

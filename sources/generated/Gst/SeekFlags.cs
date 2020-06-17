@@ -23,6 +23,8 @@ namespace Gst {
 		SnapNearest = 96,
 		TrickmodeKeyUnits = 128,
 		TrickmodeNoAudio = 256,
+		TrickmodeForwardPredicted = 512,
+		InstantRateChange = 1024,
 	}
 
 	internal class SeekFlagsGType {

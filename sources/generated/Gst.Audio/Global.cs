@@ -252,6 +252,23 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_make_raw_caps(int[] formats, uint len, int layout);
+
+		public static Gst.Caps AudioMakeRawCaps(Gst.Audio.AudioFormat[] formats, uint len, Gst.Audio.AudioLayout layout) {
+			int cnt_formats = formats == null ? 0 : formats.Length;
+			int[] native_formats = new int [cnt_formats];
+			for (int i = 0; i < cnt_formats; i++)
+				native_formats [i] = (int) formats[i];
+			IntPtr raw_ret = gst_audio_make_raw_caps(native_formats, len, (int) layout);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			return ret;
+		}
+
+		public static Gst.Caps AudioMakeRawCaps(uint len, Gst.Audio.AudioLayout layout) {
+			return AudioMakeRawCaps (null, len, layout);
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_meta_api_get_type();
 
 		public static GLib.GType AudioMetaApiGetType() {

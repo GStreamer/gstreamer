@@ -264,6 +264,23 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_encoding_profile_get_single_segment(IntPtr raw);
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_encoding_profile_set_single_segment(IntPtr raw, bool single_segment);
+
+		public bool SingleSegment { 
+			get {
+				bool raw_ret = gst_encoding_profile_get_single_segment(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_encoding_profile_set_single_segment(Handle, value);
+			}
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_type_nick(IntPtr raw);
 
 		public string TypeNick { 

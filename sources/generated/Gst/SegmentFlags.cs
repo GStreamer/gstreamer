@@ -18,6 +18,7 @@ namespace Gst {
 		Skip = 16,
 		TrickmodeKeyUnits = 128,
 		TrickmodeNoAudio = 256,
+		TrickmodeForwardPredicted = 512,
 	}
 
 	internal class SegmentFlagsGType {

@@ -17,6 +17,7 @@ namespace Gst.Video {
 		MouseButtonRelease = 4,
 		MouseMove = 5,
 		Command = 6,
+		MouseScroll = 7,
 	}
 
 	internal class NavigationEventTypeGType {

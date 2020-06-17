@@ -229,6 +229,19 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_info_align_full(IntPtr raw, IntPtr align, out UIntPtr plane_size);
+
+		public bool AlignFull(Gst.Video.VideoAlignment align, out ulong plane_size) {
+			IntPtr native_align = GLib.Marshaller.StructureToPtrAlloc (align);
+			UIntPtr native_plane_size;
+			bool raw_ret = gst_video_info_align_full(Handle, native_align, out native_plane_size);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_align);
+			plane_size = (ulong) native_plane_size;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_convert(IntPtr raw, int src_format, long src_value, int dest_format, out long dest_value);
 
 		public bool Convert(Gst.Format src_format, long src_value, Gst.Format dest_format, out long dest_value) {

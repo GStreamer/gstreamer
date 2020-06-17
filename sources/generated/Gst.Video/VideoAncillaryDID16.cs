@@ -10,8 +10,9 @@ namespace Gst.Video {
 	[GLib.GType (typeof (Gst.Video.VideoAncillaryDID16GType))]
 	public enum VideoAncillaryDID16 {
 
-		_708 = 24833,
-		_608 = 24834,
+		S20163AfdBar = 16645,
+		S334Eia708 = 24833,
+		S334Eia608 = 24834,
 	}
 
 	internal class VideoAncillaryDID16GType {

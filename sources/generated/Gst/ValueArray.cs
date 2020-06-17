@@ -67,6 +67,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_value_array_init(IntPtr value, uint prealloc);
+
+		public static GLib.Value Init(GLib.Value value, uint prealloc) {
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			IntPtr raw_ret = gst_value_array_init(native_value, prealloc);
+			GLib.Value ret = (GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (GLib.Value));
+			Marshal.FreeHGlobal (native_value);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_value_array_prepend_value(IntPtr value, IntPtr prepend_value);
 
 		public static void PrependValue(GLib.Value value, GLib.Value prepend_value) {

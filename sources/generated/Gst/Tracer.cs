@@ -68,6 +68,21 @@ namespace Gst {
 			}
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tracer_register(IntPtr plugin, IntPtr name, IntPtr type);
+
+		public static bool Register(Gst.Plugin plugin, string name, GLib.GType type) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			bool raw_ret = gst_tracer_register(plugin == null ? IntPtr.Zero : plugin.Handle, native_name, type.Val);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_name);
+			return ret;
+		}
+
+		public static bool Register(string name, GLib.GType type) {
+			return Register (null, name, type);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _abi_info = null;

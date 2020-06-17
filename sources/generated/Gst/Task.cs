@@ -177,6 +177,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_task_resume(IntPtr raw);
+
+		public bool Resume() {
+			bool raw_ret = gst_task_resume(Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_set_enter_callback(IntPtr raw, GstSharp.TaskThreadFuncNative enter_func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.TaskThreadFunc EnterCallback { 

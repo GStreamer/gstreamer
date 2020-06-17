@@ -580,20 +580,19 @@ namespace Gst {
 			return ret;
 		}
 
+		public Structure(IntPtr raw) : base(raw) {}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_from_string(IntPtr str1ng, out IntPtr end);
 
-		public static Gst.Structure FromString(string str1ng, out string end) {
+		public Structure (string str1ng, out string end) 
+		{
 			IntPtr native_str1ng = GLib.Marshaller.StringToPtrGStrdup (str1ng);
 			IntPtr native_end;
-			IntPtr raw_ret = gst_structure_from_string(native_str1ng, out native_end);
-			Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+			Raw = gst_structure_from_string(native_str1ng, out native_end);
 			GLib.Marshaller.Free (native_str1ng);
 			end = GLib.Marshaller.Utf8PtrToString (native_end);
-			return ret;
 		}
-
-		public Structure(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_new_empty(IntPtr name);

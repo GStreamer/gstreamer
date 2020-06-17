@@ -65,6 +65,21 @@ namespace Gst.Base {
 			}
 		}
 
+		[GLib.Property ("start-time-selection")]
+		public Gst.Base.AggregatorStartTimeSelection StartTimeSelection {
+			get {
+				GLib.Value val = GetProperty ("start-time-selection");
+				Gst.Base.AggregatorStartTimeSelection ret = (Gst.Base.AggregatorStartTimeSelection) (Enum) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value((Enum) value);
+				SetProperty("start-time-selection", val);
+				val.Dispose ();
+			}
+		}
+
 		public Gst.Pad Srcpad {
 			get {
 				unsafe {
@@ -1065,6 +1080,180 @@ namespace Gst.Base {
 			return __result;
 		}
 
+		static NegotiateNativeDelegate Negotiate_cb_delegate;
+		static NegotiateNativeDelegate NegotiateVMCallback {
+			get {
+				if (Negotiate_cb_delegate == null)
+					Negotiate_cb_delegate = new NegotiateNativeDelegate (Negotiate_cb);
+				return Negotiate_cb_delegate;
+			}
+		}
+
+		static void OverrideNegotiate (GLib.GType gtype)
+		{
+			OverrideNegotiate (gtype, NegotiateVMCallback);
+		}
+
+		static void OverrideNegotiate (GLib.GType gtype, NegotiateNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("negotiate"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool NegotiateNativeDelegate (IntPtr inst);
+
+		static bool Negotiate_cb (IntPtr inst)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				bool __result;
+				__result = __obj.OnNegotiate ();
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideNegotiate")]
+		protected virtual bool OnNegotiate ()
+		{
+			return InternalNegotiate ();
+		}
+
+		private bool InternalNegotiate ()
+		{
+			NegotiateNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("negotiate"));
+				unmanaged = (NegotiateNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(NegotiateNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle);
+			return __result;
+		}
+
+		static SinkEventPreQueueNativeDelegate SinkEventPreQueue_cb_delegate;
+		static SinkEventPreQueueNativeDelegate SinkEventPreQueueVMCallback {
+			get {
+				if (SinkEventPreQueue_cb_delegate == null)
+					SinkEventPreQueue_cb_delegate = new SinkEventPreQueueNativeDelegate (SinkEventPreQueue_cb);
+				return SinkEventPreQueue_cb_delegate;
+			}
+		}
+
+		static void OverrideSinkEventPreQueue (GLib.GType gtype)
+		{
+			OverrideSinkEventPreQueue (gtype, SinkEventPreQueueVMCallback);
+		}
+
+		static void OverrideSinkEventPreQueue (GLib.GType gtype, SinkEventPreQueueNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("sink_event_pre_queue"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate int SinkEventPreQueueNativeDelegate (IntPtr inst, IntPtr aggregator_pad, IntPtr evnt);
+
+		static int SinkEventPreQueue_cb (IntPtr inst, IntPtr aggregator_pad, IntPtr evnt)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				Gst.FlowReturn __result;
+				__result = __obj.OnSinkEventPreQueue (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), false));
+				return (int) __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideSinkEventPreQueue")]
+		protected virtual Gst.FlowReturn OnSinkEventPreQueue (Gst.Base.AggregatorPad aggregator_pad, Gst.Event evnt)
+		{
+			return InternalSinkEventPreQueue (aggregator_pad, evnt);
+		}
+
+		private Gst.FlowReturn InternalSinkEventPreQueue (Gst.Base.AggregatorPad aggregator_pad, Gst.Event evnt)
+		{
+			SinkEventPreQueueNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("sink_event_pre_queue"));
+				unmanaged = (SinkEventPreQueueNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SinkEventPreQueueNativeDelegate));
+			}
+			if (unmanaged == null) return (Gst.FlowReturn) 0;
+
+			int __result = unmanaged (this.Handle, aggregator_pad == null ? IntPtr.Zero : aggregator_pad.Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
+			return (Gst.FlowReturn) __result;
+		}
+
+		static SinkQueryPreQueueNativeDelegate SinkQueryPreQueue_cb_delegate;
+		static SinkQueryPreQueueNativeDelegate SinkQueryPreQueueVMCallback {
+			get {
+				if (SinkQueryPreQueue_cb_delegate == null)
+					SinkQueryPreQueue_cb_delegate = new SinkQueryPreQueueNativeDelegate (SinkQueryPreQueue_cb);
+				return SinkQueryPreQueue_cb_delegate;
+			}
+		}
+
+		static void OverrideSinkQueryPreQueue (GLib.GType gtype)
+		{
+			OverrideSinkQueryPreQueue (gtype, SinkQueryPreQueueVMCallback);
+		}
+
+		static void OverrideSinkQueryPreQueue (GLib.GType gtype, SinkQueryPreQueueNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("sink_query_pre_queue"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool SinkQueryPreQueueNativeDelegate (IntPtr inst, IntPtr aggregator_pad, IntPtr query);
+
+		static bool SinkQueryPreQueue_cb (IntPtr inst, IntPtr aggregator_pad, IntPtr query)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				bool __result;
+				__result = __obj.OnSinkQueryPreQueue (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad, query == IntPtr.Zero ? null : (Gst.Query) GLib.Opaque.GetOpaque (query, typeof (Gst.Query), false));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideSinkQueryPreQueue")]
+		protected virtual bool OnSinkQueryPreQueue (Gst.Base.AggregatorPad aggregator_pad, Gst.Query query)
+		{
+			return InternalSinkQueryPreQueue (aggregator_pad, query);
+		}
+
+		private bool InternalSinkQueryPreQueue (Gst.Base.AggregatorPad aggregator_pad, Gst.Query query)
+		{
+			SinkQueryPreQueueNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("sink_query_pre_queue"));
+				unmanaged = (SinkQueryPreQueueNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SinkQueryPreQueueNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle, aggregator_pad == null ? IntPtr.Zero : aggregator_pad.Handle, query == null ? IntPtr.Zero : query.Handle);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1212,14 +1401,38 @@ namespace Gst.Base {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // propose_allocation
 							, "decide_allocation"
+							, "negotiate"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("negotiate"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // negotiate
+							, "propose_allocation"
+							, "sink_event_pre_queue"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("sink_event_pre_queue"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // sink_event_pre_queue
+							, "negotiate"
+							, "sink_query_pre_queue"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("sink_query_pre_queue"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // sink_query_pre_queue
+							, "sink_event_pre_queue"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // _gst_reserved
-							, "propose_allocation"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 17 // _gst_reserved
+							, "sink_query_pre_queue"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1278,6 +1491,15 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_aggregator_negotiate(IntPtr raw);
+
+		public bool Negotiate() {
+			bool raw_ret = gst_aggregator_negotiate(Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_aggregator_set_latency(IntPtr raw, ulong min_latency, ulong max_latency);
 
 		public void SetLatency(ulong min_latency, ulong max_latency) {
@@ -1300,6 +1522,15 @@ namespace Gst.Base {
 			ulong raw_ret = gst_aggregator_simple_get_next_time(Handle);
 			ulong ret = raw_ret;
 			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_aggregator_update_segment(IntPtr raw, IntPtr segment);
+
+		public void UpdateSegment(Gst.Segment segment) {
+			IntPtr native_segment = GLib.Marshaller.StructureToPtrAlloc (segment);
+			gst_aggregator_update_segment(Handle, native_segment);
+			Marshal.FreeHGlobal (native_segment);
 		}
 
 

@@ -814,6 +814,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_bin_iterate_all_by_element_factory_name(IntPtr raw, IntPtr factory_name);
+
+		public Gst.Iterator IterateAllByElementFactoryName(string factory_name) {
+			IntPtr native_factory_name = GLib.Marshaller.StringToPtrGStrdup (factory_name);
+			IntPtr raw_ret = gst_bin_iterate_all_by_element_factory_name(Handle, native_factory_name);
+			Gst.Iterator ret = raw_ret == IntPtr.Zero ? null : (Gst.Iterator) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Iterator), true);
+			GLib.Marshaller.Free (native_factory_name);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bin_iterate_all_by_interface(IntPtr raw, IntPtr iface);
 
 		public Gst.Iterator IterateAllByInterface(GLib.GType iface) {

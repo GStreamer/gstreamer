@@ -73,6 +73,7 @@ namespace GtkSharp.GstreamerSharp {
 			GLib.GType.Register (Gst.Video.VideoFilter.GType, typeof (Gst.Video.VideoFilter));
 			GLib.GType.Register (Gst.Video.VideoSink.GType, typeof (Gst.Video.VideoSink));
 			GLib.GType.Register (Gst.WebRTC.WebRTCDTLSTransport.GType, typeof (Gst.WebRTC.WebRTCDTLSTransport));
+			GLib.GType.Register (Gst.WebRTC.WebRTCDataChannel.GType, typeof (Gst.WebRTC.WebRTCDataChannel));
 			GLib.GType.Register (Gst.WebRTC.WebRTCICETransport.GType, typeof (Gst.WebRTC.WebRTCICETransport));
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPReceiver.GType, typeof (Gst.WebRTC.WebRTCRTPReceiver));
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPSender.GType, typeof (Gst.WebRTC.WebRTCRTPSender));

@@ -1665,6 +1665,15 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_base_transform_reconfigure(IntPtr raw);
+
+		public bool Reconfigure() {
+			bool raw_ret = gst_base_transform_reconfigure(Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_reconfigure_sink(IntPtr raw);
 
 		public void ReconfigureSink() {

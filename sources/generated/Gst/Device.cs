@@ -156,7 +156,7 @@ namespace Gst {
 				Device __obj = GLib.Object.GetObject (inst, false) as Device;
 				Gst.Element __result;
 				__result = __obj.OnCreateElement (GLib.Marshaller.Utf8PtrToString (name));
-				return __result == null ? IntPtr.Zero : __result.OwnedHandle;
+				return __result == null ? IntPtr.Zero : __result.Handle;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
 				// NOTREACHED: above call does not return.
@@ -182,7 +182,7 @@ namespace Gst {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr __result = unmanaged (this.Handle, native_name);
 			GLib.Marshaller.Free (native_name);
-			return GLib.Object.GetObject(__result, true) as Gst.Element;
+			return GLib.Object.GetObject(__result) as Gst.Element;
 		}
 
 		static ReconfigureElementNativeDelegate ReconfigureElement_cb_delegate;
@@ -300,7 +300,7 @@ namespace Gst {
 		public Gst.Element CreateElement(string name) {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr raw_ret = gst_device_create_element(Handle, native_name);
-			Gst.Element ret = GLib.Object.GetObject(raw_ret, true) as Gst.Element;
+			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
 			GLib.Marshaller.Free (native_name);
 			return ret;
 		}

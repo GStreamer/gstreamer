@@ -11,6 +11,7 @@ namespace Gst.Video {
 	[GLib.GType (typeof (Gst.Video.VideoBufferFlagsGType))]
 	public enum VideoBufferFlags {
 
+		Marker = 512,
 		Interlaced = 1048576,
 		Tff = 2097152,
 		Rff = 4194304,

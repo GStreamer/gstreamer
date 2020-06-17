@@ -63,6 +63,11 @@ namespace Gst.Video {
 			return other is VideoGLTextureUploadMeta && Equals ((VideoGLTextureUploadMeta) other);
 		}
 
+		public override int GetHashCode ()
+		{
+			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode () ^ TextureOrientation.GetHashCode () ^ NTextures.GetHashCode () ^ TextureType.GetHashCode () ^ _buffer.GetHashCode () ^ _upload.GetHashCode () ^ _user_data.GetHashCode ();
+		}
+
 		private static GLib.GType GType {
 			get { return GLib.GType.Pointer; }
 		}

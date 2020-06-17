@@ -34,6 +34,7 @@
       <member cname="GST_CLOCK_TYPE_REALTIME" name="Realtime" value="0"/>
       <member cname="GST_CLOCK_TYPE_MONOTONIC" name="Monotonic" value="1"/>
       <member cname="GST_CLOCK_TYPE_OTHER" name="Other" value="2"/>
+      <member cname="GST_CLOCK_TYPE_TAI" name="Tai" value="3"/>
     </enum>
     <enum name="CoreError" cname="GstCoreError" type="enum" gtype="gst_core_error_get_type">
       <member cname="GST_CORE_ERROR_FAILED" name="Failed" value="1"/>
@@ -86,6 +87,7 @@
       <member cname="GST_EVENT_PROTECTION" name="Protection" value="33310"/>
       <member cname="GST_EVENT_SEGMENT_DONE" name="SegmentDone" value="38406"/>
       <member cname="GST_EVENT_GAP" name="Gap" value="40966"/>
+      <member cname="GST_EVENT_INSTANT_RATE_CHANGE" name="InstantRateChange" value="46090"/>
       <member cname="GST_EVENT_QOS" name="Qos" value="48641"/>
       <member cname="GST_EVENT_SEEK" name="Seek" value="51201"/>
       <member cname="GST_EVENT_NAVIGATION" name="Navigation" value="53761"/>
@@ -94,6 +96,7 @@
       <member cname="GST_EVENT_RECONFIGURE" name="Reconfigure" value="61441"/>
       <member cname="GST_EVENT_TOC_SELECT" name="TocSelect" value="64001"/>
       <member cname="GST_EVENT_SELECT_STREAMS" name="SelectStreams" value="66561"/>
+      <member cname="GST_EVENT_INSTANT_RATE_SYNC_TIME" name="InstantRateSyncTime" value="66817"/>
       <member cname="GST_EVENT_CUSTOM_UPSTREAM" name="CustomUpstream" value="69121"/>
       <member cname="GST_EVENT_CUSTOM_DOWNSTREAM" name="CustomDownstream" value="71686"/>
       <member cname="GST_EVENT_CUSTOM_DOWNSTREAM_OOB" name="CustomDownstreamOob" value="74242"/>
@@ -551,7 +554,8 @@
       <member cname="GST_MESSAGE_STREAM_COLLECTION" name="StreamCollection" value="2147483652"/>
       <member cname="GST_MESSAGE_STREAMS_SELECTED" name="StreamsSelected" value="2147483653"/>
       <member cname="GST_MESSAGE_REDIRECT" name="Redirect" value="2147483654"/>
-      <member cname="GST_MESSAGE_DEVICE_CHANGED" name="DeviceChanged" value="2147483654"/>
+      <member cname="GST_MESSAGE_DEVICE_CHANGED" name="DeviceChanged" value="2147483655"/>
+      <member cname="GST_MESSAGE_INSTANT_RATE_REQUEST" name="InstantRateRequest" value="2147483656"/>
       <member cname="GST_MESSAGE_ANY" name="Any" value="4294967295"/>
     </enum>
     <enum name="MetaFlags" cname="GstMetaFlags" type="flags" gtype="gst_meta_flags_get_type">
@@ -632,6 +636,9 @@
       <member cname="GST_PIPELINE_FLAG_FIXED_CLOCK" name="FixedClock" value="524288"/>
       <member cname="GST_PIPELINE_FLAG_LAST" name="Last" value="8388608"/>
     </enum>
+    <enum name="PluginAPIFlags" cname="GstPluginAPIFlags" type="flags" gtype="gst_plugin_api_flags_get_type" version="1.18">
+      <member cname="GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS" name="Members" value="1"/>
+    </enum>
     <enum name="PluginDependencyFlags" cname="GstPluginDependencyFlags" type="flags" gtype="gst_plugin_dependency_flags_get_type">
       <member cname="GST_PLUGIN_DEPENDENCY_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_PLUGIN_DEPENDENCY_FLAG_RECURSE" name="Recurse" value="1"/>
@@ -667,6 +674,8 @@
       <member cname="GST_SEEK_FLAG_SNAP_NEAREST" name="SnapNearest" value="96"/>
       <member cname="GST_SEEK_FLAG_TRICKMODE_KEY_UNITS" name="TrickmodeKeyUnits" value="128"/>
       <member cname="GST_SEEK_FLAG_TRICKMODE_NO_AUDIO" name="TrickmodeNoAudio" value="256"/>
+      <member cname="GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED" name="TrickmodeForwardPredicted" value="512"/>
+      <member cname="GST_SEEK_FLAG_INSTANT_RATE_CHANGE" name="InstantRateChange" value="1024"/>
     </enum>
     <enum name="SegmentFlags" cname="GstSegmentFlags" type="flags" gtype="gst_segment_flags_get_type">
       <member cname="GST_SEGMENT_FLAG_NONE" name="None" value="0"/>
@@ -676,8 +685,10 @@
       <member cname="GST_SEGMENT_FLAG_SKIP" name="Skip" value="16"/>
       <member cname="GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS" name="TrickmodeKeyUnits" value="128"/>
       <member cname="GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO" name="TrickmodeNoAudio" value="256"/>
+      <member cname="GST_SEGMENT_FLAG_TRICKMODE_FORWARD_PREDICTED" name="TrickmodeForwardPredicted" value="512"/>
     </enum>
     <enum name="StackTraceFlags" cname="GstStackTraceFlags" type="flags" gtype="gst_stack_trace_flags_get_type" version="1.12">
+      <member cname="GST_STACK_TRACE_SHOW_NONE" name="None" value="0"/>
       <member cname="GST_STACK_TRACE_SHOW_FULL" name="Full" value="1"/>
     </enum>
     <enum name="StreamFlags" cname="GstStreamFlags" type="flags" gtype="gst_stream_flags_get_type" version="1.2">
@@ -1875,6 +1886,14 @@
         <return-type type="GstElementFlags"/>
         <parameters/>
       </method>
+      <method name="IterateAllByElementFactoryName" cname="gst_bin_iterate_all_by_element_factory_name" version="1.18">
+        <return-type type="GstIterator*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="factory_name" type="const-gchar*"/>
+        </parameters>
+      </method>
       <method name="IterateAllByInterface" cname="gst_bin_iterate_all_by_interface">
         <return-type type="GstIterator*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -2852,7 +2871,7 @@
         <return-type type="GType"/>
       </method>
       <virtual_method name="CreateElement" cname="create_element" version="1.4">
-        <return-type type="GstElement*" owned="true"/>
+        <return-type type="GstElement*"/>
         <parameters>
           <parameter allow-none="1" name="name" type="const-gchar*"/>
         </parameters>
@@ -2864,7 +2883,7 @@
         </parameters>
       </virtual_method>
       <method name="CreateElement" cname="gst_device_create_element" version="1.4">
-        <return-type type="GstElement*" owned="true"/>
+        <return-type type="GstElement*"/>
         <parameters>
           <parameter allow-none="1" name="name" type="const-gchar*"/>
         </parameters>
@@ -3553,6 +3572,14 @@
         <return-type type="GList*" element_type="GList*" elements_owned="true" owned="true">
           <warning>missing glib:type-name</warning>
         </return-type>
+        <parameters/>
+      </method>
+      <method name="GetCurrentClockTime" cname="gst_element_get_current_clock_time" version="1.18">
+        <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetCurrentRunningTime" cname="gst_element_get_current_running_time" version="1.18">
+        <return-type type="guint64"/>
         <parameters/>
       </method>
       <method name="GetFactory" cname="gst_element_get_factory">
@@ -4480,6 +4507,10 @@
           </parameter>
         </parameters>
       </method>
+      <method name="GetSingleInternalLink" cname="gst_pad_get_single_internal_link" version="1.18">
+        <return-type type="GstPad*" owned="true"/>
+        <parameters/>
+      </method>
       <method name="GetStickyEvent" cname="gst_pad_get_sticky_event">
         <return-type type="GstEvent*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -5009,10 +5040,24 @@
         </return-type>
         <parameters/>
       </method>
+      <method name="GetDocumentationCaps" cname="gst_pad_template_get_documentation_caps" version="1.18">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="PadCreated" cname="gst_pad_template_pad_created">
         <return-type type="void"/>
         <parameters>
           <parameter name="pad" type="GstPad*"/>
+        </parameters>
+      </method>
+      <method name="SetDocumentationCaps" cname="gst_pad_template_set_documentation_caps" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
       <property name="Caps" cname="caps" type="GstCaps*" readable="true" writeable="true" construct="false" construct-only="true"/>
@@ -5031,6 +5076,9 @@
         <field cname="_gst_reserved" access="public" writeable="true" readable="true" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
         <struct name="abi" cname="abi" opaque="false" hidden="false">
           <field cname="gtype" access="public" writeable="true" readable="true" is_callback="false" name="Gtype" type="GType"/>
+          <field cname="documentation_caps" access="public" writeable="true" readable="true" is_callback="false" name="DocumentationCaps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </field>
         </struct>
       </union>
       <signal name="PadCreatedEvent" cname="pad-created" when="last" field_name="pad_created">
@@ -5718,6 +5766,10 @@
         <return-type type="gboolean"/>
         <parameters/>
       </method>
+      <method name="Resume" cname="gst_task_resume" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
       <method name="SetEnterCallback" cname="gst_task_set_enter_callback">
         <return-type type="void"/>
         <parameters>
@@ -5851,7 +5903,7 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="Tracer" cname="GstTracer" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
+    <object name="Tracer" cname="GstTracer" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject" version="1.8">
       <class_struct cname="GstTracerClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
@@ -5860,6 +5912,14 @@
       </class_struct>
       <method name="GetType" cname="gst_tracer_get_type" shared="true">
         <return-type type="GType"/>
+      </method>
+      <method name="Register" cname="gst_tracer_register" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="plugin" type="GstPlugin*"/>
+          <parameter name="name" type="const-gchar*"/>
+          <parameter name="type" type="GType"/>
+        </parameters>
       </method>
       <property name="Params" cname="params" type="gchar*" readable="true" writeable="true" construct="true" construct-only="false"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*"/>
@@ -5881,7 +5941,7 @@
         <parameters/>
       </method>
     </object>
-    <object name="TracerRecord" cname="GstTracerRecord" opaque="false" hidden="false" parent="GstObject">
+    <object name="TracerRecord" cname="GstTracerRecord" opaque="false" hidden="false" parent="GstObject" version="1.8">
       <class_struct cname="GstTracerRecordClass"/>
       <method name="GetType" cname="gst_tracer_record_get_type" shared="true">
         <return-type type="GType"/>
@@ -5963,6 +6023,17 @@
           <parameter name="index" type="guint"/>
         </parameters>
       </method>
+      <method name="Init" cname="gst_value_array_init" shared="true" version="1.18">
+        <return-type type="GValue*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="value" type="GValue*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="prealloc" type="guint"/>
+        </parameters>
+      </method>
       <method name="PrependValue" cname="gst_value_array_prepend_value" shared="true">
         <return-type type="void"/>
         <parameters>
@@ -6032,6 +6103,17 @@
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="index" type="guint"/>
+        </parameters>
+      </method>
+      <method name="Init" cname="gst_value_list_init" shared="true" version="1.18">
+        <return-type type="GValue*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="value" type="GValue*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="prealloc" type="guint"/>
         </parameters>
       </method>
       <method name="Merge" cname="gst_value_list_merge" shared="true">
@@ -6126,12 +6208,12 @@
       <method name="GetType" cname="gst_buffer_get_type" shared="true">
         <return-type type="GType"/>
       </method>
-      <field cname="mini_object" access="public" writeable="true" readable="true" is_callback="false" name="MiniObject" type="GstMiniObject">
+      <field cname="mini_object" access="public" writeable="true" readable="true" is_callback="false" name="MiniObject" type="GstMiniObject" array_index="3">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="pool" access="public" writeable="true" readable="true" is_callback="false" name="Pool" type="GstBufferPool*" array_index="3"/>
-      <field cname="pts" access="public" writeable="true" readable="true" is_callback="false" name="Pts" type="guint64" array_index="2"/>
-      <field cname="dts" access="public" writeable="true" readable="true" is_callback="false" name="Dts" type="guint64" array_index="1"/>
+      <field cname="pool" access="public" writeable="true" readable="true" is_callback="false" name="Pool" type="GstBufferPool*" array_index="2"/>
+      <field cname="pts" access="public" writeable="true" readable="true" is_callback="false" name="Pts" type="guint64" array_index="1"/>
+      <field cname="dts" access="public" writeable="true" readable="true" is_callback="false" name="Dts" type="guint64"/>
       <field cname="duration" access="public" writeable="true" readable="true" is_callback="false" name="Duration" type="guint64"/>
       <field cname="offset" access="public" writeable="true" readable="true" is_callback="false" name="Offset" type="guint64"/>
       <field cname="offset_end" access="public" writeable="true" readable="true" is_callback="false" name="OffsetEnd" type="guint64"/>
@@ -6464,6 +6546,12 @@
           </parameter>
         </parameters>
       </method>
+      <method name="Ref" cname="gst_buffer_ref">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="RemoveAllMemory" cname="gst_buffer_remove_all_memory">
         <return-type type="void"/>
         <parameters/>
@@ -6552,6 +6640,10 @@
           </parameter>
         </parameters>
       </method>
+      <method name="Unref" cname="gst_buffer_unref">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
       <method name="UnsetFlags" cname="gst_buffer_unset_flags" version="1.10">
         <return-type type="gboolean"/>
         <parameters>
@@ -6618,12 +6710,22 @@
         <return-type type="guint"/>
         <parameters/>
       </method>
+      <method name="Ref" cname="gst_buffer_list_ref">
+        <return-type type="GstBufferList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="Remove" cname="gst_buffer_list_remove">
         <return-type type="void"/>
         <parameters>
           <parameter name="idx" type="guint"/>
           <parameter name="length" type="guint"/>
         </parameters>
+      </method>
+      <method name="Unref" cname="gst_buffer_list_unref">
+        <return-type type="void"/>
+        <parameters/>
       </method>
     </boxed>
     <struct name="BufferPoolAcquireParams" cname="GstBufferPoolAcquireParams" opaque="false" hidden="false">
@@ -6690,7 +6792,7 @@
         </return-type>
         <parameters/>
       </method>
-      <method name="CopyNth" cname="gst_caps_copy_nth">
+      <method name="CopyNth" cname="gst_caps_copy_nth" version="1.16">
         <return-type type="GstCaps*" owned="true">
           <warning>missing glib:type-name</warning>
         </return-type>
@@ -6876,6 +6978,12 @@
         </return-type>
         <parameters/>
       </method>
+      <method name="Ref" cname="gst_caps_ref">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="RemoveStructure" cname="gst_caps_remove_structure">
         <return-type type="void"/>
         <parameters>
@@ -6942,6 +7050,10 @@
         </return-type>
         <parameters/>
       </method>
+      <method name="Unref" cname="gst_caps_unref">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
       <method name="FromString" cname="gst_caps_from_string" shared="true">
         <return-type type="GstCaps*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -6951,7 +7063,7 @@
         </parameters>
       </method>
     </boxed>
-    <boxed name="CapsFeatures" cname="GstCapsFeatures" opaque="false" hidden="false">
+    <boxed name="CapsFeatures" cname="GstCapsFeatures" opaque="false" hidden="false" version="1.2">
       <method name="GetType" cname="gst_caps_features_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -7065,7 +7177,7 @@
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </struct>
     <struct name="ClockPrivate" cname="GstClockPrivate" opaque="true" hidden="true"/>
-    <boxed name="Context" cname="GstContext" opaque="false" hidden="false">
+    <boxed name="Context" cname="GstContext" opaque="false" hidden="false" version="1.2">
       <method name="GetType" cname="gst_context_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -7135,9 +7247,19 @@
           <parameter name="secs" type="gint64"/>
         </parameters>
       </constructor>
+      <constructor cname="gst_date_time_new_from_unix_epoch_local_time_usecs" version="1.18">
+        <parameters>
+          <parameter name="usecs" type="gint64"/>
+        </parameters>
+      </constructor>
       <constructor cname="gst_date_time_new_from_unix_epoch_utc">
         <parameters>
           <parameter name="secs" type="gint64"/>
+        </parameters>
+      </constructor>
+      <constructor cname="gst_date_time_new_from_unix_epoch_utc_usecs" version="1.18">
+        <parameters>
+          <parameter name="usecs" type="gint64"/>
         </parameters>
       </constructor>
       <constructor cname="gst_date_time_new_local_time">
@@ -7248,7 +7370,7 @@
       <field cname="color" access="private" writeable="false" readable="false" is_callback="false" name="Color" type="guint"/>
       <field cname="name" access="private" writeable="false" readable="false" is_callback="false" name="Name" type="gchar*"/>
       <field cname="description" access="private" writeable="false" readable="false" is_callback="false" name="Description" type="gchar*"/>
-      <method name="Free" cname="gst_debug_category_free">
+      <method name="Free" cname="gst_debug_category_free" deprecated="true">
         <return-type type="void"/>
         <parameters/>
       </method>
@@ -7332,6 +7454,19 @@
         <parameters>
           <parameter name="timestamp" type="guint64"/>
           <parameter name="duration" type="guint64"/>
+        </parameters>
+      </constructor>
+      <constructor cname="gst_event_new_instant_rate_change" version="1.18">
+        <parameters>
+          <parameter name="rate_multiplier" type="gdouble"/>
+          <parameter name="new_flags" type="GstSegmentFlags"/>
+        </parameters>
+      </constructor>
+      <constructor cname="gst_event_new_instant_rate_sync_time" version="1.18">
+        <parameters>
+          <parameter name="rate_multiplier" type="gdouble"/>
+          <parameter name="running_time" type="guint64"/>
+          <parameter name="upstream_running_time" type="guint64"/>
         </parameters>
       </constructor>
       <constructor cname="gst_event_new_latency">
@@ -7473,6 +7608,12 @@
           <parameter name="name" type="const-gchar*"/>
         </parameters>
       </method>
+      <method name="HasNameId" cname="gst_event_has_name_id" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="name" type="guint32"/>
+        </parameters>
+      </method>
       <method name="ParseBufferSize" cname="gst_event_parse_buffer_size">
         <return-type type="void"/>
         <parameters>
@@ -7507,6 +7648,21 @@
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="group_id" type="guint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="ParseInstantRateChange" cname="gst_event_parse_instant_rate_change" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="rate_multiplier" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="new_flags" type="GstSegmentFlags" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="ParseInstantRateSyncTime" cname="gst_event_parse_instant_rate_sync_time" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="rate_multiplier" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="running_time" type="guint64" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="upstream_running_time" type="guint64" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="ParseLatency" cname="gst_event_parse_latency">
@@ -7644,6 +7800,12 @@
           <parameter allow-none="1" name="uid" type="gchar*" owned="true" pass_as="out"/>
         </parameters>
       </method>
+      <method name="Ref" cname="gst_event_ref">
+        <return-type type="GstEvent*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="SetGroupId" cname="gst_event_set_group_id" version="1.2">
         <return-type type="void"/>
         <parameters>
@@ -7679,6 +7841,10 @@
         <parameters>
           <parameter name="flags" type="GstStreamFlags"/>
         </parameters>
+      </method>
+      <method name="Unref" cname="gst_event_unref">
+        <return-type type="void"/>
+        <parameters/>
       </method>
       <method name="WritableStructure" cname="gst_event_writable_structure">
         <return-type type="GstStructure*">
@@ -7808,10 +7974,10 @@
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="allocator" access="public" writeable="true" readable="true" is_callback="false" name="Allocator" type="GstAllocator*"/>
-      <field cname="parent" access="public" writeable="true" readable="true" is_callback="false" name="Parent" type="GstMemory*">
+      <field cname="parent" access="public" writeable="true" readable="true" is_callback="false" name="Parent" type="GstMemory*" array_index="1">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="maxsize" access="public" writeable="true" readable="true" is_callback="false" name="Maxsize" type="gsize" array_index="1"/>
+      <field cname="maxsize" access="public" writeable="true" readable="true" is_callback="false" name="Maxsize" type="gsize"/>
       <field cname="align" access="public" writeable="true" readable="true" is_callback="false" name="Align" type="gsize"/>
       <field cname="offset" access="public" writeable="true" readable="true" is_callback="false" name="Offset" type="gsize"/>
       <field cname="size" access="public" writeable="true" readable="true" is_callback="false" name="Size" type="gsize"/>
@@ -7877,6 +8043,12 @@
           <parameter name="flags" type="GstMapFlags"/>
         </parameters>
       </method>
+      <method name="Ref" cname="gst_memory_ref">
+        <return-type type="GstMemory*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="Resize" cname="gst_memory_resize">
         <return-type type="void"/>
         <parameters>
@@ -7900,6 +8072,10 @@
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
+      </method>
+      <method name="Unref" cname="gst_memory_unref">
+        <return-type type="void"/>
+        <parameters/>
       </method>
     </boxed>
     <boxed name="Message" cname="GstMessage" opaque="false" hidden="false">
@@ -8049,6 +8225,12 @@
           <parameter name="details" type="GstStructure*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </constructor>
+      <constructor cname="gst_message_new_instant_rate_request" version="1.18">
+        <parameters>
+          <parameter name="src" type="GstObject*"/>
+          <parameter name="rate_multiplier" type="gdouble"/>
         </parameters>
       </constructor>
       <constructor cname="gst_message_new_latency">
@@ -8384,6 +8566,12 @@
           </parameter>
         </parameters>
       </method>
+      <method name="ParseInstantRateRequest" cname="gst_message_parse_instant_rate_request" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="rate_multiplier" type="gdouble*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="ParseNewClock" cname="gst_message_parse_new_clock">
         <return-type type="void"/>
         <parameters>
@@ -8565,6 +8753,12 @@
           </parameter>
         </parameters>
       </method>
+      <method name="Ref" cname="gst_message_ref">
+        <return-type type="GstMessage*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="SetBufferingStats" cname="gst_message_set_buffering_stats">
         <return-type type="void"/>
         <parameters>
@@ -8625,6 +8819,10 @@
         <parameters>
           <parameter name="idx" type="guint"/>
         </parameters>
+      </method>
+      <method name="Unref" cname="gst_message_unref">
+        <return-type type="void"/>
+        <parameters/>
       </method>
       <method name="WritableStructure" cname="gst_message_writable_structure" version="1.14">
         <return-type type="GstStructure*">
@@ -9074,7 +9272,7 @@
       <method name="Reply" cname="gst_promise_reply" version="1.14">
         <return-type type="void"/>
         <parameters>
-          <parameter name="s" type="GstStructure*" owned="true">
+          <parameter allow-none="1" name="s" type="GstStructure*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -9655,6 +9853,10 @@
           <parameter name="permanent" type="gboolean"/>
         </parameters>
       </method>
+      <method name="Unref" cname="gst_query_unref">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
       <method name="WritableStructure" cname="gst_query_writable_structure">
         <return-type type="GstStructure*">
           <warning>missing glib:type-name</warning>
@@ -9728,6 +9930,12 @@
         </return-type>
         <parameters/>
       </method>
+      <method name="Ref" cname="gst_sample_ref">
+        <return-type type="GstSample*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="SetBuffer" cname="gst_sample_set_buffer" version="1.16">
         <return-type type="void"/>
         <parameters>
@@ -9767,6 +9975,10 @@
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
+      </method>
+      <method name="Unref" cname="gst_sample_unref">
+        <return-type type="void"/>
+        <parameters/>
       </method>
     </boxed>
     <boxed name="Segment" cname="GstSegment" opaque="false" hidden="false">
@@ -9966,6 +10178,12 @@
       </method>
       <field cname="type" access="public" writeable="true" readable="true" is_callback="false" name="Type" type="GType"/>
       <field cname="name" access="private" writeable="false" readable="false" is_callback="false" name="Name" type="guint32"/>
+      <constructor cname="gst_structure_from_string">
+        <parameters>
+          <parameter name="string" type="const-gchar*"/>
+          <parameter name="end" type="const-gchar*" pass_as="out"/>
+        </parameters>
+      </constructor>
       <constructor cname="gst_structure_new_empty">
         <parameters>
           <parameter name="name" type="const-gchar*"/>
@@ -10151,7 +10369,7 @@
           <parameter name="value" type="gint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
-      <method name="GetList" cname="gst_structure_get_list">
+      <method name="GetList" cname="gst_structure_get_list" version="1.12">
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="fieldname" type="const-gchar*"/>
@@ -10307,7 +10525,7 @@
           <parameter name="fieldname" type="const-gchar*"/>
         </parameters>
       </method>
-      <method name="SetArray" cname="gst_structure_set_array">
+      <method name="SetArray" cname="gst_structure_set_array" version="1.12">
         <return-type type="void"/>
         <parameters>
           <parameter name="fieldname" type="const-gchar*"/>
@@ -10316,7 +10534,7 @@
           </parameter>
         </parameters>
       </method>
-      <method name="SetList" cname="gst_structure_set_list">
+      <method name="SetList" cname="gst_structure_set_list" version="1.12">
         <return-type type="void"/>
         <parameters>
           <parameter name="fieldname" type="const-gchar*"/>
@@ -10359,13 +10577,15 @@
         <return-type type="gchar*" owned="true"/>
         <parameters/>
       </method>
-      <method name="FromString" cname="gst_structure_from_string" shared="true">
-        <return-type type="GstStructure*" owned="true">
-          <warning>missing glib:type-name</warning>
-        </return-type>
+      <method name="Take" cname="gst_structure_take" shared="true" version="1.18">
+        <return-type type="gboolean"/>
         <parameters>
-          <parameter name="string" type="const-gchar*"/>
-          <parameter allow-none="1" name="end" type="const-gchar*" pass_as="out"/>
+          <parameter allow-none="1" name="oldstr_ptr" type="GstStructure**" owned="true" pass_as="ref">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter allow-none="1" name="newstr" type="GstStructure*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
     </boxed>
@@ -10661,6 +10881,12 @@
           <parameter name="value" type="const-gchar*" pass_as="out"/>
         </parameters>
       </method>
+      <method name="Ref" cname="gst_tag_list_ref">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="RemoveTag" cname="gst_tag_list_remove_tag">
         <return-type type="void"/>
         <parameters>
@@ -10675,6 +10901,10 @@
       </method>
       <method name="ToString" cname="gst_tag_list_to_string">
         <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="Unref" cname="gst_tag_list_unref">
+        <return-type type="void"/>
         <parameters/>
       </method>
       <method name="CopyValue" cname="gst_tag_list_copy_value" shared="true">
@@ -11314,6 +11544,22 @@
           <parameter allow-none="1" name="user_data" type="gpointer"/>
         </parameters>
       </method>
+      <method name="DebugLogGetLine" cname="gst_debug_log_get_line" shared="true" version="1.18">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="category" type="GstDebugCategory*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="level" type="GstDebugLevel"/>
+          <parameter name="file" type="const-gchar*"/>
+          <parameter name="function" type="const-gchar*"/>
+          <parameter name="line" type="gint"/>
+          <parameter allow-none="1" name="_object" type="GObject*"/>
+          <parameter name="message" type="GstDebugMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="DebugPrintStackTrace" cname="gst_debug_print_stack_trace" shared="true">
         <return-type type="void"/>
       </method>
@@ -11778,13 +12024,15 @@
           <parameter name="stype" type="GstStreamType"/>
         </parameters>
       </method>
-      <method name="StructureFromString" cname="gst_structure_from_string" shared="true">
-        <return-type type="GstStructure*" owned="true">
-          <warning>missing glib:type-name</warning>
-        </return-type>
+      <method name="StructureTake" cname="gst_structure_take" shared="true" version="1.18">
+        <return-type type="gboolean"/>
         <parameters>
-          <parameter name="string" type="const-gchar*"/>
-          <parameter allow-none="1" name="end" type="const-gchar*" pass_as="out"/>
+          <parameter allow-none="1" name="oldstr_ptr" type="GstStructure**" owned="true" pass_as="ref">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter allow-none="1" name="newstr" type="GstStructure*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
       <method name="TagExists" cname="gst_tag_exists" shared="true">
@@ -11863,6 +12111,17 @@
           <parameter name="type" type="GstTocEntryType"/>
         </parameters>
       </method>
+      <method name="TracingGetActiveTracers" cname="gst_tracing_get_active_tracers" shared="true" version="1.18">
+        <return-type type="GList*" element_type="GstTracer*" elements_owned="true" owned="true"/>
+      </method>
+      <method name="TracingRegisterHook" cname="gst_tracing_register_hook" shared="true">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="tracer" type="GstTracer*"/>
+          <parameter name="detail" type="const-gchar*"/>
+          <parameter scope="async" name="func" type="GCallback"/>
+        </parameters>
+      </method>
       <method name="TypeFindGetType" cname="gst_type_find_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -11879,6 +12138,20 @@
           </parameter>
           <parameter allow-none="1" name="data" type="gpointer"/>
           <parameter scope="async" name="data_notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="TypeIsPluginApi" cname="gst_type_is_plugin_api" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="type" type="GType"/>
+          <parameter name="flags" type="GstPluginAPIFlags" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="TypeMarkAsPluginApi" cname="gst_type_mark_as_plugin_api" shared="true" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="type" type="GType"/>
+          <parameter name="flags" type="GstPluginAPIFlags"/>
         </parameters>
       </method>
       <method name="UpdateRegistry" cname="gst_update_registry" shared="true">
@@ -12686,6 +12959,7 @@
       <constant value="2" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_ENCODER"/>
       <constant value="2048" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_ENCRYPTOR"/>
       <constant value="512" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_FORMATTER"/>
+      <constant value="4096" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_HARDWARE"/>
       <constant value="281474976710656" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_MAX_ELEMENTS"/>
       <constant value="18446462598732840960" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_MEDIA_ANY"/>
       <constant value="1125899906842624" ctype="GstElementFactoryListType" gtype="GstElementFactoryListType" name="ELEMENT_FACTORY_TYPE_MEDIA_AUDIO"/>
@@ -12719,7 +12993,9 @@
       <constant value="memory" ctype="gchar*" gtype="gchar*" name="META_TAG_MEMORY_STR" version="1.2"/>
       <constant value="1000000" ctype="GstClockTimeDiff" gtype="GstClockTimeDiff" name="MSECOND"/>
       <constant value="1" ctype="GstClockTimeDiff" gtype="GstClockTimeDiff" name="NSECOND"/>
+      <constant value="16384" ctype="gint" gtype="gint" name="PARAM_CONDITIONALLY_AVAILABLE" version="1.18"/>
       <constant value="512" ctype="gint" gtype="gint" name="PARAM_CONTROLLABLE"/>
+      <constant value="8192" ctype="gint" gtype="gint" name="PARAM_DOC_SHOW_DEFAULT" version="1.18"/>
       <constant value="2048" ctype="gint" gtype="gint" name="PARAM_MUTABLE_PAUSED"/>
       <constant value="4096" ctype="gint" gtype="gint" name="PARAM_MUTABLE_PLAYING"/>
       <constant value="1024" ctype="gint" gtype="gint" name="PARAM_MUTABLE_READY"/>
@@ -12731,6 +13007,7 @@
       <constant value="3" ctype="GstQueryTypeFlags" gtype="GstQueryTypeFlags" name="QUERY_TYPE_BOTH"/>
       <constant value="1000000000" ctype="GstClockTimeDiff" gtype="GstClockTimeDiff" name="SECOND"/>
       <constant value="paB" ctype="gchar*" gtype="gchar*" name="SEGMENT_FORMAT"/>
+      <constant value="912" ctype="gint" gtype="gint" name="SEGMENT_INSTANT_FLAGS"/>
       <constant value="0" ctype="gint" gtype="gint" name="SEQNUM_INVALID" version="1.14"/>
       <constant value="c%" ctype="gchar*" gtype="gchar*" name="STIME_FORMAT" version="1.6"/>
       <constant value="album" ctype="gchar*" gtype="gchar*" name="TAG_ALBUM"/>
@@ -13524,8 +13801,8 @@
       <property name="Mute" cname="mute" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Volume" cname="volume" type="gdouble" readable="true" writeable="true" construct="false" construct-only="false"/>
     </interface>
-    <object name="AudioAggregator" cname="GstAudioAggregator" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstAggregator">
-      <class_struct cname="GstAudioAggregatorClass">
+    <object name="AudioAggregator" cname="GstAudioAggregator" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstAggregator" version="1.14">
+      <class_struct cname="GstAudioAggregatorClass" version="1.14">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstAggregatorClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -13571,6 +13848,7 @@
       <property name="AlignmentThreshold" cname="alignment-threshold" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="DiscontWait" cname="discont-wait" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="OutputBufferDuration" cname="output-buffer-duration" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="OutputBufferDurationFraction" cname="output-buffer-duration-fraction" type="*" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstAggregator*"/>
       <field cname="current_caps" access="public" writeable="false" readable="true" is_callback="false" name="CurrentCaps" type="GstCaps*">
         <warning>missing glib:type-name</warning>
@@ -13580,8 +13858,8 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="AudioAggregatorConvertPad" cname="GstAudioAggregatorConvertPad" opaque="false" hidden="false" parent="GstAudioAggregatorPad">
-      <class_struct cname="GstAudioAggregatorConvertPadClass">
+    <object name="AudioAggregatorConvertPad" cname="GstAudioAggregatorConvertPad" opaque="false" hidden="false" parent="GstAudioAggregatorPad" version="1.14">
+      <class_struct cname="GstAudioAggregatorConvertPadClass" version="1.14">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstAudioAggregatorPadClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -13597,8 +13875,8 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="AudioAggregatorPad" cname="GstAudioAggregatorPad" opaque="false" hidden="false" parent="GstAggregatorPad">
-      <class_struct cname="GstAudioAggregatorPadClass">
+    <object name="AudioAggregatorPad" cname="GstAudioAggregatorPad" opaque="false" hidden="false" parent="GstAggregatorPad" version="1.14">
+      <class_struct cname="GstAudioAggregatorPadClass" version="1.14">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstAggregatorPadClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -14076,7 +14354,7 @@
       <method name="FinishFrame" cname="gst_audio_decoder_finish_frame">
         <return-type type="GstFlowReturn"/>
         <parameters>
-          <parameter name="buf" type="GstBuffer*">
+          <parameter allow-none="1" name="buf" type="GstBuffer*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="frames" type="gint"/>
@@ -14085,7 +14363,7 @@
       <method name="FinishSubframe" cname="gst_audio_decoder_finish_subframe" version="1.16">
         <return-type type="GstFlowReturn"/>
         <parameters>
-          <parameter name="buf" type="GstBuffer*">
+          <parameter allow-none="1" name="buf" type="GstBuffer*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -14447,7 +14725,7 @@
       <method name="FinishFrame" cname="gst_audio_encoder_finish_frame">
         <return-type type="GstFlowReturn"/>
         <parameters>
-          <parameter name="buffer" type="GstBuffer*">
+          <parameter allow-none="1" name="buffer" type="GstBuffer*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="samples" type="gint"/>
@@ -14988,7 +15266,12 @@
         <method vm="write"/>
         <method vm="delay"/>
         <method vm="reset"/>
-        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+        <method vm="pause"/>
+        <method vm="resume"/>
+        <method vm="stop"/>
+        <field cname="extension" access="public" writeable="false" readable="true" is_callback="false" name="Extension" type="GstAudioSinkClassExtension*">
+          <warning>missing glib:type-name</warning>
+        </field>
       </class_struct>
       <method name="GetType" cname="gst_audio_sink_get_type" shared="true">
         <return-type type="GType"/>
@@ -15005,6 +15288,10 @@
         <return-type type="gboolean"/>
         <parameters/>
       </virtual_method>
+      <virtual_method name="Pause" cname="pause">
+        <return-type type="void"/>
+        <parameters/>
+      </virtual_method>
       <virtual_method name="Prepare" cname="prepare">
         <return-type type="gboolean"/>
         <parameters>
@@ -15014,6 +15301,14 @@
         </parameters>
       </virtual_method>
       <virtual_method name="Reset" cname="reset">
+        <return-type type="void"/>
+        <parameters/>
+      </virtual_method>
+      <virtual_method name="Resume" cname="resume">
+        <return-type type="void"/>
+        <parameters/>
+      </virtual_method>
+      <virtual_method name="Stop" cname="stop">
         <return-type type="void"/>
         <parameters/>
       </virtual_method>
@@ -15099,10 +15394,10 @@
     <struct name="AudioBaseSinkPrivate" cname="GstAudioBaseSinkPrivate" opaque="true" hidden="true"/>
     <struct name="AudioBaseSrcPrivate" cname="GstAudioBaseSrcPrivate" opaque="true" hidden="true"/>
     <struct name="AudioBuffer" cname="GstAudioBuffer" opaque="false" hidden="false" version="1.16">
-      <field cname="info" access="public" writeable="true" readable="true" is_callback="false" name="Info" type="GstAudioInfo">
+      <field cname="info" access="public" writeable="true" readable="true" is_callback="false" name="Info" type="GstAudioInfo" array_index="4">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="n_samples" access="public" writeable="true" readable="true" is_callback="false" name="NSamples" type="gsize" array_index="4"/>
+      <field cname="n_samples" access="public" writeable="true" readable="true" is_callback="false" name="NSamples" type="gsize"/>
       <field cname="n_planes" access="public" writeable="true" readable="true" is_callback="false" name="NPlanes" type="gint"/>
       <field cname="planes" access="public" writeable="true" readable="true" is_callback="false" name="Planes" type="gpointer"/>
       <field cname="buffer" access="public" writeable="true" readable="true" is_callback="false" name="Buffer" type="GstBuffer*">
@@ -15528,6 +15823,9 @@
       <field cname="seglatency" access="public" writeable="true" readable="true" is_callback="false" name="Seglatency" type="gint"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </struct>
+    <struct name="AudioSinkClassExtension" cname="GstAudioSinkClassExtension" opaque="false" hidden="false">
+      <field cname="clear_all" access="public" writeable="false" readable="true" is_callback="true" name="ClearAll" type="GstAudioClearAllFunc"/>
+    </struct>
     <boxed name="AudioStreamAlign" cname="GstAudioStreamAlign" opaque="false" hidden="false" version="1.14">
       <method name="GetType" cname="gst_audio_stream_align_get_type" shared="true">
         <return-type type="GType"/>
@@ -15667,7 +15965,7 @@
           <parameter name="channel_mask" type="guint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
-      <method name="AudioChannelPositionsToString" cname="gst_audio_channel_positions_to_string" shared="true">
+      <method name="AudioChannelPositionsToString" cname="gst_audio_channel_positions_to_string" shared="true" version="1.10">
         <return-type type="gchar*" owned="true"/>
         <parameters>
           <parameter name="position" type="const GstAudioChannelPosition*" array="true" array_length_param_index="1"/>
@@ -15747,6 +16045,12 @@
           <parameter name="format" type="GstAudioFormat"/>
         </parameters>
       </method>
+      <method name="AudioFormatsRaw" cname="gst_audio_formats_raw" shared="true" version="1.18">
+        <return-type type="const GstAudioFormat*" array="true" array_length_param_index="0"/>
+        <parameters>
+          <parameter name="len" type="guint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="AudioGetChannelReorderMap" cname="gst_audio_get_channel_reorder_map" shared="true">
         <return-type type="gboolean" array_index="3"/>
         <parameters>
@@ -15775,6 +16079,16 @@
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="endianness" type="gint"/>
+        </parameters>
+      </method>
+      <method name="AudioMakeRawCaps" cname="gst_audio_make_raw_caps" shared="true" version="1.18">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter allow-none="1" name="formats" type="const GstAudioFormat*" array="true" array_length_param_index="1"/>
+          <parameter name="len" type="guint"/>
+          <parameter name="layout" type="GstAudioLayout"/>
         </parameters>
       </method>
       <method name="AudioMetaApiGetType" cname="gst_audio_meta_api_get_type" shared="true">
@@ -15903,7 +16217,7 @@
       <constant value="44100" ctype="gint" gtype="gint" name="AUDIO_DEF_RATE"/>
       <constant value="sink" ctype="gchar*" gtype="gchar*" name="AUDIO_ENCODER_SINK_NAME"/>
       <constant value="src" ctype="gchar*" gtype="gchar*" name="AUDIO_ENCODER_SRC_NAME"/>
-      <constant value=" { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }" ctype="gchar*" gtype="gchar*" name="AUDIO_FORMATS_ALL"/>
+      <constant value="{ F64BE, F64LE, F32BE, F32LE, S32BE, S32LE, U32BE, U32LE, S24_32BE, S24_32LE, U24_32BE, U24_32LE, S24BE, S24LE, U24BE, U24LE, S20BE, S20LE, U20BE, U20LE, S18BE, S18LE, U18BE, U18LE, S16BE, S16LE, U16BE, U16LE, S8, U8 }" ctype="gchar*" gtype="gchar*" name="AUDIO_FORMATS_ALL"/>
       <constant value="(int) [ 1, max ]" ctype="gchar*" gtype="gchar*" name="AUDIO_RATE_RANGE"/>
       <constant value="GstAudioResampler.cubic-b" ctype="gchar*" gtype="gchar*" name="AUDIO_RESAMPLER_OPT_CUBIC_B"/>
       <constant value="GstAudioResampler.cubic-c" ctype="gchar*" gtype="gchar*" name="AUDIO_RESAMPLER_OPT_CUBIC_C"/>
@@ -15925,6 +16239,11 @@
     </object>
   </namespace>
   <namespace name="GstBase" library="gstbase-1.0">
+    <enum name="AggregatorStartTimeSelection" cname="GstAggregatorStartTimeSelection" type="enum" gtype="gst_aggregator_start_time_selection_get_type" version="1.14">
+      <member cname="GST_AGGREGATOR_START_TIME_SELECTION_ZERO" name="Zero" value="0"/>
+      <member cname="GST_AGGREGATOR_START_TIME_SELECTION_FIRST" name="First" value="1"/>
+      <member cname="GST_AGGREGATOR_START_TIME_SELECTION_SET" name="Set" value="2"/>
+    </enum>
     <enum name="BaseParseFrameFlags" cname="GstBaseParseFrameFlags" type="flags">
       <member cname="GST_BASE_PARSE_FRAME_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME" name="NewFrame" value="1"/>
@@ -16262,8 +16581,8 @@
         <parameters/>
       </method>
     </object>
-    <object name="Aggregator" cname="GstAggregator" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstElement">
-      <class_struct cname="GstAggregatorClass">
+    <object name="Aggregator" cname="GstAggregator" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstElement" version="1.14">
+      <class_struct cname="GstAggregatorClass" version="1.14">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstElementClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -16285,7 +16604,10 @@
         <method vm="negotiated_src_caps"/>
         <method vm="decide_allocation"/>
         <method vm="propose_allocation"/>
-        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
+        <method vm="negotiate"/>
+        <method vm="sink_event_pre_queue"/>
+        <method vm="sink_query_pre_queue"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="17"/>
       </class_struct>
       <method name="GetType" cname="gst_aggregator_get_type" shared="true">
         <return-type type="GType"/>
@@ -16351,6 +16673,10 @@
         <return-type type="guint64"/>
         <parameters/>
       </virtual_method>
+      <virtual_method name="Negotiate" cname="negotiate" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </virtual_method>
       <virtual_method name="NegotiatedSrcCaps" cname="negotiated_src_caps">
         <return-type type="gboolean"/>
         <parameters>
@@ -16380,7 +16706,25 @@
           </parameter>
         </parameters>
       </virtual_method>
+      <virtual_method name="SinkEventPreQueue" cname="sink_event_pre_queue">
+        <return-type type="GstFlowReturn"/>
+        <parameters>
+          <parameter name="aggregator_pad" type="GstAggregatorPad*"/>
+          <parameter name="event" type="GstEvent*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
       <virtual_method name="SinkQuery" cname="sink_query">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="aggregator_pad" type="GstAggregatorPad*"/>
+          <parameter name="query" type="GstQuery*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SinkQueryPreQueue" cname="sink_query_pre_queue">
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="aggregator_pad" type="GstAggregatorPad*"/>
@@ -16456,6 +16800,10 @@
         <return-type type="guint64"/>
         <parameters/>
       </method>
+      <method name="Negotiate" cname="gst_aggregator_negotiate" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
       <method name="SetLatency" cname="gst_aggregator_set_latency">
         <return-type type="void"/>
         <parameters>
@@ -16475,9 +16823,18 @@
         <return-type type="guint64"/>
         <parameters/>
       </method>
+      <method name="UpdateSegment" cname="gst_aggregator_update_segment" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="segment" type="GstSegment*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <property name="Latency" cname="latency" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="MinUpstreamLatency" cname="min-upstream-latency" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.16"/>
       <property name="StartTime" cname="start-time" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="StartTimeSelection" cname="start-time-selection" type="GstAggregatorStartTimeSelection" readable="true" writeable="true" construct="false" construct-only="false"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstElement*"/>
       <field cname="srcpad" access="public" writeable="false" readable="true" is_callback="false" name="Srcpad" type="GstPad*"/>
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstAggregatorPrivate*">
@@ -16485,8 +16842,8 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
     </object>
-    <object name="AggregatorPad" cname="GstAggregatorPad" opaque="false" hidden="false" parent="GstPad">
-      <class_struct cname="GstAggregatorPadClass">
+    <object name="AggregatorPad" cname="GstAggregatorPad" opaque="false" hidden="false" parent="GstPad" version="1.14">
+      <class_struct cname="GstAggregatorPadClass" version="1.14">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstPadClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -17003,6 +17360,12 @@
         <return-type type="guint64"/>
         <parameters/>
       </method>
+      <method name="GetStats" cname="gst_base_sink_get_stats" version="1.18">
+        <return-type type="GstStructure*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
       <method name="GetSync" cname="gst_base_sink_get_sync">
         <return-type type="gboolean"/>
         <parameters/>
@@ -17135,6 +17498,7 @@
       <property name="ProcessingDeadline" cname="processing-deadline" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.16"/>
       <property name="Qos" cname="qos" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="RenderDelay" cname="render-delay" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Stats" cname="stats" type="GstStructure*" readable="true" writeable="false" construct="false" construct-only="false" version="1.18"/>
       <property name="Sync" cname="sync" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="ThrottleTime" cname="throttle-time" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="TsOffset" cname="ts-offset" type="gint64" readable="true" writeable="true" construct="false" construct-only="false"/>
@@ -17264,7 +17628,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="filter" type="GstCaps*">
+          <parameter allow-none="1" name="filter" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -17289,7 +17653,7 @@
         <return-type type="gboolean"/>
         <parameters/>
       </virtual_method>
-      <virtual_method name="Negotiate" cname="negotiate">
+      <virtual_method name="Negotiate" cname="negotiate" version="1.18">
         <return-type type="gboolean"/>
         <parameters/>
       </virtual_method>
@@ -17362,6 +17726,10 @@
         <parameters/>
       </method>
       <method name="IsLive" cname="gst_base_src_is_live">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="Negotiate" cname="gst_base_src_negotiate" version="1.18">
         <return-type type="gboolean"/>
         <parameters/>
       </method>
@@ -17756,6 +18124,10 @@
         <parameters/>
       </method>
       <method name="IsQosEnabled" cname="gst_base_transform_is_qos_enabled">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="Reconfigure" cname="gst_base_transform_reconfigure" version="1.18">
         <return-type type="gboolean"/>
         <parameters/>
       </method>
@@ -18262,7 +18634,7 @@
         <parameters/>
       </method>
     </struct>
-    <struct name="BitWriter" cname="GstBitWriter" opaque="false" hidden="false">
+    <struct name="BitWriter" cname="GstBitWriter" opaque="false" hidden="false" version="1.16">
       <field cname="data" access="public" writeable="true" readable="true" is_callback="false" name="Data" type="guint8"/>
       <field cname="bit_size" access="public" writeable="true" readable="true" is_callback="false" name="BitSize" type="guint"/>
       <field cname="bit_capacity" access="private" writeable="false" readable="false" is_callback="false" name="BitCapacity" type="guint"/>
@@ -19609,7 +19981,7 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="PtpClock" cname="GstPtpClock" opaque="false" hidden="false" parent="GstSystemClock">
+    <object name="PtpClock" cname="GstPtpClock" opaque="false" hidden="false" parent="GstSystemClock" version="1.6">
       <class_struct cname="GstPtpClockClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstSystemClockClass">
           <warning>missing glib:type-name</warning>
@@ -19761,6 +20133,13 @@
           <parameter name="socket" type="GSocket*"/>
           <parameter name="src_address" type="GSocketAddress*" owned="true" pass_as="out"/>
           <parameter name="error" type="GError**"/>
+        </parameters>
+      </method>
+      <method name="NetUtilsSetSocketTos" cname="gst_net_utils_set_socket_tos" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="socket" type="GSocket*"/>
+          <parameter name="qos_dscp" type="gint"/>
         </parameters>
       </method>
       <method name="PtpDeinit" cname="gst_ptp_deinit" shared="true" version="1.6">
@@ -20300,7 +20679,7 @@
           <parameter name="info" type="GstDiscovererInfo*"/>
         </parameters>
       </method>
-      <method name="Copy" cname="gst_encoding_profile_copy">
+      <method name="Copy" cname="gst_encoding_profile_copy" version="1.12">
         <return-type type="GstEncodingProfile*" owned="true"/>
         <parameters/>
       </method>
@@ -20350,6 +20729,10 @@
         </return-type>
         <parameters/>
       </method>
+      <method name="GetSingleSegment" cname="gst_encoding_profile_get_single_segment" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
       <method name="GetTypeNick" cname="gst_encoding_profile_get_type_nick">
         <return-type type="const-gchar*"/>
         <parameters/>
@@ -20376,7 +20759,7 @@
           <parameter allow-none="1" name="description" type="const-gchar*"/>
         </parameters>
       </method>
-      <method name="SetEnabled" cname="gst_encoding_profile_set_enabled">
+      <method name="SetEnabled" cname="gst_encoding_profile_set_enabled" version="1.6">
         <return-type type="void"/>
         <parameters>
           <parameter name="enabled" type="gboolean"/>
@@ -20420,6 +20803,12 @@
           <parameter allow-none="1" name="restriction" type="GstCaps*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="SetSingleSegment" cname="gst_encoding_profile_set_single_segment" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="single_segment" type="gboolean"/>
         </parameters>
       </method>
       <property name="RestrictionCaps" cname="restriction-caps" type="GstCaps*" readable="true" writeable="true" construct="false" construct-only="false"/>
@@ -20584,7 +20973,7 @@
           <parameter name="len" type="guint" array_index="1"/>
         </parameters>
       </method>
-      <method name="CodecUtilsAacGetChannels" cname="gst_codec_utils_aac_get_channels" shared="true">
+      <method name="CodecUtilsAacGetChannels" cname="gst_codec_utils_aac_get_channels" shared="true" version="1.10">
         <return-type type="guint"/>
         <parameters>
           <parameter name="audio_config" type="const guint8*" array="true" array_length_param_index="1"/>
@@ -20611,7 +21000,7 @@
           <parameter name="len" type="guint"/>
         </parameters>
       </method>
-      <method name="CodecUtilsAacGetSampleRate" cname="gst_codec_utils_aac_get_sample_rate" shared="true">
+      <method name="CodecUtilsAacGetSampleRate" cname="gst_codec_utils_aac_get_sample_rate" shared="true" version="1.10">
         <return-type type="guint"/>
         <parameters>
           <parameter name="audio_config" type="const guint8*" array="true" array_length_param_index="1"/>
@@ -20654,7 +21043,7 @@
           <parameter name="len" type="guint"/>
         </parameters>
       </method>
-      <method name="CodecUtilsH265CapsSetLevelTierAndProfile" cname="gst_codec_utils_h265_caps_set_level_tier_and_profile" shared="true">
+      <method name="CodecUtilsH265CapsSetLevelTierAndProfile" cname="gst_codec_utils_h265_caps_set_level_tier_and_profile" shared="true" version="1.4">
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="caps" type="GstCaps*">
@@ -20664,27 +21053,27 @@
           <parameter name="len" type="guint" array_index="1"/>
         </parameters>
       </method>
-      <method name="CodecUtilsH265GetLevel" cname="gst_codec_utils_h265_get_level" shared="true">
+      <method name="CodecUtilsH265GetLevel" cname="gst_codec_utils_h265_get_level" shared="true" version="1.4">
         <return-type type="const-gchar*"/>
         <parameters>
           <parameter name="profile_tier_level" type="const guint8*" array="true" array_length_param_index="1"/>
           <parameter name="len" type="guint"/>
         </parameters>
       </method>
-      <method name="CodecUtilsH265GetLevelIdc" cname="gst_codec_utils_h265_get_level_idc" shared="true">
+      <method name="CodecUtilsH265GetLevelIdc" cname="gst_codec_utils_h265_get_level_idc" shared="true" version="1.4">
         <return-type type="guint8"/>
         <parameters>
           <parameter name="level" type="const-gchar*"/>
         </parameters>
       </method>
-      <method name="CodecUtilsH265GetProfile" cname="gst_codec_utils_h265_get_profile" shared="true">
+      <method name="CodecUtilsH265GetProfile" cname="gst_codec_utils_h265_get_profile" shared="true" version="1.4">
         <return-type type="const-gchar*"/>
         <parameters>
           <parameter name="profile_tier_level" type="const guint8*" array="true" array_length_param_index="1"/>
           <parameter name="len" type="guint"/>
         </parameters>
       </method>
-      <method name="CodecUtilsH265GetTier" cname="gst_codec_utils_h265_get_tier" shared="true">
+      <method name="CodecUtilsH265GetTier" cname="gst_codec_utils_h265_get_tier" shared="true" version="1.4">
         <return-type type="const-gchar*"/>
         <parameters>
           <parameter name="profile_tier_level" type="const guint8*" array="true" array_length_param_index="1"/>
@@ -21030,6 +21419,7 @@
       <member cname="GST_RTCP_PSFB_TYPE_TSTR" name="PsfbTypeTstr" value="5"/>
       <member cname="GST_RTCP_PSFB_TYPE_TSTN" name="PsfbTypeTstn" value="6"/>
       <member cname="GST_RTCP_PSFB_TYPE_VBCN" name="PsfbTypeVbcn" value="7"/>
+      <member cname="GST_RTCP_RTPFB_TYPE_TWCC" name="RtpfbTypeTwcc" value="15"/>
       <member cname="GST_RTCP_PSFB_TYPE_AFB" name="PsfbTypeAfb" value="15"/>
     </enum>
     <enum name="RTCPSDESType" cname="GstRTCPSDESType" type="enum" gtype="gst_rtcpsdes_type_get_type">
@@ -21261,6 +21651,7 @@
           <parameter name="enable" type="gboolean"/>
         </parameters>
       </method>
+      <property name="MaxReorder" cname="max-reorder" type="gint" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <property name="SourceInfo" cname="source-info" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.16"/>
       <property name="Stats" cname="stats" type="GstStructure*" readable="true" writeable="false" construct="false" construct-only="false"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstElement*"/>
@@ -21411,6 +21802,7 @@
       <property name="PerfectRtptime" cname="perfect-rtptime" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Pt" cname="pt" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="PtimeMultiple" cname="ptime-multiple" type="gint64" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="ScaleRtptime" cname="scale-rtptime" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <property name="Seqnum" cname="seqnum" type="guint" readable="true" writeable="false" construct="false" construct-only="false"/>
       <property name="SeqnumOffset" cname="seqnum-offset" type="gint" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="SourceInfo" cname="source-info" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.16"/>
@@ -21418,6 +21810,7 @@
       <property name="Stats" cname="stats" type="GstStructure*" readable="true" writeable="false" construct="false" construct-only="false"/>
       <property name="Timestamp" cname="timestamp" type="guint" readable="true" writeable="false" construct="false" construct-only="false"/>
       <property name="TimestampOffset" cname="timestamp-offset" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="TwccExtId" cname="twcc-ext-id" type="guint" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <field cname="element" access="public" writeable="false" readable="true" is_callback="false" name="Element" type="GstElement*"/>
       <field cname="sinkpad" access="private" writeable="false" readable="false" is_callback="false" name="Sinkpad" type="GstPad*"/>
       <field cname="srcpad" access="private" writeable="false" readable="false" is_callback="false" name="Srcpad" type="GstPad*"/>
@@ -21549,7 +21942,7 @@
       </method>
     </struct>
     <struct name="RTCPPacket" cname="GstRTCPPacket" opaque="false" hidden="false">
-      <field cname="rtcp" access="public" writeable="true" readable="true" is_callback="false" name="Rtcp" type="GstRTCPBuffer*" array_index="6">
+      <field cname="rtcp" access="public" writeable="true" readable="true" is_callback="false" name="Rtcp" type="GstRTCPBuffer*">
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="offset" access="public" writeable="true" readable="true" is_callback="false" name="Offset" type="guint"/>
@@ -22029,12 +22422,12 @@
     <struct name="RTPBaseDepayloadPrivate" cname="GstRTPBaseDepayloadPrivate" opaque="true" hidden="true"/>
     <struct name="RTPBasePayloadPrivate" cname="GstRTPBasePayloadPrivate" opaque="true" hidden="true"/>
     <struct name="RTPBuffer" cname="GstRTPBuffer" opaque="false" hidden="false">
-      <field cname="buffer" access="public" writeable="true" readable="true" is_callback="false" name="Buffer" type="GstBuffer*">
+      <field cname="buffer" access="public" writeable="true" readable="true" is_callback="false" name="Buffer" type="GstBuffer*" array_index="1">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="state" access="public" writeable="true" readable="true" is_callback="false" name="State" type="guint" array_index="1"/>
-      <field cname="data" access="public" writeable="true" readable="true" is_callback="false" name="Data" type="gpointer" array_index="4" array="true" array_len="4"/>
-      <field cname="size" access="public" writeable="true" readable="true" is_callback="false" name="Size" type="gsize" array_index="3" array="true" array_len="4"/>
+      <field cname="state" access="public" writeable="true" readable="true" is_callback="false" name="State" type="guint" array_index="4"/>
+      <field cname="data" access="public" writeable="true" readable="true" is_callback="false" name="Data" type="gpointer" array_index="3" array="true" array_len="4"/>
+      <field cname="size" access="public" writeable="true" readable="true" is_callback="false" name="Size" type="gsize" array_index="4" array="true" array_len="4"/>
       <field cname="map" access="public" writeable="true" readable="true" is_callback="false" name="Map" type="GstMapInfo" array="true" array_len="4"/>
       <method name="AddExtensionOnebyteHeader" cname="gst_rtp_buffer_add_extension_onebyte_header">
         <return-type type="gboolean"/>
@@ -22284,6 +22677,19 @@
         <parameters>
           <parameter name="exttimestamp" type="guint64*" owned="true" pass_as="ref"/>
           <parameter name="timestamp" type="guint32"/>
+        </parameters>
+      </method>
+      <method name="GetExtensionOnebyteHeaderFromBytes" cname="gst_rtp_buffer_get_extension_onebyte_header_from_bytes" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="bytes" type="GBytes*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="bit_pattern" type="guint16"/>
+          <parameter name="id" type="guint8"/>
+          <parameter name="nth" type="guint"/>
+          <parameter name="data" type="gpointer*" pass_as="out" array="true" array_length_param_index="5"/>
+          <parameter name="size" type="guint*" owned="true" pass_as="out" array_index="4"/>
         </parameters>
       </method>
       <method name="Map" cname="gst_rtp_buffer_map" shared="true">
@@ -22561,6 +22967,19 @@
         <parameters>
           <parameter name="exttimestamp" type="guint64*" owned="true" pass_as="ref"/>
           <parameter name="timestamp" type="guint32"/>
+        </parameters>
+      </method>
+      <method name="RtpBufferGetExtensionOnebyteHeaderFromBytes" cname="gst_rtp_buffer_get_extension_onebyte_header_from_bytes" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="bytes" type="GBytes*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="bit_pattern" type="guint16"/>
+          <parameter name="id" type="guint8"/>
+          <parameter name="nth" type="guint"/>
+          <parameter name="data" type="gpointer*" pass_as="out" array="true" array_length_param_index="5"/>
+          <parameter name="size" type="guint*" owned="true" pass_as="out" array_index="4"/>
         </parameters>
       </method>
       <method name="RtpBufferMap" cname="gst_rtp_buffer_map" shared="true">
@@ -23210,7 +23629,7 @@
         <return-type type="GstRTSPResult"/>
         <parameters/>
       </method>
-      <method name="Connect" cname="gst_rtsp_connection_connect">
+      <method name="Connect" cname="gst_rtsp_connection_connect" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="timeout" type="GTimeVal*">
@@ -23218,12 +23637,27 @@
           </parameter>
         </parameters>
       </method>
-      <method name="ConnectWithResponse" cname="gst_rtsp_connection_connect_with_response">
+      <method name="ConnectUsec" cname="gst_rtsp_connection_connect_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="timeout" type="gint64"/>
+        </parameters>
+      </method>
+      <method name="ConnectWithResponse" cname="gst_rtsp_connection_connect_with_response" version="1.8" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="timeout" type="GTimeVal*">
             <warning>missing glib:type-name</warning>
           </parameter>
+          <parameter name="response" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ConnectWithResponseUsec" cname="gst_rtsp_connection_connect_with_response_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="timeout" type="gint64"/>
           <parameter name="response" type="GstRTSPMessage*">
             <warning>missing glib:type-name</warning>
           </parameter>
@@ -23295,7 +23729,7 @@
         <return-type type="gboolean"/>
         <parameters/>
       </method>
-      <method name="NextTimeout" cname="gst_rtsp_connection_next_timeout">
+      <method name="NextTimeout" cname="gst_rtsp_connection_next_timeout" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="timeout" type="GTimeVal*">
@@ -23303,7 +23737,11 @@
           </parameter>
         </parameters>
       </method>
-      <method name="Poll" cname="gst_rtsp_connection_poll">
+      <method name="NextTimeoutUsec" cname="gst_rtsp_connection_next_timeout_usec" version="1.18">
+        <return-type type="gint64"/>
+        <parameters/>
+      </method>
+      <method name="Poll" cname="gst_rtsp_connection_poll" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="events" type="GstRTSPEvent"/>
@@ -23313,7 +23751,15 @@
           </parameter>
         </parameters>
       </method>
-      <method name="Read" cname="gst_rtsp_connection_read">
+      <method name="PollUsec" cname="gst_rtsp_connection_poll_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="events" type="GstRTSPEvent"/>
+          <parameter name="revents" type="GstRTSPEvent"/>
+          <parameter name="timeout" type="gint64"/>
+        </parameters>
+      </method>
+      <method name="Read" cname="gst_rtsp_connection_read" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="data" type="guint8"/>
@@ -23323,7 +23769,15 @@
           </parameter>
         </parameters>
       </method>
-      <method name="Receive" cname="gst_rtsp_connection_receive">
+      <method name="ReadUsec" cname="gst_rtsp_connection_read_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="data" type="guint8"/>
+          <parameter name="size" type="guint"/>
+          <parameter name="timeout" type="gint64"/>
+        </parameters>
+      </method>
+      <method name="Receive" cname="gst_rtsp_connection_receive" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="message" type="GstRTSPMessage*">
@@ -23332,13 +23786,22 @@
           <parameter name="timeout" type="GTimeVal*">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="ReceiveUsec" cname="gst_rtsp_connection_receive_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="message" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="timeout" type="gint64"/>
         </parameters>
       </method>
       <method name="ResetTimeout" cname="gst_rtsp_connection_reset_timeout">
         <return-type type="GstRTSPResult"/>
         <parameters/>
       </method>
-      <method name="Send" cname="gst_rtsp_connection_send">
+      <method name="Send" cname="gst_rtsp_connection_send" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="message" type="GstRTSPMessage*">
@@ -23349,7 +23812,7 @@
           </parameter>
         </parameters>
       </method>
-      <method name="SendMessages" cname="gst_rtsp_connection_send_messages" version="1.16">
+      <method name="SendMessages" cname="gst_rtsp_connection_send_messages" version="1.16" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="messages" type="GstRTSPMessage*" array="true" array_length_param_index="1"/>
@@ -23357,6 +23820,23 @@
           <parameter name="timeout" type="GTimeVal*">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="SendMessagesUsec" cname="gst_rtsp_connection_send_messages_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="messages" type="GstRTSPMessage*" array="true" array_length_param_index="1"/>
+          <parameter name="n_messages" type="guint"/>
+          <parameter name="timeout" type="gint64"/>
+        </parameters>
+      </method>
+      <method name="SendUsec" cname="gst_rtsp_connection_send_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="message" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="timeout" type="gint64"/>
         </parameters>
       </method>
       <method name="SetAcceptCertificateFunc" cname="gst_rtsp_connection_set_accept_certificate_func" version="1.14">
@@ -23380,6 +23860,12 @@
         <parameters>
           <parameter name="param" type="const-gchar*"/>
           <parameter name="value" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetContentLengthLimit" cname="gst_rtsp_connection_set_content_length_limit" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="limit" type="guint"/>
         </parameters>
       </method>
       <method name="SetHttpMode" cname="gst_rtsp_connection_set_http_mode">
@@ -23437,7 +23923,7 @@
           <parameter name="tunneled" type="gboolean"/>
         </parameters>
       </method>
-      <method name="Write" cname="gst_rtsp_connection_write">
+      <method name="Write" cname="gst_rtsp_connection_write" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="data" type="guint8"/>
@@ -23445,6 +23931,14 @@
           <parameter name="timeout" type="GTimeVal*">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="WriteUsec" cname="gst_rtsp_connection_write_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="data" type="guint8"/>
+          <parameter name="size" type="guint"/>
+          <parameter name="timeout" type="gint64"/>
         </parameters>
       </method>
       <method name="Accept" cname="gst_rtsp_connection_accept" shared="true">
@@ -23903,6 +24397,12 @@
         <return-type type="gchar*" owned="true"/>
         <parameters/>
       </method>
+      <method name="GetRequestUriWithControl" cname="gst_rtsp_url_get_request_uri_with_control" version="1.18">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="control_path" type="const-gchar*"/>
+        </parameters>
+      </method>
       <method name="SetPort" cname="gst_rtsp_url_set_port">
         <return-type type="GstRTSPResult"/>
         <parameters>
@@ -23973,12 +24473,18 @@
         <return-type type="void"/>
         <parameters/>
       </method>
-      <method name="WaitBacklog" cname="gst_rtsp_watch_wait_backlog" version="1.4">
+      <method name="WaitBacklog" cname="gst_rtsp_watch_wait_backlog" version="1.4" deprecated="true" deprecated-version="1.18">
         <return-type type="GstRTSPResult"/>
         <parameters>
           <parameter name="timeout" type="GTimeVal*">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="WaitBacklogUsec" cname="gst_rtsp_watch_wait_backlog_usec" version="1.18">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="timeout" type="gint64"/>
         </parameters>
       </method>
       <method name="WriteData" cname="gst_rtsp_watch_write_data">
@@ -24353,7 +24859,7 @@
       <method name="GetType" cname="gst_mikey_message_get_type" shared="true">
         <return-type type="GType"/>
       </method>
-      <field cname="mini_object" access="private" writeable="false" readable="false" is_callback="false" name="MiniObject" type="GstMiniObject" array_index="2">
+      <field cname="mini_object" access="private" writeable="false" readable="false" is_callback="false" name="MiniObject" type="GstMiniObject">
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="version" access="public" writeable="true" readable="true" is_callback="false" name="Version" type="guint8"/>
@@ -24559,10 +25065,10 @@
       <method name="GetType" cname="gst_mikey_payload_get_type" shared="true">
         <return-type type="GType"/>
       </method>
-      <field cname="mini_object" access="private" writeable="false" readable="false" is_callback="false" name="MiniObject" type="GstMiniObject" array_index="7">
+      <field cname="mini_object" access="private" writeable="false" readable="false" is_callback="false" name="MiniObject" type="GstMiniObject" array_index="3">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="type" access="public" writeable="true" readable="true" is_callback="false" name="Type" type="GstMIKEYPayloadType" array_index="3"/>
+      <field cname="type" access="public" writeable="true" readable="true" is_callback="false" name="Type" type="GstMIKEYPayloadType"/>
       <field cname="len" access="public" writeable="true" readable="true" is_callback="false" name="Len" type="guint"/>
       <constructor cname="gst_mikey_payload_new" version="1.4">
         <parameters>
@@ -24708,7 +25214,7 @@
       <field cname="salt_data" access="public" writeable="true" readable="true" is_callback="false" name="SaltData" type="guint8"/>
       <field cname="kv_type" access="public" writeable="true" readable="true" is_callback="false" name="KvType" type="GstMIKEYKVType"/>
       <field cname="kv_len" access="public" writeable="true" readable="true" is_callback="false" name="KvLen" type="guint8" array="true" array_len="2"/>
-      <field cname="kv_data" access="public" writeable="true" readable="true" is_callback="false" name="KvData" type="guint8" array="true" array_len="2"/>
+      <field cname="kv_data" access="public" writeable="true" readable="true" is_callback="false" name="KvData" type="guint8*" array="true" array_len="2"/>
     </struct>
     <struct name="MIKEYPayloadPKE" cname="GstMIKEYPayloadPKE" opaque="false" hidden="false">
       <field cname="pt" access="public" writeable="true" readable="true" is_callback="false" name="Pt" type="GstMIKEYPayload">
@@ -26229,6 +26735,8 @@
       </method>
     </object>
     <object name="Constants" cname="GstTagConstants" opaque="true">
+      <constant value="chromaprint-fingerprint" ctype="gchar*" gtype="gchar*" name="TAG_ACOUSTID_FINGERPRINT" version="1.18"/>
+      <constant value="acoustid-id" ctype="gchar*" gtype="gchar*" name="TAG_ACOUSTID_ID" version="1.18"/>
       <constant value="capturing-contrast" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_CONTRAST"/>
       <constant value="capturing-digital-zoom-ratio" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_DIGITAL_ZOOM_RATIO"/>
       <constant value="capturing-exposure-compensation" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_EXPOSURE_COMPENSATION"/>
@@ -26262,6 +26770,8 @@
       <constant value="musicbrainz-albumartistid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_ALBUMARTISTID"/>
       <constant value="musicbrainz-albumid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_ALBUMID"/>
       <constant value="musicbrainz-artistid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_ARTISTID"/>
+      <constant value="musicbrainz-releasegroupid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_RELEASEGROUPID" version="1.18"/>
+      <constant value="musicbrainz-releasetrackid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_RELEASETRACKID" version="1.18"/>
       <constant value="musicbrainz-trackid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_TRACKID"/>
       <constant value="musicbrainz-trmid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_TRMID"/>
     </object>
@@ -26296,6 +26806,7 @@
       <member cname="GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE" name="MouseButtonRelease" value="4"/>
       <member cname="GST_NAVIGATION_EVENT_MOUSE_MOVE" name="MouseMove" value="5"/>
       <member cname="GST_NAVIGATION_EVENT_COMMAND" name="Command" value="6"/>
+      <member cname="GST_NAVIGATION_EVENT_MOUSE_SCROLL" name="MouseScroll" value="7"/>
     </enum>
     <enum name="NavigationMessageType" cname="GstNavigationMessageType" type="enum" gtype="gst_navigation_message_type_get_type">
       <member cname="GST_NAVIGATION_MESSAGE_INVALID" name="Invalid" value="0"/>
@@ -26309,12 +26820,30 @@
       <member cname="GST_NAVIGATION_QUERY_COMMANDS" name="Commands" value="1"/>
       <member cname="GST_NAVIGATION_QUERY_ANGLES" name="Angles" value="2"/>
     </enum>
+    <enum name="VideoAFDSpec" cname="GstVideoAFDSpec" type="enum" gtype="gst_video_afd_spec_get_type" version="1.18">
+      <member cname="GST_VIDEO_AFD_SPEC_DVB_ETSI" name="DvbEtsi" value="0"/>
+      <member cname="GST_VIDEO_AFD_SPEC_ATSC_A53" name="AtscA53" value="1"/>
+      <member cname="GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1" name="SmpteSt20161" value="2"/>
+    </enum>
+    <enum name="VideoAFDValue" cname="GstVideoAFDValue" type="enum" gtype="gst_video_afd_value_get_type" version="1.18">
+      <member cname="GST_VIDEO_AFD_UNAVAILABLE" name="Unavailable" value="0"/>
+      <member cname="GST_VIDEO_AFD_16_9_TOP_ALIGNED" name="_16169TopAligned" value="2"/>
+      <member cname="GST_VIDEO_AFD_14_9_TOP_ALIGNED" name="_14149TopAligned" value="3"/>
+      <member cname="GST_VIDEO_AFD_GREATER_THAN_16_9" name="GreaterThan169" value="4"/>
+      <member cname="GST_VIDEO_AFD_4_3_FULL_16_9_FULL" name="_443Full169Full" value="8"/>
+      <member cname="GST_VIDEO_AFD_4_3_FULL_4_3_PILLAR" name="_443Full43Pillar" value="9"/>
+      <member cname="GST_VIDEO_AFD_16_9_LETTER_16_9_FULL" name="_16169Letter169Full" value="10"/>
+      <member cname="GST_VIDEO_AFD_14_9_LETTER_14_9_PILLAR" name="_14149Letter149Pillar" value="11"/>
+      <member cname="GST_VIDEO_AFD_4_3_FULL_14_9_CENTER" name="_443Full149Center" value="13"/>
+      <member cname="GST_VIDEO_AFD_16_9_LETTER_14_9_CENTER" name="_16169Letter149Center" value="14"/>
+      <member cname="GST_VIDEO_AFD_16_9_LETTER_4_3_CENTER" name="_16169Letter43Center" value="15"/>
+    </enum>
     <enum name="VideoAlphaMode" cname="GstVideoAlphaMode" type="enum" gtype="gst_video_alpha_mode_get_type" version="1.6">
       <member cname="GST_VIDEO_ALPHA_MODE_COPY" name="Copy" value="0"/>
       <member cname="GST_VIDEO_ALPHA_MODE_SET" name="Set" value="1"/>
       <member cname="GST_VIDEO_ALPHA_MODE_MULT" name="Mult" value="2"/>
     </enum>
-    <enum name="VideoAncillaryDID" cname="GstVideoAncillaryDID" type="enum" gtype="gst_video_ancillary_did_get_type">
+    <enum name="VideoAncillaryDID" cname="GstVideoAncillaryDID" type="enum" gtype="gst_video_ancillary_did_get_type" version="1.16">
       <member cname="GST_VIDEO_ANCILLARY_DID_UNDEFINED" name="Undefined" value="0"/>
       <member cname="GST_VIDEO_ANCILLARY_DID_DELETION" name="Deletion" value="128"/>
       <member cname="GST_VIDEO_ANCILLARY_DID_HANC_3G_AUDIO_DATA_FIRST" name="Hanc3gAudioDataFirst" value="160"/>
@@ -26329,8 +26858,9 @@
       <member cname="GST_VIDEO_ANCILLARY_DID_HANC_SDTV_AUDIO_DATA_2_LAST" name="HancSdtvAudioData2Last" value="255"/>
     </enum>
     <enum name="VideoAncillaryDID16" cname="GstVideoAncillaryDID16" type="enum" gtype="gst_video_ancillary_di_d16_get_type" version="1.16">
-      <member cname="GST_VIDEO_ANCILLARY_DID16_S334_EIA_708" name="_708" value="24833"/>
-      <member cname="GST_VIDEO_ANCILLARY_DID16_S334_EIA_608" name="_608" value="24834"/>
+      <member cname="GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR" name="S20163AfdBar" value="16645"/>
+      <member cname="GST_VIDEO_ANCILLARY_DID16_S334_EIA_708" name="S334Eia708" value="24833"/>
+      <member cname="GST_VIDEO_ANCILLARY_DID16_S334_EIA_608" name="S334Eia608" value="24834"/>
     </enum>
     <enum name="VideoCaptionType" cname="GstVideoCaptionType" type="enum" gtype="gst_video_caption_type_get_type" version="1.16">
       <member cname="GST_VIDEO_CAPTION_TYPE_UNKNOWN" name="Unknown" value="0"/>
@@ -26477,6 +27007,17 @@
       <member cname="GST_VIDEO_FORMAT_Y410" name="Y410" value="83"/>
       <member cname="GST_VIDEO_FORMAT_VUYA" name="Vuya" value="84"/>
       <member cname="GST_VIDEO_FORMAT_BGR10A2_LE" name="Bgr10a2Le" value="85"/>
+      <member cname="GST_VIDEO_FORMAT_RGB10A2_LE" name="Rgb10a2Le" value="86"/>
+      <member cname="GST_VIDEO_FORMAT_Y444_16BE" name="Y44416be" value="87"/>
+      <member cname="GST_VIDEO_FORMAT_Y444_16LE" name="Y44416le" value="88"/>
+      <member cname="GST_VIDEO_FORMAT_P016_BE" name="P016Be" value="89"/>
+      <member cname="GST_VIDEO_FORMAT_P016_LE" name="P016Le" value="90"/>
+      <member cname="GST_VIDEO_FORMAT_P012_BE" name="P012Be" value="91"/>
+      <member cname="GST_VIDEO_FORMAT_P012_LE" name="P012Le" value="92"/>
+      <member cname="GST_VIDEO_FORMAT_Y212_BE" name="Y212Be" value="93"/>
+      <member cname="GST_VIDEO_FORMAT_Y212_LE" name="Y212Le" value="94"/>
+      <member cname="GST_VIDEO_FORMAT_Y412_BE" name="Y412Be" value="95"/>
+      <member cname="GST_VIDEO_FORMAT_Y412_LE" name="Y412Le" value="96"/>
     </enum>
     <enum name="VideoGLTextureOrientation" cname="GstVideoGLTextureOrientation" type="enum">
       <member cname="GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL" name="NormalYNormal" value="0"/>
@@ -26582,6 +27123,9 @@
       <member cname="GST_VIDEO_TRANSFER_LOG316" name="Log316" value="10"/>
       <member cname="GST_VIDEO_TRANSFER_BT2020_12" name="Bt202012" value="11"/>
       <member cname="GST_VIDEO_TRANSFER_ADOBERGB" name="Adobergb" value="12"/>
+      <member cname="GST_VIDEO_TRANSFER_BT2020_10" name="Bt202010" value="13"/>
+      <member cname="GST_VIDEO_TRANSFER_SMPTE2084" name="Smpte2084" value="14"/>
+      <member cname="GST_VIDEO_TRANSFER_ARIB_STD_B67" name="AribStdB67" value="15"/>
     </enum>
     <enum name="VideoVBIParserResult" cname="GstVideoVBIParserResult" type="enum" gtype="gst_video_vbi_parser_result_get_type" version="1.16">
       <member cname="GST_VIDEO_VBI_PARSER_RESULT_DONE" name="Done" value="0"/>
@@ -26589,6 +27133,7 @@
       <member cname="GST_VIDEO_VBI_PARSER_RESULT_ERROR" name="Error" value="2"/>
     </enum>
     <enum name="VideoBufferFlags" cname="GstVideoBufferFlags" type="flags" gtype="gst_video_buffer_flags_get_type">
+      <member cname="GST_VIDEO_BUFFER_FLAG_MARKER" name="Marker" value="512"/>
       <member cname="GST_VIDEO_BUFFER_FLAG_INTERLACED" name="Interlaced" value="1048576"/>
       <member cname="GST_VIDEO_BUFFER_FLAG_TFF" name="Tff" value="2097152"/>
       <member cname="GST_VIDEO_BUFFER_FLAG_RFF" name="Rff" value="4194304"/>
@@ -26686,7 +27231,7 @@
       <member cname="GST_VIDEO_SCALER_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_VIDEO_SCALER_FLAG_INTERLACED" name="Interlaced" value="1"/>
     </enum>
-    <enum name="VideoTimeCodeFlags" cname="GstVideoTimeCodeFlags" type="flags" version="1.10">
+    <enum name="VideoTimeCodeFlags" cname="GstVideoTimeCodeFlags" type="flags" gtype="gst_video_time_code_flags_get_type" version="1.10">
       <member cname="GST_VIDEO_TIME_CODE_FLAGS_NONE" name="None" value="0"/>
       <member cname="GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME" name="DropFrame" value="1"/>
       <member cname="GST_VIDEO_TIME_CODE_FLAGS_INTERLACED" name="Interlaced" value="2"/>
@@ -26882,6 +27427,18 @@
           <parameter allow-none="1" name="y" type="gdouble*" owned="true" pass_as="out"/>
         </parameters>
       </method>
+      <method name="EventParseMouseScrollEvent" cname="gst_navigation_event_parse_mouse_scroll_event" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="event" type="GstEvent*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter allow-none="1" name="x" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="y" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="delta_x" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="delta_y" type="gdouble*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="MessageGetType" cname="gst_navigation_message_get_type" shared="true">
         <return-type type="GstNavigationMessageType"/>
         <parameters>
@@ -27063,6 +27620,15 @@
           <parameter name="y" type="gdouble"/>
         </parameters>
       </method>
+      <method name="SendMouseScrollEvent" cname="gst_navigation_send_mouse_scroll_event" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="x" type="gdouble"/>
+          <parameter name="y" type="gdouble"/>
+          <parameter name="delta_x" type="gdouble"/>
+          <parameter name="delta_y" type="gdouble"/>
+        </parameters>
+      </method>
     </interface>
     <interface name="VideoDirection" cname="GstVideoDirection" opaque="false" hidden="false" version="1.10">
       <class_struct cname="GstVideoDirectionInterface" version="1.10">
@@ -27202,7 +27768,7 @@
       <method name="GetType" cname="gst_video_overlay_get_type" shared="true">
         <return-type type="GType"/>
       </method>
-      <method name="InstallProperties" cname="gst_video_overlay_install_properties" shared="true">
+      <method name="InstallProperties" cname="gst_video_overlay_install_properties" shared="true" version="1.14">
         <return-type type="void"/>
         <parameters>
           <parameter name="oclass" type="GObjectClass*">
@@ -27211,7 +27777,7 @@
           <parameter name="last_prop_id" type="gint"/>
         </parameters>
       </method>
-      <method name="SetProperty" cname="gst_video_overlay_set_property" shared="true">
+      <method name="SetProperty" cname="gst_video_overlay_set_property" shared="true" version="1.14">
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="_object" type="GObject*"/>
@@ -27306,8 +27872,8 @@
         </parameters>
       </signal>
     </object>
-    <object name="VideoAggregator" cname="GstVideoAggregator" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstAggregator">
-      <class_struct cname="GstVideoAggregatorClass">
+    <object name="VideoAggregator" cname="GstVideoAggregator" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstAggregator" version="1.16">
+      <class_struct cname="GstVideoAggregatorClass" version="1.16">
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GstAggregatorClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -27367,8 +27933,8 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
     </object>
-    <object name="VideoAggregatorConvertPad" cname="GstVideoAggregatorConvertPad" opaque="false" hidden="false" parent="GstVideoAggregatorPad">
-      <class_struct cname="GstVideoAggregatorConvertPadClass">
+    <object name="VideoAggregatorConvertPad" cname="GstVideoAggregatorConvertPad" opaque="false" hidden="false" parent="GstVideoAggregatorPad" version="1.16">
+      <class_struct cname="GstVideoAggregatorConvertPadClass" version="1.16">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstVideoAggregatorPadClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -27398,8 +27964,8 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="VideoAggregatorPad" cname="GstVideoAggregatorPad" opaque="false" hidden="false" parent="GstAggregatorPad">
-      <class_struct cname="GstVideoAggregatorPadClass">
+    <object name="VideoAggregatorPad" cname="GstVideoAggregatorPad" opaque="false" hidden="false" parent="GstAggregatorPad" version="1.16">
+      <class_struct cname="GstVideoAggregatorPadClass" version="1.16">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstAggregatorPadClass">
           <warning>missing glib:type-name</warning>
         </field>
@@ -27458,6 +28024,7 @@
           <parameter name="needs_alpha" type="gboolean"/>
         </parameters>
       </method>
+      <property name="MaxLastBufferRepeat" cname="max-last-buffer-repeat" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="RepeatAfterEos" cname="repeat-after-eos" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Zorder" cname="zorder" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstAggregatorPad*"/>
@@ -27874,6 +28441,7 @@
           <parameter name="use" type="gboolean"/>
         </parameters>
       </method>
+      <property name="Qos" cname="qos" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <field cname="element" access="private" writeable="false" readable="false" is_callback="false" name="Element" type="GstElement*"/>
       <field cname="sinkpad" access="private" writeable="false" readable="false" is_callback="false" name="Sinkpad" type="GstPad*"/>
       <field cname="srcpad" access="private" writeable="false" readable="false" is_callback="false" name="Srcpad" type="GstPad*"/>
@@ -28075,6 +28643,14 @@
           </parameter>
         </parameters>
       </method>
+      <method name="FinishSubframe" cname="gst_video_encoder_finish_subframe" version="1.18">
+        <return-type type="GstFlowReturn"/>
+        <parameters>
+          <parameter name="frame" type="GstVideoCodecFrame*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="GetAllocator" cname="gst_video_encoder_get_allocator">
         <return-type type="void"/>
         <parameters>
@@ -28112,6 +28688,10 @@
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
+      </method>
+      <method name="GetMinForceKeyUnitInterval" cname="gst_video_encoder_get_min_force_key_unit_interval" version="1.18">
+        <return-type type="guint64"/>
+        <parameters/>
       </method>
       <method name="GetOldestFrame" cname="gst_video_encoder_get_oldest_frame">
         <return-type type="GstVideoCodecFrame*" owned="true">
@@ -28170,7 +28750,13 @@
           <parameter name="max_latency" type="guint64"/>
         </parameters>
       </method>
-      <method name="SetMinPts" cname="gst_video_encoder_set_min_pts">
+      <method name="SetMinForceKeyUnitInterval" cname="gst_video_encoder_set_min_force_key_unit_interval" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="interval" type="guint64"/>
+        </parameters>
+      </method>
+      <method name="SetMinPts" cname="gst_video_encoder_set_min_pts" version="1.6">
         <return-type type="void"/>
         <parameters>
           <parameter name="min_pts" type="guint64"/>
@@ -28195,6 +28781,7 @@
           <parameter name="enabled" type="gboolean"/>
         </parameters>
       </method>
+      <property name="MinForceKeyUnitInterval" cname="min-force-key-unit-interval" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <property name="Qos" cname="qos" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <field cname="element" access="private" writeable="false" readable="false" is_callback="false" name="Element" type="GstElement*"/>
       <field cname="sinkpad" access="private" writeable="false" readable="false" is_callback="false" name="Sinkpad" type="GstPad*"/>
@@ -28320,6 +28907,19 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
+    <struct name="VideoAFDMeta" cname="GstVideoAFDMeta" opaque="false" hidden="false" version="1.18">
+      <field cname="meta" access="public" writeable="true" readable="true" is_callback="false" name="Meta" type="GstMeta">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="field" access="public" writeable="true" readable="true" is_callback="false" name="Field" type="guint8"/>
+      <field cname="spec" access="public" writeable="true" readable="true" is_callback="false" name="Spec" type="GstVideoAFDSpec"/>
+      <field cname="afd" access="public" writeable="true" readable="true" is_callback="false" name="Afd" type="GstVideoAFDValue"/>
+      <method name="GetInfo" cname="gst_video_afd_meta_get_info" shared="true">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
+    </struct>
     <struct name="VideoAffineTransformationMeta" cname="GstVideoAffineTransformationMeta" opaque="false" hidden="false" version="1.8">
       <field cname="meta" access="public" writeable="true" readable="true" is_callback="false" name="Meta" type="GstMeta">
         <warning>missing glib:type-name</warning>
@@ -28328,7 +28928,7 @@
       <method name="ApplyMatrix" cname="gst_video_affine_transformation_meta_apply_matrix" version="1.8">
         <return-type type="void"/>
         <parameters>
-          <parameter name="matrix" type="gfloat"/>
+          <parameter name="matrix" type="const gfloat*" array="true" array_len="16"/>
         </parameters>
       </method>
       <method name="GetInfo" cname="gst_video_affine_transformation_meta_get_info" shared="true">
@@ -28357,6 +28957,20 @@
       <field cname="data_count" access="public" writeable="true" readable="true" is_callback="false" name="DataCount" type="guint8"/>
       <field cname="data" access="public" writeable="true" readable="true" is_callback="false" name="Data" type="guint8" array="true" array_length_param_index="2"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+    </struct>
+    <struct name="VideoBarMeta" cname="GstVideoBarMeta" opaque="false" hidden="false" version="1.18">
+      <field cname="meta" access="public" writeable="true" readable="true" is_callback="false" name="Meta" type="GstMeta">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="field" access="public" writeable="true" readable="true" is_callback="false" name="Field" type="guint8"/>
+      <field cname="is_letterbox" access="public" writeable="true" readable="true" is_callback="false" name="IsLetterbox" type="gboolean"/>
+      <field cname="bar_data1" access="public" writeable="true" readable="true" is_callback="false" name="BarData1" type="guint"/>
+      <field cname="bar_data2" access="public" writeable="true" readable="true" is_callback="false" name="BarData2" type="guint"/>
+      <method name="GetInfo" cname="gst_video_bar_meta_get_info" shared="true">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
     </struct>
     <struct name="VideoBufferPoolPrivate" cname="GstVideoBufferPoolPrivate" opaque="true" hidden="true"/>
     <struct name="VideoCaptionMeta" cname="GstVideoCaptionMeta" opaque="false" hidden="false" version="1.16">
@@ -28419,6 +29033,7 @@
         <struct name="ABI" cname="ABI" opaque="false" hidden="false">
           <field cname="ts" access="public" writeable="true" readable="true" is_callback="false" name="Ts" type="guint64"/>
           <field cname="ts2" access="public" writeable="true" readable="true" is_callback="false" name="Ts2" type="guint64"/>
+          <field cname="num_subframes" access="public" writeable="true" readable="true" is_callback="false" name="NumSubframes" type="guint"/>
         </struct>
         <field cname="padding" access="public" writeable="true" readable="true" is_callback="false" name="Padding" type="gpointer" array="true" array_len="20"/>
       </union>
@@ -28514,6 +29129,41 @@
         <parameters/>
       </method>
     </struct>
+    <struct name="VideoContentLightLevel" cname="GstVideoContentLightLevel" opaque="false" hidden="false" version="1.18">
+      <field cname="max_content_light_level" access="public" writeable="true" readable="true" is_callback="false" name="MaxContentLightLevel" type="guint16"/>
+      <field cname="max_frame_average_light_level" access="public" writeable="true" readable="true" is_callback="false" name="MaxFrameAverageLightLevel" type="guint16"/>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+      <method name="AddToCaps" cname="gst_video_content_light_level_add_to_caps" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="FromCaps" cname="gst_video_content_light_level_from_caps" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="FromString" cname="gst_video_content_light_level_from_string" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="level" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="Init" cname="gst_video_content_light_level_init" version="1.18">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="ToString" cname="gst_video_content_light_level_to_string" version="1.18">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+    </struct>
     <struct name="VideoConverter" cname="GstVideoConverter" opaque="true" hidden="false">
       <method name="Frame" cname="gst_video_converter_frame" version="1.6">
         <return-type type="void"/>
@@ -28599,6 +29249,13 @@
       <field cname="tile_ws" access="public" writeable="true" readable="true" is_callback="false" name="TileWs" type="guint"/>
       <field cname="tile_hs" access="public" writeable="true" readable="true" is_callback="false" name="TileHs" type="guint"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+      <method name="Component" cname="gst_video_format_info_component" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="plane" type="guint"/>
+          <parameter name="components" type="gint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
     </struct>
     <struct name="VideoFrame" cname="GstVideoFrame" opaque="false" hidden="false">
       <field cname="info" access="public" writeable="true" readable="true" is_callback="false" name="Info" type="GstVideoInfo">
@@ -28726,6 +29383,15 @@
           </parameter>
         </parameters>
       </method>
+      <method name="AlignFull" cname="gst_video_info_align_full" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="align" type="GstVideoAlignment*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter allow-none="1" name="plane_size" type="gsize*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="Convert" cname="gst_video_info_convert">
         <return-type type="gboolean"/>
         <parameters>
@@ -28789,6 +29455,60 @@
         <parameters/>
       </method>
     </boxed>
+    <struct name="VideoMasteringDisplayInfo" cname="GstVideoMasteringDisplayInfo" opaque="false" hidden="false" version="1.18">
+      <field cname="display_primaries" access="public" writeable="true" readable="true" is_callback="false" name="DisplayPrimaries" type="GstVideoMasteringDisplayInfoCoordinates" array="true" array_len="3"/>
+      <field cname="white_point" access="public" writeable="true" readable="true" is_callback="false" name="WhitePoint" type="GstVideoMasteringDisplayInfoCoordinates">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="max_display_mastering_luminance" access="public" writeable="true" readable="true" is_callback="false" name="MaxDisplayMasteringLuminance" type="guint32"/>
+      <field cname="min_display_mastering_luminance" access="public" writeable="true" readable="true" is_callback="false" name="MinDisplayMasteringLuminance" type="guint32"/>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+      <method name="AddToCaps" cname="gst_video_mastering_display_info_add_to_caps" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="FromCaps" cname="gst_video_mastering_display_info_from_caps" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="Init" cname="gst_video_mastering_display_info_init" version="1.18">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="IsEqual" cname="gst_video_mastering_display_info_is_equal" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="other" type="GstVideoMasteringDisplayInfo*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ToString" cname="gst_video_mastering_display_info_to_string" version="1.18">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="FromString" cname="gst_video_mastering_display_info_from_string" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="minfo" type="GstVideoMasteringDisplayInfo*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="mastering" type="const-gchar*"/>
+        </parameters>
+      </method>
+    </struct>
+    <struct name="VideoMasteringDisplayInfoCoordinates" cname="GstVideoMasteringDisplayInfoCoordinates" opaque="false" hidden="false" version="1.18">
+      <field cname="x" access="public" writeable="true" readable="true" is_callback="false" name="X" type="guint16"/>
+      <field cname="y" access="public" writeable="true" readable="true" is_callback="false" name="Y" type="guint16"/>
+    </struct>
     <struct name="VideoMeta" cname="GstVideoMeta" opaque="false" hidden="false">
       <field cname="meta" access="public" writeable="true" readable="true" is_callback="false" name="Meta" type="GstMeta">
         <warning>missing glib:type-name</warning>
@@ -28806,6 +29526,21 @@
       <field cname="stride" access="public" writeable="true" readable="true" is_callback="false" name="Stride" type="gint" array="true" array_len="4"/>
       <field cname="map" access="public" writeable="false" readable="true" is_callback="true" name="MapField" type="GstVideoMapFieldFunc"/>
       <field cname="unmap" access="public" writeable="false" readable="true" is_callback="true" name="UnmapField" type="GstVideoUnmapFieldFunc"/>
+      <field cname="alignment" access="public" writeable="true" readable="true" is_callback="false" name="Alignment" type="GstVideoAlignment">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <method name="GetPlaneHeight" cname="gst_video_meta_get_plane_height" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="plane_height" type="guint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="GetPlaneSize" cname="gst_video_meta_get_plane_size" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="plane_size" type="gsize*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="Map" cname="gst_video_meta_map">
         <return-type type="gboolean"/>
         <parameters>
@@ -28816,6 +29551,14 @@
           <parameter name="data" type="gpointer*" owned="true" pass_as="out"/>
           <parameter name="stride" type="gint*" owned="true" pass_as="out"/>
           <parameter name="flags" type="GstMapFlags"/>
+        </parameters>
+      </method>
+      <method name="SetAlignment" cname="gst_video_meta_set_alignment" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="alignment" type="GstVideoAlignment">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
       <method name="Unmap" cname="gst_video_meta_unmap">
@@ -29252,7 +29995,7 @@
         <parameters>
           <parameter name="fps_n" type="guint"/>
           <parameter name="fps_d" type="guint"/>
-          <parameter name="latest_daily_jam" type="GDateTime*">
+          <parameter allow-none="1" name="latest_daily_jam" type="GDateTime*">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="flags" type="GstVideoTimeCodeFlags"/>
@@ -29445,6 +30188,19 @@
       </method>
     </boxed>
     <object name="Global" cname="GstVideoGlobal" opaque="true">
+      <method name="BufferAddVideoAfdMeta" cname="gst_buffer_add_video_afd_meta" shared="true" version="1.18">
+        <return-type type="GstVideoAFDMeta*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="field" type="guint8"/>
+          <parameter name="spec" type="GstVideoAFDSpec"/>
+          <parameter name="afd" type="GstVideoAFDValue"/>
+        </parameters>
+      </method>
       <method name="BufferAddVideoAffineTransformationMeta" cname="gst_buffer_add_video_affine_transformation_meta" shared="true" version="1.8">
         <return-type type="GstVideoAffineTransformationMeta*">
           <warning>missing glib:type-name</warning>
@@ -29453,6 +30209,20 @@
           <parameter name="buffer" type="GstBuffer*">
             <warning>missing glib:type-name</warning>
           </parameter>
+        </parameters>
+      </method>
+      <method name="BufferAddVideoBarMeta" cname="gst_buffer_add_video_bar_meta" shared="true" version="1.18">
+        <return-type type="GstVideoBarMeta*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="field" type="guint8"/>
+          <parameter name="is_letterbox" type="gboolean"/>
+          <parameter name="bar_data1" type="guint"/>
+          <parameter name="bar_data2" type="guint"/>
         </parameters>
       </method>
       <method name="BufferAddVideoCaptionMeta" cname="gst_buffer_add_video_caption_meta" shared="true" version="1.16">
@@ -29702,6 +30472,18 @@
           <parameter allow-none="1" name="y" type="gdouble*" owned="true" pass_as="out"/>
         </parameters>
       </method>
+      <method name="NavigationEventParseMouseScrollEvent" cname="gst_navigation_event_parse_mouse_scroll_event" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="event" type="GstEvent*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter allow-none="1" name="x" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="y" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="delta_x" type="gdouble*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="delta_y" type="gdouble*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="NavigationMessageGetType" cname="gst_navigation_message_get_type" shared="true">
         <return-type type="GstNavigationMessageType"/>
         <parameters>
@@ -29845,10 +30627,26 @@
           <parameter name="cmds" type="GstNavigationCommand*" array="true" array_length_param_index="1"/>
         </parameters>
       </method>
+      <method name="VideoAfdMetaApiGetType" cname="gst_video_afd_meta_api_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="VideoAfdMetaGetInfo" cname="gst_video_afd_meta_get_info" shared="true">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
       <method name="VideoAffineTransformationMetaApiGetType" cname="gst_video_affine_transformation_meta_api_get_type" shared="true">
         <return-type type="GType"/>
       </method>
       <method name="VideoAffineTransformationMetaGetInfo" cname="gst_video_affine_transformation_meta_get_info" shared="true">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
+      <method name="VideoBarMetaApiGetType" cname="gst_video_bar_meta_api_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="VideoBarMetaGetInfo" cname="gst_video_bar_meta_get_info" shared="true">
         <return-type type="GstMetaInfo*">
           <warning>missing glib:type-name</warning>
         </return-type>
@@ -29945,6 +30743,12 @@
           <parameter name="site" type="GstVideoChromaSite"/>
         </parameters>
       </method>
+      <method name="VideoColorMatrixFromIso" cname="gst_video_color_matrix_from_iso" shared="true" version="1.18">
+        <return-type type="GstVideoColorMatrix"/>
+        <parameters>
+          <parameter name="value" type="guint"/>
+        </parameters>
+      </method>
       <method name="VideoColorMatrixGetKrKb" cname="gst_video_color_matrix_get_Kr_Kb" shared="true" version="1.6">
         <return-type type="gboolean"/>
         <parameters>
@@ -29953,10 +30757,28 @@
           <parameter name="Kb" type="gdouble*" owned="true" pass_as="out"/>
         </parameters>
       </method>
+      <method name="VideoColorMatrixToIso" cname="gst_video_color_matrix_to_iso" shared="true" version="1.18">
+        <return-type type="guint"/>
+        <parameters>
+          <parameter name="matrix" type="GstVideoColorMatrix"/>
+        </parameters>
+      </method>
+      <method name="VideoColorPrimariesFromIso" cname="gst_video_color_primaries_from_iso" shared="true" version="1.18">
+        <return-type type="GstVideoColorPrimaries"/>
+        <parameters>
+          <parameter name="value" type="guint"/>
+        </parameters>
+      </method>
       <method name="VideoColorPrimariesGetInfo" cname="gst_video_color_primaries_get_info" shared="true" version="1.6">
         <return-type type="GstVideoColorPrimariesInfo*">
           <warning>missing glib:type-name</warning>
         </return-type>
+        <parameters>
+          <parameter name="primaries" type="GstVideoColorPrimaries"/>
+        </parameters>
+      </method>
+      <method name="VideoColorPrimariesToIso" cname="gst_video_color_primaries_to_iso" shared="true" version="1.18">
+        <return-type type="guint"/>
         <parameters>
           <parameter name="primaries" type="GstVideoColorPrimaries"/>
         </parameters>
@@ -29984,6 +30806,18 @@
         <parameters>
           <parameter name="func" type="GstVideoTransferFunction"/>
           <parameter name="val" type="gdouble"/>
+        </parameters>
+      </method>
+      <method name="VideoColorTransferFromIso" cname="gst_video_color_transfer_from_iso" shared="true" version="1.18">
+        <return-type type="GstVideoTransferFunction"/>
+        <parameters>
+          <parameter name="value" type="guint"/>
+        </parameters>
+      </method>
+      <method name="VideoColorTransferToIso" cname="gst_video_color_transfer_to_iso" shared="true" version="1.18">
+        <return-type type="guint"/>
+        <parameters>
+          <parameter name="func" type="GstVideoTransferFunction"/>
         </parameters>
       </method>
       <method name="VideoConvertSample" cname="gst_video_convert_sample" shared="true">
@@ -30158,6 +30992,12 @@
           <parameter name="format" type="GstVideoFormat"/>
         </parameters>
       </method>
+      <method name="VideoFormatsRaw" cname="gst_video_formats_raw" shared="true" version="1.18">
+        <return-type type="const GstVideoFormat*" array="true" array_length_param_index="0"/>
+        <parameters>
+          <parameter name="len" type="guint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
       <method name="VideoGlTextureUploadMetaApiGetType" cname="gst_video_gl_texture_upload_meta_api_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -30184,6 +31024,36 @@
         <return-type type="const-gchar*"/>
         <parameters>
           <parameter name="mode" type="GstVideoInterlaceMode"/>
+        </parameters>
+      </method>
+      <method name="VideoMakeRawCaps" cname="gst_video_make_raw_caps" shared="true" version="1.18">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter allow-none="1" name="formats" type="const GstVideoFormat*" array="true" array_length_param_index="1"/>
+          <parameter name="len" type="guint"/>
+        </parameters>
+      </method>
+      <method name="VideoMakeRawCapsWithFeatures" cname="gst_video_make_raw_caps_with_features" shared="true" version="1.18">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter allow-none="1" name="formats" type="const GstVideoFormat*" array="true" array_length_param_index="1"/>
+          <parameter name="len" type="guint"/>
+          <parameter allow-none="1" name="features" type="GstCapsFeatures*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="VideoMasteringDisplayInfoFromString" cname="gst_video_mastering_display_info_from_string" shared="true" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="minfo" type="GstVideoMasteringDisplayInfo*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="mastering" type="const-gchar*"/>
         </parameters>
       </method>
       <method name="VideoMetaApiGetType" cname="gst_video_meta_api_get_type" shared="true">
@@ -30262,7 +31132,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
       </method>
-      <method name="VideoOverlayInstallProperties" cname="gst_video_overlay_install_properties" shared="true">
+      <method name="VideoOverlayInstallProperties" cname="gst_video_overlay_install_properties" shared="true" version="1.14">
         <return-type type="void"/>
         <parameters>
           <parameter name="oclass" type="GObjectClass*">
@@ -30271,7 +31141,7 @@
           <parameter name="last_prop_id" type="gint"/>
         </parameters>
       </method>
-      <method name="VideoOverlaySetProperty" cname="gst_video_overlay_set_property" shared="true">
+      <method name="VideoOverlaySetProperty" cname="gst_video_overlay_set_property" shared="true" version="1.14">
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="_object" type="GObject*"/>
@@ -30324,6 +31194,9 @@
       <constant value="size" ctype="gchar*" gtype="gchar*" name="META_TAG_VIDEO_SIZE_STR" version="1.2"/>
       <constant value="video" ctype="gchar*" gtype="gchar*" name="META_TAG_VIDEO_STR" version="1.2"/>
       <constant value="bt2020" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_BT2020"/>
+      <constant value="bt2020-10" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_BT2020_10"/>
+      <constant value="bt2100-hlg" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_BT2100_HLG"/>
+      <constant value="bt2100-pq" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_BT2100_PQ"/>
       <constant value="bt601" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_BT601"/>
       <constant value="bt709" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_BT709"/>
       <constant value="smpte240m" ctype="gchar*" gtype="gchar*" name="VIDEO_COLORIMETRY_SMPTE240M"/>
@@ -30364,11 +31237,10 @@
       <constant value="src" ctype="gchar*" gtype="gchar*" name="VIDEO_DECODER_SRC_NAME"/>
       <constant value="sink" ctype="gchar*" gtype="gchar*" name="VIDEO_ENCODER_SINK_NAME"/>
       <constant value="src" ctype="gchar*" gtype="gchar*" name="VIDEO_ENCODER_SRC_NAME"/>
-      <constant value="{ I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }" ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ALL"/>
+      <constant value="{ AYUV64, ARGB64, GBRA_12BE, GBRA_12LE, Y412_BE, Y412_LE, A444_10BE, GBRA_10BE, A444_10LE, GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, RGB10A2_LE, BGR10A2_LE, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16BE, Y444_16LE, v216, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, I422_10BE, I422_10LE, NV16_10LE32, Y210, v210, UYVP, I420_10BE, I420_10LE, P010_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE32, GRAY8 }" ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ALL"/>
       <constant value="(fraction) [ 0, max ]" ctype="gchar*" gtype="gchar*" name="VIDEO_FPS_RANGE"/>
       <constant value="4" ctype="gint" gtype="gint" name="VIDEO_MAX_COMPONENTS"/>
       <constant value="4" ctype="gint" gtype="gint" name="VIDEO_MAX_PLANES"/>
-      <constant value="{ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }" ctype="gchar*" gtype="gchar*" name="VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS" version="1.2"/>
       <constant value="GstVideoResampler.cubic-b" ctype="gchar*" gtype="gchar*" name="VIDEO_RESAMPLER_OPT_CUBIC_B"/>
       <constant value="GstVideoResampler.cubic-c" ctype="gchar*" gtype="gchar*" name="VIDEO_RESAMPLER_OPT_CUBIC_C"/>
       <constant value="GstVideoResampler.envelope" ctype="gchar*" gtype="gchar*" name="VIDEO_RESAMPLER_OPT_ENVELOPE"/>
@@ -30384,7 +31256,7 @@
     </object>
   </namespace>
   <namespace name="GstWebRTC" library="gstwebrtc-1.0">
-    <enum name="WebRTCBundlePolicy" cname="GstWebRTCBundlePolicy" type="enum" gtype="gst_webrtc_bundle_policy_get_type">
+    <enum name="WebRTCBundlePolicy" cname="GstWebRTCBundlePolicy" type="enum" gtype="gst_webrtc_bundle_policy_get_type" version="1.16">
       <member cname="GST_WEBRTC_BUNDLE_POLICY_NONE" name="None" value="0"/>
       <member cname="GST_WEBRTC_BUNDLE_POLICY_BALANCED" name="Balanced" value="1"/>
       <member cname="GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT" name="MaxCompat" value="2"/>
@@ -30403,14 +31275,14 @@
       <member cname="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTING" name="Connecting" value="3"/>
       <member cname="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED" name="Connected" value="4"/>
     </enum>
-    <enum name="WebRTCDataChannelState" cname="GstWebRTCDataChannelState" type="enum" gtype="gst_webrtc_data_channel_state_get_type">
+    <enum name="WebRTCDataChannelState" cname="GstWebRTCDataChannelState" type="enum" gtype="gst_webrtc_data_channel_state_get_type" version="1.16">
       <member cname="GST_WEBRTC_DATA_CHANNEL_STATE_NEW" name="New" value="0"/>
       <member cname="GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING" name="Connecting" value="1"/>
       <member cname="GST_WEBRTC_DATA_CHANNEL_STATE_OPEN" name="Open" value="2"/>
       <member cname="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING" name="Closing" value="3"/>
       <member cname="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED" name="Closed" value="4"/>
     </enum>
-    <enum name="WebRTCFECType" cname="GstWebRTCFECType" type="enum" gtype="gst_webrtc_fec_type_get_type">
+    <enum name="WebRTCFECType" cname="GstWebRTCFECType" type="enum" gtype="gst_webrtc_fec_type_get_type" version="1.14.1">
       <member cname="GST_WEBRTC_FEC_TYPE_NONE" name="None" value="0"/>
       <member cname="GST_WEBRTC_FEC_TYPE_ULP_RED" name="UlpRed" value="1"/>
     </enum>
@@ -30436,7 +31308,7 @@
       <member cname="GST_WEBRTC_ICE_ROLE_CONTROLLED" name="Controlled" value="0"/>
       <member cname="GST_WEBRTC_ICE_ROLE_CONTROLLING" name="Controlling" value="1"/>
     </enum>
-    <enum name="WebRTCICETransportPolicy" cname="GstWebRTCICETransportPolicy" type="enum" gtype="gst_webrtc_ice_transport_policy_get_type">
+    <enum name="WebRTCICETransportPolicy" cname="GstWebRTCICETransportPolicy" type="enum" gtype="gst_webrtc_ice_transport_policy_get_type" version="1.16">
       <member cname="GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL" name="All" value="0"/>
       <member cname="GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY" name="Relay" value="1"/>
     </enum>
@@ -30448,7 +31320,7 @@
       <member cname="GST_WEBRTC_PEER_CONNECTION_STATE_FAILED" name="Failed" value="4"/>
       <member cname="GST_WEBRTC_PEER_CONNECTION_STATE_CLOSED" name="Closed" value="5"/>
     </enum>
-    <enum name="WebRTCPriorityType" cname="GstWebRTCPriorityType" type="enum" gtype="gst_webrtc_priority_type_get_type">
+    <enum name="WebRTCPriorityType" cname="GstWebRTCPriorityType" type="enum" gtype="gst_webrtc_priority_type_get_type" version="1.16">
       <member cname="GST_WEBRTC_PRIORITY_TYPE_VERY_LOW" name="VeryLow" value="1"/>
       <member cname="GST_WEBRTC_PRIORITY_TYPE_LOW" name="Low" value="2"/>
       <member cname="GST_WEBRTC_PRIORITY_TYPE_MEDIUM" name="Medium" value="3"/>
@@ -30461,7 +31333,7 @@
       <member cname="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY" name="Recvonly" value="3"/>
       <member cname="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV" name="Sendrecv" value="4"/>
     </enum>
-    <enum name="WebRTCSCTPTransportState" cname="GstWebRTCSCTPTransportState" type="enum" gtype="gst_webrtc_sctp_transport_state_get_type">
+    <enum name="WebRTCSCTPTransportState" cname="GstWebRTCSCTPTransportState" type="enum" gtype="gst_webrtc_sctp_transport_state_get_type" version="1.16">
       <member cname="GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW" name="New" value="0"/>
       <member cname="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING" name="Connecting" value="1"/>
       <member cname="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED" name="Connected" value="2"/>
@@ -30535,6 +31407,158 @@
       <field cname="dtlssrtpenc" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpenc" type="GstElement*"/>
       <field cname="dtlssrtpdec" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpdec" type="GstElement*"/>
       <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4"/>
+    </object>
+    <object name="WebRTCDataChannel" cname="GstWebRTCDataChannel" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GObject" version="1.18">
+      <class_struct cname="GstWebRTCDataChannelClass" version="1.18">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method signal_vm="send_data"/>
+        <method signal_vm="send_string"/>
+        <method signal_vm="close"/>
+        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4"/>
+      </class_struct>
+      <method name="GetType" cname="gst_webrtc_data_channel_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="Close" cname="gst_webrtc_data_channel_close">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="OnBufferedAmountLow" cname="gst_webrtc_data_channel_on_buffered_amount_low">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="OnClose" cname="gst_webrtc_data_channel_on_close">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="OnError" cname="gst_webrtc_data_channel_on_error">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="error" type="GError*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="OnMessageData" cname="gst_webrtc_data_channel_on_message_data">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="data" type="GBytes*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="OnMessageString" cname="gst_webrtc_data_channel_on_message_string">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="str" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="OnOpen" cname="gst_webrtc_data_channel_on_open">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="SendData" cname="gst_webrtc_data_channel_send_data">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="data" type="GBytes*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SendString" cname="gst_webrtc_data_channel_send_string">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="str" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <property name="BufferedAmount" cname="buffered-amount" type="guint64" readable="true" writeable="false" construct="false" construct-only="false"/>
+      <property name="BufferedAmountLowThreshold" cname="buffered-amount-low-threshold" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Id" cname="id" type="gint" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="Label" cname="label" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="MaxPacketLifetime" cname="max-packet-lifetime" type="gint" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="MaxRetransmits" cname="max-retransmits" type="gint" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="Negotiated" cname="negotiated" type="gboolean" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="Ordered" cname="ordered" type="gboolean" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="Priority" cname="priority" type="GstWebRTCPriorityType" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="Protocol" cname="protocol" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="ReadyState" cname="ready-state" type="GstWebRTCDataChannelState" readable="true" writeable="false" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="lock" access="public" writeable="false" readable="true" is_callback="false" name="Lock" type="GMutex*"/>
+      <field cname="label" access="public" writeable="false" readable="true" is_callback="false" name="LabelField" type="gchar*"/>
+      <field cname="ordered" access="public" writeable="false" readable="true" is_callback="false" name="OrderedField" type="gboolean"/>
+      <field cname="max_packet_lifetime" access="public" writeable="false" readable="true" is_callback="false" name="MaxPacketLifetimeField" type="guint"/>
+      <field cname="max_retransmits" access="public" writeable="false" readable="true" is_callback="false" name="MaxRetransmitsField" type="guint"/>
+      <field cname="protocol" access="public" writeable="false" readable="true" is_callback="false" name="ProtocolField" type="gchar*"/>
+      <field cname="negotiated" access="public" writeable="false" readable="true" is_callback="false" name="NegotiatedField" type="gboolean"/>
+      <field cname="id" access="public" writeable="false" readable="true" is_callback="false" name="IdField" type="gint"/>
+      <field cname="priority" access="public" writeable="false" readable="true" is_callback="false" name="PriorityField" type="GstWebRTCPriorityType"/>
+      <field cname="ready_state" access="public" writeable="false" readable="true" is_callback="false" name="ReadyStateField" type="GstWebRTCDataChannelState"/>
+      <field cname="buffered_amount" access="public" writeable="false" readable="true" is_callback="false" name="BufferedAmountField" type="guint64"/>
+      <field cname="buffered_amount_low_threshold" access="public" writeable="false" readable="true" is_callback="false" name="BufferedAmountLowThresholdField" type="guint64"/>
+      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4"/>
+      <signal name="CloseEvent" cname="close" when="last" field_name="close">
+        <return-type type="void"/>
+        <parameters/>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="OnBufferedAmountLowEvent" cname="on-buffered-amount-low" when="last">
+        <return-type type="void"/>
+        <parameters/>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="OnCloseEvent" cname="on-close" when="last">
+        <return-type type="void"/>
+        <parameters/>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="OnErrorEvent" cname="on-error" when="last">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="error" type="GError*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="OnMessageDataEvent" cname="on-message-data" when="last">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="data" type="GBytes*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="OnMessageStringEvent" cname="on-message-string" when="last">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="data" type="const-gchar*"/>
+        </parameters>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="OnOpenEvent" cname="on-open" when="last">
+        <return-type type="void"/>
+        <parameters/>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="SendDataEvent" cname="send-data" when="last" field_name="send_data">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="data" type="GBytes*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="SendStringEvent" cname="send-string" when="last" field_name="send_string">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="data" type="const-gchar*"/>
+        </parameters>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
     </object>
     <object name="WebRTCICETransport" cname="GstWebRTCICETransport" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
       <class_struct cname="GstWebRTCICETransportClass">
@@ -30664,6 +31688,7 @@
       <method name="GetType" cname="gst_webrtc_rtp_transceiver_get_type" shared="true">
         <return-type type="GType"/>
       </method>
+      <property name="Direction" cname="direction" type="GstWebRTCRTPTransceiverDirection" readable="true" writeable="true" construct="false" construct-only="false" version="1.18"/>
       <property name="Mlineindex" cname="mlineindex" type="guint" readable="true" writeable="true" construct="false" construct-only="true"/>
       <property name="Receiver" cname="receiver" type="GstWebRTCRTPReceiver*" readable="true" writeable="true" construct="false" construct-only="true"/>
       <property name="Sender" cname="sender" type="GstWebRTCRTPSender*" readable="true" writeable="true" construct="false" construct-only="true"/>
@@ -30673,7 +31698,7 @@
       <field cname="stopped" access="public" writeable="false" readable="true" is_callback="false" name="Stopped" type="gboolean"/>
       <field cname="sender" access="public" writeable="false" readable="true" is_callback="false" name="SenderField" type="GstWebRTCRTPSender*"/>
       <field cname="receiver" access="public" writeable="false" readable="true" is_callback="false" name="ReceiverField" type="GstWebRTCRTPReceiver*"/>
-      <field cname="direction" access="public" writeable="false" readable="true" is_callback="false" name="Direction" type="GstWebRTCRTPTransceiverDirection"/>
+      <field cname="direction" access="public" writeable="false" readable="true" is_callback="false" name="DirectionField" type="GstWebRTCRTPTransceiverDirection"/>
       <field cname="current_direction" access="public" writeable="false" readable="true" is_callback="false" name="CurrentDirection" type="GstWebRTCRTPTransceiverDirection"/>
       <field cname="codec_preferences" access="public" writeable="false" readable="true" is_callback="false" name="CodecPreferences" type="GstCaps*">
         <warning>missing glib:type-name</warning>

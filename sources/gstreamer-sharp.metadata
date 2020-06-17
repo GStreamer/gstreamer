@@ -98,6 +98,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="parent">GstMiniObject</attr>
 	<attr path="/api/namespace//boxed/field[@type='GstMiniObject']" name="hidden">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstStructure']" name="opaque">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstStructure']/method[@cname='gst_structure_take']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_structure_take']" name="hidden">true</attr>
 
 	<attr path="/api/namespace/struct[@cname='GstTypeFind']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstIterator']" name="opaque">true</attr>
@@ -293,6 +295,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 	<!-- Introspection fails -->
 	<attr path="//object[@cname='GstBufferPool']/field[@cname='flushing']" name="type">gboolean</attr>
+
+	<!-- GWeakRef is unknown at this point.. we can make it a gpointer for now.  -->
+	<attr path="//object[@cname='GstProxyControlBinding']/field[@cname='ref_object']" name="type">gpointer</attr>
 	<!-- FIXME Reactivate GstMpegTS when stablized
 		<remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="array"/>
 		<remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
@@ -303,7 +308,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	-->
 	<attr path="//method[@cname='gst_mini_object_replace']" name="hidden">true</attr>
 	<attr path="//method[@cname='gst_mini_object_take']" name="hidden">true</attr>
-	<attr path="//struct[@cname='GstVideoGLTextureUploadMeta']" name="nohash">true</attr>
 	<attr path="//struct[@cname='GstVideoGLTextureUploadMeta']" name="noequals">true</attr>
 	<attr path="//object[@cname='GstPad']//union" name="hidden">true</attr>
 	<attr path="//struct[@cname='GstControlPoint']" name="hidden">true</attr>
@@ -370,6 +374,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/struct[@cname='GstVideoResampler']/field[@cname='n_taps']" name="type">guint32*</attr>
 	<attr path="/api/namespace/struct[@cname='GstVideoResampler']/field[@cname='taps']" name="type">gdouble*</attr>
 
+	<!-- Webrtc fixes -->
+	<attr path="/api/namespace/object[@cname='GstWebRTCDataChannel']/signal[@cname='on-close']" name="hidden">true</attr>
+
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
 
@@ -395,4 +402,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//*[@cname='_padding']" name="padding">true</attr>
 
 	<attr path="/api/namespace/boxed[@cname='GstSDPMessage']" name="opaque">true</attr>
+
+
+	<!-- New APIs in 1.18 that need need some fixing -->
+	<attr path="/api/namespace//method[@cname='gst_rtp_buffer_get_extension_onebyte_header_from_bytes']" name="hidden">true</attr>
 </metadata>

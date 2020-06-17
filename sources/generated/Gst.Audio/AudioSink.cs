@@ -419,6 +419,165 @@ namespace Gst.Audio {
 			unmanaged (this.Handle);
 		}
 
+		static PauseNativeDelegate Pause_cb_delegate;
+		static PauseNativeDelegate PauseVMCallback {
+			get {
+				if (Pause_cb_delegate == null)
+					Pause_cb_delegate = new PauseNativeDelegate (Pause_cb);
+				return Pause_cb_delegate;
+			}
+		}
+
+		static void OverridePause (GLib.GType gtype)
+		{
+			OverridePause (gtype, PauseVMCallback);
+		}
+
+		static void OverridePause (GLib.GType gtype, PauseNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("pause"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void PauseNativeDelegate (IntPtr inst);
+
+		static void Pause_cb (IntPtr inst)
+		{
+			try {
+				AudioSink __obj = GLib.Object.GetObject (inst, false) as AudioSink;
+				__obj.OnPause ();
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioSink), ConnectionMethod="OverridePause")]
+		protected virtual void OnPause ()
+		{
+			InternalPause ();
+		}
+
+		private void InternalPause ()
+		{
+			PauseNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("pause"));
+				unmanaged = (PauseNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(PauseNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			unmanaged (this.Handle);
+		}
+
+		static ResumeNativeDelegate Resume_cb_delegate;
+		static ResumeNativeDelegate ResumeVMCallback {
+			get {
+				if (Resume_cb_delegate == null)
+					Resume_cb_delegate = new ResumeNativeDelegate (Resume_cb);
+				return Resume_cb_delegate;
+			}
+		}
+
+		static void OverrideResume (GLib.GType gtype)
+		{
+			OverrideResume (gtype, ResumeVMCallback);
+		}
+
+		static void OverrideResume (GLib.GType gtype, ResumeNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("resume"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void ResumeNativeDelegate (IntPtr inst);
+
+		static void Resume_cb (IntPtr inst)
+		{
+			try {
+				AudioSink __obj = GLib.Object.GetObject (inst, false) as AudioSink;
+				__obj.OnResume ();
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioSink), ConnectionMethod="OverrideResume")]
+		protected virtual void OnResume ()
+		{
+			InternalResume ();
+		}
+
+		private void InternalResume ()
+		{
+			ResumeNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("resume"));
+				unmanaged = (ResumeNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(ResumeNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			unmanaged (this.Handle);
+		}
+
+		static StopNativeDelegate Stop_cb_delegate;
+		static StopNativeDelegate StopVMCallback {
+			get {
+				if (Stop_cb_delegate == null)
+					Stop_cb_delegate = new StopNativeDelegate (Stop_cb);
+				return Stop_cb_delegate;
+			}
+		}
+
+		static void OverrideStop (GLib.GType gtype)
+		{
+			OverrideStop (gtype, StopVMCallback);
+		}
+
+		static void OverrideStop (GLib.GType gtype, StopNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("stop"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void StopNativeDelegate (IntPtr inst);
+
+		static void Stop_cb (IntPtr inst)
+		{
+			try {
+				AudioSink __obj = GLib.Object.GetObject (inst, false) as AudioSink;
+				__obj.OnStop ();
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioSink), ConnectionMethod="OverrideStop")]
+		protected virtual void OnStop ()
+		{
+			InternalStop ();
+		}
+
+		private void InternalStop ()
+		{
+			StopNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("stop"));
+				unmanaged = (StopNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(StopNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			unmanaged (this.Handle);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -478,14 +637,38 @@ namespace Gst.Audio {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // reset
 							, "delay"
-							, "_gst_reserved"
+							, "pause"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
-						new GLib.AbiField("_gst_reserved"
+						new GLib.AbiField("pause"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _gst_reserved
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // pause
 							, "reset"
+							, "resume"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("resume"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // resume
+							, "pause"
+							, "stop"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("stop"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // stop
+							, "resume"
+							, "extension"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("extension"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // extension
+							, "stop"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

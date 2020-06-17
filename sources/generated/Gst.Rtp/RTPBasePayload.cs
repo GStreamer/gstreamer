@@ -123,6 +123,21 @@ namespace Gst.Rtp {
 			}
 		}
 
+		[GLib.Property ("scale-rtptime")]
+		public bool ScaleRtptime {
+			get {
+				GLib.Value val = GetProperty ("scale-rtptime");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("scale-rtptime", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("seqnum")]
 		public uint Seqnum {
 			get {
@@ -209,6 +224,21 @@ namespace Gst.Rtp {
 			set {
 				GLib.Value val = new GLib.Value(value);
 				SetProperty("timestamp-offset", val);
+				val.Dispose ();
+			}
+		}
+
+		[GLib.Property ("twcc-ext-id")]
+		public uint TwccExtId {
+			get {
+				GLib.Value val = GetProperty ("twcc-ext-id");
+				uint ret = (uint) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("twcc-ext-id", val);
 				val.Dispose ();
 			}
 		}

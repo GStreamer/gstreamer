@@ -445,24 +445,20 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_structure_from_string(IntPtr str1ng, out IntPtr end);
-
-		public static Gst.Structure StructureFromString(string str1ng, out string end) {
-			IntPtr native_str1ng = GLib.Marshaller.StringToPtrGStrdup (str1ng);
-			IntPtr native_end;
-			IntPtr raw_ret = gst_structure_from_string(native_str1ng, out native_end);
-			Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
-			GLib.Marshaller.Free (native_str1ng);
-			end = GLib.Marshaller.Utf8PtrToString (native_end);
-			return ret;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_type_get_nick(int type);
 
 		public static string TocEntryTypeGetNick(Gst.TocEntryType type) {
 			IntPtr raw_ret = gst_toc_entry_type_get_nick((int) type);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_tracing_get_active_tracers();
+
+		public static Gst.Tracer[] TracingGetActiveTracers() {
+			IntPtr raw_ret = gst_tracing_get_active_tracers();
+			Gst.Tracer[] ret = (Gst.Tracer[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.Tracer));
 			return ret;
 		}
 
@@ -500,6 +496,24 @@ namespace Gst {
 
 		public static bool TypeFindRegister(string name, uint rank, Gst.TypeFindFunction func, Gst.Caps possible_caps) {
 			return TypeFindRegister (null, name, rank, func, null, possible_caps);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_type_is_plugin_api(IntPtr type, out int flags);
+
+		public static bool TypeIsPluginApi(GLib.GType type, out Gst.PluginAPIFlags flags) {
+			int native_flags;
+			bool raw_ret = gst_type_is_plugin_api(type.Val, out native_flags);
+			bool ret = raw_ret;
+			flags = (Gst.PluginAPIFlags) native_flags;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_type_mark_as_plugin_api(IntPtr type, int flags);
+
+		public static void TypeMarkAsPluginApi(GLib.GType type, Gst.PluginAPIFlags flags) {
+			gst_type_mark_as_plugin_api(type.Val, (int) flags);
 		}
 
 #endregion

@@ -1595,6 +1595,28 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_element_get_current_clock_time(IntPtr raw);
+
+		public ulong CurrentClockTime { 
+			get {
+				ulong raw_ret = gst_element_get_current_clock_time(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_element_get_current_running_time(IntPtr raw);
+
+		public ulong CurrentRunningTime { 
+			get {
+				ulong raw_ret = gst_element_get_current_running_time(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_get_factory(IntPtr raw);
 
 		public Gst.ElementFactory Factory { 

@@ -1302,9 +1302,14 @@ namespace Gst.Audio {
 		static extern int gst_audio_encoder_finish_frame(IntPtr raw, IntPtr buffer, int samples);
 
 		public Gst.FlowReturn FinishFrame(Gst.Buffer buffer, int samples) {
+			buffer.Owned = false;
 			int raw_ret = gst_audio_encoder_finish_frame(Handle, buffer == null ? IntPtr.Zero : buffer.Handle, samples);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;
+		}
+
+		public Gst.FlowReturn FinishFrame(int samples) {
+			return FinishFrame (null, samples);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

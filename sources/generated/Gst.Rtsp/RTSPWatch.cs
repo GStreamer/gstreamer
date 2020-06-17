@@ -75,8 +75,18 @@ namespace Gst.Rtsp {
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_watch_wait_backlog(IntPtr raw, IntPtr timeout);
 
+		[Obsolete]
 		public Gst.Rtsp.RTSPResult WaitBacklog(IntPtr timeout) {
 			int raw_ret = gst_rtsp_watch_wait_backlog(Handle, timeout);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_watch_wait_backlog_usec(IntPtr raw, long timeout);
+
+		public Gst.Rtsp.RTSPResult WaitBacklogUsec(long timeout) {
+			int raw_ret = gst_rtsp_watch_wait_backlog_usec(Handle, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
 		}

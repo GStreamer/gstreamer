@@ -22,6 +22,7 @@ namespace Gst.Rtp {
 		PsfbTypeTstr = 5,
 		PsfbTypeTstn = 6,
 		PsfbTypeVbcn = 7,
+		RtpfbTypeTwcc = 15,
 		PsfbTypeAfb = 15,
 	}
 

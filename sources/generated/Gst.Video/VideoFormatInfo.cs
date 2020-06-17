@@ -61,6 +61,24 @@ namespace Gst.Video {
 			return (Gst.Video.VideoFormatInfo) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoFormatInfo));
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_format_info_component(IntPtr raw, uint plane, out int components);
+
+		public int Component(uint plane) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			int components;
+			gst_video_format_info_component(this_as_native, plane, out components);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return components;
+		}
+
+		static void ReadNative (IntPtr native, ref Gst.Video.VideoFormatInfo target)
+		{
+			target = New (native);
+		}
+
 		public bool Equals (VideoFormatInfo other)
 		{
 			return true && Format.Equals (other.Format) && Name.Equals (other.Name) && Description.Equals (other.Description) && Flags.Equals (other.Flags) && Bits.Equals (other.Bits) && NComponents.Equals (other.NComponents) && Shift.Equals (other.Shift) && Depth.Equals (other.Depth) && PixelStride.Equals (other.PixelStride) && NPlanes.Equals (other.NPlanes) && Plane.Equals (other.Plane) && Poffset.Equals (other.Poffset) && WSub.Equals (other.WSub) && HSub.Equals (other.HSub) && UnpackFormat.Equals (other.UnpackFormat) && UnpackFunc.Equals (other.UnpackFunc) && PackLines.Equals (other.PackLines) && PackFunc.Equals (other.PackFunc) && TileMode.Equals (other.TileMode) && TileWs.Equals (other.TileWs) && TileHs.Equals (other.TileHs);

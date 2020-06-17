@@ -276,6 +276,23 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_pad_template_get_documentation_caps(IntPtr raw);
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_pad_template_set_documentation_caps(IntPtr raw, IntPtr caps);
+
+		public Gst.Caps DocumentationCaps { 
+			get {
+				IntPtr raw_ret = gst_pad_template_get_documentation_caps(Handle);
+				Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+				return ret;
+			}
+			set {
+				gst_pad_template_set_documentation_caps(Handle, value == null ? IntPtr.Zero : value.Handle);
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_template_pad_created(IntPtr raw, IntPtr pad);
 
 		public void PadCreated(Gst.Pad pad) {
@@ -337,8 +354,16 @@ namespace Gst {
 								, -1
 								, (uint) Marshal.SizeOf(typeof(GLib.GType)) // ABI.abi.gtype
 								, "caps"
-								, null
+								, "ABI.abi.documentation_caps"
 								, (long) Marshal.OffsetOf(typeof(GstPadTemplate_ABI_abi_gtypeAlign), "ABI_abi_gtype")
+								, 0
+								),
+							new GLib.AbiField("ABI.abi.documentation_caps"
+								, -1
+								, (uint) Marshal.SizeOf(typeof(IntPtr)) // ABI.abi.documentation_caps
+								, "ABI.abi.gtype"
+								, null
+								, (uint) Marshal.SizeOf(typeof(IntPtr))
 								, 0
 								),
 						// End ABI.abi
@@ -347,7 +372,7 @@ namespace Gst {
 							, -1
 							, new List<List<string>>() {  // union ABI
 						new List<string>() {"ABI._gst_reserved"},
-						new List<string>() {"ABI.abi.gtype"}
+						new List<string>() {"ABI.abi.gtype","ABI.abi.documentation_caps"}
 					  }
 							, "caps"
 							, null

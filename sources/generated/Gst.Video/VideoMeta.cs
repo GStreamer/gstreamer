@@ -34,6 +34,7 @@ namespace Gst.Video {
 		public int[] Stride;
 		private IntPtr _map;
 		private IntPtr _unmap;
+		public Gst.Video.VideoAlignment Alignment;
 
 		public static Gst.Video.VideoMeta Zero = new Gst.Video.VideoMeta ();
 
@@ -41,6 +42,34 @@ namespace Gst.Video {
 			if (raw == IntPtr.Zero)
 				return Gst.Video.VideoMeta.Zero;
 			return (Gst.Video.VideoMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoMeta));
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_meta_get_plane_height(IntPtr raw, out uint plane_height);
+
+		public bool GetPlaneHeight(out uint plane_height) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_video_meta_get_plane_height(this_as_native, out plane_height);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_meta_get_plane_size(IntPtr raw, out UIntPtr plane_size);
+
+		public bool GetPlaneSize(out ulong plane_size) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			UIntPtr native_plane_size;
+			bool raw_ret = gst_video_meta_get_plane_size(this_as_native, out native_plane_size);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			plane_size = (ulong) native_plane_size;
+			return ret;
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -55,6 +84,21 @@ namespace Gst.Video {
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			Marshal.FreeHGlobal (native_info);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_meta_set_alignment(IntPtr raw, IntPtr alignment);
+
+		public bool SetAlignment(Gst.Video.VideoAlignment alignment) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_alignment = GLib.Marshaller.StructureToPtrAlloc (alignment);
+			bool raw_ret = gst_video_meta_set_alignment(this_as_native, native_alignment);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_alignment);
 			return ret;
 		}
 
@@ -91,7 +135,7 @@ namespace Gst.Video {
 
 		public bool Equals (VideoMeta other)
 		{
-			return true && Meta.Equals (other.Meta) && Buffer.Equals (other.Buffer) && Flags.Equals (other.Flags) && Format.Equals (other.Format) && Id.Equals (other.Id) && Width.Equals (other.Width) && Height.Equals (other.Height) && NPlanes.Equals (other.NPlanes) && Offset.Equals (other.Offset) && Stride.Equals (other.Stride) && _map.Equals (other._map) && _unmap.Equals (other._unmap);
+			return true && Meta.Equals (other.Meta) && Buffer.Equals (other.Buffer) && Flags.Equals (other.Flags) && Format.Equals (other.Format) && Id.Equals (other.Id) && Width.Equals (other.Width) && Height.Equals (other.Height) && NPlanes.Equals (other.NPlanes) && Offset.Equals (other.Offset) && Stride.Equals (other.Stride) && _map.Equals (other._map) && _unmap.Equals (other._unmap) && Alignment.Equals (other.Alignment);
 		}
 
 		public override bool Equals (object other)
@@ -101,7 +145,7 @@ namespace Gst.Video {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode () ^ Buffer.GetHashCode () ^ Flags.GetHashCode () ^ Format.GetHashCode () ^ Id.GetHashCode () ^ Width.GetHashCode () ^ Height.GetHashCode () ^ NPlanes.GetHashCode () ^ Offset.GetHashCode () ^ Stride.GetHashCode () ^ _map.GetHashCode () ^ _unmap.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode () ^ Buffer.GetHashCode () ^ Flags.GetHashCode () ^ Format.GetHashCode () ^ Id.GetHashCode () ^ Width.GetHashCode () ^ Height.GetHashCode () ^ NPlanes.GetHashCode () ^ Offset.GetHashCode () ^ Stride.GetHashCode () ^ _map.GetHashCode () ^ _unmap.GetHashCode () ^ Alignment.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

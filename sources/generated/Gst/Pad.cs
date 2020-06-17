@@ -533,6 +533,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_pad_get_single_internal_link(IntPtr raw);
+
+		public Gst.Pad SingleInternalLink { 
+			get {
+				IntPtr raw_ret = gst_pad_get_single_internal_link(Handle);
+				Gst.Pad ret = GLib.Object.GetObject(raw_ret, true) as Gst.Pad;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_sticky_event(IntPtr raw, int event_type, uint idx);
 
 		public Gst.Event GetStickyEvent(Gst.EventType event_type, uint idx) {

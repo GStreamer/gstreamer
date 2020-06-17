@@ -88,6 +88,15 @@ namespace Gst.Net {
 		}
 
 		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_net_utils_set_socket_tos(IntPtr socket, int qos_dscp);
+
+		public static bool NetUtilsSetSocketTos(GLib.Socket socket, int qos_dscp) {
+			bool raw_ret = gst_net_utils_set_socket_tos(socket == null ? IntPtr.Zero : socket.Handle, qos_dscp);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_ptp_deinit();
 
 		public static void PtpDeinit() {

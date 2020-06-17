@@ -172,6 +172,10 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
+		public void Init(uint fps_n, uint fps_d, Gst.Video.VideoTimeCodeFlags flags, uint hours, uint minutes, uint seconds, uint frames, uint field_count) {
+			Init (fps_n, fps_d, null, flags, hours, minutes, seconds, frames, field_count);
+		}
+
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_time_code_init_from_date_time(IntPtr raw, uint fps_n, uint fps_d, IntPtr dt, int flags, uint field_count);
 

@@ -220,11 +220,29 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_date_time_new_from_unix_epoch_local_time_usecs(long usecs);
+
+		public static DateTime NewFromUnixEpochLocalTimeUsecs(long usecs)
+		{
+			DateTime result = new DateTime (gst_date_time_new_from_unix_epoch_local_time_usecs(usecs));
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_date_time_new_from_unix_epoch_utc(long secs);
 
 		public static DateTime NewFromUnixEpochUtc(long secs)
 		{
 			DateTime result = new DateTime (gst_date_time_new_from_unix_epoch_utc(secs));
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_date_time_new_from_unix_epoch_utc_usecs(long usecs);
+
+		public static DateTime NewFromUnixEpochUtcUsecs(long usecs)
+		{
+			DateTime result = new DateTime (gst_date_time_new_from_unix_epoch_utc_usecs(usecs));
 			return result;
 		}
 

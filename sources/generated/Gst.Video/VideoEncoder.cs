@@ -18,6 +18,24 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_video_encoder_get_min_force_key_unit_interval(IntPtr raw);
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_encoder_set_min_force_key_unit_interval(IntPtr raw, ulong interval);
+
+		[GLib.Property ("min-force-key-unit-interval")]
+		public ulong MinForceKeyUnitInterval {
+			get  {
+				ulong raw_ret = gst_video_encoder_get_min_force_key_unit_interval(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_video_encoder_set_min_force_key_unit_interval(Handle, value);
+			}
+		}
+
 		[GLib.Property ("qos")]
 		public bool Qos {
 			get {
@@ -1358,6 +1376,17 @@ namespace Gst.Video {
 		public Gst.FlowReturn FinishFrame(Gst.Video.VideoCodecFrame frame) {
 			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
 			int raw_ret = gst_video_encoder_finish_frame(Handle, native_frame);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_encoder_finish_subframe(IntPtr raw, IntPtr frame);
+
+		public Gst.FlowReturn FinishSubframe(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			int raw_ret = gst_video_encoder_finish_subframe(Handle, native_frame);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			Marshal.FreeHGlobal (native_frame);
 			return ret;

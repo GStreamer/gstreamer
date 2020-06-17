@@ -126,6 +126,51 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_segment);
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_sample_ref(IntPtr raw);
+
+		protected override void Ref (IntPtr raw)
+		{
+			if (!Owned) {
+				gst_sample_ref (raw);
+				Owned = true;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_sample_unref(IntPtr raw);
+
+		protected override void Unref (IntPtr raw)
+		{
+			if (Owned) {
+				gst_sample_unref (raw);
+				Owned = false;
+			}
+		}
+
+		class FinalizerInfo {
+			IntPtr handle;
+
+			public FinalizerInfo (IntPtr handle)
+			{
+				this.handle = handle;
+			}
+
+			public bool Handler ()
+			{
+				gst_sample_unref (handle);
+				return false;
+			}
+		}
+
+		~Sample ()
+		{
+			if (!Owned)
+				return;
+			FinalizerInfo info = new FinalizerInfo (Handle);
+			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _abi_info = null;

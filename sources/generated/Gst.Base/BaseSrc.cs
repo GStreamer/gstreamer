@@ -1568,6 +1568,15 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_base_src_negotiate(IntPtr raw);
+
+		public bool Negotiate() {
+			bool raw_ret = gst_base_src_negotiate(Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_src_new_seamless_segment(IntPtr raw, long start, long stop, long time);
 
 		public bool NewSeamlessSegment(long start, long stop, long time) {

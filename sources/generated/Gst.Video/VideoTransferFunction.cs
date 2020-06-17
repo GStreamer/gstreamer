@@ -23,6 +23,9 @@ namespace Gst.Video {
 		Log316 = 10,
 		Bt202012 = 11,
 		Adobergb = 12,
+		Bt202010 = 13,
+		Smpte2084 = 14,
+		AribStdB67 = 15,
 	}
 
 	internal class VideoTransferFunctionGType {

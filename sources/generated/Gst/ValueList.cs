@@ -83,6 +83,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_value_list_init(IntPtr value, uint prealloc);
+
+		public static GLib.Value Init(GLib.Value value, uint prealloc) {
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			IntPtr raw_ret = gst_value_list_init(native_value, prealloc);
+			GLib.Value ret = (GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (GLib.Value));
+			Marshal.FreeHGlobal (native_value);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_value_list_merge(IntPtr dest, IntPtr value1, IntPtr value2);
 
 		public static GLib.Value Merge(GLib.Value value1, GLib.Value value2) {

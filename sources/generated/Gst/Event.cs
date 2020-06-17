@@ -118,6 +118,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_event_has_name_id(IntPtr raw, uint name);
+
+		public bool HasNameId(uint name) {
+			bool raw_ret = gst_event_has_name_id(Handle, name);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_buffer_size(IntPtr raw, out int format, out long minsize, out long maxsize, out bool async);
 
 		public void ParseBufferSize(out Gst.Format format, out long minsize, out long maxsize, out bool async) {
@@ -160,6 +169,22 @@ namespace Gst {
 			bool raw_ret = gst_event_parse_group_id(Handle, out group_id);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_parse_instant_rate_change(IntPtr raw, out double rate_multiplier, out int new_flags);
+
+		public void ParseInstantRateChange(out double rate_multiplier, out Gst.SegmentFlags new_flags) {
+			int native_new_flags;
+			gst_event_parse_instant_rate_change(Handle, out rate_multiplier, out native_new_flags);
+			new_flags = (Gst.SegmentFlags) native_new_flags;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_parse_instant_rate_sync_time(IntPtr raw, out double rate_multiplier, out ulong running_time, out ulong upstream_running_time);
+
+		public void ParseInstantRateSyncTime(out double rate_multiplier, out ulong running_time, out ulong upstream_running_time) {
+			gst_event_parse_instant_rate_sync_time(Handle, out rate_multiplier, out running_time, out upstream_running_time);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -466,6 +491,24 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_event_new_instant_rate_change(double rate_multiplier, int new_flags);
+
+		public static Event NewInstantRateChange(double rate_multiplier, Gst.SegmentFlags new_flags)
+		{
+			Event result = new Event (gst_event_new_instant_rate_change(rate_multiplier, (int) new_flags));
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_event_new_instant_rate_sync_time(double rate_multiplier, ulong running_time, ulong upstream_running_time);
+
+		public static Event NewInstantRateSyncTime(double rate_multiplier, ulong running_time, ulong upstream_running_time)
+		{
+			Event result = new Event (gst_event_new_instant_rate_sync_time(rate_multiplier, running_time, upstream_running_time));
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_latency(ulong latency);
 
 		public static Event NewLatency(ulong latency)
@@ -632,6 +675,51 @@ namespace Gst {
 			Event result = new Event (gst_event_new_toc_select(native_uid));
 			GLib.Marshaller.Free (native_uid);
 			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_event_ref(IntPtr raw);
+
+		protected override void Ref (IntPtr raw)
+		{
+			if (!Owned) {
+				gst_event_ref (raw);
+				Owned = true;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_unref(IntPtr raw);
+
+		protected override void Unref (IntPtr raw)
+		{
+			if (Owned) {
+				gst_event_unref (raw);
+				Owned = false;
+			}
+		}
+
+		class FinalizerInfo {
+			IntPtr handle;
+
+			public FinalizerInfo (IntPtr handle)
+			{
+				this.handle = handle;
+			}
+
+			public bool Handler ()
+			{
+				gst_event_unref (handle);
+				return false;
+			}
+		}
+
+		~Event ()
+		{
+			if (!Owned)
+				return;
+			FinalizerInfo info = new FinalizerInfo (Handle);
+			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

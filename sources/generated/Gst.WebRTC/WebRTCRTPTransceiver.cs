@@ -18,6 +18,21 @@ namespace Gst.WebRTC {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("direction")]
+		public Gst.WebRTC.WebRTCRTPTransceiverDirection Direction {
+			get {
+				GLib.Value val = GetProperty ("direction");
+				Gst.WebRTC.WebRTCRTPTransceiverDirection ret = (Gst.WebRTC.WebRTCRTPTransceiverDirection) (Enum) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value((Enum) value);
+				SetProperty("direction", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("mlineindex")]
 		public uint Mlineindex {
 			get {
@@ -93,7 +108,7 @@ namespace Gst.WebRTC {
 			}
 		}
 
-		public Gst.WebRTC.WebRTCRTPTransceiverDirection Direction {
+		public Gst.WebRTC.WebRTCRTPTransceiverDirection DirectionField {
 			get {
 				unsafe {
 					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("direction"));

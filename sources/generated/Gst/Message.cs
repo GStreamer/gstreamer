@@ -276,6 +276,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_parse_instant_rate_request(IntPtr raw, out double rate_multiplier);
+
+		public double ParseInstantRateRequest() {
+			double rate_multiplier;
+			gst_message_parse_instant_rate_request(Handle, out rate_multiplier);
+			return rate_multiplier;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_parse_new_clock(IntPtr raw, out IntPtr clock);
 
 		public Gst.Clock ParseNewClock() {
@@ -747,6 +756,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_new_instant_rate_request(IntPtr src, double rate_multiplier);
+
+		public static Message NewInstantRateRequest(Gst.Object src, double rate_multiplier)
+		{
+			Message result = new Message (gst_message_new_instant_rate_request(src == null ? IntPtr.Zero : src.Handle, rate_multiplier));
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_latency(IntPtr src);
 
 		public static Message NewLatency(Gst.Object src)
@@ -982,6 +1000,51 @@ namespace Gst {
 			Message result = new Message (gst_message_new_warning_with_details(src == null ? IntPtr.Zero : src.Handle, error, native_debug, details == null ? IntPtr.Zero : details.Handle));
 			GLib.Marshaller.Free (native_debug);
 			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_ref(IntPtr raw);
+
+		protected override void Ref (IntPtr raw)
+		{
+			if (!Owned) {
+				gst_message_ref (raw);
+				Owned = true;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_unref(IntPtr raw);
+
+		protected override void Unref (IntPtr raw)
+		{
+			if (Owned) {
+				gst_message_unref (raw);
+				Owned = false;
+			}
+		}
+
+		class FinalizerInfo {
+			IntPtr handle;
+
+			public FinalizerInfo (IntPtr handle)
+			{
+				this.handle = handle;
+			}
+
+			public bool Handler ()
+			{
+				gst_message_unref (handle);
+				return false;
+			}
+		}
+
+		~Message ()
+		{
+			if (!Owned)
+				return;
+			FinalizerInfo info = new FinalizerInfo (Handle);
+			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

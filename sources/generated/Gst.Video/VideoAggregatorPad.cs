@@ -18,6 +18,21 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("max-last-buffer-repeat")]
+		public ulong MaxLastBufferRepeat {
+			get {
+				GLib.Value val = GetProperty ("max-last-buffer-repeat");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("max-last-buffer-repeat", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("repeat-after-eos")]
 		public bool RepeatAfterEos {
 			get {

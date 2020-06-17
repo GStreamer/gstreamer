@@ -159,6 +159,25 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_debug_log_get_line(IntPtr category, int level, IntPtr file, IntPtr function, int line, IntPtr _object, IntPtr message);
+
+		public static string LogGetLine(Gst.DebugCategory category, Gst.DebugLevel level, string file, string function, int line, GLib.Object _object, Gst.DebugMessage message) {
+			IntPtr native_category = GLib.Marshaller.StructureToPtrAlloc (category);
+			IntPtr native_file = GLib.Marshaller.StringToPtrGStrdup (file);
+			IntPtr native_function = GLib.Marshaller.StringToPtrGStrdup (function);
+			IntPtr raw_ret = gst_debug_log_get_line(native_category, (int) level, native_file, native_function, line, _object == null ? IntPtr.Zero : _object.Handle, message == null ? IntPtr.Zero : message.Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			Marshal.FreeHGlobal (native_category);
+			GLib.Marshaller.Free (native_file);
+			GLib.Marshaller.Free (native_function);
+			return ret;
+		}
+
+		public static string LogGetLine(Gst.DebugCategory category, Gst.DebugLevel level, string file, string function, int line, Gst.DebugMessage message) {
+			return LogGetLine (category, level, file, function, line, null, message);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_debug_print_stack_trace();
 
 		public static void PrintStackTrace() {

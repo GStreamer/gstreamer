@@ -810,6 +810,40 @@ namespace Gst {
 			return result;
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_query_unref(IntPtr raw);
+
+		protected override void Unref (IntPtr raw)
+		{
+			if (Owned) {
+				gst_query_unref (raw);
+				Owned = false;
+			}
+		}
+
+		class FinalizerInfo {
+			IntPtr handle;
+
+			public FinalizerInfo (IntPtr handle)
+			{
+				this.handle = handle;
+			}
+
+			public bool Handler ()
+			{
+				gst_query_unref (handle);
+				return false;
+			}
+		}
+
+		~Query ()
+		{
+			if (!Owned)
+				return;
+			FinalizerInfo info = new FinalizerInfo (Handle);
+			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _abi_info = null;

@@ -11,6 +11,7 @@ namespace Gst {
 	[GLib.GType (typeof (Gst.StackTraceFlagsGType))]
 	public enum StackTraceFlags {
 
+		None = 0,
 		Full = 1,
 	}
 

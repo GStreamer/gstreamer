@@ -166,6 +166,18 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_base_sink_get_stats(IntPtr raw);
+
+		[GLib.Property ("stats")]
+		public Gst.Structure Stats {
+			get  {
+				IntPtr raw_ret = gst_base_sink_get_stats(Handle);
+				Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+				return ret;
+			}
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_sink_get_sync(IntPtr raw);
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

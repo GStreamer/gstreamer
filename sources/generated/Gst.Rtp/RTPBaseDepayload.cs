@@ -18,6 +18,21 @@ namespace Gst.Rtp {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("max-reorder")]
+		public int MaxReorder {
+			get {
+				GLib.Value val = GetProperty ("max-reorder");
+				int ret = (int) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("max-reorder", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("source-info")]
 		public bool SourceInfo {
 			get {

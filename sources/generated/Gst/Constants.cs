@@ -58,7 +58,9 @@ namespace Gst {
 		public const int MAP_READWRITE = 3;
 		public const string META_TAG_MEMORY_STR = @"memory";
 		public const long MSECOND = 1000000;
+		public const int PARAM_CONDITIONALLY_AVAILABLE = 16384;
 		public const int PARAM_CONTROLLABLE = 512;
+		public const int PARAM_DOC_SHOW_DEFAULT = 8192;
 		public const int PARAM_MUTABLE_PAUSED = 2048;
 		public const int PARAM_MUTABLE_PLAYING = 4096;
 		public const int PARAM_MUTABLE_READY = 1024;
@@ -70,6 +72,7 @@ namespace Gst {
 		public const int QUERY_TYPE_BOTH = 3;
 		public const long SECOND = 1000000000;
 		public const string SEGMENT_FORMAT = @"paB";
+		public const int SEGMENT_INSTANT_FLAGS = 912;
 		public const int SEQNUM_INVALID = 0;
 		public const string STIME_FORMAT = @"c%";
 		public const string TAG_ALBUM = @"album";

@@ -18,6 +18,21 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("qos")]
+		public bool Qos {
+			get {
+				GLib.Value val = GetProperty ("qos");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("qos", val);
+				val.Dispose ();
+			}
+		}
+
 		static OpenNativeDelegate Open_cb_delegate;
 		static OpenNativeDelegate OpenVMCallback {
 			get {

@@ -1350,18 +1350,28 @@ namespace Gst.Audio {
 		static extern int gst_audio_decoder_finish_frame(IntPtr raw, IntPtr buf, int frames);
 
 		public Gst.FlowReturn FinishFrame(Gst.Buffer buf, int frames) {
+			buf.Owned = false;
 			int raw_ret = gst_audio_decoder_finish_frame(Handle, buf == null ? IntPtr.Zero : buf.Handle, frames);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;
+		}
+
+		public Gst.FlowReturn FinishFrame(int frames) {
+			return FinishFrame (null, frames);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_decoder_finish_subframe(IntPtr raw, IntPtr buf);
 
 		public Gst.FlowReturn FinishSubframe(Gst.Buffer buf) {
+			buf.Owned = false;
 			int raw_ret = gst_audio_decoder_finish_subframe(Handle, buf == null ? IntPtr.Zero : buf.Handle);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;
+		}
+
+		public Gst.FlowReturn FinishSubframe() {
+			return FinishSubframe (null);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

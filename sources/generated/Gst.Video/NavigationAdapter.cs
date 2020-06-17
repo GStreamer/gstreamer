@@ -171,6 +171,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_mouse_scroll_event(IntPtr evnt, out double x, out double y, out double delta_x, out double delta_y);
+
+		public static bool EventParseMouseScrollEvent(Gst.Event evnt, out double x, out double y, out double delta_x, out double delta_y) {
+			bool raw_ret = gst_navigation_event_parse_mouse_scroll_event(evnt == null ? IntPtr.Zero : evnt.Handle, out x, out y, out delta_x, out delta_y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_navigation_message_get_type(IntPtr message);
 
 		public static Gst.Video.NavigationMessageType MessageGetType(Gst.Message message) {
@@ -350,6 +359,13 @@ namespace Gst.Video {
 			IntPtr native_evnt = GLib.Marshaller.StringToPtrGStrdup (evnt);
 			gst_navigation_send_mouse_event(Handle, native_evnt, button, x, y);
 			GLib.Marshaller.Free (native_evnt);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_navigation_send_mouse_scroll_event(IntPtr raw, double x, double y, double delta_x, double delta_y);
+
+		public void SendMouseScrollEvent(double x, double y, double delta_x, double delta_y) {
+			gst_navigation_send_mouse_scroll_event(Handle, x, y, delta_x, delta_y);
 		}
 
 #endregion

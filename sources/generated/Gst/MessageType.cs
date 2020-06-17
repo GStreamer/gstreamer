@@ -50,7 +50,8 @@ namespace Gst {
 		StreamCollection = 2147483652,
 		StreamsSelected = 2147483653,
 		Redirect = 2147483654,
-		DeviceChanged = 2147483654,
+		DeviceChanged = 2147483655,
+		InstantRateRequest = 2147483656,
 		Any = 4294967295,
 	}
 

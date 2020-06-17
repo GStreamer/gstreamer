@@ -82,6 +82,21 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_rtsp_url_get_request_uri_with_control(IntPtr raw, IntPtr control_path);
+
+		public string GetRequestUriWithControl(string control_path) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_control_path = GLib.Marshaller.StringToPtrGStrdup (control_path);
+			IntPtr raw_ret = gst_rtsp_url_get_request_uri_with_control(this_as_native, native_control_path);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			GLib.Marshaller.Free (native_control_path);
+			return ret;
+		}
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_url_set_port(IntPtr raw, ushort port);
 
 		public Gst.Rtsp.RTSPResult SetPort(ushort port) {

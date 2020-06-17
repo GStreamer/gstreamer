@@ -12,6 +12,7 @@ namespace Gst.Video {
 		void SendEvent(Gst.Structure structure);
 		void SendKeyEvent(string evnt, string key);
 		void SendMouseEvent(string evnt, int button, double x, double y);
+		void SendMouseScrollEvent(double x, double y, double delta_x, double delta_y);
 	}
 
 	[GLib.GInterface (typeof (NavigationAdapter))]
