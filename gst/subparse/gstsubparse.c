@@ -1601,7 +1601,7 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
   gchar *data;
   GstSubParseFormat format;
 
-  if (strlen (self->textbuf->str) < 30) {
+  if (strlen (self->textbuf->str) < 6) {
     GST_DEBUG ("File too small to be a subtitles file");
     return NULL;
   }
