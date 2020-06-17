@@ -335,18 +335,42 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
-have_nasm=false
+have_nasm = false
 # FIXME: nasm path needs testing on non-Linux, esp. Windows
 host_cpu = host_machine.cpu_family()
 if host_cpu == 'x86_64'
   if cc.get_id() == 'msvc'
     message('Nasm disabled on MSVC')
   else
-    nasm = find_program('nasm', native: true, version : '>= 2.13', required: get_option('asm'))
+    asm_option = get_option('asm')
+    nasm = find_program('nasm', native: true, required: asm_option)
     if nasm.found()
-      message('Nasm found on x86-64')
-      cdata.set('HAVE_NASM', 1)
-      have_nasm = true
+      # We can't use the version: kwarg for find_program because old versions
+      # of nasm don't support --version
+      ret = run_command(nasm, '-v')
+      if ret.returncode() == 0
+        nasm_version = ret.stdout().strip().split()[2]
+        nasm_req = '>=2.13'
+        if nasm_version.version_compare(nasm_req)
+          message('nasm found on x86-64')
+          cdata.set('HAVE_NASM', 1)
+          have_nasm = true
+        else
+          if asm_option.enabled()
+            error('asm option is enabled, and nasm @0@ was found, but @1@ is required'.format(nasm_version, nasm_req))
+          endif
+          message('nasm @0@ was found, but @1@ is required'.format(nasm_version, nasm_req))
+        endif
+      else
+        if asm_option.enabled()
+          error('asm option is enabled, but nasm is not usable: @0@\n@1@'.format(ret.stdout(), ret.stderr()))
+        endif
+        message('nasm was found, but it\'s not usable')
+      endif
+      # Unset nasm to not be 'found'
+      if not have_nasm
+        nasm = disabler()
+      endif
     endif
   endif
 endif
