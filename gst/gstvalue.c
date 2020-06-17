@@ -2473,13 +2473,13 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
 
   ret = _priv_gst_value_parse_value (s, &s, &value1, type, NULL);
   if (!ret)
-    return FALSE;
+    goto err;
 
   while (g_ascii_isspace (*s))
     s++;
 
   if (*s != ',')
-    return FALSE;
+    goto err;
   s++;
 
   while (g_ascii_isspace (*s))
@@ -2487,7 +2487,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
 
   ret = _priv_gst_value_parse_value (s, &s, &value2, type, NULL);
   if (!ret)
-    return FALSE;
+    goto err;
 
   while (g_ascii_isspace (*s))
     s++;
@@ -2503,7 +2503,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
 
       ret = _priv_gst_value_parse_value (s, &s, &value3, type, NULL);
       if (!ret)
-        return FALSE;
+        goto err;
 
       while (g_ascii_isspace (*s))
         s++;
@@ -2513,7 +2513,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
   }
 
   if (*s != ']')
-    return FALSE;
+    goto err;
   s++;
 
   if (G_VALUE_TYPE (&value1) != G_VALUE_TYPE (&value2))
@@ -2555,11 +2555,18 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
     g_value_init (value, range_type);
     gst_value_set_fraction_range (value, &value1, &value2);
   } else {
-    return FALSE;
+    goto err;
   }
 
   *after = s;
   return TRUE;
+
+err:
+  g_value_unset (value);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+  g_value_unset (&value3);
+  return FALSE;
 }
 
 static gboolean
