@@ -750,7 +750,7 @@ _prune_sent_packets (RTPTWCCManager * twcc, GArray * twcc_packets)
 
   last_idx = last->seqnum - first->seqnum;
 
-  if (last_idx >= twcc->sent_packets->len)
+  if (last_idx < twcc->sent_packets->len)
     g_array_remove_range (twcc->sent_packets, 0, last_idx);
 }
 
