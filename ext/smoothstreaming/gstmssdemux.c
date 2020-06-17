@@ -358,6 +358,14 @@ _create_pad (GstMssDemux * mssdemux, GstMssStream * manifeststream)
   GstPad *srcpad = NULL;
   GstMssStreamType streamtype;
   GstPadTemplate *tmpl = NULL;
+  GstCaps *caps = NULL;
+
+  caps = gst_mss_stream_get_caps (manifeststream);
+
+  if (!caps) {
+    GST_WARNING_OBJECT (mssdemux, "not creating pad for unrecognized stream");
+    return NULL;
+  }
 
   streamtype = gst_mss_stream_get_type (manifeststream);
   GST_DEBUG_OBJECT (mssdemux, "Found stream of type: %s",
