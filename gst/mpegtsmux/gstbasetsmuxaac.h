@@ -85,7 +85,13 @@
 
 #include "gstbasetsmux.h"
 
-GstBuffer * gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsMuxPad * pad,
+GstBuffer * gst_base_ts_mux_prepare_aac_mpeg4 (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
+
+
+GstBuffer * gst_base_ts_mux_aac_mpeg2_make_codec_data (GstBaseTsMux * mux, const GstCaps *caps);
+GstBuffer * gst_base_ts_mux_prepare_aac_mpeg2 (GstBuffer * buf, GstBaseTsMuxPad * pad,
+    GstBaseTsMux * mux);
+
 
 #endif /* __BASETSMUX_AAC_H__ */

@@ -84,44 +84,40 @@
 #include "config.h"
 #endif
 
+#include <gst/pbutils/pbutils.h>
+
 #include "gstbasetsmuxaac.h"
 #include <string.h>
 
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
-GstBuffer *
-gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsMuxPad * pad,
-    GstBaseTsMux * mux)
+static GstBuffer *
+gst_base_ts_mux_prepare_aac_adts (GstBuffer * buf,
+    GstBaseTsMux * mux, gboolean is_mpeg2, guint8 obj_type_profile,
+    guint8 rate_idx, guint8 channels)
 {
   guint8 adts_header[7] = { 0, };
   gsize out_size = gst_buffer_get_size (buf) + 7;
   GstBuffer *out_buf = gst_buffer_new_and_alloc (out_size);
   gsize out_offset = 0;
-  guint8 rate_idx = 0, channels = 0, obj_type = 0;
-  GstMapInfo codec_data_map;
   GstMapInfo buf_map;
 
+  /* Generate ADTS header */
   GST_DEBUG_OBJECT (mux, "Preparing AAC buffer for output");
 
   gst_buffer_copy_into (out_buf, buf,
       GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
 
-  gst_buffer_map (pad->codec_data, &codec_data_map, GST_MAP_READ);
+  GST_DEBUG_OBJECT (mux, "Rate index %u, channels %u, object type/profile %u",
+      rate_idx, channels, obj_type_profile);
 
-  /* Generate ADTS header */
-  obj_type = GST_READ_UINT8 (codec_data_map.data) >> 3;
-  rate_idx = (GST_READ_UINT8 (codec_data_map.data) & 0x7) << 1;
-  rate_idx |= (GST_READ_UINT8 (codec_data_map.data + 1) & 0x80) >> 7;
-  channels = (GST_READ_UINT8 (codec_data_map.data + 1) & 0x78) >> 3;
-  GST_DEBUG_OBJECT (mux, "Rate index %u, channels %u, object type %u", rate_idx,
-      channels, obj_type);
   /* Sync point over a full byte */
   adts_header[0] = 0xFF;
   /* Sync point continued over first 4 bits + static 4 bits
    * (ID, layer, protection)*/
-  adts_header[1] = 0xF1;
-  /* Object type over first 2 bits */
-  adts_header[2] = (obj_type - 1) << 6;
+  adts_header[1] = 0xF1 | (is_mpeg2 ? 0x8 : 0x0);
+  /* Object type (MPEG4) / Profile (MPEG2) over first 2 bits */
+  adts_header[2] = (obj_type_profile - 1) << 6;
   /* rate index over next 4 bits */
   adts_header[2] |= (rate_idx << 2);
   /* channels over last 2 bits */
@@ -149,8 +145,119 @@ gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsMuxPad * pad,
   /* Now copy complete frame */
   gst_buffer_fill (out_buf, out_offset, buf_map.data, buf_map.size);
 
-  gst_buffer_unmap (pad->codec_data, &codec_data_map);
   gst_buffer_unmap (buf, &buf_map);
 
   return out_buf;
+}
+
+/* Constructs a dummy codec_data buffer for generating ADTS headers
+ * from raw MPEG-2 AAC input, where we don't expect codec_data in the caps,
+ * and need to get the info from the profile/channels/rate fields */
+GstBuffer *
+gst_base_ts_mux_aac_mpeg2_make_codec_data (GstBaseTsMux * mux,
+    const GstCaps * caps)
+{
+  const GstStructure *s;
+  const gchar *profile_str;
+  gint channels, rate;
+  guint8 profile_idx, channel_idx;
+  gint rate_idx;
+  GstMapInfo map;
+  GstBuffer *ret;
+
+  s = gst_caps_get_structure (caps, 0);
+  profile_str = gst_structure_get_string (s, "profile");
+  if (G_UNLIKELY (profile_str == NULL)) {
+    GST_ERROR_OBJECT (mux, "AAC caps do not contain profile");
+    return NULL;
+  }
+
+  if (G_UNLIKELY (!gst_structure_get_int (s, "rate", &rate))) {
+    GST_ERROR_OBJECT (mux, "AAC caps do not contain a sample rate");
+    return NULL;
+  }
+  if (G_UNLIKELY (!gst_structure_get_int (s, "channels", &channels))) {
+    GST_ERROR_OBJECT (mux, "AAC caps do not contain channel count");
+    return NULL;
+  }
+
+  if (g_strcmp0 (profile_str, "main") == 0) {
+    profile_idx = (guint8) 0U;
+  } else if (g_strcmp0 (profile_str, "lc") == 0) {
+    profile_idx = (guint8) 1U;
+  } else if (g_strcmp0 (profile_str, "ssr") == 0) {
+    profile_idx = (guint8) 2U;
+  } else {
+    GST_ERROR_OBJECT (mux, "Invalid profile %s for MPEG-2 AAC caps",
+        profile_str);
+    return NULL;
+  }
+
+  if (channels >= 1 && channels <= 6)   /* Mono up to & including 5.1 */
+    channel_idx = (guint8) channels;
+  else if (channels == 8)       /* 7.1 */
+    channel_idx = (guint8) 7U;
+  else {
+    GST_ERROR_OBJECT (mux, "Invalid channel count %d for MPEG-2 AAC caps",
+        channels);
+    return NULL;
+  }
+
+  rate_idx = gst_codec_utils_aac_get_index_from_sample_rate (rate);
+  if (rate_idx < 0) {
+    GST_ERROR_OBJECT (mux, "Invalid samplerate %d for MPEG-2 AAC caps", rate);
+    return NULL;
+  }
+
+  ret = gst_buffer_new_and_alloc (3);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  map.data[0] = profile_idx;
+  map.data[1] = (guint8) rate_idx;
+  map.data[2] = channel_idx;
+  gst_buffer_unmap (ret, &map);
+
+  return ret;
+}
+
+GstBuffer *
+gst_base_ts_mux_prepare_aac_mpeg4 (GstBuffer * buf, GstBaseTsMuxPad * pad,
+    GstBaseTsMux * mux)
+{
+  GstMapInfo codec_data_map;
+  guint8 rate_idx = 0, channels = 0, obj_type = 0;
+
+  g_return_val_if_fail (pad->codec_data != NULL, NULL);
+
+  gst_buffer_map (pad->codec_data, &codec_data_map, GST_MAP_READ);
+
+  obj_type = GST_READ_UINT8 (codec_data_map.data) >> 3;
+  rate_idx = (GST_READ_UINT8 (codec_data_map.data) & 0x7) << 1;
+  rate_idx |= (GST_READ_UINT8 (codec_data_map.data + 1) & 0x80) >> 7;
+  channels = (GST_READ_UINT8 (codec_data_map.data + 1) & 0x78) >> 3;
+  gst_buffer_unmap (pad->codec_data, &codec_data_map);
+
+  return gst_base_ts_mux_prepare_aac_adts (buf, mux, FALSE, obj_type, rate_idx,
+      channels);
+}
+
+GstBuffer *
+gst_base_ts_mux_prepare_aac_mpeg2 (GstBuffer * buf, GstBaseTsMuxPad * pad,
+    GstBaseTsMux * mux)
+{
+  GstMapInfo codec_data_map;
+  guint8 rate_idx = 0, channels = 0, profile_obj_type = 0;
+
+  g_return_val_if_fail (pad->codec_data != NULL, NULL);
+
+  /* Dummy codec data with 3 bytes of profile_idx, rate_idx, channel_idx */
+  gst_buffer_map (pad->codec_data, &codec_data_map, GST_MAP_READ);
+
+  profile_obj_type = GST_READ_UINT8 (codec_data_map.data);
+  rate_idx = GST_READ_UINT8 (codec_data_map.data + 1);
+  channels = GST_READ_UINT8 (codec_data_map.data + 2);
+
+  gst_buffer_unmap (pad->codec_data, &codec_data_map);
+
+  return gst_base_ts_mux_prepare_aac_adts (buf, mux, TRUE, profile_obj_type,
+      rate_idx, channels);
 }

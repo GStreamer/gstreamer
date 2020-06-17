@@ -389,6 +389,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   guint32 max_rate = 0;
   guint8 color_spec = 0;
   j2k_private_data *private_data = NULL;
+  const gchar *stream_format = NULL;
 
   pad = GST_PAD (ts_pad);
   caps = gst_pad_get_current_caps (pad);
@@ -404,6 +405,8 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   value = gst_structure_get_value (s, "codec_data");
   if (value != NULL)
     codec_data = gst_value_get_buffer (value);
+
+  stream_format = gst_structure_get_string (s, "stream-format");
 
   if (strcmp (mt, "video/x-dirac") == 0) {
     st = TSMUX_ST_VIDEO_DIRAC;
@@ -426,23 +429,50 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
     }
 
     switch (mpegversion) {
-      case 1:
-        st = TSMUX_ST_AUDIO_MPEG1;
+      case 1:{
+        int mpegaudioversion = 1;       /* Assume mpegaudioversion=1 for backwards compatibility */
+        (void) gst_structure_get_int (s, "mpegaudioversion", &mpegaudioversion);
+
+        if (mpegaudioversion == 1)
+          st = TSMUX_ST_AUDIO_MPEG1;
+        else
+          st = TSMUX_ST_AUDIO_MPEG2;
         break;
-      case 2:
-        st = TSMUX_ST_AUDIO_MPEG2;
+      }
+      case 2:{
+        /* mpegversion=2 in GStreamer refers to MPEG-2 Part 7 audio,  */
+
+        st = TSMUX_ST_AUDIO_AAC;
+
+        /* Check the stream format. If raw, make dummy internal codec data from the caps */
+        if (g_strcmp0 (stream_format, "raw") == 0) {
+          ts_pad->codec_data =
+              gst_base_ts_mux_aac_mpeg2_make_codec_data (mux, caps);
+          ts_pad->prepare_func = gst_base_ts_mux_prepare_aac_mpeg2;
+          if (ts_pad->codec_data == NULL) {
+            GST_ERROR_OBJECT (mux, "Invalid or incomplete caps for MPEG-2 AAC");
+            goto not_negotiated;
+          }
+        }
         break;
+      }
       case 4:
       {
         st = TSMUX_ST_AUDIO_AAC;
-        if (codec_data) {       /* TODO - Check stream format - codec data should only come with RAW stream */
-          GST_DEBUG_OBJECT (pad,
-              "we have additional codec data (%" G_GSIZE_FORMAT " bytes)",
-              gst_buffer_get_size (codec_data));
-          ts_pad->codec_data = gst_buffer_ref (codec_data);
-          ts_pad->prepare_func = gst_base_ts_mux_prepare_aac;
-        } else {
-          ts_pad->codec_data = NULL;
+
+        /* Check the stream format. We need codec_data with RAW streams and mpegversion=4 */
+        if (g_strcmp0 (stream_format, "raw") == 0) {
+          if (codec_data) {
+            GST_DEBUG_OBJECT (pad,
+                "we have additional codec data (%" G_GSIZE_FORMAT " bytes)",
+                gst_buffer_get_size (codec_data));
+            ts_pad->codec_data = gst_buffer_ref (codec_data);
+            ts_pad->prepare_func = gst_base_ts_mux_prepare_aac_mpeg4;
+          } else {
+            ts_pad->codec_data = NULL;
+            GST_ERROR_OBJECT (mux, "Need codec_data for raw MPEG-4 AAC");
+            goto not_negotiated;
+          }
         }
         break;
       }
