@@ -464,7 +464,9 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   }
 
   interlace->switch_fields = FALSE;
-  if (gst_caps_can_intersect (caps, othercaps)) {
+  if (gst_caps_can_intersect (caps, othercaps) &&
+      interlace->pattern <= GST_INTERLACE_PATTERN_2_2 &&
+      GST_VIDEO_INFO_INTERLACE_MODE (&info) != GST_VIDEO_INTERLACE_MODE_MIXED) {
     /* FIXME: field-order is optional in the caps. This means that, if we're
      * in a non-telecine mode and we have TFF upstream and
      * top-field-first=FALSE in interlace (or the other way around), AND
