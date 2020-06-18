@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstfdkaac.h"
 #include "gstfdkaacenc.h"
 
 #include <gst/pbutils/pbutils.h>
@@ -54,199 +55,6 @@ enum
                     "64000, " \
                     "88200, " \
                     "96000"
-
-/* *INDENT-OFF* */
-static const struct
-{
-  gint channels;
-  CHANNEL_MODE mode;
-  GstAudioChannelPosition positions[8];
-} channel_layouts[] = {
-  {
-    /* MPEG 1: Mono */
-    1, MODE_1, {
-          GST_AUDIO_CHANNEL_POSITION_MONO}}, {
-    /* MPEG 2: Stereo */
-    2, MODE_2, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}}, {
-    /* MPEG 3: Stereo + Center */
-    3, MODE_1_2, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}}, {
-    /* MPEG 4: Stereo + Center + Rear center */
-    4, MODE_1_2_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, {
-    /* MPEG 5: 5.0 Surround */
-    5, MODE_1_2_2, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}}, {
-    5, MODE_1_2_2, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT}}, {
-    /* MPEG 5: 5.0 Surround with SIDE (ffmpeg produces this) */
-    5, MODE_1_2_2, {
-  GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}}, {
-    /* MPEG 6: 5.1 Surround */
-    6, MODE_1_2_2_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    6, MODE_1_2_2_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    /* MPEG 6: 5.1 Surround with SIDE (ffmpeg produces this) */
-    6, MODE_1_2_2_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    /* Note: 8-channel layouts might also have informal variants with
-     * SIDE instead of SURROUND, but they are more complicated. They
-     * can be added here if the need arises */
-    /* MPEG 7: SDDS for cinema */
-    8, MODE_1_2_2_2_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    8, MODE_1_2_2_2_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}
-#ifdef HAVE_FDK_AAC_2_0_0
-  , {
-    /* MPEG 11: 6.1 Surround */
-    7, MODE_6_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    7, MODE_6_1, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    /* MPEG 12: 7.1 Surround */
-    8, MODE_7_1_BACK, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    8, MODE_7_1_BACK, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    /* MPEG 14: 5.1.2 Surround */
-    8, MODE_7_1_TOP_FRONT, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1,
-          GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT}}, {
-    8, MODE_7_1_TOP_FRONT, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1,
-          GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT}}
-#endif
-#ifdef HAVE_FDK_AAC_0_1_4
-  , {
-    /* Non-standard PCE clone of mode 12 */
-    8, MODE_7_1_REAR_SURROUND, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    8, MODE_7_1_REAR_SURROUND, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    /* Non-standard PCE clone of mode 7 */
-    8, MODE_7_1_FRONT_CENTER, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
-    8, MODE_7_1_FRONT_CENTER, {
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_LFE1}}
-#endif
-};
-/* *INDENT-ON* */
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -347,25 +155,24 @@ gst_fdkaacenc_stop (GstAudioEncoder * enc)
 static GstCaps *
 gst_fdkaacenc_get_caps (GstAudioEncoder * enc, GstCaps * filter)
 {
+  const GstFdkAacChannelLayout *layout;
   GstCaps *res, *caps;
-  gint i;
 
   caps = gst_caps_new_empty ();
 
-  for (i = 0; i < G_N_ELEMENTS (channel_layouts); i++) {
+  for (layout = channel_layouts; layout->channels; layout++) {
     guint64 channel_mask;
     GstCaps *tmp =
         gst_caps_make_writable (gst_pad_get_pad_template_caps
         (GST_AUDIO_ENCODER_SINK_PAD (enc)));
 
-    if (channel_layouts[i].channels == 1) {
-      gst_caps_set_simple (tmp, "channels", G_TYPE_INT,
-          channel_layouts[i].channels, NULL);
+    if (layout->channels == 1) {
+      gst_caps_set_simple (tmp, "channels", G_TYPE_INT, layout->channels, NULL);
     } else {
-      gst_audio_channel_positions_to_mask (channel_layouts[i].positions,
-          channel_layouts[i].channels, FALSE, &channel_mask);
+      gst_audio_channel_positions_to_mask (layout->positions,
+          layout->channels, FALSE, &channel_mask);
       gst_caps_set_simple (tmp, "channels", G_TYPE_INT,
-          channel_layouts[i].channels, "channel-mask", GST_TYPE_BITMASK,
+          layout->channels, "channel-mask", GST_TYPE_BITMASK,
           channel_mask, NULL);
     }
 
@@ -450,29 +257,29 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     self->aac_positions = NULL;
   } else {
     guint64 in_channel_mask, out_channel_mask;
-    gint i;
+    const GstFdkAacChannelLayout *layout;
 
-    for (i = 0; i < G_N_ELEMENTS (channel_layouts); i++) {
-      if (channel_layouts[i].channels != GST_AUDIO_INFO_CHANNELS (info))
+    for (layout = channel_layouts; layout->channels; layout++) {
+      if (layout->channels != GST_AUDIO_INFO_CHANNELS (info))
         continue;
 
       gst_audio_channel_positions_to_mask (&GST_AUDIO_INFO_POSITION (info, 0),
           GST_AUDIO_INFO_CHANNELS (info), FALSE, &in_channel_mask);
-      gst_audio_channel_positions_to_mask (channel_layouts[i].positions,
-          channel_layouts[i].channels, FALSE, &out_channel_mask);
+      gst_audio_channel_positions_to_mask (layout->positions,
+          layout->channels, FALSE, &out_channel_mask);
       if (in_channel_mask == out_channel_mask) {
-        channel_mode = channel_layouts[i].mode;
+        channel_mode = layout->mode;
         self->need_reorder =
-            memcmp (channel_layouts[i].positions,
+            memcmp (layout->positions,
             &GST_AUDIO_INFO_POSITION (info, 0),
             GST_AUDIO_INFO_CHANNELS (info) *
             sizeof (GstAudioChannelPosition)) != 0;
-        self->aac_positions = channel_layouts[i].positions;
+        self->aac_positions = layout->positions;
         break;
       }
     }
 
-    if (i == G_N_ELEMENTS (channel_layouts)) {
+    if (!layout->channels) {
       GST_ERROR_OBJECT (self, "Couldn't find a valid channel layout");
       return FALSE;
     }
