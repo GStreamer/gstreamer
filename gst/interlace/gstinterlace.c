@@ -240,7 +240,8 @@ gst_interlace_class_init (GstInterlaceClass * klass)
       g_param_spec_enum ("field-pattern", "Field pattern",
           "The output field pattern", GST_INTERLACE_PATTERN,
           GST_INTERLACE_PATTERN_2_3,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_PATTERN_OFFSET,
       g_param_spec_uint ("pattern-offset", "Pattern offset",
