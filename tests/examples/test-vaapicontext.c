@@ -307,14 +307,17 @@ draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
 {
   AppData *app = data;
   GtkAllocation allocation;
+  int i;
+
+  i = (widget == app->video_widget[0]) ? 0 : 1;
 
   get_allocation (widget, &allocation);
 
-  gst_println ("draw_cb x %d, y %d, w %d, h %d\n",
+  gst_println ("draw_cb[%d] x %d, y %d, w %d, h %d\n", i,
       allocation.x, allocation.y, allocation.width, allocation.height);
 
-  if (app->overlay[0]) {
-    gst_video_overlay_set_render_rectangle (app->overlay[0], allocation.x,
+  if (app->overlay[i]) {
+    gst_video_overlay_set_render_rectangle (app->overlay[i], allocation.x,
         allocation.y, allocation.width, allocation.height);
   }
 }
