@@ -123,11 +123,10 @@ struct _GstNvH264Dec
   guint chroma_format_idc;
   GstVideoFormat out_format;
 
-#ifdef HAVE_NVCODEC_GST_GL
-  GstGLDisplay *gl_display;
-  GstGLContext *gl_context;
-  GstGLContext *other_gl_context;
-#endif
+  /* For OpenGL interop. */
+  GstObject *gl_display;
+  GstObject *gl_context;
+  GstObject *other_gl_context;
 
   GstNvDecoderOutputType output_type;
 };
@@ -235,8 +234,9 @@ gst_nv_h264_dec_set_context (GstElement * element, GstContext * context)
     goto done;
   }
 #ifdef HAVE_NVCODEC_GST_GL
-  gst_gl_handle_set_context (element, context, &self->gl_display,
-      &self->other_gl_context);
+  gst_gl_handle_set_context (element, context,
+      (GstGLDisplay **) & self->gl_display,
+      (GstGLContext **) & self->other_gl_context);
 #endif
 
 done:
@@ -267,7 +267,8 @@ gst_nv_h264_dec_open (GstVideoDecoder * decoder)
   }
 #if HAVE_NVCODEC_GST_GL
   gst_gl_ensure_element_data (GST_ELEMENT (self),
-      &self->gl_display, &self->other_gl_context);
+      (GstGLDisplay **) & self->gl_display,
+      (GstGLContext **) & self->other_gl_context);
   if (self->gl_display)
     gst_gl_display_filter_gl_api (GST_GL_DISPLAY (self->gl_display),
         SUPPORTED_GL_APIS);
@@ -290,12 +291,10 @@ gst_nv_h264_dec_close (GstVideoDecoder * decoder)
       gst_cuda_context_pop (NULL);
     }
   }
-#ifdef HAVE_NVCODEC_GST_GL
+
   gst_clear_object (&self->gl_context);
   gst_clear_object (&self->other_gl_context);
   gst_clear_object (&self->gl_display);
-#endif
-
   gst_clear_object (&self->context);
   self->cuda_stream = NULL;
 
@@ -328,29 +327,36 @@ static gboolean
 gst_nv_h264_dec_ensure_gl_context (GstNvH264Dec * self)
 {
   gboolean ret;
+  GstGLDisplay *display;
+  GstGLContext *context;
 
   if (!self->gl_display) {
     GST_DEBUG_OBJECT (self, "No available OpenGL display");
     return FALSE;
   }
 
+  display = GST_GL_DISPLAY (self->gl_display);
+
   if (!gst_gl_query_local_gl_context (GST_ELEMENT (self), GST_PAD_SRC,
-          &self->gl_context)) {
+          (GstGLContext **) & self->gl_context)) {
     GST_INFO_OBJECT (self, "failed to query local OpenGL context");
-    if (self->gl_context)
-      gst_object_unref (self->gl_context);
+
+    gst_clear_object (&self->gl_context);
     self->gl_context =
-        gst_gl_display_get_gl_context_for_thread (self->gl_display, NULL);
+        (GstObject *) gst_gl_display_get_gl_context_for_thread (display, NULL);
     if (!self->gl_context
-        || !gst_gl_display_add_context (self->gl_display, self->gl_context)) {
-      if (self->gl_context)
-        gst_object_unref (self->gl_context);
-      if (!gst_gl_display_create_context (self->gl_display,
-              self->other_gl_context, &self->gl_context, NULL)) {
+        || !gst_gl_display_add_context (display,
+            GST_GL_CONTEXT (self->gl_context))) {
+      gst_clear_object (&self->gl_context);
+      if (!gst_gl_display_create_context (display,
+              (GstGLContext *) self->other_gl_context,
+              (GstGLContext **) & self->gl_context, NULL)) {
         GST_ERROR_OBJECT (self, "failed to create OpenGL context");
         return FALSE;
       }
-      if (!gst_gl_display_add_context (self->gl_display, self->gl_context)) {
+
+      if (!gst_gl_display_add_context (display,
+              (GstGLContext *) self->gl_context)) {
         GST_ERROR_OBJECT (self,
             "failed to add the OpenGL context to the display");
         return FALSE;
@@ -358,13 +364,14 @@ gst_nv_h264_dec_ensure_gl_context (GstNvH264Dec * self)
     }
   }
 
-  if (!gst_gl_context_check_gl_version (self->gl_context,
-          SUPPORTED_GL_APIS, 3, 0)) {
+  context = GST_GL_CONTEXT (self->gl_context);
+
+  if (!gst_gl_context_check_gl_version (context, SUPPORTED_GL_APIS, 3, 0)) {
     GST_WARNING_OBJECT (self, "OpenGL context could not support PBO download");
     return FALSE;
   }
 
-  gst_gl_context_thread_add (self->gl_context,
+  gst_gl_context_thread_add (context,
       (GstGLContextThreadFunc) gst_nv_h264_dec_check_cuda_device_from_context,
       &ret);
 
@@ -375,7 +382,6 @@ gst_nv_h264_dec_ensure_gl_context (GstNvH264Dec * self)
 
   return TRUE;
 }
-
 #endif
 
 static gboolean
@@ -476,7 +482,7 @@ gst_nv_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   if (!pool) {
-    pool = gst_gl_buffer_pool_new (self->gl_context);
+    pool = gst_gl_buffer_pool_new (GST_GL_CONTEXT (self->gl_context));
 
     if (outcaps)
       gst_video_info_from_caps (&vinfo, outcaps);
@@ -512,7 +518,9 @@ gst_nv_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
       }
 #ifdef HAVE_NVCODEC_GST_GL
       if (gst_gl_handle_context_query (GST_ELEMENT (decoder), query,
-              self->gl_display, self->gl_context, self->other_gl_context)) {
+              (GstGLDisplay *) self->gl_display,
+              (GstGLContext *) self->gl_context,
+              (GstGLContext *) self->other_gl_context)) {
         if (self->gl_display)
           gst_gl_display_filter_gl_api (GST_GL_DISPLAY (self->gl_display),
               SUPPORTED_GL_APIS);
