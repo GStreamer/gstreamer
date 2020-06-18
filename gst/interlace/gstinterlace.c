@@ -213,6 +213,9 @@ static gboolean gst_interlace_src_query (GstPad * pad, GstObject * parent,
 static GstStateChangeReturn gst_interlace_change_state (GstElement * element,
     GstStateChange transition);
 
+static GstCaps *gst_interlace_caps_double_framerate (GstCaps * caps,
+    gboolean half, gboolean skip_progressive);
+
 #define gst_interlace_parent_class parent_class
 G_DEFINE_TYPE (GstInterlace, gst_interlace, GST_TYPE_ELEMENT);
 
@@ -434,6 +437,20 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
       s = gst_caps_get_structure (othercaps, i);
       gst_structure_remove_field (s, "field-order");
     }
+  } else if (interlace->pattern == GST_INTERLACE_PATTERN_1_1 &&
+      GST_VIDEO_INFO_INTERLACE_MODE (&info) ==
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+    /* interlaced will do passthrough, mixed will fail later in the
+     * negotiation */
+    othercaps = gst_interlace_caps_double_framerate (othercaps, TRUE, FALSE);
+  } else if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
+    GST_FIXME_OBJECT (interlace,
+        "Add calculations for telecine framerate conversions");
+    for (i = 0; i < gst_caps_get_size (othercaps); ++i) {
+      GstStructure *s = gst_caps_get_structure (othercaps, i);
+
+      gst_structure_remove_field (s, "framerate");
+    }
   }
   src_peer_caps = gst_pad_peer_query_caps (interlace->srcpad, othercaps);
   gst_caps_unref (othercaps);
@@ -457,6 +474,8 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
 
   interlace->src_fps_n = info.fps_n * pdformat->ratio_n;
   interlace->src_fps_d = info.fps_d * pdformat->ratio_d;
+  GST_DEBUG_OBJECT (interlace, "new framerate %d/%d", interlace->src_fps_n,
+      interlace->src_fps_d);
 
   if (alternate) {
     GST_DEBUG_OBJECT (interlace,
@@ -666,16 +685,24 @@ gst_interlace_fraction_double (gint * n_out, gint * d_out, gboolean half)
 }
 
 static GstCaps *
-gst_interlace_caps_double_framerate (GstCaps * caps, gboolean half)
+gst_interlace_caps_double_framerate (GstCaps * caps, gboolean half,
+    gboolean skip_progressive)
 {
   guint len;
 
   for (len = gst_caps_get_size (caps); len > 0; len--) {
     GstStructure *s = gst_caps_get_structure (caps, len - 1);
     const GValue *val;
+    const gchar *interlace_mode;
 
     val = gst_structure_get_value (s, "framerate");
     if (!val)
+      continue;
+
+    interlace_mode = gst_structure_get_string (s, "interlace-mode");
+    /* Do not double the framerate for interlaced - we will either passthrough
+     * or fail to negotiate */
+    if (skip_progressive && (g_strcmp0 (interlace_mode, "progressive") != 0))
       continue;
 
     if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION) {
@@ -789,7 +816,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
     if (interlace->pattern == GST_INTERLACE_PATTERN_1_1) {
       clean_filter =
           gst_interlace_caps_double_framerate (clean_filter,
-          (pad == interlace->sinkpad));
+          (pad == interlace->sinkpad), TRUE);
     } else if (interlace->pattern != GST_INTERLACE_PATTERN_2_2) {
       GST_FIXME_OBJECT (interlace,
           "Add calculations for telecine framerate conversions");
@@ -887,7 +914,8 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 
   if (interlace->pattern == GST_INTERLACE_PATTERN_1_1) {
     icaps =
-        gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad));
+        gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad),
+        FALSE);
   } else if (interlace->pattern != GST_INTERLACE_PATTERN_2_2) {
     GST_FIXME_OBJECT (interlace,
         "Add calculations for telecine framerate conversions");
