@@ -2638,8 +2638,10 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
   if (scenario->priv->actions)
     act = scenario->priv->actions->data;
 
-  if (!act)
+  if (!act) {
+    _check_scenario_is_done (scenario);
     return G_SOURCE_CONTINUE;
+  }
 
   switch (act->priv->state) {
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
@@ -4739,8 +4741,6 @@ _element_added_cb (GstBin * bin, GstElement * element,
 
   SCENARIO_UNLOCK (scenario);
 
-  _check_scenario_is_done (scenario);
-
   /* If it's a bin, listen to the child */
   if (GST_IS_BIN (element)) {
     g_signal_connect (element, "element-added", (GCallback) _element_added_cb,
@@ -4820,14 +4820,16 @@ gst_validate_scenario_new (GstValidateRunner *
             &scenario->priv->action_execution_interval)) {
       GST_DEBUG_OBJECT (scenario, "Setting action execution interval to %d",
           scenario->priv->action_execution_interval);
+      if (scenario->priv->action_execution_interval > 0)
+        scenario->priv->execute_on_idle = TRUE;
       break;
     } else if (gst_structure_get_int (config->data,
             "scenario-action-execution-interval", &interval)) {
       if (interval > 0) {
         scenario->priv->action_execution_interval = (guint) interval;
+        scenario->priv->execute_on_idle = TRUE;
         GST_DEBUG_OBJECT (scenario, "Setting action execution interval to %d",
             scenario->priv->action_execution_interval);
-
         break;
       } else {
         GST_WARNING_OBJECT (scenario, "Interval is negative: %d", interval);
