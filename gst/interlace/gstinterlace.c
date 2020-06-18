@@ -746,9 +746,19 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 
   if (filter != NULL) {
     clean_filter = gst_caps_copy (filter);
-    clean_filter =
-        gst_interlace_caps_double_framerate (clean_filter,
-        (pad == interlace->sinkpad));
+    if (interlace->pattern == GST_INTERLACE_PATTERN_1_1) {
+      clean_filter =
+          gst_interlace_caps_double_framerate (clean_filter,
+          (pad == interlace->sinkpad));
+    } else if (interlace->pattern != GST_INTERLACE_PATTERN_2_2) {
+      GST_FIXME_OBJECT (interlace,
+          "Add calculations for telecine framerate conversions");
+      for (i = 0; i < gst_caps_get_size (clean_filter); ++i) {
+        GstStructure *s = gst_caps_get_structure (clean_filter, i);
+
+        gst_structure_remove_field (s, "framerate");
+      }
+    }
 
     if (pad == interlace->sinkpad) {
       /* @filter may contain the different formats supported upstream.
@@ -818,8 +828,18 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
     icaps = gst_caps_merge (icaps, alternate);
   }
 
-  icaps =
-      gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad));
+  if (interlace->pattern == GST_INTERLACE_PATTERN_1_1) {
+    icaps =
+        gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad));
+  } else if (interlace->pattern != GST_INTERLACE_PATTERN_2_2) {
+    GST_FIXME_OBJECT (interlace,
+        "Add calculations for telecine framerate conversions");
+    for (i = 0; i < gst_caps_get_size (icaps); ++i) {
+      GstStructure *s = gst_caps_get_structure (icaps, i);
+
+      gst_structure_remove_field (s, "framerate");
+    }
+  }
 
   if (clean_filter)
     gst_caps_unref (clean_filter);
