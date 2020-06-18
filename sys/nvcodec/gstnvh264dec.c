@@ -247,10 +247,11 @@ static gboolean
 gst_nv_h264_dec_open (GstVideoDecoder * decoder)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
+  GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (self);
   CUresult cuda_ret;
 
   if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (decoder),
-          0, &self->context)) {
+          klass->cuda_device_id, &self->context)) {
     GST_ERROR_OBJECT (self, "failed to create CUDA context");
     return FALSE;
   }
