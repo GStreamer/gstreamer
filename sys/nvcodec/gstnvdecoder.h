@@ -84,6 +84,49 @@ gboolean gst_nv_decoder_check_device_caps (CUcontext cuda_ctx,
 G_GNUC_INTERNAL
 const gchar * gst_cuda_video_codec_to_string (cudaVideoCodec codec);
 
+/* helper methods */
+G_GNUC_INTERNAL
+gboolean gst_nv_decoder_ensure_element_data  (GstElement * decoder,
+                                              guint cuda_device_id,
+                                              GstCudaContext ** cuda_context,
+                                              CUstream * cuda_stream,
+                                              GstObject ** gl_display,
+                                              GstObject ** other_gl_context);
+
+G_GNUC_INTERNAL
+void     gst_nv_decoder_set_context          (GstElement * decoder,
+                                              GstContext * context,
+                                              guint cuda_device_id,
+                                              GstCudaContext ** cuda_context,
+                                              GstObject ** gl_display,
+                                              GstObject ** other_gl_context);
+
+G_GNUC_INTERNAL
+gboolean gst_nv_decoder_handle_context_query (GstElement * decoder,
+                                              GstQuery * query,
+                                              GstCudaContext * cuda_context,
+                                              GstObject * gl_display,
+                                              GstObject * gl_context,
+                                              GstObject * other_gl_context);
+
+G_GNUC_INTERNAL
+gboolean gst_nv_decoder_negotiate            (GstVideoDecoder * decoder,
+                                              GstVideoCodecState * input_state,
+                                              GstVideoFormat format,
+                                              guint width,
+                                              guint height,
+                                              GstObject * gl_display,
+                                              GstObject * other_gl_context,
+                                              GstObject ** gl_context,
+                                              GstVideoCodecState ** output_state,
+                                              GstNvDecoderOutputType * output_type);
+
+G_GNUC_INTERNAL
+gboolean gst_nv_decoder_decide_allocation (GstVideoDecoder * decocer,
+                                           GstQuery * query,
+                                           GstObject * gl_context,
+                                           GstNvDecoderOutputType output_type);
+
 G_END_DECLS
 
 #endif /* __GST_NV_DECODER_H__ */
