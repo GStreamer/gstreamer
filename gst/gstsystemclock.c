@@ -89,7 +89,6 @@ struct _GstSystemClockPrivate
 #ifdef G_OS_WIN32
   LARGE_INTEGER start;
   LARGE_INTEGER frequency;
-  guint64 ratio;
 #endif                          /* G_OS_WIN32 */
 #ifdef __APPLE__
   struct mach_timebase_info mach_timebase;
@@ -192,11 +191,8 @@ gst_system_clock_init (GstSystemClock * clock)
 
 #ifdef G_OS_WIN32
   QueryPerformanceFrequency (&priv->frequency);
-  /* can be 0 if the hardware does not have hardware support */
-  if (priv->frequency.QuadPart != 0)
-    /* we take a base time so that time starts from 0 to ease debugging */
-    QueryPerformanceCounter (&priv->start);
-  priv->ratio = GST_SECOND / priv->frequency.QuadPart;
+  /* we take a base time so that time starts from 0 to ease debugging */
+  QueryPerformanceCounter (&priv->start);
 #endif /* G_OS_WIN32 */
 
 #ifdef __APPLE__
@@ -582,8 +578,8 @@ gst_system_clock_get_internal_time (GstClock * clock)
     /* we prefer the highly accurate performance counters on windows */
     QueryPerformanceCounter (&now);
 
-    return ((now.QuadPart -
-            sysclock->priv->start.QuadPart) * sysclock->priv->ratio);
+    return gst_util_uint64_scale (now.QuadPart - sysclock->priv->start.QuadPart,
+        GST_SECOND, sysclock->priv->frequency.QuadPart);
   } else
 #endif /* G_OS_WIN32 */
 #if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME
