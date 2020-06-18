@@ -14,9 +14,25 @@ If you don't want to use the binaries provided by GStreamer or on your Linux dis
 
 The easiest way to build the webrtc plugin and all the plugins it needs, is to [use Cerbero](https://gstreamer.freedesktop.org/documentation/installing/building-from-source-using-cerbero.html). These instructions should work out of the box for all platforms, including cross-compiling for iOS and Android.
 
-One thing to note is that it's written in Python 2, so you may need to replace all instances of `./cerbero-uninstalled` (or `cerbero`) with `python2 cerbero-uninstalled` or whatever Python 2 is called on your platform.
-
 ## Building GStreamer manually from source
+
+For hacking on the webrtc plugin, you may want to build manually using the git repositories:
+
+ - http://gitlab.freedesktop.org/gstreamer/gstreamer
+ - http://gitlab.freedesktop.org/gstreamer/gst-plugins-base
+ - http://gitlab.freedesktop.org/gstreamer/gst-plugins-good
+ - http://gitlab.freedesktop.org/gstreamer/gst-plugins-bad
+ - http://gitlab.freedesktop.org/libnice/libnice
+
+Or with Meson gst-build:
+
+https://gitlab.freedesktop.org/gstreamer/gst-build/
+
+You may need to install the following packages using your package manager:
+
+json-glib, libsoup, libnice, libnice-gstreamer1 (the gstreamer plugin for libnice, called gstreamer1.0-nice Debian)
+
+### Ubuntu 18.04
 
 Here are the commands for Ubuntu 18.04.
 
@@ -24,29 +40,9 @@ Here are the commands for Ubuntu 18.04.
 sudo apt-get install -y gstreamer1.0-tools gstreamer1.0-nice gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-plugins-good libgstreamer1.0-dev git libglib2.0-dev libgstreamer-plugins-bad1.0-dev libsoup2.4-dev libjson-glib-dev
 ```
 
-For hacking on the webrtc plugin, you may want to build manually using the git repositories:
-
- - http://cgit.freedesktop.org/gstreamer/gstreamer
- - http://cgit.freedesktop.org/gstreamer/gst-plugins-base
- - http://cgit.freedesktop.org/gstreamer/gst-plugins-good
- - http://cgit.freedesktop.org/gstreamer/gst-plugins-bad
- - http://cgit.freedesktop.org/libnice/libnice
-
-You can build these with either Autotools gst-uninstalled:
-
-https://arunraghavan.net/2014/07/quick-start-guide-to-gst-uninstalled-1-x/
-
-Or with Meson gst-build:
-
-https://cgit.freedesktop.org/gstreamer/gst-build/
-
-You may need to install the following packages using your package manager:
-
-json-glib, libsoup, libnice, libnice-gstreamer1 (the gstreamer plugin for libnice, called gstreamer1.0-nice Debian)
-
 ## Filing bugs
 
-Please only file bugs about the demos here. Bugs about GStreamer's WebRTC implementation should be filed on the [GStreamer bugzilla](https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gst-plugins-bad).
+Please only file bugs about the demos here. Bugs about GStreamer's WebRTC implementation should be filed on the [GStreamer gitlab](https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/new).
 
 You can also find us on IRC by joining #gstreamer @ FreeNode.
 
@@ -58,6 +54,18 @@ http://blog.nirbheek.in/2018/02/gstreamer-webrtc.html
 
 ## Examples
 
+### Building
+
+Most of the examples that require a build process can be built using the meson build system in the top-level gst-examples directory by using the following commands:
+
+```console
+cd /path/to/gst-examples
+meson _builddir
+ninja -C _builddir
+```
+
+Build outputs will be placed in the directory `_builddir`.
+
 ### sendrecv: Send and receive audio and video
 
 * Serve the `js/` directory on the root of your website, or open https://webrtc.nirbheek.in
@@ -66,12 +74,6 @@ http://blog.nirbheek.in/2018/02/gstreamer-webrtc.html
 * Open the website in a browser and ensure that the status is "Registered with server, waiting for call", and note the `id` too.
 
 #### Running the C version
-
-* Build the sources in the `gst/` directory on your machine. Use `make` or
-
-```console
-$ gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstreamer-sdp-1.0 libsoup-2.4 json-glib-1.0) -o webrtc-sendrecv
-```
 
 * Run `webrtc-sendrecv --peer-id=ID` with the `id` from the browser. You will see state changes and an SDP exchange.
 
@@ -104,13 +106,7 @@ You can optionally specify the server URL too (it defaults to wss://webrtc.nirbh
 
 ### multiparty-sendrecv: Multiparty audio conference with N peers
 
-* Build the sources in the `gst/` directory on your machine
-
-```console
-$ gcc mp-webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstreamer-sdp-1.0 libsoup-2.4 json-glib-1.0) -o mp-webrtc-sendrecv
-```
-
-* Run `mp-webrtc-sendrecv --room-id=ID` with `ID` as a room name. The peer will connect to the signalling server and setup a conference room.
+* Run `_builddir/multiparty-sendrecv/gst/mp-webrtc-sendrecv --room-id=ID` with `ID` as a room name. The peer will connect to the signalling server and setup a conference room.
 * Run this as many times as you like, each will spawn a peer that sends red noise and outputs the red noise it receives from other peers.
   - To change what a peer sends, find the `audiotestsrc` element in the source and change the `wave` property.
   - You can, of course, also replace `audiotestsrc` itself with `autoaudiosrc` (any platform) or `pulsesink` (on linux).
