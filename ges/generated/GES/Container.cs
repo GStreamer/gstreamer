@@ -553,10 +553,15 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_container_edit(IntPtr raw, IntPtr layers, int new_layer_priority, int mode, int edge, ulong position);
 
+		[Obsolete]
 		public bool Edit(GLib.List layers, int new_layer_priority, GES.EditMode mode, GES.Edge edge, ulong position) {
 			bool raw_ret = ges_container_edit(Handle, layers == null ? IntPtr.Zero : layers.Handle, new_layer_priority, (int) mode, (int) edge, position);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		public bool Edit(int new_layer_priority, GES.EditMode mode, GES.Edge edge, ulong position) {
+			return Edit (null, new_layer_priority, mode, edge, position);
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]

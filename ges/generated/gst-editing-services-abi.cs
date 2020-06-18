@@ -58,12 +58,14 @@ namespace AbiTester {
 			Console.WriteLine("\"GESBaseXmlFormatterClass.save\": \"" + GES.BaseXmlFormatter.class_abi.GetFieldOffset("save") + "\"");
 			Console.WriteLine("\"sizeof(GESBaseXmlFormatter)\": \"" + GES.BaseXmlFormatter.abi_info.Size + "\"");
 			Console.WriteLine("\"GESBaseXmlFormatter.priv\": \"" + GES.BaseXmlFormatter.abi_info.GetFieldOffset("priv") + "\"");
+			Console.WriteLine("\"GESBaseXmlFormatter.xmlcontent\": \"" + GES.BaseXmlFormatter.abi_info.GetFieldOffset("xmlcontent") + "\"");
 			Console.WriteLine("\"sizeof(GESClipClass)\": \"" + GES.Clip.class_abi.Size + "\"");
 			Console.WriteLine("\"GESClipClass.create_track_element\": \"" + GES.Clip.class_abi.GetFieldOffset("create_track_element") + "\"");
 			Console.WriteLine("\"GESClipClass.create_track_elements\": \"" + GES.Clip.class_abi.GetFieldOffset("create_track_elements") + "\"");
 			Console.WriteLine("\"sizeof(GESClip)\": \"" + GES.Clip.abi_info.Size + "\"");
 			Console.WriteLine("\"GESClip.priv\": \"" + GES.Clip.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESClipAssetClass)\": \"" + GES.ClipAsset.class_abi.Size + "\"");
+			Console.WriteLine("\"GESClipAssetClass.get_natural_framerate\": \"" + GES.ClipAsset.class_abi.GetFieldOffset("get_natural_framerate") + "\"");
 			Console.WriteLine("\"sizeof(GESClipAsset)\": \"" + GES.ClipAsset.abi_info.Size + "\"");
 			Console.WriteLine("\"GESClipAsset.priv\": \"" + GES.ClipAsset.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESCommandLineFormatter)\": \"" + GES.CommandLineFormatter.abi_info.Size + "\"");
@@ -143,6 +145,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GESProjectClass.missing_uri\": \"" + GES.Project.class_abi.GetFieldOffset("missing_uri") + "\"");
 			Console.WriteLine("\"GESProjectClass.loading_error\": \"" + GES.Project.class_abi.GetFieldOffset("loading_error") + "\"");
 			Console.WriteLine("\"GESProjectClass.loaded\": \"" + GES.Project.class_abi.GetFieldOffset("loaded") + "\"");
+			Console.WriteLine("\"GESProjectClass.loading\": \"" + GES.Project.class_abi.GetFieldOffset("loading") + "\"");
 			Console.WriteLine("\"sizeof(GESProject)\": \"" + GES.Project.abi_info.Size + "\"");
 			Console.WriteLine("\"GESProject.priv\": \"" + GES.Project.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESSourceClass)\": \"" + GES.Source.class_abi.Size + "\"");
@@ -190,6 +193,8 @@ namespace AbiTester {
 			Console.WriteLine("\"GESTimelineElementClass.get_track_types\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("get_track_types") + "\"");
 			Console.WriteLine("\"GESTimelineElementClass.set_child_property\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("set_child_property") + "\"");
 			Console.WriteLine("\"GESTimelineElementClass.get_layer_priority\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("get_layer_priority") + "\"");
+			Console.WriteLine("\"GESTimelineElementClass.get_natural_framerate\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("get_natural_framerate") + "\"");
+			Console.WriteLine("\"GESTimelineElementClass.set_child_property_full\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("set_child_property_full") + "\"");
 			Console.WriteLine("\"sizeof(GESTimelineElement)\": \"" + GES.TimelineElement.abi_info.Size + "\"");
 			Console.WriteLine("\"GESTimelineElement.parent\": \"" + GES.TimelineElement.abi_info.GetFieldOffset("parent") + "\"");
 			Console.WriteLine("\"GESTimelineElement.asset\": \"" + GES.TimelineElement.abi_info.GetFieldOffset("asset") + "\"");
@@ -225,6 +230,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GESTrackElement.priv\": \"" + GES.TrackElement.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"GESTrackElement.asset\": \"" + GES.TrackElement.abi_info.GetFieldOffset("asset") + "\"");
 			Console.WriteLine("\"sizeof(GESTrackElementAssetClass)\": \"" + GES.TrackElementAsset.class_abi.Size + "\"");
+			Console.WriteLine("\"GESTrackElementAssetClass.get_natural_framerate\": \"" + GES.TrackElementAsset.class_abi.GetFieldOffset("get_natural_framerate") + "\"");
 			Console.WriteLine("\"sizeof(GESTrackElementAsset)\": \"" + GES.TrackElementAsset.abi_info.Size + "\"");
 			Console.WriteLine("\"GESTrackElementAsset.priv\": \"" + GES.TrackElementAsset.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESTransitionClass)\": \"" + GES.Transition.class_abi.Size + "\"");

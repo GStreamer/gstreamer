@@ -124,13 +124,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool ges_meta_container_check_meta_registered(IntPtr raw, IntPtr meta_item, int flags, IntPtr type);
+		static extern bool ges_meta_container_check_meta_registered(IntPtr raw, IntPtr meta_item, out int flags, out IntPtr type);
 
-		public bool CheckMetaRegistered(string meta_item, GES.MetaFlag flags, GLib.GType type) {
+		public bool CheckMetaRegistered(string meta_item, out GES.MetaFlag flags, out GLib.GType type) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
-			bool raw_ret = ges_meta_container_check_meta_registered(Handle, native_meta_item, (int) flags, type.Val);
+			int native_flags;
+			IntPtr native_type;
+			bool raw_ret = ges_meta_container_check_meta_registered(Handle, native_meta_item, out native_flags, out native_type);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
+			flags = (GES.MetaFlag) native_flags;
+			type = new GLib.GType(native_type);
 			return ret;
 		}
 
@@ -207,6 +211,17 @@ namespace GES {
 			bool raw_ret = ges_meta_container_get_int64(Handle, native_meta_item, out dest);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_meta_container_get_marker_list(IntPtr raw, IntPtr key);
+
+		public GES.MarkerList GetMarkerList(string key) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr raw_ret = ges_meta_container_get_marker_list(Handle, native_key);
+			GES.MarkerList ret = GLib.Object.GetObject(raw_ret, true) as GES.MarkerList;
+			GLib.Marshaller.Free (native_key);
 			return ret;
 		}
 
@@ -298,10 +313,6 @@ namespace GES {
 			return ret;
 		}
 
-		public bool RegisterMetaDateTime(GES.MetaFlag flags, string meta_item) {
-			return RegisterMetaDateTime (flags, meta_item, null);
-		}
-
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_double(IntPtr raw, int flags, IntPtr meta_item, double value);
 
@@ -359,10 +370,6 @@ namespace GES {
 			return ret;
 		}
 
-		public bool RegisterMetaString(GES.MetaFlag flags, string meta_item) {
-			return RegisterMetaString (flags, meta_item, null);
-		}
-
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_uint(IntPtr raw, int flags, IntPtr meta_item, uint value);
 
@@ -380,6 +387,17 @@ namespace GES {
 		public bool RegisterMetaUint64(GES.MetaFlag flags, string meta_item, ulong value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_register_meta_uint64(Handle, (int) flags, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_register_static_meta(IntPtr raw, int flags, IntPtr meta_item, IntPtr type);
+
+		public bool RegisterStaticMeta(GES.MetaFlag flags, string meta_item, GLib.GType type) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_register_static_meta(Handle, (int) flags, native_meta_item, type.Val);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;
@@ -446,6 +464,17 @@ namespace GES {
 		public bool SetInt64(string meta_item, long value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_set_int64(Handle, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_set_marker_list(IntPtr raw, IntPtr meta_item, IntPtr list);
+
+		public bool SetMarkerList(string meta_item, GES.MarkerList list) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_set_marker_list(Handle, native_meta_item, list == null ? IntPtr.Zero : list.Handle);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;

@@ -53,6 +53,28 @@ namespace GES {
 			}
 		}
 
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_base_effect_is_time_effect(IntPtr raw);
+
+		public bool IsTimeEffect { 
+			get {
+				bool raw_ret = ges_base_effect_is_time_effect(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_base_effect_register_time_property(IntPtr raw, IntPtr child_property_name);
+
+		public bool RegisterTimeProperty(string child_property_name) {
+			IntPtr native_child_property_name = GLib.Marshaller.StringToPtrGStrdup (child_property_name);
+			bool raw_ret = ges_base_effect_register_time_property(Handle, native_child_property_name);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_child_property_name);
+			return ret;
+		}
+
 
 		static BaseEffect ()
 		{

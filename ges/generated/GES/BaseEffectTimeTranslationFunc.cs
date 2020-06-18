@@ -5,6 +5,6 @@ namespace GES {
 
 	using System;
 
-	public delegate GES.TrackElement[] CreateTrackElementsFunc(GES.Clip clip, GES.TrackType type);
+	public delegate ulong BaseEffectTimeTranslationFunc(GES.BaseEffect effect, ulong time, System.IntPtr time_property_values);
 
 }

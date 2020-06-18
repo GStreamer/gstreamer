@@ -19,6 +19,18 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong ges_clip_get_duration_limit(IntPtr raw);
+
+		[GLib.Property ("duration-limit")]
+		public ulong DurationLimit {
+			get  {
+				ulong raw_ret = ges_clip_get_duration_limit(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_clip_get_layer(IntPtr raw);
 
 		[GLib.Property ("layer")]
@@ -67,16 +79,32 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // create_track_elements
 							, "create_track_element"
-							, "_ges_reserved"
+							, "ABI"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
-						new GLib.AbiField("_ges_reserved"
+						// union struct ABI.abi
+						// End ABI.abi
+
+						// union struct ABI
+							new GLib.AbiField("ABI._gst_reserved"
+								, -1
+								, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // ABI._gst_reserved
+								, "create_track_elements"
+								, null
+								, (uint) Marshal.SizeOf(typeof(IntPtr))
+								, 0
+								),
+						// End ABI
+
+						new GLib.AbiField("ABI"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // _ges_reserved
+							, new List<List<string>>() {  // union ABI
+						new List<string>() {},
+						new List<string>() {"ABI._gst_reserved"}
+					  }
 							, "create_track_elements"
 							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 					});
@@ -109,6 +137,28 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe IntPtr ges_clip_add_child_to_track(IntPtr raw, IntPtr child, IntPtr track, out IntPtr error);
+
+		public unsafe GES.TrackElement AddChildToTrack(GES.TrackElement child, GES.Track track) {
+			IntPtr error = IntPtr.Zero;
+			IntPtr raw_ret = ges_clip_add_child_to_track(Handle, child == null ? IntPtr.Zero : child.Handle, track == null ? IntPtr.Zero : track.Handle, out error);
+			GES.TrackElement ret = GLib.Object.GetObject(raw_ret) as GES.TrackElement;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool ges_clip_add_top_effect(IntPtr raw, IntPtr effect, int index, out IntPtr error);
+
+		public unsafe bool AddTopEffect(GES.BaseEffect effect, int index) {
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = ges_clip_add_top_effect(Handle, effect == null ? IntPtr.Zero : effect.Handle, index, out error);
+			bool ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_clip_find_track_element(IntPtr raw, IntPtr track, IntPtr type);
 
 		public GES.TrackElement FindTrackElement(GES.Track track, GLib.GType type) {
@@ -132,6 +182,39 @@ namespace GES {
 
 		public GES.TrackElement[] FindTrackElements(GES.TrackType track_type, GLib.GType type) {
 			return FindTrackElements (null, track_type, type);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe ulong ges_clip_get_internal_time_from_timeline_time(IntPtr raw, IntPtr child, ulong timeline_time, out IntPtr error);
+
+		public unsafe ulong GetInternalTimeFromTimelineTime(GES.TrackElement child, ulong timeline_time) {
+			IntPtr error = IntPtr.Zero;
+			ulong raw_ret = ges_clip_get_internal_time_from_timeline_time(Handle, child == null ? IntPtr.Zero : child.Handle, timeline_time, out error);
+			ulong ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe ulong ges_clip_get_timeline_time_from_internal_time(IntPtr raw, IntPtr child, ulong internal_time, out IntPtr error);
+
+		public unsafe ulong GetTimelineTimeFromInternalTime(GES.TrackElement child, ulong internal_time) {
+			IntPtr error = IntPtr.Zero;
+			ulong raw_ret = ges_clip_get_timeline_time_from_internal_time(Handle, child == null ? IntPtr.Zero : child.Handle, internal_time, out error);
+			ulong ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe ulong ges_clip_get_timeline_time_from_source_frame(IntPtr raw, long frame_number, out IntPtr error);
+
+		public unsafe ulong GetTimelineTimeFromSourceFrame(long frame_number) {
+			IntPtr error = IntPtr.Zero;
+			ulong raw_ret = ges_clip_get_timeline_time_from_source_frame(Handle, frame_number, out error);
+			ulong ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -173,11 +256,44 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool ges_clip_move_to_layer_full(IntPtr raw, IntPtr layer, out IntPtr error);
+
+		public unsafe bool MoveToLayerFull(GES.Layer layer) {
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = ges_clip_move_to_layer_full(Handle, layer == null ? IntPtr.Zero : layer.Handle, out error);
+			bool ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool ges_clip_remove_top_effect(IntPtr raw, IntPtr effect, out IntPtr error);
+
+		public unsafe bool RemoveTopEffect(GES.BaseEffect effect) {
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = ges_clip_remove_top_effect(Handle, effect == null ? IntPtr.Zero : effect.Handle, out error);
+			bool ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_clip_set_top_effect_index(IntPtr raw, IntPtr effect, uint newindex);
 
 		public bool SetTopEffectIndex(GES.BaseEffect effect, uint newindex) {
 			bool raw_ret = ges_clip_set_top_effect_index(Handle, effect == null ? IntPtr.Zero : effect.Handle, newindex);
 			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool ges_clip_set_top_effect_index_full(IntPtr raw, IntPtr effect, uint newindex, out IntPtr error);
+
+		public unsafe bool SetTopEffectIndexFull(GES.BaseEffect effect, uint newindex) {
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = ges_clip_set_top_effect_index_full(Handle, effect == null ? IntPtr.Zero : effect.Handle, newindex, out error);
+			bool ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}
 
@@ -196,6 +312,17 @@ namespace GES {
 		public GES.Clip Split(ulong position) {
 			IntPtr raw_ret = ges_clip_split(Handle, position);
 			GES.Clip ret = GLib.Object.GetObject(raw_ret) as GES.Clip;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe IntPtr ges_clip_split_full(IntPtr raw, ulong position, out IntPtr error);
+
+		public unsafe GES.Clip SplitFull(ulong position) {
+			IntPtr error = IntPtr.Zero;
+			IntPtr raw_ret = ges_clip_split_full(Handle, position, out error);
+			GES.Clip ret = GLib.Object.GetObject(raw_ret) as GES.Clip;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}
 

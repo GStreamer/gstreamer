@@ -104,6 +104,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint ges_timeline_element_get_priority(IntPtr raw);
 
+		[Obsolete]
 		[GLib.Property ("priority")]
 		public uint Priority {
 			get  {
@@ -232,6 +233,16 @@ namespace GES {
 			}
 		}
 
+		[GLib.Signal("child-property-removed")]
+		public event GES.ChildPropertyRemovedHandler ChildPropertyRemoved {
+			add {
+				this.AddSignalHandler ("child-property-removed", value, typeof (GES.ChildPropertyRemovedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("child-property-removed", value);
+			}
+		}
+
 		[GLib.Signal("deep-notify")]
 		public event GES.DeepNotifyHandler DeepNotify {
 			add {
@@ -240,6 +251,122 @@ namespace GES {
 			remove {
 				this.RemoveSignalHandler ("deep-notify", value);
 			}
+		}
+
+		[GLib.Signal("child-property-added")]
+		public event GES.ChildPropertyAddedHandler ChildPropertyAdded {
+			add {
+				this.AddSignalHandler ("child-property-added", value, typeof (GES.ChildPropertyAddedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("child-property-added", value);
+			}
+		}
+
+		static ChildPropertyAddedNativeDelegate ChildPropertyAdded_cb_delegate;
+		static ChildPropertyAddedNativeDelegate ChildPropertyAddedVMCallback {
+			get {
+				if (ChildPropertyAdded_cb_delegate == null)
+					ChildPropertyAdded_cb_delegate = new ChildPropertyAddedNativeDelegate (ChildPropertyAdded_cb);
+				return ChildPropertyAdded_cb_delegate;
+			}
+		}
+
+		static void OverrideChildPropertyAdded (GLib.GType gtype)
+		{
+			OverrideChildPropertyAdded (gtype, ChildPropertyAddedVMCallback);
+		}
+
+		static void OverrideChildPropertyAdded (GLib.GType gtype, ChildPropertyAddedNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "child-property-added", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void ChildPropertyAddedNativeDelegate (IntPtr inst, IntPtr prop_object, IntPtr prop);
+
+		static void ChildPropertyAdded_cb (IntPtr inst, IntPtr prop_object, IntPtr prop)
+		{
+			try {
+				TimelineElement __obj = GLib.Object.GetObject (inst, false) as TimelineElement;
+				__obj.OnChildPropertyAdded (GLib.Object.GetObject (prop_object), prop);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideChildPropertyAdded")]
+		protected virtual void OnChildPropertyAdded (GLib.Object prop_object, IntPtr prop)
+		{
+			InternalChildPropertyAdded (prop_object, prop);
+		}
+
+		private void InternalChildPropertyAdded (GLib.Object prop_object, IntPtr prop)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (3);
+			GLib.Value[] vals = new GLib.Value [3];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (prop_object);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (prop);
+			inst_and_params.Append (vals [2]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+		}
+
+		static ChildPropertyRemovedNativeDelegate ChildPropertyRemoved_cb_delegate;
+		static ChildPropertyRemovedNativeDelegate ChildPropertyRemovedVMCallback {
+			get {
+				if (ChildPropertyRemoved_cb_delegate == null)
+					ChildPropertyRemoved_cb_delegate = new ChildPropertyRemovedNativeDelegate (ChildPropertyRemoved_cb);
+				return ChildPropertyRemoved_cb_delegate;
+			}
+		}
+
+		static void OverrideChildPropertyRemoved (GLib.GType gtype)
+		{
+			OverrideChildPropertyRemoved (gtype, ChildPropertyRemovedVMCallback);
+		}
+
+		static void OverrideChildPropertyRemoved (GLib.GType gtype, ChildPropertyRemovedNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "child-property-removed", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void ChildPropertyRemovedNativeDelegate (IntPtr inst, IntPtr prop_object, IntPtr prop);
+
+		static void ChildPropertyRemoved_cb (IntPtr inst, IntPtr prop_object, IntPtr prop)
+		{
+			try {
+				TimelineElement __obj = GLib.Object.GetObject (inst, false) as TimelineElement;
+				__obj.OnChildPropertyRemoved (GLib.Object.GetObject (prop_object), prop);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideChildPropertyRemoved")]
+		protected virtual void OnChildPropertyRemoved (GLib.Object prop_object, IntPtr prop)
+		{
+			InternalChildPropertyRemoved (prop_object, prop);
+		}
+
+		private void InternalChildPropertyRemoved (GLib.Object prop_object, IntPtr prop)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (3);
+			GLib.Value[] vals = new GLib.Value [3];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (prop_object);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (prop);
+			inst_and_params.Append (vals [2]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 		static DeepNotifyNativeDelegate DeepNotify_cb_delegate;
@@ -1221,6 +1348,127 @@ namespace GES {
 			return __result;
 		}
 
+		static GetNaturalFramerateNativeDelegate GetNaturalFramerate_cb_delegate;
+		static GetNaturalFramerateNativeDelegate GetNaturalFramerateVMCallback {
+			get {
+				if (GetNaturalFramerate_cb_delegate == null)
+					GetNaturalFramerate_cb_delegate = new GetNaturalFramerateNativeDelegate (GetNaturalFramerate_cb);
+				return GetNaturalFramerate_cb_delegate;
+			}
+		}
+
+		static void OverrideGetNaturalFramerate (GLib.GType gtype)
+		{
+			OverrideGetNaturalFramerate (gtype, GetNaturalFramerateVMCallback);
+		}
+
+		static void OverrideGetNaturalFramerate (GLib.GType gtype, GetNaturalFramerateNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("get_natural_framerate"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool GetNaturalFramerateNativeDelegate (IntPtr inst, out int framerate_n, out int framerate_d);
+
+		static bool GetNaturalFramerate_cb (IntPtr inst, out int framerate_n, out int framerate_d)
+		{
+			try {
+				TimelineElement __obj = GLib.Object.GetObject (inst, false) as TimelineElement;
+				bool __result;
+				__result = __obj.OnGetNaturalFramerate (out framerate_n, out framerate_d);
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideGetNaturalFramerate")]
+		protected virtual bool OnGetNaturalFramerate (out int framerate_n, out int framerate_d)
+		{
+			return InternalGetNaturalFramerate (out framerate_n, out framerate_d);
+		}
+
+		private bool InternalGetNaturalFramerate (out int framerate_n, out int framerate_d)
+		{
+			GetNaturalFramerateNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("get_natural_framerate"));
+				unmanaged = (GetNaturalFramerateNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GetNaturalFramerateNativeDelegate));
+			}
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
+
+			bool __result = unmanaged (this.Handle, out framerate_n, out framerate_d);
+			return __result;
+		}
+
+		static SetChildPropertyFullNativeDelegate SetChildPropertyFull_cb_delegate;
+		static SetChildPropertyFullNativeDelegate SetChildPropertyFullVMCallback {
+			get {
+				if (SetChildPropertyFull_cb_delegate == null)
+					SetChildPropertyFull_cb_delegate = new SetChildPropertyFullNativeDelegate (SetChildPropertyFull_cb);
+				return SetChildPropertyFull_cb_delegate;
+			}
+		}
+
+		static void OverrideSetChildPropertyFull (GLib.GType gtype)
+		{
+			OverrideSetChildPropertyFull (gtype, SetChildPropertyFullVMCallback);
+		}
+
+		static void OverrideSetChildPropertyFull (GLib.GType gtype, SetChildPropertyFullNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("set_child_property_full"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool SetChildPropertyFullNativeDelegate (IntPtr inst, IntPtr child, IntPtr pspec, IntPtr value, out IntPtr error);
+
+		static bool SetChildPropertyFull_cb (IntPtr inst, IntPtr child, IntPtr pspec, IntPtr value, out IntPtr error)
+		{
+			error = IntPtr.Zero;
+
+			try {
+				TimelineElement __obj = GLib.Object.GetObject (inst, false) as TimelineElement;
+				bool __result;
+				__result = __obj.OnSetChildPropertyFull (GLib.Object.GetObject (child), pspec, (GLib.Value) Marshal.PtrToStructure (value, typeof (GLib.Value)));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideSetChildPropertyFull")]
+		protected virtual bool OnSetChildPropertyFull (GLib.Object child, IntPtr pspec, GLib.Value value)
+		{
+			return InternalSetChildPropertyFull (child, pspec, value);
+		}
+
+		private bool InternalSetChildPropertyFull (GLib.Object child, IntPtr pspec, GLib.Value value)
+		{
+			SetChildPropertyFullNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("set_child_property_full"));
+				unmanaged = (SetChildPropertyFullNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SetChildPropertyFullNativeDelegate));
+			}
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
+
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			IntPtr error = IntPtr.Zero;
+			bool __result = unmanaged (this.Handle, child == null ? IntPtr.Zero : child.Handle, pspec, native_value, out error);
+			Marshal.FreeHGlobal (native_value);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1368,14 +1616,30 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // get_layer_priority
 							, "set_child_property"
+							, "get_natural_framerate"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("get_natural_framerate"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // get_natural_framerate
+							, "get_layer_priority"
+							, "set_child_property_full"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("set_child_property_full"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // set_child_property_full
+							, "get_natural_framerate"
 							, "_ges_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_ges_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 16 // _ges_reserved
-							, "get_layer_priority"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 14 // _ges_reserved
+							, "set_child_property_full"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1419,6 +1683,30 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_edit(IntPtr raw, IntPtr layers, long new_layer_priority, int mode, int edge, ulong position);
+
+		public bool Edit(GLib.List layers, long new_layer_priority, GES.EditMode mode, GES.Edge edge, ulong position) {
+			bool raw_ret = ges_timeline_element_edit(Handle, layers == null ? IntPtr.Zero : layers.Handle, new_layer_priority, (int) mode, (int) edge, position);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		public bool Edit(long new_layer_priority, GES.EditMode mode, GES.Edge edge, ulong position) {
+			return Edit (null, new_layer_priority, mode, edge, position);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool ges_timeline_element_edit_full(IntPtr raw, long new_layer_priority, int mode, int edge, ulong position, out IntPtr error);
+
+		public unsafe bool EditFull(long new_layer_priority, GES.EditMode mode, GES.Edge edge, ulong position) {
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = ges_timeline_element_edit_full(Handle, new_layer_priority, (int) mode, (int) edge, position, out error);
+			bool ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_timeline_element_get_child_property(IntPtr raw, IntPtr property_name, IntPtr value);
 
 		public bool GetChildProperty(string property_name, out GLib.Value value) {
@@ -1453,6 +1741,15 @@ namespace GES {
 				uint ret = raw_ret;
 				return ret;
 			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_get_natural_framerate(IntPtr raw, out int framerate_n, out int framerate_d);
+
+		public bool GetNaturalFramerate(out int framerate_n, out int framerate_d) {
+			bool raw_ret = ges_timeline_element_get_natural_framerate(Handle, out framerate_n, out framerate_d);
+			bool ret = raw_ret;
+			return ret;
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -1495,7 +1792,7 @@ namespace GES {
 
 		public GES.TimelineElement Paste(ulong paste_position) {
 			IntPtr raw_ret = ges_timeline_element_paste(Handle, paste_position);
-			GES.TimelineElement ret = GLib.Object.GetObject(raw_ret) as GES.TimelineElement;
+			GES.TimelineElement ret = GLib.Object.GetObject(raw_ret, true) as GES.TimelineElement;
 			return ret;
 		}
 
@@ -1564,6 +1861,21 @@ namespace GES {
 			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
 			ges_timeline_element_set_child_property_by_pspec(Handle, pspec, native_value);
 			Marshal.FreeHGlobal (native_value);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool ges_timeline_element_set_child_property_full(IntPtr raw, IntPtr property_name, IntPtr value, out IntPtr error);
+
+		public unsafe bool SetChildPropertyFull(string property_name, GLib.Value value) {
+			IntPtr native_property_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = ges_timeline_element_set_child_property_full(Handle, native_property_name, native_value, out error);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_property_name);
+			Marshal.FreeHGlobal (native_value);
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -1697,13 +2009,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool ges_meta_container_check_meta_registered(IntPtr raw, IntPtr meta_item, int flags, IntPtr type);
+		static extern bool ges_meta_container_check_meta_registered(IntPtr raw, IntPtr meta_item, out int flags, out IntPtr type);
 
-		public bool CheckMetaRegistered(string meta_item, GES.MetaFlag flags, GLib.GType type) {
+		public bool CheckMetaRegistered(string meta_item, out GES.MetaFlag flags, out GLib.GType type) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
-			bool raw_ret = ges_meta_container_check_meta_registered(Handle, native_meta_item, (int) flags, type.Val);
+			int native_flags;
+			IntPtr native_type;
+			bool raw_ret = ges_meta_container_check_meta_registered(Handle, native_meta_item, out native_flags, out native_type);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
+			flags = (GES.MetaFlag) native_flags;
+			type = new GLib.GType(native_type);
 			return ret;
 		}
 
@@ -1780,6 +2096,17 @@ namespace GES {
 			bool raw_ret = ges_meta_container_get_int64(Handle, native_meta_item, out dest);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_meta_container_get_marker_list(IntPtr raw, IntPtr key);
+
+		public GES.MarkerList GetMarkerList(string key) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr raw_ret = ges_meta_container_get_marker_list(Handle, native_key);
+			GES.MarkerList ret = GLib.Object.GetObject(raw_ret, true) as GES.MarkerList;
+			GLib.Marshaller.Free (native_key);
 			return ret;
 		}
 
@@ -1871,10 +2198,6 @@ namespace GES {
 			return ret;
 		}
 
-		public bool RegisterMetaDateTime(GES.MetaFlag flags, string meta_item) {
-			return RegisterMetaDateTime (flags, meta_item, null);
-		}
-
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_double(IntPtr raw, int flags, IntPtr meta_item, double value);
 
@@ -1932,10 +2255,6 @@ namespace GES {
 			return ret;
 		}
 
-		public bool RegisterMetaString(GES.MetaFlag flags, string meta_item) {
-			return RegisterMetaString (flags, meta_item, null);
-		}
-
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_uint(IntPtr raw, int flags, IntPtr meta_item, uint value);
 
@@ -1953,6 +2272,17 @@ namespace GES {
 		public bool RegisterMetaUint64(GES.MetaFlag flags, string meta_item, ulong value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_register_meta_uint64(Handle, (int) flags, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_register_static_meta(IntPtr raw, int flags, IntPtr meta_item, IntPtr type);
+
+		public bool RegisterStaticMeta(GES.MetaFlag flags, string meta_item, GLib.GType type) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_register_static_meta(Handle, (int) flags, native_meta_item, type.Val);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;
@@ -2019,6 +2349,17 @@ namespace GES {
 		public bool SetInt64(string meta_item, long value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_set_int64(Handle, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_set_marker_list(IntPtr raw, IntPtr meta_item, IntPtr list);
+
+		public bool SetMarkerList(string meta_item, GES.MarkerList list) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_set_marker_list(Handle, native_meta_item, list == null ? IntPtr.Zero : list.Handle);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;
@@ -2105,34 +2446,34 @@ namespace GES {
 			OverrideVirtualMethod (gtype, "notify-meta", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void NotifyMetaNativeDelegate (IntPtr inst, IntPtr _object, IntPtr p0);
+		delegate void NotifyMetaNativeDelegate (IntPtr inst, IntPtr key, IntPtr value);
 
-		static void NotifyMeta_cb (IntPtr inst, IntPtr _object, IntPtr p0)
+		static void NotifyMeta_cb (IntPtr inst, IntPtr key, IntPtr value)
 		{
 			try {
 				GES.TimelineElement __obj = GLib.Object.GetObject (inst, false) as GES.TimelineElement;
-				__obj.OnNotifyMeta (GLib.Marshaller.Utf8PtrToString (_object), (GLib.Value) Marshal.PtrToStructure (p0, typeof (GLib.Value)));
+				__obj.OnNotifyMeta (GLib.Marshaller.Utf8PtrToString (key), (GLib.Value) Marshal.PtrToStructure (value, typeof (GLib.Value)));
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideNotifyMeta")]
-		protected virtual void OnNotifyMeta (string _object, GLib.Value p0)
+		protected virtual void OnNotifyMeta (string key, GLib.Value value)
 		{
-			InternalNotifyMeta (_object, p0);
+			InternalNotifyMeta (key, value);
 		}
 
-		private void InternalNotifyMeta (string _object, GLib.Value p0)
+		private void InternalNotifyMeta (string key, GLib.Value value)
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (3);
 			GLib.Value[] vals = new GLib.Value [3];
 			vals [0] = new GLib.Value (this);
 			inst_and_params.Append (vals [0]);
-			vals [1] = new GLib.Value (_object);
+			vals [1] = new GLib.Value (key);
 			inst_and_params.Append (vals [1]);
-			vals [2] = new GLib.Value (p0);
+			vals [2] = new GLib.Value (value);
 			inst_and_params.Append (vals [2]);
 			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
 			foreach (GLib.Value v in vals)

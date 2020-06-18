@@ -86,6 +86,17 @@ namespace GES {
 			}
 		}
 
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_uri_source_asset_is_image(IntPtr raw);
+
+		public bool IsImage { 
+			get {
+				bool raw_ret = ges_uri_source_asset_is_image(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
 
 		static UriSourceAsset ()
 		{

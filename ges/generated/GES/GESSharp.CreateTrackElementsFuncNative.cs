@@ -40,9 +40,9 @@ namespace GESSharp {
 			}
 		}
 
-		IntPtr[] InvokeNative (GES.Clip clip, GES.TrackType type)
+		GES.TrackElement[] InvokeNative (GES.Clip clip, GES.TrackType type)
 		{
-			IntPtr[] __result = (IntPtr[]) GLib.Marshaller.ListPtrToArray (native_cb (clip == null ? IntPtr.Zero : clip.Handle, (int) type), typeof(GLib.List), false, false, typeof(IntPtr));
+			GES.TrackElement[] __result = (GES.TrackElement[]) GLib.Marshaller.ListPtrToArray (native_cb (clip == null ? IntPtr.Zero : clip.Handle, (int) type), typeof(GLib.List), false, true, typeof(GES.TrackElement));
 			return __result;
 		}
 	}
@@ -52,10 +52,10 @@ namespace GESSharp {
 		public IntPtr NativeCallback (IntPtr clip, int type)
 		{
 			try {
-				IntPtr[] __ret = managed (GLib.Object.GetObject(clip) as GES.Clip, (GES.TrackType) type);
+				GES.TrackElement[] __ret = managed (GLib.Object.GetObject(clip) as GES.Clip, (GES.TrackType) type);
 				if (release_on_call)
 					gch.Free ();
-				return new GLib.List(__ret, typeof (IntPtr), false, false) == null ? IntPtr.Zero : new GLib.List(__ret, typeof (IntPtr), false, false).Handle;
+				return new GLib.List(__ret, typeof (GES.TrackElement), false, true) == null ? IntPtr.Zero : new GLib.List(__ret, typeof (GES.TrackElement), false, true).Handle;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
 				// NOTREACHED: Above call does not return.

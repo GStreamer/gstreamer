@@ -45,6 +45,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
       </union>
 	</add-node>
 
+	<add-node path="/api/namespace/object/class_struct[@cname='GESTrackElementClass']">
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
+      </union>
+	</add-node>
+
+	<add-node path="/api/namespace/object/class_struct[@cname='GESClipClass']">
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
+      </union>
+	</add-node>
+
 	<!-- Mark reserved fields as padding -->
 	<attr path="//*[contains(@cname, 'ges_reserved')]" name="padding">true</attr>
 </metadata>

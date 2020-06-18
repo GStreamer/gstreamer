@@ -92,14 +92,22 @@ namespace GES {
 							, GES.Formatter.abi_info.Fields
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // priv
 							, null
+							, "xmlcontent"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("xmlcontent"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // xmlcontent
+							, "priv"
 							, "_ges_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_ges_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _ges_reserved
-							, "priv"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _ges_reserved
+							, "xmlcontent"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

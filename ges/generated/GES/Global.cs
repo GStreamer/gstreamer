@@ -39,6 +39,26 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_edit_mode_name(int mode);
+
+		public static string EditModeName(GES.EditMode mode) {
+			IntPtr raw_ret = ges_edit_mode_name((int) mode);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_find_formatter_for_uri(IntPtr uri);
+
+		public static GES.Asset FindFormatterForUri(string uri) {
+			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
+			IntPtr raw_ret = ges_find_formatter_for_uri(native_uri);
+			GES.Asset ret = GLib.Object.GetObject(raw_ret) as GES.Asset;
+			GLib.Marshaller.Free (native_uri);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_init();
 
 		public static bool Init() {
@@ -70,6 +90,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_play_sink_convert_frame(IntPtr playsink, IntPtr caps);
 
+		[Obsolete]
 		public static Gst.Sample PlaySinkConvertFrame(Gst.Element playsink, Gst.Caps caps) {
 			IntPtr raw_ret = ges_play_sink_convert_frame(playsink == null ? IntPtr.Zero : playsink.Handle, caps == null ? IntPtr.Zero : caps.Handle);
 			Gst.Sample ret = raw_ret == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Sample), true);

@@ -129,18 +129,18 @@ namespace GES {
 		// End of the ABI representation.
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_formatter_class_register_metas(IntPtr name, IntPtr description, IntPtr extension, IntPtr mimetype, double version, int rank);
+		static extern void ges_formatter_class_register_metas(IntPtr name, IntPtr description, IntPtr extensions, IntPtr caps, double version, int rank);
 
-		public static void RegisterMetas(string name, string description, string extension, string mimetype, double version, Gst.Rank rank) {
+		public static void RegisterMetas(string name, string description, string extensions, string caps, double version, Gst.Rank rank) {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr native_description = GLib.Marshaller.StringToPtrGStrdup (description);
-			IntPtr native_extension = GLib.Marshaller.StringToPtrGStrdup (extension);
-			IntPtr native_mimetype = GLib.Marshaller.StringToPtrGStrdup (mimetype);
-			ges_formatter_class_register_metas(native_name, native_description, native_extension, native_mimetype, version, (int) rank);
+			IntPtr native_extensions = GLib.Marshaller.StringToPtrGStrdup (extensions);
+			IntPtr native_caps = GLib.Marshaller.StringToPtrGStrdup (caps);
+			ges_formatter_class_register_metas(native_name, native_description, native_extensions, native_caps, version, (int) rank);
 			GLib.Marshaller.Free (native_name);
 			GLib.Marshaller.Free (native_description);
-			GLib.Marshaller.Free (native_extension);
-			GLib.Marshaller.Free (native_mimetype);
+			GLib.Marshaller.Free (native_extensions);
+			GLib.Marshaller.Free (native_caps);
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -194,6 +194,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe bool ges_formatter_load_from_uri(IntPtr raw, IntPtr timeline, IntPtr uri, out IntPtr error);
 
+		[Obsolete]
 		public unsafe bool LoadFromUri(GES.Timeline timeline, string uri) {
 			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
 			IntPtr error = IntPtr.Zero;
@@ -207,6 +208,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe bool ges_formatter_save_to_uri(IntPtr raw, IntPtr timeline, IntPtr uri, bool overwrite, out IntPtr error);
 
+		[Obsolete]
 		public unsafe bool SaveToUri(GES.Timeline timeline, string uri, bool overwrite) {
 			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
 			IntPtr error = IntPtr.Zero;

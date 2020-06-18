@@ -34,6 +34,40 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_track_element_get_auto_clamp_control_sources(IntPtr raw);
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern void ges_track_element_set_auto_clamp_control_sources(IntPtr raw, bool auto_clamp);
+
+		[GLib.Property ("auto-clamp-control-sources")]
+		public bool AutoClampControlSources {
+			get  {
+				bool raw_ret = ges_track_element_get_auto_clamp_control_sources(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set  {
+				ges_track_element_set_auto_clamp_control_sources(Handle, value);
+			}
+		}
+
+		[GLib.Property ("has-internal-source")]
+		public bool HasInternalSourceProp
+       {
+			get {
+				GLib.Value val = GetProperty ("has-internal-source");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("has-internal-source", val);
+				val.Dispose ();
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_element_get_track(IntPtr raw);
 
 		[GLib.Property ("track")]
@@ -414,16 +448,32 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // lookup_child
 							, "list_children_properties"
-							, "_ges_reserved"
+							, "ABI"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
-						new GLib.AbiField("_ges_reserved"
+						// union struct ABI.abi
+						// End ABI.abi
+
+						// union struct ABI
+							new GLib.AbiField("ABI._gst_reserved"
+								, -1
+								, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // ABI._gst_reserved
+								, "lookup_child"
+								, null
+								, (uint) Marshal.SizeOf(typeof(IntPtr))
+								, 0
+								),
+						// End ABI
+
+						new GLib.AbiField("ABI"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // _ges_reserved
+							, new List<List<string>>() {  // union ABI
+						new List<string>() {},
+						new List<string>() {"ABI._gst_reserved"}
+					  }
 							, "lookup_child"
 							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 					});
@@ -473,12 +523,26 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern void ges_track_element_clamp_control_source(IntPtr raw, IntPtr property_name);
+
+		public void ClampControlSource(string property_name) {
+			IntPtr native_property_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
+			ges_track_element_clamp_control_source(Handle, native_property_name);
+			GLib.Marshaller.Free (native_property_name);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_track_element_edit(IntPtr raw, IntPtr layers, int mode, int edge, ulong position);
 
+		[Obsolete]
 		public bool Edit(GLib.List layers, GES.EditMode mode, GES.Edge edge, ulong position) {
 			bool raw_ret = ges_track_element_edit(Handle, layers == null ? IntPtr.Zero : layers.Handle, (int) mode, (int) edge, position);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		public bool Edit(GES.EditMode mode, GES.Edge edge, ulong position) {
+			return Edit (null, mode, edge, position);
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -538,11 +602,33 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_track_element_has_internal_source(IntPtr raw);
+
+		public bool HasInternalSource { 
+			get {
+				bool raw_ret = ges_track_element_has_internal_source(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_track_element_is_active(IntPtr raw);
 
 		public bool IsActive { 
 			get {
 				bool raw_ret = ges_track_element_is_active(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_track_element_is_core(IntPtr raw);
+
+		public bool IsCore { 
+			get {
+				bool raw_ret = ges_track_element_is_core(Handle);
 				bool ret = raw_ret;
 				return ret;
 			}
@@ -592,6 +678,15 @@ namespace GES {
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_property_name);
 			GLib.Marshaller.Free (native_binding_type);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_track_element_set_has_internal_source(IntPtr raw, bool has_internal_source);
+
+		public bool SetHasInternalSource(bool has_internal_source) {
+			bool raw_ret = ges_track_element_set_has_internal_source(Handle, has_internal_source);
+			bool ret = raw_ret;
 			return ret;
 		}
 

@@ -12,6 +12,12 @@ namespace GES {
 		AssetWrongId = 0,
 		AssetLoading = 1,
 		FormatterMalformedInputFile = 2,
+		InvalidFrameNumber = 3,
+		NegativeLayer = 4,
+		NegativeTime = 5,
+		NotEnoughInternalContent = 6,
+		InvalidOverlapInTrack = 7,
+		InvalidEffectBinDescription = 8,
 	}
 #endregion
 }

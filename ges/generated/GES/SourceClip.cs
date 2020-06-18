@@ -13,9 +13,16 @@ namespace GES {
 
 		public SourceClip (IntPtr raw) : base(raw) {}
 
-		protected SourceClip() : base(IntPtr.Zero)
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_source_clip_new_time_overlay();
+
+		public SourceClip () : base (IntPtr.Zero)
 		{
-			CreateNativeObject (new string [0], new GLib.Value [0]);
+			if (GetType () != typeof (SourceClip)) {
+				CreateNativeObject (new string [0], new GLib.Value[0]);
+				return;
+			}
+			Raw = ges_source_clip_new_time_overlay();
 		}
 
 

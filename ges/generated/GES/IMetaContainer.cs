@@ -10,7 +10,7 @@ namespace GES {
 
 		event GES.NotifyMetaHandler NotifyMeta;
 		bool AddMetasFromString(string str);
-		bool CheckMetaRegistered(string meta_item, GES.MetaFlag flags, GLib.GType type);
+		bool CheckMetaRegistered(string meta_item, out GES.MetaFlag flags, out GLib.GType type);
 		void Foreach(GES.MetaForeachFunc func);
 		bool GetBoolean(string meta_item, out bool dest);
 		bool GetDateTime(string meta_item, out Gst.DateTime dest);
@@ -18,6 +18,7 @@ namespace GES {
 		bool GetFloat(string meta_item, out float dest);
 		bool GetInt(string meta_item, out int dest);
 		bool GetInt64(string meta_item, out long dest);
+		GES.MarkerList GetMarkerList(string key);
 		GLib.Value GetMeta(string key);
 		string GetString(string meta_item);
 		bool GetUint(string meta_item, out uint dest);
@@ -33,12 +34,14 @@ namespace GES {
 		bool RegisterMetaString(GES.MetaFlag flags, string meta_item, string value);
 		bool RegisterMetaUint(GES.MetaFlag flags, string meta_item, uint value);
 		bool RegisterMetaUint64(GES.MetaFlag flags, string meta_item, ulong value);
+		bool RegisterStaticMeta(GES.MetaFlag flags, string meta_item, GLib.GType type);
 		bool SetBoolean(string meta_item, bool value);
 		bool SetDateTime(string meta_item, Gst.DateTime value);
 		bool SetDouble(string meta_item, double value);
 		bool SetFloat(string meta_item, float value);
 		bool SetInt(string meta_item, int value);
 		bool SetInt64(string meta_item, long value);
+		bool SetMarkerList(string meta_item, GES.MarkerList list);
 		bool SetMeta(string meta_item, GLib.Value value);
 		bool SetString(string meta_item, string value);
 		bool SetUint(string meta_item, uint value);

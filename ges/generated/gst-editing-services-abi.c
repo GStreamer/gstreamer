@@ -43,12 +43,14 @@ int main (int argc, char *argv[]) {
 	g_print("\"GESBaseXmlFormatterClass.save\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESBaseXmlFormatterClass, save));
 	g_print("\"sizeof(GESBaseXmlFormatter)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESBaseXmlFormatter));
 	g_print("\"GESBaseXmlFormatter.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESBaseXmlFormatter, priv));
+	g_print("\"GESBaseXmlFormatter.xmlcontent\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESBaseXmlFormatter, xmlcontent));
 	g_print("\"sizeof(GESClipClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESClipClass));
 	g_print("\"GESClipClass.create_track_element\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESClipClass, create_track_element));
 	g_print("\"GESClipClass.create_track_elements\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESClipClass, create_track_elements));
 	g_print("\"sizeof(GESClip)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESClip));
 	g_print("\"GESClip.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESClip, priv));
 	g_print("\"sizeof(GESClipAssetClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESClipAssetClass));
+	g_print("\"GESClipAssetClass.get_natural_framerate\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESClipAssetClass, get_natural_framerate));
 	g_print("\"sizeof(GESClipAsset)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESClipAsset));
 	g_print("\"GESClipAsset.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESClipAsset, priv));
 	g_print("\"sizeof(GESCommandLineFormatter)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESCommandLineFormatter));
@@ -128,6 +130,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GESProjectClass.missing_uri\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProjectClass, missing_uri));
 	g_print("\"GESProjectClass.loading_error\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProjectClass, loading_error));
 	g_print("\"GESProjectClass.loaded\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProjectClass, loaded));
+	g_print("\"GESProjectClass.loading\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProjectClass, loading));
 	g_print("\"sizeof(GESProject)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESProject));
 	g_print("\"GESProject.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProject, priv));
 	g_print("\"sizeof(GESSourceClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESSourceClass));
@@ -175,6 +178,8 @@ int main (int argc, char *argv[]) {
 	g_print("\"GESTimelineElementClass.get_track_types\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, get_track_types));
 	g_print("\"GESTimelineElementClass.set_child_property\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, set_child_property));
 	g_print("\"GESTimelineElementClass.get_layer_priority\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, get_layer_priority));
+	g_print("\"GESTimelineElementClass.get_natural_framerate\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, get_natural_framerate));
+	g_print("\"GESTimelineElementClass.set_child_property_full\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, set_child_property_full));
 	g_print("\"sizeof(GESTimelineElement)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESTimelineElement));
 	g_print("\"GESTimelineElement.parent\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElement, parent));
 	g_print("\"GESTimelineElement.asset\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElement, asset));
@@ -210,6 +215,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GESTrackElement.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTrackElement, priv));
 	g_print("\"GESTrackElement.asset\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTrackElement, asset));
 	g_print("\"sizeof(GESTrackElementAssetClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESTrackElementAssetClass));
+	g_print("\"GESTrackElementAssetClass.get_natural_framerate\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTrackElementAssetClass, get_natural_framerate));
 	g_print("\"sizeof(GESTrackElementAsset)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESTrackElementAsset));
 	g_print("\"GESTrackElementAsset.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTrackElementAsset, priv));
 	g_print("\"sizeof(GESTransitionClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESTransitionClass));

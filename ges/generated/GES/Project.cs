@@ -73,6 +73,16 @@ namespace GES {
 			}
 		}
 
+		[GLib.Signal("loading")]
+		public event GES.LoadingHandler Loading {
+			add {
+				this.AddSignalHandler ("loading", value, typeof (GES.LoadingArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("loading", value);
+			}
+		}
+
 		[GLib.Signal("asset-loading")]
 		public event GES.AssetLoadingHandler AssetLoading {
 			add {
@@ -295,6 +305,59 @@ namespace GES {
 			unmanaged (this.Handle, timeline == null ? IntPtr.Zero : timeline.Handle);
 		}
 
+		static LoadingNativeDelegate Loading_cb_delegate;
+		static LoadingNativeDelegate LoadingVMCallback {
+			get {
+				if (Loading_cb_delegate == null)
+					Loading_cb_delegate = new LoadingNativeDelegate (Loading_cb);
+				return Loading_cb_delegate;
+			}
+		}
+
+		static void OverrideLoading (GLib.GType gtype)
+		{
+			OverrideLoading (gtype, LoadingVMCallback);
+		}
+
+		static void OverrideLoading (GLib.GType gtype, LoadingNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("loading"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void LoadingNativeDelegate (IntPtr inst, IntPtr timeline);
+
+		static void Loading_cb (IntPtr inst, IntPtr timeline)
+		{
+			try {
+				Project __obj = GLib.Object.GetObject (inst, false) as Project;
+				__obj.OnLoading (GLib.Object.GetObject(timeline) as GES.Timeline);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Project), ConnectionMethod="OverrideLoading")]
+		protected virtual void OnLoading (GES.Timeline timeline)
+		{
+			InternalLoading (timeline);
+		}
+
+		private void InternalLoading (GES.Timeline timeline)
+		{
+			LoadingNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("loading"));
+				unmanaged = (LoadingNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(LoadingNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			unmanaged (this.Handle, timeline == null ? IntPtr.Zero : timeline.Handle);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -346,14 +409,22 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // loaded
 							, "loading_error"
+							, "loading"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("loading"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // loading
+							, "loaded"
 							, "_ges_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_ges_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _ges_reserved
-							, "loaded"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _ges_reserved
+							, "loading"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -394,6 +465,13 @@ namespace GES {
 			bool raw_ret = ges_project_add_encoding_profile(Handle, profile == null ? IntPtr.Zero : profile.Handle);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern void ges_project_add_formatter(IntPtr raw, IntPtr formatter);
+
+		public void AddFormatter(GES.Formatter formatter) {
+			ges_project_add_formatter(Handle, formatter == null ? IntPtr.Zero : formatter.Handle);
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -494,7 +572,7 @@ namespace GES {
 		public unsafe bool Save(GES.Timeline timeline, string uri, GES.Asset formatter_asset, bool overwrite) {
 			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
 			IntPtr error = IntPtr.Zero;
-			bool raw_ret = ges_project_save(Handle, timeline == null ? IntPtr.Zero : timeline.Handle, native_uri, formatter_asset == null ? IntPtr.Zero : formatter_asset.Handle, overwrite, out error);
+			bool raw_ret = ges_project_save(Handle, timeline == null ? IntPtr.Zero : timeline.Handle, native_uri, formatter_asset == null ? IntPtr.Zero : formatter_asset.OwnedHandle, overwrite, out error);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_uri);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);

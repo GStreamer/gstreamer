@@ -8,13 +8,13 @@ namespace GES {
 	public delegate void NotifyMetaHandler(object o, NotifyMetaArgs args);
 
 	public class NotifyMetaArgs : GLib.SignalArgs {
-		public string Object{
+		public string Key{
 			get {
 				return (string) Args [0];
 			}
 		}
 
-		public GLib.Value P0{
+		public GLib.Value Value{
 			get {
 				return (GLib.Value) Args [1];
 			}

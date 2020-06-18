@@ -11,8 +11,11 @@ namespace GES {
 	public enum Edge {
 
 		EdgeStart = 0,
+		Start = 0,
 		EdgeEnd = 1,
+		End = 1,
 		EdgeNone = 2,
+		None = 2,
 	}
 
 	internal class EdgeGType {

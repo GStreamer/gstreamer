@@ -11,10 +11,15 @@ namespace GES {
 	public enum EditMode {
 
 		EditNormal = 0,
+		Normal = 0,
 		EditRipple = 1,
+		Ripple = 1,
 		EditRoll = 2,
+		Roll = 2,
 		EditTrim = 3,
+		Trim = 3,
 		EditSlide = 4,
+		Slide = 4,
 	}
 
 	internal class EditModeGType {

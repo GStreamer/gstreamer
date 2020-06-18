@@ -92,6 +92,15 @@ namespace GES {
 			}
 		}
 
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_video_source_get_natural_size(IntPtr raw, out int width, out int height);
+
+		public bool GetNaturalSize(out int width, out int height) {
+			bool raw_ret = ges_video_source_get_natural_size(Handle, out width, out height);
+			bool ret = raw_ret;
+			return ret;
+		}
+
 
 		static VideoSource ()
 		{

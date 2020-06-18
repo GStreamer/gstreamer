@@ -34,6 +34,8 @@ namespace GtkSharp.GstEditingServices {
 			GLib.GType.Register (GES.Group.GType, typeof (GES.Group));
 			GLib.GType.Register (GES.ImageSource.GType, typeof (GES.ImageSource));
 			GLib.GType.Register (GES.Layer.GType, typeof (GES.Layer));
+			GLib.GType.Register (GES.Marker.GType, typeof (GES.Marker));
+			GLib.GType.Register (GES.MarkerList.GType, typeof (GES.MarkerList));
 			GLib.GType.Register (GES.MultiFileSource.GType, typeof (GES.MultiFileSource));
 			GLib.GType.Register (GES.Operation.GType, typeof (GES.Operation));
 			GLib.GType.Register (GES.OperationClip.GType, typeof (GES.OperationClip));
@@ -42,6 +44,7 @@ namespace GtkSharp.GstEditingServices {
 			GLib.GType.Register (GES.Project.GType, typeof (GES.Project));
 			GLib.GType.Register (GES.Source.GType, typeof (GES.Source));
 			GLib.GType.Register (GES.SourceClip.GType, typeof (GES.SourceClip));
+			GLib.GType.Register (GES.SourceClipAsset.GType, typeof (GES.SourceClipAsset));
 			GLib.GType.Register (GES.TestClip.GType, typeof (GES.TestClip));
 			GLib.GType.Register (GES.TextOverlay.GType, typeof (GES.TextOverlay));
 			GLib.GType.Register (GES.TextOverlayClip.GType, typeof (GES.TextOverlayClip));
