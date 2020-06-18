@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gtk-sharp
+url=https://github.com/gtk-sharp/gtk-sharp.git
+revision=master

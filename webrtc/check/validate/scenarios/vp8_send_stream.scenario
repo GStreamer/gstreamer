@@ -1,0 +1,15 @@
+description, summary="Send a VP8 stream", handles-state=true
+include,location=negotiation_initiator.scenario
+include,location=bundle_policy.scenario
+
+set-webrtc-options, local-bundle-policy="$(local_bundle_policy)", remote-bundle-policy="$(remote_bundle_policy)"
+
+add-stream, pipeline="videotestsrc is-live=1 ! vp8enc ! rtpvp8pay ! queue"
+set-state, state="playing";
+wait-for-negotiation-needed, generation=1;
+
+# negotiate
+create-offer, which="$(negotiation_initiator)";
+wait-for-negotiation-state, which="$(negotiation_responder)", state="offer-set"
+create-answer, which="$(negotiation_responder)";
+wait-for-negotiation-state, which="$(negotiation_initiator)", state="answer-set"
