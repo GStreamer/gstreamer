@@ -24,6 +24,59 @@ test manifest:
       junit:
         - "junit.xml"
 
+# have a special definition for the test if the image already exists
+.check_image: &check_image_exists |
+  # if-not-exists steps
+  set -x
+
+  if [[ -z "$GST_FORCE_REBUILD" ]]
+  then
+    # disable exit on failure
+    set +e
+
+    # check if our image is already in the current registry
+    # we store the sha of the digest and the layers
+    skopeo inspect docker://$LOCAL_IMAGE | jq '[.Digest, .Layers]' > local_sha
+
+    # check if our image is already in the upstream registry
+    if [[ -z "$GST_UPSTREAM_REPO" ]]
+    then
+      echo "WARNING! Variable \$GST_UPSTREAM_REPO is undefined, cannot check for images"
+    else
+      skopeo inspect docker://$GST_UPSTREAM_IMAGE | jq '[.Digest, .Layers]' > upstream_sha
+    fi
+
+    # reenable exit on failure
+    set -e
+
+    # if the upstream repo has an image, ensure we use the same
+    if [ -s upstream_sha ]
+    then
+
+      # ensure we use the same image from upstream
+      diff upstream_sha local_sha && exit 0 || true
+
+      # copy the original image into the current project registry namespace
+      # we do 2 attempts with skopeo copy at most
+      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
+                  docker://$GST_UPSTREAM_IMAGE \
+                  docker://$LOCAL_IMAGE || \
+      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
+                  docker://$GST_UPSTREAM_IMAGE \
+                  docker://$LOCAL_IMAGE
+
+      exit 0
+    fi
+
+    # if we have a local image but none in the upstream repo, use our
+    if [ -s local_sha ]
+    then
+      exit 0
+    fi
+  fi
+
+  set +x
+
 .base:
   image: 'registry.fedoraproject.org/fedora:32'
   extends:
@@ -36,19 +89,32 @@ test manifest:
     STORAGE_DRIVER: 'vfs'
     BUILDAH_FORMAT: 'docker'
     BUILDAH_ISOLATION: 'chroot'
+
+    # FIXME: Probably needs to be changed to none and clone gst-ci repo each time, sigh
+    # as these jobs *could* run potentially in a fork of smth like -bad
+    # though given our current setup, its only possible to tweak the CI from a gst-ci
+    # fork so it might be fine
     GIT_STRATEGY: fetch
   script:
-    - export DATE=$(date +"%Y-%m-%d")
-    - export IMAGE="$CI_REGISTRY_IMAGE/${ARCH:=amd64}/$TAG"
-    - export _UID="$IMAGE:$DATE-$GST_UPSTREAM_BRANCH"
-    - export LATEST="$IMAGE:latest"
+    - echo $TAG
+    - echo $REPO_SUFFIX
 
-    - dnf install -y buildah runc
+    - export LOCAL_IMAGE="$CI_REGISTRY_IMAGE/$REPO_SUFFIX:$TAG"
+    - export GST_UPSTREAM_IMAGE="$GST_UPSTREAM_REPO/$REPO_SUFFIX:$TAG"
+
+    - echo $LOCAL_IMAGE
+    - echo $GST_UPSTREAM_IMAGE
+
+    # FIXME: make an image since there will be multiple jobs running every pipeline
+    - dnf install -y buildah skopeo jq runc
+
     # Newer versions of podman/buildah try to set overlayfs mount options when
     # using the vfs driver, and this causes errors.
     - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
-    - echo "Building image $_UID"
+    - *check_image_exists
+
+    - echo "Building image $LOCAL_IMAGE"
 
     - >
       buildah bud
@@ -60,29 +126,27 @@ test manifest:
       --label git.sha=$CI_COMMIT_SHA
       --label gitlab.project_path=$CI_PROJECT_PATH
       --label gitlab.project_url=$CI_PROJECT_URL
+      --label fdo.upstream-repo=$GST_UPSTREAM_REPO
+      --label fdo.expires-after="3w"
       -f $DOCKERFILE
-      -t $IMAGE
+      -t $LOCAL_IMAGE
       $CONTEXT_DIR
 
     - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-    # If we are in a fork, push the image to the reigstry regardless the branch
+
+    # Sanity check
     - |
-      if [ "$CI_PROJECT_NAMESPACE" != "gstreamer" ]; then
-        # Tag the image with the git ref
-        buildah tag $_UID $LATEST
-        # Only push the :latest so with each push the previous
-        # image in the forked registry gets overrwritten
-        # to avoid bloating the registry and making
-        # pruning easier for the gitlab admins
-        buildah push $LATEST
+      if [ "$CI_PROJECT_PATH" = "gstreamer/gst-ci" ]; then
+        if [ "$LOCAL_IMAGE" != "$GST_UPSTREAM_IMAGE" ]; then
+          echo "ERROR!!! AAAAA! THE IMAGE URI DOES NOT MATCH THE EXPECTED UPSTREAM ONE"
+          echo $LOCAL_IMAGE
+          echo $GST_UPSTRAM_IMAGE
+          exit 1
+        fi
       fi
 
-    # Push the images to the upstream registry
-    - |
-      if [ "$CI_PROJECT_NAMESPACE" = "gstreamer" ]; then
-        buildah push $_UID
-      fi
+    -  buildah push $LOCAL_IMAGE
 
 alpine amd64 manifest builder docker:
   stage: "build docker"
@@ -111,7 +175,9 @@ gst-indent amd64 docker:
 fedora amd64 docker:
   stage: "build docker"
   variables:
-    TAG: "fedora"
+    REPO_SUFFIX: "amd64/fedora"
+    TAG: "2020-06-18.0-$GST_UPSTREAM_BRANCH"
+
     CONTEXT_DIR: "docker/fedora/"
     DOCKERFILE: "docker/fedora/Dockerfile"
   extends: .base
