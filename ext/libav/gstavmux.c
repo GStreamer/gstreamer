@@ -729,7 +729,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
    * no buffers left */
   if (best_pad != NULL) {
     GstBuffer *buf;
-    AVPacket pkt;
+    AVPacket pkt = { 0, };
     GstMapInfo map;
 
     /* push out current buffer */
@@ -746,7 +746,6 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     pkt.size = map.size;
 
     pkt.stream_index = best_pad->padnum;
-    pkt.flags = 0;
 
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
       pkt.flags |= AV_PKT_FLAG_KEY;
@@ -755,8 +754,6 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       pkt.duration =
           gst_ffmpeg_time_gst_to_ff (GST_BUFFER_DURATION (buf),
           ffmpegmux->context->streams[best_pad->padnum]->time_base);
-    else
-      pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
