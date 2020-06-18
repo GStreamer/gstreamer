@@ -238,8 +238,8 @@ gst_sdp_message_new (GstSDPMessage ** msg)
 
 /**
  * gst_sdp_message_new_from_text:
- * @msg: (out) (transfer full): pointer to new #GstSDPMessage
  * @text: A dynamically allocated string representing the SDP description
+ * @msg: (out) (transfer full): pointer to new #GstSDPMessage
  *
  * Parse @text and create a new SDPMessage from these.
  *
