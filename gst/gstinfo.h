@@ -302,6 +302,32 @@ struct _GstDebugCategory {
  */
 #define GST_SEGMENT_FORMAT "p\aB"
 
+/**
+ * GST_TIMEP_FORMAT: (skip):
+ *
+ * printf format type used to debug GStreamer ClockTime pointers. You can use
+ * this in combination with GStreamer's debug logging system as well as the
+ * functions gst_info_vasprintf(), gst_info_strdup_vprintf() and
+ * gst_info_strdup_printf() to pretty-print #GstClockTime pointers. This can
+ * only be used on pointers to GstClockTime values.
+ *
+ * Since: 1.18
+ */
+#define GST_TIMEP_FORMAT "p\aT"
+
+/**
+ * GST_STIMEP_FORMAT: (skip):
+ *
+ * printf format type used to debug GStreamer signed time value pointers. You
+ * can use this in combination with GStreamer's debug logging system as well as
+ * the functions gst_info_vasprintf(), gst_info_strdup_vprintf() and
+ * gst_info_strdup_printf() to pretty-print signed time (pointers to
+ * #GstClockTimeDiff or #gint64).
+ *
+ * Since: 1.18
+ */
+#define GST_STIMEP_FORMAT "p\aS"
+
 typedef struct _GstDebugMessage GstDebugMessage;
 
 /**
