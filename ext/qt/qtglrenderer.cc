@@ -504,6 +504,11 @@ void GstQuickRenderer::stopGL ()
     if (m_sharedRenderData)
         shared_render_data_unref (m_sharedRenderData);
     m_sharedRenderData = NULL;
+
+    /* XXX: reset the OpenGL context and drawable as Qt may have clobbered it.
+     * Fixes any attempt to access OpenGL after shutting down qmlgloverlay. */
+    gst_gl_context_activate (gl_context, FALSE);
+    gst_gl_context_activate (gl_context, TRUE);
 }
 
 void GstQuickRenderer::cleanup()
