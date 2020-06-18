@@ -453,6 +453,13 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   }
 
   if (gst_caps_can_intersect (caps, othercaps)) {
+    /* FIXME: field-order is optional in the caps. This means that, if we're
+     * in a non-telecine mode and we have TFF upstream and
+     * top-field-first=FALSE in interlace (or the other way around), AND
+     * field-order isn't mentioned in the caps, we will do passthrough here
+     * and end up outptuting wrong data. Must detect missing field-order info
+     * and not do passthrough in that case, but instead check the
+     * GstVideoBufferFlags at the switch_fields check */
     interlace->passthrough = TRUE;
   } else {
     if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
