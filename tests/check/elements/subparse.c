@@ -489,6 +489,13 @@ GST_START_TEST (test_webvtt)
     ,
   };
 
+  /* Test with no hour component */
+  SubParseInputChunk webvtt_input1[] = {
+    {
+          "1\n00:01.000 --> 00:02.000 D:vertical T:50%\nNo hour component\n\n",
+        1 * GST_SECOND, 2 * GST_SECOND, "No hour component"}
+  };
+
   /* Test with no newline at the end */
   SubParseInputChunk webvtt_input2[] = {
     {
@@ -498,6 +505,7 @@ GST_START_TEST (test_webvtt)
   };
 
   test_vtt_do_test (webvtt_input, 0, G_N_ELEMENTS (webvtt_input));
+  test_vtt_do_test (webvtt_input1, 0, G_N_ELEMENTS (webvtt_input1));
   test_vtt_do_test (webvtt_input2, 0, G_N_ELEMENTS (webvtt_input2));
 }
 
