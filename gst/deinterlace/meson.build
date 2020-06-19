@@ -34,7 +34,7 @@ else
 endif
 
 asm_gen_objs = []
-if have_nasm
+if have_nasm and host_cpu == 'x86_64'
   if host_system == 'windows'
     outputname = '@PLAINNAME@.obj'
   else
