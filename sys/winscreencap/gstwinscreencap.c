@@ -25,7 +25,6 @@
 #include "gstdx9screencapsrc.h"
 
 #ifdef HAVE_DXGI_CAP
-#include <versionhelpers.h>
 #include "gstdxgiscreencapsrc.h"
 
 GST_DEBUG_CATEGORY (gst_dxgi_screen_cap_src_debug);
@@ -73,16 +72,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 #ifdef HAVE_DXGI_CAP
-  if (IsWindows8OrGreater ()) {
-    GST_DEBUG_CATEGORY_INIT (gst_dxgi_screen_cap_src_debug,
-        "dxgiscreencapsrc", 0, "DirectX DXGI screen capture source");
-
-    /* dxgiscreencapsrc is needs Windows8 or later. */
-    if (!gst_element_register (plugin, "dxgiscreencapsrc",
-            GST_RANK_NONE, GST_TYPE_DXGI_SCREEN_CAP_SRC)) {
-      return FALSE;
-    }
-  }
+  gst_dxgi_screen_cap_src_register (plugin, GST_RANK_NONE);
 #endif
 
   return TRUE;

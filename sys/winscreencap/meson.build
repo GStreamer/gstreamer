@@ -17,7 +17,6 @@ d3d_dep = cc.find_library('d3d9', required : get_option('winscreencap'))
 gdi_dep = cc.find_library('gdi32', required : get_option('winscreencap'))
 d3d11_dep = cc.find_library('d3d11', required : false)
 dxgi_lib_dep = cc.find_library('dxgi', required : false)
-d3d_compile_dep = cc.find_library('d3dcompiler', required : false)
 windowscodecs_dep = cc.find_library('windowscodecs',  required : false)
 dxguid_dep = cc.find_library('dxguid',  required : false)
 
@@ -31,12 +30,12 @@ if not have_d3d9_h and get_option('winscreencap').enabled()
   error('winscreencap plugin enabled but d3d9.h not found')
 endif
 
-have_dxgi = d3d11_dep.found() and dxgi_lib_dep.found() and d3d_compile_dep.found() and windowscodecs_dep.found() and dxguid_dep.found() and have_d3d11_h and have_dxgi_h and have_d3dcompiler_h and have_versionhelpers_h
+have_dxgi = d3d11_dep.found() and dxgi_lib_dep.found() and windowscodecs_dep.found() and dxguid_dep.found() and have_d3d11_h and have_dxgi_h and have_d3dcompiler_h and have_versionhelpers_h
 
 if have_dxgi
   dxgi_c_args += ['-DHAVE_DXGI_CAP']
   dxgiscreencap_sources += ['dxgicapture.c', 'gstdxgiscreencapsrc.c']
-  dxgi_dep += [d3d11_dep, dxgi_lib_dep, d3d_compile_dep, windowscodecs_dep, dxguid_dep]
+  dxgi_dep += [gmodule_dep, d3d11_dep, dxgi_lib_dep, windowscodecs_dep, dxguid_dep]
 endif
 
 if d3d_dep.found() and gdi_dep.found() and have_d3d9_h

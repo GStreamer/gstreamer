@@ -61,6 +61,8 @@ typedef struct _GstDXGIScreenCapSrc GstDXGIScreenCapSrc;
 
 typedef struct _DxgiCapture DxgiCapture;
 
+gboolean gst_dxgicap_shader_init (void);
+
 DxgiCapture *dxgicap_new (HMONITOR monitor, GstDXGIScreenCapSrc * src);
 void dxgicap_destory (DxgiCapture * _this);
 

@@ -43,6 +43,8 @@
 #include "config.h"
 #endif
 
+#include <windows.h>
+#include <versionhelpers.h>
 #include <gst/video/video.h>
 #include "gstdxgiscreencapsrc.h"
 #include "dxgicapture.h"
@@ -559,4 +561,21 @@ _get_hmonitor (GstDXGIScreenCapSrc * src)
     hmonitor = get_hmonitor_primary ();
   }
   return hmonitor;
+}
+
+void
+gst_dxgi_screen_cap_src_register (GstPlugin * plugin, GstRank rank)
+{
+  if (!IsWindows8OrGreater ()) {
+    GST_WARNING ("OS version is too old");
+    return;
+  }
+
+  if (!gst_dxgicap_shader_init ()) {
+    GST_WARNING ("Couldn't load HLS compiler");
+    return;
+  }
+
+  gst_element_register (plugin, "dxgiscreencapsrc",
+      rank, GST_TYPE_DXGI_SCREEN_CAP_SRC);
 }

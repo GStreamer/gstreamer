@@ -28,5 +28,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstDXGIScreenCapSrc, gst_dxgi_screen_cap_src, GST,
     DXGI_SCREEN_CAP_SRC, GstPushSrc);
 
+void gst_dxgi_screen_cap_src_register (GstPlugin * plugin,
+                                       GstRank rank);
+
 G_END_DECLS
 #endif /* __GST_DXGI_SCREEN_CAP_SRC_H__ */

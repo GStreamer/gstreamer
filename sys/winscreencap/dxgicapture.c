@@ -24,6 +24,7 @@
 #include "dxgicapture.h"
 
 #include <d3dcompiler.h>
+#include <gmodule.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_dxgi_screen_cap_src_debug);
 #define GST_CAT_DEFAULT gst_dxgi_screen_cap_src_debug
@@ -159,6 +160,51 @@ static void _set_verteces (DxgiCapture * self, vertex * verteces,
     RECT * dest_rect, const D3D11_TEXTURE2D_DESC * dst_desc, RECT * rect,
     const D3D11_TEXTURE2D_DESC * src_desc);
 
+static GModule *d3d_compiler_module = NULL;
+static pD3DCompile GstD3DCompileFunc = NULL;
+
+gboolean
+gst_dxgicap_shader_init (void)
+{
+  static volatile gsize _init = 0;
+  static const gchar *d3d_compiler_names[] = {
+    "d3dcompiler_47.dll",
+    "d3dcompiler_46.dll",
+    "d3dcompiler_45.dll",
+    "d3dcompiler_44.dll",
+    "d3dcompiler_43.dll",
+  };
+
+  if (g_once_init_enter (&_init)) {
+    gint i;
+    for (i = 0; i < G_N_ELEMENTS (d3d_compiler_names); i++) {
+      d3d_compiler_module =
+          g_module_open (d3d_compiler_names[i], G_MODULE_BIND_LAZY);
+
+      if (d3d_compiler_module) {
+        GST_INFO ("D3D compiler %s is available", d3d_compiler_names[i]);
+        if (!g_module_symbol (d3d_compiler_module, "D3DCompile",
+                (gpointer *) & GstD3DCompileFunc)) {
+          GST_ERROR ("Cannot load D3DCompile symbol from %s",
+              d3d_compiler_names[i]);
+          g_module_close (d3d_compiler_module);
+          d3d_compiler_module = NULL;
+          GstD3DCompileFunc = NULL;
+        } else {
+          break;
+        }
+      }
+    }
+
+    if (!GstD3DCompileFunc)
+      GST_WARNING ("D3D11 compiler library is unavailable");
+
+    g_once_init_leave (&_init, 1);
+  }
+
+  return ! !GstD3DCompileFunc;
+}
+
 DxgiCapture *
 dxgicap_new (HMONITOR monitor, GstDXGIScreenCapSrc * src)
 {
@@ -272,13 +318,15 @@ dxgicap_new (HMONITOR monitor, GstDXGIScreenCapSrc * src)
   }
 
   if (DXGI_MODE_ROTATION_IDENTITY != self->dupl_desc.Rotation) {
+    g_assert (GstD3DCompileFunc);
+
     /* For a rotated display, create a shader. */
-    hr = D3DCompile (STR_VERTEX_SHADER, sizeof (STR_VERTEX_SHADER),
+    hr = GstD3DCompileFunc (STR_VERTEX_SHADER, sizeof (STR_VERTEX_SHADER),
         NULL, NULL, NULL, "vs_main", "vs_4_0_level_9_1",
         0, 0, &vertex_shader_blob, NULL);
     HR_FAILED_GOTO (hr, D3DCompile, new_error);
 
-    hr = D3DCompile (STR_PIXEL_SHADER, sizeof (STR_PIXEL_SHADER),
+    hr = GstD3DCompileFunc (STR_PIXEL_SHADER, sizeof (STR_PIXEL_SHADER),
         NULL, NULL, NULL, "ps_main", "ps_4_0_level_9_1",
         0, 0, &pixel_shader_blob, NULL);
     HR_FAILED_GOTO (hr, D3DCompile, new_error);
