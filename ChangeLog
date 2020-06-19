@@ -1,3 +1,4040 @@
+=== release 1.17.1 ===
+
+2020-06-19 19:25:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.17.1
+
+2020-06-19 11:13:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.c:
+	* ges/ges-enums.c:
+	* ges/ges-layer.c:
+	* ges/ges-marker-list.c:
+	* ges/ges-marker-list.h:
+	* ges/ges-meta-container.c:
+	* ges/ges-project.h:
+	* ges/ges-source-clip-asset.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.c:
+	* ges/ges-types.h:
+	* ges/ges-uri-asset.c:
+	* ges/ges-video-source.c:
+	  ges: Add all missing Since markers from 1.16 onward
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/191>
+
+2020-06-09 10:07:13 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: Do not try to update proxies when we are in a proxying loop
+	  This is a regression introduced in
+	  c12b84788d197c714ec32653e2b751079e377c46, this commit simply brings back
+	  the previous behavior.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/113
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/185>
+
+2020-06-09 00:03:57 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-effect-asset.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-gerror.h:
+	* ges/ges-internal.h:
+	* tests/check/meson.build:
+	* tests/check/scenarios/complex_effect_bin_desc.validatetest:
+	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
+	  ges: Refactor the way we plug converters in effects
+	  Stopping to do it at the bin description level but properly
+	  plugging them where they are needed and cleanly ghosting the pads
+	  where it makes most sense.
+	  This introduces support for GES to request pads on the most upstream
+	  element in case no static pad can be ghosted.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/187>
+
+2020-06-09 16:40:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structured-interface.c:
+	  structured-interface: Add support for setting effects inpoint
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/187>
+
+2020-06-09 16:35:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	  track-element: Make set_has_internal_source return a boolean
+	  Telling the user if it is legal to have an internal source in that
+	  particular GESTrackElement.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/187>
+
+2020-06-15 13:09:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: doc: Add a note about trying to render before setting rendering settings
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/189>
+
+2020-06-15 12:23:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-uri-clip.c:
+	  uri-clip: Add a warning about synchronous uri discovery
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/189>
+
+2020-06-09 15:22:30 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins cache
+
+2020-06-08 10:58:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins cache
+
+2020-06-05 15:56:00 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* tests/check/scenarios/edit_while_seeked_with_stop.validatetest:
+	* tests/check/scenarios/edit_while_seeked_with_stop/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync.validatetest:
+	* tests/check/scenarios/seek_with_stop.validatetest:
+	  tests: enforce I420 format
+	  Tests are assuming video is I420 with a specific chroma and colorimetry
+	  but were not actually enforcing it.
+	  Fixes needed as I420 will no longer be the first video format, see
+	  gst-plugins-base!689
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/184>
+
+2020-06-04 23:14:59 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ges/ges-track.c:
+	* plugins/nle/nlecomposition.c:
+	  track, composition: mark stream id properties as DOC_SHOW_DEFAULT
+	  and update plugins cache
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/182>
+
+2020-06-03 18:30:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Require hotdoc >= 0.11.0
+
+2020-05-27 16:03:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update gst_plugins_cache.json
+
+2020-06-03 09:57:06 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* ges/ges-base-effect.c:
+	* ges/ges-base-effect.h:
+	* ges/ges-clip.c:
+	* ges/ges-enums.h:
+	* ges/ges-gerror.h:
+	* ges/ges-layer.c:
+	* ges/ges-time-overlay-clip.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	  add missing Since annotations on new API
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/181>
+
+2020-05-27 19:44:29 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pitivi-formatter.c:
+	  formatter: Do not dereference NULL pointer
+	  CID 1461701
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/180>
+
+2020-05-27 19:39:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  xml-formatter: Add an GST_ERROR when setting control sources fails
+	  CID 1463853
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/180>
+
+2020-05-26 19:14:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Wait for state change to consider commit as done
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/178>
+
+2020-05-26 19:02:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Stop always muting
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/178>
+
+2020-05-21 17:22:18 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-xml-formatter.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  formatter: Fix saving/loading project with clip speed rate control
+	  We need to ensure that clips duration is set after time effects are
+	  added and we now need to serialize effects inpoints and max duration.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-21 15:42:23 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* docs/design/time_notes.md:
+	  docs: add some notes on Time in GES
+	  These notes cover time coordinates in GES, time effects, time
+	  translations.
+	  It also goes into why keyframes will not work with non-linear time
+	  effects.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-21 11:25:30 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-uri-clip.c:
+	* tests/check/ges/asset.c:
+	  uri-clip: don't assume duration needs to stay the same
+	  ges_uri_clip_asset_get_duration does not tell us what the duration in
+	  the timeline needs to be. Especially when we have time effects, or
+	  effects with finite max-durations. So we should no longer expect the
+	  duration to stay the same when replacing assets. Instead, we just check
+	  that the new max-duration would be compatible with the current in-point
+	  (which was not checked before), and the clip would not be totally
+	  overlapped if its duration-limit changes.
+	  This is based on the assumption that each source is replaced one-to-one
+	  in its track. If a source is replaced with nothing in the same track,
+	  this check may be a little too strong (but still mostly weaker than
+	  before). However, problems could occur if track selection does
+	  something unexpected, such as placing the new source in a track not
+	  previously occupied.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-20 21:23:03 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: provide an example of using time effects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-20 21:20:10 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	* ges/ges-xml-formatter.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/project.c:
+	  track-element: use out-point for updating control bindings
+	  The out-point, which is an internal time, is used instead of the
+	  duration for determining the control binding value at the end of the
+	  element.
+	  Also, allow the user to switch off the auto-clamping of control sources
+	  if they are not desired. And allow them to clamp specific control sources
+	  individually.
+	  Also, fix a lot of memory leaks related to control sources. In
+	  particular, releasing the extra ref gained by source in
+	  g_object_get (binding, "control-source", &source, NULL);
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 18:09:50 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: test for layer in group
+	  Make sure the layer exists before we try to remove the grouped clips
+	  from it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 14:58:08 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline.c:
+	  timeline-tree: make sure the layer priority refers to an existing layer
+	  If a layer priority sits between the priorities of two layers in the
+	  timeline, i.e. it references a gap in the timeline's layers, then
+	  ges_timeline_append_layer will never fill this gap and create the
+	  desired layer, so the edit in timeline-tree would loop forever. So a
+	  check was added to avoid this.
+	  This would be a usage error, but a user can reasonably end up with a gap
+	  in their layers if they remove a layer from the timeline.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 14:53:49 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	  clip: add method for adding top effects
+	  Unlike ges_container_add, this lets you set the index and will check
+	  that track selection did not fail. This is useful for time effects whose
+	  addition would create an unsupported timeline configuration.
+	  Also can use the clip add error in ges_timeline_add_clip to let the user
+	  know when adding a clip to a layer that its in-point is set larger than
+	  the max-duration of its core children.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 14:47:15 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-enums.h:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* tests/check/python/test_timeline.py:
+	  timeline-tree: take time effects into account when trimming
+	  When trimming the start of a clip, we want to set the in-point of its
+	  children such that whatever data was at the timeline time T still
+	  remains at the timeline time T after the trim, where
+	  T = MAX (prev_start, new_start)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 14:41:58 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/tempochange.c:
+	  clip: use time translation for split
+	  The new in-point should be the media position corresponding to the media
+	  position. media_duration_factor is no longer needed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-18 17:34:01 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: fix warning when getting duration-limit
+	  The duration-limit case was missing a 'break;' statement.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-12 18:18:09 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/clip.c:
+	  clip: add methods to convert between time coordinates
+	  Add methods to convert between the timeline time coordinates and the
+	  internal time coordinates of a track element in a clip, taking time
+	  effects into account.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 14:28:09 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-base-effect.c:
+	* ges/ges-base-effect.h:
+	* ges/ges-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	* tests/check/ges/clip.c:
+	  effect: Add support for time effects
+	  Allow the user to register a child property of a base effect as a time
+	  property. This can be used by GES to correctly calculate the
+	  duration-limit of a clip when it has time effects on it. The existing
+	  ges_effect_class_register_rate_property is now used to automatically
+	  register such time effects for rate effects.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 14:25:01 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-gerror.h:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-layer.c:
+	* ges/ges-layer.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline-tree.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  errors: added edit errors
+	  Added more errors to GES_ERROR for when edits fail (other than
+	  programming or usage errors). Also promoted some GST messages if they
+	  related to a usage error.
+	  Also added explanation of timeline overlap rules in user docs.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/177>
+
+2020-05-15 12:19:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/scenarios/seek_with_stop.validatetest:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-audiosink-sink-expected:
+	  tests: Stop recording gaps in seek_with_stop
+	  We have little control over those as they are generated by streamsynchronizer in a not reproducible way
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-05-15 11:53:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/libs/GESTitleSource-children-props.md:
+	* docs/libs/GESVideoTestSource-children-props.md:
+	  docs: Remove reference to deinterlacing props in title and video test source
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-05-15 18:33:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Fix setting ges properties
+	  And fix typos.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-04-22 13:39:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/libs/GESTimeOverlayClip-children-props.md:
+	* docs/libs/document-children-props.py:
+	* docs/sitemap.txt:
+	* ges/ges-internal.h:
+	* ges/ges-source-clip.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-test-clip.h:
+	* ges/ges-time-overlay-clip.c:
+	* ges/ges-time-overlay-clip.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-test-source.h:
+	* ges/ges.h:
+	* ges/meson.build:
+	* tests/check/ges/clip.c:
+	* tests/check/scenarios/check_edit_in_frames_with_framerate_mismatch.scenario:
+	* tests/check/scenarios/edit_while_seeked_with_stop.validatetest:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync.validatetest:
+	* tests/check/scenarios/seek_with_stop.validatetest:
+	  ges: Move TimeOverlayClip out of GESTestClip
+	  This was complexifying the implementation for very little gain.
+	  Each source type should ideally have its own API.
+	  In that patch we make it so we do not have to subclass anything
+	  but instead use GESAsset to pass information about how the pipeline
+	  should look like.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-05-14 00:56:40 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Add stack initialization action after setting our state
+	  Otherwise there is a pretty rare race where we get the
+	  _initialize_stack_func executed leading to the stack set up and
+	  the source pushing buffers before the composition source pad is
+	  activated, and a STREAM_ERROR is reported as we end up pushing a
+	  buffer to a flushing pad.
+	  Thanks rr chaos mode for showing that improbable race
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-05-13 17:11:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	  timeline: No thread checking while disposing
+	  While this is not correct, we can't predict from what thread a
+	  GstElement will be disposed as it might still be referenced by
+	  a GstMessage somewhere which is freed by, any thread.
+	  In this specific case we can assume that GES user will already have
+	  let go his timeline reference and we should not avoid assert in that
+	  specific case as it should be safe to let the timeline be destroyed
+	  at that point.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-05-01 23:05:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nleobject.c:
+	  nle: Use G_PARAM_DEPRECATED for media-duration-factor
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/175>
+
+2020-05-18 08:49:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  ges: Ensure that assets are added to project before adding clip to timeline
+	  It is the right ordering and in Pitivi we set the project size
+	  when adding the first (relevant) asset, meaning that our code to
+	  reposition clips would kick in (in the unit tests) if we do not respect
+	  that ordering.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/176>
+
+2020-05-13 12:11:32 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	* ges/ges-uri-clip.c:
+	  track-element: Add is_core method to API
+	  Open up the method to the user, since they may need the information.
+	  Also added more documentation on what a core track element is to a clip
+	  and how they are treated.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-05-01 12:40:58 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-project.c:
+	* tests/check/ges/asset.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	  asset: unref requested assets
+	  Prevent a few memory leaks in the tests.
+	  Also mark ges_project_save as transfer full for the formatter asset.
+	  Also make sure that ges_project_request_sync is transfer full on the
+	  returned asset.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/104
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-30 12:10:22 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-track-element.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/test-utils.h:
+	  clip: enforce duration-limit
+	  Prevent setting of properties or that of children, if the clip would not
+	  be able to set the corresponding duration if the duration-limit would
+	  drop below the currently set duration.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-30 12:01:52 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: make sure core child is active for non-core in same track
+	  Each active non-core child must have a corresponding active core child
+	  in the same track. Therefore, if we de-activate a core child, we also
+	  need to de-activate all the non-core children in the same track.
+	  Similarly, if we activate a non-core child, we need to activate the
+	  corresponding core child as well.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-30 11:50:08 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: be more robust in handling priority
+	  Make less assumptions about the priority of effects and core elements so
+	  that the code would still work if the priority of an element was set
+	  directly. In particular, the index of a top effect will always be its
+	  position in the effect ordering.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-28 17:29:22 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	  container: stop storing priority offset in child mapping
+	  GESGroup no longer uses this, and GESClip can be made simpler without
+	  it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-27 19:11:16 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-auto-transition.h:
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* tests/check/ges/clip.c:
+	  clip: preserve auto-transition in split
+	  When splitting a clip, keep the auto-transition at the end of the clip
+	  alive and move its source to that of the corresponding split track
+	  element.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-21 12:55:34 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: change order of split
+	  We first change the duration of the splitted clip, then we add the new
+	  clip to the layer and assign the tracks for its children. Normally, when
+	  a clip is added to a layer it will have its track elements created, if
+	  needed, and then assigned to their tracks. This will fail if any sources
+	  would fully or triple overlap existing sources in the same track.
+	  However, here we were adding the clip to the layer *and* avoiding the
+	  track assignment process and instead setting the tracks explicitly. In
+	  particular, the order was:
+	  + add new clip to layer with no tracks assigned
+	  + shrink the split clip
+	  + assign the tracks for the new clip
+	  This has been changed to:
+	  + shrink the split clip
+	  + add new clip to layer with no tracks assigned
+	  + assign the tracks for the new clip
+	  Thus, the order of events for any users connecting to object signals
+	  will be close to that of adding another clip to the layer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-27 16:27:15 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-timeline.c:
+	  timeline: create auto-transitions during track-element-added
+	  Any time a track element is added to a track, we need to check whether
+	  we need to create a new corresponding auto-transition. This simply moves
+	  the code from ges-clip.c to ges-timeline.c, where it is more appropriate.
+	  Moreover, it technically opens the possibility for creating
+	  auto-transitions for track elements in the timeline that have no
+	  corresponding clip.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-27 16:05:54 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline-tree.c:
+	* tests/check/python/test_timeline.py:
+	  timeline-tree: also trim non-core track elements
+	  Also trim the in-point of non-core children of clips to ensure that
+	  their content will appear in the timeline at the same position.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-24 21:00:18 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/basic.c:
+	  timeline: make sure appended layer has lowest priority
+	  Make sure that the priority of an appended layer is the lowest (highest
+	  in value) when appending a layer to the timeline. This change is
+	  important when appending a layer to a timeline, which can easily have a
+	  gap in priorities if a layer has been removed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-23 17:34:52 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  tests: add tests for new editing behaviour
+	  These tests expose some of the new editing behaviour in timeline
+	  tree. In particular, we test:
+	  + edits for clips within groups within a group
+	  + that an edit can succeed if a snap allows it to
+	  + that snapping occurs at a specific point, and that we alternate
+	  between one call to snapping-started and one call to snapping-ended
+	  with corresponding values
+	  + that an edit can fail if a snap causes it to
+	  + no snapping is released when an edit fails
+	  + We tests for the expected changes, and otherwise check that the
+	  configuration of the timeline has remained unchanged
+	  + The timeline configuration remains the same when an edit fails
+	  + That each clip overlap has a corresponding auto-transition
+	  + That particular auto-transitions are created when a new overlap is
+	  formed
+	  + That particular auto-transitions are destroyed when an overlap ends
+	  + That auto-transitions are not replaced when two clips move but
+	  maintain their overlap
+	  + That the timeline does not contain any unaccounted for clips
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-23 17:30:17 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-timeline.c:
+	  layer: don't set timeline when moving clip
+	  If a clip is moving we should not unset its timeline when it is removed
+	  from the layer. Logic has been moved to ges_timeline_add_clip and
+	  ges_timeline_remove_clip.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-22 15:06:32 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-auto-transition.h:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline.c:
+	  timeline-tree: freeze auto-transitions whilst editing
+	  Freeze the auto-tranistions so they do not destroy themselves during an
+	  edit. Once complete the auto-transitions can move themselves back into
+	  position, or remove themselves if their sources are no longer
+	  overlapping.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-21 15:06:03 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline-tree.h:
+	  clip: make auto-transitions less expensive when adding to track
+	  Only check the overlaps with the actual track element that was just added
+	  to the track. This reduces the tree traversal by one order.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-21 14:05:55 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-layer.c:
+	* tests/check/ges/clip.c:
+	  clip: remove children if failed to add to layer
+	  If adding to a layer fails during ges_timeline_add_clip, any new children
+	  that were created during this process should be removed from the clip to
+	  put it back into its previous state.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-21 11:36:58 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-group.c:
+	  group: let timeline-tree handle layer priority
+	  Since a group can only have its priority set whilst it is part of a
+	  timeline, we can simply let the timeline-tree handle the move, which it
+	  can already do, whilst checking that the move would be legal (not break
+	  the timeline configuration). All the group has to do now if update its
+	  priority value if the priority of any of its children changes. It
+	  doesn't even need to keep track of the layer priority offsets.
+	  Also, added a check to ensure added children belong to the same
+	  timeline.
+	  Also moved the sigids from the GObject data to a g_hash_table, which is
+	  clearer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-20 14:56:55 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-group.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  timeline-element: stop using edit vmethods
+	  These were all redirecting to essentially ges_timeline_element_edit
+	  anyway.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-20 13:13:48 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-tree.c:
+	  timeline-element: simplify check for being edited
+	  It should be sufficient to set the edit flag only on the toplevel, which
+	  allows all of its children to know they are being edited and should not
+	  move in response.
+	  Also, removed some unnecessary setting/checking of this.
+	  Also, supplied the ges_timeline_element_peak_toplevel, which unlike
+	  ges_timeline_element_get_toplevel_parent, does not add a reference to
+	  the toplevel. Some corresponding leaks in auto-transition have been
+	  fixed by using this instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-27 14:05:38 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: emit snapping-started with new valid time
+	  Only emit snapping-ended if we have a valid snap time. Moreover, we
+	  should emit a new snapping-started even if we are snapping at the same
+	  location. This is because a new snap will always correspond to a new edit,
+	  possibly involving different snapping elements, which a user would want
+	  to know about.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-27 13:58:38 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline-tree.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/python/test_timeline.py:
+	* tests/check/scenarios/check_edit_in_frames_with_framerate_mismatch.scenario:
+	  timeline-tree: simplify and fix editing
+	  Editing has been simplified by breaking down each edit into a
+	  combination of three basic single-element edits: MOVE, TRIM_START, and
+	  TRIM_END.
+	  Each edit follows these steps:
+	  + Determine which elements are to be edited and under which basic mode
+	  + Determine which track elements will move as a result
+	  + Snap the edit position to one of the edges of the main edited element,
+	  (or the edge of one of its descendants, in the case of MOVE), avoiding
+	  moving elements.
+	  NOTE: in particular, we can *not* snap to the edge of a neighbouring
+	  element in a roll edit. This was previously possible, even though the
+	  neighbour was moving!
+	  + Determine the edit positions for clips (or track elements with no
+	  parent) using the snapped value. In addition, we replace any edits of
+	  a group with an edit of its descendant clips. If any value would be
+	  out of bounds (e.g. negative start) we do not edit.
+	  NOTE: this is now done *after* checking the snapping. This allows the
+	  edit to succeed if snapping would cause it to go from being invalid to
+	  valid!
+	  + Determine whether the collection of edits would result in a valid
+	  timeline-configuration which does not break the rules for sources
+	  overlapping.
+	  + If all this succeeds, we emit snapping-started on the timeline.
+	  + We then perform all the edits. At this point they should all succeed.
+	  The simplification/unification should make it easier to make other
+	  changes.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/97
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/98
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-18 16:49:31 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-group.c:
+	* tests/check/ges/group.c:
+	  group: fix priority setting
+	  Stop moving the group if a child clip is being edited by timeline-tree,
+	  a child group is updating its own priority, or a layer that a clip is in
+	  has changed priority. A group should only move if a descendant moves
+	  layers outside of a timeline-tree edit, or the priority of the group is
+	  set by the user.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/89
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-18 16:34:56 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	  container: keep start and duration up to date
+	  Simplified keeping the start and the duration of a container/group up to
+	  date with the earliest start of the children and the last end of the
+	  children. The previous logic was spread between ges-group and
+	  ges-container, now all the position handling is in ges-container.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-28 18:01:04 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: use duration-limit in set_max_duration
+	  Use the duration-limit rather than max-duration - in-point, since the
+	  former will be able to take other factors, such as effects, into
+	  account.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-04-13 17:42:22 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/test-utils.h:
+	  clip: add the duration-limit property
+	  The duration-limit is the maximum duration that can be set for the clip
+	  given its current children and their properties. If a change in the
+	  children properties causes this to drop below the current duration, it
+	  is automatically capped by this limit.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/169>
+
+2020-05-04 10:35:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	* ges/python/gesotioformatter.py:
+	  ges: Output otio formatter loading issues in debug logs
+	  Instead of spamming the terminal with a python traceback
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/107
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/173>
+
+2020-05-05 23:03:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/scenarios/seek_with_stop.validatetest:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-audiosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	  tests: Stop recording segment position in seek_with_stop
+	  There are two valid timing in GstAggregator where the segment event
+	  is pushed before GstAggregator sets its srcpad->segment.position in
+	  gst_aggregator_pad_chain_internal. Segment.position is basically
+	  a helper field for internal elements use so we should not require
+	  a specific value here as we are not checking a particular element
+	  behavior.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/106
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/174>
+
+2020-05-02 01:24:18 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  test: Add support for .validatetest in the launcher app
+
+2020-05-01 14:26:32 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	  container: return TRUE if adding doesn't cause any errors
+	  If `add_child` and `set_parent` succeed we want to return TRUE, even if
+	  the added element is no longer a child by the end of the method. This is
+	  because some users may call ges_container_remove during `child-added`.
+	  This shouldn't be considered an error.
+
+2020-04-30 17:44:33 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/scenarios/edit_while_seeked_with_stop.validatetest:
+	* tests/check/scenarios/edit_while_seeked_with_stop/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync.validatetest:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.validatetest:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-audiosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	  ges:tests: Fix the `ignore-fields` format in validatetests
+	  They are needed as those are not 100% reproducible with GES.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/168>
+
+2020-04-30 13:23:05 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesbasebin.c:
+	  plugin: Fix a race removing tracks from timeline from the wrong thread
+	  The case was that the timeline state was being changed from the parent
+	  composition's action thread before the timeline was committed, leading
+	  to the SELECT_STREAM event to be pushed from the track to the nested
+	  timeline from the wrong composition thread.
+	  ```
+	  **
+	  GES:ERROR:../subprojects/gst-editing-services/ges/ges-track.c:1263:ges_track_remove_element: assertion failed: (track->priv->valid_thread == g_thread_self())
+	  Bail out! GES:ERROR:../subprojects/gst-editing-services/ges/ges-track.c:1263:ges_track_remove_element: assertion failed: (track->priv->valid_thread == g_thread_self())
+	  Thread 1 (Thread 0x7f6ec2d43700 (LWP 1228982)):
+	  #0  0x00007f6ed85b2a25 in raise () at /lib64/libc.so.6
+	  #1  0x00007f6ed859b895 in abort () at /lib64/libc.so.6
+	  #2  0x00007f6ed899cb8c in g_assertion_message (domain=<optimized out>, file=0x7f6ed8d7fd58 "../subprojects/gst-editing-services/ges/ges-track.c", line=<optimized out>, func=<optimized out>, message=<optimized out>) at ../glib/gtestutils.c:2914
+	  #3  0x00007f6ed89fa9ff in g_assertion_message_expr (domain=domain@entry=0x7f6ed8d76875 "GES", file=file@entry=0x7f6ed8d7fd58 "../subprojects/gst-editing-services/ges/ges-track.c", line=line@entry=1263, func=func@entry=0x7f6ed8d805b0 <__func__.6> "ges_track_remove_element", expr=expr@entry=0x7f6ed8d801e8 "track->priv->valid_thread == g_thread_self()") at ../glib/gtestutils.c:2940
+	  #4  0x00007f6ed8d2658f in ges_track_remove_element (track=track@entry=0x7f6eb4119b20 [GESAudioTrack], object=object@entry=0x106f240 [GESAudioUriSource]) at ../subprojects/gst-editing-services/ges/ges-track.c:1263
+	  #5  0x00007f6ed8d10842 in ges_clip_empty_from_track (clip=0x7f6e7803ee80 [GESUriClip], track=track@entry=0x7f6eb4119b20 [GESAudioTrack]) at ../subprojects/gst-editing-services/ges/ges-clip.c:1086
+	  #6  0x00007f6ed8d01453 in ges_timeline_remove_track (timeline=timeline@entry=0x7f6e6c01ae50 [GESTimeline], track=0x7f6eb4119b20 [GESAudioTrack]) at ../subprojects/gst-editing-services/ges/ges-timeline.c:2460
+	  #7  0x00007f6ed8d0286b in ges_timeline_send_event (element=<optimized out>, event=<optimized out>) at ../subprojects/gst-editing-services/ges/ges-timeline.c:484
+	  #8  0x00007f6ed8bf466c in gst_element_send_event (element=0x7f6e6c01ae50 [GESTimeline], event=event@entry=0x7f6eb410f9f0) at ../subprojects/gstreamer/gst/gstelement.c:1934
+	  #9  0x00007f6ed8d242cd in ges_track_handle_message (bin=0xd846f0 [GESVideoTrack], message=0x7f6eb411ac90) at ../subprojects/gst-editing-services/ges/ges-track.c:477
+	  #10 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #11 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0xfdf440 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #12 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x10261d0 [NleComposition], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #13 0x00007f6ed8bccbee in gst_bin_post_message (element=0x10261d0 [NleComposition], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #14 0x00007f6ed8bf4b66 in gst_element_post_message (element=0x10261d0 [NleComposition], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #15 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #16 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0xfdf2c0 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #17 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x1029110 [GstBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #18 0x00007f6ed8bccbee in gst_bin_post_message (element=0x1029110 [GstBin], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #19 0x00007f6ed8bf4b66 in gst_element_post_message (element=0x1029110 [GstBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #20 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #21 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0xfdf500 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #22 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0xd705e0 [NleSource], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #23 0x00007f6ed8bccbee in gst_bin_post_message (element=0xd705e0 [NleSource], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #24 0x00007f6ed8bf4b66 in gst_element_post_message (element=0xd705e0 [NleSource], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #25 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #26 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0x1042400 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #27 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x1029450 [GstBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #28 0x00007f6ed8bccbee in gst_bin_post_message (element=0x1029450 [GstBin], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #29 0x00007f6ed8bf4b66 in gst_element_post_message (element=0x1029450 [GstBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #30 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #31 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0x1042640 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #32 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x7f6eb42fc7a0 [GstURIDecodeBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #33 0x00007f6ed8bccbee in gst_bin_post_message (element=0x7f6eb42fc7a0 [GstURIDecodeBin], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #34 0x00007f6ed8bf4b66 in gst_element_post_message (element=0x7f6eb42fc7a0 [GstURIDecodeBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #35 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #36 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0x7f6eb80a7130 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #37 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x7f6e6c02aa60 [GstDecodeBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #38 0x00007f6ed8bccbee in gst_bin_post_message (element=0x7f6e6c02aa60 [GstDecodeBin], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #39 0x00007f6ed8bf4b66 in gst_element_post_message (element=0x7f6e6c02aa60 [GstDecodeBin], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #40 0x00007f6ec8f1e00d in gst_decode_bin_handle_message (bin=0x7f6e6c02aa60 [GstDecodeBin], msg=<optimized out>) at ../subprojects/gst-plugins-base/gst/playback/gstdecodebin2.c:5667
+	  #41 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #42 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0x7f6eb4139110 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #43 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x7f6e54038c70 [GESDemux], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #44 0x00007f6ed8bccbee in gst_bin_post_message (element=0x7f6e54038c70 [GESDemux], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #45 0x00007f6ed8bf4b66 in gst_element_post_message (element=0x7f6e54038c70 [GESDemux], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #46 0x00007f6ed8bc9128 in bin_bus_handler (bus=<optimized out>, message=<optimized out>, bin=<optimized out>) at ../subprojects/gstreamer/gst/gstbin.c:3286
+	  #47 0x00007f6ed8bdbae2 in gst_bus_post (bus=bus@entry=0x7f6eb4139350 [GstBus], message=message@entry=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstbus.c:359
+	  #48 0x00007f6ed8bf1396 in gst_element_post_message_default (element=element@entry=0x7f6e6c01ae50 [GESTimeline], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2067
+	  #49 0x00007f6ed8bccbee in gst_bin_post_message (element=0x7f6e6c01ae50 [GESTimeline], msg=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstmessage.h:376
+	  #50 0x00007f6ed8bf4b66 in gst_element_post_message (element=element@entry=0x7f6e6c01ae50 [GESTimeline], message=0x7f6eb411ac90) at ../subprojects/gstreamer/gst/gstelement.c:2110
+	  #51 0x00007f6ed8cfa221 in ges_timeline_change_state (element=0x7f6e6c01ae50 [GESTimeline], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gst-editing-services/ges/ges-timeline.c:450
+	  #52 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0x7f6e6c01ae50 [GESTimeline], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #53 0x00007f6ed8bf6868 in gst_element_continue_state (element=element@entry=0x7f6e6c01ae50 [GESTimeline], ret=ret@entry=GST_STATE_CHANGE_SUCCESS) at ../subprojects/gstreamer/gst/gstelement.c:2741
+	  #54 0x00007f6ed8bf5d67 in gst_element_change_state (element=element@entry=0x7f6e6c01ae50 [GESTimeline], transition=transition@entry=GST_STATE_CHANGE_NULL_TO_READY) at ../subprojects/gstreamer/gst/gstelement.c:3072
+	  #55 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0x7f6e6c01ae50 [GESTimeline], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #56 0x00007f6ed8bd2129 in gst_bin_element_set_state (next=GST_STATE_PAUSED, current=GST_STATE_PAUSED, start_time=0, base_time=0, element=0x7f6e6c01ae50 [GESTimeline], bin=0x7f6e54038c70 [GESDemux]) at ../subprojects/gstreamer/gst/gstbin.c:2615
+	  #57 gst_bin_change_state_func (element=0x7f6e54038c70 [GESDemux], transition=GST_STATE_CHANGE_PAUSED_TO_PAUSED) at ../subprojects/gstreamer/gst/gstbin.c:2957
+	  #58 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0x7f6e54038c70 [GESDemux], transition=transition@entry=GST_STATE_CHANGE_PAUSED_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #59 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0x7f6e54038c70 [GESDemux], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #60 0x00007f6ed8bd2129 in gst_bin_element_set_state (next=GST_STATE_PAUSED, current=GST_STATE_READY, start_time=0, base_time=0, element=0x7f6e54038c70 [GESDemux], bin=0x7f6e6c02aa60 [GstDecodeBin]) at ../subprojects/gstreamer/gst/gstbin.c:2615
+	  #61 gst_bin_change_state_func (element=0x7f6e6c02aa60 [GstDecodeBin], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstbin.c:2957
+	  #62 0x00007f6ec8f1e84f in gst_decode_bin_change_state (element=0x7f6e6c02aa60 [GstDecodeBin], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gst-plugins-base/gst/playback/gstdecodebin2.c:5482
+	  #63 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0x7f6e6c02aa60 [GstDecodeBin], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #64 0x00007f6ed8bf6868 in gst_element_continue_state (element=element@entry=0x7f6e6c02aa60 [GstDecodeBin], ret=ret@entry=GST_STATE_CHANGE_SUCCESS) at ../subprojects/gstreamer/gst/gstelement.c:2741
+	  #65 0x00007f6ed8bf5d67 in gst_element_change_state (element=element@entry=0x7f6e6c02aa60 [GstDecodeBin], transition=transition@entry=GST_STATE_CHANGE_NULL_TO_READY) at ../subprojects/gstreamer/gst/gstelement.c:3072
+	  #66 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0x7f6e6c02aa60 [GstDecodeBin], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #67 0x00007f6ed8bf5ae8 in gst_element_sync_state_with_parent (element=0x7f6e6c02aa60 [GstDecodeBin]) at ../subprojects/gstreamer/gst/gstelement.c:2413
+	  #68 0x00007f6ed89f17a0 in g_slist_foreach (list=<optimized out>, func=0x7f6ed8bf5a50 <gst_element_sync_state_with_parent>, user_data=user_data@entry=0x0) at ../glib/gslist.c:880
+	  #69 0x00007f6ec8f37d45 in gst_uri_decode_bin_change_state (element=<optimized out>, transition=<optimized out>) at ../subprojects/gst-plugins-base/gst/playback/gsturidecodebin.c:2869
+	  #70 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0x7f6eb42fc7a0 [GstURIDecodeBin], transition=transition@entry=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #71 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0x7f6eb42fc7a0 [GstURIDecodeBin], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #72 0x00007f6ed8bd2129 in gst_bin_element_set_state (next=GST_STATE_PAUSED, current=GST_STATE_READY, start_time=0, base_time=0, element=0x7f6eb42fc7a0 [GstURIDecodeBin], bin=0x1029450 [GstBin]) at ../subprojects/gstreamer/gst/gstbin.c:2615
+	  #73 gst_bin_change_state_func (element=0x1029450 [GstBin], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstbin.c:2957
+	  #74 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0x1029450 [GstBin], transition=transition@entry=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #75 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0x1029450 [GstBin], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #76 0x00007f6ed8bd2129 in gst_bin_element_set_state (next=GST_STATE_PAUSED, current=GST_STATE_READY, start_time=0, base_time=0, element=0x1029450 [GstBin], bin=0xd705e0 [NleSource]) at ../subprojects/gstreamer/gst/gstbin.c:2615
+	  #77 gst_bin_change_state_func (element=0xd705e0 [NleSource], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstbin.c:2957
+	  #78 0x00007f6ec805533f in nle_object_change_state (element=0xd705e0 [NleSource], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gst-editing-services/plugins/nle/nleobject.c:748
+	  #79 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0xd705e0 [NleSource], transition=transition@entry=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #80 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0xd705e0 [NleSource], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #81 0x00007f6ed8bd2129 in gst_bin_element_set_state (next=GST_STATE_PAUSED, current=GST_STATE_READY, start_time=0, base_time=0, element=0xd705e0 [NleSource], bin=0x1029110 [GstBin]) at ../subprojects/gstreamer/gst/gstbin.c:2615
+	  #82 gst_bin_change_state_func (element=0x1029110 [GstBin], transition=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstbin.c:2957
+	  #83 0x00007f6ed8bf5d1e in gst_element_change_state (element=element@entry=0x1029110 [GstBin], transition=transition@entry=GST_STATE_CHANGE_READY_TO_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:3033
+	  #84 0x00007f6ed8bf6368 in gst_element_set_state_func (element=0x1029110 [GstBin], state=GST_STATE_PAUSED) at ../subprojects/gstreamer/gst/gstelement.c:2987
+	  #85 0x00007f6ed8bf5ae8 in gst_element_sync_state_with_parent (element=0x1029110 [GstBin]) at ../subprojects/gstreamer/gst/gstelement.c:2413
+	  #86 0x00007f6ec8060356 in _activate_new_stack (toplevel_seek=<optimized out>, comp=0x10261d0 [NleComposition]) at ../subprojects/gst-editing-services/plugins/nle/nlecomposition.c:3117
+	  #87 update_pipeline (comp=comp@entry=0x10261d0 [NleComposition], currenttime=<optimized out>, seqnum=<optimized out>, update_reason=update_reason@entry=COMP_UPDATE_STACK_INITIALIZE) at ../subprojects/gst-editing-services/plugins/nle/nlecomposition.c:3396
+	  #88 0x00007f6ec80614f6 in _initialize_stack_func (comp=0x10261d0 [NleComposition], ucompo=0x108c800) at ../subprojects/gst-editing-services/plugins/nle/nlecomposition.c:732
+	  #89 0x00007f6ed893788a in g_closure_invoke (closure=<optimized out>, return_value=<optimized out>, n_param_values=<optimized out>, param_values=<optimized out>, invocation_hint=<optimized out>) at ../gobject/gclosure.c:810
+	  #90 0x00007f6ec805aaf6 in _execute_actions (comp=0x10261d0 [NleComposition]) at ../subprojects/gst-editing-services/plugins/nle/nlecomposition.c:412
+	  #91 0x00007f6ed8c4c1cf in gst_task_func (task=0x7f6e6c01c290 [GstTask]) at ../subprojects/gstreamer/gst/gsttask.c:328
+	  #92 0x00007f6ed89fc0f4 in g_thread_pool_thread_proxy (data=<optimized out>) at ../glib/gthreadpool.c:354
+	  #93 0x00007f6ed89fb7f2 in g_thread_proxy (data=0x7f6eb0017800) at ../glib/gthread.c:807
+	  #94 0x00007f6ed7e14432 in start_thread () at /lib64/libpthread.so.0
+	  #95 0x00007f6ed86779d3 in clone () at /lib64/libc.so.6
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/167>
+
+2020-04-14 10:22:09 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* tests/check/nle/tempochange.c:
+	  check: give nle_tempochange test more time
+	  These test can take longer than most under valgrind, so give them a
+	  little more time until they timeout.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/160>
+
+2020-04-13 11:40:55 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/basic.c:
+	  timeline: fix adding track when layers contains clips
+	  Made sure that adding a new track only uses select-tracks-for-object for
+	  core children to determine whether a track elements should be added to the
+	  new track or not, and *not* any other track. In particular, there should
+	  be *no* change in the existing tracks of the timeline when adding another
+	  track. Moreover, a new track should not invoke the creation of track
+	  elements for other tracks.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/160>
+
+2020-04-08 17:11:14 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-effect.c:
+	* ges/ges-track-element.c:
+	* plugins/nle/nleghostpad.c:
+	* plugins/nle/nleobject.c:
+	* plugins/nle/nleobject.h:
+	* plugins/nle/nleoperation.c:
+	* tests/check/ges/tempochange.c:
+	* tests/check/nle/tempochange.c:
+	  nleobject: stop using media-duration-factor
+	  The property had been deprecated and is unused.
+	  This property is not needed. Any internal time effect that an nleoperation
+	  wraps is itself responsible for converting seek/segment timestamps.
+	  Previously, the ghostpads were performing a rate conversion after the
+	  rate element had already done so, essentially doubling their effect on
+	  seeks and segment times. This was always unnecessary, but went unnoticed
+	  by the tempochange test because it was using an identity element rather
+	  than an actual rate-changing element.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/160>
+
+2020-04-08 17:08:41 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleoperation.c:
+	* plugins/nle/nleoperation.h:
+	  nleoperation: stop setting next_base_time
+	  This property was unused.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/160>
+
+2020-04-21 16:22:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	* tests/check/meson.build:
+	* tests/check/scenarios/edit_while_seeked_with_stop.validatetest:
+	* tests/check/scenarios/edit_while_seeked_with_stop/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync.validatetest:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.validatetest:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-audiosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.c:
+	  nlecomposition: Fix seeking with stop
+	  And add some tests
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/166>
+
+2020-04-24 17:15:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.c:
+	  launch: Add support for testfiles
+	  Making it simpler to define a test in a single files, including the
+	  configuration etc..
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/166>
+
+2020-04-24 16:46:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	  track: Do not commit ourselves automatically when changing state from wrong thread
+	  The user is responsible to commit the timeline from the right thread
+	  in that case and in the case of gesdemux, the loaded timeline is filling
+	  gaps automatically when the project is set loaded.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/166>
+
+2020-04-18 16:22:25 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* meson.build:
+	  macos: fix python's configure checks
+
+2020-04-17 12:35:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	* ges/ges-video-uri-source.c:
+	  ges: Fix interlaced stream playback
+	  Negotiation was failling as `videoflip` was not allowing not
+	  progressive interlacing.
+	  Also avoid adding a deinterlace element when it is useless.
+
+2020-04-16 20:27:30 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	* meson.build:
+	* tests/check/scenarios/check_video_track_restriction_scale.scenario:
+	  framepositioner: Fix some source repositionning rounding issues
+	  Avoid loosing (too much) precision when rescaling back and forth by
+	  storing values in gdoubles.
+	  Handle the fact that position values can be negative
+	  Also fix debug category static variable
+	  as it clashes with the instance variable name in a few methods.
+
+2020-04-16 12:53:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip-asset.c:
+	* ges/ges-timeline.c:
+	  timeline: Fix wrong usage of scale_int
+	  We are multiplying the framerate by GST_SECOND and thus have no
+	  guarantee that it won't overflow.
+
+2020-04-11 11:40:06 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-image-source.c:
+	* ges/ges-video-uri-source.c:
+	  ges: Place imagefreeze at right place
+	  Negotiation fails when having the imagefreeze after videorate and
+	  frame positioning won't happen after seeks if we do not put it
+	  before the postioner
+
+2020-04-09 11:24:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	* ges/ges-timeline.c:
+	  asset: Avoid dereferencing NULL pointer
+	  CID 1461286
+
+2020-04-09 11:20:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesbasebin.c:
+	  basebin: Do not set stream_group if upstream didn't provide it
+	  CID: 1461278
+
+2020-04-09 11:17:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/gstframepositioner.c:
+	  framepositionner: Fix wrong old size check condition
+	  CID: 1461277
+
+2020-04-09 11:16:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Avoid dereferencing NULL pointer
+	  CID: 1461266
+
+2020-04-09 11:10:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Ensure setting framerate in timeline_get_framerate
+	  CID: 1461250, 1461288
+
+2020-04-09 11:07:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/nle/complex.c:
+	  tests: Check that linking pads works
+	  CID: 1456061
+
+2020-04-09 11:02:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Properly check that setting keyframe works
+	  Fixes CID: 1455490
+
+2020-04-09 10:59:40 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Check result of g_stat
+	  CID: 1455489, 1455521
+
+2020-04-09 10:54:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/tempochange.c:
+	  test: tempochange: Plug leak
+	  CID: 1455448
+
+2020-04-09 10:42:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  ges: Cast to signed int to compare agasint 0
+	  The check made sense but we were not casting to be able to check
+	  signess of subtraction result.
+	  CID: 1444923
+
+2020-04-09 10:37:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Do not compare unsigned with 0
+	  Layer priorities are always positive the check was making no
+	  sense in any case.
+	  Fixes CID: 1444922, 1461284
+
+2020-04-09 10:31:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-pitivi-formatter.c:
+	* plugins/ges/gesdemux.c:
+	* tests/check/ges/clip.c:
+	  ges: Always check return value of `ges_container_add`
+	  Making coverity happy
+	  CIDs: 1461460, 1461461, 1461462, 1461463, 1461464, 1461465, 1461466, 1461468,
+
+2020-04-09 10:00:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-test-source.c:
+	  ges: Fix sending EOS on testclip when using timeoverlay
+	  Basically when using timeoverlay we where waiting for input-selector
+	  to receive EOS on its active on the output-selector streaming thread
+	  but... EOS was being sent from that same thread waiting for input-selector
+	  to unblock to send EOS on its other pad.
+	  In our specific use case we want EOS to be sent only on the active pad.
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/103
+
+2020-04-09 09:29:17 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/deprecated.md:
+	* docs/libs/GESAudioTestSource-children-props.md:
+	* docs/libs/GESAudioUriSource-children-props.md:
+	* docs/libs/GESTitleSource-children-props.md:
+	* docs/libs/GESTransitionClip-children-props.md:
+	* docs/libs/GESVideoTestSource-children-props.md:
+	* docs/libs/GESVideoUriSource-children-props.md:
+	* docs/libs/document-children-props.py:
+	* docs/sitemap.txt:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-effect-asset.c:
+	* ges/ges-source-clip-asset.c:
+	* ges/ges-title-source.c:
+	* ges/ges-title-source.h:
+	* ges/ges-transition-clip.h:
+	* ges/ges-types.h:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-uri-source.h:
+	  ges: Update documentation
+	  And start generating TrackElement children property with a stupid
+	  simple script
+
+2020-04-09 09:24:12 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-test-source.c:
+	  ges: Add the foreground color child property
+
+2020-04-07 10:53:15 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* tests/check/python/test_assets.py:
+	  ges: Fix reloading UriClipAsset synchronously
+	  And add tests for that
+
+2020-04-07 10:47:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	* ges/ges-track-element.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-uri-asset.c:
+	* tests/check/python/test_clip.py:
+	  ges: Rework the way we ensure core elements are not wrongly moved between clips
+	  Instead of focusing on the instances of the clips and their children,
+	  we relax the check to allow moving track element clip between clips
+	  that share a common asset. This makes it as correct conceptually but
+	  more flexible, and the code becomes simpler.
+
+2020-04-02 11:58:18 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-timeline.c:
+	  group: tidied timeline membership in copy-paste
+	  Previously, the GESContainer ->paste method and GESGroup ->paste methods
+	  were unnecessarily setting the timeline of groups, even though this is
+	  handled by the GESGroup ->child_added method. This could result in the
+	  group being added multiple times.
+
+2020-04-01 21:34:48 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline-tree.c:
+	* tests/check/python/test_timeline.py:
+	  timeline-tree: fix overlap check
+	  Previously, the code was not able to detect that an element overlaps on
+	  its end, nor could it detect that an element overlaps two elements that
+	  already overlap.
+
+2020-04-06 12:44:30 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: tidy grouping
+	  Make the grouping of clips cleaner by checking that the clips share the
+	  same asset.
+
+2020-04-06 12:42:03 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-layer.c:
+	  clip: secure adding clip to layer
+	  Add more checks when adding a clip to a layer, or moving a clip to a new
+	  layer. Also, mark the "layer" property as explicit-notify.
+
+2020-04-06 12:28:13 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: match children by track
+	  When the asset of a uri clip is reset, its core children are removed and
+	  replaced by the new core children. When replacing, the `set_asset`
+	  method attempts to copy children properties from the previous children
+	  to the new children. However, the children were matched by track-type
+	  only. This would not function as intended when a URI contains multiple
+	  audio or video streams. Instead, we now match children by the tracks
+	  themselves. This should work better, provided the user's
+	  select-tracks-for-object is well behaved.
+	  Also, fix a memory problem in `set_mute` for when a child is not in a
+	  track.
+
+2020-04-06 12:26:11 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-track-element.c:
+	  timeline-element: only copy read-write properties
+	  Only copy the properties that can be both read and written, and are not
+	  construct only. Similarly for child properties when a track-element is
+	  deep copied.
+
+2020-04-06 12:17:43 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	  timeline: return sunk element on pasting
+	  Technically, an element can still be floating on the return from
+	  `->paste` (e.g. a clip not in a layer). Since the return of the `_paste`
+	  methods are (return full) a non-floating object is probably expected in
+	  all cases.
+
+2020-04-06 12:16:11 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/basic.c:
+	  auto-transition: select track directly
+	  By-pass the select-tracks-for-object signal for auto-transitions since
+	  their track element must land in the same track as the elements it is
+	  the auto-transition for.
+
+2020-04-06 12:09:54 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-internal.h:
+	* ges/ges-layer.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/test-utils.h:
+	  timeline: re-handle clip children track selection
+	  The way a clip's track elements are added to tracks was re-handled. This
+	  doesn't affect the normal usage of a simple audio-video timeline, where
+	  the tracks are added before any clips, but usage for multi-track
+	  timelines has improved. The main changes are:
+	  + We can now handle a track being selected for more than one track,
+	  including a full copy of their children properties and bindings.
+	  (Previously broken.)
+	  + When a clip is split, we copy the new elements directly into the same
+	  track, avoiding select-tracks-for-object.
+	  + When a clip is grouped or ungrouped, we avoid moving the elements to
+	  or from tracks.
+	  + Added API to allow users to copy the core elements of a clip directly
+	  into a track, complementing select-tracks-for-object.
+	  + Enforced the rule that a clip can only contain one core child in a
+	  track, and all the non-core children must be added to tracks that
+	  already contains a core child. This extends the previous condition
+	  that two sources from the same clip should not be added to the same
+	  track.
+	  + Made ges_track_add_element check that the newly added track element
+	  does not break the configuration rules of the timeline.
+	  + When adding a track to a timeline, we only use
+	  select-tracks-for-object to check whether track elements should be
+	  added to the new track, not existing ones.
+	  + When removing a track from a timeline, we empty it of all the track
+	  elements that are controlled by a clip. Thus, we ensure that a clip
+	  only contains elements that are in the tracks of the same timeline, or
+	  no track. Similarly, when removing a clip from a timeline.
+	  + We can now avoid unsupported timeline configurations when a layer is
+	  added to a timeline, and already contains clips.
+	  + We can now avoid unsupported timeline configurations when a track is
+	  added to a timeline, and the timeline already contains clips.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/84
+
+2020-03-26 09:21:42 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: stop connecting to track-element-added
+	  This was used to connect to the track element's notify::start signal in
+	  order to update the duration of the timeline (it is not clear why the
+	  notify::duration signal was not also connected to for the same reason).
+	  However, this is already covered by the timeline_tree_move method, which
+	  is always called to update the start of a track element, even if it is not
+	  part of a clip (and similarly for timeline_tree_trim, which is called
+	  when the duration is set).
+
+2020-03-25 19:35:11 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: allow arbitrary max-duration when no core children
+	  Before the max-duration could be set arbitrarily when the clip was empty,
+	  to indicate what the max-duration would be once the core children were
+	  created. Now, we can also do this whilst the clip only contains non-core
+	  children.
+
+2020-03-25 18:49:16 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* tests/check/python/test_clip.py:
+	  track-element: change owner to creator
+	  Rename the private "owners" to "creators" to avoid confusing this with
+	  the owner of the track element's memory.
+	  Also made the ungroup method for GESClip symmetric by making all the
+	  children of the resulting clips share their creators, which allows them
+	  to be added to any of the other ungrouped clips. Once the clips are
+	  grouped back together, the tracks loose these extra creators.
+
+2020-04-06 12:21:54 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* tests/check/ges/clip.c:
+	  container: change ownership when adding
+	  Make sure we sink the child on adding, and keep it alive until the end
+	  in case the method fails.
+	  Also, since the child mappings hold a ref to the child, they should give
+	  them up in their free method. This way, the ref will be given up on
+	  disposing, even if ges_container_remove fails.
+	  Also, reverse setting of the start of the container if adding fails.
+
+2020-04-06 23:06:29 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ges/ges-uri-clip.c:
+	* ges/ges-video-source.c:
+	  ges: Fix build with GCC 10
+	  gcc-10 defaults to -fno-common, which exposes a symbol conflict, so
+	  use `static` correctly. Also we don't use `parent_extractable_iface`
+	  in `ges-uri-clip.c`.
+	  See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85678
+
+2020-03-31 11:25:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-container.c:
+	* tests/check/python/test_timeline.py:
+	  ges: Fix trimming clip inside deeply nested groups
+	  This broke in 6b7c658b6a551a5b9170987ba44592d1d819e1ae
+
+2020-03-24 22:47:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: Remove dead code
+	  GES_TESTING_ASSETS_DIRECTORY is prehistoric and since then
+	  new mechanism for asset relocation have been added, it makes
+	  no sense to keep that unused code path
+
+2020-03-24 22:44:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: Remove ->create_track_element implementation
+	  It is dead code
+
+2020-03-24 22:35:35 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-image-source.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-source.h:
+	* ges/ges-video-uri-source.c:
+	* tests/check/ges/uriclip.c:
+	* tests/check/python/test_clip.py:
+	  ges: Deprecate GESImageSource and GESMultiFileSource
+	  Refactoring GESVideoSource so that #GESUriVideoSource can handle
+	  still image in a simple way
+	  MultiFileSource has been replaced with the new `imagesequencesrc`
+	  element, this was totally broken anyway as `multifilesrc` can not seek
+	  properly.
+
+2020-03-24 22:30:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-track-element.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-uri-source.c:
+	  track-element: Create nleobject on GESExtractable::set_asset
+	  This means that we have all the information about the asset
+	  when constructing the underlying GstElements.
+	  This also allows to cleanup some code all around
+
+2020-03-24 22:25:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	  timeline:element: Refactor the way we 'copy'
+	  Simplifying the implementation and making sure assets are set asap
+
+2020-03-24 22:23:16 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-transition.c:
+	* ges/ges-audio-transition.h:
+	* ges/ges-effect-clip.c:
+	* ges/ges-group.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-text-overlay.h:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-transition.c:
+	* ges/ges-video-transition.h:
+	  ges: Use assets to instantiate track elements/group
+	  And deprecate all GESTrackElement constructors, but the GESEffect one.
+	  Those should **never** be created by users and should become internal
+	  in the future.
+	  Stop having docstring for the constructors that were internal.
+
+2020-03-18 16:24:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/assets/audio_only.ogg:
+	* tests/check/assets/audio_video.ogg:
+	* tests/check/assets/image.png:
+	* tests/check/assets/test-auto-transition.xges:
+	* tests/check/assets/test-project.xges:
+	* tests/check/assets/test-properties.xges:
+	* tests/check/ges/test-utils.c:
+	* tests/check/meson.build:
+	* tests/check/python/test_clip.py:
+	  tests: Cleanup test files handling
+
+2020-03-13 15:03:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-layer.h:
+	* ges/ges-xml-formatter.c:
+	  formatter: Serialize source properties
+	  This way we ensure that the TrackElement 'active' property is
+	  properly serialized
+
+2020-03-06 18:56:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-layer.c:
+	* ges/ges-layer.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline-tree.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-validate.c:
+	* ges/ges-xml-formatter.c:
+	* tests/check/meson.build:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	* tests/check/scenarios/check_layer_activness_gaps.scenario:
+	  ges: Add a way to set layer activeness by track
+	  a.k.a muting layers.
+	  Adding unit tests and making sure serialization works properly
+
+2020-03-23 21:21:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	  element: Add API safe guard against invalid position in edit()
+
+2020-03-23 21:11:45 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Refactor actions implementation
+	  Making them simpler to read and avoiding leaks
+
+2020-03-23 15:14:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Fix adding clip to layer error reporting
+
+2020-03-17 11:53:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip-asset.c:
+	* ges/ges-source-clip-asset.c:
+	* ges/ges-source-clip-asset.h:
+	* ges/ges-source-clip.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/meson.build:
+	  ges: Add a SourceClipAsset class
+	  Cleaning up the way we use the default framerate for natural
+	  frame rate.
+
+2020-03-10 16:10:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.c:
+	  launch: Add a way to disable validate at runtime
+	  Also avoid to add useless bin in our sinks
+
+2020-03-09 15:38:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	* ges/ges-timeline.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-validate.c:
+	* tests/check/meson.build:
+	* tools/ges-launch.c:
+	* tools/ges-launcher.c:
+	* tools/ges-validate.c:
+	  ges: Plug some leaks
+
+2020-02-28 11:56:22 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	* tests/check/scenarios/check_edit_in_frames_with_framerate_mismatch.scenario:
+	  validate: Add support to seek in frames
+
+2020-02-28 11:47:25 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-extractable.c:
+	* ges/ges-extractable.h:
+	* ges/ges-internal.h:
+	* ges/ges-structure-parser.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-video-test-source.c:
+	* tests/check/python/test_timeline.py:
+	  ges: support test clips assets natural size/framerate
+	  This way we can test this kind of behaviour without requiring
+	  real sources.
+	  Also add simple tests.
+
+2020-02-21 09:17:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-gerror.h:
+	* ges/ges-internal.h:
+	* ges/ges-structured-interface.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-types.h:
+	* ges/ges-utils.c:
+	* ges/ges-validate.c:
+	* tests/check/meson.build:
+	* tests/check/scenarios/check_edit_in_frames.scenario:
+	* tests/check/scenarios/check_edit_in_frames_with_framerate_mismatch.scenario:
+	  ges: Add APIs to have a sens of frame numbers
+	  APIs:
+	  - ges_timeline_get_frame_time
+	  - ges_timeline_get_frame_at
+	  - ges_clip_asset_get_frame_time
+	  - ges_clip_get_timeline_time_from_source_frame
+	  Extracting ges_util_structure_get_clocktime to internal utilities adding
+	  support for specifying timing values in frames with the special
+	  f<frame-number> synthax.
+
+2019-10-29 16:52:52 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* tools/utils.c:
+	  utils: fix argument sanitization
+	  _sanitize_argument is supposed to wrap arguments in '"' quote marks such
+	  that they can be parsed and copied into a GstStructure string. This
+	  purpose is now supported more directly, which fixes some bugs, e.g.:
+	  arguments                before                  fix
+	  +title my=title          +title my="title"       +title "my=title"
+	  +title abc n=my=name     +title abc n="my="name" +title abc n="my=name"
+	  +title my"title          +title "my"title"       +title "my\"title"
+	  +title my\title          +title "my\title"       +title "my\\title"
+
+2020-02-28 11:52:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.c:
+	  launch: Fix memory management issue with the rendering format
+
+2020-02-25 17:42:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Rename edit-container to edit
+	  Keeping the old version for backward compat
+
+2020-02-21 17:17:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-source.c:
+	* ges/ges-video-test-source.c:
+	  ges: Add a timeoverlay to video test sources
+	  This is often very useful to have a timeoverlay inside test sources.
+	  We do not want to use it as an effect as segments are not the sames
+	  in GES when it comes to nleoperations.
+
+2020-02-25 18:39:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	  element: Handle using own property as child property
+	  Avoiding ref cycles
+
+2020-02-21 17:16:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	  ges: Ensure GESClips assets are always ClipAssets
+
+2020-02-18 15:21:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-video-uri-source.c:
+	  ges: Add API to retrieve the natural framerate of an element
+
+2020-02-28 17:53:55 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	  ges: Some memory management fixes setting track mixing
+	  Also fix 'mixing' property notifies
+
+2020-02-28 17:50:05 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-enums.c:
+	  ges: Cleanup GESEdge and GESEditMode GEnum values
+	  By duplicating the registered values, so that bindings have
+	  better values to use
+
+2020-03-02 14:35:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Make command line provided sinks override scenario defined ones
+
+2020-02-28 11:58:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Avoid dereferencing NULL pointer
+
+2020-03-04 16:03:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Initialize GValue before calling g_object_get_value
+	  This is required with GLib < 2.60
+
+2020-03-17 18:13:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.h:
+	* ges/ges-audio-source.h:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-track.h:
+	* ges/ges-audio-transition.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-auto-transition.h:
+	* ges/ges-base-effect-clip.h:
+	* ges/ges-base-effect.h:
+	* ges/ges-base-transition-clip.h:
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.h:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-container.h:
+	* ges/ges-effect-asset.h:
+	* ges/ges-effect-clip.h:
+	* ges/ges-effect.h:
+	* ges/ges-enums.h:
+	* ges/ges-extractable.h:
+	* ges/ges-formatter.h:
+	* ges/ges-gerror.h:
+	* ges/ges-group.h:
+	* ges/ges-image-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-layer.h:
+	* ges/ges-marker-list.h:
+	* ges/ges-meta-container.h:
+	* ges/ges-multi-file-source.h:
+	* ges/ges-operation-clip.h:
+	* ges/ges-operation.h:
+	* ges/ges-overlay-clip.h:
+	* ges/ges-pipeline.h:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-prelude.h:
+	* ges/ges-project.h:
+	* ges/ges-screenshot.h:
+	* ges/ges-smart-adder.h:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-source-clip.h:
+	* ges/ges-source.h:
+	* ges/ges-structure-parser.h:
+	* ges/ges-structured-interface.h:
+	* ges/ges-test-clip.h:
+	* ges/ges-text-overlay-clip.h:
+	* ges/ges-text-overlay.h:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline-tree.h:
+	* ges/ges-timeline.h:
+	* ges/ges-title-clip.h:
+	* ges/ges-title-source.h:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.h:
+	* ges/ges-track.h:
+	* ges/ges-transition-clip.h:
+	* ges/ges-transition.h:
+	* ges/ges-types.h:
+	* ges/ges-uri-asset.h:
+	* ges/ges-uri-clip.h:
+	* ges/ges-utils.h:
+	* ges/ges-version.h.in:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-track.h:
+	* ges/ges-video-transition.h:
+	* ges/ges-video-uri-source.h:
+	* ges/ges-xml-formatter.h:
+	* ges/ges.h:
+	* plugins/ges/gesbasebin.h:
+	* tests/check/ges/test-utils.h:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.h:
+	  ges: Use #pragma once everywhere
+
+2020-03-17 15:51:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.h:
+	* ges/ges-audio-source.h:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-track.h:
+	* ges/ges-audio-transition.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-auto-transition.h:
+	* ges/ges-base-effect-clip.h:
+	* ges/ges-base-effect.h:
+	* ges/ges-base-transition-clip.h:
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.h:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-container.h:
+	* ges/ges-effect-asset.h:
+	* ges/ges-effect-clip.h:
+	* ges/ges-effect.h:
+	* ges/ges-extractable.h:
+	* ges/ges-formatter.h:
+	* ges/ges-group.h:
+	* ges/ges-image-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-layer.h:
+	* ges/ges-meta-container.h:
+	* ges/ges-multi-file-source.h:
+	* ges/ges-operation-clip.h:
+	* ges/ges-operation.c:
+	* ges/ges-operation.h:
+	* ges/ges-overlay-clip.h:
+	* ges/ges-pipeline.h:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-project.h:
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-source-clip.h:
+	* ges/ges-source.h:
+	* ges/ges-test-clip.h:
+	* ges/ges-text-overlay-clip.h:
+	* ges/ges-text-overlay.h:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.h:
+	* ges/ges-title-clip.h:
+	* ges/ges-title-source.h:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.h:
+	* ges/ges-track.h:
+	* ges/ges-transition-clip.h:
+	* ges/ges-transition.c:
+	* ges/ges-transition.h:
+	* ges/ges-types.h:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/ges-uri-clip.h:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-track.h:
+	* ges/ges-video-transition.h:
+	* ges/ges-video-uri-source.h:
+	* ges/ges-xml-formatter.h:
+	* tools/ges-launcher.h:
+	  ges: Cleanup the way we declare object types
+	  We create our own _DECLARE_ macro because we have instance structures
+
+2020-03-19 09:15:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	  ges: Stop using hash_table_steal_extended
+	  This appeard in GLib 2.58
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/99
+
+2020-03-18 13:36:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/assets/30frames.ogv:
+	* tests/check/ges/clip.c:
+	* tests/check/python/test_clip.py:
+	  clip: Allow setting max-duration clips without TrackElements
+	  Otherwise this breaks quite a few assumption in user code, several
+	  pitivi tests broke because of that.
+
+2020-03-18 12:56:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* tests/check/assets/30frames.ogv:
+	* tests/check/python/test_clip.py:
+	  ges: Make it so core elements can be re added to their 'owners'
+	  The user might want to add/remove/add core children to clips and be able
+	  to regroup ungrouped clip. This is needed for undo/redo in Pitivi for
+	  example
+
+2020-03-18 11:12:55 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-container.c:
+	  container: Let subclass know adding child was interrupted
+	  When the `child-added` signal emission was called, the
+	  `GESContainer->child_added` vmethod was called (the signal is
+	  `G_SIGNAL_RUN_FIRST`) so we need to call `GESContainer->child_removed`
+	  ourself so subclasses know they do not control the child anymore.
+
+2020-03-10 16:01:02 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	  timeline-element: make start and duration EXPLICIT_NOTIFY
+	  The properties will only have their signal emitted when they change in
+	  value, even when g_object_set, etc, methods are used.
+	  The _set_start method already did this, but start was missing the
+	  EXPLICIT_NOTIFY flag. There should be no need to check that the property
+	  has changed in ->set_start or ->set_duration
+
+2020-03-10 15:27:20 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-track-element.c:
+	* tests/check/ges/clip.c:
+	  timeline-element: make max-duration cap in-point
+	  Do not allow the in-point to exceed the max-duration of any timeline
+	  element.
+
+2020-03-10 11:53:09 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: only allow children with the same timeline
+	  Refuse the addition of children whose timeline is neither NULL nor the
+	  clip's timeline.
+
+2020-03-10 11:38:58 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/transition.c:
+	  clip: re-handle child in-point and max-duration
+	  The in-point of a clip is kept in sync with its core children, unless they
+	  have no has-internal-source.
+	  The max-duration is defined as the minimum max-duration amongst the
+	  clip's core children. If it is set to a new value, this sets the
+	  max-duration of its core children to the same value if they have
+	  has-internal-source set as TRUE.
+	  Non-core children (such as effects on a source clip) do not influence
+	  these values.
+	  As part of this, we no longer track in-point in GESContainer. Unlike start
+	  and duration, the in-point of a timeline element does not refer to its
+	  extent in the timeline. As such, it has little meaning for most
+	  collections of timeline-elements, in particular GESGroups. As such, there
+	  is no generic way to relate the in-point of a container to its children.
+
+2020-03-10 11:35:23 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-group.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  timeline-element: make in-point and max-duration EXPLICIT_NOTIFY
+	  As such, they only emit a signal if their value changes, either through
+	  their _set_inpoint or _set_max_duration methods, or through
+	  g_object_set, etc.
+	  Also, we now require the ->set_max_duration method to be implemented.
+	  This was added to GESGroup, which will only allow the max-duration to be
+	  set to GST_CLOCK_TIME_NONE.
+
+2020-03-10 11:29:40 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-image-source.c:
+	* ges/ges-source.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	  track-element: add has-internal-source property
+	  Unless this property is set to TRUE, the in-point must be 0 and the
+	  max-duration must be GST_CLOCK_TIME_NONE.
+	  Also added EXPLICIT_NOTIFY flags to the active and track-type
+	  properties such that their notifies are emitted only if the property
+	  changes, even when the g_object_set, etc, methods are used.
+	  Also added a missing notify signal to the set_active method.
+
+2020-03-03 18:00:51 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: copy and paste control bindings
+	  Previously the control bindings were not properly copied into the pasted
+	  clip. Also changed the order so that elements are added to the clip
+	  before the clip is added to the timeline.
+
+2020-03-03 14:31:10 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/test-utils.c:
+	* tests/check/ges/test-utils.h:
+	  timeline-element: add signals for child properties
+	  Add the child-property-added and child-property-removed signals to
+	  GESTimelineElement.
+	  GESContainer is able to use this to keep their child properties in sync
+	  with their children: if they are added or removed from the child, they
+	  are also added or removed from the container.
+
+2020-03-02 12:23:07 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* tests/check/ges/clip.c:
+	  container: freeze notifies during add and remove
+	  Hold the notify signals for the container and the children until after
+	  the child has been fully added or removed.
+	  After the previous commit, this was used to ensure that the
+	  notify::priority signal was sent for children of a clip *after* the
+	  child-removed signal. This stopped being the case when the code in
+	  ->child_removed was moved to ->remove_child (the latter is called before
+	  the child-removed signal is emitted, whilst the former is called
+	  afterwards). Rather than undo this move of code, which was necessary to
+	  ensure that ->add_child was always reversed, the notify::priority signal
+	  is now simply delayed until after removing the child has completed. This
+	  was done for all notify signals, as well as in the add method, to ensure
+	  consistency.
+	  This allows the test_clips.py test_signal_order_when_removing_effect to
+	  pass.
+	  Also make subclasses take a copy of the list of the children before
+	  setting the start and duration, since this can potentially re-order the
+	  children (if they have the SET_SIMPLE flag set).
+
+2020-03-02 13:35:20 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: make remove_child a reverse of add_child
+	  Previously, we relied on ->child_removed to reverse the priority changes
+	  that occured in ->add_child. However, ->child_removed is not always
+	  called (the signal child-removed is not always emitted) when a
+	  ->add_child needs to be removed. However, ->remove_child is always
+	  called to reverse ->add_child, so the code was moved here. Otherwise, we
+	  risk that the priorities of the clip will contain gaps, which will cause
+	  problems when another child is added to the clip.
+
+2020-03-02 13:25:21 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: tidy handling of child priorities
+	  Handle the child priorities in a way that keeps the container children
+	  list sorted by priority at all times. Also, no longer rely on the
+	  control_mode of the container, since we have less control over its value,
+	  compared to private variables.
+	  Also fixed the changing of priorities in set_top_effect_index:
+	  previously *all* children whose priority was above or below the new
+	  priority were shifted, when we should have been only shifting priorities
+	  for the children whose priority lied *between* the old and the new
+	  priority of the effect. E.g.
+	  effect:   A   B   C   D   E   F
+	  index:    0   1   2   3   4   5
+	  After moving effect E to index 1, previously, we would get
+	  effect:   A   B   C   D   E   F
+	  index:    0   2   3   4   1   6
+	  (this would have also shifted the priority for the core children as
+	  well!). Whereas now, we have the correct:
+	  effect:   A   B   C   D   E   F
+	  index:    0   2   3   4   1   5
+
+2020-03-02 12:56:03 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	* ges/ges-source-clip.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/test-utils.h:
+	  clip: only allow core elements as children
+	  Only allow elements that were created by ges_clip_create_track_elements
+	  (or copied from such an element) to be added to a clip. This prevents
+	  users from adding arbitrary elements to a clip.
+	  As an exception, a user can add GESBaseEffects to clips whose class
+	  supports it, i.e. to a GESSourceClip and a GESBaseEffectClip.
+	  This change also introduces a distinction between the core elements of a
+	  clip (created by ges_clip_create_track_elements) and non-core elements
+	  (currently, only GESBaseEffects, for some classes). In particular,
+	  GESBaseEffectClip will now distinguish between its core elements and
+	  effects added by the user. This means that the core elements will always
+	  have the lowest priority, and will not be listed as top effects. This is
+	  desirable because it brings the behaviour of GESBaseEffectClip in line
+	  with other clip types.
+
+2020-03-11 19:38:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleobject.c:
+	  nle: Delay marking object as not in composition
+	  Instead of doing it at the time of resetting `object->in_composition`
+	  when user calls `gst_bin_remove` do it after we actually removed
+	  it from the object thread, and do it in the `nle_object_reset`
+	  method where it belongs
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/96
+
+2020-03-10 21:54:56 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	  auto-transition: fix setting of SET_SIMPLE flag
+	  Previously, the SET_SIMPLE flag was non unset for auto-transitions after
+	  it had been set.
+
+2020-03-11 13:42:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  Fix build with Python 3.8 by also checking for python-3.X-embed.pc
+	  Since Python 3.8 the normal checks don't include the Python libraries
+	  anymore and linking of the Python formatters would fail.
+	  See also https://github.com/mesonbuild/meson/issues/5629
+	  and https://gitlab.freedesktop.org/gstreamer/gst-python/issues/28
+
+2020-03-09 11:49:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Handle checking/setting subprojects ges properties
+
+2020-03-09 11:49:02 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Do not warn when resetting URI to the same one
+
+2020-03-05 15:56:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-clip.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/group.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  ges: Make setting start/duration move or trim generic
+	  We were implementing the logic for moving/trimming elements specific
+	  to SourceClip but this was not correct ass the new timeline tree allows
+	  us to handle that for all element types in a generic and nice way.
+	  This make us need to have groups trimming properly implemented in the
+	  timeline tree, leading to some fixes in the group tests.
+	  This adds tests for the various cases known to not be handled properly
+	  by the previous code.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/92
+
+2020-03-04 17:42:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_group.py:
+	  group: Update priority when a child is removed
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/93
+
+2020-03-04 17:16:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/python/test_timeline.py:
+	  clip: Don't split clips at illegal position
+	  Make sure that when we split a clip, the resulting timeline would
+	  not be in an illegal state.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/94
+
+2020-03-05 19:00:20 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: don't link tracks unnecessarily
+	  Unless the pipeline is in certain modes, we do not want to try and link
+	  every track. The previous debug message implied this, but the method did
+	  not actually end early.
+	  Also, we always end early if we receive a track that is neither video
+	  nor audio.
+
+2020-03-05 18:15:41 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-asset.c:
+	* tests/check/ges/asset.c:
+	  asset: fix handling of proxies
+	  Previous usage of the property proxy-target seemed to alternate between
+	  the two definitions:
+	  + The asset we are the default proxy of
+	  + The asset we are in the proxy list of
+	  Now, the latter definition is used, which seems more useful to a user
+	  since knowing the latter can easily allow you to find out the former.
+	  The previous behaviour of ges_asset_set_proxy (asset, NULL) was not very
+	  clear. It is now defined so that it clears all the proxies for 'asset'.
+	  This means that after this call, the GESAsset:proxy property will indeed
+	  be NULL.
+	  Also fixed:
+	  + We can call ges_asset_set_proxy (asset, proxy) when 'proxy' is already
+	  in the proxy list of 'asset'.
+	  + Handling of removing the default proxy in ges_asset_unproxy. This was
+	  sending out the wrong notifies.
+	  + Prohibiting circular proxying. Before we could only prevent one case,
+	  we should now be able to prevent all cases. This will prevent a hang
+	  in ges_asset_request.
+
+2020-03-04 17:00:46 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* tests/check/ges/asset.c:
+	  test: remove asset test that needs internal method
+	  The test_proxy_asset test needs the internal method
+	  ges_asset_finish_proxy. The test also uses the associated internal methods
+	  ges_asset_try_proxy and ges_asset_cache_lookup. However, these are
+	  marked with GES_API in ges-internal.h, which allows us access to them
+	  here.
+	  The new method is not marked as GES_API because it would not allow us to
+	  remove the method in the future without removing it from the symbols list.
+	  We do not want to add to the problem.
+	  The test was simply commented out since we may wish to support tests
+	  that access internal methods in the future using meson.
+
+2020-03-04 13:05:58 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: fix ownership in ges_asset_request
+	  Fix the ownership in ges_asset_request. This should be transfer-full,
+	  but for proxies it would fail to add a reference. Also,
+	  ges_asset_cache_put was leaking memory if the asset already existed.
+
+2020-03-04 11:31:32 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-project.c:
+	* tests/check/ges/asset.c:
+	  asset: move set_proxy (NULL, proxy) behaviour to new method
+	  We should not be accepting ges_asset_set_proxy (NULL, proxy) as part of
+	  the API! This behaviour was used internally in combination with
+	  ges_asset_try_proxy, which is called on a still loading asset, so it was
+	  moved to ges_asset_finish_proxy.
+
+2020-03-04 10:34:45 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	  asset: deprecate ->proxied method
+	  This method was no longer called, so it has been deprecated.
+
+2020-03-04 09:59:33 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: make proxy-target read only
+	  We should not be able to set this property.
+
+2020-02-27 16:08:45 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: fix layer priority argument in trim
+	  Previously, we tested that the given priority was `>0`, when it seems
+	  that `>=0` was intended. A priority of `-1` means leave the priority
+	  unchanged, whilst a priority of 0, or more, means move to this layer
+	  priority.
+
+2020-02-21 09:23:34 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	  timeline-element: use default ->list_children_properties
+	  Stop overwriting the ->list_children_properties virtual method in
+	  subclasses because the timeline element class handles everything itself
+	  anyway.
+	  Note that containers already automatically add the children properties of
+	  their child elements in ges_container_add.
+
+2020-02-25 08:16:58 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-group.c:
+	  group: fix memory leak in child layer callback
+	  We were leaking the sigids->layer argument because gst_clip_get_layer
+	  returns a new reference.
+
+2020-02-24 20:19:12 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	  container: fix child duration callback
+	  Previously, we were setting the inpoint_offset using the start offset in
+	  the duration callback!
+	  Also added a notify for when the duration is changed in the child start
+	  callback.
+
+2020-02-24 18:58:55 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-group.c:
+	  group: fix max layer priority
+	  The maximum priority is `height - prio - 1`. Previously missing the -1.
+	  Related to, but does not completely fix,
+	  https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/91
+
+2020-02-18 18:02:08 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: allow for neither track nor type in search
+	  Previously, either the track or track_type arguments had to be specified
+	  in order to find **any** track elements. Now, you can specify neither,
+	  which will match any track element, of the specified type.
+
+2020-02-18 12:17:50 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* tests/check/python/test_timeline.py:
+	  pythontests: change num layers in timeline to 1
+	  In the test_timeline.test_auto_transition, the corresponding xges only
+	  has one layer, so we should only expect one layer when we extract the
+	  timeline. This fixes a change that was missing from commit
+	  d3e2cf55e3ad6258ff09220ee6393655fdd833f1
+
+2020-02-18 12:14:25 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-extractable.c:
+	  extractable: check extractable-type of set asset
+	  When setting the asset of a GESExtractable object, first make sure that
+	  the asset's extractable-type matches the type of the object.
+
+2020-02-18 09:17:09 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-layer.c:
+	  layer: fix ownership when failing to add clip
+	  If a clip is already part of a layer, then adding it to another layer
+	  should fail. Previously, in this case, `ges_layer_add_clip` was adding a
+	  reference to the clip instead, without subsequently giving up ownership.
+	  This meant that the clip would be left with an unowned reference.
+	  This has now been corrected by also calling `unref` after the
+	  `ref_sink`.
+	  Note that, since `clip` is already part of `current_layer`, it should
+	  already be non-floating, so the `ref_sink`-`unref` should do nothing
+	  overall. But we keep both to make the ownership (transfer floating/none)
+	  explicit.
+
+2020-02-12 22:23:38 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-audio-track.c:
+	* ges/ges-video-track.c:
+	  docs: update GESAudioTrack and GESVideoTrack
+
+2020-01-21 12:01:41 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-enums.h:
+	* ges/ges-pipeline.c:
+	  docs: update GESPipeline
+
+2020-01-17 20:10:23 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-meta-container.c:
+	* ges/ges-meta-container.h:
+	  docs: update GESMetaContainer
+
+2020-01-17 15:27:29 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-extractable.c:
+	* ges/ges-extractable.h:
+	  docs: update GESExtractable
+
+2020-01-17 12:20:11 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	  docs: update GESAsset
+
+2020-01-15 14:46:02 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-track-element.c:
+	* ges/ges-track-element.h:
+	  docs: update GESTrackElement
+
+2020-01-15 14:44:38 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  docs: update GESTrack
+
+2020-01-09 12:11:35 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	  docs: update GESClip
+
+2020-01-09 12:09:15 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	  docs: update GESGroup
+
+2020-01-08 09:26:07 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-container.c:
+	* ges/ges-container.h:
+	  docs: update GESContainer
+
+2020-01-07 17:40:53 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-enums.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  docs: update GESTimelineElement
+
+2019-12-20 12:30:54 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: unref copied and pasted
+
+2019-12-20 11:20:49 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: fix paste ownership
+	  The method steals ownership of `copied_from`, so should be responsible
+	  for unreffing it. Also make sure we fail when `layer != -1`, since this
+	  functionality is not supported.
+
+2019-12-18 20:33:45 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-layer.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-utils.c:
+	  docs: update GESTimeline and GESLayer
+
+2020-03-03 18:07:32 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	  python: Cleanup overrides using monkey patching
+	  Following the PyGObject guidelines[0], this starts monkey patching
+	  overridden elements instead of subclassing them.
+	  [0]: https://pygobject.readthedocs.io/en/latest/devguide/override_guidelines.html#python-override-guidelines
+
+2018-11-29 19:12:24 +0100  Jens Göpfert <mail@jensgoepfert.de>
+
+	* examples/c/concatenate.c:
+	  add assets to layer and adjust position and duration (closes #45)
+
+2020-03-02 19:06:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* tests/check/python/test_timeline.py:
+	  python: Add a Timeline.iter_clips() helper to iterate clips
+
+2020-02-24 12:21:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Add an option to enable/disable validate integration
+
+2020-02-22 14:23:45 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/gstframepositioner.c:
+	* tests/check/meson.build:
+	* tests/check/scenarios/check_video_track_restriction_scale.scenario:
+	* tests/check/scenarios/check_video_track_restriction_scale_with_keyframes.scenario:
+	  framepositioner: Reposition source when the user positioned them
+	  Keeping the same proportion in the size and position and only if
+	  the aspect ratio is conserved.
+
+2020-02-24 08:50:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  ges:launch: Handle setting playback information in scenarios
+	  This way we can avoid real sinks when implementing scenarios
+
+2020-02-24 08:47:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	* ges/ges-track-element.c:
+	* ges/ges-validate.c:
+	  validate: Handle absolute control binding support when setting keyframes
+	  And minor fix in set-control-source
+
+2020-02-19 18:09:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	* ges/ges-video-uri-source.c:
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	* tests/check/scenarios/check_video_track_restriction_scale.scenario:
+	  ges: Properly position video sources in the scene by default
+	  We try to do our best to have the video frames scaled the best way
+	  to fill most space on the final frames, keeping aspect ratio. The user
+	  can later on rescale or move the sources as usual but it makes the
+	  default behaviour a better and more natural especially now that we
+	  set default restriction caps to the video tracks.
+	  And fix the unit test to take that change into account
+
+2020-02-19 18:06:26 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-image-source.c:
+	* ges/ges-internal.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-uri-source.c:
+	  ges: Add a method to retrieve the 'natural' size of VideoSource
+	  This way the user can easily know how the clip would look like
+	  if no scaling was applied to the clip, this is useful to be able
+	  to properly position the clips with the framepositionner element.
+
+2020-02-19 15:31:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	  ges: Call the right ->set_child_property vmethod
+	  We used to always call the `->set_child_property` virtual method
+	  of the object that `ges_timeline_element_set_child_property` was called
+	  from, but that means that, in the case of referencing GESContainer
+	  children properties from its children, the children wouldn't know
+	  what child property have been set, and the children override wouldn't
+	  be takent into account, in turns, it means that the behaviour could be
+	  different in the setter depending on parent the method was called,
+	  which is totally unexpected.
+	  We now make sure that the vmethod from the element that introduced the
+	  child property is called whatever parent method is called, making the
+	  behaviour more uniform.
+	  Fix the python override to make sure that new behaviour is respected.
+
+2020-02-18 16:31:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.h:
+	  ges: Deprecate the GESTimeline::track field
+	  It is not MT safe to access it, and user should use the proper getter
+
+2020-02-18 16:09:55 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-video-track.c:
+	  ges: Set default caps for GESVideoTrack
+	  By default, video track output full HD@30fps, this makes the behaviour
+	  of clip position much more understandable and guarantess that we
+	  always have a framerate.
+	  The user can modify the values whenever he wants
+
+2020-02-20 12:28:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/gstframepositioner.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/meson.build:
+	* tests/check/scenarios/check_video_track_restriction_scale.scenario:
+	* tools/meson.build:
+	  framepositioner: Stop lying about the source size
+	  Basically we were advertising that the source size would be the
+	  size of the track if it hadn't been defined by end user, but since
+	  we started to let scaling happen in the compositor, this is not true
+	  as the source size is now the natural size of the underlying video
+	  stream.
+	  Remove the unit test and reimplemented using a validate scenario which
+	  make the test much simpler to read :=)
+
+2020-02-20 12:27:37 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Add action types to set/check various child properties at once
+	  And add a way to take into account control bindings.
+
+2020-02-20 12:22:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	  ges: Allow setting children property using the set_object_arg format
+	  This make it much simpler for the user to set enum values and should not cause any issue
+
+2020-02-20 17:13:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	* ges/ges-validate.c:
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.c:
+	* tools/utils.c:
+	* tools/utils.h:
+	  ges: Plug leaks in new ges-launch and related
+
+2020-02-25 17:38:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Port to the new REPORT_ACTION API
+
+2020-02-18 23:08:53 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: When standalone consider object.duration==0 as not set
+	  nleobject.duration defaults to 0, but this is pretty unintuitive for
+	  end user in the case nlesource is use standalone, just consider
+	  duration=0 equivalent to duration=GST_CLOCK_TIME_NONE as it makes
+	  the element much simpler to use, we could actually forbid 0 as a value
+	  in the future.
+	  Also take into account potential CLOCK_TIME_NONE
+
+2020-02-10 18:05:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-internal.h:
+	* ges/ges-source.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-uri-source.c:
+	  ges: Avoid adding unnecessary converters for nested timelines
+	  Basically we know that if we are using mixing, compositor will be
+	  able to do video conversion and scaling for us, so avoid adding those
+	  usless elements.
+	  This optimizes a lot caps negotiation for deeply nested timelines.
+
+2020-02-10 18:00:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesbasebin.c:
+	* plugins/ges/gesdemux.c:
+	  plugins:ges: Fix pushing tags after e8c782d119eccf364fa24812cdc90c40f60d65d6
+	  Basically the tags we send before STREAM_START are now ignored, meaning
+	  that we could not detect nested timelines anymore, this commits makes
+	  sure that we send our tag event after getting pushing STREAM_START.
+
+2020-02-06 16:42:25 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Optimize prerolling when using nested compositions
+	  When a composition is nested into anotherone, we *know* that the
+	  toplevel composition is going to send a stack initializing seek,
+	  we can thus avoid sending it on the subcomposition itself when
+	  prerolling. This avoid seeking roundtrips and we now have one and
+	  only one seek travelling in the overall pipeline (after it has
+	  prerolled).
+
+2020-02-06 12:43:57 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: Fix seeks when used standalone
+	  The 'start' of nleobject is in the 'composition' scale, inpoint is in
+	  the media scale, when outside a composition, a nleobject->start value
+	  doesn't mean anything.
+
+2020-02-06 12:39:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nlesource.c:
+	  nle: Seek the whole stack on initialization
+	  Instead of seeking each nleobject separately to setup new stack, wait
+	  for the whole stack to preroll and then seek that newly setup stack,
+	  leading to the same code path and seek 'tweaking' as when processing
+	  a seek on the composition (without stack changes).
+	  This is mandatory to properly handle filter that tweak segments to handle
+	  time remapping for example.
+
+2020-02-06 12:37:37 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleghostpad.c:
+	  nle: Minor typo fixes
+
+2020-02-04 17:07:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  validate: Allow overriding ges-launch options through scenarios
+	  In 99c45d42cfd1cafb658b63abf0b506db20167499 we allowed setting
+	  track-types but in the end we could do it generically using the
+	  following synthax in the scenario 'properties' metadata:
+	  `ges-options={--track-types=video,--disable-mixing}`
+
+2020-02-07 09:39:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-extractable.c:
+	* ges/ges-extractable.h:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-uri-clip.c:
+	  ges: Ignore deprecation of GParameter
+	  GParameter is part of our API, and for GLib < 2.54 we do not even have
+	  a way around avoiding it (namely `g_object_new_with_properties`).
+	  We should stop using GParameter once we depend on GLib 2.54.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/86
+
+2019-08-20 17:46:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-container.h:
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-layer.h:
+	* ges/ges-prelude.h:
+	* ges/ges-screenshot.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-clip.h:
+	* ges/ges-track-element-deprecated.h:
+	* ges/ges-track-element.h:
+	* ges/meson.build:
+	  ges: Use G_DEPRECATE to mark deprecated methods
+	  Cleanup a few things on the way.
+	  And move ges-track-element deprecations to a dedicated header file
+
+2019-12-14 17:04:54 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/clip.c:
+	  ges-source-clip: fixed return of duration setter
+	  In general, brought the behaviour of the `start`, `duration` and
+	  `inpoint` setters in line with each other. In particular:
+	  1. fixed return value the GESSourceClip `duration` setter
+	  2. changed the GESClip `start` setter
+	  3. fixed the inpoint callback for GESContainer
+	  4. changed the type of `res` in GESTimelineElement to be gint to
+	  emphasise that the GES library is using the hack that a return of -1
+	  from klass->set_duration means no notify signal should be sent out.
+	  Also added a new test for clips to ensure that the setters work for
+	  clips within and outside of timelines, and that the `start`, `inpoint`
+	  and `duration` of a clip will match its children.
+
+2019-12-05 14:23:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Ensure that encodebin enforces a single segment sent to encoders
+
+2019-10-04 09:58:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Move to the new GstValidateEncodingTestInterface API
+
+2019-11-20 07:52:56 +0100  Edward Hervey <edward@centricular.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Free structure after usage
+	  CID: 1416901
+	  CID: 1439518
+	  CID: 1439527
+
+2019-11-20 07:46:47 +0100  Edward Hervey <edward@centricular.com>
+
+	* ges/ges-pitivi-formatter.c:
+	  formatter: Free path object after usage
+	  As it's done everywhere else
+	  CID: 1455511
+
+2019-11-07 16:54:32 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Fix disabling of the python support
+	  Cannot call python.dependency() if the python module was not found.
+
+2019-08-29 07:45:45 +0200  Niels De Graef <nielsdegraef@gmail.com>
+
+	* ges/ges-container.c:
+	* ges/ges-layer.c:
+	* ges/ges-marker-list.c:
+	* ges/ges-meta-container.c:
+	* ges/ges-project.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleoperation.c:
+	  Don't pass default GLib marshallers for signals
+	  By passing NULL to `g_signal_new` instead of a marshaller, GLib will
+	  actually internally optimize the signal (if the marshaller is available
+	  in GLib itself) by also setting the valist marshaller. This makes the
+	  signal emission a bit more performant than the regular marshalling,
+	  which still needs to box into `GValue` and call libffi in case of a
+	  generic marshaller.
+	  Note that for custom marshallers, one would use
+	  `g_signal_set_va_marshaller()` with the valist marshaller instead.
+
+2019-10-16 19:26:55 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-marker-list.c:
+	* ges/ges-meta-container.h:
+	* tests/check/ges/markerlist.c:
+	  marker: add color meta
+	  Support optionally coloring markers by reserving GES_META_MARKER_COLOR
+	  for an ARGB guint.
+
+2019-10-16 13:40:57 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-meta-container.c:
+	* ges/ges-meta-container.h:
+	  meta-container: add register_static_meta
+	  Allows us to register a static meta without having to set a value.
+
+2019-10-16 11:37:23 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-meta-container.c:
+	  meta-container: move comment
+	  The comment that was above _register_meta is actually meant for
+	  _set_value.
+
+2019-10-23 16:04:01 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* tools/ges-launch.c:
+	* tools/ges-launcher.c:
+	  ges-launch: Document timeline description format under --help
+	  Making it simpler for user to get the documentation
+
+2019-10-22 22:51:41 +0200  Rico Tzschichholz <ricotz@ubuntu.com>
+
+	* ges/ges-marker-list.c:
+	  marker-list: Use proper parameters names even in the docs
+	  Otherwise there will be parameters with hyphen in their name in the GIR.
+
+2019-10-22 13:30:36 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Enhance dumping stack output
+
+2019-10-22 12:21:04 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-marker-list.c:
+	  ges: Handle empty marker lists
+
+2019-10-22 11:53:36 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Tear down pipeline when openning a new project
+	  Avoiding potential deadlock when we remove tracks on a playing pipeline
+
+2019-10-22 11:50:02 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  ges: Fix setting GError when adding children to containers
+	  We were misusing assertion and not properly setting the GError value
+
+2019-10-22 11:31:04 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	  smart-video-mixer: Handle segment updates
+	  We were basically ignoring any segment update which could potentially
+	  lead to setting a wrong stream time leading to wrong alpha value
+	  being used.
+
+2019-10-17 16:30:49 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.c:
+	* tools/utils.h:
+	  launcher: Enhance printed output
+
+2019-10-17 16:21:28 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.c:
+	* tools/utils.h:
+	  launcher: Use the output URI extension to set encoding format
+	  And print a description of the encoding profile.
+
+2019-10-17 16:19:11 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Be smarter about how we match encoding profiles and tracks
+
+2019-10-18 00:50:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: build gir even when cross-compiling if introspection was enabled explicitly
+	  This can be made to work in certain circumstances when
+	  cross-compiling, so default to not building g-i stuff
+	  when cross-compiling, but allow it if introspection was
+	  enabled explicitly via -Dintrospection=enabled.
+	  See gstreamer/gstreamer#454 and gstreamer/gstreamer#381
+
+2019-10-16 16:40:27 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-marker-list.c:
+	* tests/check/ges/markerlist.c:
+	  marker-list: add prev position to ::marker-moved
+	  Additionally give the previous marker position in the
+	  GESMarkerList::marker-moved signal, since a user may want to know
+	  where a move was from.
+	  Also, fixed the documentation for GESMarkerList::marker-added
+	  https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/78
+
+2019-10-13 13:37:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* .gitmodules:
+	* Makefile.am:
+	* autogen.sh:
+	* bindings/Makefile.am:
+	* bindings/python/Makefile.am:
+	* bindings/python/gi/Makefile.am:
+	* bindings/python/gi/overrides/Makefile.am:
+	* common:
+	* configure.ac:
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/c/Makefile.am:
+	* ges/.gitignore:
+	* ges/Makefile.am:
+	* m4/Makefile.am:
+	* pkgconfig/.gitignore:
+	* pkgconfig/Makefile.am:
+	* plugins/Makefile.am:
+	* plugins/ges/Makefile.am:
+	* plugins/nle/.gitignore:
+	* plugins/nle/Makefile.am:
+	* tests/.gitignore:
+	* tests/Makefile.am:
+	* tests/benchmarks/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/ges/.gitignore:
+	* tests/validate/Makefile.am:
+	* tests/validate/scenarios/Makefile.am:
+	* tools/Makefile.am:
+	  Remove autotools build system
+	  Todo:
+	  - hook up data/completions/ges-launch-1.0 in Meson (#77)
+
+2019-10-01 18:02:27 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-internal.h:
+	* ges/ges.c:
+	  ges: Hide internal debug category behind a GOnce
+	  Otherwise it might be used (e.g. by the plugin loader via the GES
+	  plugin!) before ges_init() is called.
+
+2019-10-01 18:01:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Initialize debug category before first using it
+	  Prevents critical warnings during class_init()
+
+2019-09-23 16:10:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Add missing safe guard when listing assets
+
+2019-09-23 16:07:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structured-interface.c:
+	* tools/ges-launcher.c:
+	  launch: Add an option to embed nested timelines when saving
+
+2019-08-19 14:38:12 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: increase xges version to 0.6
+	  Increase minor_version to 6 if a sub-project is saved under an asset or an asset includes a child stream-info element.
+
+2019-08-23 17:26:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  tests: Fix transition project tests
+	  Basically the test project was plain broken as it had fully overlapping
+	  clips is prohibited since the timeline edition API was reimplemented.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/62
+
+2019-08-21 14:41:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: Fix asset cache for CLips and TrackElement with same ID
+	  We clearly uniquely identify assets by both their IDs and their
+	  extractable type, and we should make sure that you can have a
+	  TrackElement and a Clip with the same ID.
+	  There is one exception in our implementation which is GESFormatter
+	  because we treat their subclasses as 1 type with different IDs.
+
+2019-08-17 11:59:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-effect.c:
+	* ges/ges.c:
+	  ges: Expose ges mixer to be used as effects
+
+2019-08-17 11:59:02 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-effect-clip.c:
+	* ges/ges-layer.c:
+	  ges: Add support for EffectClip assets
+
+2019-08-28 18:13:06 +1000  Matthew Waters <matthew@centricular.com>
+
+	* plugins/ges/gesdemux.c:
+	* plugins/ges/gessrc.c:
+	  build: also suppress unused-function warnings about g_autoptr
+	  ../plugins/ges/gesdemux.c:50:1: error: unused function 'glib_autoptr_cleanup_GESDemux' [-Werror,-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, DEMUX, GESBaseBin);
+	  ^
+	  /home/matt/Projects/cerbero/build/dist/android_universal/x86_64/include/glib-2.0/gobject/gtype.h:1401:3: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  _GLIB_DEFINE_AUTOPTR_CHAINUP (ModuleObjName, ParentName)                                               \
+	  ^
+	  /home/matt/Projects/cerbero/build/dist/android_universal/x86_64/include/glib-2.0/glib/gmacros.h:451:22: note: expanded from macro '_GLIB_DEFINE_AUTOPTR_CHAINUP'
+	  static inline void _GLIB_AUTOPTR_FUNC_NAME(ModuleObjName) (ModuleObjName **_ptr) {                     \
+	  ^
+	  /home/matt/Projects/cerbero/build/dist/android_universal/x86_64/include/glib-2.0/glib/gmacros.h:441:43: note: expanded from macro '_GLIB_AUTOPTR_FUNC_NAME'
+	  #define _GLIB_AUTOPTR_FUNC_NAME(TypeName) glib_autoptr_cleanup_##TypeName
+	  ^
+	  <scratch space>:81:1: note: expanded from here
+	  glib_autoptr_cleanup_GESDemux
+	  ^
+	  ../plugins/ges/gessrc.c:56:1: error: unused function 'glib_autoptr_cleanup_GESSrc' [-Werror,-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (GESSrc, ges_src, GES, SRC, GESBaseBin);
+	  ^
+	  /home/matt/Projects/cerbero/build/dist/android_universal/x86_64/include/glib-2.0/gobject/gtype.h:1401:3: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  _GLIB_DEFINE_AUTOPTR_CHAINUP (ModuleObjName, ParentName)                                               \
+	  ^
+	  /home/matt/Projects/cerbero/build/dist/android_universal/x86_64/include/glib-2.0/glib/gmacros.h:451:22: note: expanded from macro '_GLIB_DEFINE_AUTOPTR_CHAINUP'
+	  static inline void _GLIB_AUTOPTR_FUNC_NAME(ModuleObjName) (ModuleObjName **_ptr) {                     \
+	  ^
+	  /home/matt/Projects/cerbero/build/dist/android_universal/x86_64/include/glib-2.0/glib/gmacros.h:441:43: note: expanded from macro '_GLIB_AUTOPTR_FUNC_NAME'
+	  #define _GLIB_AUTOPTR_FUNC_NAME(TypeName) glib_autoptr_cleanup_##TypeName
+	  ^
+	  <scratch space>:158:1: note: expanded from here
+	  glib_autoptr_cleanup_GESSrc
+	  ^
+
+2019-08-27 10:02:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesbasebin.h:
+	* plugins/ges/gesdemux.c:
+	* plugins/ges/gessrc.c:
+	  ges: fix G_DECLARE_FINAL_TYPE -Werror with clang
+	  Also fix wrong casing the `G_DECLARE` for GESDemux.
+	  ../subprojects/gst-editing-services/plugins/ges/gessrc.c:56:1: warning: unused function 'GES_SRC' [-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (GESSrc, ges_src, GES, SRC, GESBaseBin);
+	  ^
+	  /usr/include/glib-2.0/gobject/gtype.h:1405:33: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline ModuleObjName * MODULE##_##OBJ_NAME (gpointer ptr) {                                     \
+	  ^
+	  <scratch space>:39:1: note: expanded from here
+	  GES_SRC
+	  ^
+	  ../subprojects/gst-editing-services/plugins/ges/gessrc.c:56:1: warning: unused function 'GES_IS_SRC' [-Wunused-function]
+	  /usr/include/glib-2.0/gobject/gtype.h:1407:26: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline gboolean MODULE##_IS_##OBJ_NAME (gpointer ptr) {                                         \
+	  ^
+	  <scratch space>:42:1: note: expanded from here
+	  GES_IS_SRC
+	  ^
+	  ../subprojects/gst-editing-services/plugins/ges/gesdemux.c:50:1: warning: unused function 'GES_Demux' [-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, Demux, GESBaseBin);
+	  ^
+	  /usr/include/glib-2.0/gobject/gtype.h:1405:33: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline ModuleObjName * MODULE##_##OBJ_NAME (gpointer ptr) {                                     \
+	  ^
+	  <scratch space>:72:1: note: expanded from here
+	  GES_Demux
+	  ^
+	  ../subprojects/gst-editing-services/plugins/ges/gesdemux.c:50:1: warning: unused function 'GES_IS_Demux' [-Wunused-function]
+	  /usr/include/glib-2.0/gobject/gtype.h:1407:26: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline gboolean MODULE##_IS_##OBJ_NAME (gpointer ptr) {                                         \
+	  ^
+	  <scratch space>:75:1: note: expanded from here
+	  GES_IS_Demux
+	  ^
+
+2019-08-27 13:52:52 +1000  Matthew Waters <matthew@centricular.com>
+
+	* ges/ges-timeline.c:
+	  ges/timeline: remove unused function get_toplevel_container
+	  Fixes -Werror build with clang:
+	  ../subprojects/gst-editing-services/ges/ges-timeline.c:695:1: warning: unused function 'get_toplevel_container' [-Wunused-function]
+	  get_toplevel_container (gpointer element)
+	  ^
+
+2019-08-23 12:36:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* ges/ges-enums.h:
+	  doc: Update cache and fix usage of <ulink>
+
+2019-08-22 18:50:00 +0200  Millan Castro <m.castrovilarino@gmail.com>
+
+	* ges/Makefile.am:
+	* ges/ges-internal.h:
+	* ges/ges-marker-list.c:
+	* ges/ges-marker-list.h:
+	* ges/ges-meta-container.c:
+	* ges/ges-meta-container.h:
+	* ges/ges-types.h:
+	* ges/ges.c:
+	* ges/ges.h:
+	* ges/meson.build:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/markerlist.c:
+	* tests/check/meson.build:
+	  markerlist: implement GESMarkerList
+	  Co-authored by Mathieu Duponchelle <mathieu@centricular.com>
+
+2019-08-20 15:29:12 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Fix querying if we need stack reloading
+	  We are probing upstream queries, not downstream ones
+	  This was clearly a small test that slipt into previous commit
+
+2019-08-16 17:41:17 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: strip "caps" from the "properties" attribute of a track element
+	  We already have the separate "caps" attribute for xges track
+	  elements, which is actually used in parsing.
+
+2019-08-19 16:35:49 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: fix cb of ::error-loading-asset
+	  Corrected typo that attached project_loaded_cb, rather than error_loading_asset_cb, to ::error-loading-asset, which meant data.error would be left unset if an error occurred in loading.
+
+2019-08-15 17:32:12 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  Test that gst_structure_get succeeds to ensure gchar *restriction is actually set before reading it. Warn if no caps are returned by gst_caps_from_string.
+
+2019-08-14 15:48:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	* ges/ges-structured-interface.c:
+	  structured-interface: Properly error out when a child property could not be set
+
+2019-08-12 17:37:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/nle/nlecomposition.c:
+	  tests:nle: Unref the bus before unrefing the pipeline
+	  Aiming at fixing a rare race condition where we get:
+	  ../subprojects/gstreamer/libs/gst/check/gstcheck.c:1258:F:nlecomposition:test_seek_on_nested:0: nested_src0_0x1a1a310 is not destroyed, 1 refcounts left!
+	  The idea is that there might have a remaining GstMessage
+	  with the nested_src as `message.src` on the bus that has
+	  yet to be processed in some conditions leading to a reference
+	  still existing when unrefing the pipeline.
+
+2019-08-12 17:17:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-xml-formatter.c:
+	  ges-xml-formatter: Use g_filename_to_uri() instead of deprecated gst_uri_construct()
+	  ges-xml-formatter.c: In function ‘_parse_asset’:
+	  ges-xml-formatter.c:357:7: error: ‘gst_uri_construct’ is deprecated: Use 'gst_uri_new' instead [-Werror=deprecated-declarations]
+	  357 |       id = gst_uri_construct ("file", subproj_data->filename);
+	  |       ^~
+
+2019-08-12 17:16:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-uri-asset.c:
+	  Fix old-style C function declarations
+	  ges-uri-asset.c: In function ‘create_discoverer’:
+	  ges-uri-asset.c:53:1: error: old-style function definition [-Werror=old-style-definition]
+	  53 | create_discoverer ()
+	  | ^~~~~~~~~~~~~~~~~
+	  ges-uri-asset.c: In function ‘get_discoverer’:
+	  ges-uri-asset.c:67:1: error: old-style function definition [-Werror=old-style-definition]
+	  67 | get_discoverer ()
+	  | ^~~~~~~~~~~~~~
+	  CC       libges_1.0_la-ges-auto-transition.lo
+	  ges-asset.c: In function ‘_get_type_entries’:
+	  ges-asset.c:489:1: error: old-style function definition [-Werror=old-style-definition]
+	  489 | _get_type_entries ()
+	  | ^~~~~~~~~~~~~~~~~
+
+2019-08-12 09:49:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	* ges/ges-uri-asset.c:
+	* plugins/ges/gesbasebin.c:
+	  doc: Add some missing Since:
+
+2019-08-11 21:20:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Properly handle NULL project asset ID
+
+2019-07-30 18:24:07 -0700  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured: Enhance error message when no clip duration set
+
+2019-07-30 18:22:18 -0700  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Avoid setting invalid clip duration
+
+2019-07-16 21:51:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	* ges/ges-track.h:
+	  track: Add a getter for restriction_caps
+
+2019-07-13 21:27:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Set user restriction caps even when loading projects
+
+2019-07-13 21:26:35 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	  track: Enhance restriction capsfilter name
+
+2019-07-13 13:25:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Serialize DiscovererStreamInfo
+	  We do not use it yet but it gives interesting information to
+	  users
+
+2019-07-12 16:15:35 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	* tests/check/ges/project.c:
+	  formatter: Plug lists of TimedValue leak
+
+2019-07-05 09:40:57 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-xml-formatter.c:
+	  formatter: Better document metadata registration
+	  And fix xges mimetype to match typefind mimetype
+
+2019-07-04 16:51:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Do not require the GStreamer cache generator
+
+2019-07-04 15:58:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges.c:
+	* ges/python/gesotioformatter.py:
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Compute sinkpad caps based on formatter mimetypes
+	  Implement lazy loading asset cache so gesdemux use the formatters
+	  assets while GES hasn't been initialized.
+	  And set extensions to temporary files as some formatters require
+	  the information (otio)
+
+2019-07-03 20:15:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	* ges/ges-project.c:
+	  formatter: Add a method to retrieve the best formatter for a givent URI
+	  Uses the file extension as hint falling back to the default formatter
+	  if none is found
+	  Make use of that function in when saving a project and not formatter
+	  is specified.
+
+2019-02-05 15:46:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	* ges/ges.resource:
+	* ges/meson.build:
+	* ges/python/gesotioformatter.py:
+	* meson.build:
+	* meson_options.txt:
+	  Implement a formatter based on [OpenTimelineIO]
+	  [OpenTimelineIO]: http://opentimeline.io/
+
+2019-04-19 09:07:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	  formatter: Handle coma separated extensions in formatter metas
+
+2019-03-11 19:25:23 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	* ges/ges-formatter.h:
+	  formatter: Duplicate const gchar* for metadatas
+
+2019-02-05 16:08:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	* ges/ges-project.h:
+	  project: Expose the ges_project_add_formatter method
+	  This method is useful when implementing a formatter outside
+	  GES that end up converting to xges and uses the default formatter
+	  to finally load the timeline.
+
+2019-07-11 16:23:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/ges-uri-clip.c:
+	* plugins/ges/gesdemux.c:
+	  Mark nested timeline assets as such
+	  Adding a property to let the application know
+	  Also make sure that the duration of nested timeline assets is reported
+	  as CLOCK_TIME_NONE as those are extended as necessary.
+	  And make a difference between asset duration and their max duration
+	  As nested timelines can be extended 'infinitely' those max duration
+	  is GST_CLOCK_TIME_NONE, but their duration is the real duration of
+	  the timeline.
+
+2019-07-11 15:54:27 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges-project.c:
+	* plugins/ges/gesdemux.c:
+	* tools/ges-launcher.c:
+	  formatter: Enhance error reporting
+	  And add a "loading-error" signal in GESProject so we can report
+	  issue when loading async elements for the timeline.
+
+2019-07-11 15:43:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* tests/check/ges/test-properties.xges:
+	  xml-formatter: Fix loading sources
+	  And fix the project file which couldn't be load now that we
+	  properly check clips coherency
+
+2019-07-10 19:36:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Add a testsrc to timelines if parent nleobject duration is too long
+
+2019-07-10 12:06:01 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  ges:validate: Properly error when editing container fails
+
+2019-07-10 11:02:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	* plugins/ges/gesdemux.c:
+	* plugins/nle/nlecomposition.c:
+	  nle: Handle nested timelines update when file changes
+	  When we have nested timelines, we need to make sure the underlying
+	  formatted file is reloaded when commiting the main composition to
+	  take into account the new timeline.
+	  In other to make the implementation as simple as possible we make
+	  sure that whenever the toplevel composition is commited, the decodebin
+	  holding the gesdemux is torn down so that a new demuxer is created
+	  with the new content of the timeline.
+	  To do that a we do a NleCompositionQueryNeedsTearDown query to which
+	  gesdemux answers leading to a full nlecomposition stack
+	  deactivation/activation cycle.
+
+2019-07-10 10:15:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	* ges/ges-structured-interface.h:
+	* ges/ges-validate.c:
+	  ges:validate: Add a way to execute actions on serialized timelines
+	  This way we can modify nested timelines.
+
+2019-07-09 01:03:56 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-project.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-utils.c:
+	  ges: Implement our own idle_add which uses the thread local maincontext
+
+2019-07-09 00:28:29 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Allow passing 'uri' to 'load-project'
+	  The action type was thought to allow that but it wasn't implemented.
+
+2019-07-09 00:07:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Lower down borring debug to _LOG
+
+2019-07-09 00:05:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Use asset ID as URI if possible
+	  It was making no sense to consider it an empty timeline when the user
+	  had passed the project URI when requesting the asset. Usually user
+	  use `ges_project_new` with the URI but it is also valid to use
+	  `ges_asset_request` with the uri as ID so let's handle that properly.
+
+2019-07-08 19:25:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	  python: Add a better asset __repr__
+
+2019-07-07 20:55:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-internal.h:
+	* ges/ges-project.c:
+	* ges/ges-xml-formatter.c:
+	* ges/ges.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  ges: Implement subprojects
+	  Subprojects simply consist of adding the GESProject
+	  to the main project asset list. Then those are recursively
+	  serialized in the main project in the <asset> not, when deserializing,
+	  temporary files are created and those will be used in clips
+	  as necessary
+
+2019-07-07 20:35:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Fix our asset cache
+	  It was not talking into account the fact that you can have
+	  several assets with a same ID but different exactractable types.
+
+2019-07-14 16:28:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: Handle trying to proxy an asset to itself
+	  And avoid infinite recursion
+
+2019-07-03 12:10:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Detect recursively loading the same project file
+	  And error out when it is the case.
+
+2019-07-03 12:09:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Create proper stream-ids
+
+2019-07-03 10:10:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/nle/nlecomposition.c:
+	  nle: Check seeking on deeply nested composition
+
+2019-06-28 20:19:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	  track: Disable last gap by default
+	  And let the GESPipeline logic handle that
+
+2019-06-28 20:19:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Drop all group-done but the last one
+
+2019-06-28 17:35:40 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	  validate: Allow scenarios to set track types
+
+2019-06-19 15:52:21 +0530  Swayamjeet <swayam1998@gmail.com>
+
+	* tests/validate/geslaunch.py:
+	  tests: Add ges-sample-path-recurse with projects location
+	  So that project files are found when using nested timelines
+
+2019-06-23 13:03:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	* tools/ges-validate.c:
+	  validate: Add a way to use validate configs with scenarios
+	  Config files should have the-scenario-name.scenario.config to be picked automatically
+
+2019-06-23 13:03:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Use proper sink and give them good names
+
+2019-06-23 12:42:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Create folders as needed when serializing timelines
+
+2019-06-22 23:49:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: Wait for the seek to actualy happen before removing the probe
+	  Make sure that an event resulting from the seek happens before removing
+	  the pad probe, dropping anything while it is not the case.
+	  This guarantees that the seek happens before `nlesource` outputs
+	  anything. This was not necessary as with decodebin or usual source
+	  flushing seeks lead to synchronous flush_start/flush_stop and we could
+	  safely assume that once the seek is sent, it was happenning.
+	  With nested `nlecomposition` this assumption is simply not true as
+	  in the composition seeks are basically cached and happen later in
+	  the composition updating thread.
+	  This fixes races where we ended up removing the blocking probe before
+	  the seek actually started to be executed in the nlecomposition
+	  nested inside an nlesource which leaded to data from *before* the seek
+	  to be outputed which means we could display wrong frames,
+	  and it was leading to interesting deadlocks.
+
+2019-06-22 23:25:57 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Minor debugging enhancements
+
+2019-06-21 11:45:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-asset.c:
+	* tests/check/python/test_assets.py:
+	  uri-asset: Fix retrieving a relocated asset sync twice
+	  Add a simple test for that.
+
+2019-06-21 10:47:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Make adding/removing track MT safe
+	  It was almost the case already so make it happen fully
+
+2019-06-19 18:14:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Ensure flushes after seek have the right seqnum
+	  Seeks that lead to a stack change lead to deactivating the current
+	  stack. At that point we explicitely flush downstream as a reaction to
+	  the flushing seek. Until now those flushes had a random seqnum, this
+	  fails if we are a nested compostion as the parent composition will end
+	  up dropping that flush which in turns might lead to deadlocks. For
+	  example, the flush goes through a `compositor` which wants to flush
+	  downstream to stop its srcpad task, but that flush wouldn't have
+	  "released" its srcpad thread if the composition srcpad drops it, meaning
+	  it won't be able to stop the task ever.
+
+2019-06-17 18:23:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	* tests/check/nle/nlecomposition.c:
+	  nlecomposition: Shutdown children when setting state to NULL
+	  Otherwise if we shutdown a composition whith an nested composition
+	  (inside a source in the test) and leak it, we end up with the nested
+	  composition task still running (in READY) which is bad.
+	  Add a test for that which leaks the pipeline on purpose.
+
+2019-06-17 18:23:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nle: Parent the GstTask to ourself
+	  This allows accessing the nlecomposition in gdb when a task is
+	  'dangling' making debugging easier.
+
+2019-06-11 23:51:14 +0530  Swayamjeet <swayam1998@gmail.com>
+
+	* tests/validate/geslaunch.py:
+	  tests: Implement nested timelines tests
+
+2019-06-16 23:03:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Properly set seqnum on flush events
+
+2019-06-16 23:00:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Drop ASYNC_/START/DONE messages
+	  When we have nested timelines, we do not want those messages to pop
+	  to the parent timelines as we handle the sequence ourself in the
+	  timeline.
+
+2019-06-14 23:48:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  demux: Create timeline from the streaming thread
+	  First marshilling it to the main thread is dangerous as it is a blocking
+	  operation and it should never happen there.
+	  The asset cache is MT safe now so it is possible to load the timeline
+	  from that thread directly
+
+2019-06-16 21:27:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* plugins/ges/gesdemux.c:
+	  uri-asset: Implement multi threading support
+	  Making sure to have 1 GstDiscoverer per thread.
+	  Use that new feature in gesdemux by loading the timeline directly from
+	  the streaming thread. Modifying the timeline is not supported allowed
+	  anyway.
+
+2019-06-09 19:35:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/nle/nlecomposition.c:
+	  nle: Add a seeking test for nested composition
+
+2019-06-07 16:12:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-asset.c:
+	* plugins/ges/gesdemux.c:
+	  Use the new GstDiscoverer caching feature
+
+2019-06-07 16:06:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Do not post upstream translated composition update messages
+	  In the case of nested timeline in the toplevel timeline we ended up
+	  with CompositionUpdate for seeks sent by our own composition to
+	  granchildren composition. This was not causing essential issues
+	  if all tracks where containing nested timelines but in cases
+	  where one of the tracks only had a nested timelines, then we
+	  were waiting forever for a `CompositionUpdateDone`.
+	  CompositionUpdate translated into ASYNC_START/ASYNC_DONE should
+	  be kept inside the GESTimeline and not travel up (possibly to some
+	  parent GESTimeline).
+
+2019-06-07 09:10:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Handle track-types in clip addition
+	  The field was already expected in the launcher
+
+2019-06-06 23:19:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	* plugins/ges/gesbasebin.c:
+	* plugins/ges/gesdemux.c:
+	* plugins/nle/nlecomposition.c:
+	  Implement and use the GstStream API
+
+2019-06-06 17:21:01 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	* plugins/nle/nlecomposition.c:
+	  timeline: Create stable stream IDs
+
+2019-06-06 15:40:57 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* docs/plugins/index.md:
+	* docs/plugins/nle.md:
+	* docs/plugins/sitemap.txt:
+	* meson.build:
+	* plugins/ges/gessrc.c:
+	* plugins/nle/nleoperation.c:
+	  docs: Generate ges plugin doc
+
+2019-06-06 13:51:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* plugins/ges/gesbasebin.c:
+	* plugins/ges/gesbasebin.h:
+	* plugins/ges/gesdemux.c:
+	* plugins/ges/gessrc.c:
+	* plugins/ges/meson.build:
+	  plugins:ges: Factor out a GESBaseBin class
+	  And use it in both gesdemux and gessrc
+
+2019-06-06 13:02:33 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Emit no-more-pad as required
+
+2019-06-06 12:46:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Respect seek seqnum in output EOS/SEGMENT
+	  Allowing a proper seek EOS handling with nested compositions
+
+2019-06-06 11:26:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: Properly combine flows
+
+2019-06-06 10:16:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	* plugins/ges/gesdemux.h:
+	* plugins/ges/gesplugin.c:
+	* plugins/ges/gessrc.c:
+	* plugins/ges/gessrc.h:
+	  plugin: Make use of G_DECLARE
+	  And remove useless .h files
+
+2019-06-16 11:09:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Plug some leaks
+
+2019-06-15 16:44:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  xml-formatter: Refactor the way we handle loading state
+
+2019-06-15 15:11:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  xml-formatter: Cleanup removing all now useless pending fields
+
+2018-06-23 11:26:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-layer.c:
+	* ges/ges-uri-asset.c:
+	* tests/check/python/test_clip.py:
+	  xml-formatter: Load assets before their proxies
+	  Paving the way to removing pending fields to make the code
+	  simpler to follow.
+
+2019-06-15 01:33:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  assets: Recurse in the chain of proxies
+	  When linking loaded proxies and trying to setup their targets
+
+2019-06-06 09:48:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* plugins/ges/meson.build:
+	  docs: Add gstges plugin
+
+2019-05-26 09:55:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Add action type to copy/paste clips
+
+2019-05-25 20:20:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-container.c:
+	* tests/check/python/test_timeline.py:
+	  container: Handle children pasting failures
+
+2019-05-25 18:51:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/python/test_timeline.py:
+	  clip: Fix layer managament when copying a clip that was pasted
+
+2019-05-25 16:05:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-timeline-element.c:
+	* tests/check/python/test_timeline.py:
+	  element: Properly handle the fact that pasting can return NULL
+	  And fix paste annotation
+
+2019-05-31 23:13:48 +0200  Niels De Graef <niels.degraef@barco.com>
+
+	* configure.ac:
+	* meson.build:
+	  meson: Bump minimal GLib version to 2.44
+	  This means we can use some newer features and get rid of some
+	  boilerplate code using the G_DECLARE_* macros.
+	  As discussed on IRC, 2.44 is old enough by now to start depending on it.
+
+2019-05-29 23:12:11 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* plugins/nle/nleobject.c:
+	* plugins/nle/nleoperation.c:
+	  doc: remove xml from comments
+
+2019-05-17 19:54:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-transition.c:
+	  video-transition: When using non crossfade effect use 'over' operations
+	  For smptealph element to work as expected the following compositing
+	  element should mix with the default "over" operator, as described
+	  in its documentation.
+
+2019-05-23 18:43:06 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launcher: Remove duplicated track types option
+
+2019-05-23 18:42:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	  docs: Minor documentation fixes
+
+2019-05-23 17:20:56 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	  overrides: Make sure overrides are in hierarchy order
+	  Otherwise method order resolution will not be correct
+
+2019-01-24 19:39:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	  ges: Minor reorganisation of timeline-element.c
+
+2019-01-24 08:43:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.h:
+	  ges: Cleanup timeline-element.h indentation
+
+2019-05-01 18:20:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	* ges/ges-project.h:
+	  project: Add a signal to notify when a new timeline is starting to load
+
+2019-05-23 16:58:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  tools: Initialize GStreamer before parsin options
+	  We need it to be initialized to be able to parse our options
+
+2019-05-01 17:28:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.c:
+	* tools/utils.h:
+	  tools: Use a proper implementation of get_flags_from_string
+
+2019-05-01 17:26:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/test-utils.h:
+	  tests: Simply include ges-internal.h instead of redefining the same macros
+
+2019-05-16 09:07:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* docs/meson.build:
+	  docs: Stop building the doc cache by default
+	  And update the cache
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-docs/issues/36
+
+2019-05-16 15:09:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline-element.c:
+	  timeline-element: Mark edit() as Since: 1.18
+
+2019-05-16 15:06:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges.c:
+	  ges: Sprinkle around some Since: 1.16 markers
+
+2019-05-01 13:19:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/sitemap.txt:
+	* ges/ges-pipeline.c:
+	* ges/ges-screenshot.c:
+	  ges: Deprecate ges_play_sink_convert_frame
+	  It has nothing to do in our namespace/API
+
+2019-05-01 12:56:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-title-source.c:
+	* ges/ges-types.h:
+	* ges/ges-video-source.c:
+	  More porting to markdown
+
+2019-05-01 11:53:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-title-clip.c:
+	  title-clip: Enhance documentation
+
+2018-10-22 08:22:52 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/base-classes.md:
+	* docs/gst_plugins_cache.json:
+	* docs/images/layer_track_overview.png:
+	* docs/index.md:
+	* docs/libs/.gitignore:
+	* docs/libs/Makefile.am:
+	* docs/libs/architecture.xml:
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* docs/libs/ges.types:
+	* docs/libs/meson.build:
+	* docs/low_level.md:
+	* docs/meson.build:
+	* docs/nle-index.md:
+	* docs/nle-sitemap.txt:
+	* docs/nle.md:
+	* docs/sitemap.txt:
+	* ges/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	* plugins/meson.build:
+	* plugins/nle/meson.build:
+	  doc: Build documentation with hotdoc
+
+2018-10-22 11:39:03 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-project.c:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges.c:
+	* ges/meson.build:
+	  docs: Minor fixes
+
+2019-05-07 13:33:09 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/libs/ges-sections.txt:
+	  doc: ges-track: Add ges_track_set_create_element_for_gap_func
+
+2019-05-05 11:38:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Fix caps restriction short names
+
+2019-05-04 10:47:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* tests/check/python/test_timeline.py:
+	  python: Avoid warning about using deprecated methods
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/69
+
+2019-05-02 11:41:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-group.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	  element: Make return value of setters mean something
+	  Setters return values should return %FALSE **only** when the value
+	  could not be set, not when unchanged or when the subclass handled
+	  it itself!
+	  This patches makes it so the return value is meaningul by allowing
+	  subclasses return anything different than `TRUE` or `FALSE` (convention
+	  is -1) to let the subclass now that it took care of everything and
+	  no signal should be emited.
+
+2019-05-01 12:09:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-container.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	  ges: Move `ges_container_edit` to GESTimelineElement
+	  Now that the notion of layer has been moved down to #GESTimelineElement
+	  (through the new #ges_timeline_element_get_layer_priority method), this
+	  method make much more sense directly in the base class.
+
+2019-04-20 01:36:10 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* plugins/ges/meson.build:
+	  meson: Generate a pkgconfig file for the GES plugin
+	  This was missing due to a typo.
+
+2019-04-19 10:41:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.16.0 ===
 
 2019-04-19 00:35:57 +0100  Tim-Philipp Müller <tim@centricular.com>
