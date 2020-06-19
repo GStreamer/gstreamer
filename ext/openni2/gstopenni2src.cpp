@@ -140,6 +140,8 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
           GST_TYPE_OPENNI2_SRC_SOURCETYPE, DEFAULT_SOURCETYPE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  gst_type_mark_as_plugin_api (GST_TYPE_OPENNI2_SRC_SOURCETYPE,
+      (GstPluginAPIFlags) 0);
 
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_openni2_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_openni2_src_stop);

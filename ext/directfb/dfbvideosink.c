@@ -147,7 +147,7 @@ gst_dfbvideosink_layer_mode_get_type (void)
 GType
 gst_meta_dfbsurface_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { "memory", NULL };
 
   if (g_once_init_enter (&type)) {
@@ -2437,6 +2437,8 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
           "'administrative' when the cursor is required)",
           gst_dfbvideosink_layer_mode_get_type (), DEFAULT_LAYER_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (gst_dfbvideosink_layer_mode_get_type (), 0);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "DirectFB video sink", "Sink/Video", "A DirectFB based videosink",
