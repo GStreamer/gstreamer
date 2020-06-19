@@ -151,6 +151,8 @@ ges_track_element_asset_get_track_type (GESTrackElementAsset * asset)
  * @framerate_d: The framerate denominator
  *
  * Result: %TRUE if @self has a natural framerate %FALSE otherwise
+ *
+ * Since: 1.18
  */
 gboolean
 ges_track_element_asset_get_natural_framerate (GESTrackElementAsset * self,

@@ -421,6 +421,8 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    * Note that GES can not support track elements that have both internal
    * content and manipulate the timing of their data streams (time
    * effects).
+   *
+   * Since: 1.18
    */
   properties[PROP_HAS_INTERNAL_SOURCE] =
       g_param_spec_boolean ("has-internal-source", "Has Internal Source",
@@ -441,6 +443,8 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    * per control source.
    *
    * Default value: %TRUE
+   *
+   * Since: 1.18
    */
   properties[PROP_AUTO_CLAMP_CONTROL_SOURCES] =
       g_param_spec_boolean ("auto-clamp-control-sources",
@@ -903,6 +907,8 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
  *
  * Returns: %FALSE if @has_internal_source is forbidden for @object and
  * %TRUE in any other case.
+ *
+ * Since: 1.18
  */
 gboolean
 ges_track_element_set_has_internal_source (GESTrackElement * object,
@@ -1346,6 +1352,8 @@ ges_track_element_is_active (GESTrackElement * object)
  * Gets #GESTrackElement:has-internal-source for the element.
  *
  * Returns: %TRUE if @object can have its 'internal time' properties set.
+ *
+ * Since: 1.18
  */
 gboolean
 ges_track_element_has_internal_source (GESTrackElement * object)

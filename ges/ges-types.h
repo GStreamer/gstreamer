@@ -47,6 +47,8 @@ G_BEGIN_DECLS
  * GESFrameNumber:
  *
  * A datatype to hold a frame number.
+ *
+ * Since: 1.18
  */
 typedef gint64 GESFrameNumber;
 

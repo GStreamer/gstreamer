@@ -594,6 +594,8 @@ ges_meta_container_add_metas_from_string (GESMetaContainer * container,
  *
  * Returns: %TRUE if the @meta_item field was successfully registered on
  * @container to only hold @type values, with the given @flags.
+ *
+ * Since: 1.18
  */
 gboolean
 ges_meta_container_register_static_meta (GESMetaContainer * container,

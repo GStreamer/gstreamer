@@ -38,8 +38,6 @@
 #include "ges-internal.h"
 #include "ges-meta-container.h"
 
-/* GESMarker */
-
 static void ges_meta_container_interface_init (GESMetaContainerInterface *
     iface);
 
@@ -92,10 +90,12 @@ ges_marker_class_init (GESMarkerClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->get_property = ges_marker_get_property;
-    /**
+  /**
    * GESMarker:position:
    *
    * Current position (in nanoseconds) of the #GESMarker
+   *
+   * Since: 1.18
    */
   properties[PROP_POSITION] =
       g_param_spec_uint64 ("position", "Position",
@@ -321,7 +321,7 @@ done:
 /**
  * ges_marker_list_get_markers:
  *
- * Returns: (element-type GESMarker) (transfer full): a #GList 
+ * Returns: (element-type GESMarker) (transfer full): a #GList
  * of the #GESMarker within the GESMarkerList. The user will have
  * to unref each #GESMarker and free the #GList.
  *
@@ -350,7 +350,7 @@ ges_marker_list_get_markers (GESMarkerList * self)
 
 /**
  * ges_marker_list_move:
- * 
+ *
  * Moves a @marker in a @list to a new @position
  *
  * Returns: %TRUE if the marker could be moved, %FALSE otherwise

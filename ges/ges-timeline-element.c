@@ -584,6 +584,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    * Note that some GES elements will be automatically created with
    * pre-registered children properties. You can use
    * ges_timeline_element_list_children_properties() to list these.
+   *
+   * Since: 1.18
    */
   ges_timeline_element_signals[CHILD_PROPERTY_ADDED] =
       g_signal_new ("child-property-added", G_TYPE_FROM_CLASS (klass),
@@ -598,6 +600,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    *
    * Emitted when the element has a child property unregistered. See
    * ges_timeline_element_remove_child_property().
+   *
+   * Since: 1.18
    */
   ges_timeline_element_signals[CHILD_PROPERTY_REMOVED] =
       g_signal_new ("child-property-removed", G_TYPE_FROM_CLASS (klass),

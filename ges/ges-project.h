@@ -61,8 +61,15 @@ struct _GESProjectClass
                               GType extractable_type);
   gboolean (*loaded)         (GESProject  * self,
                               GESTimeline * timeline);
-  gboolean (*loading)        (GESProject  * self,
-                              GESTimeline * timeline);
+  /**
+   * GESProjectClass::loading:
+   * @self: The self
+   * @timeline: The loading timeline
+   *
+   * Since: 1.18
+   */
+  void (*loading)           (GESProject  * self,
+                             GESTimeline * timeline);
 
   gpointer _ges_reserved[GES_PADDING - 1];
 };

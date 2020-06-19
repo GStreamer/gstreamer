@@ -45,6 +45,16 @@ struct _GESClipAssetClass
 {
   GESAssetClass parent;
 
+  /**
+   * GESClipAssetClass::get_natural_framerate:
+   * @self: A #GESClipAsset
+   * @framerate_n: The framerate numerator to retrieve
+   * @framerate_d: The framerate denominator to retrieve
+   *
+   * Returns: %TRUE if @self has a natural framerate @FALSE otherwise.
+   *
+   * Since: 1.18
+   */
   gboolean (*get_natural_framerate)        (GESClipAsset *self, gint *framerate_n, gint *framerate_d);
 
   gpointer _ges_reserved[GES_PADDING - 1];

@@ -182,6 +182,8 @@ ges_clip_asset_get_supported_formats (GESClipAsset * self)
  * @framerate_d: The framerate denominator
  *
  * Result: %TRUE if @self has a natural framerate %FALSE otherwise
+ *
+ * Since: 1.18
  */
 gboolean
 ges_clip_asset_get_natural_framerate (GESClipAsset * self,
@@ -216,6 +218,8 @@ ges_clip_asset_get_natural_framerate (GESClipAsset * self,
  * Returns: The timestamp corresponding to @frame_number in the element source, given
  * in internal time coordinates, or #GST_CLOCK_TIME_NONE if the clip asset does not have a
  * natural frame rate.
+ *
+ * Since: 1.18
  */
 GstClockTime
 ges_clip_asset_get_frame_time (GESClipAsset * self, GESFrameNumber frame_number)

@@ -27,11 +27,24 @@ G_BEGIN_DECLS
 
 #define GES_TYPE_MARKER ges_marker_get_type ()
 
+/**
+ * GESMarker:
+ *
+ * A timed #GESMetaContainer object.
+ *
+ * Since: 1.18
+ */
 GES_API
 G_DECLARE_FINAL_TYPE (GESMarker, ges_marker, GES, MARKER, GObject)
-
 #define GES_TYPE_MARKER_LIST ges_marker_list_get_type ()
 
+/**
+ * GESMarkerList:
+ *
+ * A list of #GESMarker
+ *
+ * Since: 1.18
+ */
 GES_API
 G_DECLARE_FINAL_TYPE (GESMarkerList, ges_marker_list, GES, MARKER_LIST, GObject)
 

@@ -26,6 +26,13 @@ G_BEGIN_DECLS
 
 #define GES_TYPE_SOURCE_CLIP_ASSET ges_source_clip_asset_get_type ()
 
+/**
+ * GESSourceClipAsset:
+ *
+ * An asset types from which #GESSourceClip will be extracted
+ *
+ * Since: 1.18
+ */
 GES_API
 G_DECLARE_DERIVABLE_TYPE(GESSourceClipAsset, ges_source_clip_asset, GES,
                          SOURCE_CLIP_ASSET, GESClipAsset);

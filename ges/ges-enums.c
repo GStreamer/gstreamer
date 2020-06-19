@@ -189,6 +189,14 @@ register_ges_edge (GType * id)
   *id = g_enum_register_static ("GESEdge", edges);
 }
 
+/**
+ * ges_edge_name:
+ * @edge: The #GESEdge to get the name of
+ *
+ * Returns: A human friendly name for @edge
+ *
+ * Since: 1.16
+ */
 const gchar *
 ges_edge_name (GESEdge edge)
 {

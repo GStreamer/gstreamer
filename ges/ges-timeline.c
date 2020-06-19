@@ -3223,6 +3223,8 @@ ges_timeline_move_layer (GESTimeline * timeline, GESLayer * layer,
  * an element within the timeline.
  *
  * Returns: The timestamp corresponding to @frame_number in the output of @self.
+ *
+ * Since: 1.18
  */
 GstClockTime
 ges_timeline_get_frame_time (GESTimeline * self, GESFrameNumber frame_number)
@@ -3247,6 +3249,8 @@ ges_timeline_get_frame_time (GESTimeline * self, GESFrameNumber frame_number)
  * corresponding #GESFrameNumber in the timeline's output.
  *
  * Returns: The frame number @timestamp corresponds to.
+ *
+ * Since: 1.18
  */
 GESFrameNumber
 ges_timeline_get_frame_at (GESTimeline * self, GstClockTime timestamp)

@@ -602,6 +602,8 @@ ges_uri_clip_asset_get_max_duration (GESUriClipAsset * self)
  * Gets Whether the file represented by @self is an image or not
  *
  * Returns: Whether the file represented by @self is an image or not
+ *
+ * Since: 1.18
  */
 gboolean
 ges_uri_clip_asset_is_image (GESUriClipAsset * self)
@@ -898,6 +900,8 @@ ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
  *
  * Returns: %TRUE if the video stream corresponds to an image (i.e. only
  * contains one frame)
+ *
+ * Since: 1.18
  */
 gboolean
 ges_uri_source_asset_is_image (GESUriSourceAsset * asset)

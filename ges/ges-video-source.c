@@ -255,6 +255,8 @@ ges_video_source_init (GESVideoSource * self)
  * account.
  *
  * Returns: %TRUE if the object has a natural size, %FALSE otherwise.
+ *
+ * Since: 1.18
  */
 gboolean
 ges_video_source_get_natural_size (GESVideoSource * self, gint * width,

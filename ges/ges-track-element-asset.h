@@ -44,6 +44,16 @@ struct _GESTrackElementAssetClass
 {
   GESAssetClass parent_class;
 
+  /**
+   * GESTrackElementAssetClass::get_natural_framerate:
+   * @self: A #GESTrackElementAsset
+   * @framerate_n: The framerate numerator to retrieve
+   * @framerate_d: The framerate denominator to retrieve
+   *
+   * Returns: %TRUE if @self has a natural framerate @FALSE otherwise.
+   *
+   * Since: 1.18
+   */
   gboolean (*get_natural_framerate)        (GESTrackElementAsset *self, gint *framerate_n, gint *framerate_d);
 
   gpointer _ges_reserved[GES_PADDING - 1];

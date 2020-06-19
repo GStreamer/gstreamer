@@ -281,6 +281,8 @@ ges_layer_class_init (GESLayerClass * klass)
    *
    * Will be emitted whenever the layer is activated or deactivated
    * for some #GESTrack. See ges_layer_set_active_for_tracks().
+   *
+   * Since: 1.18
    */
   ges_layer_signals[ACTIVE_CHANGED] =
       g_signal_new ("active-changed", G_TYPE_FROM_CLASS (klass),
@@ -1026,6 +1028,8 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
  * ges_layer_set_active_for_tracks().
  *
  * Returns: %TRUE if @layer is active for @track, or %FALSE otherwise.
+ *
+ * Since: 1.18
  */
 gboolean
 ges_layer_get_active_for_track (GESLayer * layer, GESTrack * track)
@@ -1062,6 +1066,8 @@ ges_layer_get_active_for_track (GESLayer * layer, GESTrack * track)
  * timeline's tracks.
  *
  * Returns: %TRUE if the operation worked %FALSE otherwise.
+ *
+ * Since: 1.18
  */
 gboolean
 ges_layer_set_active_for_tracks (GESLayer * layer, gboolean active,

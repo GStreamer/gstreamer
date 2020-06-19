@@ -2590,6 +2590,8 @@ ges_clip_class_init (GESClipClass * klass)
    * #GESTimelineElement:duration of the clip due to a change in the above
    * variables, its #GESTimelineElement:duration will be set to the new
    * limit.
+   *
+   * Since: 1.18
    */
   properties[PROP_DURATION_LIMIT] =
       g_param_spec_uint64 ("duration-limit", "Duration Limit",
@@ -4003,6 +4005,8 @@ _active_time_effects_in_track_after_priority (GESClip * clip,
  * Returns: The time in the timeline coordinates corresponding to
  * @internal_time, or #GST_CLOCK_TIME_NONE if the conversion could not be
  * performed.
+ *
+ * Since: 1.18
  */
 GstClockTime
 ges_clip_get_timeline_time_from_internal_time (GESClip * clip,
@@ -4418,6 +4422,8 @@ ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
  *
  * Returns: (transfer none): The element that was added to @track, either
  * @child or a copy of child, or %NULL if the element could not be added.
+ *
+ * Since: 1.18
  */
 GESTrackElement *
 ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
