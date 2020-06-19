@@ -443,6 +443,16 @@ gst_install_plugins_context_free (GstInstallPluginsContext * ctx)
   g_free (ctx);
 }
 
+/**
+ * gst_install_plugins_context_copy:
+ * @ctx: a #GstInstallPluginsContext
+ *
+ * Copies a #GstInstallPluginsContext.
+ *
+ * Returns: (transfer full): A copy of @ctx
+ *
+ * Since: 1.12.1
+ */
 GstInstallPluginsContext *
 gst_install_plugins_context_copy (GstInstallPluginsContext * ctx)
 {

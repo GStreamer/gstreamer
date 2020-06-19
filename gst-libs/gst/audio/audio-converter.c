@@ -1643,6 +1643,8 @@ gst_audio_converter_convert (GstAudioConverter * convert,
  * The return value would be typically input to gst_base_transform_set_in_place()
  *
  * Returns: %TRUE when the conversion can be done in place.
+ *
+ * Since: 1.12
  */
 gboolean
 gst_audio_converter_supports_inplace (GstAudioConverter * convert)

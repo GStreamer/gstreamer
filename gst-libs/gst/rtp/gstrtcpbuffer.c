@@ -1068,6 +1068,8 @@ gst_rtcp_packet_set_rb (GstRTCPPacket * packet, guint nth, guint32 ssrc,
  * extension.
  *
  * Returns: %TRUE if the profile specific extension data was added.
+ *
+ * Since: 1.10
  */
 gboolean
 gst_rtcp_packet_add_profile_specific_ext (GstRTCPPacket * packet,
@@ -1108,6 +1110,8 @@ gst_rtcp_packet_add_profile_specific_ext (GstRTCPPacket * packet,
  *
  * Returns: The number of 32-bit words containing profile-specific extension
  *          data from @packet.
+ *
+ * Since: 1.10
  */
 guint16
 gst_rtcp_packet_get_profile_specific_ext_length (GstRTCPPacket * packet)
@@ -1138,6 +1142,8 @@ gst_rtcp_packet_get_profile_specific_ext_length (GstRTCPPacket * packet)
  * @len: (out): result length of the profile-specific data
  *
  * Returns: %TRUE if there was valid data.
+ *
+ * Since: 1.10
  */
 gboolean
 gst_rtcp_packet_get_profile_specific_ext (GstRTCPPacket * packet,
@@ -1177,6 +1183,8 @@ gst_rtcp_packet_get_profile_specific_ext (GstRTCPPacket * packet,
  * memory area @data. This must be freed with g_free() after usage.
  *
  * Returns: %TRUE if there was valid data.
+ *
+ * Since: 1.10
  */
 gboolean
 gst_rtcp_packet_copy_profile_specific_ext (GstRTCPPacket * packet,

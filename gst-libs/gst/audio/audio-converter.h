@@ -28,6 +28,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstAudioConverter:
+ *
+ * Opaque #GstAudioConverter struct.
+ *
+ * Since: 1.8
+ */
 typedef struct _GstAudioConverter GstAudioConverter;
 
 /**

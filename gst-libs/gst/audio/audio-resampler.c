@@ -1622,8 +1622,6 @@ gst_audio_resampler_update (GstAudioResampler * resampler,
  * @resampler: a #GstAudioResampler
  *
  * Free a previously allocated #GstAudioResampler @resampler.
- *
- * Since: 1.6
  */
 void
 gst_audio_resampler_free (GstAudioResampler * resampler)

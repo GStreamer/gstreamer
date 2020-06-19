@@ -25,6 +25,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstAudioResampler:
+ *
+ * Opaque #GstAudioResampler struct.
+ *
+ * Since: 1.10
+ */
 typedef struct _GstAudioResampler GstAudioResampler;
 
 /**
@@ -90,6 +97,8 @@ typedef struct _GstAudioResampler GstAudioResampler;
  *     and full filter tables.
  *
  * Select for the filter tables should be set up.
+ *
+ * Since: 1.10
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_FILTER_MODE_INTERPOLATED = (0),
@@ -122,6 +131,8 @@ typedef enum {
  *   filter coefficients.
  *
  * The different filter interpolation methods.
+ *
+ * Since: 1.10
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE = (0),
@@ -165,7 +176,7 @@ typedef enum {
  *
  * Different subsampling and upsampling methods
  *
- * Since: 1.6
+ * Since: 1.10
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_METHOD_NEAREST,
@@ -189,6 +200,8 @@ typedef enum {
  *    when #GST_AUDIO_RESAMPLER_FILTER_MODE_AUTO is configured.
  *
  * Different resampler flags.
+ *
+ * Since: 1.10
  */
 typedef enum {
   GST_AUDIO_RESAMPLER_FLAG_NONE                 = (0),
