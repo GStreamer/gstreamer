@@ -633,6 +633,12 @@ gst_vaapisink_video_overlay_set_render_rectangle (GstVideoOverlay * overlay,
   display_rect->width = width;
   display_rect->height = height;
 
+  if (gst_vaapisink_ensure_render_rect (sink, width, height) && sink->window) {
+    gst_vaapi_window_set_render_rectangle (sink->window, x, y, width, height);
+    gst_vaapi_window_set_size (sink->window, width, height);
+    gst_vaapisink_reconfigure_window (sink);
+  }
+
   GST_DEBUG ("render rect (%d,%d):%ux%u",
       display_rect->x, display_rect->y,
       display_rect->width, display_rect->height);

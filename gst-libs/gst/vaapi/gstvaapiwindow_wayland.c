@@ -531,6 +531,17 @@ gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
   return TRUE;
 }
 
+void
+gst_vaapi_window_wayland_set_render_rect (GstVaapiWindow * window, gint x,
+    gint y, gint width, gint height)
+{
+  GstVaapiWindowWaylandPrivate *const priv =
+      GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+
+  if (priv->video_subsurface)
+    wl_subsurface_set_position (priv->video_subsurface, x, y);
+}
+
 static inline gboolean
 frame_done (FrameState * frame)
 {
@@ -991,6 +1002,7 @@ gst_vaapi_window_wayland_class_init (GstVaapiWindowWaylandClass * klass)
   window_class->set_fullscreen = gst_vaapi_window_wayland_set_fullscreen;
   window_class->unblock = gst_vaapi_window_wayland_unblock;
   window_class->unblock_cancel = gst_vaapi_window_wayland_unblock_cancel;
+  window_class->set_render_rect = gst_vaapi_window_wayland_set_render_rect;
 
   signals[SIZE_CHANGED] = g_signal_new ("size-changed",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,

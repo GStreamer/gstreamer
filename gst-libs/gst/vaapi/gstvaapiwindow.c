@@ -414,6 +414,32 @@ gst_vaapi_window_get_fullscreen (GstVaapiWindow * window)
 }
 
 /**
+ * gst_vaapi_window_set_render_rectangle:
+ * @window: a #GstVaapiWindow
+ * @x: the horizontal offset of the render area inside the window
+ * @y: the vertical offset of the render area inside the window
+ * @width: the width of the render area inside the window
+ * @height: the height of the render area inside the window
+ *
+ * Set information of the render area.
+ *
+ * Since: 1.18
+ */
+void
+gst_vaapi_window_set_render_rectangle (GstVaapiWindow * window, gint x, gint y,
+    gint width, gint height)
+{
+  const GstVaapiWindowClass *klass;
+
+  g_return_if_fail (window != NULL);
+
+  klass = GST_VAAPI_WINDOW_GET_CLASS (window);
+
+  if (klass->set_render_rect)
+    klass->set_render_rect (window, x, y, width, height);
+}
+
+/**
  * gst_vaapi_window_set_fullscreen:
  * @window: a #GstVaapiWindow
  * @fullscreen: %TRUE to request window to get fullscreen

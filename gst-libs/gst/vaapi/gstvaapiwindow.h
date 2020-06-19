@@ -85,6 +85,10 @@ gst_vaapi_window_set_height (GstVaapiWindow * window, guint height);
 void
 gst_vaapi_window_set_size (GstVaapiWindow * window, guint width, guint height);
 
+void
+gst_vaapi_window_set_render_rectangle (GstVaapiWindow * window, gint x, gint y,
+    gint width, gint height);
+
 gboolean
 gst_vaapi_window_put_surface (GstVaapiWindow * window,
     GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,

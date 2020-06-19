@@ -129,6 +129,7 @@ struct _GstVaapiWindowClass
   guintptr (*get_colormap) (GstVaapiWindow * window);
   gboolean (*unblock) (GstVaapiWindow * window);
   gboolean (*unblock_cancel) (GstVaapiWindow * window);
+  void (*set_render_rect) (GstVaapiWindow * window, gint x, gint y, gint width, gint height);
 };
 
 GstVaapiWindow *
