@@ -14,7 +14,7 @@
   </description>
   <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gstreamer-vaapi.html"/>
   <download-page rdf:resource="http://gstreamer.freedesktop.org/download/"/>
-  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gstreamer-vaapi"/>
+  <bug-database rdf:resource="https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues/"/>
   <programming-language>C</programming-language>
   <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
 
@@ -24,6 +24,16 @@
       <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi"/>
     </GitRepository>
   </repository>
+
+ <release>
+  <Version>
+   <revision>1.17.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-06-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gstreamer-vaapi/gstreamer-vaapi-1.17.1.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
