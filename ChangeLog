@@ -1,3 +1,1953 @@
+=== release 1.17.1 ===
+
+2020-06-19 19:27:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.17.1
+
+2020-06-12 19:31:41 +0530  Vivek R <123vivekr@gmail.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	  validate: flow: record GstRegionOfInterestMeta
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/206>
+
+2020-06-15 18:37:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Ensure that the main directory exists
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/issues/53 part 1
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/209>
+
+2020-06-15 18:06:33 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tests/check/meson.build:
+	* validate/tests/launcher_tests/meson.build:
+	* validate/tests/meson.build:
+	  validate:tests: Cleanup the way set environment vars
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/209>
+
+2020-06-15 17:56:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate-launcher.in:
+	  validate: Stop trying to support uninstalled autotools
+	  Fix https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/issues/53 part 2
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/209>
+
+2020-06-09 17:29:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	  validateflow: Plug leak
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/205>
+
+2020-06-08 14:01:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Fix waiting for signal
+	  The signal callback signature was just wrong and not generic leading to
+	  crash if waiting for any signal that didn't match it. This commit fixes
+	  it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/205>
+
+2020-06-08 14:00:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Add an option to set properties on all instances
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/205>
+
+2020-06-08 13:45:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	* validate/gst/validate/flow/formatting.h:
+	* validate/gst/validate/flow/gstvalidateflow.c:
+	  validate:flow: Add a way to dump buffer content as hex
+	  Useful in unit tests with very small buffers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/205>
+
+2020-06-02 19:10:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Cleanup implementation of appsrc-push
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/205>
+
+2020-05-07 09:16:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Remove useless condition
+	  CID 1462652
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/192>
+
+2020-05-07 09:09:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate:ssim: Avoid dereferencing NULL pointer
+	  CID 1462650
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/192>
+
+2020-05-07 09:06:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Give a proper argv[0] when running test files
+	  Fixes CID 1462613
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/192>
+
+2020-05-07 09:05:06 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate:transcoding: Exit after printing the help
+	  Fixes CID 1455575
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/192>
+
+2020-05-07 08:49:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Ensure Scenario isn't NULL when preparing action
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/192>
+
+2020-06-03 14:29:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/fakesrc.simple.validatetest:
+	* docs/fakesrc.simple.validatetest.ini:
+	* docs/fakesrc.simple/flow-expectations/log-sink-sink-expected:
+	* docs/gst-validate-config.md:
+	* docs/gst-validate-flow.md:
+	* docs/gst-validate-test-file.md:
+	* docs/plugins/validateflow.md:
+	* docs/sitemap.txt:
+	  validate: Update documentation now core plugins are integrated
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/204>
+
+2020-06-03 10:55:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	* validate/gst/validate/flow/formatting.h:
+	* validate/gst/validate/flow/gstvalidateflow.c:
+	* validate/gst/validate/flow/gstvalidateflow.h:
+	* validate/gst/validate/flow/meson.build:
+	* validate/gst/validate/gst-validate-extra-checks.c:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/meson.build:
+	* validate/gst/validate/validate.c:
+	* validate/plugins/extra_checks/meson.build:
+	* validate/plugins/meson.build:
+	  validate: Make extracheck and flow part of core instead plugins
+	  It makes things more complex and doesn't bring anything!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/204>
+
+2020-06-03 09:32:32 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher: Limit copies of massive debug logs in markdown file
+	  When debugging is activated, we could end up with log files ranging in the
+	  multi-megabyte or even gigabyte range. Copying those is expensive from a cpu/io
+	  point of view in addition to clobbering the storage.
+	  Instead of always copying those files, check if they are smaller than 500kB. If
+	  not, don't copy them and instead provide a link to their location.
+	  Fixes #52
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/203>
+
+2020-05-30 15:54:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/validateflow.md:
+	* validate/plugins/flow/formatting.c:
+	* validate/plugins/flow/formatting.h:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validateflow: Allow specifying checksum type
+	  And add an extra mode 'checksum-as-id' which basically numerate
+	  buffers checksums as they are being received so that it is simpler
+	  to compare expectations when you are tracking buffers from both
+	  sinkpads and srcpads.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/202>
+
+2020-05-29 18:11:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	  validate: Add a parameter to force waiting on the test clock
+	  This allows to wait for a new buffer to reach the sink without
+	  actually cranking that buffer, allowing to quite the test without
+	  waiting for EOS in a 100% reproducible way
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/201>
+
+2020-05-29 18:11:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/validate.c:
+	  validate: Error out when a config hasn't been used at all
+	  It probably means a plugin is not available
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/201>
+
+2020-05-28 00:16:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* validate/AUTHORS:
+	* validate/meson.build:
+	  Ship validate as part of a gst-devtools tarball
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/199>
+
+2020-05-27 20:59:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: make debug_viewer a feature option
+	  ... and disable by default.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/199>
+
+2020-05-28 17:04:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Fix mixup in quarks usages
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/200>
+
+2020-05-27 19:35:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Add missing return func when GLib < 2.50
+	  CID 1463854
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/200>
+
+2020-05-26 23:25:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-action-types.md:
+	* docs/gst-validate-test-file.md:
+	* docs/plugins/validateflow.md:
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Update documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/200>
+
+2020-05-05 18:09:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/fakesrc.simple.validatetest:
+	* docs/plugins/fakesrc.simple.validatetest.yaml:
+	* docs/plugins/fakesrc.simple/flow-expectations/log-sink-sink-expected:
+	* docs/plugins/validateflow.md:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/validate.c:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validateflow: Add a way to configure when to generate expectations
+	  By default, generate them whenever the file is missing but adding a way
+	  to override that with `validateflow,generate-expectations=true` to force
+	  regenerating them or setting `validateflow,generate-expectations=false`
+	  to disallow generating them (on CI servers for example)
+	  Also update the validateflow documentation to take that into account
+	  and remove references to pipeline.json file which is now gone!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/200>
+
+2020-05-14 19:22:18 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Minor cleanup around pipeline change state management
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/198>
+
+2020-05-14 18:45:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Mark seek as done only when reaching next state
+	  There is a race where following actions could generate a
+	  flush-start/flush-stop dance but the state change resulting from the
+	  seek hasn't been committed yet, leading to the ASYNC_START being
+	  ignored by GstBin since its pending_state is not VOID when receiving
+	  the ASYNC_START message.
+	  Conceptually it is totally correct to consider an action done when
+	  the state change of the pipeline is stabilized..
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/198>
+
+2020-05-26 15:55:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Stop wrongly erroring on testsuite loading failure
+	  When the testsuite was actually already loaded as the .py
+	  file was explicitly passed in
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-05-26 15:53:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Fix loading configs from a caps
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-05-23 00:38:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  flow: Use bat to color diffs when possible
+	  Adding a function to check if can output colored logs
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-05-15 11:27:12 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  launcher: check: Properly set PLUGIN_PATH and registry when running in gst-build
+	  This makes registry
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-05-13 18:25:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	  launcher: Ensure that -j tests run in parallel when running forever
+	  So that you can reproduce the issue you want faster!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-05-12 09:26:40 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-launcher.md:
+	  docs: Update gst-validate-launcher documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-03-10 11:52:35 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	* validate/launcher/utils.py:
+	  launcher: Add support for running tests inside rr
+	  Allowing us to easily run the tests forever and then replay the
+	  failures!
+	  https://rr-project.org/
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/197>
+
+2020-05-14 12:35:40 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: add missing gir annotation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/194>
+
+2020-05-22 18:00:04 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Initialize variable correctly
+	  ret needs to be always reset to FALSE *before* checking attempting to load the
+	  individual files. Otherwise there's the possibility it would silently accept an
+	  invalid scenario name
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/196>
+
+2020-05-22 17:56:40 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Remove unused variable
+	  We only need to check whether the field is present and of a given type
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/196>
+
+2020-05-15 11:26:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Stop using g_file_peek_path
+	  It was introduced in 2.56 so is too recent
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/issues/51
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/195>
+
+2020-05-05 13:52:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/validate.c:
+	* validate/tests/check/validate/utilities.c:
+	  validate: Add including support in the structure file parser
+	  Adding proper error reporting support
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/191>
+
+2020-05-08 17:35:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: utils: Do not try to replace vars in debug info fields
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/190>
+
+2020-05-08 17:35:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Fix parsing validate tests files with vars on windows
+	  And ensure that we escape windows path in variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/190>
+
+2020-05-03 01:24:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher:check: Add support for gst-tester-1.0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/189>
+
+2020-05-07 00:23:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-test-file.md:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/validate.c:
+	* validate/launcher/baseclasses.py:
+	* validate/tests/launcher_tests/check_set_prop_never_called_error.validatetest:
+	* validate/tests/launcher_tests/not_negotiated.accept_caps_failure.validatetest:
+	* validate/tests/launcher_tests/test_validate.py:
+	* validate/tools/gst-validate.c:
+	  validate: Add support for known-issues in the .validatetest
+	  And add some tests about remaining actions failures
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/189>
+
+2020-05-06 22:36:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Ensure a meta structure is found in test files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/189>
+
+2020-05-06 22:20:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Check remaining action on stop, not EOS
+	  When ignoring EOS, on addition action could end up not being executed
+	  and no error was reported which was wrong.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/189>
+
+2020-05-04 17:59:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	  validate: Fix rendering destination directory path creation
+	  We were ending up creating file:/some/path in cwd
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/187>
+
+2020-05-04 16:59:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	* validate/launcher/baseclasses.py:
+	* validate/tools/gst-validate.c:
+	  validate: Plug some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/187>
+
+2020-05-03 01:22:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Add details on all g_log message reports.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/187>
+
+2020-05-03 01:20:19 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-config.md:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/reporters.py:
+	* validate/tools/gst-validate-rtsp-server.c:
+	* validate/tools/gst-validate.c:
+	  validate: Add a mechanism to mark tests as skipped
+	  And use it when a plugin is missing and the user didn't ask for
+	  failure when it happens
+	  And use the TAP[0] synthax to report it
+	  [0]: https://testanything.org
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/187>
+
+2020-05-03 00:54:56 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/validate.c:
+	* validate/plugins/extra_checks/gstvalidateextrachecks.c:
+	* validate/plugins/flow/gstvalidateflow.c:
+	* validate/tools/gst-validate-images-check.c:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-rtsp-server.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: Enhance issue reporting from structures
+	  And properly bail out when required
+	  This is preparatory work for gst-test in core which will use the TAP
+	  protocol
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/187>
+
+2020-05-05 22:57:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/flow/formatting.c:
+	  validate:flow: Handle some more segment fields filtering
+	  Those slept through when implementing filtering
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/188>
+
+2020-04-09 16:04:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  ssim: Minor improvements on the way we attach to pads
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2018-06-05 17:56:36 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Refactor seek handling
+	  * Store all seek values into a list of pending seeks instead
+	  of hardcoding some values
+	  * Store all segments that sinks received
+	  * Match segments to seeks when all sinks received segments with
+	  the same seqnum
+	  * Detect when a seek did *not* result in segments with identical
+	  matching seqnums
+	  Should allow checking for all types of seek handling, including
+	  flush-less seeks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2018-06-15 10:52:46 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate-report: Add new check for top-level seek
+	  This issue is to detect seeks that don't result in segments
+	  with identical seqnums. This check can be done at the top-level
+	  scenario
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2018-06-05 17:55:29 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate-pad-monitor: Post GstBaseSink SEGMENT on the bus
+	  Allows higher-level bin or app (like validate-scenario) to know
+	  what each sink currently has in terms of SEGMENT.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2018-06-05 17:53:51 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	  validate-element-monitor: Detect basesink elements
+	  And add a macro
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2018-06-05 17:51:44 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Add logging for scenario lock taking/releasing
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2020-04-30 12:39:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	  pad-monitor: Reliably track pending seeks
+	  Instead of overriding all values when receiving a seek, store
+	  them as a list of expected values.
+	  This allows handling several seeks in a row, like non-flushing
+	  seeks.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/174>
+
+2020-04-28 23:06:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-config.md:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/validate.c:
+	  validate: Allow overidding issue severity from configs
+	  Refactoring sensibly to allow getting configs outside the `core` namespace
+	  and outside plugin names.
+	  The `GST_VALIDATE_OVERRIDE` env variable should probably be removed
+	  all together at some point.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/185>
+
+2020-04-28 23:26:13 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/tools/gst-validate.c:
+	  validate: Add an option to describe issue types
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/185>
+
+2020-04-28 12:51:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/plugins/flow/gstvalidateflow.c:
+	* validate/tools/gst-validate.c:
+	  validate: Show the exact file line when error out in structure files
+	  And minor stdout enhancements
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/185>
+
+2020-04-28 21:30:29 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate:launcher: Mark some more tests as too long for valgrind
+
+2020-04-27 21:46:02 +0000  Bilal Elmoussaoui <bil.elmoussaoui@gmail.com>
+
+	* debug-viewer/org.freedesktop.GstDebugViewer.appdata.xml.in:
+	  Apply suggestion to debug-viewer/org.freedesktop.GstDebugViewer.appdata.xml.in
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/155>
+
+2020-01-23 15:53:03 +0000  Bilal Elmoussaoui <bil.elmoussaoui@gmail.com>
+
+	* debug-viewer/org.freedesktop.GstDebugViewer.appdata.xml.in:
+	  Metainfo: backport flathub fixes
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/155>
+
+2020-03-19 18:25:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Do not check pulling thread when thread is paused
+	  With decodebin3 we have cases where a task has been started in
+	  the `typefind` element but the demuxer is the one pulling (from
+	  its own thread)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/183>
+
+2020-04-24 23:33:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add a check-position action type
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/182>
+
+2020-04-24 23:32:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Enhance failures messages
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/182>
+
+2020-04-13 16:23:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-test-file.md:
+	* meson.build:
+	* meson_options.txt:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/meson.build:
+	  validate: Add a way to run a TestClock in scenarios
+	  A TestClock will be used automatically when a scenario has a
+	  `crank-clock` action.
+	  And make `validate` and `debug-viewer` options features in meson,
+	  no reason they weren't and now we require gst-check to build validate
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/182>
+
+2020-04-24 15:41:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-scenarios.md:
+	* docs/gst-validate-test-file.md:
+	* docs/sitemap.txt:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/validate.c:
+	* validate/gst/validate/validate.h:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/tools/gst-validate.c:
+	  validate: Introduce the concept of "Test files"
+	  This way we can have a single file that wraps scenarios,
+	  `gst-validate-1.0` arguments, as well as a configuration.
+	  It changes the name of `description` of scenarios to use `meta`
+	  The goal is to replace tests describes in python with dictionary
+	  to fully self contained `.validatetest` files which look like:
+	  ```
+	  meta,
+	  handles-states=true,
+	  ignore-eos=true,
+	  gst-validate-args = {
+	  "videotestsrc pattern=blue ! video/x-raw,format=I420,framerate=1/1 ! timeoverlay ! $(videosink) name=videosink allocation-meta-flags=0",
+	  },
+	  configs = {
+	  "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields={\"buffers=meta\", }",
+	  }
+	  play
+	  seek, start=0.0, stop=5.0, flags=accurate+flush, rate=1.0
+	  crank-clock, expected-elapsed-time=0.0
+	  crank-clock, repeat=4, expected-elapsed-time=1.0
+	  crank-clock, expected-elapsed-time=1.0
+	  stop, on-message=eos
+	  ```
+
+2020-04-23 20:11:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validate:flow: Sensibly improve stdout
+
+2020-04-23 20:10:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Fix criticals around NULL structure usage
+
+2020-04-23 20:09:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Fix 'repeat' parameter on non ASYNC action types
+
+2020-04-22 21:13:06 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Do not consider action with 'on-message' as on addition
+
+2020-04-09 16:01:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: report: Handle when reporting NULL action
+	  And add information about the action repeat state.
+
+2020-04-22 13:02:29 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Handle comments in multiline expressions
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/179>
+
+2020-04-22 11:27:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/tests/check/meson.build:
+	* validate/tests/check/validate/utilities.c:
+	  validate: Fix multi variable in a single structure field
+	  We were keeping using the GMatchInfo even after modifying the string
+	  which is explicitly stated as invalid in the GRegex documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/179>
+
+2020-04-21 15:48:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Fix 'on-message' actions execution
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/177>
+
+2020-04-21 15:28:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Add { and [ as line continuation markers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/177>
+
+2020-04-13 15:38:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/launcher/main.py:
+	  validate-launcher: Fix syntax error
+	  This error prevents downloading assets from scratch. This regression was
+	  introduced by MR !145 / commit 2581fef6843bfb53f3fc6f629577c1f013ef84e7
+
+2020-04-07 18:33:08 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  utils: Fix double free in error case
+	  This was detected by Coverity. The content point would have been freed gain in
+	  the done: label.
+	  CID 1461289
+
+2020-03-23 21:28:45 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: Use gst_print for validate report messages
+
+2020-03-17 11:51:32 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* .gitlab-ci.yml:
+	  ci: Port from only: to rules
+	  This fixed CI breakage introduced by gst-ci!247
+
+2020-03-10 11:50:26 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/data/gstvalidate.supp:
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validate: Plug some leaks
+	  And add some valgrind suppression for fontconfig
+
+2020-03-04 11:07:32 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/ssim.md:
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	* validate/gst-libs/gst/video/gstvalidatessim.h:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	* validate/tools/gst-validate-images-check.c:
+	  validate:ssim: Allow specifying file framerate to use frame numbers during comparison
+
+2020-03-03 21:36:21 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Make the action->prepare function return a GstValidateExecuteActionReturn
+	  Implementers might want to report the error themselves
+
+2020-02-28 13:51:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add a way to check last frame number
+	  This introduces a new 'timecode-frame-number' in the 'check-last-sample'
+	  action type se we can verify the number of output frames.
+
+2020-02-20 08:52:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Enhance debug message on invalid expression function call
+
+2020-02-04 18:13:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate:utils: Allow plain string in `gst_validate_utils_get_strv`
+
+2020-02-10 14:55:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	* validate/gst-libs/gst/video/gstvalidatessim.h:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validatessim: Avoid having ':' in file names
+	  This is unsupported on windows
+
+2020-02-03 16:23:37 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:ssim: Flush cairo surface before getting pixels
+
+2020-02-03 11:14:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Fix reporting on failure when running forever/fatal
+
+2020-01-14 10:26:54 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate:ssim: Enhance printing position
+	  Adding a new `gst_validate_print_position` method which also
+	  sends messages to the runner if required.
+
+2020-01-08 15:26:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Add a generator to generate test for frame accurate seeking
+
+2020-01-08 15:21:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate:ssim: Use stream time to reference frames
+
+2020-01-08 15:18:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:ssim: Don't check neighbor frames when comparing exact same frame
+
+2020-01-08 15:14:34 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:ssim: Enhance debugging message when similarity do not match
+	  Printing out where the diff image file is
+
+2020-01-07 15:48:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Enhance support for running ssim tests
+	  Using a special 'ssim' variable in pipeline dicts to activate it
+	  Similare to what we do for validateflow
+
+2020-01-07 15:46:21 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add support for skipped media info files
+	  Those are skipped to generate tests by default but are updated when
+	  required, this will allow us to generate specific test on demand for
+	  those
+
+2020-01-06 16:29:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate:ssim: Avoid segfaults trying to attach pads without a template
+
+2020-01-06 16:26:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate:scenario:Handle GStreamer serialized timestamps
+
+2020-02-17 10:32:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Never try to load a testsuite with the same name from different locations
+
+2020-02-13 10:41:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate:media-check: Fix wrong exit code
+	  There are code paths where the runner doesn't contain any issue but an error has already been reported
+
+2020-02-11 16:01:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Add support for the imagesequence protocol
+
+2020-02-03 11:14:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix reporting on failure when running forever/fatal
+
+2020-01-08 09:54:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Cache GstValidateMediaDescriptor to avoid reparsing .media_info
+	  Saving another second at startup
+
+2020-01-08 09:23:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate-launcher.in:
+	  validate:launcher: Generate profiling data even if an exception happens
+
+2020-01-07 19:29:05 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Batch inspecting scenarios
+	  Removing almost 1 second to start running tests with the default
+	  testsuite
+
+2020-01-06 16:27:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix printed test number
+
+2020-01-06 16:27:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Allow passing configs paths when loading from dictionary
+	  The same way we allow it for scenarios
+
+2020-03-02 12:55:18 +0000  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	  debug-viewer: Display nanoseconds in the timestamp column
+
+2020-02-27 16:33:36 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* validate/plugins/flow/formatting.c:
+	  validate: Don't use sprintf + glib format modifiers
+	  We do not have a way to know the format modifiers to use with string
+	  functions provided by the system. `G_GUINT64_FORMAT` and other string
+	  modifiers only work for glib string formatting functions. We cannot
+	  use them for string functions provided by the stdlib. See:
+	  https://developer.gnome.org/glib/stable/glib-Basic-Types.html#glib-Basic-Types.description
+	  ```
+	  ../validate/plugins/flow/formatting.c: In function 'format_number':
+	  ../validate/plugins/flow/formatting.c:68:22: error: unknown conversion type character 'l' in format [-Werror=format=]
+	  sprintf (dest_str, "%" G_GUINT64_FORMAT, number);
+	  ^~~
+	  In file included from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/glib-2.0/glib/gtypes.h:32,
+	  from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/glib-2.0/glib/galloca.h:32,
+	  from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/glib-2.0/glib.h:30,
+	  from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/gstreamer-1.0/gst/gst.h:27,
+	  from ../validate/plugins/flow/formatting.h:26,
+	  from ../validate/plugins/flow/formatting.c:30:
+	  /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/lib/glib-2.0/include/glibconfig.h:69:28: note: format string is defined here
+	  #define G_GUINT64_FORMAT "llu"
+	  ^
+	  ../validate/plugins/flow/formatting.c:68:22: error: too many arguments for format [-Werror=format-extra-args]
+	  sprintf (dest_str, "%" G_GUINT64_FORMAT, number);
+	  ^~~
+	  ../validate/plugins/flow/formatting.c:68:22: error: unknown conversion type character 'l' in format [-Werror=format=]
+	  In file included from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/glib-2.0/glib/gtypes.h:32,
+	  from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/glib-2.0/glib/galloca.h:32,
+	  from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/glib-2.0/glib.h:30,
+	  from /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/include/gstreamer-1.0/gst/gst.h:27,
+	  from ../validate/plugins/flow/formatting.h:26,
+	  from ../validate/plugins/flow/formatting.c:30:
+	  /builds/nirbheek/cerbero/cerbero-build/dist/windows_x86_64/lib/glib-2.0/include/glibconfig.h:69:28: note: format string is defined here
+	  #define G_GUINT64_FORMAT "llu"
+	  ^
+	  ../validate/plugins/flow/formatting.c:68:22: error: too many arguments for format [-Werror=format-extra-args]
+	  sprintf (dest_str, "%" G_GUINT64_FORMAT, number);
+	  ^~~
+	  ```
+	  Needed for https://gitlab.freedesktop.org/gstreamer/cerbero/merge_requests/419
+
+2020-02-26 14:21:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	* validate/meson.build:
+	* validate/win32/common/libgstvalidate.def:
+	  meson: remove vs_module_defs
+	  The GST_EXPORT should handle it.
+
+2020-02-26 12:05:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher: Do not dump output on known issues
+	  And remove dead code
+
+2020-02-26 10:52:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Fix leak parsing structure files
+
+2020-02-25 11:00:57 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Enhance error reporting for errors in struct files
+	  Get a sense of files and line numbers in the parsed GstStructure
+	  and take that information when reporting GstValidateAction errors
+	  by letting the user know where the action comes from in the messages.
+	  And accept non-literal string in printing formats.
+
+2020-02-25 10:54:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate: Add a specific error type for check actions
+	  And mark it as `NO_BACKTRACE | FULL_DETAILS`, same as for
+	  other action failure types.
+
+2020-01-16 17:36:54 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/launcher/baseclasses.py:
+	  validate: Enhance error reporting when scenario or configs are invalid
+
+2020-01-14 10:23:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/win32/common/libgstvalidate.def:
+	  validate: Add a flags to issues
+	  Currently those allow registering issue that:
+	  - Won't print backtrace as it is sometimes useless info
+	  - Will repeat the details even in smart mode
+
+2020-02-19 22:16:44 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Consider ',' as continuing line marker in struct files
+	  Since `,` is the separator between fields of GstStructure we can
+	  safely consider that if a line ends with it, the following line
+	  is the logical continuity of the serialized GstStructure.
+	  This makes writing those files more convenient and reading them
+	  more pleasant as we do not need to add extra `\` at end of lines
+	  anymore
+
+2020-02-11 09:18:23 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle validate report bigger than allowed by the socket
+	  This almost never happens but I had a case where we had a report
+	  with a GstSample in the caps that were reported leading to an
+	  error printed.
+
+2020-02-06 10:34:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Reference exception in a var as we use it in the handling
+
+2020-02-04 18:14:25 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/validateflow.md:
+	* validate/plugins/flow/formatting.c:
+	* validate/plugins/flow/formatting.h:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validate:flow: Make field filtering in what is logged more generic
+	  Instead of forcing it on event, allow specifying filters on anything
+	  we log, meaning also buffers
+
+2020-02-04 16:59:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/validateflow.md:
+	* validate/plugins/flow/formatting.c:
+	* validate/plugins/flow/formatting.h:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validateflow: Add a logged-event-fields configuration
+
+2020-02-11 15:57:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Stop rounding up clocktime values
+	  This doesn't make any sense in that context
+
+2020-02-06 14:33:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Fix defining several scenario with a same config
+	  When generating tests from dictionary the dict format allows passing
+	  several scenario for a same config and pipelines, but this was breaking
+	  the case where expected flow is different with each config, instead we
+	  should generate one config per scenario, fixing the expectation files
+	  generated.
+
+2020-01-15 21:22:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Print the duration of the test run in the logs
+
+2020-01-15 21:15:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	  validate:flow: Add a way to set the types of events to log/ignore
+	  Added two properties to the plugin:
+	  * ignored-event-types: A list of event types to be ignored when logging events
+	  * logged-event-types: A list of event types to be logged when logging events
+	  This commits also moves the "ignored-event-fields" property to using a proper
+	  GstValueList for the list of event fields to be taken into account, instead
+	  of the home grown separated by comas list of string, making the API more
+	  uniform.
+	  This also adds a simple helper method: `gst_validate_utils_get_strv`
+
+2019-12-03 18:26:18 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/reporters.py:
+	  gst-validate-launcher: separate known error from passed tests
+	  Introduce known_error in statistics to keep in mind the expected
+	  error result.
+
+2019-12-02 14:46:59 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* docs/gst-validate-launcher.md:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/main.py:
+	  gst-validate-launcher: update documentation
+	  Use the new api to create your custom testsuite.
+	  Fix some broken links and enhance the logging system.
+
+2020-01-11 23:00:06 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  launcher: Allow partionning the tests
+	  This introduce new command line options, --parts and --part-index. When
+	  --parts is set to a value larger then 1, the tests will be split in the
+	  same number of group. The group number identified by --part-index will
+	  be executed.
+	  This is being added in orther to support gliblab CI parallel feature.
+
+2019-08-12 16:56:41 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Try to dump logs with bat if avalaible
+	  We got to many issues with mdv, it seems not to be maintained
+	  bat is a very good replacement.
+
+2020-01-05 14:09:07 -0600  Brady J. Garvin <bgarvin@cse.unl.edu>
+
+	* validate/launcher/loggable.py:
+	  validate:launcher: Support mixed str/bytes control sequences.
+	  It is not safe for `_preformat_levels` to assume that all of the fields in a
+	  `TerminalController` have the same type; at least in my environment, some of
+	  these fields are populated with `bytes` while others remain strings.
+	  This change conditionally applies decoding to each control sequence separately
+	  using a helper function `_as_string`.  As a side-effect, it also eliminates some
+	  code repetition in `_preformat_levels`.
+	  Closes #50.
+
+2019-12-30 12:57:57 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Enhance progress reporting using a progress bar
+	  This also allows us to properly report progress on the CI
+
+2019-12-30 10:27:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Take our timeout factor into account for gstcheck
+
+2019-11-07 15:57:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: fix some typos
+
+2019-11-07 15:55:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Implement an action to check property value
+
+2019-12-28 22:39:23 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* meson_options.txt:
+	  meson: Remove unused gtk_doc option
+	  The "doc" option is available to disable the documentation.
+
+2019-12-23 10:27:11 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  check: unblacklist removed systemclock tests
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/merge_requests/348
+
+2019-12-14 10:45:30 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  check: unblacklist gstreamer.pipelines_parse_launch.delayed_link
+	  It should not be flaky anymore after
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/merge_requests/343
+
+2019-11-15 17:25:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Use python dict for pipeline description
+
+2019-11-27 15:33:14 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Initialize variable
+	  We could end up using it uninitialized
+	  CID: 1444920
+
+2019-10-04 09:59:57 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Make encoding extra check use common code path
+	  Reusing the reporting infrastructure instead of shurtcuting it
+
+2019-09-24 14:23:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate: Add vp9 transcoding tests
+	  Making sure to encode small frames as vp9enc is slow.
+
+2019-11-20 10:19:00 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/validate.c:
+	* validate/plugins/flow/formatting.c:
+	* validate/tests/check/validate/scenario.c:
+	  validate: Fix memory leaks
+	  Various structures were being leaked.
+
+2019-11-11 18:57:27 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Avoid clashes when importing testsuite
+	  This introduce an hard dependency on python >= 3.5, same as meson
+
+2019-11-10 16:29:45 +0100  Jordan Petridis <jpetridis@gnome.org>
+
+	* validate/launcher/testsuites/check.py:
+	  check: blacklist gst-plugins-good.elements_splitmux.test_splitmuxsink$
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/626
+
+2019-11-06 18:21:11 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  gstvalidate: fix GstValidateRTSPMediaDescriptor typo
+
+2019-11-02 17:07:02 +0100  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	  gst-validate-bin-monitor: Remove unused field.
+
+2019-10-25 12:45:40 +0200  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validateflow: Don't use colon in file names
+	  The colon character commonly used to separate the element name and the
+	  pad name is reserved in Windows filesystems, so it's better to use
+	  something safer.
+	  This patch replaces it with '-'. Please update
+	  gst-integration-testsuites too where another commit has renamed all the
+	  files.
+
+2019-10-25 12:26:58 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate: blacklist gstreamer-vaapi checks
+	  They still can be checked by running the tests explicitly.
+
+2019-10-18 12:31:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: build gir even when cross-compiling if introspection was enabled explicitly
+	  This can be made to work in certain circumstances when
+	  cross-compiling, so default to not building g-i stuff
+	  when cross-compiling, but allow it if introspection was
+	  enabled explicitly via -Dintrospection=enabled.
+	  See gstreamer/gstreamer#454 and gstreamer/gstreamer#381.
+
+2019-10-15 00:24:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* .gitmodules:
+	* configure:
+	* validate/.gitignore:
+	* validate/Makefile.am:
+	* validate/README:
+	* validate/autogen.sh:
+	* validate/common:
+	* validate/configure.ac:
+	* validate/data/Makefile.am:
+	* validate/data/scenarios/Makefile.am:
+	* validate/docs/.gitignore:
+	* validate/gst-libs/Makefile.am:
+	* validate/gst-libs/gst/Makefile.am:
+	* validate/gst-libs/gst/video/Makefile.am:
+	* validate/gst/Makefile.am:
+	* validate/gst/overrides/Makefile.am:
+	* validate/gst/validate/Makefile.am:
+	* validate/launcher/Makefile.am:
+	* validate/launcher/apps/Makefile.am:
+	* validate/launcher/testsuites/Makefile.am:
+	* validate/pkgconfig/Makefile.am:
+	* validate/plugins/Makefile.am:
+	* validate/plugins/fault_injection/Makefile.am:
+	* validate/plugins/flow/Makefile.am:
+	* validate/plugins/gapplication/Makefile.am:
+	* validate/plugins/gtk/Makefile.am:
+	* validate/plugins/ssim/Makefile.am:
+	* validate/po/Makevars:
+	* validate/po/POTFILES.in:
+	* validate/tests/Makefile.am:
+	* validate/tests/check/Makefile.am:
+	* validate/tools/.gitignore:
+	* validate/tools/Makefile.am:
+	* validate/win32/MANIFEST:
+	  validate: remove autotools build
+
+2019-10-15 00:11:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* codecanalyzer/.gitignore:
+	* codecanalyzer/AUTHORS:
+	* codecanalyzer/COPYING:
+	* codecanalyzer/Makefile.am:
+	* codecanalyzer/NEWS:
+	* codecanalyzer/README.md:
+	* codecanalyzer/autogen.sh:
+	* codecanalyzer/configure.ac:
+	* codecanalyzer/data/Makefile.am:
+	* codecanalyzer/data/pixmaps/Makefile.am:
+	* codecanalyzer/data/pixmaps/codecanalyzer-logo.png:
+	* codecanalyzer/data/pixmaps/frame-thumbnail.png:
+	* codecanalyzer/data/ui/LICENSE.txt:
+	* codecanalyzer/data/ui/Makefile.am:
+	* codecanalyzer/data/ui/mainwindow.xml:
+	* codecanalyzer/data/ui/menu.xml:
+	* codecanalyzer/src/Makefile.am:
+	* codecanalyzer/src/codecanalyzer.c:
+	* codecanalyzer/src/gst_analyzer.c:
+	* codecanalyzer/src/gst_analyzer.h:
+	* codecanalyzer/src/plugins/Makefile.am:
+	* codecanalyzer/src/plugins/gst/Makefile.am:
+	* codecanalyzer/src/plugins/gst/analyzersink/Makefile.am:
+	* codecanalyzer/src/plugins/gst/analyzersink/analyzer_utils.c:
+	* codecanalyzer/src/plugins/gst/analyzersink/analyzer_utils.h:
+	* codecanalyzer/src/plugins/gst/analyzersink/gstanalyzersink.c:
+	* codecanalyzer/src/plugins/gst/analyzersink/gstanalyzersink.h:
+	* codecanalyzer/src/plugins/gst/analyzersink/mpeg_xml.c:
+	* codecanalyzer/src/plugins/gst/analyzersink/mpeg_xml.h:
+	* codecanalyzer/src/plugins/gst/analyzersink/plugin.c:
+	* codecanalyzer/src/plugins/gst/analyzersink/xml_utils.c:
+	* codecanalyzer/src/plugins/gst/analyzersink/xml_utils.h:
+	* codecanalyzer/src/xml_parse.c:
+	* codecanalyzer/src/xml_parse.h:
+	  codecanalyzer: remove
+	  Remove in effort to declutter. There has been
+	  pretty much no activity at all since the initial
+	  commit in 2014 apart from a few coverity fixes.
+	  Doesn't seem super-useful in its current form
+	  either. Still available on github at
+	  https://github.com/sreerenjb/codecanalyzer/
+	  if anyone has a use for it.
+
+2019-10-14 19:28:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* mediainfo/AUTHORS:
+	* mediainfo/COPYING:
+	* mediainfo/ChangeLog:
+	* mediainfo/HACKING:
+	* mediainfo/Makefile.am:
+	* mediainfo/NEWS:
+	* mediainfo/README:
+	* mediainfo/TODO:
+	* mediainfo/autogen.sh:
+	* mediainfo/configure.ac:
+	* mediainfo/git.mk:
+	* mediainfo/gst-mediainfo.anjuta:
+	* mediainfo/po/LINGUAS:
+	* mediainfo/po/POTFILES.in:
+	* mediainfo/po/POTFILES.skip:
+	* mediainfo/src/Makefile.am:
+	* mediainfo/src/gst-mi.desktop.in:
+	* mediainfo/src/gst-mi.png:
+	* mediainfo/src/gst-mi.svg:
+	* mediainfo/src/mi-app.vala:
+	* mediainfo/src/mi-info.vala:
+	* mediainfo/src/mi-preview.vala:
+	* mediainfo/src/mi.vala:
+	* mediainfo/vapi/Makefile.am:
+	* mediainfo/vapi/config.vapi:
+	  mediainfo: remove
+	  This looks bitrotten and abandoned,
+	  remove in an effort to declutter.
+
+2019-10-14 19:25:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* vagrant/Vagrantfile:
+	* vagrant/ansible_hosts:
+	* vagrant/gst-streaming-server-git.yml:
+	* vagrant/gstreamer-git.yml:
+	* vagrant/gstreamer.yml:
+	* vagrant/ipython.yml:
+	* vagrant/playbook.yml:
+	  vagrant: remove
+	  This looks bitrotten and still targets Ubuntu 13.10
+	  and autotools. Doesn't look like anyone has been using
+	  this in the last 5+ years, so let's remove it in an
+	  effort to declutter.
+
+2019-07-15 17:58:05 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix the 'can-happen-several-times' known issue field
+
+2019-07-15 12:36:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate: Check that pull_range is called from the streaming thread
+	  `gst_pad_pull_range` should always be called from the streaming thread,
+	  we now check that when pull_range is called, and if the sinkpad calling
+	  the function has a GstTask with a running thread, the function is called
+	  from that thread.
+
+2019-09-27 16:52:51 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scanario: Fix crash when using installed validate
+	  When installed, the lookup path will endup on the very last try, but the
+	  scenario_file was left unset, which lead to a crash.
+
+2019-09-24 11:45:34 +1000  Matthew Waters <matthew@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: fix build with newer gcc
+	  In file included from ../../../../dist/linux_x86_64/include/gstreamer-1.0/gst/gst.h:55,
+	  from ../validate/gst/validate/gst-validate-scenario.c:45:
+	  ../validate/gst/validate/gst-validate-scenario.c: In function ‘gst_validate_scenario_load’:
+	  ../../../../dist/linux_x86_64/include/gstreamer-1.0/gst/gstinfo.h:645:5: error: ‘%s’ directive argument is null [-Werror=format-overflow=]
+	  645 |     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__, \
+	  |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  646 |         (GObject *) (object), __VA_ARGS__);    \
+	  |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  ../../../../dist/linux_x86_64/include/gstreamer-1.0/gst/gstinfo.h:1067:26: note: in expansion of macro ‘GST_CAT_LEVEL_LOG’
+	  1067 | #define GST_ERROR(...)   GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   NULL, __VA_ARGS__)
+	  |                          ^~~~~~~~~~~~~~~~~
+	  ../validate/gst/validate/gst-validate-scenario.c:3615:5: note: in expansion of macro ‘GST_ERROR’
+	  3615 |     GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
+	  |     ^~~~~~~~~
+	  ../validate/gst/validate/gst-validate-scenario.c:3615:44: note: format string is defined here
+	  3615 |     GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
+	  |                                            ^~
+
+2019-08-24 07:57:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not hardcode pathsep
+
+2019-08-28 17:22:55 +1000  Matthew Waters <matthew@centricular.com>
+
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validate/flow: fix werror build with android clang
+	  ../validate/plugins/flow/gstvalidateflow.c:75:3: error: redefinition of typedef 'ValidateFlowOverride' is a C11 feature [-Werror,-Wtypedef-redefinition]
+	  } ValidateFlowOverride;
+	  ^
+	  ../validate/plugins/flow/gstvalidateflow.h:31:23: note: previous definition is here
+	  G_DECLARE_FINAL_TYPE (ValidateFlowOverride, validate_flow_override,
+	  ^
+
+2019-08-26 21:43:24 +1000  Matthew Waters <matthew@centricular.com>
+
+	* validate/plugins/flow/gstvalidateflow.c:
+	* validate/plugins/flow/gstvalidateflow.h:
+	  validate: fix -Werror=unused-function with clang
+	  [3623/4053] Compiling C object 'subprojects/gst-devtools/validate/plugins/flow/697521d@@gstvalidateflow@sha/gstvalidateflow.c.o'.
+	  ../subprojects/gst-devtools/validate/plugins/flow/gstvalidateflow.c:85:1: warning: unused function 'VALIDATE_IS_FLOW_OVERRIDE' [-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (ValidateFlowOverride, validate_flow_override,
+	  ^
+	  /usr/include/glib-2.0/gobject/gtype.h:1407:26: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline gboolean MODULE##_IS_##OBJ_NAME (gpointer ptr) {                                         \
+	  ^
+	  <scratch space>:129:1: note: expanded from here
+	  VALIDATE_IS_FLOW_OVERRIDE
+	  ^
+
+2019-08-26 21:41:00 +1000  Matthew Waters <matthew@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validate: fix -Werror=format-nonliteral build with clang
+	  [3470/4053] Compiling C object 'subprojects/gst-devtools/validate/gst/validate/28db7b6@@gstvalidatetracer@sha/gst-validate-reporter.c.o'.
+	  ../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.c:186:31: warning: format string is not a string literal [-Wformat-nonliteral]
+	  message = g_strdup_vprintf (format, vacopy);
+	  ^~~~~~
+	  [3487/4053] Compiling C object 'subprojects/gst-devtools/validate/gst/validate/28db7b6@@gstvalidatetracer@sha/gst-validate-report.c.o'.
+	  ../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.c:1007:34: warning: format string is not a string literal [-Wformat-nonliteral]
+	  tmp = gst_info_strdup_vprintf (format, args);
+	  ^~~~~~
+	  [76/151] Compiling C object 'subprojects/gst-devtools/validate/plugins/flow/697521d@@gstvalidateflow@sha/gstvalidateflow.c.o'.
+	  ../subprojects/gst-devtools/validate/plugins/flow/gstvalidateflow.c:125:65: warning: format string is not a string literal [-Wformat-nonliteral]
+	  if (!flow->error_writing_file && vfprintf (flow->output_file, format, ap) < 0) {
+	  ^~~~~~
+
+2019-08-19 12:25:39 +0100  Philippe Normand <philn@igalia.com>
+
+	* validate/data/scenarios/meson.build:
+	* validate/data/scenarios/play_5s.scenario:
+	  validate: Add a scenario for 5 seconds playback use-cases
+
+2019-08-19 11:08:41 +0100  Philippe Normand <philn@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate/ssim: Clean-up temporary directory
+	  When no output-dir is specified in the plugin config, a temporary directory is
+	  created, so it needs to be removed when no-longer needed.
+
+2019-08-19 11:25:45 +0100  Philippe Normand <philn@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate/launcher: Ensure the HTTP server is started when a pipeline needs it
+	  Pipelines declared in gst-integration-testsuites can rely on the validate HTTP
+	  server, so when an URI pointing to it is detected, advertise the server as
+	  needed before starting the test.
+	  For this to work the test scenario should explicitely declare the pipeline uri,
+	  as shown in this example:
+	  "some_playbin3":
+	  {
+	  "pipeline": "playbin3 uri=%(uri)s video-sink=%(videosink)s",
+	  "config": [
+	  "%(validateflow)s, pad=sink:sink"
+	  ],
+	  "scenarios": ["play_15s"],
+	  "uri": "http://127.0.0.1:%(http-server-port)s/defaults/html/foo.html"
+	  }
+
+2019-08-05 19:04:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Allow passing any extra_data in json test definition
+	  This means that we can now pass any extra key that `populate_tests`
+	  expects, meaning any key expected by FakeMediaDescriptor and
+	  a few other keys supported by the methods such as
+	  `expected-issues` and `extra_env_vars`
+
+2019-07-10 16:52:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  launcher: Raise an exception when provided scenario can't be found
+
+2019-08-03 20:09:32 -0400  Aaron Boxer <aaron.boxer@collabora.com>
+
+	* validate/gst/validate/validate.h:
+	  validate: add missing G_BEGIN/END_DECLS in validate.h
+
+2019-08-01 21:04:12 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Update blacklisting reason for fast forward rtsp
+	  While https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/14
+	  was merged, the client side (in particular rtpbasedepayload) still
+	  isn't expected to work appropriately
+
+2019-07-29 10:05:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: fix build with older GLib versions
+	  g_enum_to_string() is only available in newer ones.
+	  Add compatibility workaround for the time being to decouple
+	  this from the decision whether to bump the GLib requirement
+	  and what to bump it to.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/merge_requests/199
+	  Fixes #45
+
+2019-07-26 02:28:42 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: fix PAUSED position check
+	  The way this was implemented was simply wrong, first of all checking
+	  the position against the segment after a seek in PAUSED by a query
+	  of the pipeline position is of limited interest, and can only work
+	  in forward playback.
+	  Furthermore the check was a huge blob of code that didn't even look
+	  like it was pretending to do a good job at checking the position in
+	  reverse playback.
+
+2019-07-26 02:26:20 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  json tests: assume all user pipelines can seek reverse
+	  When doing a targeted test, it is up to the user to make sure
+	  their pipeline + scenario behaves correctly.
+
+2019-07-08 23:37:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Pass the right timeout_factor is passed to subprojects
+
+2019-07-08 23:36:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Do not dereference NULL pointer
+
+2019-07-03 15:42:26 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate:pipeline-monitor: Connect deep properties notification only when required
+	  This is quite expensive and can lead to an overwhelm mainloop.
+
+2019-06-28 17:34:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Keep a reference to 'description' structure
+	  For it to be reusable outside the scenario
+
+2019-06-27 00:41:03 +0000  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/gst-validate-config.md:
+	  doc: Minor typo fixes.
+
+2019-06-23 13:56:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Use internal sinks when a sink bin can be used to check last-sample
+
+2019-06-23 13:40:37 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-config.md:
+	* docs/sitemap.txt:
+	  docs: Document validate core configuration
+
+2019-06-23 12:48:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validate:flow: Log buffers even when tracking srcpads
+
+2019-06-23 12:48:06 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Move get_fakesink_for_media_type to utils
+	  So it can be reused in other apps like GES
+
+2019-06-23 12:46:37 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: Also monitor ghost pads
+	  Allowing overrides to work on ghost pads too
+
+2019-06-23 11:58:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/validateflow.md:
+	* validate/plugins/flow/formatting.c:
+	* validate/plugins/flow/formatting.h:
+	* validate/plugins/flow/gstvalidateflow.c:
+	  validateflow: Add `buffers-checksum` option to log buffers data checksum
+
+2019-06-23 03:31:30 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-config.md:
+	* docs/gst-validate-scenarios.md:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	  validate: Add SCENARIO_NAME and CONFIG_NAME vars in configs/scenarios
+
+2019-06-23 03:09:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-config.md:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/validate.c:
+	* validate/launcher/baseclasses.py:
+	  validate: Set 'LOGSDIR' variable in scenarios and config files
+	  Implementing support for variables in config files.
+
+2019-06-23 01:51:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-scenarios.md:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Set `SCENARIO_PATH/DIR` variables in scenarios
+	  And add some documentation about it
+
+2019-06-23 00:47:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-scenarios.md:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	  scenario: Add a `TMPDIR` global variables in scenarios
+	  This also adds the notion of global variables which will be useable
+	  in config files too.
+	  And add some documentation about default variables in scenarios
+
+2019-06-18 18:10:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-action-types.md:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  docs: Update validate action types
+	  Include minor fixes in the action types and markdown generator
+
+2019-06-18 17:43:56 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/tools/gst-validate.c:
+	  validate: Misc leaks plugging
+
+2019-06-17 17:59:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Strip env vars in command line outputing verbose
+	  But activate if activating verbosity more than once
+
+2019-06-14 10:43:15 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/ges-validate-action-types.md:
+	* docs/gst-validate-action-types.md:
+	* docs/sitemap.txt:
+	  docs: Document GES validate action types
+
+2019-06-11 17:11:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate:reporter: Show report by branches when doing smart reporting
+	  Meaning that instead of getting 1 "Detected on" line per monitor,
+	  there will be one per "branch" like:
+	  Detected on <audioconvert1:sink, audioconvert1:src, audioresample1:sink, audioresample1:src, smart-adder-adder:sink_0, smart-adder-adder:src, smart-adder-capsfilter:sink, smart-adder-capsfilter:src, capsfilter2:sink, capsfilter2:src, tee1:sink, tee1:src_0>
+	  Making it simpler to read and a bit less verbose.
+
+2019-06-11 16:34:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Avoid repeating failure info in summaries
+
+2019-06-11 16:27:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate-transcoding.c:
+	  validate:scenario: Move force-key-unit action from the transcoding tool
+	  The action is generally useful but was implemented in a way that
+	  was restricting its usage for no good reason. Refactor the
+	  implementation adding more argument so it can be used in a wider
+	  context, such as uvch264src.
+	  Something like:
+	  ``` bash
+	  echo "video-request-key-unit, direction=upstream, all-header=true, count=1, target-element-factory-name=h264parse, srcpad=src, playback-time=1.0" > tmp.scenario && \
+	  echo "stop,playback-time=2.0" >> tmp.scenario && \
+	  gst-validate-1.0 --set-scenario=tmp.scenario uvch264src \
+	  device=/dev/video0 name=src iframe-period=33 auto-start=true src.vfsrc ! queue ! fakesink \
+	  src.vidsrc ! queue ! video/x-h264,width=1280,height=720,framerate=30/1 ! h264parse ! fakesink
+	  ```
+	  works now.
+
+2019-06-11 16:23:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Minor documentation cleanup
+
+2019-06-11 16:21:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate:pipeline-monitor: Avoid wrong position issue
+	  If the reported position or duration is NONE, do not check its
+	  validity
+
+2019-05-31 23:18:08 +0200  Niels De Graef <niels.degraef@barco.com>
+
+	* meson.build:
+	  meson: Bump minimal GLib version to 2.44
+	  This means we can use some newer features and get rid of some
+	  boilerplate code using the G_DECLARE_* macros.
+	  As discussed on IRC, 2.44 is old enough by now to start depending on it.
+
+2019-05-21 14:54:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Implement seeking with DEFAULT format
+
+2019-05-23 11:49:01 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  ssim: Report critical issue when override not attached
+
+2019-05-23 11:35:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  ssim: Fix the way we handle when an override is attached
+
+2019-05-23 11:34:19 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/plugins/ssim.md:
+	  docs: Minor fix about ssim plugin
+
+2019-04-24 16:24:05 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-transcoding.md:
+	* docs/index.md:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	  docs: Fix docstrings
+
+2019-04-20 10:21:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Do not dump to big log files
+	  Avoiding ' The script exceeded the maximum execution time set for the job' in GitLab
+
+2019-02-07 15:50:26 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/sitemap.txt:
+	  docs: Document the validateflow plugin
+
+2018-11-17 16:50:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-action-types.md:
+	* docs/sitemap.txt:
+	  docs: Document validate action types
+	  Just did:
+	  ```
+	  gst-validate-1.0 --inspect-action-type all >   docs/gst-validate-action-types.md
+	  ```
+
+2018-11-17 12:31:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate.c:
+	  validate: inspect: Output valid markdown
+	  So it can be used directly in the documentation Also add a special "all"
+	  argument to `gst-validate-1.0 --inspect-action-type` so we can generate
+	  the documentation for all action types easily.
+
+2018-10-22 11:38:30 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/api.md:
+	* docs/gi-index.md:
+	* docs/gst-validate-config.md:
+	* docs/gst-validate-environment-variables.md:
+	* docs/gst-validate-launcher.md:
+	* docs/gst-validate-media-check.md:
+	* docs/gst-validate-scenarios.md:
+	* docs/gst-validate-transcoding.md:
+	* docs/gst-validate.md:
+	* docs/index.md:
+	* docs/meson.build:
+	* docs/plugins/index.md:
+	* docs/plugins/ssim.md:
+	* docs/sitemap.txt:
+	* meson.build:
+	* meson_options.txt:
+	* validate/Makefile.am:
+	* validate/configure.ac:
+	* validate/docs/Makefile.am:
+	* validate/docs/launcher/Makefile.am:
+	* validate/docs/launcher/conf.py:
+	* validate/docs/launcher/index.rst:
+	* validate/docs/launcher/launcher.rst:
+	* validate/docs/launcher/modules.rst:
+	* validate/docs/meson.build:
+	* validate/docs/plugins/.gitignore:
+	* validate/docs/plugins/Makefile.am:
+	* validate/docs/plugins/gst-validate-plugins-docs.sgml:
+	* validate/docs/plugins/gst-validate-plugins-overrides.txt:
+	* validate/docs/plugins/gst-validate-plugins-sections.txt:
+	* validate/docs/plugins/gst-validate-plugins.sgml:
+	* validate/docs/plugins/gst-validate-plugins.types:
+	* validate/docs/validate/.gitignore:
+	* validate/docs/validate/Makefile.am:
+	* validate/docs/validate/envvariables.xml:
+	* validate/docs/validate/gst-validate-docs.sgml:
+	* validate/docs/validate/gst-validate-launcher.xml:
+	* validate/docs/validate/gst-validate-media-check.xml:
+	* validate/docs/validate/gst-validate-sections.txt:
+	* validate/docs/validate/gst-validate-transcoding.xml:
+	* validate/docs/validate/gst-validate.types:
+	* validate/docs/validate/gst-validate.xml:
+	* validate/docs/validate/meson.build:
+	* validate/docs/validate/scenarios.xml:
+	* validate/docs/version.entities.in:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/meson.build:
+	* validate/meson.build:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  doc: Port to hotdoc
+	  Ideally we want a GstValidate hotdoc plugin... not for now.
+
+2018-10-22 11:38:27 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tests/check/meson.build:
+	  meson: Use dep.type_name() when it makes sense
+
+2018-10-22 11:38:24 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-enums.h:
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	  doc: Minor fixes
+
+2019-04-19 13:02:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  launcher: testsuites: skip systemclock stress tests
+	  These are very flaky when the build bots are under load.
+
+2019-05-04 19:54:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/validate.c:
+	  validate: fix build on macOS
+	  _Q_VALIDATE_MONITOR was defined twice because it wasn't declared
+	  as extern in the header, so it would be defined as variable in all
+	  included files. This doesn't seem to cause problems on Linux, but
+	  seems to cause build failures on macOS.
+	  Fixes #42
+
+2019-04-19 10:42:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/RELEASE:
+	* validate/configure.ac:
+	* validate/meson.build:
+	  Back to development
+
 === release 1.16.0 ===
 
 2019-04-19 00:36:53 +0100  Tim-Philipp Müller <tim@centricular.com>

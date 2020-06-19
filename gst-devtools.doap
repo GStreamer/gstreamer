@@ -39,7 +39,7 @@
  world interactive cases and reproduce existing issues in a convenient way.
  </description>
  <category></category>
- <bug-database rdf:resource="https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-devtools" />
+ <bug-database rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-devtools/issues/" />
  <screenshots></screenshots>
  <mailing-list rdf:resource="https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
@@ -52,6 +52,16 @@
      <browse rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-devtools/"/>
    </GitRepository>
  </repository>
+
+ <release>
+  <Version>
+   <revision>1.17.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-06-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-devtools/gst-devtools-1.17.1.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
