@@ -17,6 +17,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstd3d11shader.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
