@@ -36186,7 +36186,7 @@
                 "long-name": "Icecast network sink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/ogg:\naudio/ogg:\nvideo/ogg:\naudio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n",
+                        "caps": "application/ogg:\naudio/ogg:\nvideo/ogg:\naudio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\nvideo/webm:\naudio/webm:\n",
                         "direction": "sink",
                         "presence": "always"
                     }
