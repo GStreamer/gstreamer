@@ -19,7 +19,7 @@ d3d11_dep = cc.find_library('d3d11', required : false)
 dxgi_lib_dep = cc.find_library('dxgi', required : false)
 d3d_compile_dep = cc.find_library('d3dcompiler', required : false)
 windowscodecs_dep = cc.find_library('windowscodecs',  required : false)
-dxguid_dep = cc.find_library('dxguid',  required : false) 
+dxguid_dep = cc.find_library('dxguid',  required : false)
 
 have_d3d11_h = cc.has_header('d3d11.h')
 have_dxgi_h = cc.has_header('dxgi1_2.h')

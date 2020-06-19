@@ -18,7 +18,7 @@
  */
 
 /* This code captures the screen using "Desktop Duplication API".
- * For more information 
+ * For more information
  * https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api */
 
 #include "dxgicapture.h"
@@ -62,8 +62,8 @@ typedef struct _DxgiCapture
   ID3D11Texture2D *work_texture;
   D3D11_TEXTURE2D_DESC work_texture_desc;
   D3D11_VIEWPORT view_port;
-  /* Textures that can be read by the CPU. 
-   * CPU-accessible textures are required separately from work_texture 
+  /* Textures that can be read by the CPU.
+   * CPU-accessible textures are required separately from work_texture
    * because shaders cannot be executed. */
   ID3D11Texture2D *readable_texture;
   ID3D11VertexShader *vertex_shader;
@@ -78,7 +78,7 @@ typedef struct _DxgiCapture
   guint8 *pointer_buffer;
   gsize pointer_buffer_capacity;
 
-  /* The movement rectangular regions and the movement 
+  /* The movement rectangular regions and the movement
    * destination position from the previous frame. */
   DXGI_OUTDUPL_MOVE_RECT *move_rects;
   gsize move_rects_capacity;
@@ -382,7 +382,7 @@ dxgicap_acquire_next_frame (DxgiCapture * self, gboolean show_cursor,
   hr = IDXGIOutputDuplication_AcquireNextFrame (self->dxgi_dupl,
       timeout, &frame_info, &desktop_resource);
   if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
-    /* In case of DXGI_ERROR_WAIT_TIMEOUT, 
+    /* In case of DXGI_ERROR_WAIT_TIMEOUT,
      * it has not changed from the last time. */
     GST_LOG_OBJECT (src, "DXGI_ERROR_WAIT_TIMEOUT");
     ret = TRUE;
@@ -532,7 +532,7 @@ _draw_pointer (DxgiCapture * self, PBYTE buffer, LPRECT dst_rect, int stride)
     return;
   }
 
-  /* Draw a pointer if it overlaps the destination rectangle range. 
+  /* Draw a pointer if it overlaps the destination rectangle range.
    * There are three ways to draw the mouse cursor.
    * see  https://docs.microsoft.com/ja-jp/windows/win32/api/dxgi1_2/ne-dxgi1_2-dxgi_outdupl_pointer_shape_type */
   offset_x = clip_pointer_rect.left - pointer_rect.left;
@@ -563,7 +563,7 @@ _draw_pointer (DxgiCapture * self, PBYTE buffer, LPRECT dst_rect, int stride)
         int i;
         for (i = 0; i < 3; ++i) {
           if (mask_mode) {
-            /* case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MASKED_COLOR: 
+            /* case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MASKED_COLOR:
              * If the alpha channel of a pixel in the mouse image is 0, copy it.
              * Otherwise, xor each pixel. */
             if (0 == alpha) {
@@ -572,7 +572,7 @@ _draw_pointer (DxgiCapture * self, PBYTE buffer, LPRECT dst_rect, int stride)
               *p1 = *p2 ^ *p1;
             }
           } else {
-            /* case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_COLOR: 
+            /* case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_COLOR:
              * Copies the mouse cursor image with alpha channel composition. */
             *p1 = min (255, max (0, *p1 + ((*p2 - *p1) * alpha / 255)));
           }
@@ -586,12 +586,12 @@ _draw_pointer (DxgiCapture * self, PBYTE buffer, LPRECT dst_rect, int stride)
   } else if (DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MONOCHROME ==
       self->pointer_shape_info.Type) {
     guint mask_bit = 0x80;
-    /* AND MASK pointer 
+    /* AND MASK pointer
      * It is stored in 1 bit per pixel from the beginning. */
     PBYTE p_src_and =
         (PBYTE) self->pointer_buffer +
         (offset_y * self->pointer_shape_info.Pitch);
-    /* XOR MASK pointer 
+    /* XOR MASK pointer
      * The XOR MASK is stored after the AND mask. */
     PBYTE p_src_xor =
         (PBYTE) self->pointer_buffer +
@@ -700,7 +700,7 @@ _setup_texture (DxgiCapture * self)
   return TRUE;
 }
 
-/* Update work_texture to the latest desktop frame from the update information 
+/* Update work_texture to the latest desktop frame from the update information
  * that can be obtained from IDXGIOutputDuplication.
  * Then copy to readable_texture.
  */
@@ -726,7 +726,7 @@ _update_work_texture (DxgiCapture * self, IDXGIResource * desktop_resource)
       (void **) &desktop_texture);
   HR_FAILED_GOTO (hr, IDXGIResource::QueryInterface, end);
 
-  /* Get the rectangular regions that was moved from the last time. 
+  /* Get the rectangular regions that was moved from the last time.
    * However, I have never obtained a valid value in GetFrameMoveRects.
    * It seems to depend on the implementation of the GPU driver.
    * see https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_2/nf-dxgi1_2-idxgioutputduplication-getframemoverects
@@ -748,8 +748,8 @@ _update_work_texture (DxgiCapture * self, IDXGIResource * desktop_resource)
   move_count = required_size / sizeof (DXGI_OUTDUPL_MOVE_RECT);
 
   dirty_rects_capacity_size = sizeof (RECT) * self->dirty_rects_capacity;
-  /* Gets the rectangular regions that has changed since the last time. 
-     see https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_2/nf-dxgi1_2-idxgioutputduplication-getframedirtyrects 
+  /* Gets the rectangular regions that has changed since the last time.
+     see https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_2/nf-dxgi1_2-idxgioutputduplication-getframedirtyrects
    */
   hr = IDXGIOutputDuplication_GetFrameDirtyRects (self->dxgi_dupl,
       dirty_rects_capacity_size, self->dirty_rects, &required_size);
@@ -915,7 +915,7 @@ _copy_dirty_fragment (DxgiCapture * self, ID3D11Texture2D * src_texture,
   /* Create a vertex buffer to move and rotate from the move_rects.
    * And set the rectangular region to be copied to readable_texture. */
   for (i = 0; i < move_count; ++i) {
-    /* Copy the area to be moved. 
+    /* Copy the area to be moved.
      * The source of the move is included in dirty_rects. */
     _set_verteces (self, vp, dst_rect_p, &self->work_texture_desc,
         &(self->move_rects[i].DestinationRect), src_desc);
