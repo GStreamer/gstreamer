@@ -110,53 +110,57 @@ gboolean nal_reader_get_ue (NalReader * nr, guint32 * val);
 G_GNUC_INTERNAL
 gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
 
-#define CHECK_ALLOWED_MAX(val, max) { \
+#define CHECK_ALLOWED_MAX_WITH_DEBUG(dbg, val, max) { \
   if (val > max) { \
-    GST_WARNING ("value greater than max. value: %d, max %d", \
+    GST_WARNING ("value for '" dbg "' greater than max. value: %d, max %d", \
                      val, max); \
     goto error; \
   } \
 }
+#define CHECK_ALLOWED_MAX(val, max) \
+  CHECK_ALLOWED_MAX_WITH_DEBUG (G_STRINGIFY (val), val, max)
 
-#define CHECK_ALLOWED(val, min, max) { \
+#define CHECK_ALLOWED_WITH_DEBUG(dbg, val, min, max) { \
   if (val < min || val > max) { \
-    GST_WARNING ("value not in allowed range. value: %d, range %d-%d", \
+    GST_WARNING ("value for '" dbg "' not in allowed range. value: %d, range %d-%d", \
                      val, min, max); \
     goto error; \
   } \
 }
+#define CHECK_ALLOWED(val, min, max) \
+  CHECK_ALLOWED_WITH_DEBUG (G_STRINGIFY (val), val, min, max)
 
 #define READ_UINT8(nr, val, nbits) { \
   if (!nal_reader_get_bits_uint8 (nr, &val, nbits)) { \
-    GST_WARNING ("failed to read uint8, nbits: %d", nbits); \
+    GST_WARNING ("failed to read uint8 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define READ_UINT16(nr, val, nbits) { \
   if (!nal_reader_get_bits_uint16 (nr, &val, nbits)) { \
-  GST_WARNING ("failed to read uint16, nbits: %d", nbits); \
+  GST_WARNING ("failed to read uint16 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define READ_UINT32(nr, val, nbits) { \
   if (!nal_reader_get_bits_uint32 (nr, &val, nbits)) { \
-  GST_WARNING ("failed to read uint32, nbits: %d", nbits); \
+  GST_WARNING ("failed to read uint32 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define READ_UINT64(nr, val, nbits) { \
   if (!nal_reader_get_bits_uint64 (nr, &val, nbits)) { \
-    GST_WARNING ("failed to read uint32, nbits: %d", nbits); \
+    GST_WARNING ("failed to read uint32 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define READ_UE(nr, val) { \
   if (!nal_reader_get_ue (nr, &val)) { \
-    GST_WARNING ("failed to read UE"); \
+    GST_WARNING ("failed to read UE for '" G_STRINGIFY (val) "'"); \
     goto error; \
   } \
 }
@@ -164,20 +168,20 @@ gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
 #define READ_UE_ALLOWED(nr, val, min, max) { \
   guint32 tmp; \
   READ_UE (nr, tmp); \
-  CHECK_ALLOWED (tmp, min, max); \
+  CHECK_ALLOWED_WITH_DEBUG (G_STRINGIFY (val), tmp, min, max); \
   val = tmp; \
 }
 
 #define READ_UE_MAX(nr, val, max) { \
   guint32 tmp; \
   READ_UE (nr, tmp); \
-  CHECK_ALLOWED_MAX (tmp, max); \
+  CHECK_ALLOWED_MAX_WITH_DEBUG (G_STRINGIFY (val), tmp, max); \
   val = tmp; \
 }
 
 #define READ_SE(nr, val) { \
   if (!nal_reader_get_se (nr, &val)) { \
-    GST_WARNING ("failed to read SE"); \
+    GST_WARNING ("failed to read SE for '" G_STRINGIFY (val) "'"); \
     goto error; \
   } \
 }
@@ -185,7 +189,7 @@ gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
 #define READ_SE_ALLOWED(nr, val, min, max) { \
   gint32 tmp; \
   READ_SE (nr, tmp); \
-  CHECK_ALLOWED (tmp, min, max); \
+  CHECK_ALLOWED_WITH_DEBUG (G_STRINGIFY (val), tmp, min, max); \
   val = tmp; \
 }
 
@@ -224,35 +228,35 @@ gboolean count_exp_golomb_bits (guint32 value, guint * leading_zeros, guint * re
 
 #define WRITE_UINT8(nw, val, nbits) { \
   if (!nal_writer_put_bits_uint8 (nw, val, nbits)) { \
-    GST_WARNING ("failed to write uint8, nbits: %d", nbits); \
+    GST_WARNING ("failed to write uint8 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define WRITE_UINT16(nw, val, nbits) { \
   if (!nal_writer_put_bits_uint16 (nw, val, nbits)) { \
-    GST_WARNING ("failed to write uint16, nbits: %d", nbits); \
+    GST_WARNING ("failed to write uint16 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define WRITE_UINT32(nw, val, nbits) { \
   if (!nal_writer_put_bits_uint32 (nw, val, nbits)) { \
-    GST_WARNING ("failed to write uint32, nbits: %d", nbits); \
+    GST_WARNING ("failed to write uint32 for '" G_STRINGIFY (val) "', nbits: %d", nbits); \
     goto error; \
   } \
 }
 
 #define WRITE_BYTES(nw, data, nbytes) { \
   if (!nal_writer_put_bytes (nw, data, nbytes)) { \
-    GST_WARNING ("failed to write bytes, nbits: %d", nbytes); \
+    GST_WARNING ("failed to write bytes for '" G_STRINGIFY (val) "', nbits: %d", nbytes); \
     goto error; \
   } \
 }
 
 #define WRITE_UE(nw, val) { \
   if (!nal_writer_put_ue (nw, val)) { \
-    GST_WARNING ("failed to write ue"); \
+    GST_WARNING ("failed to write ue for '" G_STRINGIFY (val) "'"); \
     goto error; \
   } \
 }
