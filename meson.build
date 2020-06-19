@@ -1,5 +1,5 @@
 project('gstreamer', 'c',
-  version : '1.17.0.1',
+  version : '1.17.1',
   meson_version : '>= 0.48',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -108,7 +108,7 @@ cdata.set_quoted('PACKAGE', 'gstreamer')
 cdata.set_quoted('PACKAGE_NAME', 'GStreamer')
 cdata.set_quoted('PACKAGE_STRING', 'GStreamer @0@'.format(gst_version))
 cdata.set_quoted('PACKAGE_TARNAME', 'gstreamer')
-cdata.set_quoted('PACKAGE_BUGREPORT', 'http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer')
+cdata.set_quoted('PACKAGE_BUGREPORT', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/new')
 cdata.set_quoted('PACKAGE_URL', '')
 cdata.set_quoted('PACKAGE_VERSION', gst_version)
 cdata.set_quoted('PLUGINDIR', join_paths(get_option('prefix'), get_option('libdir'), 'gstreamer-1.0'))
