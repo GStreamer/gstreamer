@@ -23,14 +23,17 @@
 #include <gst/video/videooverlay.h>
 
 #include <va/va.h>
+
 #include <gtk/gtk.h>
 
-#include <X11/Xlib.h>
-#include <va/va_x11.h>
 #ifdef GDK_WINDOWING_X11
+#include <X11/Xlib.h>
 #include <gdk/gdkx.h>
-#else
-#error "X11 is not supported in GTK+"
+#include <va/va_x11.h>
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/gdkwayland.h>
+#include <va/va_wayland.h>
 #endif
 
 static gboolean g_multisink;
@@ -51,6 +54,8 @@ typedef struct _CustomData
   GstElement *pipeline;
   guintptr videoarea_handle[2];
   GstObject *gstvaapidisplay;
+  GtkWidget *video_widget[2];
+  GstVideoOverlay *overlay[2];
 } AppData;
 
 static void
@@ -71,26 +76,35 @@ button_rotate_cb (GtkWidget * widget, GstElement * elem)
   g_object_set (elem, "rotation", tags[counter++ % G_N_ELEMENTS (tags)], NULL);
 }
 
-static Display *
-get_x11_window_display (AppData * app)
+static gpointer
+get_native_display (AppData * app, gboolean * is_x11)
 {
-#if defined(GDK_WINDOWING_X11)
   GdkDisplay *gdk_display;
-  Display *x11_display;
 
   gdk_display = gtk_widget_get_display (app->main_window);
-  x11_display = gdk_x11_display_get_xdisplay (gdk_display);
-  return x11_display;
+
+#if defined(GDK_WINDOWING_X11)
+  if (GDK_IS_X11_DISPLAY (gdk_display)) {
+    *is_x11 = TRUE;
+    return gdk_x11_display_get_xdisplay (gdk_display);
+  } else
 #endif
-  g_error ("Running in a non-X11 environment");
+#ifdef GDK_WINDOWING_WAYLAND
+  if (GDK_IS_WAYLAND_DISPLAY (gdk_display)) {
+    *is_x11 = FALSE;
+    return gdk_wayland_display_get_wl_display (gdk_display);
+  } else
+#endif
+    g_error ("Running in a non supported environment");
 }
 
 static VADisplay
-ensure_va_display (AppData * app)
+ensure_va_display (AppData * app, gpointer native_display, gboolean is_x11)
 {
   if (app->va_display)
     return app->va_display;
-  app->va_display = vaGetDisplay (get_x11_window_display (app));
+  app->va_display = is_x11 ?
+      vaGetDisplay (native_display) : vaGetDisplayWl (native_display);
   /* There's no need to call vaInitialize() since element does it
    * internally */
   return app->va_display;
@@ -102,21 +116,41 @@ create_vaapi_app_display_context (AppData * app, gboolean new_va_display)
   GstContext *context;
   GstStructure *s;
   VADisplay va_display;
-  Display *x11_display;
+  gpointer native_display = NULL;
+  const gchar *name = NULL;
+  gboolean is_x11;
 
-  x11_display = get_x11_window_display (app);
+  native_display = get_native_display (app, &is_x11);
 
-  if (new_va_display)
-    va_display = vaGetDisplay (x11_display);
-  else
-    va_display = ensure_va_display (app);
+  if (new_va_display) {
+    va_display = is_x11 ?
+        vaGetDisplay (native_display) : vaGetDisplayWl (native_display);
+  } else
+    va_display = ensure_va_display (app, native_display, is_x11);
+
+  name = is_x11 ? "x11-display" : "wl-display";
 
   context = gst_context_new ("gst.vaapi.app.Display", FALSE);
   s = gst_context_writable_structure (context);
   gst_structure_set (s, "va-display", G_TYPE_POINTER, va_display, NULL);
-  gst_structure_set (s, "x11-display", G_TYPE_POINTER, x11_display, NULL);
+  gst_structure_set (s, name, G_TYPE_POINTER, native_display, NULL);
 
   return context;
+}
+
+static void
+get_allocation (GtkWidget * widget, GtkAllocation * allocation)
+{
+  GdkDisplay *display = gdk_display_get_default ();
+
+  gtk_widget_get_allocation (widget, allocation);
+
+  /* On Wayland the whole gtk window is one surface and the video is a
+   * subsurface of the top-level surface. So the position must be relative
+   * to the top-level window not relative to the parent widget */
+  if (GDK_IS_WAYLAND_DISPLAY (display))
+    gtk_widget_translate_coordinates (widget, gtk_widget_get_toplevel (widget),
+        0, 0, &allocation->x, &allocation->y);
 }
 
 static GstBusSyncReply
@@ -158,15 +192,23 @@ bus_sync_handler (GstBus * bus, GstMessage * msg, gpointer data)
       break;
     }
     case GST_MESSAGE_ELEMENT:{
+      GstVideoOverlay *overlay;
+      GtkAllocation allocation;
+      guint i;
+
       if (!gst_is_video_overlay_prepare_window_handle_message (msg))
         break;
 
-      if (g_strcmp0 (GST_MESSAGE_SRC_NAME (msg), "sink2") == 0)
-        gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY
-            (GST_MESSAGE_SRC (msg)), app->videoarea_handle[1]);
-      else
-        gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY
-            (GST_MESSAGE_SRC (msg)), app->videoarea_handle[0]);
+      overlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (msg));
+
+      i = (g_strcmp0 (GST_MESSAGE_SRC_NAME (msg), "sink2") == 0) ? 1 : 0;
+
+      app->overlay[i] = overlay;
+      get_allocation (app->video_widget[i], &allocation);
+      gst_video_overlay_set_window_handle (overlay, app->videoarea_handle[i]);
+      gtk_widget_queue_draw_area (app->video_widget[i], 0, 0, allocation.width,
+          allocation.height);
+
       break;
     }
     case GST_MESSAGE_HAVE_CONTEXT:{
@@ -228,16 +270,53 @@ realize_cb (GtkWidget * widget, gpointer data)
 {
   AppData *app = data;
   GdkWindow *window;
+  GdkDisplay *display;
   static guint counter = 0;
 
-#if defined(GDK_WINDOWING_X11)
-  window = gtk_widget_get_window (widget);
+  display = gdk_display_get_default ();
+
+#ifdef GDK_WINDOWING_WAYLAND
+  /* On wayland gtk_widget_get_window() only works correctly for the
+   * toplevel widget. Otherwise a new wayland surface is created but
+   * never used and the video remains invisible. */
+  if (GDK_IS_WAYLAND_DISPLAY (display))
+    window = gtk_widget_get_window (app->main_window);
+  else
+#endif
+    window = gtk_widget_get_window (widget);
 
   if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+    g_error ("Couldn't create native window needed for GstOverlay!");
 
-  app->videoarea_handle[counter++ % 2] = GDK_WINDOW_XID (window);
+#ifdef GDK_WINDOWING_X11
+  if (GDK_IS_X11_DISPLAY (display)) {
+    app->videoarea_handle[counter++ % 2] = GDK_WINDOW_XID (window);
+  } else
 #endif
+#ifdef GDK_WINDOWING_WAYLAND
+  if (GDK_IS_WAYLAND_DISPLAY (display)) {
+    app->videoarea_handle[counter++ % 2] =
+        (guintptr) gdk_wayland_window_get_wl_surface (window);
+  } else
+#endif
+    g_error ("Unsupported GDK backend");
+}
+
+static void
+draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
+{
+  AppData *app = data;
+  GtkAllocation allocation;
+
+  get_allocation (widget, &allocation);
+
+  gst_println ("draw_cb x %d, y %d, w %d, h %d\n",
+      allocation.x, allocation.y, allocation.width, allocation.height);
+
+  if (app->overlay[0]) {
+    gst_video_overlay_set_render_rectangle (app->overlay[0], allocation.x,
+        allocation.y, allocation.width, allocation.height);
+  }
 }
 
 static GtkWidget *
@@ -248,6 +327,7 @@ create_video_box (AppData * app)
   video_area = gtk_drawing_area_new ();
   gtk_widget_set_size_request (video_area, 640, 480);
   g_signal_connect (video_area, "realize", G_CALLBACK (realize_cb), app);
+  g_signal_connect (video_area, "draw", G_CALLBACK (draw_cb), app);
   return video_area;
 }
 
@@ -288,7 +368,8 @@ build_ui (AppData * app)
   gtk_box_pack_start (GTK_BOX (vbox), pane, TRUE, TRUE, 0);
 
   /* first video box */
-  gtk_paned_pack1 (GTK_PANED (pane), create_video_box (app), TRUE, TRUE);
+  app->video_widget[0] = create_video_box (app);
+  gtk_paned_pack1 (GTK_PANED (pane), app->video_widget[0], TRUE, TRUE);
 
   /* rotate buttons */
   bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
@@ -300,7 +381,8 @@ build_ui (AppData * app)
 
   if (g_multisink) {
     /* second video box */
-    gtk_paned_pack2 (GTK_PANED (pane), create_video_box (app), TRUE, TRUE);
+    app->video_widget[1] = create_video_box (app);
+    gtk_paned_pack2 (GTK_PANED (pane), app->video_widget[1], TRUE, TRUE);
 
     gtk_box_pack_start (GTK_BOX (bbox), create_rotate_button (app, "sink2"),
         TRUE, TRUE, 0);
