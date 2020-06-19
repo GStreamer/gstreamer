@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import sys
+import re
 import subprocess
 import tempfile
 
@@ -38,6 +39,7 @@ except ImportError:  # python <3.3
 UNSTABLE_VALUE = "unstable-values"
 
 
+
 def dict_recursive_update(d, u):
     modified = False
     unstable_values = d.get(UNSTABLE_VALUE, [])
@@ -49,8 +51,11 @@ def dict_recursive_update(d, u):
             modified |= dict_recursive_update(r, v)
             d[k] = r
         elif k not in unstable_values:
-            d[k] = u[k]
             modified = True
+            if k == "package":
+                d[k] = re.sub(" git$| source release$| prerelease$", "", v)
+            else:
+                d[k] = u[k]
     return modified
 
 

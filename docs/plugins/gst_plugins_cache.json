@@ -3588,7 +3588,7 @@
                 ]
             }
         },
-        "package": "GStreamer git",
+        "package": "GStreamer",
         "source": "gstreamer",
         "tracers": {},
         "url": "Unknown package origin"
@@ -3599,7 +3599,7 @@
         "filename": "gstcoretracers",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer git",
+        "package": "GStreamer",
         "source": "gstreamer",
         "tracers": {
             "latency": {},
