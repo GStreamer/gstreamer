@@ -15,6 +15,12 @@
   <project_group>GStreamer</project_group>
   <translation type="gettext">GStreamer</translation>
   <developer_name>The GStreamer Team</developer_name>
+  <screenshots>
+      <screenshot type="default">
+          <caption>The main window</caption>
+          <image>https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/raw/master/debug-viewer/screenshots/gst-debug-viewer.png?inline=false</image>
+      </screenshot>
+  </screenshots>
   <content_rating type="oars-1.0" />
   <releases>
     <release version="1.16.2" date="2019-12-03" />
