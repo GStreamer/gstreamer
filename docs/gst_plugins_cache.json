@@ -345,7 +345,7 @@
         "filename": "gst1394",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1284,7 +1284,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1447,7 +1447,7 @@
         "filename": "gstalaw",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1663,7 +1663,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1717,7 +1717,7 @@
         "filename": "gstalphacolor",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1756,7 +1756,7 @@
         "filename": "gstapetag",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -3300,7 +3300,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -3652,7 +3652,7 @@
         "filename": "gstaudioparsers",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -3690,7 +3690,7 @@
         "filename": "gstauparse",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4034,7 +4034,7 @@
         "filename": "gstautodetect",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4188,7 +4188,7 @@
         "filename": "gstavi",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4614,7 +4614,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4707,7 +4707,7 @@
         "filename": "gstcairo",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4815,7 +4815,7 @@
         "filename": "gstcutter",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -5758,7 +5758,7 @@
         "filename": "gstdebug",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -6038,7 +6038,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -6423,7 +6423,7 @@
         "filename": "gstdtmf",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -6607,7 +6607,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -7488,7 +7488,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -7837,7 +7837,7 @@
         "filename": "gstequalizer",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -8283,7 +8283,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -8392,7 +8392,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer 1.17.0.1 FLV muxer",
+                        "default": "GStreamer 1.17.1 FLV muxer",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
@@ -8418,7 +8418,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer 1.17.0.1 FLV muxer",
+                        "default": "GStreamer 1.17.1 FLV muxer",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
@@ -8533,7 +8533,7 @@
                 }
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -8571,7 +8571,7 @@
         "filename": "gstflxdec",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9057,7 +9057,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9124,7 +9124,7 @@
         "filename": "gstgoom",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9191,7 +9191,7 @@
         "filename": "gstgoom2k1",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9721,7 +9721,7 @@
         "filename": "gstgtk",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9786,7 +9786,7 @@
         "filename": "gsticydemux",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9839,7 +9839,7 @@
         "filename": "gstid3demux",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -9905,7 +9905,7 @@
         "filename": "gstimagefreeze",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -10035,7 +10035,7 @@
         "filename": "gstinterleave",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -12196,7 +12196,7 @@
                 }
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -12844,7 +12844,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -13040,7 +13040,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -13246,7 +13246,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -13365,7 +13365,7 @@
         "filename": "gstlevel",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -13815,7 +13815,7 @@
         "filename": "gstmatroska",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -13853,7 +13853,7 @@
         "filename": "gstmonoscope",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -13934,7 +13934,7 @@
         "filename": "gstmpg123",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -14097,7 +14097,7 @@
         "filename": "gstmulaw",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -15310,7 +15310,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -15441,7 +15441,7 @@
         "filename": "gstmultipart",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -15495,7 +15495,7 @@
         "filename": "gstnavigationtest",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -16044,7 +16044,7 @@
         "filename": "gstoss4",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -16552,7 +16552,7 @@
         "filename": "gstossaudio",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -16689,7 +16689,7 @@
         "filename": "gstpng",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -17374,7 +17374,7 @@
         "filename": "gstpulseaudio",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -17829,7 +17829,7 @@
         "filename": "gstqmlgl",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -18125,7 +18125,7 @@
         "filename": "gstreplaygain",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -31904,7 +31904,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -35019,7 +35019,7 @@
                 }
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -35777,7 +35777,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer/1.17.0.1",
+                        "default": "GStreamer/1.17.1",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
@@ -36087,7 +36087,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -36160,7 +36160,7 @@
         "filename": "gstshapewipe",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -36549,7 +36549,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -37479,7 +37479,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -38161,7 +38161,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer souphttpsrc 1.17.0.1 ",
+                        "default": "GStreamer souphttpsrc 1.17.1 ",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
@@ -38198,7 +38198,7 @@
         "filename": "gstsoup",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -38342,7 +38342,7 @@
         "filename": "gstspectrum",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -38674,7 +38674,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -38746,7 +38746,7 @@
         "filename": "gsttaglib",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -39098,7 +39098,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -40725,7 +40725,7 @@
         "filename": "gstudp",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -41771,7 +41771,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -41969,7 +41969,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -42149,7 +42149,7 @@
         "filename": "gstvideocrop",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -42519,7 +42519,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -42600,7 +42600,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -44307,7 +44307,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -44349,7 +44349,7 @@
         "filename": "gstwavenc",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -44700,7 +44700,7 @@
                 ]
             }
         },
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -44752,7 +44752,7 @@
         "filename": "gstwavparse",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -44971,7 +44971,7 @@
         "filename": "gstximagesrc",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
@@ -45041,7 +45041,7 @@
         "filename": "gsty4menc",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Good Plug-ins git",
+        "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
         "url": "Unknown package origin"
