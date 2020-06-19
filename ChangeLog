@@ -1,3 +1,1164 @@
+=== release 1.17.1 ===
+
+2020-06-19 19:24:38 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.17.1
+
+2020-06-15 19:45:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Add/configure transports when completing the pipeline
+	  Otherwise the transports are not set up yet during the PLAY request
+	  handling when unsuspending (and thus unblocking) the media.
+	  In case of live pipelines this then causes the first few packets to go
+	  to the sinks before they know what to do with them, and they simply
+	  discard them which is rather suboptimal in case of keyframes.
+	  For non-live pipelines this is not a problem because the sink will still
+	  be PAUSED and as such not send out the data yet but wait until it goes
+	  to PLAYING, which is late enough.
+	  Adding the transports multiple times is not a problem: if the transport
+	  is already added it won't be added another time and TRUE will be
+	  returned.
+	  This fixes a regression introduced by a7732a68e8bc6b4ba15629c652056c240c624ff0
+	  before 1.14.0.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/107
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/135>
+
+2020-06-15 19:45:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix misleading comment
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/135>
+
+2020-06-15 18:29:13 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Make sure to also unblock pads when going to PLAYING while buffering
+	  The pad probes are not needed anymore at this point and later when
+	  reaching buffering 100% only the state is changed, no unblocking
+	  happens.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/135>
+
+2020-06-15 18:17:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Remove duplicated media_unblock() function
+	  It does literally the same as media_streams_set_blocked(FALSE).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/135>
+
+2020-06-12 15:38:45 +0200  Lenny Jorissen <lennyjorissen@gmail.com>
+
+	* examples/test-onvif-server.c:
+	  test-onvif-server: cast ntp-offset property value to 64 bit
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/134>
+
+2020-06-09 15:21:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins cache
+
+2020-06-10 13:45:04 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/test-onvif-server.c:
+	* examples/test-onvif-server.h:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	  onvif-media-factory: define autoptr cleanup function
+	  And have the factory in the onvif-server example inherit from
+	  GstRTSPOnvifMediaFactory.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/133>
+
+2020-06-08 10:59:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins cache
+
+2020-06-08 09:45:15 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: enforce I420 format
+	  Test was not enforcing a video format on videotestsrc. I420 was picked as it
+	  was the first format in GST_VIDEO_FORMATS_ALL which will no longer be
+	  true (gst-plugins-base!689).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/129>
+
+2020-06-06 00:41:51 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  plugins: uddate gst_type_mark_as_plugin_api() calls
+
+2020-06-03 18:36:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Require hotdoc >= 0.11.0
+
+2020-05-27 17:00:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update gst_plugins_cache.json
+
+2020-05-30 23:23:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  plugins: Use gst_type_mark_as_plugin_api() for all non-element plugin types
+
+2020-05-27 23:38:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	  meson: gir: remove bogus sources_top_dir kwarg
+	  Doesn't actually exist. Was fixed differently in Meson
+	  so that the user doesn't have to specify it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/127>
+
+2020-05-27 17:43:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: put registry into tests/check not the gst/ subdir
+	  Underscorify the test name before setting GST_REGISTRY,
+	  so the registry actually ends up in the current build dir
+	  and not some subdir.
+	  For consistency with the other modules, but should also
+	  avoid problems on windows.
+	  Also fix indentation of environment block.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/126>
+
+2020-05-27 17:33:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: fix meson test env setup to make sure we use the right gst-plugin-scanner
+	  If core is built as a subproject (e.g. as in gst-build), make sure to use
+	  the gst-plugin-scanner from the built subproject. Without this, gstreamer
+	  might accidentally use the gst-plugin-scanner from the install prefix if
+	  that exists, which in turn might drag in gst library versions we didn't
+	  mean to drag in. Those gst library versions might then be older than
+	  what our current build needs, and might cause our newly-built plugins
+	  to get blacklisted in the test registry because they rely on a symbol
+	  that the wrongly-pulled in gst lib doesn't have.
+	  This should fix running of unit tests in gst-build when invoking
+	  meson test or ninja test from outside the devenv for the case where
+	  there is an older or different-version gst-plugin-scanner installed
+	  in the install prefix.
+	  In case no gst-plugin-scanner is installed in the install prefix, this
+	  will fix "GStreamer-WARNING: External plugin loader failed. This most
+	  likely means that the plugin loader helper binary was not found or
+	  could not be run. You might need to set the GST_PLUGIN_SCANNER
+	  environment variable if your setup is unusual." warnings when running
+	  the unit tests.
+	  In the case where we find GStreamer core via pkg-config we use
+	  a newly-added pkg-config var "pluginscannerdir" to get the right
+	  directory. This has the benefit of working transparently for both
+	  installed and uninstalled pkg-config files/setups.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/126>
+
+2020-05-27 17:32:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: gst-plugins-base and -bad plugins are required for the unit tests
+	  Make hard requirement until we have more fine-grained control
+	  in the unit tests. Of course the presence of the .pc file doesn't
+	  imply that the plugins we need are actually there, but it's at
+	  least a step in the right direction.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/126>
+
+2020-05-27 17:29:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: pick up rtsp-server plugins from build directory only
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/126>
+
+2020-05-26 15:31:22 +0200  Ludvig Rappe <ludvigr@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: wait for all GstRTSPStreamBlocking messages
+	  Make sure rtsp-media have received a GstRTSPStreamBlocking message from
+	  each active stream when checking if all streams are blocked.
+	  Without this change there will be a race condition when using two or
+	  more streams and rtsp-media receives a GstRTSPStreamBlocking message
+	  from one of the streams. This is because rtsp-media then checks if all
+	  streams are blocked by calling gst_rtsp_stream_is_blocking() for each
+	  stream. This function call returns TRUE if the stream has sent a
+	  GstRTSPStreamBlocking message, however, rtsp-media may have yet to
+	  receive this message. This would then result in that rtsp-media
+	  erroneously thinks it is blocking all streams which could result in
+	  rtsp-media changing state, from PREPARING to PREPARED. In the case of a
+	  preroll, this could result in that rtsp-media thinks that the pipeline
+	  is prerolled even though that might not be the case.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/124>
+
+2020-05-04 13:43:00 +0200  Ludvig Rappe <ludvigr@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: update expected_async_done during suspend
+	  Set expected_async_done to FALSE in default_suspend() if a state change
+	  occurs and the return value from set_target_state() is something other
+	  than GST_STATE_CHANGE_ASYNC.
+	  Without this change there is a risk that expected_async_done will be
+	  TRUE even though no asynchronous state change is taking place. This
+	  could happen if the pipeline is set to PAUSED using
+	  media_set_pipeline_state_locked(), an asynchronous state change starts
+	  and then the media is suspended (which could result in a state change,
+	  aborting the asynchronous state change). If the media is suspended
+	  before the asynchronous state change ends then expected_async_done will
+	  be TRUE but no asynchronous state change is taking place.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/123>
+
+2020-05-25 13:49:45 +0200  Kristofer Björkström <kristofb@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix race condition in rtsp ctrl timeout by WeakRef client
+	  There was a race condition where client was being finalized and
+	  concurrently in some other thread the rtsp ctrl timout was relying on
+	  client data that was being freed.
+	  When rtsp ctrl timeout is setup, a WeakRef on Client is set.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/121>
+
+2015-03-03 14:42:07 +0100  Gregor Boirie <gregor.boirie@parrot.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  media-factory: complete DSCP QoS setting support
+	  add dscp_qos setting support at factory and media level to setup IP DSCP
+	  field of bounded UDP sinks.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/6
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/120>
+
+2020-05-14 10:08:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix some race conditions around timeout source removal
+	  We always need to take the lock while accessing it as otherwise another
+	  thread might've removed it in the meantime. Also when destroying and
+	  creating a new one, ensure that the mutex is not shortly unlocked in
+	  between as during that time another one might potentially be created
+	  already.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/119>
+
+2020-05-03 16:29:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-media: Mark out parameters accordingly in gst_rtsp_media_get_rates()
+	  And the same for gst_rtsp_stream_get_rates().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/118>
+
+2020-05-03 10:17:41 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-onvif-server.c:
+	  examples: test-onvif-server: fix compiler warnings on raspbian
+	  Fix printf format for 64-bit variables.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/117>
+
+2020-05-01 10:42:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream-transport: Fix accidental API/ABI breakage with message_sent callbacks
+	  The old API is preserved now and new API was added that provides the
+	  additional parameter to the callback.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/104
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/116>
+
+2020-04-28 23:33:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Store the timeout source by pointer instead of id
+	  That way we don't have to retrieve it again from the main context when
+	  destroying it but can directly do so.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/115>
+
+2020-04-28 23:16:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Clean up watch/watch context and related state consistently
+	  And assert that it was cleaned up properly before the client is
+	  finalized. If something is still around when the client is shut down
+	  then something went very wrong before.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/115>
+
+2020-04-27 23:25:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-client: Combine the pre-session and post-session timeout
+	  They previously used the same state but different mechanisms and
+	  functions, which was difficult to follow, error prone and simply
+	  confusing.
+	  Also adjust the test for the post-session timeout a bit to be less racy
+	  now that the timing has slightly changed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/115>
+
+2020-04-27 19:47:15 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Don't ever close the client connection directly when a session is torn down
+	  There might be other sessions that are running over the same RTSP
+	  connection and we should not simply close the client directly if one of
+	  them is torn down.
+	  By default the connection will be closed once the client closes it or
+	  the OS does. This behaviour can be adjusted with the
+	  post-session-timeout property, which allows to close it automatically
+	  from the server side after all sessions are gone and the given timeout
+	  is reached.
+	  This reverts the previous commit.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/115>
+
+2020-04-27 13:49:55 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: If the TEARDOWN response can be sent directly, directly close the client
+	  Instead of closing it never at all. Previously there was only code that
+	  closed the client asynchronously if sending the response happened
+	  asynchrously at a later time.
+	  Thanks to Christian M for debugging this issue.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/102
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/114>
+
+2020-03-23 14:51:28 +0100  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: use mcast_udpsink[0] last-sample if available for rtpinfo
+	  Otherwise no sink is found for multicast sreams and the less accurate
+	  fallback is used to determine the current sequence number and timestamp.
+
+2020-03-23 16:06:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  rtsp-auth: Fix NULL pointer dereference when handling an invalid basic Authorization header
+	  When using the basic authentication scheme, we wouldn't validate that
+	  the authorization field of the credentials is not NULL and pass it on
+	  to g_hash_table_lookup(). g_str_hash() however is not NULL-safe and will
+	  dereference the NULL pointer and crash.
+	  A specially crafted (read: invalid) RTSP header can cause this to
+	  happen.
+	  As a solution, check for the authorization to be not NULL before
+	  continuing processing it and if it is simply fail authentication.
+	  This fixes CVE-2020-6095 and TALOS-2020-1018.
+	  Discovered by Peter Wang of Cisco ASIG.
+
+2020-03-09 14:17:34 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Use watch_context before unref
+	  Move the usage of priv->watch_context to beginning of function
+	  gst_rtsp_client_finalize. Instead of use it after
+	  g_main_context_unref (priv->watch_context).
+
+2020-02-14 14:59:43 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix deadlock on transport removal
+	  We cannot take the RTSPStream lock while holding a transport backlog
+	  lock, as remove_transport may be called externally, which will
+	  take first the RTSPStream lock then the transport backlog lock.
+
+2020-02-14 14:59:25 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: clear backlog when removing transport
+	  This ensures we don't end up calling any of transports' callbacks
+	  with a potentially unreffed user_data (in practice, a client that
+	  may have been removed)
+
+2020-02-06 22:46:18 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: marshal calls to send_tcp_message to a single thread
+	  In order to address the race condition pointed out at
+	  https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/merge_requests/108#note_403579
+	  we get rid of the send thread pool, and instead spawn and manage
+	  a single thread to pull samples from app sinks and add them to
+	  the transport's backlogs.
+	  Additionally, we now also always go through the backlogs in order
+	  to simplify the logic.
+
+2020-02-05 20:28:19 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: properly protect TCP backlog access
+	  Fixes #97
+	  We cannot hold stream->lock while pushing data, but need
+	  to consistently check the state of the backlog both from
+	  the send_tcp_message function and the on_message_sent function,
+	  which may or may not be called from the same thread.
+	  This commit introduces internal API to allow for potentially
+	  recursive locking of transport streams, addressing a race
+	  condition where the RTSP stream could push items out of order
+	  when popping them from the backlog.
+
+2020-02-22 00:41:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Sink pipeline in gst_rtsp_media_take_pipeline()
+	  It's taken ownership of by the media, and returned with `transfer none`
+	  from the GstRTSPMedia::create_pipeline() vfunc. If we don't sink it
+	  first then any bindings will wrongly take ownership of the pipeline once
+	  it arrives in bindings code.
+
+2020-02-05 16:51:14 +0100  Bastian Bouchardon <bastian.bouchardon@gmail.com>
+
+	* examples/test-onvif-client.c:
+	  Add initialization for context and params (gchar *) Insert define (DEFAULT_*) into help to have to modify only the constants
+
+2020-02-03 12:30:14 +0000  Marc Leeman <marc.leeman@gmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: fix default latency
+
+2020-01-15 17:06:41 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: make closing more thread safe
+	  + Take the watch lock prior to using priv->watch
+	  + Flush both the watch and connection before closing / unreffing
+	  gst_rtsp_connection_close() is not threadsafe on its own, this is
+	  a workaround at the client level, where we control both the watch
+	  and the connection
+
+2020-01-23 16:41:26 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* gst/rtsp-server/rtsp-latency-bin.c:
+	  rtsp-latency-bin: replace G_TYPE_INSTANCE_GET_PRIVATE as it's been deprecated
+	  from glib
+	  ```
+	  Deprecated: 2.58: Use %G_ADD_PRIVATE and the generated
+	  `your_type_get_instance_private()` function instead
+	  ```
+
+2019-12-17 16:08:19 +0100  Zoltán Imets <zoltani@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-client: add property post-session-timeout
+	  This is a TCP connection timeout for client connections, in seconds.
+	  If a positive value is set for this property, the client connection
+	  will be kept alive for this amount of seconds after the last session
+	  timeout. For negative values of this property the connection timeout
+	  handling is delegated to the system (just as it was before).
+	  Fixes #83
+
+2020-01-11 22:58:48 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: check for NULL transports prior to ref'ing
+
+2020-01-09 14:10:44 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix checking of TCP backpressure
+	  The internal index of our appsinks, while it can be used to
+	  determine whether a message is RTP or RTCP, is not necessarily
+	  the same as the interleaved channel. Let the stream-transport
+	  determine the channel to check backpressure for, the same way
+	  it determines the channel according to whether it is sending
+	  RTP or RTCP.
+
+2019-12-10 19:16:51 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: Butcher the file to please gst-indent in the CI
+	  This should be reverted once the CI has an updated gst-indent.
+
+2019-12-10 18:39:32 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  rtsp-session & client: Remove deprecated GTimeVal
+	  GTimeVal won't work past 2038
+
+2019-12-12 17:56:18 +0100  Nicola Murino <nicola.murino@gmail.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  rtsp-auth: fix default token leak
+
+2019-12-09 14:17:05 +0100  Adam x Nilsson <adamni@axis.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  gstrtspclientsink: unref transports when closing bin
+	  Fixes #91
+
+2019-12-06 10:44:35 +0100  Kristofer Bjorkstrom <kristofb@pc36402-1937.se.axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Force seek when flush flag is set
+	  The commit "rtsp-client: define all seek accuracy flags from
+	  setup_play_mode" changed the behaviour of when doing a seek.
+	  Before that commit, having the flush flag set would result in a seek
+	  (forced seek).
+	  Even if no seek was needed. One reason to force seek is to flush old buffers
+	  created in Describe requests.
+	  Thus adding force seek also for flush flag will result in play request
+	  with fresh buffers.
+
+2019-11-21 17:12:45 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Revitalize dead code
+	  Leftover from 65d9aa327cd1844934836249cd4463edf09c725d
+	  CID: 1455379
+
+2019-11-27 15:22:35 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Don't try to use non-initialized values
+	  Only attempt to use the various timing values iif gst_rtsp_stream_get_info()
+	  returns TRUE. Also avoid the whole clock signalling block if we're not
+	  dealing with senders.
+	  CID: 1439524
+	  CID: 1439536
+	  CID: 1439520
+
+2019-11-01 12:01:41 +0100  Adam x Nilsson <adamni@axis.com>
+
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/stream.c:
+	  rtsp-stream: Removing invalid transports returns false
+	  When removing transports an assertion was that the transports passed in
+	  for removal are present in the list, however that can't be assumed.
+	  As an example if a transport was removed from a thread running
+	  send_tcp_message, the main thread can try to remove the same transport
+	  again if it gets a handle_pause_request. This will not effect the
+	  transport list but it will effect n_tcp_transports as it will be
+	  decrement and then have the wrong value.
+
+2019-11-06 14:17:48 +0100  Zoltán Imets <zoltani@axis.com>
+
+	* tests/check/gst/client.c:
+	  client test: add scale and speed negative tests
+	  Negative tests for scale and speed should be done as well, verify that
+	  the response code is "400 Bad request" when a bad request is done.
+
+2019-08-29 07:34:26 +0200  Niels De Graef <nielsdegraef@gmail.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  Don't pass default GLib marshallers for signals
+	  By passing NULL to `g_signal_new` instead of a marshaller, GLib will
+	  actually internally optimize the signal (if the marshaller is available
+	  in GLib itself) by also setting the valist marshaller. This makes the
+	  signal emission a bit more performant than the regular marshalling,
+	  which still needs to box into `GValue` and call libffi in case of a
+	  generic marshaller.
+	  Note that for custom marshallers, one would use
+	  `g_signal_set_va_marshaller()` with the valist marshaller instead.
+
+2019-09-05 19:51:06 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	  GstRTSPMountPoints: Remove any existing factory before adding a new one
+	  The documentation of gst_rtsp_mount_points_add_factory() says "Any
+	  previous mount point will be freed" which was true when it was
+	  implemented using a GHashTable. But in 2012 it got rewrote using a
+	  GSequence and since then it could have 2 factories for the same path.
+	  Which one gets used is random, depending on the sorting order of 2
+	  identical items.
+
+2019-10-15 19:08:32 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: refactor TCP backpressure handling
+	  The previous implementation stopped sending TCP messages to
+	  all clients when a single one stopped consuming them, which
+	  obviously created problems for shared media.
+	  Instead, we now manage a backlog in stream-transport, and slow
+	  clients are removed once this backlog exceeds a maximum duration,
+	  currently hardcoded.
+	  Fixes #80
+
+2019-10-18 00:42:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: build gir even when cross-compiling if introspection was enabled explicitly
+	  This can be made to work in certain circumstances when
+	  cross-compiling, so default to not building g-i stuff
+	  when cross-compiling, but allow it if introspection was
+	  enabled explicitly via -Dintrospection=enabled.
+	  See gstreamer/gstreamer#454 and gstreamer/gstreamer#381.
+
+2019-10-18 09:19:59 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: clean up comment extra-timeout
+
+2019-10-17 12:15:42 +0200  Muhammet Ilendemli <mi@tailored-apps.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Generate correct URI for MIKEY in ANNOUNCE responses
+	  Instead of hardcoding the URI, take the actual URI (and especially the correct port)
+	  from the RTSP context.
+	  Fixes #84
+
+2019-10-16 13:20:54 +0000  Kristofer <kristofer.bjorkstrom@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  rtsp-client: Lock shared media
+	  For shared media we got race conditions. Concurrently rtsp clients might
+	  suspend or unsuspend the shared media and thus change the state without
+	  the clients expecting that.
+	  By introducing a lock that can be taken by callers such as rtsp_client
+	  one can force rtsp clients calling, eg. PLAY, SETUP and that uses shared media,
+	  to handle the media sequentially thus allowing one client to finish its
+	  rtsp call before another client calls on the same media.
+	  https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/86
+	  Fixes #86
+
+2019-10-15 07:33:29 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: add property extra-timeout
+	  Extra time to add to the timeout, in seconds. This only
+	  affects the time until a session is considered timed out
+	  and is not signalled in the RTSP request responses.
+	  Only the value of the timeout property is signalled in the
+	  request responses.
+
+2019-10-07 12:13:47 +0200  Adam x Nilsson <adamni@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream : fix race condition in send_tcp_message
+	  If one thread is inside the send_tcp_message function and are done
+	  sending rtp or rtcp messages so the n_outstanding variable is zero
+	  however have not exit the loop sending the messages. While sending its
+	  messages, transports have been added or removed to the transport list,
+	  so the cache should be updated. If now an additional thread comes to
+	  the function send_tcp_message and trying to send rtp messages it will
+	  first destroy the rtp cache that is still being iterated trough by the
+	  first thread.
+	  Fixes #81
+
+2019-05-24 14:32:50 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* .gitmodules:
+	* Makefile.am:
+	* autogen.sh:
+	* common:
+	* configure.ac:
+	* docs/.gitignore:
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* gst/Makefile.am:
+	* gst/rtsp-server/.gitignore:
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-sink/Makefile.am:
+	* pkgconfig/.gitignore:
+	* pkgconfig/Makefile.am:
+	* tests/.gitignore:
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	  Remove autotools build
+	  Replaced by Meson.
+	  Maybe we can now use the meson pkgconfig module
+	  for .pc files? (Does it support uninstalled now?)
+
+2019-10-07 10:27:36 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* tests/check/gst/client.c:
+	  client: fix test mem leak in attach_rate_tweaking_probe
+
+2019-10-07 10:14:52 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* tests/check/gst/media.c:
+	  media: remove memleak in test test_media_seek
+
+2019-10-07 10:07:54 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  rtspserver: Remove memleak in test test_double_play
+
+2019-09-17 13:45:57 +0200  Adam x Nilsson <adamni@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Use lock in gst_rtsp_media_is_receive_only
+
+2018-10-29 17:02:41 +0100  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-media: Unblock all streams
+	  When unsuspending and going to PLAYING, unblock all streams instead of
+	  only those that are linked (the linked streams are the ones for which
+	  SETUP has been called). GST_FLOW_NOT_LINKED will be returned when
+	  pushing buffers on unlinked streams.
+	  This change is because playback using single-threaded demuxers like
+	  matroska-demux could be blocked if SETUP was not called for all media.
+	  Demuxers that use GstFlowCombiner (including gstoggdemux, gstavidemux,
+	  gstflvdemux, qtdemux, and matroska-demux) will handle
+	  GST_FLOW_NOT_LINKED automatically.
+	  Fixes #39
+
+2019-09-11 07:08:37 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-media: Wait on async when needed.
+	  Wait on asyn-done when needed in gst_rtsp_media_seek_trickmode.
+	  In the unit test the pause from adjust_play_mode will cause a preroll
+	  and after that async-done will be produced.
+	  Without this patch there are no one consuming this async-done and when
+	  later when seek fluch is done in gst_rtsp_media_seek_trickmode then it
+	  wait for async-done. But then it wrongly find the async-done prodused by
+	  adjus_play_mode and continue executing without waiting for the preroll
+	  to finish.
+
+2019-09-30 15:13:15 +0200  Kristofer Bjorkstrom <kristofb@pc36402-1937.se.axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: RTP Info when completed_sender
+	  Change condition that should be fulfilled regarding RTPInfo.
+	  Replace !gst_rtsp_media_is_receive_only with
+	  gst_rtsp_media_has_completed_sender. It is more correct to actually look
+	  for a sender pipeline that is complete. Only then a RTPInfo should
+	  exist.
+	  gst_rtsp_media_is_receive_only gives different answears depending on
+	  state of server.
+	  If Describe is called wth URL+options for backchannel SDP will give only
+	  audio and only backchannel a=sendonly
+	  If Describe is called on URL+options that gives both audio and video
+	  direction from server to client, pipelines are created. Thus
+	  receive_only will return false, even though Setup only would setup
+	  backchannel.
+	  RTP-Info is only for outgoing streams. Thus one should look if outgoing
+	  streams are complete.
+
+2019-09-25 09:14:08 +0000  Kristofer <kristofer.bjorkstrom@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/client.c:
+	  rtsp-client: RTP Info exists conditionally in PLAY
+	  If RTP Info is missing and it is not a receiver only, eg. audio
+	  backchannel. Then return GST_RTSP_STS_INTERNAL_SERVER_ERROR.
+	  In rfc2326 it says RTP-info is req. but in RFC7826 it is conditional.
+	  Since 1.14 there is audio backchannel support. Thus RTP-info is
+	  conditional now. When audio backchannel only mode, there is no RTP-info.
+	  Fixes #82
+
+2019-09-05 16:23:26 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/test-onvif-client.c:
+	  test-onvif-client: remove unused query
+
+2019-08-30 14:00:52 +0200  Kristofer Björkström <kristofb@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: RTP Info must exist in PLAY response
+	  If RTP Info is missing. Then return GST_RTSP_STS_INTERNAL_SERVER_ERROR
+	  Fixes #76
+
+2019-08-29 21:37:24 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/test-onvif-client.c:
+	  test-onvif-client: perform accurate seeks
+	  See https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/merge_requests/336
+	  Also, modify how we compute the position: position queries in
+	  PAUSED mode fail to account for the newly-prerolled frame, leading
+	  to frame skips when performing seeks in that state. Instead,
+	  compute the current position from the last sample.
+
+2019-08-21 14:57:25 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* tests/check/gst/rtspserver.c:
+	  Use complete streams for scale and speed.
+	  Without this patch it's always stream0 that is used to get segment event
+	  that is used to set scale and speed. This even if client not doing SETUP
+	  for stream0. At least in suspend mode reset this not working since then
+	  it's just random if send_rtp_sink have got any segment event. There are
+	  no check if send_rtp_sink for stream0 got any data before media is
+	  prerolled after PLAY request.
+
+2019-08-26 22:24:12 +1000  Matthew Waters <matthew@centricular.com>
+
+	* examples/test-onvif-server.c:
+	* examples/test-onvif-server.h:
+	  examples/onvif-server: fix werror build with clang
+	  ../subprojects/gst-rtsp-server/examples/test-onvif-server.c:346:65: warning: implicit conversion from enumeration type 'const GstSegmentFlags' to different enumeration type 'GstSeekFlags' [-Wenum-conversion]
+	  self->incoming_segment->format, self->incoming_segment->flags,
+	  ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+	  ../subprojects/gst-rtsp-server/examples/test-onvif-server.c:53:1: warning: unused function 'REPLAY_IS_BIN' [-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (ReplayBin, replay_bin, REPLAY, BIN, GstBin);
+	  ^
+	  /usr/include/glib-2.0/gobject/gtype.h:1407:26: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline gboolean MODULE##_IS_##OBJ_NAME (gpointer ptr) {                                         \
+	  ^
+	  <scratch space>:77:1: note: expanded from here
+	  REPLAY_IS_BIN
+	  ^
+	  ../subprojects/gst-rtsp-server/examples/test-onvif-server.c:525:1: warning: unused function 'ONVIF_FACTORY' [-Wunused-function]
+	  G_DECLARE_FINAL_TYPE (OnvifFactory, onvif_factory, ONVIF, FACTORY,
+	  ^
+	  /usr/include/glib-2.0/gobject/gtype.h:1405:33: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline ModuleObjName * MODULE##_##OBJ_NAME (gpointer ptr) {                                     \
+	  ^
+	  <scratch space>:9:1: note: expanded from here
+	  ONVIF_FACTORY
+	  ^
+	  ../subprojects/gst-rtsp-server/examples/test-onvif-server.c:525:1: warning: unused function 'ONVIF_IS_FACTORY' [-Wunused-function]
+	  /usr/include/glib-2.0/gobject/gtype.h:1407:26: note: expanded from macro 'G_DECLARE_FINAL_TYPE'
+	  static inline gboolean MODULE##_IS_##OBJ_NAME (gpointer ptr) {                                         \
+	  ^
+	  <scratch space>:12:1: note: expanded from here
+	  ONVIF_IS_FACTORY
+	  ^
+
+2019-08-23 16:21:36 +1000  Matthew Waters <matthew@centricular.com>
+
+	* docs/meson.build:
+	  meson: Don't generate doc cache when no plugins are enabled
+	  Fixes gst-build with -Dauto-features=disabled -Drtsp_server=enabled
+
+2019-08-16 13:38:01 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* examples/test-onvif-client.c:
+	  test-onvif-client: stdin is not defined in MSVC
+
+2019-08-12 18:03:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: add missing Since tag
+
+2019-08-08 15:52:53 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/test-onvif-client.c:
+	  test-onvif-client: STDIN_FILENO is not portable
+	  If not defined, define it to _fileno(stdin) on Windows, 0
+	  everywhere else
+
+2019-08-07 21:04:33 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/test-onvif-server.c:
+	  test-onvif-server: downgrade logging
+
+2019-07-27 05:14:49 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/meson.build:
+	* examples/test-onvif-client.c:
+	* examples/test-onvif-server.c:
+	  examples: add ONVIF client / server example
+
+2019-07-27 05:14:28 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-client: define all seek accuracy flags from setup_play_mode
+	  We then pass those to adjust_play_mode, which needs to operate
+	  on the "final" seek flags, as previously the code in rtsp-media
+	  was assuming that accuracy seek flags (accurate / key_unit) should
+	  not be set if the flags passed to the seek method were already set.
+
+2019-07-22 19:32:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Try to get dynamic payloaders by name from their bin first
+	  First try "pay", then "pay_%s" (where %s == pad name). And only then
+	  fall back to the code that simply takes the first payloader that is
+	  found.
+	  The current code usually works (but is racy) because it will always take
+	  the payloader that was last added (due to g_list_prepend() when adding
+	  elements) in pad-added and that's usually the correct one. But if a new
+	  payloader is added between pad-added and us trying to get it, we would
+	  get the wrong payloader.
+
+2019-07-17 15:51:08 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tests/check/gst/client.c:
+	  client test: expect any port in transport
+	  setup_multicast_client sets a 5000-5010 range for the client
+	  ports, it is incorrect to expect the transport to always use
+	  5000-5001
+	  Fixes #73
+
+2019-07-15 17:06:42 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tests/check/gst/onvif.c:
+	  onvif tests: use g_cond_wait() correctly
+	  g_cond_wait() has to be called in a loop until required conditions
+	  are met
+	  Fixes #71
+
+2019-06-28 12:28:41 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Not wait on receiver streams when pre-rolling
+	  Without this patch there are problem pre-rolling when using audio back
+	  channel.
+	  Without this patch a probe will be created for all streams including
+	  the stream for audio backchannel. To pre-roll all this pads have to
+	  receive data. Since the stream for audio backchannel is a receiver this
+	  will never happen.
+	  The solution is to never create any probes for streams that are for
+	  incomming data and instead set them as blocking already from beginning.
+
+2019-06-25 13:19:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  onvif-media: fix "void function returning a value" compiler warning
+
+2019-06-12 22:19:27 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: make sure streams are blocked when sending seek
+	  The recent ONVIF work exposed a race condition when dealing with
+	  multiple streams: one of the sinks may preroll before other streams
+	  have started flushing. This led to the pipeline posting async-done
+	  prematurely, when some streams were actually still in the middle
+	  of performing a flushing seek. The newly-added code looks up a
+	  sticky segment event on the first stream in order to respond to
+	  the PLAY request with accurate Scale and Speed headers. In the
+	  failure condition, the first stream was flushing, and thus had
+	  no sticky segment event, leading to the PLAY request failing,
+	  and in turn the test.
+
+2019-06-07 10:51:19 +0200  Michael Bunk <bunk@iat.uni-leipzig.de>
+
+	* docs/README:
+	* gst/rtsp-server/rtsp-media-factory-uri.h:
+	  Fix typos
+
+2019-04-05 00:48:07 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-onvif-client.c:
+	* gst/rtsp-server/rtsp-onvif-client.h:
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/media.c:
+	* tests/check/gst/onvif.c:
+	* tests/check/meson.build:
+	  onvif: Implement and test the Streaming Specification
+	  https://www.onvif.org/specs/stream/ONVIF-Streaming-Spec.pdf
+
+2018-11-05 15:34:20 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: add gst_rtsp_client_get_stream_transport()
+	  This will be used in the onvif tests in order to validate the
+	  data transmitted over TCP: for streaming to continue after a
+	  data message has been provided to client->send_func, the client
+	  is responsible for marking the message as sent on the relevant
+	  stream transport.
+
+2018-11-07 00:33:01 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Scale implies TRICK_MODE
+
+2018-11-07 00:32:29 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: compare booleans, not pointers to them
+
+2018-11-13 21:28:45 +0100  Nikita Bobkov <NikitaDBobkov@gmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/media.c:
+	  Reverse playback support
+	  GStreamer plays segment from stop to start when doing reverse playback.
+	  RTSP implies that media should be played from start of Range header to
+	  its stop. Hence we swap start and stop times before passing them to
+	  gst_element_seek.
+	  Also make gst_rtsp_stream_query_stop always return value that can be
+	  used as stop time of Range header.
+
+2018-10-12 08:53:04 +0200  Branko Subasic <branko@subasic.net>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* tests/check/gst/client.c:
+	  rtsp-client: add support for Scale and Speed header
+	  Add support for the RTSP Scale and Speed headers by setting the rate in
+	  the seek to (scale*speed). We then check the resulting segment for rate
+	  and applied rate, and use them as values for the Speed and Scale headers
+	  respectively.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754575
+
+2018-10-01 18:51:49 +0200  Branko Subasic <branko@subasic.net>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: allow sub classes to adjust the seek
+	  Adds a new virtual function, adjust_play_mode(), that allows
+	  sub classes to adjust the seek done on the media. The sub class can
+	  modify the values of the the seek flags and the rate.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754575
+
+2018-09-27 19:09:01 +0200  Branko Subasic <branko@subasic.net>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/media.c:
+	  rtsp-media: allow specifying rate when seeking
+	  Add new function gst_rtsp_media_seek_full_with_rate() which allows the
+	  caller to specify the rate for the seek. Also added functions in
+	  rtsp-stream and rtsp-media for retreiving current rate and applied rate.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754575
+
+2019-06-02 21:39:33 +0200  Niels De Graef <niels.degraef@barco.com>
+
+	* configure.ac:
+	* meson.build:
+	  meson: Bump minimal GLib version to 2.44
+	  This means we can use some newer features and get rid of some
+	  boilerplate code using the G_DECLARE_* macros.
+	  As discussed on IRC, 2.44 is old enough by now to start depending on it.
+
+2019-05-31 18:53:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/.gitignore:
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* docs/libs/gst-rtsp-server.types:
+	  docs: remove obsolete gtk-doc related files
+
+2019-05-29 23:20:09 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  doc: remove xml from comments
+
+2019-05-16 09:23:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* docs/meson.build:
+	  docs: Stop building the doc cache by default
+	  And update the cache
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-docs/issues/36
+
+2019-05-13 22:59:57 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins documentation cache
+
+2019-04-23 12:30:02 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* gst/rtsp-server/rtsp-context.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  doc: Fix some docstrings
+
+2018-10-22 11:29:24 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* .gitignore:
+	* Makefile.am:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/gst_plugins_cache.json:
+	* docs/index.md:
+	* docs/meson.build:
+	* docs/plugin-index.md:
+	* docs/plugin-sitemap.txt:
+	* docs/sitemap.md:
+	* docs/sitemap.txt:
+	* docs/version.entities.in:
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-sink/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  docs: Port to hotdoc
+
+2019-04-23 15:09:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-server: Fix various Since markers
+
+2019-04-23 15:01:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Add various Since: 1.14 markers
+
+2019-04-23 14:38:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Add various missing Since: 1.16 markers
+
+2019-04-15 20:54:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Set async-handling=false for the internal bins
+	  Without this we can easily run into a race condition with async state changes:
+	  - the pipeline is doing an async state change
+	  - we set the internal bins to PLAYING but that's ignored because an
+	  async state change is currently pending
+	  - the async state change finishes but does not change the state of the
+	  internal bins because of locked_state==TRUE
+	  - the internal bins stay in PAUSED forever
+
+2019-04-15 20:51:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Use write_messages() API to send buffer lists in one go
+	  And to write messages with multiple memories also via writev().
+
+2019-03-27 16:21:03 +0100  Kristofer Bjorkstrom <kristofb@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-server-object.h:
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-client: Handle Content-Length limitation
+	  Add functionality to limit the Content-Length.
+	  API addition, Enhancement.
+	  Define an appropriate request size limit and reject requests
+	  exceeding the limit with response status 413 Request Entity Too Large
+	  Related to !182
+
+2019-04-19 10:40:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.16.0 ===
 
 2019-04-19 00:34:54 +0100  Tim-Philipp Müller <tim@centricular.com>
