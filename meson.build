@@ -418,7 +418,6 @@ if find_program('xgettext', required : get_option('nls')).found()
   subdir('po')
 endif
 
-cdata.set10('ARCH_X86_64', host_cpu == 'x86_64')
 configure_file(output : 'config.h', configuration : cdata)
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
