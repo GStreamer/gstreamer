@@ -32,6 +32,7 @@
 #include "gstnvdec.h"
 #include "gstnvenc.h"
 #include "gstnvh264dec.h"
+#include "gstnvh265dec.h"
 #include "gstnvdecoder.h"
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
@@ -54,6 +55,7 @@ plugin_init (GstPlugin * plugin)
   guint api_minor_ver = 1;
   const gchar *env;
   gboolean use_h264_sl_dec = FALSE;
+  gboolean use_h265_sl_dec = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
@@ -103,9 +105,10 @@ plugin_init (GstPlugin * plugin)
       if (g_ascii_strcasecmp (*iter, "h264") == 0) {
         GST_INFO ("Found %s in GST_USE_NV_STATELESS_CODEC environment", *iter);
         use_h264_sl_dec = TRUE;
-        break;
+      } else if (g_ascii_strcasecmp (*iter, "h265") == 0) {
+        GST_INFO ("Found %s in GST_USE_NV_STATELESS_CODEC environment", *iter);
+        use_h265_sl_dec = TRUE;
       }
-
     }
 
     g_strfreev (split);
@@ -147,16 +150,31 @@ plugin_init (GstPlugin * plugin)
               "src template %" GST_PTR_FORMAT, codec_name,
               sink_template, src_template);
 
-          if (codec == cudaVideoCodec_H264) {
-            gst_nv_h264_dec_register (plugin,
-                i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
-            if (use_h264_sl_dec) {
-              GST_INFO ("Skip register cuvid parser based nvh264dec");
-              register_cuviddec = FALSE;
-
+          switch (codec) {
+            case cudaVideoCodec_H264:
               gst_nv_h264_dec_register (plugin,
-                  i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
-            }
+                  i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
+              if (use_h264_sl_dec) {
+                GST_INFO ("Skip register cuvid parser based nvh264dec");
+                register_cuviddec = FALSE;
+
+                gst_nv_h264_dec_register (plugin,
+                    i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
+              }
+              break;
+            case cudaVideoCodec_HEVC:
+              gst_nv_h265_dec_register (plugin,
+                  i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
+              if (use_h265_sl_dec) {
+                GST_INFO ("Skip register cuvid parser based nvh264dec");
+                register_cuviddec = FALSE;
+
+                gst_nv_h265_dec_register (plugin,
+                    i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
+              }
+              break;
+            default:
+              break;
           }
 
           if (register_cuviddec) {

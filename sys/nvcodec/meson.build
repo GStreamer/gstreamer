@@ -11,6 +11,7 @@ nvcodec_sources = [
   'gstcudautils.c',
   'gstnvdecoder.c',
   'gstnvh264dec.c',
+  'gstnvh265dec.c',
 ]
 
 if get_option('nvcodec').disabled()
