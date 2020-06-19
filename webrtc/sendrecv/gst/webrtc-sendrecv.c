@@ -525,7 +525,7 @@ on_offer_set (GstPromise * promise, gpointer user_data)
 }
 
 static void
-on_offer_received (GstSDPMessage *sdp)
+on_offer_received (GstSDPMessage * sdp)
 {
   GstWebRTCSessionDescription *offer = NULL;
   GstPromise *promise;
@@ -536,8 +536,7 @@ on_offer_received (GstSDPMessage *sdp)
   /* Set remote description on our pipeline */
   {
     promise = gst_promise_new_with_change_func (on_offer_set, NULL, NULL);
-    g_signal_emit_by_name (webrtc1, "set-remote-description", offer,
-        promise);
+    g_signal_emit_by_name (webrtc1, "set-remote-description", offer, promise);
   }
   gst_webrtc_session_description_free (offer);
 }

@@ -183,8 +183,8 @@ const gchar *html_source = " \n \
 ";
 
 static void
-handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
-    const char * sink_name)
+handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
+    const char *sink_name)
 {
   GstPad *qpad;
   GstElement *q, *conv, *resample, *sink;
@@ -250,7 +250,8 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
 }
 
 static void
-on_incoming_stream (GstElement * webrtc, GstPad * pad, ReceiverEntry *receiver_entry)
+on_incoming_stream (GstElement * webrtc, GstPad * pad,
+    ReceiverEntry * receiver_entry)
 {
   GstElement *decodebin;
   GstPad *sinkpad;
@@ -287,10 +288,11 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       G_CALLBACK (soup_websocket_message_cb), (gpointer) receiver_entry);
 
   error = NULL;
-  receiver_entry->pipeline = gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://" STUN_SERVER " "
+  receiver_entry->pipeline =
+      gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://"
+      STUN_SERVER " "
       "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! "
-      "queue ! " RTP_CAPS_OPUS "97 ! webrtcbin. "
-      , &error);
+      "queue ! " RTP_CAPS_OPUS "97 ! webrtcbin. ", &error);
   if (error != NULL) {
     g_error ("Could not create WebRTC pipeline: %s\n", error->message);
     g_error_free (error);
@@ -302,18 +304,24 @@ create_receiver_entry (SoupWebsocketConnection * connection)
   g_assert (receiver_entry->webrtcbin != NULL);
 
   /* Incoming streams will be exposed via this signal */
-  g_signal_connect (receiver_entry->webrtcbin, "pad-added", G_CALLBACK (on_incoming_stream),
-      receiver_entry);
+  g_signal_connect (receiver_entry->webrtcbin, "pad-added",
+      G_CALLBACK (on_incoming_stream), receiver_entry);
 
 #if 0
-  GstElement *rtpbin = gst_bin_get_by_name (GST_BIN (receiver_entry->webrtcbin), "rtpbin");
+  GstElement *rtpbin =
+      gst_bin_get_by_name (GST_BIN (receiver_entry->webrtcbin), "rtpbin");
   g_object_set (rtpbin, "latency", 40, NULL);
   gst_object_unref (rtpbin);
 #endif
 
   // Create a 2nd transceiver for the receive only video stream
-  video_caps = gst_caps_from_string ("application/x-rtp,media=video,encoding-name=H264,payload=" RTP_PAYLOAD_TYPE ",clock-rate=90000,packetization-mode=(string)1, profile-level-id=(string)42c016");
-  g_signal_emit_by_name (receiver_entry->webrtcbin, "add-transceiver", GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY, video_caps, NULL, &trans);
+  video_caps =
+      gst_caps_from_string
+      ("application/x-rtp,media=video,encoding-name=H264,payload="
+      RTP_PAYLOAD_TYPE
+      ",clock-rate=90000,packetization-mode=(string)1, profile-level-id=(string)42c016");
+  g_signal_emit_by_name (receiver_entry->webrtcbin, "add-transceiver",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY, video_caps, NULL, &trans);
   gst_caps_unref (video_caps);
   gst_object_unref (trans);
 

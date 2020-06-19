@@ -43,24 +43,25 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GET_CUSTOM_DATA(env, thiz, fieldID) (WebRTC *)(gintptr)(*env)->GetLongField (env, thiz, fieldID)
 #define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(gintptr)data)
 
-enum AppState {
-    APP_STATE_UNKNOWN = 0,
-    APP_STATE_ERROR = 1, /* generic error */
-    SERVER_CONNECTING = 1000,
-    SERVER_CONNECTION_ERROR,
-    SERVER_CONNECTED, /* Ready to register */
-    SERVER_REGISTERING = 2000,
-    SERVER_REGISTRATION_ERROR,
-    SERVER_REGISTERED, /* Ready to call a peer */
-    SERVER_CLOSED, /* server connection closed by us or the server */
-    PEER_CONNECTING = 3000,
-    PEER_CONNECTION_ERROR,
-    PEER_CONNECTED,
-    PEER_CALL_NEGOTIATING = 4000,
-    PEER_CALL_STARTED,
-    PEER_CALL_STOPPING,
-    PEER_CALL_STOPPED,
-    PEER_CALL_ERROR,
+enum AppState
+{
+  APP_STATE_UNKNOWN = 0,
+  APP_STATE_ERROR = 1,          /* generic error */
+  SERVER_CONNECTING = 1000,
+  SERVER_CONNECTION_ERROR,
+  SERVER_CONNECTED,             /* Ready to register */
+  SERVER_REGISTERING = 2000,
+  SERVER_REGISTRATION_ERROR,
+  SERVER_REGISTERED,            /* Ready to call a peer */
+  SERVER_CLOSED,                /* server connection closed by us or the server */
+  PEER_CONNECTING = 3000,
+  PEER_CONNECTION_ERROR,
+  PEER_CONNECTED,
+  PEER_CALL_NEGOTIATING = 4000,
+  PEER_CALL_STARTED,
+  PEER_CALL_STOPPING,
+  PEER_CALL_STOPPED,
+  PEER_CALL_ERROR,
 };
 
 typedef struct _WebRTC
@@ -115,7 +116,7 @@ cleanup_and_quit_loop (WebRTC * webrtc, const gchar * msg, enum AppState state)
   return G_SOURCE_REMOVE;
 }
 
-static gchar*
+static gchar *
 get_string_from_json_object (JsonObject * object)
 {
   JsonNode *root;
@@ -135,8 +136,8 @@ get_string_from_json_object (JsonObject * object)
 }
 
 static GstElement *
-handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
-                     const char * sink_name)
+handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
+    const char *sink_name)
 {
   GstPad *qpad;
   GstElement *q, *conv, *sink;
@@ -176,14 +177,14 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
 
 static void
 on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
-                              WebRTC * webrtc)
+    WebRTC * webrtc)
 {
   GstCaps *caps;
   const gchar *name;
 
   if (!gst_pad_has_current_caps (pad)) {
     g_printerr ("Pad '%s' has no caps, can't do anything, ignoring\n",
-                GST_PAD_NAME (pad));
+        GST_PAD_NAME (pad));
     return;
   }
 
@@ -191,11 +192,13 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
   name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
 
   if (g_str_has_prefix (name, "video")) {
-    GstElement *sink = handle_media_stream (pad, webrtc->pipe, "videoconvert", "glimagesink");
+    GstElement *sink =
+        handle_media_stream (pad, webrtc->pipe, "videoconvert", "glimagesink");
     if (webrtc->video_sink == NULL) {
       webrtc->video_sink = sink;
       if (webrtc->native_window)
-        gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink), (gpointer) webrtc->native_window);
+        gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink),
+            (gpointer) webrtc->native_window);
     }
   } else if (g_str_has_prefix (name, "audio")) {
     handle_media_stream (pad, webrtc->pipe, "audioconvert", "autoaudiosink");
@@ -216,21 +219,22 @@ on_incoming_stream (GstElement * webrtcbin, GstPad * pad, WebRTC * webrtc)
 
   decodebin = gst_element_factory_make ("decodebin", NULL);
   g_signal_connect (decodebin, "pad-added",
-                    G_CALLBACK (on_incoming_decodebin_stream), webrtc);
+      G_CALLBACK (on_incoming_decodebin_stream), webrtc);
   gst_bin_add (GST_BIN (webrtc->pipe), decodebin);
   gst_element_sync_state_with_parent (decodebin);
   gst_element_link (webrtcbin, decodebin);
 }
 
 static void
-send_ice_candidate_message (GstElement * webrtcbin G_GNUC_UNUSED, guint mlineindex,
-                            gchar * candidate, WebRTC * webrtc)
+send_ice_candidate_message (GstElement * webrtcbin G_GNUC_UNUSED,
+    guint mlineindex, gchar * candidate, WebRTC * webrtc)
 {
   gchar *text;
   JsonObject *ice, *msg;
 
   if (webrtc->app_state < PEER_CALL_NEGOTIATING) {
-    cleanup_and_quit_loop (webrtc, "Can't send ICE, not in call", APP_STATE_ERROR);
+    cleanup_and_quit_loop (webrtc, "Can't send ICE, not in call",
+        APP_STATE_ERROR);
     return;
   }
 
@@ -253,7 +257,8 @@ send_sdp_offer (WebRTC * webrtc, GstWebRTCSessionDescription * offer)
   JsonObject *msg, *sdp;
 
   if (webrtc->app_state < PEER_CALL_NEGOTIATING) {
-    cleanup_and_quit_loop (webrtc, "Can't send offer, not in call", APP_STATE_ERROR);
+    cleanup_and_quit_loop (webrtc, "Can't send offer, not in call",
+        APP_STATE_ERROR);
     return;
   }
 
@@ -283,14 +288,15 @@ on_offer_created (GstPromise * promise, WebRTC * webrtc)
 
   g_assert (webrtc->app_state == PEER_CALL_NEGOTIATING);
 
-  g_assert (gst_promise_wait(promise) == GST_PROMISE_RESULT_REPLIED);
+  g_assert (gst_promise_wait (promise) == GST_PROMISE_RESULT_REPLIED);
   reply = gst_promise_get_reply (promise);
   gst_structure_get (reply, "offer",
-                     GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
+      GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
   gst_promise_unref (promise);
 
   promise = gst_promise_new ();
-  g_signal_emit_by_name (webrtc->webrtcbin, "set-local-description", offer, promise);
+  g_signal_emit_by_name (webrtc->webrtcbin, "set-local-description", offer,
+      promise);
   gst_promise_interrupt (promise);
   gst_promise_unref (promise);
 
@@ -333,13 +339,12 @@ start_pipeline (WebRTC * webrtc)
   GstPad *pad;
 
   webrtc->pipe =
-          gst_parse_launch ("webrtcbin name=sendrecv "
-                            "ahcsrc device-facing=front ! video/x-raw,width=[320,1280] ! queue max-size-buffers=1 ! videoconvert ! "
-                            "vp8enc keyframe-max-dist=30 deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit mtu=1300 ! "
-                            "queue max-size-time=300000000 ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
-                            "openslessrc ! queue ! audioconvert ! audioresample ! audiorate ! queue ! opusenc ! rtpopuspay ! "
-                            "queue ! " RTP_CAPS_OPUS " ! sendrecv.sink_1 ",
-                            &error);
+      gst_parse_launch ("webrtcbin name=sendrecv "
+      "ahcsrc device-facing=front ! video/x-raw,width=[320,1280] ! queue max-size-buffers=1 ! videoconvert ! "
+      "vp8enc keyframe-max-dist=30 deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit mtu=1300 ! "
+      "queue max-size-time=300000000 ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
+      "openslessrc ! queue ! audioconvert ! audioresample ! audiorate ! queue ! opusenc ! rtpopuspay ! "
+      "queue ! " RTP_CAPS_OPUS " ! sendrecv.sink_1 ", &error);
 
   if (error) {
     g_printerr ("Failed to parse launch: %s\n", error->message);
@@ -354,15 +359,15 @@ start_pipeline (WebRTC * webrtc)
   /* This is the gstwebrtc entry point where we create the offer and so on. It
    * will be called when the pipeline goes to PLAYING. */
   g_signal_connect (webrtc->webrtcbin, "on-negotiation-needed",
-                    G_CALLBACK (on_negotiation_needed), webrtc);
+      G_CALLBACK (on_negotiation_needed), webrtc);
   /* We need to transmit this ICE candidate to the browser via the websockets
    * signalling server. Incoming ice candidates from the browser need to be
    * added by us too, see on_server_message() */
   g_signal_connect (webrtc->webrtcbin, "on-ice-candidate",
-                    G_CALLBACK (send_ice_candidate_message), webrtc);
+      G_CALLBACK (send_ice_candidate_message), webrtc);
   /* Incoming streams will be exposed via this signal */
-  g_signal_connect (webrtc->webrtcbin, "pad-added", G_CALLBACK (on_incoming_stream),
-                    webrtc);
+  g_signal_connect (webrtc->webrtcbin, "pad-added",
+      G_CALLBACK (on_incoming_stream), webrtc);
   /* Lifetime is the same as the pipeline itself */
   gst_object_unref (webrtc->webrtcbin);
 
@@ -425,8 +430,7 @@ register_with_server (WebRTC * webrtc)
 }
 
 static void
-on_server_closed (SoupWebsocketConnection * conn G_GNUC_UNUSED,
-                  WebRTC * webrtc)
+on_server_closed (SoupWebsocketConnection * conn G_GNUC_UNUSED, WebRTC * webrtc)
 {
   webrtc->app_state = SERVER_CLOSED;
   cleanup_and_quit_loop (webrtc, "Server connection closed", 0);
@@ -435,7 +439,7 @@ on_server_closed (SoupWebsocketConnection * conn G_GNUC_UNUSED,
 /* One mega message handler for our asynchronous calling mechanism */
 static void
 on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
-                   GBytes * message, WebRTC * webrtc)
+    GBytes * message, WebRTC * webrtc)
 {
   gsize size;
   gchar *text, *data;
@@ -443,14 +447,14 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
   switch (type) {
     case SOUP_WEBSOCKET_DATA_BINARY:
       g_printerr ("Received unknown binary message, ignoring\n");
-          g_bytes_unref (message);
-          return;
+      g_bytes_unref (message);
+      return;
     case SOUP_WEBSOCKET_DATA_TEXT:
       data = g_bytes_unref_to_data (message, &size);
-          /* Convert to NULL-terminated string */
-          text = g_strndup (data, size);
-          g_free (data);
-          break;
+      /* Convert to NULL-terminated string */
+      text = g_strndup (data, size);
+      g_free (data);
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -458,22 +462,23 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
   /* Server has accepted our registration, we are ready to send commands */
   if (g_strcmp0 (text, "HELLO") == 0) {
     if (webrtc->app_state != SERVER_REGISTERING) {
-      cleanup_and_quit_loop (webrtc, "ERROR: Received HELLO when not registering",
-                             APP_STATE_ERROR);
+      cleanup_and_quit_loop (webrtc,
+          "ERROR: Received HELLO when not registering", APP_STATE_ERROR);
       goto out;
     }
     webrtc->app_state = SERVER_REGISTERED;
     g_print ("Registered with server\n");
     /* Ask signalling server to connect us with a specific peer */
     if (!setup_call (webrtc)) {
-      cleanup_and_quit_loop (webrtc, "ERROR: Failed to setup call", PEER_CALL_ERROR);
+      cleanup_and_quit_loop (webrtc, "ERROR: Failed to setup call",
+          PEER_CALL_ERROR);
       goto out;
     }
     /* Call has been setup by the server, now we can start negotiation */
   } else if (g_strcmp0 (text, "SESSION_OK") == 0) {
     if (webrtc->app_state != PEER_CONNECTING) {
-      cleanup_and_quit_loop (webrtc, "ERROR: Received SESSION_OK when not calling",
-                             PEER_CONNECTION_ERROR);
+      cleanup_and_quit_loop (webrtc,
+          "ERROR: Received SESSION_OK when not calling", PEER_CONNECTION_ERROR);
       goto out;
     }
 
@@ -481,23 +486,23 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     /* Start negotiation (exchange SDP and ICE candidates) */
     if (!start_pipeline (webrtc))
       cleanup_and_quit_loop (webrtc, "ERROR: failed to start pipeline",
-                             PEER_CALL_ERROR);
+          PEER_CALL_ERROR);
     /* Handle errors */
   } else if (g_str_has_prefix (text, "ERROR")) {
     switch (webrtc->app_state) {
       case SERVER_CONNECTING:
         webrtc->app_state = SERVER_CONNECTION_ERROR;
-            break;
+        break;
       case SERVER_REGISTERING:
         webrtc->app_state = SERVER_REGISTRATION_ERROR;
-            break;
+        break;
       case PEER_CONNECTING:
         webrtc->app_state = PEER_CONNECTION_ERROR;
-            break;
+        break;
       case PEER_CONNECTED:
       case PEER_CALL_NEGOTIATING:
         webrtc->app_state = PEER_CALL_ERROR;
-            break;
+        break;
       default:
         webrtc->app_state = APP_STATE_ERROR;
     }
@@ -541,7 +546,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
        * See tests/examples/webrtcbidirectional.c in gst-plugins-bad for how to
        * handle offers from peers and reply with answers using webrtcbin. */
       g_assert_cmpstr (json_object_get_string_member (object, "type"), ==,
-                       "answer");
+          "answer");
 
       text = json_object_get_string_member (object, "sdp");
 
@@ -554,14 +559,14 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       g_assert (ret == GST_SDP_OK);
 
       answer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER,
-                                                   sdp);
+          sdp);
       g_assert (answer);
 
       /* Set remote description on our pipeline */
       {
         GstPromise *promise = gst_promise_new ();
-        g_signal_emit_by_name (webrtc->webrtcbin, "set-remote-description", answer,
-                               promise);
+        g_signal_emit_by_name (webrtc->webrtcbin, "set-remote-description",
+            answer, promise);
         gst_promise_interrupt (promise);
         gst_promise_unref (promise);
       }
@@ -577,25 +582,25 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       sdpmlineindex = json_object_get_int_member (ice, "sdpMLineIndex");
 
       /* Add ice candidate sent by remote peer */
-      g_signal_emit_by_name (webrtc->webrtcbin, "add-ice-candidate", sdpmlineindex,
-                             candidate);
+      g_signal_emit_by_name (webrtc->webrtcbin, "add-ice-candidate",
+          sdpmlineindex, candidate);
     } else {
       g_printerr ("Ignoring unknown JSON message:\n%s\n", text);
     }
     g_object_unref (parser);
   }
 
-    out:
+out:
   g_free (text);
 }
 
 static void
-on_server_connected (SoupSession * session, GAsyncResult * res,
-                     WebRTC * webrtc)
+on_server_connected (SoupSession * session, GAsyncResult * res, WebRTC * webrtc)
 {
   GError *error = NULL;
 
-  webrtc->ws_conn = soup_session_websocket_connect_finish (session, res, &error);
+  webrtc->ws_conn =
+      soup_session_websocket_connect_finish (session, res, &error);
   if (error) {
     cleanup_and_quit_loop (webrtc, error->message, SERVER_CONNECTION_ERROR);
     g_error_free (error);
@@ -607,8 +612,10 @@ on_server_connected (SoupSession * session, GAsyncResult * res,
   webrtc->app_state = SERVER_CONNECTED;
   g_print ("Connected to signalling server\n");
 
-  g_signal_connect (webrtc->ws_conn, "closed", G_CALLBACK (on_server_closed), webrtc);
-  g_signal_connect (webrtc->ws_conn, "message", G_CALLBACK (on_server_message), webrtc);
+  g_signal_connect (webrtc->ws_conn, "closed", G_CALLBACK (on_server_closed),
+      webrtc);
+  g_signal_connect (webrtc->ws_conn, "message", G_CALLBACK (on_server_message),
+      webrtc);
 
   /* Register with the server so it knows about us and can accept commands */
   register_with_server (webrtc);
@@ -623,16 +630,16 @@ connect_to_websocket_server_async (WebRTC * webrtc)
   SoupLogger *logger;
   SoupMessage *message;
   SoupSession *session;
-  const char *https_aliases[] = {"wss", NULL};
+  const char *https_aliases[] = { "wss", NULL };
   const gchar *ca_certs;
 
-  ca_certs = g_getenv("CA_CERTIFICATES");
+  ca_certs = g_getenv ("CA_CERTIFICATES");
   g_assert (ca_certs != NULL);
   g_print ("ca-certificates %s", ca_certs);
   session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, FALSE,
-          //                                 SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
-                                           SOUP_SESSION_SSL_CA_FILE, ca_certs,
-                                           SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
+      //                                 SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
+      SOUP_SESSION_SSL_CA_FILE, ca_certs,
+      SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
 
   logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
   soup_session_add_feature (session, SOUP_SESSION_FEATURE (logger));
@@ -644,7 +651,7 @@ connect_to_websocket_server_async (WebRTC * webrtc)
 
   /* Once connected, we will register */
   soup_session_websocket_connect_async (session, message, NULL, NULL, NULL,
-                                        (GAsyncReadyCallback) on_server_connected, webrtc);
+      (GAsyncReadyCallback) on_server_connected, webrtc);
   webrtc->app_state = SERVER_CONNECTING;
 
   return G_SOURCE_REMOVE;
@@ -708,7 +715,7 @@ native_end_call (JNIEnv * env, jobject thiz)
   if (webrtc->loop) {
     GThread *thread = webrtc->thread;
 
-    GST_INFO("Ending current call");
+    GST_INFO ("Ending current call");
     cleanup_and_quit_loop (webrtc, NULL, 0);
     webrtc->thread = NULL;
     g_mutex_unlock (&webrtc->lock);
@@ -729,14 +736,15 @@ static gpointer
 _call_thread (WebRTC * webrtc)
 {
   GMainContext *context = NULL;
-  JNIEnv *env = attach_current_thread();
+  JNIEnv *env = attach_current_thread ();
 
   g_mutex_lock (&webrtc->lock);
 
   context = g_main_context_new ();
   webrtc->loop = g_main_loop_new (context, FALSE);
   g_main_context_invoke (context, (GSourceFunc) _unlock_mutex, &webrtc->lock);
-  g_main_context_invoke (context, (GSourceFunc) connect_to_websocket_server_async, webrtc);
+  g_main_context_invoke (context,
+      (GSourceFunc) connect_to_websocket_server_async, webrtc);
   g_main_context_push_thread_default (context);
   g_cond_broadcast (&webrtc->cond);
   g_main_loop_run (webrtc->loop);
@@ -748,7 +756,7 @@ _call_thread (WebRTC * webrtc)
 }
 
 static void
-native_call_other_party(JNIEnv * env, jobject thiz)
+native_call_other_party (JNIEnv * env, jobject thiz)
 {
   WebRTC *webrtc = GET_CUSTOM_DATA (env, thiz, native_webrtc_field_id);
 
@@ -758,9 +766,9 @@ native_call_other_party(JNIEnv * env, jobject thiz)
   if (webrtc->thread)
     native_end_call (env, thiz);
 
-  GST_INFO("calling other party");
+  GST_INFO ("calling other party");
 
-  webrtc->thread = g_thread_new("webrtc", (GThreadFunc) _call_thread, webrtc);
+  webrtc->thread = g_thread_new ("webrtc", (GThreadFunc) _call_thread, webrtc);
   g_mutex_lock (&webrtc->lock);
   while (!webrtc->loop)
     g_cond_wait (&webrtc->cond, &webrtc->lock);
@@ -814,14 +822,13 @@ native_class_init (JNIEnv * env, jclass klass)
     __android_log_print (ANDROID_LOG_ERROR, "GstPlayer", "%s", message);
     (*env)->ThrowNew (env, exception_class, message);
   }
-
   //gst_debug_set_threshold_from_string ("gl*:7", FALSE);
 }
 
 static void
 native_set_surface (JNIEnv * env, jobject thiz, jobject surface)
 {
-  WebRTC *webrtc= GET_CUSTOM_DATA (env, thiz, native_webrtc_field_id);
+  WebRTC *webrtc = GET_CUSTOM_DATA (env, thiz, native_webrtc_field_id);
   ANativeWindow *new_native_window;
 
   if (!webrtc)
@@ -829,7 +836,7 @@ native_set_surface (JNIEnv * env, jobject thiz, jobject surface)
 
   new_native_window = surface ? ANativeWindow_fromSurface (env, surface) : NULL;
   GST_DEBUG ("Received surface %p (native window %p)", surface,
-             new_native_window);
+      new_native_window);
 
   if (webrtc->native_window) {
     ANativeWindow_release (webrtc->native_window);
@@ -837,36 +844,39 @@ native_set_surface (JNIEnv * env, jobject thiz, jobject surface)
 
   webrtc->native_window = new_native_window;
   if (webrtc->video_sink)
-    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (webrtc->video_sink), (guintptr) new_native_window);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (webrtc->video_sink),
+        (guintptr) new_native_window);
 }
 
 static void
-native_set_signalling_server (JNIEnv * env, jobject thiz, jstring server) {
-  WebRTC *webrtc= GET_CUSTOM_DATA (env, thiz, native_webrtc_field_id);
-  const gchar *s;
-
-  if (!webrtc)
-    return;
-
-  s = (*env)->GetStringUTFChars(env, server, NULL);
-  if (webrtc->signalling_server)
-    g_free (webrtc->signalling_server);
-  webrtc->signalling_server = g_strdup (s);
-  (*env)->ReleaseStringUTFChars(env, server, s);
-}
-
-static void
-native_set_call_id(JNIEnv * env, jobject thiz, jstring peer_id) {
+native_set_signalling_server (JNIEnv * env, jobject thiz, jstring server)
+{
   WebRTC *webrtc = GET_CUSTOM_DATA (env, thiz, native_webrtc_field_id);
   const gchar *s;
 
   if (!webrtc)
     return;
 
-  s = (*env)->GetStringUTFChars(env, peer_id, NULL);
+  s = (*env)->GetStringUTFChars (env, server, NULL);
+  if (webrtc->signalling_server)
+    g_free (webrtc->signalling_server);
+  webrtc->signalling_server = g_strdup (s);
+  (*env)->ReleaseStringUTFChars (env, server, s);
+}
+
+static void
+native_set_call_id (JNIEnv * env, jobject thiz, jstring peer_id)
+{
+  WebRTC *webrtc = GET_CUSTOM_DATA (env, thiz, native_webrtc_field_id);
+  const gchar *s;
+
+  if (!webrtc)
+    return;
+
+  s = (*env)->GetStringUTFChars (env, peer_id, NULL);
   g_free (webrtc->peer_id);
   webrtc->peer_id = g_strdup (s);
-  (*env)->ReleaseStringUTFChars(env, peer_id, s);
+  (*env)->ReleaseStringUTFChars (env, peer_id, s);
 }
 
 /* List of implemented native methods */
