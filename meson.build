@@ -1,5 +1,5 @@
 project('gst-omx', 'c',
-  version : '1.17.0.1',
+  version : '1.17.1',
   meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -106,7 +106,7 @@ endforeach
 cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-omx"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE_BUGREPORT', '"http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"')
+cdata.set('PACKAGE_BUGREPORT', '"https://gitlab.freedesktop.org/gstreamer/gst-omx/issues/new"')
 cdata.set('PACKAGE_NAME', '"GStreamer OMX Plugins"')
 cdata.set('GETTEXT_PACKAGE', '"gst-omx-1.0"')
 cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))

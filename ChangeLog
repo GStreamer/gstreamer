@@ -1,3 +1,545 @@
+=== release 1.17.1 ===
+
+2020-06-19 19:27:38 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.17.1
+
+2020-06-16 01:20:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugin cache json
+	  https://gitlab.freedesktop.org/alatiera/gst-ci/-/jobs/3109574
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/68>
+
+2020-06-03 22:24:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update documentation cache
+
+2019-12-23 18:23:55 -0800  Dylan Yip <dylan.yip@xilinx.com>
+
+	* omx/gstomx.c:
+	  omx: Add latest OMX_ALG_Index's to omx_index_type_to_str
+	  Add following indexes to omx_index_type_to_str:
+	  OMX_ALG_IndexParamVideoAccessUnitDelimiter
+	  OMX_ALG_IndexParamVideoBufferingPeriodSEI
+	  OMX_ALG_IndexParamVideoPictureTimingSEI
+	  OMX_ALG_IndexParamVideoRecoveryPointSEI
+	  OMX_ALG_IndexParamVideoMasteringDisplayColourVolumeSEI
+	  OMX_ALG_IndexParamVideoContentLightLevelSEI
+	  OMX_ALG_IndexConfigVideoRegionOfInterestByValue
+	  OMX_ALG_IndexConfigVideoColorPrimaries
+
+2020-05-20 17:05:33 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* omx/gstomx.c:
+	  zynq: change API to use public 2020.01 from vcu-omx-il
+	  This new release 2020.01 fixes an API typo
+	  Change to OMX_ALG_IndexConfigVideoHighDynamicRangeSEI
+	  instead of OMX_ALG_IndexConfigVideoHighDynamicRangeSEIs
+	  among others.
+
+2017-12-27 17:18:54 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: factor out gst_omx_video_enc_allocate_out_buffers()
+	  No semantic change.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/66>
+
+2020-04-10 11:47:03 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxh265enc.c:
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: remove unsupported formats from caps template
+	  Our encoder implementation actually supports a small subset of the
+	  formats supported by the decoder. Those are the formats for which we
+	  have a copy path in gst_omx_video_enc_fill_buffer() and which are not
+	  filtered out in filter_supported_formats().
+
+2020-04-10 09:59:02 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideo.h:
+	  video: remove BGR from supported format
+	  It's not supported by either decoder or encoder and is even not listed in
+	  gst_omx_video_get_format_from_omx() so it can't work.
+
+2020-04-10 10:21:16 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: add GRAY8 support
+	  It's supported by Zynq encoder and was already in the sink caps
+	  template.
+
+2020-04-10 11:18:49 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: factor out gst_omx_video_enc_copy_plane()
+	  No semantic change, I'm going to use it to copy GRAY8 buffers which is
+	  actually a single plane 8-bits format.
+
+2020-04-10 10:58:34 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: use gst_video_meta_get_plane_height() to compute slice height
+	  This new API saves us from doing manual computation and actually work
+	  with single planar formats, such as GRAY8.
+
+2020-04-07 19:59:12 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh265enc.c:
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideoenc.c:
+	  omxh26xenc: fix coverity with frame test
+	  Coverity was complaining with:
+	  Null pointer dereferences  (REVERSE_INULL) Null-checking "frame"
+	  suggests that it may be null, but it has already been
+	  dereferenced on all paths leading to the check.
+	  The frame == NULL has been removed as 'frame' is actively used
+	  in the code above without any change of dereferencing and setting
+	  its value to NULL before the test.
+	  CID: 1461287
+
+2020-03-19 16:23:41 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  gstomxvideoenc: fix subframe output_buffer
+	  Using more than 1 subframes was failing with
+	  frame->output_buffer = NULL
+
+2020-02-06 10:21:49 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: add support of alternate interlace mode on zynq
+
+2020-02-06 10:11:13 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxh265enc.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: add support of alternate interlace mode on zynq
+	  It's only supported by the Zynq HEVC encoder for now.
+
+2020-02-06 10:12:50 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: add alternate flags to buffer_flags_map
+	  Zynq specific flags used to tag top/bottom fields in alternate mode.
+
+2020-02-06 09:57:48 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo(enc): use GST_VIDEO_INFO_FIELD_RATE_N()
+	  Does not change anything for now but will be needed when we'll support
+	  interlace-mode=alternate as the field rate will be twice the frame rate.
+	  Made the code safe from division by 0 while I was on it.
+
+2020-02-06 09:36:20 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo{enc,dec}: use GST_VIDEO_INFO_FIELD_HEIGHT()
+	  Does not change anything for now but will be needed when we'll support
+	  interlace-mode=alternate as the fields will have half the frame height.
+
+2020-02-25 10:45:47 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: don't log error when failing to load conf file with generic target
+	  The generic target is meant to only test building gst-omx. It doesn't
+	  provide any configuration file and so is not supposed to register any
+	  element.
+	  I'm not aware of any user building gst-omx with this target and
+	  providing their own conf file to actually register elements. But best to
+	  not break this use case anyway so let's just downgrade the log message.
+	  Fix GST_ERROR in the 'check fedora' CI job.
+
+2020-01-27 11:56:53 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* meson.build:
+	  meson: add glib project fallback
+	  Add a fallback from glib project to provide glib, gio and
+	  gmodule dependencies.
+
+2020-01-15 11:06:12 +0000  Stéphane Cerveau <scerveau@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: fix warning
+	  Fix warning test when OMX_BUFFERFLAG_ENDOFFRAME
+	  is not set.
+
+2018-08-28 13:03:14 -0700  Varunkumar Allagadapa <varunkum@xilinx.com>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Add look-ahead property to ZYNQ_USCALE_PLUS encoder
+	  This patch adds look-ahead property to encoder
+	  The value indicates look ahead size in frames,
+	  the number of frames processed ahead of second pass encoding.
+	  Dual pass encoding is disabled if look-ahead
+	  value is less than 2.
+
+2018-08-06 13:02:41 -0700  Varunkumar Allagadapa <varunkum@xilinx.com>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Add long-term-ref support to ZYNQ_USCALE_PLUS encoder
+	  Custom API that upstream elements can use to notify encoders about
+	  marking longterm ref. pictures or using longterm ref. pictures in
+	  encoding process.
+	  This patch adds below properties:
+	  long-term-ref: Enable/Disable dynamically marking long-term
+	  reference pictures in encoding process
+	  long-term-freq: Periodicity of long-term reference picture
+	  marking in encoding process.
+	  If a picture is marked as long-term reference picture then it remains
+	  in the DPB list for ever unless it overrides with new long-term pitcure with
+	  same index. Encoder can use this long-term picture as refence for
+	  encoding.
+	  This feature is mostly useful to avoid visual artifacts propagation in streaming use cases
+	  when packet loss happens. Instead of requesting for IDR, client can request for use long-term
+	  reference picture for encoding.
+
+2020-01-07 10:24:19 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* meson.build:
+	  meson: display OMX target when configuring
+	  I'm adding more gst-omx CI (
+	  https://gitlab.freedesktop.org/gstreamer/gst-ci/issues/20 ) having the
+	  OMX targets displayed in the logs makes things clearer.
+
+2019-08-30 10:27:32 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: remove useless double negations
+	  flush and port->flushing are both gboolean.
+
+2019-12-20 22:19:06 -0800  Julien Isorce <jisorce@oblong.com>
+
+	* meson.build:
+	  meson: fix tizonia build
+	  meson.build was both using path to gst-omx/openmax/OMX*
+	  headers and path to OMX headers provided by tizilheaders.pc
+	  so this patch makes sure we only use the later.
+	  Also bump tizonia minimum version to 0.19.0 which
+	  is the latest release.
+
+2019-05-16 10:50:18 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxh265enc.c:
+	* omx/gstomxh265enc.h:
+	  omxh265enc: handle CODECCONFIG buffers
+	  Exact same code as omxh264enc.
+
+2019-05-16 10:38:49 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: send codec data downstream
+	  We are operating in stream-format=byte-stream so the codec data buffer
+	  is meant to be part of the buffer flow.
+	  The base class will push it when a key frame is requested (as we stored
+	  it with gst_video_encoder_set_headers()) but we still have to push it
+	  right away as part of the normal buffer flow.
+	  Also set the HEADER flag on this buffer.
+
+2019-05-16 10:38:49 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: no need to check if codeconfig has startcode
+	  We currently only support stream-format=byte-stream so there is no point
+	  re-checking for it when handling CODECCONFIG buffer.
+
+2018-09-04 20:12:17 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh265enc.c:
+	  omxh26xenc: Negotiate subframe mode
+	  We now negotiate subframe mode through the caps. To enabled subframe
+	  mode, the caps need to specify alignment=nal:
+	  ... ! omxh264enc ! video/x-h264,alignment=nal ! ...
+	  ... ! omxh265enc ! video/x-h265,alignment=nal ! ...
+
+2018-08-31 12:24:34 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: use subframe base class API
+	  Use subframe base class support.
+
+2018-09-04 19:34:59 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add helper to enable/disable/read subframe mode
+
+2019-12-19 13:51:17 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  zynq: add mapping for latest custom indexes
+	  Fix warning when building using version 2019.2 of OMX headers.
+
+2019-09-12 16:29:59 -0700  Varunkumar Allagadapa <varunkumar.allagadapa@xilinx.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: update qp-mode settings
+	  Adds load-qp-absolute and load-qp-relative qp-modes
+
+2019-12-10 18:34:25 +0900  Shinya Saito <ssaito@igel.co.jp>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add stride check for input buffer extraction
+	  Stride of input buffer may be different from
+	  that of omx input port even if both sizes are the same.
+
+2019-05-15 14:04:47 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: pass padding requirements to ALLOCATION query
+	  By passing the expected video buffer layout, the upstream producer
+	  may be able to produce buffers fitting those requierements allowing
+	  gst-omx to use dynamic buffer mode rather than having to copy each input
+	  buffer.
+	  This is particularly useful with v4l2src as it can request the capture
+	  driver to produce buffers with the required paddings.
+
+2019-07-09 13:07:32 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	  omxbufferpool: use gst_video_meta_set_alignment()
+	  Tell buffer consumer about our paddings.
+	  v4l2src can now uses these paddings information when trying to import
+	  buffers to configure the v4l2 driver accordingly.
+
+2019-05-30 11:11:34 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: fix buffer size in debug log
+	  Use the actual OMX buffer size rather than the info.size as OMX
+	  may require larger buffer if the port requires some padding.
+
+2019-10-14 00:48:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* .gitmodules:
+	* Makefile.am:
+	* autogen.sh:
+	* common:
+	* config/Makefile.am:
+	* config/bellagio/Makefile.am:
+	* config/rpi/Makefile.am:
+	* config/tizonia/Makefile.am:
+	* config/zynqultrascaleplus/Makefile.am:
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/egl/Makefile.am:
+	* m4/Makefile.am:
+	* omx/Makefile.am:
+	* tests/Makefile.am:
+	* tests/check/.gitignore:
+	* tests/check/Makefile.am:
+	* tests/check/generic/.gitignore:
+	* tools/Makefile.am:
+	  Remove autotools build
+
+2019-10-07 16:59:10 +0000  Stéphane Cerveau <scerveau@collabora.com>
+
+	* omx/gstomxallocator.c:
+	  omxallocator: fix leak with a proper chaining finalize
+
+2019-09-20 15:02:24 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: revert draining on ALLOCATION and DRAIN query
+	  My latest patch introduces some regressions which I have no time to
+	  debug properly at the moment so just revert it for now.
+
+2019-09-17 13:02:54 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: let encoder base class handle ALLOCATION query
+	  Fixing a regression introduced in my previous patch
+	  (7c40a91c31aa4bcbb191f7c6a5d222edf9dfd9d1).
+	  The ALLOCATION query needs to be handled by GstVideoEncoder (to call
+	  propose_allocation()) so chain up the query handling rather than early
+	  returning.
+
+2019-08-29 12:20:56 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: drain encoder on ALLOCATION and DRAIN queries
+	  Ensure that the encoder releases all its input buffers when requested by
+	  upstream. Encoder input buffers may be shared with downstreaming (when
+	  using dmabuf), upstream may then request the encoder to
+	  drain when reconfiguring before destroying its buffers.
+	  Also drain on ALLOCATION query as we already do in kmssink as that
+	  notify of a format change.
+	  Fix "decoder ! encoder" pipeline when decoding a file with different
+	  resolutions on Zynq.
+
+2019-08-28 15:52:41 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: log the number of pending buffers when port is EOS
+
+2019-08-28 15:49:00 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: log when an output port is eos
+
+2019-08-27 15:47:28 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: log the full input format
+	  Make it easier to debug dynamic format changes.
+
+2019-08-21 12:25:40 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix dmabuf import
+	  When importing dmabuf, UseBuffer() has to be called with the fd as
+	  pBuffer rather than the mapped address of the buffer.
+
+2019-08-21 12:48:25 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: fix dmabuf import
+	  When importing dmabuf from downstream, we want the allocator to be in
+	  OTHER_POOL mode despite output_mode being DMABUF.
+	  So check first if other_pool is set before checking for pool's
+	  output_mode.
+
+2019-08-22 17:55:54 +0900  Shinya Saito <ssaito@igel.co.jp>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Remove unnecessary gst_video_frame_unmap()
+
+2019-07-25 16:30:13 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: log supported caps by the decoder
+	  Can be useful when debugging to check the caps supported by the decoder
+	  before filtering.
+
+2019-07-11 12:03:46 +0900  Shinya Saito <ssaito@igel.co.jp>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Unref frame of codec config buffer
+	  After handling codec config, codec frame should be unreffed.
+
+2019-06-14 16:27:37 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideo.c:
+	  omxvideo: check difference between frame and requested ts
+	  This has proven to be very useful when debugging to detect bugs where we
+	  match the wrong gst frame with an output OMX buffer.
+
+2019-06-14 10:57:29 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo: add debug infos to find_nearest_frame()
+	  Those debug infos have proved to be very helpful when debugging
+	  timestamp issues. They are often linked to gst-omx picking the wrong
+	  frame when trying to map from OMX.
+
+2019-03-05 16:57:40 +0900  Shinya Saito <ssaito@igel.co.jp>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Deactivate negotiated pool when output own buffer
+	  If decoder outputs internal buffer and not use OMX_UseBuffer,
+	  downstream bufferpool should be stopped.
+
+2019-06-03 12:21:05 +0900  Shinya Saito <ssaito@igel.co.jp>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh264enc.h:
+	  omxh264enc: Add 'ref-frames' property
+	  Add a property to control the number of frames for reference.
+	  Min and max value is based on OpenMAX IL 1.2.0 Specification.
+
+2019-06-03 07:57:02 +0200  Niels De Graef <niels.degraef@barco.com>
+
+	* configure.ac:
+	* meson.build:
+	  meson: Bump minimal GLib version to 2.44
+	  This means we can use some newer features and get rid of some
+	  boilerplate code using the G_DECLARE_* macros.
+	  As discussed on IRC, 2.44 is old enough by now to start depending on it.
+
+2019-04-19 12:38:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* docs/index.md:
+	* docs/meson.build:
+	* docs/sitemap.txt:
+	* meson.build:
+	* meson_options.txt:
+	* omx/meson.build:
+	  doc: Build documentation of hotdoc
+
+2019-03-26 12:26:03 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  gstomx: remove gst_omx_buffer_set_omx_buf/get_omx_buf
+	  They are no longer used anywhere
+
+2019-03-22 12:11:13 +0200  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/Makefile.am:
+	* omx/gstomxallocator.c:
+	* omx/gstomxallocator.h:
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxbufferpool.h:
+	* omx/gstomxvideoenc.c:
+	* omx/meson.build:
+	  omxbufferpool: refactor to allow memory sharing
+	  One big restriction of the OMX buffer pool has always been
+	  that the GstMemory objects were flagged with NO_SHARE.
+	  This was because the buffer pool needed to be sure that when
+	  a buffer returned to the pool, it would be safe to release the
+	  OMX buffer back to OpenMAX.
+	  With this change, this is no longer a restriction. What this
+	  commit introduces is a new allocator that allows us to track
+	  the GstMemory objects independently. Now, when a buffer returns
+	  to the pool, it is not necessary for the memory to be released
+	  as well. We simply track the memory's ref count in the allocator
+	  and we return the OMX buffer back when the memory's ref count
+	  drops to 0.
+	  The reason for doing this is to allow implementing zero-copy
+	  transfers in situations where we may need to copy or map a
+	  certain region of the buffer. For instance, omxh264enc ! h264parse
+	  should be possible to be zero-copy by using an OMX buffer pool
+	  between them.
+
+2019-04-23 15:13:23 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: fix memory mapping with offset
+	  gst_memory_map() is already adding the offset to the mapped pointer.
+	  Doing it in the memory implementation was resulting in the offset being
+	  accounted twice.
+	  It doesn't matter yet as we are only creating memory without offset for
+	  now but it will once we'll start sharing OMX memories.
+
+2019-04-19 10:43:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.16.0 ===
 
 2019-04-19 00:38:44 +0100  Tim-Philipp Müller <tim@centricular.com>
