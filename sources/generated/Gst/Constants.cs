@@ -170,7 +170,7 @@ namespace Gst {
 		public const int VERSION_MAJOR = 1;
 		public const int VERSION_MICRO = 1;
 		public const int VERSION_MINOR = 17;
-		public const int VERSION_NANO = 0;
+		public const int VERSION_NANO = 1;
 #endregion
 	}
 }
