@@ -1,18 +1,15 @@
-This is GStreamer gst-libav 1.17.0.1.
+This is GStreamer gst-libav 1.17.1.
 
-The GStreamer team is thrilled to announce a new major feature release in the
-stable 1.0 API series of your favourite cross-platform multimedia framework!
+GStreamer 1.17 is the development branch leading up to the next major
+stable version which will be 1.18.
 
-As always, this release is again packed with new features, bug fixes and
-other improvements.
-
-The 1.16 release series adds new features on top of the 1.14 series and is
+The 1.17 development series adds new features on top of the 1.16 series and is
 part of the API and ABI-stable 1.x release series of the GStreamer multimedia
 framework.
 
 Full release notes will one day be found at:
 
-  https://gstreamer.freedesktop.org/releases/1.16/
+  https://gstreamer.freedesktop.org/releases/1.18/
 
 Binaries for Android, iOS, Mac OS X and Windows will usually be provided
 shortly after the release.
@@ -60,7 +57,7 @@ You can find source releases of gstreamer in the download
 directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
-https://cgit.freedesktop.org/gstreamer/gstreamer/
+https://gitlab.freedesktop.org/gstreamer/
 
 ==== Homepage ====
 
