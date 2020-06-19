@@ -545,7 +545,8 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
 
   gst_type_mark_as_plugin_api (GST_X265_ENC_LOG_LEVEL_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_X265_ENC_SPEED_PRESET_TYPE, 0);
-  gst_type_mark_as_plugin_api (GST_X265_ENC_TUNE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_X265_ENC_TUNE_TYPE,
+      GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS);
 }
 
 /* initialize the new element
