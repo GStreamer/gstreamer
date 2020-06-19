@@ -98,6 +98,8 @@ struct _GstInterlace
   int src_fps_n;
   int src_fps_d;
 
+  GMutex lock;
+  gint new_pattern;
   GstBuffer *stored_frame;
   guint stored_fields;
   guint phase_index;
@@ -240,8 +242,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
       g_param_spec_enum ("field-pattern", "Field pattern",
           "The output field pattern", GST_INTERLACE_PATTERN,
           GST_INTERLACE_PATTERN_2_3,
-          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_PATTERN_OFFSET,
       g_param_spec_uint ("pattern-offset", "Pattern offset",
@@ -271,6 +272,8 @@ gst_interlace_class_init (GstInterlaceClass * klass)
 static void
 gst_interlace_finalize (GObject * obj)
 {
+  GstInterlace *interlace = GST_INTERLACE (obj);
+  g_mutex_clear (&interlace->lock);
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -307,7 +310,10 @@ gst_interlace_init (GstInterlace * interlace)
   interlace->top_field_first = FALSE;
   interlace->allow_rff = FALSE;
   interlace->pattern = GST_INTERLACE_PATTERN_2_3;
+  interlace->new_pattern = GST_INTERLACE_PATTERN_2_3;
   interlace->pattern_offset = 0;
+  interlace->src_fps_n = 0;
+  g_mutex_init (&interlace->lock);
   gst_interlace_reset (interlace);
 }
 
@@ -349,8 +355,13 @@ static void
 gst_interlace_decorate_buffer_ts (GstInterlace * interlace, GstBuffer * buf,
     int n_fields)
 {
+  gint src_fps_n, src_fps_d;
+  g_mutex_lock (&interlace->lock);
+  src_fps_n = interlace->src_fps_n;
+  src_fps_d = interlace->src_fps_d;
+  g_mutex_unlock (&interlace->lock);
   /* field duration = src_fps_d / (2 * src_fps_n) */
-  if (interlace->src_fps_n == 0) {
+  if (src_fps_n == 0) {
     /* If we don't know the fps, we can't generate timestamps/durations */
     GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
@@ -358,12 +369,10 @@ gst_interlace_decorate_buffer_ts (GstInterlace * interlace, GstBuffer * buf,
   } else {
     GST_BUFFER_DTS (buf) = interlace->timebase +
         gst_util_uint64_scale (GST_SECOND,
-        interlace->src_fps_d * interlace->fields_since_timebase,
-        interlace->src_fps_n * 2);
+        src_fps_d * interlace->fields_since_timebase, src_fps_n * 2);
     GST_BUFFER_PTS (buf) = GST_BUFFER_DTS (buf);
     GST_BUFFER_DURATION (buf) =
-        gst_util_uint64_scale (GST_SECOND, interlace->src_fps_d * n_fields,
-        interlace->src_fps_n * 2);
+        gst_util_uint64_scale (GST_SECOND, src_fps_d * n_fields, src_fps_n * 2);
   }
 }
 
@@ -382,16 +391,22 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
   if (n_fields == 1) {
     GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
   }
+  g_mutex_lock (&interlace->lock);
   if (interlace->pattern > GST_INTERLACE_PATTERN_2_2 && n_fields == 2
       && interlaced) {
     GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
   }
+  g_mutex_unlock (&interlace->lock);
 }
 
 static const gchar *
 interlace_mode_from_pattern (GstInterlace * interlace)
 {
-  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2)
+  GstInterlacePattern pattern;
+  g_mutex_lock (&interlace->lock);
+  pattern = interlace->pattern;
+  g_mutex_unlock (&interlace->lock);
+  if (pattern > GST_INTERLACE_PATTERN_2_2)
     return "mixed";
   else
     return "interleaved";
@@ -422,29 +437,36 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   const PulldownFormat *pdformat;
   gboolean alternate;
   int i;
+  int src_fps_n, src_fps_d;
+  GstInterlacePattern pattern;
 
   if (!gst_video_info_from_caps (&info, caps))
     goto caps_error;
+
+  g_mutex_lock (&interlace->lock);
+  interlace->pattern = interlace->new_pattern;
+  pattern = interlace->pattern;
+  g_mutex_unlock (&interlace->lock);
 
   /* Check if downstream prefers alternate mode */
   othercaps = gst_caps_copy (caps);
   gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING,
       interlace_mode_from_pattern (interlace), NULL);
   gst_caps_append (othercaps, dup_caps_with_alternate (othercaps));
-  if (interlace->pattern == GST_INTERLACE_PATTERN_2_2) {
+  if (pattern == GST_INTERLACE_PATTERN_2_2) {
     for (i = 0; i < gst_caps_get_size (othercaps); ++i) {
       GstStructure *s;
 
       s = gst_caps_get_structure (othercaps, i);
       gst_structure_remove_field (s, "field-order");
     }
-  } else if (interlace->pattern == GST_INTERLACE_PATTERN_1_1 &&
+  } else if (pattern == GST_INTERLACE_PATTERN_1_1 &&
       GST_VIDEO_INFO_INTERLACE_MODE (&info) ==
       GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
     /* interlaced will do passthrough, mixed will fail later in the
      * negotiation */
     othercaps = gst_interlace_caps_double_framerate (othercaps, TRUE, FALSE);
-  } else if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
+  } else if (pattern > GST_INTERLACE_PATTERN_2_2) {
     GST_FIXME_OBJECT (interlace,
         "Add calculations for telecine framerate conversions");
     for (i = 0; i < gst_caps_get_size (othercaps); ++i) {
@@ -469,14 +491,17 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
       GST_VIDEO_INFO_INTERLACE_MODE (&out_info) ==
       GST_VIDEO_INTERLACE_MODE_ALTERNATE;
 
-  pdformat = &formats[interlace->pattern];
+  pdformat = &formats[pattern];
 
   interlace->phase_index = interlace->pattern_offset;
 
-  interlace->src_fps_n = info.fps_n * pdformat->ratio_n;
-  interlace->src_fps_d = info.fps_d * pdformat->ratio_d;
-  GST_DEBUG_OBJECT (interlace, "new framerate %d/%d", interlace->src_fps_n,
-      interlace->src_fps_d);
+  src_fps_n = info.fps_n * pdformat->ratio_n;
+  src_fps_d = info.fps_d * pdformat->ratio_d;
+  g_mutex_lock (&interlace->lock);
+  interlace->src_fps_n = src_fps_n;
+  interlace->src_fps_d = src_fps_d;
+  g_mutex_unlock (&interlace->lock);
+  GST_DEBUG_OBJECT (interlace, "new framerate %d/%d", src_fps_n, src_fps_d);
 
   if (alternate) {
     GST_DEBUG_OBJECT (interlace,
@@ -485,7 +510,7 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
 
   interlace->switch_fields = FALSE;
   if (gst_caps_can_intersect (caps, othercaps) &&
-      interlace->pattern <= GST_INTERLACE_PATTERN_2_2 &&
+      pattern <= GST_INTERLACE_PATTERN_2_2 &&
       GST_VIDEO_INFO_INTERLACE_MODE (&info) != GST_VIDEO_INTERLACE_MODE_MIXED) {
     /* FIXME: field-order is optional in the caps. This means that, if we're
      * in a non-telecine mode and we have TFF upstream and
@@ -497,7 +522,7 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
     interlace->passthrough = TRUE;
   } else {
     if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
-      if (interlace->pattern == GST_INTERLACE_PATTERN_2_2) {
+      if (pattern == GST_INTERLACE_PATTERN_2_2) {
         /* There is a chance we'd have to switch fields when in fact doing
          * passthrough - see FIXME comment above, basically it would
          * auto-negotiate to passthrough (because field-order is missing from
@@ -528,9 +553,9 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
       }
     }
     interlace->passthrough = FALSE;
-    gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION,
-        interlace->src_fps_n, interlace->src_fps_d, NULL);
-    if (interlace->pattern <= GST_INTERLACE_PATTERN_2_2 || alternate) {
+    gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION, src_fps_n,
+        src_fps_d, NULL);
+    if (pattern <= GST_INTERLACE_PATTERN_2_2 || alternate) {
       gst_caps_set_simple (othercaps, "field-order", G_TYPE_STRING,
           interlace->top_field_first ? "top-field-first" : "bottom-field-first",
           NULL);
@@ -808,17 +833,22 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   GstCaps *clean_filter = NULL;
   const char *mode;
   guint i;
+  gint pattern;
 
   otherpad =
       (pad == interlace->srcpad) ? interlace->sinkpad : interlace->srcpad;
 
+  g_mutex_lock (&interlace->lock);
+  pattern = interlace->new_pattern;
+  g_mutex_unlock (&interlace->lock);
+
   if (filter != NULL) {
     clean_filter = gst_caps_copy (filter);
-    if (interlace->pattern == GST_INTERLACE_PATTERN_1_1) {
+    if (pattern == GST_INTERLACE_PATTERN_1_1) {
       clean_filter =
           gst_interlace_caps_double_framerate (clean_filter,
           (pad == interlace->sinkpad), TRUE);
-    } else if (interlace->pattern != GST_INTERLACE_PATTERN_2_2) {
+    } else if (pattern != GST_INTERLACE_PATTERN_2_2) {
       GST_FIXME_OBJECT (interlace,
           "Add calculations for telecine framerate conversions");
       for (i = 0; i < gst_caps_get_size (clean_filter); ++i) {
@@ -843,8 +873,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 
       s = gst_caps_get_structure (clean_filter, i);
       gst_structure_remove_field (s, "interlace-mode");
-      if (interlace->pattern == GST_INTERLACE_PATTERN_2_2
-          && pad == interlace->sinkpad) {
+      if (pattern == GST_INTERLACE_PATTERN_2_2 && pad == interlace->sinkpad) {
         gst_structure_remove_field (s, "field-order");
       }
     }
@@ -853,7 +882,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   tcaps = gst_pad_get_pad_template_caps (otherpad);
   othercaps = gst_pad_peer_query_caps (otherpad, clean_filter);
   if (othercaps) {
-    if (interlace->pattern == GST_INTERLACE_PATTERN_2_2) {
+    if (pattern == GST_INTERLACE_PATTERN_2_2) {
       for (i = 0; i < gst_caps_get_size (othercaps); ++i) {
         GstStructure *s = gst_caps_get_structure (othercaps, i);
 
@@ -913,11 +942,11 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
     icaps = gst_caps_merge (icaps, alternate);
   }
 
-  if (interlace->pattern == GST_INTERLACE_PATTERN_1_1) {
+  if (pattern == GST_INTERLACE_PATTERN_1_1) {
     icaps =
         gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad),
         FALSE);
-  } else if (interlace->pattern != GST_INTERLACE_PATTERN_2_2) {
+  } else if (pattern != GST_INTERLACE_PATTERN_2_2) {
     GST_FIXME_OBJECT (interlace,
         "Add calculations for telecine framerate conversions");
     for (i = 0; i < gst_caps_get_size (icaps); ++i) {
@@ -1175,7 +1204,9 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     interlace->timebase = timestamp;
   }
 
+  g_mutex_lock (&interlace->lock);
   format = &formats[interlace->pattern];
+  g_mutex_unlock (&interlace->lock);
 
   if (interlace->stored_fields == 0
       && interlace->phase_index == interlace->pattern_offset
@@ -1349,9 +1380,19 @@ gst_interlace_set_property (GObject * object,
     case PROP_TOP_FIELD_FIRST:
       interlace->top_field_first = g_value_get_boolean (value);
       break;
-    case PROP_PATTERN:
-      interlace->pattern = g_value_get_enum (value);
+    case PROP_PATTERN:{
+      gint pattern = g_value_get_enum (value);
+      g_mutex_lock (&interlace->lock);
+      interlace->new_pattern = pattern;
+      if (pattern == interlace->pattern || interlace->src_fps_n == 0) {
+        interlace->pattern = pattern;
+        g_mutex_unlock (&interlace->lock);
+      } else {
+        g_mutex_unlock (&interlace->lock);
+        gst_pad_push_event (interlace->srcpad, gst_event_new_reconfigure ());
+      }
       break;
+    }
     case PROP_PATTERN_OFFSET:
       interlace->pattern_offset = g_value_get_uint (value);
       break;
@@ -1375,7 +1416,9 @@ gst_interlace_get_property (GObject * object,
       g_value_set_boolean (value, interlace->top_field_first);
       break;
     case PROP_PATTERN:
-      g_value_set_enum (value, interlace->pattern);
+      g_mutex_lock (&interlace->lock);
+      g_value_set_enum (value, interlace->new_pattern);
+      g_mutex_unlock (&interlace->lock);
       break;
     case PROP_PATTERN_OFFSET:
       g_value_set_uint (value, interlace->pattern_offset);
@@ -1392,10 +1435,14 @@ gst_interlace_get_property (GObject * object,
 static GstStateChangeReturn
 gst_interlace_change_state (GstElement * element, GstStateChange transition)
 {
-  //GstInterlace *interlace = GST_INTERLACE (element);
+  GstInterlace *interlace = GST_INTERLACE (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (&interlace->lock);
+      interlace->src_fps_n = 0;
+      g_mutex_unlock (&interlace->lock);
+      /* why? */
       //gst_interlace_reset (interlace);
       break;
     default:
