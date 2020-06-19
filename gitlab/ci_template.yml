@@ -1,4 +1,5 @@
 stages:
+  - 'build docker'
   - 'preparation'
   - 'pre-build'
   - 'build'
@@ -7,17 +8,42 @@ stages:
   - 'integrate'
 
 variables:
-  ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2020-06-18-3152521-master'
-  CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:2020-06-18-3152520-master'
-  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2020-06-04-2958178-master'
-  INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
-  MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:2020-02-10-1589542-master'
-  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v11-master'
-
   # Branch to track for modules that have no ref specified in the manifest
   GST_UPSTREAM_BRANCH: 'master'
   ORC_UPSTREAM_BRANCH: 'master'
-  GST_UPSTRAM_REPO: 'gstreamer/gst-ci'
+
+  ###
+  # IMPORTANT
+  # These are the version tags for the docker images the CI runs against.
+  # If you are hacking on them or need a them to rebuild, its enough
+  # to change any part of the string of the image you want.
+  ###
+  FEDORA_TAG:  '2020-06-25.0'
+  CERBERO_TAG: '2020-06-25.0'
+  ANDROID_TAG: '2020-06-25.0'
+  MANIFEST_TAG: '2020-06-25.0'
+  TEST_MANIFEST_TAG: '2020-06-25.0'
+
+  GST_UPSTREAM_REPO: 'gstreamer/gst-ci'
+
+  FEDORA_AMD64_SUFFIX:  'amd64/fedora'
+  CERBERO_AMD64_SUFFIX: 'amd64/cerbero-fedora'
+  ANDROID_AMD64_SUFFIX: 'amd64/android-fedora'
+  MANIFEST_AMD64_SUFFIX: 'amd64/build-manifest'
+  TEST_MANIFEST_AMD64_SUFFIX: 'amd64/test-manifest'
+
+  FEDORA_IMAGE:   "$CI_REGISTRY_IMAGE/$FEDORA_AMD64_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+  CERBERO_IMAGE:  "$CI_REGISTRY_IMAGE/$CERBERO_AMD64_SUFFIX:$CERBERO_TAG-$GST_UPSTREAM_BRANCH"
+  ANDROID_IMAGE:  "$CI_REGISTRY_IMAGE/$ANDROID_AMD64_SUFFIX:$ANDROID_TAG-$GST_UPSTREAM_BRANCH"
+  MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$MANIFEST_AMD64_SUFFIX:$MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
+  TEST_MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$TEST_MANIFEST_AMD64_SUFFIX:$TEST_MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
+
+  # FIXME: properly append the gst-upstream-branch once the images are rebuilt
+  INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
+  INDENT_TAG: '6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG"
+
+  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v11-master'
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
@@ -55,6 +81,194 @@ variables:
       - 'api_failure'
   interruptible: true
 
+
+# Script to check if a docker image exists in the upstream registry
+# and if so copy it to the forked registry so we can use it
+#
+# This is copied/adapted from citemplates/templates/fedora.yml
+# https://gitlab.freedesktop.org/freedesktop/ci-templates/-/blob/96b621fe9f57ec2464f8d1a0940446afbf6c8f59/templates/fedora.yml
+.check_image: &check_image_exists |
+  # if-not-exists steps
+  set -x
+
+  if [[ -z "$GST_FORCE_REBUILD" ]]
+  then
+    # disable exit on failure
+    set +e
+
+    # check if our image is already in the current registry
+    # we store the sha of the digest and the layers
+    skopeo inspect docker://$LOCAL_IMAGE | jq '[.Digest, .Layers]' > local_sha
+
+    # check if our image is already in the upstream registry
+    if [[ -z "$GST_UPSTREAM_REPO" ]]
+    then
+      echo "WARNING! Variable \$GST_UPSTREAM_REPO is undefined, cannot check for images"
+    else
+      skopeo inspect docker://$GST_UPSTREAM_IMAGE | jq '[.Digest, .Layers]' > upstream_sha
+    fi
+
+    # reenable exit on failure
+    set -e
+
+    # if the upstream repo has an image, ensure we use the same
+    if [ -s upstream_sha ]
+    then
+
+      # ensure we use the same image from upstream
+      diff upstream_sha local_sha && exit 0 || true
+
+      # copy the original image into the current project registry namespace
+      # we do 2 attempts with skopeo copy at most
+      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
+                  docker://$GST_UPSTREAM_IMAGE \
+                  docker://$LOCAL_IMAGE || \
+      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
+                  docker://$GST_UPSTREAM_IMAGE \
+                  docker://$LOCAL_IMAGE
+
+      exit 0
+    fi
+
+    # if we have a local image but none in the upstream repo, use our
+    if [ -s local_sha ]
+    then
+      exit 0
+    fi
+  fi
+
+  set +x
+
+# Build docker images from Dockerfiles
+#
+# This is copied/adapted from citemplates/templates/fedora.yml
+# https://gitlab.freedesktop.org/freedesktop/ci-templates/-/blob/96b621fe9f57ec2464f8d1a0940446afbf6c8f59/templates/fedora.yml
+#
+# CITemplates builds uses buildah run/commit workflow to build the images which doesn't
+# fit us atm and our images need further adjustment to make use of it. Porting to
+# ci-templates is the next step though.
+#
+# All the documentation from citemplates should be applicable here, so please refer there
+.base:
+  image: 'registry.fedoraproject.org/fedora:32'
+  extends:
+    - '.global_ci_policy'
+  tags: ['gstreamer']
+  rules:
+    - when: 'always'
+  variables:
+    STORAGE_DRIVER: 'vfs'
+    BUILDAH_FORMAT: 'docker'
+    BUILDAH_ISOLATION: 'chroot'
+
+    # FIXME: Probably needs to be changed to none and clone gst-ci repo each time, sigh
+    # as these jobs *could* run potentially in a fork of smth like -bad
+    # though given our current setup, its only possible to tweak the CI from a gst-ci
+    # fork so it might be fine
+    GIT_STRATEGY: fetch
+  script:
+    - export LOCAL_IMAGE="$CI_REGISTRY_IMAGE/$REPO_SUFFIX:$TAG"
+    - export GST_UPSTREAM_IMAGE="$CI_REGISTRY/$GST_UPSTREAM_REPO/$REPO_SUFFIX:$TAG"
+
+    # FIXME: make an image since there will be multiple jobs running every pipeline
+    - dnf install -y skopeo jq diffutils
+
+    # Newer versions of podman/buildah try to set overlayfs mount options when
+    # using the vfs driver, and this causes errors.
+    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
+
+    - *check_image_exists
+
+    # FIXME: make an image since there will be multiple jobs running every pipeline
+    - dnf install -y buildah skopeo jq runc
+
+    - echo "Building image $LOCAL_IMAGE"
+
+    - >
+      buildah bud
+      --build-arg DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH
+      --arch=${ARCH:=amd64}
+      --label ci.job_id=$CI_JOB_ID
+      --label pipeline.url=$CI_PIPELINE_URL
+      --label git.ref_name=$CI_COMMIT_REF_NAME
+      --label git.sha=$CI_COMMIT_SHA
+      --label gitlab.project_path=$CI_PROJECT_PATH
+      --label gitlab.project_url=$CI_PROJECT_URL
+      --label fdo.upstream-repo=$GST_UPSTREAM_REPO
+      --label fdo.expires-after="3w"
+      -f $DOCKERFILE
+      -t $LOCAL_IMAGE
+      $CONTEXT_DIR
+
+    - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+    # Sanity check
+    - |
+      if [ "$CI_PROJECT_PATH" = "gstreamer/gst-ci" ]; then
+        if [ "$LOCAL_IMAGE" != "$GST_UPSTREAM_IMAGE" ]; then
+          echo "ERROR!!! AAAAA! THE IMAGE URI DOES NOT MATCH THE EXPECTED UPSTREAM ONE"
+          echo $LOCAL_IMAGE
+          echo $GST_UPSTREAM_IMAGE
+          exit 1
+        fi
+      fi
+
+    -  buildah push $LOCAL_IMAGE
+
+fedora amd64 docker:
+  stage: "build docker"
+  variables:
+    REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
+    TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+
+    CONTEXT_DIR: "./docker/fedora/"
+    DOCKERFILE: "docker/fedora/Dockerfile"
+  extends: .base
+
+cerbero fedora amd64 docker:
+  stage: "build docker"
+  variables:
+    REPO_SUFFIX: "$CERBERO_AMD64_SUFFIX"
+    TAG: "$CERBERO_TAG-$GST_UPSTREAM_BRANCH"
+
+    CONTEXT_DIR: "docker/cerbero/"
+    DOCKERFILE: "docker/cerbero/Dockerfile-fedora"
+  extends: .base
+
+android docker:
+  stage: "build docker"
+  variables:
+    REPO_SUFFIX: "$ANDROID_AMD64_SUFFIX"
+    TAG: "$ANDROID_TAG-$GST_UPSTREAM_BRANCH"
+
+    CONTEXT_DIR: "docker/android/"
+    DOCKERFILE: "docker/android/Dockerfile"
+  extends: .base
+
+alpine amd64 manifest builder docker:
+  stage: "build docker"
+  variables:
+    REPO_SUFFIX: "$MANIFEST_AMD64_SUFFIX"
+    TAG: '$MANIFEST_TAG-$GST_UPSTREAM_BRANCH'
+
+    CONTEXT_DIR: "docker/build_manifest/"
+    DOCKERFILE: "docker/build_manifest/Dockerfile"
+  extends: .base
+
+gst-indent amd64 docker:
+  stage: "build docker"
+  variables:
+    REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
+    # FIXME: Add gst-ups-branch to the tag
+    TAG: "$INDENT_TAG"
+
+    CONTEXT_DIR: "docker/indent/"
+    DOCKERFILE: "docker/indent/Dockerfile"
+  extends: .base
+
+#
+# Job to create the manifest.xml to used for our builds
+#
 manifest:
   image: $MANIFEST_IMAGE
   extends:
@@ -78,6 +292,9 @@ manifest:
     paths:
       - "manifest.xml"
 
+#
+# gst-indent!!
+#
 gst indent:
   image: $INDENT_IMAGE
   extends:
@@ -102,6 +319,9 @@ gst indent:
           exit 1
       fi
 
+#
+# gst-build setup templates
+#
 .gst_build_template: &gst_build
   - echo $MESON_ARGS
   # Sometimes, gitlab-runner want to reuse
