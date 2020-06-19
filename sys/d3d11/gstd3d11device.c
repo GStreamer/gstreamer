@@ -371,14 +371,29 @@ can_support_format (GstD3D11Device * self, DXGI_FORMAT format)
       (D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_RENDER_TARGET |
       D3D11_FORMAT_SUPPORT_SHADER_SAMPLE);
 
-  if (!gst_d3d11_is_windows_8_or_greater ())
+  if (!gst_d3d11_is_windows_8_or_greater ()) {
+    GST_WARNING_OBJECT (self, "DXGI format %d needs Windows 8 or greater",
+        (guint) format);
     return FALSE;
+  }
 
   hr = ID3D11Device_CheckFormatSupport (handle, format, &supported);
-  if (!gst_d3d11_result (hr, NULL))
+  if (!gst_d3d11_result (hr, NULL)) {
+    GST_WARNING_OBJECT (self, "DXGI format %d is not supported by device",
+        (guint) format);
     return FALSE;
+  }
 
-  return (supported & flags) == flags;
+  if ((supported & flags) != flags) {
+    GST_WARNING_OBJECT (self,
+        "DXGI format %d doesn't support flag 0x%x (supported flag 0x%x)",
+        (guint) format, (guint) supported, (guint) flags);
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT (self, "Device supports DXGI format %d", (guint) format);
+
+  return TRUE;
 }
 
 static void
