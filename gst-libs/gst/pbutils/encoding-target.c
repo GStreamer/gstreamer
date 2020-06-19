@@ -99,6 +99,7 @@ struct _GstEncodingTarget
   gchar *name;
   gchar *category;
   gchar *description;
+  gchar *path;
   GList *profiles;
 
   /*< private > */
@@ -123,6 +124,7 @@ gst_encoding_target_finalize (GObject * object)
   g_free (target->name);
   g_free (target->category);
   g_free (target->description);
+  g_free (target->path);
 
   g_list_foreach (target->profiles, (GFunc) g_object_unref, NULL);
   g_list_free (target->profiles);
@@ -169,6 +171,21 @@ const gchar *
 gst_encoding_target_get_description (GstEncodingTarget * target)
 {
   return target->description;
+}
+
+/**
+ * gst_encoding_target_get_path:
+ * @target: a #GstEncodingTarget
+ *
+ * Returns: (transfer none): The path to the @target file.
+ *
+ * Since: 1.18
+ */
+const gchar *
+gst_encoding_target_get_path (GstEncodingTarget * target)
+{
+  g_return_val_if_fail (GST_IS_ENCODING_TARGET (target), NULL);
+  return target->path;
 }
 
 /**
@@ -1010,6 +1027,8 @@ gst_encoding_target_save_to_file (GstEncodingTarget * target,
   if (!g_file_set_contents (filepath, data, data_size, error))
     goto write_failed;
 
+  target->path = g_strdup (filepath);
+
   g_key_file_free (out);
   g_free (data);
 
@@ -1167,10 +1186,10 @@ sub_get_all_targets (gchar * subdir)
     fullname = g_build_filename (subdir, filename, NULL);
     target = gst_encoding_target_load_from_file (fullname, NULL);
     if (target) {
+      target->path = fullname;
       res = g_list_append (res, target);
     } else
       GST_WARNING ("Failed to get a target from %s", fullname);
-    g_free (fullname);
   }
   g_dir_close (dir);
 

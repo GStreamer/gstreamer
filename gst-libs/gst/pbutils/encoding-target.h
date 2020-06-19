@@ -137,6 +137,9 @@ GST_PBUTILS_API
 const gchar *           gst_encoding_target_get_description     (GstEncodingTarget *target);
 
 GST_PBUTILS_API
+const gchar *           gst_encoding_target_get_path            (GstEncodingTarget *target);
+
+GST_PBUTILS_API
 const GList *           gst_encoding_target_get_profiles        (GstEncodingTarget *target);
 
 GST_PBUTILS_API
