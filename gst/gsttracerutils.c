@@ -188,6 +188,8 @@ gst_tracing_register_hook_id (GstTracer * tracer, GQuark detail, GCallback func)
  *
  * Register @func to be called when the trace hook @detail is getting invoked.
  * Use %NULL for @detail to register to all hooks.
+ *
+ * Since: 1.8
  */
 void
 gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,

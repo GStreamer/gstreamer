@@ -3296,6 +3296,8 @@ _gst_structure_get_any_list (GstStructure * structure, GType type,
  * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a %GST_TYPE_ARRAY,
  * this function returns %FALSE.
+ *
+ * Since: 1.12
  */
 gboolean
 gst_structure_get_array (GstStructure * structure, const gchar * fieldname,

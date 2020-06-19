@@ -94,10 +94,10 @@ G_BEGIN_DECLS
 /* --- type macros --- */
 
 /**
- * GstParamArray:
+ * GstParamFraction:
  *
- * A fundamental type that describes a #GParamSpec for arrays of
- * values
+ * A fundamental type that describes a #GParamSpec for fractional
+ * properties
  */
 
 #define GST_TYPE_PARAM_FRACTION           (gst_param_spec_fraction_get_type ())
@@ -105,10 +105,12 @@ G_BEGIN_DECLS
 #define GST_PARAM_SPEC_FRACTION(pspec)    (G_TYPE_CHECK_INSTANCE_CAST ((pspec), GST_TYPE_PARAM_FRACTION, GstParamSpecFraction))
 
 /**
- * GstParamFraction:
+ * GstParamArray:
  *
- * A fundamental type that describes a #GParamSpec for fractional
- * properties
+ * A fundamental type that describes a #GParamSpec for arrays of
+ * values
+ *
+ * Since: 1.12
  */
 
 #define GST_TYPE_PARAM_ARRAY_LIST           (gst_param_spec_array_get_type ())

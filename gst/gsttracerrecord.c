@@ -179,6 +179,8 @@ gst_tracer_record_init (GstTracerRecord * self)
  * > Please note that this is still under discussion and subject to change.
  *
  * Returns: (transfer full): a new #GstTracerRecord
+ *
+ * Since: 1.8
  */
 GstTracerRecord *
 gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
@@ -247,6 +249,8 @@ gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
  * the category "GST_TRACER".
  *
  * > Please note that this is still under discussion and subject to change.
+ *
+ * Since: 1.8
  */
 void
 gst_tracer_record_log (GstTracerRecord * self, ...)

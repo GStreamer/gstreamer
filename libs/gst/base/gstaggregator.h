@@ -397,7 +397,7 @@ void            gst_aggregator_update_segment       (GstAggregator              
  * @GST_AGGREGATOR_START_TIME_SELECTION_SET: Start at the running time
  * selected by the `start-time` property.
  *
- * Since: 1.14
+ * Since: 1.18
  */
 typedef enum
 {

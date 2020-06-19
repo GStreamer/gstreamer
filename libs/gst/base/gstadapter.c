@@ -1365,7 +1365,7 @@ gst_adapter_available_fast (GstAdapter * adapter)
 }
 
 /**
- * gst_adapter_get_distance_from_discont:
+ * gst_adapter_distance_from_discont:
  * @adapter: a #GstAdapter
  *
  * Get the distance in bytes since the last buffer with the

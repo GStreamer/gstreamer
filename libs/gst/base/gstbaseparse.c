@@ -684,8 +684,9 @@ gst_base_parse_get_property (GObject * object, guint prop_id, GValue * value,
  * Copies a #GstBaseParseFrame.
  *
  * Returns: A copy of @frame
+ *
+ * Since: 1.12.1
  */
-
 GstBaseParseFrame *
 gst_base_parse_frame_copy (GstBaseParseFrame * frame)
 {

@@ -30,6 +30,8 @@ G_BEGIN_DECLS
  * GstTracerRecord:
  *
  * The opaque GstTracerRecord instance structure
+ *
+ * Since: 1.8
  */
 typedef struct _GstTracerRecord GstTracerRecord;
 typedef struct _GstTracerRecordClass GstTracerRecordClass;

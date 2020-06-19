@@ -364,7 +364,7 @@ gst_buffer_get_flags (GstBuffer * buffer)
 }
 
 /**
- * gst_buffer_flag_is_set:
+ * gst_buffer_has_flags:
  * @buffer: a #GstBuffer
  * @flags: the #GstBufferFlags flag to check.
  *

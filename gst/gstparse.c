@@ -100,6 +100,8 @@ gst_parse_context_new (void)
  * Copies the @context.
  *
  * Returns: (transfer full) (nullable): A copied #GstParseContext
+ *
+ * Since: 1.12.1
  */
 GstParseContext *
 gst_parse_context_copy (const GstParseContext * context)

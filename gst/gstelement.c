@@ -3835,6 +3835,8 @@ _priv_gst_element_cleanup (void)
  * @...: variable arguments in the same form as #GstStructure
  *
  * Create a #GstStructure to be used with #gst_element_message_full_with_details
+ *
+ * Since: 1.10
  */
 GstStructure *
 gst_make_element_message_details (const char *name, ...)
