@@ -899,8 +899,8 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
       gst_caps_features_remove (features, GST_CAPS_FEATURE_FORMAT_INTERLACED);
     }
 
-    gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING,
-        "progressive", NULL);
+    gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING, "progressive",
+        NULL);
 
     /* Now add variants of the same caps with the interlace-mode and Interlaced
      * caps so we can operate in passthrough if needed. */
@@ -1057,8 +1057,8 @@ copy_field (GstInterlace * interlace, GstBuffer * src, int field_index)
   GstBuffer *dest;
 
   dest =
-      gst_buffer_new_allocate (NULL,
-      GST_VIDEO_INFO_SIZE (&interlace->out_info), NULL);
+      gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&interlace->out_info),
+      NULL);
 
   if (!gst_video_frame_map (&dframe, &interlace->out_info, dest, GST_MAP_WRITE))
     goto dest_map_failed;
@@ -1094,8 +1094,7 @@ copy_field (GstInterlace * interlace, GstBuffer * src, int field_index)
   return dest;
 dest_map_failed:
   {
-    GST_ELEMENT_ERROR (interlace, CORE, FAILED,
-        ("Failed to write map buffer"),
+    GST_ELEMENT_ERROR (interlace, CORE, FAILED, ("Failed to write map buffer"),
         ("Failed to map dest buffer for field %d", field_index));
     gst_buffer_unref (dest);
     return NULL;
@@ -1148,8 +1147,8 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_BUFFER_FLAGS (buffer),
       (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_TFF) ? "tff" : "",
       (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_RFF) ? "rff" : "",
-      (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_ONEFIELD) ?
-      "onefield" : "");
+      (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_ONEFIELD) ? "onefield"
+      : "");
 
   if (interlace->passthrough) {
     return gst_pad_push (interlace->srcpad, buffer);
@@ -1275,8 +1274,8 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     if (!alternate) {
       g_assert (!output_buffer2);
-      gst_interlace_decorate_buffer (interlace, output_buffer,
-          n_output_fields, interlaced);
+      gst_interlace_decorate_buffer (interlace, output_buffer, n_output_fields,
+          interlaced);
     } else {
       g_assert (output_buffer2);
       gst_interlace_decorate_buffer_ts (interlace, output_buffer,
