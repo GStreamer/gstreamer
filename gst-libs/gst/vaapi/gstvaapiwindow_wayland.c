@@ -969,7 +969,7 @@ gst_vaapi_window_wayland_init (GstVaapiWindowWayland * window)
  * will be attached to the @display and remains invisible to the user
  * until gst_vaapi_window_show() is called.
  *
- * Return value: the newly allocated #GstVaapiWindow object
+ * Return value (transfer full): the newly allocated #GstVaapiWindow object
  */
 GstVaapiWindow *
 gst_vaapi_window_wayland_new (GstVaapiDisplay * display,
