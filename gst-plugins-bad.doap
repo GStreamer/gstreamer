@@ -19,7 +19,7 @@ something - be it a good code review, some documentation, a set of tests, a
 real live maintainer, or some actual wide use.
  </description>
  <category></category>
- <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-bad" />
+ <bug-database rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/" />
  <screenshots></screenshots>
  <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
@@ -32,6 +32,16 @@ real live maintainer, or some actual wide use.
      <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-bad"/>
    </GitRepository>
  </repository>
+
+ <release>
+  <Version>
+   <revision>1.17.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-06-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.17.1.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
