@@ -106,7 +106,6 @@ struct _GstVaapiWindowWaylandPrivate
   struct wl_shell_surface *wl_shell_surface;
   struct wl_surface *surface;
   struct wl_subsurface *video_subsurface;
-  struct wl_region *opaque_region;
   struct wl_event_queue *event_queue;
   FrameState *last_frame;
   GstPoll *poll;
@@ -118,6 +117,8 @@ struct _GstVaapiWindowWaylandPrivate
   gint configure_pending;
   gboolean need_vpp;
   gboolean dmabuf_broken;
+  GMutex opaque_mutex;
+  gint opaque_width, opaque_height;
 };
 
 /**
@@ -465,6 +466,8 @@ gst_vaapi_window_wayland_create (GstVaapiWindow * window,
   priv->poll = gst_poll_new (TRUE);
   gst_poll_fd_init (&priv->pollfd);
 
+  g_mutex_init (&priv->opaque_mutex);
+
   if (priv->fullscreen_on_show)
     gst_vaapi_window_wayland_set_fullscreen (window, TRUE);
 
@@ -507,26 +510,29 @@ gst_vaapi_window_wayland_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vaapi_window_wayland_parent_class)->finalize (object);
 }
 
-static gboolean
-gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
+static void
+gst_vaapi_window_wayland_update_opaque_region (GstVaapiWindow * window,
     guint width, guint height)
 {
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
-  GstVaapiDisplayWaylandPrivate *const priv_display =
-      GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (GST_VAAPI_WINDOW_DISPLAY (window));
 
+  g_mutex_lock (&priv->opaque_mutex);
+  priv->opaque_width = width;
+  priv->opaque_height = height;
+  g_mutex_unlock (&priv->opaque_mutex);
+}
+
+static gboolean
+gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
+    guint width, guint height)
+{
   if (window->use_foreign_window)
     return TRUE;
 
   GST_DEBUG ("resize window, new size %ux%u", width, height);
 
-  if (priv->opaque_region)
-    wl_region_destroy (priv->opaque_region);
-  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
-  priv->opaque_region = wl_compositor_create_region (priv_display->compositor);
-  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
-  wl_region_add (priv->opaque_region, 0, 0, width, height);
+  gst_vaapi_window_wayland_update_opaque_region (window, width, height);
 
   return TRUE;
 }
@@ -540,6 +546,8 @@ gst_vaapi_window_wayland_set_render_rect (GstVaapiWindow * window, gint x,
 
   if (priv->video_subsurface)
     wl_subsurface_set_position (priv->video_subsurface, x, y);
+
+  gst_vaapi_window_wayland_update_opaque_region (window, width, height);
 }
 
 static inline gboolean
@@ -880,6 +888,8 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
 {
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+  GstVaapiDisplayWaylandPrivate *const priv_display =
+      GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (GST_VAAPI_WINDOW_DISPLAY (window));
   struct wl_display *const wl_display =
       GST_VAAPI_WINDOW_NATIVE_DISPLAY (window);
   struct wl_buffer *buffer;
@@ -946,11 +956,17 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   wl_surface_attach (priv->surface, buffer, 0, 0);
   wl_surface_damage (priv->surface, 0, 0, width, height);
 
-  if (priv->opaque_region) {
-    wl_surface_set_opaque_region (priv->surface, priv->opaque_region);
-    wl_region_destroy (priv->opaque_region);
-    priv->opaque_region = NULL;
+  g_mutex_lock (&priv->opaque_mutex);
+  if (priv->opaque_width > 0) {
+    struct wl_region *opaque_region;
+    opaque_region = wl_compositor_create_region (priv_display->compositor);
+    wl_region_add (opaque_region, 0, 0, width, height);
+    wl_surface_set_opaque_region (priv->surface, opaque_region);
+    wl_region_destroy (opaque_region);
+    priv->opaque_width = 0;
+    priv->opaque_height = 0;
   }
+  g_mutex_unlock (&priv->opaque_mutex);
 
   wl_proxy_set_queue ((struct wl_proxy *) buffer, priv->event_queue);
   wl_buffer_add_listener (buffer, &frame_buffer_listener, frame);
