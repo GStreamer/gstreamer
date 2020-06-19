@@ -1,3 +1,186 @@
+=== release 1.17.1 ===
+
+2020-06-19 19:26:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.17.1
+
+2020-03-16 14:04:35 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/record_sound.py:
+	  Add an example to record audio
+
+2019-11-13 00:52:04 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* meson.build:
+	  Fix configure python lib detection in macOS
+	  pylib_loc = python.get_variable('LIBPL', '') alreay returns
+	  the correct path for python's library dir
+
+2020-02-26 13:53:17 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/gstmodule.c:
+	  gstmodule: Fix reference counts of Py_True and Py_False
+	  When returning those values, extensions must take a new reference.
+	  Fixes #33
+
+2020-01-07 18:16:51 +0530  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* testsuite/cleanup.py:
+	  testsuite: remove cleanup
+	  It's no longer used.
+
+2017-05-21 17:03:48 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* testsuite/meson.build:
+	* testsuite/python/identity.py:
+	* testsuite/test_plugin.py:
+	  test: Add test for the plugin loader
+	  Fix #8
+
+2017-05-21 16:56:16 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: Also look at GST_PLUGIN_PATH_1_0
+
+2019-12-10 16:59:16 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/gstmodule.c:
+	  Do not declare mix declaration and code
+
+2019-12-13 10:46:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  Fix build with Python 3.8 by also checking for python-3.X-embed.pc
+	  Since Python 3.8 the normal checks don't include the Python libraries
+	  anymore and linking of the gst-python module would fail.
+	  See also https://github.com/mesonbuild/meson/issues/5629
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-python/issues/28
+
+2019-12-11 08:14:16 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/py_audiotestsrc.py:
+	  example: Use do_fill in AudioTestSrc instead of do_create
+	  With the new mapping API we can efficiently use the ->fill vmethod
+	  which is sensibly better.
+
+2019-12-10 11:58:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/exampleTransform.py:
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  Subclass Exception for mapping and unmapping errors
+	  And minor cleanup in the way errors are handled
+
+2019-10-17 17:31:41 +0200  Philipp Zabel <philipp.zabel@gmail.com>
+
+	* testsuite/test_gst.py:
+	  tests: Add buffer map/unmap tests
+
+2019-04-05 15:58:38 +0200  Daniel Klamt <graphics@pengutronix.de>
+
+	* examples/plugins/python/exampleTransform.py:
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  Changes the mapinfo so that the mapped data is writable
+	  The Problem is, that in the current state it is not easily possible to
+	  edit the buffer data in a gstreamer python element since you get a copy
+	  of the real buffer.
+	  This patch overrides the mapinfo and the function generating it in a way
+	  so that mapinfo.data is now a memoryview pointing to the real buffer.
+	  Depending on the flags given for this buffer the memoryview is r/w.
+
+2019-11-28 10:18:44 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/gstmodule.c:
+	* plugin/gstpythonplugin.c:
+	  python: Fix type type qualifiers issues
+
+2019-11-19 10:07:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	* meson.build:
+	  Remove python2 support
+	  We have notified application developers this would happen a long time
+	  ago and python2 is going to be deprecated very soon now, before 1.18
+	  is going to be released.
+
+2019-10-14 19:08:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* .gitmodules:
+	* Makefile.am:
+	* acinclude.m4:
+	* autogen.sh:
+	* common:
+	* configure.ac:
+	* env:
+	* gi/Makefile.am:
+	* gi/overrides/Makefile.am:
+	* old_examples/.gitignore:
+	* old_examples/Makefile.am:
+	* plugin/Makefile.am:
+	* pygst.py.in:
+	* testsuite/.gitignore:
+	* testsuite/Makefile.am:
+	  Remove autotools build
+
+2019-09-02 18:11:56 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: fix callback setter overrides (bis)
+	  The previous commit broke those by trying to pass weak refs
+	  through pygobject, but we should probably have tested the elements
+	  beyond instantiation: weakref.WeakMethod returns a callable, but
+	  that callable when called only returns the ephemeral bound method,
+	  which is the object we want to call, but pygobject has no support
+	  for that.
+	  Instead, fix the memory leaks we were going after by decoupling the
+	  lifecycle of the callback and that of the pad, by passing functors
+	  to pygobject.
+
+2019-08-09 01:03:17 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: fix callback setter overrides
+	  Use weakref to avoid leaks, and remove refcount hack as the actual
+	  issue has been fixed in pygobject
+
+2019-08-07 18:23:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* testsuite/python.supp:
+	  suppr: Add a supression on wrong jump in python from fedora 30
+
+2019-05-26 16:20:08 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* plugin/meson.build:
+	  meson: expose plugins variable
+
+2019-05-06 11:29:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_gst.py:
+	  override Element before Bin so we can access element fields of bins
+	  And add a test
+	  See https://gitlab.gnome.org/GNOME/pygobject/issues/325
+
+2019-04-11 00:42:49 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/Gst.py:
+	  Gst.py: add high-level helpers
+
+2019-04-19 10:42:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.16.0 ===
 
 2019-04-19 00:37:16 +0100  Tim-Philipp Müller <tim@centricular.com>

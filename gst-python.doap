@@ -16,7 +16,7 @@ Python bindings for GStreamer
 GStreamer Python Bindings is a set of overrides and Gst fundamental types handling for the dynamically generated PyGObject bindings.
  </description>
  <category></category>
- <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-python" />
+ <bug-database rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-python/issues/" />
  <screenshots></screenshots>
  <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
  <programming-language>Python</programming-language>
@@ -29,6 +29,16 @@ GStreamer Python Bindings is a set of overrides and Gst fundamental types handli
      <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-python"/>
    </GitRepository>
  </repository>
+
+ <release>
+  <Version>
+   <revision>1.17.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-06-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-python/gst-python-1.17.1.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
