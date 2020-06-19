@@ -45,6 +45,10 @@ GstVaapiWindow *
 gst_vaapi_window_wayland_new (GstVaapiDisplay * display, guint width,
     guint height);
 
+GstVaapiWindow *
+gst_vaapi_window_wayland_new_with_surface (GstVaapiDisplay * display,
+    guintptr wl_surface);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindowWayland, gst_object_unref)
 
 G_END_DECLS

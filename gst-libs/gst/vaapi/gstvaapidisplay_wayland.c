@@ -151,6 +151,9 @@ registry_handle_global (void *data,
   if (strcmp (interface, "wl_compositor") == 0)
     priv->compositor =
         wl_registry_bind (registry, id, &wl_compositor_interface, 1);
+  else if (strcmp (interface, "wl_subcompositor") == 0)
+    priv->subcompositor =
+        wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
   else if (strcmp (interface, "wl_shell") == 0)
     priv->wl_shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
   else if (strcmp (interface, "xdg_wm_base") == 0) {
@@ -254,6 +257,7 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
   g_clear_pointer (&priv->output, wl_output_destroy);
   g_clear_pointer (&priv->wl_shell, wl_shell_destroy);
   g_clear_pointer (&priv->xdg_wm_base, xdg_wm_base_destroy);
+  g_clear_pointer (&priv->subcompositor, wl_subcompositor_destroy);
   g_clear_pointer (&priv->compositor, wl_compositor_destroy);
   g_clear_pointer (&priv->registry, wl_registry_destroy);
 

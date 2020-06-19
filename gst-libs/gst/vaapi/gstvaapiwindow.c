@@ -544,10 +544,12 @@ gst_vaapi_window_set_size (GstVaapiWindow * window, guint width, guint height)
   if (!GST_VAAPI_WINDOW_GET_CLASS (window)->resize (window, width, height))
     return;
 
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   gst_vaapi_video_pool_replace (&window->surface_pool, NULL);
 
   window->width = width;
   window->height = height;
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
 }
 
 static inline void

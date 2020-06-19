@@ -40,6 +40,7 @@
 #include <unistd.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi);
 #define GST_CAT_DEFAULT gst_debug_vaapi_window
 
 #define GST_VAAPI_WINDOW_WAYLAND_CAST(obj) \
@@ -104,6 +105,7 @@ struct _GstVaapiWindowWaylandPrivate
   struct xdg_toplevel *xdg_toplevel;
   struct wl_shell_surface *wl_shell_surface;
   struct wl_surface *surface;
+  struct wl_subsurface *video_subsurface;
   struct wl_region *opaque_region;
   struct wl_event_queue *event_queue;
   FrameState *last_frame;
@@ -350,6 +352,9 @@ gst_vaapi_window_wayland_set_fullscreen (GstVaapiWindow * window,
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
 
+  if (window->use_foreign_window)
+    return TRUE;
+
   if (!priv->is_shown) {
     priv->fullscreen_on_show = fullscreen;
     return TRUE;
@@ -403,8 +408,34 @@ gst_vaapi_window_wayland_create (GstVaapiWindow * window,
     return FALSE;
   wl_proxy_set_queue ((struct wl_proxy *) priv->surface, priv->event_queue);
 
-  /* Prefer XDG-shell over deprecated wl_shell (if available) */
-  if (priv_display->xdg_wm_base) {
+  if (window->use_foreign_window) {
+    struct wl_surface *wl_surface;
+
+    if (priv_display->subcompositor) {
+      if (GST_VAAPI_SURFACE_ID (window) == VA_INVALID_ID) {
+        GST_ERROR ("Invalid window");
+        return FALSE;
+      }
+
+      wl_surface = (struct wl_surface *) GST_VAAPI_WINDOW_ID (window);
+      GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
+      priv->video_subsurface =
+          wl_subcompositor_get_subsurface (priv_display->subcompositor,
+          priv->surface, wl_surface);
+      GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
+      if (!priv->video_subsurface)
+        return FALSE;
+
+      wl_proxy_set_queue ((struct wl_proxy *) priv->video_subsurface,
+          priv->event_queue);
+
+      wl_subsurface_set_desync (priv->video_subsurface);
+    } else {
+      GST_ERROR ("Wayland server does not support subsurfaces");
+      window->use_foreign_window = FALSE;
+    }
+    /* Prefer XDG-shell over deprecated wl_shell (if available) */
+  } else if (priv_display->xdg_wm_base) {
     /* Create the XDG surface. We make the toplevel on VaapiWindow::show() */
     GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
     priv->xdg_surface = xdg_wm_base_get_xdg_surface (priv_display->xdg_wm_base,
@@ -467,6 +498,7 @@ gst_vaapi_window_wayland_finalize (GObject * object)
 
   g_clear_pointer (&priv->xdg_surface, xdg_surface_destroy);
   g_clear_pointer (&priv->wl_shell_surface, wl_shell_surface_destroy);
+  g_clear_pointer (&priv->video_subsurface, wl_subsurface_destroy);
   g_clear_pointer (&priv->surface, wl_surface_destroy);
   g_clear_pointer (&priv->event_queue, wl_event_queue_destroy);
 
@@ -483,6 +515,9 @@ gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
   GstVaapiDisplayWaylandPrivate *const priv_display =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (GST_VAAPI_WINDOW_DISPLAY (window));
+
+  if (window->use_foreign_window)
+    return TRUE;
 
   GST_DEBUG ("resize window, new size %ux%u", width, height);
 
@@ -630,8 +665,7 @@ choose_next_format (GstVaapiDisplay * const display, gint * next_index)
 
 static GstVaapiDmabufStatus
 dmabuf_buffer_from_surface (GstVaapiWindow * window, GstVaapiSurface * surface,
-    const GstVaapiRectangle * rect, guint va_flags,
-    struct wl_buffer **out_buffer)
+    guint va_flags, struct wl_buffer **out_buffer)
 {
   GstVaapiDisplay *const display = GST_VAAPI_WINDOW_DISPLAY (window);
   GstVaapiDisplayWaylandPrivate *const priv_display =
@@ -690,8 +724,8 @@ dmabuf_buffer_from_surface (GstVaapiWindow * window, GstVaapiSurface * surface,
     }
   }
 
-  buffer = zwp_linux_buffer_params_v1_create_immed (params, rect->width,
-      rect->height, format, 0);
+  buffer = zwp_linux_buffer_params_v1_create_immed (params, window->width,
+      window->height, format, 0);
 
   if (!buffer)
     ret = GST_VAAPI_DMABUF_NOT_SUPPORTED;
@@ -754,8 +788,7 @@ again:
     }
   }
   if (!priv->dmabuf_broken) {
-    ret = dmabuf_buffer_from_surface (window, surface, dst_rect, va_flags,
-        buffer);
+    ret = dmabuf_buffer_from_surface (window, surface, va_flags, buffer);
     switch (ret) {
       case GST_VAAPI_DMABUF_SUCCESS:
         goto out;
@@ -843,6 +876,11 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   guint width, height;
   gboolean ret;
 
+  /* Skip rendering without valid window size. This can happen with a foreign
+     window if the render rectangle is not yet set. */
+  if (window->width == 0 || window->height == 0)
+    return TRUE;
+
   /* Check that we don't need to crop source VA surface */
   gst_vaapi_surface_get_size (surface, &width, &height);
   if (src_rect->x != 0 || src_rect->y != 0)
@@ -854,6 +892,11 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   if (dst_rect->x != 0 || dst_rect->y != 0)
     priv->need_vpp = TRUE;
   if (dst_rect->width != window->width || dst_rect->height != window->height)
+    priv->need_vpp = TRUE;
+
+  /* Check that the surface has the correct size for the window */
+  if (dst_rect->width != src_rect->width ||
+      dst_rect->height != src_rect->height)
     priv->need_vpp = TRUE;
 
   ret = buffer_from_surface (window, &surface, src_rect, dst_rect, flags,
@@ -979,4 +1022,31 @@ gst_vaapi_window_wayland_new (GstVaapiDisplay * display,
 
   return gst_vaapi_window_new_internal (GST_TYPE_VAAPI_WINDOW_WAYLAND, display,
       GST_VAAPI_ID_INVALID, width, height);
+}
+
+/**
+ * gst_vaapi_window_wayland_new_with_surface:
+ * @display: a #GstVaapiDisplay
+ * @wl_surface: a Wayland surface pointer
+ *
+ * Creates a window with the specified @wl_surface. The window
+ * will be attached to the @display and remains invisible to the user
+ * until gst_vaapi_window_show() is called.
+ *
+ * Return value (transfer full): the newly allocated #GstVaapiWindow object
+ *
+ * Since: 1.18
+ */
+GstVaapiWindow *
+gst_vaapi_window_wayland_new_with_surface (GstVaapiDisplay * display,
+    guintptr wl_surface)
+{
+  g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_WAYLAND (display), NULL);
+  g_return_val_if_fail (wl_surface, NULL);
+
+  GST_CAT_DEBUG (gst_debug_vaapi, "new window from surface 0x%"
+      G_GINTPTR_MODIFIER "x", wl_surface);
+
+  return gst_vaapi_window_new_internal (GST_TYPE_VAAPI_WINDOW_WAYLAND, display,
+      wl_surface, 0, 0);
 }

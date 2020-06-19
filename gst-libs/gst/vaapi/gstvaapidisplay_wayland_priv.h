@@ -72,6 +72,7 @@ struct _GstVaapiDisplayWaylandPrivate
   struct wl_compositor *compositor;
   struct wl_shell *wl_shell;
   struct xdg_wm_base *xdg_wm_base;
+  struct wl_subcompositor *subcompositor;
   struct wl_output *output;
   struct zwp_linux_dmabuf_v1 *dmabuf;
   struct wl_registry *registry;
