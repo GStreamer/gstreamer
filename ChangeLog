@@ -1,3 +1,421 @@
+=== release 1.17.1 ===
+
+2020-06-19 19:20:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.17.1
+
+2020-06-09 15:13:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins cache
+
+2020-06-08 09:37:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins cache
+
+2020-06-06 10:15:25 +0100  Philippe Normand <philn@igalia.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	  siddec: update gst_type_mark_as_plugin_api() calls
+	  This was left behind in commit bc1ab5e8e00a7ed6ac5e192af9310bd2146e446a.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/55>
+
+2020-06-06 00:41:38 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/x264/gstx264enc.c:
+	  plugins: uddate gst_type_mark_as_plugin_api() calls
+
+2020-06-03 18:38:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Require hotdoc >= 0.11.0
+
+2020-05-27 16:02:02 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update gst_plugins_cache.json
+
+2020-05-30 23:16:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/sidplay/gstsiddec.cc:
+	* ext/x264/gstx264enc.c:
+	  plugins: Use gst_type_mark_as_plugin_api() for all non-element plugin types
+
+2020-06-02 00:41:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: extract WM/PartOfSet disc number and count metadata
+	  Fixes #30
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/54>
+
+2020-06-02 00:40:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: sprinkle some INDENT-OFF
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/54>
+
+2020-05-27 14:42:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: fix meson test env setup to make sure we use the right gst-plugin-scanner
+	  If core is built as a subproject (e.g. as in gst-build), make sure to use
+	  the gst-plugin-scanner from the built subproject. Without this, gstreamer
+	  might accidentally use the gst-plugin-scanner from the install prefix if
+	  that exists, which in turn might drag in gst library versions we didn't
+	  mean to drag in. Those gst library versions might then be older than
+	  what our current build needs, and might cause our newly-built plugins
+	  to get blacklisted in the test registry because they rely on a symbol
+	  that the wrongly-pulled in gst lib doesn't have.
+	  This should fix running of unit tests in gst-build when invoking
+	  meson test or ninja test from outside the devenv for the case where
+	  there is an older or different-version gst-plugin-scanner installed
+	  in the install prefix.
+	  In case no gst-plugin-scanner is installed in the install prefix, this
+	  will fix "GStreamer-WARNING: External plugin loader failed. This most
+	  likely means that the plugin loader helper binary was not found or
+	  could not be run. You might need to set the GST_PLUGIN_SCANNER
+	  environment variable if your setup is unusual." warnings when running
+	  the unit tests.
+	  In the case where we find GStreamer core via pkg-config we use
+	  a newly-added pkg-config var "pluginscannerdir" to get the right
+	  directory. This has the benefit of working transparently for both
+	  installed and uninstalled pkg-config files/setups.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/53>
+
+2020-05-27 09:13:17 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: fix uninitialized warning
+	  Variable is always set in actual code paths but let's keep gcc happy.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/51>
+
+2020-05-12 05:07:47 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/sidplay/meson.build:
+	* meson.build:
+	  meson: Pass native: false to add_languages()
+	  This is needed for cross-compiling without a build machine compiler
+	  available. The option was added in 0.54, but we only need this in
+	  Cerbero and it doesn't affect older versions so it should be ok.
+	  Will just cause a spurious warning.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/50>
+
+2020-04-03 14:24:46 -0500  Derek Lesho <dlesho@codeweavers.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Always re-initialize metadata and global_metadata
+	  When transitioning from the PAUSED state, to the READY state, and back,
+	  metadata and global_metadata are left uninitialized, unlike when the
+	  demxuer transitions from NULL to READY, then to PAUSED.  I have found
+	  this to cause a segmentation fault when fields in these structures are
+	  set.
+
+2020-04-02 16:18:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix 'ref' property range and default
+	  The --ref option indicate the size of the DPB, hence should be in the range of
+	  0 to 16. This patch also fix the default to match x264enc default 3. This
+	  change isn't a behaviour change since we don't enforce the reported default.
+
+2020-03-19 18:05:43 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Mark as converter
+	  It is able to do channel downminxing, so technically it is also a
+	  converter
+	  This is also important so validate knows about that when doing its
+	  checks
+
+2019-10-17 14:55:51 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/x264/gstencoderbitrateprofilemanager.c:
+	* ext/x264/gstencoderbitrateprofilemanager.h:
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	* ext/x264/meson.build:
+	  x264enc: Respect Youtube bitrate recommandation
+	  Properly follow google recommendations[0] concerning bitrate when the
+	  user wants to use the youtube profile.
+	  [0]: https://support.google.com/youtube/answer/1722171?hl=en
+
+2019-12-18 16:09:42 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  ugly: use of g_value_dup_string
+	  Use helper method to get string from GValue.
+
+2019-12-14 18:49:54 +0700  Dmitry Shusharin <pmdvsh@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fixed codestyle
+
+2019-12-14 17:15:21 +0700  Dmitry Shusharin <pmdvsh@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: corrected em_data value in CEA-708 CC SEI message (fixes #28)
+	  Section 4.4 of CEA-708-D specification (table 2) requires all bits to be
+	  set inside em_data field. h264parse element (and possible third-party
+	  decoders such as libav) also follows this requirement.
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/issues/28
+
+2019-06-09 00:30:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* .gitmodules:
+	* Makefile.am:
+	* README:
+	* autogen.sh:
+	* common:
+	* configure.ac:
+	* docs/.gitignore:
+	* docs/version.entities.in:
+	* ext/Makefile.am:
+	* ext/a52dec/Makefile.am:
+	* ext/amrnb/Makefile.am:
+	* ext/amrwbdec/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/dvdread/Makefile.am:
+	* ext/mpeg2dec/.gitignore:
+	* ext/mpeg2dec/Makefile.am:
+	* ext/sidplay/Makefile.am:
+	* ext/x264/Makefile.am:
+	* gst-libs/Makefile.am:
+	* gst-libs/gst/Makefile.am:
+	* gst/Makefile.am:
+	* gst/asfdemux/.gitignore:
+	* gst/asfdemux/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/realmedia/.gitignore:
+	* gst/realmedia/Makefile.am:
+	* gst/xingmux/Makefile.am:
+	* m4/.gitignore:
+	* m4/Makefile.am:
+	* m4/README:
+	* m4/a52.m4:
+	* m4/aalib.m4:
+	* m4/as-ffmpeg.m4:
+	* m4/as-slurp-ffmpeg.m4:
+	* m4/check-libheader.m4:
+	* m4/freetype2.m4:
+	* m4/gconf-2.m4:
+	* m4/glib.m4:
+	* m4/gst-fionread.m4:
+	* m4/gst-ivorbis.m4:
+	* m4/gst-sdl.m4:
+	* m4/gst-shout2.m4:
+	* m4/gst-sid.m4:
+	* m4/gtk.m4:
+	* m4/libfame.m4:
+	* m4/libmikmod.m4:
+	* m4/lrint.m4:
+	* m4/lrintf.m4:
+	* pkgconfig/.gitignore:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-plugins-ugly-uninstalled.pc.in:
+	* po/.gitignore:
+	* po/Makevars:
+	* po/POTFILES:
+	* tests/Makefile.am:
+	* tests/check/.gitignore:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/generic/.gitignore:
+	* tests/files/Makefile.am:
+	  Remove autotools build system
+
+2019-09-02 09:33:15 -0400  Aaron Boxer <aaron.boxer@collabora.com>
+
+	* NEWS:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/x264/gstx264enc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/realmedia/rdtjitterbuffer.c:
+	* gst/realmedia/rtspreal.c:
+	* hooks/pre-commit.hook:
+	  documentation: fix some typos
+
+2019-08-23 19:06:59 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrwbdec/amrwbdec.c:
+	  docstrings: port ulinks to markdown links
+
+2019-08-23 16:25:25 +1000  Matthew Waters <matthew@centricular.com>
+
+	* docs/meson.build:
+	  meson: Don't generate doc cache when no plugins are enabled
+	  Fixes gst-build with -Dauto-features=disabled -Dugly=enabled
+
+2019-07-15 21:56:57 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Port to color_{primaries,transfer,matrix}_to_iso
+	  ... with more color value mapping
+
+2019-07-15 22:38:35 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/elements/x264enc.c:
+	* tests/check/meson.build:
+	  tests: x264enc: Enable test on Windows
+	  ... with removal of pointless unistd.h dependency.
+	  Note that full dependency listing is required to run unit test
+	  executable binary on Windows uninstalled environment.
+
+2019-05-31 23:07:58 +0200  Niels De Graef <niels.degraef@barco.com>
+
+	* configure.ac:
+	* meson.build:
+	  meson: Bump minimal GLib version to 2.44
+	  This means we can use some newer features and get rid of some
+	  boilerplate code using the G_DECLARE_* macros.
+	  As discussed on IRC, 2.44 is old enough by now to start depending on it.
+
+2019-05-29 23:00:48 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	  doc: remove xml from comments
+
+2019-05-25 14:19:54 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfdemux/asfheaders.h:
+	  asfdemux: remove some unused cruft in internal headers
+
+2019-05-16 09:15:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* docs/meson.build:
+	  docs: Stop building the doc cache by default
+	  And update the cache
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-docs/issues/36
+
+2019-05-13 22:54:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Update plugins documentation cache
+
+2018-10-22 11:47:37 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/all_index.md:
+	* docs/gst_api_version.in:
+	* docs/gst_plugins_cache.json:
+	* docs/index.md:
+	* docs/meson.build:
+	* docs/plugins/.gitignore:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/gst-plugins-ugly-plugins.signals:
+	* docs/plugins/gst-plugins-ugly-plugins.types:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* docs/sitemap.txt:
+	* ext/a52dec/meson.build:
+	* ext/amrnb/meson.build:
+	* ext/amrwbdec/meson.build:
+	* ext/cdio/meson.build:
+	* ext/dvdread/meson.build:
+	* ext/mpeg2dec/meson.build:
+	* ext/sidplay/meson.build:
+	* ext/x264/meson.build:
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/asfdemux/meson.build:
+	* gst/dvdlpcmdec/meson.build:
+	* gst/dvdsub/meson.build:
+	* gst/realmedia/meson.build:
+	* gst/xingmux/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  docs: Port documentation to hotdoc
+
+2018-10-22 11:47:32 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/x264/gstx264enc.c:
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/realmedia/gstrdtbuffer.h:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rtspreal.c:
+	* gst/xingmux/gstxingmux.c:
+	  docs: Port all docstring to gtk-doc markdown
+
+2019-04-26 18:28:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/sidplay/meson.build:
+	  meson: sidplay: use library() instead of shared_module()
+	  Like we do for other plugins, and also install a .pc file
+	  if we build the plugin statically.
+
+2019-04-22 12:51:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/dvdread/meson.build:
+	* meson.build:
+	  meson: Always require the gmodule dependency
+	  It's needed by the dvdread plugin but also by the x264 plugin in certain
+	  circumstances. As it's part of GLib and always available, simply move it
+	  as a hard dependency to the top-level meson.build.
+
+2019-04-19 10:28:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* README:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* meson.build:
+	  Back to development
+
 === release 1.16.0 ===
 
 2019-04-19 00:24:40 +0100  Tim-Philipp Müller <tim@centricular.com>

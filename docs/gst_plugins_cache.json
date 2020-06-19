@@ -157,7 +157,7 @@
                 ]
             }
         },
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -410,7 +410,7 @@
                 ]
             }
         },
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -491,7 +491,7 @@
         "filename": "gstamrwbdec",
         "license": "unknown",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -645,7 +645,7 @@
         "filename": "gstasf",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -790,7 +790,7 @@
         "filename": "gstcdio",
         "license": "GPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -871,7 +871,7 @@
         "filename": "gstdvdlpcmdec",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1017,7 +1017,7 @@
         "filename": "gstdvdread",
         "license": "GPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1081,7 +1081,7 @@
         "filename": "gstdvdsub",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1134,7 +1134,7 @@
         "filename": "gstmpeg2dec",
         "license": "GPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1546,7 +1546,7 @@
         "filename": "gstrealmedia",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1581,84 +1581,111 @@
                 "properties": {
                     "blocksize": {
                         "blurb": "Size in bytes to output per buffer",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "4096",
                         "max": "-1",
                         "min": "1",
+                        "mutable": "null",
                         "readable": true,
                         "type": "guint",
                         "writable": true
                     },
                     "clock": {
                         "blurb": "clock",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "pal (1)",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstSidClock",
                         "writable": true
                     },
                     "filter": {
                         "blurb": "filter",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "true",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
                     },
                     "force-speed": {
                         "blurb": "force_speed",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "false",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
                     },
                     "measured-volume": {
                         "blurb": "measured_volume",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "true",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
                     },
                     "memory": {
                         "blurb": "memory",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "bank-switching (32)",
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstSidMemory",
                         "writable": true
                     },
                     "metadata": {
                         "blurb": "Metadata",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
                         "readable": true,
                         "type": "GstCaps",
                         "writable": false
                     },
                     "mos8580": {
                         "blurb": "mos8580",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "false",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
                     },
                     "tune": {
                         "blurb": "tune",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "0",
                         "max": "100",
                         "min": "0",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -1706,7 +1733,7 @@
                 ]
             }
         },
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2529,7 +2556,7 @@
                 ]
             }
         },
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2567,7 +2594,7 @@
         "filename": "gstxingmux",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Ugly Plug-ins git",
+        "package": "GStreamer Ugly Plug-ins",
         "source": "gst-plugins-ugly",
         "tracers": {},
         "url": "Unknown package origin"
