@@ -29,6 +29,7 @@
 #include "gstd3d11download.h"
 #include "gstd3d11colorconvert.h"
 #include "gstd3d11videosinkbin.h"
+#include "gstd3d11shader.h"
 #ifdef HAVE_DXVA_H
 #include "gstd3d11utils.h"
 #include "gstd3d11h264dec.h"
@@ -37,6 +38,7 @@
 #include "gstd3d11vp8dec.h"
 #endif
 
+GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_utils_debug);
@@ -57,9 +59,12 @@ GST_DEBUG_CATEGORY (gst_d3d11_vp9_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp8_dec_debug);
 #endif
 
+#define GST_CAT_DEFAULT gst_d3d11_debug
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug, "d3d11", 0, "direct3d 11 plugin");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_shader_debug,
       "d3d11shader", 0, "d3d11shader");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_colorconverter_debug,
@@ -82,6 +87,11 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug_layer_debug,
       "d3d11debuglayer", 0, "native d3d11 and dxgi debug");
 #endif
+
+  if (!gst_d3d11_shader_init ()) {
+    GST_WARNING ("Cannot initialize d3d11 shader");
+    return TRUE;
+  }
 
   gst_element_register (plugin,
       "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);

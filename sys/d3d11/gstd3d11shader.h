@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstD3D11Quad GstD3D11Quad;
 
+gboolean gst_d3d11_shader_init (void);
+
 gboolean gst_d3d11_create_pixel_shader (GstD3D11Device * device,
                                         const gchar * source,
                                         ID3D11PixelShader ** shader);

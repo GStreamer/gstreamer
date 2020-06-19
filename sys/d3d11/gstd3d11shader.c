@@ -24,9 +24,60 @@
 #include "gstd3d11shader.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
+#include <gmodule.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_shader_debug);
 #define GST_CAT_DEFAULT gst_d3d11_shader_debug
+
+static GModule *d3d_compiler_module = NULL;
+static pD3DCompile GstD3DCompileFunc = NULL;
+
+gboolean
+gst_d3d11_shader_init (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+#if GST_D3D11_WINAPI_ONLY_APP
+    /* Assuming that d3d compiler library is available */
+    GstD3DCompileFunc = D3DCompile;
+#else
+    static const gchar *d3d_compiler_names[] = {
+      "d3dcompiler_47.dll",
+      "d3dcompiler_46.dll",
+      "d3dcompiler_45.dll",
+      "d3dcompiler_44.dll",
+      "d3dcompiler_43.dll",
+    };
+    gint i;
+    for (i = 0; i < G_N_ELEMENTS (d3d_compiler_names); i++) {
+      d3d_compiler_module =
+          g_module_open (d3d_compiler_names[i], G_MODULE_BIND_LAZY);
+
+      if (d3d_compiler_module) {
+        GST_INFO ("D3D compiler %s is available", d3d_compiler_names[i]);
+        if (!g_module_symbol (d3d_compiler_module, "D3DCompile",
+                (gpointer *) & GstD3DCompileFunc)) {
+          GST_ERROR ("Cannot load D3DCompile symbol from %s",
+              d3d_compiler_names[i]);
+          g_module_close (d3d_compiler_module);
+          d3d_compiler_module = NULL;
+          GstD3DCompileFunc = NULL;
+        } else {
+          break;
+        }
+      }
+    }
+
+    if (!GstD3DCompileFunc)
+      GST_WARNING ("D3D11 compiler library is unavailable");
+#endif
+
+    g_once_init_leave (&_init, 1);
+  }
+
+  return ! !GstD3DCompileFunc;
+}
 
 static ID3DBlob *
 compile_shader (GstD3D11Device * device, const gchar * shader_source,
@@ -37,6 +88,11 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
   const gchar *shader_target;
   D3D_FEATURE_LEVEL feature_level;
   HRESULT hr;
+
+  if (!gst_d3d11_shader_init ()) {
+    GST_ERROR ("D3DCompiler is unavailable");
+    return NULL;
+  }
 
   feature_level = gst_d3d11_device_get_chosen_feature_level (device);
 
@@ -56,8 +112,10 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
       shader_target = "vs_4_0_level_9_1";
   }
 
-  hr = D3DCompile (shader_source, strlen (shader_source), NULL, NULL, NULL,
-      "main", shader_target, 0, 0, &ret, &error);
+  g_assert (GstD3DCompileFunc);
+
+  hr = GstD3DCompileFunc (shader_source, strlen (shader_source), NULL, NULL,
+      NULL, "main", shader_target, 0, 0, &ret, &error);
 
   if (!gst_d3d11_result (hr, device)) {
     const gchar *err = NULL;

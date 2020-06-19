@@ -110,10 +110,6 @@ if get_option('debug')
       set_variable(f.get(3), true)
     endif
   endforeach
-
-  if have_d3d11sdk_h or have_dxgidebug_h
-    extra_dep += [gmodule_dep]
-  endif
 endif
 
 d3d11_conf.set10('HAVE_D3D11SDKLAYERS_H', have_d3d11sdk_h)
@@ -134,7 +130,7 @@ winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     dependencies: [d3d11_lib, dxgi_lib],
     name: 'checking if building for Win32')
 
-if runtimeobject_lib.found()
+if runtimeobject_lib.found() and d3dcompiler_lib.found()
   winapi_app = cxx.compiles('''#include <winapifamily.h>
       #include <windows.applicationmodel.core.h>
       #include <wrl.h>
@@ -157,7 +153,7 @@ winapi_app_only = winapi_app and not winapi_desktop
 if winapi_app_only
   d3d11_sources += ['gstd3d11window_corewindow.cpp',
                     'gstd3d11window_swapchainpanel.cpp']
-  extra_dep += [runtimeobject_lib]
+  extra_dep += [runtimeobject_lib, d3dcompiler_lib]
 else
   d3d11_sources += ['gstd3d11window_win32.cpp']
 endif
@@ -174,7 +170,7 @@ gstd3d11 = library('gstd3d11',
   c_args : gst_plugins_bad_args + extra_c_args,
   cpp_args: gst_plugins_bad_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib, d3dcompiler_lib] + extra_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
