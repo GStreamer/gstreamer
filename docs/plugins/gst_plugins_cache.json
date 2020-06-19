@@ -48,7 +48,7 @@
         "filename": "gstadder",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -693,7 +693,7 @@
         "filename": "gstalsa",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1351,7 +1351,7 @@
         "filename": "gstapp",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -1439,7 +1439,7 @@
         "filename": "gstaudioconvert",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2039,7 +2039,7 @@
                 }
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2173,7 +2173,7 @@
         "filename": "gstaudiorate",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2361,7 +2361,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2692,7 +2692,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -2947,7 +2947,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -3278,7 +3278,7 @@
                 }
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -3487,7 +3487,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4115,18 +4115,467 @@
         "filename": "gstgio",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
     },
     "libvisual": {
         "description": "libvisual visualization plugins",
-        "elements": {},
+        "elements": {
+            "libvisual_bumpscope": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Bumpscope visual plugin",
+                "hierarchy": [
+                    "GstVisualbumpscope",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual Bumpscope plugin plugin v.0.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_corona": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Libvisual corona plugin",
+                "hierarchy": [
+                    "GstVisualcorona",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual libvisual corona plugin plugin v.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_infinite": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Infinite visual plugin",
+                "hierarchy": [
+                    "GstVisualinfinite",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual infinite plugin plugin v.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_jakdaw": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "jakdaw visual plugin",
+                "hierarchy": [
+                    "GstVisualjakdaw",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual Jakdaw plugin plugin v.0.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_jess": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Jess visual plugin",
+                "hierarchy": [
+                    "GstVisualjess",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual jess plugin plugin v.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_lv_analyzer": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Libvisual analyzer plugin",
+                "hierarchy": [
+                    "GstVisuallv_analyzer",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual libvisual analyzer plugin v.1.0",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_lv_scope": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Libvisual scope plugin",
+                "hierarchy": [
+                    "GstVisuallv_scope",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual libvisual scope plugin v.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "libvisual_oinksie": {
+                "author": "Benjamin Otte <otte@gnome.org>",
+                "description": "Libvisual Oinksie visual plugin",
+                "hierarchy": [
+                    "GstVisualoinksie",
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Visualization",
+                "long-name": "libvisual oinksie plugin plugin v.0.1",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)8000, (int)11250, (int)22500, (int)32000, (int)44100, (int)48000, (int)96000 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGR, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "shade-amount": {
+                        "blurb": "Shading color to use (big-endian ARGB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "657930",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "shader": {
+                        "blurb": "Shader function to apply on each frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "fade (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioVisualizerShader",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
         "filename": "gstlibvisual",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -4500,7 +4949,7 @@
         "filename": "gstogg",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -10477,7 +10926,7 @@
                 }
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -10928,7 +11377,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -10994,7 +11443,7 @@
         "filename": "gstoverlaycomposition",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -12658,7 +13107,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -12669,7 +13118,7 @@
         "filename": "gstpbtypes",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -15972,7 +16421,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -16440,7 +16889,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -16532,7 +16981,7 @@
         "filename": "gstsubparse",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -19042,7 +19491,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -19090,44 +19539,56 @@
                     },
                     "visualize-bit-usage": {
                         "blurb": "Sets the bitstream breakdown visualization mode. Values influence the width of the bit usage bars to show",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "0",
                         "max": "255",
                         "min": "0",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
                     },
                     "visualize-macroblock-modes": {
                         "blurb": "Show macroblock mode selection overlaid on image. Value gives a mask for macroblock (MB) modes to show",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "0",
                         "max": "65535",
                         "min": "0",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
                     },
                     "visualize-motion-vectors": {
                         "blurb": "Show motion vector selection overlaid on image. Value gives a mask for motion vector (MV) modes to show",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "0",
                         "max": "65535",
                         "min": "0",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
                     },
                     "visualize-quantization-modes": {
                         "blurb": "Show adaptive quantization mode selection overlaid on image. Value gives a mask for quantization (QI) modes to show",
+                        "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
+                        "controllable": false,
                         "default": "0",
                         "max": "65535",
                         "min": "0",
+                        "mutable": "null",
                         "readable": true,
                         "type": "gint",
                         "writable": true
@@ -19412,7 +19873,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -19423,7 +19884,7 @@
         "filename": "gsttypefindfunctions",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -19603,7 +20064,7 @@
         "filename": "gstvideoconvert",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -19818,7 +20279,7 @@
         "filename": "gstvideorate",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -20032,7 +20493,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -20576,7 +21037,7 @@
                 ]
             }
         },
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -20659,7 +21120,7 @@
         "filename": "gstvolume",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -20959,7 +21420,7 @@
         "filename": "gstvorbis",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -21281,7 +21742,7 @@
         "filename": "gstximagesink",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"
@@ -21745,7 +22206,7 @@
         "filename": "gstxvimagesink",
         "license": "LGPL",
         "other-types": {},
-        "package": "GStreamer Base Plug-ins git",
+        "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
         "url": "Unknown package origin"

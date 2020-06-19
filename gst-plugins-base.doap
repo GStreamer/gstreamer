@@ -20,7 +20,7 @@ libraries and base classes useful for writing elements.
 A wide range of video and audio decoders, encoders, and filters are included.
 </description>
  <category></category>
- <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-base" />
+ <bug-database rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/" />
  <screenshots></screenshots>
  <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
  <programming-language>C</programming-language>
@@ -33,6 +33,16 @@ A wide range of video and audio decoders, encoders, and filters are included.
      <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-base"/>
    </GitRepository>
  </repository>
+
+ <release>
+  <Version>
+   <revision>1.17.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-06-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.17.1.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
