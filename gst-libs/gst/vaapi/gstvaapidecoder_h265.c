@@ -1201,7 +1201,7 @@ ensure_context (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
   info.chroma_type = priv->chroma_type;
   info.width = sps->width;
   info.height = sps->height;
-  info.ref_frames = dpb_size;
+  info.ref_frames = 16;
 
   if (!gst_vaapi_decoder_ensure_context (GST_VAAPI_DECODER (decoder), &info))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
