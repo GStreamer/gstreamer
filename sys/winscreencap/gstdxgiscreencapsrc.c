@@ -47,7 +47,8 @@
 #include "gstdxgiscreencapsrc.h"
 #include "dxgicapture.h"
 
-GST_DEBUG_CATEGORY_STATIC (dxgiscreencapsrc_debug);
+GST_DEBUG_CATEGORY_EXTERN (gst_dxgi_screen_cap_src_debug);
+#define GST_CAT_DEFAULT gst_dxgi_screen_cap_src_debug
 
 struct _GstDXGIScreenCapSrc
 {
@@ -190,9 +191,6 @@ gst_dxgi_screen_cap_src_class_init (GstDXGIScreenCapSrcClass * klass)
   gst_element_class_set_static_metadata (e_class,
       "DirectX DXGI screen capture source",
       "Source/Video", "Captures screen", "OKADA Jun-ichi <okada@abt.jp>");
-
-  GST_DEBUG_CATEGORY_INIT (dxgiscreencapsrc_debug, "dxgiscreencapsrc", 0,
-      "DirectX DXGI screen capture source");
 }
 
 static void

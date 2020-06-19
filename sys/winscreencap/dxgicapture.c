@@ -25,6 +25,9 @@
 
 #include <d3dcompiler.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_dxgi_screen_cap_src_debug);
+#define GST_CAT_DEFAULT gst_dxgi_screen_cap_src_debug
+
 #define PTR_RELEASE(p) {if(NULL!=(p)){IUnknown_Release((IUnknown *)(p)); (p) = NULL;}}
 #define BYTE_PER_PIXEL (4)
 
