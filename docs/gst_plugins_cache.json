@@ -28,18 +28,6 @@
                     }
                 },
                 "properties": {
-                    "async-handling": {
-                        "blurb": "The bin will handle Asynchronous state changes",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "debug": {
                         "blurb": "Dump request and response messages to stdout",
                         "conditionally-available": false,
@@ -88,18 +76,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
-                        "writable": true
-                    },
-                    "message-forward": {
-                        "blurb": "Forwards all children messages",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     },
                     "multicast-iface": {
