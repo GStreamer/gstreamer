@@ -190,6 +190,7 @@ gst_vpx_dec_class_init (GstVPXDecClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_vpxdec_debug, "vpxdec", 0, "VPX Decoder");
 
   gst_type_mark_as_plugin_api (GST_VPX_DEC_TYPE_POST_PROCESSING_FLAGS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_VPX_DEC, 0);
 }
 
 static void

@@ -128,6 +128,8 @@ gst_gtk_base_sink_class_init (GstGtkBaseSinkClass * klass)
   gstbasesink_class->stop = gst_gtk_base_sink_stop;
 
   gstvideosink_class->show_frame = gst_gtk_base_sink_show_frame;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GTK_BASE_SINK, 0);
 }
 
 static void

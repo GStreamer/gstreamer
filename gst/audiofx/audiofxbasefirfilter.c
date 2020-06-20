@@ -584,6 +584,8 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
   trans_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform_size);
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_setup);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_FX_BASE_FIR_FILTER, 0);
 }
 
 static void

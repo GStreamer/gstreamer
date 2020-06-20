@@ -658,6 +658,7 @@ gst_vpx_enc_class_init (GstVPXEncClass * klass)
   gst_type_mark_as_plugin_api (GST_VPX_ENC_SCALING_MODE_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_VPX_ENC_TOKEN_PARTITIONS_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_VPX_ENC_ER_FLAGS_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_VPX_ENC, 0);
 }
 
 static void

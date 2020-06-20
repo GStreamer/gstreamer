@@ -90,6 +90,8 @@ gst_auto_detect_class_init (GstAutoDetectClass * klass)
       g_param_spec_boolean ("sync", "Sync",
           "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUTO_DETECT, 0);
 }
 
 static void

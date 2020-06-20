@@ -118,6 +118,8 @@ gst_audio_fx_base_iir_filter_class_init (GstAudioFXBaseIIRFilterClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_iir_filter_transform_ip);
   trans_class->transform_ip_on_passthrough = FALSE;
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_audio_fx_base_iir_filter_stop);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_FX_BASE_IIR_FILTER, 0);
 }
 
 static void
