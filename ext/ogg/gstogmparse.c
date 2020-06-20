@@ -336,6 +336,8 @@ gst_ogm_parse_class_init (GstOgmParseClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_ogm_parse_change_state);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_OGM_PARSE, 0);
 }
 
 static void

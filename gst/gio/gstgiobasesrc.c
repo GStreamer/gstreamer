@@ -76,6 +76,8 @@ gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_gio_base_src_unlock_stop);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_gio_base_src_create);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_gio_base_src_query);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GIO_BASE_SRC, 0);
 }
 
 static void

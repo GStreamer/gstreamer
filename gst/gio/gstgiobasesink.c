@@ -69,6 +69,8 @@ gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_gio_base_sink_query);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_gio_base_sink_event);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_gio_base_sink_render);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GIO_BASE_SINK, 0);
 }
 
 static void

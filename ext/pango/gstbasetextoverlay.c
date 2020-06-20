@@ -636,6 +636,7 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_LINE_ALIGN, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_SCALE_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_WRAP_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY, 0);
 }
 
 static void

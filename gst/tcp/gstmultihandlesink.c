@@ -488,6 +488,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_RECOVER_POLICY, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_SYNC_METHOD, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_CLIENT_STATUS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MULTI_HANDLE_SINK, 0);
 }
 
 static void

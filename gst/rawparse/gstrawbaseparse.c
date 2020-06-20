@@ -182,6 +182,8 @@ gst_raw_base_parse_class_init (GstRawBaseParseClass * klass)
           "Use the sink caps for defining the output format",
           DEFAULT_USE_SINK_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RAW_BASE_PARSE, 0);
 }
 
 static void

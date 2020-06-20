@@ -75,6 +75,8 @@ gst_gl_base_mixer_pad_class_init (GstGLBaseMixerPadClass * klass)
 
   vaggpad_class->prepare_frame = NULL;
   vaggpad_class->clean_frame = NULL;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_BASE_MIXER_PAD, 0);
 }
 
 static void
@@ -396,6 +398,8 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   g_type_class_ref (GST_TYPE_GL_BASE_MIXER_PAD);
 
   klass->supported_gl_api = GST_GL_API_ANY;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_BASE_MIXER, 0);
 }
 
 static void
