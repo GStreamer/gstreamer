@@ -52,20 +52,6 @@
                         "type": "gboolean",
                         "writable": true
                     },
-                    "min-latency": {
-                        "blurb": "Aggregate output data to a minimum of latency time (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
                     "mode": {
                         "blurb": "Decoding Mode (default 3f2r)",
                         "conditionally-available": false,
@@ -76,32 +62,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstA52DecMode",
-                        "writable": true
-                    },
-                    "plc": {
-                        "blurb": "Perform packet loss concealment (if supported)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "tolerance": {
-                        "blurb": "Perfect ts while timestamp jitter/imperfection within tolerance (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -191,46 +151,6 @@
                     }
                 },
                 "properties": {
-                    "min-latency": {
-                        "blurb": "Aggregate output data to a minimum of latency time (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
-                    "plc": {
-                        "blurb": "Perform packet loss concealment (if supported)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "tolerance": {
-                        "blurb": "Perfect ts while timestamp jitter/imperfection within tolerance (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
                     "variant": {
                         "blurb": "The decoder variant",
                         "conditionally-available": false,
@@ -285,56 +205,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstAmrnbEncBandMode",
-                        "writable": true
-                    },
-                    "hard-resync": {
-                        "blurb": "Perform clipping and sample flushing upon discontinuity",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "mark-granule": {
-                        "blurb": "Apply granule semantics to buffer metadata (implies perfect-timestamp)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": false
-                    },
-                    "perfect-timestamp": {
-                        "blurb": "Favour perfect timestamps over tracking upstream timestamps",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "tolerance": {
-                        "blurb": "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "40000000",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -443,48 +313,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "min-latency": {
-                        "blurb": "Aggregate output data to a minimum of latency time (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
-                    "plc": {
-                        "blurb": "Perform packet loss concealment (if supported)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "tolerance": {
-                        "blurb": "Perfect ts while timestamp jitter/imperfection within tolerance (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "primary"
             }
         },
@@ -529,33 +358,7 @@
                     }
                 },
                 "rank": "secondary",
-                "signals": {
-                    "no-more-pads": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-added": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-removed": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    }
-                }
+                "signals": {}
             },
             "rtpasfdepay": {
                 "author": "Tim-Philipp Müller <tim centricular net>, Wim Taymans <wim.taymans@gmail.com>",
@@ -582,46 +385,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "max-reorder": {
-                        "blurb": "Max seqnum reorder before assuming sender has restarted",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "100",
-                        "max": "2147483647",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
-                    "source-info": {
-                        "blurb": "Add RTP source information as buffer meta",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Various statistics",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "application/x-rtp-depayload-stats, clock_rate=(uint)0, npt-start=(guint64)0, npt-stop=(guint64)18446744073709551615, play-speed=(double)1, play-scale=(double)1, running-time-dts=(guint64)18446744073709551615, running-time-pts=(guint64)18446744073709551615, seqnum=(uint)0, timestamp=(uint)0;",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstStructure",
-                        "writable": false
-                    }
-                },
+                "properties": {},
                 "rank": "marginal"
             },
             "rtspwms": {
@@ -679,70 +443,6 @@
                     }
                 },
                 "properties": {
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "device": {
-                        "blurb": "CD device location",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "/dev/cdrom",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gchararray",
-                        "writable": true
-                    },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "mode": {
-                        "blurb": "Mode",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "normal (0)",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstAudioCdSrcMode",
-                        "writable": true
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
                     "read-speed": {
                         "blurb": "Read from device at the specified speed (-1 = default)",
                         "conditionally-available": false,
@@ -755,32 +455,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
-                        "writable": true
-                    },
-                    "track": {
-                        "blurb": "Track",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "1",
-                        "max": "99",
-                        "min": "1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -823,48 +497,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "min-latency": {
-                        "blurb": "Aggregate output data to a minimum of latency time (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
-                    "plc": {
-                        "blurb": "Perform packet loss concealment (if supported)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "tolerance": {
-                        "blurb": "Perfect ts while timestamp jitter/imperfection within tolerance (ns)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "primary"
             }
         },
@@ -918,20 +551,6 @@
                         "type": "gint",
                         "writable": true
                     },
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
                     "chapter": {
                         "blurb": "chapter",
                         "conditionally-available": false,
@@ -958,32 +577,6 @@
                         "type": "gchararray",
                         "writable": true
                     },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
                     "title": {
                         "blurb": "title",
                         "conditionally-available": false,
@@ -996,18 +589,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
-                        "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1114,20 +695,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "secondary"
             }
         },
@@ -1167,32 +735,6 @@
                     }
                 },
                 "properties": {
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "location": {
                         "blurb": "Location of the PNM url to read",
                         "conditionally-available": false,
@@ -1203,32 +745,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
-                        "writable": true
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1259,33 +775,7 @@
                     }
                 },
                 "rank": "secondary",
-                "signals": {
-                    "no-more-pads": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-added": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-removed": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    }
-                }
+                "signals": {}
             },
             "rdtdepay": {
                 "author": "Lutz Mueller <lutz at topfrose dot de>, Wim Taymans <wim@fluendo.com>",
@@ -1370,11 +860,6 @@
                         "return-type": "void",
                         "when": "last"
                     },
-                    "no-more-pads": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
                     "on-bye-ssrc": {
                         "args": [
                             {
@@ -1431,26 +916,6 @@
                         "return-type": "void",
                         "when": "last"
                     },
-                    "pad-added": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-removed": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
                     "request-pt-map": {
                         "args": [
                             {
@@ -1497,33 +962,7 @@
                     }
                 },
                 "rank": "primary",
-                "signals": {
-                    "no-more-pads": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-added": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-removed": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    }
-                }
+                "signals": {}
             },
             "rtspreal": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
@@ -1982,20 +1421,6 @@
                         "type": "GstX264EncMe",
                         "writable": true
                     },
-                    "min-force-key-unit-interval": {
-                        "blurb": "Minimum interval between force-keyunit requests in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
                     "multipass-cache-file": {
                         "blurb": "Filename for multipass cache file",
                         "conditionally-available": false,
@@ -2070,18 +1495,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstX264EncPsyTune",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     },
                     "qp-max": {
