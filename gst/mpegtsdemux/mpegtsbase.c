@@ -159,6 +159,8 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->sink_query = GST_DEBUG_FUNCPTR (mpegts_base_default_sink_query);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_MPEGTS_BASE, 0);
 }
 
 static void

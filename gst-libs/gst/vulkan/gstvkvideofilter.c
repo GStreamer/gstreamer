@@ -104,6 +104,8 @@ gst_vulkan_video_filter_class_init (GstVulkanVideoFilterClass * klass)
       gst_vulkan_video_filter_propose_allocation;
   gstbasetransform_class->decide_allocation =
       gst_vulkan_video_filter_decide_allocation;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VULKAN_VIDEO_FILTER, 0);
 }
 
 static void

@@ -226,6 +226,7 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
       g_param_spec_boxed ("stats", "Stats", "Retrieve a statistics structure",
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_LOCATION_HANDLER, 0);
   GST_DEBUG_CATEGORY_INIT (gst_rtmp2_sink_debug_category, "rtmp2sink", 0,
       "debug category for rtmp2sink element");
 }

@@ -132,6 +132,8 @@ gst_curl_tls_sink_class_init (GstCurlTlsSinkClass * klass)
           "Perform insecure SSL connections",
           "Allow curl to perform insecure SSL connections",
           DEFAULT_INSECURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CURL_TLS_SINK, 0);
 }
 
 static void

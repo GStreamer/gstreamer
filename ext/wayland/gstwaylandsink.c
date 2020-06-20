@@ -209,6 +209,8 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
       g_param_spec_boolean ("fullscreen", "Fullscreen",
           "Whether the surface should be made fullscreen ", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_WAYLAND_VIDEO, 0);
 }
 
 static void

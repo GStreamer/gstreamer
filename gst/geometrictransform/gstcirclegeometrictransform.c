@@ -191,6 +191,8 @@ gst_circle_geometric_transform_class_init (GstCircleGeometricTransformClass *
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->prepare_func = circle_geometric_transform_precalc;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM, 0);
 }
 
 static void

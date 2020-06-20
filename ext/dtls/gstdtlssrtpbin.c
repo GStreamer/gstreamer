@@ -121,6 +121,8 @@ gst_dtls_srtp_bin_class_init (GstDtlsSrtpBinClass * klass)
       G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_DTLS_SRTP_BIN, 0);
 }
 
 static void

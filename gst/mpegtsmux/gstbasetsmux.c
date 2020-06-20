@@ -178,6 +178,8 @@ gst_base_ts_mux_pad_class_init (GstBaseTsMuxPadClass * klass)
 
   gobject_class->dispose = gst_base_ts_mux_pad_dispose;
   gstaggpad_class->flush = gst_base_ts_mux_pad_flush;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_TS_MUX, 0);
 }
 
 static void

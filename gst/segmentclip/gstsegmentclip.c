@@ -83,6 +83,8 @@ gst_segment_clip_class_init (GstSegmentClipClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_segment_clip_change_state);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SEGMENT_CLIP, 0);
 }
 
 static void

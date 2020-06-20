@@ -176,6 +176,7 @@ gst_curl_ssh_sink_class_init (GstCurlSshSinkClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_type_mark_as_plugin_api (GST_TYPE_CURL_SSH_SINK_AUTH_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_CURL_SSH_SINK, 0);
 }
 
 static void

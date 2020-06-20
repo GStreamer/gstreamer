@@ -508,6 +508,8 @@ gst_ladspa_source_type_base_init (GstLADSPASourceClass * ladspa_class)
 
   gst_ladspa_source_type_class_add_pad_template (&ladspa_class->ladspa,
       base_class);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_LADSPA_SOURCE, 0);
 }
 
 static void

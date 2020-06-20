@@ -282,6 +282,8 @@ gst_ladspa_filter_type_base_init (GstLADSPAFilterClass * ladspa_class)
       GST_LADSPA_FILTER_CLASS_TAGS);
   gst_ladspa_filter_type_class_add_pad_templates (&ladspa_class->ladspa,
       audio_class);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_LADSPA_FILTER, 0);
 }
 
 static void

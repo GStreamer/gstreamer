@@ -546,6 +546,8 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Base class for camerabin src bin", "Source/Video",
       "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_CAMERA_SRC, 0);
 }
 
 static void
