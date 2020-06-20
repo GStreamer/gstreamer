@@ -33,4 +33,6 @@ if opencv_dep.found()
   install_headers(opencv_headers, subdir : 'gstreamer-1.0/gst/opencv')
 elif get_option('opencv').enabled()
   error('OpenCV support enabled but required dependencies were not found.')
+else
+  gstopencv_dep = disabler()
 endif

@@ -111,6 +111,7 @@ if build_gir
         {'name': 'player', 'gir': player_gir, 'lib': gstplayer_dep},
         {'name': 'insertbin', 'gir': insertbin_gir, 'lib': gstinsertbin_dep},
         {'name': 'codecparsers', 'lib': gstcodecparsers_dep},
+        {'name': 'opencv', 'lib': gstopencv_dep, 'c_source_patterns': ['*.h', '*.cpp'], 'extra_c_flags': ['-x c++']},
         {'name': 'adaptivedemux', 'lib': gstadaptivedemux_dep},
         {'name': 'webrtc', 'gir': webrtc_gir, 'lib': gstwebrtc_dep, 'suffix': 'lib'},
         {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
@@ -125,6 +126,13 @@ libs_doc = []
 foreach lib_def: libs
   name = lib_def['name']
   lib = lib_def['lib']
+
+  c_source_patterns = lib_def.get('c_source_patterns', ['*.[hc]'])
+  c_sources = []
+  foreach pattern: c_source_patterns
+    c_sources += join_paths(root_rel, 'gst-libs/gst', name, pattern)
+  endforeach
+
     if lib_def.has_key('gir')
         if has_gi_extension
             gir = lib_def['gir']
@@ -132,7 +140,7 @@ foreach lib_def: libs
             suffix = lib_def.get('suffix', '')
             libs_doc += [hotdoc.generate_doc(prefix + name + suffix,
                 project_version: api_version,
-                gi_c_sources: [join_paths(root_rel, 'gst-libs/gst', name, '*.[hc]')],
+                gi_c_sources: c_sources,
                 gi_sources: gir[0].full_path(),
                 gi_c_source_filters: excludes,
                 sitemap: join_paths('libs', name, 'sitemap.txt'),
@@ -151,12 +159,12 @@ foreach lib_def: libs
                 sitemap: join_paths('libs', name, 'sitemap.txt'),
                 index: join_paths('libs', name, 'index.md'),
                 project_version: api_version,
-                c_sources: [join_paths(root_rel, 'gst-libs/gst/', name, '*.[hc]')],
+                c_sources: c_sources,
                 c_source_filters: excludes,
                 c_index: join_paths('libs', name, 'index.md'),
                 c_smart_index: true,
                 c_order_generated_subpages: true,
-                extra_c_flags: ' -DGST_USE_UNSTABLE_API',
+                extra_c_flags: ['-DGST_USE_UNSTABLE_API'] + lib_def.get('extra_c_flags', []),
                 dependencies: lib,
                 install: false,
             )]
