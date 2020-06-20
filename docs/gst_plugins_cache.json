@@ -31,18 +31,6 @@
                     }
                 },
                 "properties": {
-                    "async-handling": {
-                        "blurb": "The bin will handle Asynchronous state changes",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "deinterlace-method": {
                         "blurb": "Deinterlace method to use",
                         "conditionally-available": false,
@@ -108,18 +96,6 @@
                         "readable": true,
                         "type": "guint64",
                         "writable": true
-                    },
-                    "message-forward": {
-                        "blurb": "Forwards all children messages",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
                     }
                 },
                 "rank": "primary + 2"
@@ -169,18 +145,6 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
                         "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
@@ -365,20 +329,6 @@
                         "type": "GstVaapiEncoderMbbrc",
                         "writable": true
                     },
-                    "min-force-key-unit-interval": {
-                        "blurb": "Minimum interval between force-keyunit requests in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
                     "min-qp": {
                         "blurb": "Minimum quantizer value",
                         "conditionally-available": false,
@@ -431,18 +381,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstVaapiEncoderH264PredictionType",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     },
                     "qp-ib": {
@@ -618,17 +556,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "true",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "primary"
             },
             "vaapih265enc": {
@@ -778,15 +706,6 @@
                         "type": "guint",
                         "writable": true
                     },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "qp-ib": {
                         "blurb": "Difference of QP between I and B frame (available only on CQP)",
                         "construct": false,
@@ -908,20 +827,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "marginal"
             },
             "vaapimpeg2dec": {
@@ -949,20 +855,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "primary"
             },
             "vaapimpeg2enc": {
@@ -1373,18 +1266,6 @@
                         "type": "gfloat",
                         "writable": true
                     },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "saturation": {
                         "blurb": "The color saturation value",
                         "conditionally-available": false,
@@ -1507,32 +1388,6 @@
                     }
                 },
                 "properties": {
-                    "async": {
-                        "blurb": "Go asynchronously to PAUSED",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "blocksize": {
-                        "blurb": "Size in bytes to pull per buffer (0 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
                     "brightness": {
                         "blurb": "The display brightness value",
                         "conditionally-available": false,
@@ -1585,18 +1440,6 @@
                         "type": "gchararray",
                         "writable": true
                     },
-                    "enable-last-sample": {
-                        "blurb": "Enable the last-sample property",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "force-aspect-ratio": {
                         "blurb": "When enabled, scaling will respect original aspect ratio",
                         "conditionally-available": false,
@@ -1635,85 +1478,6 @@
                         "type": "gfloat",
                         "writable": true
                     },
-                    "last-sample": {
-                        "blurb": "The last sample received in the sink",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstSample",
-                        "writable": false
-                    },
-                    "max-bitrate": {
-                        "blurb": "The maximum bits per second to render (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "max-lateness": {
-                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "5000000",
-                        "max": "9223372036854775807",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
-                    "processing-deadline": {
-                        "blurb": "Maximum processing time for a buffer in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "15000000",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Generate Quality-of-Service events upstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "render-delay": {
-                        "blurb": "Additional render delay of the sink in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
                     "rotation": {
                         "blurb": "The display rotation mode",
                         "conditionally-available": false,
@@ -1740,18 +1504,6 @@
                         "type": "gfloat",
                         "writable": true
                     },
-                    "show-preroll-frame": {
-                        "blurb": "Whether to render video frames during preroll",
-                        "conditionally-available": false,
-                        "construct": true,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "signal-handoffs": {
                         "blurb": "Send a signal after rendering the buffer",
                         "conditionally-available": false,
@@ -1762,58 +1514,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Sink Statistics",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstStructure",
-                        "writable": false
-                    },
-                    "sync": {
-                        "blurb": "Sync on the clock",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "throttle-time": {
-                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "ts-offset": {
-                        "blurb": "Timestamp offset in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "-9223372036854775808",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     },
                     "view-id": {
@@ -1870,20 +1570,7 @@
                         "presence": "always"
                     }
                 },
-                "properties": {
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events from downstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    }
-                },
+                "properties": {},
                 "rank": "primary"
             }
         },
