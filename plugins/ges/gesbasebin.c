@@ -135,6 +135,8 @@ ges_base_bin_class_init (GESBaseBinClass * self_class)
       gst_static_pad_template_get (&video_src_template));
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&audio_src_template));
+
+  gst_type_mark_as_plugin_api (ges_base_bin_get_type (), 0);
 }
 
 static void

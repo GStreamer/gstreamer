@@ -278,6 +278,8 @@ nle_object_class_init (NleObjectClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (NleObjectClass, commit_signal_handler), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
+
+  gst_type_mark_as_plugin_api (NLE_TYPE_OBJECT, 0);
 }
 
 static void
