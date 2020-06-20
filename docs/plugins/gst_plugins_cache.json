@@ -51,18 +51,6 @@
                         "readable": true,
                         "type": "GstCapsFilterCapsChangeMode",
                         "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
                     }
                 },
                 "rank": "none"
@@ -196,58 +184,6 @@
                     }
                 },
                 "properties": {
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "uri": {
                         "blurb": "URI that should be used",
                         "conditionally-available": false,
@@ -404,32 +340,6 @@
                     }
                 },
                 "properties": {
-                    "async": {
-                        "blurb": "Go asynchronously to PAUSED",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "blocksize": {
-                        "blurb": "Size in bytes to pull per buffer (0 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
                     "can-activate-pull": {
                         "blurb": "Can activate in pull mode",
                         "conditionally-available": false,
@@ -478,18 +388,6 @@
                         "type": "gboolean",
                         "writable": true
                     },
-                    "enable-last-sample": {
-                        "blurb": "Enable the last-sample property",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "last-message": {
                         "blurb": "The message describing current status",
                         "conditionally-available": false,
@@ -501,45 +399,6 @@
                         "readable": true,
                         "type": "gchararray",
                         "writable": false
-                    },
-                    "last-sample": {
-                        "blurb": "The last sample received in the sink",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstSample",
-                        "writable": false
-                    },
-                    "max-bitrate": {
-                        "blurb": "The maximum bits per second to render (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "max-lateness": {
-                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "18446744073709551615",
-                        "max": "9223372036854775807",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
                     },
                     "num-buffers": {
                         "blurb": "Number of buffers to accept going EOS",
@@ -553,46 +412,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
-                        "writable": true
-                    },
-                    "processing-deadline": {
-                        "blurb": "Maximum processing time for a buffer in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "20000000",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Generate Quality-of-Service events upstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "render-delay": {
-                        "blurb": "Additional render delay of the sink in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
                         "writable": true
                     },
                     "signal-handoffs": {
@@ -629,58 +448,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstFakeSinkStateError",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Sink Statistics",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstStructure",
-                        "writable": false
-                    },
-                    "sync": {
-                        "blurb": "Sync on the clock",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "throttle-time": {
-                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "ts-offset": {
-                        "blurb": "Timestamp offset in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "-9223372036854775808",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -737,20 +504,6 @@
                     }
                 },
                 "properties": {
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
                     "can-activate-pull": {
                         "blurb": "Can activate in pull mode",
                         "conditionally-available": false,
@@ -799,18 +552,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
-                        "writable": true
-                    },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     },
                     "dump": {
@@ -872,20 +613,6 @@
                         "readable": true,
                         "type": "gchararray",
                         "writable": false
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
                     },
                     "parentsize": {
                         "blurb": "Size of parent buffer for sub-buffered allocation",
@@ -988,18 +715,6 @@
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
                     }
                 },
                 "rank": "none",
@@ -1044,44 +759,6 @@
                     }
                 },
                 "properties": {
-                    "async": {
-                        "blurb": "Go asynchronously to PAUSED",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "blocksize": {
-                        "blurb": "Size in bytes to pull per buffer (0 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "enable-last-sample": {
-                        "blurb": "Enable the last-sample property",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "fd": {
                         "blurb": "An open file descriptor to write to",
                         "conditionally-available": false,
@@ -1094,137 +771,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
-                        "writable": true
-                    },
-                    "last-sample": {
-                        "blurb": "The last sample received in the sink",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstSample",
-                        "writable": false
-                    },
-                    "max-bitrate": {
-                        "blurb": "The maximum bits per second to render (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "max-lateness": {
-                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "18446744073709551615",
-                        "max": "9223372036854775807",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
-                        "writable": true
-                    },
-                    "processing-deadline": {
-                        "blurb": "Maximum processing time for a buffer in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "20000000",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Generate Quality-of-Service events upstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "render-delay": {
-                        "blurb": "Additional render delay of the sink in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Sink Statistics",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstStructure",
-                        "writable": false
-                    },
-                    "sync": {
-                        "blurb": "Sync on the clock",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "throttle-time": {
-                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "ts-offset": {
-                        "blurb": "Timestamp offset in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "-9223372036854775808",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -1255,32 +801,6 @@
                     }
                 },
                 "properties": {
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "fd": {
                         "blurb": "An open file descriptor to read from",
                         "conditionally-available": false,
@@ -1290,20 +810,6 @@
                         "default": "-1",
                         "max": "2147483647",
                         "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
@@ -1321,18 +827,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "guint64",
-                        "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1374,32 +868,6 @@
                         "type": "gboolean",
                         "writable": true
                     },
-                    "async": {
-                        "blurb": "Go asynchronously to PAUSED",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "blocksize": {
-                        "blurb": "Size in bytes to pull per buffer (0 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
                     "buffer-mode": {
                         "blurb": "The buffering mode to use",
                         "conditionally-available": false,
@@ -1426,29 +894,6 @@
                         "type": "guint",
                         "writable": true
                     },
-                    "enable-last-sample": {
-                        "blurb": "Enable the last-sample property",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "true",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "last-sample": {
-                        "blurb": "The last sample received in the sink",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstSample",
-                        "writable": false
-                    },
                     "location": {
                         "blurb": "Location of the file to write",
                         "conditionally-available": false,
@@ -1459,34 +904,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
-                        "writable": true
-                    },
-                    "max-bitrate": {
-                        "blurb": "The maximum bits per second to render (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "max-lateness": {
-                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "18446744073709551615",
-                        "max": "9223372036854775807",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     },
                     "max-transient-error-timeout": {
@@ -1513,98 +930,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
-                        "writable": true
-                    },
-                    "processing-deadline": {
-                        "blurb": "Maximum processing time for a buffer in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "20000000",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "qos": {
-                        "blurb": "Generate Quality-of-Service events upstream",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "render-delay": {
-                        "blurb": "Additional render delay of the sink in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Sink Statistics",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstStructure",
-                        "writable": false
-                    },
-                    "sync": {
-                        "blurb": "Sync on the clock",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "throttle-time": {
-                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "18446744073709551615",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint64",
-                        "writable": true
-                    },
-                    "ts-offset": {
-                        "blurb": "Timestamp offset in nanoseconds",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "9223372036854775807",
-                        "min": "-9223372036854775808",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint64",
                         "writable": true
                     }
                 },
@@ -1634,32 +959,6 @@
                     }
                 },
                 "properties": {
-                    "blocksize": {
-                        "blurb": "Size in bytes to read per buffer (-1 = default)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "4096",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    },
-                    "do-timestamp": {
-                        "blurb": "Apply current stream time to buffers",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
                     "location": {
                         "blurb": "Location of the file to read",
                         "conditionally-available": false,
@@ -1670,32 +969,6 @@
                         "mutable": "ready",
                         "readable": true,
                         "type": "gchararray",
-                        "writable": true
-                    },
-                    "num-buffers": {
-                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "-1",
-                        "max": "2147483647",
-                        "min": "-1",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gint",
-                        "writable": true
-                    },
-                    "typefind": {
-                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
                         "writable": true
                     }
                 },
@@ -1894,18 +1167,6 @@
                         "readable": true,
                         "type": "gchararray",
                         "writable": false
-                    },
-                    "qos": {
-                        "blurb": "Handle Quality-of-Service events",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
                     },
                     "signal-handoffs": {
                         "blurb": "Send a signal before pushing the buffer",
@@ -2334,35 +1595,10 @@
                 },
                 "rank": "none",
                 "signals": {
-                    "no-more-pads": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
                     "overrun": {
                         "args": [],
                         "return-type": "void",
                         "when": "first"
-                    },
-                    "pad-added": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-removed": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
                     },
                     "underrun": {
                         "args": [],
@@ -2978,33 +2214,7 @@
                     }
                 },
                 "rank": "primary",
-                "signals": {
-                    "no-more-pads": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-added": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "pad-removed": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "GstPad"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    }
-                }
+                "signals": {}
             },
             "tee": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>",
