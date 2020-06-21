@@ -43,6 +43,15 @@
 #else
 #define ALWAYS_INLINE inline
 #endif
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
 
 #define GST_TYPE_DEINTERLACE_METHOD_YADIF	(gst_deinterlace_method_yadif_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_YADIF(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_YADIF))
