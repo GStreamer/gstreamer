@@ -4461,13 +4461,17 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   {
     gboolean ice_controller = FALSE;
 
+    /* get the current value so we don't change ice controller from TRUE to
+     * FALSE on renegotiation or once set to TRUE for the initial local offer */
+    g_object_get (webrtc->priv->ice, "controller", &ice_controller, NULL);
+
     /* we control ice negotiation if we send the initial offer */
     ice_controller |=
-        new_signaling_state == GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_OFFER
+        new_signaling_state == GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_OFFER
         && webrtc->current_remote_description == NULL;
     /* or, if the remote is an ice-lite peer */
     ice_controller |= new_signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE
-        && webrtc->current_remote_description->type == GST_WEBRTC_SDP_TYPE_OFFER
+        && webrtc->current_remote_description
         && _message_has_attribute_key (webrtc->current_remote_description->sdp,
         "ice-lite");
 
