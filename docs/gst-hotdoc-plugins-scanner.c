@@ -769,6 +769,13 @@ _add_object_details (GString * json, GString * other_types,
     g_string_append_printf (json, "\"%s\"%c", g_type_name (type),
         type == G_TYPE_OBJECT ? ' ' : ',');
 
+    if (!g_hash_table_contains (seen_other_types, g_type_name (type))
+        && gst_type_is_plugin_api (type, NULL)) {
+      g_hash_table_insert (seen_other_types, (gpointer) g_type_name (type),
+          NULL);
+      _serialize_object (other_types, seen_other_types, type);
+    }
+
     if (type == G_TYPE_OBJECT)
       break;
   }
