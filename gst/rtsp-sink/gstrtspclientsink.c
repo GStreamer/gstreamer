@@ -227,7 +227,6 @@ gst_rtsp_client_sink_pad_new (const GstPadTemplate * pad_tmpl,
   ret =
       g_object_new (GST_TYPE_RTSP_CLIENT_SINK_PAD, "direction", GST_PAD_SINK,
       "template", pad_tmpl, "name", name, NULL);
-  gst_ghost_pad_construct (GST_GHOST_PAD_CAST (ret));
 
   return GST_PAD (ret);
 }
