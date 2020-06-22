@@ -4201,7 +4201,6 @@ gst_parse_pad_new (GstParseBin * parsebin, GstParseChain * chain)
   parsepad =
       g_object_new (GST_TYPE_PARSE_PAD, "direction", GST_PAD_SRC,
       "template", pad_tmpl, NULL);
-  gst_ghost_pad_construct (GST_GHOST_PAD_CAST (parsepad));
   parsepad->chain = chain;
   parsepad->parsebin = parsebin;
   gst_object_unref (pad_tmpl);

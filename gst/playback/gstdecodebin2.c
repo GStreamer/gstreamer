@@ -5223,7 +5223,6 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstDecodeChain * chain)
   dpad =
       g_object_new (GST_TYPE_DECODE_PAD, "direction", GST_PAD_SRC,
       "template", pad_tmpl, NULL);
-  gst_ghost_pad_construct (GST_GHOST_PAD_CAST (dpad));
   dpad->chain = chain;
   dpad->dbin = dbin;
   gst_object_unref (pad_tmpl);

@@ -346,10 +346,6 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
       GST_OBJECT_NAME (mixer_pad), "direction", GST_PAD_DIRECTION (mixer_pad),
       NULL);
 
-  if (!gst_ghost_pad_construct (GST_GHOST_PAD (input))) {
-    gst_object_unref (input);
-    return NULL;
-  }
 #define ADD_BINDING(obj,ref,prop) \
     gst_object_add_control_binding (GST_OBJECT (obj), \
         gst_proxy_control_binding_new (GST_OBJECT (obj), prop, \
