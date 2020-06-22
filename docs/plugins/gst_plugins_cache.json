@@ -2094,6 +2094,58 @@
                         "when": "last"
                     }
                 }
+            },
+            "streamcombiner": {
+                "author": "Edward Hervey <edward.hervey@collabora.co.uk>",
+                "description": "Recombines streams split by the streamsplitter element",
+                "hierarchy": [
+                    "GstStreamCombiner",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic",
+                "long-name": "streamcombiner",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            },
+            "streamsplitter": {
+                "author": "Edward Hervey <edward.hervey@collabora.co.uk>",
+                "description": "Splits streams based on their media type",
+                "hierarchy": [
+                    "GstStreamSplitter",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic",
+                "long-name": "streamsplitter",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "request"
+                    }
+                },
+                "rank": "none"
             }
         },
         "filename": "gstencoding",
@@ -2300,7 +2352,30 @@
         },
         "filename": "gstgio",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstGioBaseSink": {
+                "hierarchy": [
+                    "GstGioBaseSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
+            },
+            "GstGioBaseSrc": {
+                "hierarchy": [
+                    "GstGioBaseSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
+            }
+        },
         "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
@@ -3030,7 +3105,18 @@
         },
         "filename": "gstogg",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstOgmParse": {
+                "hierarchy": [
+                    "GstOgmParse",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
+            }
+        },
         "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
@@ -6374,6 +6460,43 @@
                     }
                 ]
             },
+            "GstGLBaseMixer": {
+                "hierarchy": [
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "context": {
+                        "blurb": "Get OpenGL context",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstGLContext",
+                        "writable": false
+                    }
+                }
+            },
+            "GstGLBaseMixerPad": {
+                "hierarchy": [
+                    "GstGLBaseMixerPad",
+                    "GstVideoAggregatorPad",
+                    "GstAggregatorPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
+            },
             "GstGLDeinterlaceMethod": {
                 "kind": "enum",
                 "values": [
@@ -6388,6 +6511,19 @@
                         "value": "1"
                     }
                 ]
+            },
+            "GstGLEffects": {
+                "hierarchy": [
+                    "GstGLEffects",
+                    "GstGLFilter",
+                    "GstGLBaseFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
             },
             "GstGLEffectsEffect": {
                 "kind": "enum",
@@ -6488,6 +6624,19 @@
                         "value": "18"
                     }
                 ]
+            },
+            "GstGLMixer": {
+                "hierarchy": [
+                    "GstGLMixer",
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
             },
             "GstGLMixerBinStartTimeSelection": {
                 "kind": "enum",
@@ -7769,6 +7918,410 @@
         "filename": "gstpango",
         "license": "LGPL",
         "other-types": {
+            "GstBaseTextOverlay": {
+                "hierarchy": [
+                    "GstBaseTextOverlay",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "auto-resize": {
+                        "blurb": "Automatically adjust font size to screen-size.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "color": {
+                        "blurb": "Color to use for text (big-endian ARGB).",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "-1",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "deltax": {
+                        "blurb": "Shift X position to the left or to the right. Unit is pixels.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "-2147483648",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "deltay": {
+                        "blurb": "Shift Y position up or down. Unit is pixels.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "-2147483648",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "draw-outline": {
+                        "blurb": "Whether to draw outline",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "draw-shadow": {
+                        "blurb": "Whether to draw shadow",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "font-desc": {
+                        "blurb": "Pango font description of font to be used for rendering. See documentation of pango_font_description_from_string for syntax.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "halignment": {
+                        "blurb": "Horizontal alignment of the text",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "left (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstBaseTextOverlayHAlign",
+                        "writable": true
+                    },
+                    "line-alignment": {
+                        "blurb": "Alignment of text lines relative to each other.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "center (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstBaseTextOverlayLineAlign",
+                        "writable": true
+                    },
+                    "outline-color": {
+                        "blurb": "Color to use for outline the text (big-endian ARGB).",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "-16777216",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "scale-mode": {
+                        "blurb": "Scale text to compensate for and avoid distortion by subsequent video scaling.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstBaseTextOverlayScaleMode",
+                        "writable": true
+                    },
+                    "scale-pixel-aspect-ratio": {
+                        "blurb": "Pixel aspect ratio of video scale to compensate for in user scale-mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1/1",
+                        "max": "100/1",
+                        "min": "1/100",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFraction",
+                        "writable": true
+                    },
+                    "shaded-background": {
+                        "blurb": "Whether to shade the background under the text area",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "shading-value": {
+                        "blurb": "Shading value to apply if shaded-background is true",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "80",
+                        "max": "255",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "silent": {
+                        "blurb": "Whether to render the text string",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "text": {
+                        "blurb": "Text to be display.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "text-height": {
+                        "blurb": "Resulting height of font rendering",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "text-width": {
+                        "blurb": "Resulting width of font rendering",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "text-x": {
+                        "blurb": "Resulting X position of font rendering.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "-2147483647",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": false
+                    },
+                    "text-y": {
+                        "blurb": "Resulting X position of font rendering.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "-2147483647",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": false
+                    },
+                    "valignment": {
+                        "blurb": "Vertical alignment of the text",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "top (2)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstBaseTextOverlayVAlign",
+                        "writable": true
+                    },
+                    "vertical-render": {
+                        "blurb": "Vertical Render.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "wait-text": {
+                        "blurb": "Whether to wait for subtitles",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "wrap-mode": {
+                        "blurb": "Whether to wrap the text and if so how.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "wordchar (2)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstBaseTextOverlayWrapMode",
+                        "writable": true
+                    },
+                    "x-absolute": {
+                        "blurb": "Horizontal position when using absolute alignment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0.5",
+                        "max": "1.79769e+308",
+                        "min": "-1.79769e+308",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "xpad": {
+                        "blurb": "Horizontal paddding when using left/right alignment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "25",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "xpos": {
+                        "blurb": "Horizontal position when using clamped position alignment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0.5",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "y-absolute": {
+                        "blurb": "Vertical position when using absolute alignment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0.5",
+                        "max": "1.79769e+308",
+                        "min": "-1.79769e+308",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "ypad": {
+                        "blurb": "Vertical padding when using top/bottom alignment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "25",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "ypos": {
+                        "blurb": "Vertical position when using clamped position alignment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0.5",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    }
+                }
+            },
             "GstBaseTextOverlayHAlign": {
                 "kind": "enum",
                 "values": [
@@ -11176,6 +11729,31 @@
                         "value": "1"
                     }
                 ]
+            },
+            "GstRawBaseParse": {
+                "hierarchy": [
+                    "GstRawBaseParse",
+                    "GstBaseParse",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "use-sink-caps": {
+                        "blurb": "Use the sink caps for defining the output format",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                }
             }
         },
         "package": "GStreamer Base Plug-ins",
@@ -11927,6 +12505,283 @@
         "filename": "gsttcp",
         "license": "LGPL",
         "other-types": {
+            "GstMultiHandleSink": {
+                "hierarchy": [
+                    "GstMultiHandleSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "buffers-max": {
+                        "blurb": "max number of buffers to queue for a client (-1 = no limit)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "buffers-min": {
+                        "blurb": "min number of buffers to queue (-1 = as few as possible)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "buffers-queued": {
+                        "blurb": "Number of buffers currently queued",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "buffers-soft-max": {
+                        "blurb": "Recover client when going over this limit (-1 = no limit)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "burst-format": {
+                        "blurb": "The format of the burst units (when sync-method is burst[[-with]-keyframe])",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "undefined (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFormat",
+                        "writable": true
+                    },
+                    "burst-value": {
+                        "blurb": "The amount of burst expressed in burst-format",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "bytes-min": {
+                        "blurb": "min number of bytes to queue (-1 = as little as possible)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "bytes-served": {
+                        "blurb": "Total number of bytes send to all clients",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "bytes-to-serve": {
+                        "blurb": "Number of bytes received to serve to clients",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "num-handles": {
+                        "blurb": "The current number of client handles",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "qos-dscp": {
+                        "blurb": "Quality of Service, differentiated services code point (-1 default)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "63",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "recover-policy": {
+                        "blurb": "How to recover when client reaches the soft max",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstMultiHandleSinkRecoverPolicy",
+                        "writable": true
+                    },
+                    "resend-streamheader": {
+                        "blurb": "Resend the streamheader if it changes in the caps",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "sync-method": {
+                        "blurb": "How to sync new clients to the stream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "latest (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstMultiHandleSinkSyncMethod",
+                        "writable": true
+                    },
+                    "time-min": {
+                        "blurb": "min amount of time to queue (in nanoseconds) (-1 = as little as possible)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    },
+                    "timeout": {
+                        "blurb": "Maximum inactivity timeout in nanoseconds for a client (0 = no limit)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "unit-format": {
+                        "blurb": "The unit to measure the max/soft-max/queued properties",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "buffers (4)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFormat",
+                        "writable": true
+                    },
+                    "units-max": {
+                        "blurb": "max number of units to queue (-1 = no limit)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    },
+                    "units-soft-max": {
+                        "blurb": "Recover client when going over this limit (-1 = no limit)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    }
+                },
+                "signals": {
+                    "clear": {
+                        "action": true,
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
             "GstMultiHandleSinkClientStatus": {
                 "kind": "enum",
                 "values": [
