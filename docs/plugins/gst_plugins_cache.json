@@ -10972,6 +10972,20 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "max-errors": {
+                        "blurb": "Max consecutive decoder errors before returning flow error",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
                     "min-latency": {
                         "blurb": "Aggregate output data to a minimum of latency time (ns)",
                         "conditionally-available": false,
@@ -19525,6 +19539,20 @@
                     }
                 },
                 "properties": {
+                    "max-errors": {
+                        "blurb": "Max consecutive decoder errors before returning flow error",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
                     "qos": {
                         "blurb": "Handle Quality-of-Service events from downstream",
                         "conditionally-available": false,
@@ -21154,6 +21182,20 @@
                     }
                 },
                 "properties": {
+                    "max-errors": {
+                        "blurb": "Max consecutive decoder errors before returning flow error",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
                     "min-latency": {
                         "blurb": "Aggregate output data to a minimum of latency time (ns)",
                         "conditionally-available": false,
