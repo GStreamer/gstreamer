@@ -637,7 +637,7 @@ main (int argc, char **argv)
   GOptionEntry options[] = {
     {"async", 'a', 0, G_OPTION_ARG_NONE, &async,
         "Run asynchronously", NULL},
-    {"use-cache", 'a', 0, G_OPTION_ARG_NONE, &use_cache,
+    {"use-cache", 0, 0, G_OPTION_ARG_NONE, &use_cache,
         "Use GstDiscovererInfo from our cache.", NULL},
     {"print-cache-dir", 0, 0, G_OPTION_ARG_NONE, &print_cache_dir,
         "Print the directory of the discoverer cache.", NULL},
