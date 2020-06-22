@@ -289,11 +289,13 @@ GST_DEBUG_CATEGORY (videodecoder_debug);
 
 /* properties */
 #define DEFAULT_QOS                 TRUE
+#define DEFAULT_MAX_ERRORS          GST_VIDEO_DECODER_MAX_ERRORS
 
 enum
 {
   PROP_0,
   PROP_QOS,
+  PROP_MAX_ERRORS,
 };
 
 struct _GstVideoDecoderPrivate
@@ -573,6 +575,20 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
       g_param_spec_boolean ("qos", "Quality of Service",
           "Handle Quality-of-Service events from downstream",
           DEFAULT_QOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoDecoder:max-errors:
+   *
+   * Maximum number of tolerated consecutive decode errors. See
+   * gst_video_decoder_set_max_errors() for more details.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_ERRORS,
+      g_param_spec_int ("max-errors", "Max errors",
+          "Max consecutive decoder errors before returning flow error",
+          -1, G_MAXINT, DEFAULT_MAX_ERRORS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -831,11 +847,15 @@ static void
 gst_video_decoder_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVideoDecoderPrivate *priv = GST_VIDEO_DECODER (object)->priv;
+  GstVideoDecoder *dec = GST_VIDEO_DECODER (object);
+  GstVideoDecoderPrivate *priv = dec->priv;
 
   switch (property_id) {
     case PROP_QOS:
       g_value_set_boolean (value, priv->do_qos);
+      break;
+    case PROP_MAX_ERRORS:
+      g_value_set_int (value, gst_video_decoder_get_max_errors (dec));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -847,11 +867,15 @@ static void
 gst_video_decoder_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoDecoderPrivate *priv = GST_VIDEO_DECODER (object)->priv;
+  GstVideoDecoder *dec = GST_VIDEO_DECODER (object);
+  GstVideoDecoderPrivate *priv = dec->priv;
 
   switch (property_id) {
     case PROP_QOS:
       priv->do_qos = g_value_get_boolean (value);
+      break;
+    case PROP_MAX_ERRORS:
+      gst_video_decoder_set_max_errors (dec, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
