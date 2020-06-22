@@ -311,11 +311,6 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 
   gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
 
-  if (!gst_ghost_pad_construct (GST_GHOST_PAD (pad))) {
-    gst_object_unref (pad);
-    return NULL;
-  }
-
   GST_DEBUG_OBJECT (pad, "new visible pad with direction %s",
       direction == GST_PAD_SRC ? "src" : "sink");
   return pad;
