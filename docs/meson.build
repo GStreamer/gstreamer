@@ -26,6 +26,7 @@ elif plugins_cache_generator.found()
         command: [plugins_cache_generator, plugins_cache, '@OUTPUT@', '@INPUT@'],
         input: plugins,
         output: 'gst_plugins_cache.json',
+        build_always_stale: true,
     )
 else
     warning('GStreamer plugin inspector for documentation not found, can\'t update the cache')
