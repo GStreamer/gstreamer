@@ -494,8 +494,8 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
 
   *list = g_list_prepend (*list, chk);
 
-  GST_DEBUG ("Found %d features in plugin \"%s\"", pe->nfeatures,
-      plugin->desc.name);
+  GST_DEBUG ("Found %d features in plugin %p (%s)", pe->nfeatures,
+      plugin, plugin->desc.name);
   return TRUE;
 
   /* Errors */
