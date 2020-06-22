@@ -32,6 +32,7 @@ plugins_doc_dep = custom_target('build-doc-cache',
     input: plugins,
     output: 'gst_plugins_cache.json',
     depends: [hotdoc_plugin_scanner],
+    build_always_stale: true,
 )
 
 hotdoc_p = find_program('hotdoc', required: get_option('doc'))

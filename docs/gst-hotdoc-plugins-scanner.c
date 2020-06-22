@@ -14,24 +14,6 @@ static GRegex *cleanup_caps_field = NULL;
 static void _add_object_details (GString * json, GString * other_types,
     GHashTable * seen_other_types, GObject * object);
 
-static gboolean
-has_sometimes_template (GObject * object)
-{
-  GstElementClass *klass;
-  GList *l;
-
-  if (!GST_IS_ELEMENT (object))
-    return FALSE;
-
-  klass = GST_ELEMENT_GET_CLASS (object);
-  for (l = klass->padtemplates; l != NULL; l = l->next) {
-    if (GST_PAD_TEMPLATE (l->data)->presence == GST_PAD_SOMETIMES)
-      return TRUE;
-  }
-
-  return FALSE;
-}
-
 static gchar *
 json_strescape (const gchar * str)
 {
@@ -250,144 +232,91 @@ _add_signals (GString * json, GString * other_types,
     GHashTable * seen_other_types, GObject * object)
 {
   gboolean opened = FALSE;
-  guint *signals;
+  guint *signals = NULL;
   guint nsignals;
-  gint i = 0, j, k;
-  GSignalQuery *query = NULL;
-  GType type;
+  gint i = 0, j;
   GstPluginAPIFlags api_flags;
-  GSList *found_signals, *l;
 
-  for (k = 0; k < 2; k++) {
-    found_signals = NULL;
+  signals = g_signal_list_ids (G_OBJECT_TYPE (object), &nsignals);
+  for (i = 0; i < nsignals; i++) {
+    GSignalQuery query = { 0, };
 
-    /* For elements that have sometimes pads, also list a few useful GstElement
-     * signals. Put these first, so element-specific ones come later. */
-    if (k == 0 && has_sometimes_template (object)) {
-      query = g_new0 (GSignalQuery, 1);
-      g_signal_query (g_signal_lookup ("pad-added", GST_TYPE_ELEMENT), query);
-      found_signals = g_slist_append (found_signals, query);
-      query = g_new0 (GSignalQuery, 1);
-      g_signal_query (g_signal_lookup ("pad-removed", GST_TYPE_ELEMENT), query);
-      found_signals = g_slist_append (found_signals, query);
-      query = g_new0 (GSignalQuery, 1);
-      g_signal_query (g_signal_lookup ("no-more-pads", GST_TYPE_ELEMENT),
-          query);
-      found_signals = g_slist_append (found_signals, query);
-    }
+    g_signal_query (signals[i], &query);
+    g_string_append_printf (json,
+        "%s\"%s\" : {", opened ? "," : ",\"signals\": {", query.signal_name);
 
-    for (type = G_OBJECT_TYPE (object); type; type = g_type_parent (type)) {
-      if (type == GST_TYPE_ELEMENT || type == GST_TYPE_OBJECT
-          || type == G_TYPE_OBJECT)
-        break;
+    opened = TRUE;
 
-      if (type == GST_TYPE_PAD)
-        break;
-
-      if (type == GST_TYPE_BIN && G_OBJECT_TYPE (object) != GST_TYPE_BIN)
-        continue;
-      if (type == GST_TYPE_PIPELINE
-          && G_OBJECT_TYPE (object) != GST_TYPE_PIPELINE)
-        continue;
-
-      signals = g_signal_list_ids (type, &nsignals);
-      for (i = 0; i < nsignals; i++) {
-        query = g_new0 (GSignalQuery, 1);
-        g_signal_query (signals[i], query);
-
-        if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
-            (k == 1 && (query->signal_flags & G_SIGNAL_ACTION)))
-          found_signals = g_slist_append (found_signals, query);
-        else
-          g_free (query);
+    g_string_append (json, "\"args\": [");
+    for (j = 0; j < query.n_params; j++) {
+      gchar *arg_name = g_strdup_printf ("arg%u", j);
+      if (j) {
+        g_string_append_c (json, ',');
       }
-      g_free (signals);
-      signals = NULL;
-    }
 
-    if (!found_signals)
-      continue;
-
-    for (l = found_signals; l; l = l->next) {
-      query = (GSignalQuery *) l->data;
-
-      g_string_append_printf (json,
-          "%s\"%s\" : {", opened ? "," : ",\"signals\": {", query->signal_name);
-
-      opened = TRUE;
-
-      g_string_append (json, "\"args\": [");
-      for (j = 0; j < query->n_params; j++) {
-        gchar *arg_name = g_strdup_printf ("arg%u", j);
-        if (j) {
-          g_string_append_c (json, ',');
-        }
-
-        g_string_append_printf (json, "{ \"name\": \"%s\","
-            "\"type\": \"%s\" }", arg_name,
-            g_type_name (query->param_types[j]));
-
-        if (!g_hash_table_contains (seen_other_types,
-                g_type_name (query->param_types[j]))
-            && gst_type_is_plugin_api (query->param_types[j], &api_flags)) {
-          g_hash_table_insert (seen_other_types,
-              (gpointer) g_type_name (query->param_types[j]), NULL);
-
-          if (g_type_is_a (query->param_types[j], G_TYPE_ENUM)) {
-            _serialize_enum (other_types, query->param_types[j], api_flags);
-          } else if (g_type_is_a (query->param_types[j], G_TYPE_FLAGS)) {
-            _serialize_flags (other_types, query->param_types[j]);
-          } else if (g_type_is_a (query->param_types[j], G_TYPE_OBJECT)) {
-            _serialize_object (other_types, seen_other_types,
-                query->param_types[j]);
-          }
-        }
-      }
-      g_string_append_c (json, ']');
+      g_string_append_printf (json, "{ \"name\": \"%s\","
+          "\"type\": \"%s\" }", arg_name, g_type_name (query.param_types[j]));
 
       if (!g_hash_table_contains (seen_other_types,
-              g_type_name (query->return_type))
-          && gst_type_is_plugin_api (query->return_type, &api_flags)) {
+              g_type_name (query.param_types[j])) &&
+          gst_type_is_plugin_api (query.param_types[j], &api_flags)) {
         g_hash_table_insert (seen_other_types,
-            (gpointer) g_type_name (query->return_type), NULL);
-        if (g_type_is_a (query->return_type, G_TYPE_ENUM)) {
-          _serialize_enum (other_types, query->return_type, api_flags);
-        } else if (g_type_is_a (query->return_type, G_TYPE_FLAGS)) {
-          _serialize_flags (other_types, query->return_type);
-        } else if (g_type_is_a (query->return_type, G_TYPE_OBJECT)) {
-          _serialize_object (other_types, seen_other_types, query->return_type);
+            (gpointer) g_type_name (query.param_types[j]), NULL);
+
+        if (g_type_is_a (query.param_types[j], G_TYPE_ENUM)) {
+          _serialize_enum (other_types, query.param_types[j], api_flags);
+        } else if (g_type_is_a (query.param_types[j], G_TYPE_FLAGS)) {
+          _serialize_flags (other_types, query.param_types[j]);
+        } else if (g_type_is_a (query.param_types[j], G_TYPE_OBJECT)) {
+          _serialize_object (other_types, seen_other_types,
+              query.param_types[j]);
         }
       }
+    }
+    g_string_append_c (json, ']');
 
-      g_string_append_printf (json,
-          ",\"return-type\": \"%s\"", g_type_name (query->return_type));
-
-      if (query->signal_flags & G_SIGNAL_RUN_FIRST)
-        g_string_append (json, ",\"when\": \"first\"");
-      else if (query->signal_flags & G_SIGNAL_RUN_LAST)
-        g_string_append (json, ",\"when\": \"last\"");
-      else if (query->signal_flags & G_SIGNAL_RUN_CLEANUP)
-        g_string_append (json, ",\"when\": \"cleanup\"");
-
-      if (query->signal_flags & G_SIGNAL_NO_RECURSE)
-        g_string_append (json, ",\"no-recurse\": true");
-
-      if (query->signal_flags & G_SIGNAL_DETAILED)
-        g_string_append (json, ",\"detailed\": true");
-
-      if (query->signal_flags & G_SIGNAL_ACTION)
-        g_string_append (json, ",\"action\": true");
-
-      if (query->signal_flags & G_SIGNAL_NO_HOOKS)
-        g_string_append (json, ",\"no-hooks\": true");
-
-      g_string_append_c (json, '}');
+    if (g_type_name (query.return_type) &&
+        !g_hash_table_contains (seen_other_types,
+            g_type_name (query.return_type)) &&
+        gst_type_is_plugin_api (query.return_type, &api_flags)) {
+      g_hash_table_insert (seen_other_types,
+          (gpointer) g_type_name (query.return_type), NULL);
+      if (g_type_is_a (query.return_type, G_TYPE_ENUM)) {
+        _serialize_enum (other_types, query.return_type, api_flags);
+      } else if (g_type_is_a (query.return_type, G_TYPE_FLAGS)) {
+        _serialize_flags (other_types, query.return_type);
+      } else if (g_type_is_a (query.return_type, G_TYPE_OBJECT)) {
+        _serialize_object (other_types, seen_other_types, query.return_type);
+      }
     }
 
-    g_slist_foreach (found_signals, (GFunc) g_free, NULL);
-    g_slist_free (found_signals);
+    g_string_append_printf (json,
+        ",\"return-type\": \"%s\"", g_type_name (query.return_type));
+
+    if (query.signal_flags & G_SIGNAL_RUN_FIRST)
+      g_string_append (json, ",\"when\": \"first\"");
+    else if (query.signal_flags & G_SIGNAL_RUN_LAST)
+      g_string_append (json, ",\"when\": \"last\"");
+    else if (query.signal_flags & G_SIGNAL_RUN_CLEANUP)
+      g_string_append (json, ",\"when\": \"cleanup\"");
+
+    if (query.signal_flags & G_SIGNAL_NO_RECURSE)
+      g_string_append (json, ",\"no-recurse\": true");
+
+    if (query.signal_flags & G_SIGNAL_DETAILED)
+      g_string_append (json, ",\"detailed\": true");
+
+    if (query.signal_flags & G_SIGNAL_ACTION)
+      g_string_append (json, ",\"action\": true");
+
+    if (query.signal_flags & G_SIGNAL_NO_HOOKS)
+      g_string_append (json, ",\"no-hooks\": true");
+
+    g_string_append_c (json, '}');
+
     opened = TRUE;
   }
+  g_free (signals);
 
   if (opened)
     g_string_append (json, "}");
@@ -410,7 +339,7 @@ _add_properties (GString * json, GString * other_types,
     const gchar *mutable_str = NULL;
     spec = specs[i];
 
-    if (spec->owner_type == GST_TYPE_PAD || spec->owner_type == GST_TYPE_OBJECT)
+    if (spec->owner_type != G_OBJECT_TYPE (object))
       continue;
 
     g_value_init (&value, spec->value_type);
