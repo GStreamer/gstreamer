@@ -600,7 +600,13 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
     case WM_MOUSEMOVE:
-      gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
+      /* To handle mouse event only once, do this only for internal window */
+      if (self->internal_hwnd && self->internal_hwnd == hWnd)
+        gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
+
+      /* DefWindowProc will not chain up mouse event to parent window */
+      if (self->external_hwnd && self->external_hwnd != hWnd)
+        SendMessage (self->external_hwnd, uMsg, wParam, lParam);
       break;
     case WM_SYSKEYDOWN:
       if ((window->fullscreen_toggle_mode &
