@@ -122,6 +122,19 @@
 extern HMODULE _priv_gst_dll_handle;
 #endif
 
+/* Use a toolchain-dependent suffix on Windows */
+#ifdef G_OS_WIN32
+# ifdef _MSC_VER
+#  define GST_REGISTRY_FILE_SUFFIX TARGET_CPU "-msvc"
+# else
+#  define GST_REGISTRY_FILE_SUFFIX TARGET_CPU "-mingw"
+# endif
+#else
+# define GST_REGISTRY_FILE_SUFFIX TARGET_CPU
+#endif
+#define GST_REGISTRY_FILE_NAME "registry." GST_REGISTRY_FILE_SUFFIX ".bin"
+
+
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
 struct _GstRegistryPrivate
@@ -1713,7 +1726,7 @@ ensure_current_registry (GError ** error)
     registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
     registry_file = g_build_filename (g_get_user_cache_dir (),
-        "gstreamer-" GST_API_VERSION, "registry." TARGET_CPU ".bin", NULL);
+        "gstreamer-" GST_API_VERSION, GST_REGISTRY_FILE_NAME, NULL);
   }
 
   if (!_gst_disable_registry_cache) {
