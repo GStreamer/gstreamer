@@ -1,8 +1,11 @@
 #include <locale.h>
 #include <glib.h>
-#include <glib-unix.h>
 #include <gst/gst.h>
 #include <gst/sdp/sdp.h>
+
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif
 
 #define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
@@ -41,8 +44,6 @@ void soup_websocket_handler (G_GNUC_UNUSED SoupServer * server,
     SoupClientContext * client_context, gpointer user_data);
 
 static gchar *get_string_from_json_object (JsonObject * object);
-
-gboolean exit_sighandler (gpointer user_data);
 
 struct _ReceiverEntry
 {
@@ -531,7 +532,7 @@ get_string_from_json_object (JsonObject * object)
   return text;
 }
 
-
+#ifdef G_OS_UNIX
 gboolean
 exit_sighandler (gpointer user_data)
 {
@@ -540,7 +541,7 @@ exit_sighandler (gpointer user_data)
   g_main_loop_quit (mainloop);
   return TRUE;
 }
-
+#endif
 
 int
 main (int argc, char *argv[])
@@ -559,8 +560,10 @@ main (int argc, char *argv[])
   mainloop = g_main_loop_new (NULL, FALSE);
   g_assert (mainloop != NULL);
 
+#ifdef G_OS_UNIX
   g_unix_signal_add (SIGINT, exit_sighandler, mainloop);
   g_unix_signal_add (SIGTERM, exit_sighandler, mainloop);
+#endif
 
   soup_server =
       soup_server_new (SOUP_SERVER_SERVER_HEADER, "webrtc-soup-server", NULL);
