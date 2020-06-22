@@ -132,7 +132,7 @@ GstPad*          gst_ghost_pad_get_target        (GstGhostPad *gpad);
 GST_API
 gboolean         gst_ghost_pad_set_target        (GstGhostPad *gpad, GstPad *newtarget);
 
-GST_API
+GST_DEPRECATED
 gboolean         gst_ghost_pad_construct         (GstGhostPad *gpad);
 
 GST_API
