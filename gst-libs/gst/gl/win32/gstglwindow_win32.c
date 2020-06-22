@@ -566,6 +566,9 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       case WM_MBUTTONUP:
       case WM_MOUSEMOVE:
         gst_gl_window_win32_handle_mouse_event (window, uMsg, lParam);
+        /* DefWindowProc will not chain up mouse event to parent window */
+        if (window_win32->parent_win_id)
+          PostMessage (window_win32->parent_win_id, uMsg, wParam, lParam);
         ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
         break;
       default:
