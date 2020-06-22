@@ -271,7 +271,6 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_bin_add (GST_BIN (self), infos->bin);
   ghost = g_object_new (ges_smart_mixer_pad_get_type (), "name", name,
       "direction", GST_PAD_DIRECTION (tmpghost), NULL);
-  gst_ghost_pad_construct (GST_GHOST_PAD (ghost));
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), tmpghost);
   gst_pad_set_active (ghost, TRUE);
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
