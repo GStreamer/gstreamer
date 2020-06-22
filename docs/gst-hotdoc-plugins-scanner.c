@@ -213,7 +213,8 @@ _serialize_object (GString * json, GHashTable * seen_other_types, GType gtype,
   GString *other_types = NULL;
 
   g_string_append_printf (json, "%s\"%s\": { "
-      "\"kind\": \"object\"", json->len ? "," : "", g_type_name (gtype));
+      "\"kind\": \"%s\"", json->len ? "," : "", g_type_name (gtype),
+      G_TYPE_IS_INTERFACE (gtype) ? "interface" : "object");
 
   other_types = g_string_new ("");
   g_string_append_c (json, ',');
@@ -774,7 +775,7 @@ _add_object_details (GString * json, GString * other_types,
 
   for (;; ptype = g_type_parent (ptype)) {
     g_string_append_printf (json, "\"%s\"%c", g_type_name (ptype),
-        ptype == G_TYPE_OBJECT ? ' ' : ',');
+        ((ptype == G_TYPE_OBJECT || ptype == G_TYPE_INTERFACE) ? ' ' : ','));
 
     if (!g_hash_table_contains (seen_other_types, g_type_name (ptype))
         && gst_type_is_plugin_api (ptype, NULL)) {
@@ -783,7 +784,7 @@ _add_object_details (GString * json, GString * other_types,
       _serialize_object (other_types, seen_other_types, ptype, inst_type);
     }
 
-    if (ptype == G_TYPE_OBJECT)
+    if (ptype == G_TYPE_OBJECT || ptype == G_TYPE_INTERFACE)
       break;
   }
   g_string_append (json, "]");
@@ -796,6 +797,13 @@ _add_object_details (GString * json, GString * other_types,
     for (iface = interfaces; *iface; iface++, n_interfaces--) {
       g_string_append_printf (json, "\"%s\"%c", g_type_name (*iface),
           n_interfaces > 1 ? ',' : ' ');
+
+      if (!g_hash_table_contains (seen_other_types, g_type_name (*iface))
+          && gst_type_is_plugin_api (*iface, NULL)) {
+        g_hash_table_insert (seen_other_types, (gpointer) g_type_name (*iface),
+            NULL);
+        _serialize_object (other_types, seen_other_types, *iface, inst_type);
+      }
     }
 
     g_string_append (json, "]");
