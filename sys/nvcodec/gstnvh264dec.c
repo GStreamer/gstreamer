@@ -201,6 +201,8 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_dec_debug,
       "nvh264dec", 0, "Nvidia H.264 Decoder");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_H264_DEC, 0);
 }
 
 static void

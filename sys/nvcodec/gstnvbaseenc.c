@@ -439,6 +439,10 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
           DEFAULT_QP_DETAIL,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_BASE_ENC, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_PRESET, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_RC_MODE, 0);
 }
 
 static gboolean
@@ -2710,6 +2714,8 @@ gst_nv_base_enc_register (const char *codec, guint device_id,
 
   subtype = g_type_register_static (GST_TYPE_NV_BASE_ENC,
       type_name, &type_info, 0);
+
+  gst_type_mark_as_plugin_api (subtype, 0);
 
 done:
   g_free (type_name);
