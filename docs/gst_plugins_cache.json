@@ -6140,7 +6140,24 @@
         },
         "filename": "gstequalizer",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstIirEqualizer": {
+                "hierarchy": [
+                    "GstIirEqualizer",
+                    "GstAudioFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy",
+                    "GstPreset"
+                ],
+                "kind": "object"
+            }
+        },
         "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
