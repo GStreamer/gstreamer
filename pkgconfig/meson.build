@@ -28,6 +28,7 @@ pkg_libs = [
   'codecparsers',
   'insertbin',
   'mpegts',
+  'photography',
   'player',
   'plugins-bad',
   'sctp',

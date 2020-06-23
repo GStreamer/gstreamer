@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=@playerlibdir@
+includedir=@abs_top_srcdir@/gst-libs
+
+Name: GStreamer Photography, Uninstalled
+Description: GStreamer Photography digital image capture library, uninstalled
+Requires: gstreamer-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} -lgstphotography-@GST_API_VERSION@
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
+
