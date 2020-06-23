@@ -107,6 +107,7 @@ option('flite', type : 'feature', value : 'auto', description : 'Flite speech sy
 option('fluidsynth', type : 'feature', value : 'auto', description : 'Fluidsynth MIDI decoder plugin')
 option('gl', type : 'feature', value : 'auto', description : 'GStreamer OpenGL integration support (used by various plugins)')
 option('gme', type : 'feature', value : 'auto', description : 'libgme gaming console music file decoder plugin')
+option('gs', type : 'feature', value : 'auto', description : 'Google Cloud Storage source and sink plugin')
 option('gsm', type : 'feature', value : 'auto', description : 'GSM encoder/decoder plugin')
 option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-process communication plugin')
 option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin')
