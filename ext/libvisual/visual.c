@@ -117,6 +117,8 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
 
   scope_class->setup = GST_DEBUG_FUNCPTR (gst_visual_setup);
   scope_class->render = GST_DEBUG_FUNCPTR (gst_visual_render);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VISUAL, 0);
 }
 
 static void
