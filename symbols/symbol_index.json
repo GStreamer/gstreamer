@@ -62072,5 +62072,6 @@
   "zbar:message",
   "GstZBar!sink",
   "GstZBar!src",
+  "plugin-gstomx",
   "plugin-gstzbar"
 ]

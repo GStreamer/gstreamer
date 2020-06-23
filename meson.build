@@ -2,6 +2,23 @@ project('GStreamer manuals and tutorials', 'c',
   version: '1.17.1.1',
   meson_version: '>=0.48.0')
 
+hotdoc_p = find_program('hotdoc')
+if not hotdoc_p.found()
+    message('Hotdoc not found, not building the documentation')
+    subdir_done()
+endif
+
+hotdoc_req = '>= 0.12.2'
+hotdoc_version = run_command(hotdoc_p, '--version').stdout()
+if not hotdoc_version.version_compare(hotdoc_req)
+    if get_option('doc').enabled()
+        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
+    else
+        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
+        subdir_done()
+    endif
+endif
+
 hotdoc = import('hotdoc')
 hotdoc_subprojects = []
 
