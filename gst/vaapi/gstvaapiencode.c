@@ -882,6 +882,8 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 
   venc_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapiencode_src_query);
   venc_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapiencode_sink_query);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VAAPIENCODE, 0);
 }
 
 /* Only used by the drived class */
