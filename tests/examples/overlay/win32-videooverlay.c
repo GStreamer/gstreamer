@@ -32,8 +32,92 @@ static GMainLoop *loop = NULL;
 static gboolean visible = FALSE;
 static gboolean test_reuse = FALSE;
 static HWND hwnd = NULL;
+static gboolean test_fullscreen = FALSE;
+static gboolean fullscreen = FALSE;
+static LONG prev_style = 0;
+static RECT prev_rect = { 0, };
 
 #define DEFAULT_VIDEO_SINK "glimagesink"
+
+static gboolean
+get_monitor_size (RECT * rect)
+{
+  HMONITOR monitor = MonitorFromWindow (hwnd, MONITOR_DEFAULTTONEAREST);
+  MONITORINFOEX monitor_info;
+  DEVMODE dev_mode;
+
+  monitor_info.cbSize = sizeof (monitor_info);
+  if (!GetMonitorInfo (monitor, (LPMONITORINFO) & monitor_info)) {
+    return FALSE;
+  }
+
+  dev_mode.dmSize = sizeof (dev_mode);
+  dev_mode.dmDriverExtra = sizeof (POINTL);
+  dev_mode.dmFields = DM_POSITION;
+  if (!EnumDisplaySettings
+      (monitor_info.szDevice, ENUM_CURRENT_SETTINGS, &dev_mode)) {
+    return FALSE;
+  }
+
+  SetRect (rect, 0, 0, dev_mode.dmPelsWidth, dev_mode.dmPelsHeight);
+
+  return TRUE;
+}
+
+static void
+switch_fullscreen_mode (void)
+{
+  if (!hwnd)
+    return;
+
+  fullscreen = !fullscreen;
+
+  gst_print ("Full screen %s\n", fullscreen ? "on" : "off");
+
+  if (!fullscreen) {
+    /* Restore the window's attributes and size */
+    SetWindowLong (hwnd, GWL_STYLE, prev_style);
+
+    SetWindowPos (hwnd, HWND_NOTOPMOST,
+        prev_rect.left,
+        prev_rect.top,
+        prev_rect.right - prev_rect.left,
+        prev_rect.bottom - prev_rect.top, SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+    ShowWindow (hwnd, SW_NORMAL);
+  } else {
+    RECT fullscreen_rect;
+
+    /* show window before change style */
+    ShowWindow (hwnd, SW_SHOW);
+
+    /* Save the old window rect so we can restore it when exiting
+     * fullscreen mode */
+    GetWindowRect (hwnd, &prev_rect);
+    prev_style = GetWindowLong (hwnd, GWL_STYLE);
+
+    if (!get_monitor_size (&fullscreen_rect)) {
+      g_warning ("Couldn't get monitor size");
+
+      fullscreen = !fullscreen;
+      return;
+    }
+
+    /* Make the window borderless so that the client area can fill the screen */
+    SetWindowLong (hwnd, GWL_STYLE,
+        prev_style &
+        ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU |
+            WS_THICKFRAME));
+
+    SetWindowPos (hwnd, HWND_NOTOPMOST,
+        fullscreen_rect.left,
+        fullscreen_rect.top,
+        fullscreen_rect.right,
+        fullscreen_rect.bottom, SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+    ShowWindow (hwnd, SW_MAXIMIZE);
+  }
+}
 
 static LRESULT CALLBACK
 window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -46,6 +130,19 @@ window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         g_main_loop_quit (loop);
       }
       return 0;
+    case WM_KEYUP:
+      if (!test_fullscreen)
+        break;
+
+      if (wParam == VK_SPACE)
+        switch_fullscreen_mode ();
+      break;
+    case WM_RBUTTONUP:
+      if (!test_fullscreen)
+        break;
+
+      switch_fullscreen_mode ();
+      break;
     default:
       break;
   }
@@ -132,6 +229,10 @@ main (gint argc, gchar ** argv)
     ,
     {"repeat", 0, 0, G_OPTION_ARG_NONE, &test_reuse,
         "Test reuse video sink element", NULL}
+    ,
+    {"fullscreen", 0, 0, G_OPTION_ARG_NONE, &test_fullscreen,
+        "Test full screen (borderless topmost) mode switching via "
+          "\"SPACE\" key or \"right mouse button\" click", NULL}
     ,
     {NULL}
   };
