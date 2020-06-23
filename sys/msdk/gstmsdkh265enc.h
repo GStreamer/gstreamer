@@ -55,6 +55,7 @@ struct _GstMsdkH265Enc
 {
   GstMsdkEnc base;
 
+  gchar *profile_name;
   gboolean lowpower;
   gushort num_tile_rows;
   gushort num_tile_cols;

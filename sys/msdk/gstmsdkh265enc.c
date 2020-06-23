@@ -210,6 +210,42 @@ gst_msdkh265enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 static gboolean
 gst_msdkh265enc_set_format (GstMsdkEnc * encoder)
 {
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
+  GstCaps *template_caps, *allowed_caps;
+
+  g_free (thiz->profile_name);
+  thiz->profile_name = NULL;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+
+  if (!allowed_caps || gst_caps_is_empty (allowed_caps)) {
+    if (allowed_caps)
+      gst_caps_unref (allowed_caps);
+    return FALSE;
+  }
+
+  template_caps = gst_static_pad_template_get_caps (&src_factory);
+
+  if (gst_caps_is_equal (allowed_caps, template_caps)) {
+    GST_INFO_OBJECT (thiz,
+        "downstream have the same caps, profile set to auto");
+  } else {
+    GstStructure *s;
+    const gchar *profile;
+
+    allowed_caps = gst_caps_make_writable (allowed_caps);
+    allowed_caps = gst_caps_fixate (allowed_caps);
+    s = gst_caps_get_structure (allowed_caps, 0);
+    profile = gst_structure_get_string (s, "profile");
+
+    if (profile) {
+      thiz->profile_name = g_strdup (profile);
+    }
+  }
+
+  gst_caps_unref (allowed_caps);
+  gst_caps_unref (template_caps);
+
   return TRUE;
 }
 
@@ -232,23 +268,35 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 
   encoder->param.mfx.CodecId = MFX_CODEC_HEVC;
 
-  switch (encoder->param.mfx.FrameInfo.FourCC) {
-    case MFX_FOURCC_P010:
+  if (h265enc->profile_name) {
+    encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
+
+    if (!strcmp (h265enc->profile_name, "main-10"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
-      break;
-    case MFX_FOURCC_AYUV:
-    case MFX_FOURCC_YUY2:
+    else if (!strcmp (h265enc->profile_name, "main-444") ||
+        !strcmp (h265enc->profile_name, "main-422-10") ||
+        !strcmp (h265enc->profile_name, "main-444-10") ||
+        !strcmp (h265enc->profile_name, "main-12"))
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
+  } else {
+    switch (encoder->param.mfx.FrameInfo.FourCC) {
+      case MFX_FOURCC_P010:
+        encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
+        break;
+      case MFX_FOURCC_AYUV:
+      case MFX_FOURCC_YUY2:
 #if (MFX_VERSION >= 1027)
-    case MFX_FOURCC_Y410:
-    case MFX_FOURCC_Y210:
+      case MFX_FOURCC_Y410:
+      case MFX_FOURCC_Y210:
 #endif
 #if (MFX_VERSION >= 1031)
-    case MFX_FOURCC_P016:
+      case MFX_FOURCC_P016:
 #endif
-      encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
-      break;
-    default:
-      encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
+        encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
+        break;
+      default:
+        encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
+    }
   }
 
   /* IdrInterval field of MediaSDK HEVC encoder behaves differently
@@ -322,6 +370,7 @@ level_to_string (gint level)
 static GstCaps *
 gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
 {
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
   GstCaps *caps;
   GstStructure *structure;
   const gchar *level;
@@ -334,36 +383,44 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
 
   gst_structure_set (structure, "alignment", G_TYPE_STRING, "au", NULL);
 
-  switch (encoder->param.mfx.FrameInfo.FourCC) {
-    case MFX_FOURCC_P010:
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-10", NULL);
-      break;
-    case MFX_FOURCC_AYUV:
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444", NULL);
-      break;
-    case MFX_FOURCC_YUY2:
-      /* The profile is main-422-10 for 8-bit 422 */
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
-          NULL);
-      break;
+  if (thiz->profile_name)
+    gst_structure_set (structure, "profile", G_TYPE_STRING, thiz->profile_name,
+        NULL);
+  else {
+    switch (encoder->param.mfx.FrameInfo.FourCC) {
+      case MFX_FOURCC_P010:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-10",
+            NULL);
+        break;
+      case MFX_FOURCC_AYUV:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444",
+            NULL);
+        break;
+      case MFX_FOURCC_YUY2:
+        /* The profile is main-422-10 for 8-bit 422 */
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
+            NULL);
+        break;
 #if (MFX_VERSION >= 1027)
-    case MFX_FOURCC_Y410:
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444-10",
-          NULL);
-      break;
-    case MFX_FOURCC_Y210:
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
-          NULL);
-      break;
+      case MFX_FOURCC_Y410:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444-10",
+            NULL);
+        break;
+      case MFX_FOURCC_Y210:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
+            NULL);
+        break;
 #endif
 #if (MFX_VERSION >= 1031)
-    case MFX_FOURCC_P016:
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-12", NULL);
-      break;
+      case MFX_FOURCC_P016:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-12",
+            NULL);
+        break;
 #endif
-    default:
-      gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
-      break;
+      default:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
+        break;
+    }
   }
 
   level = level_to_string (encoder->param.mfx.CodecLevel);
@@ -382,6 +439,8 @@ gst_msdkh265enc_finalize (GObject * object)
     gst_h265_parser_free (thiz->parser);
   if (thiz->cc_sei_array)
     g_array_unref (thiz->cc_sei_array);
+
+  g_free (thiz->profile_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
