@@ -39,7 +39,7 @@
  * time effect's whose overall seek transformation:
  *
  * + Maps the time `0` to `0`. So initial time-shifting effects are
- *   excluded (the #nlesource:inpoint can sometimes be used instead).
+ *   excluded (the #NleObject:inpoint can sometimes be used instead).
  * + Is monotonically increasing. So reversing effects, and effects that
  *   jump backwards in the stream are excluded.
  * + Can handle a reasonable #GstClockTime, relative to the project. So
@@ -58,10 +58,10 @@
  *
  * For such a time effect, they should be configured in nle such that:
  *
- * + Their #nleoperation:inpoint is `0`. Otherwise this will introduce
+ * + Their #NleObject:inpoint is `0`. Otherwise this will introduce
  *   seeking problems in its #nlecomposition.
- * + They must share the same #nleoperation:start and
- *   #nleoperation:duration as all nleobjects of lower priority in its
+ * + They must share the same #NleObject:start and
+ *   #NleObject:duration as all nleobjects of lower priority in its
  *   #nlecomposition. Otherwise this will introduce jumps in playback.
  *
  * Note that, at the moment, nle only converts the #GstSegment

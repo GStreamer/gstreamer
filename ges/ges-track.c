@@ -674,7 +674,7 @@ ges_track_class_init (GESTrackClass * klass)
    * The capabilities used to choose the output of the #GESTrack's
    * elements. Internally, this is used to select output streams when
    * several may be available, by determining whether its #GstPad is
-   * compatible (see #nlecomposition:caps for #nlecomposition). As such,
+   * compatible (see #NleObject:caps for #nlecomposition). As such,
    * this is used as a weaker indication of the desired output type of the
    * track, **before** the #GESTrack:restriction-caps is applied.
    * Therefore, this should be set to a *generic* superset of the

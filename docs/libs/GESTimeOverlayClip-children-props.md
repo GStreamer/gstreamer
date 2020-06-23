@@ -19,7 +19,7 @@ pango_font_description_from_string for syntax.
 
 Value type: #gchararray
 
-See #timeoverlay:font-desc
+See #GstBaseTextOverlay:font-desc
 
 #### `foreground-color`
 
@@ -48,7 +48,7 @@ Valid values:
   - **position** (4) – Absolute position clamped to canvas
   - **absolute** (5) – Absolute position
 
-See #timeoverlay:halignment
+See #GstBaseTextOverlay:halignment
 
 #### `height`
 
@@ -115,7 +115,7 @@ Resulting width of font rendering
 
 Value type: #guint
 
-See #timeoverlay:text-width
+See #GstBaseTextOverlay:text-width
 
 #### `text-x`
 
@@ -123,7 +123,7 @@ Resulting X position of font rendering.
 
 Value type: #gint
 
-See #timeoverlay:text-x
+See #GstBaseTextOverlay:text-x
 
 #### `text-y`
 
@@ -131,7 +131,7 @@ Resulting X position of font rendering.
 
 Value type: #gint
 
-See #timeoverlay:text-y
+See #GstBaseTextOverlay:text-y
 
 #### `time-mode`
 
@@ -157,7 +157,7 @@ Valid values:
   - **center** (4) – center
   - **absolute** (5) – Absolute position
 
-See #timeoverlay:valignment
+See #GstBaseTextOverlay:valignment
 
 #### `video-direction`
 
@@ -175,7 +175,7 @@ Valid values:
   - **GST_VIDEO_ORIENTATION_AUTO** (8) – auto
   - **GST_VIDEO_ORIENTATION_CUSTOM** (9) – custom
 
-See #videoflip:video-direction
+See #GstVideoDirection:video-direction
 
 #### `volume`
 

@@ -10,7 +10,7 @@ Color to use for text (big-endian ARGB).
 
 Value type: #guint
 
-See #timeoverlay:color
+See #GstBaseTextOverlay:color
 
 #### `font-desc`
 
@@ -19,7 +19,7 @@ pango_font_description_from_string for syntax.
 
 Value type: #gchararray
 
-See #timeoverlay:font-desc
+See #GstBaseTextOverlay:font-desc
 
 #### `foreground-color`
 
@@ -40,7 +40,7 @@ Valid values:
   - **position** (4) – Absolute position clamped to canvas
   - **absolute** (5) – Absolute position
 
-See #timeoverlay:halignment
+See #GstBaseTextOverlay:halignment
 
 #### `height`
 
@@ -54,7 +54,7 @@ Color to use for outline the text (big-endian ARGB).
 
 Value type: #guint
 
-See #timeoverlay:outline-color
+See #GstBaseTextOverlay:outline-color
 
 #### `pattern`
 
@@ -107,7 +107,7 @@ Whether to shade the background under the text area
 
 Value type: #gboolean
 
-See #timeoverlay:shaded-background
+See #GstBaseTextOverlay:shaded-background
 
 #### `text`
 
@@ -115,7 +115,7 @@ Text to be display.
 
 Value type: #gchararray
 
-See #timeoverlay:text
+See #GstBaseTextOverlay:text
 
 #### `text-height`
 
@@ -123,7 +123,7 @@ Resulting height of font rendering
 
 Value type: #guint
 
-See #timeoverlay:text-height
+See #GstBaseTextOverlay:text-height
 
 #### `text-width`
 
@@ -131,7 +131,7 @@ Resulting width of font rendering
 
 Value type: #guint
 
-See #timeoverlay:text-width
+See #GstBaseTextOverlay:text-width
 
 #### `text-x`
 
@@ -139,7 +139,7 @@ Resulting X position of font rendering.
 
 Value type: #gint
 
-See #timeoverlay:text-x
+See #GstBaseTextOverlay:text-x
 
 #### `text-y`
 
@@ -147,7 +147,7 @@ Resulting X position of font rendering.
 
 Value type: #gint
 
-See #timeoverlay:text-y
+See #GstBaseTextOverlay:text-y
 
 #### `valignment`
 
@@ -161,7 +161,7 @@ Valid values:
   - **center** (4) – center
   - **absolute** (5) – Absolute position
 
-See #timeoverlay:valignment
+See #GstBaseTextOverlay:valignment
 
 #### `video-direction`
 
@@ -179,7 +179,7 @@ Valid values:
   - **GST_VIDEO_ORIENTATION_AUTO** (8) – auto
   - **GST_VIDEO_ORIENTATION_CUSTOM** (9) – custom
 
-See #videoflip:video-direction
+See #GstVideoDirection:video-direction
 
 #### `width`
 
@@ -193,7 +193,7 @@ Horizontal position when using absolute alignment
 
 Value type: #gdouble
 
-See #timeoverlay:x-absolute
+See #GstBaseTextOverlay:x-absolute
 
 #### `xpos`
 
@@ -201,7 +201,7 @@ Horizontal position when using clamped position alignment
 
 Value type: #gdouble
 
-See #timeoverlay:xpos
+See #GstBaseTextOverlay:xpos
 
 #### `y-absolute`
 
@@ -209,7 +209,7 @@ Vertical position when using absolute alignment
 
 Value type: #gdouble
 
-See #timeoverlay:y-absolute
+See #GstBaseTextOverlay:y-absolute
 
 #### `ypos`
 
@@ -217,5 +217,5 @@ Vertical position when using clamped position alignment
 
 Value type: #gdouble
 
-See #timeoverlay:ypos
+See #GstBaseTextOverlay:ypos
 

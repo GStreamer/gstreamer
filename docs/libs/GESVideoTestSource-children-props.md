@@ -87,7 +87,7 @@ Valid values:
   - **GST_VIDEO_ORIENTATION_AUTO** (8) – auto
   - **GST_VIDEO_ORIENTATION_CUSTOM** (9) – custom
 
-See #videoflip:video-direction
+See #GstVideoDirection:video-direction
 
 #### `width`
 
