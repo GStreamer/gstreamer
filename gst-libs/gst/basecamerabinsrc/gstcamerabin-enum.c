@@ -23,6 +23,9 @@
 
 #include "gstcamerabin-enum.h"
 
+/**
+ * GstCameraBin2Mode:
+ */
 GType
 gst_camerabin_mode_get_type (void)
 {
