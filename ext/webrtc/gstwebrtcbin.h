@@ -104,6 +104,8 @@ struct _GstWebRTCBinPrivate
    * channel protocol for */
   GPtrArray *pending_data_channels;
 
+  guint jb_latency;
+
   GstWebRTCSCTPTransport *sctp_transport;
   TransportStream *data_channel_transport;
 

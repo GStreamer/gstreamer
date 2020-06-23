@@ -53,6 +53,10 @@
 #define ICE_LOCK(w) (g_mutex_lock (ICE_GET_LOCK(w)))
 #define ICE_UNLOCK(w) (g_mutex_unlock (ICE_GET_LOCK(w)))
 
+
+/* The extra time for the rtpstorage compared to the RTP jitterbuffer (in ms) */
+#define RTPSTORAGE_EXTRA_TIME (50)
+
 /*
  * This webrtcbin implements the majority of the W3's peerconnection API and
  * implementation guide where possible. Generating offers, answers and setting
@@ -364,6 +368,7 @@ enum
   PROP_BUNDLE_POLICY,
   PROP_ICE_TRANSPORT_POLICY,
   PROP_ICE_AGENT,
+  PROP_LATENCY
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -5644,8 +5649,13 @@ static void
 on_rtpbin_new_storage (GstElement * rtpbin, GstElement * storage,
     guint session_id, GstWebRTCBin * webrtc)
 {
-  /* TODO: when exposing latency, set size-time based on that */
-  g_object_set (storage, "size-time", (guint64) 250 * GST_MSECOND, NULL);
+  guint64 latency = webrtc->priv->jb_latency;
+
+  /* Add an extra 50 ms for safey */
+  latency += RTPSTORAGE_EXTRA_TIME;
+  latency *= GST_MSECOND;
+
+  g_object_set (storage, "size-time", latency, NULL);
 }
 
 static GstElement *
@@ -5840,6 +5850,29 @@ gst_webrtc_bin_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
+_update_rtpstorage_latency (GstWebRTCBin * webrtc)
+{
+  guint i;
+  guint64 latency_ns;
+
+  /* Add an extra 50 ms for safety */
+  latency_ns = webrtc->priv->jb_latency + RTPSTORAGE_EXTRA_TIME;
+  latency_ns *= GST_MSECOND;
+
+  for (i = 0; i < webrtc->priv->transports->len; i++) {
+    TransportStream *stream = g_ptr_array_index (webrtc->priv->transports, i);
+    GObject *storage = NULL;
+
+    g_signal_emit_by_name (webrtc->rtpbin, "get-storage", stream->session_id,
+        &storage);
+
+    g_object_set (storage, "size-time", latency_ns, NULL);
+
+    g_object_unref (storage);
+  }
+}
+
+static void
 gst_webrtc_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -5862,6 +5895,11 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
       g_object_set (webrtc->priv->ice, "force-relay",
           webrtc->ice_transport_policy ==
           GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY ? TRUE : FALSE, NULL);
+      break;
+    case PROP_LATENCY:
+      g_object_set_property (G_OBJECT (webrtc->rtpbin), "latency", value);
+      webrtc->priv->jb_latency = g_value_get_uint (value);
+      _update_rtpstorage_latency (webrtc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5929,6 +5967,9 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ICE_AGENT:
       g_value_set_object (value, webrtc->priv->ice);
+      break;
+    case PROP_LATENCY:
+      g_value_set_uint (value, webrtc->priv->jb_latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -6197,6 +6238,20 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       g_param_spec_object ("ice-agent", "WebRTC ICE agent",
           "The WebRTC ICE agent",
           GST_TYPE_WEBRTC_ICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCBin:latency:
+   *
+   * Default duration to buffer in the jitterbuffers (in ms)
+   *
+   * Since: 1.18
+   */
+
+  g_object_class_install_property (gobject_class,
+      PROP_LATENCY,
+      g_param_spec_uint ("latency", "Latency",
+          "Default duration to buffer in the jitterbuffers (in ms)",
+          0, G_MAXUINT, 200, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:
