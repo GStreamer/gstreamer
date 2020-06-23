@@ -24,6 +24,8 @@
 #include "nicetransport.h"
 #include "icestream.h"
 
+#include <gio/gnetworking.h>
+
 #define GST_CAT_DEFAULT gst_webrtc_nice_transport_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -37,6 +39,8 @@ enum
 {
   PROP_0,
   PROP_STREAM,
+  PROP_SEND_BUFFER_SIZE,
+  PROP_RECEIVE_BUFFER_SIZE
 };
 
 //static guint gst_webrtc_nice_transport_signals[LAST_SIGNAL] = { 0 };
@@ -44,6 +48,9 @@ enum
 struct _GstWebRTCNiceTransportPrivate
 {
   gboolean running;
+
+  gint send_buffer_size;
+  gint receive_buffer_size;
 };
 
 #define gst_webrtc_nice_transport_parent_class parent_class
@@ -115,6 +122,14 @@ gst_webrtc_nice_transport_set_property (GObject * object, guint prop_id,
         gst_object_unref (nice->stream);
       nice->stream = g_value_dup_object (value);
       break;
+    case PROP_SEND_BUFFER_SIZE:
+      nice->priv->send_buffer_size = g_value_get_int (value);
+      gst_webrtc_nice_transport_update_buffer_size (nice);
+      break;
+    case PROP_RECEIVE_BUFFER_SIZE:
+      nice->priv->receive_buffer_size = g_value_get_int (value);
+      gst_webrtc_nice_transport_update_buffer_size (nice);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -131,6 +146,12 @@ gst_webrtc_nice_transport_get_property (GObject * object, guint prop_id,
     case PROP_STREAM:
       g_value_set_object (value, nice->stream);
       break;
+    case PROP_SEND_BUFFER_SIZE:
+      g_value_set_int (value, nice->priv->send_buffer_size);
+      break;
+    case PROP_RECEIVE_BUFFER_SIZE:
+      g_value_set_int (value, nice->priv->receive_buffer_size);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -146,6 +167,51 @@ gst_webrtc_nice_transport_finalize (GObject * object)
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
+
+void
+gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
+{
+  GstWebRTCICETransport *ice = GST_WEBRTC_ICE_TRANSPORT (nice);
+  NiceAgent *agent = NULL;
+  GPtrArray *sockets;
+  guint i;
+
+  g_object_get (nice->stream->ice, "agent", &agent, NULL);
+  g_assert (agent != NULL);
+
+  sockets = nice_agent_get_sockets (agent, nice->stream->stream_id,
+      ice->component + 1);
+  if (sockets == NULL) {
+    g_object_unref (agent);
+    return;
+  }
+
+  for (i = 0; i < sockets->len; i++) {
+    GSocket *gsocket = g_ptr_array_index (sockets, i);
+#ifdef SO_SNDBUF
+    if (nice->priv->send_buffer_size != 0) {
+      GError *gerror = NULL;
+      if (!g_socket_set_option (gsocket, SOL_SOCKET, SO_SNDBUF,
+              nice->priv->send_buffer_size, &gerror))
+        GST_WARNING_OBJECT (nice, "Could not set send buffer size : %s",
+            gerror->message);
+      g_clear_error (&gerror);
+    }
+#endif
+#ifdef SO_RCVBUF
+    if (nice->priv->receive_buffer_size != 0) {
+      GError *gerror = NULL;
+      if (!g_socket_set_option (gsocket, SOL_SOCKET, SO_RCVBUF,
+              nice->priv->receive_buffer_size, &gerror))
+        GST_WARNING_OBJECT (nice, "Could not set send receive size : %s",
+            gerror->message);
+      g_clear_error (&gerror);
+    }
+#endif
+  }
+  g_ptr_array_unref (sockets);
+}
+
 
 static void
 _on_new_selected_pair (NiceAgent * agent, guint stream_id,
@@ -245,6 +311,34 @@ gst_webrtc_nice_transport_class_init (GstWebRTCNiceTransportClass * klass)
           "WebRTC ICE Stream", "ICE stream associated with this transport",
           GST_TYPE_WEBRTC_ICE_STREAM,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCNiceTransport:send-buffer-size:
+   *
+   * Size of the kernel send buffer in bytes, 0=default
+   *
+   * Since: 1.20
+   */
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_SEND_BUFFER_SIZE, g_param_spec_int ("send-buffer-size",
+          "Send Buffer Size",
+          "Size of the kernel send buffer in bytes, 0=default", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCNiceTransport:receive-buffer-size:
+   *
+   * Size of the kernel receive buffer in bytes, 0=default
+   *
+   * Since: 1.20
+   */
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_RECEIVE_BUFFER_SIZE, g_param_spec_int ("receive-buffer-size",
+          "Receive Buffer Size",
+          "Size of the kernel receive buffer in bytes, 0=default", 0, G_MAXINT,
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

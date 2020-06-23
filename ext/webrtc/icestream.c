@@ -192,6 +192,12 @@ gst_webrtc_ice_stream_gather_candidates (GstWebRTCICEStream * stream)
     return FALSE;
   }
 
+  for (l = stream->priv->transports; l; l = l->next) {
+    GstWebRTCNiceTransport *trans = l->data;
+
+    gst_webrtc_nice_transport_update_buffer_size (trans);
+  }
+
   g_object_unref (agent);
   return TRUE;
 }

@@ -50,8 +50,11 @@ struct _GstWebRTCNiceTransportClass
   GstWebRTCICETransportClass               parent_class;
 };
 
-GstWebRTCNiceTransport *    gst_webrtc_nice_transport_new               (GstWebRTCICEStream * stream,
-                                                                         GstWebRTCICEComponent component);
+GstWebRTCNiceTransport * gst_webrtc_nice_transport_new                (GstWebRTCICEStream * stream,
+                                                                       GstWebRTCICEComponent component);
+
+void                     gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice);
+
 
 G_END_DECLS
 
