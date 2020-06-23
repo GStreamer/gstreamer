@@ -148,7 +148,7 @@
  * * The duration that is returned to a DURATION query is always the duration
  *   of the (sub)song, regardless of number of loops or output mode. The same
  *   goes for DURATION messages and tags.
- *  
+ *
  * * If the number of loops is >0 or -1, durations of TOC entries are set to
  *   the duration of the respective subsong in LOOPING mode and to G_MAXINT64 in
  *   STEADY mode. If the number of loops is 0, entry durations are set to the
@@ -298,7 +298,8 @@ gst_nonstream_audio_decoder_output_mode_get_type (void)
     };
 
     gst_nonstream_audio_decoder_output_mode_type =
-        g_enum_register_static ("NonstreamAudioOutputMode", output_mode_values);
+        g_enum_register_static ("GstNonstreamAudioOutputMode",
+        output_mode_values);
   }
 
   return gst_nonstream_audio_decoder_output_mode_type;
@@ -321,7 +322,7 @@ gst_nonstream_audio_decoder_subsong_mode_get_type (void)
     };
 
     gst_nonstream_audio_decoder_subsong_mode_type =
-        g_enum_register_static ("NonstreamAudioSubsongMode",
+        g_enum_register_static ("GstNonstreamAudioSubsongMode",
         subsong_mode_values);
   }
 
