@@ -23612,6 +23612,99 @@
         "filename": "gstvideo4linux2",
         "license": "LGPL",
         "other-types": {
+            "GstTuner": {
+                "hierarchy": [
+                    "GstTuner",
+                    "GInterface"
+                ],
+                "kind": "interface",
+                "signals": {
+                    "channel-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstTunerChannel"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "frequency-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstTunerChannel"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "gulong"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "norm-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstTunerNorm"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "signal-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstTunerChannel"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "gint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
+            "GstTunerChannel": {
+                "hierarchy": [
+                    "GstTunerChannel",
+                    "GObject"
+                ],
+                "kind": "object",
+                "signals": {
+                    "frequency-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "gulong"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "signal-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "gint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
+            "GstTunerNorm": {
+                "hierarchy": [
+                    "GstTunerNorm",
+                    "GObject"
+                ],
+                "kind": "object"
+            },
             "GstV4l2DeviceTypeFlags": {
                 "kind": "flags",
                 "values": [

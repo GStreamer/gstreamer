@@ -128,14 +128,16 @@ gst_tuner_default_init (GstTunerInterface * iface)
      * @signal: The new signal strength (an integer)
      *
      * Reports that the signal strength has changed.
-     *
-     * See Also: gst_tuner_signal_strength()
      */
     gst_tuner_signals[SIGNAL_CHANGED] =
         g_signal_new ("signal-changed",
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, signal_changed),
         NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL, G_TYPE_INT);
+
+    gst_type_mark_as_plugin_api (GST_TYPE_TUNER, 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_TUNER_CHANNEL, 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_TUNER_NORM, 0);
 
     initialized = TRUE;
   }

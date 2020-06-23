@@ -77,8 +77,6 @@ gst_tuner_channel_class_init (GstTunerChannelClass * klass)
    * @signal: The new signal strength (an integer)
    *
    * Reports that the signal strength has changed.
-   *
-   * See Also: gst_tuner_signal_strength()
    */
   signals[SIGNAL_SIGNAL_CHANGED] =
       g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
