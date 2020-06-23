@@ -105,6 +105,7 @@ gstreamer_doc = hotdoc.generate_doc('GStreamer',
     devhelp_online: 'https://gstreamer.freedesktop.org/documentation/',
     build_always_stale: true,
     edit_on_github_repository: 'https://gitlab.freedesktop.org/gstreamer/gst-docs/',
+    previous_symbol_index: join_paths(meson.current_source_dir(), 'symbols', 'symbol_index.json'),
 )
 
 cdata = configuration_data()
@@ -116,7 +117,7 @@ readme = configure_file(input: 'scripts/RELEASE_README.md',
 run_target('release',
   command: [find_program('scripts/release.py'),
             gstreamer_doc.full_path(),
-            'gstreamer-docs-@0@'.format(meson.project_version()),
-            join_paths(meson.current_build_dir(), 'README.md')],
+            meson.project_version(),
+            meson.current_build_dir()],
   depends: [gstreamer_doc]
 )
