@@ -811,7 +811,7 @@ documentation:
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-  - pip3 install --upgrade hotdoc==0.12.0
+  - pip3 install --upgrade hotdoc==0.12.2
   - *gst_build
   - ./gst-uninstalled.py ninja -C build/ plugins_doc_caches
   - |
