@@ -452,13 +452,24 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
         GST_DEBUG_OBJECT (element, "Device video access permission has already been granted");
         break;
       case AVAuthorizationStatusNotDetermined:
+        ;
         // Explicit user permission is required for media capture,
         // but the user has not yet granted or denied such permission.
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
         dispatch_sync (mainQueue, ^{
           [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
             GST_DEBUG_OBJECT (element, "Device video access permission %s", granted ? "granted" : "not granted");
+            dispatch_semaphore_signal(sema);
           }];
         });
+        // Block on dialog being answered
+        if (![NSThread isMainThread]) {
+            dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+        } else {
+            while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+            }
+        }
         // Check if permission has been granted
         AVAuthorizationStatus videoAuthorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
         if (videoAuthorizationStatus != AVAuthorizationStatusAuthorized) {
