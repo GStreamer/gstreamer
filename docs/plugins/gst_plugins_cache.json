@@ -2835,7 +2835,19 @@
         },
         "filename": "gstlibvisual",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstVisual": {
+                "hierarchy": [
+                    "GstVisual",
+                    "GstAudioVisualizer",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
+            }
+        },
         "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
