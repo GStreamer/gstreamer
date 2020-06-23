@@ -375,8 +375,6 @@ struct _GstVideoDecoderPrivate
   /* combine with base_picture_number, framerate and calcs to yield (presentation) ts */
   GstClockTime base_timestamp;
 
-  /* FIXME : reorder_depth is never set */
-  int reorder_depth;
   int distance_from_sync;
 
   guint32 system_frame_number;
