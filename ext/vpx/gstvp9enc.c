@@ -29,10 +29,10 @@
  * [Google](http://www.google.com/). It's the successor of On2 VP3, which was
  * the base of the Theora video codec.
  *
- * To control the quality of the encoding, the #GstVP9Enc:target-bitrate,
- * #GstVP9Enc:min-quantizer, #GstVP9Enc:max-quantizer or #GstVP9Enc:cq-level
+ * To control the quality of the encoding, the #GstVPXEnc:target-bitrate,
+ * #GstVPXEnc:min-quantizer, #GstVPXEnc:max-quantizer or #GstVPXEnc:cq-level
  * properties can be used. Which one is used depends on the mode selected by
- * the #GstVP9Enc:end-usage property.
+ * the #GstVPXEnc:end-usage property.
  * See [Encoder Parameters](http://www.webmproject.org/docs/encoder-parameters/)
  * for explanation, examples for useful encoding parameters and more details
  * on the encoding parameters.
