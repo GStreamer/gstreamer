@@ -847,7 +847,6 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   gst_type_mark_as_plugin_api (GST_TYPE_CAM_FLAGS, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_CAMERABIN_MODE, 0);
 }
 
 static void
@@ -866,7 +865,7 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   g_cond_init (&camera->video_state_cond);
 
   /* capsfilters are created here as we proxy their caps properties and
-   * this way we avoid having to store the caps while on NULL state to 
+   * this way we avoid having to store the caps while on NULL state to
    * set them later */
   camera->videobin_capsfilter = gst_element_factory_make ("capsfilter",
       "videobin-capsfilter");

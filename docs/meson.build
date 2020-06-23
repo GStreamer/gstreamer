@@ -114,6 +114,7 @@ if build_gir
         {'name': 'codecparsers', 'lib': gstcodecparsers_dep},
         {'name': 'opencv', 'lib': gstopencv_dep, 'c_source_patterns': ['*.h', '*.cpp'], 'extra_c_flags': ['-x c++']},
         {'name': 'adaptivedemux', 'lib': gstadaptivedemux_dep},
+        {'name': 'basecamerabinsrc', 'gir': basecamerabin_gir, 'lib': gstbasecamerabin_dep},
         {'name': 'webrtc', 'gir': webrtc_gir, 'lib': gstwebrtc_dep, 'suffix': 'lib'},
         {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
         {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},

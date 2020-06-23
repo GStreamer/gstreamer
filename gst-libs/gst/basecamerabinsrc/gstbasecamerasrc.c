@@ -32,7 +32,7 @@
  *
  * * 3 pads: viewfinder, image capture, video capture
  *
- * During construct_pipeline() vmethod a subclass can add several elements into
+ * During `construct_pipeline()` vmethod a subclass can add several elements into
  * the bin and expose 3 srcs pads as ghostpads implementing the 3 pad templates.
  *
  * However the subclass is responsible for adding the pad templates for the
@@ -60,7 +60,7 @@
  * dataflow methods on these pads. This way all functionality can be implemented
  * directly in the subclass without extra elements.
  *
- * The src will receive the capture mode from #GstCameraBin2 on the
+ * The src will receive the capture mode from `GstCameraBin2` on the
  * #GstBaseCameraSrc:mode property. Possible capture modes are defined in
  * #GstCameraBinMode.
  */
@@ -72,6 +72,14 @@
 
 #include <gst/glib-compat-private.h>
 #include "gstbasecamerasrc.h"
+
+#define DEFAULT_WIDTH 640
+#define DEFAULT_HEIGHT 480
+#define DEFAULT_CAPTURE_WIDTH 800
+#define DEFAULT_CAPTURE_HEIGHT 600
+#define DEFAULT_FPS_N 0         /* makes it use the default */
+#define DEFAULT_FPS_D 1
+#define DEFAULT_ZOOM MIN_ZOOM
 
 enum
 {
@@ -546,8 +554,6 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Base class for camerabin src bin", "Source/Video",
       "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
-
-  gst_type_mark_as_plugin_api (GST_TYPE_BASE_CAMERA_SRC, 0);
 }
 
 static void

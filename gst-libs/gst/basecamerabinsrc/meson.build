@@ -22,6 +22,24 @@ gstbasecamerabin = library('gstbasecamerabinsrc-' + api_version,
   dependencies : [gstapp_dep],
 )
 
+_sources = []
+if build_gir
+  basecamerabin_gir = gnome.generate_gir(gstbasecamerabin,
+    sources : camerabin_sources + camerabin_headers,
+    namespace : 'GstBadBaseCameraBin',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-bad-base-camerabinsrc-1.0',
+    includes : ['Gst-1.0', 'GstApp-1.0'],
+    install : false, # Only for the documentation
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    dependencies : [gstapp_dep],
+    build_by_default : true,
+  )
+  _sources += [basecamerabin_gir]
+endif
+
 gstbasecamerabin_dep = declare_dependency(link_with : gstbasecamerabin,
   include_directories : [libsinc],
   dependencies : [gstapp_dep])

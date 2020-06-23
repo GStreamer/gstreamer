@@ -22,8 +22,7 @@
  * SECTION:camerabingeneral
  * @short_description: helper functions for #GstCameraBin and it's modules
  *
- * Common helper functions for #GstCameraBin, #GstCameraBinImage and
- * #GstCameraBinVideo.
+ * Common helper functions for #GstCameraBin.
  *
  */
 #ifdef HAVE_CONFIG_H
