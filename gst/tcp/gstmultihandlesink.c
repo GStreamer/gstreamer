@@ -21,83 +21,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
- * SECTION:element-multihandlesink
- * @title: multihandlesink
- * @see_also: tcpserversink
- *
- * This plugin writes incoming data to a set of file descriptors. The
- * file descriptors can be added to multihandlesink by emitting the #GstMultiHandleSink::add signal.
- * For each descriptor added, the #GstMultiHandleSink::client-added signal will be called.
- *
- * A client can also be added with the #GstMultiHandleSink::add-full signal
- * that allows for more control over what and how much data a client
- * initially receives.
- *
- * Clients can be removed from multihandlesink by emitting the #GstMultiHandleSink::remove signal. For
- * each descriptor removed, the #GstMultiHandleSink::client-removed signal will be called. The
- * #GstMultiHandleSink::client-removed signal can also be fired when multihandlesink decides that a
- * client is not active anymore or, depending on the value of the
- * #GstMultiHandleSink:recover-policy property, if the client is reading too slowly.
- * In all cases, multihandlesink will never close a file descriptor itself.
- * The user of multihandlesink is responsible for closing all file descriptors.
- * This can for example be done in response to the #GstMultiHandleSink::client-fd-removed signal.
- * Note that multihandlesink still has a reference to the file descriptor when the
- * #GstMultiHandleSink::client-removed signal is emitted, so that "get-stats" can be performed on
- * the descriptor; it is therefore not safe to close the file descriptor in
- * the #GstMultiHandleSink::client-removed signal handler, and you should use the
- * #GstMultiHandleSink::client-fd-removed signal to safely close the fd.
- *
- * Multisocketsink internally keeps a queue of the incoming buffers and uses a
- * separate thread to send the buffers to the clients. This ensures that no
- * client write can block the pipeline and that clients can read with different
- * speeds.
- *
- * When adding a client to multihandlesink, the #GstMultiHandleSink:sync-method property will define
- * which buffer in the queued buffers will be sent first to the client. Clients
- * can be sent the most recent buffer (which might not be decodable by the
- * client if it is not a keyframe), the next keyframe received in
- * multihandlesink (which can take some time depending on the keyframe rate), or the
- * last received keyframe (which will cause a simple burst-on-connect).
- * Multisocketsink will always keep at least one keyframe in its internal buffers
- * when the sync-mode is set to latest-keyframe.
- *
- * There are additional values for the #GstMultiHandleSink:sync-method
- * property to allow finer control over burst-on-connect behaviour. By selecting
- * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
- * additionally requires that the burst begin with a keyframe, and
- * 'burst-with-keyframe' attempts to burst beginning with a keyframe, but will
- * prefer a minimum burst size even if it requires not starting with a keyframe.
- *
- * Multisocketsink can be instructed to keep at least a minimum amount of data
- * expressed in time or byte units in its internal queues with the
- * #GstMultiHandleSink:time-min and #GstMultiHandleSink:bytes-min properties respectively.
- * These properties are useful if the application adds clients with the
- * #GstMultiHandleSink::add-full signal to make sure that a burst connect can
- * actually be honored.
- *
- * When streaming data, clients are allowed to read at a different rate than
- * the rate at which multihandlesink receives data. If the client is reading too
- * fast, no data will be send to the client until multihandlesink receives more
- * data. If the client, however, reads too slowly, data for that client will be
- * queued up in multihandlesink. Two properties control the amount of data
- * (buffers) that is queued in multihandlesink: #GstMultiHandleSink:buffers-max and
- * #GstMultiHandleSink:buffers-soft-max. A client that falls behind by
- * #GstMultiHandleSink:buffers-max is removed from multihandlesink forcibly.
- *
- * A client with a lag of at least #GstMultiHandleSink:buffers-soft-max enters the recovery
- * procedure which is controlled with the #GstMultiHandleSink:recover-policy property.
- * A recover policy of NONE will do nothing, RESYNC_LATEST will send the most recently
- * received buffer as the next buffer for the client, RESYNC_SOFT_LIMIT
- * positions the client to the soft limit in the buffer queue and
- * RESYNC_KEYFRAME positions the client at the most recent keyframe in the
- * buffer queue.
- *
- * multihandlesink will by default synchronize on the clock before serving the
- * buffers to the clients. This behaviour can be disabled by setting the sync
- * property to FALSE. Multisocketsink will by default not do QoS and will never
- * drop late buffers.
- */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -817,7 +740,7 @@ done:
   CLIENTS_UNLOCK (sink);
 }
 
-/* can be called both through the signal (i.e. from any thread) or when 
+/* can be called both through the signal (i.e. from any thread) or when
  * stopping, after the writing thread has shut down */
 static void
 gst_multi_handle_sink_clear (GstMultiHandleSink * mhsink)
@@ -1146,7 +1069,7 @@ is_sync_frame (GstMultiHandleSink * sink, GstBuffer * buffer)
 }
 
 /* find the keyframe in the list of buffers starting the
- * search from @idx. @direction as -1 will search backwards, 
+ * search from @idx. @direction as -1 will search backwards,
  * 1 will search forwards.
  * Returns: the index or -1 if there is no keyframe after idx.
  */
@@ -1283,7 +1206,7 @@ find_limits (GstMultiHandleSink * sink,
   max_hit = FALSE;
 
   i = 0;
-  /* loop through the buffers, when a limit is ok, mark it 
+  /* loop through the buffers, when a limit is ok, mark it
    * as -1, we have at least one buffer in the queue. */
   do {
     GstBuffer *buf;
@@ -1348,7 +1271,7 @@ find_limits (GstMultiHandleSink * sink,
 }
 
 /* parse the unit/value pair and assign it to the result value of the
- * right type, leave the other values untouched 
+ * right type, leave the other values untouched
  *
  * Returns: FALSE if the unit is unknown or undefined. TRUE otherwise.
  */
@@ -1793,7 +1716,7 @@ restart:
   }
 
   /* now look for sync points and make sure there is at least one
-   * sync point in the queue. We only do this if the LATEST_KEYFRAME or 
+   * sync point in the queue. We only do this if the LATEST_KEYFRAME or
    * BURST_KEYFRAME mode is selected */
   if (mhsink->def_sync_method == GST_SYNC_METHOD_LATEST_KEYFRAME ||
       mhsink->def_sync_method == GST_SYNC_METHOD_BURST_KEYFRAME) {

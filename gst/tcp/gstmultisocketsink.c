@@ -38,7 +38,7 @@
  * each descriptor removed, the #GstMultiSocketSink::client-removed signal will be called. The
  * #GstMultiSocketSink::client-removed signal can also be fired when multisocketsink decides that a
  * client is not active anymore or, depending on the value of the
- * #GstMultiSocketSink:recover-policy property, if the client is reading too slowly.
+ * #GstMultiHandleSink:recover-policy property, if the client is reading too slowly.
  * In all cases, multisocketsink will never close a socket itself.
  * The user of multisocketsink is responsible for closing all sockets.
  * This can for example be done in response to the #GstMultiSocketSink::client-socket-removed signal.
@@ -53,7 +53,7 @@
  * client write can block the pipeline and that clients can read with different
  * speeds.
  *
- * When adding a client to multisocketsink, the #GstMultiSocketSink:sync-method property will define
+ * When adding a client to multisocketsink, the #GstMultiHandleSink:sync-method property will define
  * which buffer in the queued buffers will be sent first to the client. Clients
  * can be sent the most recent buffer (which might not be decodable by the
  * client if it is not a keyframe), the next keyframe received in
@@ -62,7 +62,7 @@
  * Multisocketsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
  *
- * There are additional values for the #GstMultiSocketSink:sync-method
+ * There are additional values for the #GstMultiHandleSink:sync-method
  * property to allow finer control over burst-on-connect behaviour. By selecting
  * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
  * additionally requires that the burst begin with a keyframe, and
@@ -71,7 +71,7 @@
  *
  * Multisocketsink can be instructed to keep at least a minimum amount of data
  * expressed in time or byte units in its internal queues with the
- * #GstMultiSocketSink:time-min and #GstMultiSocketSink:bytes-min properties respectively.
+ * #GstMultiHandleSink:time-min and #GstMultiHandleSink:bytes-min properties respectively.
  * These properties are useful if the application adds clients with the
  * #GstMultiSocketSink::add-full signal to make sure that a burst connect can
  * actually be honored.
@@ -81,12 +81,12 @@
  * fast, no data will be send to the client until multisocketsink receives more
  * data. If the client, however, reads too slowly, data for that client will be
  * queued up in multisocketsink. Two properties control the amount of data
- * (buffers) that is queued in multisocketsink: #GstMultiSocketSink:buffers-max and
- * #GstMultiSocketSink:buffers-soft-max. A client that falls behind by
- * #GstMultiSocketSink:buffers-max is removed from multisocketsink forcibly.
+ * (buffers) that is queued in multisocketsink: #GstMultiHandleSink:buffers-max and
+ * #GstMultiHandleSink:buffers-soft-max. A client that falls behind by
+ * #GstMultiHandleSink:buffers-max is removed from multisocketsink forcibly.
  *
- * A client with a lag of at least #GstMultiSocketSink:buffers-soft-max enters the recovery
- * procedure which is controlled with the #GstMultiSocketSink:recover-policy property.
+ * A client with a lag of at least #GstMultiHandleSink:buffers-soft-max enters the recovery
+ * procedure which is controlled with the #GstMultiHandleSink:recover-policy property.
  * A recover policy of NONE will do nothing, RESYNC_LATEST will send the most recently
  * received buffer as the next buffer for the client, RESYNC_SOFT_LIMIT
  * positions the client to the soft limit in the buffer queue and
