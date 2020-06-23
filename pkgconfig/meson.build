@@ -31,6 +31,7 @@ pkg_libs = [
   'player',
   'plugins-bad',
   'sctp',
+  'transcoder',
   'webrtc',
 ]
 
