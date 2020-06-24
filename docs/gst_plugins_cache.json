@@ -3153,7 +3153,6 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "audio/x-raw",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstCaps",
