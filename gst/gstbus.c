@@ -1096,6 +1096,7 @@ gst_bus_remove_watch (GstBus * bus)
 
   source =
       bus->priv->signal_watch ? g_source_ref (bus->priv->signal_watch) : NULL;
+  bus->priv->signal_watch = NULL;
 
   GST_OBJECT_UNLOCK (bus);
 
@@ -1498,6 +1499,7 @@ gst_bus_remove_signal_watch (GstBus * bus)
 
   source =
       bus->priv->signal_watch ? g_source_ref (bus->priv->signal_watch) : NULL;
+  bus->priv->signal_watch = NULL;
 
 done:
   GST_OBJECT_UNLOCK (bus);
