@@ -184,7 +184,7 @@ configure_file(
 )
 
 if documented_projects != ''
-  subproject('gst-docs')
+  subproject('gst-docs', required: get_option('doc').enabled())
   message('Gst docs subprojects: ' + documented_projects)
 endif
 
