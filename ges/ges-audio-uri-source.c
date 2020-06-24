@@ -159,14 +159,13 @@ ges_audio_uri_source_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_audio_uri_source_dispose (GObject * object)
+ges_audio_uri_source_finalize (GObject * object)
 {
   GESAudioUriSource *uriclip = GES_AUDIO_URI_SOURCE (object);
 
-  if (uriclip->uri)
-    g_free (uriclip->uri);
+  g_free (uriclip->uri);
 
-  G_OBJECT_CLASS (ges_audio_uri_source_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_audio_uri_source_parent_class)->finalize (object);
 }
 
 static void
@@ -178,7 +177,7 @@ ges_audio_uri_source_class_init (GESAudioUriSourceClass * klass)
 
   object_class->get_property = ges_audio_uri_source_get_property;
   object_class->set_property = ges_audio_uri_source_set_property;
-  object_class->dispose = ges_audio_uri_source_dispose;
+  object_class->finalize = ges_audio_uri_source_finalize;
 
   /**
    * GESAudioUriSource:uri:
