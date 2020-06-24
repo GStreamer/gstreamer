@@ -132,6 +132,7 @@ n_print (const char *format, ...)
 {
   va_list args;
   int i;
+  gchar *str;
 
   if (_name)
     g_print ("%s", _name);
@@ -140,8 +141,14 @@ n_print (const char *format, ...)
     g_print ("  ");
 
   va_start (args, format);
-  g_vprintf (format, args);
+  str = gst_info_strdup_vprintf (format, args);
   va_end (args);
+
+  if (!str)
+    return;
+
+  g_print ("%s", str);
+  g_free (str);
 }
 
 static gboolean
