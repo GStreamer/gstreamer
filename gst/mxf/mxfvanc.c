@@ -402,6 +402,12 @@ static MXFEssenceElementWriter mxf_vanc_essence_element_writer = {
   {{0,}}
 };
 
+/**
+ * GstMXFMux!vanc_sink_%u:
+ *
+ * Since: 1.18
+ */
+
 void
 mxf_vanc_init (void)
 {
