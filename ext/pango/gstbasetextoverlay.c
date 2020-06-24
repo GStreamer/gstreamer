@@ -379,7 +379,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
       g_param_spec_uint ("shading-value", "background shading value",
           "Shading value to apply if shaded-background is true", 1, 255,
           DEFAULT_PROP_SHADING_VALUE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
       g_param_spec_enum ("valignment", "vertical alignment",
           "Vertical alignment of the text", GST_TYPE_BASE_TEXT_OVERLAY_VALIGN,
@@ -387,7 +388,9 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGNMENT,
       g_param_spec_enum ("halignment", "horizontal alignment",
           "Horizontal alignment of the text", GST_TYPE_BASE_TEXT_OVERLAY_HALIGN,
-          DEFAULT_PROP_HALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_HALIGNMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPAD,
       g_param_spec_int ("xpad", "horizontal paddding",
           "Horizontal paddding when using left/right alignment", 0, G_MAXINT,
@@ -403,8 +406,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELTAY,
       g_param_spec_int ("deltay", "Y position modifier",
-          "Shift Y position up or down. Unit is pixels.",
-          G_MININT, G_MAXINT, DEFAULT_PROP_DELTAY,
+          "Shift Y position up or down. Unit is pixels.", G_MININT, G_MAXINT,
+          DEFAULT_PROP_DELTAY,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**

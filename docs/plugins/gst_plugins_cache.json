@@ -8036,7 +8036,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "left (0)",
+                        "default": "center (1)",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstBaseTextOverlayHAlign",
