@@ -46,7 +46,7 @@ qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
 # that it's installed.
 # We don't do this check on other OSes because they need to be able to simply
 # point the `QMAKE` env var to `qmake` to build against a particular Qt5.
-if host_system == 'linux'
+if host_system == 'linux' and not meson.is_cross_build()
   moc = find_program('moc-qt5', 'moc', required : qt5_option)
 else
   # We only check if `moc` was found, and then discard it, so we can fake it.
