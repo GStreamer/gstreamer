@@ -85,7 +85,7 @@ if __name__ == "__main__":
     subenv = os.environ.copy()
     cache = {}
     try:
-        with open(cache_filename, newline='\n') as f:
+        with open(cache_filename, newline='\n', encoding='utf8') as f:
             cache = json.load(f)
     except FileNotFoundError:
         pass
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         gst_plugins_paths.append(os.path.dirname(plugin_path))
 
     try:
-        with open(os.path.join(build_root, 'GstPluginsPath.json'), newline='\n') as f:
+        with open(os.path.join(build_root, 'GstPluginsPath.json'), newline='\n', encoding='utf8') as f:
             plugin_paths = os.pathsep.join(json.load(f))
     except FileNotFoundError:
         plugin_paths = ""
@@ -109,16 +109,16 @@ if __name__ == "__main__":
     # Hide stderr unless an actual error happens as we have cases where we get g_warnings
     # and other issues because plugins are being built while `gst_init` is called
     stderrlogfile = output_filename + '.stderr'
-    with open(stderrlogfile, 'w') as log:
+    with open(stderrlogfile, 'w', encoding='utf8') as log:
         try:
-            data = subprocess.check_output(cmd, env=subenv, stderr=log)
+            data = subprocess.check_output(cmd, env=subenv, stderr=log, encoding='utf8', universal_newlines=True)
         except subprocess.CalledProcessError as e:
             log.flush()
-            with open(stderrlogfile, 'r') as f:
+            with open(stderrlogfile, 'r', encoding='utf8') as f:
                 print(f.read(), file=sys.stderr)
             raise
 
-    with open(out, 'r') as jfile:
+    with open(out, 'r', newline='\n', encoding='utf8') as jfile:
         try:
             plugins = json.load(jfile, object_pairs_hook=OrderedDict)
         except json.decoder.JSONDecodeError:
