@@ -50,6 +50,8 @@ struct _GstCCExtractor
   GstVideoInfo video_info;
 
   GstFlowCombiner *combiner;
+
+  gboolean remove_caption_meta;
 };
 
 struct _GstCCExtractorClass
