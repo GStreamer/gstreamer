@@ -423,6 +423,7 @@ gst_cc_extractor_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn flow = GST_FLOW_OK;
   GstVideoCaptionMeta *cc_meta;
   GstVideoTimeCodeMeta *tc_meta;
+  gboolean had_cc_meta = FALSE;
   gpointer iter = NULL;
 
   tc_meta = gst_buffer_get_video_time_code_meta (buf);
@@ -430,6 +431,7 @@ gst_cc_extractor_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   while ((cc_meta =
           (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buf, &iter,
               GST_VIDEO_CAPTION_META_API_TYPE)) && flow == GST_FLOW_OK) {
+    had_cc_meta = TRUE;
     flow = gst_cc_extractor_handle_meta (filter, buf, cc_meta, tc_meta);
   }
 
@@ -442,6 +444,11 @@ gst_cc_extractor_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (filter->remove_caption_meta) {
     buf = gst_buffer_make_writable (buf);
     gst_buffer_foreach_meta (buf, remove_caption_meta, NULL);
+  }
+
+  if (!had_cc_meta && filter->captionpad && GST_BUFFER_PTS_IS_VALID (buf)) {
+    gst_pad_push_event (filter->captionpad,
+        gst_event_new_gap (GST_BUFFER_PTS (buf), GST_BUFFER_DURATION (buf)));
   }
 
   /* Push the buffer downstream and return the combined flow return */
