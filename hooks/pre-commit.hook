@@ -81,3 +81,35 @@ echo "==========================================================================
     fi
 done
 echo "--Checking style pass--"
+
+# This is an opt-in check, and can only be run from gst-build's devenv,
+# as outside of it MESON_BUILD_ROOT will not be set.
+#
+# The idea is to build the cache, and check if it has unstaged changes.
+# To accomodate for the git add -p case, where the developer will break
+# down a large change set into multiple commits, this hook will only
+# fail when there are no unstaged changes left to commit, in other
+# cases it will only print a reminder that the cache needs committing.
+if [ -v MESON_BUILD_ROOT ] && [ "$GST_CACHE_HOOK" == "enabled" ]; then
+    echo "--Checking plugin cache--"
+    toplevel=`git rev-parse --show-toplevel`
+    repo_name=`basename $toplevel`
+    target_name=`ninja -C $MESON_BUILD_ROOT -t targets all | grep "\/\<$repo_name\>\/.*\/gst_plugins_cache.json" | cut -d ":" -f 1`
+    ninja -C $MESON_BUILD_ROOT $target_name
+    cache_path=`git ls-files $toplevel/**gst_plugins_cache.json`
+    git diff --quiet --exit-code -- $cache_path
+    has_unstaged_cache_changes=$?
+    git diff --quiet --exit-code -- ':!'$cache_path
+    has_unstaged_non_cache_changes=$?
+
+    if [ $has_unstaged_non_cache_changes != 0 ] ; then
+        if [ $has_unstaged_cache_changes != 0 ]; then
+            echo -e "\033[1;33mUnstaged cache changes, but working directory isn't clean, don't forget to commit the cache when you're done\033[0m"
+        fi
+    elif [ $has_unstaged_cache_changes != 0 ]; then
+        echo -e "\033[1;31mUnstaged cache changes, but the working directory is clean, you must commit the cache\033[0m"
+        exit 1
+    else
+    echo "--Checking plugin cache pass--"
+    fi
+fi
