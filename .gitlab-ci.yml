@@ -19,7 +19,7 @@ test manifest amd64 docker:
   stage: "build docker"
   variables:
     REPO_SUFFIX: "$TEST_MANIFEST_AMD64_SUFFIX"
-    TAG: "$TEST_MANIFEST_TAG"
+    TAG: "$TEST_MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
 
     CONTEXT_DIR: "docker/test_manifest/"
     DOCKERFILE: "docker/test_manifest/Dockerfile"

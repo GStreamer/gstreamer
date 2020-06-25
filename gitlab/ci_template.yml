@@ -150,7 +150,7 @@ variables:
 #
 # All the documentation from citemplates should be applicable here, so please refer there
 .base:
-  image: 'registry.fedoraproject.org/fedora:32'
+  image: "$CI_REGISTRY/freedesktop/ci-templates/buildah:2020-03-24"
   extends:
     - '.global_ci_policy'
   tags: ['gstreamer']
@@ -170,17 +170,13 @@ variables:
     - export LOCAL_IMAGE="$CI_REGISTRY_IMAGE/$REPO_SUFFIX:$TAG"
     - export GST_UPSTREAM_IMAGE="$CI_REGISTRY/$GST_UPSTREAM_REPO/$REPO_SUFFIX:$TAG"
 
-    # FIXME: make an image since there will be multiple jobs running every pipeline
-    - dnf install -y skopeo jq diffutils
-
     # Newer versions of podman/buildah try to set overlayfs mount options when
     # using the vfs driver, and this causes errors.
     - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
-    - *check_image_exists
+    - dnf upgrade -y buildah skopeo jq runc
 
-    # FIXME: make an image since there will be multiple jobs running every pipeline
-    - dnf install -y buildah skopeo jq runc
+    - *check_image_exists
 
     - echo "Building image $LOCAL_IMAGE"
 
