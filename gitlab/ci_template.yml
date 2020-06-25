@@ -100,6 +100,9 @@ variables:
     # we store the sha of the digest and the layers
     skopeo inspect docker://$LOCAL_IMAGE | jq '[.Digest, .Layers]' > local_sha
 
+    # check if our image is already in our gst-ci registry fork
+    skopeo inspect docker://$LOCAL_GST_CI_IMAGE | jq '[.Digest, .Layers]' > local_gst_ci_sha
+
     # check if our image is already in the upstream registry
     if [[ -z "$GST_UPSTREAM_REPO" ]]
     then
@@ -125,6 +128,25 @@ variables:
                   docker://$LOCAL_IMAGE || \
       skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
                   docker://$GST_UPSTREAM_IMAGE \
+                  docker://$LOCAL_IMAGE
+
+      exit 0
+    fi
+
+    # if the local ci fork repo has an image, ensure we use the same
+    if [ -s local_gst_ci_sha ]
+    then
+
+      # ensure we use the same image from upstream
+      diff local_gst_ci_sha local_sha && exit 0 || true
+
+      # copy the original image into the current project registry namespace
+      # we do 2 attempts with skopeo copy at most
+      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
+                  docker://$LOCAL_GST_CI_IMAGE \
+                  docker://$LOCAL_IMAGE || \
+      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
+                  docker://$LOCAL_GST_CI_IMAGE \
                   docker://$LOCAL_IMAGE
 
       exit 0
@@ -161,13 +183,10 @@ variables:
     BUILDAH_FORMAT: 'docker'
     BUILDAH_ISOLATION: 'chroot'
 
-    # FIXME: Probably needs to be changed to none and clone gst-ci repo each time, sigh
-    # as these jobs *could* run potentially in a fork of smth like -bad
-    # though given our current setup, its only possible to tweak the CI from a gst-ci
-    # fork so it might be fine
     GIT_STRATEGY: fetch
   script:
     - export LOCAL_IMAGE="$CI_REGISTRY_IMAGE/$REPO_SUFFIX:$TAG"
+    - export LOCAL_GST_CI_IMAGE="$CI_REGISTRY/$CI_PROJECT_NAMESPACE/gst-ci/$REPO_SUFFIX:$TAG"
     - export GST_UPSTREAM_IMAGE="$CI_REGISTRY/$GST_UPSTREAM_REPO/$REPO_SUFFIX:$TAG"
 
     # Newer versions of podman/buildah try to set overlayfs mount options when
@@ -177,6 +196,15 @@ variables:
     - dnf upgrade -y buildah skopeo jq runc
 
     - *check_image_exists
+
+    # This part of the job should only ever be possible to be reach in a gst-ci fork
+    - |
+      if [[ "$CI_PROJECT_NAME" != 'gst-ci' ]]
+      then
+        echo "ERROR! Something is wrong!"
+        echo "This part of the job is supposed to be executed only in gst-ci forks, and its probably going to fail else"
+        exit 1
+      fi
 
     - echo "Building image $LOCAL_IMAGE"
 
