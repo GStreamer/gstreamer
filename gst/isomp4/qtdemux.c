@@ -3129,7 +3129,10 @@ check_update_duration (GstQTDemux * qtdemux, GstClockTime duration)
       /* internal duration tracking state has been updated above, so */
       /* preserve an open-ended dummy segment rather than repeatedly updating
        * it and spamming downstream accordingly with segment events */
-      if (stream->dummy_segment &&
+      /* also mangle the edit list end time when fragmented with a single edit
+       * list that may only cover any non-fragmented data */
+      if ((stream->dummy_segment ||
+              (qtdemux->fragmented && stream->n_segments == 1)) &&
           GST_CLOCK_TIME_IS_VALID (stream->segments[0].duration)) {
         /* Update all dummy values to new duration */
         stream->segments[0].stop_time = duration;
