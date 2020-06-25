@@ -881,6 +881,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 
   tcaps = gst_pad_get_pad_template_caps (otherpad);
   othercaps = gst_pad_peer_query_caps (otherpad, clean_filter);
+  othercaps = gst_caps_make_writable (othercaps);
   if (othercaps) {
     if (pattern == GST_INTERLACE_PATTERN_2_2) {
       for (i = 0; i < gst_caps_get_size (othercaps); ++i) {
