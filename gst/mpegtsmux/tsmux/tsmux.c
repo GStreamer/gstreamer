@@ -705,10 +705,12 @@ tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
   mux->streams = g_list_prepend (mux->streams, stream);
   mux->nb_streams++;
 
-  if (language)
-    g_strlcat (stream->language, language, 3 * sizeof (gchar));
-  else
-    g_strlcat (stream->language, "eng", 3 * sizeof (gchar));
+  if (language) {
+    strncpy (stream->language, language, 4);
+    stream->language[3] = 0;
+  } else {
+    strcpy (stream->language, "eng");
+  }
 
   return stream;
 }
