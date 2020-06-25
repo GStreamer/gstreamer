@@ -548,6 +548,9 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
     if (gst_caps_foreach (allowed_caps, negotiate_profile_and_level, &ctx)) {
       goto no_profile_level;
     }
+
+    gst_caps_unref (allowed_caps);
+    allowed_caps = NULL;
   }
 
   if (codec->profile_cid && !ctx.profile) {
