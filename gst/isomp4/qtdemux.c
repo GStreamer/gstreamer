@@ -12774,7 +12774,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       qtdemux->moof_offset = offset;
       goto samples_failed;
     }
-    qtdemux->moof_offset = 0;
+    qtdemux->moof_offset = offset;
     /* movie duration more reliable in this case (e.g. mehd) */
     if (qtdemux->segment.duration &&
         GST_CLOCK_TIME_IS_VALID (qtdemux->segment.duration))
@@ -12971,7 +12971,7 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
     GST_DEBUG_OBJECT (qtdemux, "track-id %u, fourcc %" GST_FOURCC_FORMAT,
         stream->track_id, GST_FOURCC_ARGS (CUR_STREAM (stream)->fourcc));
 
-    if (qtdemux->fragmented) {
+    if (qtdemux->fragmented && qtdemux->pullbased) {
       /* need all moov samples first */
       GST_OBJECT_LOCK (qtdemux);
       while (stream->n_samples == 0)
