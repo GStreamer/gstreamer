@@ -2,8 +2,12 @@ tests = [
   ['basic',  'basic.py'],
 ]
 
-if openssl.found()
+check_test = find_program ('configure_test_check.py')
+have_webrtc_check_deps = run_command (check_test).returncode() == 0
+
+if openssl.found() and have_webrtc_check_deps
   test_deps = [certs]
+  message ('adding webrtc tests')
 
   foreach elem : tests
     test(elem.get(0),
