@@ -964,9 +964,6 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   gboolean ret;
 
-  if (pool->orphaned)
-    return gst_v4l2_buffer_pool_vallocator_stop (pool);
-
   GST_DEBUG_OBJECT (pool, "stopping pool");
 
   if (pool->group_released_handler > 0) {
@@ -981,7 +978,8 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
     pool->other_pool = NULL;
   }
 
-  gst_v4l2_buffer_pool_streamoff (pool);
+  if (!pool->orphaned)
+    gst_v4l2_buffer_pool_streamoff (pool);
 
   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
 
@@ -997,6 +995,8 @@ gst_v4l2_buffer_pool_orphan (GstBufferPool ** bpool)
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (*bpool);
   gboolean ret;
 
+  g_return_val_if_fail (pool->orphaned == FALSE, FALSE);
+
   if (!GST_V4L2_ALLOCATOR_CAN_ORPHAN_BUFS (pool->vallocator))
     return FALSE;
 
@@ -1004,25 +1004,24 @@ gst_v4l2_buffer_pool_orphan (GstBufferPool ** bpool)
     return FALSE;
 
   GST_DEBUG_OBJECT (pool, "orphaning pool");
-
   gst_buffer_pool_set_active (*bpool, FALSE);
-  /*
-   * If the buffer pool has outstanding buffers, it will not be stopped
-   * by the base class when set inactive. Stop it manually and mark it
-   * as orphaned
-   */
-  ret = gst_v4l2_buffer_pool_stop (*bpool);
-  if (!ret)
-    ret = gst_v4l2_allocator_orphan (pool->vallocator);
 
-  if (!ret)
-    goto orphan_failed;
+  /* We lock to prevent racing with a return buffer in QBuf, and has a
+   * workaround of not being able to use the pool hidden activation lock. */
+  GST_OBJECT_LOCK (pool);
 
-  pool->orphaned = TRUE;
-  gst_object_unref (*bpool);
-  *bpool = NULL;
+  gst_v4l2_buffer_pool_streamoff (pool);
+  ret = gst_v4l2_allocator_orphan (pool->vallocator);
+  if (ret)
+    pool->orphaned = TRUE;
 
-orphan_failed:
+  GST_OBJECT_UNLOCK (pool);
+
+  if (ret) {
+    gst_object_unref (*bpool);
+    *bpool = NULL;
+  }
+
   return ret;
 }
 
@@ -1171,6 +1170,13 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
   }
 
   GST_OBJECT_LOCK (pool);
+
+  /* If the pool was orphaned, don't try to queue any returned buffers.
+   * This is done with the objet lock in order to synchronize with
+   * orphaning. */
+  if (pool->orphaned)
+    goto was_orphaned;
+
   g_atomic_int_inc (&pool->num_queued);
   pool->buffers[index] = buf;
 
@@ -1187,6 +1193,13 @@ already_queued:
   {
     GST_ERROR_OBJECT (pool, "the buffer %i was already queued", index);
     return GST_FLOW_ERROR;
+  }
+was_orphaned:
+  {
+    GST_DEBUG_OBJECT (pool, "pool was orphaned, not queuing back buffer.");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_TAG_MEMORY);
+    GST_OBJECT_UNLOCK (pool);
+    return GST_FLOW_FLUSHING;
   }
 queue_failed:
   {
@@ -1467,14 +1480,6 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
   GstV4l2Object *obj = pool->obj;
 
   GST_DEBUG_OBJECT (pool, "release buffer %p", buffer);
-
-  /* If the buffer's pool has been orphaned, dispose of it so that
-   * the pool resources can be freed */
-  if (pool->orphaned) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
-    pclass->release_buffer (bpool, buffer);
-    return;
-  }
 
   switch (obj->type) {
     case V4L2_BUF_TYPE_VIDEO_CAPTURE:
