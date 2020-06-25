@@ -160,7 +160,7 @@ struct _GstBin {
  * added to any bin inside this bin, so it will also be called if a new child
  * was added to a sub-bin of this bin. #GstBin implementations that override
  * this message should chain up to the parent class implementation so the
- * element-added-deep signal is emitted on all parents.
+ * #GstBin::deep-element-added signal is emitted on all parents.
  */
 struct _GstBinClass {
   GstElementClass parent_class;
