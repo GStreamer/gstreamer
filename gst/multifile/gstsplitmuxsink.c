@@ -111,8 +111,10 @@ enum
   PROP_RESET_MUXER,
   PROP_ASYNC_FINALIZE,
   PROP_MUXER_FACTORY,
+  PROP_MUXER_PRESET,
   PROP_MUXER_PROPERTIES,
   PROP_SINK_FACTORY,
+  PROP_SINK_PRESET,
   PROP_SINK_PROPERTIES,
   PROP_MUXERPAD_MAP
 };
@@ -386,6 +388,19 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           "The muxer element factory to use (default = mp4mux). "
           "Valid only for async-finalize = TRUE",
           "mp4mux", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstSplitMuxSink:muxer-preset
+   *
+   * An optional #GstPreset name to use for the muxer. This only has an effect
+   * in `async-finalize=TRUE` mode.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_MUXER_PRESET,
+      g_param_spec_string ("muxer-preset", "Muxer preset",
+          "The muxer preset to use. "
+          "Valid only for async-finalize = TRUE",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MUXER_PROPERTIES,
       g_param_spec_boxed ("muxer-properties", "Muxer properties",
           "The muxer element properties to use. "
@@ -397,6 +412,19 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           "The sink element factory to use (default = filesink). "
           "Valid only for async-finalize = TRUE",
           "filesink", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstSplitMuxSink:sink-preset
+   *
+   * An optional #GstPreset name to use for the sink. This only has an effect
+   * in `async-finalize=TRUE` mode.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_SINK_PRESET,
+      g_param_spec_string ("sink-preset", "Sink preset",
+          "The sink preset to use. "
+          "Valid only for async-finalize = TRUE",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SINK_PROPERTIES,
       g_param_spec_boxed ("sink-properties", "Sink properties",
           "The sink element properties to use. "
@@ -627,10 +655,14 @@ gst_splitmux_sink_finalize (GObject * object)
 
   if (splitmux->muxer_factory)
     g_free (splitmux->muxer_factory);
+  if (splitmux->muxer_preset)
+    g_free (splitmux->muxer_preset);
   if (splitmux->muxer_properties)
     gst_structure_free (splitmux->muxer_properties);
   if (splitmux->sink_factory)
     g_free (splitmux->sink_factory);
+  if (splitmux->sink_preset)
+    g_free (splitmux->sink_preset);
   if (splitmux->sink_properties)
     gst_structure_free (splitmux->sink_properties);
 
@@ -799,6 +831,13 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       splitmux->muxer_factory = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (splitmux);
       break;
+    case PROP_MUXER_PRESET:
+      GST_OBJECT_LOCK (splitmux);
+      if (splitmux->muxer_preset)
+        g_free (splitmux->muxer_preset);
+      splitmux->muxer_preset = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     case PROP_MUXER_PROPERTIES:
       GST_OBJECT_LOCK (splitmux);
       if (splitmux->muxer_properties)
@@ -815,6 +854,13 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       if (splitmux->sink_factory)
         g_free (splitmux->sink_factory);
       splitmux->sink_factory = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_SINK_PRESET:
+      GST_OBJECT_LOCK (splitmux);
+      if (splitmux->sink_preset)
+        g_free (splitmux->sink_preset);
+      splitmux->sink_preset = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_SINK_PROPERTIES:
@@ -930,6 +976,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, splitmux->muxer_factory);
       GST_OBJECT_UNLOCK (splitmux);
       break;
+    case PROP_MUXER_PRESET:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_string (value, splitmux->muxer_preset);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     case PROP_MUXER_PROPERTIES:
       GST_OBJECT_LOCK (splitmux);
       gst_value_set_structure (value, splitmux->muxer_properties);
@@ -938,6 +989,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
     case PROP_SINK_FACTORY:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_string (value, splitmux->sink_factory);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_SINK_PRESET:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_string (value, splitmux->sink_preset);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_SINK_PROPERTIES:
@@ -1851,6 +1907,9 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
               create_element (splitmux, splitmux->sink_factory, newname,
                   TRUE)) == NULL)
         goto fail;
+      if (splitmux->sink_preset && GST_IS_PRESET (splitmux->sink))
+        gst_preset_load_preset (GST_PRESET (splitmux->sink),
+            splitmux->sink_preset);
       if (splitmux->sink_properties)
         gst_structure_foreach (splitmux->sink_properties,
             _set_property_from_structure, splitmux->sink);
@@ -1868,6 +1927,9 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
          * failures, so let's try and turn that off */
         g_object_set (splitmux->sink, "async", FALSE, NULL);
       }
+      if (splitmux->muxer_preset && GST_IS_PRESET (splitmux->muxer))
+        gst_preset_load_preset (GST_PRESET (splitmux->muxer),
+            splitmux->muxer_preset);
       if (splitmux->muxer_properties)
         gst_structure_foreach (splitmux->muxer_properties,
             _set_property_from_structure, splitmux->muxer);
@@ -3168,6 +3230,9 @@ create_muxer (GstSplitMuxSink * splitmux)
               create_element (splitmux, splitmux->muxer_factory, "muxer",
                   FALSE)) == NULL)
         goto fail;
+      if (splitmux->muxer_preset && GST_IS_PRESET (splitmux->muxer))
+        gst_preset_load_preset (GST_PRESET (splitmux->muxer),
+            splitmux->muxer_preset);
       if (splitmux->muxer_properties)
         gst_structure_foreach (splitmux->muxer_properties,
             _set_property_from_structure, splitmux->muxer);
@@ -3262,6 +3327,9 @@ create_sink (GstSplitMuxSink * splitmux)
               create_element (splitmux, splitmux->sink_factory, "sink",
                   TRUE)) == NULL)
         goto fail;
+      if (splitmux->sink_preset && GST_IS_PRESET (splitmux->sink))
+        gst_preset_load_preset (GST_PRESET (splitmux->sink),
+            splitmux->sink_preset);
       if (splitmux->sink_properties)
         gst_structure_foreach (splitmux->sink_properties,
             _set_property_from_structure, splitmux->sink);

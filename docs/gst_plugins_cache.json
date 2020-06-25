@@ -10868,6 +10868,18 @@
                         "type": "GstStructure",
                         "writable": true
                     },
+                    "muxer-preset": {
+                        "blurb": "The muxer preset to use. Valid only for async-finalize = TRUE",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "muxer-properties": {
                         "blurb": "The muxer element properties to use. Example: {properties,boolean-prop=true,string-prop=\"hi\"}. Valid only for async-finalize = TRUE",
                         "conditionally-available": false,
@@ -10921,6 +10933,18 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "filesink",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "sink-preset": {
+                        "blurb": "The sink preset to use. Valid only for async-finalize = TRUE",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",

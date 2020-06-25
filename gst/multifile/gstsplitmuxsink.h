@@ -188,8 +188,10 @@ struct _GstSplitMuxSink
   /* Async finalize options */
   gboolean async_finalize;
   gchar *muxer_factory;
+  gchar *muxer_preset;
   GstStructure *muxer_properties;
   gchar *sink_factory;
+  gchar *sink_preset;
   GstStructure *sink_properties;
 
   GstStructure *muxerpad_map;
