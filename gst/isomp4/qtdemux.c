@@ -8833,13 +8833,15 @@ qtdemux_find_atom (GstQTDemux * qtdemux, guint64 * offset,
     }
 
     if (lfourcc == fourcc) {
-      GST_DEBUG_OBJECT (qtdemux, "found fourcc at offset %" G_GUINT64_FORMAT,
-          *offset);
+      GST_DEBUG_OBJECT (qtdemux, "found '%" GST_FOURCC_FORMAT " at offset %"
+          G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc), *offset);
       break;
     } else {
       GST_LOG_OBJECT (qtdemux,
           "skipping atom '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
-          GST_FOURCC_ARGS (fourcc), *offset);
+          GST_FOURCC_ARGS (lfourcc), *offset);
+      if (*offset == G_MAXUINT64)
+        goto locate_failed;
       *offset += *length;
     }
   }
