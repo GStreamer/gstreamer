@@ -1229,8 +1229,8 @@ struct _GstH265PPS
   guint8 num_tile_columns_minus1;
   guint8 num_tile_rows_minus1;
   guint8 uniform_spacing_flag;
-  guint32 column_width_minus1[19];
-  guint32 row_height_minus1[21];
+  guint32 column_width_minus1[20];
+  guint32 row_height_minus1[22];
   guint8 loop_filter_across_tiles_enabled_flag;
 
   guint8 loop_filter_across_slices_enabled_flag;

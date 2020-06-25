@@ -2164,8 +2164,23 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   READ_UINT8 (&nr, pps->entropy_coding_sync_enabled_flag, 1);
 
   if (pps->tiles_enabled_flag) {
-    READ_UE_ALLOWED (&nr, pps->num_tile_columns_minus1, 0, 19);
-    READ_UE_ALLOWED (&nr, pps->num_tile_rows_minus1, 0, 21);
+    READ_UE_ALLOWED (&nr,
+        pps->num_tile_columns_minus1, 0, pps->PicWidthInCtbsY - 1);
+    READ_UE_ALLOWED (&nr,
+        pps->num_tile_rows_minus1, 0, pps->PicHeightInCtbsY - 1);
+
+    if (pps->num_tile_columns_minus1 + 1 >
+        G_N_ELEMENTS (pps->column_width_minus1)) {
+      GST_WARNING ("Invalid \"num_tile_columns_minus1\" %d",
+          pps->num_tile_columns_minus1);
+      goto error;
+    }
+
+    if (pps->num_tile_rows_minus1 + 1 > G_N_ELEMENTS (pps->row_height_minus1)) {
+      GST_WARNING ("Invalid \"num_tile_rows_minus1\" %d",
+          pps->num_tile_rows_minus1);
+      goto error;
+    }
 
     READ_UINT8 (&nr, pps->uniform_spacing_flag, 1);
     /* 6.5.1, 6-4, 6-5, 7.4.3.3.1 */
