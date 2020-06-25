@@ -64,7 +64,7 @@ typedef struct
 #define GST_VIDEO_COLORIMETRY_NONAME  NULL
 
 static const ColorimetryInfo colorimetry[] = {
-  MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, SMPTE170M),
+  MAKE_COLORIMETRY (BT601, _16_235, BT601, BT601, SMPTE170M),
   MAKE_COLORIMETRY (BT709, _16_235, BT709, BT709, BT709),
   MAKE_COLORIMETRY (SMPTE240M, _16_235, SMPTE240M, SMPTE240M, SMPTE240M),
   MAKE_COLORIMETRY (SRGB, _0_255, RGB, SRGB, BT709),
@@ -435,6 +435,7 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
     case GST_VIDEO_TRANSFER_GAMMA22:
       res = pow (val, 1.0 / 2.2);
       break;
+    case GST_VIDEO_TRANSFER_BT601:
     case GST_VIDEO_TRANSFER_BT709:
     case GST_VIDEO_TRANSFER_BT2020_10:
       if (val < 0.018)
@@ -552,6 +553,7 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
     case GST_VIDEO_TRANSFER_GAMMA22:
       res = pow (val, 2.2);
       break;
+    case GST_VIDEO_TRANSFER_BT601:
     case GST_VIDEO_TRANSFER_BT709:
     case GST_VIDEO_TRANSFER_BT2020_10:
       if (val < 0.081)
@@ -689,6 +691,8 @@ gst_video_color_transfer_to_iso (GstVideoTransferFunction func)
       return 4;
     case GST_VIDEO_TRANSFER_GAMMA28:
       return 5;
+    case GST_VIDEO_TRANSFER_BT601:
+      return 6;
     case GST_VIDEO_TRANSFER_SMPTE240M:
       return 7;
     case GST_VIDEO_TRANSFER_GAMMA10:
@@ -818,12 +822,13 @@ gst_video_color_transfer_from_iso (guint value)
 {
   switch (value) {
     case 1:
-    case 6:
       return GST_VIDEO_TRANSFER_BT709;
     case 4:
       return GST_VIDEO_TRANSFER_GAMMA22;
     case 5:
       return GST_VIDEO_TRANSFER_GAMMA28;
+    case 6:
+      return GST_VIDEO_TRANSFER_BT601;
     case 7:
       return GST_VIDEO_TRANSFER_SMPTE240M;
     case 8:
