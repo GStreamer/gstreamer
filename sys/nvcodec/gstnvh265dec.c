@@ -602,26 +602,41 @@ gst_nv_h265_dec_picture_params_from_pps (GstNvH265Dec * self,
   COPY_FIELD_WITH_PREFIX (tc_offset_div2);
   COPY_FIELD (tiles_enabled_flag);
   COPY_FIELD (uniform_spacing_flag);
-  COPY_FIELD (num_tile_columns_minus1);
-  COPY_FIELD (num_tile_rows_minus1);
 
-  if (pps->num_tile_columns_minus1 > G_N_ELEMENTS (params->column_width_minus1)) {
-    GST_ERROR_OBJECT (self,
-        "Too large column_width_minus1 %d", pps->num_tile_columns_minus1);
-    return FALSE;
+  if (pps->tiles_enabled_flag) {
+    guint num_tile_columns;
+    guint num_tile_rows;
+
+    COPY_FIELD (num_tile_columns_minus1);
+    COPY_FIELD (num_tile_rows_minus1);
+
+    if (pps->num_tile_columns_minus1 >
+        G_N_ELEMENTS (params->column_width_minus1)) {
+      GST_ERROR_OBJECT (self,
+          "Too large column_width_minus1 %d", pps->num_tile_columns_minus1);
+      return FALSE;
+    }
+
+    if (pps->num_tile_rows_minus1 > G_N_ELEMENTS (params->row_height_minus1)) {
+      GST_ERROR_OBJECT (self,
+          "Too large num_tile_rows_minus1 %d", pps->num_tile_rows_minus1);
+      return FALSE;
+    }
+
+    /* XXX: The size of column_width_minus1 array in CUVIDHEVCPICPARAMS struct
+     * is 21 which is inconsistent with the spec.
+     * Just copy values as many as possible */
+    num_tile_columns = MIN (pps->num_tile_columns_minus1,
+        G_N_ELEMENTS (pps->column_width_minus1));
+    num_tile_rows = MIN (pps->num_tile_rows_minus1,
+        G_N_ELEMENTS (pps->row_height_minus1));
+
+    for (i = 0; i < num_tile_columns; i++)
+      COPY_FIELD (column_width_minus1[i]);
+
+    for (i = 0; i < num_tile_rows; i++)
+      COPY_FIELD (row_height_minus1[i]);
   }
-
-  if (pps->num_tile_rows_minus1 > G_N_ELEMENTS (params->row_height_minus1)) {
-    GST_ERROR_OBJECT (self,
-        "Too large num_tile_rows_minus1 %d", pps->num_tile_rows_minus1);
-    return FALSE;
-  }
-
-  for (i = 0; i < pps->num_tile_columns_minus1 + 1; i++)
-    COPY_FIELD (column_width_minus1[i]);
-
-  for (i = 0; i < pps->num_tile_rows_minus1 + 1; i++)
-    COPY_FIELD (row_height_minus1[i]);
 
   COPY_FIELD (pps_range_extension_flag);
   if (pps->pps_range_extension_flag) {
