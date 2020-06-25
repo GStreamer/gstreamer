@@ -3544,7 +3544,7 @@ invalid_track:
   }
 unknown_stream:
   {
-    GST_DEBUG_OBJECT (qtdemux, "unknown stream in tfhd");
+    GST_DEBUG_OBJECT (qtdemux, "unknown stream (%u) in tfhd", track_id);
     return TRUE;
   }
 }
@@ -5180,6 +5180,9 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   stream->sample_index++;
   stream->offset_in_sample = 0;
 
+  GST_TRACE_OBJECT (qtdemux, "advance to sample %u/%u", stream->sample_index,
+      stream->n_samples);
+
   /* reached the last sample, we need the next segment */
   if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
     goto next_segment;
@@ -5192,6 +5195,10 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
   /* get next sample */
   sample = &stream->samples[stream->sample_index];
+
+  GST_TRACE_OBJECT (qtdemux, "sample dts %" GST_TIME_FORMAT " media_stop: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (QTSAMPLE_DTS (stream, sample)),
+      GST_TIME_ARGS (segment->media_stop));
 
   /* see if we are past the segment */
   if (G_UNLIKELY (QTSAMPLE_DTS (stream, sample) >= segment->media_stop))
@@ -12964,7 +12971,7 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
   GstFlowReturn ret = GST_FLOW_OK;
   gint i;
 
-  GST_DEBUG_OBJECT (qtdemux, "prepare streams");
+  GST_DEBUG_OBJECT (qtdemux, "prepare %u streams", QTDEMUX_N_STREAMS (qtdemux));
 
   for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
     QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, i);
