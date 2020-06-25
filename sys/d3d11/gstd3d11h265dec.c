@@ -958,10 +958,12 @@ gst_d3d11_h265_dec_picture_params_from_pps (GstD3D11H265Dec * self,
     COPY_FIELD (num_tile_columns_minus1);
     COPY_FIELD (num_tile_rows_minus1);
     if (!pps->uniform_spacing_flag) {
-      for (i = 0; i < pps->num_tile_columns_minus1 + 1; i++)
+      for (i = 0; i < pps->num_tile_columns_minus1 &&
+          i < G_N_ELEMENTS (params->column_width_minus1); i++)
         COPY_FIELD (column_width_minus1[i]);
 
-      for (i = 0; i < pps->num_tile_rows_minus1 + 1; i++)
+      for (i = 0; i < pps->num_tile_rows_minus1 &&
+          i < G_N_ELEMENTS (params->row_height_minus1); i++)
         COPY_FIELD (row_height_minus1[i]);
     }
   }
