@@ -186,6 +186,18 @@ h265_get_slice_type (GstVaapiPictureType type)
 }
 
 static gboolean
+h265_is_scc (GstVaapiEncoderH265 * encoder)
+{
+  if (encoder->profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN ||
+      encoder->profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_10 ||
+      encoder->profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444 ||
+      encoder->profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444_10)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 h265_is_tile_enabled (GstVaapiEncoderH265 * encoder)
 {
   return encoder->num_tile_cols * encoder->num_tile_rows > 1;
@@ -305,8 +317,18 @@ bs_write_profile_tier_level (GstBitWriter * bs,
     WRITE_UINT32 (bs, 0, 1);
   }
 
-  /* general_profile_compatibility_flag[5~32] */
-  WRITE_UINT32 (bs, 0, 27);
+  /* general_profile_compatibility_flag[5~8] */
+  WRITE_UINT32 (bs, 0, 4);
+
+  /* general_profile_compatibility_flag[9] */
+  if (seq_param->general_profile_idc == 9) {    /* screen content coding profiles */
+    WRITE_UINT32 (bs, 1, 1);
+  } else {
+    WRITE_UINT32 (bs, 0, 1);
+  }
+
+  /* general_profile_compatibility_flag[10~32] */
+  WRITE_UINT32 (bs, 0, 22);
 
   /* general_progressive_source_flag */
   WRITE_UINT32 (bs, 1, 1);
@@ -411,6 +433,107 @@ bs_write_profile_tier_level (GstBitWriter * bs,
 
     /* general_reserved_zero_34bits */
     for (i = 0; i < 34; i++)
+      WRITE_UINT32 (bs, 0, 1);
+  } else if (seq_param->general_profile_idc == 9) {
+    /*  In A.3.7, Screen content coding extensions profiles. */
+    switch (profile) {
+      case GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* general_max_14bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
+      case GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_10:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* general_max_14bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
+      case GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* general_max_14bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
+      case GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444_10:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* general_max_14bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
+      default:
+        GST_WARNING ("do not support the profile: %s of screen"
+            " content coding extensions",
+            gst_vaapi_profile_get_va_name (profile));
+        goto bs_error;
+    }
+
+    /* general_reserved_zero_33bits */
+    for (i = 0; i < 33; i++)
       WRITE_UINT32 (bs, 0, 1);
   } else {
     /* general_reserved_zero_43bits */
@@ -703,8 +826,40 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
     /* bitstream_restriction_flag */
     WRITE_UINT32 (bs, seq_param->vui_fields.bits.bitstream_restriction_flag, 1);
   }
-  /* sps_extension_flag */
-  WRITE_UINT32 (bs, sps_extension_flag, 1);
+
+  if (h265_is_scc (encoder)) {
+    /* sps_extension_flag */
+    WRITE_UINT32 (bs, 1, 1);
+    /* sps_range_extension_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* sps_multilayer_extension_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* sps_3d_extension_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* sps_scc_extension_flag */
+    WRITE_UINT32 (bs, 1, 1);
+    /* sps_extension_4bits */
+    WRITE_UINT32 (bs, 0, 4);
+
+    /* sps_scc_extension() */
+    /* sps_curr_pic_ref_enabled_flag */
+    WRITE_UINT32 (bs, 1, 1);
+    /* palette_mode_enabled_flag */
+    WRITE_UINT32 (bs, 1, 1);
+    /* palette_max_size */
+    WRITE_UE (bs, 64);
+    /* delta_palette_max_predictor_size */
+    WRITE_UE (bs, 32);
+    /* sps_palette_predictor_initializers_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* motion_vector_resolution_control_idc */
+    WRITE_UINT32 (bs, 0, 2);
+    /* intra_boundary_filtering_disabled_flag */
+    WRITE_UINT32 (bs, 0, 1);
+  } else {
+    /* sps_extension_flag */
+    WRITE_UINT32 (bs, sps_extension_flag, 1);
+  }
 
   return TRUE;
 
@@ -734,7 +889,7 @@ bs_write_sps (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
 
 /* Write a PPS NAL unit */
 static gboolean
-bs_write_pps (GstBitWriter * bs,
+bs_write_pps (GstBitWriter * bs, gboolean is_scc,
     const VAEncPictureParameterBufferHEVC * pic_param)
 {
   guint32 pic_parameter_set_id = 0;
@@ -831,8 +986,39 @@ bs_write_pps (GstBitWriter * bs,
   WRITE_UE (bs, pic_param->log2_parallel_merge_level_minus2);
   /* slice_segment_header_extension_present_flag */
   WRITE_UINT32 (bs, slice_segment_header_extension_present_flag, 1);
-  /* pps_extension_flag */
-  WRITE_UINT32 (bs, pps_extension_flag, 1);
+
+  if (is_scc) {
+#if VA_CHECK_VERSION(1,8,0)
+    /* pps_extension_flag */
+    WRITE_UINT32 (bs, 1, 1);
+    /* pps_range_extension_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* pps_multilayer_extension_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* pps_3d_extension_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* pps_scc_extension_flag */
+    WRITE_UINT32 (bs, 1, 1);
+    /* pps_extension_4bits */
+    WRITE_UINT32 (bs, 0, 4);
+
+    /* pps_scc_extension() */
+    /* pps_curr_pic_ref_enabled_flag */
+    WRITE_UINT32 (bs,
+        pic_param->scc_fields.bits.pps_curr_pic_ref_enabled_flag, 1);
+    /* residual_adaptive_colour_transform_enabled_flag */
+    WRITE_UINT32 (bs, 0, 1);
+    /* pps_palette_predictor_initializers_present_flag */
+    WRITE_UINT32 (bs, 0, 1);
+#else
+    /* SCC profile should not be selected. */
+    g_assert_not_reached ();
+    return FALSE;
+#endif
+  } else {
+    /* pps_extension_flag */
+    WRITE_UINT32 (bs, pps_extension_flag, 1);
+  }
 
   /* rbsp_trailing_bits */
   bs_write_trailing_bits (bs);
@@ -862,6 +1048,11 @@ bs_write_slice (GstBitWriter * bs,
   guint8 slice_deblocking_filter_disabled_flag = 0;
   guint8 num_ref_idx_active_override_flag =
       slice_param->slice_fields.bits.num_ref_idx_active_override_flag;
+
+  if (h265_is_scc (encoder)) {
+    /* If scc, need to add the current picture itself. */
+    num_ref_idx_active_override_flag = 1;
+  }
 
   /* first_slice_segment_in_pic_flag */
   WRITE_UINT32 (bs, encoder->first_slice_segment_in_pic_flag, 1);
@@ -985,7 +1176,20 @@ bs_write_slice (GstBitWriter * bs,
       /* num_ref_idx_active_override_flag */
       WRITE_UINT32 (bs, num_ref_idx_active_override_flag, 1);
       if (num_ref_idx_active_override_flag) {
-        WRITE_UE (bs, slice_param->num_ref_idx_l0_active_minus1);
+        if (h265_is_scc (encoder)) {
+          if (picture->type == GST_VAAPI_PICTURE_TYPE_I) {
+            g_assert (slice_param->num_ref_idx_l0_active_minus1 == 0);
+            /* Let num_ref_idx_l0_active_minus1 = 0 and
+               NumRpsCurrTempList0 = 1 to include current picture itself */
+            WRITE_UE (bs, 0);
+          } else {
+            /* For scc, need to add 1 for current picture itself when
+               calculating NumRpsCurrTempList0. */
+            WRITE_UE (bs, slice_param->num_ref_idx_l0_active_minus1 + 1);
+          }
+        } else {
+          WRITE_UE (bs, slice_param->num_ref_idx_l0_active_minus1);
+        }
         if (slice_param->slice_type == GST_H265_B_SLICE)
           WRITE_UE (bs, slice_param->num_ref_idx_l1_active_minus1);
       }
@@ -1101,7 +1305,7 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
   const GstVideoFormat format =
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
   guint depth, chrome;
-  GstVaapiProfile profile_candidates[4];
+  GstVaapiProfile profile_candidates[6];
   guint num, i;
 
   g_assert (GST_VIDEO_FORMAT_INFO_IS_YUV (gst_video_format_get_info (format)));
@@ -1117,6 +1321,15 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
       profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN_444;
     if (depth <= 10)
       profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN_444_10;
+#if VA_CHECK_VERSION(1,8,0)
+    /* Consider SCREEN_EXTENDED_MAIN_444 and SCREEN_EXTENDED_MAIN_444_10 */
+    if (depth == 8)
+      profile_candidates[num++] =
+          GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444;
+    if (depth <= 10)
+      profile_candidates[num++] =
+          GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444_10;
+#endif
   } else if (chrome == 2) {
     /* 4:2:2 */
     profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN_422_10;
@@ -1131,6 +1344,14 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
     /* Always add STILL_PICTURE as a candidate for Main and Main10. */
     if (depth <= 10)
       profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
+#if VA_CHECK_VERSION(1,8,0)
+    /* Consider SCREEN_EXTENDED_MAIN and SCREEN_EXTENDED_MAIN_10 */
+    if (depth == 8)
+      profile_candidates[num++] = GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN;
+    if (depth <= 10)
+      profile_candidates[num++] =
+          GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_10;
+#endif
   }
 
   if (num == 0) {
@@ -1436,7 +1657,7 @@ add_packed_picture_header (GstVaapiEncoderH265 * encoder,
   gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H265_NAL_PPS);
-  bs_write_pps (&bs, pic_param);
+  bs_write_pps (&bs, h265_is_scc (encoder), pic_param);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
   data = GST_BIT_WRITER_DATA (&bs);
@@ -1727,6 +1948,17 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
       seq_param->vui_time_scale = GST_VAAPI_ENCODER_FPS_N (encoder);
     }
   }
+
+  if (h265_is_scc (encoder)) {
+#if VA_CHECK_VERSION(1,8,0)
+    seq_param->scc_fields.bits.palette_mode_enabled_flag = 1;
+#else
+    /* SCC profile should not be selected. */
+    g_assert_not_reached ();
+    return FALSE;
+#endif
+  }
+
   return TRUE;
 }
 
@@ -1841,6 +2073,16 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       pic_param->row_height_minus1[i] = tile_ctu_rows[i] - 1;
   }
 
+  if (h265_is_scc (encoder)) {
+#if VA_CHECK_VERSION(1,8,0)
+    pic_param->scc_fields.bits.pps_curr_pic_ref_enabled_flag = 1;
+#else
+    /* SCC profile should not be selected. */
+    g_assert_not_reached ();
+    return FALSE;
+#endif
+  }
+
   return TRUE;
 }
 
@@ -1862,7 +2104,16 @@ create_and_fill_one_slice (GstVaapiEncoderH265 * encoder,
   slice_param->slice_type = h265_get_slice_type (picture->type);
   if (encoder->no_p_frame && slice_param->slice_type == GST_H265_P_SLICE) {
     slice_param->slice_type = GST_H265_B_SLICE;
+  } else if (h265_is_scc (encoder) &&
+      slice_param->slice_type == GST_H265_I_SLICE) {
+    /* In scc mode, the I frame can ref to itself and so need the L0
+       reference list enabled. Just set the I frame to P_SLICE type
+       and leaving all reference unchanged. So all ref_pic_list0's
+       picture is invalid, the only ref is itself enabled by
+       pic_param->scc_fields.bits.pps_curr_pic_ref_enabled_flag. */
+    slice_param->slice_type = GST_H265_P_SLICE;
   }
+
   slice_param->slice_pic_parameter_set_id = 0;
 
   slice_param->slice_fields.bits.num_ref_idx_active_override_flag =
