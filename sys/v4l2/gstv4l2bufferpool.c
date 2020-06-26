@@ -650,13 +650,18 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
       if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
-        guint i;
+        guint num_queued;
+        guint i, n = 0;
+
+        num_queued = g_atomic_int_get (&pool->num_queued);
+        if (num_queued < pool->num_allocated)
+          n = pool->num_allocated - num_queued;
 
         /* For captures, we need to enqueue buffers before we start streaming,
          * so the driver don't underflow immediately. As we have put then back
          * into the base class queue, resurrect them, then releasing will queue
          * them back. */
-        for (i = 0; i < pool->num_allocated; i++)
+        for (i = 0; i < n; i++)
           gst_v4l2_buffer_pool_resurrect_buffer (pool);
       }
 
