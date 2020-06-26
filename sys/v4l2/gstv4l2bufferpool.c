@@ -830,6 +830,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
       count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_USERPTR);
+      pool->num_allocated = count;
 
       /* There is no rational to not get what we asked */
       if (count < min_buffers) {
@@ -850,6 +851,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
       count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_DMABUF);
+      pool->num_allocated = count;
 
       /* There is no rational to not get what we asked */
       if (count < min_buffers) {
@@ -891,7 +893,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
     goto start_failed;
 
   if (!V4L2_TYPE_IS_OUTPUT (obj->type)) {
-    if (g_atomic_int_get (&pool->num_queued) < min_buffers)
+    if (g_atomic_int_get (&pool->num_queued) < pool->num_allocated)
       goto queue_failed;
 
     pool->group_released_handler =
