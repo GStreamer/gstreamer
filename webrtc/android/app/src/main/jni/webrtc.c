@@ -822,6 +822,8 @@ native_class_init (JNIEnv * env, jclass klass)
     __android_log_print (ANDROID_LOG_ERROR, "GstPlayer", "%s", message);
     (*env)->ThrowNew (env, exception_class, message);
   }
+  GST_DEBUG_CATEGORY_INIT (debug_category, "webrtc", 0,
+      "GStreamer Android WebRTC");
   //gst_debug_set_threshold_from_string ("gl*:7", FALSE);
 }
 
@@ -905,7 +907,7 @@ JNI_OnLoad (JavaVM * vm, void *reserved)
   java_vm = vm;
 
   if ((*vm)->GetEnv (vm, (void **) &env, JNI_VERSION_1_4) != JNI_OK) {
-    __android_log_print (ANDROID_LOG_ERROR, "GstPlayer",
+    __android_log_print (ANDROID_LOG_ERROR, "GstWebRTC",
         "Could not retrieve JNIEnv");
     return 0;
   }
