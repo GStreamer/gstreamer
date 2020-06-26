@@ -118,7 +118,7 @@ static void gst_dtls_connection_get_property (GObject *, guint prop_id,
     GValue *, GParamSpec *);
 
 static void log_state (GstDtlsConnection *, const gchar * str);
-static void export_srtp_keys (GstDtlsConnection *);
+static gboolean export_srtp_keys (GstDtlsConnection *, GError ** err);
 static GstFlowReturn openssl_poll (GstDtlsConnection *, gboolean * notify_state,
     GError ** err);
 static GstFlowReturn handle_error (GstDtlsConnection * self, int ret,
@@ -850,8 +850,8 @@ log_state (GstDtlsConnection * self, const gchar * str)
 #endif
 }
 
-static void
-export_srtp_keys (GstDtlsConnection * self)
+static gboolean
+export_srtp_keys (GstDtlsConnection * self, GError ** err)
 {
   typedef struct
   {
@@ -889,16 +889,24 @@ export_srtp_keys (GstDtlsConnection * self)
       NULL, 0, 0);
 
   if (!success) {
-    GST_WARNING_OBJECT (self, "failed to export srtp keys");
-    return;
+    GST_WARNING_OBJECT (self, "Failed to export SRTP keys");
+    if (err)
+      *err =
+          g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+          "Failed to export SRTP keys");
+    return FALSE;
   }
 
   profile = SSL_get_selected_srtp_profile (self->priv->ssl);
 
   if (!profile) {
     GST_WARNING_OBJECT (self,
-        "no srtp capabilities negotiated during handshake");
-    return;
+        "No SRTP capabilities negotiated during handshake");
+    if (err)
+      *err =
+          g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+          "No SRTP capabilities negotiated during handshake");
+    return FALSE;
   }
 
   GST_INFO_OBJECT (self, "keys received, profile is %s", profile->name);
@@ -913,8 +921,13 @@ export_srtp_keys (GstDtlsConnection * self)
       auth = GST_DTLS_SRTP_AUTH_HMAC_SHA1_32;
       break;
     default:
-      GST_WARNING_OBJECT (self, "invalid crypto suite set by handshake");
-      return;
+      GST_WARNING_OBJECT (self,
+          "Invalid/unsupported crypto suite set by handshake");
+      if (err)
+        *err =
+            g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+            "Invalid/unsupported crypto suite set by handshake");
+      return FALSE;
   }
 
   client_key.key = exported_keys.client_key;
@@ -935,6 +948,8 @@ export_srtp_keys (GstDtlsConnection * self)
   }
 
   self->priv->keys_exported = TRUE;
+
+  return TRUE;
 }
 
 static int
@@ -1047,7 +1062,10 @@ openssl_poll (GstDtlsConnection * self, gboolean * notify_state, GError ** err)
       if (!self->priv->keys_exported) {
         GST_INFO_OBJECT (self,
             "handshake just completed successfully, exporting keys");
-        export_srtp_keys (self);
+
+        if (!export_srtp_keys (self, err))
+          return GST_FLOW_ERROR;
+
         if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED
             && self->priv->connection_state != GST_DTLS_CONNECTION_STATE_CLOSED
             && self->priv->connection_state !=
