@@ -1034,7 +1034,7 @@ gst_v4l2_buffer_pool_flush_start (GstBufferPool * bpool)
   g_cond_broadcast (&pool->empty_cond);
   GST_OBJECT_UNLOCK (pool);
 
-  if (pool->other_pool)
+  if (pool->other_pool && gst_buffer_pool_is_active (pool->other_pool))
     gst_buffer_pool_set_flushing (pool->other_pool, TRUE);
 }
 
@@ -1045,7 +1045,7 @@ gst_v4l2_buffer_pool_flush_stop (GstBufferPool * bpool)
 
   GST_DEBUG_OBJECT (pool, "stop flushing");
 
-  if (pool->other_pool)
+  if (pool->other_pool && gst_buffer_pool_is_active (pool->other_pool))
     gst_buffer_pool_set_flushing (pool->other_pool, FALSE);
 
   gst_poll_set_flushing (pool->poll, FALSE);
