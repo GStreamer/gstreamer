@@ -462,7 +462,10 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    * @splitmux: the #GstSplitMuxSink
    * @fragment_id: the sequence number of the file to be created
    *
-   * Returns: the location to be used for the next output file
+   * Returns: the location to be used for the next output file. This must be
+   *    a newly-allocated string which will be freed with g_free() by the
+   *    splitmuxsink element when it no longer needs it, so use g_strdup() or
+   *    g_strdup_printf() or similar functions to allocate it.
    */
   signals[SIGNAL_FORMAT_LOCATION] =
       g_signal_new ("format-location", G_TYPE_FROM_CLASS (klass),
@@ -475,7 +478,12 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    * @first_sample: A #GstSample containing the first buffer
    *   from the reference stream in the new file
    *
-   * Returns: the location to be used for the next output file
+   * Returns: the location to be used for the next output file. This must be
+   *    a newly-allocated string which will be freed with g_free() by the
+   *    splitmuxsink element when it no longer needs it, so use g_strdup() or
+   *    g_strdup_printf() or similar functions to allocate it.
+   *
+   * Since: 1.12
    */
   signals[SIGNAL_FORMAT_LOCATION_FULL] =
       g_signal_new ("format-location-full", G_TYPE_FROM_CLASS (klass),
