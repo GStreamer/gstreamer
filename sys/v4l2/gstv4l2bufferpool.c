@@ -826,10 +826,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
       can_allocate =
           GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, USERPTR);
 
-      GST_DEBUG_OBJECT (pool, "requesting %d USERPTR import slots",
-          max_buffers);
+      GST_DEBUG_OBJECT (pool, "requesting %d USERPTR buffers", min_buffers);
 
-      count = gst_v4l2_allocator_start (pool->vallocator, max_buffers,
+      count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_USERPTR);
 
       /* There is no rational to not get what we asked */
