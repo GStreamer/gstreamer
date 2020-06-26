@@ -812,6 +812,9 @@ gst_v4l2_allocator_orphan (GstV4l2Allocator * allocator)
 
   GST_OBJECT_FLAG_SET (allocator, GST_V4L2_ALLOCATOR_FLAG_ORPHANED);
 
+  if (!g_atomic_int_get (&allocator->active))
+    return TRUE;
+
   if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0) {
     GST_ERROR_OBJECT (allocator,
         "error orphaning buffers buffers: %s", g_strerror (errno));
