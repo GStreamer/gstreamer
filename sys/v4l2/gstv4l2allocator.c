@@ -1363,7 +1363,7 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
 
       offset = group->planes[i].data_offset;
 
-      if (group->planes[i].bytesused > group->planes[i].data_offset) {
+      if (group->planes[i].bytesused >= group->planes[i].data_offset) {
         size = group->planes[i].bytesused - group->planes[i].data_offset;
       } else {
         GST_WARNING_OBJECT (allocator, "V4L2 provided buffer has bytesused %"
