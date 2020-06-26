@@ -40,6 +40,6 @@ GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE_CUSTOM) $(GSTREAMER_PLUGIN
 
 GSTREAMER_EXTRA_DEPS      := gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-video-1.0 libsoup-2.4 json-glib-1.0 glib-2.0
 
-G_IO_MODULES = gnutls
+G_IO_MODULES = openssl
 
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk
