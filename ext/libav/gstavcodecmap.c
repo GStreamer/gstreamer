@@ -1413,6 +1413,21 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           "video/x-cineform", NULL);
       break;
 
+    case AV_CODEC_ID_SPEEDHQ:
+      if (context && context->codec_tag) {
+        gchar *variant = g_strdup_printf ("%" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (context->codec_tag));
+        caps =
+            gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+            "video/x-speedhq", "variant", G_TYPE_STRING, variant, NULL);
+        g_free (variant);
+      } else {
+        caps =
+            gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+            "video/x-speedhq", NULL);
+      }
+      break;
+
     case AV_CODEC_ID_AAC:
     {
       caps =
@@ -3415,6 +3430,18 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
       }
       break;
     }
+    case AV_CODEC_ID_SPEEDHQ:
+    {
+      const gchar *variant;
+
+      if (context && (variant = gst_structure_get_string (str, "variant"))
+          && strlen (variant) == 4) {
+
+        context->codec_tag =
+            GST_MAKE_FOURCC (variant[0], variant[1], variant[2], variant[3]);
+      }
+      break;
+    }
     default:
       break;
   }
@@ -4069,6 +4096,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-cineform")) {
     id = AV_CODEC_ID_CFHD;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-speedhq")) {
+    id = AV_CODEC_ID_SPEEDHQ;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-indeo")) {
     gint indeoversion = 0;
