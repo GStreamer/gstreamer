@@ -430,6 +430,9 @@ gst_video_convert_set_info (GstVideoFilter * filter,
     GstVideoInfo * out_info)
 {
   GstVideoConvert *space;
+  GstBaseTransformClass *gstbasetransform_class =
+      GST_BASE_TRANSFORM_GET_CLASS (filter);
+  GstVideoInfo tmp_info;
 
   space = GST_VIDEO_CONVERT_CAST (filter);
 
@@ -451,6 +454,21 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
+  /* if the only thing different in the caps is the transfer function, and
+   * we're converting between equivalent transfer functions, do passthrough */
+  tmp_info = *in_info;
+  tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
+  if (gst_video_info_is_equal (&tmp_info, out_info)) {
+    if (gst_video_color_transfer_is_equivalent (in_info->colorimetry.transfer,
+            in_info->finfo->bits, out_info->colorimetry.transfer,
+            out_info->finfo->bits)) {
+      gstbasetransform_class->passthrough_on_same_caps = FALSE;
+      gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
+      return TRUE;
+    }
+  }
+  gstbasetransform_class->passthrough_on_same_caps = TRUE;
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
 
   space->convert = gst_video_converter_new (in_info, out_info,
       gst_structure_new ("GstVideoConvertConfig",

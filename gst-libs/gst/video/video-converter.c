@@ -6741,12 +6741,16 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   gboolean interlaced, same_matrix, same_primaries, same_size, crop, border;
   gboolean need_copy, need_set, need_mult;
   gint width, height;
+  guint in_bpp, out_bpp;
 
   width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&convert->in_info);
 
   if (GET_OPT_DITHER_QUANTIZATION (convert) != 1)
     return FALSE;
+
+  in_bpp = convert->in_info.finfo->bits;
+  out_bpp = convert->out_info.finfo->bits;
 
   /* we don't do gamma conversion in fastpath */
   in_transf = convert->in_info.colorimetry.transfer;
@@ -6755,7 +6759,9 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   same_size = (width == convert->out_width && height == convert->out_height);
 
   /* fastpaths don't do gamma */
-  if (CHECK_GAMMA_REMAP (convert) && (!same_size || in_transf != out_transf))
+  if (CHECK_GAMMA_REMAP (convert) && (!same_size
+          || !gst_video_color_transfer_is_equivalent (in_transf, in_bpp,
+              out_transf, out_bpp)))
     return FALSE;
 
   need_copy = (convert->alpha_mode & ALPHA_MODE_COPY) == ALPHA_MODE_COPY;

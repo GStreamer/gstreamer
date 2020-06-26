@@ -287,6 +287,12 @@ GstVideoTransferFunction  gst_video_color_transfer_from_iso  (guint value);
 GST_VIDEO_API
 GstVideoColorPrimaries    gst_video_color_primaries_from_iso (guint value);
 
+GST_VIDEO_API
+gboolean                  gst_video_color_transfer_is_equivalent (GstVideoTransferFunction from_func,
+                                                               guint from_bpp,
+                                                               GstVideoTransferFunction to_func,
+                                                               guint to_bpp);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_COLOR_H__ */
