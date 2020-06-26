@@ -9,7 +9,7 @@ android {
         targetSdkVersion 15
         versionCode 1
         versionName "1.0"
-
+        archivesBaseName = "$applicationId-v$versionCode"
 
         externalNativeBuild {
             ndkBuild {
