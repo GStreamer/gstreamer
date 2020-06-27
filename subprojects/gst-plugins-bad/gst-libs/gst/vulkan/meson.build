@@ -5,7 +5,7 @@ if get_option('vulkan').disabled()
   subdir_done()
 endif
 
-vulkan_sources = [
+vulkan_sources = files(
   'gstvkbuffermemory.c',
   'gstvkbufferpool.c',
   'gstvkcommandbuffer.c',
@@ -34,9 +34,9 @@ vulkan_sources = [
   'gstvkvideofilter.c',
   'gstvkutils.c',
   'gstvkwindow.c',
-]
+)
 
-vulkan_headers = [
+vulkan_headers = files(
   'gstvkapi.h',
   'gstvkbarrier.h',
   'gstvkbuffermemory.h',
@@ -70,7 +70,7 @@ vulkan_headers = [
   'vulkan-prelude.h',
   'vulkan_fwd.h',
   'vulkan.h',
-]
+)
 
 vulkan_priv_sources = []
 vulkan_xcb_sources = []
@@ -154,17 +154,17 @@ xkbcommon_dep = dependency('xkbcommon', required : get_option('x11'))
 xkbcommon_x11_dep = dependency('xkbcommon-x11', required : get_option('x11'))
 
 if xcb_dep.found() and xkbcommon_dep.found() and xkbcommon_x11_dep.found() and cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulkan_dep)
-  vulkan_priv_sources += [
+  vulkan_priv_sources += files(
     'xcb/gstvkwindow_xcb.c',
     'xcb/xcb_event_source.c',
-  ]
-  vulkan_xcb_sources += [
+  )
+  vulkan_xcb_sources += files(
     'xcb/gstvkdisplay_xcb.c',
-  ]
-  vulkan_xcb_headers += [
+  )
+  vulkan_xcb_headers += files(
     'xcb/xcb.h',
     'xcb/gstvkdisplay_xcb.h'
-  ]
+  )
 
   optional_deps += [xcb_dep, xkbcommon_dep, xkbcommon_x11_dep]
   vulkan_windowing = true
@@ -174,18 +174,18 @@ endif
 
 wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : get_option('wayland'))
 if wayland_client_dep.found() and cc.has_header('vulkan/vulkan_wayland.h', dependencies : vulkan_dep)
-  vulkan_priv_sources += [
+  vulkan_priv_sources += files(
     'wayland/gstvkdisplay_wayland.c',
     'wayland/gstvkwindow_wayland.c',
     'wayland/wayland_event_source.c',
-  ]
-  vulkan_wayland_sources += [
+  )
+  vulkan_wayland_sources += files(
     'wayland/gstvkdisplay_wayland.c',
-  ]
-  vulkan_wayland_headers += [
+  )
+  vulkan_wayland_headers += files(
     'wayland/wayland.h',
     'wayland/gstvkdisplay_wayland.h'
-  ]
+  )
 
   optional_deps += wayland_client_dep
   vulkan_windowing = true
@@ -213,10 +213,10 @@ if host_system == 'darwin'
   cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : get_option('vulkan'))
 
   if cocoa_dep.found() and cc.has_header('vulkan/vulkan_macos.h', dependencies : vulkan_dep)
-    vulkan_priv_sources += [
+    vulkan_priv_sources += files(
       'cocoa/gstvkdisplay_cocoa.m',
       'cocoa/gstvkwindow_cocoa.m',
-    ]
+    )
     optional_deps += [cocoa_dep]
     vulkan_windowing = true
     vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_COCOA', 1)
@@ -228,10 +228,10 @@ if host_system == 'ios'
   uikit_dep = dependency('appleframeworks', modules : ['UIKit'], required : get_option('vulkan'))
 
   if uikit_dep.found() and cc.has_header('vulkan/vulkan_ios.h', dependencies : vulkan_dep)
-    vulkan_priv_sources += [
+    vulkan_priv_sources += files(
       'ios/gstvkdisplay_ios.m',
       'ios/gstvkwindow_ios.m',
-    ]
+    )
     optional_deps += [uikit_dep]
     vulkan_windowing = true
     vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_IOS', 1)
@@ -254,10 +254,10 @@ endif
 
 if host_system == 'android'
   if cc.has_header('vulkan/vulkan_android.h', dependencies : vulkan_dep)
-    vulkan_priv_sources += [
+    vulkan_priv_sources += files(
       'android/gstvkdisplay_android.c',
       'android/gstvkwindow_android.c',
-    ]
+    )
     vulkan_windowing = true
     vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_ANDROID', 1)
     enabled_vulkan_winsys += ['android']

@@ -1,4 +1,4 @@
-rtsp_server_sources = [
+rtsp_server_sources = files(
   'rtsp-address-pool.c',
   'rtsp-auth.c',
   'rtsp-client.c',
@@ -23,9 +23,9 @@ rtsp_server_sources = [
   'rtsp-onvif-client.c',
   'rtsp-onvif-media-factory.c',
   'rtsp-onvif-media.c',
-]
+)
 
-rtsp_server_headers = [
+rtsp_server_headers = files(
   'rtsp-auth.h',
   'rtsp-address-pool.h',
   'rtsp-context.h',
@@ -51,7 +51,7 @@ rtsp_server_headers = [
   'rtsp-onvif-client.h',
   'rtsp-onvif-media-factory.h',
   'rtsp-onvif-media.h',
-]
+)
 
 install_headers(rtsp_server_headers, subdir : 'gstreamer-1.0/gst/rtsp-server')
 

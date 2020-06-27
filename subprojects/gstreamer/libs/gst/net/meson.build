@@ -1,4 +1,4 @@
-gst_net_sources = [
+gst_net_sources = files([
   'gstnetaddressmeta.c',
   'gstnetclientclock.c',
   'gstnetcontrolmessagemeta.c',
@@ -7,9 +7,9 @@ gst_net_sources = [
   'gstptpclock.c',
   'gstntppacket.c',
   'gstnetutils.c',
-]
+])
 
-gst_net_headers = [
+gst_net_headers = files([
  'gstnet.h',
  'gstnetaddressmeta.h',
  'gstnetclientclock.h',
@@ -20,7 +20,7 @@ gst_net_headers = [
  'gstptpclock.h',
  'net-prelude.h',
  'net.h',
-]
+])
 install_headers(gst_net_headers, subdir : 'gstreamer-1.0/gst/net/')
 
 gst_net_gen_sources = []

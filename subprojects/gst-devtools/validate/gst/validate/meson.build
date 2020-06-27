@@ -1,4 +1,4 @@
-gstvalidate_sources = [
+gstvalidate_sources = files(
     'gst-validate-reporter.c',
     'gst-validate-mockdecryptor.c',
     'gst-validate-monitor.c',
@@ -20,9 +20,9 @@ gstvalidate_sources = [
     'flow/gstvalidateflow.c',
     'flow/formatting.c',
     'validate.c',
-]
+)
 
-gstvalidate_headers = [
+gstvalidate_headers = files(
     'validate.h',
     'validate-prelude.h',
     'gst-validate-types.h',
@@ -44,7 +44,7 @@ gstvalidate_headers = [
     'gst-validate-scenario.h',
     'gst-validate-utils.h',
     'gst-validate-media-info.h'
-]
+)
 
 install_headers(gstvalidate_headers, subdir : 'gstreamer-1.0/gst/validate')
 

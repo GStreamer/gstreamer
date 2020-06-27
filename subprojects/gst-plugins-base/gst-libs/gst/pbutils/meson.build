@@ -1,4 +1,4 @@
-pbutils_sources = [
+pbutils_sources = files([
   'gstpluginsbaseversion.c',
   'pbutils.c',
   'codec-utils.c',
@@ -10,7 +10,7 @@ pbutils_sources = [
   'gstaudiovisualizer.c',
   'gstdiscoverer.c',
   'gstdiscoverer-types.c'
-  ]
+])
 
 pbconf = configuration_data()
 pbconf.set('PACKAGE_VERSION_MAJOR', gst_version_major)
@@ -22,7 +22,7 @@ gst_pbutils_version_h = configure_file(input : 'gstpluginsbaseversion.h.in',
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/pbutils'),
   configuration: pbconf)
 
-pbutils_headers = [
+pbutils_headers = files([
   'pbutils.h',
   'pbutils-prelude.h',
   'codec-utils.h',
@@ -33,7 +33,7 @@ pbutils_headers = [
   'missing-plugins.h',
   'gstdiscoverer.h',
   'gstaudiovisualizer.h',
-]
+])
 install_headers(pbutils_headers, subdir : 'gstreamer-1.0/gst/pbutils/')
 
 pbutils_mkenum_headers = pbutils_headers

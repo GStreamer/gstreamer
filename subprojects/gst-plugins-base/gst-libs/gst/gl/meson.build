@@ -5,7 +5,7 @@ if get_option('gl').disabled()
   subdir_done()
 endif
 
-gl_sources = [
+gl_sources = files([
   'gstglapi.c',
   'gstglbasefilter.c',
   'gstglbasememory.c',
@@ -35,11 +35,11 @@ gl_sources = [
   'gstglutils.c',
   'gstglviewconvert.c',
   'gstglwindow.c',
-]
+])
 
-gl_priv_sources = []
+gl_priv_sources = files([])
 
-gir_gl_headers = [
+gir_gl_headers = files([
   'gl.h',
   'gl-prelude.h',
   'gstgl_enums.h',
@@ -73,13 +73,13 @@ gir_gl_headers = [
   'gstglutils.h',
   'gstglviewconvert.h',
   'gstglwindow.h',
-]
+])
 
-gl_headers = gir_gl_headers + [
+gl_headers = gir_gl_headers + files([
   'gstglfuncs.h',
-]
+])
 
-gl_prototype_headers = [
+gl_prototype_headers = files([
   'glprototypes/all_functions.h',
   'glprototypes/base.h',
   'glprototypes/buffer_storage.h',
@@ -97,7 +97,7 @@ gl_prototype_headers = [
   'glprototypes/shaders.h',
   'glprototypes/sync.h',
   'glprototypes/vao.h',
-]
+])
 
 gl_x11_sources = []
 gl_x11_headers = []
@@ -530,22 +530,21 @@ if need_platform_egl != 'no'
   endif
 
   if egl_dep.found()
-    gl_egl_sources += [
+    gl_egl_sources += files([
       'egl/gstegl.c',
       'egl/gsteglimage.c',
       'egl/gstglcontext_egl.c',
       'egl/gstgldisplay_egl.c',
       'egl/gstglmemoryegl.c',
       'egl/gstgldisplay_egl_device.c',
-    ]
-    gl_egl_headers += [
-      'egl/egl.h',
+    ])
+    gl_egl_headers += files([
       'egl/gstegl.h',
       'egl/gsteglimage.h',
       'egl/gstgldisplay_egl.h',
       'egl/gstglmemoryegl.h',
       'egl/gstgldisplay_egl_device.h',
-    ]
+    ])
     gl_platform_deps += egl_dep
     glconf.set10('GST_GL_HAVE_PLATFORM_EGL', 1)
 
@@ -613,19 +612,19 @@ if need_win_wayland != 'no'
         output: 'xdg-shell-client-protocol.c',
       )
 
-      gl_wayland_sources += [
+      gl_wayland_sources += files([
         'wayland/gstgldisplay_wayland.c',
-      ]
-      gl_priv_sources += [
+      ])
+      gl_priv_sources += files([
         'wayland/gstglwindow_wayland_egl.c',
         'wayland/wayland_event_source.c',
         xdg_shell_header,
         xdg_shell_code,
-      ]
-      gl_wayland_headers += [
+      ])
+      gl_wayland_headers += files([
         'wayland/wayland.h',
         'wayland/gstgldisplay_wayland.h'
-      ]
+      ])
       glconf.set('GST_GL_HAVE_WINDOW_WAYLAND', 1)
       gl_winsys_deps += [wayland_client_dep, wayland_cursor_dep, wayland_egl_dep]
       enabled_gl_winsys += 'wayland'
@@ -653,26 +652,26 @@ endif
 if need_win_x11 != 'no'
   xcb_dep = dependency('x11-xcb', required : false)
   if x11_dep.found() and xcb_dep.found()
-    gl_x11_sources += [
+    gl_x11_sources += files([
       'x11/gstgldisplay_x11.c',
-    ]
-    gl_priv_sources += [
+    ])
+    gl_priv_sources += files([
       'x11/gstglwindow_x11.c',
       'x11/xcb_event_source.c',
-    ]
-    gl_x11_headers += [
+    ])
+    gl_x11_headers += files([
       'x11/x11.h',
       'x11/gstgldisplay_x11.h',
-    ]
+    ])
     glconf.set('GST_GL_HAVE_WINDOW_X11', 1)
     gl_winsys_deps += [x11_dep, xcb_dep]
     enabled_gl_winsys += 'x11'
 
     if need_platform_glx != 'no' and glx_dep.found() and cc.has_function ('glXMakeCurrent', dependencies : glx_dep)
       glconf.set('GST_GL_HAVE_PLATFORM_GLX', 1)
-      gl_priv_sources += [
+      gl_priv_sources += files([
         'x11/gstglcontext_glx.c',
-      ]
+      ])
       # GLX is in the opengl library on linux
       gl_platform_deps += glx_dep
       enabled_gl_platforms += 'glx'
@@ -688,9 +687,9 @@ if need_win_dispmanx != 'no'
       error('dispmanx requires the use of egl')
     endif
 
-    gl_priv_sources += [
+    gl_priv_sources += files([
       'dispmanx/gstglwindow_dispmanx_egl.c'
-    ]
+    ])
 
     glconf.set('GST_GL_HAVE_WINDOW_DISPMANX', 1)
     gl_winsys_deps += bcm_host_dep
@@ -725,18 +724,18 @@ if host_system == 'windows' and need_win_win32 != 'no'
     if have_wgl or have_egl_win32
       gl_includes += [compat_includes]
       gl_platform_deps += gdi_dep
-      gl_priv_sources += [
+      gl_priv_sources += files([
         'win32/gstglwindow_win32.c',
-      ]
+      ])
       enabled_gl_winsys += 'win32'
       gl_winsys_deps += gdi_dep
       glconf.set('GST_GL_HAVE_WINDOW_WIN32', 1)
     endif
 
     if have_wgl
-      gl_priv_sources += [
+      gl_priv_sources += files([
         'wgl/gstglcontext_wgl.c',
-      ]
+      ])
       enabled_gl_platforms += 'wgl'
       glconf.set('GST_GL_HAVE_PLATFORM_WGL', 1)
     endif
@@ -757,9 +756,9 @@ if need_win_winrt != 'no' and host_system == 'windows'
     if windows_graphics_h and windows_app_dep.found() and runtimeobject_lib.found()
       enabled_gl_winsys += 'winrt'
       glconf.set10('GST_GL_HAVE_WINDOW_WINRT', 1)
-      gl_priv_sources += [
+      gl_priv_sources += files([
         'winrt/gstglwindow_winrt_egl.cpp'
-      ]
+      ])
       gl_winsys_deps += runtimeobject_lib
     elif need_win_winrt == 'yes'
       error('WinRT is enabled, but headers/libraries were not found')
@@ -809,12 +808,12 @@ if host_system == 'darwin'
       if need_win_cocoa != 'no'
         cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : false)
         if cocoa_dep.found()
-          gl_priv_sources += [
+          gl_priv_sources += files([
             'cocoa/gstglcaopengllayer.m',
             'cocoa/gstglcontext_cocoa.m',
             'cocoa/gstgldisplay_cocoa.m',
             'cocoa/gstglwindow_cocoa.m'
-          ]
+          ])
           gl_winsys_deps += cocoa_dep
           enabled_gl_winsys += 'cocoa'
           glconf.set10('GST_GL_HAVE_WINDOW_COCOA', 1)
@@ -856,10 +855,10 @@ if host_system == 'ios' and need_platform_eagl != 'no' and need_win_eagl != 'no'
       quartzcore_dep,
       uikit_dep,
     ]
-    gl_priv_sources += [
+    gl_priv_sources += files([
       'eagl/gstglcontext_eagl.m',
       'eagl/gstglwindow_eagl.m',
-    ]
+    ])
     enabled_gl_winsys += 'eagl'
     enabled_gl_platforms += 'eagl'
     glconf.set('GST_GL_HAVE_WINDOW_EAGL', 1)
@@ -884,11 +883,11 @@ if need_win_gbm != 'no'
   gbm_libdrm_dep = dependency('libdrm', version : '>= 2.4.55', required : false)
   gbm_dep = dependency('gbm', required : false)
   if egl_dep.found() and gbm_gudev_dep.found() and gbm_libdrm_dep.found() and gbm_dep.found()
-    gl_priv_sources += [
+    gl_priv_sources += files([
       'gbm/gstgldisplay_gbm.c',
       'gbm/gstgl_gbm_utils.c',
       'gbm/gstglwindow_gbm_egl.c',
-    ]
+    ])
     enabled_gl_winsys += 'gbm'
     gl_winsys_deps += [gbm_gudev_dep, gbm_libdrm_dep, gbm_dep]
     glconf.set('GST_GL_HAVE_WINDOW_GBM', 1)
@@ -908,10 +907,10 @@ if need_platform_egl != 'no' and need_win_viv_fb != 'no'
       enabled_gl_winsys += 'viv-fb'
       glconf.set10('GST_GL_HAVE_WINDOW_VIV_FB', 1)
       glconf.set10('GST_GL_HAVE_VIV_DIRECTVIV', 1)
-      gl_priv_sources += [
+      gl_priv_sources += files([
         'viv-fb/gstgldisplay_viv_fb.c',
         'viv-fb/gstglwindow_viv_fb_egl.c',
-      ]
+      ])
       gl_cpp_args += ['-DEGL_API_FB']
     endif
   endif
@@ -931,9 +930,9 @@ if host_system == 'android' and need_win_android != 'no' and need_platform_egl !
   if gles2_dep.found() and egl_dep.found()
     enabled_gl_winsys += ['android']
     glconf.set10('GST_GL_HAVE_WINDOW_ANDROID', 1)
-    gl_priv_sources += [
+    gl_priv_sources += files([
       'android/gstglwindow_android_egl.c'
-    ]
+    ])
   endif
 endif
 

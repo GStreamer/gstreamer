@@ -49,12 +49,7 @@ foreach f: excludes
         'validate', 'gst', 'validate', f)]
 endforeach
 
-validate_sources = []
-foreach f: gstvalidate_headers + gstvalidate_sources
-    validate_sources += [join_paths(meson.current_source_dir(), '..',
-        'validate', 'gst', 'validate', f)]
-endforeach
-
+validate_sources = gstvalidate_headers + gstvalidate_sources
 hotdoc = import('hotdoc')
 plugins_doc = []
 libs_doc = [hotdoc.generate_doc('gst-devtools',

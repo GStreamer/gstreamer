@@ -1,13 +1,13 @@
-gstplay_sources = [
+gstplay_sources = files(
   'gstplay.c',
   'gstplay-signal-adapter.c',
   'gstplay-video-renderer.c',
   'gstplay-media-info.c',
   'gstplay-video-overlay-video-renderer.c',
   'gstplay-visualization.c',
-]
+)
 
-gstplay_headers = [
+gstplay_headers = files(
   'play.h',
   'play-prelude.h',
   'gstplay.h',
@@ -17,7 +17,7 @@ gstplay_headers = [
   'gstplay-media-info.h',
   'gstplay-video-overlay-video-renderer.h',
   'gstplay-visualization.h',
-]
+)
 
 install_headers(gstplay_headers, subdir : 'gstreamer-' + api_version + '/gst/play/')
 

@@ -1,4 +1,4 @@
-rtp_sources = [
+rtp_sources = files([
   'gstrtpbuffer.c',
   'gstrtcpbuffer.c',
   'gstrtppayloads.c',
@@ -7,9 +7,9 @@ rtp_sources = [
   'gstrtpbaseaudiopayload.c',
   'gstrtpbasepayload.c',
   'gstrtpbasedepayload.c'
-  ]
+  ])
 
-rtp_headers = [
+rtp_headers = files([
   'gstrtcpbuffer.h',
   'gstrtpbaseaudiopayload.h',
   'gstrtpbasedepayload.h',
@@ -21,7 +21,7 @@ rtp_headers = [
   'gstrtppayloads.h',
   'rtp-prelude.h',
   'rtp.h',
-]
+])
 install_headers(rtp_headers, subdir : 'gstreamer-1.0/gst/rtp/')
 
 rtp_enums = gnome.mkenums_simple('gstrtp-enumtypes',

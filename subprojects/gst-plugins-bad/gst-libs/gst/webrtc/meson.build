@@ -1,4 +1,4 @@
-webrtc_sources = [
+webrtc_sources = files([
   'dtlstransport.c',
   'icetransport.c',
   'rtcsessiondescription.c',
@@ -7,9 +7,9 @@ webrtc_sources = [
   'rtptransceiver.c',
   'datachannel.c',
   'sctptransport.c',
-]
+])
 
-webrtc_headers = [
+webrtc_headers = files([
   'dtlstransport.h',
   'icetransport.h',
   'rtcsessiondescription.h',
@@ -20,14 +20,14 @@ webrtc_headers = [
   'webrtc_fwd.h',
   'webrtc.h',
   'sctptransport.h',
-]
+])
 
-webrtc_enumtypes_headers = [
+webrtc_enumtypes_headers = files([
   'dtlstransport.h',
   'icetransport.h',
   'rtptransceiver.h',
   'webrtc_fwd.h',
-]
+])
 
 webrtc_enums = gnome.mkenums_simple('webrtc-enumtypes',
   sources : webrtc_enumtypes_headers,

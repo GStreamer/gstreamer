@@ -1,4 +1,4 @@
-gst_controller_sources = [
+gst_controller_sources = files([
   'gstargbcontrolbinding.c',
   'gstdirectcontrolbinding.c',
   'gsttimedvaluecontrolsource.c',
@@ -6,14 +6,14 @@ gst_controller_sources = [
   'gstproxycontrolbinding.c',
   'gsttriggercontrolsource.c',
   'gstlfocontrolsource.c',
-]
+])
 
-controller_mkenum_headers = [
+controller_mkenum_headers = files([
   'gstinterpolationcontrolsource.h',
   'gstlfocontrolsource.h',
-]
+])
 
-gst_controller_headers = controller_mkenum_headers + [
+gst_controller_headers = controller_mkenum_headers + files([
   'gstargbcontrolbinding.h',
   'gstdirectcontrolbinding.h',
   'gsttimedvaluecontrolsource.h',
@@ -23,7 +23,7 @@ gst_controller_headers = controller_mkenum_headers + [
   'gstlfocontrolsource.h',
   'controller-prelude.h',
   'controller.h',
-]
+])
 install_headers(gst_controller_headers, subdir : 'gstreamer-1.0/gst/controller/')
 
 controller_enums = gnome.mkenums_simple('controller-enumtypes',

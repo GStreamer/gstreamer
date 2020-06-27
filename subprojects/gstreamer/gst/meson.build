@@ -1,4 +1,4 @@
-gst_sources = [
+gst_sources = files([
   'gst.c',
   'gstobject.c',
   'gstallocator.c',
@@ -71,9 +71,9 @@ gst_sources = [
   'gstutils.c',
   'gstvalue.c',
   'gstparse.c',
-]
+])
 
-gst_headers = [
+gst_headers = files([
   'gst.h',
   'glib-compat.h',
   'gstobject.h',
@@ -147,12 +147,12 @@ gst_headers = [
   'gstregistry.h',
   'gstparse.h',
   'math-compat.h',
-]
+])
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
 gst_registry = get_option('registry')
 if gst_registry
-  gst_registry_sources = ['gstregistrybinary.c']
+  gst_registry_sources = files(['gstregistrybinary.c'])
 else
   gst_registry_sources = []
 endif

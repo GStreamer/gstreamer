@@ -1,4 +1,4 @@
-gstplayer_sources = [
+gstplayer_sources = files([
   'gstplayer.c',
   'gstplayer-signal-dispatcher.c',
   'gstplayer-video-renderer.c',
@@ -7,9 +7,9 @@ gstplayer_sources = [
   'gstplayer-video-overlay-video-renderer.c',
   'gstplayer-wrapped-video-renderer.c',
   'gstplayer-visualization.c',
-]
+])
 
-gstplayer_headers = [
+gstplayer_headers = files([
   'player.h',
   'player-prelude.h',
   'gstplayer.h',
@@ -20,7 +20,7 @@ gstplayer_headers = [
   'gstplayer-g-main-context-signal-dispatcher.h',
   'gstplayer-video-overlay-video-renderer.h',
   'gstplayer-visualization.h',
-]
+])
 
 install_headers(gstplayer_headers, subdir : 'gstreamer-' + api_version + '/gst/player/')
 

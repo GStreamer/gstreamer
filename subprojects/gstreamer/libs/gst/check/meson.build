@@ -1,11 +1,11 @@
-gst_check_sources = [
+gst_check_sources = files([
   'gstbufferstraw.c',
   'gstcheck.c',
   'gstconsistencychecker.c',
   'gstharness.c',
   'gsttestclock.c',
-]
-gst_check_headers = [
+])
+gst_check_headers = files([
   'check.h',
   'check-prelude.h',
   'gstbufferstraw.h',
@@ -13,7 +13,7 @@ gst_check_headers = [
   'gstconsistencychecker.h',
   'gstharness.h',
   'gsttestclock.h',
-]
+])
 install_headers(gst_check_headers, subdir : 'gstreamer-1.0/gst/check/')
 
 

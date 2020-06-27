@@ -1,4 +1,4 @@
-codecs_sources = files([
+codecs_sources = files(
   'gsth264decoder.c',
   'gsth264picture.c',
   'gsth265decoder.c',
@@ -12,9 +12,9 @@ codecs_sources = files([
   'gstav1decoder.c',
   'gstav1picture.c',
   'gstvp9statefulparser.c',
-])
+)
 
-codecs_headers = [
+codecs_headers = files(
   'gsth264decoder.h',
   'gsth264picture.h',
   'gsth265decoder.h',
@@ -28,7 +28,7 @@ codecs_headers = [
   'gstav1decoder.h',
   'gstav1picture.h',
   'gstvp9statefulparser.h',
-]
+)
 
 cp_args = [
   '-DGST_USE_UNSTABLE_API',

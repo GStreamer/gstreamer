@@ -1,4 +1,4 @@
-rtsp_sources = [
+rtsp_sources = files([
   'gstrtsptransport.c',
   'gstrtspurl.c',
   'gstrtspmessage.c',
@@ -6,9 +6,9 @@ rtsp_sources = [
   'gstrtspdefs.c',
   'gstrtspextension.c',
   'gstrtsprange.c'
-  ]
+  ])
 
-rtsp_headers = [
+rtsp_headers = files([
   'gstrtspconnection.h',
   'gstrtspdefs.h',
   'gstrtspextension.h',
@@ -19,7 +19,7 @@ rtsp_headers = [
   'gstrtspurl.h',
   'rtsp-prelude.h',
   'rtsp.h',
-]
+])
 install_headers(rtsp_headers, subdir : 'gstreamer-1.0/gst/rtsp/')
 
 rtsp_enums = gnome.mkenums_simple('gstrtsp-enumtypes',

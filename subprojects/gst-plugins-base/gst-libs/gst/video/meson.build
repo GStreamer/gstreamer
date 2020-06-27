@@ -1,4 +1,4 @@
-video_sources = [
+video_sources = files([
   'colorbalance.c',
   'colorbalancechannel.c',
   'convertframe.c',
@@ -35,9 +35,9 @@ video_sources = [
   'videodirection.c',
   'videoorientation.c',
   'videooverlay.c',
-]
+])
 
-video_headers = [
+video_headers = files([
   'colorbalance.h',
   'colorbalancechannel.h',
   'gstvideoaffinetransformationmeta.h',
@@ -73,7 +73,7 @@ video_headers = [
   'video-blend.h',
   'video-overlay-composition.h',
   'video-multiview.h',
-]
+])
 install_headers(video_headers, subdir : 'gstreamer-1.0/gst/video/')
 
 video_mkenum_headers = [

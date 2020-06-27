@@ -1,4 +1,4 @@
-audio_src= [
+audio_src = files([
   'audio.c',
   'audio-buffer.c',
   'audio-channel-mixer.c',
@@ -24,9 +24,9 @@ audio_src= [
   'gstaudioutilsprivate.c',
   'streamvolume.c',
   'gstaudiostreamalign.c',
-]
+])
 
-audio_mkenum_headers = [
+audio_mkenum_headers = files([
   'audio.h',
   'audio-format.h',
   'audio-channels.h',
@@ -41,10 +41,10 @@ audio_mkenum_headers = [
   'gstaudiocdsrc.h',
   'gstaudiobasesink.h',
   'gstaudiostreamalign.h',
-]
+])
 
 # FIXME: check headers
-audio_headers = audio_mkenum_headers + [
+audio_headers = audio_mkenum_headers + files([
   'audio-prelude.h',
   'audio-buffer.h',
   'gstaudiobasesink.h',
@@ -59,7 +59,7 @@ audio_headers = audio_mkenum_headers + [
   'gstaudiosink.h',
   'gstaudiosrc.h',
   'streamvolume.h',
-]
+])
 install_headers(audio_headers, subdir : 'gstreamer-1.0/gst/audio/')
 
 audio_enums = gnome.mkenums_simple('audio-enumtypes',

@@ -1,10 +1,10 @@
-app_sources = ['gstappsrc.c', 'gstappsink.c']
+app_sources = files(['gstappsrc.c', 'gstappsink.c'])
 
-app_mkenum_headers = [
+app_mkenum_headers = files([
   'gstappsrc.h',
-]
+])
 
-app_headers = app_mkenum_headers + [ 'app.h', 'app-prelude.h', 'gstappsrc.h', 'gstappsink.h' ]
+app_headers = app_mkenum_headers + files([ 'app.h', 'app-prelude.h', 'gstappsrc.h', 'gstappsink.h' ])
 install_headers(app_headers, subdir : 'gstreamer-1.0/gst/app/')
 
 app_enums = gnome.mkenums_simple('app-enumtypes',

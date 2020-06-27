@@ -1,4 +1,4 @@
-mpegts_sources = [
+mpegts_sources = files(
   'mpegts.c',
   'gstmpegtssection.c',
   'gstmpegtsdescriptor.c',
@@ -6,9 +6,9 @@ mpegts_sources = [
   'gst-dvb-section.c',
   'gst-atsc-section.c',
   'gst-scte-section.c',
-]
+)
 
-mpegts_headers = [
+mpegts_headers = files(
   'gstmpegtssection.h',
   'gst-atsc-section.h',
   'gst-dvb-section.h',
@@ -20,7 +20,7 @@ mpegts_headers = [
   'gst-isdb-descriptor.h',
   'mpegts-prelude.h',
   'mpegts.h',
-]
+)
 install_headers(mpegts_headers, subdir : 'gstreamer-1.0/gst/mpegts')
 
 mpegts_enums = gnome.mkenums_simple('gstmpegts-enumtypes',

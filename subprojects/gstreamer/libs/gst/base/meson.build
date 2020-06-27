@@ -1,4 +1,4 @@
-gst_base_sources = [
+gst_base_sources = files([
   'gstadapter.c',
   'gstaggregator.c',
   'gstbaseparse.c',
@@ -15,9 +15,9 @@ gst_base_sources = [
   'gstpushsrc.c',
   'gstqueuearray.c',
   'gsttypefindhelper.c',
-]
+])
 
-gst_base_headers = [
+gst_base_headers = files([
   'base.h',
   'base-prelude.h',
   'gstadapter.h',
@@ -36,9 +36,7 @@ gst_base_headers = [
   'gstpushsrc.h',
   'gstqueuearray.h',
   'gsttypefindhelper.h',
-]
-
-gst_base_gen_sources = []
+])
 
 gst_base = library('gstbase-@0@'.format(apiversion),
   gst_base_sources,

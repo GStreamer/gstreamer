@@ -1,4 +1,4 @@
-tag_sources = [
+tag_sources = files([
   'gstvorbistag.c',
   'gstid3tag.c',
   'gstxmptag.c',
@@ -13,17 +13,17 @@ tag_sources = [
   'id3v2frames.c',
   'xmpwriter.c',
 ]
-
-tag_mkenum_headers = [
+)
+tag_mkenum_headers = files([
   'gsttagdemux.h',
   'tag.h',
-]
+])
 
-tag_headers = tag_mkenum_headers + [
+tag_headers = tag_mkenum_headers + files([
   'gsttagmux.h',
   'xmpwriter.h',
   'tag-prelude.h',
-]
+])
 install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
 
 tag_enums = gnome.mkenums_simple('tag-enumtypes',
