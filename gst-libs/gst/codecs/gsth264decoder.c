@@ -1847,7 +1847,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   level = sps->level_idc;
   if (level == 11 && (sps->profile_idc == 66 || sps->profile_idc == 77) &&
       sps->constraint_set3_flag) {
-    /* Leel 1b */
+    /* Level 1b */
     level = 9;
   }
 
@@ -1861,8 +1861,11 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   max_dpb_frames = MIN (max_dpb_mbs / (width_mb * height_mb),
       GST_H264_DPB_MAX_SIZE);
 
-  max_dpb_size = MIN (max_dpb_frames,
-      MAX (sps->num_ref_frames, sps->vui_parameters.max_dec_frame_buffering));
+  if (sps->vui_parameters_present_flag
+      && sps->vui_parameters.bitstream_restriction_flag)
+    max_dpb_frames = MAX (1, sps->vui_parameters.max_dec_frame_buffering);
+
+  max_dpb_size = MIN (max_dpb_frames, sps->num_ref_frames);
 
   /* Safety, so that subclass don't need bound checking */
   g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, FALSE);
