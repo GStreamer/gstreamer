@@ -35,17 +35,18 @@ gstfft = library('gstfft-@0@'.format(api_version),
   install : true,
   dependencies : [gst_dep, libm],
 )
-
+pkg_name = 'gstreamer-fft-1.0'
 pkgconfig.generate(gstfft,
   libraries : [gst_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-fft-1.0',
+  name : pkg_name,
   description : 'FFT implementation',
 )
+libraries += [[pkg_name, {'lib': gstfft}]]
 
 fft_dep = declare_dependency(link_with: gstfft,
   include_directories : [libsinc],
   dependencies : [gst_dep])
 
-meson.override_dependency('gstreamer-fft-1.0', fft_dep)
+meson.override_dependency(pkg_name, fft_dep)

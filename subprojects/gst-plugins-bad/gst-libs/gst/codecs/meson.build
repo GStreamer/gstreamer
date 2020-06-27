@@ -46,29 +46,38 @@ gstcodecs = library('gstcodecs-' + api_version,
   dependencies : [gstvideo_dep, gstcodecparsers_dep],
 )
 
+library_def = {'lib': gstcodecs}
+pkg_name = 'gstreamer-codecs-1.0'
 gen_sources = []
 if build_gir
-  codecs_gir = gnome.generate_gir(gstcodecs,
-    sources : codecs_sources + codecs_headers,
-    namespace : 'GstCodecs',
-    nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-codecs-1.0',
-    includes : ['Gst-1.0', 'GstVideo-1.0'],
-    install : true,
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] +
+  gir = {
+    'sources' : codecs_sources + codecs_headers,
+    'namespace' : 'GstCodecs',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstVideo-1.0'],
+    'install' : true,
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'] +
       ['--c-include=gst/codecs/gsth264decoder.h',
       '--c-include=gst/codecs/gsth265decoder.h',
       '--c-include=gst/codecs/gstvp9decoder.h',
       '--c-include=gst/codecs/gstvp8decoder.h',
       '--c-include=gst/codecs/gstmpeg2decoder.h',
       ],
-    dependencies : [gstvideo_dep, gstcodecparsers_dep]
-  )
+    'dependencies' : [gstvideo_dep, gstcodecparsers_dep]
+  }
+  library_def += {'gir': [gir]}
+  if not static_build
+    codecs_gir = gnome.generate_gir(gstcodecs, kwargs: gir)
+    gen_sources += codecs_gir
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 gstcodecs_dep = declare_dependency(link_with : gstcodecs,
   include_directories : [libsinc],
   sources: gen_sources,
   dependencies : [gstvideo_dep, gstcodecparsers_dep])
+meson.override_dependency(pkg_name, gstcodecs_dep)

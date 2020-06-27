@@ -1,4 +1,4 @@
-gst_sources = files([
+gst_sources = files(
   'gst.c',
   'gstobject.c',
   'gstallocator.c',
@@ -71,9 +71,9 @@ gst_sources = files([
   'gstutils.c',
   'gstvalue.c',
   'gstparse.c',
-])
+)
 
-gst_headers = files([
+gst_headers = files(
   'gst.h',
   'glib-compat.h',
   'gstobject.h',
@@ -147,12 +147,12 @@ gst_headers = files([
   'gstregistry.h',
   'gstparse.h',
   'math-compat.h',
-])
+)
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
 gst_registry = get_option('registry')
 if gst_registry
-  gst_registry_sources = files(['gstregistrybinary.c'])
+  gst_registry_sources = files('gstregistrybinary.c')
 else
   gst_registry_sources = []
 endif
@@ -250,12 +250,14 @@ libgst = library('gstreamer-1.0', gst_sources,
                    + platform_deps,
 )
 
+pkg_name = 'gstreamer-1.0'
+library_def = {'lib': libgst}
 pkgconfig.generate(libgst,
   libraries : [glib_dep, gobject_dep],
   variables : pkgconfig_variables,
   uninstalled_variables: pkgconfig_uninstalled_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-1.0',
+  name : pkg_name,
   description : 'Streaming media framework',
 )
 
@@ -272,19 +274,29 @@ if build_gir
   endif
 
   gst_incdirs += [configinc]
-  gst_gir = gnome.generate_gir(libgst,
-    sources : gst_sources + gst_headers + gst_enums + [gst_version_h],
-    namespace : 'Gst',
-    nsversion : apiversion,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-1.0',
-    includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
-    install : true,
-    extra_args : gst_gir_extra_args,
-  )
-  gst_gen_sources += gst_gir
+  gir = {
+    'sources' : gst_sources + gst_headers + gst_enums + [gst_version_h],
+    'namespace' : 'Gst',
+    'nsversion' : apiversion,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
+    'install' : true,
+    'extra_args' : gst_gir_extra_args,
+  }
+  library_def += {'gir': [gir]}
+  # When building statically the information about the gir is going to be
+  # consumed by `gst-build` to generate gir files linked against
+  # `libgstreamer-full-1.0.so`. We do not build it here as it is currently
+  # broken. Once that is fixed we could build it here, even though we would keep
+  # creating another gir which links against gst-full.
+  if not static_build
+    gst_gir = gnome.generate_gir(libgst, kwargs: gir)
+    gst_gen_sources += gst_gir
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 gst_compile_args = []
 if get_option('default_library') == 'static'
@@ -299,4 +311,4 @@ gst_dep = declare_dependency(link_with : libgst,
   sources : gst_gen_sources,
 )
 
-meson.override_dependency('gstreamer-1.0', gst_dep)
+meson.override_dependency(pkg_name, gst_dep)

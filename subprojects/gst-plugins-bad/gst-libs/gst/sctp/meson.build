@@ -21,11 +21,13 @@ libgstsctp = library('gstsctp-' + api_version,
   dependencies : [gstbase_dep],
 )
 
+pkg_name = 'gstreamer-sctp-1.0'
+libraries += [[pkg_name, {'lib': libgstsctp}]]
 pkgconfig.generate(libgstsctp,
   libraries : [gst_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-sctp-1.0',
+  name : pkg_name,
   description : 'SCTP helper functions',
 )
 
@@ -33,4 +35,4 @@ gstsctp_dep = declare_dependency(link_with : libgstsctp,
   include_directories : [libsinc],
   dependencies : [gstbase_dep])
 
-meson.override_dependency('gstreamer-sctp-1.0', gstsctp_dep)
+meson.override_dependency(pkg_name, gstsctp_dep)

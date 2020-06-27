@@ -585,6 +585,8 @@ pkgconfig_uninstalled_variables = ['exec_prefix=${prefix}',
     'helpersdir=${gstreamerdir}/libs/gst/helpers']
 pkgconfig_subdirs = ['gstreamer-1.0']
 
+static_build = get_option('default_library') == 'static'
+libraries = []
 subdir('gst')
 subdir('libs')
 subdir('plugins')

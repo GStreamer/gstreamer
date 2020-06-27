@@ -25,35 +25,42 @@ gst_transcoder = library('gsttranscoder-' + api_version,
   soversion : soversion,
 )
 
+library_def = {'lib': gst_transcoder}
+pkg_name = 'gstreamer-transcoder-1.0'
 pkgconfig.generate(gst_transcoder,
   libraries : [gst_dep, gstbase_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-transcoder-1.0',
+  name : pkg_name,
   description : 'High level API for transcoding using GStreamer',
 )
 
 if build_gir
-  transcoder_gir = gnome.generate_gir(gst_transcoder,
-    sources : sources + headers + [gsttranscoder_h],
-    nsversion : api_version,
-    namespace : 'GstTranscoder',
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst_',
-    includes : ['GObject-2.0',
+  gir = {
+    'sources' : sources + headers  + [gsttranscoder_h],
+    'nsversion' : api_version,
+    'namespace' : 'GstTranscoder',
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst_',
+    'includes' : ['GObject-2.0',
                 'Gst-' + api_version,
                 'GstPbutils-' + api_version],
-    dependencies: [gst_dep, gstpbutils_dep],
-    install : true,
-    extra_args : gir_init_section
-  )
-  transcoder_gen_sources += transcoder_gir
+    'dependencies' : [gst_dep, gstpbutils_dep],
+    'export_packages' : pkg_name,
+    'install' : true,
+    'extra_args' : gir_init_section
+  }
+  library_def += { 'gir': [gir]}
+  if not static_build
+    transcoder_gir = gnome.generate_gir(gst_transcoder, kwargs: gir)
+    transcoder_gen_sources += transcoder_gir
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 gst_transcoder_dep = declare_dependency(link_with: gst_transcoder,
   dependencies : [gst_dep, gstpbutils_dep],
-  include_directories : [libsinc],
   sources: transcoder_gen_sources,
+  include_directories : [libsinc]
 )
-
-meson.override_dependency('gstreamer-transcoder-1.0', gst_transcoder_dep)
+meson.override_dependency(pkg_name, gst_transcoder_dep)

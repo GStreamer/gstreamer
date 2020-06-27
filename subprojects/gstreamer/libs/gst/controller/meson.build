@@ -1,4 +1,4 @@
-gst_controller_sources = files([
+gst_controller_sources = files(
   'gstargbcontrolbinding.c',
   'gstdirectcontrolbinding.c',
   'gsttimedvaluecontrolsource.c',
@@ -6,14 +6,14 @@ gst_controller_sources = files([
   'gstproxycontrolbinding.c',
   'gsttriggercontrolsource.c',
   'gstlfocontrolsource.c',
-])
+)
 
-controller_mkenum_headers = files([
+controller_mkenum_headers = files(
   'gstinterpolationcontrolsource.h',
   'gstlfocontrolsource.h',
-])
+)
 
-gst_controller_headers = controller_mkenum_headers + files([
+gst_controller_headers = controller_mkenum_headers + files(
   'gstargbcontrolbinding.h',
   'gstdirectcontrolbinding.h',
   'gsttimedvaluecontrolsource.h',
@@ -23,7 +23,7 @@ gst_controller_headers = controller_mkenum_headers + files([
   'gstlfocontrolsource.h',
   'controller-prelude.h',
   'controller.h',
-])
+)
 install_headers(gst_controller_headers, subdir : 'gstreamer-1.0/gst/controller/')
 
 controller_enums = gnome.mkenums_simple('controller-enumtypes',
@@ -48,35 +48,42 @@ gst_controller = library('gstcontroller-@0@'.format(apiversion),
   dependencies : [gobject_dep, glib_dep, mathlib, gst_dep],
 )
 
+library_def = {'lib': gst_controller}
+pkg_name = 'gstreamer-controller-1.0'
 pkgconfig.generate(gst_controller,
   libraries : [libgst],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-controller-1.0',
+  name : pkg_name,
   description : 'Dynamic parameter control for GStreamer elements',
 )
 
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/controller/controller.h' ]
-  gst_controller_gir = gnome.generate_gir(gst_controller,
-    sources : gst_controller_sources + gst_controller_headers + [gstcontroller_h] + [gstcontroller_c],
-    namespace : 'GstController',
-    nsversion : apiversion,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-controller-1.0',
-    dependencies : [gst_dep],
-    include_directories : [configinc, libsinc, privinc],
-    includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
-    install : true,
-    extra_args : gst_gir_extra_args,
-  )
-  gst_controller_gen_sources += [gst_controller_gir]
+  gir = {
+    'sources' : gst_controller_sources + gst_controller_headers + [gstcontroller_h] + [gstcontroller_c],
+    'namespace': 'GstController',
+    'nsversion': apiversion,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'dependencies' : [gst_dep],
+    'include_directories' : [configinc, libsinc, privinc],
+    'includes' : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
+    'install' : true,
+    'extra_args' : gst_gir_extra_args,
+  }
+  library_def += {'gir': [gir]}
+  if not static_build
+    gst_controller_gir = gnome.generate_gir(gst_controller, kwargs: gir)
+    gst_controller_gen_sources += [gst_controller_gir]
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 gst_controller_dep = declare_dependency(link_with : gst_controller,
   include_directories : [libsinc],
   sources: gst_controller_gen_sources,
   dependencies : [gst_dep])
 
-meson.override_dependency('gstreamer-controller-1.0', gst_controller_dep)
+meson.override_dependency(pkg_name, gst_controller_dep)

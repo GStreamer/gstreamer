@@ -76,35 +76,44 @@ gstvalidatetracer = library('gstvalidatetracer',
     dependencies : validate_deps)
 
 plugins += gstvalidatetracer
+
+pkg_name = 'gst-validate-1.0'
+library_def = {'lib': gstvalidate}
 pkgconfig.generate(gstvalidate,
   libraries : [gst_dep],
   subdirs : pkgconfig_subdirs,
-  name : 'gst-validate-1.0',
+  name : pkg_name,
   description : 'Gstreamer Validate',
 )
 
 validate_gen_sources = []
 if build_gir
     gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
-    validate_gir = gnome.generate_gir(gstvalidate,
-            sources : gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
-            nsversion : '1.0',
-            namespace : 'GstValidate',
-            symbol_prefix : 'gst_validate',
-            identifier_prefix : 'GstValidate',
-            export_packages : 'gst-validate-' + apiversion,
-            includes : ['GObject-2.0',
+    gir = {
+            'sources' : gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
+            'nsversion' : '1.0',
+            'namespace' : 'GstValidate',
+            'symbol_prefix' : 'gst_validate',
+            'identifier_prefix' : 'GstValidate',
+            'export_packages' : pkg_name,
+            'includes' : ['GObject-2.0',
                         'GLib-2.0',
                         'Gio-2.0',
                         'GModule-2.0',
                         'Gst-' + apiversion,
                         'GstPbutils-' + apiversion],
-            install : true,
-            dependencies : validate_deps,
-            extra_args : gst_validate_gir_extra_args,
-    )
-    validate_gen_sources += [validate_gir]
+            'install' : true,
+            'dependencies' : validate_deps,
+            'extra_args' : gst_validate_gir_extra_args,
+    }
+    library_def += {'gir': [gir]}
+
+    if not static_build
+      validate_gir = gnome.generate_gir(gstvalidate, kwargs: gir)
+      validate_gen_sources += [validate_gir]
+    endif
 endif
+libraries += [[pkg_name, library_def]]
 
 validate_dep = declare_dependency(link_with : gstvalidate,
   include_directories : [inc_dirs],
@@ -112,6 +121,6 @@ validate_dep = declare_dependency(link_with : gstvalidate,
   sources : validate_gen_sources
 )
 
-meson.override_dependency('gst-validate-1.0', validate_dep)
+meson.override_dependency(pkg_name, validate_dep)
 
 pkgconfig.generate(gstvalidatetracer, install_dir : plugins_pkgconfig_install_dir)

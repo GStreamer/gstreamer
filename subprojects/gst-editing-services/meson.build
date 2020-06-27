@@ -254,6 +254,9 @@ pkgconfig = import('pkgconfig')
 pkgconfig_subdirs = ['gstreamer-1.0']
 
 configinc = include_directories('.')
+static_build = get_option('default_library') == 'static'
+libraries = []
+
 subdir('ges')
 subdir('plugins')
 if not get_option('tools').disabled()

@@ -1,4 +1,4 @@
-libcheck_files = files([
+libcheck_files = files(
   'check.c',
   'check_error.c',
   'check_list.c',
@@ -9,7 +9,7 @@ libcheck_files = files([
   'check_run.c',
   'check_str.c',
   'libcompat/libcompat.c'
-])
+)
 
 if not cdata.has('HAVE_ALARM')
   libcheck_files += ['libcompat/alarm.c']
@@ -41,11 +41,11 @@ endif
 
 # FIXME: check that timer_create, timer_settime, timer_delete are in rt_lib
 if not rt_lib.found()
-  libcheck_files += files([
+  libcheck_files += files(
     'libcompat/timer_create.c',
     'libcompat/timer_settime.c',
     'libcompat/timer_delete.c'
-  ])
+  )
 endif
 
 configure_file(input : 'check.h.in',

@@ -14,29 +14,37 @@ gstbadaudio = library('gstbadaudio-' + api_version,
   dependencies : [gstaudio_dep, gstbase_dep],
 )
 
+library_def = {'lib': gstbadaudio}
+pkg_name = 'gstreamer-bad-audio-1.0'
 pkgconfig.generate(gstbadaudio,
   libraries : [gst_dep, gstbase_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-bad-audio-1.0',
+  name : pkg_name,
   description : 'Bad audio library for GStreamer elements',
 )
 gen_sources = []
+
 if build_gir
-  audio_gir = gnome.generate_gir(gstbadaudio,
-    sources : badaudio_sources + badaudio_headers,
-    namespace : 'GstBadAudio',
-    nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-bad-audio-1.0',
-    includes : ['Gst-1.0', 'GstAudio-1.0', 'GstBase-1.0'],
-    install : true,
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
-    dependencies : [gstbase_dep, gstaudio_dep]
-  )
-  gen_sources += audio_gir
+  gir = {
+    'sources' : badaudio_sources + badaudio_headers,
+    'namespace' : 'GstBadAudio',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstAudio-1.0', 'GstBase-1.0'],
+    'install' : true,
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    'dependencies' : [gstbase_dep, gstaudio_dep]
+  }
+  library_def += {'gir': [gir]}
+  if not static_build
+    audio_gir = gnome.generate_gir(gstbadaudio, kwargs: gir)
+    gen_sources += audio_gir
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,
   include_directories : [libsinc],

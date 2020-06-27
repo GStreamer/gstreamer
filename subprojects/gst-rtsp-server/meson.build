@@ -187,6 +187,8 @@ endif
 
 plugins = []
 pkgconfig_subdirs = ['gstreamer-1.0']
+static_build = get_option('default_library') == 'static'
+libraries = []
 
 subdir('gst')
 if not get_option('tests').disabled()

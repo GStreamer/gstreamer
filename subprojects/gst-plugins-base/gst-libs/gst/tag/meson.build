@@ -91,37 +91,44 @@ gsttag = library('gsttag-@0@'.format(api_version),
   dependencies : tag_deps,
 )
 
+library_def = {'lib': gsttag}
+pkg_name = 'gstreamer-tag-1.0'
 pkgconfig.generate(gsttag,
   libraries : [gst_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-tag-1.0',
+  name : pkg_name,
   description : 'Tag base classes and helper functions',
 )
 
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/tag/tag.h' ]
-  tag_gir = gnome.generate_gir(gsttag,
-    sources : tag_sources + tag_headers + [gsttag_h] + [gsttag_c],
-    namespace : 'GstTag',
-    nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-tag-1.0',
-    includes : ['Gst-1.0', 'GstBase-1.0'],
-    install : true,
-    extra_args : gst_gir_extra_args,
-    dependencies : tag_deps
-  )
-  tag_gen_sources += [tag_gir]
+  gir = {
+    'sources' : tag_sources + tag_headers + [gsttag_h] + [gsttag_c],
+    'namespace' : 'GstTag',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstBase-1.0'],
+    'install' : true,
+    'extra_args' : gst_gir_extra_args,
+    'dependencies' : tag_deps,
+  }
+  library_def = {'lib': library_def['lib'], 'gir': [gir]}
+  if not static_build
+    tag_gir = gnome.generate_gir(gsttag, kwargs: gir)
+    tag_gen_sources += [tag_gir]
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 tag_dep = declare_dependency(link_with: gsttag,
   include_directories : [libsinc],
   dependencies : tag_deps,
   sources: tag_gen_sources)
 
-meson.override_dependency('gstreamer-tag-1.0', tag_dep)
+meson.override_dependency(pkg_name, tag_dep)
 
 # Little program that reads iso_639.xml and outputs tables for us as fallback
 # for when iso-codes are not available (and so we don't have to read the xml

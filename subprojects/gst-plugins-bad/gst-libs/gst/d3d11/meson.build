@@ -187,6 +187,7 @@ configure_file(
   configuration: d3d11_conf,
 )
 
+pkg_name = 'gstreamer-d3d11-' + api_version
 gstd3d11 = library('gstd3d11-' + api_version,
   d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args + extra_comm_args,
@@ -197,6 +198,9 @@ gstd3d11 = library('gstd3d11-' + api_version,
   install : true,
   dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib]
 )
+
+library_def = {'lib': gstd3d11}
+libraries += [[pkg_name, library_def]]
 
 # Still non-public api, should not install headers
 gstd3d11_dep = declare_dependency(link_with : gstd3d11,

@@ -61,6 +61,15 @@ foreach extension: required_hotdoc_extensions
     endif
 endforeach
 
+if static_build
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when building statically.')
+    endif
+
+    message('Building statically, can\'t build the documentation')
+    subdir_done()
+endif
+
 if not build_gir
     if get_option('doc').enabled()
         error('Documentation enabled but introspection not built.')

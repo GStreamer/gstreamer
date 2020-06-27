@@ -61,7 +61,7 @@ foreach extension: required_hotdoc_extensions
     endif
 endforeach
 
-if not build_gir
+if not build_gir or static_build
     if get_option('doc').enabled()
         error('Documentation enabled but introspection not built.')
     endif

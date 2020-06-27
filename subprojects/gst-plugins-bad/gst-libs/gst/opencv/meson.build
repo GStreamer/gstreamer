@@ -25,6 +25,7 @@ if opencv_dep.found()
   # /usr/include/opencv4/opencv2/flann/logger.h:83:36: error: format string is not a string literal [-Werror,-Wformat-nonliteral]
   gstopencv_cargs = cxx.get_supported_arguments(['-Wno-missing-include-dirs', '-Wno-format-nonliteral'])
 
+  pkg_name = 'gstreamer-opencv-1.0'
   gstopencv = library('gstopencv-' + api_version,
     opencv_sources,
     c_args : gst_plugins_bad_args + ['-DBUILDING_GST_OPENCV'],
@@ -33,14 +34,16 @@ if opencv_dep.found()
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
-  darwin_versions : osxversion,
+    darwin_versions : osxversion,
     install : true,
     dependencies : [gstbase_dep, gstvideo_dep, opencv_dep],
   )
 
+  libraries += [[pkg_name, {'lib': gstopencv}]]
   gstopencv_dep = declare_dependency(link_with: gstopencv,
     include_directories : [libsinc],
     dependencies : [gstvideo_dep, opencv_dep])
+  meson.override_dependency(pkg_name, gstopencv_dep)
 
   install_headers(opencv_headers, subdir : 'gstreamer-1.0/gst/opencv')
 elif get_option('opencv').enabled()

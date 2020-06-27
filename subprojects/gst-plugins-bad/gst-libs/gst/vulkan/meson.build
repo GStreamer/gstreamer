@@ -322,11 +322,13 @@ gstvulkan = library('gstvulkan-' + api_version,
   # don't confuse gst/vulkan/xcb/xcb.h with xcb/xcb.h
   implicit_include_directories : false)
 
+library_def = {'lib': gstvulkan}
+pkg_name = 'gstreamer-vulkan-1.0'
 pkgconfig.generate(gstvulkan,
   libraries : [gst_dep, gstbase_dep, gstvideo_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-vulkan-1.0',
+  name : pkg_name,
   description : 'GStreamer Vulkan support',
 )
 
@@ -338,27 +340,33 @@ if build_gir
     extra_gir_includes += ['Vulkan-1.0']
   endif
 
-  vulkan_gir = gnome.generate_gir(gstvulkan,
-    sources : vulkan_sources + vulkan_headers + [vulkan_enumtypes_h, vulkan_enumtypes_c],
-    namespace : 'GstVulkan',
-    nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-vulkan-1.0',
-    includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'] + extra_gir_includes,
-    install : true,
-    extra_args : gir_init_section + ['--c-include=gst/vulkan/vulkan.h'],
-    dependencies : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
-  )
-  gen_sources += vulkan_gir
+  gir = {
+    'sources' : vulkan_sources + vulkan_headers + [vulkan_enumtypes_h, vulkan_enumtypes_c],
+    'namespace' : 'GstVulkan',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'] + extra_gir_includes,
+    'install' : true,
+    'extra_args' : gir_init_section + ['--c-include=gst/vulkan/vulkan.h'],
+    'dependencies' : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
+  }
+
+  library_def += {'gir': [gir]}
+  if not static_build
+    vulkan_gir = gnome.generate_gir(gstvulkan, kwargs: gir)
+    gen_sources += vulkan_gir
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 gstvulkan_dep = declare_dependency(link_with : gstvulkan,
   include_directories : [libsinc],
   sources: gen_sources,
   dependencies : [gstvideo_dep, gstbase_dep, vulkan_dep] + optional_deps)
 
-meson.override_dependency('gstreamer-vulkan-1.0', gstvulkan_dep)
+meson.override_dependency(pkg_name, gstvulkan_dep)
 
 if enabled_vulkan_winsys.contains('xcb')
   install_headers(vulkan_xcb_headers, subdir : 'gstreamer-1.0/gst/vulkan/xcb')
@@ -371,18 +379,25 @@ if enabled_vulkan_winsys.contains('xcb')
   )
   vulkan_xcb_gir = []
   if build_gir
-    vulkan_xcb_gir = gnome.generate_gir(gstvulkan,
-      sources : vulkan_xcb_sources + vulkan_xcb_headers,
-      namespace : 'GstVulkanXCB',
-      nsversion : api_version,
-      identifier_prefix : 'Gst',
-      symbol_prefix : 'gst',
-      export_packages : 'gstreamer-vulkan-xcb-1.0',
-      includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', vulkan_gir[0]] + extra_gir_includes,
-      install : true,
-      extra_args : gir_init_section + ['--c-include=gst/vulkan/xcb/xcb.h'],
-      dependencies : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
-    )
+    gir = {
+      'sources' : vulkan_xcb_sources + vulkan_xcb_headers,
+      'namespace' : 'GstVulkanXCB',
+      'nsversion' : api_version,
+      'identifier_prefix' : 'Gst',
+      'symbol_prefix' : 'gst',
+      'export_packages' : 'gstreamer-vulkan-xcb-1.0',
+      'install' : true,
+      'extra_args' : gir_init_section + ['--c-include=gst/vulkan/xcb/xcb.h'],
+      'dependencies' : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
+    }
+
+    if not static_build
+      gir += {'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', vulkan_gir[0]] + extra_gir_includes}
+      vulkan_xcb_gir = gnome.generate_gir(gstvulkan, kwargs: gir)
+    endif
+
+    gir += {'includes' :['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', 'GstVulkan-1.0'] + extra_gir_includes}
+    library_def += {'gir':  library_def['gir'] + [gir]}
   endif
   gstvulkanxcb_dep = declare_dependency(dependencies : [gstvulkan_dep],
       sources : vulkan_xcb_gir)
@@ -400,20 +415,26 @@ if enabled_vulkan_winsys.contains('wayland')
   )
   vulkan_wayland_gir = []
   if build_gir
-    vulkan_wayland_gir = gnome.generate_gir(gstvulkan,
-      sources : vulkan_wayland_sources + vulkan_wayland_headers,
-      namespace : 'GstVulkanWayland',
-      nsversion : api_version,
-      identifier_prefix : 'Gst',
-      symbol_prefix : 'gst',
-      export_packages : 'gstreamer-vulkan-wayland-1.0',
-      includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', vulkan_gir[0]] + extra_gir_includes,
-      install : true,
-      extra_args : gir_init_section + ['--c-include=gst/vulkan/wayland/wayland.h'],
-      dependencies : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
-    )
+    gir = {
+      'sources' : vulkan_wayland_sources + vulkan_wayland_headers,
+      'namespace' : 'GstVulkanWayland',
+      'nsversion' : api_version,
+      'identifier_prefix' : 'Gst',
+      'symbol_prefix' : 'gst',
+      'export_packages' : 'gstreamer-vulkan-wayland-1.0',
+      'install' : true,
+      'extra_args' : gir_init_section + ['--c-include=gst/vulkan/wayland/wayland.h'],
+      'dependencies' : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
+    }
+    if not static_build
+      gir += {'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', vulkan_gir[0]] + extra_gir_includes}
+      vulkan_wayland_gir += gnome.generate_gir(gstvulkan, kwargs: gir)
+    endif
+    gir += {'includes' :['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', 'GstVulkan-1.0'] + extra_gir_includes}
+    library_def += {'gir':  library_def['gir'] + [gir]}
   endif
   gstvulkanwayland_dep = declare_dependency(dependencies : [gstvulkan_dep],
       sources : vulkan_wayland_gir)
   meson.override_dependency('gstreamer-vulkan-wayland-1.0', gstvulkanwayland_dep)
 endif
+

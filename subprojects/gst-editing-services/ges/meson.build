@@ -105,7 +105,6 @@ ges_headers = files([
     'ges-audio-source.h',
     'ges-video-uri-source.h',
     'ges-audio-uri-source.h',
-    'ges-image-source.h',
     'ges-multi-file-source.h',
     'ges-transition.h',
     'ges-audio-transition.h',
@@ -149,8 +148,6 @@ ges_headers += [configure_file(input : 'ges-version.h.in',
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/ges'),
   configuration : version_data)]
 
-install_headers(ges_headers, subdir : 'gstreamer-1.0/ges')
-
 flex = find_program('flex', required : false)
 if not flex.found()
   flex = find_program('win_flex', required : false)
@@ -183,13 +180,16 @@ libges = library('ges-1.0', ges_sources, parser, ges_resources,
     install : true,
     dependencies : libges_deps)
 
+pkg_name = 'gst-editing-services-1.0'
 pkgconfig.generate(libges,
   libraries : [gst_dep, gstbase_dep, gstpbutils_dep, gstcontroller_dep],
   subdirs : pkgconfig_subdirs,
-  name : 'gst-editing-services-1.0',
+  name : pkg_name,
   description : 'GStreamer Editing Services',
 )
 
+library_def = {'lib': libges}
+pkg_name = 'gst-editing-services-1.0'
 ges_gen_sources = []
 if build_gir
     ges_gir_extra_args = gir_init_section + [ '--c-include=ges/ges.h' ]
@@ -201,26 +201,34 @@ if build_gir
       '-I' + meson.current_build_dir() + '/..',
       '--cflags-end']
     endif
-    ges_gir = gnome.generate_gir(libges,
-        sources : ges_sources + ges_headers,
-        namespace : 'GES',
-        nsversion : apiversion,
-        identifier_prefix : 'GES',
-        symbol_prefix : 'ges',
-        export_packages : 'gst-editing-services-1.0',
-        includes : ['Gst-1.0', 'GstPbutils-1.0', 'GstVideo-1.0', 'Gio-2.0', 'GObject-2.0'],
-        install : true,
-        dependencies : libges_deps,
-        extra_args : ges_gir_extra_args
-    )
 
-    ges_gen_sources += [ges_gir]
+    gir = {
+        'sources' : ges_sources + ges_headers,
+        'namespace' : 'GES',
+        'nsversion' : apiversion,
+        'identifier_prefix' : 'GES',
+        'symbol_prefix' : 'ges',
+        'export_packages' : pkg_name,
+        'includes' : ['Gst-1.0', 'GstPbutils-1.0', 'GstVideo-1.0', 'Gio-2.0', 'GObject-2.0'],
+        'install' : true,
+        'dependencies' : libges_deps,
+        'extra_args' : ges_gir_extra_args
+    }
+    library_def = {'gir': gir}
+    if not static_build
+      ges_gir = gnome.generate_gir(libges, kwargs: gir)
+      ges_gen_sources += [ges_gir]
+    endif
 endif
+
+# GESImageSource is unused and is internal only so it gets stripped out when we statically
+# link GES. We keep the header for backward compatibility reasons.
+install_headers(ges_headers + files('ges-image-source.h'), subdir : 'gstreamer-1.0/ges')
+libraries += [[pkg_name, library_def]]
 
 ges_dep = declare_dependency(link_with : libges,
   include_directories : [configinc],
   sources : ges_gen_sources,
   dependencies : libges_deps,
 )
-
-meson.override_dependency('gst-editing-services-1.0', ges_dep)
+meson.override_dependency(pkg_name, ges_dep)

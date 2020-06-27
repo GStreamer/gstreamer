@@ -13,6 +13,7 @@ photo_enums = gnome.mkenums_simple('photography-enumtypes',
 photoenum_c = photo_enums[0]
 photoenum_h = photo_enums[1]
 
+pkg_name = 'gstreamer-photography-1.0'
 gstphotography = library('gstphotography-' + api_version,
   photography_sources, photoenum_h, photoenum_c,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_PHOTOGRAPHY'],
@@ -28,7 +29,7 @@ pkgconfig.generate(gstphotography,
   libraries : [gst_dep, gstbase_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-photography-1.0',
+  name : pkg_name,
   description : 'High level API for transcoding using GStreamer',
 )
 
@@ -37,4 +38,5 @@ gstphotography_dep = declare_dependency(link_with : gstphotography,
   dependencies : [gst_dep],
   sources : [photoenum_h])
 
-meson.override_dependency('gstreamer-photography-1.0', gstphotography_dep)
+libraries += [[pkg_name, {'lib': gstphotography}]]
+meson.override_dependency(pkg_name, gstphotography_dep)

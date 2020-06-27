@@ -46,34 +46,39 @@ gstmpegts = library('gstmpegts-' + api_version,
   dependencies : [gst_dep],
 )
 
+library_def = {'lib': gstmpegts}
+pkg_name = 'gstreamer-mpegts-1.0'
 pkgconfig.generate(gstmpegts,
   libraries : [gst_dep, gstbase_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-mpegts-1.0',
+  name : pkg_name,
   description : 'GStreamer MPEG-TS support',
 )
 
 if build_gir
-  mpegts_gir = gnome.generate_gir(gstmpegts,
-    sources : mpegts_sources + mpegts_headers,
-    namespace : 'GstMpegts',
-    nsversion : api_version,
-    identifier_prefix : 'GstMpegts',
-    symbol_prefix : ['gst_mpegts', 'gst'],
-    export_packages : 'gstreamer-mpegts-1.0',
-    includes : ['Gst-1.0'],
-    install : true,
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/mpegts/mpegts.h'],
-    dependencies : [gst_dep]
-  )
-  gen_sources += mpegts_gir
+  gir = {
+    'sources' : mpegts_sources + mpegts_headers,
+    'namespace' : 'GstMpegts',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'GstMpegts',
+    'symbol_prefix' : ['gst_mpegts', 'gst'],
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0'],
+    'install' : true,
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/mpegts/mpegts.h'],
+    'dependencies' : [gst_dep]
+  }
+  library_def += {'gir': [gir]}
+  if not static_build
+    mpegts_gir = gnome.generate_gir(gstmpegts, kwargs: gir)
+    gen_sources += mpegts_gir
+  endif
 endif
-
+libraries += [[pkg_name, library_def]]
 
 gstmpegts_dep = declare_dependency(link_with : gstmpegts,
   include_directories : [libsinc],
   dependencies : [gst_dep],
   sources : gen_sources)
-
-meson.override_dependency('gstreamer-mpegts-1.0', gstmpegts_dep)
+meson.override_dependency(pkg_name, gstmpegts_dep)

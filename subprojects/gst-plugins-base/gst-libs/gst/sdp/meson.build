@@ -20,36 +20,43 @@ gstsdp = library('gstsdp-@0@'.format(api_version),
   dependencies : sdp_deps,
 )
 
+library_def = {'lib': gstsdp}
+pkg_name = 'gstreamer-sdp-1.0'
+sdp_gen_sources  = []
 pkgconfig.generate(gstsdp,
   libraries : [glib_deps],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-sdp-1.0',
+  name : pkg_name,
   description : 'SDP helper functions',
 )
 
-sdp_gen_sources  = []
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/sdp/sdp.h' ]
-  sdp_gir = gnome.generate_gir(gstsdp,
-    sources : gst_sdp_sources + gst_sdp_headers,
-    namespace : 'GstSdp',
-    nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-sdp-1.0',
-    includes : ['Gst-1.0'],
-    install : true,
-    extra_args : gst_gir_extra_args,
-    dependencies : sdp_deps
-  )
+  gir = {
+    'sources' : gst_sdp_sources + gst_sdp_headers,
+    'namespace' : 'GstSdp',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0'],
+    'install' : true,
+    'extra_args' : gst_gir_extra_args,
+    'dependencies' : sdp_deps
+  }
 
-  sdp_gen_sources += [sdp_gir]
+  library_def = {'lib': library_def['lib'], 'gir': [gir]}
+  if not static_build
+    sdp_gir = gnome.generate_gir(gstsdp, kwargs: gir)
+    sdp_gen_sources += [sdp_gir]
+  endif
 endif
+libraries += [[pkg_name, library_def]]
 
 sdp_dep = declare_dependency(link_with: gstsdp,
   include_directories : [libsinc],
   dependencies : sdp_deps,
   sources: sdp_gen_sources)
 
-meson.override_dependency('gstreamer-sdp-1.0', sdp_dep)
+meson.override_dependency(pkg_name, sdp_dep)

@@ -18,11 +18,13 @@ if use_wayland
     dependencies : [gst_dep, gstvideo_dep, wl_client_dep]
   )
 
+  pkg_name = 'gstreamer-wayland-1.0'
+  libraries += [[pkg_name, {'lib': gstwayland}]]
   pkgconfig.generate(gstwayland,
     libraries : [gst_dep, gstvideo_dep],
     variables : pkgconfig_variables,
     subdirs : pkgconfig_subdirs,
-    name : 'gstreamer-wayland-1.0',
+    name : pkg_name,
     description : 'GStreamer Wayland support',
   )
 
@@ -30,6 +32,6 @@ if use_wayland
     include_directories : [libsinc],
     dependencies : [gst_dep, gstvideo_dep])
 
-  meson.override_dependency('gstreamer-wayland-1.0', gstwayland_dep)
   install_headers('wayland.h', subdir: 'gstreamer-1.0/gst/wayland')
+  meson.override_dependency(pkg_name, gstwayland_dep)
 endif

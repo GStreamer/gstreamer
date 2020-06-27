@@ -45,15 +45,17 @@ gstva = library('gstva-' + api_version,
   dependencies : [gst_dep, libva_dep, libva_drm_dep, libdrm_dep],
 )
 
+pkg_name = 'gstreamer-va-1.0'
+libraries += [[pkg_name, {'lib': gstva}]]
 pkgconfig.generate(gstva,
   libraries : gst_dep,
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
-  name : 'gstreamer-va-1.0',
+  name : pkg_name,
   description : 'GStreamer VA support',
 )
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],
   dependencies : [gst_dep, libva_dep, libva_drm_dep, libdrm_dep])
-meson.override_dependency('gstreamer-va-1.0', gstva_dep)
+meson.override_dependency(pkg_name, gstva_dep)

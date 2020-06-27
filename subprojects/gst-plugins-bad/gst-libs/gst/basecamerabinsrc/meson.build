@@ -22,24 +22,32 @@ gstbasecamerabin = library('gstbasecamerabinsrc-' + api_version,
   dependencies : [gstapp_dep],
 )
 
-_sources = []
-if build_gir
-  basecamerabin_gir = gnome.generate_gir(gstbasecamerabin,
-    sources : camerabin_sources + camerabin_headers,
-    namespace : 'GstBadBaseCameraBin',
-    nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
-    export_packages : 'gstreamer-bad-base-camerabinsrc-1.0',
-    includes : ['Gst-1.0', 'GstApp-1.0'],
-    install : false, # Only for the documentation
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
-    dependencies : [gstapp_dep],
-    build_by_default : true,
-  )
-  _sources += [basecamerabin_gir]
+library_def = {'lib': gstbasecamerabin}
+pkg_name = 'gstreamer-bad-base-camerabinsrc-1.0'
+gen_sources = []
+if build_gir and not static_build
+  gir = {
+    'sources' : camerabin_sources + camerabin_headers,
+    'namespace' : 'GstBadBaseCameraBin',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstApp-1.0'],
+    'install' : false, # Only for the documentation
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    'dependencies' : [gstapp_dep],
+    'build_by_default' : true,
+  }
+  library_def += {'gir': [gir]}
+  if not static_build
+    basecamerabin_gir = gnome.generate_gir(gstbasecamerabin, kwargs: gir)
+    gen_sources += basecamerabin_gir
+  endif
 endif
 
 gstbasecamerabin_dep = declare_dependency(link_with : gstbasecamerabin,
   include_directories : [libsinc],
+  sources: gen_sources,
   dependencies : [gstapp_dep])
+meson.override_dependency(pkg_name, gstbasecamerabin_dep)
