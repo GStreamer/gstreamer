@@ -70,6 +70,12 @@ gst_vaapi_video_format_get_formats_by_chroma (guint chroma);
 gboolean
 gst_vaapi_video_format_create_map (VAImageFormat * formats, guint n);
 
+guint
+gst_vaapi_drm_format_from_va_fourcc (guint32 fourcc);
+
+GstVideoFormat
+gst_vaapi_video_format_from_drm_format (guint drm_format);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_FORMAT_H */

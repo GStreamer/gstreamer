@@ -35,22 +35,35 @@
 #define DEBUG 1
 #include "gst/vaapi/gstvaapidebug.h"
 
+#if USE_DRM
+#include <drm_fourcc.h>
+#endif
+
 typedef struct _GstVideoFormatMapMap
 {
   GstVideoFormat format;
+  uint32_t drm_format;
   GstVaapiChromaType chroma_type;
   VAImageFormat va_format;
 } GstVideoFormatMap;
 
 #define VA_BYTE_ORDER_NOT_CARE 0
 
-#define DEF_YUV(BYTE_ORDER, FORMAT, FOURCC, BPP, SUB)                   \
+#if USE_DRM
+#define MAKE_DRM_FORMAT(DRM_FORMAT) G_PASTE(DRM_FORMAT_,DRM_FORMAT)
+#else
+#define MAKE_DRM_FORMAT(DRM_FORMAT) 0
+#endif
+
+#define DEF_YUV(BYTE_ORDER, FORMAT, DRM_FORMAT, FOURCC, BPP, SUB)       \
   { G_PASTE(GST_VIDEO_FORMAT_,FORMAT),                                  \
+    MAKE_DRM_FORMAT(DRM_FORMAT),                                        \
     G_PASTE(GST_VAAPI_CHROMA_TYPE_YUV,SUB),                             \
     { VA_FOURCC FOURCC, BYTE_ORDER, BPP, }, }
 
-#define DEF_RGB(BYTE_ORDER, FORMAT, FOURCC, BPP, DEPTH, R,G,B,A)        \
+#define DEF_RGB(BYTE_ORDER, FORMAT, DRM, FOURCC, BPP, DEPTH, R,G,B,A)   \
   { G_PASTE(GST_VIDEO_FORMAT_,FORMAT),                                  \
+    MAKE_DRM_FORMAT(DRM),                                               \
     G_PASTE(GST_VAAPI_CHROMA_TYPE_RGB,BPP),                             \
     { VA_FOURCC FOURCC, BYTE_ORDER, BPP, DEPTH, R, G, B, A }, }
 
@@ -83,85 +96,85 @@ static const GstVideoFormatMap gst_vaapi_video_default_formats[] = {
    */
 
   /* YUV formats */
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, NV12, ('N', 'V', '1', '2'), 12, 420),
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, YV12, ('Y', 'V', '1', '2'), 12, 420),
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, I420, ('I', '4', '2', '0'), 12, 420),
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, YUY2, ('Y', 'U', 'Y', '2'), 16, 422),
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, UYVY, ('U', 'Y', 'V', 'Y'), 16, 422),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, NV12, NV12, ('N', 'V', '1', '2'), 12, 420),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, YV12, YVU420, ('Y', 'V', '1', '2'), 12, 420),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, I420, YUV420, ('I', '4', '2', '0'), 12, 420),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, YUY2, YUYV, ('Y', 'U', 'Y', '2'), 16, 422),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, UYVY, UYVY, ('U', 'Y', 'V', 'Y'), 16, 422),
 
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y444, ('4', '4', '4', 'P'), 24, 444),
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, GRAY8, ('Y', '8', '0', '0'), 8, 400),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y444, YUV444, ('4', '4', '4', 'P'), 24, 444),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, GRAY8, INVALID, ('Y', '8', '0', '0'), 8, 400),
 
-  DEF_YUV (VA_LSB_FIRST, P010_10LE, ('P', '0', '1', '0'), 24, 420_10BPP),
-  DEF_YUV (VA_LSB_FIRST, P012_LE, ('P', '0', '1', '2'), 24, 420_12BPP),
+  DEF_YUV (VA_LSB_FIRST, P010_10LE, P010, ('P', '0', '1', '0'), 24, 420_10BPP),
+  DEF_YUV (VA_LSB_FIRST, P012_LE, P012, ('P', '0', '1', '2'), 24, 420_10BPP),
   /* AYUV is a clear defined format by doc */
-  DEF_YUV (VA_LSB_FIRST, VUYA, ('A', 'Y', 'U', 'V'), 32, 444),
+  DEF_YUV (VA_LSB_FIRST, VUYA, AYUV, ('A', 'Y', 'U', 'V'), 32, 444),
 
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y210, ('Y', '2', '1', '0'), 32, 422_10BPP),
-  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y410, ('Y', '4', '1', '0'), 32, 444_10BPP),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y210, Y210, ('Y', '2', '1', '0'), 32, 422_10BPP),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y410, Y410, ('Y', '4', '1', '0'), 32, 444_10BPP),
 
   /* RGB formats */
-  DEF_RGB (VA_LSB_FIRST, ARGB, ('A', 'R', 'G', 'B'), 32, 32, 0x0000ff00,
+  DEF_RGB (VA_LSB_FIRST, ARGB, BGRA8888, ('A', 'R', 'G', 'B'), 32, 32, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x000000ff),
-  DEF_RGB (VA_LSB_FIRST, ARGB, ('B', 'G', 'R', 'A'), 32, 32, 0x0000ff00,
+  DEF_RGB (VA_LSB_FIRST, ARGB, BGRA8888, ('B', 'G', 'R', 'A'), 32, 32, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x000000ff),
-  DEF_RGB (VA_MSB_FIRST, ARGB, ('A', 'R', 'G', 'B'), 32, 32, 0x00ff0000,
+  DEF_RGB (VA_MSB_FIRST, ARGB, BGRA8888, ('A', 'R', 'G', 'B'), 32, 32, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0xff000000),
 
-  DEF_RGB (VA_LSB_FIRST, xRGB, ('X', 'R', 'G', 'B'), 32, 24, 0x0000ff00,
+  DEF_RGB (VA_LSB_FIRST, xRGB, BGRX8888, ('X', 'R', 'G', 'B'), 32, 24, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x00000000),
-  DEF_RGB (VA_LSB_FIRST, xRGB, ('B', 'G', 'R', 'X'), 32, 24, 0x0000ff00,
+  DEF_RGB (VA_LSB_FIRST, xRGB, BGRX8888, ('B', 'G', 'R', 'X'), 32, 24, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x00000000),
-  DEF_RGB (VA_MSB_FIRST, xRGB, ('X', 'R', 'G', 'B'), 32, 24, 0x00ff0000,
+  DEF_RGB (VA_MSB_FIRST, xRGB, BGRX8888, ('X', 'R', 'G', 'B'), 32, 24, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0x00000000),
 
-  DEF_RGB (VA_LSB_FIRST, RGBA, ('R', 'G', 'B', 'A'), 32, 32, 0x000000ff,
+  DEF_RGB (VA_LSB_FIRST, RGBA, ABGR8888, ('R', 'G', 'B', 'A'), 32, 32, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0xff000000),
-  DEF_RGB (VA_LSB_FIRST, RGBA, ('A', 'B', 'G', 'R'), 32, 32, 0x000000ff,
+  DEF_RGB (VA_LSB_FIRST, RGBA, ABGR8888, ('A', 'B', 'G', 'R'), 32, 32, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0xff000000),
-  DEF_RGB (VA_MSB_FIRST, RGBA, ('R', 'G', 'B', 'A'), 32, 32, 0xff000000,
+  DEF_RGB (VA_MSB_FIRST, RGBA, ABGR8888, ('R', 'G', 'B', 'A'), 32, 32, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x000000ff),
 
-  DEF_RGB (VA_LSB_FIRST, RGBx, ('R', 'G', 'B', 'X'), 32, 24, 0x000000ff,
+  DEF_RGB (VA_LSB_FIRST, RGBx, XBGR8888, ('R', 'G', 'B', 'X'), 32, 24, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0x00000000),
-  DEF_RGB (VA_LSB_FIRST, RGBx, ('X', 'B', 'G', 'R'), 32, 24, 0x000000ff,
+  DEF_RGB (VA_LSB_FIRST, RGBx, XBGR8888, ('X', 'B', 'G', 'R'), 32, 24, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0x00000000),
-  DEF_RGB (VA_MSB_FIRST, RGBx, ('R', 'G', 'B', 'X'), 32, 24, 0xff000000,
+  DEF_RGB (VA_MSB_FIRST, RGBx, XBGR8888, ('R', 'G', 'B', 'X'), 32, 24, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x00000000),
 
-  DEF_RGB (VA_LSB_FIRST, ABGR, ('A', 'B', 'G', 'R'), 32, 32, 0xff000000,
+  DEF_RGB (VA_LSB_FIRST, ABGR, RGBA8888, ('A', 'B', 'G', 'R'), 32, 32, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x000000ff),
-  DEF_RGB (VA_LSB_FIRST, ABGR, ('R', 'G', 'B', 'A'), 32, 32, 0xff000000,
+  DEF_RGB (VA_LSB_FIRST, ABGR, RGBA8888, ('R', 'G', 'B', 'A'), 32, 32, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x000000ff),
-  DEF_RGB (VA_MSB_FIRST, ABGR, ('A', 'B', 'G', 'R'), 32, 32, 0x000000ff,
+  DEF_RGB (VA_MSB_FIRST, ABGR, RGBA8888, ('A', 'B', 'G', 'R'), 32, 32, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0xff000000),
 
-  DEF_RGB (VA_LSB_FIRST, xBGR, ('X', 'B', 'G', 'R'), 32, 24, 0xff000000,
+  DEF_RGB (VA_LSB_FIRST, xBGR, RGBX8888, ('X', 'B', 'G', 'R'), 32, 24, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x00000000),
-  DEF_RGB (VA_LSB_FIRST, xBGR, ('R', 'G', 'B', 'X'), 32, 24, 0xff000000,
+  DEF_RGB (VA_LSB_FIRST, xBGR, RGBX8888, ('R', 'G', 'B', 'X'), 32, 24, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x00000000),
-  DEF_RGB (VA_MSB_FIRST, xBGR, ('X', 'B', 'G', 'R'), 32, 24, 0x000000ff,
+  DEF_RGB (VA_MSB_FIRST, xBGR, RGBX8888, ('X', 'B', 'G', 'R'), 32, 24, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0x00000000),
 
-  DEF_RGB (VA_LSB_FIRST, BGRA, ('B', 'G', 'R', 'A'), 32, 32, 0x00ff0000,
+  DEF_RGB (VA_LSB_FIRST, BGRA, ARGB8888, ('B', 'G', 'R', 'A'), 32, 32, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0xff000000),
-  DEF_RGB (VA_LSB_FIRST, BGRA, ('A', 'R', 'G', 'B'), 32, 32, 0x00ff0000,
+  DEF_RGB (VA_LSB_FIRST, BGRA, ARGB8888, ('A', 'R', 'G', 'B'), 32, 32, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0xff000000),
-  DEF_RGB (VA_MSB_FIRST, BGRA, ('B', 'G', 'R', 'A'), 32, 32, 0x0000ff00,
+  DEF_RGB (VA_MSB_FIRST, BGRA, ARGB8888, ('B', 'G', 'R', 'A'), 32, 32, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x000000ff),
 
-  DEF_RGB (VA_LSB_FIRST, BGRx, ('B', 'G', 'R', 'X'), 32, 24, 0x00ff0000,
+  DEF_RGB (VA_LSB_FIRST, BGRx, XRGB8888, ('B', 'G', 'R', 'X'), 32, 24, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0x00000000),
-  DEF_RGB (VA_LSB_FIRST, BGRx, ('X', 'R', 'G', 'B'), 32, 24, 0x00ff0000,
+  DEF_RGB (VA_LSB_FIRST, BGRx, XRGB8888, ('X', 'R', 'G', 'B'), 32, 24, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0x00000000),
-  DEF_RGB (VA_MSB_FIRST, BGRx, ('B', 'G', 'R', 'X'), 32, 24, 0x0000ff00,
+  DEF_RGB (VA_MSB_FIRST, BGRx, XRGB8888, ('B', 'G', 'R', 'X'), 32, 24, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x00000000),
 
-  DEF_RGB (VA_BYTE_ORDER_NOT_CARE, RGB16, ('R', 'G', '1', '6'), 16, 16,
+  DEF_RGB (VA_BYTE_ORDER_NOT_CARE, RGB16, RGB565, ('R', 'G', '1', '6'), 16, 16,
       0x0000f800, 0x000007e0, 0x0000001f, 0x00000000),
-  DEF_RGB (VA_BYTE_ORDER_NOT_CARE, RGB, ('R', 'G', '2', '4'), 32, 24,
+  DEF_RGB (VA_BYTE_ORDER_NOT_CARE, RGB, RGB888, ('R', 'G', '2', '4'), 32, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
-  DEF_RGB (VA_LSB_FIRST, BGR10A2_LE, ('A', 'R', '3', '0'), 32, 30,
+  DEF_RGB (VA_LSB_FIRST, BGR10A2_LE, ARGB2101010, ('A', 'R', '3', '0'), 32, 30,
       0x3ff00000, 0x000ffc00, 0x000003ff, 0x30000000),
   {0,}
 };
@@ -602,4 +615,65 @@ gst_vaapi_video_format_create_map (VAImageFormat * formats, guint n)
   g_once (&once, video_format_create_map_once, &data);
 
   return once.retval != NULL;
+}
+
+/**
+ * gst_vaapi_drm_format_from_va_fourcc:
+ * @fourcc: a FOURCC value
+ *
+ * Converts a VA fourcc into the corresponding DRM_FORMAT_*. If no
+ * matching fourcc was found, then DRM_FORMAT_INVALID is returned.
+ *
+ * Return value: the DRM_FORMAT_* corresponding to the VA @fourcc
+ *
+ * Since: 1.18
+ */
+guint
+gst_vaapi_drm_format_from_va_fourcc (guint32 fourcc)
+{
+#if USE_DRM
+  const GArray *map = gst_vaapi_video_formats_map;
+  const GstVideoFormatMap *m;
+  guint i;
+
+  /* Note: VA fourcc values are now standardized and shall represent
+     a unique format. The associated VAImageFormat is just a hint to
+     determine RGBA component ordering */
+  for (i = 0; i < map->len; i++) {
+    m = &g_array_index (map, GstVideoFormatMap, i);
+    if (m->va_format.fourcc == fourcc)
+      return m->drm_format;
+  }
+  return DRM_FORMAT_INVALID;
+#else
+  return 0;
+#endif
+}
+
+/**
+ * gst_vaapi_video_format_from_drm_format:
+ * @drm_format: a DRM format value
+ *
+ * Converts a DRM_FORMAT_* to the corresponding GstVideoFormat. If no
+ * matching fourcc was found, then DRM_FORMAT_INVALID is returned.
+ *
+ * Return value: GstVideoFormat corresponding to the @drm_format
+ *
+ * Since: 1.18
+ */
+GstVideoFormat
+gst_vaapi_video_format_from_drm_format (guint drm_format)
+{
+#if USE_DRM
+  const GArray *map = gst_vaapi_video_formats_map;
+  const GstVideoFormatMap *m;
+  guint i;
+
+  for (i = 0; i < map->len; i++) {
+    m = &g_array_index (map, GstVideoFormatMap, i);
+    if (m->drm_format == drm_format)
+      return m->format;
+  }
+#endif
+  return GST_VIDEO_FORMAT_UNKNOWN;
 }
