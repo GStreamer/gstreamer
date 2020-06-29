@@ -1041,19 +1041,24 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   gsize sc_off = 0;
   gsize nal_size;
-  guint8 *bitstream_data = self->bitstream_map.data + self->bitstream_map.size;
+  guint8 *bitstream_data;
 
   if (is_slice_based (self)) {
-    /* In slice mode, we submit the pending slice asking the acceletator to hold
-     * on the picture */
-    if (self->bitstream_map.size)
-      gst_v4l2_codec_h264_dec_submit_bitstream (self, picture,
-          V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF);
+    if (self->bitstream_map.size) {
+      /* In slice mode, we submit the pending slice asking the accelerator to
+       * hold on the picture */
+      if (!gst_v4l2_codec_h264_dec_submit_bitstream (self, picture,
+              V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF)
+          || !gst_v4l2_codec_h264_dec_ensure_bitstream (self))
+        return FALSE;
+    }
 
     gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
     gst_v4l2_codec_h264_dec_fill_references (self, ref_pic_list0,
         ref_pic_list1);
   }
+
+  bitstream_data = self->bitstream_map.data + self->bitstream_map.size;
 
   if (needs_start_codes (self))
     sc_off = 3;
