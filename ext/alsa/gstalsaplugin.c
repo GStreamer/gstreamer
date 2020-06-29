@@ -72,7 +72,7 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_ALSA_MIDI_SRC))
     return FALSE;
   if (!gst_device_provider_register (plugin, "alsadeviceprovider",
-          GST_RANK_PRIMARY, GST_TYPE_ALSA_DEVICE_PROVIDER))
+          GST_RANK_SECONDARY, GST_TYPE_ALSA_DEVICE_PROVIDER))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
