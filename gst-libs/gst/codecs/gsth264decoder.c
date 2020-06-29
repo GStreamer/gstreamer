@@ -1865,7 +1865,18 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
       && sps->vui_parameters.bitstream_restriction_flag)
     max_dpb_frames = MAX (1, sps->vui_parameters.max_dec_frame_buffering);
 
-  max_dpb_size = MIN (max_dpb_frames, sps->num_ref_frames);
+  /* Case 1) There might be some non-conforming streams that require more DPB
+   * size than that of specified one by SPS
+   * Case 2) If bitstream_restriction_flag is not present,
+   * max_dec_frame_buffering should be inferred
+   * to be equal to MaxDpbFrames, then MaxDpbFrames can exceed num_ref_frames
+   * See https://chromium-review.googlesource.com/c/chromium/src/+/760276/
+   */
+  max_dpb_size = MAX (max_dpb_frames, sps->num_ref_frames);
+  if (max_dpb_size > GST_H264_DPB_MAX_SIZE) {
+    GST_WARNING_OBJECT (self, "Too large calculated DPB size %d", max_dpb_size);
+    max_dpb_size = GST_H264_DPB_MAX_SIZE;
+  }
 
   /* Safety, so that subclass don't need bound checking */
   g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, FALSE);
