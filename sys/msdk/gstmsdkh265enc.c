@@ -67,16 +67,37 @@ enum
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
-
-#if (MFX_VERSION >= 1031)
-#define COMMON_FORMAT "{ " RAW_FORMATS ", Y410, Y210, P012_LE }"
-#define PRFOLIE_STR   "{ " PROFILES ", main-444-10, main-422-10, main-12 }"
-#elif (MFX_VERSION >= 1027)
-#define COMMON_FORMAT "{ " RAW_FORMATS ", Y410, Y210 }"
-#define PRFOLIE_STR   "{ " PROFILES ", main-444-10, main-422-10 }"
-#else
 #define COMMON_FORMAT "{ " RAW_FORMATS " }"
 #define PRFOLIE_STR   "{ " PROFILES " }"
+
+
+#if (MFX_VERSION >= 1027)
+#undef  COMMON_FORMAT
+#undef  PRFOLIE_STR
+#define FORMATS_1027    RAW_FORMATS ", Y410, Y210"
+#define PROFILES_1027   PROFILES "main-444-10, main-422-10"
+#define COMMON_FORMAT   "{ " FORMATS_1027 " }"
+#define PRFOLIE_STR     "{ " PROFILES_1027 " }"
+#endif
+
+#if (MFX_VERSION >= 1031)
+#undef  COMMON_FORMAT
+#undef  PRFOLIE_STR
+#define FORMATS_1031    FORMATS_1027 ", P012_LE"
+#define PROFILES_1031   PROFILES_1027  ", main-12"
+#define COMMON_FORMAT   "{ " FORMATS_1031 " }"
+#define PRFOLIE_STR     "{ " PROFILES_1031 " }"
+#endif
+
+#if (MFX_VERSION >= 1032)
+#undef  COMMON_FORMAT
+#undef  PRFOLIE_STR
+#define FORMATS_1032    FORMATS_1031
+#define PROFILES_1032   PROFILES_1031  ", screen-extended-main, " \
+  "screen-extended-main-10, screen-extended-main-444, " \
+  "screen-extended-main-444-10"
+#define COMMON_FORMAT   "{ " FORMATS_1032 " }"
+#define PRFOLIE_STR     "{ " PROFILES_1032 " }"
 #endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -278,6 +299,14 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
         !strcmp (h265enc->profile_name, "main-444-10") ||
         !strcmp (h265enc->profile_name, "main-12"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
+
+#if (MFX_VERSION >= 1032)
+    else if (!strcmp (h265enc->profile_name, "screen-extended-main") ||
+        !strcmp (h265enc->profile_name, "screen-extended-main-10") ||
+        !strcmp (h265enc->profile_name, "screen-extended-main-444") ||
+        !strcmp (h265enc->profile_name, "screen-extended-main-444-10"))
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_SCC;
+#endif
   } else {
     switch (encoder->param.mfx.FrameInfo.FourCC) {
       case MFX_FOURCC_P010:
