@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2020 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,6 +21,7 @@
 #include <string.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/video/video.h>
 
 static gboolean
@@ -648,6 +650,63 @@ GST_START_TEST (test_imagefreeze_eos)
 
 GST_END_TEST;
 
+GST_START_TEST (test_imagefreeze_25_1_live)
+{
+  GstBuffer *buffer;
+  GstHarness *h = gst_harness_new_parse ("imagefreeze is-live=true");
+  guint i;
+
+  gst_harness_use_testclock (h);
+  gst_harness_play (h);
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw, format=xRGB, width=640, height=480, framerate=0/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw, format=xRGB, width=640, height=480, framerate=25/1");
+
+  /* Fill the buffer */
+  buffer = gst_buffer_new ();
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_EOS);
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  /* Check if we can get 10 buffers under normal circumstances out */
+  for (i = 0; i < 10; i++) {
+    fail_unless (gst_harness_crank_single_clock_wait (h));
+    buffer = gst_harness_pull (h);
+    fail_unless (buffer != NULL);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), i * 40 * GST_MSECOND);
+    gst_buffer_unref (buffer);
+  }
+
+  /* Skip ahead, now the next buffer would be too late so imagefreeze should
+   * skip ahead too and continue from there */
+  fail_unless (gst_harness_wait_for_clock_id_waits (h, 1, 5));
+  gst_harness_set_time (h, 1 * GST_SECOND);
+
+  /* FIXME: Consume one more buffer that went through because of a testclock
+   * bug. See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/581
+   */
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+  buffer = gst_harness_pull (h);
+  fail_unless (buffer != NULL);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), i * 40 * GST_MSECOND);
+  gst_buffer_unref (buffer);
+
+  /* Check if we can get 10 more buffers after the 1s gap */
+  for (i = 0; i < 10; i++) {
+    fail_unless (gst_harness_crank_single_clock_wait (h));
+    buffer = gst_harness_pull (h);
+    fail_unless (buffer != NULL);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer),
+        GST_SECOND + i * 40 * GST_MSECOND);
+    gst_buffer_unref (buffer);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 imagefreeze_suite (void)
 {
@@ -666,6 +725,8 @@ imagefreeze_suite (void)
 
   tcase_add_test (tc_chain, test_imagefreeze_num_buffers);
   tcase_add_test (tc_chain, test_imagefreeze_eos);
+
+  tcase_add_test (tc_chain, test_imagefreeze_25_1_live);
 
   return s;
 }
