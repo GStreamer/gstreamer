@@ -347,3 +347,36 @@ gst_rtmp_string_print_escaped (GString * string, const gchar * data,
   g_string_append_c (string, '"');
 
 }
+
+gboolean
+gst_rtmp_flv_tag_parse_header (GstRtmpFlvTagHeader * header,
+    const guint8 * data, gsize size)
+{
+  g_return_val_if_fail (header, FALSE);
+  g_return_val_if_fail (data, FALSE);
+
+  /* Parse FLVTAG header as described in
+   * video_file_format_spec_v10.pdf page 5 (page 9 of the PDF) */
+
+  if (size < GST_RTMP_FLV_TAG_HEADER_SIZE) {
+    return FALSE;
+  }
+
+  /* TagType UI8 */
+  header->type = GST_READ_UINT8 (data);
+
+  /* DataSize UI24 */
+  header->payload_size = GST_READ_UINT24_BE (data + 1);
+
+  /* 4 bytes for the PreviousTagSize UI32 following every tag */
+  header->total_size = GST_RTMP_FLV_TAG_HEADER_SIZE + header->payload_size + 4;
+
+  /* Timestamp UI24 + TimestampExtended UI8 */
+  header->timestamp = GST_READ_UINT24_BE (data + 4);
+  header->timestamp |= (guint32) GST_READ_UINT8 (data + 7) << 24;
+
+  /* Skip StreamID UI24. It's "always 0" for FLV files and for aggregated RTMP
+   * messages we're supposed to use the Stream ID from the AGGREGATE. */
+
+  return TRUE;
+}

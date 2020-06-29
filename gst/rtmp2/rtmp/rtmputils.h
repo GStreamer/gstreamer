@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gio/gio.h>
+#include "rtmpmessage.h"
 
 G_BEGIN_DECLS
 
@@ -47,6 +48,17 @@ gboolean gst_rtmp_output_stream_write_all_buffer_finish (GOutputStream * stream,
 
 void gst_rtmp_string_print_escaped (GString * string, const gchar * data,
     gssize size);
+
+#define GST_RTMP_FLV_TAG_HEADER_SIZE 11
+
+typedef struct {
+  GstRtmpMessageType type;
+  gsize payload_size, total_size;
+  guint32 timestamp;
+} GstRtmpFlvTagHeader;
+
+gboolean gst_rtmp_flv_tag_parse_header (GstRtmpFlvTagHeader *header,
+    const guint8 * data, gsize size);
 
 G_END_DECLS
 

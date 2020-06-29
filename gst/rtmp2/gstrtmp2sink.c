@@ -44,6 +44,7 @@
 #include "rtmp/amf.h"
 #include "rtmp/rtmpclient.h"
 #include "rtmp/rtmpmessage.h"
+#include "rtmp/rtmputils.h"
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
@@ -587,10 +588,9 @@ static gboolean
 buffer_to_message (GstRtmp2Sink * self, GstBuffer * buffer, GstBuffer ** outbuf)
 {
   GstBuffer *message;
-  gsize payload_offset, payload_size;
+  GstRtmpFlvTagHeader header;
   guint64 timestamp;
   guint32 cstream;
-  GstRtmpMessageType type;
 
   {
     GstMapInfo info;
@@ -611,21 +611,22 @@ buffer_to_message (GstRtmp2Sink * self, GstBuffer * buffer, GstBuffer ** outbuf)
       return TRUE;
     }
 
-    if (G_UNLIKELY (info.size < 11 + 4)) {
-      GST_ERROR_OBJECT (self, "too small: %" GST_PTR_FORMAT, buffer);
+    if (!gst_rtmp_flv_tag_parse_header (&header, info.data, info.size)) {
+      GST_ERROR_OBJECT (self, "too small for tag header: %" GST_PTR_FORMAT,
+          buffer);
       gst_buffer_unmap (buffer, &info);
       return FALSE;
     }
 
-    /* payload between 11 byte header and 4 byte size footer */
-    payload_offset = 11;
-    payload_size = info.size - 11 - 4;
-
-    type = GST_READ_UINT8 (info.data);
-    timestamp = GST_READ_UINT24_BE (info.data + 4);
-    timestamp |= (guint32) GST_READ_UINT8 (info.data + 7) << 24;
+    if (info.size < header.total_size) {
+      GST_ERROR_OBJECT (self, "too small for tag body: buffer %" G_GSIZE_FORMAT
+          ", tag %" G_GSIZE_FORMAT, info.size, header.total_size);
+      gst_buffer_unmap (buffer, &info);
+      return FALSE;
+    }
 
     /* flvmux timestamps roll over after about 49 days */
+    timestamp = header.timestamp;
     if (timestamp + self->base_ts + G_MAXINT32 < self->last_ts) {
       GST_WARNING_OBJECT (self, "Timestamp regression %" G_GUINT64_FORMAT
           " -> %" G_GUINT64_FORMAT "; assuming overflow", self->last_ts,
@@ -651,7 +652,7 @@ buffer_to_message (GstRtmp2Sink * self, GstBuffer * buffer, GstBuffer ** outbuf)
     gst_buffer_unmap (buffer, &info);
   }
 
-  switch (type) {
+  switch (header.type) {
     case GST_RTMP_MESSAGE_TYPE_DATA_AMF0:
       cstream = 4;
       break;
@@ -665,14 +666,14 @@ buffer_to_message (GstRtmp2Sink * self, GstBuffer * buffer, GstBuffer ** outbuf)
       break;
 
     default:
-      GST_ERROR_OBJECT (self, "unknown tag type %d", type);
+      GST_ERROR_OBJECT (self, "unknown tag type %d", header.type);
       return FALSE;
   }
 
   /* May not know stream ID yet; set later */
-  message = gst_rtmp_message_new (type, cstream, 0);
+  message = gst_rtmp_message_new (header.type, cstream, 0);
   message = gst_buffer_append_region (message, gst_buffer_ref (buffer),
-      payload_offset, payload_size);
+      GST_RTMP_FLV_TAG_HEADER_SIZE, header.payload_size);
 
   GST_BUFFER_DTS (message) = timestamp * GST_MSECOND;
 
