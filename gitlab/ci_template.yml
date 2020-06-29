@@ -173,7 +173,6 @@ variables:
   image: "$CI_REGISTRY/freedesktop/ci-templates/buildah:2020-03-24"
   extends:
     - '.global_ci_policy'
-  tags: ['gstreamer']
   rules:
     - when: 'always'
   variables:
