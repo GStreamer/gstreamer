@@ -97,11 +97,50 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SINK_FORMATS))
     );
 
+/* Child proxy implementation */
+static GObject *
+gst_iqa_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstIqa *iqa = GST_IQA (child_proxy);
+  GObject *obj = NULL;
 
-/* GstIqa */
+  GST_OBJECT_LOCK (iqa);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (iqa)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (iqa);
+
+  return obj;
+}
+
+static guint
+gst_iqa_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstIqa *iqa = GST_IQA (child_proxy);
+
+  GST_OBJECT_LOCK (iqa);
+  count = GST_ELEMENT_CAST (iqa)->numsinkpads;
+  GST_OBJECT_UNLOCK (iqa);
+  GST_INFO_OBJECT (iqa, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_iqa_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_iqa_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_iqa_child_proxy_get_children_count;
+}
+
 
 #define gst_iqa_parent_class parent_class
-G_DEFINE_TYPE (GstIqa, gst_iqa, GST_TYPE_VIDEO_AGGREGATOR);
+G_DEFINE_TYPE_WITH_CODE (GstIqa, gst_iqa, GST_TYPE_VIDEO_AGGREGATOR,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY, gst_iqa_child_proxy_init));
 
 #ifdef HAVE_DSSIM
 inline static unsigned char
