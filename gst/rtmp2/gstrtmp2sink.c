@@ -236,6 +236,7 @@ static void
 gst_rtmp2_sink_init (GstRtmp2Sink * self)
 {
   self->location.flash_ver = g_strdup ("FMLE/3.0 (compatible; FMSc/1.0)");
+  self->location.publish = TRUE;
   self->async_connect = TRUE;
   self->chunk_size = GST_RTMP_DEFAULT_CHUNK_SIZE;
 

@@ -70,6 +70,7 @@ typedef struct _GstRtmpLocation
   gint timeout;
   GTlsCertificateFlags tls_flags;
   gchar *flash_ver;
+  gboolean publish;
 } GstRtmpLocation;
 
 void gst_rtmp_location_copy (GstRtmpLocation * dest,

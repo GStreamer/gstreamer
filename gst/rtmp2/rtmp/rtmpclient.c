@@ -184,6 +184,7 @@ gst_rtmp_location_copy (GstRtmpLocation * dest, const GstRtmpLocation * src)
   dest->timeout = src->timeout;
   dest->tls_flags = src->tls_flags;
   dest->flash_ver = g_strdup (src->flash_ver);
+  dest->publish = src->publish;
 }
 
 void
@@ -199,6 +200,7 @@ gst_rtmp_location_clear (GstRtmpLocation * location)
   g_clear_pointer (&location->password, g_free);
   g_clear_pointer (&location->secure_token, g_free);
   g_clear_pointer (&location->flash_ver, g_free);
+  location->publish = FALSE;
 }
 
 gchar *
@@ -228,6 +230,65 @@ gst_rtmp_location_get_string (const GstRtmpLocation * location,
 
   return string;
 }
+
+/* Flag values for the audioCodecs property,
+ * rtmp_specification_1.0.pdf page 32 */
+enum
+{
+  SUPPORT_SND_NONE = 0x001,     /* Raw sound, no compression */
+  SUPPORT_SND_ADPCM = 0x002,    /* ADPCM compression */
+  SUPPORT_SND_MP3 = 0x004,      /* mp3 compression */
+  SUPPORT_SND_INTEL = 0x008,    /* Not used */
+  SUPPORT_SND_UNUSED = 0x010,   /* Not used */
+  SUPPORT_SND_NELLY8 = 0x020,   /* NellyMoser at 8-kHz compression */
+  SUPPORT_SND_NELLY = 0x040,    /* NellyMoser compression
+                                 * (5, 11, 22, and 44 kHz) */
+  SUPPORT_SND_G711A = 0x080,    /* G711A sound compression
+                                 * (Flash Media Server only) */
+  SUPPORT_SND_G711U = 0x100,    /* G711U sound compression
+                                 * (Flash Media Server only) */
+  SUPPORT_SND_NELLY16 = 0x200,  /* NellyMoser at 16-kHz compression */
+  SUPPORT_SND_AAC = 0x400,      /* Advanced audio coding (AAC) codec */
+  SUPPORT_SND_SPEEX = 0x800,    /* Speex Audio */
+  SUPPORT_SND_ALL = 0xFFF,      /* All RTMP-supported audio codecs */
+};
+
+/* audioCodecs value sent by libavformat. All "used" codecs. */
+#define GST_RTMP_AUDIOCODECS \
+  (SUPPORT_SND_ALL & ~SUPPORT_SND_INTEL & ~SUPPORT_SND_UNUSED)
+G_STATIC_ASSERT (GST_RTMP_AUDIOCODECS == 4071); /* libavformat's magic number */
+
+/* Flag values for the videoCodecs property,
+ * rtmp_specification_1.0.pdf page 32 */
+enum
+{
+  SUPPORT_VID_UNUSED = 0x01,    /* Obsolete value */
+  SUPPORT_VID_JPEG = 0x02,      /* Obsolete value */
+  SUPPORT_VID_SORENSON = 0x04,  /* Sorenson Flash video */
+  SUPPORT_VID_HOMEBREW = 0x08,  /* V1 screen sharing */
+  SUPPORT_VID_VP6 = 0x10,       /* On2 video (Flash 8+) */
+  SUPPORT_VID_VP6ALPHA = 0x20,  /* On2 video with alpha channel */
+  SUPPORT_VID_HOMEBREWV = 0x40, /* Screen sharing version 2 (Flash 8+) */
+  SUPPORT_VID_H264 = 0x80,      /* H264 video */
+  SUPPORT_VID_ALL = 0xFF,       /* All RTMP-supported video codecs */
+};
+
+/* videoCodecs value sent by libavformat. All non-obsolete codecs. */
+#define GST_RTMP_VIDEOCODECS \
+  (SUPPORT_VID_ALL & ~SUPPORT_VID_UNUSED & ~SUPPORT_VID_JPEG)
+G_STATIC_ASSERT (GST_RTMP_VIDEOCODECS == 252);  /* libavformat's magic number */
+
+/* Flag values for the videoFunction property,
+ * rtmp_specification_1.0.pdf page 32 */
+enum
+{
+  /* Indicates that the client can perform frame-accurate seeks. */
+  SUPPORT_VID_CLIENT_SEEK = 1,
+};
+
+/* videoFunction value sent by libavformat */
+#define GST_RTMP_VIDEOFUNCTION (SUPPORT_VID_CLIENT_SEEK)
+G_STATIC_ASSERT (GST_RTMP_VIDEOFUNCTION == 1);  /* libavformat's magic number */
 
 static void socket_connect (GTask * task);
 static void socket_connect_done (GObject * source, GAsyncResult * result,
@@ -499,10 +560,12 @@ send_connect (GTask * task)
   GstAmfNode *node;
   const gchar *app, *flash_ver;
   gchar *uri, *appstr = NULL, *uristr = NULL;
+  gboolean publish;
 
   node = gst_amf_node_new_object ();
   app = data->location.application;
   flash_ver = data->location.flash_ver;
+  publish = data->location.publish;
   uri = gst_rtmp_location_get_string (&data->location, FALSE);
 
   if (!app) {
@@ -548,10 +611,51 @@ send_connect (GTask * task)
     uristr = g_strdup (uri);
   }
 
+  /* Arguments for the connect command.
+   * Most of these are described in rtmp_specification_1.0.pdf page 30 */
+
+  /* "The server application name the client is connected to." */
   gst_amf_node_append_field_take_string (node, "app", appstr, -1);
-  gst_amf_node_append_field_take_string (node, "tcUrl", uristr, -1);
-  gst_amf_node_append_field_string (node, "type", "nonprivate", -1);
+
+  if (publish) {
+    /* Undocumented. Sent by both libavformat and librtmp. */
+    gst_amf_node_append_field_string (node, "type", "nonprivate", -1);
+  }
+
+  /* "Flash Player version. It is the same string as returned by the
+   * ApplicationScript getversion () function." */
   gst_amf_node_append_field_string (node, "flashVer", flash_ver, -1);
+
+  /* "URL of the source SWF file making the connection."
+   * XXX: libavformat sends "swfUrl" here, if provided. */
+
+  /* "URL of the Server. It has the following format.
+   * protocol://servername:port/appName/appInstance" */
+  gst_amf_node_append_field_take_string (node, "tcUrl", uristr, -1);
+
+  if (!publish) {
+    /* "True if proxy is being used." */
+    gst_amf_node_append_field_boolean (node, "fpad", FALSE);
+
+    /* Undocumented. Sent by libavformat. */
+    gst_amf_node_append_field_number (node, "capabilities",
+        15 /* libavformat's magic number */ );
+
+    /* "Indicates what audio codecs the client supports." */
+    gst_amf_node_append_field_number (node, "audioCodecs",
+        GST_RTMP_AUDIOCODECS);
+
+    /* "Indicates what video codecs are supported." */
+    gst_amf_node_append_field_number (node, "videoCodecs",
+        GST_RTMP_VIDEOCODECS);
+
+    /* "Indicates what special video functions are supported." */
+    gst_amf_node_append_field_number (node, "videoFunction",
+        GST_RTMP_VIDEOFUNCTION);
+
+    /* "URL of the web page from where the SWF file was loaded."
+     * XXX: libavformat sends "pageUrl" here, if provided. */
+  }
 
   gst_rtmp_connection_send_command (data->connection, send_connect_done,
       task, 0, "connect", node, NULL);
