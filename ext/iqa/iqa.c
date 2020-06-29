@@ -88,6 +88,7 @@ enum
   PROP_0,
   PROP_DO_SSIM,
   PROP_SSIM_ERROR_THRESHOLD,
+  PROP_MODE,
   PROP_LAST,
 };
 
@@ -137,7 +138,41 @@ gst_iqa_child_proxy_init (gpointer g_iface, gpointer iface_data)
   iface->get_children_count = gst_iqa_child_proxy_get_children_count;
 }
 
+/**
+ * GstIqaMode:
+ * @GST_IQA_MODE_STRICT: Strict checks of the frames is enabled, this for
+ * example implies that an error will be posted in case all the streams don't
+ * have the exact same number of frames.
+ *
+ * Since: 1.18
+ */
+typedef enum
+{
+  GST_IQA_MODE_STRICT = (1 << 1),
+} GstIqaMode;
 
+#define GST_TYPE_IQA_MODE (gst_iqa_mode_flags_get_type())
+static GType
+gst_iqa_mode_flags_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {GST_IQA_MODE_STRICT, "Strict comparison of frames.", "strict"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("GstIqaMode", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+/* GstIqa */
 #define gst_iqa_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIqa, gst_iqa, GST_TYPE_VIDEO_AGGREGATOR,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY, gst_iqa_child_proxy_init));
@@ -331,6 +366,16 @@ gst_iqa_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
         if (!res)
           goto failed;
       }
+    } else if ((self->mode & GST_IQA_MODE_STRICT) && ref_frame) {
+      GST_OBJECT_UNLOCK (vagg);
+
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          ("All sources are supposed to have the same number of buffers"
+              " but got no buffer matching %" GST_PTR_FORMAT " on pad: %"
+              GST_PTR_FORMAT, outbuf, pad), (NULL));
+
+      GST_OBJECT_LOCK (vagg);
+      break;
     }
   }
 
@@ -367,6 +412,11 @@ _set_property (GObject * object, guint prop_id, const GValue * value,
       self->ssim_threshold = g_value_get_double (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_MODE:
+      GST_OBJECT_LOCK (self);
+      self->mode = g_value_get_flags (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -388,6 +438,11 @@ _get_property (GObject * object,
     case PROP_SSIM_ERROR_THRESHOLD:
       GST_OBJECT_LOCK (self);
       g_value_set_double (value, self->ssim_threshold);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_MODE:
+      GST_OBJECT_LOCK (self);
+      g_value_set_flags (value, self->mode);
       GST_OBJECT_UNLOCK (self);
       break;
     default:
@@ -426,6 +481,20 @@ gst_iqa_class_init (GstIqaClass * klass)
           " A value < 0.0 means 'disabled'.",
           -1.0, G_MAXDOUBLE, DEFAULT_DSSIM_ERROR_THRESHOLD, G_PARAM_READWRITE));
 #endif
+
+  /**
+   * iqa:mode:
+   *
+   * Controls the frame comparison mode.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_flags ("mode", "IQA mode",
+          "Controls the frame comparison mode.", GST_TYPE_IQA_MODE,
+          0, G_PARAM_READWRITE));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_IQA_MODE, 0);
 
   gst_element_class_set_static_metadata (gstelement_class, "Iqa",
       "Filter/Analyzer/Video",
