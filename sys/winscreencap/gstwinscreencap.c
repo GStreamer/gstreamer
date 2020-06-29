@@ -72,6 +72,8 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 #ifdef HAVE_DXGI_CAP
+  GST_DEBUG_CATEGORY_INIT (gst_dxgi_screen_cap_src_debug,
+      "dxgiscreencapsrc", 0, "DirectX DXGI screen capture source");
   gst_dxgi_screen_cap_src_register (plugin, GST_RANK_NONE);
 #endif
 
