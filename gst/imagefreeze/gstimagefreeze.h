@@ -63,6 +63,11 @@ struct _GstImageFreeze
 
   gboolean allow_replace;
 
+  gboolean is_live;
+  gboolean blocked;
+  GCond blocked_cond;
+  GstClockID clock_id;
+
   guint64 offset;
 
   gboolean flushing;

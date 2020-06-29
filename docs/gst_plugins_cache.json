@@ -7341,6 +7341,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "is-live": {
+                        "blurb": "Whether to output a live video stream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "num-buffers": {
                         "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
                         "conditionally-available": false,
