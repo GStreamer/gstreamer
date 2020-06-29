@@ -724,6 +724,34 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
 }
 
 static gboolean
+gst_v4l2_codec_h264_dec_ensure_bitstream (GstV4l2CodecH264Dec * self)
+{
+  if (self->bitstream)
+    goto done;
+
+  self->bitstream = gst_v4l2_codec_allocator_alloc (self->sink_allocator);
+
+  if (!self->bitstream) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
+        ("Not enough memory to decode H264 stream."), (NULL));
+    return FALSE;
+  }
+
+  if (!gst_memory_map (self->bitstream, &self->bitstream_map, GST_MAP_WRITE)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+        ("Could not access bitstream memory for writing"), (NULL));
+    g_clear_pointer (&self->bitstream, gst_memory_unref);
+    return FALSE;
+  }
+
+done:
+  /* We use this field to track how much we have written */
+  self->bitstream_map.size = 0;
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
@@ -733,26 +761,8 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
   if (!self->sink_allocator)
     return FALSE;
 
-  /* Ensure we have a bitstream to write into */
-  if (!self->bitstream) {
-    self->bitstream = gst_v4l2_codec_allocator_alloc (self->sink_allocator);
-
-    if (!self->bitstream) {
-      GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
-          ("Not enough memory to decode H264 stream."), (NULL));
-      return FALSE;
-    }
-
-    if (!gst_memory_map (self->bitstream, &self->bitstream_map, GST_MAP_WRITE)) {
-      GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
-          ("Could not access bitstream memory for writing"), (NULL));
-      g_clear_pointer (&self->bitstream, gst_memory_unref);
-      return FALSE;
-    }
-  }
-
-  /* We use this field to track how much we have written */
-  self->bitstream_map.size = 0;
+  if (!gst_v4l2_codec_h264_dec_ensure_bitstream (self))
+    return FALSE;
 
   gst_v4l2_codec_h264_dec_fill_pps (self, slice->header.pps);
   gst_v4l2_codec_h264_dec_fill_scaling_matrix (self, slice->header.pps);
