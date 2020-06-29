@@ -208,6 +208,9 @@ init_set_data_frame_value (void)
 
   set_data_frame_value = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
       (gpointer) data, size, 0, size, bytes, (GDestroyNotify) g_bytes_unref);
+  GST_MINI_OBJECT_FLAG_SET (set_data_frame_value,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
   gst_amf_node_free (node);
 }
 
