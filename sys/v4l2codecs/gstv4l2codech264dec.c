@@ -900,6 +900,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   GstBuffer *buffer;
   GstFlowReturn flow_ret;
   gsize bytesused;
+  gboolean ret = FALSE;
 
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
@@ -936,7 +937,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   if (!request) {
     GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
         ("Failed to allocate a media request object."), (NULL));
-    goto fail;
+    goto done;
   }
 
   gst_h264_picture_set_user_data (picture, request,
@@ -950,7 +951,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     else
       GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
           ("No more picture buffer available."), (NULL));
-    goto fail;
+    goto done;
   }
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
@@ -964,7 +965,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
           G_N_ELEMENTS (control))) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream parameters."), (NULL));
-    goto fail;
+    goto done;
   }
 
   bytesused = self->bitstream_map.size;
@@ -975,28 +976,27 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
           picture->system_frame_number, bytesused, flags)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream data."), (NULL));
-    goto fail;
+    goto done;
   }
 
   if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
           picture->system_frame_number)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the picture buffer."), (NULL));
-    goto fail;
+    goto done;
   }
 
   if (!gst_v4l2_request_queue (request)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the decode request."), (NULL));
-    goto fail;
+    goto done;
   }
 
-  gst_v4l2_codec_h264_dec_reset_picture (self);
-  return TRUE;
+  ret = TRUE;
 
-fail:
+done:
   gst_v4l2_codec_h264_dec_reset_picture (self);
-  return FALSE;
+  return ret;
 }
 
 static gboolean
