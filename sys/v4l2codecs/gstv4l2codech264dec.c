@@ -813,13 +813,30 @@ fail:
   return FALSE;
 }
 
+static gboolean
+gst_v4l2_codec_h264_dec_wait (GstV4l2CodecH264Dec * self,
+    GstV4l2Request * request)
+{
+  gint ret = gst_v4l2_request_poll (request, GST_SECOND);
+  if (ret == 0) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoding frame took too long"), (NULL));
+    return FALSE;
+  } else if (ret < 0) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoding request failed: %s", g_strerror (errno)), (NULL));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstV4l2Request *request = gst_h264_picture_get_user_data (picture);
-  gint ret;
   guint32 frame_num;
   GstVideoCodecFrame *frame, *other_frame;
   GstH264Picture *other_pic;
@@ -830,16 +847,8 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
   if (gst_v4l2_request_is_done (request))
     goto finish_frame;
 
-  ret = gst_v4l2_request_poll (request, GST_SECOND);
-  if (ret == 0) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoding frame took too long"), (NULL));
-    return GST_FLOW_ERROR;
-  } else if (ret < 0) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoding request failed: %s", g_strerror (errno)), (NULL));
-    return GST_FLOW_ERROR;
-  }
+  if (!gst_v4l2_codec_h264_dec_wait (self, request))
+    return FALSE;
 
   while (TRUE) {
     if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
