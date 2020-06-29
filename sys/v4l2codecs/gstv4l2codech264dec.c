@@ -948,7 +948,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     GstH264Picture * picture, guint flags)
 {
   GstVideoCodecFrame *frame;
-  GstV4l2Request *request;
+  GstV4l2Request *prev_request, *request;
   gsize bytesused;
   gboolean ret = FALSE;
 
@@ -990,8 +990,6 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
-  gst_h264_picture_set_user_data (picture, request,
-      (GDestroyNotify) gst_v4l2_request_free);
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
@@ -1026,10 +1024,22 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
+  prev_request = gst_h264_picture_get_user_data (picture);
+  if (prev_request) {
+    if (!gst_v4l2_codec_h264_dec_wait (self, prev_request))
+      goto done;
+    gst_v4l2_request_set_done (prev_request);
+  }
+
+  gst_h264_picture_set_user_data (picture, g_steal_pointer (&request),
+      (GDestroyNotify) gst_v4l2_request_free);
   ret = TRUE;
 
 done:
+  if (request)
+    gst_v4l2_request_free (request);
   gst_v4l2_codec_h264_dec_reset_picture (self);
+
   return ret;
 }
 
