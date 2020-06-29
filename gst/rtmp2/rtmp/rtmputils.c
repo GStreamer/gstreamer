@@ -200,7 +200,6 @@ gst_rtmp_output_stream_write_all_buffer_async (GOutputStream * stream,
   g_task_set_task_data (task, data, write_all_buffer_data_free);
 
   if (!gst_buffer_map (buffer, &data->map, GST_MAP_READ)) {
-    GST_ERROR ("Failed to map %" GST_PTR_FORMAT, buffer);
     g_task_return_new_error (task, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
         "Failed to map buffer for reading");
     g_object_unref (task);
