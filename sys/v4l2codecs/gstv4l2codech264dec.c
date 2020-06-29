@@ -142,7 +142,7 @@ gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
 
   GST_INFO_OBJECT (self, "Opened H264 %s decoder %s",
       is_frame_based (self) ? "frame based" : "slice based",
-      needs_start_codes (self) ? "using start-codes" : "withouth start-codes");
+      needs_start_codes (self) ? "using start-codes" : "without start-codes");
   gst_h264_decoder_set_process_ref_pic_lists (GST_H264_DECODER (self),
       is_slice_based (self));
 
