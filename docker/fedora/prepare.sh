@@ -41,6 +41,8 @@ dnf install -y \
     glslc \
     gtk3 \
     gtk3-devel \
+    gtest \
+    gtest-devel \
     graphene \
     graphene-devel \
     gsl \
