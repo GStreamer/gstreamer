@@ -901,13 +901,44 @@ gst_v4l2_codec_h264_dec_reset_picture (GstV4l2CodecH264Dec * self)
 }
 
 static gboolean
+gst_v4l2_codec_h264_dec_ensure_output_buffer (GstV4l2CodecH264Dec * self,
+    GstVideoCodecFrame * frame)
+{
+  GstBuffer *buffer;
+  GstFlowReturn flow_ret;
+
+  if (frame->output_buffer)
+    return TRUE;
+
+  flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
+      &buffer, NULL);
+  if (flow_ret != GST_FLOW_OK) {
+    if (flow_ret == GST_FLOW_FLUSHING)
+      GST_DEBUG_OBJECT (self, "Frame decoding aborted, we are flushing.");
+    else
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+          ("No more picture buffer available."), (NULL));
+    return FALSE;
+  }
+
+  if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
+          frame->system_frame_number)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+        ("Driver did not accept the picture buffer."), (NULL));
+    gst_buffer_unref (buffer);
+    return FALSE;
+  }
+
+  frame->output_buffer = buffer;
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     GstH264Picture * picture, guint flags)
 {
   GstVideoCodecFrame *frame;
   GstV4l2Request *request;
-  GstBuffer *buffer;
-  GstFlowReturn flow_ret;
   gsize bytesused;
   gboolean ret = FALSE;
 
@@ -952,22 +983,13 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   gst_h264_picture_set_user_data (picture, request,
       (GDestroyNotify) gst_v4l2_request_free);
 
-  flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
-      &buffer, NULL);
-  if (flow_ret != GST_FLOW_OK) {
-    if (flow_ret == GST_FLOW_FLUSHING)
-      GST_DEBUG_OBJECT (self, "Frame decoding aborted, we are flushing.");
-    else
-      GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
-          ("No more picture buffer available."), (NULL));
-    goto done;
-  }
-
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
   g_return_val_if_fail (frame, FALSE);
-  g_warn_if_fail (frame->output_buffer == NULL);
-  frame->output_buffer = buffer;
+
+  if (!gst_v4l2_codec_h264_dec_ensure_output_buffer (self, frame))
+    goto done;
+
   gst_video_codec_frame_unref (frame);
 
   if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
@@ -985,13 +1007,6 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
           picture->system_frame_number, bytesused, flags)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream data."), (NULL));
-    goto done;
-  }
-
-  if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
-          picture->system_frame_number)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
-        ("Driver did not accept the picture buffer."), (NULL));
     goto done;
   }
 
