@@ -186,6 +186,16 @@ variables:
     - export LOCAL_GST_CI_IMAGE="$CI_REGISTRY/$CI_PROJECT_NAMESPACE/gst-ci/$REPO_SUFFIX:$TAG"
     - export GST_UPSTREAM_IMAGE="$CI_REGISTRY/$GST_UPSTREAM_REPO/$REPO_SUFFIX:$TAG"
 
+    # check if the docker registry is enabled, else the variable will be missing
+    - |
+      if [[ -z "$CI_REGISTRY_IMAGE" ]]
+      then
+        echo "ERROR! Looks like your repository/fork has disabled Docker Registries."
+        echo "Pleae enable them by following the documentation from here:"
+        echo "https://docs.gitlab.com/ee/user/packages/container_registry/#enable-the-container-registry-for-your-project"
+        exit 1
+      fi
+
     # Newer versions of podman/buildah try to set overlayfs mount options when
     # using the vfs driver, and this causes errors.
     - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
