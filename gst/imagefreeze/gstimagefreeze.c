@@ -576,6 +576,7 @@ gst_image_freeze_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
          * can according to the negotiated framerate */
         gst_query_set_latency (query, FALSE, 0, GST_CLOCK_TIME_NONE);
       }
+      ret = TRUE;
       break;
     default:
       ret = FALSE;
