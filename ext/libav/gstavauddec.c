@@ -701,7 +701,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   gst_avpacket_init (&packet, data, size);
 
   if (!packet.size)
-    goto done;
+    goto unmap;
 
   if (avcodec_send_packet (ffmpegdec->context, &packet) < 0) {
     goto send_packet_failed;
@@ -722,13 +722,14 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     }
   } while (got_frame);
 
-  gst_buffer_unmap (inbuf, &map);
-  gst_buffer_unref (inbuf);
-
   if (is_header || got_any_frames) {
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
   }
+
+unmap:
+  gst_buffer_unmap (inbuf, &map);
+  gst_buffer_unref (inbuf);
 
 done:
   return ret;
@@ -747,7 +748,7 @@ not_negotiated:
 send_packet_failed:
   {
     GST_WARNING_OBJECT (ffmpegdec, "decoding error");
-    goto done;
+    goto unmap;
   }
 }
 
