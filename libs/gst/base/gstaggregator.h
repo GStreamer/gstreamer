@@ -340,9 +340,18 @@ struct _GstAggregatorClass {
    */
   GstFlowReturn     (*finish_buffer_list) (GstAggregator    * aggregator,
                                            GstBufferList    * bufferlist);
+  /**
+   * GstAggregatorClass::peek_next_sample:
+   *
+   * See gst_aggregator_peek_next_sample().
+   *
+   * Since: 1.18
+   */
+  GstSample *       (*peek_next_sample)         (GstAggregator *aggregator,
+                                                 GstAggregatorPad * aggregator_pad);
 
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING_LARGE-4];
+  gpointer          _gst_reserved[GST_PADDING_LARGE-5];
 };
 
 /************************************
@@ -403,6 +412,13 @@ GstClockTime    gst_aggregator_simple_get_next_time (GstAggregator              
 GST_BASE_API
 void            gst_aggregator_update_segment       (GstAggregator                * self,
                                                      const GstSegment             * segment);
+
+GST_BASE_API
+GstSample     * gst_aggregator_peek_next_sample     (GstAggregator *self,
+                                                     GstAggregatorPad * pad);
+
+GST_BASE_API
+void            gst_aggregator_selected_samples     (GstAggregator                * self);
 
 /**
  * GstAggregatorStartTimeSelection:
