@@ -709,7 +709,7 @@ tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
     strncpy (stream->language, language, 4);
     stream->language[3] = 0;
   } else {
-    strcpy (stream->language, "eng");
+    stream->language[0] = 0;
   }
 
   return stream;
