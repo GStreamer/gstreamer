@@ -375,6 +375,13 @@ GST_VIDEO_API
 gboolean gst_video_decoder_get_needs_format (GstVideoDecoder * dec);
 
 GST_VIDEO_API
+void     gst_video_decoder_set_needs_sync_point (GstVideoDecoder * dec,
+                                                 gboolean enabled);
+
+GST_VIDEO_API
+gboolean gst_video_decoder_get_needs_sync_point (GstVideoDecoder * dec);
+
+GST_VIDEO_API
 void     gst_video_decoder_set_latency (GstVideoDecoder *decoder,
 					GstClockTime min_latency,
 					GstClockTime max_latency);

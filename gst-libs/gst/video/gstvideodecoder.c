@@ -377,9 +377,13 @@ struct _GstVideoDecoderPrivate
   /* combine with base_picture_number, framerate and calcs to yield (presentation) ts */
   GstClockTime base_timestamp;
 
-  int distance_from_sync;
   /* Properties */
   gboolean discard_corrupted_frames;
+
+  /* Key unit related state */
+  gboolean needs_sync_point;
+  /* -1 if we saw no sync point yet */
+  guint64 distance_from_sync;
 
   guint32 system_frame_number;
   guint32 decode_frame_number;
@@ -2180,6 +2184,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     priv->proportion = 0.5;
     priv->decode_flags_override = FALSE;
     GST_OBJECT_UNLOCK (decoder);
+    priv->distance_from_sync = -1;
   }
 
   if (full) {
@@ -3571,8 +3576,6 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
    * implementation, or it doesn't) */
   g_return_val_if_fail (decoder_class->handle_frame != NULL, GST_FLOW_ERROR);
 
-  frame->distance_from_sync = priv->distance_from_sync;
-  priv->distance_from_sync++;
   frame->pts = GST_BUFFER_PTS (frame->input_buffer);
   frame->dts = GST_BUFFER_DTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
@@ -3582,15 +3585,30 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   /* FIXME upstream can be quite wrong about the keyframe aspect,
    * so we could be going off here as well,
    * maybe let subclass decide if it really is/was a keyframe */
-  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) &&
-      GST_CLOCK_TIME_IS_VALID (frame->pts)
-      && GST_CLOCK_TIME_IS_VALID (frame->dts)) {
-    /* just in case they are not equal as might ideally be,
-     * e.g. quicktime has a (positive) delta approach */
-    priv->pts_delta = frame->pts - frame->dts;
-    GST_DEBUG_OBJECT (decoder, "PTS delta %d ms",
-        (gint) (priv->pts_delta / GST_MSECOND));
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
+    priv->distance_from_sync = 0;
+
+    if (GST_CLOCK_TIME_IS_VALID (frame->pts)
+        && GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+      /* just in case they are not equal as might ideally be,
+       * e.g. quicktime has a (positive) delta approach */
+      priv->pts_delta = frame->pts - frame->dts;
+      GST_DEBUG_OBJECT (decoder, "PTS delta %d ms",
+          (gint) (priv->pts_delta / GST_MSECOND));
+    }
+  } else {
+    if (priv->needs_sync_point && priv->distance_from_sync == -1) {
+      GST_WARNING_OBJECT (decoder,
+          "Subclass requires a sync point but we didn't receive one yet, discarding input");
+      GST_OBJECT_UNLOCK (decoder);
+      gst_video_decoder_release_frame (decoder, frame);
+      return GST_FLOW_OK;
+    }
+
+    priv->distance_from_sync++;
   }
+
+  frame->distance_from_sync = priv->distance_from_sync;
 
   frame->abidata.ABI.ts = frame->dts;
   frame->abidata.ABI.ts2 = frame->pts;
@@ -4682,4 +4700,50 @@ gst_video_decoder_set_use_default_pad_acceptcaps (GstVideoDecoder * decoder,
     gboolean use)
 {
   decoder->priv->use_default_pad_acceptcaps = use;
+}
+
+/**
+ * gst_video_decoder_set_needs_sync_point:
+ * @dec: a #GstVideoDecoder
+ * @enabled: new state
+ *
+ * Configures whether the decoder requires a sync point before it starts
+ * outputting data in the beginning. If enabled, the base class will discard
+ * all non-sync point frames in the beginning and after a flush and does not
+ * pass it to the subclass.
+ *
+ * If the first frame is not a sync point, the base class will request a sync
+ * point via the force-key-unit event.
+ *
+ * Since: 1.20
+ */
+void
+gst_video_decoder_set_needs_sync_point (GstVideoDecoder * dec, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_VIDEO_DECODER (dec));
+
+  dec->priv->needs_sync_point = enabled;
+}
+
+/**
+ * gst_video_decoder_get_needs_sync_point:
+ * @dec: a #GstVideoDecoder
+ *
+ * Queries if the decoder requires a sync point before it starts outputting
+ * data in the beginning.
+ *
+ * Returns: %TRUE if a sync point is required in the beginning.
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_video_decoder_get_needs_sync_point (GstVideoDecoder * dec)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (dec), FALSE);
+
+  result = dec->priv->needs_sync_point;
+
+  return result;
 }
