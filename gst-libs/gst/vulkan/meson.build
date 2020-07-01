@@ -265,7 +265,11 @@ if host_system == 'android'
 endif
 
 if not vulkan_windowing
-  warning('No Windowing system found.  vulkansink will not work')
+  if get_option('vulkan').enabled()
+    error('No Windowing system found. vulkansink will not work')
+  else
+    message('No Windowing system found. vulkansink will not work')
+  endif
 endif
 
 # Only needed for the vulkan plugin, but doesn't make sense to build
