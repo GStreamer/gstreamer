@@ -195,6 +195,60 @@ GST_START_TEST (framerate_changes)
 
 GST_END_TEST;
 
+GST_START_TEST (framerate_invalid_format)
+{
+  GstHarness *h;
+  GstBuffer *buffer;
+  GstMapInfo map;
+  guint i, j;
+
+  const gchar *failure_caps[] = {
+    /* all of these combinations should fail with different framerates */
+    "closedcaption/x-cea-608,format=(string)raw",
+    "closedcaption/x-cea-608,format=(string)s334-1a",
+    "closedcaption/x-cea-708,format=(string)cc_data",
+  };
+
+  h = gst_harness_new ("ccconverter");
+
+  buffer = gst_buffer_new_and_alloc (3);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  map.data[0] = 0x00;
+  map.data[1] = 0x80;
+  map.data[2] = 0x80;
+  gst_buffer_unmap (buffer, &map);
+
+  /* framerate conversion failure cases */
+  for (i = 0; i < G_N_ELEMENTS (failure_caps); i++) {
+    for (j = 0; j < G_N_ELEMENTS (failure_caps); j++) {
+      gchar *srccaps, *sinkcaps;
+
+      srccaps =
+          g_strdup_printf ("%s%s", failure_caps[i],
+          ",framerate=(fraction)30/1");
+      sinkcaps =
+          g_strdup_printf ("%s%s", failure_caps[i],
+          ",framerate=(fraction)60/1");
+
+      GST_INFO ("attempting conversion from %s", srccaps);
+      GST_INFO ("                        to %s", sinkcaps);
+
+      gst_harness_set_src_caps_str (h, srccaps);
+      gst_harness_set_sink_caps_str (h, sinkcaps);
+      fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buffer)),
+          GST_FLOW_NOT_NEGOTIATED);
+
+      g_free (srccaps);
+      g_free (sinkcaps);
+    }
+  }
+
+  gst_buffer_unref (buffer);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static void
 check_conversion_multiple (guint n_in, const guint8 ** in, guint * in_len,
     guint n_out, const guint8 ** out, guint * out_len, const gchar * in_caps,
@@ -903,6 +957,7 @@ ccextractor_suite (void)
   tcase_add_test (tc, cdp_requires_framerate);
   tcase_add_test (tc, framerate_passthrough);
   tcase_add_test (tc, framerate_changes);
+  tcase_add_test (tc, framerate_invalid_format);
   tcase_add_test (tc, convert_cea608_raw_cea608_s334_1a);
   tcase_add_test (tc, convert_cea608_raw_cea708_cc_data);
   tcase_add_test (tc, convert_cea608_raw_cea708_cdp);

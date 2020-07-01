@@ -111,7 +111,16 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
          * We can convert everything to CEA608.
          */
         res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
-        res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+        if (framerate) {
+          /* we can only keep the same framerate for non-cdp */
+          GstCaps *tmp;
+
+          tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+          gst_caps_set_value (tmp, "framerate", framerate);
+          res = gst_caps_merge (res, tmp);
+        } else {
+          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+        }
       } else {
         /* SINK: We produce downstream caps
          *
@@ -211,7 +220,16 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
         } else {
           /* Downstream wants not only CDP, we can do everything */
           res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
-          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+          if (framerate) {
+            /* we can only keep the same framerate for non-cdp */
+            GstCaps *tmp;
+
+            tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+            gst_caps_set_value (tmp, "framerate", framerate);
+            res = gst_caps_merge (res, tmp);
+          } else {
+            res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+          }
         }
       } else {
         GstCaps *tmp;
@@ -254,7 +272,16 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           res = gst_caps_merge (res, tmp);
         }
         /* We can always convert CEA708 to all non-CDP formats */
-        res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+        if (framerate) {
+          /* we can only keep the same framerate for non-cdp */
+          GstCaps *tmp;
+
+          tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+          gst_caps_set_value (tmp, "framerate", framerate);
+          res = gst_caps_merge (res, tmp);
+        } else {
+          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+        }
       }
     } else {
       g_assert_not_reached ();
