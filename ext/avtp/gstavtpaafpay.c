@@ -66,17 +66,23 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GType
 gst_avtp_aaf_tstamp_mode_get_type (void)
 {
-  static GType tstamp_mode_type = 0;
   static const GEnumValue tstamp_mode_types[] = {
     {GST_AVTP_AAF_TSTAMP_MODE_NORMAL, "Normal timestamping mode", "normal"},
     {GST_AVTP_AAF_TSTAMP_MODE_SPARSE, "Sparse timestamping mode", "sparse"},
     {0, NULL, NULL},
   };
+  static gsize id = 0;
 
-  tstamp_mode_type =
-      g_enum_register_static ("GstAvtpAafTstampMode", tstamp_mode_types);
+  if (g_once_init_enter (&id)) {
+    GType new_type;
 
-  return tstamp_mode_type;
+    new_type =
+        g_enum_register_static ("GstAvtpAafTstampMode", tstamp_mode_types);
+
+    g_once_init_leave (&id, (gsize) new_type);
+  }
+
+  return (GType) id;
 }
 
 #define gst_avtp_aaf_pay_parent_class parent_class
@@ -129,6 +135,8 @@ gst_avtp_aaf_pay_class_init (GstAvtpAafPayClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (avtpaafpay_debug, "avtpaafpay", 0,
       "AAF AVTP Payloader");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AVTP_AAF_TSTAMP_MODE, 0);
 }
 
 static void

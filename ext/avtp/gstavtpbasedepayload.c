@@ -97,6 +97,8 @@ gst_avtp_base_depayload_class_init (GstAvtpBaseDepayloadClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (avtpbasedepayload_debug, "avtpbasedepayload", 0,
       "Base class for AVTP depayloaders");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AVTP_BASE_DEPAYLOAD, 0);
 }
 
 static void

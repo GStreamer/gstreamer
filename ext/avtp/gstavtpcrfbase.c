@@ -112,6 +112,8 @@ gst_avtp_crf_base_class_init (GstAvtpCrfBaseClass * klass)
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
   GST_DEBUG_CATEGORY_INIT (avtpcrfbase_debug, "avtpcrfbase", 0, "CRF Base");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AVTP_CRF_BASE, 0);
 }
 
 static void

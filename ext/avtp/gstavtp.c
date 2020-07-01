@@ -20,7 +20,7 @@
  */
 
 /**
- * plugin-avtp:
+ * plugin-gstavtp:
  *
  * ## Audio Video Transport Protocol (AVTP) Plugin
  *
@@ -226,6 +226,7 @@
  * a malicious software do it for Denial of Service attempts, or other
  * compromises attempts.
  *
+ * Since: 1.18
  */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
