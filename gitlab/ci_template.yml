@@ -521,7 +521,7 @@ check fedora:
   variables:
     TEST_SUITE: "check.gst*"
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-examples|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -530,7 +530,7 @@ integration testsuites fedora:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --check-bugs --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX}"
     TEST_SUITE: "validate ges"
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-omx|gst-plugins-rs)$/'
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-examples|gst-omx|gst-plugins-rs)$/'
 
 gstreamer-full:
   extends: 'build static fedora x86_64'
