@@ -40,18 +40,18 @@ G_BEGIN_DECLS
 
 typedef struct _GstAvtpAafPay GstAvtpAafPay;
 typedef struct _GstAvtpAafPayClass GstAvtpAafPayClass;
-typedef enum _GstAvtpAafTstampMode GstAvtpAafTstampMode;
+typedef enum _GstAvtpAafTimestampMode GstAvtpAafTimestampMode;
 
-enum _GstAvtpAafTstampMode {
-  GST_AVTP_AAF_TSTAMP_MODE_NORMAL,
-  GST_AVTP_AAF_TSTAMP_MODE_SPARSE,
+enum _GstAvtpAafTimestampMode {
+  GST_AVTP_AAF_TIMESTAMP_MODE_NORMAL,
+  GST_AVTP_AAF_TIMESTAMP_MODE_SPARSE,
 };
 
 struct _GstAvtpAafPay
 {
   GstAvtpBasePayload payload;
 
-  GstAvtpAafTstampMode tstamp_mode;
+  GstAvtpAafTimestampMode timestamp_mode;
 
   GstMemory *header;
   gint channels;

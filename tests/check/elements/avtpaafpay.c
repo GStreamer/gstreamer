@@ -30,7 +30,7 @@ setup_harness (void)
   GstHarness *h;
 
   h = gst_harness_new_parse
-      ("avtpaafpay streamid=0xDEADC0DEDEADC0DE mtt=1000000 tu=1000000 processing-deadline=1000000 tstamp-mode=normal");
+      ("avtpaafpay streamid=0xDEADC0DEDEADC0DE mtt=1000000 tu=1000000 processing-deadline=1000000 timestamp-mode=normal");
   gst_harness_set_src_caps_str (h,
       "audio/x-raw,format=S16BE,rate=48000,channels=2,layout=interleaved");
 
@@ -101,8 +101,8 @@ GST_START_TEST (test_properties)
   g_object_get (G_OBJECT (element), "tu", &val_uint, NULL);
   fail_unless (val_uint == tu);
 
-  g_object_set (G_OBJECT (element), "tstamp-mode", tstamp_mode, NULL);
-  g_object_get (G_OBJECT (element), "tstamp-mode", &val_uint, NULL);
+  g_object_set (G_OBJECT (element), "timestamp-mode", tstamp_mode, NULL);
+  g_object_get (G_OBJECT (element), "timestamp-mode", &val_uint, NULL);
   fail_unless (val_uint == tstamp_mode);
 
   g_object_set (G_OBJECT (element), "processing-deadline", processing_deadline,

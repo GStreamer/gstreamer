@@ -172,7 +172,7 @@
  *     define the correct presentation time of the packets on the AVTP listener
  *     side. It should be as low as possible (zero if possible).
  *
- *   * tstamp-mode (avtpaafpay): AAF timestamping mode, as defined in AVTP spec.
+ *   * timestamp-mode (avtpaafpay): AAF timestamping mode, as defined in AVTP spec.
  *
  *   * mtu (avtpcvfpay): Maximum Transmit Unit of the underlying network, used
  *     to determine when to fragment a CVF packet and how big it should be.

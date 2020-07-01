@@ -44,12 +44,12 @@
 GST_DEBUG_CATEGORY_STATIC (avtpaafpay_debug);
 #define GST_CAT_DEFAULT (avtpaafpay_debug)
 
-#define DEFAULT_TSTAMP_MODE GST_AVTP_AAF_TSTAMP_MODE_NORMAL
+#define DEFAULT_TIMESTAMP_MODE GST_AVTP_AAF_TIMESTAMP_MODE_NORMAL
 
 enum
 {
   PROP_0,
-  PROP_TSTAMP_MODE,
+  PROP_TIMESTAMP_MODE,
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -62,13 +62,13 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "layout = (string) interleaved")
     );
 
-#define GST_TYPE_AVTP_AAF_TSTAMP_MODE (gst_avtp_aaf_tstamp_mode_get_type())
+#define GST_TYPE_AVTP_AAF_TIMESTAMP_MODE (gst_avtp_aaf_timestamp_mode_get_type())
 static GType
-gst_avtp_aaf_tstamp_mode_get_type (void)
+gst_avtp_aaf_timestamp_mode_get_type (void)
 {
-  static const GEnumValue tstamp_mode_types[] = {
-    {GST_AVTP_AAF_TSTAMP_MODE_NORMAL, "Normal timestamping mode", "normal"},
-    {GST_AVTP_AAF_TSTAMP_MODE_SPARSE, "Sparse timestamping mode", "sparse"},
+  static const GEnumValue timestamp_mode_types[] = {
+    {GST_AVTP_AAF_TIMESTAMP_MODE_NORMAL, "Normal timestamping mode", "normal"},
+    {GST_AVTP_AAF_TIMESTAMP_MODE_SPARSE, "Sparse timestamping mode", "sparse"},
     {0, NULL, NULL},
   };
   static gsize id = 0;
@@ -77,7 +77,8 @@ gst_avtp_aaf_tstamp_mode_get_type (void)
     GType new_type;
 
     new_type =
-        g_enum_register_static ("GstAvtpAafTstampMode", tstamp_mode_types);
+        g_enum_register_static ("GstAvtpAafTimestampMode",
+        timestamp_mode_types);
 
     g_once_init_leave (&id, (gsize) new_type);
   }
@@ -112,10 +113,10 @@ gst_avtp_aaf_pay_class_init (GstAvtpAafPayClass * klass)
   object_class->set_property = gst_avtp_aaf_pay_set_property;
   object_class->get_property = gst_avtp_aaf_pay_get_property;
 
-  g_object_class_install_property (object_class, PROP_TSTAMP_MODE,
-      g_param_spec_enum ("tstamp-mode", "Timestamping Mode",
-          "AAF timestamping mode", GST_TYPE_AVTP_AAF_TSTAMP_MODE,
-          DEFAULT_TSTAMP_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+  g_object_class_install_property (object_class, PROP_TIMESTAMP_MODE,
+      g_param_spec_enum ("timestamp-mode", "Timestamping Mode",
+          "AAF timestamping mode", GST_TYPE_AVTP_AAF_TIMESTAMP_MODE,
+          DEFAULT_TIMESTAMP_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PAUSED));
 
   element_class->change_state =
@@ -136,13 +137,13 @@ gst_avtp_aaf_pay_class_init (GstAvtpAafPayClass * klass)
   GST_DEBUG_CATEGORY_INIT (avtpaafpay_debug, "avtpaafpay", 0,
       "AAF AVTP Payloader");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_AVTP_AAF_TSTAMP_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AVTP_AAF_TIMESTAMP_MODE, 0);
 }
 
 static void
 gst_avtp_aaf_pay_init (GstAvtpAafPay * avtpaafpay)
 {
-  avtpaafpay->tstamp_mode = DEFAULT_TSTAMP_MODE;
+  avtpaafpay->timestamp_mode = DEFAULT_TIMESTAMP_MODE;
 
   avtpaafpay->header = NULL;
   avtpaafpay->channels = 0;
@@ -160,8 +161,8 @@ gst_avtp_aaf_pay_set_property (GObject * object, guint prop_id,
   GST_DEBUG_OBJECT (avtpaafpay, "prop_id %u", prop_id);
 
   switch (prop_id) {
-    case PROP_TSTAMP_MODE:
-      avtpaafpay->tstamp_mode = g_value_get_enum (value);
+    case PROP_TIMESTAMP_MODE:
+      avtpaafpay->timestamp_mode = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -178,8 +179,8 @@ gst_avtp_aaf_pay_get_property (GObject * object, guint prop_id,
   GST_DEBUG_OBJECT (avtpaafpay, "prop_id %u", prop_id);
 
   switch (prop_id) {
-    case PROP_TSTAMP_MODE:
-      g_value_set_enum (value, avtpaafpay->tstamp_mode);
+    case PROP_TIMESTAMP_MODE:
+      g_value_set_enum (value, avtpaafpay->timestamp_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -230,7 +231,8 @@ gst_avtp_aaf_pay_change_state (GstElement * element, GstStateChange transition)
       res = avtp_aaf_pdu_set (pdu, AVTP_AAF_FIELD_STREAM_ID,
           avtpbasepayload->streamid);
       g_assert (res == 0);
-      res = avtp_aaf_pdu_set (pdu, AVTP_AAF_FIELD_SP, avtpaafpay->tstamp_mode);
+      res =
+          avtp_aaf_pdu_set (pdu, AVTP_AAF_FIELD_SP, avtpaafpay->timestamp_mode);
       g_assert (res == 0);
       gst_memory_unmap (mem, &info);
       break;
