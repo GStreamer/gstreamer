@@ -290,12 +290,14 @@ GST_DEBUG_CATEGORY (videodecoder_debug);
 /* properties */
 #define DEFAULT_QOS                 TRUE
 #define DEFAULT_MAX_ERRORS          GST_VIDEO_DECODER_MAX_ERRORS
+#define DEFAULT_DISCARD_CORRUPTED_FRAMES FALSE
 
 enum
 {
   PROP_0,
   PROP_QOS,
   PROP_MAX_ERRORS,
+  PROP_DISCARD_CORRUPTED_FRAMES
 };
 
 struct _GstVideoDecoderPrivate
@@ -376,6 +378,8 @@ struct _GstVideoDecoderPrivate
   GstClockTime base_timestamp;
 
   int distance_from_sync;
+  /* Properties */
+  gboolean discard_corrupted_frames;
 
   guint32 system_frame_number;
   guint32 decode_frame_number;
@@ -590,6 +594,21 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
       g_param_spec_int ("max-errors", "Max errors",
           "Max consecutive decoder errors before returning flow error",
           -1, G_MAXINT, DEFAULT_MAX_ERRORS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoDecoder:discard-corrupted-frames:
+   *
+   * If set to %TRUE the decoder will discard frames that are marked as
+   * corrupted instead of outputting them.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_DISCARD_CORRUPTED_FRAMES,
+      g_param_spec_boolean ("discard-corrupted-frames",
+          "Discard Corrupted Frames",
+          "Discard frames marked as corrupted instead of outputting them",
+          DEFAULT_DISCARD_CORRUPTED_FRAMES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
@@ -861,6 +880,9 @@ gst_video_decoder_get_property (GObject * object, guint property_id,
     case PROP_MAX_ERRORS:
       g_value_set_int (value, gst_video_decoder_get_max_errors (dec));
       break;
+    case PROP_DISCARD_CORRUPTED_FRAMES:
+      g_value_set_boolean (value, priv->discard_corrupted_frames);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -880,6 +902,9 @@ gst_video_decoder_set_property (GObject * object, guint property_id,
       break;
     case PROP_MAX_ERRORS:
       gst_video_decoder_set_max_errors (dec, g_value_get_int (value));
+      break;
+    case PROP_DISCARD_CORRUPTED_FRAMES:
+      priv->discard_corrupted_frames = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -3149,7 +3174,19 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   /* no buffer data means this frame is skipped */
   if (!frame->output_buffer || GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (frame)) {
-    GST_DEBUG_OBJECT (decoder, "skipping frame %" GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (decoder,
+        "skipping frame %" GST_TIME_FORMAT " because not output was produced",
+        GST_TIME_ARGS (frame->pts));
+    goto done;
+  }
+
+  if (priv->discard_corrupted_frames
+      && (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
+              GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED)
+          || GST_BUFFER_FLAG_IS_SET (frame->output_buffer,
+              GST_BUFFER_FLAG_CORRUPTED))) {
+    GST_DEBUG_OBJECT (decoder,
+        "skipping frame %" GST_TIME_FORMAT " because it is corrupted",
         GST_TIME_ARGS (frame->pts));
     goto done;
   }
