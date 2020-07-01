@@ -98,6 +98,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     GST_LOG_OBJECT (self, "No caption pad, passing through video");
     video_buf = self->current_video_buffer;
     self->current_video_buffer = NULL;
+    gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self));
     goto done;
   }
 
@@ -202,6 +203,8 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     g_array_append_val (self->current_frame_captions, caption_data);
     gst_aggregator_pad_drop_buffer (caption_pad);
   } while (TRUE);
+
+  gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self));
 
   if (self->current_frame_captions->len > 0) {
     guint i;
@@ -592,6 +595,57 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
   return ret;
 }
 
+static GstSample *
+gst_cc_combiner_peek_next_sample (GstAggregator * agg,
+    GstAggregatorPad * aggpad)
+{
+  GstAggregatorPad *caption_pad, *video_pad;
+  GstCCCombiner *self = GST_CCCOMBINER (agg);
+  GstSample *res = NULL;
+
+  caption_pad =
+      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
+          (self), "caption"));
+  video_pad =
+      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
+          (self), "sink"));
+
+  if (aggpad == caption_pad) {
+    if (self->current_frame_captions->len > 0) {
+      GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
+      GstBufferList *buflist = gst_buffer_list_new ();
+      guint i;
+
+      for (i = 0; i < self->current_frame_captions->len; i++) {
+        CaptionData *caption_data =
+            &g_array_index (self->current_frame_captions, CaptionData, i);
+        gst_buffer_list_add (buflist, gst_buffer_ref (caption_data->buffer));
+      }
+
+      res = gst_sample_new (NULL, caps, &aggpad->segment, NULL);
+      gst_caps_unref (caps);
+
+      gst_sample_set_buffer_list (res, buflist);
+      gst_buffer_list_unref (buflist);
+    }
+  } else if (aggpad == video_pad) {
+    if (self->current_video_buffer) {
+      GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
+      res = gst_sample_new (self->current_video_buffer,
+          caps, &aggpad->segment, NULL);
+      gst_caps_unref (caps);
+    }
+  }
+
+  if (caption_pad)
+    gst_object_unref (caption_pad);
+
+  if (video_pad)
+    gst_object_unref (video_pad);
+
+  return res;
+}
+
 static void
 gst_cc_combiner_class_init (GstCCCombinerClass * klass)
 {
@@ -627,6 +681,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
   aggregator_class->get_next_time = gst_aggregator_simple_get_next_time;
   aggregator_class->src_query = gst_cc_combiner_src_query;
   aggregator_class->sink_query = gst_cc_combiner_sink_query;
+  aggregator_class->peek_next_sample = gst_cc_combiner_peek_next_sample;
 
   GST_DEBUG_CATEGORY_INIT (gst_cc_combiner_debug, "cccombiner",
       0, "Closed Caption combiner");

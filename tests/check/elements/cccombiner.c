@@ -66,6 +66,36 @@ GST_START_TEST (no_captions)
 
 GST_END_TEST;
 
+GstBuffer *expected_video_buffer = NULL;
+GstBuffer *expected_caption_buffer = NULL;
+
+static void
+samples_selected_cb (GstAggregator * agg)
+{
+  GstBufferList *buflist;
+  GstPad *caption_pad =
+      gst_element_get_static_pad (GST_ELEMENT (agg), "caption");
+  GstPad *video_pad = gst_element_get_static_pad (GST_ELEMENT (agg), "sink");
+  GstSample *video_sample =
+      gst_aggregator_peek_next_sample (agg, GST_AGGREGATOR_PAD (video_pad));
+  GstSample *captions_sample =
+      gst_aggregator_peek_next_sample (agg, GST_AGGREGATOR_PAD (caption_pad));
+
+  fail_unless (video_sample != NULL);
+  fail_unless (captions_sample != NULL);
+
+  fail_unless (gst_sample_get_buffer (video_sample) == expected_video_buffer);
+  gst_sample_unref (video_sample);
+
+  buflist = gst_sample_get_buffer_list (captions_sample);
+  fail_unless_equals_int (gst_buffer_list_length (buflist), 1);
+  fail_unless (gst_buffer_list_get (buflist, 0) == expected_caption_buffer);
+  gst_sample_unref (captions_sample);
+
+  gst_object_unref (caption_pad);
+  gst_object_unref (video_pad);
+}
+
 GST_START_TEST (captions_and_eos)
 {
   GstHarness *h, *h2;
@@ -73,12 +103,17 @@ GST_START_TEST (captions_and_eos)
   GstPad *caption_pad;
   GstCaps *caps;
   GstVideoCaptionMeta *meta;
+  GstBuffer *second_video_buf, *second_caption_buf;
 
   h = gst_harness_new_with_padnames ("cccombiner", "sink", "src");
   h2 = gst_harness_new_with_element (h->element, NULL, NULL);
   caption_pad = gst_element_get_request_pad (h->element, "caption");
   gst_harness_add_element_sink_pad (h2, caption_pad);
   gst_object_unref (caption_pad);
+
+  g_object_set (h->element, "emit-signals", TRUE, NULL);
+  g_signal_connect (h->element, "samples-selected",
+      G_CALLBACK (samples_selected_cb), NULL);
 
   gst_harness_set_src_caps_str (h, foo_bar_caps.string);
   gst_harness_set_src_caps_str (h2, cea708_cc_data_caps.string);
@@ -87,11 +122,13 @@ GST_START_TEST (captions_and_eos)
   buf = gst_buffer_new_and_alloc (128);
   GST_BUFFER_PTS (buf) = 0;
   GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  expected_video_buffer = buf;
   gst_harness_push (h, buf);
 
   buf = gst_buffer_new_and_alloc (128);
   GST_BUFFER_PTS (buf) = 0;
   GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  expected_caption_buffer = buf;
   gst_harness_push (h2, buf);
 
   /* And another one: the first video buffer should be retrievable
@@ -99,16 +136,21 @@ GST_START_TEST (captions_and_eos)
   buf = gst_buffer_new_and_alloc (128);
   GST_BUFFER_PTS (buf) = 40 * GST_MSECOND;
   GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  second_video_buf = buf;
   gst_harness_push (h, buf);
 
   buf = gst_buffer_new_and_alloc (128);
   GST_BUFFER_PTS (buf) = 40 * GST_MSECOND;
   GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  second_caption_buf = buf;
   gst_harness_push (h2, buf);
 
   /* Pull the first output buffer */
   outbuf = gst_harness_pull (h);
   fail_unless (outbuf != NULL);
+
+  expected_video_buffer = second_video_buf;
+  expected_caption_buffer = second_caption_buf;
 
   meta = gst_buffer_get_video_caption_meta (outbuf);
   fail_unless (meta != NULL);
