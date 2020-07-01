@@ -827,6 +827,47 @@ gst_event_parse_gap (GstEvent * event, GstClockTime * timestamp,
 }
 
 /**
+ * gst_event_set_gap_flags:
+ * @event: a #GstEvent of type #GST_EVENT_GAP
+ * @flags: a #GstGapFlags
+ *
+ * Sets @flags on @event to give additional information about the reason for
+ * the #GST_EVENT_GAP.
+ *
+ * Since: 1.20
+ */
+void
+gst_event_set_gap_flags (GstEvent * event, GstGapFlags flags)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
+  g_return_if_fail (gst_event_is_writable (event));
+
+  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (GAP_FLAGS), GST_TYPE_GAP_FLAGS, flags, NULL);
+}
+
+/**
+ * gst_event_parse_gap_flags:
+ * @event: a #GstEvent of type #GST_EVENT_GAP
+ * @flags: (out): a #GstGapFlags or %NULL
+ *
+ * Retrieve the gap flags that may have been set on a gap event with
+ * gst_event_set_gap_flags().
+ *
+ * Since: 1.20
+ */
+void
+gst_event_parse_gap_flags (GstEvent * event, GstGapFlags * flags)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
+
+  gst_structure_id_get (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (GAP_FLAGS), GST_TYPE_GAP_FLAGS, flags, NULL);
+}
+
+/**
  * gst_event_new_caps:
  * @caps: (transfer none): a #GstCaps
  *
