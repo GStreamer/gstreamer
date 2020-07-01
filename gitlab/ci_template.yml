@@ -1064,7 +1064,7 @@ documentation:
     - '.global_ci_policy'
     - '.gst_build_ccache_vars'
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-sharp|gst-integration-testsuites|gst-omx|gst-plugins-rs|gst-python)$/'
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-integration-testsuites|gst-plugins-rs|gst-python)$/'
   needs:
     - "manifest"
   stage: integrate
@@ -1079,7 +1079,7 @@ documentation:
   - |
     python3 -c "import os, subprocess, sys
     subprojects = [os.environ['CI_PROJECT_NAME']]
-    if subprojects[0]  == 'gst-ci':
+    if subprojects[0]  in ['gst-ci', 'gst-build']:
         subprojects = ['gstreamer', 'gst-plugins-ugly', 'gst-omx', 'gst-plugins-good', 'gst-plugins-base', 'gstreamer-vaapi', 'gst-libav', 'gst-editing-services', 'gst-rtsp-server', 'gst-plugins-bad',]
 
     diffsdir = '../plugins-cache-diffs'
