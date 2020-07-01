@@ -536,6 +536,8 @@ gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     .flags = V4L2_BUF_FLAG_REQUEST_FD | flags,
   };
 
+  GST_TRACE_OBJECT (self, "Queueing bitstream buffer %i", buf.index);
+
   if (self->mplane) {
     buf.length = 1;
     buf.m.planes = &plane;
@@ -565,6 +567,8 @@ gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self, GstBuffer * buffer,
     .memory = V4L2_MEMORY_MMAP,
     .index = gst_v4l2_codec_buffer_get_index (buffer),
   };
+
+  GST_TRACE_OBJECT (self, "Queuing picture buffer %i", buf.index);
 
   if (self->mplane) {
     buf.length = gst_buffer_n_memory (buffer);
@@ -611,6 +615,8 @@ gst_v4l2_decoder_dequeue_sink (GstV4l2Decoder * self)
     return FALSE;
   }
 
+  GST_TRACE_OBJECT (self, "Dequeued bitstream buffer %i", buf.index);
+
   return TRUE;
 }
 
@@ -636,6 +642,9 @@ gst_v4l2_decoder_dequeue_src (GstV4l2Decoder * self, guint32 * out_frame_num)
   }
 
   *out_frame_num = buf.timestamp.tv_usec;
+
+  GST_TRACE_OBJECT (self, "Dequeued picture buffer %i", buf.index);
+
   return TRUE;
 }
 
@@ -835,7 +844,7 @@ gst_v4l2_request_free (GstV4l2Request * request)
     return;
   }
 
-  GST_DEBUG_OBJECT (decoder, "Recycling request %p.", request);
+  GST_TRACE_OBJECT (decoder, "Recycling request %p.", request);
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_REINIT, NULL);
   if (ret < 0) {
@@ -855,7 +864,7 @@ gst_v4l2_request_queue (GstV4l2Request * request)
 {
   gint ret;
 
-  GST_DEBUG_OBJECT (request->decoder, "Queuing request %p.", request);
+  GST_TRACE_OBJECT (request->decoder, "Queuing request %p.", request);
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_QUEUE, NULL);
   if (ret < 0) {
