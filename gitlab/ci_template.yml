@@ -1070,7 +1070,7 @@ documentation:
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-  - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc@0171b68bcb540d2cd74d833f652bf95ebdc4d74f
+  - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc@95aa79758f64281de3f0e6d2efde45108d8cd2ea
   - *gst_build
   - ./gst-uninstalled.py ninja -C build/ plugins_doc_caches
   - |
