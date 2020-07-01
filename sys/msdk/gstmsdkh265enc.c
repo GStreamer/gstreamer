@@ -48,7 +48,7 @@ enum
   PROP_MAX_SLICE_SIZE,
 };
 
-#define PROP_LOWPOWER_DEFAULT           FALSE
+#define PROP_LOWPOWER_DEFAULT           -1
 #define PROP_TILE_ROW_DEFAULT           1
 #define PROP_TILE_COL_DEFAULT           1
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
@@ -266,7 +266,8 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   }
 
   encoder->param.mfx.LowPower =
-      (h265enc->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF);
+      (h265enc->lowpower == 1 ? MFX_CODINGOPTION_ON : (h265enc->lowpower ==
+          0 ? MFX_CODINGOPTION_OFF : MFX_CODINGOPTION_UNKNOWN));
 
   return TRUE;
 }
@@ -388,7 +389,7 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOW_POWER:
-      thiz->lowpower = g_value_get_boolean (value);
+      thiz->lowpower = g_value_get_int (value);
       break;
 
     case PROP_TILE_ROW:
@@ -422,7 +423,7 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_LOCK (thiz);
   switch (prop_id) {
     case PROP_LOW_POWER:
-      g_value_set_boolean (value, thiz->lowpower);
+      g_value_set_int (value, thiz->lowpower);
       break;
 
     case PROP_TILE_ROW:
@@ -524,8 +525,10 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
   gst_msdkenc_install_common_properties (encoder_class);
 
   g_object_class_install_property (gobject_class, PROP_LOW_POWER,
-      g_param_spec_boolean ("low-power", "Low power", "Enable low power mode",
-          PROP_LOWPOWER_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("low-power", "Low power",
+          "Enable low power mode(-1: default, 0: disable, 1: enable)",
+          -1, 1, PROP_LOWPOWER_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TILE_ROW,
       g_param_spec_uint ("num-tile-rows", "number of rows for tiled encoding",
