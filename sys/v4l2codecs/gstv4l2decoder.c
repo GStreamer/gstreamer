@@ -63,6 +63,7 @@ struct _GstV4l2Decoder
   gint media_fd;
   gint video_fd;
   GstQueueArray *request_pool;
+  GstQueueArray *pending_requests;
 
   enum v4l2_buf_type src_buf_type;
   enum v4l2_buf_type sink_buf_type;
@@ -104,6 +105,7 @@ static void
 gst_v4l2_decoder_init (GstV4l2Decoder * self)
 {
   self->request_pool = gst_queue_array_new (16);
+  self->pending_requests = gst_queue_array_new (16);
 }
 
 static void
@@ -223,8 +225,18 @@ gst_v4l2_decoder_streamon (GstV4l2Decoder * self, GstPadDirection direction)
 gboolean
 gst_v4l2_decoder_streamoff (GstV4l2Decoder * self, GstPadDirection direction)
 {
-  gint ret;
+  GstV4l2Request *pending_req;
   guint32 type = direction_to_buffer_type (self, direction);
+  gint ret;
+
+  if (direction == GST_PAD_SRC) {
+    /* STREAMOFF have the effect of cancelling all requests and unqueuing all
+     * buffers, so clear the pending request list */
+    while ((pending_req = gst_queue_array_pop_head (self->pending_requests))) {
+      g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
+      pending_req->pending = FALSE;
+    }
+  }
 
   ret = ioctl (self->video_fd, VIDIOC_STREAMOFF, &type);
   if (ret < 0) {
@@ -838,7 +850,14 @@ gst_v4l2_request_free (GstV4l2Request * request)
   request->decoder = NULL;
 
   if (request->pending) {
+    gint idx;
+
     GST_DEBUG_OBJECT (decoder, "Freeing pending request %p.", request);
+
+    idx = gst_queue_array_find (decoder->pending_requests, NULL, NULL);
+    if (idx >= 0)
+      gst_queue_array_drop_element (decoder->pending_requests, idx);
+
     gst_v4l2_request_free (request);
     g_object_unref (decoder);
     return;
@@ -874,6 +893,7 @@ gst_v4l2_request_queue (GstV4l2Request * request)
   }
 
   request->pending = TRUE;
+  gst_queue_array_push_tail (request->decoder->pending_requests, request);
 
   return TRUE;
 }
@@ -888,8 +908,23 @@ void
 gst_v4l2_request_set_done (GstV4l2Request * request)
 {
   if (request->bitstream) {
-    gst_v4l2_decoder_dequeue_sink (request->decoder);
-    g_clear_pointer (&request->bitstream, gst_memory_unref);
+    GstV4l2Decoder *dec = request->decoder;
+    GstV4l2Request *pending_req;
+
+    while ((pending_req = gst_queue_array_pop_head (dec->pending_requests))) {
+      gst_v4l2_decoder_dequeue_sink (request->decoder);
+      g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
+
+      if (pending_req == request)
+        break;
+    }
+
+    /* Pending request should always be found in the fifo */
+    if (pending_req != request) {
+      g_warning ("Pending request not found in the pending list.");
+      gst_v4l2_decoder_dequeue_sink (request->decoder);
+      g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
+    }
   }
 
   request->pending = FALSE;
