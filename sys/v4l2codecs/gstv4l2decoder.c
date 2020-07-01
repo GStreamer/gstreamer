@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <gst/base/base.h>
+
 GST_DEBUG_CATEGORY (v4l2_decoder_debug);
 #define GST_CAT_DEFAULT v4l2_decoder_debug
 
@@ -60,7 +62,7 @@ struct _GstV4l2Decoder
   gboolean opened;
   gint media_fd;
   gint video_fd;
-  GstAtomicQueue *request_pool;
+  GstQueueArray *request_pool;
 
   enum v4l2_buf_type src_buf_type;
   enum v4l2_buf_type sink_buf_type;
@@ -93,7 +95,7 @@ gst_v4l2_decoder_finalize (GObject * obj)
 
   g_free (self->media_device);
   g_free (self->video_device);
-  gst_atomic_queue_unref (self->request_pool);
+  gst_queue_array_free (self->request_pool);
 
   G_OBJECT_CLASS (gst_v4l2_decoder_parent_class)->finalize (obj);
 }
@@ -101,7 +103,7 @@ gst_v4l2_decoder_finalize (GObject * obj)
 static void
 gst_v4l2_decoder_init (GstV4l2Decoder * self)
 {
-  self->request_pool = gst_atomic_queue_new (16);
+  self->request_pool = gst_queue_array_new (16);
 }
 
 static void
@@ -188,7 +190,7 @@ gst_v4l2_decoder_close (GstV4l2Decoder * self)
 {
   GstV4l2Request *request;
 
-  while ((request = gst_atomic_queue_pop (self->request_pool)))
+  while ((request = gst_queue_array_pop_head (self->request_pool)))
     gst_v4l2_request_free (request);
 
   if (self->media_fd)
@@ -786,7 +788,7 @@ gst_v4l2_decoder_register (GstPlugin * plugin,
 GstV4l2Request *
 gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self)
 {
-  GstV4l2Request *request = gst_atomic_queue_pop (self->request_pool);
+  GstV4l2Request *request = gst_queue_array_pop_head (self->request_pool);
   gint ret;
 
   if (!request) {
@@ -844,7 +846,7 @@ gst_v4l2_request_free (GstV4l2Request * request)
     return;
   }
 
-  gst_atomic_queue_push (decoder->request_pool, request);
+  gst_queue_array_push_tail (decoder->request_pool, request);
   g_object_unref (decoder);
 }
 
