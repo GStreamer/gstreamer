@@ -116,9 +116,11 @@ variables:
     if [ -s upstream_sha ]
     then
 
+      echo "Checking if $LOCAL_IMAGE is up to date"
       # ensure we use the same image from upstream
       diff upstream_sha local_sha && exit 0 || true
 
+      echo "Copying image from gstreamer/gst-ci to local registry"
       # copy the original image into the current project registry namespace
       # we do 2 attempts with skopeo copy at most
       skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
@@ -131,13 +133,16 @@ variables:
       exit 0
     fi
 
+    set +x
+
     # if the local ci fork repo has an image, ensure we use the same
     if [ -s local_gst_ci_sha ]
     then
-
+      echo "Checking if $LOCAL_GST_CI_IMAGE is up to date"
       # ensure we use the same image from upstream
       diff local_gst_ci_sha local_sha && exit 0 || true
 
+      echo "Copying image from $CI_PROJECT_NAMESPACE/gst-ci to local registry"
       # copy the original image into the current project registry namespace
       # we do 2 attempts with skopeo copy at most
       skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
@@ -153,11 +158,11 @@ variables:
     # if we have a local image but none in the upstream repo, use our
     if [ -s local_sha ]
     then
+      echo "Using $LOCAL_IMAGE"
       exit 0
     fi
   fi
 
-  set +x
 
 # Build docker images from Dockerfiles
 #
