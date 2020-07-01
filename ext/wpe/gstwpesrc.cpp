@@ -30,6 +30,8 @@
  * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
  * wpesrc element.
  *
+ * Since: 1.16
+ *
  * ## Example launch lines
  *
  * |[
@@ -122,25 +124,31 @@ static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
 G_DEFINE_TYPE_WITH_CODE (GstWpeSrc, gst_wpe_src, GST_TYPE_GL_BASE_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_wpe_src_uri_handler_init));
 
+#if ENABLE_SHM_BUFFER_SUPPORT
+#define WPE_RAW_CAPS "; video/x-raw, "          \
+  "format = (string) BGRA, "                    \
+  "width = " GST_VIDEO_SIZE_RANGE ", "          \
+  "height = " GST_VIDEO_SIZE_RANGE ", "         \
+  "framerate = " GST_VIDEO_FPS_RANGE ", "       \
+  "pixel-aspect-ratio = (fraction)1/1"
+#else
+#define WPE_RAW_CAPS ""
+#endif
+
+#define WPE_BASIC_CAPS "video/x-raw(memory:GLMemory), " \
+  "format = (string) RGBA, "                            \
+  "width = " GST_VIDEO_SIZE_RANGE ", "                  \
+  "height = " GST_VIDEO_SIZE_RANGE ", "                 \
+  "framerate = " GST_VIDEO_FPS_RANGE ", "               \
+  "pixel-aspect-ratio = (fraction)1/1, texture-target = (string)2D"
+
+#define WPE_SRC_CAPS WPE_BASIC_CAPS WPE_RAW_CAPS
+#define WPE_SRC_DOC_CAPS WPE_BASIC_CAPS "; video/x-raw, format = (string) BGRA"
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw(memory:GLMemory), "
-        "format = (string) RGBA, "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE ", "
-        "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "pixel-aspect-ratio = (fraction)1/1, texture-target = (string)2D;"
-#if ENABLE_SHM_BUFFER_SUPPORT
-        "video/x-raw, "
-        "format = (string) BGRA, "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE ", "
-        "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "pixel-aspect-ratio = (fraction)1/1"
-#endif
-        )
-    );
+    GST_STATIC_CAPS (WPE_SRC_CAPS));
 
 static GstFlowReturn
 gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer ** buf)
@@ -561,6 +569,8 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstGLBaseSrcClass *gl_base_src_class = GST_GL_BASE_SRC_CLASS (klass);
   GstBaseSrcClass *base_src_class = GST_BASE_SRC_CLASS (klass);
+  GstPadTemplate *tmpl;
+  GstCaps *doc_caps;
 
   gobject_class->set_property = gst_wpe_src_set_property;
   gobject_class->get_property = gst_wpe_src_get_property;
@@ -579,7 +589,8 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
       "Creates a video stream from a WPE browser",
       "Philippe Normand <philn@igalia.com>, Žan Doberšek <zdobersek@igalia.com>");
 
-  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  tmpl = gst_static_pad_template_get (&src_factory);
+  gst_element_class_add_pad_template (gstelement_class, tmpl);
 
   base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_wpe_src_fixate);
   base_src_class->create = GST_DEBUG_FUNCPTR (gst_wpe_src_create);
@@ -591,6 +602,10 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
   gl_base_src_class->gl_stop = GST_DEBUG_FUNCPTR (gst_wpe_src_gl_stop);
   gl_base_src_class->fill_gl_memory =
       GST_DEBUG_FUNCPTR (gst_wpe_src_fill_memory);
+
+  doc_caps = gst_caps_from_string (WPE_SRC_DOC_CAPS);
+  gst_pad_template_set_documentation_caps (tmpl, doc_caps);
+  gst_clear_caps (&doc_caps);
 
   /**
    * GstWpeSrc::configure-web-view:
