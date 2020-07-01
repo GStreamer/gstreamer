@@ -32,10 +32,15 @@
 #include "gstvc1parse.h"
 #include "gsth265parse.h"
 
+GST_DEBUG_CATEGORY (videoparseutils_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (videoparseutils_debug, "videoparseutils", 0,
+      "video parse utilities");
 
   ret |= gst_element_register (plugin, "h263parse",
       GST_RANK_PRIMARY + 1, GST_TYPE_H263_PARSE);

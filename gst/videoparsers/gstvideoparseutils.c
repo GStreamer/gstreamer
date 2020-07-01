@@ -29,6 +29,9 @@
 #include <gst/base/gstbitreader.h>
 #include <gstvideoparseutils.h>
 
+GST_DEBUG_CATEGORY_EXTERN (videoparseutils_debug);
+#define GST_CAT_DEFAULT videoparseutils_debug
+
 static gboolean gst_video_parse_utils_parse_bar (const guint8 * data,
     gsize size, guint field, GstVideoBarData * bar);
 
