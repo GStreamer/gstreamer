@@ -318,14 +318,25 @@ gst_cc_converter_fixate_caps (GstBaseTransform * base,
       GST_BASE_TRANSFORM_CLASS (parent_class)->fixate_caps (base, direction,
       incaps, outcaps);
 
-  /* remove any framerate that might've been added by basetransform due to
-   * intersecting with downstream */
   s = gst_caps_get_structure (incaps, 0);
   framerate = gst_structure_get_value (s, "framerate");
   outcaps = gst_caps_make_writable (outcaps);
   t = gst_caps_get_structure (outcaps, 0);
   if (!framerate) {
+    /* remove any output framerate that might've been added by basetransform
+     * due to intersecting with downstream */
     gst_structure_remove_field (t, "framerate");
+  } else {
+    /* or passthrough the input framerate if possible */
+    guint n, d;
+
+    n = gst_value_get_fraction_numerator (framerate);
+    d = gst_value_get_fraction_denominator (framerate);
+
+    if (gst_structure_has_field (t, "framerate"))
+      gst_structure_fixate_field_nearest_fraction (t, "framerate", n, d);
+    else
+      gst_structure_set (t, "framerate", GST_TYPE_FRACTION, n, d, NULL);
   }
 
   GST_DEBUG_OBJECT (self,

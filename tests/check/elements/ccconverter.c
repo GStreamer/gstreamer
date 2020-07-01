@@ -142,9 +142,20 @@ GST_START_TEST (framerate_passthrough)
   gst_harness_set_sink_caps_str (h,
       "closedcaption/x-cea-708,format=(string)cc_data,framerate=(fraction)30/1");
 
-  fail_unless_equals_int (gst_harness_push (h, buffer),
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buffer)),
       GST_FLOW_NOT_NEGOTIATED);
 
+  /* Now try cdp -> cc_data with framerate passthrough */
+  gst_harness_set_src_caps_str (h,
+      "closedcaption/x-cea-708,format=(string)cdp,framerate=(fraction)30/1");
+
+  gst_harness_set_sink_caps_str (h,
+      "closedcaption/x-cea-708,format=(string)cc_data");
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buffer)),
+      GST_FLOW_OK);
+
+  gst_buffer_unref (buffer);
   gst_harness_teardown (h);
 }
 
