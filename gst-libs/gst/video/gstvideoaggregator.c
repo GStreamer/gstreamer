@@ -213,6 +213,22 @@ gst_video_aggregator_pad_clean_frame (GstVideoAggregatorPad * pad,
   }
 }
 
+static GstSample *
+gst_video_aggregator_peek_next_sample (GstAggregator * agg,
+    GstAggregatorPad * aggpad)
+{
+  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (aggpad);
+  GstSample *res = NULL;
+
+  if (vaggpad->priv->buffer) {
+    GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
+    res = gst_sample_new (vaggpad->priv->buffer, caps, &aggpad->segment, NULL);
+    gst_caps_unref (caps);
+  }
+
+  return res;
+}
+
 static void
 gst_video_aggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
 {
@@ -451,8 +467,8 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
     if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
       pad->priv->convert =
           gst_video_converter_new (&vpad->info, &pad->priv->conversion_info,
-          pad->priv->converter_config ? gst_structure_copy (pad->
-              priv->converter_config) : NULL);
+          pad->priv->converter_config ? gst_structure_copy (pad->priv->
+              converter_config) : NULL);
       if (!pad->priv->convert) {
         GST_WARNING_OBJECT (pad, "No path found for conversion");
         return FALSE;
@@ -1564,7 +1580,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
 
-      if (end_time >= output_start_running_time
+      if (end_time > output_start_running_time
           && start_time < output_end_running_time) {
         GST_DEBUG_OBJECT (pad,
             "Taking new buffer with start time %" GST_TIME_FORMAT,
@@ -1754,6 +1770,9 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
   /* Sync pad properties to the stream time */
   gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), sync_pad_values,
       &out_stream_time);
+
+  /* Let the application know that input buffers have been staged */
+  gst_aggregator_selected_samples (agg);
 
   /* Convert all the frames the subclass has before aggregating */
   gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), prepare_frames, NULL);
@@ -2639,6 +2658,7 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
       gst_video_aggregator_default_negotiated_src_caps;
   agg_class->decide_allocation = gst_video_aggregator_decide_allocation;
   agg_class->propose_allocation = gst_video_aggregator_propose_allocation;
+  agg_class->peek_next_sample = gst_video_aggregator_peek_next_sample;
 
   klass->find_best_format = gst_video_aggregator_find_best_format;
   klass->create_output_buffer = gst_video_aggregator_create_output_buffer;

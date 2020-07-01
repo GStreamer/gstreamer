@@ -2166,6 +2166,88 @@ GST_START_TEST (test_gap_events)
 
 GST_END_TEST;
 
+static GstBuffer *expected_selected_buffer = NULL;
+
+static void
+samples_selected_cb (GstAggregator * agg, gint * called)
+{
+  GstPad *pad;
+  GstSample *sample;
+
+  pad = gst_element_get_static_pad (GST_ELEMENT (agg), "sink_0");
+  sample = gst_aggregator_peek_next_sample (agg, GST_AGGREGATOR_PAD (pad));
+  fail_unless (sample != NULL);
+  fail_unless (gst_sample_get_buffer (sample) == expected_selected_buffer);
+  gst_sample_unref (sample);
+  gst_object_unref (pad);
+
+  *called += 1;
+}
+
+static void
+buffer_consumed_cb (GstAggregator * agg, GstBuffer * unused, gint * called)
+{
+  *called += 1;
+}
+
+GST_START_TEST (test_signals)
+{
+  gint samples_selected_called = 0;
+  gint buffer_consumed_called = 0;
+  GstBuffer *buf;
+  GstElement *comp = gst_element_factory_make ("compositor", NULL);
+  GstHarness *h = gst_harness_new_with_element (comp, "sink_%u", "src");
+  GstPad *pad;
+
+  g_object_set (comp, "emit-signals", TRUE, NULL);
+  g_signal_connect (comp, "samples-selected", G_CALLBACK (samples_selected_cb),
+      &samples_selected_called);
+
+  pad = gst_element_get_static_pad (comp, "sink_0");
+  g_object_set (pad, "emit-signals", TRUE, NULL);
+  g_signal_connect (pad, "buffer-consumed", G_CALLBACK (buffer_consumed_cb),
+      &buffer_consumed_called);
+  gst_object_unref (pad);
+
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw, format=RGBA, width=1, height=1, framerate=1/1");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw, format=RGBA, width=1, height=1, framerate=2/1");
+
+  gst_harness_play (h);
+
+  buf = gst_buffer_new_allocate (NULL, 4, NULL);
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DURATION (buf) = GST_SECOND / 2;
+  expected_selected_buffer = buf;
+  gst_harness_push (h, buf);
+  buf = gst_harness_pull (h);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (samples_selected_called, 1);
+  fail_unless_equals_int (buffer_consumed_called, 1);
+
+  /* This next buffer should be discarded */
+  buf = gst_buffer_new_allocate (NULL, 4, NULL);
+  GST_BUFFER_PTS (buf) = GST_SECOND / 2;
+  GST_BUFFER_DURATION (buf) = GST_SECOND / 2;
+  gst_harness_push (h, buf);
+
+  buf = gst_buffer_new_allocate (NULL, 4, NULL);
+  GST_BUFFER_PTS (buf) = GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_SECOND / 2;
+  expected_selected_buffer = buf;
+  gst_harness_push (h, buf);
+  buf = gst_harness_pull (h);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (samples_selected_called, 2);
+  fail_unless_equals_int (buffer_consumed_called, 3);
+
+  gst_harness_teardown (h);
+  gst_object_unref (comp);
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -2205,6 +2287,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3);
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3_unlinked_1);
   tcase_add_test (tc_chain, test_gap_events);
+  tcase_add_test (tc_chain, test_signals);
 
   return s;
 }
