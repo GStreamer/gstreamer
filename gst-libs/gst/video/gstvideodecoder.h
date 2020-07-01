@@ -341,6 +341,23 @@ struct _GstVideoDecoderClass
   gpointer padding[GST_PADDING_LARGE-6];
 };
 
+/**
+ * GstVideoDecoderRequestSyncPointFlags:
+ * @GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT: discard all following
+ *     input until the next sync point.
+ * @GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT: discard all following
+ *     output until the next sync point.
+ *
+ * Flags to be used in combination with gst_video_decoder_request_sync_point().
+ * See the function documentation for more details.
+ *
+ * Since: 1.20
+ */
+typedef enum {
+  GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT  = (1<<0),
+  GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT = (1<<1),
+} GstVideoDecoderRequestSyncPointFlags;
+
 GST_VIDEO_API
 GType    gst_video_decoder_get_type (void);
 
@@ -465,6 +482,11 @@ GstFlowReturn    gst_video_decoder_finish_frame (GstVideoDecoder *decoder,
 GST_VIDEO_API
 GstFlowReturn    gst_video_decoder_drop_frame (GstVideoDecoder *dec,
 					       GstVideoCodecFrame *frame);
+
+GST_VIDEO_API
+void             gst_video_decoder_request_sync_point (GstVideoDecoder *dec,
+                                                       GstVideoCodecFrame *frame,
+                                                       GstVideoDecoderRequestSyncPointFlags flags);
 
 GST_VIDEO_API
 void             gst_video_decoder_release_frame (GstVideoDecoder * dec,

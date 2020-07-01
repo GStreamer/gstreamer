@@ -290,13 +290,20 @@ GST_DEBUG_CATEGORY (videodecoder_debug);
 /* properties */
 #define DEFAULT_QOS                 TRUE
 #define DEFAULT_MAX_ERRORS          GST_VIDEO_DECODER_MAX_ERRORS
+#define DEFAULT_MIN_FORCE_KEY_UNIT_INTERVAL 0
 #define DEFAULT_DISCARD_CORRUPTED_FRAMES FALSE
+
+/* Used for request_sync_point_frame_number. These are out of range for the
+ * frame numbers and can be given special meaning */
+#define REQUEST_SYNC_POINT_PENDING G_MAXUINT + 1
+#define REQUEST_SYNC_POINT_UNSET G_MAXUINT64
 
 enum
 {
   PROP_0,
   PROP_QOS,
   PROP_MAX_ERRORS,
+  PROP_MIN_FORCE_KEY_UNIT_INTERVAL,
   PROP_DISCARD_CORRUPTED_FRAMES
 };
 
@@ -378,10 +385,14 @@ struct _GstVideoDecoderPrivate
   GstClockTime base_timestamp;
 
   /* Properties */
+  GstClockTime min_force_key_unit_interval;
   gboolean discard_corrupted_frames;
 
   /* Key unit related state */
   gboolean needs_sync_point;
+  GstVideoDecoderRequestSyncPointFlags request_sync_point_flags;
+  guint64 request_sync_point_frame_number;
+  GstClockTime last_force_key_unit_time;
   /* -1 if we saw no sync point yet */
   guint64 distance_from_sync;
 
@@ -598,6 +609,26 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
       g_param_spec_int ("max-errors", "Max errors",
           "Max consecutive decoder errors before returning flow error",
           -1, G_MAXINT, DEFAULT_MAX_ERRORS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoDecoder:min-force-key-unit-interval:
+   *
+   * Minimum interval between force-key-unit events sent upstream by the
+   * decoder. Setting this to 0 will cause every event to be handled, setting
+   * this to %GST_CLOCK_TIME_NONE will cause every event to be ignored.
+   *
+   * See gst_video_event_new_upstream_force_key_unit() for more details about
+   * force-key-unit events.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_MIN_FORCE_KEY_UNIT_INTERVAL,
+      g_param_spec_uint64 ("min-force-key-unit-interval",
+          "Minimum Force Keyunit Interval",
+          "Minimum interval between force-keyunit requests in nanoseconds", 0,
+          G_MAXUINT64, DEFAULT_MIN_FORCE_KEY_UNIT_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -884,6 +915,9 @@ gst_video_decoder_get_property (GObject * object, guint property_id,
     case PROP_MAX_ERRORS:
       g_value_set_int (value, gst_video_decoder_get_max_errors (dec));
       break;
+    case PROP_MIN_FORCE_KEY_UNIT_INTERVAL:
+      g_value_set_uint64 (value, priv->min_force_key_unit_interval);
+      break;
     case PROP_DISCARD_CORRUPTED_FRAMES:
       g_value_set_boolean (value, priv->discard_corrupted_frames);
       break;
@@ -906,6 +940,9 @@ gst_video_decoder_set_property (GObject * object, guint property_id,
       break;
     case PROP_MAX_ERRORS:
       gst_video_decoder_set_max_errors (dec, g_value_get_int (value));
+      break;
+    case PROP_MIN_FORCE_KEY_UNIT_INTERVAL:
+      priv->min_force_key_unit_interval = g_value_get_uint64 (value);
       break;
     case PROP_DISCARD_CORRUPTED_FRAMES:
       priv->discard_corrupted_frames = g_value_get_boolean (value);
@@ -2183,6 +2220,10 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     priv->earliest_time = GST_CLOCK_TIME_NONE;
     priv->proportion = 0.5;
     priv->decode_flags_override = FALSE;
+
+    priv->request_sync_point_flags = 0;
+    priv->request_sync_point_frame_number = REQUEST_SYNC_POINT_UNSET;
+    priv->last_force_key_unit_time = GST_CLOCK_TIME_NONE;
     GST_OBJECT_UNLOCK (decoder);
     priv->distance_from_sync = -1;
   }
@@ -3185,6 +3226,27 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     goto done;
   }
 
+  /* Mark output as corrupted if the subclass requested so and we're either
+   * still before the sync point after the request, or we don't even know the
+   * frame number of the sync point yet (it is 0) */
+  GST_OBJECT_LOCK (decoder);
+  if (frame->system_frame_number <= priv->request_sync_point_frame_number
+      && priv->request_sync_point_frame_number != REQUEST_SYNC_POINT_UNSET) {
+    if (priv->request_sync_point_flags &
+        GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT) {
+      GST_DEBUG_OBJECT (decoder,
+          "marking frame %" GST_TIME_FORMAT
+          " as corrupted because it is still before the sync point",
+          GST_TIME_ARGS (frame->pts));
+      GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
+          GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED);
+    }
+  } else {
+    /* Reset to -1 to mark it as unset now that we've reached the frame */
+    priv->request_sync_point_frame_number = REQUEST_SYNC_POINT_UNSET;
+  }
+  GST_OBJECT_UNLOCK (decoder);
+
   if (priv->discard_corrupted_frames
       && (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
               GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED)
@@ -3588,6 +3650,13 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
     priv->distance_from_sync = 0;
 
+    GST_OBJECT_LOCK (decoder);
+    priv->request_sync_point_flags &=
+        ~GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT;
+    if (priv->request_sync_point_frame_number == REQUEST_SYNC_POINT_PENDING)
+      priv->request_sync_point_frame_number = frame->system_frame_number;
+    GST_OBJECT_UNLOCK (decoder);
+
     if (GST_CLOCK_TIME_IS_VALID (frame->pts)
         && GST_CLOCK_TIME_IS_VALID (frame->dts)) {
       /* just in case they are not equal as might ideally be,
@@ -3597,13 +3666,17 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
           (gint) (priv->pts_delta / GST_MSECOND));
     }
   } else {
-    if (priv->needs_sync_point && priv->distance_from_sync == -1) {
+    GST_OBJECT_LOCK (decoder);
+    if ((priv->needs_sync_point && priv->distance_from_sync == -1)
+        || (priv->request_sync_point_flags &
+            GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT)) {
       GST_WARNING_OBJECT (decoder,
           "Subclass requires a sync point but we didn't receive one yet, discarding input");
       GST_OBJECT_UNLOCK (decoder);
       gst_video_decoder_release_frame (decoder, frame);
       return GST_FLOW_OK;
     }
+    GST_OBJECT_UNLOCK (decoder);
 
     priv->distance_from_sync++;
   }
@@ -4700,6 +4773,82 @@ gst_video_decoder_set_use_default_pad_acceptcaps (GstVideoDecoder * decoder,
     gboolean use)
 {
   decoder->priv->use_default_pad_acceptcaps = use;
+}
+
+/**
+ * gst_video_decoder_request_sync_point:
+ * @dec: a #GstVideoDecoder
+ * @frame: a #GstVideoCodecFrame
+ * @flags: #GstVideoDecoderRequestSyncPointFlags
+ *
+ * Allows the #GstVideoDecoder subclass to request from the base class that
+ * a new sync should be requested from upstream, and that @frame was the frame
+ * when the subclass noticed that a new sync point is required. A reason for
+ * the subclass to do this could be missing reference frames, for example.
+ *
+ * The base class will then request a new sync point from upstream as long as
+ * the time that passed since the last one is exceeding
+ * #GstVideoDecoder:min-force-key-unit-interval.
+ *
+ * The subclass can signal via @flags how the frames until the next sync point
+ * should be handled:
+ *
+ *   * If %GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT is selected then
+ *     all following input frames until the next sync point are discarded.
+ *     This can be useful if the lack of a sync point will prevent all further
+ *     decoding and the decoder implementation is not very robust in handling
+ *     missing references frames.
+ *   * If %GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT is selected
+ *     then all output frames following @frame are marked as corrupted via
+ *     %GST_BUFFER_FLAG_CORRUPTED. Corrupted frames can be automatically
+ *     dropped by the base class, see #GstVideoDecoder:discard-corrupted-frames.
+ *     Subclasses can manually mark frames as corrupted via %GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED
+ *     before calling gst_video_decoder_finish_frame().
+ *
+ * Since: 1.20
+ */
+void
+gst_video_decoder_request_sync_point (GstVideoDecoder * dec,
+    GstVideoCodecFrame * frame, GstVideoDecoderRequestSyncPointFlags flags)
+{
+  GstEvent *fku = NULL;
+  GstVideoDecoderPrivate *priv;
+
+  g_return_if_fail (GST_IS_VIDEO_DECODER (dec));
+  g_return_if_fail (frame != NULL);
+
+  priv = dec->priv;
+
+  GST_OBJECT_LOCK (dec);
+
+  /* Check if we're allowed to send a new force-keyunit event.
+   * frame->deadline is set to the running time of the PTS. */
+  if (priv->min_force_key_unit_interval == 0 ||
+      frame->deadline == GST_CLOCK_TIME_NONE ||
+      (priv->min_force_key_unit_interval != GST_CLOCK_TIME_NONE &&
+          (priv->last_force_key_unit_time == GST_CLOCK_TIME_NONE
+              || (priv->last_force_key_unit_time +
+                  priv->min_force_key_unit_interval >= frame->deadline)))) {
+    GST_DEBUG_OBJECT (dec,
+        "Requesting a new key-unit for frame with PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->pts));
+    fku =
+        gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE, FALSE,
+        0);
+    priv->last_force_key_unit_time = frame->deadline;
+  } else {
+    GST_DEBUG_OBJECT (dec,
+        "Can't request a new key-unit for frame with PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->pts));
+  }
+  priv->request_sync_point_flags |= flags;
+  /* We don't know yet the frame number of the sync point so set it to a
+   * frame number higher than any allowed frame number */
+  priv->request_sync_point_frame_number = REQUEST_SYNC_POINT_PENDING;
+  GST_OBJECT_UNLOCK (dec);
+
+  if (fku)
+    gst_pad_push_event (dec->sinkpad, fku);
 }
 
 /**
