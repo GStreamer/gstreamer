@@ -7918,6 +7918,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_H265:
       case FOURCC_hvc1:
       case FOURCC_hev1:
+      case FOURCC_dvh1:
+      case FOURCC_dvhe:
       case FOURCC_mjp2:
       case FOURCC_encv:
       {
@@ -11064,6 +11066,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_H265:
           case FOURCC_hvc1:
           case FOURCC_hev1:
+          case FOURCC_dvh1:
+          case FOURCC_dvhe:
           {
             gint len = QT_UINT32 (stsd_entry_data) - 0x56;
             const guint8 *hevc_data = stsd_entry_data + 0x56;
@@ -14166,12 +14170,14 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case FOURCC_H264:
     case FOURCC_avc1:
+    case FOURCC_dva1:
       _codec ("H.264 / AVC");
       caps = gst_caps_new_simple ("video/x-h264",
           "stream-format", G_TYPE_STRING, "avc",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case FOURCC_avc3:
+    case FOURCC_dvav:
       _codec ("H.264 / AVC");
       caps = gst_caps_new_simple ("video/x-h264",
           "stream-format", G_TYPE_STRING, "avc3",
@@ -14179,12 +14185,14 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case FOURCC_H265:
     case FOURCC_hvc1:
+    case FOURCC_dvh1:
       _codec ("H.265 / HEVC");
       caps = gst_caps_new_simple ("video/x-h265",
           "stream-format", G_TYPE_STRING, "hvc1",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case FOURCC_hev1:
+    case FOURCC_dvhe:
       _codec ("H.265 / HEVC");
       caps = gst_caps_new_simple ("video/x-h265",
           "stream-format", G_TYPE_STRING, "hev1",
