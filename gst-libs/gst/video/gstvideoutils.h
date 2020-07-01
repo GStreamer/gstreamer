@@ -82,6 +82,7 @@ struct _GstVideoCodecState
  * @GST_VIDEO_CODEC_FRAME_FLAG_SYNC_POINT: is the frame a synchronization point (keyframe)
  * @GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME: should the output frame be made a keyframe
  * @GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS: should the encoder output stream headers
+ * @GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED: the buffer data is corrupted (Since: 1.20)
  *
  * Flags for #GstVideoCodecFrame
  */
@@ -90,7 +91,15 @@ typedef enum
   GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY            = (1<<0),
   GST_VIDEO_CODEC_FRAME_FLAG_SYNC_POINT             = (1<<1),
   GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME         = (1<<2),
-  GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS = (1<<3)
+  GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS = (1<<3),
+  /**
+   * GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED:
+   *
+   * The buffer data is corrupted.
+   *
+   * Since: 1.20
+   */
+  GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED = (1<<4),
 } GstVideoCodecFrameFlags;
 
 /**

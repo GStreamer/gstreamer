@@ -3171,6 +3171,14 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_DISCONT);
   }
 
+  if (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
+          GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED)) {
+    GST_DEBUG_OBJECT (decoder,
+        "marking frame %" GST_TIME_FORMAT " as corrupted",
+        GST_TIME_ARGS (frame->pts));
+    GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_CORRUPTED);
+  }
+
   if (decoder_class->transform_meta) {
     if (G_LIKELY (frame->input_buffer)) {
       CopyMetaData data;
@@ -3485,6 +3493,12 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
   if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
     GST_LOG_OBJECT (decoder, "Marking as sync point");
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
+  }
+
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_CORRUPTED)) {
+    GST_LOG_OBJECT (decoder, "Marking as corrupted");
+    GST_VIDEO_CODEC_FRAME_FLAG_SET (priv->current_frame,
+        GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED);
   }
 
   /* In reverse playback, just capture and queue frames for later processing */
