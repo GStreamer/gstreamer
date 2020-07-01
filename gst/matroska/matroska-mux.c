@@ -2254,6 +2254,8 @@ refuse_caps:
 static gboolean
 gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
+  GstCollectData *data = (GstCollectData *) (pad);
+
   /* There is now (at least) one such alement (kateenc), and I'm going
      to handle it here and claim it works when it can be piped back
      through GStreamer and VLC */
@@ -2365,6 +2367,15 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (pad, "codec_id %s, codec data size %" G_GSIZE_FORMAT,
       GST_STR_NULL (context->codec_id), context->codec_priv_size);
 
+  /* This pad is sparse. Now that we have caps on it, we can tell collectpads
+   * not to actually wait for data when muxing */
+  GST_COLLECT_PADS_STREAM_LOCK (mux->collect);
+  GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_LOCKED);
+  gst_collect_pads_set_waiting (mux->collect, data, FALSE);
+  GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_LOCKED);
+  GST_COLLECT_PADS_STREAM_UNLOCK (mux->collect);
+
+
 exit:
 
   return ret;
@@ -2402,7 +2413,6 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   GstMatroskaCapsFunc capsfunc = NULL;
   GstMatroskaTrackContext *context = NULL;
   gint pad_id;
-  gboolean locked = TRUE;
   const gchar *id = NULL;
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
@@ -2449,7 +2459,6 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     context->name = g_strdup ("Subtitle");
     /* setcaps may only provide proper one a lot later */
     id = "S_SUB_UNKNOWN";
-    locked = FALSE;
   } else {
     GST_WARNING_OBJECT (mux, "This is not our template!");
     return NULL;
@@ -2462,7 +2471,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   collect_pad = (GstMatroskaPad *)
       gst_collect_pads_add_pad (mux->collect, GST_PAD (newpad),
       sizeof (GstMatroskaPad),
-      (GstCollectDataDestroyNotify) gst_matroska_pad_free, locked);
+      (GstCollectDataDestroyNotify) gst_matroska_pad_free, TRUE);
 
   collect_pad->mux = mux;
   collect_pad->track = context;
