@@ -64,8 +64,7 @@ nal_size (GstBuffer * buffer)
   guint8 nal_size[4];
 
   gst_buffer_extract (buffer, 0, nal_size, 4);
-  return (nal_size[0] << 24) | (nal_size[1] << 16) | (nal_size[2] << 8) |
-      nal_size[3];
+  return GST_READ_UINT32_BE (nal_size);
 }
 
 static gsize
@@ -88,7 +87,7 @@ fetch_nal (GstBuffer * buffer, gsize * offset)
     return NULL;
 
   gst_buffer_extract (buffer, *offset, buf, 4);
-  nal_size = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+  nal_size = GST_READ_UINT32_BE (buf);
 
   ret =
       gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY, *offset,

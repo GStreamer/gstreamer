@@ -605,8 +605,8 @@ gst_avtp_cvf_pay_prepare_avtp_packets (GstAvtpCvfPay * avtpcvfpay,
               " DTS: %" GST_TIME_FORMAT " AVTP_TS: %" GST_TIME_FORMAT
               " H264_TS: %" GST_TIME_FORMAT "\navtp_time: %" G_GUINT64_FORMAT
               " h264_time: %" G_GUINT64_FORMAT, GST_TIME_ARGS (h264_time),
-              GST_TIME_ARGS (avtp_time), GST_TIME_ARGS ((guint32) avtp_time),
-              GST_TIME_ARGS ((guint32) h264_time), avtp_time, h264_time);
+              GST_TIME_ARGS (avtp_time), GST_TIME_ARGS (avtp_time & 0xffffffff),
+              GST_TIME_ARGS (h264_time & 0xffffffff), avtp_time, h264_time);
         }
       }
 
