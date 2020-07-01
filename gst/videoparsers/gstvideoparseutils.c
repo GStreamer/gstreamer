@@ -116,7 +116,6 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
               "Missing active format description, ignoring");
           break;
         }
-        temp = temp & 0xF;
 
         GST_LOG_OBJECT (elt, "parsed active format description (AFD): %d",
             temp);
