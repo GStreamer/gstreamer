@@ -248,11 +248,9 @@ GST_VIDEO_API const GstMetaInfo *gst_video_afd_meta_get_info (void);
 /**
  * gst_buffer_get_video_afd_meta:
  * @b: A #GstBuffer
- * @field: 0 for progressive or field 1 and 1 for field 2
- * @spec: #GstVideoAFDSpec that applies to @afd
- * @afd: #GstVideoAFDValue AFD value
  *
  * Gets the #GstVideoAFDMeta that might be present on @b.
+ *
  * Note: there may be two #GstVideoAFDMeta structs for interlaced video.
  *
  * Since: 1.18
@@ -261,7 +259,7 @@ GST_VIDEO_API const GstMetaInfo *gst_video_afd_meta_get_info (void);
  * no #GstVideoAFDMeta are present
  */
 #define gst_buffer_get_video_afd_meta(b) \
-        ((GstVideoAFDMeta*)gst_buffer_get_meta((b)))
+        ((GstVideoAFDMeta*)gst_buffer_get_meta((b),GST_VIDEO_AFD_META_API_TYPE))
 
 GST_VIDEO_API
 GstVideoAFDMeta *gst_buffer_add_video_afd_meta (GstBuffer * buffer, guint8 field,
@@ -310,23 +308,10 @@ GST_VIDEO_API GType gst_video_bar_meta_api_get_type (void);
 
 GST_VIDEO_API const GstMetaInfo *gst_video_bar_meta_get_info (void);
 #define GST_VIDEO_BAR_META_INFO (gst_video_bar_meta_get_info())
-
-#define gst_buffer_get_video_bar_meta(b) \
-        ((GstVideoBarMeta*)gst_buffer_get_meta((b)))
-
 /**
  * gst_buffer_get_video_bar_meta:
  * @b: A #GstBuffer
- * @field: 0 for progressive or field 1 and 1 for field 2
- * @is_letterbox: if true then bar data specifies letterbox, otherwise pillarbox
- * @bar_data1: If @is_letterbox is true, then the value specifies the
- *      last line of a horizontal letterbox bar area at top of reconstructed frame.
- *      Otherwise, it specifies the last horizontal luminance sample of a vertical pillarbox
- *      bar area at the left side of the reconstructed frame
- * @bar_data2: If @is_letterbox is true, then the value specifies the
- *      first line of a horizontal letterbox bar area at bottom of reconstructed frame.
- *      Otherwise, it specifies the first horizontal
- *      luminance sample of a vertical pillarbox bar area at the right side of the reconstructed frame.
+ *
  * Gets the #GstVideoBarMeta that might be present on @b.
  *
  * Since: 1.18
@@ -334,6 +319,9 @@ GST_VIDEO_API const GstMetaInfo *gst_video_bar_meta_get_info (void);
  * Returns: The first #GstVideoBarMeta present on @b, or %NULL if
  * no #GstVideoBarMeta are present
  */
+#define gst_buffer_get_video_bar_meta(b) \
+        ((GstVideoBarMeta*)gst_buffer_get_meta((b),GST_VIDEO_BAR_META_API_TYPE))
+
 GST_VIDEO_API
 GstVideoBarMeta *gst_buffer_add_video_bar_meta (GstBuffer * buffer, guint8 field,
     gboolean is_letterbox, guint bar_data1, guint bar_data2);
