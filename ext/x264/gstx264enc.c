@@ -209,7 +209,8 @@ unload_x264 (GstX264EncVTable * vtable)
 
 static gboolean
 gst_x264_enc_add_x264_chroma_format (GstStructure * s,
-    gboolean allow_420, gboolean allow_422, gboolean allow_444)
+    gboolean allow_420_8, gboolean allow_420_10, gboolean allow_422,
+    gboolean allow_444)
 {
   GValue fmts = G_VALUE_INIT;
   GValue fmt = G_VALUE_INIT;
@@ -233,7 +234,7 @@ gst_x264_enc_add_x264_chroma_format (GstStructure * s,
       gst_value_list_append_value (&fmts, &fmt);
     }
 
-    if ((chroma_format == 0 || chroma_format == X264_CSP_I420) && allow_420) {
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I420) && allow_420_8) {
       g_value_set_string (&fmt, "I420");
       gst_value_list_append_value (&fmts, &fmt);
       g_value_set_string (&fmt, "YV12");
@@ -266,7 +267,7 @@ gst_x264_enc_add_x264_chroma_format (GstStructure * s,
       gst_value_list_append_value (&fmts, &fmt);
     }
 
-    if ((chroma_format == 0 || chroma_format == X264_CSP_I420) && allow_420) {
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I420) && allow_420_10) {
       if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         g_value_set_string (&fmt, "I420_10LE");
       else
@@ -780,15 +781,17 @@ gst_x264_enc_build_partitions (gint analyse)
 }
 
 static void
-check_formats (const gchar * str, gboolean * has_420, gboolean * has_422,
-    gboolean * has_444)
+check_formats (const gchar * str, gboolean * has_420_8, gboolean * has_420_10,
+    gboolean * has_422, gboolean * has_444)
 {
   if (g_str_has_prefix (str, "high-4:4:4"))
     *has_444 = TRUE;
   else if (g_str_has_prefix (str, "high-4:2:2"))
     *has_422 = TRUE;
+  else if (g_str_has_prefix (str, "high-10"))
+    *has_420_10 = TRUE;
   else
-    *has_420 = TRUE;
+    *has_420_8 = TRUE;
 }
 
 
@@ -846,24 +849,26 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
         gst_structure_set_value (s, "chroma-site", val);
 
       if ((val = gst_structure_get_value (allowed_s, "profile"))) {
-        gboolean has_420 = FALSE;
+        gboolean has_420_8 = FALSE;
+        gboolean has_420_10 = FALSE;
         gboolean has_422 = FALSE;
         gboolean has_444 = FALSE;
 
         if (G_VALUE_HOLDS_STRING (val)) {
-          check_formats (g_value_get_string (val), &has_420, &has_422,
-              &has_444);
+          check_formats (g_value_get_string (val), &has_420_8, &has_420_10,
+              &has_422, &has_444);
         } else if (GST_VALUE_HOLDS_LIST (val)) {
           for (k = 0; k < gst_value_list_get_size (val); k++) {
             const GValue *vlist = gst_value_list_get_value (val, k);
 
             if (G_VALUE_HOLDS_STRING (vlist))
-              check_formats (g_value_get_string (vlist), &has_420, &has_422,
-                  &has_444);
+              check_formats (g_value_get_string (vlist), &has_420_8,
+                  &has_420_10, &has_422, &has_444);
           }
         }
 
-        gst_x264_enc_add_x264_chroma_format (s, has_420, has_422, has_444);
+        gst_x264_enc_add_x264_chroma_format (s, has_420_8, has_420_10, has_422,
+            has_444);
       }
 
       filter_caps = gst_caps_merge_structure (filter_caps, s);
@@ -1201,7 +1206,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
 
   gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure
-      (supported_sinkcaps, 0), TRUE, TRUE, TRUE);
+      (supported_sinkcaps, 0), TRUE, TRUE, TRUE, TRUE);
 
   sink_templ = gst_pad_template_new ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS, supported_sinkcaps);
