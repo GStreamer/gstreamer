@@ -220,6 +220,7 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
           user_data->bar_data_size = bar_size;
           user_data->has_bar_data = TRUE;
           user_data->field = field;
+          GST_DEBUG_OBJECT (elt, "Bar data, %u bytes", bar_size);
           break;
         default:
           GST_DEBUG_OBJECT (elt,
@@ -318,7 +319,7 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
   guint8 temp;
   int i = 0;
   guint8 bar_flags[4];
-  guint16 bar_vals[4];
+  guint16 bar_vals[4] = { 0, 0, 0, 0 };
   GstBitReader bar_tender;
 
   /* there must be at least one byte, and not more than GST_VIDEO_BAR_MAX_BYTES bytes */
@@ -353,10 +354,10 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
   /* bars are signaled in pairs: either top/bottom or left/right, but not both */
   if ((bar_flags[0] != bar_flags[1]) || (bar_flags[2] != bar_flags[3]))
     return FALSE;
-  if ((bar_flags[0] && bar_flags[1]) == (bar_flags[2] && bar_flags[3]))
+  if (bar_flags[0] && bar_flags[2])
     return FALSE;
 
-  bar->is_letterbox = bar_flags[0] && bar_flags[1];
+  bar->is_letterbox = bar_flags[0];
   if (bar->is_letterbox) {
     bar->bar_data[0] = bar_vals[0];
     bar->bar_data[1] = bar_vals[1];
