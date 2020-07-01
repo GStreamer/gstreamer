@@ -2323,7 +2323,46 @@ ensure_profile_tier_level (GstVaapiEncoderH265 * encoder)
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
-static void
+static gboolean
+check_ref_list (GstVaapiEncoderH265 * encoder)
+{
+#if VA_CHECK_VERSION(1,9,0)
+  /* Some driver require both r0 and r1 list are non NULL, i.e. no p frame
+     in the stream. The traditional P frame can be converted to B frame with
+     forward dependency only. The new B frame has only forward reference in
+     both r0 and r1 list, which conforms to H265 spec. This can get some gain
+     because there are 2 MVs for each frame and can generate better motion
+     estimation. */
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (encoder);
+  guint value = 0;
+  VAProfile va_profile = gst_vaapi_profile_get_va_profile (encoder->profile);
+  VAEntrypoint va_entrypoint =
+      gst_vaapi_entrypoint_get_va_entrypoint (encoder->entrypoint);
+
+  encoder->no_p_frame = FALSE;
+  if (gst_vaapi_get_config_attribute (base_encoder->display, va_profile,
+          va_entrypoint, VAConfigAttribPredictionDirection, &value)) {
+    gboolean double_ref_list =
+        ((value & VA_PREDICTION_DIRECTION_BI_NOT_EMPTY) != 0);
+    if (double_ref_list) {
+      GST_INFO ("driver does not support P frame, we need to convert P"
+          " frame to forward dependency B frame.");
+      encoder->no_p_frame = double_ref_list;
+    }
+  }
+
+  if (encoder->no_p_frame == TRUE && base_encoder->max_num_ref_frames_1 < 1) {
+    GST_WARNING ("P frame should be converted to forward dependent B,"
+        " but reference list 1 is disabled here. Should be an invalid"
+        " setting or a driver error.");
+    return FALSE;
+  }
+#endif
+
+  return TRUE;
+}
+
+static GstVaapiEncoderStatus
 reset_properties (GstVaapiEncoderH265 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
@@ -2349,6 +2388,9 @@ reset_properties (GstVaapiEncoderH265 * encoder)
 
   gst_vaapi_encoder_ensure_max_num_ref_frames (base_encoder, encoder->profile,
       encoder->entrypoint);
+
+  if (!check_ref_list (encoder))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
 
   if (base_encoder->max_num_ref_frames_1 < 1 && encoder->num_bframes > 0) {
     GST_WARNING ("Disabling b-frame since the driver doesn't support it");
@@ -2394,6 +2436,8 @@ reset_properties (GstVaapiEncoderH265 * encoder)
 
   reorder_pool = &encoder->reorder_pool;
   reorder_pool->frame_index = 0;
+
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
 static void
@@ -3151,7 +3195,10 @@ gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
     encoder->ctu_height = (encoder->luma_height + 31) / 32;
   }
 
-  reset_properties (encoder);
+  status = reset_properties (encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return status;
+
   status = ensure_tile (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;
