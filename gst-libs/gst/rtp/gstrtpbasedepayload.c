@@ -992,6 +992,7 @@ gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
           &might_have_been_fec) || !might_have_been_fec) {
     /* send GAP event */
     sevent = gst_event_new_gap (timestamp, duration);
+    gst_event_set_gap_flags (sevent, GST_GAP_FLAG_MISSING_DATA);
     res = gst_pad_push_event (filter->srcpad, sevent);
   }
 
