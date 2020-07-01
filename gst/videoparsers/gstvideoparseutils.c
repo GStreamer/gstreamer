@@ -252,9 +252,14 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
 
   /* 1. handle closed captions */
   if (user_data->closedcaptions_size > 0) {
-    gst_buffer_add_video_caption_meta (buf,
-        user_data->closedcaptions_type, user_data->closedcaptions,
-        user_data->closedcaptions_size);
+    if (!gst_buffer_get_meta (buf, GST_VIDEO_CAPTION_META_API_TYPE)) {
+      gst_buffer_add_video_caption_meta (buf,
+          user_data->closedcaptions_type, user_data->closedcaptions,
+          user_data->closedcaptions_size);
+    } else {
+      GST_DEBUG_OBJECT (elt, "Closed caption data already found on buffer, "
+          "discarding to avoid duplication");
+    }
 
     user_data->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
     user_data->closedcaptions_size = 0;
