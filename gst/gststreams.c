@@ -232,18 +232,20 @@ gst_stream_set_stream_id (GstStream * stream, const gchar * stream_id)
 
   GST_OBJECT_LOCK (stream);
   g_assert (stream->stream_id == NULL);
-  if (stream_id)
+  if (stream_id) {
     stream->stream_id = g_strdup (stream_id);
-  else {
+  } else {
     /* Create a random stream_id if NULL */
-    GST_FIXME_OBJECT (stream, "Creating random stream-id, consider "
-        "implementing a deterministic way of creating a stream-id");
     stream->stream_id =
         g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
         g_random_int (), g_random_int ());
   }
 
   GST_OBJECT_UNLOCK (stream);
+
+  if (!stream_id)
+    GST_FIXME_OBJECT (stream, "Created random stream-id, consider "
+        "implementing a deterministic way of creating a stream-id");
 }
 
 /**
