@@ -977,6 +977,11 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
       goto refuse_caps;
     }
     gst_caps_unref (old_caps);
+  } else if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER) {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+        ("Caps on pad %" GST_PTR_FORMAT
+            " arrived late. Headers were already written", pad));
+    goto refuse_caps;
   }
 
   /* find context */
@@ -1834,6 +1839,11 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       goto refuse_caps;
     }
     gst_caps_unref (old_caps);
+  } else if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER) {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+        ("Caps on pad %" GST_PTR_FORMAT
+            " arrived late. Headers were already written", pad));
+    goto refuse_caps;
   }
 
   /* find context */
@@ -2270,6 +2280,11 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
       goto refuse_caps;
     }
     gst_caps_unref (old_caps);
+  } else if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER) {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+        ("Caps on pad %" GST_PTR_FORMAT
+            " arrived late. Headers were already written", pad));
+    goto refuse_caps;
   }
 
   /* find context */
@@ -2778,6 +2793,8 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
       /* doesn't need type-specific data */
       break;
   }
+
+  GST_DEBUG_OBJECT (mux, "Wrote track header. Codec %s", context->codec_id);
 
   gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_CODECID, context->codec_id);
   if (context->codec_priv)
