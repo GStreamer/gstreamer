@@ -1,3 +1,48 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:33:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-30 18:33:56 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: fix buffer leak when send packet failed
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/81>
+
+2020-06-26 13:11:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add support for SpeedHQ video codec
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/79>
+
+2020-06-23 00:07:26 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/meson.build:
+	  meson: mark plugins cache target as always stale
+
+2020-06-19 22:59:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: Stop documenting properties from parents
+
+2020-06-18 22:16:30 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: zero-initialize packets
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/76>
+
+2020-06-20 00:28:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:24:14 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +50,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-libav.doap:
 	* meson.build:
 	  Release 1.17.1

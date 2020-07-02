@@ -11,7 +11,7 @@ in summer 2020 now.
 
 1.17.x is the unstable development series that is currently being
 developed in the git master branch and which will eventually result in
-1.18, and 1.17.1 is the current development release in that series.
+1.18, and 1.17.2 is the current development release in that series.
 
 The schedule for the 1.18 development cycle is yet to be confirmed, but
 it is expected that feature freeze will be in June/July 2020, followed
@@ -24,7 +24,7 @@ July/August 2020.
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
 
-_Last updated: Thursday 18 June 2020, 16:00 UTC (log)_
+_Last updated: Wednesday 1 July 2020, 23:50 UTC (log)_
 
 
 Introduction
