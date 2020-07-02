@@ -1,3 +1,29 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-23 00:03:04 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/meson.build:
+	  meson: mark plugins cache target as always stale
+
+2020-06-19 22:55:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: Stop documenting properties from parents
+
+2020-06-20 00:28:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:20:41 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +31,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-plugins-ugly.doap:
 	* meson.build:
 	  Release 1.17.1
