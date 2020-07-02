@@ -1,3 +1,35 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:36:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-23 10:20:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/vaapi/gstvaapiencode.c:
+	  docs: Mark parent classes as plugin API
+
+2020-06-23 00:07:57 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/meson.build:
+	  meson: mark plugins cache target as always stale
+
+2020-06-19 23:34:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: Stop documenting properties from parents
+
+2020-06-20 00:28:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:27:11 +0100  Tim-Philipp Müller <tim@centricular.com>
