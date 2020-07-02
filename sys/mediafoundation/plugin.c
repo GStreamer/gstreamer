@@ -50,7 +50,7 @@ plugin_init (GstPlugin * plugin)
   GstRank rank = GST_RANK_SECONDARY;
 
   /**
-   * plugin-gstmediafoundation:
+   * plugin-mediafoundation:
    *
    * Since: 1.18
    */

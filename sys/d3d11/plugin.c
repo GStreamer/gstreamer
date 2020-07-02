@@ -68,7 +68,7 @@ plugin_init (GstPlugin * plugin)
   GstRank video_sink_rank = GST_RANK_NONE;
 
   /**
-   * plugin-gstd3d11:
+   * plugin-d3d11:
    *
    * Since: 1.18
    */

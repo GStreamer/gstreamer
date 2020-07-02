@@ -36,7 +36,7 @@ plugin_init (GstPlugin * plugin)
   GstRank rank = GST_RANK_SECONDARY;
 
   /**
-   * plugin-gstwasapi2:
+   * plugin-wasapi2:
    *
    * Since: 1.18
    */

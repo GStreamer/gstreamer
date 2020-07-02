@@ -20,7 +20,7 @@
  */
 
 /**
- * plugin-gstavtp:
+ * plugin-avtp:
  *
  * ## Audio Video Transport Protocol (AVTP) Plugin
  *
