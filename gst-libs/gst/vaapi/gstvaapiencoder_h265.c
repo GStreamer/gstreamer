@@ -1249,44 +1249,6 @@ error_unsupported_level:
   }
 }
 
-/* Derives the minimum tier from the active coding tools */
-/* Enable "high-compression" tuning options */
-static gboolean
-ensure_tuning_high_compression (GstVaapiEncoderH265 * encoder)
-{
-  guint8 profile_idc;
-
-  if (!ensure_hw_profile_limits (encoder))
-    return FALSE;
-
-  profile_idc = encoder->hw_max_profile_idc;
-  if (encoder->max_profile_idc && encoder->max_profile_idc < profile_idc)
-    profile_idc = encoder->max_profile_idc;
-
-  /* Tuning options */
-  if (!encoder->num_bframes)
-    encoder->num_bframes = 3;
-
-  return TRUE;
-}
-
-/* Ensure tuning options */
-static gboolean
-ensure_tuning (GstVaapiEncoderH265 * encoder)
-{
-  gboolean success;
-
-  switch (GST_VAAPI_ENCODER_TUNE (encoder)) {
-    case GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION:
-      success = ensure_tuning_high_compression (encoder);
-      break;
-    default:
-      success = TRUE;
-      break;
-  }
-  return success;
-}
-
 /* Handle new GOP starts */
 static void
 reset_gop_start (GstVaapiEncoderH265 * encoder)
@@ -2326,8 +2288,6 @@ ensure_profile_tier_level (GstVaapiEncoderH265 * encoder)
   const GstVaapiProfile profile = encoder->profile;
   const GstVaapiTierH265 tier = encoder->tier;
   const GstVaapiLevelH265 level = encoder->level;
-
-  ensure_tuning (encoder);
 
   if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
