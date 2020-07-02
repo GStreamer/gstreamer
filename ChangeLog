@@ -1,3 +1,37 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:33:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-19 22:55:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: Stop documenting properties from parents
+
+2020-06-22 20:04:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: Fix version in the plugins cache
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/138>
+
+2020-06-22 12:33:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Don't call gst_ghost_pad_construct() anymore
+	  It's deprecated, unneeded and doesn't do anything anymore.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/138>
+
+2020-06-20 00:28:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:24:38 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +39,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.17.1
