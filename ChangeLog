@@ -1,3 +1,19 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:37:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-20 00:28:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:27:38 +0100  Tim-Philipp Müller <tim@centricular.com>
