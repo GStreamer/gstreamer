@@ -45,8 +45,8 @@ GstVaapiEncoder *
 gst_vaapi_encoder_h265_new (GstVaapiDisplay * display);
 
 gboolean
-gst_vaapi_encoder_h265_set_max_profile (GstVaapiEncoderH265 * encoder,
-    GstVaapiProfile profile);
+gst_vaapi_encoder_h265_set_allowed_profiles (GstVaapiEncoderH265 * encoder,
+    GArray * profiles);
 
 gboolean
 gst_vaapi_encoder_h265_get_profile_tier_level (GstVaapiEncoderH265 * encoder,

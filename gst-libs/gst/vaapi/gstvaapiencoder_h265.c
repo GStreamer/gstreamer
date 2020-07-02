@@ -97,7 +97,7 @@ struct _GstVaapiEncoderH265
   GstVaapiLevelH265 level;
   GstVaapiEntrypoint entrypoint;
   guint8 profile_idc;
-  guint8 max_profile_idc;
+  GArray *allowed_profiles;
   guint8 level_idc;
   guint32 idr_period;
   guint32 init_qp;
@@ -1104,10 +1104,16 @@ error_unsupported_profile:
 static gboolean
 ensure_profile_limits (GstVaapiEncoderH265 * encoder)
 {
+  gint i;
 
-  if (!encoder->max_profile_idc
-      || encoder->profile_idc <= encoder->max_profile_idc)
+  if (!encoder->allowed_profiles)
     return TRUE;
+
+  for (i = 0; i < encoder->allowed_profiles->len; i++) {
+    if (encoder->profile ==
+        g_array_index (encoder->allowed_profiles, GstVaapiProfile, i))
+      return TRUE;
+  }
 
   GST_WARNING
       ("Needs to lower coding tools to meet target decoder constraints");
@@ -3195,6 +3201,8 @@ gst_vaapi_encoder_h265_init (GstVaapiEncoderH265 * encoder)
   ref_pool->max_ref_frames = 0;
   ref_pool->max_reflist0_count = 1;
   ref_pool->max_reflist1_count = 1;
+
+  encoder->allowed_profiles = NULL;
 }
 
 struct _GstVaapiEncoderH265Class
@@ -3237,6 +3245,9 @@ gst_vaapi_encoder_h265_finalize (GObject * object)
   g_queue_clear (&reorder_pool->reorder_frame_list);
 
   reset_tile (encoder);
+
+  if (encoder->allowed_profiles)
+    g_array_unref (encoder->allowed_profiles);
 
   G_OBJECT_CLASS (gst_vaapi_encoder_h265_parent_class)->finalize (object);
 }
@@ -3678,36 +3689,22 @@ gst_vaapi_encoder_h265_new (GstVaapiDisplay * display)
 }
 
 /**
- * gst_vaapi_encoder_h265_set_max_profile:
+ * gst_vaapi_encoder_h265_set_allowed_profiles:
  * @encoder: a #GstVaapiEncoderH265
- * @profile: an H.265 #GstVaapiProfile
+ * @profiles: a #GArray of all allowed #GstVaapiProfile.
  *
- * Notifies the @encoder to use coding tools from the supplied
- * @profile at most.
- *
- * This means that if the minimal profile derived to
- * support the specified coding tools is greater than this @profile,
- * then an error is returned when the @encoder is configured.
+ * Set the all allowed profiles for the encoder.
  *
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_encoder_h265_set_max_profile (GstVaapiEncoderH265 * encoder,
-    GstVaapiProfile profile)
+gst_vaapi_encoder_h265_set_allowed_profiles (GstVaapiEncoderH265 * encoder,
+    GArray * profiles)
 {
-  guint8 profile_idc;
-
   g_return_val_if_fail (encoder != NULL, FALSE);
-  g_return_val_if_fail (profile != GST_VAAPI_PROFILE_UNKNOWN, FALSE);
+  g_return_val_if_fail (profiles, FALSE);
 
-  if (gst_vaapi_profile_get_codec (profile) != GST_VAAPI_CODEC_H265)
-    return FALSE;
-
-  profile_idc = gst_vaapi_utils_h265_get_profile_idc (profile);
-  if (!profile_idc)
-    return FALSE;
-
-  encoder->max_profile_idc = profile_idc;
+  encoder->allowed_profiles = g_array_ref (profiles);
   return TRUE;
 }
 

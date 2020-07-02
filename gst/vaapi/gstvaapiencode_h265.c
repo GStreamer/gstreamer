@@ -153,7 +153,7 @@ gst_vaapiencode_h265_set_config (GstVaapiEncode * base_encode)
   if (profile) {
     GST_INFO ("using %s profile as target decoder constraints",
         gst_vaapi_utils_h265_get_profile_string (profile));
-    if (!gst_vaapi_encoder_h265_set_max_profile (encoder, profile))
+    if (!gst_vaapi_encoder_h265_set_allowed_profiles (encoder, NULL))
       return FALSE;
   }
   return TRUE;
