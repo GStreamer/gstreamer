@@ -78,85 +78,29 @@ gst_vaapiencode_h265_get_allowed_profiles (GstVaapiEncode * encode,
       gst_vaapi_utils_h265_get_profile_from_string);
 }
 
-typedef struct
-{
-  GstVaapiProfile best_profile;
-  guint best_score;
-} FindBestProfileData;
-
-static void
-find_best_profile_value (FindBestProfileData * data, const GValue * value)
-{
-  const gchar *str;
-  GstVaapiProfile profile;
-  guint score;
-
-  if (!value || !G_VALUE_HOLDS_STRING (value))
-    return;
-
-  str = g_value_get_string (value);
-  if (!str)
-    return;
-  profile = gst_vaapi_utils_h265_get_profile_from_string (str);
-  if (!profile)
-    return;
-  score = gst_vaapi_utils_h265_get_profile_score (profile);
-  if (score < data->best_score)
-    return;
-  data->best_profile = profile;
-  data->best_score = score;
-}
-
-static GstVaapiProfile
-find_best_profile (GstCaps * caps)
-{
-  FindBestProfileData data;
-  guint i, j, num_structures, num_values;
-
-  data.best_profile = GST_VAAPI_PROFILE_UNKNOWN;
-  data.best_score = 0;
-
-  num_structures = gst_caps_get_size (caps);
-  for (i = 0; i < num_structures; i++) {
-    GstStructure *const structure = gst_caps_get_structure (caps, i);
-    const GValue *const value = gst_structure_get_value (structure, "profile");
-
-    if (!value)
-      continue;
-    if (G_VALUE_HOLDS_STRING (value))
-      find_best_profile_value (&data, value);
-    else if (GST_VALUE_HOLDS_LIST (value)) {
-      num_values = gst_value_list_get_size (value);
-      for (j = 0; j < num_values; j++)
-        find_best_profile_value (&data, gst_value_list_get_value (value, j));
-    }
-  }
-  return data.best_profile;
-}
-
 static gboolean
 gst_vaapiencode_h265_set_config (GstVaapiEncode * base_encode)
 {
   GstVaapiEncoderH265 *const encoder =
       GST_VAAPI_ENCODER_H265 (base_encode->encoder);
   GstCaps *allowed_caps;
-  GstVaapiProfile profile;
+  GArray *profiles;
+  gboolean ret = TRUE;
 
-  /* Check for the largest profile that is supported */
   allowed_caps =
       gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (base_encode));
   if (!allowed_caps)
     return TRUE;
 
-  profile = find_best_profile (allowed_caps);
+  profiles = gst_vaapi_encoder_get_profiles_from_caps (allowed_caps,
+      gst_vaapi_utils_h265_get_profile_from_string);
   gst_caps_unref (allowed_caps);
-  if (profile) {
-    GST_INFO ("using %s profile as target decoder constraints",
-        gst_vaapi_utils_h265_get_profile_string (profile));
-    if (!gst_vaapi_encoder_h265_set_allowed_profiles (encoder, NULL))
-      return FALSE;
+  if (profiles) {
+    ret = gst_vaapi_encoder_h265_set_allowed_profiles (encoder, profiles);
+    g_array_unref (profiles);
   }
-  return TRUE;
+
+  return ret;
 }
 
 static GstCaps *
