@@ -205,8 +205,6 @@ variables:
     # using the vfs driver, and this causes errors.
     - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
-    - dnf upgrade -y buildah skopeo jq runc
-
     - *check_image_exists
 
     # This part of the job should only ever be possible to be reach in a gst-ci fork
@@ -223,7 +221,6 @@ variables:
     - >
       buildah bud
       --build-arg DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH
-      --arch=${ARCH:=amd64}
       --label ci.job_id=$CI_JOB_ID
       --label pipeline.url=$CI_PIPELINE_URL
       --label git.ref_name=$CI_COMMIT_REF_NAME
