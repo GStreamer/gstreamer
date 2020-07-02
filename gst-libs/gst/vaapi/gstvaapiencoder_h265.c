@@ -98,7 +98,6 @@ struct _GstVaapiEncoderH265
   GstVaapiEntrypoint entrypoint;
   guint8 profile_idc;
   guint8 max_profile_idc;
-  guint8 hw_max_profile_idc;
   guint8 level_idc;
   guint32 idr_period;
   guint32 init_qp;
@@ -1056,37 +1055,6 @@ _check_vps_sps_pps_status (GstVaapiEncoderH265 * encoder,
     default:
       break;
   }
-}
-
-/* Determines the largest supported profile by the underlying hardware */
-static gboolean
-ensure_hw_profile_limits (GstVaapiEncoderH265 * encoder)
-{
-  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
-  GArray *profiles;
-  guint i, profile_idc, max_profile_idc;
-
-  if (encoder->hw_max_profile_idc)
-    return TRUE;
-
-  profiles = gst_vaapi_display_get_encode_profiles (display);
-  if (!profiles)
-    return FALSE;
-
-  max_profile_idc = 0;
-  for (i = 0; i < profiles->len; i++) {
-    const GstVaapiProfile profile =
-        g_array_index (profiles, GstVaapiProfile, i);
-    profile_idc = gst_vaapi_utils_h265_get_profile_idc (profile);
-    if (!profile_idc)
-      continue;
-    if (max_profile_idc < profile_idc)
-      max_profile_idc = profile_idc;
-  }
-  g_array_unref (profiles);
-
-  encoder->hw_max_profile_idc = max_profile_idc;
-  return TRUE;
 }
 
 /* Derives the profile supported by the underlying hardware */
@@ -2299,12 +2267,6 @@ ensure_profile_tier_level (GstVaapiEncoderH265 * encoder)
     GST_WARNING ("Cannot find valid entrypoint");
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
   }
-
-  /* Check HW constraints */
-  if (!ensure_hw_profile_limits (encoder))
-    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
-  if (encoder->profile_idc > encoder->hw_max_profile_idc)
-    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
   /* Ensure bitrate if not set already and derive the right level to use */
   ensure_bitrate (encoder);
