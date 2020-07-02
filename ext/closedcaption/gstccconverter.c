@@ -1117,7 +1117,7 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
       return 0;
 
     u8 = gst_byte_reader_get_uint8_unchecked (&br);
-    if ((u8 & 0xc) != 0xc)
+    if ((u8 & 0xc0) != 0xc0)
       return 0;
 
     hours = ((u8 >> 4) & 0x3) * 10 + (u8 & 0xf);
