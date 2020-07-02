@@ -69,7 +69,7 @@ variables:
 #
 # This can be used to configure global behaviour our our jobs.
 #
-.global_ci_policy:
+default:
   retry:
     max: 2
     when:
@@ -176,8 +176,6 @@ variables:
 # All the documentation from citemplates should be applicable here, so please refer there
 .base:
   image: "$CI_REGISTRY/freedesktop/ci-templates/buildah:2020-03-24"
-  extends:
-    - '.global_ci_policy'
   rules:
     - when: 'always'
   variables:
@@ -303,8 +301,6 @@ gst-indent amd64 docker:
 #
 manifest:
   image: $MANIFEST_IMAGE
-  extends:
-    - '.global_ci_policy'
   rules:
     - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $GITLAB_USER_LOGIN == "gstreamer-merge-bot"'
       when: 'always'
@@ -329,8 +325,6 @@ manifest:
 #
 gst indent:
   image: $INDENT_IMAGE
-  extends:
-    - '.global_ci_policy'
   stage: 'preparation'
   variables:
     GIT_STRATEGY: 'fetch'
@@ -394,7 +388,6 @@ gst indent:
 .build:
   stage: 'build'
   extends:
-    - '.global_ci_policy'
     - '.gst_build_ccache_vars'
   needs:
     - "manifest"
@@ -460,7 +453,6 @@ build clang fedora x86_64:
 .test:
   stage: 'test'
   extends:
-    - '.global_ci_policy'
     - '.gst_build_ccache_vars'
   needs:
     - "manifest"
@@ -626,8 +618,6 @@ valgrind ges:
 .cerbero:
   stage: "build"
   image: $CERBERO_IMAGE
-  extends:
-    - '.global_ci_policy'
   rules:
     - if: '$CI_PROJECT_NAME == "cerbero"'
   needs:
@@ -695,8 +685,6 @@ valgrind ges:
 
 .build windows:
   image: $WINDOWS_IMAGE
-  extends:
-    - '.global_ci_policy'
   stage: 'build'
   needs:
     - 'manifest'
@@ -926,8 +914,6 @@ build cerbero cross win64:
 #
 .cross-android universal examples:
   image: $ANDROID_IMAGE
-  extends:
-    - '.global_ci_policy'
   stage: 'integrate'
   variables:
     EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
@@ -1058,7 +1044,6 @@ build cerbero cross-ios universal:
 documentation:
   image: $FEDORA_IMAGE
   extends:
-    - '.global_ci_policy'
     - '.gst_build_ccache_vars'
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-integration-testsuites|gst-plugins-rs|gst-python)$/'
@@ -1112,8 +1097,6 @@ documentation:
 #
 .cross-ios universal examples:
   stage: 'integrate'
-  extends:
-    - '.global_ci_policy'
   variables:
     EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
     # disable codesigning so we don't need developer identities on the CI
