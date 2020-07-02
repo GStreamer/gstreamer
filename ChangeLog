@@ -1,3 +1,170 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:37:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-18 12:46:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Always check if scenario is done from the right thread
+	  Action will be set_done from the right thread and we will check if the action is done from there
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/212>
+
+2020-06-16 15:34:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: Print errors on action failures
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 17:32:13 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Plug some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 16:17:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tests/launcher_tests/simple_interlaced_action.validatetest:
+	  validate: Move action finalization to _set_done where it belongs
+	  gst_validate_action_set_done is the place where we should finalize the
+	  action, not in `execute_next`, this way we better handle printing
+	  interlaced action finalization too.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 10:50:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/data/scenarios/change_state_intensive.scenario:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tests/launcher_tests/foreach.validatetest:
+	* validate/tests/launcher_tests/foreach/flow-expectations/log-sink-sink-expected:
+	* validate/tests/launcher_tests/foreach_deep.validatetest:
+	* validate/tests/launcher_tests/foreach_repeat.validatetest:
+	  validate:scenario: Replace the `sub-action` with a `foreach` action type
+	  Sub-actions were really hard to use and conceptually weird. The
+	  implementation was ugly and made the code complex for nothing.
+	  Instead this commit introduces a `foreach` action type which allows
+	  repeating actions passed in an `actions` array the number of time
+	  specified by any `GstIntRange` value defined in the structure or its
+	  `repeat` field.
+	  This commit also makes sure that all action got through
+	  gst_validate_action_set_done upon finalization.
+	  + Cleanup surrounding code
+	  + Add tests
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 09:17:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/tests/launcher_tests/simple_repeat.validatetest:
+	* validate/tests/launcher_tests/simple_repeat/flow-expectations/log-sink-sink-expected:
+	  validate: scenario: Implement 'repeat' by copying actions
+	  Instead of trying to reuse the same action structure and deal with
+	  that in a complex way, copy the action the required number of times.
+	  And add a simple test
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 09:32:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Round results of expressions in a sensible way
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 10:54:20 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher: Keep running tests forever on KNOWN_ERROR
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 09:37:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Add private action type to check number of action type calls
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 09:14:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Avoid dereferencing NULL structure
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-15 09:08:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Fix marking expected issues as criticals
+	  And never mark a repeat expected reports as repeated
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-12 10:08:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Add a way to use the expression parser in any field
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-12 10:05:57 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Allow variables to be set with other types than strings
+	  And use value serialization from GStreamer to convert
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-12 09:58:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Add an action to remove a feature/plugin from the registry
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-10 17:18:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tests/launcher_tests/check_set_props_and_time_props.validatetest:
+	  valiadate: Add a test for setting/checking (timed) properties
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-10 16:44:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add action to set and check several properties at once
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-10 15:39:12 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/meson.build:
+	* validate/tools/meson.build:
+	  validate: Add an action type to set timed value properties
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/207>
+
+2020-06-19 10:26:17 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/org.freedesktop.GstDebugViewer.appdata.xml.in:
+	* debug-viewer/screenshots/gst-debug-viewer.png:
+	  debug-viewer: Add screenshot
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/210>
+
+2020-06-20 00:28:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:27:58 +0100  Tim-Philipp Müller <tim@centricular.com>
