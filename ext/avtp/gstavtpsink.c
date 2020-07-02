@@ -224,20 +224,22 @@ gst_avtp_sink_init_socket (GstAvtpSink * avtpsink)
 
   index = if_nametoindex (avtpsink->ifname);
   if (!index) {
-    GST_ERROR_OBJECT (avtpsink, "Failed to get if_index: %s", strerror (errno));
+    GST_ERROR_OBJECT (avtpsink, "Failed to get if_index: %s",
+        g_strerror (errno));
     return FALSE;
   }
 
   fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
   if (fd < 0) {
-    GST_ERROR_OBJECT (avtpsink, "Failed to open socket: %s", strerror (errno));
+    GST_ERROR_OBJECT (avtpsink, "Failed to open socket: %s",
+        g_strerror (errno));
     return FALSE;
   }
 
   res = setsockopt (fd, SOL_SOCKET, SO_PRIORITY, &avtpsink->priority,
       sizeof (avtpsink->priority));
   if (res < 0) {
-    GST_ERROR_OBJECT (avtpsink, "Failed to socket priority: %s", strerror
+    GST_ERROR_OBJECT (avtpsink, "Failed to socket priority: %s", g_strerror
         (errno));
     goto err;
   }
@@ -247,7 +249,7 @@ gst_avtp_sink_init_socket (GstAvtpSink * avtpsink)
   res = setsockopt (fd, SOL_SOCKET, SO_TXTIME, &txtime_cfg,
       sizeof (txtime_cfg));
   if (res < 0) {
-    GST_ERROR_OBJECT (avtpsink, "Failed to set SO_TXTIME: %s", strerror
+    GST_ERROR_OBJECT (avtpsink, "Failed to set SO_TXTIME: %s", g_strerror
         (errno));
     goto err;
   }
@@ -445,7 +447,7 @@ gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
 
   n = sendmsg (avtpsink->sk_fd, avtpsink->msg, 0);
   if (n < 0) {
-    GST_INFO_OBJECT (avtpsink, "Failed to send AVTPDU: %s", strerror (errno));
+    GST_INFO_OBJECT (avtpsink, "Failed to send AVTPDU: %s", g_strerror (errno));
 
     if (G_LIKELY (basesink->sync))
       gst_avtp_sink_process_error_queue (avtpsink, avtpsink->sk_fd);

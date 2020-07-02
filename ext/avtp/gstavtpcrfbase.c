@@ -183,7 +183,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
   fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
   if (fd < 0) {
     GST_ERROR_OBJECT (avtpcrfbase, "Failed to open socket: %s",
-        strerror (errno));
+        g_strerror (errno));
     return fd;
   }
 
@@ -191,7 +191,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
   if (!ifindex) {
     res = -1;
     GST_ERROR_OBJECT (avtpcrfbase, "Failed to get index for interface: %s",
-        strerror (errno));
+        g_strerror (errno));
     goto err;
   }
 
@@ -202,7 +202,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
   res = bind (fd, (struct sockaddr *) &sk_addr, sizeof (sk_addr));
   if (res < 0) {
     GST_ERROR_OBJECT (avtpcrfbase, "Failed to bind socket: %s",
-        strerror (errno));
+        g_strerror (errno));
     goto err;
   }
 
@@ -222,7 +222,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
       sizeof (struct packet_mreq));
   if (res < 0) {
     GST_ERROR_OBJECT (avtpcrfbase, "Failed to set multicast address: %s",
-        strerror (errno));
+        g_strerror (errno));
     goto err;
   }
 
@@ -232,7 +232,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
       sizeof (struct timeval));
   if (res < 0) {
     GST_ERROR_OBJECT (avtpcrfbase, "Failed to set receive timeout: %s",
-        strerror (errno));
+        g_strerror (errno));
     goto err;
   }
 
@@ -495,7 +495,7 @@ crf_listener_thread_func (GstAvtpCrfBase * avtpcrfbase)
         continue;
 
       GST_ERROR_OBJECT (avtpcrfbase, "Failed to receive packet: %s",
-          strerror (errno));
+          g_strerror (errno));
       break;
     }
 

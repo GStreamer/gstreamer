@@ -203,13 +203,14 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
 
   index = if_nametoindex (avtpsrc->ifname);
   if (!index) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to get if_index: %s", strerror (errno));
+    GST_ERROR_OBJECT (avtpsrc, "Failed to get if_index: %s",
+        g_strerror (errno));
     return FALSE;
   }
 
   fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
   if (fd < 0) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to open socket: %s", strerror (errno));
+    GST_ERROR_OBJECT (avtpsrc, "Failed to open socket: %s", g_strerror (errno));
     return FALSE;
   }
 
@@ -219,7 +220,7 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
 
   res = bind (fd, (struct sockaddr *) &sk_addr, sizeof (sk_addr));
   if (res < 0) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to bind socket: %s", strerror (errno));
+    GST_ERROR_OBJECT (avtpsrc, "Failed to bind socket: %s", g_strerror (errno));
     goto err;
   }
 
@@ -238,7 +239,7 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
       sizeof (struct packet_mreq));
   if (res < 0) {
     GST_ERROR_OBJECT (avtpsrc, "Failed to set multicast address: %s",
-        strerror (errno));
+        g_strerror (errno));
     goto err;
   }
 
@@ -292,7 +293,7 @@ retry:
       goto retry;
     }
     GST_ELEMENT_ERROR (avtpsrc, RESOURCE, READ, (NULL),
-        ("Failed to receive AVTPDU: %s", strerror (errno)));
+        ("Failed to receive AVTPDU: %s", g_strerror (errno)));
     gst_buffer_unmap (buffer, &map);
 
     return GST_FLOW_ERROR;
