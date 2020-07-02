@@ -407,25 +407,72 @@ gst_gl_window_win32_draw (GstGLWindow * window)
       RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
 }
 
+typedef struct
+{
+  GstGLWindow *window;
+  const gchar *event_type;
+  gchar *key_string;
+} GstGLWindowWin32KeyEvent;
+
+static gboolean
+gst_gl_window_win32_handle_key_event_func (GstGLWindowWin32KeyEvent * event)
+{
+  gst_gl_window_send_key_event (event->window,
+      event->event_type, event->key_string);
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+gst_gl_window_win32_key_event_free (GstGLWindowWin32KeyEvent * event)
+{
+  g_free (event->key_string);
+  g_free (event);
+}
+
 static void
 gst_gl_window_win32_handle_key_event (GstGLWindow * window, UINT uMsg,
     LPARAM lParam)
 {
   gunichar2 wcrep[128];
-  const gchar *event;
 
   if (GetKeyNameTextW (lParam, (LPWSTR) wcrep, 128)) {
     gchar *utfrep = g_utf16_to_utf8 (wcrep, 128, NULL, NULL, NULL);
     if (utfrep) {
-      if (uMsg == WM_KEYDOWN)
-        event = "key-press";
-      else
-        event = "key-release";
+      GstGLDisplay *display = window->display;
+      GstGLWindowWin32KeyEvent *key_event;
 
-      gst_gl_window_send_key_event (window, event, utfrep);
-      g_free (utfrep);
+      key_event = g_new0 (GstGLWindowWin32KeyEvent, 1);
+      key_event->window = window;
+      if (uMsg == WM_KEYDOWN)
+        key_event->event_type = "key-press";
+      else
+        key_event->event_type = "key-release";
+      key_event->key_string = utfrep;
+
+      g_main_context_invoke_full (display->main_context, G_PRIORITY_DEFAULT,
+          (GSourceFunc) gst_gl_window_win32_handle_key_event_func,
+          key_event, (GDestroyNotify) gst_gl_window_win32_key_event_free);
     }
   }
+}
+
+typedef struct
+{
+  GstGLWindow *window;
+  const gchar *event_type;
+  gint button;
+  gdouble pos_x;
+  gdouble pos_y;
+} GstGLWindowWin32MouseEvent;
+
+static gboolean
+gst_gl_window_win32_handle_mouse_event_func (GstGLWindowWin32MouseEvent * event)
+{
+  gst_gl_window_send_mouse_event (event->window,
+      event->event_type, event->button, event->pos_x, event->pos_y);
+
+  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -468,9 +515,21 @@ gst_gl_window_win32_handle_mouse_event (GstGLWindow * window, UINT uMsg,
       break;
   }
 
-  if (event)
-    gst_gl_window_send_mouse_event (window, event, button,
-        (double) LOWORD (lParam), (double) HIWORD (lParam));
+  if (event) {
+    GstGLDisplay *display = window->display;
+    GstGLWindowWin32MouseEvent *mouse_event;
+
+    mouse_event = g_new0 (GstGLWindowWin32MouseEvent, 1);
+    mouse_event->window = window;
+    mouse_event->event_type = event;
+    mouse_event->button = button;
+    mouse_event->pos_x = (gdouble) LOWORD (lParam);
+    mouse_event->pos_y = (gdouble) HIWORD (lParam);
+
+    g_main_context_invoke_full (display->main_context, G_PRIORITY_DEFAULT,
+        (GSourceFunc) gst_gl_window_win32_handle_mouse_event_func,
+        mouse_event, (GDestroyNotify) g_free);
+  }
 }
 
 /* PRIVATE */
