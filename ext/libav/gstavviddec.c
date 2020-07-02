@@ -1691,26 +1691,14 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     AVFrameSideData *side_data =
         av_frame_get_side_data (ffmpegdec->picture, AV_FRAME_DATA_A53_CC);
     if (side_data) {
-      GstVideoCaptionMeta *cc_meta = NULL;
-      gpointer iter = NULL;
-      gboolean found_708_raw_meta = FALSE;
-
       GST_LOG_OBJECT (ffmpegdec,
           "Found CC side data of type AV_FRAME_DATA_A53_CC, size %d",
           side_data->size);
       GST_MEMDUMP ("A53 CC", side_data->data, side_data->size);
 
-      while ((cc_meta = (GstVideoCaptionMeta *)
-              gst_buffer_iterate_meta_filtered (out_frame->input_buffer, &iter,
-                  GST_VIDEO_CAPTION_META_API_TYPE))) {
-        if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
-          continue;
-        found_708_raw_meta = TRUE;
-        break;
-      }
-
-      /* do not add CEA 708 caption meta if it already exists */
-      if (!found_708_raw_meta) {
+      /* do not add closed caption meta if it already exists */
+      if (!gst_buffer_get_meta (out_frame->output_buffer,
+              GST_VIDEO_CAPTION_META_API_TYPE)) {
         out_frame->output_buffer =
             gst_buffer_make_writable (out_frame->output_buffer);
         gst_buffer_add_video_caption_meta (out_frame->output_buffer,
@@ -1718,7 +1706,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
             side_data->size);
       } else {
         GST_LOG_OBJECT (ffmpegdec,
-            "CEA 708 caption meta already exists: will not add new caption meta");
+            "Closed caption meta already exists: will not add new caption meta");
       }
     }
   }
