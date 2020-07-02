@@ -483,6 +483,10 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
    * This signal is emitted whenever @decodebin needs to decide whether
    * to expose a @stream of a given @collection.
    *
+   * Note that the prefered way to select streams is to listen to
+   * GST_MESSAGE_STREAM_COLLECTION on the bus and send a
+   * GST_EVENT_SELECT_STREAMS with the streams the user wants.
+   *
    * Returns: 1 if the stream should be selected, 0 if it shouldn't be selected.
    * A value of -1 (default) lets @decodebin decide what to do with the stream.
    * */

@@ -85,6 +85,19 @@
  * setting the format passed to GST_FORMAT_TIME. If the query was successful,
  * the duration or position will have been returned in units of nanoseconds.
  *
+ * ## Selecting streams
+ *
+ * The recommended way to select streams (instead of the default selection) is
+ * to listen to GST_MESSAGE_STREAM_COLLECTION messages on the GstBus and send a
+ * GST_EVENT_SELECT_STREAMS on the pipeline with the selected streams. This
+ * provides more information and flexibility compared to the legacy #GstPlayBin
+ * property and signal-based mechanism.
+ *
+ * Note: The application should not assume that collections will not change
+ * throughout a single file. If it wishes to modify the default selection, it
+ * should always respond to new collections posted on the bus with a
+ * GST_EVENT_SELECT_STREAMS.
+ *
  * ## Advanced Usage: specifying the audio and video sink
  *
  * By default, if no audio sink or video sink has been specified via the

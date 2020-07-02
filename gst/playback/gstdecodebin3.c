@@ -579,6 +579,10 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
    * This signal is emitted whenever @decodebin needs to decide whether
    * to expose a @stream of a given @collection.
    *
+   * Note that the prefered way to select streams is to listen to
+   * GST_MESSAGE_STREAM_COLLECTION on the bus and send a
+   * GST_EVENT_SELECT_STREAMS with the streams the user wants.
+   *
    * Returns: 1 if the stream should be selected, 0 if it shouldn't be selected.
    * A value of -1 (default) lets @decodebin decide what to do with the stream.
    * */
@@ -922,6 +926,7 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
       if (dbin->collection)
         gst_object_unref (dbin->collection);
       dbin->collection = collection;
+      dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
 
       msg =
           gst_message_new_stream_collection ((GstObject *) dbin,
@@ -1161,14 +1166,15 @@ update_requested_selection (GstDecodebin3 * dbin)
   }
 
   /* 4. If the user didn't explicitly selected all streams, match one stream of each type */
-  if (!all_user_selected && !dbin->requested_selection) {
+  if (!all_user_selected && dbin->select_streams_seqnum == GST_SEQNUM_INVALID) {
     for (i = 0; i < nb; i++) {
       GstStream *stream = gst_stream_collection_get_stream (collection, i);
       GstStreamType curtype = gst_stream_get_stream_type (stream);
       if (!(used_types & curtype)) {
         const gchar *sid = gst_stream_get_stream_id (stream);
-        GST_DEBUG_OBJECT (dbin, "Selecting stream '%s' of type %s",
-            sid, gst_stream_type_get_name (curtype));
+        GST_DEBUG_OBJECT (dbin,
+            "Automatically selecting stream '%s' of type %s", sid,
+            gst_stream_type_get_name (curtype));
         tmp = g_list_append (tmp, (gchar *) sid);
         used_types |= curtype;
       }
@@ -1453,6 +1459,7 @@ handle_stream_collection (GstDecodebin3 * dbin,
     /* dbin->pending_collection = */
     /*     g_list_append (dbin->pending_collection, collection); */
   }
+  dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
   SELECTION_UNLOCK (dbin);
 }
 
