@@ -62,11 +62,7 @@ if have_nasm and host_cpu == 'x86_64'
   elif host_system.endswith('bsd')
     asm_outformat = 'aoutb'
   else
-    if cc.get_define('__ILP32__') == '1'
-      asm_outformat = 'elfx32'
-    else
-      asm_outformat = 'elf64'
-    endif
+    asm_outformat = 'elf64'
   endif
   asm_x = files('x86/yadif.asm',
                 'x86/x86inc.asm')

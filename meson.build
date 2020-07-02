@@ -341,6 +341,8 @@ host_cpu = host_machine.cpu_family()
 if host_cpu == 'x86_64'
   if cc.get_id() == 'msvc'
     message('Nasm disabled on MSVC')
+  elif cc.get_define('__ILP32__') == '1'
+    message('Nasm disabled on x32')
   else
     asm_option = get_option('asm')
     nasm = find_program('nasm', native: true, required: asm_option)
