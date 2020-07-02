@@ -88,6 +88,7 @@
 #include "gstbus.h"
 #include "gsterror.h"
 #include "gstevent.h"
+#include "gstghostpad.h"
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gstquark.h"
@@ -801,6 +802,16 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
       gst_pad_unlink (peer, pad);
 
     gst_object_unref (peer);
+  }
+
+  /* if this is a ghost pad we also need to unset the target or it
+   * will stay linked although not allowed according to the topology.
+   *
+   * FIXME 2.0: Do this generically somehow from inside GstGhostPad
+   * when it gets unparented.
+   */
+  if (GST_IS_GHOST_PAD (pad)) {
+    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), NULL);
   }
 
   GST_OBJECT_LOCK (element);
