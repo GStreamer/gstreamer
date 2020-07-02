@@ -3497,13 +3497,17 @@ static gboolean
 create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     transport)
 {
+  gboolean ret = FALSE;
   GstRTSPStreamPrivate *priv;
   GstPad *pad;
   GstBin *bin;
   gboolean tcp;
   gboolean udp;
   gboolean mcast;
+  gboolean secure;
   gint i;
+  GstCaps *rtp_caps;
+  GstCaps *rtcp_caps;
 
   GST_DEBUG_OBJECT (stream, "create receiver part");
   priv = stream->priv;
@@ -3512,6 +3516,20 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
   tcp = transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP;
   udp = transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP;
   mcast = transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST;
+  secure = (priv->profiles & GST_RTSP_PROFILE_SAVP)
+      || (priv->profiles & GST_RTSP_PROFILE_SAVPF);
+
+  if (secure) {
+    rtp_caps = gst_caps_new_empty_simple ("application/x-srtp");
+    rtcp_caps = gst_caps_new_empty_simple ("application/x-srtcp");
+  } else {
+    rtp_caps = gst_caps_new_empty_simple ("application/x-rtp");
+    rtcp_caps = gst_caps_new_empty_simple ("application/x-rtcp");
+  }
+
+  GST_DEBUG_OBJECT (stream,
+      "RTP caps: %" GST_PTR_FORMAT " RTCP caps: %" GST_PTR_FORMAT, rtp_caps,
+      rtcp_caps);
 
   for (i = 0; i < 2; i++) {
     /* For the receiver we create this bit of pipeline for both
@@ -3558,7 +3576,13 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
       GST_DEBUG_OBJECT (stream, "udp IPv4, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->udpsrc_v4[i],
               priv->socket_v4[i]))
-        goto udpsrc_error;
+        goto done;
+
+      if (i == 0) {
+        g_object_set (priv->udpsrc_v4[i], "caps", rtp_caps, NULL);
+      } else {
+        g_object_set (priv->udpsrc_v4[i], "caps", rtcp_caps, NULL);
+      }
 
       plug_src (stream, bin, priv->udpsrc_v4[i], priv->funnel[i]);
     }
@@ -3567,7 +3591,13 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
       GST_DEBUG_OBJECT (stream, "udp IPv6, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->udpsrc_v6[i],
               priv->socket_v6[i]))
-        goto udpsrc_error;
+        goto done;
+
+      if (i == 0) {
+        g_object_set (priv->udpsrc_v6[i], "caps", rtp_caps, NULL);
+      } else {
+        g_object_set (priv->udpsrc_v6[i], "caps", rtcp_caps, NULL);
+      }
 
       plug_src (stream, bin, priv->udpsrc_v6[i], priv->funnel[i]);
     }
@@ -3576,7 +3606,14 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
       GST_DEBUG_OBJECT (stream, "mcast IPv4, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->mcast_udpsrc_v4[i],
               priv->mcast_socket_v4[i]))
-        goto mcast_udpsrc_error;
+        goto done;
+
+      if (i == 0) {
+        g_object_set (priv->mcast_udpsrc_v4[i], "caps", rtp_caps, NULL);
+      } else {
+        g_object_set (priv->mcast_udpsrc_v4[i], "caps", rtcp_caps, NULL);
+      }
+
       plug_src (stream, bin, priv->mcast_udpsrc_v4[i], priv->funnel[i]);
     }
 
@@ -3584,7 +3621,14 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
       GST_DEBUG_OBJECT (stream, "mcast IPv6, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->mcast_udpsrc_v6[i],
               priv->mcast_socket_v6[i]))
-        goto mcast_udpsrc_error;
+        goto done;
+
+      if (i == 0) {
+        g_object_set (priv->mcast_udpsrc_v6[i], "caps", rtp_caps, NULL);
+      } else {
+        g_object_set (priv->mcast_udpsrc_v6[i], "caps", rtcp_caps, NULL);
+      }
+
       plug_src (stream, bin, priv->mcast_udpsrc_v6[i], priv->funnel[i]);
     }
 
@@ -3600,11 +3644,12 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     gst_element_sync_state_with_parent (priv->funnel[i]);
   }
 
-  return TRUE;
+  ret = TRUE;
 
-mcast_udpsrc_error:
-udpsrc_error:
-  return FALSE;
+done:
+  gst_caps_unref (rtp_caps);
+  gst_caps_unref (rtcp_caps);
+  return ret;
 }
 
 static gboolean
