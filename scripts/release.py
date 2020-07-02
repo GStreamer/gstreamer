@@ -95,7 +95,7 @@ HERE = os.path.realpath(os.path.dirname(__file__))
 if __name__ == "__main__":
     files = sys.argv[1]
     version = sys.argv[2]
-    release_name = 'gstreamer-doc-' + sys.argv[2]
+    release_name = 'gstreamer-docs-' + sys.argv[2]
     builddir = sys.argv[3]
     readme = os.path.join(builddir, "README.md")
     outname = release_name + '.tar.xz'
