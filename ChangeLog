@@ -1,3 +1,57 @@
+=== release 1.17.2 ===
+
+2020-07-03 00:35:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.17.2
+
+2020-06-23 16:11:59 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/GESTimeOverlayClip-children-props.md:
+	* docs/libs/GESTitleSource-children-props.md:
+	* docs/libs/GESVideoTestSource-children-props.md:
+	* docs/libs/GESVideoUriSource-children-props.md:
+	* ges/ges-track.c:
+	* plugins/nle/nleoperation.c:
+	  docs: fix links
+
+2020-06-23 00:05:13 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  plugins_cache: add base classes
+
+2020-06-23 00:04:52 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/meson.build:
+	  meson: mark plugins cache target as always stale
+
+2020-06-21 01:42:26 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* plugins/ges/gesbasebin.c:
+	* plugins/nle/nleobject.c:
+	  docs: mark more types as plugin API
+
+2020-06-19 22:56:41 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: Stop documenting properties from parents
+
+2020-06-22 12:34:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-smart-video-mixer.c:
+	  smart-video-mixer: Don't call gst_ghost_pad_construct() anymore
+	  It's deprecated, unneeded and doesn't do anything anymore.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/192>
+
+2020-06-20 00:28:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.1 ===
 
 2020-06-19 19:25:56 +0100  Tim-Philipp Müller <tim@centricular.com>
