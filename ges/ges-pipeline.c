@@ -1066,7 +1066,7 @@ ges_pipeline_set_timeline (GESPipeline * pipeline, GESTimeline * timeline)
  * result to
  * @profile: The encoding to use for rendering the #GESPipeline:timeline
  *
- * Specifies the encoding to be used by the pipeline to render its
+ * Specifies encoding setting to be used by the pipeline to render its
  * #GESPipeline:timeline, and where the result should be written to.
  *
  * This method **must** be called before setting the pipeline mode to
@@ -1105,13 +1105,32 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
     g_list_free_full (tracks, gst_object_unref);
 
     for (; tmpprofiles; tmpprofiles = tmpprofiles->next) {
-      if ((GST_IS_ENCODING_AUDIO_PROFILE (tmpprofiles->data) && n_audiotracks))
-        n_audiotracks--;
-      else if ((GST_IS_ENCODING_VIDEO_PROFILE (tmpprofiles->data)
-              && n_videotracks))
-        n_videotracks--;
-      else
+      if (!gst_encoding_profile_is_enabled (tmpprofiles->data))
         continue;
+
+      if (GST_IS_ENCODING_AUDIO_PROFILE (tmpprofiles->data)) {
+        if (n_audiotracks) {
+          n_audiotracks--;
+        } else {
+          GST_INFO_OBJECT (pipeline, "No audio track but got an audio profile, "
+              " make it optional: %" GST_PTR_FORMAT, tmpprofiles);
+          gst_encoding_profile_set_presence (tmpprofiles->data, 0);
+
+          continue;
+        }
+      } else if (GST_IS_ENCODING_VIDEO_PROFILE (tmpprofiles->data)) {
+        if (n_videotracks) {
+          n_videotracks--;
+        } else {
+          GST_INFO_OBJECT (pipeline, "No video track but got a video profile, "
+              " make it optional: %" GST_PTR_FORMAT, tmpprofiles);
+          gst_encoding_profile_set_presence (tmpprofiles->data, 0);
+
+          continue;
+        }
+      } else {
+        continue;
+      }
 
       GST_DEBUG_OBJECT (pipeline, "Setting presence to 1!");
       gst_encoding_profile_set_single_segment (tmpprofiles->data, TRUE);
