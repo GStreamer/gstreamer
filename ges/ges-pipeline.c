@@ -1140,11 +1140,13 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   }
 
   /* Clear previous URI sink if it existed */
-  /* FIXME : We should figure out if it was added to the pipeline,
-   * and if so, remove it. */
   if (pipeline->priv->urisink) {
-    gst_object_unref (pipeline->priv->urisink);
+    GstObject *sink_parent =
+        gst_object_get_parent (GST_OBJECT (pipeline->priv->urisink));
+    if (sink_parent == GST_OBJECT (pipeline))
+      gst_bin_remove (GST_BIN (pipeline), pipeline->priv->urisink);
     pipeline->priv->urisink = NULL;
+    gst_clear_object (&sink_parent);
   }
 
   pipeline->priv->urisink =
@@ -1171,7 +1173,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
     return FALSE;
   }
 
-  /* We got a referencer when getting back the profile */
+  /* We got a reference when getting back the profile */
   pipeline->priv->profile = profile;
 
   return TRUE;
