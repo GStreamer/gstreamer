@@ -853,26 +853,42 @@ convert_cea708_cc_data_cea708_cdp_internal (GstDecklinkVideoSink * self,
 
   if (tc_meta) {
     const GstVideoTimeCode *tc = &tc_meta->tc;
+    guint8 u8;
 
     gst_byte_writer_put_uint8_unchecked (&bw, 0x71);
-    gst_byte_writer_put_uint8_unchecked (&bw, 0xc0 |
-        (((tc->hours % 10) & 0x3) << 4) |
-        ((tc->hours - (tc->hours % 10)) & 0xf));
+    /* reserved 11 - 2 bits */
+    u8 = 0xc0;
+    /* tens of hours - 2 bits */
+    u8 |= ((tc->hours / 10) & 0x3) << 4;
+    /* units of hours - 4 bits */
+    u8 |= (tc->hours % 10) & 0xf;
+    gst_byte_writer_put_uint8_unchecked (&bw, u8);
 
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x80 |
-        (((tc->minutes % 10) & 0x7) << 4) |
-        ((tc->minutes - (tc->minutes % 10)) & 0xf));
+    /* reserved 1 - 1 bit */
+    u8 = 0x80;
+    /* tens of minutes - 3 bits */
+    u8 |= ((tc->minutes / 10) & 0x7) << 4;
+    /* units of minutes - 4 bits */
+    u8 |= (tc->minutes % 10) & 0xf;
+    gst_byte_writer_put_uint8_unchecked (&bw, u8);
 
-    gst_byte_writer_put_uint8_unchecked (&bw,
-        (tc->field_count <
-            2 ? 0x00 : 0x80) | (((tc->seconds %
-                    10) & 0x7) << 4) | ((tc->seconds -
-                (tc->seconds % 10)) & 0xf));
+    /* field flag - 1 bit */
+    u8 = tc->field_count < 2 ? 0x00 : 0x80;
+    /* tens of seconds - 3 bits */
+    u8 |= ((tc->seconds / 10) & 0x7) << 4;
+    /* units of seconds - 4 bits */
+    u8 |= (tc->seconds % 10) & 0xf;
+    gst_byte_writer_put_uint8_unchecked (&bw, u8);
 
-    gst_byte_writer_put_uint8_unchecked (&bw,
-        ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) ? 0x80 :
-            0x00) | (((tc->frames % 10) & 0x3) << 4) | ((tc->frames -
-                (tc->frames % 10)) & 0xf));
+    /* drop frame flag - 1 bit */
+    u8 = (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) ? 0x80 :
+        0x00;
+    /* reserved0 - 1 bit */
+    /* tens of frames - 2 bits */
+    u8 |= ((tc->frames / 10) & 0x3) << 4;
+    /* units of frames 4 bits */
+    u8 |= (tc->frames % 10) & 0xf;
+    gst_byte_writer_put_uint8_unchecked (&bw, u8);
   }
 
   gst_byte_writer_put_uint8_unchecked (&bw, 0x72);
