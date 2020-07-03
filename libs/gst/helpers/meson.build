@@ -29,9 +29,11 @@ elif host_system == 'windows'
   message('PTP not supported on Windows, not ported yet.')
 elif host_system == 'ios'
   message('PTP not supported on iOS because of permissions.')
-elif ['linux', 'darwin', 'netbsd', 'freebsd', 'openbsd', 'kfreebsd', 'dragonfly', 'solaris'].contains(host_system)
+elif ['linux', 'darwin', 'netbsd', 'freebsd', 'openbsd', 'kfreebsd', 'dragonfly', 'sunos', 'gnu'].contains(host_system)
   message('PTP supported on ' + host_system + '.')
   have_ptp = true
+else
+  message('PTP not supported on ' + host_system + ', not ported yet.')
 endif
 
 if have_ptp
