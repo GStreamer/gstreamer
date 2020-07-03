@@ -317,6 +317,7 @@ gst_controller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 
 have_orcc = false
 orcc_args = []
+orc_targets = []
 # Used by various libraries/elements that use Orc code
 orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'),
     fallback : ['orc', 'orc_dep'])
@@ -416,6 +417,29 @@ if find_program('xgettext', required : get_option('nls')).found()
   subdir('po')
 endif
 subdir('docs')
+
+if have_orcc
+  update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')
+
+  orc_update_targets = []
+  foreach t : orc_targets
+    orc_name = t.get('name')
+    orc_file = t.get('orc-source')
+    header = t.get('header')
+    source = t.get('source')
+    # alias_target() only works with build targets, so can't use run_target() here
+    orc_update_targets += [
+      custom_target('update-orc-@0@'.format(orc_name),
+        input: [header, source],
+        command: [update_orc_dist_files, orc_file, header, source],
+        output: ['@0@-dist.c'.format(orc_name)]) # not entirely true
+    ]
+  endforeach
+
+  if meson.version().version_compare('>= 0.52')
+    update_orc_dist_target = alias_target('update-orc-dist', orc_update_targets)
+  endif
+endif
 
 # Use core_conf after all subdirs have set values
 configure_file(output : 'config.h', configuration : core_conf)
