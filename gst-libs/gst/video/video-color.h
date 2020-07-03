@@ -130,7 +130,9 @@ typedef enum {
   GST_VIDEO_TRANSFER_ARIB_STD_B67,
   /**
    * GST_VIDEO_TRANSFER_BT601:
+   *
    * also known as SMPTE170M / ITU-R BT1358 525 or 625 / ITU-R BT1700 NTSC
+   *
    * Since: 1.18
    */
   GST_VIDEO_TRANSFER_BT601
