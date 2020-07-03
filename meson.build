@@ -1,5 +1,5 @@
 project('gstreamer-vaapi', 'c',
-  version : '1.17.2',
+  version : '1.17.2.1',
   meson_version : '>= 0.48.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
