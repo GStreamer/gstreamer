@@ -142,8 +142,8 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
       TRUE, NULL);
   elements = g_ptr_array_new ();
   g_ptr_array_add (elements, vbin);
-  topbin = ges_source_create_topbin ("audiosrcbin", sub_element, elements);
-  g_ptr_array_free (elements, TRUE);
+  topbin = ges_source_create_topbin (GES_SOURCE (trksrc), "audiosrcbin",
+      sub_element, elements);
   volume = gst_bin_get_by_name (GST_BIN (vbin), "v");
   self->priv->capsfilter = gst_bin_get_by_name (GST_BIN (vbin),
       "audio-track-caps-filter");

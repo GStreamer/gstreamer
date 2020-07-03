@@ -471,9 +471,11 @@ ges_track_element_get_creator_asset                    (GESTrackElement * self);
 G_GNUC_INTERNAL void
 ges_track_element_set_has_internal_source_is_forbidden (GESTrackElement * element);
 
-G_GNUC_INTERNAL GstElement* ges_source_create_topbin(const gchar* bin_name, GstElement* sub_element, GPtrArray* elements);
-G_GNUC_INTERNAL void ges_track_set_caps(GESTrack* track,
-    const GstCaps* caps);
+G_GNUC_INTERNAL GstElement* ges_source_create_topbin  (GESSource *source,
+                                                       const gchar* bin_name,
+                                                       GstElement* sub_element,
+                                                       GPtrArray* elements);
+G_GNUC_INTERNAL void ges_track_set_caps                (GESTrack* track, const GstCaps* caps);
 G_GNUC_INTERNAL GstElement * ges_track_get_composition (GESTrack *track);
 
 

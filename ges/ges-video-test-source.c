@@ -256,8 +256,8 @@ ges_video_test_source_create_source (GESTrackElement * element)
 
   ges_track_element_add_children_props (element, testsrc, NULL, NULL, props);
 
-  res = ges_source_create_topbin ("videotestsrc", testsrc, elements);
-  g_ptr_array_free (elements, TRUE);
+  res = ges_source_create_topbin (GES_SOURCE (element), "videotestsrc", testsrc,
+      elements);
 
   return res;
 }

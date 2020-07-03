@@ -35,8 +35,11 @@
 #include "gstframepositioner.h"
 struct _GESSourcePrivate
 {
-  /*  Dummy variable */
-  GstFramePositioner *positioner;
+  GstElement *topbin;
+  GstElement *first_converter;
+  GstElement *last_converter;
+  GstPad *ghostpad;
+
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
@@ -44,54 +47,11 @@ G_DEFINE_TYPE_WITH_PRIVATE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
 /******************************
  *   Internal helper methods  *
  ******************************/
-static void
-_pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
+static GstElement *
+link_elements (GstElement * bin, GPtrArray * elements)
 {
-  GstPadLinkReturn res;
-  gst_element_no_more_pads (element);
-  res = gst_pad_link (srcpad, sinkpad);
-#ifndef GST_DISABLE_GST_DEBUG
-  if (res != GST_PAD_LINK_OK) {
-    GstCaps *srccaps = NULL;
-    GstCaps *sinkcaps = NULL;
-
-    srccaps = gst_pad_query_caps (srcpad, NULL);
-    sinkcaps = gst_pad_query_caps (sinkpad, NULL);
-
-    GST_WARNING_OBJECT (element, "Could not link source with "
-        "conversion bin: %s (srcpad caps %" GST_PTR_FORMAT
-        " sinkpad caps: %" GST_PTR_FORMAT ")",
-        gst_pad_link_get_name (res), srccaps, sinkcaps);
-    gst_caps_unref (srccaps);
-    gst_caps_unref (sinkcaps);
-  }
-#endif
-}
-
-static void
-_ghost_pad_added_cb (GstElement * element, GstPad * srcpad, GstElement * bin)
-{
-  GstPad *ghost;
-
-  ghost = gst_ghost_pad_new ("src", srcpad);
-  gst_pad_set_active (ghost, TRUE);
-  gst_element_add_pad (bin, ghost);
-  gst_element_no_more_pads (element);
-}
-
-GstElement *
-ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element,
-    GPtrArray * elements)
-{
-  GstElement *element;
-  GstElement *prev = NULL;
-  GstElement *first = NULL;
-  GstElement *bin;
-  GstPad *sub_srcpad;
+  GstElement *element, *prev = NULL, *first = NULL;
   gint i;
-
-  bin = gst_bin_new (bin_name);
-  gst_bin_add (GST_BIN (bin), sub_element);
 
   for (i = 0; i < elements->len; i++) {
     element = elements->pdata[i];
@@ -100,8 +60,8 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element,
       if (!gst_element_link_pads_full (prev, "src", element, "sink",
               GST_PAD_LINK_CHECK_NOTHING)) {
         if (!gst_element_link (prev, element)) {
-          g_error ("Could not link %s and %s",
-              GST_OBJECT_NAME (prev), GST_OBJECT_NAME (element));
+          g_error ("Could not link %s and %s", GST_OBJECT_NAME (prev),
+              GST_OBJECT_NAME (element));
         }
       }
     }
@@ -110,50 +70,127 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element,
       first = element;
   }
 
-  sub_srcpad = gst_element_get_static_pad (sub_element, "src");
+  return prev;
+}
 
-  if (prev != NULL) {
-    GstPad *srcpad, *sinkpad, *ghost;
+static void
+_set_ghost_pad_target (GESSource * self, GstPad * srcpad, GstElement * element)
+{
+  GESSourcePrivate *priv = self->priv;
+  gboolean use_converter = FALSE;
+  GstPadLinkReturn link_return;
 
-    srcpad = gst_element_get_static_pad (prev, "src");
-    ghost = gst_ghost_pad_new ("src", srcpad);
-    gst_pad_set_active (ghost, TRUE);
-    gst_element_add_pad (bin, ghost);
-
-    sinkpad = gst_element_get_static_pad (first, "sink");
-    if (sub_srcpad)
-      gst_pad_link_full (sub_srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-    else
-      g_signal_connect (sub_element, "pad-added", G_CALLBACK (_pad_added_cb),
-          sinkpad);
-
-    gst_object_unref (srcpad);
-    gst_object_unref (sinkpad);
-
-  } else if (sub_srcpad) {
-    GstPad *ghost;
-
-    ghost = gst_ghost_pad_new ("src", sub_srcpad);
-    gst_pad_set_active (ghost, TRUE);
-    gst_element_add_pad (bin, ghost);
-  } else {
-    g_signal_connect (sub_element, "pad-added",
-        G_CALLBACK (_ghost_pad_added_cb), bin);
+  if (priv->first_converter) {
+    GstPad *pad = gst_element_get_static_pad (priv->first_converter, "sink");
+    use_converter = gst_pad_can_link (srcpad, pad);
+    gst_object_unref (pad);
   }
 
-  if (sub_srcpad)
+  if (use_converter) {
+    GstPad *converter_src, *sinkpad;
+
+    converter_src = gst_element_get_static_pad (priv->last_converter, "src");
+    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (priv->ghostpad),
+            converter_src)) {
+      GST_ERROR_OBJECT (self, "Could not set ghost target");
+    }
+
+    sinkpad = gst_element_get_static_pad (priv->first_converter, "sink");
+    link_return = gst_pad_link (srcpad, sinkpad);
+#ifndef GST_DISABLE_GST_DEBUG
+    if (link_return != GST_PAD_LINK_OK) {
+      GstCaps *srccaps = NULL;
+      GstCaps *sinkcaps = NULL;
+
+      srccaps = gst_pad_query_caps (srcpad, NULL);
+      sinkcaps = gst_pad_query_caps (sinkpad, NULL);
+
+      GST_ERROR_OBJECT (element, "Could not link source with "
+          "conversion bin: %s (srcpad caps %" GST_PTR_FORMAT
+          " sinkpad caps: %" GST_PTR_FORMAT ")",
+          gst_pad_link_get_name (link_return), srccaps, sinkcaps);
+      gst_caps_unref (srccaps);
+      gst_caps_unref (sinkcaps);
+    }
+#endif
+
+    gst_object_unref (converter_src);
+    gst_object_unref (sinkpad);
+  } else {
+    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (priv->ghostpad), srcpad))
+      GST_ERROR_OBJECT (self, "Could not set ghost target");
+  }
+
+  gst_element_no_more_pads (element);
+}
+
+/* @elements: (transfer-full) */
+GstElement *
+ges_source_create_topbin (GESSource * source, const gchar * bin_name,
+    GstElement * sub_element, GPtrArray * elements)
+{
+  GstElement *last;
+  GstElement *bin;
+  GstPad *sub_srcpad;
+  GESSourcePrivate *priv = source->priv;
+
+  bin = gst_bin_new (bin_name);
+  if (!gst_bin_add (GST_BIN (bin), sub_element)) {
+    GST_ERROR_OBJECT (source, "Could not add sub element: %" GST_PTR_FORMAT,
+        sub_element);
+    gst_object_unref (bin);
+    return NULL;
+  }
+
+  priv->ghostpad = gst_object_ref (gst_ghost_pad_new_no_target ("src",
+          GST_PAD_SRC));
+  gst_pad_set_active (priv->ghostpad, TRUE);
+  gst_element_add_pad (bin, priv->ghostpad);
+  priv->topbin = gst_object_ref (bin);
+  last = link_elements (bin, elements);
+  if (last) {
+    priv->first_converter = gst_object_ref (elements->pdata[0]);
+    priv->last_converter = gst_object_ref (last);
+  }
+
+  sub_srcpad = gst_element_get_static_pad (sub_element, "src");
+  if (sub_srcpad) {
+    _set_ghost_pad_target (source, sub_srcpad, sub_element);
     gst_object_unref (sub_srcpad);
+  } else {
+    GST_INFO_OBJECT (source, "Waiting for pad added");
+    g_signal_connect_swapped (sub_element, "pad-added",
+        G_CALLBACK (_set_ghost_pad_target), source);
+  }
+  g_ptr_array_free (elements, TRUE);
 
   return bin;
+}
+
+
+static void
+ges_source_dispose (GObject * object)
+{
+  GESSourcePrivate *priv = GES_SOURCE (object)->priv;
+
+  gst_clear_object (&priv->first_converter);
+  gst_clear_object (&priv->last_converter);
+  gst_clear_object (&priv->topbin);
+  gst_clear_object (&priv->ghostpad);
+
+  G_OBJECT_CLASS (ges_source_parent_class)->dispose (object);
 }
 
 static void
 ges_source_class_init (GESSourceClass * klass)
 {
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = NULL;
+  object_class->dispose = ges_source_dispose;
+
   GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = TRUE;
 }
 

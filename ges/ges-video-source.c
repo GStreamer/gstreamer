@@ -177,8 +177,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
     return NULL;
   }
 
-  topbin = ges_source_create_topbin ("videosrcbin", sub_element, elements);
-  g_ptr_array_free (elements, TRUE);
+  topbin = ges_source_create_topbin (GES_SOURCE (trksrc), "videosrcbin",
+      sub_element, elements);
 
   return topbin;
 }
