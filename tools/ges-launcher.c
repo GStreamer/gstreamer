@@ -106,6 +106,83 @@ _set_restriction_caps (GESTimeline * timeline, GESLauncherParsedOptions * opts)
 }
 
 static gboolean
+_set_rendering_details (GESLauncher * self)
+{
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
+  GESPipelineFlags cmode = ges_pipeline_get_mode (self->priv->pipeline);
+
+  if (cmode & GES_PIPELINE_MODE_RENDER
+      || cmode & GES_PIPELINE_MODE_SMART_RENDER) {
+    GST_INFO_OBJECT (self, "Rendering settings already set");
+    return TRUE;
+  }
+
+  /* Setup profile/encoding if needed */
+  if (opts->outputuri) {
+    GstEncodingProfile *prof = NULL;
+    if (!opts->format) {
+      GESProject *proj =
+          GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
+                  priv->timeline)));
+      const GList *profiles = ges_project_list_encoding_profiles (proj);
+
+      if (profiles) {
+        prof = profiles->data;
+        if (opts->encoding_profile)
+          for (; profiles; profiles = profiles->next)
+            if (g_strcmp0 (opts->encoding_profile,
+                    gst_encoding_profile_get_name (profiles->data)) == 0)
+              prof = profiles->data;
+      }
+    }
+
+    if (!prof) {
+      if (opts->format == NULL) {
+        opts->format = get_file_extension (opts->outputuri);
+        prof = parse_encoding_profile (opts->format);
+      } else {
+        prof = parse_encoding_profile (opts->format);
+        if (!prof)
+          g_error ("Invalid format specified: %s", opts->format);
+      }
+
+      if (!prof) {
+        warn ("No format specified and couldn't find one from output file extension, " "falling back to theora+vorbis in ogg.");
+        g_free (opts->format);
+
+        opts->format =
+            g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
+        prof = parse_encoding_profile (opts->format);
+      }
+
+      if (!prof) {
+        printerr ("Could not find any encoding format for %s\n", opts->format);
+        return FALSE;
+      }
+
+      g_print ("Output: %s\n", opts->outputuri);
+      g_print ("Encoding to:\n");
+      describe_encoding_profile (prof);
+    }
+
+    opts->outputuri = ensure_uri (opts->outputuri);
+    if (!prof
+        || !ges_pipeline_set_render_settings (self->priv->pipeline,
+            opts->outputuri, prof)
+        || !ges_pipeline_set_mode (self->priv->pipeline,
+            opts->smartrender ? GES_PIPELINE_MODE_SMART_RENDER :
+            GES_PIPELINE_MODE_RENDER)) {
+      return FALSE;
+    }
+
+    gst_encoding_profile_unref (prof);
+  } else {
+    ges_pipeline_set_mode (self->priv->pipeline, GES_PIPELINE_MODE_PREVIEW);
+  }
+  return TRUE;
+}
+
+static gboolean
 _timeline_set_user_options (GESLauncher * self, GESTimeline * timeline,
     const gchar * load_path)
 {
@@ -220,6 +297,10 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     g_application_quit (G_APPLICATION (self));
   }
   _timeline_set_user_options (self, timeline, project_uri);
+  if (project_uri) {
+    if (!_set_rendering_details (self))
+      g_error ("Failed to setup rendering details\n");
+  }
 
   g_free (project_uri);
 
@@ -457,6 +538,11 @@ _run_pipeline (GESLauncher * self)
       printerr ("Could not properly set tracks\n");
       return FALSE;
     }
+
+    if (!_set_rendering_details (self)) {
+      g_error ("Failed to setup rendering details\n");
+      return FALSE;
+    }
   }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (self->priv->pipeline));
@@ -473,76 +559,6 @@ _run_pipeline (GESLauncher * self)
   }
   g_application_hold (G_APPLICATION (self));
 
-  return TRUE;
-}
-
-static gboolean
-_set_rendering_details (GESLauncher * self)
-{
-  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
-
-  /* Setup profile/encoding if needed */
-  if (opts->outputuri) {
-    GstEncodingProfile *prof = NULL;
-    if (!opts->format) {
-      GESProject *proj =
-          GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
-                  priv->timeline)));
-      const GList *profiles = ges_project_list_encoding_profiles (proj);
-
-      if (profiles) {
-        prof = profiles->data;
-        if (opts->encoding_profile)
-          for (; profiles; profiles = profiles->next)
-            if (g_strcmp0 (opts->encoding_profile,
-                    gst_encoding_profile_get_name (profiles->data)) == 0)
-              prof = profiles->data;
-      }
-    }
-
-    if (!prof) {
-      if (opts->format == NULL) {
-        opts->format = get_file_extension (opts->outputuri);
-
-        prof = parse_encoding_profile (opts->format);
-      } else {
-        prof = parse_encoding_profile (opts->format);
-        if (!prof)
-          g_error ("Invalid format specified: %s", opts->format);
-      }
-
-      if (!prof) {
-        warn ("No format specified and couldn't find one from output file extension, " "falling back to theora+vorbis in ogg.");
-        g_free (opts->format);
-
-        opts->format =
-            g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
-        prof = parse_encoding_profile (opts->format);
-      }
-
-      if (!prof) {
-        printerr ("Could not find any encoding format for %s\n", opts->format);
-        return FALSE;
-      }
-
-      g_print ("Encoding to:\n\n");
-      describe_encoding_profile (prof);
-    }
-
-    opts->outputuri = ensure_uri (opts->outputuri);
-    if (!prof
-        || !ges_pipeline_set_render_settings (self->priv->pipeline,
-            opts->outputuri, prof)
-        || !ges_pipeline_set_mode (self->priv->pipeline,
-            opts->smartrender ? GES_PIPELINE_MODE_SMART_RENDER :
-            GES_PIPELINE_MODE_RENDER)) {
-      return FALSE;
-    }
-
-    gst_encoding_profile_unref (prof);
-  } else {
-    ges_pipeline_set_mode (self->priv->pipeline, GES_PIPELINE_MODE_PREVIEW);
-  }
   return TRUE;
 }
 
