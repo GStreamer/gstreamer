@@ -21,6 +21,7 @@
 
 import os
 import sys
+import tempfile
 import urllib.parse
 import subprocess
 from launcher import utils
@@ -263,12 +264,12 @@ class GESTestsManager(TestsManager):
 
     def init(self):
         try:
-            if "--set-scenario=" in subprocess.check_output([GES_LAUNCH_COMMAND, "--help"]).decode():
-
-                return True
-            else:
-                self.warning("Can not use ges-launch, it seems not to be compiled against"
-                             " gst-validate")
+            with tempfile.NamedTemporaryFile() as f:
+                if "--set-scenario=" in subprocess.check_output([GES_LAUNCH_COMMAND, "--help"], stderr=f).decode():
+                    return True
+                else:
+                    self.warning("Can not use ges-launch, it seems not to be compiled against"
+                                " gst-validate")
         except subprocess.CalledProcessError as e:
             self.warning("Can not use ges-launch: %s" % e)
         except OSError as e:
