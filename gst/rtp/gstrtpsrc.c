@@ -59,6 +59,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_src_debug);
 #define DEFAULT_PROP_TTL              64
 #define DEFAULT_PROP_TTL_MC           1
 #define DEFAULT_PROP_ENCODING_NAME    NULL
+#define DEFAULT_PROP_CAPS             NULL
 #define DEFAULT_PROP_LATENCY          200
 
 #define DEFAULT_PROP_ADDRESS          "0.0.0.0"
@@ -78,6 +79,7 @@ enum
   PROP_ENCODING_NAME,
   PROP_LATENCY,
   PROP_MULTICAST_IFACE,
+  PROP_CAPS,
 
   PROP_LAST
 };
@@ -120,6 +122,12 @@ gst_rtp_src_rtpbin_request_pt_map_cb (GstElement * rtpbin, guint session_id,
 
   GST_DEBUG_OBJECT (self,
       "Requesting caps for session-id 0x%x and pt %u.", session_id, pt);
+
+  if (G_UNLIKELY (self->caps)) {
+    GST_DEBUG_OBJECT (self,
+        "Full caps were set, no need for lookup %" GST_PTR_FORMAT, self->caps);
+    return gst_caps_copy (self->caps);
+  }
 
   /* the encoding-name has more relevant information */
   if (self->encoding_name != NULL) {
@@ -231,6 +239,22 @@ gst_rtp_src_set_property (GObject * object, guint prop_id,
       else
         self->multi_iface = g_value_dup_string (value);
       break;
+    case PROP_CAPS:
+    {
+      const GstCaps *new_caps_val = gst_value_get_caps (value);
+      GstCaps *new_caps = NULL;
+      GstCaps *old_caps = self->caps;
+
+      if (new_caps_val != NULL) {
+        new_caps = gst_caps_copy (new_caps_val);
+      }
+
+      self->caps = new_caps;
+
+      if (old_caps)
+        gst_caps_unref (old_caps);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -273,6 +297,9 @@ gst_rtp_src_get_property (GObject * object, guint prop_id,
     case PROP_MULTICAST_IFACE:
       g_value_set_string (value, self->multi_iface);
       break;
+    case PROP_CAPS:
+      gst_value_set_caps (value, self->caps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -289,6 +316,9 @@ gst_rtp_src_finalize (GObject * gobject)
   g_free (self->encoding_name);
 
   g_free (self->multi_iface);
+
+  if (self->caps)
+    gst_caps_unref (self->caps);
 
   g_mutex_clear (&self->lock);
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
@@ -411,6 +441,18 @@ gst_rtp_src_class_init (GstRtpSrcClass * klass)
           "The network interface on which to join the multicast group."
           "This allows multiple interfaces separated by comma. (\"eth0,eth1\")",
           DEFAULT_PROP_MULTICAST_IFACE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+  * GstRtpSrc:caps:
+  *
+  * The RTP caps of the incoming stream.
+  *
+  * Since: 1.20
+  */
+  g_object_class_install_property (gobject_class, PROP_CAPS,
+      g_param_spec_boxed ("caps", "Caps",
+          "The caps of the incoming stream", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -753,6 +795,7 @@ gst_rtp_src_init (GstRtpSrc * self)
   self->ttl = DEFAULT_PROP_TTL;
   self->ttl_mc = DEFAULT_PROP_TTL_MC;
   self->encoding_name = DEFAULT_PROP_ENCODING_NAME;
+  self->caps = DEFAULT_PROP_CAPS;
 
   GST_OBJECT_FLAG_SET (GST_OBJECT (self), GST_ELEMENT_FLAG_SOURCE);
   gst_bin_set_suppressed_flags (GST_BIN (self),

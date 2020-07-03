@@ -51,6 +51,7 @@ struct _GstRtpSrc
   gint ttl_mc;
   gchar *encoding_name;
   gchar *multi_iface;
+  GstCaps *caps;
 
   /* Internal elements */
   GstElement *rtpbin;
