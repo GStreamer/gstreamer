@@ -26,6 +26,10 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GESUriSource: (attributes doc.skip=true):
+ */
+typedef struct _GESUriSource GESUriSource;
 #define GES_TYPE_VIDEO_URI_SOURCE ges_video_uri_source_get_type()
 GES_DECLARE_TYPE(VideoUriSource, video_uri_source, VIDEO_URI_SOURCE);
 
@@ -42,7 +46,7 @@ struct _GESVideoUriSource {
 
   gchar *uri;
 
-  GESVideoUriSourcePrivate *priv;
+  GESUriSource *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

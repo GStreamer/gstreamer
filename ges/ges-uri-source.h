@@ -1,6 +1,6 @@
 /* GStreamer Editing Services
- * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
- *               2009 Nokia Corporation
+ * Copyright (C) 2020 Ubicast SAS
+ *               Author: Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,40 +21,21 @@
 #pragma once
 
 #include <glib-object.h>
-#include <ges/ges-types.h>
-#include <ges/ges-audio-source.h>
+#include <ges/ges.h>
 
 G_BEGIN_DECLS
 
 typedef struct _GESUriSource GESUriSource;
-#define GES_TYPE_AUDIO_URI_SOURCE ges_audio_uri_source_get_type()
-GES_DECLARE_TYPE(AudioUriSource, audio_uri_source, AUDIO_URI_SOURCE);
 
-/**
- * GESAudioUriSource:
- *
- * ### Children Properties
- *
- *  {{ libs/GESVideoUriSource-children-props.md }}
- */
-struct _GESAudioUriSource {
-  /*< private >*/
-  GESAudioSource parent;
-
+struct _GESUriSource
+{
+  GstElement *decodebin;        /* Reference owned by parent class */
   gchar *uri;
 
-  GESUriSource *priv;
-
-  /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  GESTrackElement *element;
 };
 
-struct _GESAudioUriSourceClass {
-  /*< private >*/
-  GESAudioSourceClass parent_class;
-
-  /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
-};
+G_GNUC_INTERNAL GstElement * ges_uri_source_create_source (GESUriSource *self);
+G_GNUC_INTERNAL void         ges_uri_source_init          (GESTrackElement *element, GESUriSource *self);
 
 G_END_DECLS

@@ -30,13 +30,14 @@
 #include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-track-element.h"
+#include "ges-uri-source.h"
 #include "ges-audio-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-extractable.h"
 
 struct _GESAudioUriSourcePrivate
 {
-  GstElement *decodebin;        /* Reference owned by parent class */
+  GESUriSource parent;
 };
 
 enum
@@ -45,49 +46,11 @@ enum
   PROP_URI
 };
 
-static void
-ges_audio_uri_source_track_set_cb (GESAudioUriSource * self,
-    GParamSpec * arg G_GNUC_UNUSED, gpointer nothing)
-{
-  GESTrack *track;
-  const GstCaps *caps = NULL;
-
-  if (!self->priv->decodebin)
-    return;
-
-  track = ges_track_element_get_track (GES_TRACK_ELEMENT (self));
-  if (!track)
-    return;
-
-  caps = ges_track_get_caps (track);
-
-  GST_INFO_OBJECT (self, "Setting caps to: %" GST_PTR_FORMAT, caps);
-  g_object_set (self->priv->decodebin, "caps", caps, NULL);
-}
-
 /* GESSource VMethod */
 static GstElement *
-ges_audio_uri_source_create_source (GESTrackElement * trksrc)
+ges_audio_uri_source_create_source (GESTrackElement * element)
 {
-  GESAudioUriSource *self;
-  GESTrack *track;
-  GstElement *decodebin;
-  const GstCaps *caps = NULL;
-
-  self = (GESAudioUriSource *) trksrc;
-
-  track = ges_track_element_get_track (trksrc);
-
-  self->priv->decodebin = decodebin =
-      gst_element_factory_make ("uridecodebin", NULL);
-
-  if (track)
-    caps = ges_track_get_caps (track);
-
-  g_object_set (decodebin, "caps", caps,
-      "expose-all-streams", FALSE, "uri", self->uri, NULL);
-
-  return decodebin;
+  return ges_uri_source_create_source (GES_AUDIO_URI_SOURCE (element)->priv);
 }
 
 /* Extractable interface implementation */
@@ -151,7 +114,7 @@ ges_audio_uri_source_set_property (GObject * object, guint property_id,
         GST_WARNING_OBJECT (object, "Uri already set to %s", uriclip->uri);
         return;
       }
-      uriclip->uri = g_value_dup_string (value);
+      uriclip->priv->uri = uriclip->uri = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -197,9 +160,7 @@ static void
 ges_audio_uri_source_init (GESAudioUriSource * self)
 {
   self->priv = ges_audio_uri_source_get_instance_private (self);
-
-  g_signal_connect (self, "notify::track",
-      G_CALLBACK (ges_audio_uri_source_track_set_cb), NULL);
+  ges_uri_source_init (GES_TRACK_ELEMENT (self), self->priv);
 }
 
 /**

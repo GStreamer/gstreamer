@@ -11,6 +11,7 @@ ges_sources = files([
     'ges-base-effect-clip.c',
     'ges-effect-clip.c',
     'ges-uri-clip.c',
+    'ges-uri-source.c',
     'ges-operation-clip.c',
     'ges-base-transition-clip.c',
     'ges-transition-clip.c',
