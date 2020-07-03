@@ -4155,6 +4155,14 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
             "content-light-level", G_TYPE_STRING, s, NULL);
       }
     }
+    if (gst_structure_has_field (in_struct, "hdr-format")) {
+      const gchar *s;
+      state->caps = gst_caps_make_writable (state->caps);
+
+      if ((s = gst_structure_get_string (in_struct, "hdr-format"))) {
+        gst_caps_set_simple (state->caps, "hdr-format", G_TYPE_STRING, s, NULL);
+      }
+    }
 
     gst_caps_unref (incaps);
   }
