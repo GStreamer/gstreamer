@@ -345,8 +345,8 @@ nle_source_control_element_func (NleSource * source, GstElement * element)
 
   g_return_val_if_fail (source->element == NULL, FALSE);
 
-  GST_DEBUG_OBJECT (source, "element:%s, source->element:%p",
-      GST_ELEMENT_NAME (element), source->element);
+  GST_DEBUG_OBJECT (source, "element: %" GST_PTR_FORMAT ", source->element:%"
+      GST_PTR_FORMAT, element, source->element);
 
   source->element = element;
   gst_object_ref (element);
