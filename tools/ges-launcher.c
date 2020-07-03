@@ -105,10 +105,111 @@ _set_restriction_caps (GESTimeline * timeline, GESLauncherParsedOptions * opts)
 
 }
 
+static void
+_check_has_audio_video (GESLauncher * self, gint * n_audio, gint * n_video)
+{
+  GList *tmp, *tracks = ges_timeline_get_tracks (self->priv->timeline);
+
+  *n_video = *n_audio = 0;
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_VIDEO)
+      *n_video = *n_video + 1;
+    else if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_AUDIO)
+      *n_audio = *n_audio + 1;
+  }
+}
+
+#define N_INSTANCES "__n_instances"
+static gint
+sort_encoding_profiles (gconstpointer a, gconstpointer b)
+{
+  const gint acount =
+      GPOINTER_TO_INT (g_object_get_data ((GObject *) a, N_INSTANCES));
+  const gint bcount =
+      GPOINTER_TO_INT (g_object_get_data ((GObject *) b, N_INSTANCES));
+
+  if (acount < bcount)
+    return -1;
+
+  if (acount == bcount)
+    return 0;
+
+  return 1;
+}
+
+static GstEncodingProfile *
+get_smart_profile (GESLauncher * self)
+{
+  gint n_audio, n_video;
+  GList *tmp, *assets, *possible_profiles = NULL;
+  GstEncodingProfile *res = NULL;
+  GESProject *proj =
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
+              priv->timeline)));
+
+  _check_has_audio_video (self, &n_audio, &n_video);
+  assets = ges_project_list_assets (proj, GES_TYPE_URI_CLIP);
+  for (tmp = assets; tmp; tmp = tmp->next) {
+    GESAsset *asset = tmp->data;
+    GList *audio_streams, *video_streams;
+    GstDiscovererInfo *info;
+
+    if (!GES_IS_URI_CLIP_ASSET (asset))
+      continue;
+
+    info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
+    audio_streams = gst_discoverer_info_get_audio_streams (info);
+    video_streams = gst_discoverer_info_get_video_streams (info);
+    if (g_list_length (audio_streams) >= n_audio
+        && g_list_length (video_streams) >= n_video) {
+      GstEncodingProfile *prof = gst_encoding_profile_from_discoverer (info);
+      GList *prevprof;
+
+      prevprof =
+          g_list_find_custom (possible_profiles, prof,
+          (GCompareFunc) gst_encoding_profile_is_equal);
+      if (prevprof) {
+        g_object_unref (prof);
+        prof = prevprof->data;
+      } else {
+        possible_profiles = g_list_prepend (possible_profiles, prof);
+      }
+
+      g_object_set_data ((GObject *) prof, N_INSTANCES,
+          GINT_TO_POINTER (GPOINTER_TO_INT (g_object_get_data ((GObject *) prof,
+                      N_INSTANCES)) + 1));
+    }
+    gst_discoverer_stream_info_list_free (audio_streams);
+    gst_discoverer_stream_info_list_free (video_streams);
+  }
+  g_list_free_full (assets, gst_object_unref);
+
+  if (possible_profiles) {
+    possible_profiles = g_list_sort (possible_profiles, sort_encoding_profiles);
+    res = gst_object_ref (possible_profiles->data);
+    g_list_free_full (possible_profiles, gst_object_unref);
+  }
+
+  return res;
+}
+
+static void
+disable_bframe_for_smart_rendering_cb (GstBin * bin, GstBin * sub_bin,
+    GstElement * child)
+{
+  GstElementFactory *factory = gst_element_get_factory (child);
+
+  if (factory && !g_strcmp0 (GST_OBJECT_NAME (factory), "x264enc")) {
+    g_object_set (child, "b-adapt", FALSE, "b-pyramid", FALSE, "bframes", 0,
+        NULL);
+  }
+}
+
 static gboolean
 _set_rendering_details (GESLauncher * self)
 {
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
+  gboolean smart_profile = FALSE;
   GESPipelineFlags cmode = ges_pipeline_get_mode (self->priv->pipeline);
 
   if (cmode & GES_PIPELINE_MODE_RENDER
@@ -138,8 +239,14 @@ _set_rendering_details (GESLauncher * self)
 
     if (!prof) {
       if (opts->format == NULL) {
-        opts->format = get_file_extension (opts->outputuri);
-        prof = parse_encoding_profile (opts->format);
+        if (opts->smartrender)
+          prof = get_smart_profile (self);
+        if (prof)
+          smart_profile = TRUE;
+        else {
+          opts->format = get_file_extension (opts->outputuri);
+          prof = parse_encoding_profile (opts->format);
+        }
       } else {
         prof = parse_encoding_profile (opts->format);
         if (!prof)
@@ -161,11 +268,17 @@ _set_rendering_details (GESLauncher * self)
       }
 
       g_print ("Output: %s\n", opts->outputuri);
-      g_print ("Encoding to:\n");
+      g_print ("Encoding to:%s\n", smart_profile ?
+          " (Selected from input files format for efficient smart rendering)" :
+          "");
       describe_encoding_profile (prof);
     }
 
     opts->outputuri = ensure_uri (opts->outputuri);
+    if (opts->smartrender) {
+      g_signal_connect (self->priv->pipeline, "deep-element-added",
+          G_CALLBACK (disable_bframe_for_smart_rendering_cb), NULL);
+    }
     if (!prof
         || !ges_pipeline_set_render_settings (self->priv->pipeline,
             opts->outputuri, prof)
@@ -180,6 +293,19 @@ _set_rendering_details (GESLauncher * self)
     ges_pipeline_set_mode (self->priv->pipeline, GES_PIPELINE_MODE_PREVIEW);
   }
   return TRUE;
+}
+
+static void
+_track_set_mixing (GESTrack * track, GESLauncherParsedOptions * opts)
+{
+  static gboolean printed_mixing_disabled = FALSE;
+
+  if (opts->disable_mixing || opts->smartrender)
+    ges_track_set_mixing (track, FALSE);
+  if (!opts->disable_mixing && opts->smartrender && !printed_mixing_disabled) {
+    g_print ("**Mixing is disabled for smart rendering to work**\n");
+    printed_mixing_disabled = TRUE;
+  }
 }
 
 static gboolean
@@ -199,9 +325,7 @@ retry:
     else if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_AUDIO)
       has_audio = TRUE;
 
-    if (opts->disable_mixing)
-      ges_track_set_mixing (tmp->data, FALSE);
-
+    _track_set_mixing (tmp->data, opts);
     if (!(GES_TRACK (tmp->data)->type & opts->track_types)) {
       ges_timeline_remove_track (timeline, tmp->data);
       goto retry;
@@ -215,8 +339,7 @@ retry:
       if (!_set_track_restriction_caps (trackv, opts->video_track_caps))
         return FALSE;
 
-      if (opts->disable_mixing)
-        ges_track_set_mixing (trackv, FALSE);
+      _track_set_mixing (trackv, opts);
 
       if (!(ges_timeline_add_track (timeline, trackv)))
         return FALSE;
@@ -228,8 +351,7 @@ retry:
       if (!_set_track_restriction_caps (tracka, opts->audio_track_caps))
         return FALSE;
 
-      if (opts->disable_mixing)
-        ges_track_set_mixing (tracka, FALSE);
+      _track_set_mixing (tracka, opts);
 
       if (!(ges_timeline_add_track (timeline, tracka)))
         return FALSE;
@@ -720,6 +842,9 @@ ges_launcher_get_rendering_option_group (GESLauncherParsedOptions * opts)
           "See ges-launch-1.0 help profile for more information. "
           "This will have no effect if no outputuri has been specified.",
         "<profile-name>"},
+    {"smart-rendering", 0, 0, G_OPTION_ARG_NONE, &opts->smartrender,
+          "Avoid reencoding when rendering. This option implies --disable-mixing.",
+        NULL},
     {NULL}
   };
 
