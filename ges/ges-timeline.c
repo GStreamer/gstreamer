@@ -230,6 +230,8 @@ struct _GESTimelinePrivate
   gboolean disposed;
 
   GstStreamCollection *stream_collection;
+
+  gboolean rendering_smartly;
 };
 
 /* private structure to contain our track-related information */
@@ -2051,6 +2053,10 @@ timeline_add_element (GESTimeline * timeline, GESTimelineElement * element)
       ges_timeline_element_get_name (element), gst_object_ref (element));
 
   timeline_tree_track_element (timeline->priv->tree, element);
+  if (GES_IS_SOURCE (element)) {
+    ges_source_set_rendering_smartly (GES_SOURCE (element),
+        timeline->priv->rendering_smartly);
+  }
 
   return TRUE;
 }
@@ -2083,6 +2089,32 @@ GNode *
 timeline_get_tree (GESTimeline * timeline)
 {
   return timeline->priv->tree;
+}
+
+void
+ges_timeline_set_smart_rendering (GESTimeline * timeline,
+    gboolean rendering_smartly)
+{
+  if (rendering_smartly) {
+    GList *tmp;
+
+    for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+      if (ges_track_get_mixing (tmp->data)) {
+        GST_INFO_OBJECT (timeline, "Smart rendering will not"
+            " work as track %" GST_PTR_FORMAT " is doing mixing", tmp->data);
+      } else {
+        ges_track_set_smart_rendering (tmp->data, rendering_smartly);
+      }
+    }
+  }
+  timeline_tree_set_smart_rendering (timeline->priv->tree, rendering_smartly);
+  timeline->priv->rendering_smartly = rendering_smartly;
+}
+
+gboolean
+ges_timeline_get_smart_rendering (GESTimeline * timeline)
+{
+  return timeline->priv->rendering_smartly;
 }
 
 /**** API *****/

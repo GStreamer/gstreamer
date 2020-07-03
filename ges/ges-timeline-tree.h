@@ -82,5 +82,6 @@ void
 timeline_update_duration                  (GESTimeline * timeline);
 
 void timeline_tree_reset_layer_active     (GNode *root, GESLayer *layer);
+void timeline_tree_set_smart_rendering    (GNode * root, gboolean rendering_smartly);
 
 void timeline_tree_init_debug             (void);

@@ -177,6 +177,12 @@ G_GNUC_INTERNAL void
 ges_timeline_remove_clip (GESTimeline * timeline, GESClip * clip);
 
 G_GNUC_INTERNAL void
+ges_timeline_set_smart_rendering (GESTimeline * timeline, gboolean rendering_smartly);
+
+G_GNUC_INTERNAL gboolean
+ges_timeline_get_smart_rendering (GESTimeline *timeline);
+
+G_GNUC_INTERNAL void
 ges_auto_transition_set_previous_source (GESAutoTransition * self, GESTrackElement * source);
 
 
@@ -475,6 +481,12 @@ G_GNUC_INTERNAL GstElement* ges_source_create_topbin  (GESSource *source,
                                                        const gchar* bin_name,
                                                        GstElement* sub_element,
                                                        GPtrArray* elements);
+G_GNUC_INTERNAL void ges_source_set_rendering_smartly (GESSource *source,
+                                                       gboolean rendering_smartly);
+G_GNUC_INTERNAL gboolean
+ges_source_get_rendering_smartly                      (GESSource *source);
+
+G_GNUC_INTERNAL void ges_track_set_smart_rendering     (GESTrack* track, gboolean rendering_smartly);
 G_GNUC_INTERNAL GstElement * ges_track_get_composition (GESTrack *track);
 
 

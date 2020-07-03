@@ -1268,6 +1268,11 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
         pipeline->priv->urisink, "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
 
+  if (pipeline->priv->timeline) {
+    ges_timeline_set_smart_rendering (pipeline->priv->timeline,
+        (mode & GES_PIPELINE_MODE_SMART_RENDER) != 0);
+  }
+
   /* FIXUPS */
   /* FIXME
    * If we are rendering, set playsink to sync=False,

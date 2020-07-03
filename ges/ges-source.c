@@ -40,6 +40,7 @@ struct _GESSourcePrivate
   GstElement *last_converter;
   GstPad *ghostpad;
 
+  gboolean is_rendering_smartly;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
@@ -76,11 +77,11 @@ link_elements (GstElement * bin, GPtrArray * elements)
 static void
 _set_ghost_pad_target (GESSource * self, GstPad * srcpad, GstElement * element)
 {
-  GESSourcePrivate *priv = self->priv;
-  gboolean use_converter = FALSE;
   GstPadLinkReturn link_return;
+  GESSourcePrivate *priv = self->priv;
+  gboolean use_converter = ! !priv->first_converter;
 
-  if (priv->first_converter) {
+  if (use_converter && priv->is_rendering_smartly) {
     GstPad *pad = gst_element_get_static_pad (priv->first_converter, "sink");
     use_converter = gst_pad_can_link (srcpad, pad);
     gst_object_unref (pad);
@@ -167,6 +168,30 @@ ges_source_create_topbin (GESSource * source, const gchar * bin_name,
   return bin;
 }
 
+
+void
+ges_source_set_rendering_smartly (GESSource * source,
+    gboolean is_rendering_smartly)
+{
+
+  if (is_rendering_smartly) {
+    GESTrack *track = ges_track_element_get_track (GES_TRACK_ELEMENT (source));
+
+    if (track && ges_track_get_mixing (track)) {
+      GST_DEBUG_OBJECT (source, "Not rendering smartly as track is mixing!");
+
+      source->priv->is_rendering_smartly = FALSE;
+      return;
+    }
+  }
+  source->priv->is_rendering_smartly = is_rendering_smartly;
+}
+
+gboolean
+ges_source_get_rendering_smartly (GESSource * source)
+{
+  return source->priv->is_rendering_smartly;
+}
 
 static void
 ges_source_dispose (GObject * object)

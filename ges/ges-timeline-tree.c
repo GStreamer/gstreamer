@@ -2481,3 +2481,21 @@ timeline_tree_reset_layer_active (GNode * root, GESLayer * layer)
   g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_LEAFS, -1,
       (GNodeTraverseFunc) reset_layer_activness, layer);
 }
+
+static gboolean
+set_is_smart_rendering (GNode * node, gboolean * is_rendering_smartly)
+{
+  if (!GES_IS_SOURCE (node->data))
+    return FALSE;
+
+  ges_source_set_rendering_smartly (GES_SOURCE (node->data),
+      *is_rendering_smartly);
+  return FALSE;
+}
+
+void
+timeline_tree_set_smart_rendering (GNode * root, gboolean rendering_smartly)
+{
+  g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_LEAFS, -1,
+      (GNodeTraverseFunc) set_is_smart_rendering, &rendering_smartly);
+}

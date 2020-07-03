@@ -375,6 +375,15 @@ ges_track_get_composition (GESTrack * track)
   return track->priv->composition;
 }
 
+void
+ges_track_set_smart_rendering (GESTrack * track, gboolean rendering_smartly)
+{
+  GESTrackPrivate *priv = track->priv;
+
+  g_object_set (priv->capsfilter, "caps",
+      rendering_smartly ? NULL : priv->restriction_caps, NULL);
+}
+
 /* FIXME: Find out how to avoid doing this "hack" using the GDestroyNotify
  * function pointer in the trackelements_by_start GSequence
  *
@@ -985,6 +994,9 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
  * @caps: The new restriction-caps for @track
  *
  * Sets the #GESTrack:restriction-caps for the track.
+ *
+ * > **NOTE**: Restriction caps are **not** taken into account when
+ * > using #GESPipeline:mode=#GES_PIPELINE_MODE_SMART_RENDER.
  */
 void
 ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
@@ -1003,7 +1015,9 @@ ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
     gst_caps_unref (priv->restriction_caps);
   priv->restriction_caps = gst_caps_copy (caps);
 
-  g_object_set (priv->capsfilter, "caps", caps, NULL);
+  if (!track->priv->timeline ||
+      !ges_timeline_get_smart_rendering (track->priv->timeline))
+    g_object_set (priv->capsfilter, "caps", caps, NULL);
 
   g_object_notify (G_OBJECT (track), "restriction-caps");
 }
@@ -1105,6 +1119,9 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
 notify:
   track->priv->mixing = mixing;
 
+  if (track->priv->timeline)
+    ges_timeline_set_smart_rendering (track->priv->timeline,
+        ges_timeline_get_smart_rendering (track->priv->timeline));
   g_object_notify_by_pspec (G_OBJECT (track), properties[ARG_MIXING]);
 
   GST_DEBUG_OBJECT (track, "The track has been set to mixing = %d", mixing);

@@ -29,6 +29,36 @@ GST_DEBUG_CATEGORY_STATIC (uri_source_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT uri_source_debug
 
+typedef enum
+{
+  GST_AUTOPLUG_SELECT_TRY,
+  GST_AUTOPLUG_SELECT_EXPOSE,
+  GST_AUTOPLUG_SELECT_SKIP,
+} GstAutoplugSelectResult;
+
+static gint
+autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
+    GstElementFactory * factory, GESUriSource * self)
+{
+  GstElement *nlesrc;
+  GstCaps *downstream_caps;
+  GstAutoplugSelectResult res = GST_AUTOPLUG_SELECT_TRY;
+
+  if (!ges_source_get_rendering_smartly (GES_SOURCE (self->element))) {
+    GST_LOG_OBJECT (self->element, "Not being smart here");
+    return res;
+  }
+
+  nlesrc = ges_track_element_get_nleobject (self->element);
+  downstream_caps = gst_pad_peer_query_caps (nlesrc->srcpads->data, NULL);
+  if (downstream_caps && gst_caps_can_intersect (downstream_caps, caps)) {
+    GST_DEBUG_OBJECT (self, "Exposing %s", GST_OBJECT_NAME (factory));
+    res = GST_AUTOPLUG_SELECT_EXPOSE;
+  }
+  gst_clear_caps (&downstream_caps);
+
+  return res;
+}
 
 GstElement *
 ges_uri_source_create_source (GESUriSource * self)
@@ -48,6 +78,8 @@ ges_uri_source_create_source (GESUriSource * self)
 
   g_object_set (decodebin, "caps", caps,
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
+  g_signal_connect (decodebin, "autoplug-select",
+      G_CALLBACK (autoplug_select_cb), self);
 
   return decodebin;
 

@@ -344,7 +344,9 @@ GType ges_video_test_pattern_get_type (void);
  * #encodebin:avoid-reencoding property set to %FALSE)
  * @GES_PIPELINE_MODE_SMART_RENDER: Render the #GESPipeline:timeline,
  * avoiding decoding/reencoding (the underlying #encodebin has its
- * #encodebin:avoid-reencoding property set to %TRUE)
+ * #encodebin:avoid-reencoding property set to %TRUE).
+ * > NOTE: Smart rendering can not work in tracks where #GESTrack:mixing
+ * > is enabled.
  *
  * The various modes a #GESPipeline can be configured to.
  */
