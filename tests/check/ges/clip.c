@@ -1664,11 +1664,11 @@ GST_START_TEST (test_clip_find_track_element)
   g_signal_connect (timeline, "select-tracks-for-object",
       G_CALLBACK (_select_none), &selection_called);
 
-  effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("audio identity"));
   fail_unless (ges_track_add_element (track, effect));
   _assert_add (clip, effect);
 
-  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("audio identity"));
   fail_unless (ges_track_add_element (track1, effect1));
   _assert_add (clip, effect1);
 
