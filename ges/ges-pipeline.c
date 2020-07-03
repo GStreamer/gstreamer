@@ -1150,7 +1150,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   }
 
   pipeline->priv->urisink =
-      gst_element_make_from_uri (GST_URI_SINK, output_uri, "urisink", &err);
+      gst_element_make_from_uri (GST_URI_SINK, output_uri, NULL, &err);
   if (G_UNLIKELY (pipeline->priv->urisink == NULL)) {
     GST_ERROR_OBJECT (pipeline, "Couldn't not create sink for URI %s: '%s'",
         output_uri, ((err
