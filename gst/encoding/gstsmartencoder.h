@@ -24,21 +24,35 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_SMART_ENCODER (gst_smart_encoder_get_type())
-G_DECLARE_FINAL_TYPE (GstSmartEncoder, gst_smart_encoder, GST, SMART_ENCODER,
-    GstElement)
+G_DECLARE_FINAL_TYPE (GstSmartEncoder, gst_smart_encoder, GST, SMART_ENCODER, GstBin)
 
 struct _GstSmartEncoder {
-  GstElement element;
+  GstBin parent;
 
   GstPad *sinkpad, *srcpad;
 
-  GstSegment *segment;
-  GstEvent *newsegment;
+  gboolean pushed_segment;
+
+  /* Segment received upstream */
+  GstSegment input_segment;
+
+  /* The segment we pushed downstream */
+  GstSegment output_segment;
+
+  /* Internal segments to compute buffers running time before pushing
+   * them downstream. It is the encoder segment when reecoding gops,
+   * and the input segment when pushing them unmodified. */
+  GstSegment internal_segment;
+  GstClockTime last_dts;
+
+  GstCaps *last_caps;
+  GstEvent *segment_event;
+  GstEvent *stream_start_event;
 
   /* Pending GOP to be checked */
-  GList *pending_gop;
-  guint64 gop_start;		/* GOP start in running time */
-  guint64 gop_stop;		/* GOP end in running time */
+  GList* pending_gop;
+  guint64 gop_start;	/* GOP start PTS in the `input_segment` scale. */
+  guint64 gop_stop;		/* GOP end PTS in the `input_segment` scale. */
 
   /* Internal recoding elements */
   GstPad *internal_sinkpad;
@@ -46,9 +60,14 @@ struct _GstSmartEncoder {
   GstElement *decoder;
   GstElement *encoder;
 
-  /* Available caps at runtime */
-  GstCaps *available_caps;
+  GstFlowReturn internal_flow;
+  GMutex internal_flow_lock;
+  GCond internal_flow_cond;
 };
+
+gboolean gst_smart_encoder_set_encoder (GstSmartEncoder *self,
+                                        GstCaps *format,
+                                        GstElement *encoder);
 
 G_END_DECLS
 

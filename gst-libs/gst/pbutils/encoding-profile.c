@@ -665,11 +665,14 @@ gst_encoding_profile_get_single_segment (GstEncodingProfile * profile)
 /**
  * gst_encoding_profile_set_single_segment:
  * @profile: a #GstEncodingProfile
- * @single_segment: #TRUE if the stream represented by @profile should use a single
- * segment before the encoder #FALSE otherwise.
+ * @single_segment: #TRUE if the stream represented by @profile should use a
+ * single segment before the encoder, #FALSE otherwise.
  *
- * If using a single segment, buffers will be retimestamped
- * and segments will be eat so as to appear as one segment.
+ * If using a single segment, buffers will be retimestamped and segments will be
+ * eat so as to appear as one segment.
+ *
+ * > *NOTE*: Single segment is not property supported when using
+ * > #encodebin:avoid-reencoding
  *
  * Since: 1.18
  */
@@ -912,6 +915,9 @@ gst_encoding_video_profile_get_pass (GstEncodingVideoProfile * prof)
 /**
  * gst_encoding_video_profile_get_variableframerate:
  * @prof: a #GstEncodingVideoProfile
+ *
+ * > *NOTE*: Fixed framerate won't be enforced when #encodebin:avoid-reencoding
+ * > is set.
  *
  * Returns: Whether non-constant video framerate is allowed for encoding.
  */

@@ -209,6 +209,8 @@ struct _StreamGroup
   GstElement *combiner;
   GstElement *parser;
   GstElement *smartencoder;
+  GstElement *smart_capsfilter;
+  gulong smart_capsfilter_sid;
   GstElement *outfilter;        /* Output capsfilter (streamprofile.format) */
   gulong outputfilter_caps_sid;
   GstElement *formatter;
@@ -1128,10 +1130,17 @@ _profile_restriction_caps_cb (GstEncodingProfile * profile,
 
 static void
 _capsfilter_force_format (GstPad * pad,
-    GParamSpec * arg G_GNUC_UNUSED, gulong * signal_id)
+    GParamSpec * arg G_GNUC_UNUSED, StreamGroup * sgroup)
 {
   GstCaps *caps;
   GstStructure *structure;
+  GstElement *parent =
+      GST_ELEMENT_CAST (gst_object_get_parent (GST_OBJECT (pad)));
+
+  if (!parent) {
+    GST_DEBUG_OBJECT (pad, "Doesn't have a parent anymore");
+    return;
+  }
 
   g_object_get (pad, "caps", &caps, NULL);
   caps = gst_caps_copy (caps);
@@ -1139,10 +1148,36 @@ _capsfilter_force_format (GstPad * pad,
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_remove_field (structure, "streamheader");
   GST_INFO_OBJECT (pad, "Forcing caps to %" GST_PTR_FORMAT, caps);
-  g_object_set (GST_OBJECT_PARENT (pad), "caps", caps, NULL);
-  g_signal_handler_disconnect (pad, *signal_id);
-  *signal_id = 0;
+  if (parent == sgroup->outfilter || parent == sgroup->smart_capsfilter) {
+    /* outfilter and the smart encoder internal capsfilter need to always be
+     * in sync so the caps match between the two */
+    if (sgroup->smart_capsfilter) {
+      gst_structure_remove_field (structure, "codec_data");
+      /* The smart encoder handles codec_data itself */
+      g_object_set (sgroup->smart_capsfilter, "caps", caps, NULL);
+
+      g_signal_handler_disconnect (sgroup->smart_capsfilter->sinkpads->data,
+          sgroup->smart_capsfilter_sid);
+      sgroup->smart_capsfilter_sid = 0;
+    }
+
+    if (sgroup->outfilter) {
+      GstCaps *tmpcaps = gst_caps_copy (caps);
+      g_object_set (sgroup->outfilter, "caps", tmpcaps, NULL);
+      gst_caps_unref (tmpcaps);
+      g_signal_handler_disconnect (sgroup->outfilter->sinkpads->data,
+          sgroup->outputfilter_caps_sid);
+      sgroup->outputfilter_caps_sid = 0;
+    }
+  } else if (parent == sgroup->capsfilter) {
+    g_object_set (parent, "caps", caps, NULL);
+    g_signal_handler_disconnect (pad, sgroup->inputfilter_caps_sid);
+  } else {
+    g_assert_not_reached ();
+  }
+
   gst_caps_unref (caps);
+  gst_object_unref (parent);
 }
 
 static void
@@ -1155,8 +1190,7 @@ _set_group_caps_format (StreamGroup * sgroup, GstEncodingProfile * prof,
     if (!sgroup->outputfilter_caps_sid) {
       sgroup->outputfilter_caps_sid =
           g_signal_connect (sgroup->outfilter->sinkpads->data,
-          "notify::caps", G_CALLBACK (_capsfilter_force_format),
-          &sgroup->outputfilter_caps_sid);
+          "notify::caps", G_CALLBACK (_capsfilter_force_format), sgroup);
     }
   }
 }
@@ -1202,6 +1236,112 @@ _set_up_fake_encoder_pad_probe (GstEncodeBin * ebin, StreamGroup * sgroup)
       sgroup, NULL);
 
   gst_object_unref (pad);
+}
+
+static GstElement *
+setup_smart_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+    StreamGroup * sgroup)
+{
+  GstElement *encoder = NULL, *parser = NULL;
+  GstElement *reencoder_bin = NULL;
+  GstElement *sinkelement, *convert = NULL;
+  GstElement *smartencoder = g_object_new (GST_TYPE_SMART_ENCODER, NULL);
+  GstPad *srcpad = gst_element_get_static_pad (smartencoder, "src");
+  GstCaps *format = gst_encoding_profile_get_format (sprof);
+  GstCaps *tmpcaps = gst_pad_query_caps (srcpad, NULL);
+  const gboolean native_video =
+      ! !(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
+
+  /* Check if stream format is compatible */
+  if (!gst_caps_can_intersect (tmpcaps, format)) {
+    GST_DEBUG_OBJECT (ebin,
+        "We don't have a smart encoder for the stream format: %" GST_PTR_FORMAT,
+        format);
+    goto err;
+  }
+
+  sinkelement = encoder = _get_encoder (ebin, sprof);
+  if (!encoder) {
+    GST_INFO_OBJECT (ebin, "No encoder found... not using smart rendering");
+    goto err;
+  }
+
+  parser = _get_parser (ebin, sprof);
+  sgroup->smart_capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  reencoder_bin = gst_bin_new (NULL);
+  g_object_set (sgroup->smart_capsfilter, "caps", format, NULL);
+
+  gst_bin_add_many (GST_BIN (reencoder_bin),
+      gst_object_ref (encoder),
+      parser ? gst_object_ref (parser) : sgroup->smart_capsfilter,
+      parser ? gst_object_ref (sgroup->smart_capsfilter) : NULL, NULL);
+  if (!native_video) {
+    convert = gst_element_factory_make ("videoconvert", NULL);
+    if (!convert) {
+      GST_ERROR_OBJECT (ebin, "`videoconvert` element missing");
+      goto err;
+    }
+
+    gst_bin_add (GST_BIN (reencoder_bin), gst_object_ref (convert));
+    if (!gst_element_link (convert, sinkelement)) {
+      GST_ERROR_OBJECT (ebin, "Can not link `videoconvert` to %" GST_PTR_FORMAT,
+          sinkelement);
+      goto err;
+    }
+    sinkelement = convert;
+  }
+
+  if (!gst_element_link_many (encoder,
+          parser ? parser : sgroup->smart_capsfilter,
+          parser ? sgroup->smart_capsfilter : NULL, NULL)) {
+    GST_ERROR_OBJECT (ebin, "Can not link smart encoding elements");
+    goto err;
+  }
+
+  if (!gst_element_add_pad (reencoder_bin,
+          gst_ghost_pad_new ("sink", sinkelement->sinkpads->data))) {
+    GST_ERROR_OBJECT (ebin, "Can add smart encoding bin `srcpad`");
+    goto err;
+  }
+
+  if (!gst_element_add_pad (reencoder_bin,
+          gst_ghost_pad_new ("src", sgroup->smart_capsfilter->srcpads->data))) {
+    GST_ERROR_OBJECT (ebin, "Could not ghost smart encoder bin"
+        " srcpad, not being smart.");
+    goto err;
+  }
+
+  if (!gst_encoding_profile_get_allow_dynamic_output (sprof)) {
+    /* Enforce no dynamic output in the smart encoder */
+    if (!sgroup->smart_capsfilter_sid) {
+      sgroup->smart_capsfilter_sid =
+          g_signal_connect (sgroup->smart_capsfilter->sinkpads->data,
+          "notify::caps", G_CALLBACK (_capsfilter_force_format), sgroup);
+    }
+  }
+
+  if (!gst_smart_encoder_set_encoder (GST_SMART_ENCODER (smartencoder),
+          format, reencoder_bin)) {
+    reencoder_bin = NULL;       /* We do not own the ref anymore */
+    GST_ERROR_OBJECT (ebin, "Could not set encoder to the smart encoder,"
+        " disabling smartness");
+    goto err;
+  }
+
+done:
+  gst_caps_unref (tmpcaps);
+  gst_caps_unref (format);
+  gst_object_unref (srcpad);
+  gst_clear_object (&encoder);
+  gst_clear_object (&parser);
+  gst_clear_object (&convert);
+
+  return smartencoder;
+
+err:
+  gst_clear_object (&smartencoder);
+  gst_clear_object (&reencoder_bin);
+  goto done;
 }
 
 /* FIXME : Add handling of streams that don't require conversion elements */
@@ -1338,10 +1478,16 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   tosync = g_list_append (tosync, sgroup->splitter);
 
   if (gst_encoding_profile_get_single_segment (sprof)) {
-    sgroup->identity = gst_element_factory_make ("identity", NULL);
-    g_object_set (sgroup->identity, "single-segment", TRUE, NULL);
-    gst_bin_add (GST_BIN (ebin), sgroup->identity);
-    tosync = g_list_append (tosync, sgroup->identity);
+
+    if (!ebin->avoid_reencoding) {
+      sgroup->identity = gst_element_factory_make ("identity", NULL);
+      g_object_set (sgroup->identity, "single-segment", TRUE, NULL);
+      gst_bin_add (GST_BIN (ebin), sgroup->identity);
+      tosync = g_list_append (tosync, sgroup->identity);
+    } else {
+      GST_INFO_OBJECT (ebin, "Single segment is not supported when avoiding"
+          " to reencode!");
+    }
   }
 
   /* Input queue
@@ -1386,26 +1532,16 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     goto no_combiner_sinkpad;
 
   if (ebin->avoid_reencoding) {
-    GstCaps *tmpcaps;
-
     GST_DEBUG ("Asked to use Smart Encoder");
-    sgroup->smartencoder = g_object_new (GST_TYPE_SMART_ENCODER, NULL);
-
-    /* Check if stream format is compatible */
-    srcpad = gst_element_get_static_pad (sgroup->smartencoder, "src");
-    tmpcaps = gst_pad_query_caps (srcpad, NULL);
-    if (!gst_caps_can_intersect (tmpcaps, format)) {
-      GST_DEBUG ("We don't have a smart encoder for the stream format");
-      gst_object_unref (sgroup->smartencoder);
-      sgroup->smartencoder = NULL;
-    } else {
+    sgroup->smartencoder = setup_smart_encoder (ebin, sprof, sgroup);
+    if (sgroup->smartencoder) {
       gst_bin_add ((GstBin *) ebin, sgroup->smartencoder);
+      srcpad = gst_element_get_static_pad (sgroup->smartencoder, "src");
       fast_pad_link (srcpad, sinkpad);
+      gst_object_unref (srcpad);
       tosync = g_list_append (tosync, sgroup->smartencoder);
       sinkpad = gst_element_get_static_pad (sgroup->smartencoder, "sink");
     }
-    gst_caps_unref (tmpcaps);
-    gst_object_unref (srcpad);
   }
 
   srcpad =
@@ -1468,8 +1604,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     if (!sgroup->inputfilter_caps_sid) {
       sgroup->inputfilter_caps_sid =
           g_signal_connect (sgroup->capsfilter->sinkpads->data,
-          "notify::caps", G_CALLBACK (_capsfilter_force_format),
-          &sgroup->inputfilter_caps_sid);
+          "notify::caps", G_CALLBACK (_capsfilter_force_format), sgroup);
     }
   }
 
@@ -2136,6 +2271,7 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
   }
   if (sgroup->smartencoder)
     gst_element_set_state (sgroup->smartencoder, GST_STATE_NULL);
+  gst_clear_object (&sgroup->smart_capsfilter);
 
   if (sgroup->capsfilter) {
     gst_element_set_state (sgroup->capsfilter, GST_STATE_NULL);
@@ -2144,11 +2280,6 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     else
       gst_element_unlink (sgroup->capsfilter, sgroup->fakesink);
 
-    if (sgroup->inputfilter_caps_sid) {
-      g_signal_handler_disconnect (sgroup->capsfilter->sinkpads->data,
-          sgroup->inputfilter_caps_sid);
-      sgroup->inputfilter_caps_sid = 0;
-    }
     gst_bin_remove ((GstBin *) ebin, sgroup->capsfilter);
   }
 
