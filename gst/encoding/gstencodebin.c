@@ -548,8 +548,14 @@ gst_encode_bin_set_property (GObject * object, guint prop_id,
       ebin->tolerance = g_value_get_uint64 (value);
       break;
     case PROP_AVOID_REENCODING:
+    {
+      gboolean avoided_reencoding = ebin->avoid_reencoding;
       ebin->avoid_reencoding = g_value_get_boolean (value);
+      if (ebin->avoid_reencoding != avoided_reencoding && ebin->profile)
+        gst_encode_bin_set_profile (ebin, gst_object_ref (ebin->profile));
+
       break;
+    }
     case PROP_FLAGS:
       ebin->flags = g_value_get_flags (value);
       break;
