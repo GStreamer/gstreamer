@@ -87,10 +87,11 @@ if build_system == 'windows'
   subproject('win-nasm')
 endif
 
-subproject('orc', required: get_option('orc'))
+orc_subproject = subproject('orc', required: get_option('orc'))
 
 subprojects_names = []
 plugins_doc_caches = []
+orc_update_targets = []
 all_plugins = []
 foreach sp : subprojects
   project_name = sp[0]
@@ -114,6 +115,8 @@ foreach sp : subprojects
       plugins = []
     endif
     all_plugins += plugins
+
+    orc_update_targets += subproj.get_variable('orc_update_targets', [])
 
     subprojects_names += [project_name]
     cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
@@ -308,3 +311,7 @@ update = find_program('git-update')
 run_target('git-update', command : [update])
 run_target('update', command : [update,
     '--builddir=@0@'.format(meson.current_build_dir())])
+
+if orc_subproject.found()
+  alias_target('update-orc-dist', orc_update_targets)
+endif
