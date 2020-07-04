@@ -183,6 +183,9 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+      toall = TRUE;
+      break;
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
