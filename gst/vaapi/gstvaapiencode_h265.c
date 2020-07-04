@@ -176,7 +176,12 @@ static GstCaps *
 gst_vaapiencode_h265_get_caps (GstVaapiEncode * base_encode)
 {
   GstVaapiEncodeH265 *const encode = GST_VAAPIENCODE_H265_CAST (base_encode);
+  GstVaapiEncoderH265 *const encoder =
+      GST_VAAPI_ENCODER_H265 (base_encode->encoder);
   GstCaps *caps, *allowed_caps;
+  GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
+  GstVaapiLevelH265 level = 0;
+  GstVaapiTierH265 tier = GST_VAAPI_TIER_H265_UNKNOWN;
 
   caps = gst_caps_from_string (GST_CODEC_CAPS);
 
@@ -204,7 +209,22 @@ gst_vaapiencode_h265_get_caps (GstVaapiEncode * base_encode)
 
   base_encode->need_codec_data = encode->is_hvc;
 
-  /* XXX: update profile and level information */
+  gst_vaapi_encoder_h265_get_profile_tier_level (encoder,
+      &profile, &tier, &level);
+  if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING,
+        gst_vaapi_utils_h265_get_profile_string (profile), NULL);
+
+    if (level) {
+      gst_caps_set_simple (caps, "level", G_TYPE_STRING,
+          gst_vaapi_utils_h265_get_level_string (level), NULL);
+
+      if (tier != GST_VAAPI_TIER_H265_UNKNOWN)
+        gst_caps_set_simple (caps, "tier", G_TYPE_STRING,
+            gst_vaapi_utils_h265_get_tier_string (tier), NULL);
+    }
+  }
+
   return caps;
 }
 
