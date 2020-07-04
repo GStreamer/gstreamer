@@ -136,8 +136,40 @@ gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (pad, "Got event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+      STREAMS_LOCK (stream_combiner);
+      if (gst_structure_has_name (gst_event_get_structure (event),
+              "start-draining-encoder")) {
+        GST_INFO_OBJECT (pad, "Starting to drain the encoder");
+        stream_combiner->draining_encoder = TRUE;
+      }
+      STREAMS_UNLOCK (stream_combiner);
+      break;
+    case GST_EVENT_FLUSH_START:
+      STREAMS_LOCK (stream_combiner);
+      if (stream_combiner->draining_encoder) {
+        GST_INFO_OBJECT (pad, "Discarding FLUSH_START as draining encoder");
+        gst_clear_event (&event);
+      }
+      STREAMS_UNLOCK (stream_combiner);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      STREAMS_LOCK (stream_combiner);
+      if (stream_combiner->draining_encoder) {
+        gst_clear_event (&event);
+        GST_INFO_OBJECT (stream_combiner, "Done draining the encoder.");
+      }
+      stream_combiner->draining_encoder = FALSE;
+      STREAMS_UNLOCK (stream_combiner);
+      break;
     case GST_EVENT_EOS:
       STREAMS_LOCK (stream_combiner);
+      if (stream_combiner->draining_encoder) {
+        STREAMS_UNLOCK (stream_combiner);
+        GST_INFO_OBJECT (stream_combiner, "Discarding EOS as draining encoder");
+        gst_clear_event (&event);
+        break;
+      }
       combiner_pad->is_eos = TRUE;
       if (!_all_sink_pads_eos (stream_combiner)) {
         gst_event_unref (event);

@@ -41,6 +41,11 @@ struct _GstStreamCombiner {
   GstPad *current;
   GList *sinkpads;
   guint32 cookie;
+  gboolean draining_encoder; /* TRUE when streamspliter informed us that it is
+                              * draining the encoder, meaning that we are
+                              * expecting to receive and discard an EOS, a flush
+                              * start, and then a flush_stop which implies the
+                              * draining is done. */
 
 };
 
