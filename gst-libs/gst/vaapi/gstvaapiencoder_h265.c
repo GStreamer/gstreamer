@@ -3167,6 +3167,7 @@ gst_vaapi_encoder_h265_init (GstVaapiEncoderH265 * encoder)
 
   /* Default encoding entrypoint */
   encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  encoder->tier = GST_VAAPI_TIER_H265_UNKNOWN;
 
   encoder->conformance_window_flag = 0;
   encoder->num_slices = 1;
