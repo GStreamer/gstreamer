@@ -3705,7 +3705,8 @@ gst_vaapi_encoder_h265_get_profile_tier_level (GstVaapiEncoderH265 * encoder,
 {
   g_return_val_if_fail (encoder != NULL, FALSE);
 
-  if (!encoder->profile || !encoder->tier || !encoder->level)
+  if (!encoder->profile || encoder->tier == GST_VAAPI_TIER_H265_UNKNOWN
+      || !encoder->level)
     return FALSE;
 
   if (out_profile_ptr)
