@@ -9,7 +9,7 @@ gst/gstregistry.c
 gst/gsttaglist.c
 gst/gsturi.c
 gst/gstutils.c
-gst/parse/grammar.y
+gst/parse/grammar.y.in
 libs/gst/base/gstbasesink.c
 libs/gst/base/gstbasesrc.c
 plugins/elements/gstcapsfilter.c
