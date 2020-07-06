@@ -36,6 +36,7 @@
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_vp9.h>
+#include <gst/vaapi/gstvaapiutils_vpx.h>
 #include "gstvaapiencode_vp9.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
@@ -52,7 +53,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_vp9_encode_debug);
 #define EXTRA_FORMATS {}
 
 /* vp9 encode */
-GST_VAAPI_ENCODE_REGISTER_TYPE (vp9, VP9, VP9, EXTRA_FORMATS, NULL);
+GST_VAAPI_ENCODE_REGISTER_TYPE (vp9, VP9, VP9, EXTRA_FORMATS,
+    gst_vaapi_utils_vp9_get_profile_string);
 
 static void
 gst_vaapiencode_vp9_init (GstVaapiEncodeVP9 * encode)
@@ -64,6 +66,14 @@ static void
 gst_vaapiencode_vp9_finalize (GObject * object)
 {
   G_OBJECT_CLASS (gst_vaapiencode_vp9_parent_class)->finalize (object);
+}
+
+static GArray *
+gst_vaapiencode_vp9_get_allowed_profiles (GstVaapiEncode * encode,
+    GstCaps * allowed)
+{
+  return gst_vaapi_encoder_get_profiles_from_caps (allowed,
+      gst_vaapi_utils_vp9_get_profile_from_string);
 }
 
 static GstCaps *
@@ -99,6 +109,7 @@ gst_vaapiencode_vp9_class_init (GstVaapiEncodeVP9Class * klass, gpointer data)
   object_class->set_property = gst_vaapiencode_set_property_subclass;
   object_class->get_property = gst_vaapiencode_get_property_subclass;
 
+  encode_class->get_allowed_profiles = gst_vaapiencode_vp9_get_allowed_profiles;
   encode_class->get_caps = gst_vaapiencode_vp9_get_caps;
   encode_class->alloc_encoder = gst_vaapiencode_vp9_alloc_encoder;
 
