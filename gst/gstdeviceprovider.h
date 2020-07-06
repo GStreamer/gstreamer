@@ -71,7 +71,8 @@ struct _GstDeviceProvider {
  * @factory: a pointer to the #GstDeviceProviderFactory that creates this
  *  provider
  * @probe: Returns a list of devices that are currently available.
- *  This should never block.
+ *  This should never block. The devices should not have a parent and should
+ *  be floating.
  * @start: Starts monitoring for new devices. Only subclasses that can know
  *  that devices have been added or remove need to implement this method.
  * @stop: Stops monitoring for new devices. Only subclasses that implement

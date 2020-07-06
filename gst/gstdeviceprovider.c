@@ -417,8 +417,14 @@ gst_device_provider_get_devices (GstDeviceProvider * provider)
     for (item = provider->devices; item; item = item->next)
       devices = g_list_prepend (devices, gst_object_ref (item->data));
     GST_OBJECT_UNLOCK (provider);
-  } else if (klass->probe)
+  } else if (klass->probe) {
+
     devices = klass->probe (provider);
+
+    for (item = devices; item; item = item->next)
+      if (g_object_is_floating (item->data))
+        g_object_ref_sink (item->data);
+  }
 
   g_mutex_unlock (&provider->priv->start_lock);
 
