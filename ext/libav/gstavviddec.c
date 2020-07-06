@@ -1697,7 +1697,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       GST_MEMDUMP ("A53 CC", side_data->data, side_data->size);
 
       /* do not add closed caption meta if it already exists */
-      if (!gst_buffer_get_meta (out_frame->output_buffer,
+      if (!gst_buffer_get_meta (out_frame->input_buffer,
               GST_VIDEO_CAPTION_META_API_TYPE)) {
         out_frame->output_buffer =
             gst_buffer_make_writable (out_frame->output_buffer);
