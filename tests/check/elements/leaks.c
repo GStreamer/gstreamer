@@ -334,6 +334,8 @@ GST_START_TEST (test_activity_start_stop)
   GstMessage *m;
   GstTracer *tracer = get_tracer_by_name ("plain");
 
+  fail_unless (tracer);
+
   g_signal_emit_by_name (tracer, "activity-start-tracking");
 
   pipe = gst_pipeline_new ("pipeline");
@@ -371,6 +373,8 @@ GST_START_TEST (test_activity_log_checkpoint)
   GstElement *pipe, *src, *sink;
   GstMessage *m;
   GstTracer *tracer = get_tracer_by_name ("plain");
+
+  fail_unless (tracer);
 
   g_signal_emit_by_name (tracer, "activity-start-tracking");
 
@@ -412,6 +416,8 @@ GST_START_TEST (test_activity_get_checkpoint)
   GstElement *pipe, *src, *sink;
   GstMessage *m;
   GstTracer *tracer = get_tracer_by_name ("more");
+
+  fail_unless (tracer);
 
   g_signal_emit_by_name (tracer, "activity-start-tracking");
 
