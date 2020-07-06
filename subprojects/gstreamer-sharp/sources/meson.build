@@ -16,6 +16,7 @@ sources = [
     'custom/DeviceProvider.cs',
     'custom/DynamicSignal.cs',
     'custom/Element.cs',
+    'custom/ElementFactory.cs',
     'custom/FFTF32.cs',
     'custom/Iterator.cs',
     'custom/MapInfo.cs',

@@ -27,9 +27,8 @@ namespace Gst.App {
 
 	partial class AppSink 
 	{
-		public AppSink (String name) {
-			var element = ElementFactory.Make ("appsink", name);
-			Raw = element.Handle;
+		public AppSink (String name) : base(IntPtr.Zero) {
+			Raw = ElementFactory.MakeRaw("appsink", name);
 		}
 	}
 }
