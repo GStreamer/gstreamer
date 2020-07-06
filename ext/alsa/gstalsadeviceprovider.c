@@ -92,8 +92,6 @@ add_device (GstDeviceProvider * provider, snd_ctl_t * info,
 
   snd_pcm_close (handle);
 
-  gst_device_provider_device_add (provider, gst_object_ref (device));
-
   return device;
 }
 
@@ -169,23 +167,6 @@ beach:
 }
 
 
-static gboolean
-gst_alsa_device_provider_start (GstDeviceProvider * provider)
-{
-  g_list_free_full (gst_alsa_device_provider_probe (provider),
-      gst_object_unref);
-
-  /* TODO - Implement monitoring support */
-
-  return TRUE;
-}
-
-static void
-gst_alsa_device_provider_stop (GstDeviceProvider * provider)
-{
-  return;
-}
-
 enum
 {
   PROP_0,
@@ -199,8 +180,6 @@ gst_alsa_device_provider_class_init (GstAlsaDeviceProviderClass * klass)
   GstDeviceProviderClass *dm_class = GST_DEVICE_PROVIDER_CLASS (klass);
 
   dm_class->probe = gst_alsa_device_provider_probe;
-  dm_class->start = gst_alsa_device_provider_start;
-  dm_class->stop = gst_alsa_device_provider_stop;
 
   gst_device_provider_class_set_static_metadata (dm_class,
       "ALSA Device Provider", "Sink/Source/Audio",
