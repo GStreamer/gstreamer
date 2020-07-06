@@ -111,6 +111,7 @@ struct _GstVaapiWindowWaylandPrivate
   guint fullscreen_on_show:1;
   guint sync_failed:1;
   volatile guint num_frames_pending;
+  gint configure_pending;
   gboolean need_vpp;
 };
 
@@ -184,6 +185,8 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   handle_xdg_toplevel_close,
 };
 
+static gboolean gst_vaapi_window_wayland_sync (GstVaapiWindow * window);
+
 static gboolean
 gst_vaapi_window_wayland_show (GstVaapiWindow * window)
 {
@@ -200,6 +203,8 @@ gst_vaapi_window_wayland_show (GstVaapiWindow * window)
     return TRUE;
   }
 
+  g_atomic_int_set (&priv->configure_pending, 1);
+  g_atomic_int_inc (&priv->num_frames_pending);
   /* Create a toplevel window out of it */
   priv->xdg_toplevel = xdg_surface_get_toplevel (priv->xdg_surface);
   g_return_val_if_fail (priv->xdg_toplevel, FALSE);
@@ -213,7 +218,7 @@ gst_vaapi_window_wayland_show (GstVaapiWindow * window)
   /* Commit the xdg_surface state as top-level window */
   wl_surface_commit (priv->surface);
 
-  return TRUE;
+  return gst_vaapi_window_wayland_sync (window);
 }
 
 static gboolean
@@ -322,7 +327,13 @@ static void
 handle_xdg_surface_configure (void *data, struct xdg_surface *xdg_surface,
     uint32_t serial)
 {
+  GstVaapiWindow *window = GST_VAAPI_WINDOW (data);
+  GstVaapiWindowWaylandPrivate *priv =
+      GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+
   xdg_surface_ack_configure (xdg_surface, serial);
+  if (g_atomic_int_compare_and_exchange (&priv->configure_pending, 1, 0))
+    g_atomic_int_dec_and_test (&priv->num_frames_pending);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
