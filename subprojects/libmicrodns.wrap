@@ -1,4 +1,4 @@
 [wrap-git]
 directory=libmicrodns
 url=https://github.com/videolabs/libmicrodns.git
-revision=master
+revision=0.1.2
