@@ -55,24 +55,24 @@ endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
-  ['gstreamer', {'build-hotdoc': true, 'has-plugins': true}],
-  ['gst-plugins-base', {'build-hotdoc': true, 'has-plugins': true}],
-  ['gst-plugins-good', {'build-hotdoc': true, 'has-plugins': true}],
+  ['gstreamer', {'build-hotdoc': true}],
+  ['gst-plugins-base', {'build-hotdoc': true}],
+  ['gst-plugins-good', {'build-hotdoc': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
-  ['gst-plugins-bad', { 'option': get_option('bad'), 'build-hotdoc': true, 'has-plugins': true}],
-  ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true, 'has-plugins': true}],
-  ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true, 'has-plugins': true}],
-  ['gst-rtsp-server', { 'option': get_option('rtsp_server'), 'build-hotdoc': true , 'has-plugins': true}],
+  ['gst-plugins-bad', { 'option': get_option('bad'), 'build-hotdoc': true}],
+  ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true}],
+  ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true}],
+  ['gst-rtsp-server', { 'option': get_option('rtsp_server'), 'build-hotdoc': true}],
   ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true }],
   ['gst-integration-testsuites', { 'option': get_option('devtools') }],
-  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true, 'has-plugins': true}],
-  ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true, 'has-plugins': true}],
-  ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true, 'has-plugins': true}],
+  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true}],
+  ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true}],
+  ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
   ['pygobject', { 'option': get_option('python'), 'match_gst_version': false }],
-  ['gst-python', { 'option': get_option('python'), 'has-plugins': true}],
+  ['gst-python', { 'option': get_option('python')}],
   ['gst-examples', { 'option': get_option('gst-examples'), 'match_gst_versions': false}],
-  ['gst-plugins-rs', { 'option': get_option('rs'), 'has-plugins': true, 'match_gst_version': false}],
+  ['gst-plugins-rs', { 'option': get_option('rs'), 'match_gst_version': false}],
 ]
 
 symlink = '''
@@ -106,14 +106,7 @@ foreach sp : subprojects
   endif
 
   if subproj.found()
-    # Replace by using subproject.get_variable('plugins', [])
-    # when https://github.com/mesonbuild/meson/pull/5426/files
-    # is merged and released
-    if build_infos.get('has-plugins', false)
-      plugins = subproj.get_variable('plugins')
-    else
-      plugins = []
-    endif
+    plugins = subproj.get_variable('plugins', [])
     all_plugins += plugins
 
     orc_update_targets += subproj.get_variable('orc_update_targets', [])
