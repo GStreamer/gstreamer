@@ -70,7 +70,8 @@ gst_play_flags_get_type (void)
     {C_FLAGS (GST_PLAY_FLAG_FORCE_FILTERS),
         "Force audio/video filter(s) to be applied", "force-filters"},
     {C_FLAGS (GST_PLAY_FLAG_FORCE_SW_DECODERS),
-        "Force only software-based decoders", "force-sw-decoders"},
+          "Force only software-based decoders (no effect for playbin3)",
+        "force-sw-decoders"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;

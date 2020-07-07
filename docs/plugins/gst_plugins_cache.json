@@ -11351,7 +11351,7 @@
                         "value": "0x00000800"
                     },
                     {
-                        "desc": "Force only software-based decoders",
+                        "desc": "Force only software-based decoders (no effect for playbin3)",
                         "name": "force-sw-decoders",
                         "value": "0x00001000"
                     }
