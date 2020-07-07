@@ -434,10 +434,10 @@ gst_rist_src_init (GstRistSrc * src)
       "sdes", sdes, NULL);
   gst_structure_free (sdes);
 
-  g_signal_connect_swapped (src->rtpbin, "request-pt-map",
-      G_CALLBACK (gst_rist_src_request_pt_map), src);
-  g_signal_connect_swapped (src->rtpbin, "request-aux-receiver",
-      G_CALLBACK (gst_rist_src_request_aux_receiver), src);
+  g_signal_connect_object (src->rtpbin, "request-pt-map",
+      G_CALLBACK (gst_rist_src_request_pt_map), src, G_CONNECT_SWAPPED);
+  g_signal_connect_object (src->rtpbin, "request-aux-receiver",
+      G_CALLBACK (gst_rist_src_request_aux_receiver), src, G_CONNECT_SWAPPED);
 
   src->rtxbin = gst_bin_new ("rist_recv_rtxbin");
   g_object_ref_sink (src->rtxbin);
@@ -454,12 +454,12 @@ gst_rist_src_init (GstRistSrc * src)
   gst_object_unref (pad);
   gst_element_add_pad (src->rtxbin, gpad);
 
-  g_signal_connect_swapped (src->rtpbin, "pad-added",
-      G_CALLBACK (gst_rist_src_pad_added), src);
-  g_signal_connect_swapped (src->rtpbin, "on-new-ssrc",
-      G_CALLBACK (gst_rist_src_on_new_ssrc), src);
-  g_signal_connect_swapped (src->rtpbin, "new-jitterbuffer",
-      G_CALLBACK (gst_rist_src_new_jitterbuffer), src);
+  g_signal_connect_object (src->rtpbin, "pad-added",
+      G_CALLBACK (gst_rist_src_pad_added), src, G_CONNECT_SWAPPED);
+  g_signal_connect_object (src->rtpbin, "on-new-ssrc",
+      G_CALLBACK (gst_rist_src_on_new_ssrc), src, G_CONNECT_SWAPPED);
+  g_signal_connect_object (src->rtpbin, "new-jitterbuffer",
+      G_CALLBACK (gst_rist_src_new_jitterbuffer), src, G_CONNECT_SWAPPED);
 
   bond = gst_rist_src_add_bond (src);
   if (!bond)

@@ -452,9 +452,10 @@ gst_rist_sink_on_new_sender_ssrc (GstRistSink * sink, guint session_id,
   if (ssrc & 1) {
     g_object_set (source, "disable-rtcp", TRUE, NULL);
   } else {
-    g_signal_connect (session, "on-app-rtcp", (GCallback) on_app_rtcp, sink);
-    g_signal_connect (session, "on-receiving-rtcp",
-        (GCallback) on_receiving_rtcp, sink);
+    g_signal_connect_object (session, "on-app-rtcp",
+        (GCallback) on_app_rtcp, sink, 0);
+    g_signal_connect_object (session, "on-receiving-rtcp",
+        (GCallback) on_receiving_rtcp, sink, 0);
   }
 
   g_object_unref (source);
@@ -585,14 +586,14 @@ gst_rist_sink_init (GstRistSink * sink)
       "sdes", sdes, NULL);
   gst_structure_free (sdes);
 
-  g_signal_connect_swapped (sink->rtpbin, "request-pt-map",
-      G_CALLBACK (gst_rist_sink_request_pt_map), sink);
-  g_signal_connect_swapped (sink->rtpbin, "request-aux-sender",
-      G_CALLBACK (gst_rist_sink_request_aux_sender), sink);
-  g_signal_connect_swapped (sink->rtpbin, "on-new-sender-ssrc",
-      G_CALLBACK (gst_rist_sink_on_new_sender_ssrc), sink);
-  g_signal_connect_swapped (sink->rtpbin, "on-new-ssrc",
-      G_CALLBACK (gst_rist_sink_on_new_receiver_ssrc), sink);
+  g_signal_connect_object (sink->rtpbin, "request-pt-map",
+      G_CALLBACK (gst_rist_sink_request_pt_map), sink, G_CONNECT_SWAPPED);
+  g_signal_connect_object (sink->rtpbin, "request-aux-sender",
+      G_CALLBACK (gst_rist_sink_request_aux_sender), sink, G_CONNECT_SWAPPED);
+  g_signal_connect_object (sink->rtpbin, "on-new-sender-ssrc",
+      G_CALLBACK (gst_rist_sink_on_new_sender_ssrc), sink, G_CONNECT_SWAPPED);
+  g_signal_connect_object (sink->rtpbin, "on-new-ssrc",
+      G_CALLBACK (gst_rist_sink_on_new_receiver_ssrc), sink, G_CONNECT_SWAPPED);
 
   sink->rtxbin = gst_bin_new ("rist_send_rtxbin");
   g_object_ref_sink (sink->rtxbin);
