@@ -1292,13 +1292,15 @@ gst_base_ts_mux_release_pad (GstElement * element, GstPad * pad)
     GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (pad);
     gint pid = ts_pad->pid;
 
-    if (ts_pad->prog->pcr_stream == ts_pad->stream) {
-      tsmux_stream_pcr_unref (ts_pad->prog->pcr_stream);
-      ts_pad->prog->pcr_stream = NULL;
+    if (ts_pad->prog) {
+      if (ts_pad->prog->pcr_stream == ts_pad->stream) {
+        tsmux_program_set_pcr_stream (ts_pad->prog, NULL);
+      }
+      if (tsmux_remove_stream (mux->tsmux, pid, ts_pad->prog)) {
+        g_hash_table_remove (mux->programs, GINT_TO_POINTER (ts_pad->prog_id));
+      }
     }
-    if (tsmux_remove_stream (mux->tsmux, pid, ts_pad->prog)) {
-      g_hash_table_remove (mux->programs, GINT_TO_POINTER (ts_pad->prog_id));
-    }
+
     tsmux_resend_pat (mux->tsmux);
     tsmux_resend_si (mux->tsmux);
 
