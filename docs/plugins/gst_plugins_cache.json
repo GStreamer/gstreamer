@@ -8936,18 +8936,6 @@
                         "readable": true,
                         "type": "GstCaps",
                         "writable": true
-                    },
-                    "force-sw-decoders": {
-                        "blurb": "Use only sofware decoders to process streams",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
                     }
                 },
                 "rank": "none",
@@ -10954,18 +10942,6 @@
                     },
                     "download": {
                         "blurb": "Attempt download buffering when buffering network streams",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "false",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gboolean",
-                        "writable": true
-                    },
-                    "force-sw-decoders": {
-                        "blurb": "Use only sofware decoders to process streams",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
