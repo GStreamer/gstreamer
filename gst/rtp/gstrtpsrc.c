@@ -705,16 +705,16 @@ gst_rtp_src_init (GstRtpSrc * self)
   gst_bin_add (GST_BIN (self), self->rtpbin);
 
   /* Add rtpbin callbacks to monitor the operation of rtpbin */
-  g_signal_connect (self->rtpbin, "pad-added",
-      G_CALLBACK (gst_rtp_src_rtpbin_pad_added_cb), self);
-  g_signal_connect (self->rtpbin, "pad-removed",
-      G_CALLBACK (gst_rtp_src_rtpbin_pad_removed_cb), self);
-  g_signal_connect (self->rtpbin, "request-pt-map",
-      G_CALLBACK (gst_rtp_src_rtpbin_request_pt_map_cb), self);
-  g_signal_connect (self->rtpbin, "on-new-ssrc",
-      G_CALLBACK (gst_rtp_src_rtpbin_on_new_ssrc_cb), self);
-  g_signal_connect (self->rtpbin, "on-ssrc-collision",
-      G_CALLBACK (gst_rtp_src_rtpbin_on_ssrc_collision_cb), self);
+  g_signal_connect_object (self->rtpbin, "pad-added",
+      G_CALLBACK (gst_rtp_src_rtpbin_pad_added_cb), self, 0);
+  g_signal_connect_object (self->rtpbin, "pad-removed",
+      G_CALLBACK (gst_rtp_src_rtpbin_pad_removed_cb), self, 0);
+  g_signal_connect_object (self->rtpbin, "request-pt-map",
+      G_CALLBACK (gst_rtp_src_rtpbin_request_pt_map_cb), self, 0);
+  g_signal_connect_object (self->rtpbin, "on-new-ssrc",
+      G_CALLBACK (gst_rtp_src_rtpbin_on_new_ssrc_cb), self, 0);
+  g_signal_connect_object (self->rtpbin, "on-ssrc-collision",
+      G_CALLBACK (gst_rtp_src_rtpbin_on_ssrc_collision_cb), self, 0);
 
   self->rtp_src = gst_element_factory_make ("udpsrc", "rtp_rtp_udpsrc0");
   if (self->rtp_src == NULL) {

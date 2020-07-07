@@ -589,12 +589,12 @@ gst_rtp_sink_init (GstRtpSink * self)
   gst_bin_add (GST_BIN (self), self->rtpbin);
 
   /* Add rtpbin callbacks to monitor the operation of rtpbin */
-  g_signal_connect (self->rtpbin, "element-added",
-      G_CALLBACK (gst_rtp_sink_rtpbin_element_added_cb), self);
-  g_signal_connect (self->rtpbin, "pad-added",
-      G_CALLBACK (gst_rtp_sink_rtpbin_pad_added_cb), self);
-  g_signal_connect (self->rtpbin, "pad-removed",
-      G_CALLBACK (gst_rtp_sink_rtpbin_pad_removed_cb), self);
+  g_signal_connect_object (self->rtpbin, "element-added",
+      G_CALLBACK (gst_rtp_sink_rtpbin_element_added_cb), self, 0);
+  g_signal_connect_object (self->rtpbin, "pad-added",
+      G_CALLBACK (gst_rtp_sink_rtpbin_pad_added_cb), self, 0);
+  g_signal_connect_object (self->rtpbin, "pad-removed",
+      G_CALLBACK (gst_rtp_sink_rtpbin_pad_removed_cb), self, 0);
 
   GST_OBJECT_FLAG_SET (GST_OBJECT (self), GST_ELEMENT_FLAG_SINK);
   gst_bin_set_suppressed_flags (GST_BIN (self),
