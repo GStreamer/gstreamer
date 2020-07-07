@@ -246,6 +246,14 @@ if get_option('default_library') == 'static'
   )
   install_headers('gstinitstaticplugins.h', subdir : 'gstreamer-1.0/gst')
 
+  # Avoid a x264 link issue described here: https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/108
+  # Similar issue has been found with VLC: https://mailman.videolan.org/pipermail/vlc-devel/2009-March/057640.html
+  gstfull_link_args = []
+  if cc.has_link_argument('-Wl,-Bsymbolic')
+    gstfull_link_args += ['-Wl,-Bsymbolic']
+  endif
+
+
   gst_dep = subproject('gstreamer').get_variable('gst_dep')
 
   # Get a list of libraries that needs to be exposed in the ABI.
@@ -272,6 +280,7 @@ if get_option('default_library') == 'static'
   gstfull = both_libraries('gstreamer-full-1.0',
     init_static_plugins_c,
     link_with : all_plugins,
+    link_args: gstfull_link_args,
     link_whole : exposed_libs,
     dependencies : gst_dep,
     install : true,
