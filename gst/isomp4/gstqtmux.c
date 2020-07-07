@@ -2727,6 +2727,7 @@ prefill_raw_audio_prepare_buf_func (GstQTMuxPad * qtpad, GstBuffer * buf,
   return buf;
 }
 
+/* Must be called with object lock */
 static void
 find_video_sample_duration (GstQTMux * qtmux, guint * dur_n, guint * dur_d)
 {
@@ -2734,7 +2735,6 @@ find_video_sample_duration (GstQTMux * qtmux, guint * dur_n, guint * dur_d)
 
   /* Find the (first) video track and assume that we have to output
    * in that size */
-  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *tmp_qpad = (GstQTMuxPad *) l->data;
 
@@ -2744,7 +2744,6 @@ find_video_sample_duration (GstQTMux * qtmux, guint * dur_n, guint * dur_d)
       break;
     }
   }
-  GST_OBJECT_UNLOCK (qtmux);
 
   if (l == NULL) {
     GST_INFO_OBJECT (qtmux,
