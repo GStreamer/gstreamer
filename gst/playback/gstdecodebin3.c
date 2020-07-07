@@ -265,7 +265,6 @@ struct _GstDecodebin3
 
   /* Properties */
   GstCaps *caps;
-  gboolean force_sw_decoders;
 };
 
 struct _GstDecodebin3Class
@@ -372,8 +371,7 @@ typedef struct _PendingPad
 enum
 {
   PROP_0,
-  PROP_CAPS,
-  PROP_FORCE_SW_DECODERS,
+  PROP_CAPS
 };
 
 /* signals */
@@ -424,8 +422,6 @@ GType gst_decodebin3_get_type (void);
 G_DEFINE_TYPE (GstDecodebin3, gst_decodebin3, GST_TYPE_BIN);
 
 static GstStaticCaps default_raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
-
-#define DEFAULT_FORCE_SW_DECODERS FALSE
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -555,20 +551,6 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
           "The caps on which to stop decoding. (NULL = default)",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /**
-   * GstDecodeBin::force-sw-decoders:
-   *
-   * While auto-plugging, if set to %TRUE, those decoders within
-   * "Hardware" klass will be ignored. Otherwise they will be tried.
-   *
-   * Since: 1.18
-   */
-  g_object_class_install_property (gobject_klass, PROP_FORCE_SW_DECODERS,
-      g_param_spec_boolean ("force-sw-decoders", "Software Decoders Only",
-          "Use only sofware decoders to process streams",
-          DEFAULT_FORCE_SW_DECODERS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   /* FIXME : ADD SIGNALS ! */
   /**
    * GstDecodebin3::select-stream
@@ -649,7 +631,6 @@ gst_decodebin3_init (GstDecodebin3 * dbin)
   g_mutex_init (&dbin->input_lock);
 
   dbin->caps = gst_static_caps_get (&default_raw_caps);
-  dbin->force_sw_decoders = DEFAULT_FORCE_SW_DECODERS;
 
   GST_OBJECT_FLAG_SET (dbin, GST_BIN_FLAG_STREAMS_AWARE);
 }
@@ -701,9 +682,6 @@ gst_decodebin3_set_property (GObject * object, guint prop_id,
       dbin->caps = g_value_dup_boxed (value);
       GST_OBJECT_UNLOCK (dbin);
       break;
-    case PROP_FORCE_SW_DECODERS:
-      dbin->force_sw_decoders = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -722,9 +700,6 @@ gst_decodebin3_get_property (GObject * object, guint prop_id, GValue * value,
       GST_OBJECT_LOCK (dbin);
       g_value_set_boxed (value, dbin->caps);
       GST_OBJECT_UNLOCK (dbin);
-      break;
-    case PROP_FORCE_SW_DECODERS:
-      g_value_set_boolean (value, dbin->force_sw_decoders);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1067,19 +1042,12 @@ gst_decode_bin_update_factories_list (GstDecodebin3 * dbin)
     dbin->decodable_factories = NULL;
     for (tmp = dbin->factories; tmp; tmp = tmp->next) {
       GstElementFactory *fact = (GstElementFactory *) tmp->data;
-
       if (gst_element_factory_list_is_type (fact,
-              GST_ELEMENT_FACTORY_TYPE_DECODER)) {
-        if (!(dbin->force_sw_decoders
-                && gst_element_factory_list_is_type (fact,
-                    GST_ELEMENT_FACTORY_TYPE_HARDWARE))) {
-          dbin->decoder_factories =
-              g_list_append (dbin->decoder_factories, fact);
-        }
-      } else {
+              GST_ELEMENT_FACTORY_TYPE_DECODER))
+        dbin->decoder_factories = g_list_append (dbin->decoder_factories, fact);
+      else
         dbin->decodable_factories =
             g_list_append (dbin->decodable_factories, fact);
-      }
     }
   }
 }

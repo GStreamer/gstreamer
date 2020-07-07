@@ -196,7 +196,6 @@ struct _GstURIDecodeBin3
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
   gboolean use_buffering;
-  gboolean force_sw_decoders;
   guint64 ring_buffer_max_size;
 
   GList *play_items;            /* List of GstPlayItem ordered by time of
@@ -280,7 +279,6 @@ static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw(ANY)");
 #define DEFAULT_BUFFER_SIZE         -1
 #define DEFAULT_DOWNLOAD            FALSE
 #define DEFAULT_USE_BUFFERING       FALSE
-#define DEFAULT_FORCE_SW_DECODERS   FALSE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
 
 enum
@@ -296,7 +294,6 @@ enum
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
   PROP_USE_BUFFERING,
-  PROP_FORCE_SW_DECODERS,
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_CAPS
 };
@@ -440,21 +437,6 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
       g_param_spec_boolean ("use-buffering", "Use Buffering",
           "Perform buffering on demuxed/parsed media",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstURIDecodeBin3::force-sw-decoders:
-   *
-   * While auto-plugging, if set to %TRUE, those decoders within
-   * "Hardware" klass will by tried. Otherwise they will be ignored.
-   *
-   * Since: 1.18
-   */
-  g_object_class_install_property (gobject_class, PROP_FORCE_SW_DECODERS,
-      g_param_spec_boolean ("force-sw-decoders", "Software Decoders Only",
-          "Use only sofware decoders to process streams",
-          DEFAULT_FORCE_SW_DECODERS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
 
   /**
    * GstURIDecodeBin3::ring-buffer-max-size
@@ -882,12 +864,6 @@ gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
     case PROP_USE_BUFFERING:
       dec->use_buffering = g_value_get_boolean (value);
       break;
-    case PROP_FORCE_SW_DECODERS:
-      if (dec->decodebin) {
-        g_object_set_property (G_OBJECT (dec->decodebin), "force-sw-decoders",
-            value);
-      }
-      break;
     case PROP_RING_BUFFER_MAX_SIZE:
       dec->ring_buffer_max_size = g_value_get_uint64 (value);
       break;
@@ -966,12 +942,6 @@ gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, dec->use_buffering);
-      break;
-    case PROP_FORCE_SW_DECODERS:
-      if (dec->decodebin) {
-        g_object_get_property (G_OBJECT (dec->decodebin), "force-sw-decoders",
-            value);
-      }
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       g_value_set_uint64 (value, dec->ring_buffer_max_size);
