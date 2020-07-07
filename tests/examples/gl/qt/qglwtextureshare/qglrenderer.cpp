@@ -25,13 +25,12 @@
 #include <QDebug>
 #include <QCloseEvent>
 
-#include <GL/glx.h>
-
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 
 #if GST_GL_HAVE_PLATFORM_GLX
+#include <GL/glx.h>
 #include <QX11Info>
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
