@@ -87,7 +87,7 @@ G_BEGIN_DECLS
       for (i = 0; i < n; i++)                                              \
         g_array_append_val (extra_fmts, ext_video_fmts[i]);                \
     }                                                                      \
-    caps = gst_vaapi_build_template_caps_by_codec (display,                \
+    caps = gst_vaapi_build_template_raw_caps_by_codec (display,            \
         GST_VAAPI_CONTEXT_USAGE_ENCODE,                                    \
         GST_VAAPI_CODEC_##CODEC, extra_fmts);                              \
     g_clear_pointer (&extra_fmts, g_array_unref);                          \

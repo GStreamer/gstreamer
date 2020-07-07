@@ -1141,7 +1141,7 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
 }
 
 /**
- * gst_vaapi_build_template_caps_by_codec:
+ * gst_vaapi_build_template_raw_caps_by_codec:
  * @display: a #GstVaapiDisplay
  * @usage: used for encode, decode or postproc
  * @codec: a #GstVaapiCodec specify the codec to detect
@@ -1155,7 +1155,7 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
  * Returns: a built #GstCaps if succeeds, or %NULL if error.
  **/
 GstCaps *
-gst_vaapi_build_template_caps_by_codec (GstVaapiDisplay * display,
+gst_vaapi_build_template_raw_caps_by_codec (GstVaapiDisplay * display,
     GstVaapiContextUsage usage, GstVaapiCodec codec, GArray * extra_fmts)
 {
   GArray *profiles = NULL;

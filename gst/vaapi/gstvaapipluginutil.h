@@ -168,7 +168,7 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
 
 G_GNUC_INTERNAL
 GstCaps *
-gst_vaapi_build_template_caps_by_codec (GstVaapiDisplay * display,
+gst_vaapi_build_template_raw_caps_by_codec (GstVaapiDisplay * display,
     GstVaapiContextUsage usage, GstVaapiCodec codec, GArray * extra_fmts);
 
 G_GNUC_INTERNAL
