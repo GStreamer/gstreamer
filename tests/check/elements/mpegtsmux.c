@@ -79,10 +79,11 @@ setup_src_pad (GstElement * element,
    * task of tsmux if it just happens to iterate over the pads */
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
-  gst_object_unref (sinkpad);   /* because we got it higher up */
 
   if (padname)
     *padname = g_strdup (GST_PAD_NAME (sinkpad));
+
+  gst_object_unref (sinkpad);   /* because we got it higher up */
 
   return srcpad;
 }
@@ -371,9 +372,9 @@ GST_START_TEST (test_reappearing_pad)
 
   pad = gst_element_get_static_pad (mux, padname);
   gst_pad_set_active (mysrcpad, FALSE);
-  gst_object_unref (pad);
   teardown_src_pad (mux, padname);
   gst_element_release_request_pad (mux, pad);
+  gst_object_unref (pad);
   g_free (padname);
 
   mysrcpad = setup_src_pad (mux, &video_src_template, "sink_%d", &padname);
