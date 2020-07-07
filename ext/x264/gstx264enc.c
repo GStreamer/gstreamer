@@ -829,6 +829,8 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
       const GValue *val;
       GstStructure *s;
 
+      /* FIXME Find a way to reuse gst_video_encoder_proxy_getcaps so that
+       * we do not need to copy that logic */
       s = gst_structure_new_id_empty (q_name);
       if ((val = gst_structure_get_value (allowed_s, "width")))
         gst_structure_set_value (s, "width", val);
@@ -838,6 +840,10 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
         gst_structure_set_value (s, "framerate", val);
       if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
         gst_structure_set_value (s, "pixel-aspect-ratio", val);
+      if ((val = gst_structure_get_value (allowed_s, "colorimetry")))
+        gst_structure_set_value (s, "colorimetry", val);
+      if ((val = gst_structure_get_value (allowed_s, "chroma-site")))
+        gst_structure_set_value (s, "chroma-site", val);
 
       if ((val = gst_structure_get_value (allowed_s, "profile"))) {
         gboolean has_420 = FALSE;
