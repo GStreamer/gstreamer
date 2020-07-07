@@ -37,7 +37,8 @@ if nunit_console.found()
     if nunit_dep.found()
         foreach test: [
                 # 'PipelineTests',
-                'SdpTests'
+                'SdpTests',
+                'AppTests'
                 ]
             lib = shared_library(test, test + '.cs', 'TestBase.cs',
                         cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114'],
