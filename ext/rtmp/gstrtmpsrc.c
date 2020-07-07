@@ -43,7 +43,7 @@
 #include "config.h"
 #endif
 
-#include <glib/gi18n-lib.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include "gstrtmpsrc.h"
 
