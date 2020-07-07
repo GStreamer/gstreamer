@@ -1,7 +1,7 @@
 if gst_dep.type_name() == 'internal'
    if meson.version().version_compare('>= 0.51')
-    gst_tester = gst_proj.get_variable('gst_tester', false)
-    if gst_tester == false
+    gst_tester = gst_proj.get_variable('gst_tester', disabler())
+    if is_disabler(gst_tester)
         if get_option('tests').enabled()
             error('Tests are enabled for gst-plugins-base but were not enabled for the gstreamer subproject')
         endif
