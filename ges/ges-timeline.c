@@ -272,6 +272,7 @@ enum
   SNAPING_ENDED,
   SELECT_TRACKS_FOR_OBJECT,
   COMMITED,
+  SELECT_ELEMENT_TRACK,
   LAST_SIGNAL
 };
 
@@ -843,6 +844,25 @@ ges_timeline_class_init (GESTimelineClass * klass)
       g_signal_new ("select-tracks-for-object", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, _gst_array_accumulator, NULL, NULL,
       G_TYPE_PTR_ARRAY, 2, GES_TYPE_CLIP, GES_TYPE_TRACK_ELEMENT);
+
+  /**
+   * GESTimeline::select-element-track:
+   * @timeline: The #GESTimeline
+   * @clip: The clip that @track_element is being added to
+   * @track_element: The element being added
+   *
+   * Simplified version of #GESTimeline::select-tracks-for-object which only
+   * allows @track_element to be added to a single #GESTrack.
+   *
+   * Returns: (transfer full): A track to put @track_element into, or %NULL if
+   * it should be discarded.
+   *
+   * Since: 1.18
+   */
+  ges_timeline_signals[SELECT_ELEMENT_TRACK] =
+      g_signal_new ("select-element-track", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
+      GES_TYPE_TRACK, 2, GES_TYPE_CLIP, GES_TYPE_TRACK_ELEMENT);
 
   /**
    * GESTimeline::commited:
@@ -1437,10 +1457,21 @@ _get_selected_tracks (GESTimeline * timeline, GESClip * clip,
 {
   guint i, j;
   GPtrArray *tracks = NULL;
+  GESTrack *track = NULL;
 
   g_signal_emit (G_OBJECT (timeline),
-      ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip, track_element,
-      &tracks);
+      ges_timeline_signals[SELECT_ELEMENT_TRACK], 0, clip, track_element,
+      &track);
+
+  if (track) {
+    tracks = g_ptr_array_new ();
+
+    g_ptr_array_add (tracks, track);
+  } else {
+    g_signal_emit (G_OBJECT (timeline),
+        ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip, track_element,
+        &tracks);
+  }
 
   if (tracks == NULL)
     tracks = g_ptr_array_new ();
