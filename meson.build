@@ -388,8 +388,6 @@ else
   message('GStreamer debug system is enabled')
 endif
 
-configure_file(output : 'config.h', configuration : cdata)
-
 subdir('config')
 
 if not get_option('examples').disabled()
@@ -406,6 +404,22 @@ if not get_option('tests').disabled() and gstcheck_dep.found()
   subdir('tests')
 endif
 subdir('docs')
+
+# Set release date
+if gst_version_nano == 0
+  extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
+  run_result = run_command(extract_release_date, gst_version, files('gst-omx.doap'))
+  if run_result.returncode() == 0
+    release_date = run_result.stdout().strip()
+    cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
+    message('Package release date: ' + release_date)
+  else
+    # Error out if our release can't be found in the .doap file
+    error(run_result.stderr())
+  endif
+endif
+
+configure_file(output: 'config.h', configuration: cdata)
 
 python3 = find_program('python3')
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

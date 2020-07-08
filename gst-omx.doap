@@ -6,7 +6,7 @@
   xmlns:admin="http://webns.net/mvcb/">
 
  <name>GStreamer OpenMAX IL wrapper plugin</name>
- <shortname>gst-omx>/shortname>
+ <shortname>gst-omx</shortname>
  <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-omx.html" />
  <created>2005-06-17</created>
  <shortdesc xml:lang="en">
@@ -284,7 +284,7 @@ a basic collection of elements
 
  <maintainer>
   <foaf:Person>
-     <foaf:name>Sebastian Dr&ouml;&ge</foaf:name>
+     <foaf:name>Sebastian Dröge</foaf:name>
      <foaf:mbox_sha1sum>7c1069ea873ef7751e4eca5f1a42744b0e9a3a0a</foaf:mbox_sha1sum>
   </foaf:Person>
  </maintainer>
