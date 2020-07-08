@@ -415,6 +415,15 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
 
       break;
     }
+    case GST_EVENT_SEGMENT:{
+      if (strcmp (GST_OBJECT_NAME (agg_pad), "sink") == 0) {
+        const GstSegment *segment;
+
+        gst_event_parse_segment (event, &segment);
+        gst_aggregator_update_segment (aggregator, segment);
+      }
+      break;
+    }
     default:
       break;
   }
