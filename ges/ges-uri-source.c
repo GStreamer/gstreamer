@@ -29,6 +29,25 @@ GST_DEBUG_CATEGORY_STATIC (uri_source_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT uri_source_debug
 
+#define DEFAULT_RAW_CAPS			\
+  "video/x-raw; "				\
+  "audio/x-raw; "				\
+  "text/x-raw; "				\
+  "subpicture/x-dvd; "			\
+  "subpicture/x-pgs"
+
+static GstStaticCaps default_raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
+
+static inline gboolean
+are_raw_caps (const GstCaps * caps)
+{
+  GstCaps *raw = gst_static_caps_get (&default_raw_caps);
+  gboolean res = gst_caps_can_intersect (caps, raw);
+
+  gst_caps_unref (raw);
+  return res;
+}
+
 typedef enum
 {
   GST_AUTOPLUG_SELECT_TRY,
@@ -43,20 +62,39 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
   GstElement *nlesrc;
   GstCaps *downstream_caps;
   GstAutoplugSelectResult res = GST_AUTOPLUG_SELECT_TRY;
+  gchar *stream_id = gst_pad_get_stream_id (pad);
+  const gchar *wanted_id =
+      gst_discoverer_stream_info_get_stream_id
+      (ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET
+          (ges_extractable_get_asset (GES_EXTRACTABLE (self->element)))));
+  gboolean wanted = !g_strcmp0 (stream_id, wanted_id);
+
 
   if (!ges_source_get_rendering_smartly (GES_SOURCE (self->element))) {
+    if (!wanted && are_raw_caps (caps)) {
+      GST_DEBUG_OBJECT (self->element, "Totally skipping %s", stream_id);
+      res = GST_AUTOPLUG_SELECT_SKIP;
+    }
     GST_LOG_OBJECT (self->element, "Not being smart here");
-    return res;
+    goto done;
   }
 
   nlesrc = ges_track_element_get_nleobject (self->element);
   downstream_caps = gst_pad_peer_query_caps (nlesrc->srcpads->data, NULL);
   if (downstream_caps && gst_caps_can_intersect (downstream_caps, caps)) {
-    GST_DEBUG_OBJECT (self, "Exposing %s", GST_OBJECT_NAME (factory));
-    res = GST_AUTOPLUG_SELECT_EXPOSE;
+    if (wanted) {
+      res = GST_AUTOPLUG_SELECT_EXPOSE;
+      GST_DEBUG_OBJECT (self, "Exposing %" GST_PTR_FORMAT " with stream id: %s",
+          pad, stream_id);
+    } else {
+      res = GST_AUTOPLUG_SELECT_SKIP;
+      GST_DEBUG_OBJECT (self->element, "Totally skipping %s", stream_id);
+    }
   }
   gst_clear_caps (&downstream_caps);
 
+done:
+  g_free (stream_id);
   return res;
 }
 
