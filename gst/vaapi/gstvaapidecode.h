@@ -54,7 +54,6 @@ struct _GstVaapiDecode {
     guint               display_height;
 
     GstVideoCodecState *input_state;
-    GstSegment          in_segment;
 
     gboolean            do_renego;
 };
