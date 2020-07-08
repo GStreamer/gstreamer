@@ -53,6 +53,12 @@ gst_wl_display_init (GstWlDisplay * self)
 }
 
 static void
+gst_wl_ref_wl_buffer (gpointer key, gpointer value, gpointer user_data)
+{
+  g_object_ref (value);
+}
+
+static void
 gst_wl_display_finalize (GObject * gobject)
 {
   GstWlDisplay *self = GST_WL_DISPLAY (gobject);
@@ -65,7 +71,7 @@ gst_wl_display_finalize (GObject * gobject)
    * at the same time, take their ownership */
   g_mutex_lock (&self->buffers_mutex);
   self->shutting_down = TRUE;
-  g_hash_table_foreach (self->buffers, (GHFunc) g_object_ref, NULL);
+  g_hash_table_foreach (self->buffers, gst_wl_ref_wl_buffer, NULL);
   g_mutex_unlock (&self->buffers_mutex);
 
   g_hash_table_foreach (self->buffers,
@@ -379,24 +385,36 @@ gst_wl_display_new_existing (struct wl_display * display,
 }
 
 void
-gst_wl_display_register_buffer (GstWlDisplay * self, gpointer buf)
+gst_wl_display_register_buffer (GstWlDisplay * self, gpointer gstbuffer,
+    gpointer wlbuffer)
 {
   g_assert (!self->shutting_down);
 
-  GST_TRACE_OBJECT (self, "registering GstWlBuffer %p", buf);
+  GST_TRACE_OBJECT (self, "registering GstWlBuffer %p to GstBuffer %p",
+      wlbuffer, gstbuffer);
 
   g_mutex_lock (&self->buffers_mutex);
-  g_hash_table_add (self->buffers, buf);
+  g_hash_table_replace (self->buffers, gstbuffer, wlbuffer);
   g_mutex_unlock (&self->buffers_mutex);
 }
 
-void
-gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer buf)
+gpointer
+gst_wl_display_lookup_buffer (GstWlDisplay * self, gpointer gstbuffer)
 {
-  GST_TRACE_OBJECT (self, "unregistering GstWlBuffer %p", buf);
+  gpointer wlbuffer;
+  g_mutex_lock (&self->buffers_mutex);
+  wlbuffer = g_hash_table_lookup (self->buffers, gstbuffer);
+  g_mutex_unlock (&self->buffers_mutex);
+  return wlbuffer;
+}
+
+void
+gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstbuffer)
+{
+  GST_TRACE_OBJECT (self, "unregistering GstWlBuffer owned by %p", gstbuffer);
 
   g_mutex_lock (&self->buffers_mutex);
   if (G_LIKELY (!self->shutting_down))
-    g_hash_table_remove (self->buffers, buf);
+    g_hash_table_remove (self->buffers, gstbuffer);
   g_mutex_unlock (&self->buffers_mutex);
 }

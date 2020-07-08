@@ -85,8 +85,10 @@ GstWlDisplay *gst_wl_display_new_existing (struct wl_display * display,
     gboolean take_ownership, GError ** error);
 
 /* see wlbuffer.c for explanation */
-void gst_wl_display_register_buffer (GstWlDisplay * self, gpointer buf);
-void gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer buf);
+void gst_wl_display_register_buffer (GstWlDisplay * self, gpointer gstbuffer,
+    gpointer wlbuffer);
+void gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstbuffer);
+gpointer gst_wl_display_lookup_buffer (GstWlDisplay * self, gpointer gstbuffer);
 
 gboolean gst_wl_display_check_format_for_shm (GstWlDisplay * display,
     GstVideoFormat format);

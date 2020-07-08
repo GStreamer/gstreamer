@@ -38,7 +38,7 @@
  *   -----------------     -------------     ---------------
  *
  * A GstBufferPool normally holds references to its GstBuffers and each buffer
- * holds a reference to a GstWlBuffer (saved in the GstMiniObject qdata).
+ * holds a reference to a GstWlBuffer (saved in the GstMiniObject weak ref data).
  * When a GstBuffer is in use, it holds a reference back to the pool and the
  * pool doesn't hold a reference to the GstBuffer. When the GstBuffer is unrefed
  * externally, it returns back to the pool and the pool holds again a reference
@@ -83,8 +83,6 @@ GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
 
 G_DEFINE_TYPE (GstWlBuffer, gst_wl_buffer, G_TYPE_OBJECT);
 
-static G_DEFINE_QUARK (GstWlBufferQDataQuark, gst_wl_buffer_qdata);
-
 static void
 gst_wl_buffer_dispose (GObject * gobject)
 {
@@ -97,7 +95,7 @@ gst_wl_buffer_dispose (GObject * gobject)
    * block and in the end the display will increase the refcount
    * of this GstWlBuffer, so it will not be finalized */
   if (self->display)
-    gst_wl_display_unregister_buffer (self->display, self);
+    gst_wl_display_unregister_buffer (self->display, self->gstbuffer);
 
   G_OBJECT_CLASS (gst_wl_buffer_parent_class)->dispose (gobject);
 }
@@ -150,7 +148,6 @@ static void
 gstbuffer_disposed (GstWlBuffer * self)
 {
   g_assert (!self->used_by_compositor);
-  self->gstbuffer = NULL;
 
   GST_TRACE_OBJECT (self, "owning GstBuffer was finalized");
 
@@ -170,25 +167,25 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
   self->wlbuffer = wlbuffer;
   self->display = display;
 
-  gst_wl_display_register_buffer (self->display, self);
+  gst_wl_display_register_buffer (self->display, self->gstbuffer, self);
 
   wl_buffer_add_listener (self->wlbuffer, &buffer_listener, self);
 
-  gst_mini_object_set_qdata ((GstMiniObject *) gstbuffer,
-      gst_wl_buffer_qdata_quark (), self, (GDestroyNotify) gstbuffer_disposed);
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (gstbuffer),
+      (GstMiniObjectNotify) gstbuffer_disposed, self);
+
 
   return self;
 }
 
 GstWlBuffer *
-gst_buffer_get_wl_buffer (GstBuffer * gstbuffer)
+gst_buffer_get_wl_buffer (GstWlDisplay * display, GstBuffer * gstbuffer)
 {
-  return gst_mini_object_get_qdata ((GstMiniObject *) gstbuffer,
-      gst_wl_buffer_qdata_quark ());
+  return gst_wl_display_lookup_buffer (display, gstbuffer);
 }
 
 void
-gst_wl_buffer_force_release_and_unref (GstWlBuffer * self)
+gst_wl_buffer_force_release_and_unref (GstBuffer * buf, GstWlBuffer * self)
 {
   /* Force a buffer release.
    * At this point, the GstWlDisplay has killed its event loop,
@@ -212,6 +209,7 @@ gst_wl_buffer_force_release_and_unref (GstWlBuffer * self)
   wl_buffer_destroy (self->wlbuffer);
   self->wlbuffer = NULL;
   self->display = NULL;
+  self->gstbuffer = NULL;
 
   /* remove the reference that the caller (GstWlDisplay) owns */
   g_object_unref (self);

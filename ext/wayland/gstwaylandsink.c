@@ -655,7 +655,7 @@ render_last_buffer (GstWaylandSink * sink, gboolean redraw)
   struct wl_surface *surface;
   struct wl_callback *callback;
 
-  wlbuffer = gst_buffer_get_wl_buffer (sink->last_buffer);
+  wlbuffer = gst_buffer_get_wl_buffer (sink->display, sink->last_buffer);
   surface = gst_wl_window_get_wl_surface (sink->window);
 
   sink->redraw_pending = TRUE;
@@ -723,7 +723,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   if (G_UNLIKELY (sink->window->render_rectangle.w == 0))
     goto no_window_size;
 
-  wlbuffer = gst_buffer_get_wl_buffer (buffer);
+  wlbuffer = gst_buffer_get_wl_buffer (sink->display, buffer);
 
   if (G_LIKELY (wlbuffer && wlbuffer->display == sink->display)) {
     GST_LOG_OBJECT (sink, "buffer %p has a wl_buffer from our display, "
@@ -807,7 +807,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       if (ret != GST_FLOW_OK)
         goto no_buffer;
 
-      wlbuffer = gst_buffer_get_wl_buffer (to_render);
+      wlbuffer = gst_buffer_get_wl_buffer (sink->display, to_render);
 
       /* attach a wl_buffer if there isn't one yet */
       if (G_UNLIKELY (!wlbuffer)) {
