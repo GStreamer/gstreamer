@@ -103,8 +103,6 @@ endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
 cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
-configure_file(output : 'config.h', configuration : cdata)
-
 rtspserver_args = ['-DHAVE_CONFIG_H']
 
 warning_flags = [
@@ -197,3 +195,19 @@ if not get_option('examples').disabled()
 endif
 subdir('pkgconfig')
 subdir('docs')
+
+# Set release date
+if gst_version_nano == 0
+  extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
+  run_result = run_command(extract_release_date, gst_version, files('gst-rtsp-server.doap'))
+  if run_result.returncode() == 0
+    release_date = run_result.stdout().strip()
+    cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
+    message('Package release date: ' + release_date)
+  else
+    # Error out if our release can't be found in the .doap file
+    error(run_result.stderr())
+  endif
+endif
+
+configure_file(output: 'config.h', configuration: cdata)
