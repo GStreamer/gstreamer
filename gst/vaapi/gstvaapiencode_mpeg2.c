@@ -37,6 +37,7 @@
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_mpeg2.h>
+#include <gst/vaapi/gstvaapiutils_mpeg2.h>
 #include "gstvaapiencode_mpeg2.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
@@ -67,7 +68,8 @@ static GstStaticPadTemplate gst_vaapiencode_mpeg2_src_factory =
 #define EXTRA_FORMATS {}
 
 /* mpeg2 encode */
-GST_VAAPI_ENCODE_REGISTER_TYPE (mpeg2, MPEG2, Mpeg2, EXTRA_FORMATS);
+GST_VAAPI_ENCODE_REGISTER_TYPE (mpeg2, MPEG2, Mpeg2, EXTRA_FORMATS,
+    gst_vaapi_utils_mpeg2_get_profile_string);
 
 static void
 gst_vaapiencode_mpeg2_init (GstVaapiEncodeMpeg2 * encode)
@@ -106,7 +108,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass,
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
-  GstCaps *sink_caps = GST_CAPS_CAST (data);
+  GstCaps *sink_caps = ((GstVaapiEncodeInitData *) data)->sink_caps;
   gpointer encoder_class;
 
   object_class->finalize = gst_vaapiencode_mpeg2_finalize;

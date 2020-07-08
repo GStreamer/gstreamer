@@ -65,7 +65,7 @@ static GstStaticPadTemplate gst_vaapiencode_vp9_src_factory =
 #define EXTRA_FORMATS {}
 
 /* vp9 encode */
-GST_VAAPI_ENCODE_REGISTER_TYPE (vp9, VP9, VP9, EXTRA_FORMATS);
+GST_VAAPI_ENCODE_REGISTER_TYPE (vp9, VP9, VP9, EXTRA_FORMATS, NULL);
 
 static void
 gst_vaapiencode_vp9_init (GstVaapiEncodeVP9 * encode)
@@ -102,7 +102,7 @@ gst_vaapiencode_vp9_class_init (GstVaapiEncodeVP9Class * klass, gpointer data)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
-  GstCaps *sink_caps = GST_CAPS_CAST (data);
+  GstCaps *sink_caps = ((GstVaapiEncodeInitData *) data)->sink_caps;
   gpointer encoder_class;
 
   object_class->finalize = gst_vaapiencode_vp9_finalize;

@@ -44,7 +44,15 @@ G_BEGIN_DECLS
 #define GST_IS_VAAPIENCODE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE))
 
-#define GST_VAAPI_ENCODE_REGISTER_TYPE(NAME, CODEC, CLASS, _EXT_FMT_)      \
+typedef struct _GstVaapiEncodeInitData GstVaapiEncodeInitData;
+struct _GstVaapiEncodeInitData
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+};
+
+#define GST_VAAPI_ENCODE_REGISTER_TYPE(NAME, CODEC, CLASS, _EXT_FMT_, FUN) \
+  static GstVaapiEncodeInitData encode_init_data = { NULL, NULL };         \
   static GType encode_type = G_TYPE_INVALID;                               \
   static gpointer gst_vaapiencode_##NAME##_parent_class = NULL;            \
   static void                                                              \
@@ -108,7 +116,23 @@ G_BEGIN_DECLS
                                                                            \
     /* class data will be leaked if the element never gets instantiated */ \
     GST_MINI_OBJECT_FLAG_SET (caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);   \
-    type_info.class_data = caps;                                           \
+    encode_init_data.sink_caps = caps;                                     \
+                                                                           \
+    caps = gst_vaapi_build_template_coded_caps_by_codec (display,          \
+        GST_VAAPI_CONTEXT_USAGE_ENCODE,                                    \
+        GST_VAAPI_CODEC_##CODEC, GST_CODEC_CAPS,                           \
+        FUN);                                                              \
+    if (!caps) {                                                           \
+      GST_ERROR ("failed to get src caps for " #CODEC                      \
+          " encode, can not register");                                    \
+      gst_caps_unref (encode_init_data.sink_caps);                         \
+      return G_TYPE_INVALID;                                               \
+    }                                                                      \
+    GST_DEBUG (#CODEC" encode's src caps %" GST_PTR_FORMAT, caps);         \
+    /* class data will be leaked if the element never gets instantiated */ \
+    GST_MINI_OBJECT_FLAG_SET (caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);   \
+    encode_init_data.src_caps = caps;                                      \
+    type_info.class_data = &encode_init_data;                              \
     encode_type = g_type_register_static (GST_TYPE_VAAPIENCODE,            \
         "GstVaapiEncode"#CLASS, &type_info, 0);                            \
                                                                            \

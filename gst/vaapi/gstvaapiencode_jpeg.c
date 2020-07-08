@@ -65,7 +65,7 @@ static GstStaticPadTemplate gst_vaapiencode_jpeg_src_factory =
 #define EXTRA_FORMATS { GST_VIDEO_FORMAT_BGRA, }
 
 /* jpeg encode */
-GST_VAAPI_ENCODE_REGISTER_TYPE (jpeg, JPEG, Jpeg, EXTRA_FORMATS);
+GST_VAAPI_ENCODE_REGISTER_TYPE (jpeg, JPEG, Jpeg, EXTRA_FORMATS, NULL);
 
 static void
 gst_vaapiencode_jpeg_init (GstVaapiEncodeJpeg * encode)
@@ -102,7 +102,7 @@ gst_vaapiencode_jpeg_class_init (GstVaapiEncodeJpegClass * klass, gpointer data)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
-  GstCaps *sink_caps = GST_CAPS_CAST (data);
+  GstCaps *sink_caps = ((GstVaapiEncodeInitData *) data)->sink_caps;
   gpointer encoder_class;
 
   object_class->finalize = gst_vaapiencode_jpeg_finalize;
