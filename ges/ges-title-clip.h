@@ -54,52 +54,52 @@ struct _GESTitleClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_text( GESTitleClip * self, const gchar * text);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_color (GESTitleClip * self, guint32 color);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_background (GESTitleClip * self, guint32 background);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_xpos (GESTitleClip * self, gdouble position);
 
-G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_ypos (GESTitleClip * self, gdouble position);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gchar*
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gchar*
 ges_title_clip_get_font_desc (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) GESTextVAlign
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) GESTextVAlign
 ges_title_clip_get_valignment (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) GESTextHAlign
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) GESTextHAlign
 ges_title_clip_get_halignment (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const guint32
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const guint32
 ges_title_clip_get_text_color (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const guint32
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const guint32
 ges_title_clip_get_background_color (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gdouble
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gdouble
 ges_title_clip_get_xpos (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gdouble
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties) const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self);
 
-G_DEPRECATED_FOR(ges_timeline_element_get_children_properties)
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties)
 const gchar* ges_title_clip_get_text (GESTitleClip * self);
 
 GES_API
