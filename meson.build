@@ -192,8 +192,6 @@ if build_gir
   endif
 endif
 
-configure_file(output : 'config.h', configuration : cdata)
-
 ges_c_args = ['-DHAVE_CONFIG_H', '-DG_LOG_DOMAIN="GES"']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
@@ -291,5 +289,21 @@ if pygi_override_dir != ''
   message('pygobject overrides directory ' + pygi_override_dir)
   subdir('bindings/python')
 endif
+
+# Set release date
+if gst_version_nano == 0
+  extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
+  run_result = run_command(extract_release_date, gst_version, files('gst-editing-services.doap'))
+  if run_result.returncode() == 0
+    release_date = run_result.stdout().strip()
+    cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
+    message('Package release date: ' + release_date)
+  else
+    # Error out if our release can't be found in the .doap file
+    error(run_result.stderr())
+  endif
+endif
+
+configure_file(output: 'config.h', configuration: cdata)
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
