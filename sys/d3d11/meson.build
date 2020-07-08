@@ -86,35 +86,6 @@ if not have_d3d11
   subdir_done()
 endif
 
-# for enabling debug layer
-if get_option('debug')
-  d3d11_debug_libs = [
-    ['d3d11sdklayers.h', 'ID3D11Debug', 'ID3D11InfoQueue', 'have_d3d11sdk_h'],
-    ['dxgidebug.h', 'IDXGIDebug', 'IDXGIInfoQueue', 'have_dxgidebug_h'],
-  ]
-
-  foreach f : d3d11_debug_libs
-    header = f.get(0)
-    debug_obj = f.get(1)
-    info_obj = f.get(2)
-    compile_code = '''
-                   #include <d3d11.h>
-                   #include <dxgi.h>
-                   #include <@0@>
-                   int main(int arc, char ** argv) {
-                     @1@ *debug = NULL;
-                     @2@ *info_queue = NULL;
-                     return 0;
-                   }'''.format(header, debug_obj, info_obj)
-    if cc.compiles(compile_code, dependencies: [d3d11_lib, dxgi_lib], name: debug_obj)
-      set_variable(f.get(3), true)
-    endif
-  endforeach
-endif
-
-d3d11_conf.set10('HAVE_D3D11SDKLAYERS_H', have_d3d11sdk_h)
-d3d11_conf.set10('HAVE_DXGIDEBUG_H', have_dxgidebug_h)
-
 # d3d11 video api uses dxva structure for decoding, and dxva.h needs d3d9 types
 if cc.has_header('dxva.h') and cc.has_header('d3d9.h')
   d3d11_conf.set('HAVE_DXVA_H', 1)
@@ -159,6 +130,57 @@ else
 endif
 
 d3d11_conf.set10('GST_D3D11_WINAPI_ONLY_APP', winapi_app_only)
+
+# for enabling debug layer
+# NOTE: Disable d3d11/dxgi debug layer in case of [UWP build + release CRT]
+# WACK (Windows App Certification Kit) doesn't seem to be happy with
+# the DXGIGetDebugInterface1 symbol.
+
+# FIXME: Probably DXGIGetDebugInterface1 might be used on UWP app for development
+# purpose. So, I suspect one possible reason why WACK is complaining about
+# DXGIGetDebugInterface1 is that debugging APIs couldn't be used for
+# Windows store app, but couldn't find any reference about that.
+#
+# [IDXGIDebug1]
+# https://docs.microsoft.com/en-us/windows/win32/api/dxgidebug/nn-dxgidebug-idxgidebug1
+# is saying that the IDXGIDebug1 interface is available for both desktop app and
+# UWP. And then the *DXGIGetDebugInterface1* method need to be called to obtain
+# the IDXGIDebug1 interface.
+#
+# [DXGIGetDebugInterface1]
+# https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-dxgigetdebuginterface1
+# is mentioning that DXGIGetDebugInterface1 is desktop app only.
+#
+# PLEASE LET US KNOW A CORRECT WAY TO OBTAIN IDXGIDebug1 ON UWP, MICROSOFT
+if get_option('debug') and not (winapi_app_only and get_option('b_vscrt') == 'md')
+  d3d11_debug_libs = [
+    ['d3d11sdklayers.h', 'ID3D11Debug', 'ID3D11InfoQueue', 'have_d3d11sdk_h'],
+    ['dxgidebug.h', 'IDXGIDebug', 'IDXGIInfoQueue', 'have_dxgidebug_h'],
+  ]
+
+  foreach f : d3d11_debug_libs
+    header = f.get(0)
+    debug_obj = f.get(1)
+    info_obj = f.get(2)
+    compile_code = '''
+                   #include <d3d11.h>
+                   #include <dxgi.h>
+                   #include <@0@>
+                   int main(int arc, char ** argv) {
+                     @1@ *debug = NULL;
+                     @2@ *info_queue = NULL;
+                     return 0;
+                   }'''.format(header, debug_obj, info_obj)
+    if cc.compiles(compile_code, dependencies: [d3d11_lib, dxgi_lib], name: debug_obj)
+      set_variable(f.get(3), true)
+    endif
+  endforeach
+else
+  message('Disable D3D11Debug and DXGIDebug layers')
+endif
+
+d3d11_conf.set10('HAVE_D3D11SDKLAYERS_H', have_d3d11sdk_h)
+d3d11_conf.set10('HAVE_DXGIDEBUG_H', have_dxgidebug_h)
 
 configure_file(
   output: 'gstd3d11config.h',
