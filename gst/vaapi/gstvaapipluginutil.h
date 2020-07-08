@@ -158,7 +158,7 @@ gst_vaapi_codecs_has_codec (GArray * codecs, GstVaapiCodec codec);
 
 G_GNUC_INTERNAL
 GArray *
-gst_vaapi_h26x_encoder_get_profiles_from_caps (GstCaps * caps,
+gst_vaapi_encoder_get_profiles_from_caps (GstCaps * caps,
     GstVaapiStrToProfileFunc func);
 
 G_GNUC_INTERNAL

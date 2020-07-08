@@ -103,7 +103,7 @@ static GArray *
 gst_vaapiencode_h264_get_allowed_profiles (GstVaapiEncode * encode,
     GstCaps * allowed)
 {
-  return gst_vaapi_h26x_encoder_get_profiles_from_caps (allowed,
+  return gst_vaapi_encoder_get_profiles_from_caps (allowed,
       gst_vaapi_utils_h264_get_profile_from_string);
 }
 

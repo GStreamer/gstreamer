@@ -1018,18 +1018,17 @@ gst_vaapi_codecs_has_codec (GArray * codecs, GstVaapiCodec codec)
 }
 
 /**
- * gst_vaapi_h26x_encoder_get_profiles_from_caps:
+ * gst_vaapi_encoder_get_profiles_from_caps:
  * @caps: a #GstCaps to detect
  * @func: a #GstVaapiStrToProfileFunc
  *
  * This function will detect all profile strings in @caps and
- * return the according GstVaapiProfile in array. This can just
- * work for h264 and h265 now.
+ * return the according GstVaapiProfile in array.
  *
  * Return: A #GArray of @GstVaapiProfile if succeed, %NULL if fail.
  **/
 GArray *
-gst_vaapi_h26x_encoder_get_profiles_from_caps (GstCaps * caps,
+gst_vaapi_encoder_get_profiles_from_caps (GstCaps * caps,
     GstVaapiStrToProfileFunc func)
 {
   guint i, j;
