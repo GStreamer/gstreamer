@@ -61,6 +61,13 @@ GType gst_webrtc_rtp_transceiver_get_type(void);
  *
  * Since: 1.16
  */
+/**
+ * GstWebRTCRTPTransceiver.kind:
+ *
+ * Type of media
+ *
+ * Since: 1.20
+ */
 struct _GstWebRTCRTPTransceiver
 {
   GstObject                         parent;
@@ -75,6 +82,7 @@ struct _GstWebRTCRTPTransceiver
   GstWebRTCRTPTransceiverDirection  current_direction;
 
   GstCaps                          *codec_preferences;
+  GstWebRTCKind                     kind;
 
   gpointer                          _padding[GST_PADDING];
 };
