@@ -465,7 +465,7 @@ if have_orcc
     ]
   endforeach
 
-  if meson.version().version_compare('>= 0.52')
+  if meson.version().version_compare('>= 0.52') and orc_update_targets.length() > 0
     update_orc_dist_target = alias_target('update-orc-dist', orc_update_targets)
   endif
 endif
