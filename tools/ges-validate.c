@@ -27,6 +27,24 @@
 
 #include <string.h>
 
+static gboolean
+_print_position (GstElement * pipeline)
+{
+  gint64 position = 0, duration = -1;
+
+  if (pipeline) {
+    gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+        &position);
+    gst_element_query_duration (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+        &duration);
+
+    g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+        "/>\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+  }
+
+  return TRUE;
+}
+
 #ifdef HAVE_GST_VALIDATE
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/validate.h>
@@ -112,6 +130,9 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
       g_error ("Trying to run scenario: %s but validate is deactivated",
           opts->scenario);
     opts->needs_set_state = TRUE;
+    g_object_set_data (G_OBJECT (pipeline), "pposition-id",
+        GUINT_TO_POINTER (g_timeout_add (200,
+                (GSourceFunc) _print_position, pipeline)));
     return TRUE;
   }
 
@@ -189,6 +210,9 @@ ges_validate_clean (GstPipeline * pipeline)
 
   if (runner)
     res = gst_validate_runner_exit (runner, TRUE);
+  else
+    g_source_remove (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pipeline),
+                "pposition-id")));
 
   gst_object_unref (pipeline);
   if (runner)
@@ -229,24 +253,6 @@ ges_validate_print_action_types (const gchar ** types, gint num_types)
 }
 
 #else
-static gboolean
-_print_position (GstElement * pipeline)
-{
-  gint64 position = 0, duration = -1;
-
-  if (pipeline) {
-    gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
-        &position);
-    gst_element_query_duration (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
-        &duration);
-
-    g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-        "/>\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
-  }
-
-  return TRUE;
-}
-
 gboolean
 ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
     GESLauncherParsedOptions * opts)
