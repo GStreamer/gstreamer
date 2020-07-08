@@ -44,11 +44,17 @@ pkg_files = [
 
 # XXX: requires the meson.build to be parsed/executed after gst-libs/gl/meson.build
 if build_gstgl
-  pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
+  gllibdir = join_paths(meson.build_root(), gstgl.outdir())
+  pkgconf.set('gllibdir', gllibdir)
+  pkgconf.set('glliblinkerflag', '-L' + gllibdir)
   pkg_files += ['gstreamer-gl']
   pkgconf.set('GL_APIS', ' '.join(enabled_gl_apis))
   pkgconf.set('GL_WINDOWS', ' '.join(enabled_gl_winsys))
   pkgconf.set('GL_PLATFORMS', ' '.join(enabled_gl_platforms))
+  pkgconf.set('gl_lib_name', 'gl')
+else
+  pkgconf.set('glliblinkerflag', '')
+  pkgconf.set('gl_lib_name', '')
 endif
 
 foreach p : pkg_files

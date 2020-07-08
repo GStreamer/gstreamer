@@ -10,7 +10,7 @@ Name: GStreamer Base Plugins Libraries, Uninstalled
 Description: Streaming media framework, base plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
-Libs: -L@allocatorslibdir@ -L@applibdir@ -L@audiolibdir@ -L@fftlibdir@ -L@pbutilslibdir@ -L@rifflibdir@ -L@rtplibdir@ -L@rtsplibdir@ -L@sdplibdir@ -L@taglibdir@ -L@videolibdir@ -L@gllibdir@
+Libs: -L@allocatorslibdir@ -L@applibdir@ -L@audiolibdir@ -L@fftlibdir@ -L@pbutilslibdir@ -L@rifflibdir@ -L@rtplibdir@ -L@rtsplibdir@ -L@sdplibdir@ -L@taglibdir@ -L@videolibdir@ @glliblinkerflag@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
-libraries=allocators app audio fft pbutils riff rtp rtsp sdp tag video gl
+libraries=allocators app audio fft pbutils riff rtp rtsp sdp tag video @gl_lib_name@
