@@ -14,5 +14,4 @@ Version: @VERSION@
 Requires: gstreamer-video-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@ gstreamer-@GST_API_VERSION@
 
 Libs: -L${libdir} -lgstgl-@GST_API_VERSION@
-Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs @GL_CFLAGS@
-
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
