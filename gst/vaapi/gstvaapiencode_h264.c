@@ -78,20 +78,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
   "stream-format = (string) { avc, byte-stream }, " \
   "alignment = (string) au"
 
-/* *INDENT-OFF* */
-static const char gst_vaapiencode_h264_src_caps_str[] =
-  GST_CODEC_CAPS ", "
-  "profile = (string) { constrained-baseline, baseline, main, high, multiview-high, stereo-high }";
-/* *INDENT-ON* */
-
-/* *INDENT-OFF* */
-static GstStaticPadTemplate gst_vaapiencode_h264_src_factory =
-  GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (gst_vaapiencode_h264_src_caps_str));
-/* *INDENT-ON* */
-
 #define EXTRA_FORMATS {}
 
 /* h264 encode */
@@ -242,7 +228,7 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
   gboolean ret = TRUE;
 
   template_caps =
-      gst_static_pad_template_get_caps (&gst_vaapiencode_h264_src_factory);
+      gst_pad_get_pad_template_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
   allowed_caps =
       gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 
@@ -559,6 +545,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass, gpointer data)
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
   GstCaps *sink_caps = ((GstVaapiEncodeInitData *) data)->sink_caps;
+  GstCaps *src_caps = ((GstVaapiEncodeInitData *) data)->src_caps;
   gpointer encoder_class;
 
   object_class->finalize = gst_vaapiencode_h264_finalize;
@@ -584,8 +571,10 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass, gpointer data)
   gst_caps_unref (sink_caps);
 
   /* src pad */
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vaapiencode_h264_src_factory);
+  g_assert (src_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps));
+  gst_caps_unref (src_caps);
 
   encoder_class = g_type_class_ref (GST_TYPE_VAAPI_ENCODER_H264);
   g_assert (encoder_class);
