@@ -87,6 +87,8 @@ gstpbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gstvideo_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
+gstaudio_dep = dependency('gstreamer-audio-' + apiversion, version : gst_req,
+    fallback : ['gst-plugins-base', 'audio_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])
 if host_machine.system() != 'windows'

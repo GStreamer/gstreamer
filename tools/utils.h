@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <ges/ges.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/pbutils/encoding-profile.h>
 
@@ -33,3 +34,4 @@ void printerr (const gchar * format, ...);
 
 gchar * get_file_extension (gchar * uri);
 void describe_encoding_profile (GstEncodingProfile *profile);
+void print_timeline(GESTimeline *timeline);

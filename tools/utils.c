@@ -22,6 +22,9 @@
 #include <string.h>
 #include <gst/gst.h>
 #include "utils.h"
+#include "../ges/ges-internal.h"
+
+#undef GST_CAT_DEFAULT
 
 /* Copy of GST_ASCII_IS_STRING */
 #define ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
@@ -260,16 +263,18 @@ get_file_extension (gchar * uri)
 }
 
 static const gchar *
-get_profile_type (GstEncodingProfile * profile)
+get_type_icon (gpointer obj)
 {
-  if (GST_IS_ENCODING_CONTAINER_PROFILE (profile))
-    return "Container";
-  else if (GST_IS_ENCODING_AUDIO_PROFILE (profile))
-    return "Audio";
-  else if (GST_IS_ENCODING_VIDEO_PROFILE (profile))
-    return "Video";
+  if (GST_IS_ENCODING_AUDIO_PROFILE (obj) || GST_IS_DISCOVERER_AUDIO_INFO (obj))
+    return "♫";
+  else if (GST_IS_ENCODING_VIDEO_PROFILE (obj)
+      || GST_IS_DISCOVERER_VIDEO_INFO (obj))
+    return "▶";
+  else if (GST_IS_ENCODING_CONTAINER_PROFILE (obj)
+      || GST_IS_DISCOVERER_CONTAINER_INFO (obj))
+    return "∋";
   else
-    return "Unkonwn";
+    return "";
 }
 
 static void
@@ -278,16 +283,59 @@ print_profile (GstEncodingProfile * profile, const gchar * prefix)
   const gchar *name = gst_encoding_profile_get_name (profile);
   const gchar *desc = gst_encoding_profile_get_description (profile);
   GstCaps *format = gst_encoding_profile_get_format (profile);
-  gchar *capsdesc;
+  gchar *capsdesc = NULL;
 
   if (gst_caps_is_fixed (format))
     capsdesc = gst_pb_utils_get_codec_description (format);
-  else
+  if (!capsdesc)
     capsdesc = gst_caps_to_string (format);
 
-  g_print ("%s%s: %s%s%s%s%s%s\n", prefix, get_profile_type (profile),
-      name ? name : capsdesc, desc ? ": " : "", desc ? desc : "",
-      name ? " (" : "", name ? capsdesc : "", name ? ")" : "");
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
+    g_print ("%s> %s %s: %s%s%s%s\n", prefix,
+        get_type_icon (profile),
+        capsdesc, name ? name : "",
+        desc ? " (" : "", desc ? desc : "", desc ? ")" : "");
+
+  } else {
+    g_print ("%s%s %s%s%s%s%s%s", prefix, get_type_icon (profile),
+        name ? name : capsdesc, desc ? ": " : "", desc ? desc : "",
+        name ? " (" : "", name ? capsdesc : "", name ? ")" : "");
+
+    if (GST_IS_ENCODING_VIDEO_PROFILE (profile)) {
+      GstCaps *caps = gst_encoding_profile_get_restriction (profile);
+
+      if (!caps && gst_caps_is_fixed (format))
+        caps = gst_caps_ref (format);
+
+      if (caps) {
+        GstVideoInfo info;
+
+        if (gst_video_info_from_caps (&info, caps)) {
+          g_print (" (%dx%d", info.width, info.height);
+          if (info.fps_n)
+            g_print ("@%d/%dfps", info.fps_n, info.fps_d);
+          g_print (")");
+        }
+        gst_caps_unref (caps);
+      }
+    } else if (GST_IS_ENCODING_AUDIO_PROFILE (profile)) {
+      GstCaps *caps = gst_encoding_profile_get_restriction (profile);
+
+      if (!caps && gst_caps_is_fixed (format))
+        caps = gst_caps_ref (format);
+
+      if (caps) {
+        GstAudioInfo info;
+
+        if (gst_caps_is_fixed (caps) && gst_audio_info_from_caps (&info, caps))
+          g_print (" (%d channels @ %dhz)", info.channels, info.rate);
+        gst_caps_unref (caps);
+      }
+    }
+
+
+    g_print ("\n");
+  }
 
   gst_caps_unref (format);
 
@@ -299,14 +347,103 @@ describe_encoding_profile (GstEncodingProfile * profile)
 {
   g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
 
-  print_profile (profile, "  ");
+  print_profile (profile, "     ");
   if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
     const GList *tmp;
 
     for (tmp =
         gst_encoding_container_profile_get_profiles
         (GST_ENCODING_CONTAINER_PROFILE (profile)); tmp; tmp = tmp->next)
-      print_profile (tmp->data, "    - ");
+      print_profile (tmp->data, "       - ");
+  }
+}
+
+static void
+describe_stream_info (GstDiscovererStreamInfo * sinfo, GString * desc)
+{
+  gchar *capsdesc;
+  GstCaps *caps;
+
+  caps = gst_discoverer_stream_info_get_caps (sinfo);
+  capsdesc = gst_pb_utils_get_codec_description (caps);
+  if (!capsdesc)
+    capsdesc = gst_caps_to_string (caps);
+  gst_caps_unref (caps);
+
+  g_string_append_printf (desc, "%s%s%s", desc->len ? ", " : "",
+      get_type_icon (sinfo), capsdesc);
+
+  if (GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
+    GList *tmp, *streams;
+
+    streams =
+        gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
+        (sinfo));
+    for (tmp = streams; tmp; tmp = tmp->next)
+      describe_stream_info (tmp->data, desc);
+    gst_discoverer_stream_info_list_free (streams);
+  }
+}
+
+static gchar *
+describe_discoverer (GstDiscovererInfo * info)
+{
+  GString *desc = g_string_new (NULL);
+  GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
+
+  describe_stream_info (sinfo, desc);
+  gst_discoverer_stream_info_unref (sinfo);
+
+  return g_string_free (desc, FALSE);
+}
+
+void
+print_timeline (GESTimeline * timeline)
+{
+  GList *layer, *clip, *clips;
+
+  if (!timeline->layers)
+    return;
+
+  g_print ("\nTimeline description:\n");
+  g_print ("====================\n\n");
+  for (layer = timeline->layers; layer; layer = layer->next) {
+    clips = ges_layer_get_clips (layer->data);
+
+    if (!clips)
+      continue;
+
+    g_printerr ("  layer %d: \n", ges_layer_get_priority (layer->data));
+    g_printerr ("  --------\n");
+    for (clip = clips; clip; clip = clip->next) {
+      gchar *name;
+
+      if (GES_IS_URI_CLIP (clip->data)) {
+        GESUriClipAsset *asset =
+            GES_URI_CLIP_ASSET (ges_extractable_get_asset (clip->data));
+        gchar *asset_desc =
+            describe_discoverer (ges_uri_clip_asset_get_info (asset));
+
+        name = g_strdup_printf ("Clip from: '%s' [%s]",
+            ges_asset_get_id (GES_ASSET (asset)), asset_desc);
+        g_free (asset_desc);
+      } else {
+        name = g_strdup (GES_TIMELINE_ELEMENT_NAME (clip->data));
+      }
+      g_print ("    - %s\n        start=%" GST_TIME_FORMAT,
+          name, GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (clip->data)));
+      g_free (name);
+      if (GES_TIMELINE_ELEMENT_INPOINT (clip->data))
+        g_print (" inpoint=%" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (clip->data)));
+      g_print (" duration=%" GST_TIME_FORMAT "\n",
+          GST_TIME_ARGS (GES_TIMELINE_ELEMENT_END (clip->data)));
+    }
+    if (layer->next)
+      g_printerr ("\n");
+
+    g_list_free_full (clips, gst_object_unref);
   }
 
+  g_print ("\n");
 }

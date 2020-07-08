@@ -274,11 +274,16 @@ _set_rendering_details (GESLauncher * self)
         return FALSE;
       }
 
-      g_print ("Output: %s\n", opts->outputuri);
-      g_print ("Encoding to:%s\n", smart_profile ?
-          " (Selected from input files format for efficient smart rendering)" :
+      g_print ("\nEncoding details:\n");
+      g_print ("================\n");
+
+      g_print ("  -> Output file: %s\n", opts->outputuri);
+      g_print ("  -> Profile:%s\n",
+          smart_profile ?
+          " (selected from input files format for efficient smart rendering" :
           "");
       describe_encoding_profile (prof);
+      g_print ("\n");
     }
 
     opts->outputuri = ensure_uri (opts->outputuri);
@@ -672,6 +677,8 @@ _run_pipeline (GESLauncher * self)
       g_error ("Failed to setup rendering details\n");
       return FALSE;
     }
+
+    print_timeline (self->priv->timeline);
   }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (self->priv->pipeline));

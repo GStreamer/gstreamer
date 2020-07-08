@@ -1,4 +1,4 @@
-deps = [ges_dep, gstpbutils_dep, gio_dep]
+deps = [ges_dep, gstpbutils_dep, gio_dep, gstvideo_dep, gstaudio_dep]
 
 ges_tool_args = [ges_c_args]
 if gstvalidate_dep.found()
