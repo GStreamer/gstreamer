@@ -189,16 +189,26 @@ done:
 static void
 gst_rtp_funnel_forward_segment (GstRtpFunnel * funnel, GstPad * pad)
 {
-  GstEvent *segment;
+  GstEvent *event;
+  guint i;
 
   if (pad == funnel->current_pad) {
     goto done;
   }
 
-  segment = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
-  if (segment && !gst_pad_push_event (funnel->srcpad, segment)) {
+  event = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+  if (event && !gst_pad_push_event (funnel->srcpad, event)) {
     GST_ERROR_OBJECT (funnel, "Could not push segment");
     goto done;
+  }
+
+  for (i = 0;; i++) {
+    event = gst_pad_get_sticky_event (pad, GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+        i);
+    if (event == NULL)
+      break;
+    if (!gst_pad_push_event (funnel->srcpad, event))
+      GST_ERROR_OBJECT (funnel, "Could not push custom event");
   }
 
   funnel->current_pad = pad;
