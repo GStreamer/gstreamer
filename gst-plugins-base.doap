@@ -588,7 +588,7 @@ A wide range of video and audio decoders, encoders, and filters are included.
   <Version>
    <revision>0.11.90</revision>
    <branch>0.11</branch>
-   <name>Golden bells&excl; What a world of happiness their harmony foretells&excl;</name>
+   <name>Golden bells! What a world of happiness their harmony foretells!</name>
    <created>2012-04-12</created>
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.11.90.tar.bz2" />
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.11.90.tar.gz" />
