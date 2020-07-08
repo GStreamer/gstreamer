@@ -365,7 +365,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (G_UNLIKELY (map->size < sizeof (*pdu) + val)) {
     GST_DEBUG_OBJECT (avtpcvfdepay,
-        "AVTP packet size %ld too small, expected at least %lu",
+        "AVTP packet size %ld too small, expected at least %" G_GUINT64_FORMAT,
         map->size - AVTP_CVF_H264_HEADER_SIZE, sizeof (*pdu) + val);
     goto end;
   }
@@ -375,8 +375,8 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (G_UNLIKELY (val != avtpcvfdepay->seqnum)) {
     GST_INFO_OBJECT (avtpcvfdepay,
-        "Unexpected AVTP header seq num %lu, expected %u", val,
-        avtpcvfdepay->seqnum);
+        "Unexpected AVTP header seq num %" G_GUINT64_FORMAT ", expected %u",
+        val, avtpcvfdepay->seqnum);
 
     avtpcvfdepay->seqnum = val;
     /* This is not a reason to drop the packet, but it may be a good moment
@@ -447,8 +447,8 @@ gst_avtp_cvf_depay_internal_push (GstAvtpCvfDepay * avtpcvfdepay,
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (avtpcvfdepay,
-      "Adding buffer of size %lu (nalu size %lu) to out_buffer",
-      gst_buffer_get_size (buffer),
+      "Adding buffer of size %" G_GUINT64_FORMAT " (nalu size %"
+      G_GUINT64_FORMAT ") to out_buffer", gst_buffer_get_size (buffer),
       gst_buffer_get_size (buffer) - sizeof (guint32));
 
   if (avtpcvfdepay->out_buffer) {
@@ -568,8 +568,8 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
 
   if (G_UNLIKELY (map->size - AVTP_CVF_H264_HEADER_SIZE < 2)) {
     GST_ERROR_OBJECT (avtpcvfdepay,
-        "Buffer too small to contain fragment headers, size: %lu",
-        map->size - AVTP_CVF_H264_HEADER_SIZE);
+        "Buffer too small to contain fragment headers, size: %"
+        G_GUINT64_FORMAT, map->size - AVTP_CVF_H264_HEADER_SIZE);
     ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
     goto end;
   }

@@ -275,8 +275,9 @@ gst_avtp_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
   buffer_size = gst_buffer_get_size (buffer);
   if (G_UNLIKELY (buffer_size < MAX_AVTPDU_SIZE)) {
     GST_WARNING_OBJECT (avtpsrc,
-        "Buffer size (%lu) may not be enough to hold AVTPDU (max AVTPDU size %d)",
-        buffer_size, MAX_AVTPDU_SIZE);
+        "Buffer size (%" G_GUINT64_FORMAT
+        ") may not be enough to hold AVTPDU (max AVTPDU size %d)", buffer_size,
+        MAX_AVTPDU_SIZE);
     n = buffer_size;
   }
 
