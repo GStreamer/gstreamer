@@ -31,6 +31,8 @@
 #include "webrtcdatachannel.h"
 #include "sctptransport.h"
 
+#include <gst/rtp/rtp.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -247,6 +249,21 @@ gst_webrtc_bin_pad_class_init (GstWebRTCBinPadClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
+static void
+gst_webrtc_bin_pad_update_ssrc_event (GstWebRTCBinPad * wpad)
+{
+  if (wpad->received_caps) {
+    WebRTCTransceiver *trans = (WebRTCTransceiver *) wpad->trans;
+    GstPad *pad = GST_PAD (wpad);
+
+    trans->ssrc_event =
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+        gst_structure_new ("GstWebRtcBinUpdateTos", "ssrc", G_TYPE_UINT,
+            trans->current_ssrc, NULL));
+    gst_pad_send_event (pad, gst_event_ref (trans->ssrc_event));
+  }
+}
+
 static gboolean
 gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -272,6 +289,7 @@ gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       s = gst_caps_get_structure (caps, 0);
       gst_structure_get_uint (s, "ssrc", &trans->current_ssrc);
+      gst_webrtc_bin_pad_update_ssrc_event (wpad);
     }
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     check_negotiation = TRUE;
@@ -1635,6 +1653,242 @@ _on_dtls_transport_notify_state (GstWebRTCDTLSTransport * transport,
   _update_peer_connection_state (webrtc);
 }
 
+static gboolean
+match_ssrc (GstWebRTCRTPTransceiver * rtp_trans, gconstpointer data)
+{
+  WebRTCTransceiver *trans = (WebRTCTransceiver *) rtp_trans;
+
+  return (trans->current_ssrc == GPOINTER_TO_UINT (data));
+}
+
+static gboolean
+_on_sending_rtcp (GObject * internal_session, GstBuffer * buffer,
+    gboolean early, gpointer user_data)
+{
+  GstWebRTCBin *webrtc = user_data;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket packet;
+
+  if (!gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp))
+    goto done;
+
+  if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet)) {
+    if (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_SR) {
+      guint32 ssrc;
+      GstWebRTCRTPTransceiver *rtp_trans;
+      WebRTCTransceiver *trans;
+
+      gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, NULL, NULL, NULL,
+          NULL);
+
+      rtp_trans = _find_transceiver (webrtc, GUINT_TO_POINTER (ssrc),
+          match_ssrc);
+      trans = (WebRTCTransceiver *) rtp_trans;
+
+      if (rtp_trans && rtp_trans->sender && trans->ssrc_event) {
+        GstPad *pad;
+        gchar *pad_name = NULL;
+
+        pad_name =
+            g_strdup_printf ("send_rtcp_src_%u",
+            rtp_trans->sender->rtcp_transport->session_id);
+        pad = gst_element_get_static_pad (webrtc->rtpbin, pad_name);
+        g_free (pad_name);
+        if (pad) {
+          gst_pad_push_event (pad, gst_event_ref (trans->ssrc_event));
+          gst_object_unref (pad);
+        }
+      }
+    }
+  }
+
+  gst_rtcp_buffer_unmap (&rtcp);
+
+done:
+  /* False means we don't care about suppression */
+  return FALSE;
+}
+
+static void
+gst_webrtc_bin_attach_tos_to_session (GstWebRTCBin * webrtc, guint session_id)
+{
+  GObject *internal_session = NULL;
+
+  g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
+      session_id, &internal_session);
+
+  if (internal_session) {
+    g_signal_connect (internal_session, "on-sending-rtcp",
+        G_CALLBACK (_on_sending_rtcp), webrtc);
+    g_object_unref (internal_session);
+  }
+}
+
+static GstPadProbeReturn
+_nicesink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstWebRTCBin *webrtc = user_data;
+
+  if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info))
+      == GST_EVENT_CUSTOM_DOWNSTREAM_STICKY) {
+    const GstStructure *s =
+        gst_event_get_structure (GST_PAD_PROBE_INFO_EVENT (info));
+
+    if (gst_structure_has_name (s, "GstWebRtcBinUpdateTos")) {
+      guint ssrc;
+      gint priority;
+
+      if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
+        GstWebRTCRTPTransceiver *rtp_trans;
+
+        rtp_trans = _find_transceiver (webrtc, GUINT_TO_POINTER (ssrc),
+            match_ssrc);
+        if (rtp_trans) {
+          WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
+          GstWebRTCICEStream *stream = _find_ice_stream_for_session (webrtc,
+              trans->stream->session_id);
+          guint8 dscp = 0;
+
+          /* Set DSCP field based on
+           * https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18#section-5
+           */
+          switch (rtp_trans->sender->priority) {
+            case GST_WEBRTC_PRIORITY_TYPE_VERY_LOW:
+              dscp = 8;         /* CS1 */
+              break;
+            case GST_WEBRTC_PRIORITY_TYPE_LOW:
+              dscp = 0;         /* DF */
+              break;
+            case GST_WEBRTC_PRIORITY_TYPE_MEDIUM:
+              switch (rtp_trans->kind) {
+                case GST_WEBRTC_KIND_AUDIO:
+                  dscp = 46;    /* EF */
+                  break;
+                case GST_WEBRTC_KIND_VIDEO:
+                  dscp = 38;    /* AF43 *//* TODO: differentiate non-interactive */
+                  break;
+                case GST_WEBRTC_KIND_UNKNOWN:
+                  dscp = 0;
+                  break;
+              }
+              break;
+            case GST_WEBRTC_PRIORITY_TYPE_HIGH:
+              switch (rtp_trans->kind) {
+                case GST_WEBRTC_KIND_AUDIO:
+                  dscp = 46;    /* EF */
+                  break;
+                case GST_WEBRTC_KIND_VIDEO:
+                  dscp = 36;    /* AF42 *//* TODO: differentiate non-interactive */
+                  break;
+                case GST_WEBRTC_KIND_UNKNOWN:
+                  dscp = 0;
+                  break;
+              }
+              break;
+          }
+
+          gst_webrtc_ice_set_tos (webrtc->priv->ice, stream, dscp << 2);
+        }
+      } else if (gst_structure_get_enum (s, "sctp-priority",
+              GST_TYPE_WEBRTC_PRIORITY_TYPE, &priority)) {
+        guint8 dscp = 0;
+
+        /* Set DSCP field based on
+         * https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18#section-5
+         */
+        switch (priority) {
+          case GST_WEBRTC_PRIORITY_TYPE_VERY_LOW:
+            dscp = 8;           /* CS1 */
+            break;
+          case GST_WEBRTC_PRIORITY_TYPE_LOW:
+            dscp = 0;           /* DF */
+            break;
+          case GST_WEBRTC_PRIORITY_TYPE_MEDIUM:
+            dscp = 10;          /* AF11 */
+            break;
+          case GST_WEBRTC_PRIORITY_TYPE_HIGH:
+            dscp = 18;          /* AF21 */
+            break;
+        }
+        if (webrtc->priv->data_channel_transport)
+          gst_webrtc_ice_set_tos (webrtc->priv->ice,
+              webrtc->priv->data_channel_transport->stream, dscp << 2);
+      }
+    }
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+static void gst_webrtc_bin_attach_tos (GstWebRTCBin * webrtc);
+
+static void
+gst_webrtc_bin_update_sctp_priority (GstWebRTCBin * webrtc)
+{
+  GstWebRTCPriorityType sctp_priority = 0;
+  guint i;
+
+  if (!webrtc->priv->sctp_transport)
+    return;
+
+  for (i = 0; i < webrtc->priv->data_channels->len; i++) {
+    GstWebRTCDataChannel *channel
+        = g_ptr_array_index (webrtc->priv->data_channels, i);
+
+    sctp_priority = MAX (sctp_priority, channel->priority);
+  }
+
+  /* Default priority is low means DSCP field is left as 0 */
+  if (sctp_priority == 0)
+    sctp_priority = GST_WEBRTC_PRIORITY_TYPE_LOW;
+
+  /* Nobody asks for DSCP, leave it as-is */
+  if (sctp_priority == GST_WEBRTC_PRIORITY_TYPE_LOW &&
+      !webrtc->priv->tos_attached)
+    return;
+
+  /* If one stream has a non-default priority, then everyone else does too */
+  gst_webrtc_bin_attach_tos (webrtc);
+
+  gst_webrtc_sctp_transport_set_priority (webrtc->priv->sctp_transport,
+      sctp_priority);
+}
+
+static void
+gst_webrtc_bin_attach_probe_to_ice_sink (GstWebRTCBin * webrtc,
+    GstWebRTCICETransport * transport)
+{
+  GstPad *pad;
+
+  pad = gst_element_get_static_pad (transport->sink, "sink");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      _nicesink_pad_probe, g_object_ref (webrtc),
+      (GDestroyNotify) gst_object_unref);
+  gst_object_unref (pad);
+}
+
+static void
+gst_webrtc_bin_attach_tos (GstWebRTCBin * webrtc)
+{
+  guint i;
+
+  if (webrtc->priv->tos_attached)
+    return;
+  webrtc->priv->tos_attached = TRUE;
+
+  for (i = 0; i < webrtc->priv->transports->len; i++) {
+    TransportStream *stream = g_ptr_array_index (webrtc->priv->transports, i);
+
+    gst_webrtc_bin_attach_tos_to_session (webrtc, stream->session_id);
+
+    gst_webrtc_bin_attach_probe_to_ice_sink (webrtc,
+        stream->transport->transport);
+    gst_webrtc_bin_attach_probe_to_ice_sink (webrtc,
+        stream->rtcp_transport->transport);
+  }
+
+  gst_webrtc_bin_update_sctp_priority (webrtc);
+}
+
 static WebRTCTransceiver *
 _create_webrtc_transceiver (GstWebRTCBin * webrtc,
     GstWebRTCRTPTransceiverDirection direction, guint mline)
@@ -1652,6 +1906,9 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
   rtp_trans->mline = mline;
   /* FIXME: We don't support stopping transceiver yet so they're always not stopped */
   rtp_trans->stopped = FALSE;
+
+  g_signal_connect_object (sender, "notify::priority",
+      G_CALLBACK (gst_webrtc_bin_attach_tos), webrtc, G_CONNECT_SWAPPED);
 
   g_ptr_array_add (webrtc->priv->transceivers, trans);
 
@@ -1681,6 +1938,8 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
       G_CALLBACK (_on_ice_transport_notify_gathering_state), webrtc);
   g_signal_connect (G_OBJECT (transport), "notify::state",
       G_CALLBACK (_on_dtls_transport_notify_state), webrtc);
+  if (webrtc->priv->tos_attached)
+    gst_webrtc_bin_attach_probe_to_ice_sink (webrtc, transport->transport);
 
   if ((transport = ret->rtcp_transport)) {
     g_signal_connect (G_OBJECT (transport->transport),
@@ -1690,6 +1949,8 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
         G_CALLBACK (_on_ice_transport_notify_gathering_state), webrtc);
     g_signal_connect (G_OBJECT (transport), "notify::state",
         G_CALLBACK (_on_dtls_transport_notify_state), webrtc);
+    if (webrtc->priv->tos_attached)
+      gst_webrtc_bin_attach_probe_to_ice_sink (webrtc, transport->transport);
   }
 
   GST_TRACE_OBJECT (webrtc,
@@ -1722,6 +1983,8 @@ _get_or_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
     if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
             GST_ELEMENT (ret->send_bin), "rtcp_sink"))
       g_warn_if_reached ();
+    if (webrtc->priv->tos_attached)
+      gst_webrtc_bin_attach_tos_to_session (webrtc, ret->session_id);
     g_free (pad_name);
   }
 
@@ -1760,6 +2023,8 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
     }
 
     g_ptr_array_add (webrtc->priv->data_channels, channel);
+
+    gst_webrtc_bin_update_sctp_priority (webrtc);
 
     g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL], 0,
         gst_object_ref (channel));
@@ -2011,6 +2276,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
     }
 
     webrtc->priv->sctp_transport = sctp_transport;
+    gst_webrtc_bin_update_sctp_priority (webrtc);
   }
 
   return webrtc->priv->data_channel_transport;
@@ -5299,6 +5565,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     ret = gst_object_ref (ret);
     ret->webrtcbin = webrtc;
     g_ptr_array_add (webrtc->priv->data_channels, ret);
+    gst_webrtc_bin_update_sctp_priority (webrtc);
     webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
     if (webrtc->priv->sctp_transport &&
         webrtc->priv->sctp_transport->association_established

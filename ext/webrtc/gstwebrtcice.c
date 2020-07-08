@@ -867,6 +867,18 @@ gst_webrtc_ice_set_on_ice_candidate (GstWebRTCICE * ice,
   ice->priv->on_candidate_notify = notify;
 }
 
+void
+gst_webrtc_ice_set_tos (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
+    guint tos)
+{
+  struct NiceStreamItem *item;
+
+  item = _find_item (ice, -1, -1, stream);
+  g_return_if_fail (item != NULL);
+
+  nice_agent_set_stream_tos (ice->priv->nice_agent, item->nice_stream_id, tos);
+}
+
 static void
 _clear_ice_stream (struct NiceStreamItem *item)
 {

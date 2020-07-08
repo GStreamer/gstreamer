@@ -145,6 +145,20 @@ gst_webrtc_sctp_transport_set_property (GObject * object, guint prop_id,
   }
 }
 
+void
+gst_webrtc_sctp_transport_set_priority (GstWebRTCSCTPTransport * sctp,
+    GstWebRTCPriorityType priority)
+{
+  GstPad *pad;
+
+  pad = gst_element_get_static_pad (sctp->sctpenc, "src");
+  gst_pad_push_event (pad,
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+          gst_structure_new ("GstWebRtcBinUpdateTos", "sctp-priority",
+              GST_TYPE_WEBRTC_PRIORITY_TYPE, priority, NULL)));
+  gst_object_unref (pad);
+}
+
 static void
 gst_webrtc_sctp_transport_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)

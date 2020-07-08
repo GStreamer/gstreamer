@@ -141,6 +141,8 @@ struct _GstWebRTCBinPrivate
   GstWebRTCSessionDescription *last_generated_answer;
 
   GstStructure *stats;
+
+  gboolean tos_attached;
 };
 
 typedef void (*GstWebRTCBinFunc) (GstWebRTCBin * webrtc, gpointer data);
