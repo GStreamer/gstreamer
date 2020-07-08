@@ -31,7 +31,7 @@
 #include "gstvaapivideomemory.h"
 
 typedef GstVaapiProfile (*GstVaapiStrToProfileFunc) (const gchar * str);
-
+typedef const gchar * (*GstVaapiProfileToStrFunc) (GstVaapiProfile profile);
 
 G_GNUC_INTERNAL
 gboolean
@@ -174,5 +174,11 @@ gst_vaapi_build_template_raw_caps_by_codec (GstVaapiDisplay * display,
 G_GNUC_INTERNAL
 void
 gst_vaapi_structure_set_profiles (GstStructure * st, gchar ** list);
+
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_build_template_coded_caps_by_codec (GstVaapiDisplay * display,
+    GstVaapiContextUsage usage, GstVaapiCodec codec, const char *caps_str,
+    GstVaapiProfileToStrFunc func);
 
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */

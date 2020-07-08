@@ -1275,3 +1275,77 @@ gst_vaapi_structure_set_profiles (GstStructure * st, gchar ** list)
   g_value_unset (&value);
   g_value_unset (&vlist);
 }
+
+/**
+ * gst_vaapi_build_template_coded_caps_by_codec:
+ * @display: a #GstVaapiDisplay
+ * @usage: used for encode or decode
+ * @codec: a #GstVaapiCodec specify the codec to detect
+ * @caps_str: a string of basic caps
+ *
+ * Called by vaapi elements to detect the all possible profiles belong to the
+ * specified codec and build the caps based on the basic caps description.
+ *
+ * Returns: a built #GstCaps if succeeds, or %NULL if error.
+ **/
+GstCaps *
+gst_vaapi_build_template_coded_caps_by_codec (GstVaapiDisplay * display,
+    GstVaapiContextUsage usage, GstVaapiCodec codec, const char *caps_str,
+    GstVaapiProfileToStrFunc func)
+{
+  GValue v_profiles = G_VALUE_INIT;
+  GValue v_profile = G_VALUE_INIT;
+  GstCaps *caps = NULL;
+  guint i, num;
+  GArray *profiles = NULL;
+  GstVaapiProfile profile;
+  const gchar *str;
+
+  caps = gst_caps_from_string (caps_str);
+  if (!caps)
+    goto out;
+
+  if (!func)
+    goto out;
+
+  /* If no profiles, just ignore the profile field. */
+  if (usage == GST_VAAPI_CONTEXT_USAGE_ENCODE) {
+    profiles = gst_vaapi_display_get_encode_profiles (display);
+  } else if (usage == GST_VAAPI_CONTEXT_USAGE_DECODE) {
+    profiles = gst_vaapi_display_get_decode_profiles (display);
+  }
+  if (!profiles || profiles->len == 0)
+    goto out;
+
+  num = 0;
+  g_value_init (&v_profiles, GST_TYPE_LIST);
+  g_value_init (&v_profile, G_TYPE_STRING);
+
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) != codec)
+      continue;
+
+    str = func (profile);
+    if (!str)
+      continue;
+
+    g_value_set_string (&v_profile, str);
+    num++;
+    gst_value_list_append_value (&v_profiles, &v_profile);
+  }
+
+  if (num == 1) {
+    gst_caps_set_value (caps, "profile", &v_profile);
+  } else if (num > 1) {
+    gst_caps_set_value (caps, "profile", &v_profiles);
+  }
+
+out:
+  g_value_unset (&v_profile);
+  g_value_unset (&v_profiles);
+  if (profiles)
+    g_array_unref (profiles);
+
+  return caps;
+}
