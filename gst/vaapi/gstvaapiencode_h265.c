@@ -52,20 +52,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h265_encode_debug);
   "stream-format = (string) { hvc1, byte-stream }, " \
   "alignment = (string) au"
 
-/* *INDENT-OFF* */
-static const char gst_vaapiencode_h265_src_caps_str[] =
-  GST_CODEC_CAPS ", "
-  "profile = (string) { main, main-10, main-444, main-444-10, main-422-10 }";
-/* *INDENT-ON* */
-
-/* *INDENT-OFF* */
-static GstStaticPadTemplate gst_vaapiencode_h265_src_factory =
-  GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (gst_vaapiencode_h265_src_caps_str));
-/* *INDENT-ON* */
-
 #define EXTRA_FORMATS {}
 
 /* h265 encode */
@@ -372,6 +358,7 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass, gpointer data)
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
   GstCaps *sink_caps = ((GstVaapiEncodeInitData *) data)->sink_caps;
+  GstCaps *src_caps = ((GstVaapiEncodeInitData *) data)->src_caps;
   gpointer encoder_class;
 
   object_class->finalize = gst_vaapiencode_h265_finalize;
@@ -398,8 +385,10 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass, gpointer data)
   gst_caps_unref (sink_caps);
 
   /* src pad */
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vaapiencode_h265_src_factory);
+  g_assert (src_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps));
+  gst_caps_unref (src_caps);
 
   encoder_class = g_type_class_ref (GST_TYPE_VAAPI_ENCODER_H265);
   g_assert (encoder_class);
