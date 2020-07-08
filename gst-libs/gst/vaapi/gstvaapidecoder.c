@@ -305,10 +305,6 @@ decode_step (GstVaapiDecoder * decoder)
   gboolean got_frame;
   guint got_unit_size, input_size;
 
-  status = gst_vaapi_decoder_check_status (decoder);
-  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    return status;
-
   /* Fill adapter with all buffers we have in the queue */
   for (;;) {
     buffer = pop_buffer (decoder);
@@ -1003,15 +999,6 @@ gst_vaapi_decoder_push_frame (GstVaapiDecoder * decoder,
 }
 
 GstVaapiDecoderStatus
-gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder)
-{
-  if (decoder->context &&
-      gst_vaapi_context_get_surface_count (decoder->context) < 1)
-    return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
-  return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-GstVaapiDecoderStatus
 gst_vaapi_decoder_parse (GstVaapiDecoder * decoder,
     GstVideoCodecFrame * base_frame, GstAdapter * adapter, gboolean at_eos,
     guint * got_unit_size_ptr, gboolean * got_frame_ptr)
@@ -1034,8 +1021,6 @@ gst_vaapi_decoder_parse (GstVaapiDecoder * decoder,
 GstVaapiDecoderStatus
 gst_vaapi_decoder_decode (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame)
 {
-  GstVaapiDecoderStatus status;
-
   g_return_val_if_fail (decoder != NULL,
       GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
   g_return_val_if_fail (frame != NULL,
@@ -1043,9 +1028,6 @@ gst_vaapi_decoder_decode (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame)
   g_return_val_if_fail (frame->user_data != NULL,
       GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-  status = gst_vaapi_decoder_check_status (decoder);
-  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-    return status;
   return do_decode (decoder, frame);
 }
 

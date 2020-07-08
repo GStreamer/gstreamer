@@ -136,9 +136,6 @@ gst_vaapi_decoder_flush (GstVaapiDecoder * decoder);
 GstVaapiDecoderStatus
 gst_vaapi_decoder_reset (GstVaapiDecoder * decoder);
 
-GstVaapiDecoderStatus
-gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder);
-
 gboolean
 gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps);
 

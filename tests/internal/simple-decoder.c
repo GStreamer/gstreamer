@@ -86,7 +86,6 @@ typedef struct
   GstVaapiDecoder *decoder;
   GThread *decoder_thread;
   volatile gboolean decoder_thread_cancel;
-  GCond decoder_ready;
   GAsyncQueue *decoder_queue;
   GstVaapiCodec codec;
   guint fps_n;
@@ -219,14 +218,6 @@ get_error_string (AppError error)
   return str;
 }
 
-static void
-decoder_release (App * app)
-{
-  g_mutex_lock (&app->mutex);
-  g_cond_signal (&app->decoder_ready);
-  g_mutex_unlock (&app->mutex);
-}
-
 static gpointer
 decoder_thread (gpointer data)
 {
@@ -237,8 +228,7 @@ decoder_thread (gpointer data)
   RenderFrame *rfp;
   GstBuffer *buffer;
   GstClockTime pts;
-  gboolean got_surface, got_eos = FALSE;
-  gint64 end_time;
+  gboolean got_eos = FALSE;
   guint ofs;
 
   g_print ("Decoder thread started\n");
@@ -266,12 +256,9 @@ decoder_thread (gpointer data)
       SEND_ERROR ("failed to push buffer to decoder");
     gst_buffer_replace (&buffer, NULL);
 
-  get_surface:
     status = gst_vaapi_decoder_get_surface (app->decoder, &proxy);
     switch (status) {
       case GST_VAAPI_DECODER_STATUS_SUCCESS:
-        gst_vaapi_surface_proxy_set_destroy_notify (proxy,
-            (GDestroyNotify) decoder_release, app);
         rfp = render_frame_new ();
         if (!rfp)
           SEND_ERROR ("failed to allocate render frame");
@@ -289,16 +276,6 @@ decoder_thread (gpointer data)
         if (got_eos)
           goto send_eos;
         got_eos = TRUE;
-        break;
-      case GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE:
-        end_time = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
-        g_mutex_lock (&app->mutex);
-        got_surface = g_cond_wait_until (&app->decoder_ready, &app->mutex,
-            end_time);
-        g_mutex_unlock (&app->mutex);
-        if (got_surface)
-          goto get_surface;
-        SEND_ERROR ("failed to acquire a surface within one second");
         break;
       default:
         SEND_ERROR ("%s", get_decoder_status_string (status));
@@ -550,7 +527,6 @@ app_free (App * app)
     g_async_queue_unref (app->decoder_queue);
     app->decoder_queue = NULL;
   }
-  g_cond_clear (&app->decoder_ready);
 
   if (app->timer) {
     g_timer_destroy (app->timer);
@@ -574,7 +550,6 @@ app_new (void)
 
   g_mutex_init (&app->mutex);
   g_cond_init (&app->event_cond);
-  g_cond_init (&app->decoder_ready);
   g_cond_init (&app->render_ready);
 
   app_set_framerate (app, 60, 1);

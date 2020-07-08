@@ -375,15 +375,6 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   return TRUE;
 }
 
-static void
-gst_vaapidecode_release (GstVaapiDecode * decode)
-{
-  g_mutex_lock (&decode->surface_ready_mutex);
-  g_cond_signal (&decode->surface_ready);
-  g_mutex_unlock (&decode->surface_ready_mutex);
-  gst_object_unref (decode);
-}
-
 /* check whether the decoded surface size has changed */
 static gboolean
 is_surface_resolution_changed (GstVaapiDecode * decode,
@@ -540,9 +531,6 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
       if (!gst_vaapidecode_negotiate (decode))
         return GST_FLOW_ERROR;
     }
-
-    gst_vaapi_surface_proxy_set_destroy_notify (proxy,
-        (GDestroyNotify) gst_vaapidecode_release, gst_object_ref (decode));
 
     if (is_src_allocator_dmabuf (decode)) {
       vaapi_params.proxy = gst_vaapi_surface_proxy_ref (proxy);
@@ -706,18 +694,6 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
   /* Decode current frame */
   for (;;) {
     status = gst_vaapi_decoder_decode (decode->decoder, frame);
-    if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
-      /* Make sure that there are no decoded frames waiting in the
-         output queue. */
-      gst_vaapidecode_push_all_decoded_frames (decode);
-
-      g_mutex_lock (&decode->surface_ready_mutex);
-      if (gst_vaapi_decoder_check_status (decode->decoder) ==
-          GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE)
-        g_cond_wait (&decode->surface_ready, &decode->surface_ready_mutex);
-      g_mutex_unlock (&decode->surface_ready_mutex);
-      continue;
-    }
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
       goto error_decode;
     break;
@@ -987,8 +963,6 @@ gst_vaapidecode_destroy (GstVaapiDecode * decode)
   gst_vaapidecode_purge (decode);
 
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
-
-  gst_vaapidecode_release (gst_object_ref (decode));
 }
 
 static gboolean
@@ -1016,11 +990,6 @@ gst_vaapidecode_reset (GstVaapiDecode * decode, GstCaps * caps,
 static void
 gst_vaapidecode_finalize (GObject * object)
 {
-  GstVaapiDecode *const decode = GST_VAAPIDECODE (object);
-
-  g_cond_clear (&decode->surface_ready);
-  g_mutex_clear (&decode->surface_ready_mutex);
-
   gst_vaapi_plugin_base_finalize (GST_VAAPI_PLUGIN_BASE (object));
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1536,9 +1505,6 @@ gst_vaapidecode_init (GstVaapiDecode * decode)
   GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
 
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (decode), GST_CAT_DEFAULT);
-
-  g_mutex_init (&decode->surface_ready_mutex);
-  g_cond_init (&decode->surface_ready);
 
   gst_video_decoder_set_packetized (vdec, FALSE);
 }

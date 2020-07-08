@@ -43,8 +43,6 @@ struct _GstVaapiDecode {
     GstCaps            *srcpad_caps;
     GstVideoInfo        decoded_info;
     GstVaapiDecoder    *decoder;
-    GMutex              surface_ready_mutex;
-    GCond               surface_ready;
     GstCaps            *allowed_sinkpad_caps;
     GstCaps            *allowed_srcpad_caps;
     guint               current_frame_size;
