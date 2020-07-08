@@ -173,6 +173,10 @@ webrtc_transceiver_finalize (GObject * object)
 
   gst_caps_replace (&trans->last_configured_caps, NULL);
 
+  if (trans->ssrc_event)
+    gst_event_unref (trans->ssrc_event);
+  trans->ssrc_event = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 

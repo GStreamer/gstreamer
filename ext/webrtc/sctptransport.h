@@ -61,6 +61,10 @@ struct _GstWebRTCSCTPTransportClass
 
 GstWebRTCSCTPTransport *    gst_webrtc_sctp_transport_new               (void);
 
+void
+gst_webrtc_sctp_transport_set_priority (GstWebRTCSCTPTransport *sctp,
+                                        GstWebRTCPriorityType priority);
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_SCTP_TRANSPORT_H__ */
