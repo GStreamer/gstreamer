@@ -141,14 +141,21 @@ static GstEncodingProfile *
 get_smart_profile (GESLauncher * self)
 {
   gint n_audio, n_video;
-  GList *tmp, *assets, *possible_profiles = NULL;
+  GList *tmp, *assets = NULL, *possible_profiles = NULL;
   GstEncodingProfile *res = NULL;
-  GESProject *proj =
-      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
-              priv->timeline)));
 
   _check_has_audio_video (self, &n_audio, &n_video);
-  assets = ges_project_list_assets (proj, GES_TYPE_URI_CLIP);
+  for (tmp = self->priv->timeline->layers; tmp; tmp = tmp->next) {
+    GList *tclip, *clips = ges_layer_get_clips (tmp->data);
+
+    for (tclip = clips; tclip; tclip = tclip->next) {
+      if (GES_IS_URI_CLIP (tclip->data))
+        assets =
+            g_list_append (assets, ges_extractable_get_asset (tclip->data));
+    }
+    g_list_free_full (clips, gst_object_unref);
+  }
+
   for (tmp = assets; tmp; tmp = tmp->next) {
     GESAsset *asset = tmp->data;
     GList *audio_streams, *video_streams;
