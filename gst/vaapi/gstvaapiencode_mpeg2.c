@@ -52,19 +52,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
   "video/mpeg, mpegversion = (int) 2, "         \
   "systemstream = (boolean) false"
 
-/* *INDENT-OFF* */
-static const char gst_vaapiencode_mpeg2_src_caps_str[] =
-  GST_CODEC_CAPS;
-/* *INDENT-ON* */
-
-/* *INDENT-OFF* */
-static GstStaticPadTemplate gst_vaapiencode_mpeg2_src_factory =
-  GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (gst_vaapiencode_mpeg2_src_caps_str));
-/* *INDENT-ON* */
-
 #define EXTRA_FORMATS {}
 
 /* mpeg2 encode */
@@ -109,6 +96,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass,
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
   GstCaps *sink_caps = ((GstVaapiEncodeInitData *) data)->sink_caps;
+  GstCaps *src_caps = ((GstVaapiEncodeInitData *) data)->src_caps;
   gpointer encoder_class;
 
   object_class->finalize = gst_vaapiencode_mpeg2_finalize;
@@ -130,8 +118,10 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass,
   gst_caps_unref (sink_caps);
 
   /* src pad */
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vaapiencode_mpeg2_src_factory);
+  g_assert (src_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps));
+  gst_caps_unref (src_caps);
 
   encoder_class = g_type_class_ref (GST_TYPE_VAAPI_ENCODER_MPEG2);
   g_assert (encoder_class);
