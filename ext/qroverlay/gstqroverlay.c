@@ -135,10 +135,11 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_qr_overlay_set_property;
   gobject_class->get_property = gst_qr_overlay_get_property;
@@ -349,7 +350,7 @@ gst_qr_overlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   return TRUE;
 }
 
-gchar *
+static gchar *
 parse_data_array (GstQROverlay * filter, gchar * value_in_array)
 {
   guint value_size;
@@ -384,7 +385,7 @@ parse_data_array (GstQROverlay * filter, gchar * value_in_array)
   return value_in_array;
 }
 
-gchar *
+static gchar *
 build_string (GstBaseTransform * base, GstBuffer * outbuf,
     gchar * encode_string)
 {
@@ -474,7 +475,7 @@ build_string (GstBaseTransform * base, GstBuffer * outbuf,
   return encode_string;
 }
 
-void
+static void
 overlay_qr_in_frame (GstQROverlay * filter, QRcode * qrcode, GstBuffer * outbuf)
 {
   GstMapInfo current_info;
