@@ -12646,6 +12646,1047 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "rpicamsrc": {
+        "description": "Raspberry Pi Camera Source",
+        "elements": {
+            "rpicamsrc": {
+                "author": "Jan Schmidt <jan@centricular.com>",
+                "description": "Raspberry Pi camera module source",
+                "hierarchy": [
+                    "GstRpiCamSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstColorBalance",
+                    "GstVideoDirection",
+                    "GstVideoOrientation"
+                ],
+                "klass": "Source/Video",
+                "long-name": "Raspberry Pi Camera Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-h264:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n  stream-format: byte-stream\n      alignment: nal\n        profile: { (string)constrained-baseline, (string)baseline, (string)main, (string)high }\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, RGB, BGR, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "annotation-mode": {
+                        "blurb": "Flags to control annotation of the output video",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "(none)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcAnnotationMode",
+                        "writable": true
+                    },
+                    "annotation-text": {
+                        "blurb": "Text string to annotate onto video when annotation-mode flags include 'custom-text'",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "annotation-text-bg-colour": {
+                        "blurb": "Set the annotation text background colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "annotation-text-colour": {
+                        "blurb": "Set the annotation text colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "annotation-text-size": {
+                        "blurb": "Set the size of annotation text (in pixels) (0 = Auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "awb-gain-blue": {
+                        "blurb": "Manual AWB Gain for blue channel when awb-mode=off",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "8",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "awb-gain-red": {
+                        "blurb": "Manual AWB Gain for red channel when awb-mode=off",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "8",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "awb-mode": {
+                        "blurb": "White Balance mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcAWBMode",
+                        "writable": true
+                    },
+                    "bitrate": {
+                        "blurb": "Bitrate for encoding. 0 for VBR using quantisation-parameter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "17000000",
+                        "max": "25000000",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "brightness": {
+                        "blurb": "Image capture brightness",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "50",
+                        "max": "100",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "camera-number": {
+                        "blurb": "Which camera to use on a multi-camera system - 0 or 1",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "contrast": {
+                        "blurb": "Image capture contrast",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "100",
+                        "min": "-100",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "drc": {
+                        "blurb": "Dynamic Range Control level",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "off (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcDRCLevel",
+                        "writable": true
+                    },
+                    "exposure-compensation": {
+                        "blurb": "Exposure Value compensation",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "10",
+                        "min": "-10",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "exposure-mode": {
+                        "blurb": "Camera exposure mode to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcExposureMode",
+                        "writable": true
+                    },
+                    "fullscreen": {
+                        "blurb": "Display preview window full screen",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "hflip": {
+                        "blurb": "Flip capture horizontally",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "image-effect": {
+                        "blurb": "Visual FX to apply to the image",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcImageEffect",
+                        "writable": true
+                    },
+                    "inline-headers": {
+                        "blurb": "Set to TRUE to insert SPS/PPS before each IDR packet",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "intra-refresh-type": {
+                        "blurb": "Type of Intra Refresh to use, -1 to disable intra refresh",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (-1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcIntraRefreshType",
+                        "writable": true
+                    },
+                    "iso": {
+                        "blurb": "ISO value to use (0 = Auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "3200",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "keyframe-interval": {
+                        "blurb": "Interval (in frames) between I frames. -1 = automatic, 0 = single-keyframe",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "metering-mode": {
+                        "blurb": "Camera exposure metering mode to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "average (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcExposureMeteringMode",
+                        "writable": true
+                    },
+                    "preview": {
+                        "blurb": "Display preview window overlay",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "preview-encoded": {
+                        "blurb": "Display encoder output in the preview",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "preview-h": {
+                        "blurb": "Height of the preview window (in pixels)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "768",
+                        "max": "2048",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "preview-opacity": {
+                        "blurb": "Opacity to use for the preview window",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "255",
+                        "max": "255",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "preview-w": {
+                        "blurb": "Width of the preview window (in pixels)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1024",
+                        "max": "2048",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "preview-x": {
+                        "blurb": "Start X coordinate of the preview window (in pixels)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2048",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "preview-y": {
+                        "blurb": "Start Y coordinate of the preview window (in pixels)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2048",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "quantisation-parameter": {
+                        "blurb": "Set a Quantisation Parameter approx 10-40 with bitrate=0 for VBR encoding. 0 = off",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "roi-h": {
+                        "blurb": "Normalised region-of-interest H coord",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "roi-w": {
+                        "blurb": "Normalised region-of-interest W coord",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "roi-x": {
+                        "blurb": "Normalised region-of-interest X coord",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "roi-y": {
+                        "blurb": "Normalised region-of-interest Y coord",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "rotation": {
+                        "blurb": "Rotate captured image (0, 90, 180, 270 degrees)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "270",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "saturation": {
+                        "blurb": "Image capture saturation",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "100",
+                        "min": "-100",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "sensor-mode": {
+                        "blurb": "Manually set the camera sensor mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "automatic (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRpiCamSrcSensorMode",
+                        "writable": true
+                    },
+                    "sharpness": {
+                        "blurb": "Image capture sharpness",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "100",
+                        "min": "-100",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "shutter-speed": {
+                        "blurb": "Set a fixed shutter speed, in microseconds. (0 = Auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "6000000",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "use-stc": {
+                        "blurb": "Use the camera STC for timestamping buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "vflip": {
+                        "blurb": "Flip capture vertically",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "video-stabilisation": {
+                        "blurb": "Enable or disable video stabilisation",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstrpicamsrc",
+        "license": "LGPL",
+        "other-types": {
+            "GstRpiCamSrcAWBMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_OFF",
+                        "name": "off",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_AUTO",
+                        "name": "auto",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_SUNLIGHT",
+                        "name": "sunlight",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_CLOUDY",
+                        "name": "cloudy",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_SHADE",
+                        "name": "shade",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_TUNGSTEN",
+                        "name": "tungsten",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_FLUORESCENT",
+                        "name": "fluorescent",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_INCANDESCENT",
+                        "name": "incandescent",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_FLASH",
+                        "name": "flash",
+                        "value": "8"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_AWB_MODE_HORIZON",
+                        "name": "horizon",
+                        "value": "9"
+                    }
+                ]
+            },
+            "GstRpiCamSrcAnnotationMode": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_CUSTOM_TEXT",
+                        "name": "custom-text",
+                        "value": "0x00000001"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_TEXT",
+                        "name": "text",
+                        "value": "0x00000002"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_DATE",
+                        "name": "date",
+                        "value": "0x00000004"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_TIME",
+                        "name": "time",
+                        "value": "0x00000008"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_SHUTTER_SETTINGS",
+                        "name": "shutter-settings",
+                        "value": "0x00000010"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_CAF_SETTINGS",
+                        "name": "caf-settings",
+                        "value": "0x00000020"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_GAIN_SETTINGS",
+                        "name": "gain-settings",
+                        "value": "0x00000040"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_LENS_SETTINGS",
+                        "name": "lens-settings",
+                        "value": "0x00000080"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_MOTION_SETTINGS",
+                        "name": "motion-settings",
+                        "value": "0x00000100"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_FRAME_NUMBER",
+                        "name": "frame-number",
+                        "value": "0x00000200"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_ANNOTATION_MODE_BLACK_BACKGROUND",
+                        "name": "black-background",
+                        "value": "0x00000400"
+                    }
+                ]
+            },
+            "GstRpiCamSrcDRCLevel": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_DRC_LEVEL_OFF",
+                        "name": "off",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_DRC_LEVEL_LOW",
+                        "name": "low",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_DRC_LEVEL_MEDIUM",
+                        "name": "medium",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_DRC_LEVEL_HIGH",
+                        "name": "high",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstRpiCamSrcExposureMeteringMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_AVERAGE",
+                        "name": "average",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_SPOT",
+                        "name": "spot",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_BACKLIST",
+                        "name": "backlist",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_MATRIX",
+                        "name": "matrix",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstRpiCamSrcExposureMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_OFF",
+                        "name": "off",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_AUTO",
+                        "name": "auto",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_NIGHT",
+                        "name": "night",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_NIGHTPREVIEW",
+                        "name": "nightpreview",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_BACKLIGHT",
+                        "name": "backlight",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_SPOTLIGHT",
+                        "name": "spotlight",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_SPORTS",
+                        "name": "sports",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_SNOW",
+                        "name": "snow",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_BEACH",
+                        "name": "beach",
+                        "value": "8"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_VERYLONG",
+                        "name": "verylong",
+                        "value": "9"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_FIXEDFPS",
+                        "name": "fixedfps",
+                        "value": "10"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_ANTISHAKE",
+                        "name": "antishake",
+                        "value": "11"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_EXPOSURE_MODE_FIREWORKS",
+                        "name": "fireworks",
+                        "value": "12"
+                    }
+                ]
+            },
+            "GstRpiCamSrcImageEffect": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_NONE",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_NEGATIVE",
+                        "name": "negative",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_SOLARIZE",
+                        "name": "solarize",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_POSTERIZE",
+                        "name": "posterize",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_WHITEBOARD",
+                        "name": "whiteboard",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_BLACKBOARD",
+                        "name": "blackboard",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_SKETCH",
+                        "name": "sketch",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_DENOISE",
+                        "name": "denoise",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_EMBOSS",
+                        "name": "emboss",
+                        "value": "8"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_OILPAINT",
+                        "name": "oilpaint",
+                        "value": "9"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_HATCH",
+                        "name": "hatch",
+                        "value": "10"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_GPEN",
+                        "name": "gpen",
+                        "value": "11"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_PASTEL",
+                        "name": "pastel",
+                        "value": "12"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_WATERCOLOUR",
+                        "name": "watercolour",
+                        "value": "13"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_FILM",
+                        "name": "film",
+                        "value": "14"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_BLUR",
+                        "name": "blur",
+                        "value": "15"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_SATURATION",
+                        "name": "saturation",
+                        "value": "16"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_COLOURSWAP",
+                        "name": "colourswap",
+                        "value": "17"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_WASHEDOUT",
+                        "name": "washedout",
+                        "value": "18"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_POSTERISE",
+                        "name": "posterise",
+                        "value": "19"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_COLOURPOINT",
+                        "name": "colourpoint",
+                        "value": "20"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_COLOURBALANCE",
+                        "name": "colourbalance",
+                        "value": "21"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_IMAGEFX_CARTOON",
+                        "name": "cartoon",
+                        "value": "22"
+                    }
+                ]
+            },
+            "GstRpiCamSrcIntraRefreshType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_NONE",
+                        "name": "none",
+                        "value": "-1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_CYCLIC",
+                        "name": "cyclic",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_ADAPTIVE",
+                        "name": "adaptive",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_BOTH",
+                        "name": "both",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_CYCLIC_ROWS",
+                        "name": "cyclic-rows",
+                        "value": "2130706433"
+                    }
+                ]
+            },
+            "GstRpiCamSrcSensorMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Automatic",
+                        "name": "automatic",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "1920x1080 16:9 1-30fps",
+                        "name": "1920x1080",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "2592x1944 4:3 1-15fps / 3240x2464 15fps w/ v.2 board",
+                        "name": "2592x1944-fast",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "2592x1944 4:3 0.1666-1fps / 3240x2464 15fps w/ v.2 board",
+                        "name": "2592x1944-slow",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "1296x972 4:3 1-42fps",
+                        "name": "1296x972",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "1296x730 16:9 1-49fps",
+                        "name": "1296x730",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "640x480 4:3 42.1-60fps",
+                        "name": "640x480-slow",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "640x480 4:3 60.1-90fps",
+                        "name": "640x480-fast",
+                        "value": "7"
+                    }
+                ]
+            }
+        },
+        "package": "GStreamer Good Plug-ins",
+        "source": "gst-plugins-good",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "rtp": {
         "description": "Real-time protocol plugins",
         "elements": {

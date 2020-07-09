@@ -43,15 +43,46 @@
 
 /**
  * SECTION:element-rpicamsrc
+ * @title: rpicamsrc
+ * @short_description: Raspberry Pi Camera Source
  *
- * Source element for capturing from the Raspberry Pi camera module
+ * Source element for capturing video from the Raspberry Pi camera module.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * This element works the same way that the `raspivid` command-line utility
+ * does and has a similar feature set.
+ *
+ * The element can output video in form of raw video frames or encoded as
+ * (M)JPEG or H.264 video. You can use the element properties to fine-tune
+ * the capture, image processing and encoding parameters.
+ *
+ * ## Example pipelines
  * |[
- * gst-launch -v -m rpicamsrc ! fakesink
+ * gst-launch-1.0 -v rpicamsrc preview=true ! fakesink
  * ]|
- * </refsect2>
+ * should show a preview window on the screen.
+ *
+ * |[
+ * gst-launch-1.0 -e rpicamsrc bitrate=1000000 ! h264parse ! matroskamux ! filesink location=test.mkv
+ * ]|
+ * should produce a file called test.mkv containing an H.264 video stream. We
+ * pass -e to gst-launch-1.0 so that the pipeline is finalised properly when
+ * interrupted with Control-C. This makes sure the Matroska file headers are
+ * updated when streaming ends.
+ *
+ * |[
+ * gst-launch-1.0 -e rpicamsrc bitrate=5000000 num-buffers=500 keyframe-interval=30 ! h264parse ! splitmuxsink location=video%02d.mov max-size-time=10000000000 max-size-bytes=1000000
+ * ]|
+ * Records a video stream captured from the Raspberry Pi camera module and
+ * muxes it into ISO mp4 files, splitting as needed to limit size/duration to
+ * 10 seconds and 1MB maximum size.
+ *
+ * gst-launch-1.0 -e rpicamsrc ! image/jpeg,framerate=1/1 ! multifilesink location=image-%05d.jpg
+ * ]|
+ * Captures a stream of JPEG images from the Raspberry Pi camera module at
+ * a rate of 1 frame per second and writes each frame into a new file in the
+ * current directory, starting with image-00000.jpg, then image-00001.jpg etc.
+ *
+ * Since: 1.18
  */
 
 #ifdef HAVE_CONFIG_H
@@ -235,6 +266,7 @@ G_DEFINE_TYPE_WITH_CODE (GstRpiCamSrc, gst_rpi_cam_src,
 
 #define C_ENUM(v) ((gint) v)
 
+#define GST_RPI_CAM_SRC_TYPE_SENSOR_MODE gst_rpi_cam_src_sensor_mode_get_type()
 static GType gst_rpi_cam_src_sensor_mode_get_type (void);
 
 static GType
@@ -503,6 +535,16 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_send_event);
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rpi_cam_src_create);
   raspicapture_init ();
+
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_SENSOR_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_EXPOSURE_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_EXPOSURE_METERING_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_AWB_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_IMAGE_EFFECT, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_FLICKER_AVOIDANCE, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_DRC_LEVEL, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_ANNOTATION_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_RPI_CAM_SRC_TYPE_INTRA_REFRESH_TYPE, 0);
 }
 
 static void
@@ -1461,6 +1503,11 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
   return ret;
 }
 
+/**
+ * plugin-rpicamsrc:
+ *
+ * Since: 1.18
+ */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

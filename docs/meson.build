@@ -74,6 +74,8 @@ foreach f: ['gstgdkpixbufplugin.c']
     excludes += [join_paths(meson.current_source_dir(), '..', 'ext/gdk_pixbuf/', f)]
 endforeach
 
+excludes += [join_paths(meson.current_source_dir(), '..', 'sys', 'rpicamsrc', 'Raspi*.[ch]')]
+
 list_plugin_res = run_command(python3, '-c',
 '''
 import sys
