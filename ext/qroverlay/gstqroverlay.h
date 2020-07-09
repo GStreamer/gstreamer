@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2006 Stefan Kost <ensonic@users.sf.net>
- * Copyright (C) 2015 anthony <<user@hostname.org>>
+ * Copyright (c) 2020 Anthony Violo <anthony.violo@ubicast.eu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
