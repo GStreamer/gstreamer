@@ -30,16 +30,18 @@
 /* FIXME: translations */
 #define _(s) s
 
-static GstRpiCamSrcDevice * gst_rpi_cam_src_device_new (void);
+static GstRpiCamSrcDevice *gst_rpi_cam_src_device_new (void);
 
 G_DEFINE_TYPE (GstRpiCamSrcDeviceProvider, gst_rpi_cam_src_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
 
 
-static GList *gst_rpi_cam_src_device_provider_probe (GstDeviceProvider * provider);
+static GList *gst_rpi_cam_src_device_provider_probe (GstDeviceProvider *
+    provider);
 
 static void
-gst_rpi_cam_src_device_provider_class_init (GstRpiCamSrcDeviceProviderClass * klass)
+gst_rpi_cam_src_device_provider_class_init (GstRpiCamSrcDeviceProviderClass *
+    klass)
 {
   GstDeviceProviderClass *dprovider_class = GST_DEVICE_PROVIDER_CLASS (klass);
 
@@ -69,7 +71,8 @@ gst_rpi_cam_src_device_provider_probe (GstDeviceProvider * provider)
     GST_INFO ("No Raspberry Pi camera module detected.");
     return NULL;
   } else if (!supported) {
-    GST_WARNING ("Raspberry Pi camera module not supported, make sure to enable it.");
+    GST_WARNING
+        ("Raspberry Pi camera module not supported, make sure to enable it.");
     return NULL;
   }
 
@@ -120,8 +123,7 @@ gst_rpi_cam_src_device_new (void)
       "height", GST_TYPE_INT_RANGE, 1, 1080,
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, RPICAMSRC_MAX_FPS, 1,
       "stream-format", G_TYPE_STRING, "byte-stream",
-      "alignment", G_TYPE_STRING, "au",
-      NULL);
+      "alignment", G_TYPE_STRING, "au", NULL);
 
   g_value_init (&profiles, GST_TYPE_LIST);
   g_value_init (&val, G_TYPE_STRING);

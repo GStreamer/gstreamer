@@ -1,3 +1,4 @@
+/* *INDENT-OFF* */
 /*
  * Copyright (c) 2013 Jan Schmidt <jan@centricular.com>
 Portions:
@@ -954,4 +955,4 @@ error:
 
 
 
-
+/* *INDENT-ON* */

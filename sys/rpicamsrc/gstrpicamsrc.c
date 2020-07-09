@@ -191,7 +191,7 @@ enum
   "alignment = (string) nal, "               \
   "profile = (string) { constrained-baseline, baseline, main, high }"
 #define RAW_CAPS \
-  GST_VIDEO_CAPS_MAKE ("{ I420, RGB, BGR, RGBA }") /* FIXME: Map more raw formats */
+  GST_VIDEO_CAPS_MAKE ("{ I420, RGB, BGR, RGBA }")      /* FIXME: Map more raw formats */
 
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
 #define gst_rpi_cam_src_reset_custom_orientation(src) { src->orientation = GST_VIDEO_ORIENTATION_CUSTOM; }
@@ -202,15 +202,16 @@ enum
 static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( H264_CAPS "; " JPEG_CAPS "; " RAW_CAPS)
+    GST_STATIC_CAPS (H264_CAPS "; " JPEG_CAPS "; " RAW_CAPS)
     );
 
 
-static void gst_rpi_cam_src_finalize (GObject *object);
+static void gst_rpi_cam_src_finalize (GObject * object);
 
 static void gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface *
     iface);
-static void gst_rpi_cam_src_orientation_init (GstVideoOrientationInterface * iface);
+static void gst_rpi_cam_src_orientation_init (GstVideoOrientationInterface *
+    iface);
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
 static void gst_rpi_cam_src_direction_init (GstVideoDirectionInterface * iface);
 #endif
@@ -259,7 +260,8 @@ gst_rpi_cam_src_sensor_mode_get_type (void)
           "2592x1944 4:3 1-15fps / 3240x2464 15fps w/ v.2 board",
         "2592x1944-fast"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_2592x1944_SLOW),
-        "2592x1944 4:3 0.1666-1fps / 3240x2464 15fps w/ v.2 board", "2592x1944-slow"},
+          "2592x1944 4:3 0.1666-1fps / 3240x2464 15fps w/ v.2 board",
+        "2592x1944-slow"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1296x972), "1296x972 4:3 1-42fps",
         "1296x972"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1296x730), "1296x730 16:9 1-49fps",
@@ -480,13 +482,16 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           "Set the size of annotation text (in pixels) (0 = Auto)", 0,
           G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_COLOUR,
-      g_param_spec_int ("annotation-text-colour", "Annotation text colour (VUY)",
-          "Set the annotation text colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default", -1,
-          G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_BG_COLOUR,
-      g_param_spec_int ("annotation-text-bg-colour", "Annotation text background colour (VUY)",
-          "Set the annotation text background colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default", -1,
-          G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("annotation-text-colour",
+          "Annotation text colour (VUY)",
+          "Set the annotation text colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default",
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_ANNOTATION_TEXT_BG_COLOUR,
+      g_param_spec_int ("annotation-text-bg-colour",
+          "Annotation text background colour (VUY)",
+          "Set the annotation text background colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default",
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
       "video-direction");
@@ -552,7 +557,7 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
 }
 
 static void
-gst_rpi_cam_src_finalize (GObject *object)
+gst_rpi_cam_src_finalize (GObject * object)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
   GList *channels = NULL;
@@ -651,7 +656,9 @@ gst_rpi_cam_src_colorbalance_get_balance_type (GstColorBalance * balance)
 }
 
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
-static void gst_rpi_cam_src_set_orientation (GstRpiCamSrc * src, GstVideoOrientationMethod orientation)
+static void
+gst_rpi_cam_src_set_orientation (GstRpiCamSrc * src,
+    GstVideoOrientationMethod orientation)
 {
   switch (orientation) {
     case GST_VIDEO_ORIENTATION_IDENTITY:
@@ -709,8 +716,8 @@ static void gst_rpi_cam_src_set_orientation (GstRpiCamSrc * src, GstVideoOrienta
       break;
   }
   src->orientation =
-    orientation >= GST_VIDEO_ORIENTATION_IDENTITY &&
-    orientation <= GST_VIDEO_ORIENTATION_CUSTOM ?
+      orientation >= GST_VIDEO_ORIENTATION_IDENTITY &&
+      orientation <= GST_VIDEO_ORIENTATION_CUSTOM ?
       orientation : GST_VIDEO_ORIENTATION_CUSTOM;
   src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
 }
@@ -732,7 +739,8 @@ gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface * iface)
 }
 
 static gboolean
-gst_rpi_cam_src_orientation_get_hflip (GstVideoOrientation * orientation, gboolean * flip)
+gst_rpi_cam_src_orientation_get_hflip (GstVideoOrientation * orientation,
+    gboolean * flip)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
 
@@ -747,7 +755,8 @@ gst_rpi_cam_src_orientation_get_hflip (GstVideoOrientation * orientation, gboole
 }
 
 static gboolean
-gst_rpi_cam_src_orientation_get_vflip (GstVideoOrientation * orientation, gboolean * flip)
+gst_rpi_cam_src_orientation_get_vflip (GstVideoOrientation * orientation,
+    gboolean * flip)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
 
@@ -762,7 +771,8 @@ gst_rpi_cam_src_orientation_get_vflip (GstVideoOrientation * orientation, gboole
 }
 
 static gboolean
-gst_rpi_cam_src_orientation_set_hflip (GstVideoOrientation * orientation, gboolean flip)
+gst_rpi_cam_src_orientation_set_hflip (GstVideoOrientation * orientation,
+    gboolean flip)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
 
@@ -770,7 +780,7 @@ gst_rpi_cam_src_orientation_set_hflip (GstVideoOrientation * orientation, gboole
   g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
 
   g_mutex_lock (&src->config_lock);
-  gst_rpi_cam_src_reset_custom_orientation(src);
+  gst_rpi_cam_src_reset_custom_orientation (src);
   src->capture_config.camera_parameters.hflip = flip;
   src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
   g_mutex_unlock (&src->config_lock);
@@ -779,7 +789,8 @@ gst_rpi_cam_src_orientation_set_hflip (GstVideoOrientation * orientation, gboole
 }
 
 static gboolean
-gst_rpi_cam_src_orientation_set_vflip (GstVideoOrientation * orientation, gboolean flip)
+gst_rpi_cam_src_orientation_set_vflip (GstVideoOrientation * orientation,
+    gboolean flip)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (orientation);
 
@@ -787,7 +798,7 @@ gst_rpi_cam_src_orientation_set_vflip (GstVideoOrientation * orientation, gboole
   g_return_val_if_fail (GST_IS_RPICAMSRC (src), FALSE);
 
   g_mutex_lock (&src->config_lock);
-  gst_rpi_cam_src_reset_custom_orientation(src);
+  gst_rpi_cam_src_reset_custom_orientation (src);
   src->capture_config.camera_parameters.vflip = flip;
   src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
   g_mutex_unlock (&src->config_lock);
@@ -849,19 +860,23 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_PREVIEW_X:
-      src->capture_config.preview_parameters.previewWindow.x = g_value_get_int (value);
+      src->capture_config.preview_parameters.previewWindow.x =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_PREVIEW_Y:
-      src->capture_config.preview_parameters.previewWindow.y = g_value_get_int (value);
+      src->capture_config.preview_parameters.previewWindow.y =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_PREVIEW_W:
-      src->capture_config.preview_parameters.previewWindow.width = g_value_get_int (value);
+      src->capture_config.preview_parameters.previewWindow.width =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_PREVIEW_H:
-      src->capture_config.preview_parameters.previewWindow.height = g_value_get_int (value);
+      src->capture_config.preview_parameters.previewWindow.height =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_PREVIEW;
       break;
     case PROP_SHARPNESS:
@@ -907,7 +922,7 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.change_flags |= PROP_CHANGE_SENSOR_SETTINGS;
       break;
     case PROP_ROTATION:
-      gst_rpi_cam_src_reset_custom_orientation(src);
+      gst_rpi_cam_src_reset_custom_orientation (src);
       src->capture_config.camera_parameters.rotation = g_value_get_int (value);
       break;
     case PROP_AWB_MODE:
@@ -930,12 +945,12 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.change_flags |= PROP_CHANGE_IMAGE_COLOUR_EFFECT;
       break;
     case PROP_HFLIP:
-      gst_rpi_cam_src_reset_custom_orientation(src);
+      gst_rpi_cam_src_reset_custom_orientation (src);
       src->capture_config.camera_parameters.hflip = g_value_get_boolean (value);
       src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
       break;
     case PROP_VFLIP:
-      gst_rpi_cam_src_reset_custom_orientation(src);
+      gst_rpi_cam_src_reset_custom_orientation (src);
       src->capture_config.camera_parameters.vflip = g_value_get_boolean (value);
       src->capture_config.change_flags |= PROP_CHANGE_ORIENTATION;
       break;
@@ -990,18 +1005,18 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
     case PROP_ANNOTATION_TEXT_SIZE:
-      src->capture_config.
-          camera_parameters.annotate_text_size = g_value_get_int (value);
+      src->capture_config.camera_parameters.annotate_text_size =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
     case PROP_ANNOTATION_TEXT_COLOUR:
-      src->capture_config.
-          camera_parameters.annotate_text_colour = g_value_get_int (value);
+      src->capture_config.camera_parameters.annotate_text_colour =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
     case PROP_ANNOTATION_TEXT_BG_COLOUR:
-      src->capture_config.
-          camera_parameters.annotate_bg_colour = g_value_get_int (value);
+      src->capture_config.camera_parameters.annotate_bg_colour =
+          g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_ANNOTATION;
       break;
     case PROP_INTRA_REFRESH_TYPE:
@@ -1059,16 +1074,20 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, src->capture_config.preview_parameters.opacity);
       break;
     case PROP_PREVIEW_X:
-      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.x);
+      g_value_set_int (value,
+          src->capture_config.preview_parameters.previewWindow.x);
       break;
     case PROP_PREVIEW_Y:
-      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.y);
+      g_value_set_int (value,
+          src->capture_config.preview_parameters.previewWindow.y);
       break;
     case PROP_PREVIEW_W:
-      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.width);
+      g_value_set_int (value,
+          src->capture_config.preview_parameters.previewWindow.width);
       break;
     case PROP_PREVIEW_H:
-      g_value_set_int (value, src->capture_config.preview_parameters.previewWindow.height);
+      g_value_set_int (value,
+          src->capture_config.preview_parameters.previewWindow.height);
       break;
     case PROP_SHARPNESS:
       g_value_set_int (value, src->capture_config.camera_parameters.sharpness);
@@ -1087,7 +1106,7 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_STABILISATION:
       g_value_set_boolean (value,
-          ! !(src->capture_config.camera_parameters.videoStabilisation));
+          src->capture_config.camera_parameters.videoStabilisation != 0);
       break;
     case PROP_EXPOSURE_COMPENSATION:
       g_value_set_int (value,
@@ -1121,11 +1140,11 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HFLIP:
       g_value_set_boolean (value,
-          ! !(src->capture_config.camera_parameters.hflip));
+          src->capture_config.camera_parameters.hflip != 0);
       break;
     case PROP_VFLIP:
       g_value_set_boolean (value,
-          ! !(src->capture_config.camera_parameters.vflip));
+          src->capture_config.camera_parameters.vflip != 0);
       break;
     case PROP_ROI_X:
       g_value_set_float (value, src->capture_config.camera_parameters.roi.x);
@@ -1164,13 +1183,16 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
           src->capture_config.camera_parameters.annotate_string);
       break;
     case PROP_ANNOTATION_TEXT_SIZE:
-      g_value_set_int (value, src->capture_config.camera_parameters.annotate_text_size);
+      g_value_set_int (value,
+          src->capture_config.camera_parameters.annotate_text_size);
       break;
     case PROP_ANNOTATION_TEXT_COLOUR:
-      g_value_set_int (value, src->capture_config.camera_parameters.annotate_text_colour);
+      g_value_set_int (value,
+          src->capture_config.camera_parameters.annotate_text_colour);
       break;
     case PROP_ANNOTATION_TEXT_BG_COLOUR:
-      g_value_set_int (value, src->capture_config.camera_parameters.annotate_bg_colour);
+      g_value_set_int (value,
+          src->capture_config.camera_parameters.annotate_bg_colour);
       break;
     case PROP_INTRA_REFRESH_TYPE:
       g_value_set_enum (value, src->capture_config.intra_refresh_type);
@@ -1285,14 +1307,13 @@ gst_rpi_cam_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *s = gst_caps_get_structure (caps, i);
     if (gst_structure_has_name (s, "video/x-h264")) {
-       gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 1920, "height",
-           GST_TYPE_INT_RANGE, 1, 1080, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-           RPICAMSRC_MAX_FPS, 1, NULL);
-    }
-    else {
-       gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 3240, "height",
-           GST_TYPE_INT_RANGE, 1, 2464, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-           RPICAMSRC_MAX_FPS, 1, NULL);
+      gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 1920, "height",
+          GST_TYPE_INT_RANGE, 1, 1080, "framerate", GST_TYPE_FRACTION_RANGE, 0,
+          1, RPICAMSRC_MAX_FPS, 1, NULL);
+    } else {
+      gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 3240, "height",
+          GST_TYPE_INT_RANGE, 1, 2464, "framerate", GST_TYPE_FRACTION_RANGE, 0,
+          1, RPICAMSRC_MAX_FPS, 1, NULL);
     }
   }
 done:
@@ -1320,7 +1341,8 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
       if (g_str_equal (profile_str, "baseline"))
         src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_BASELINE;
       else if (g_str_equal (profile_str, "constrained-baseline"))
-        src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_CONSTRAINED_BASELINE;
+        src->capture_config.profile =
+            MMAL_VIDEO_PROFILE_H264_CONSTRAINED_BASELINE;
       else if (g_str_equal (profile_str, "main"))
         src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_MAIN;
       else if (g_str_equal (profile_str, "high"))
@@ -1328,31 +1350,29 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
       else
         g_warning ("Unknown profile string in rpicamsrc caps: %s", profile_str);
     }
-  }
-  else if (gst_structure_has_name (structure, "image/jpeg")) {
+  } else if (gst_structure_has_name (structure, "image/jpeg")) {
 #ifdef USE_JPEG_CODEC
     src->capture_config.encoding = MMAL_ENCODING_JPEG;
 #else
     src->capture_config.encoding = MMAL_ENCODING_MJPEG;
 #endif
-  }
-  else {
+  } else {
     /* Raw caps */
-    switch (GST_VIDEO_INFO_FORMAT(&info)) {
-    case GST_VIDEO_FORMAT_I420:
-      src->capture_config.encoding = MMAL_ENCODING_I420;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-      src->capture_config.encoding = MMAL_ENCODING_RGB24;
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-      src->capture_config.encoding = MMAL_ENCODING_BGR24;
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-      src->capture_config.encoding = MMAL_ENCODING_RGBA;
-      break;
-    default:
-      return FALSE;
+    switch (GST_VIDEO_INFO_FORMAT (&info)) {
+      case GST_VIDEO_FORMAT_I420:
+        src->capture_config.encoding = MMAL_ENCODING_I420;
+        break;
+      case GST_VIDEO_FORMAT_RGB:
+        src->capture_config.encoding = MMAL_ENCODING_RGB24;
+        break;
+      case GST_VIDEO_FORMAT_BGR:
+        src->capture_config.encoding = MMAL_ENCODING_BGR24;
+        break;
+      case GST_VIDEO_FORMAT_RGBA:
+        src->capture_config.encoding = MMAL_ENCODING_RGBA;
+        break;
+      default:
+        return FALSE;
     }
   }
 
@@ -1363,7 +1383,7 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
   if (info.fps_n != 0 && info.fps_d != 0)
     src->duration = gst_util_uint64_scale_int (GST_SECOND, info.fps_d,
-                        info.fps_n);
+        info.fps_n);
   else
     src->duration = GST_CLOCK_TIME_NONE;
 
@@ -1408,10 +1428,11 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 
   if (!src->started) {
     g_mutex_lock (&src->config_lock);
-    raspi_capture_update_config (src->capture_state, &src->capture_config, FALSE);
+    raspi_capture_update_config (src->capture_state, &src->capture_config,
+        FALSE);
     src->capture_config.change_flags = 0;
     g_mutex_unlock (&src->config_lock);
-    
+
     if (!raspi_capture_start (src->capture_state))
       return GST_FLOW_ERROR;
     src->started = TRUE;
@@ -1425,7 +1446,8 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 
   g_mutex_lock (&src->config_lock);
   if (src->capture_config.change_flags) {
-    raspi_capture_update_config (src->capture_state, &src->capture_config, TRUE);
+    raspi_capture_update_config (src->capture_state, &src->capture_config,
+        TRUE);
     src->capture_config.change_flags = 0;
   }
   g_mutex_unlock (&src->config_lock);

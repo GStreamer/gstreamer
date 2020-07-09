@@ -1,3 +1,4 @@
+/* *INDENT-OFF* */
 /*
  * Copyright (c) 2013-2015 Jan Schmidt <jan@centricular.com>
 Portions:
@@ -305,3 +306,4 @@ void raspipreview_display_help()
    raspicli_display_help(cmdline_commands, cmdline_commands_size);
 }
 #endif
+/* *INDENT-ON* */

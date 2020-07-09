@@ -1,3 +1,4 @@
+/* *INDENT-OFF* */
 /*
  * Copyright (c) 2013 Jan Schmidt <jan@centricular.com>
 Portions:
@@ -1464,4 +1465,4 @@ void raspicamcontrol_check_configuration(int min_gpu_mem)
    else
       vcos_log_error("Failed to run camera app. Please check for firmware updates\n");
 }
-
+/* *INDENT-ON* */
