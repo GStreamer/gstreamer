@@ -1085,13 +1085,6 @@ gst_encoding_container_profile_add_profile (GstEncodingContainerProfile *
   g_return_val_if_fail (GST_IS_ENCODING_CONTAINER_PROFILE (container), FALSE);
   g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
 
-  if (g_list_find_custom (container->encodingprofiles, profile,
-          (GCompareFunc) _compare_encoding_profiles)) {
-    GST_ERROR
-        ("Encoding profile already contains an identical GstEncodingProfile");
-    return FALSE;
-  }
-
   container->encodingprofiles =
       g_list_append (container->encodingprofiles, profile);
 
