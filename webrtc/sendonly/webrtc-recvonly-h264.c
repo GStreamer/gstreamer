@@ -270,6 +270,38 @@ on_incoming_stream (GstElement * webrtc, GstPad * pad,
   gst_object_unref (sinkpad);
 }
 
+static gboolean
+bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+    {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &error, &debug);
+      g_error ("Error on bus: %s (debug: %s)", error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_WARNING:
+    {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_warning (message, &error, &debug);
+      g_warning ("Warning on bus: %s (debug: %s)", error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return G_SOURCE_CONTINUE;
+}
 
 ReceiverEntry *
 create_receiver_entry (SoupWebsocketConnection * connection)
@@ -278,6 +310,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
   ReceiverEntry *receiver_entry;
   GstCaps *video_caps;
   GstWebRTCRTPTransceiver *trans = NULL;
+  GstBus *bus;
 
   receiver_entry = g_slice_alloc0 (sizeof (ReceiverEntry));
   receiver_entry->connection = connection;
@@ -331,7 +364,13 @@ create_receiver_entry (SoupWebsocketConnection * connection)
   g_signal_connect (receiver_entry->webrtcbin, "on-ice-candidate",
       G_CALLBACK (on_ice_candidate_cb), (gpointer) receiver_entry);
 
-  gst_element_set_state (receiver_entry->pipeline, GST_STATE_PLAYING);
+  bus = gst_pipeline_get_bus (GST_PIPELINE (receiver_entry->pipeline));
+  gst_bus_add_watch (bus, bus_watch_cb, NULL);
+  gst_object_unref (bus);
+
+  if (gst_element_set_state (receiver_entry->pipeline, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE)
+    g_error ("Error starting pipeline");
 
   return receiver_entry;
 
