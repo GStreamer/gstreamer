@@ -48,6 +48,13 @@ GType gst_webrtc_rtp_sender_get_type(void);
  *
  * Since: 1.16
  */
+/**
+ * GstWebRTCRTPSender.priority:
+ *
+ * The priority of the stream
+ *
+ * Since: 1.20
+ */
 struct _GstWebRTCRTPSender
 {
   GstObject                          parent;
@@ -57,6 +64,7 @@ struct _GstWebRTCRTPSender
   GstWebRTCDTLSTransport            *rtcp_transport;
 
   GArray                            *send_encodings;
+  GstWebRTCPriorityType              priority;
 
   gpointer                          _padding[GST_PADDING];
 };
@@ -77,7 +85,9 @@ void                        gst_webrtc_rtp_sender_set_transport         (GstWebR
 GST_WEBRTC_API
 void                        gst_webrtc_rtp_sender_set_rtcp_transport    (GstWebRTCRTPSender * sender,
                                                                          GstWebRTCDTLSTransport * transport);
-
+GST_WEBRTC_API
+void                        gst_webrtc_rtp_sender_set_priority          (GstWebRTCRTPSender *sender,
+                                                                         GstWebRTCPriorityType priority);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPSender, gst_object_unref)
 
