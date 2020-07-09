@@ -74,6 +74,11 @@ option('vpx', type : 'feature', value : 'auto', description : 'VP8 and VP9 video
 option('waveform', type : 'feature', value : 'auto', description : 'Windows waveform audio sink plugin')
 option('wavpack', type : 'feature', value : 'auto', description : 'Wavpack audio codec plugin')
 
+# rpicamsrc plugin options
+option('rpicamsrc', type : 'feature', value : 'auto', description : 'Raspberry Pi camera module plugin')
+option('rpi-header-dir', type : 'string', value : '/opt/vc/include', description : 'Directory where VideoCore/MMAL headers and bcm_host.h can be found')
+option('rpi-lib-dir', type : 'string', value : '/opt/vc/lib', description : 'Directory where VideoCore/MMAL libraries can be found')
+
 # ximagesrc plugin options
 option('ximagesrc', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin')
 option('ximagesrc-xshm', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XSHM support)')

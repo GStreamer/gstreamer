@@ -1455,23 +1455,21 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
+
   GST_DEBUG_CATEGORY_INIT (gst_rpi_cam_src_debug, "rpicamsrc",
       0, "rpicamsrc debug");
+
   ret = gst_element_register (plugin, "rpicamsrc", GST_RANK_NONE,
       GST_TYPE_RPICAMSRC);
-#if GST_CHECK_VERSION (1,4,0)
+
   ret &= gst_device_provider_register (plugin, "rpicamsrcdeviceprovider",
       GST_RANK_PRIMARY, GST_TYPE_RPICAMSRC_DEVICE_PROVIDER);
-#endif
+
   return ret;
 }
-
-#ifndef PACKAGE
-#define PACKAGE "gstrpicamsrc"
-#endif
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     rpicamsrc,
     "Raspberry Pi Camera Source",
-    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

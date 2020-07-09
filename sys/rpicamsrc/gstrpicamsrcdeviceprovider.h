@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#if GST_CHECK_VERSION (1,4,0)
-
 G_BEGIN_DECLS
 
 typedef struct _GstRpiCamSrcDeviceProvider GstRpiCamSrcDeviceProvider;
@@ -73,7 +71,5 @@ struct _GstRpiCamSrcDeviceClass {
 GType  gst_rpi_cam_src_device_get_type (void);
 
 G_END_DECLS
-
-#endif /* GST_CHECK_VERSION (1,4,0) */
 
 #endif /* __GST_RPICAMSRC_DEVICE_PROVIDER_H__ */

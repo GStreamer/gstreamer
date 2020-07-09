@@ -25,8 +25,6 @@
 
 #include <string.h>
 
-#if GST_CHECK_VERSION (1,4,0)
-
 #include "RaspiCapture.h"
 
 /* FIXME: translations */
@@ -145,5 +143,3 @@ gst_rpi_cam_src_device_new (void)
 
   return device;
 }
-
-#endif /* GST_CHECK_VERSION (1,4,0) */
