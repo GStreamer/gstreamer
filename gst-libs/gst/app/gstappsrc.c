@@ -294,7 +294,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gobject_class->get_property = gst_app_src_get_property;
 
   /**
-   * GstAppSrc::caps:
+   * GstAppSrc:caps:
    *
    * The GstCaps that will negotiated downstream and will be put
    * on outgoing buffers.
@@ -304,7 +304,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           "The allowed caps for the src pad", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAppSrc::format:
+   * GstAppSrc:format:
    *
    * The format to use for segment events. When the source is producing
    * timestamped buffers this property should be set to GST_FORMAT_TIME.
@@ -314,7 +314,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           "The format of the segment events and seek", GST_TYPE_FORMAT,
           DEFAULT_PROP_FORMAT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAppSrc::size:
+   * GstAppSrc:size:
    *
    * The total size in bytes of the data stream. If the total size is known, it
    * is recommended to configure it with this property.
@@ -325,7 +325,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           -1, G_MAXINT64, DEFAULT_PROP_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAppSrc::stream-type:
+   * GstAppSrc:stream-type:
    *
    * The type of stream that this source is producing.  For seekable streams the
    * application should connect to the seek-data signal.
@@ -336,7 +336,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           DEFAULT_PROP_STREAM_TYPE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAppSrc::max-bytes:
+   * GstAppSrc:max-bytes:
    *
    * The maximum amount of bytes that can be queued internally.
    * After the maximum amount of bytes are queued, appsrc will emit the
@@ -348,7 +348,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           0, G_MAXUINT64, DEFAULT_PROP_MAX_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAppSrc::block:
+   * GstAppSrc:block:
    *
    * When max-bytes are queued and after the enough-data signal has been emitted,
    * block any further push-buffer calls until the amount of queued bytes drops
@@ -360,7 +360,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           DEFAULT_PROP_BLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::is-live:
+   * GstAppSrc:is-live:
    *
    * Instruct the source to behave like a live source. This includes that it
    * will only push out buffers in the PLAYING state.
@@ -370,7 +370,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           "Whether to act as a live source",
           DEFAULT_PROP_IS_LIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAppSrc::min-latency:
+   * GstAppSrc:min-latency:
    *
    * The minimum latency of the source. A value of -1 will use the default
    * latency calculations of #GstBaseSrc.
@@ -393,7 +393,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::emit-signals:
+   * GstAppSrc:emit-signals:
    *
    * Make appsrc emit the "need-data", "enough-data" and "seek-data" signals.
    * This option is by default enabled for backwards compatibility reasons but
@@ -406,7 +406,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::min-percent:
+   * GstAppSrc:min-percent:
    *
    * Make appsrc emit the "need-data" signal when the amount of bytes in the
    * queue drops below this percentage of max-bytes.
@@ -418,7 +418,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::current-level-bytes:
+   * GstAppSrc:current-level-bytes:
    *
    * The number of currently queued bytes inside appsrc.
    *
@@ -431,7 +431,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::duration:
+   * GstAppSrc:duration:
    *
    * The total duration in nanoseconds of the data stream. If the total duration is known, it
    * is recommended to configure it with this property.
@@ -468,7 +468,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::need-data:
+   * GstAppSrc:need-data:
    * @appsrc: the appsrc element that emitted the signal
    * @length: the amount of bytes needed.
    *
@@ -487,7 +487,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
-   * GstAppSrc::enough-data:
+   * GstAppSrc:enough-data:
    * @appsrc: the appsrc element that emitted the signal
    *
    * Signal that the source has enough data. It is recommended that the
@@ -500,7 +500,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstAppSrc::seek-data:
+   * GstAppSrc:seek-data:
    * @appsrc: the appsrc element that emitted the signal
    * @offset: the offset to seek to
    *
@@ -516,7 +516,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT64);
 
    /**
-    * GstAppSrc::push-buffer:
+    * GstAppSrc:push-buffer:
     * @appsrc: the appsrc
     * @buffer: a buffer to push
     *
@@ -534,7 +534,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
 
    /**
-    * GstAppSrc::push-buffer-list:
+    * GstAppSrc:push-buffer-list:
     * @appsrc: the appsrc
     * @buffer_list: a buffer list to push
     *
@@ -555,7 +555,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER_LIST);
 
   /**
-    * GstAppSrc::push-sample:
+    * GstAppSrc:push-sample:
     * @appsrc: the appsrc
     * @sample: a sample from which extract buffer to push
     *
@@ -572,7 +572,6 @@ gst_app_src_class_init (GstAppSrcClass * klass)
     * becomes available in the queue.
     *
     * Since: 1.6
-    *
     */
   gst_app_src_signals[SIGNAL_PUSH_SAMPLE] =
       g_signal_new ("push-sample", G_TYPE_FROM_CLASS (klass),
@@ -582,7 +581,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 
 
    /**
-    * GstAppSrc::end-of-stream:
+    * GstAppSrc:end-of-stream:
     * @appsrc: the appsrc
     *
     * Notify @appsrc that no more buffer are available.
