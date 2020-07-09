@@ -37,6 +37,7 @@ GType gst_gl_window_winrt_egl_get_type (void);
 
 typedef struct _GstGLWindowWinRTEGL        GstGLWindowWinRTEGL;
 typedef struct _GstGLWindowWinRTEGLClass   GstGLWindowWinRTEGLClass;
+typedef struct _GstGLWindowWinRTEGLPrivate GstGLWindowWinRTEGLPrivate;
 
 struct _GstGLWindowWinRTEGL {
   /*< private >*/
@@ -45,6 +46,8 @@ struct _GstGLWindowWinRTEGL {
   /* This is actually an IInspectable type, which must be one of:
    * ICoreWindow, ISwapChainPanel, IPropertySet */
   EGLNativeWindowType window;
+
+  GstGLWindowWinRTEGLPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
 };

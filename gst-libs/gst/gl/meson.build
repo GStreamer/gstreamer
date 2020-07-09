@@ -718,13 +718,15 @@ if need_win_winrt != 'no' and host_system == 'windows'
   if egl_dep.found()
     windows_graphics_h = cc.has_header('windows.graphics.h')
     windows_app_dep = cc.find_library('WindowsApp', required: false)
+    runtimeobject_lib = cc.find_library('runtimeobject', required: false)
 
-    if windows_graphics_h and windows_app_dep.found()
+    if windows_graphics_h and windows_app_dep.found() and runtimeobject_lib.found()
       enabled_gl_winsys += 'winrt'
       glconf.set10('GST_GL_HAVE_WINDOW_WINRT', 1)
       gl_sources += [
         'winrt/gstglwindow_winrt_egl.cpp'
       ]
+      gl_winsys_deps += runtimeobject_lib
     elif need_win_winrt == 'yes'
       error('WinRT is enabled, but headers/libraries were not found')
     endif
