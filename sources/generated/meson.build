@@ -432,6 +432,7 @@ generated_sources = [
     'Gst.WebRTC/WebRTCICERole.cs',
     'Gst.WebRTC/WebRTCICETransport.cs',
     'Gst.WebRTC/WebRTCICETransportPolicy.cs',
+    'Gst.WebRTC/WebRTCKind.cs',
     'Gst.WebRTC/WebRTCPeerConnectionState.cs',
     'Gst.WebRTC/WebRTCPriorityType.cs',
     'Gst.WebRTC/WebRTCRTPReceiver.cs',

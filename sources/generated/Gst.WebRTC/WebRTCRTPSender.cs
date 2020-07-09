@@ -26,6 +26,22 @@ namespace Gst.WebRTC {
 		}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_webrtc_rtp_sender_set_priority(IntPtr raw, int priority);
+
+		[GLib.Property ("priority")]
+		public Gst.WebRTC.WebRTCPriorityType Priority {
+			get {
+				GLib.Value val = GetProperty ("priority");
+				Gst.WebRTC.WebRTCPriorityType ret = (Gst.WebRTC.WebRTCPriorityType) (Enum) val;
+				val.Dispose ();
+				return ret;
+			}
+			set  {
+				gst_webrtc_rtp_sender_set_priority(Handle, (int) value);
+			}
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_rtp_sender_set_transport(IntPtr raw, IntPtr transport);
 
 		public Gst.WebRTC.WebRTCDTLSTransport Transport {
@@ -52,6 +68,15 @@ namespace Gst.WebRTC {
 			}
 			set  {
 				gst_webrtc_rtp_sender_set_rtcp_transport(Handle, value == null ? IntPtr.Zero : value.Handle);
+			}
+		}
+
+		public Gst.WebRTC.WebRTCPriorityType PriorityField {
+			get {
+				unsafe {
+					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("priority"));
+					return (Gst.WebRTC.WebRTCPriorityType) (*raw_ptr);
+				}
 			}
 		}
 
@@ -122,14 +147,22 @@ namespace Gst.WebRTC {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // send_encodings
 							, "rtcp_transport"
-							, "_padding"
+							, "priority"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("priority"
+							, -1
+							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCPriorityType))) // priority
+							, "send_encodings"
+							, "_padding"
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCRTPSender_priorityAlign), "priority")
 							, 0
 							),
 						new GLib.AbiField("_padding"
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "send_encodings"
+							, "priority"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -138,6 +171,13 @@ namespace Gst.WebRTC {
 
 				return _abi_info;
 			}
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstWebRTCRTPSender_priorityAlign
+		{
+			sbyte f1;
+			private Gst.WebRTC.WebRTCPriorityType priority;
 		}
 
 

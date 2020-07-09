@@ -31577,6 +31577,11 @@
       <member cname="GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL" name="All" value="0"/>
       <member cname="GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY" name="Relay" value="1"/>
     </enum>
+    <enum name="WebRTCKind" cname="GstWebRTCKind" type="enum" gtype="gst_webrtc_kind_get_type" version="1.20">
+      <member cname="GST_WEBRTC_KIND_UNKNOWN" name="Unknown" value="0"/>
+      <member cname="GST_WEBRTC_KIND_AUDIO" name="Audio" value="1"/>
+      <member cname="GST_WEBRTC_KIND_VIDEO" name="Video" value="2"/>
+    </enum>
     <enum name="WebRTCPeerConnectionState" cname="GstWebRTCPeerConnectionState" type="enum" gtype="gst_webrtc_peer_connection_state_get_type">
       <member cname="GST_WEBRTC_PEER_CONNECTION_STATE_NEW" name="New" value="0"/>
       <member cname="GST_WEBRTC_PEER_CONNECTION_STATE_CONNECTING" name="Connecting" value="1"/>
@@ -31886,7 +31891,7 @@
         <parameters/>
       </signal>
     </object>
-    <object name="WebRTCRTPReceiver" cname="GstWebRTCRTPReceiver" opaque="false" hidden="false" parent="GstObject">
+    <object name="WebRTCRTPReceiver" cname="GstWebRTCRTPReceiver" opaque="false" hidden="false" parent="GstObject" version="1.16">
       <class_struct cname="GstWebRTCRTPReceiverClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
@@ -31914,7 +31919,7 @@
       <field cname="rtcp_transport" access="public" writeable="false" readable="true" is_callback="false" name="RtcpTransport" type="GstWebRTCDTLSTransport*"/>
       <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="WebRTCRTPSender" cname="GstWebRTCRTPSender" opaque="false" hidden="false" parent="GstObject">
+    <object name="WebRTCRTPSender" cname="GstWebRTCRTPSender" opaque="false" hidden="false" parent="GstObject" version="1.16">
       <class_struct cname="GstWebRTCRTPSenderClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
@@ -31925,6 +31930,12 @@
         <return-type type="GType"/>
       </method>
       <constructor cname="gst_webrtc_rtp_sender_new" disable_void_ctor=""/>
+      <method name="SetPriority" cname="gst_webrtc_rtp_sender_set_priority" version="1.20">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="priority" type="GstWebRTCPriorityType"/>
+        </parameters>
+      </method>
       <method name="SetRtcpTransport" cname="gst_webrtc_rtp_sender_set_rtcp_transport">
         <return-type type="void"/>
         <parameters>
@@ -31937,13 +31948,15 @@
           <parameter name="transport" type="GstWebRTCDTLSTransport*"/>
         </parameters>
       </method>
+      <property name="Priority" cname="priority" type="GstWebRTCPriorityType" readable="true" writeable="true" construct="false" construct-only="false" version="1.20"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*"/>
       <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*"/>
       <field cname="rtcp_transport" access="public" writeable="false" readable="true" is_callback="false" name="RtcpTransport" type="GstWebRTCDTLSTransport*"/>
       <field cname="send_encodings" access="public" writeable="false" readable="true" is_callback="false" name="SendEncodings" type="GArray*" array="true" null_term_array="true"/>
+      <field cname="priority" access="public" writeable="false" readable="true" is_callback="false" name="PriorityField" type="GstWebRTCPriorityType"/>
       <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="WebRTCRTPTransceiver" cname="GstWebRTCRTPTransceiver" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
+    <object name="WebRTCRTPTransceiver" cname="GstWebRTCRTPTransceiver" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject" version="1.16">
       <class_struct cname="GstWebRTCRTPTransceiverClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
@@ -31968,6 +31981,7 @@
       <field cname="codec_preferences" access="public" writeable="false" readable="true" is_callback="false" name="CodecPreferences" type="GstCaps*">
         <warning>missing glib:type-name</warning>
       </field>
+      <field cname="kind" access="public" writeable="false" readable="true" is_callback="false" name="Kind" type="GstWebRTCKind"/>
       <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4"/>
     </object>
     <boxed name="WebRTCSessionDescription" cname="GstWebRTCSessionDescription" opaque="false" hidden="false">

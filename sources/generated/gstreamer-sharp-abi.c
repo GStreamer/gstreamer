@@ -1021,6 +1021,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstWebRTCRTPSender.transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, transport));
 	g_print("\"GstWebRTCRTPSender.rtcp_transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, rtcp_transport));
 	g_print("\"GstWebRTCRTPSender.send_encodings\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, send_encodings));
+	g_print("\"GstWebRTCRTPSender.priority\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, priority));
 	g_print("\"sizeof(GstWebRTCRTPTransceiverClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPTransceiverClass));
 	g_print("\"sizeof(GstWebRTCRTPTransceiver)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPTransceiver));
 	g_print("\"GstWebRTCRTPTransceiver.mline\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, mline));
@@ -1031,5 +1032,6 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstWebRTCRTPTransceiver.direction\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, direction));
 	g_print("\"GstWebRTCRTPTransceiver.current_direction\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, current_direction));
 	g_print("\"GstWebRTCRTPTransceiver.codec_preferences\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, codec_preferences));
+	g_print("\"GstWebRTCRTPTransceiver.kind\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, kind));
 	return 0;
 }

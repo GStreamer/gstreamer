@@ -1521,6 +1521,39 @@ for more information.</doc>
               glib:nick="relay">
       </member>
     </enumeration>
+    <enumeration name="WebRTCKind"
+                 version="1.20"
+                 glib:type-name="GstWebRTCKind"
+                 glib:get-type="gst_webrtc_kind_get_type"
+                 c:type="GstWebRTCKind">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="376">https://w3c.github.io/mediacapture-main/#dom-mediastreamtrack-kind</doc>
+      <member name="unknown"
+              value="0"
+              c:identifier="GST_WEBRTC_KIND_UNKNOWN"
+              glib:nick="unknown">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="378">Kind has not yet been set</doc>
+      </member>
+      <member name="audio"
+              value="1"
+              c:identifier="GST_WEBRTC_KIND_AUDIO"
+              glib:nick="audio">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="379">Kind is audio</doc>
+      </member>
+      <member name="video"
+              value="2"
+              c:identifier="GST_WEBRTC_KIND_VIDEO"
+              glib:nick="video">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="380">Kind is audio</doc>
+      </member>
+    </enumeration>
     <enumeration name="WebRTCPeerConnectionState"
                  glib:type-name="GstWebRTCPeerConnectionState"
                  glib:get-type="gst_webrtc_peer_connection_state_get_type"
@@ -1613,14 +1646,20 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
     <class name="WebRTCRTPReceiver"
            c:symbol-prefix="webrtc_rtp_receiver"
            c:type="GstWebRTCRTPReceiver"
+           version="1.16"
            parent="Gst.Object"
            glib:type-name="GstWebRTCRTPReceiver"
            glib:get-type="gst_webrtc_rtp_receiver_get_type"
            glib:type-struct="WebRTCRTPReceiverClass">
-      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="57"/>
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtpreceiver.h"
+           line="38">An object to track the receiving aspect of the stream
+
+Mostly matches the WebRTC RTCRtpReceiver interface.</doc>
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="65"/>
       <constructor name="new" c:identifier="gst_webrtc_rtp_receiver_new">
         <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h"
-                         line="60"/>
+                         line="68"/>
         <return-value transfer-ownership="none">
           <type name="WebRTCRTPReceiver" c:type="GstWebRTCRTPReceiver*"/>
         </return-value>
@@ -1628,7 +1667,7 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
       <method name="set_rtcp_transport"
               c:identifier="gst_webrtc_rtp_receiver_set_rtcp_transport">
         <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h"
-                         line="65"/>
+                         line="73"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -1644,7 +1683,7 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
       <method name="set_transport"
               c:identifier="gst_webrtc_rtp_receiver_set_transport">
         <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h"
-                         line="62"/>
+                         line="70"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -1661,9 +1700,15 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
         <type name="Gst.Object" c:type="GstObject"/>
       </field>
       <field name="transport">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpreceiver.h"
+             line="40">The transport for RTP packets</doc>
         <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
       </field>
       <field name="rtcp_transport">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpreceiver.h"
+             line="41">The transport for RTCP packets without rtcp-mux</doc>
         <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
       </field>
       <field name="_padding">
@@ -1675,7 +1720,7 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
     <record name="WebRTCRTPReceiverClass"
             c:type="GstWebRTCRTPReceiverClass"
             glib:is-gtype-struct-for="WebRTCRTPReceiver">
-      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="57"/>
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="65"/>
       <field name="parent_class">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
@@ -1688,20 +1733,53 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
     <class name="WebRTCRTPSender"
            c:symbol-prefix="webrtc_rtp_sender"
            c:type="GstWebRTCRTPSender"
+           version="1.16"
            parent="Gst.Object"
            glib:type-name="GstWebRTCRTPSender"
            glib:get-type="gst_webrtc_rtp_sender_get_type"
            glib:type-struct="WebRTCRTPSenderClass">
-      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="59"/>
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtpsender.h"
+           line="38">An object to track the sending aspect of the stream
+
+Mostly matches the WebRTC RTCRtpSender interface.</doc>
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="70"/>
       <constructor name="new" c:identifier="gst_webrtc_rtp_sender_new">
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="62"/>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="73"/>
         <return-value transfer-ownership="none">
           <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
         </return-value>
       </constructor>
+      <method name="set_priority"
+              c:identifier="gst_webrtc_rtp_sender_set_priority"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.c"
+             line="85">Sets the content of the IPv4 Type of Service (ToS), also known as DSCP
+(Differentiated Services Code Point).
+This also sets the Traffic Class field of IPv6.</doc>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="82"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sender" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtpsender.c"
+                 line="87">a #GstWebRTCRTPSender</doc>
+            <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
+          </instance-parameter>
+          <parameter name="priority" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtpsender.c"
+                 line="88">The priority of this sender</doc>
+            <type name="WebRTCPriorityType" c:type="GstWebRTCPriorityType"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_rtcp_transport"
               c:identifier="gst_webrtc_rtp_sender_set_rtcp_transport">
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="68"/>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="79"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -1716,7 +1794,7 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
       </method>
       <method name="set_transport"
               c:identifier="gst_webrtc_rtp_sender_set_transport">
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="65"/>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="76"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -1729,19 +1807,43 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
           </parameter>
         </parameters>
       </method>
+      <property name="priority"
+                version="1.20"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.c"
+             line="166">The priority from which to set the DSCP field on packets</doc>
+        <type name="WebRTCPriorityType"/>
+      </property>
       <field name="parent">
         <type name="Gst.Object" c:type="GstObject"/>
       </field>
       <field name="transport">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.h"
+             line="40">The transport for RTP packets</doc>
         <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
       </field>
       <field name="rtcp_transport">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.h"
+             line="41">The transport for RTCP packets without rtcp-mux</doc>
         <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
       </field>
       <field name="send_encodings">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.h"
+             line="42">Unused</doc>
         <array name="GLib.Array" c:type="GArray*">
           <type name="gpointer" c:type="gpointer"/>
         </array>
+      </field>
+      <field name="priority">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.h"
+             line="43">The priority of the stream (Since: 1.20)</doc>
+        <type name="WebRTCPriorityType" c:type="GstWebRTCPriorityType"/>
       </field>
       <field name="_padding">
         <array zero-terminated="0" fixed-size="4">
@@ -1752,7 +1854,7 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
     <record name="WebRTCRTPSenderClass"
             c:type="GstWebRTCRTPSenderClass"
             glib:is-gtype-struct-for="WebRTCRTPSender">
-      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="59"/>
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="70"/>
       <field name="parent_class">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
@@ -1765,13 +1867,17 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
     <class name="WebRTCRTPTransceiver"
            c:symbol-prefix="webrtc_rtp_transceiver"
            c:type="GstWebRTCRTPTransceiver"
+           version="1.16"
            parent="Gst.Object"
            abstract="1"
            glib:type-name="GstWebRTCRTPTransceiver"
            glib:get-type="gst_webrtc_rtp_transceiver_get_type"
            glib:type-struct="WebRTCRTPTransceiverClass">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtptransceiver.h"
+           line="39">Mostly matches the WebRTC RTCRtpTransceiver interface.</doc>
       <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
-                       line="66"/>
+                       line="96"/>
       <property name="direction"
                 version="1.18"
                 writable="1"
@@ -1803,30 +1909,69 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
         <type name="Gst.Object" c:type="GstObject"/>
       </field>
       <field name="mline">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="41">the mline number this transceiver corresponds to</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="mid">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="42">The media ID of the m-line associated with this
+transceiver. This association is established, when possible,
+whenever either a local or remote description is applied. This
+field is NULL if neither a local or remote description has been
+applied, or if its associated m-line is rejected by either a remote
+offer or any answer.</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <field name="stopped">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="48">Indicates whether or not sending and receiving using the paired
+#GstWebRTCRTPSender and #GstWebRTCRTPReceiver has been permanently disabled,
+either due to SDP offer/answer</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
       <field name="sender">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="51">The #GstWebRTCRTPSender object responsible sending  data to the
+remote peer</doc>
         <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
       </field>
       <field name="receiver">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="53">The #GstWebRTCRTPReceiver object responsible for receiver data from
+the remote peer.</doc>
         <type name="WebRTCRTPReceiver" c:type="GstWebRTCRTPReceiver*"/>
       </field>
       <field name="direction">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="55">The transceiver's desired direction.</doc>
         <type name="WebRTCRTPTransceiverDirection"
               c:type="GstWebRTCRTPTransceiverDirection"/>
       </field>
       <field name="current_direction">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="56">The transceiver's current direction (read-only)</doc>
         <type name="WebRTCRTPTransceiverDirection"
               c:type="GstWebRTCRTPTransceiverDirection"/>
       </field>
       <field name="codec_preferences">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="57">A caps representing the codec preferences (read-only)</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
+      </field>
+      <field name="kind">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.h"
+             line="58">Type of media (Since: 1.20)</doc>
+        <type name="WebRTCKind" c:type="GstWebRTCKind"/>
       </field>
       <field name="_padding">
         <array zero-terminated="0" fixed-size="4">
@@ -1838,7 +1983,7 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
             c:type="GstWebRTCRTPTransceiverClass"
             glib:is-gtype-struct-for="WebRTCRTPTransceiver">
       <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
-                       line="66"/>
+                       line="96"/>
       <field name="parent_class">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>

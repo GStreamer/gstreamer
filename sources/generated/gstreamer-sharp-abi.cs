@@ -1015,6 +1015,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstWebRTCRTPSender.transport\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("transport") + "\"");
 			Console.WriteLine("\"GstWebRTCRTPSender.rtcp_transport\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("rtcp_transport") + "\"");
 			Console.WriteLine("\"GstWebRTCRTPSender.send_encodings\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("send_encodings") + "\"");
+			Console.WriteLine("\"GstWebRTCRTPSender.priority\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("priority") + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCRTPTransceiverClass)\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.class_abi.Size + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCRTPTransceiver)\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.abi_info.Size + "\"");
 			Console.WriteLine("\"GstWebRTCRTPTransceiver.mline\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.abi_info.GetFieldOffset("mline") + "\"");
@@ -1025,6 +1026,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstWebRTCRTPTransceiver.direction\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.abi_info.GetFieldOffset("direction") + "\"");
 			Console.WriteLine("\"GstWebRTCRTPTransceiver.current_direction\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.abi_info.GetFieldOffset("current_direction") + "\"");
 			Console.WriteLine("\"GstWebRTCRTPTransceiver.codec_preferences\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.abi_info.GetFieldOffset("codec_preferences") + "\"");
+			Console.WriteLine("\"GstWebRTCRTPTransceiver.kind\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.abi_info.GetFieldOffset("kind") + "\"");
 		}
 	}
 }

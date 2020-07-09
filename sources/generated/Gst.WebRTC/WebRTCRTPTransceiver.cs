@@ -135,6 +135,15 @@ namespace Gst.WebRTC {
 			}
 		}
 
+		public Gst.WebRTC.WebRTCKind Kind {
+			get {
+				unsafe {
+					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("kind"));
+					return (Gst.WebRTC.WebRTCKind) (*raw_ptr);
+				}
+			}
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -242,14 +251,22 @@ namespace Gst.WebRTC {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // codec_preferences
 							, "current_direction"
-							, "_padding"
+							, "kind"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("kind"
+							, -1
+							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCKind))) // kind
+							, "codec_preferences"
+							, "_padding"
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCRTPTransceiver_kindAlign), "kind")
 							, 0
 							),
 						new GLib.AbiField("_padding"
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "codec_preferences"
+							, "kind"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -286,6 +303,13 @@ namespace Gst.WebRTC {
 		{
 			sbyte f1;
 			private Gst.WebRTC.WebRTCRTPTransceiverDirection current_direction;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstWebRTCRTPTransceiver_kindAlign
+		{
+			sbyte f1;
+			private Gst.WebRTC.WebRTCKind kind;
 		}
 
 
