@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2006 Stefan Kost <ensonic@users.sf.net>
  * Copyright (C) 2015 anthony <<user@hostname.org>>
@@ -18,30 +18,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
-#ifndef __GST_QROVERLAY_H__
-#define __GST_QROVERLAY_H__
+
+#ifndef __GST_QR_OVERLAY_H__
+#define __GST_QR_OVERLAY_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_QROVERLAY \
-  (gst_qroverlay_get_type())
-#define GST_QROVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QROVERLAY,Gstqroverlay))
-#define GST_QROVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QROVERLAY,GstqroverlayClass))
-#define GST_IS_QROVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QROVERLAY))
-#define GST_IS_QROVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QROVERLAY))
+#define GST_TYPE_QR_OVERLAY (gst_qr_overlay_get_type())
 
-typedef struct _Gstqroverlay      Gstqroverlay;
-typedef struct _GstqroverlayClass GstqroverlayClass;
+G_DECLARE_FINAL_TYPE(GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstBaseTransform);
 
-struct _Gstqroverlay {
+struct _GstQROverlay {
   GstBaseTransform element;
 
   guint32	frame_number;
@@ -64,12 +54,6 @@ struct _Gstqroverlay {
   gboolean	extra_data_enabled;
 };
 
-struct _GstqroverlayClass {
-  GstBaseTransformClass parent_class;
-};
-
-GType gst_qroverlay_get_type (void);
-
 G_END_DECLS
 
-#endif /* __GST_QROVERLAY_H__ */
+#endif /* __GST_QR_OVERLAY_H__ */

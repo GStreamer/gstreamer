@@ -22,20 +22,23 @@
 /**
  * SECTION:element-qroverlay
  *
- * This element will build a Json string that contain a desciption of the buffer and will convert Json string to a Qrcode
- * The Qrcode contain a timestamp, a buffer number, a framerate and a extra-data that is custom
- * Each frame will have a Qrcode overlay in video
- * Some properties are available to set the postion and to define the size of it
- * You can add custom data with the properties extra-data-name and extra-data-array.
- * You can define quality of the Qrcode with qrcode-error-correction
- * Also you can define interval and span of the extra-data-name and extra-data-array
- * The 
- * <refsect2>
- * <title>Example launch line</title>
- * |[
+ * This element will build a Json string that contains a description of the
+ * buffer and will convert the string to a QRcode. The QRcode contains a
+ * timestamp, a buffer number, a framerate and some custom extra-data. Each
+ * frame will have a Qrcode overlaid in the video stream. Some properties are
+ * available to set the position and to define its size. You can add custom data
+ * with the properties #qroverlay:extra-data-name and
+ * #qroverlay:extra-data-array. You can also define the quality of the Qrcode
+ * with #qroverlay:qrcode-error-correction. You can also define interval and
+ * span of #qrovlerlay:extra-data-name #qrovlerlay:extra-data-array
+ *
+ * ## Example launch line
+ *
+ * ``` bash
  * gst-launch -v -m videotestsrc ! qroverlay ! fakesink silent=TRUE
- * ]|
- * </refsect2>
+ * ```
+ *
+ * Since: 1.20
  */
 
 #ifdef HAVE_CONFIG_H
@@ -44,7 +47,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/controller/controller.h>
 
 #include <qrencode.h>
 #include <string.h>
@@ -53,8 +55,8 @@
 
 #include "gstqroverlay.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_qroverlay_debug);
-#define GST_CAT_DEFAULT gst_qroverlay_debug
+GST_DEBUG_CATEGORY_STATIC (gst_qr_overlay_debug);
+#define GST_CAT_DEFAULT gst_qr_overlay_debug
 
 enum
 {
@@ -111,25 +113,25 @@ gst_qrcode_quality_get_type (void)
   return qrcode_quality_type;
 }
 
-#define gst_qroverlay_parent_class parent_class
-G_DEFINE_TYPE (Gstqroverlay, gst_qroverlay, GST_TYPE_BASE_TRANSFORM);
+#define gst_qr_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstQROverlay, gst_qr_overlay, GST_TYPE_BASE_TRANSFORM);
 
 static gboolean
-gst_qroverlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out);
+gst_qr_overlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out);
 
-static void gst_qroverlay_set_property (GObject * object, guint prop_id,
+static void gst_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_qroverlay_get_property (GObject * object, guint prop_id,
+static void gst_qr_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_qroverlay_transform_ip (GstBaseTransform * base,
+static GstFlowReturn gst_qr_overlay_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
 
 /* GObject vmethod implementations */
 
 /* initialize the qroverlay's class */
 static void
-gst_qroverlay_class_init (GstqroverlayClass * klass)
+gst_qr_overlay_class_init (GstQROverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -138,8 +140,8 @@ gst_qroverlay_class_init (GstqroverlayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
-  gobject_class->set_property = gst_qroverlay_set_property;
-  gobject_class->get_property = gst_qroverlay_get_property;
+  gobject_class->set_property = gst_qr_overlay_set_property;
+  gobject_class->get_property = gst_qr_overlay_get_property;
 
   g_object_class_install_property (gobject_class,
       PROP_X_AXIS, g_param_spec_float ("x",
@@ -162,25 +164,26 @@ gst_qroverlay_class_init (GstqroverlayClass * klass)
       PROP_DATA_INTERVAL_BUFFERS,
       g_param_spec_int64 ("extra-data-interval-buffers",
           "extra-data-interval-buffers",
-          "Extra data appened into the Qrcode at the first buffer of each interval",
-          0, G_MAXINT64, 60, G_PARAM_READWRITE));
+          "Extra data append into the Qrcode at the first buffer of each "
+          " interval", 0, G_MAXINT64, 60, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       PROP_DATA_SPAN_BUFFERS, g_param_spec_int64 ("extra-data-span-buffers",
           "extra-data-span-buffers",
-          "Numbers of consecutive buffers that the extra data will be inserted (counting the first buffer)",
-          0, G_MAXINT64, 1, G_PARAM_READWRITE));
+          "Numbers of consecutive buffers that the extra data will be inserted "
+          " (counting the first buffer)", 0, G_MAXINT64, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       PROP_EXTRA_DATA_NAME, g_param_spec_string ("extra-data-name",
-          "Json key name for extra appened data",
-          "Json key name for extra appened data", NULL, G_PARAM_READWRITE));
+          "Extra data name",
+          "Json key name for extra append data", NULL, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       PROP_EXTRA_DATA_ARRAY, g_param_spec_string ("extra-data-array",
-          "List of comma separated values that the extra data value will be cycled from at each interval, exemple array structure : \"240,480,720,960,1200,1440,1680,1920\"",
-          "List of comma separated values that the extra data value will be cycled from at each interval, exemple array structure : \"240,480,720,960,1200,1440,1680,1920\"",
-          NULL, G_PARAM_READWRITE));
+          "Extra data array",
+          "List of comma separated values that the extra data value will be "
+          " cycled from at each interval, example array structure :"
+          " \"240,480,720,960,1200,1440,1680,1920\"", NULL, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_QRCODE_ERROR_CORRECTION,
       g_param_spec_enum ("qrcode-error-correction", "qrcode-error-correction",
@@ -198,16 +201,18 @@ gst_qroverlay_class_init (GstqroverlayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
+  gst_type_mark_as_plugin_api (GST_TYPE_QRCODE_QUALITY, 0);
+
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_qroverlay_transform_ip);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_qroverlay_set_caps);
+      GST_DEBUG_FUNCPTR (gst_qr_overlay_transform_ip);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_qr_overlay_set_caps);
 }
 
 /* initialize the new element
  * initialize instance structure
  */
 static void
-gst_qroverlay_init (Gstqroverlay * filter)
+gst_qr_overlay_init (GstQROverlay * filter)
 {
   filter->frame_number = 1;
   filter->x_percent = 50.0;
@@ -226,10 +231,10 @@ gst_qroverlay_init (Gstqroverlay * filter)
 }
 
 static void
-gst_qroverlay_set_property (GObject * object, guint prop_id,
+gst_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstqroverlay *filter = GST_QROVERLAY (object);
+  GstQROverlay *filter = GST_QR_OVERLAY (object);
 
   switch (prop_id) {
     case PROP_X_AXIS:
@@ -263,10 +268,10 @@ gst_qroverlay_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_qroverlay_get_property (GObject * object, guint prop_id,
+gst_qr_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstqroverlay *filter = GST_QROVERLAY (object);
+  GstQROverlay *filter = GST_QR_OVERLAY (object);
 
   switch (prop_id) {
     case PROP_X_AXIS:
@@ -300,9 +305,9 @@ gst_qroverlay_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_qroverlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
+gst_qr_overlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
-  Gstqroverlay *filter = GST_QROVERLAY (trans);
+  GstQROverlay *filter = GST_QR_OVERLAY (trans);
   GstStructure *structure;
   const GValue *framerate_value;
   guint i;
@@ -345,7 +350,7 @@ gst_qroverlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 }
 
 gchar *
-parse_data_array (Gstqroverlay * filter, gchar * value_in_array)
+parse_data_array (GstQROverlay * filter, gchar * value_in_array)
 {
   guint value_size;
   guint i, j, k, count;
@@ -392,7 +397,7 @@ build_string (GstBaseTransform * base, GstBuffer * outbuf,
   gchar *extra_data_value = NULL;
   int size_string;
 
-  Gstqroverlay *filter = GST_QROVERLAY (base);
+  GstQROverlay *filter = GST_QR_OVERLAY (base);
   GST_DEBUG_OBJECT (filter, "Build string will be encoded");
   /* Convert timestamp to string */
   if (!(timestamp = malloc (35 * sizeof (char *))))
@@ -470,7 +475,7 @@ build_string (GstBaseTransform * base, GstBuffer * outbuf,
 }
 
 void
-overlay_qr_in_frame (Gstqroverlay * filter, QRcode * qrcode, GstBuffer * outbuf)
+overlay_qr_in_frame (GstQROverlay * filter, QRcode * qrcode, GstBuffer * outbuf)
 {
   GstMapInfo current_info;
   guchar *source_data;
@@ -532,9 +537,9 @@ overlay_qr_in_frame (Gstqroverlay * filter, QRcode * qrcode, GstBuffer * outbuf)
 /* this function does the actual processing
  */
 static GstFlowReturn
-gst_qroverlay_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+gst_qr_overlay_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  Gstqroverlay *filter = GST_QROVERLAY (base);
+  GstQROverlay *filter = GST_QR_OVERLAY (base);
   QRcode *qrcode;
   gchar *encode_string;
 
@@ -560,13 +565,11 @@ gst_qroverlay_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 static gboolean
 qroverlay_init (GstPlugin * qroverlay)
 {
-  /* initialize gst controller library */
-  //gst_controller_init(NULL, NULL);
-  GST_DEBUG_CATEGORY_INIT (gst_qroverlay_debug, "qroverlay", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_qr_overlay_debug, "qroverlay", 0,
       "Qrcode overlay element");
 
   return gst_element_register (qroverlay, "qroverlay", GST_RANK_NONE,
-      GST_TYPE_QROVERLAY);
+      GST_TYPE_QR_OVERLAY);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
