@@ -453,28 +453,10 @@ gst_clear_tag_list (GstTagList ** taglist_ptr)
   gst_clear_mini_object ((GstMiniObject **) taglist_ptr);
 }
 
-/**
- * gst_tag_list_copy: (skip)
- * @taglist: a #GstTagList.
- *
- * Creates a new #GstTagList as a copy of the old @taglist. The new taglist
- * will have a refcount of 1, owned by the caller, and will be writable as
- * a result.
- *
- * Note that this function is the semantic equivalent of a gst_tag_list_ref()
- * followed by a gst_tag_list_make_writable(). If you only want to hold on to a
- * reference to the data, you should use gst_tag_list_ref().
- *
- * When you are finished with the taglist, call gst_tag_list_unref() on it.
- *
- * Returns: the new #GstTagList
- */
-static inline GstTagList* gst_tag_list_copy(const GstTagList* taglist);
-static inline GstTagList *
-gst_tag_list_copy (const GstTagList * taglist)
-{
-  return GST_TAG_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (taglist)));
-}
+GST_API
+GstTagList* gst_tag_list_copy(const GstTagList* taglist);
+
+#define gst_tag_list_copy(taglist) GST_TAG_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (taglist)))
 
 /**
  * gst_tag_list_replace:

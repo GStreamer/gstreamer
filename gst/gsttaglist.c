@@ -2062,3 +2062,24 @@ gst_tag_list_get_sample_index (const GstTagList * list,
   *sample = g_value_dup_boxed (v);
   return (*sample != NULL);
 }
+
+/**
+ * gst_tag_list_copy:
+ * @taglist: a #GstTagList.
+ *
+ * Creates a new #GstTagList as a copy of the old @taglist. The new taglist
+ * will have a refcount of 1, owned by the caller, and will be writable as
+ * a result.
+ *
+ * Note that this function is the semantic equivalent of a gst_tag_list_ref()
+ * followed by a gst_tag_list_make_writable(). If you only want to hold on to a
+ * reference to the data, you should use gst_tag_list_ref().
+ *
+ * When you are finished with the taglist, call gst_tag_list_unref() on it.
+ *
+ * Returns: the new #GstTagList
+ */
+GstTagList *(gst_tag_list_copy) (const GstTagList * taglist)
+{
+  return GST_TAG_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (taglist)));
+}
