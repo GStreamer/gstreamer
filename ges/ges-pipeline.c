@@ -1105,7 +1105,8 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
 
       GST_DEBUG_OBJECT (pipeline, "Setting presence to 1!");
       gst_encoding_profile_set_single_segment (tmpprofiles->data, TRUE);
-      gst_encoding_profile_set_presence (tmpprofiles->data, 1);
+      if (gst_encoding_profile_get_presence (tmpprofiles->data) == 0)
+        gst_encoding_profile_set_presence (tmpprofiles->data, 1);
       gst_encoding_profile_set_allow_dynamic_output (tmpprofiles->data, FALSE);
     }
   }
