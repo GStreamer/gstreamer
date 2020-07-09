@@ -61,10 +61,6 @@ G_BEGIN_DECLS
 #define GST_IS_RPICAMSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RPICAMSRC))
 
-#if GST_CHECK_PLUGINS_BASE_VERSION(1, 9, 2)
-#define GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
-#endif
-
 typedef struct _GstRpiCamSrc      GstRpiCamSrc;
 typedef struct _GstRpiCamSrcClass GstRpiCamSrcClass;
 
@@ -83,9 +79,7 @@ struct _GstRpiCamSrc
   /* channels for interface */
   GList *channels;
 
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   GstVideoOrientationMethod orientation;
-#endif
 
   GstClockTime duration;
 };

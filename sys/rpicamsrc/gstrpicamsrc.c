@@ -135,9 +135,7 @@ enum
   PROP_ANNOTATION_TEXT_COLOUR,
   PROP_ANNOTATION_TEXT_BG_COLOUR,
   PROP_INTRA_REFRESH_TYPE,
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   PROP_VIDEO_DIRECTION,
-#endif
   PROP_JPEG_QUALITY,
   PROP_USE_STC
 };
@@ -193,12 +191,6 @@ enum
 #define RAW_CAPS \
   GST_VIDEO_CAPS_MAKE ("{ I420, RGB, BGR, RGBA }")      /* FIXME: Map more raw formats */
 
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
-#define gst_rpi_cam_src_reset_custom_orientation(src) { src->orientation = GST_VIDEO_ORIENTATION_CUSTOM; }
-#else
-#define gst_rpi_cam_src_reset_custom_orientation(src) { }
-#endif
-
 static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -212,9 +204,7 @@ static void gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface *
     iface);
 static void gst_rpi_cam_src_orientation_init (GstVideoOrientationInterface *
     iface);
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
 static void gst_rpi_cam_src_direction_init (GstVideoDirectionInterface * iface);
-#endif
 
 static void gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -238,10 +228,8 @@ G_DEFINE_TYPE_WITH_CODE (GstRpiCamSrc, gst_rpi_cam_src,
     GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_rpi_cam_src_colorbalance_init);
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
         gst_rpi_cam_src_direction_init);
-#endif
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
         gst_rpi_cam_src_orientation_init));
 
@@ -492,10 +480,8 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           "Annotation text background colour (VUY)",
           "Set the annotation text background colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default",
           -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
       "video-direction");
-#endif
   g_object_class_install_property (gobject_class, PROP_USE_STC,
       g_param_spec_boolean ("use-stc", "Use System Time Clock",
           "Use the camera STC for timestamping buffers", TRUE,
@@ -655,7 +641,12 @@ gst_rpi_cam_src_colorbalance_get_balance_type (GstColorBalance * balance)
   return GST_COLOR_BALANCE_HARDWARE;
 }
 
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
+static void
+gst_rpi_cam_src_reset_custom_orientation (GstRpiCamSrc * src)
+{
+  src->orientation = GST_VIDEO_ORIENTATION_CUSTOM;
+}
+
 static void
 gst_rpi_cam_src_set_orientation (GstRpiCamSrc * src,
     GstVideoOrientationMethod orientation)
@@ -727,7 +718,6 @@ gst_rpi_cam_src_direction_init (GstVideoDirectionInterface * iface)
 {
   /* We implement the video-direction property */
 }
-#endif
 
 static void
 gst_rpi_cam_src_colorbalance_init (GstColorBalanceInterface * iface)
@@ -1023,11 +1013,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.intra_refresh_type = g_value_get_enum (value);
       src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
       break;
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
     case PROP_VIDEO_DIRECTION:
       gst_rpi_cam_src_set_orientation (src, g_value_get_enum (value));
       break;
-#endif
     case PROP_USE_STC:
       src->capture_config.useSTC = g_value_get_boolean (value);
       break;
@@ -1197,11 +1185,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     case PROP_INTRA_REFRESH_TYPE:
       g_value_set_enum (value, src->capture_config.intra_refresh_type);
       break;
-#ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
     case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, src->orientation);
       break;
-#endif
     case PROP_USE_STC:
       g_value_set_boolean (value, src->capture_config.useSTC);
       break;
