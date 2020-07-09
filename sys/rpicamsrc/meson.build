@@ -49,6 +49,17 @@ foreach rpi_lib : ['mmal_core', 'mmal_util', 'mmal_vc_client', 'vcos', 'bcm_host
   mmal_deps += [l]
 endforeach
 
+rpi_warn_flags = cc.get_supported_arguments([
+  # vcos/mmal headers
+  '-Wno-redundant-decls',
+  # RaspiCapture.c + RaspiCamControl.c
+  '-Wno-discarded-qualifiers',
+  '-Wno-declaration-after-statement',
+  '-Wno-missing-prototypes',
+  '-Wno-missing-declarations',
+  '-Wno-stringop-truncation',
+])
+
 gnome = import('gnome')
 
 enums = gnome.mkenums_simple('gstrpicam-enum-types',
@@ -59,7 +70,7 @@ enums = gnome.mkenums_simple('gstrpicam-enum-types',
 # we might need '-Wl,--no-as-needed' or b_asneeded=false on ubuntu, tbd
 gstrpicamsrc = library('gstrpicamsrc',
   rpicamsrc_sources, enums,
-  c_args: [gst_plugins_good_args, rpi_inc_args],
+  c_args: [gst_plugins_good_args, rpi_inc_args, rpi_warn_flags],
   include_directories: [configinc, libsinc],
   dependencies: [gst_dep, gstbase_dep, gstvideo_dep] + mmal_deps,
   install_dir: plugins_install_dir,

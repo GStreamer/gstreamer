@@ -126,7 +126,7 @@ typedef struct
 
 typedef struct RASPIVID_STATE_T RASPIVID_STATE;
 
-void raspicapture_init();
+void raspicapture_init(void);
 void raspicapture_default_config(RASPIVID_CONFIG *config);
 RASPIVID_STATE *raspi_capture_setup(RASPIVID_CONFIG *config);
 gboolean raspi_capture_start(RASPIVID_STATE *state);

@@ -246,7 +246,9 @@ G_DEFINE_TYPE_WITH_CODE (GstRpiCamSrc, gst_rpi_cam_src,
 
 #define C_ENUM(v) ((gint) v)
 
-GType
+static GType gst_rpi_cam_src_sensor_mode_get_type (void);
+
+static GType
 gst_rpi_cam_src_sensor_mode_get_type (void)
 {
   static const GEnumValue values[] = {

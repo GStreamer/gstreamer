@@ -1627,7 +1627,7 @@ static void check_disable_port(MMAL_PORT_T *port)
       mmal_port_disable(port);
 }
 
-void raspicapture_init()
+void raspicapture_init(void)
 {
    bcm_host_init();
 
