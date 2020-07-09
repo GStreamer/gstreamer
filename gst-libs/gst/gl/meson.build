@@ -723,7 +723,7 @@ if need_win_winrt != 'no' and host_system == 'windows'
       enabled_gl_winsys += 'winrt'
       glconf.set10('GST_GL_HAVE_WINDOW_WINRT', 1)
       gl_sources += [
-        'winrt/gstglwindow_winrt_egl.c'
+        'winrt/gstglwindow_winrt_egl.cpp'
       ]
     elif need_win_winrt == 'yes'
       error('WinRT is enabled, but headers/libraries were not found')
@@ -978,6 +978,7 @@ if build_gstgl
   gstgl = library('gstgl-' + api_version,
     gl_sources, gl_priv_sources, gl_enumtypes_c, gl_enumtypes_h,
     c_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
+    cpp_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
     objc_args : gst_plugins_base_args + gl_cpp_args + gl_objc_args + ['-DBUILDING_GST_GL'],
     include_directories : [configinc, libsinc, gl_includes],
     version : libversion,
