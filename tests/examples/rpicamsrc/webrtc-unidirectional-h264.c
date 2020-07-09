@@ -184,7 +184,9 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       G_CALLBACK (soup_websocket_message_cb), (gpointer) receiver_entry);
 
   error = NULL;
-  receiver_entry->pipeline = gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://" STUN_SERVER " "
+  receiver_entry->pipeline =
+      gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://"
+      STUN_SERVER " "
       "rpicamsrc bitrate=600000 annotation-mode=12 preview=false ! video/x-h264,profile=constrained-baseline,width=640,height=360,level=3.0 ! queue max-size-time=100000000 ! h264parse ! "
       "rtph264pay config-interval=-1 name=payloader ! "
       "application/x-rtp,media=video,encoding-name=H264,payload="
