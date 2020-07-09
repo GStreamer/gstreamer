@@ -47,6 +47,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <json-glib/json-glib.h>
 
 #include <qrencode.h>
 #include <string.h>
@@ -220,11 +221,8 @@ gst_qr_overlay_init (GstQROverlay * filter)
   filter->y_percent = 50.0;
   filter->qrcode_quality = DEFAULT_PROP_QUALITY;
   filter->level = QR_ECLEVEL_M;
-  filter->extra_data_name = 0;
-  filter->extra_data_array = 0;
-  filter->extra_data_enabled = FALSE;
   filter->array_counter = 0;
-  filter->array_size = 1;
+  filter->array_size = 0;
   filter->extra_data_interval_buffers = 60;
   filter->extra_data_span_buffers = 1;
   filter->span_frame = 0;
@@ -260,8 +258,16 @@ gst_qr_overlay_set_property (GObject * object, guint prop_id,
       filter->extra_data_name = g_value_dup_string (value);
       break;
     case PROP_EXTRA_DATA_ARRAY:
-      filter->extra_data_array = g_value_dup_string (value);
+    {
+      g_clear_pointer (&filter->extra_data_str, g_free);
+      g_clear_pointer (&filter->extra_data_array, g_strfreev);
+      filter->extra_data_str = g_value_dup_string (value);
+      if (filter->extra_data_str) {
+        filter->extra_data_array = g_strsplit (filter->extra_data_str, ",", -1);
+        filter->array_size = g_strv_length (filter->extra_data_array);
+      }
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -297,7 +303,7 @@ gst_qr_overlay_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, filter->extra_data_name);
       break;
     case PROP_EXTRA_DATA_ARRAY:
-      g_value_set_string (value, filter->extra_data_array);
+      g_value_set_string (value, filter->extra_data_str);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -311,7 +317,6 @@ gst_qr_overlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   GstQROverlay *filter = GST_QR_OVERLAY (trans);
   GstStructure *structure;
   const GValue *framerate_value;
-  guint i;
 
   structure = gst_caps_get_structure (in, 0);
   framerate_value = gst_structure_get_value (structure, "framerate");
@@ -339,129 +344,34 @@ gst_qr_overlay_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
       GST_ERROR_OBJECT (filter, "Invalid level");
       break;
   }
-  if (filter->extra_data_array && filter->extra_data_name
-      && strlen (filter->extra_data_array) > 3
-      && strlen (filter->extra_data_name) > 0) {
-    filter->extra_data_enabled = TRUE;
-    for (i = 0; filter->extra_data_array[i]; i++)
-      if (filter->extra_data_array[i] == ',')
-        filter->array_size++;
-  }
   return TRUE;
 }
 
 static gchar *
-parse_data_array (GstQROverlay * filter, gchar * value_in_array)
+build_string (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  guint value_size;
-  guint i, j, k, count;
-
-  GST_LOG_OBJECT (filter, "Select data in array");
-  for (i = 0, count = 0; filter->extra_data_array[i]; i++) {
-    if (filter->extra_data_array[i] == ',')
-      count++;
-    if (count == filter->array_counter)
-      break;
-  }
-  for (j = i, value_size = 0; filter->extra_data_array[j]; j++) {
-    value_size++;
-    if (j > i && (filter->extra_data_array[j] == ','
-            || filter->extra_data_array[j] == '"'))
-      break;
-  }
-  if (!(value_in_array = malloc (value_size + 1 * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to value in array");
-  for (j = i, k = 0; filter->extra_data_array[j]; j++) {
-    if (j > i && (filter->extra_data_array[j] == ','
-            || filter->extra_data_array[j] == '"'))
-      break;
-    else if (filter->extra_data_array[j] != ','
-        && filter->extra_data_array[j] != '"') {
-      value_in_array[k] = filter->extra_data_array[j];
-      k++;
-    }
-  }
-  value_in_array[k] = '\0';
-  return value_in_array;
-}
-
-static gchar *
-build_string (GstBaseTransform * base, GstBuffer * outbuf,
-    gchar * encode_string)
-{
-  gchar *timestamp;
-  gchar *value;
-  gchar *buffer_count;
-  gchar *framerate;
-  gchar *element_name;
-  gchar *name;
-  gchar *extra_data_value = NULL;
-  int size_string;
+  GString *res = g_string_new (NULL);
+  JsonGenerator *jgen;
 
   GstQROverlay *filter = GST_QR_OVERLAY (base);
-  GST_DEBUG_OBJECT (filter, "Build string will be encoded");
-  /* Convert timestamp to string */
-  if (!(timestamp = malloc (35 * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to timestamp");
-  if (!(value = malloc (20 * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to timestamp value");
-  sprintf (value, "%llu",
-      (long long unsigned int) GST_BUFFER_TIMESTAMP (outbuf));
-  strcpy (timestamp, "\"timestamp\":");
-  timestamp = strcat (timestamp, value);
-  timestamp = strcat (timestamp, ",");
-  strcpy (encode_string, "{");
-  GST_LOG_OBJECT (filter, "Build timestamp string");
-  encode_string = strcat (encode_string, timestamp);
-  g_free (value);
-  g_free (timestamp);
-  /* Convert frame number to string */
-  if (!(buffer_count = malloc (23 * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to buffer count");
-  if (!(value = malloc (7 * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to buffer counr value");
-  strcpy (buffer_count, "\"buffercount\":");
-  sprintf (value, "%d", filter->frame_number);
-  buffer_count = strcat (buffer_count, value);
-  buffer_count = strcat (buffer_count, ",");
-  GST_LOG_OBJECT (filter, "Build buffer count string");
-  encode_string = strcat (encode_string, buffer_count);
-  g_free (value);
-  g_free (buffer_count);
-  /* Convert framerate to string */
-  size_string = strlen (filter->framerate_string);
-  if (!(framerate = malloc ((18 + size_string) * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to framerate");
-  strcpy (framerate, "\"framerate\":\"");
-  framerate = strcat (framerate, filter->framerate_string);
-  framerate = strcat (framerate, "\",");
-  GST_LOG_OBJECT (filter, "Build framerate string");
-  encode_string = strcat (encode_string, framerate);
-  g_free (framerate);
-  /* element name string */
-  name = GST_ELEMENT_NAME (base);
-  size_string = strlen (name);
-  if (!(element_name = malloc ((14 + size_string) * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to element name");
-  strcpy (element_name, "\"name\":\"");
-  element_name = strcat (element_name, name);
-  element_name = strcat (element_name, "\",");
-  GST_LOG_OBJECT (filter, "Build element name string");
-  encode_string = strcat (encode_string, element_name);
-  g_free (element_name);
-  if (filter->extra_data_enabled &&
+  JsonObject *jobj = json_object_new ();
+  JsonNode *root = json_node_new (JSON_NODE_OBJECT);
+
+  json_object_set_int_member (jobj, "TIMESTAMP",
+      (gint64) GST_BUFFER_TIMESTAMP (outbuf));
+  json_object_set_int_member (jobj, "BUFFERCOUNT",
+      (gint64) filter->frame_number);
+  json_object_set_string_member (jobj, "FRAMERATE", filter->framerate_string);
+  json_object_set_string_member (jobj, "NAME", GST_ELEMENT_NAME (base));
+
+  if (filter->extra_data_array && filter->extra_data_name &&
       (filter->frame_number == 1
           || filter->frame_number % filter->extra_data_interval_buffers == 1
           || (filter->span_frame > 0
               && filter->span_frame < filter->extra_data_span_buffers))) {
-    extra_data_value = parse_data_array (filter, extra_data_value);
-    GST_LOG_OBJECT (filter, "Build extra data string");
-    encode_string = strcat (encode_string, "\"");
-    encode_string = strcat (encode_string, filter->extra_data_name);
-    encode_string = strcat (encode_string, "\":\"");
-    encode_string = strcat (encode_string, extra_data_value);
-    encode_string = strcat (encode_string, "\",");
-    g_free (extra_data_value);
+    json_object_set_string_member (jobj, filter->extra_data_name,
+        filter->extra_data_array[filter->array_counter]);
+
     filter->span_frame++;
     if (filter->span_frame == filter->extra_data_span_buffers) {
       filter->array_counter++;
@@ -470,9 +380,14 @@ build_string (GstBaseTransform * base, GstBuffer * outbuf,
         filter->array_counter = 0;
     }
   }
-  encode_string = strcat (encode_string, "}");
-  GST_LOG_OBJECT (filter, "String built");
-  return encode_string;
+
+  jgen = json_generator_new ();
+  json_node_set_object (root, jobj);
+  json_generator_set_root (jgen, root);
+  res = json_generator_to_gstring (jgen, res);
+  g_object_unref (jgen);
+
+  return g_strdup (g_string_free (res, FALSE));
 }
 
 static void
@@ -546,9 +461,7 @@ gst_qr_overlay_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
     gst_object_sync_values (GST_OBJECT (filter), GST_BUFFER_TIMESTAMP (outbuf));
-  if (!(encode_string = malloc (150 * sizeof (char *))))
-    GST_ERROR_OBJECT (filter, "can't alloc memory to timestamp");
-  encode_string = build_string (base, outbuf, encode_string);
+  encode_string = build_string (base, outbuf);
   GST_INFO_OBJECT (filter, "String will be encoded : %s", encode_string);
   qrcode =
       QRcode_encodeString ((const char *) encode_string, 0,

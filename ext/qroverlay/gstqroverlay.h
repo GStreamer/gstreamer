@@ -26,34 +26,34 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_QR_OVERLAY (gst_qr_overlay_get_type())
+G_DECLARE_FINAL_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY,
+    GstBaseTransform);
 
-G_DECLARE_FINAL_TYPE(GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstBaseTransform);
-
-struct _GstQROverlay {
+struct _GstQROverlay
+{
   GstBaseTransform element;
 
-  guint32	frame_number;
-  guint32	width;
-  guint32	height;
-  gfloat	qrcode_size;
-  guint 	qrcode_quality;
-  guint 	array_counter;
-  guint 	array_size;
-  guint 	span_frame;
-  guint64	extra_data_interval_buffers;
-  guint64	extra_data_span_buffers;
+  guint32 frame_number;
+  guint32 width;
+  guint32 height;
+  gfloat qrcode_size;
+  guint qrcode_quality;
+  guint array_counter;
+  guint array_size;
+  guint span_frame;
+  guint64 extra_data_interval_buffers;
+  guint64 extra_data_span_buffers;
   QRecLevel level;
-  gchar		*framerate_string;
-  const gchar 	*extra_data_name;
-  const gchar		*extra_data_array;
-  gfloat	x_percent;
-  gfloat	y_percent;
-  gboolean	silent;
-  gboolean	extra_data_enabled;
+  gchar *framerate_string;
+  gchar *extra_data_name;
+  gchar *extra_data_str;
+  gchar **extra_data_array;
+  gfloat x_percent;
+  gfloat y_percent;
+  gboolean silent;
+  gboolean extra_data_enabled;
 };
 
 G_END_DECLS
-
 #endif /* __GST_QR_OVERLAY_H__ */
