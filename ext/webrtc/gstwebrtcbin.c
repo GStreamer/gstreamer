@@ -265,6 +265,14 @@ gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     GST_DEBUG_OBJECT (parent,
         "On %" GST_PTR_FORMAT " checking negotiation? %u, caps %"
         GST_PTR_FORMAT, pad, check_negotiation, caps);
+
+    if (check_negotiation) {
+      WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (wpad->trans);
+      const GstStructure *s;
+
+      s = gst_caps_get_structure (caps, 0);
+      gst_structure_get_uint (s, "ssrc", &trans->current_ssrc);
+    }
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     check_negotiation = TRUE;
   }
