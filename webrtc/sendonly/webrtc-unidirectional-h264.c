@@ -15,16 +15,18 @@
 #include <string.h>
 
 #define RTP_PAYLOAD_TYPE "96"
+#define RTP_AUDIO_PAYLOAD_TYPE "97"
 #define SOUP_HTTP_PORT 57778
 #define STUN_SERVER "stun.l.google.com:19302"
+
+gchar *video_priority = NULL;
+gchar *audio_priority = NULL;
+
 
 typedef struct _ReceiverEntry ReceiverEntry;
 
 ReceiverEntry *create_receiver_entry (SoupWebsocketConnection * connection);
 void destroy_receiver_entry (gpointer receiver_entry_ptr);
-
-GstPadProbeReturn payloader_caps_event_probe_cb (GstPad * pad,
-    GstPadProbeInfo * info, gpointer user_data);
 
 void on_offer_created_cb (GstPromise * promise, gpointer user_data);
 void on_negotiation_needed_cb (GstElement * webrtcbin, gpointer user_data);
@@ -191,6 +193,24 @@ bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
   return G_SOURCE_CONTINUE;
 }
 
+static GstWebRTCPriorityType
+_priority_from_string (const gchar * s)
+{
+  GEnumClass *klass =
+      (GEnumClass *) g_type_class_ref (GST_TYPE_WEBRTC_PRIORITY_TYPE);
+  GEnumValue *en;
+
+  g_return_val_if_fail (klass, 0);
+  if (!(en = g_enum_get_value_by_name (klass, s)))
+    en = g_enum_get_value_by_nick (klass, s);
+  g_type_class_unref (klass);
+
+  if (en)
+    return en->value;
+
+  return 0;
+}
+
 ReceiverEntry *
 create_receiver_entry (SoupWebsocketConnection * connection)
 {
@@ -215,7 +235,9 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       "v4l2src ! videorate ! videoscale ! video/x-raw,width=640,height=360,framerate=15/1 ! videoconvert ! queue max-size-buffers=1 ! x264enc bitrate=600 speed-preset=ultrafast tune=zerolatency key-int-max=15 ! video/x-h264,profile=constrained-baseline ! queue max-size-time=100000000 ! h264parse ! "
       "rtph264pay config-interval=-1 name=payloader aggregate-mode=zero-latency ! "
       "application/x-rtp,media=video,encoding-name=H264,payload="
-      RTP_PAYLOAD_TYPE " ! webrtcbin. ", &error);
+      RTP_PAYLOAD_TYPE " ! webrtcbin. "
+      "autoaudiosrc is-live=1 ! queue max-size-buffers=1 leaky=downstream ! opusenc ! rtpopuspay pt="
+      RTP_AUDIO_PAYLOAD_TYPE " ! webrtcbin. ", &error);
   if (error != NULL) {
     g_error ("Could not create WebRTC pipeline: %s\n", error->message);
     g_error_free (error);
@@ -228,9 +250,25 @@ create_receiver_entry (SoupWebsocketConnection * connection)
 
   g_signal_emit_by_name (receiver_entry->webrtcbin, "get-transceivers",
       &transceivers);
-  g_assert (transceivers != NULL && transceivers->len > 0);
+  g_assert (transceivers != NULL && transceivers->len > 1);
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
   trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  if (video_priority) {
+    GstWebRTCPriorityType priority;
+
+    priority = _priority_from_string (video_priority);
+    if (priority)
+      gst_webrtc_rtp_sender_set_priority (trans->sender, priority);
+  }
+  trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
+  trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  if (audio_priority) {
+    GstWebRTCPriorityType priority;
+
+    priority = _priority_from_string (audio_priority);
+    if (priority)
+      gst_webrtc_rtp_sender_set_priority (trans->sender, priority);
+  }
   g_array_unref (transceivers);
 
   g_signal_connect (receiver_entry->webrtcbin, "on-negotiation-needed",
@@ -583,15 +621,35 @@ exit_sighandler (gpointer user_data)
 }
 #endif
 
+
+static GOptionEntry entries[] = {
+  {"video-priority", 0, 0, G_OPTION_ARG_STRING, &video_priority,
+        "Priority of the video stream (very-low, low, medium or high)",
+      "PRIORITY"},
+  {"audio-priority", 0, 0, G_OPTION_ARG_STRING, &audio_priority,
+        "Priority of the audio stream (very-low, low, medium or high)",
+      "PRIORITY"},
+  {NULL},
+};
+
 int
 main (int argc, char *argv[])
 {
   GMainLoop *mainloop;
   SoupServer *soup_server;
   GHashTable *receiver_entry_table;
+  GOptionContext *context;
+  GError *error = NULL;
 
   setlocale (LC_ALL, "");
-  gst_init (&argc, &argv);
+
+  context = g_option_context_new ("- gstreamer webrtc sendonly demo");
+  g_option_context_add_main_entries (context, entries, NULL);
+  g_option_context_add_group (context, gst_init_get_option_group ());
+  if (!g_option_context_parse (context, &argc, &argv, &error)) {
+    g_printerr ("Error initializing: %s\n", error->message);
+    return -1;
+  }
 
   receiver_entry_table =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
