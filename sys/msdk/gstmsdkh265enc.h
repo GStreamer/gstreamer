@@ -55,7 +55,7 @@ struct _GstMsdkH265Enc
 {
   GstMsdkEnc base;
 
-  gint lowpower;
+  gboolean lowpower;
   gushort num_tile_rows;
   gushort num_tile_cols;
   guint max_slice_size;
