@@ -875,7 +875,11 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
   gint downstream_rate;
   GstStructure *s;
 
-  if (!downstream_caps || gst_caps_is_empty (downstream_caps)) {
+  /* Returns NULL if there is no downstream peer */
+  if (!downstream_caps)
+    downstream_caps = gst_pad_get_pad_template_caps (agg->srcpad);
+
+  if (gst_caps_is_empty (downstream_caps)) {
     ret = FALSE;
     goto done;
   }
