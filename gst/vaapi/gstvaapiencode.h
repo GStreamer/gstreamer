@@ -51,6 +51,18 @@ struct _GstVaapiEncodeInitData
   GstCaps *src_caps;
 };
 
+/* *INDENT-OFF* */
+#define GST_VAAPI_ENCODE_STATIC_SINK_CAPS                \
+  GST_VAAPI_MAKE_SURFACE_CAPS ", "                       \
+  GST_CAPS_INTERLACED_FALSE "; "                         \
+  GST_VIDEO_CAPS_MAKE (GST_VAAPI_FORMATS_ALL) ", "       \
+  GST_CAPS_INTERLACED_FALSE ";"                          \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES(                     \
+      GST_CAPS_FEATURE_MEMORY_DMABUF,                    \
+      GST_VAAPI_FORMATS_ALL) ","                         \
+  GST_CAPS_INTERLACED_FALSE
+/* *INDENT-ON* */
+
 #define GST_VAAPI_ENCODE_REGISTER_TYPE(NAME, CODEC, CLASS, _EXT_FMT_, FUN) \
   static GstVaapiEncodeInitData encode_init_data = { NULL, NULL };         \
   static GType encode_type = G_TYPE_INVALID;                               \
