@@ -42,16 +42,28 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265enc_debug);
 
 enum
 {
+#ifndef GST_REMOVE_DEPRECATED
   PROP_LOW_POWER = GST_MSDKENC_PROP_MAX,
   PROP_TILE_ROW,
+#else
+  PROP_TILE_ROW = GST_MSDKENC_PROP_MAX,
+#endif
   PROP_TILE_COL,
   PROP_MAX_SLICE_SIZE,
+  PROP_TUNE_MODE,
+};
+
+enum
+{
+  GST_MSDK_FLAG_LOW_POWER = 1 << 0,
+  GST_MSDK_FLAG_TUNE_MODE = 1 << 1,
 };
 
 #define PROP_LOWPOWER_DEFAULT           FALSE
 #define PROP_TILE_ROW_DEFAULT           1
 #define PROP_TILE_COL_DEFAULT           1
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
+#define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
@@ -265,8 +277,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
           h265enc->num_tile_rows * h265enc->num_tile_cols;
   }
 
-  encoder->param.mfx.LowPower =
-      (h265enc->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF);
+  encoder->param.mfx.LowPower = h265enc->tune_mode;
 
   return TRUE;
 }
@@ -387,9 +398,18 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (thiz);
 
   switch (prop_id) {
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_LOW_POWER:
       thiz->lowpower = g_value_get_boolean (value);
+      thiz->prop_flag |= GST_MSDK_FLAG_LOW_POWER;
+
+      /* Ignore it if user set tune mode explicitly */
+      if (!(thiz->prop_flag & GST_MSDK_FLAG_TUNE_MODE))
+        thiz->tune_mode =
+            thiz->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
+
       break;
+#endif
 
     case PROP_TILE_ROW:
       thiz->num_tile_rows = g_value_get_uint (value);
@@ -401,6 +421,11 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
 
     case PROP_MAX_SLICE_SIZE:
       thiz->max_slice_size = g_value_get_uint (value);
+      break;
+
+    case PROP_TUNE_MODE:
+      thiz->tune_mode = g_value_get_enum (value);
+      thiz->prop_flag |= GST_MSDK_FLAG_TUNE_MODE;
       break;
 
     default:
@@ -421,9 +446,11 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
   GST_OBJECT_LOCK (thiz);
   switch (prop_id) {
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_LOW_POWER:
       g_value_set_boolean (value, thiz->lowpower);
       break;
+#endif
 
     case PROP_TILE_ROW:
       g_value_set_uint (value, thiz->num_tile_rows);
@@ -435,6 +462,10 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_MAX_SLICE_SIZE:
       g_value_set_uint (value, thiz->max_slice_size);
+      break;
+
+    case PROP_TUNE_MODE:
+      g_value_set_enum (value, thiz->tune_mode);
       break;
 
     default:
@@ -483,7 +514,8 @@ gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
 
     case GST_VIDEO_FORMAT_YUY2:
 #if (MFX_VERSION >= 1027)
-      if (encoder->codename >= MFX_PLATFORM_ICELAKE && !h265enc->lowpower)
+      if (encoder->codename >= MFX_PLATFORM_ICELAKE &&
+          h265enc->tune_mode == MFX_CODINGOPTION_OFF)
         return FALSE;
 #endif
     default:
@@ -523,9 +555,13 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 
   gst_msdkenc_install_common_properties (encoder_class);
 
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_LOW_POWER,
-      g_param_spec_boolean ("low-power", "Low power", "Enable low power mode",
-          PROP_LOWPOWER_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("low-power", "Low power",
+          "Enable low power mode (DEPRECATED, use tune instead)",
+          PROP_LOWPOWER_DEFAULT,
+          G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_TILE_ROW,
       g_param_spec_uint ("num-tile-rows", "number of rows for tiled encoding",
@@ -543,6 +579,12 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
       g_param_spec_uint ("max-slice-size", "Max Slice Size",
           "Maximum slice size in bytes (if enabled MSDK will ignore the control over num-slices)",
           0, G_MAXUINT32, PROP_MAX_SLICE_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TUNE_MODE,
+      g_param_spec_enum ("tune", "Encoder tuning",
+          "Encoder tuning option",
+          gst_msdkenc_tune_mode_get_type (), PROP_TUNE_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
@@ -563,5 +605,6 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->num_tile_rows = PROP_TILE_ROW_DEFAULT;
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
   thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
+  thiz->tune_mode = PROP_TUNE_MODE_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }

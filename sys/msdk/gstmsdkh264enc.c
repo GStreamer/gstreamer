@@ -45,12 +45,21 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkh264enc_debug);
 enum
 {
   PROP_CABAC = GST_MSDKENC_PROP_MAX,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_LOW_POWER,
+#endif
   PROP_FRAME_PACKING,
   PROP_RC_LA_DOWNSAMPLING,
   PROP_TRELLIS,
   PROP_MAX_SLICE_SIZE,
-  PROP_B_PYRAMID
+  PROP_B_PYRAMID,
+  PROP_TUNE_MODE,
+};
+
+enum
+{
+  GST_MSDK_FLAG_LOW_POWER = 1 << 0,
+  GST_MSDK_FLAG_TUNE_MODE = 1 << 1,
 };
 
 #define PROP_CABAC_DEFAULT              TRUE
@@ -60,6 +69,7 @@ enum
 #define PROP_TRELLIS_DEFAULT            _MFX_TRELLIS_NONE
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
 #define PROP_B_PYRAMID_DEFAULT          FALSE
+#define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -346,8 +356,7 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (encoder);
 
-  encoder->param.mfx.LowPower =
-      (thiz->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF);
+  encoder->param.mfx.LowPower = thiz->tune_mode;
   encoder->param.mfx.CodecId = MFX_CODEC_AVC;
   encoder->param.mfx.CodecProfile = thiz->profile;
   encoder->param.mfx.CodecLevel = thiz->level;
@@ -517,9 +526,18 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_CABAC:
       thiz->cabac = g_value_get_boolean (value);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_LOW_POWER:
       thiz->lowpower = g_value_get_boolean (value);
+      thiz->prop_flag |= GST_MSDK_FLAG_LOW_POWER;
+
+      /* Ignore it if user set tune mode explicitly */
+      if (!(thiz->prop_flag & GST_MSDK_FLAG_TUNE_MODE))
+        thiz->tune_mode =
+            thiz->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
+
       break;
+#endif
     case PROP_FRAME_PACKING:
       thiz->frame_packing = g_value_get_enum (value);
       break;
@@ -534,6 +552,10 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_B_PYRAMID:
       thiz->b_pyramid = g_value_get_boolean (value);
+      break;
+    case PROP_TUNE_MODE:
+      thiz->tune_mode = g_value_get_enum (value);
+      thiz->prop_flag |= GST_MSDK_FLAG_TUNE_MODE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -557,9 +579,11 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_CABAC:
       g_value_set_boolean (value, thiz->cabac);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_LOW_POWER:
       g_value_set_boolean (value, thiz->lowpower);
       break;
+#endif
     case PROP_FRAME_PACKING:
       g_value_set_enum (value, thiz->frame_packing);
       break;
@@ -574,6 +598,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_B_PYRAMID:
       g_value_set_boolean (value, thiz->b_pyramid);
+      break;
+    case PROP_TUNE_MODE:
+      g_value_set_enum (value, thiz->tune_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -632,9 +659,13 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
       g_param_spec_boolean ("cabac", "CABAC", "Enable CABAC entropy coding",
           PROP_CABAC_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_LOW_POWER,
-      g_param_spec_boolean ("low-power", "Low power", "Enable low power mode",
-          PROP_LOWPOWER_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("low-power", "Low power",
+          "Enable low power mode (DEPRECATED, use tune instead)",
+          PROP_LOWPOWER_DEFAULT,
+          G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_FRAME_PACKING,
       g_param_spec_enum ("frame-packing", "Frame Packing",
@@ -666,6 +697,12 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           "Enable B-Pyramid Reference structure", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_TUNE_MODE,
+      g_param_spec_enum ("tune", "Encoder tuning",
+          "Encoder tuning option",
+          gst_msdkenc_tune_mode_get_type (), PROP_TUNE_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder", "Codec/Encoder/Video/Hardware",
       "H264 video encoder based on Intel Media SDK",
@@ -683,4 +720,5 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->trellis = PROP_TRELLIS_DEFAULT;
   thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
+  thiz->tune_mode = PROP_TUNE_MODE_DEFAULT;
 }

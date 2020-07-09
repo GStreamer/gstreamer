@@ -69,6 +69,9 @@ gst_msdkenc_adaptive_i_get_type (void);
 GType
 gst_msdkenc_adaptive_b_get_type (void);
 
+GType
+gst_msdkenc_tune_mode_get_type (void);
+
 /*========= MSDK VPP Enums =========================*/
 
 GType

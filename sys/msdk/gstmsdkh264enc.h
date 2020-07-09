@@ -69,6 +69,8 @@ struct _GstMsdkH264Enc
   guint trellis;
   guint max_slice_size;
   guint b_pyramid;
+  gint tune_mode;
+  guint prop_flag;
 
   GstH264NalParser *parser;
   GArray *cc_sei_array;
