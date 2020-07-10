@@ -874,29 +874,6 @@ new_packet_common_init (GstBaseTsMux * mux, GstBuffer * buf, guint8 * data,
 }
 
 static GstFlowReturn
-finish_buffer_list (GstBaseTsMux * mux, GstBufferList * list)
-{
-  guint i;
-  guint l = gst_buffer_list_length (list);
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  for (i = 0; i < l; i++) {
-    GstBuffer *buf = gst_buffer_list_get (list, i);
-
-    ret =
-        gst_aggregator_finish_buffer (GST_AGGREGATOR (mux),
-        gst_buffer_ref (buf));
-
-    if (ret != GST_FLOW_OK)
-      break;
-  }
-
-  gst_buffer_list_unref (list);
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
 {
   GstBufferList *buffer_list;
@@ -917,7 +894,8 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
   /* no alignment, just push all available data */
   if (align == 0) {
     buffer_list = gst_adapter_take_buffer_list (mux->out_adapter, av);
-    return finish_buffer_list (mux, buffer_list);
+    return gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux),
+        buffer_list);
   }
 
   align *= packet_size;
@@ -993,7 +971,7 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
     gst_buffer_list_add (buffer_list, buf);
   }
 
-  return finish_buffer_list (mux, buffer_list);
+  return gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux), buffer_list);
 }
 
 static GstFlowReturn
