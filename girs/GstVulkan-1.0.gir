@@ -2428,7 +2428,8 @@ the error</doc>
           <type name="guint8" c:type="guint8"/>
         </array>
       </field>
-      <field name="aspect" writable="1">
+      <field name="aspect" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">image aspect of this format</doc>
         <type name="Vulkan.ImageAspectFlags" c:type="VkImageAspectFlags"/>
       </field>
     </record>
@@ -4528,7 +4529,8 @@ called.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">number of elements in @queue_family_props</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
-      <field name="queue_family_ops">
+      <field name="queue_family_ops" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">vulkan operations allowed per queue family</doc>
         <type name="VulkanQueueFamilyOps" c:type="GstVulkanQueueFamilyOps*"/>
       </field>
       <field name="_reserved" readable="0" private="1">
@@ -6065,6 +6067,82 @@ Currently intended for subclasses to update internal state.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="vkbuffermemory">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">#GstVulkanBufferMemory is a #GstMemory subclass providing support for the
+mapping of Vulkan device memory.</doc>
+    </docsection>
+    <docsection name="vkbufferpool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">a #GstVulkanBufferPool is an object that allocates buffers with #GstVulkanBufferMemory
+
+A #GstVulkanBufferPool is created with gst_vulkan_buffer_pool_new()
+
+#GstVulkanBufferPool implements the VideoMeta buffer pool option
+#GST_BUFFER_POOL_OPTION_VIDEO_META</doc>
+    </docsection>
+    <docsection name="vkdescriptorset">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdescriptorset.c">vulkandescriptorset holds information about a descriptor set.</doc>
+    </docsection>
+    <docsection name="vkdevice">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">A #GstVulkanDevice encapsulates a VkDevice</doc>
+    </docsection>
+    <docsection name="vkdisplay">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">A #GstVulkanDisplay represents a connection to a display server on the platform</doc>
+    </docsection>
+    <docsection name="vkfence">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfence.c">A #GstVulkanFence encapsulates a VkFence</doc>
+    </docsection>
+    <docsection name="vkfullscreenquad">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">A #GstVulkanFullScreenQuad is a helper object for rendering a single input
+image to an output #GstBuffer</doc>
+    </docsection>
+    <docsection name="vkhandle">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.c">#GstVulkanHandle holds information about a vulkan handle.</doc>
+    </docsection>
+    <docsection name="vkimagebufferpool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">a #GstVulkanImageBufferPool is an object that allocates buffers with #GstVulkanImageMemory
+
+A #GstVulkanImageBufferPool is created with gst_vulkan_image_buffer_pool_new()</doc>
+    </docsection>
+    <docsection name="vkimagememory">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">GstVulkanImageMemory is a #GstMemory subclass providing support for the
+mapping of Vulkan device memory.</doc>
+    </docsection>
+    <docsection name="vkimageview">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.c">#GstVulkanImageView is a wrapper around a `VkImageView` mostly for
+usage across element boundaries with #GstVulkanImageMemory</doc>
+    </docsection>
+    <docsection name="vkinstance">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">#GstVulkanInstance encapsulates the necessary information for the toplevel
+Vulkan instance object.
+
+If GStreamer is built with debugging support, the default Vulkan API chosen
+can be selected with the environment variable
+`GST_VULKAN_INSTANCE_API_VERSION=1.0`.  Any subsequent setting of the
+requested Vulkan API version through the available properties will override
+the environment variable.</doc>
+    </docsection>
+    <docsection name="vkmemory">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">GstVulkanMemory is a #GstMemory subclass providing support for the mapping of
+Vulkan device memory.</doc>
+    </docsection>
+    <docsection name="vkphysicaldevice">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">A #GstVulkanPhysicalDevice encapsulates a VkPhysicalDevice</doc>
+    </docsection>
+    <docsection name="vkqueue">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">GstVulkanQueue encapsulates the vulkan command queue.</doc>
+    </docsection>
+    <docsection name="vkswapper">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.c">#GstVulkanSwapper is a helper object for rendering to a surface exposed by
+#GstVulkanWindow.</doc>
+    </docsection>
+    <docsection name="vktrash">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">#GstVulkanTrash is a helper object for freeing resources after a
+#GstVulkanFence is signalled.</doc>
+    </docsection>
+    <docsection name="vkwindow">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.c">GstVulkanWindow represents a window that elements can render into.  A window can
+either be a user visible window (onscreen) or hidden (offscreen).</doc>
+    </docsection>
     <function name="vulkan_buffer_memory_alloc" c:identifier="gst_vulkan_buffer_memory_alloc" moved-to="VulkanBufferMemory.alloc" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">Allocate a new #GstVulkanBufferMemory.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.h"/>
@@ -6823,5 +6901,15 @@ associated #GstVulkanFence is signalled</doc>
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
     </function>
+    <docsection name="vulkancommandbuffer">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkcommandbuffer.c">vulkancommandbuffer holds information about a command buffer.</doc>
+    </docsection>
+    <docsection name="vulkanhandlepool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.c">#GstVulkanHandlePool holds a number of handles that are pooled together.</doc>
+    </docsection>
+    <docsection name="vulkanvideofilter">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">#GstVulkanVideoFilter is a helper base class for retrieving and holding the
+#GstVulkanInstance, #GstVulkanDevice and #GstVulkanQueue used by an element.</doc>
+    </docsection>
   </namespace>
 </repository>

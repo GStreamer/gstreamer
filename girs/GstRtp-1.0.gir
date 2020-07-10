@@ -1989,19 +1989,26 @@ is set as zero, @lost_packets or @dup_packets will be zero.</doc>
       <member name="priv" value="8" c:identifier="GST_RTCP_SDES_PRIV" glib:nick="priv">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Private extensions</doc>
       </member>
-      <member name="h323_caddr" value="9" c:identifier="GST_RTCP_SDES_H323_CADDR" glib:nick="h323-caddr">
+      <member name="h323_caddr" value="9" c:identifier="GST_RTCP_SDES_H323_CADDR" version="1.20" glib:nick="h323-caddr">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">H.323 callable address</doc>
       </member>
-      <member name="apsi" value="10" c:identifier="GST_RTCP_SDES_APSI" glib:nick="apsi">
+      <member name="apsi" value="10" c:identifier="GST_RTCP_SDES_APSI" version="1.20" glib:nick="apsi">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Application Specific Identifier (RFC6776)</doc>
       </member>
-      <member name="rgrp" value="11" c:identifier="GST_RTCP_SDES_RGRP" glib:nick="rgrp">
+      <member name="rgrp" value="11" c:identifier="GST_RTCP_SDES_RGRP" version="1.20" glib:nick="rgrp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Reporting Group Identifier (RFC8861)</doc>
       </member>
-      <member name="rtp_stream_id" value="12" c:identifier="GST_RTCP_SDES_RTP_STREAM_ID" glib:nick="rtp-stream-id">
+      <member name="rtp_stream_id" value="12" c:identifier="GST_RTCP_SDES_RTP_STREAM_ID" version="1.20" glib:nick="rtp-stream-id">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">RtpStreamId SDES item (RFC8852).</doc>
       </member>
-      <member name="repaired_rtp_stream_id" value="13" c:identifier="GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID" glib:nick="repaired-rtp-stream-id">
+      <member name="repaired_rtp_stream_id" value="13" c:identifier="GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID" version="1.20" glib:nick="repaired-rtp-stream-id">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">RepairedRtpStreamId SDES item (RFC8852).</doc>
       </member>
-      <member name="ccid" value="14" c:identifier="GST_RTCP_SDES_CCID" glib:nick="ccid">
+      <member name="ccid" value="14" c:identifier="GST_RTCP_SDES_CCID" version="1.20" glib:nick="ccid">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">CLUE CaptId (RFC8849)</doc>
       </member>
-      <member name="mid" value="15" c:identifier="GST_RTCP_SDES_MID" glib:nick="mid">
+      <member name="mid" value="15" c:identifier="GST_RTCP_SDES_MID" version="1.20" glib:nick="mid">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">MID SDES item (RFC8843).</doc>
       </member>
     </enumeration>
     <enumeration name="RTCPType" glib:type-name="GstRTCPType" glib:get-type="gst_rtcp_type_get_type" c:type="GstRTCPType">
@@ -6007,6 +6014,14 @@ is no such metadata on @buffer.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gstrtpdefs">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">Provides common defines for the RTP library.</doc>
+    </docsection>
+    <docsection name="gstrtppayloads">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.c">The GstRTPPayloads helper functions makes it easy to deal with static and dynamic
+payloads. Its main purpose is to retrieve properties such as the default clock-rate
+and get session bandwidth information.</doc>
+    </docsection>
     <function name="rtcp_buffer_map" c:identifier="gst_rtcp_buffer_map" moved-to="RTCPBuffer.map">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.c">Open @buffer for reading or writing, depending on @flags. The resulting RTCP
 buffer state is stored in @rtcp.</doc>

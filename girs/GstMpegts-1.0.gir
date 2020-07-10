@@ -824,6 +824,9 @@ Consult the relevant specifications for more details.</doc>
       <member name="frequency_list" value="98" c:identifier="GST_MTS_DESC_DVB_FREQUENCY_LIST">
       </member>
       <member name="partial_transport_stream" value="99" c:identifier="GST_MTS_DESC_DVB_PARTIAL_TRANSPORT_STREAM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h">Partial Transport Stream descriptor. Only present in SIT Sections.
+
+See also: %GST_MPEGTS_SECTION_SIT, %GstMpegtsSIT</doc>
       </member>
       <member name="data_broadcast" value="100" c:identifier="GST_MTS_DESC_DVB_DATA_BROADCAST">
       </member>
@@ -930,7 +933,8 @@ Consult the relevant specifications for more details.</doc>
       </member>
       <member name="ac4" value="21" c:identifier="GST_MTS_DESC_EXT_DVB_AC4">
       </member>
-      <member name="audio_preselection" value="25" c:identifier="GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION">
+      <member name="audio_preselection" value="25" c:identifier="GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h">Provide all avaliable audio programme for user selection</doc>
       </member>
     </enumeration>
     <record name="DVBLinkageDescriptor" c:type="GstMpegtsDVBLinkageDescriptor" glib:type-name="GstMpegtsDVBLinkageDescriptor" glib:get-type="gst_mpegts_dvb_linkage_descriptor_get_type" c:symbol-prefix="dvb_linkage_descriptor">
@@ -2816,13 +2820,17 @@ See ISO/IEC 13818-1:2018 Section 2.6.60 and Section 2.6.61 for more information.
     <enumeration name="MetadataFormat" version="1.24" c:type="GstMpegtsMetadataFormat">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">metadata_descriptor metadata_format valid values. See ISO/IEC 13818-1:2018(E) Table 2-85.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h"/>
-      <member name="tem" value="16" c:identifier="GST_MPEGTS_METADATA_FORMAT_TEM">
+      <member name="tem" value="16" c:identifier="GST_MPEGTS_METADATA_FORMAT_TEM" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">ISO/IEC 15938-1 TeM.</doc>
       </member>
-      <member name="bim" value="17" c:identifier="GST_MPEGTS_METADATA_FORMAT_BIM">
+      <member name="bim" value="17" c:identifier="GST_MPEGTS_METADATA_FORMAT_BIM" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">ISO/IEC 15938-1 BiM.</doc>
       </member>
-      <member name="application_format" value="63" c:identifier="GST_MPEGTS_METADATA_FORMAT_APPLICATION_FORMAT">
+      <member name="application_format" value="63" c:identifier="GST_MPEGTS_METADATA_FORMAT_APPLICATION_FORMAT" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">Defined by metadata application format.</doc>
       </member>
-      <member name="identifier_field" value="255" c:identifier="GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD">
+      <member name="identifier_field" value="255" c:identifier="GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">Defined by metadata_format_identifier field.</doc>
       </member>
     </enumeration>
     <enumeration name="MiscDescriptorType" c:type="GstMpegtsMiscDescriptorType">
@@ -3187,10 +3195,14 @@ Corresponds to table 6 of ETSI EN 300 468 (v1.13.0)</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
-      <field name="fully_parsed" writable="1">
+      <field name="fully_parsed" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h">When encrypted, or when encountering an unknown command type,
+we may still want to pass the sit through.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
-      <field name="is_running_time" writable="1">
+      <field name="is_running_time" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h">When the SIT was constructed by the application, splice times
+are in running_time and must be translated before packetizing.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
       <constructor name="new" c:identifier="gst_mpegts_scte_sit_new">
@@ -3293,10 +3305,12 @@ Corresponds to table 6 of ETSI EN 300 468 (v1.13.0)</doc>
       <field name="program_splice_time" writable="1">
         <type name="guint64" c:type="guint64"/>
       </field>
-      <field name="utc_splice_time" writable="1">
+      <field name="utc_splice_time" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h">The UTC time of the signaled splice event</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
-      <field name="components" writable="1">
+      <field name="components" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h">Per-PID splice time information</doc>
         <array name="GLib.PtrArray" c:type="GPtrArray*">
           <type name="gpointer" c:type="gpointer"/>
         </array>
@@ -4195,7 +4209,8 @@ see also: #GstMpegtsSectionTableID and other variants.</doc>
       <member name="data_service" value="207" c:identifier="GST_MTS_TABLE_ID_ATSC_DATA_SERVICE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h">A/90: Data Service Table (DST)</doc>
       </member>
-      <member name="program_identifier" value="208" c:identifier="GST_MTS_TABLE_ID_ATSC_PROGRAM_IDENTIFIER">
+      <member name="program_identifier" value="208" c:identifier="GST_MTS_TABLE_ID_ATSC_PROGRAM_IDENTIFIER" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h">A/57B: Program Identifier Table.</doc>
       </member>
       <member name="network_resource" value="209" c:identifier="GST_MTS_TABLE_ID_ATSC_NETWORK_RESOURCE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h">A/90: Network Resources Table (NRT)</doc>
@@ -4242,9 +4257,11 @@ see also: #GstMpegtsSectionTableID</doc>
       <member name="bouquet_association" value="74" c:identifier="GST_MTS_TABLE_ID_BOUQUET_ASSOCIATION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">Bouquet Association Table (BAT)</doc>
       </member>
-      <member name="update_notification" value="75" c:identifier="GST_MTS_TABLE_ID_UPDATE_NOTIFICATION">
+      <member name="update_notification" value="75" c:identifier="GST_MTS_TABLE_ID_UPDATE_NOTIFICATION" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">ETSI TS 102 006: Update Notification Table (UNT)</doc>
       </member>
-      <member name="downloadable_font_info" value="76" c:identifier="GST_MTS_TABLE_ID_DOWNLOADABLE_FONT_INFO">
+      <member name="downloadable_font_info" value="76" c:identifier="GST_MTS_TABLE_ID_DOWNLOADABLE_FONT_INFO" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">ETSI EN 303 560: Downloadable Font Info</doc>
       </member>
       <member name="event_information_actual_ts_present" value="78" c:identifier="GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">Event Information Table (EIT), Actual Transport Stream, present/following</doc>
@@ -4297,7 +4314,8 @@ see also: #GstMpegtsSectionTableID</doc>
       <member name="mpe_ifec" value="122" c:identifier="GST_MTS_TABLE_ID_MPE_IFEC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">ETSI TS 102 772: MPE-IFEC Section</doc>
       </member>
-      <member name="protection_message" value="123" c:identifier="GST_MTS_TABLE_ID_PROTECTION_MESSAGE">
+      <member name="protection_message" value="123" c:identifier="GST_MTS_TABLE_ID_PROTECTION_MESSAGE" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">ETSI TS 102 809: Protection Message Section</doc>
       </member>
       <member name="discontinuity_information" value="126" c:identifier="GST_MTS_TABLE_ID_DISCONTINUITY_INFORMATION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h">Discontinuity Information Table (DIT)</doc>
@@ -4401,11 +4419,14 @@ see also #GstMpegtsSectionATSCTableID, #GstMpegtsSectionDVBTableID, and
       <member name="ipmp_control_information" value="7" c:identifier="GST_MTS_TABLE_ID_IPMP_CONTROL_INFORMATION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">IPMP Control Information</doc>
       </member>
-      <member name="14496_section" value="8" c:identifier="GST_MTS_TABLE_ID_14496_SECTION">
+      <member name="14496_section" value="8" c:identifier="GST_MTS_TABLE_ID_14496_SECTION" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">ISO/IEC 14496 Section.</doc>
       </member>
-      <member name="23001_11_section" value="9" c:identifier="GST_MTS_TABLE_ID_23001_11_SECTION">
+      <member name="23001_11_section" value="9" c:identifier="GST_MTS_TABLE_ID_23001_11_SECTION" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">ISO/IEC 23001-11 (Green Access Unit) Section.</doc>
       </member>
-      <member name="23001_10_section" value="10" c:identifier="GST_MTS_TABLE_ID_23001_10_SECTION">
+      <member name="23001_10_section" value="10" c:identifier="GST_MTS_TABLE_ID_23001_10_SECTION" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">ISO/ISO 23001-10 (Quality Access Unit) Section.</doc>
       </member>
       <member name="dsm_cc_multiproto_encapsulated_data" value="58" c:identifier="GST_MTS_TABLE_ID_DSM_CC_MULTIPROTO_ENCAPSULATED_DATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">DSM-CC Multi-Protocol Encapsulated (MPE) Data</doc>
@@ -4467,7 +4488,8 @@ use.</doc>
       <member name="tot" value="10" c:identifier="GST_MPEGTS_SECTION_TOT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">Time Offset Table (EN 300 468)</doc>
       </member>
-      <member name="sit" value="11" c:identifier="GST_MPEGTS_SECTION_SIT">
+      <member name="sit" value="11" c:identifier="GST_MPEGTS_SECTION_SIT" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">Selection Information Table (EN 300 468)</doc>
       </member>
       <member name="atsc_tvct" value="12" c:identifier="GST_MPEGTS_SECTION_ATSC_TVCT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">ATSC Terrestrial Virtual Channel Table (A65)</doc>
@@ -4644,7 +4666,8 @@ profiles defined in Annex A for service-compatible stereoscopic 3D services</doc
       <member name="ipmp_stream" value="127" c:identifier="GST_MPEGTS_STREAM_TYPE_IPMP_STREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">IPMP stream</doc>
       </member>
-      <member name="user_private_ea" value="234" c:identifier="GST_MPEGTS_STREAM_TYPE_USER_PRIVATE_EA">
+      <member name="user_private_ea" value="234" c:identifier="GST_MPEGTS_STREAM_TYPE_USER_PRIVATE_EA" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">User Private stream id (used for VC-1) as defined by SMPTE RP227.</doc>
       </member>
     </enumeration>
     <record name="T2DeliverySystemCell" c:type="GstMpegtsT2DeliverySystemCell" glib:type-name="GstMpegtsT2DeliverySystemCell" glib:get-type="gst_mpegts_t2_delivery_system_cell_get_type" c:symbol-prefix="t2_delivery_system_cell">
@@ -5122,6 +5145,114 @@ of #GstMpegtsDescriptor</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gst-atsc-descriptor">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-descriptor.h">This contains the various descriptors defined by the ATSC specifications</doc>
+    </docsection>
+    <docsection name="gst-atsc-section">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The list of section types defined and used by the ATSC specifications can be
+seen in %GstMpegtsSectionATSCTableID.
+
+# Supported ATSC MPEG-TS sections
+These are the sections for which parsing and packetizing code exists.
+
+## Master Guide Table (MGT)
+See:
+* gst_mpegts_section_get_atsc_mgt()
+* %GstMpegtsAtscMGT
+* %GstMpegtsAtscMGTTable
+* gst_mpegts_atsc_mgt_new()
+
+## Terrestrial (TVCT) and Cable (CVCT) Virtual Channel Table
+See:
+* gst_mpegts_section_get_atsc_tvct()
+* gst_mpegts_section_get_atsc_cvct()
+* %GstMpegtsAtscVCT
+* %GstMpegtsAtscVCTSource
+
+## Rating Region Table (RRT)
+See:
+* gst_mpegts_section_get_atsc_rrt()
+* %GstMpegtsAtscRRT
+* gst_mpegts_atsc_rrt_new()
+
+## Event Information Table (EIT)
+See:
+* gst_mpegts_section_get_atsc_eit()
+* %GstMpegtsAtscEIT
+* %GstMpegtsAtscEITEvent
+
+## Extended Text Table (ETT)
+See:
+* gst_mpegts_section_get_atsc_ett()
+* %GstMpegtsAtscETT
+
+## System Time Table (STT)
+See:
+* gst_mpegts_section_get_atsc_stt()
+* %GstMpegtsAtscSTT
+* gst_mpegts_atsc_stt_new()
+
+# API</doc>
+    </docsection>
+    <docsection name="gst-dvb-section">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The list of section types defined and used by the DVB specifications can be
+seen in %GstMpegtsSectionDVBTableID.
+
+# Supported DVB MPEG-TS sections
+These are the sections for which parsing and packetizing code exists.
+
+## Network Information Table (NIT)
+See:
+* gst_mpegts_section_get_nit()
+* %GstMpegtsNIT
+* %GstMpegtsNITStream
+* gst_mpegts_nit_new()
+
+## Service Description Table (SDT)
+See:
+* gst_mpegts_section_get_sdt()
+* %GstMpegtsSDT
+* %GstMpegtsSDTService
+* gst_mpegts_sdt_new()
+
+## Bouquet Association Table (BAT)
+See:
+* gst_mpegts_section_get_bat()
+* %GstMpegtsBAT
+* %GstMpegtsBATStream
+
+## Event Information Table (EIT)
+See:
+* gst_mpegts_section_get_eit()
+* %GstMpegtsEIT
+* %GstMpegtsEITEvent
+
+## Time Date Table (TDT)
+See:
+* gst_mpegts_section_get_tdt()
+
+## Time Offset Table (TOT)
+See:
+* gst_mpegts_section_get_tot()
+* %GstMpegtsTOT
+
+## Selection Information Table (SIT)
+See:
+* gst_mpegts_section_get_sit()
+* %GstMpegtsSIT
+* %GstMpegtsSITService
+
+# API</doc>
+    </docsection>
+    <docsection name="gst-isdb-descriptor">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-isdb-descriptor.h">This contains the various descriptors defined by the ISDB specifications</doc>
+    </docsection>
+    <docsection name="gst-scte-section">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">This contains the %GstMpegtsSection relevent to SCTE specifications.</doc>
+    </docsection>
+    <docsection name="gstmpegts">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/mpegts.c">Before any usage of this library, the initialization function should be called.</doc>
+    </docsection>
     <function name="initialize" c:identifier="gst_mpegts_initialize">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/mpegts.c">Initializes the MPEG-TS helper library. Must be called before any
 usage.</doc>

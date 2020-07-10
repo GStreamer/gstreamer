@@ -164,7 +164,8 @@ number and the height is scaled according to the sub-sampling.</doc>
     </class>
     <record name="DRMDumbAllocatorClass" c:type="GstDRMDumbAllocatorClass" glib:is-gtype-struct-for="DRMDumbAllocator">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdrmdumb.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdrmdumb.h">Parent Class.</doc>
         <type name="Gst.AllocatorClass" c:type="GstAllocatorClass"/>
       </field>
     </record>

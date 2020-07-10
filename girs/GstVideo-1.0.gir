@@ -1962,36 +1962,32 @@ event.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">A navigation command event. Use
 gst_navigation_event_parse_command() to extract the details from the event.</doc>
       </member>
-      <member name="mouse_scroll" value="7" c:identifier="GST_NAVIGATION_EVENT_MOUSE_SCROLL" glib:nick="mouse-scroll">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">A mouse scroll event. Use
-gst_navigation_event_parse_mouse_scroll_event() to extract the details from
-the event. (Since: 1.18)</doc>
+      <member name="mouse_scroll" value="7" c:identifier="GST_NAVIGATION_EVENT_MOUSE_SCROLL" version="1.18" glib:nick="mouse-scroll">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">A mouse scroll event. Use gst_navigation_event_parse_mouse_scroll_event()
+to extract the details from the event.</doc>
       </member>
-      <member name="touch_down" value="8" c:identifier="GST_NAVIGATION_EVENT_TOUCH_DOWN" glib:nick="touch-down">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event describing a new touch point,
-which will be assigned an identifier that is unique to it for the duration
-of its movement on the screen. Use gst_navigation_event_parse_touch_event()
-to extract the details from the event. (Since: 1.22)</doc>
+      <member name="touch_down" value="8" c:identifier="GST_NAVIGATION_EVENT_TOUCH_DOWN" version="1.22" glib:nick="touch-down">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event describing a new touch point, which will be assigned an identifier
+that is unique to it for the duration of its movement on the screen.
+Use gst_navigation_event_parse_touch_event() to extract the details
+from the event.</doc>
       </member>
-      <member name="touch_motion" value="9" c:identifier="GST_NAVIGATION_EVENT_TOUCH_MOTION" glib:nick="touch-motion">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event describing the movement of an
-active touch point across the screen. Use
-gst_navigation_event_parse_touch_event() to extract the details from the
-event. (Since: 1.22)</doc>
+      <member name="touch_motion" value="9" c:identifier="GST_NAVIGATION_EVENT_TOUCH_MOTION" version="1.22" glib:nick="touch-motion">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event describing the movement of an active touch point across
+the screen. Use gst_navigation_event_parse_touch_event() to extract
+the details from the event.</doc>
       </member>
-      <member name="touch_up" value="10" c:identifier="GST_NAVIGATION_EVENT_TOUCH_UP" glib:nick="touch-up">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event describing a removed touch point.
-After this event, its identifier may be reused for any new touch points. Use
-gst_navigation_event_parse_touch_up_event() to extract the details from the
-event. (Since: 1.22)</doc>
+      <member name="touch_up" value="10" c:identifier="GST_NAVIGATION_EVENT_TOUCH_UP" version="1.22" glib:nick="touch-up">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event describing a removed touch point. After this event,
+its identifier may be reused for any new touch points.
+Use gst_navigation_event_parse_touch_up_event() to extract the details
+from the event.</doc>
       </member>
-      <member name="touch_frame" value="11" c:identifier="GST_NAVIGATION_EVENT_TOUCH_FRAME" glib:nick="touch-frame">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event signaling the end of a sequence
-of simultaneous touch events. (Since: 1.22)</doc>
+      <member name="touch_frame" value="11" c:identifier="GST_NAVIGATION_EVENT_TOUCH_FRAME" version="1.22" glib:nick="touch-frame">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event signaling the end of a sequence of simultaneous touch events.</doc>
       </member>
-      <member name="touch_cancel" value="12" c:identifier="GST_NAVIGATION_EVENT_TOUCH_CANCEL" glib:nick="touch-cancel">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event cancelling all currently active
-touch points. (Since: 1.22)</doc>
+      <member name="touch_cancel" value="12" c:identifier="GST_NAVIGATION_EVENT_TOUCH_CANCEL" version="1.22" glib:nick="touch-cancel">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/navigation.h">An event cancelling all currently active touch points.</doc>
       </member>
     </enumeration>
     <record name="NavigationInterface" c:type="GstNavigationInterface" glib:is-gtype-struct-for="Navigation">
@@ -5742,8 +5738,8 @@ will be freed.</doc>
       <member name="force_keyframe_headers" value="8" c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS" glib:nick="force-keyframe-headers">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">should the encoder output stream headers</doc>
       </member>
-      <member name="corrupted" value="16" c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED" glib:nick="corrupted">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">the buffer data is corrupted (Since: 1.20)</doc>
+      <member name="corrupted" value="16" c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED" version="1.20" glib:nick="corrupted">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">The buffer data is corrupted.</doc>
       </member>
     </bitfield>
     <record name="VideoCodecState" c:type="GstVideoCodecState" glib:type-name="GstVideoCodecState" glib:get-type="gst_video_codec_state_get_type" c:symbol-prefix="video_codec_state">
@@ -5778,14 +5774,12 @@ gst_video_encoder_set_output_state() methods.</doc>
     negotiation. Since: 1.10</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
       </field>
-      <field name="mastering_display_info" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">Mastering display color volume information
-    (HDR metadata) for the stream. Since: 1.20</doc>
+      <field name="mastering_display_info" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">Mastering display color volume information (HDR metadata) for the stream.</doc>
         <type name="VideoMasteringDisplayInfo" c:type="GstVideoMasteringDisplayInfo*"/>
       </field>
-      <field name="content_light_level" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">Content light level information for the stream.
-    Since: 1.20</doc>
+      <field name="content_light_level" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoutils.h">Content light level information for the stream.</doc>
         <type name="VideoContentLightLevel" c:type="GstVideoContentLightLevel*"/>
       </field>
       <field name="padding" readable="0" private="1">
@@ -10099,116 +10093,128 @@ for details about the layout and packing of these formats in memory.</doc>
       <member name="y412_le" value="96" c:identifier="GST_VIDEO_FORMAT_Y412_LE" glib:nick="y412-le">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed 4:4:4:4 YUV, 12 bits per channel(U-Y-V-A...) (Since: 1.18)</doc>
       </member>
-      <member name="nv12_4l4" value="97" c:identifier="GST_VIDEO_FORMAT_NV12_4L4" glib:nick="nv12-4l4">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 4x4 tiles in linear order (Since: 1.18)</doc>
+      <member name="nv12_4l4" value="97" c:identifier="GST_VIDEO_FORMAT_NV12_4L4" version="1.18" glib:nick="nv12-4l4">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 4x4 tiles in linear order.</doc>
       </member>
-      <member name="nv12_32l32" value="98" c:identifier="GST_VIDEO_FORMAT_NV12_32L32" glib:nick="nv12-32l32">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 32x32 tiles in linear order (Since: 1.18)</doc>
+      <member name="nv12_32l32" value="98" c:identifier="GST_VIDEO_FORMAT_NV12_32L32" version="1.18" glib:nick="nv12-32l32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 32x32 tiles in linear order.</doc>
       </member>
-      <member name="rgbp" value="99" c:identifier="GST_VIDEO_FORMAT_RGBP" glib:nick="rgbp">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 8 bits per channel (Since: 1.20)</doc>
+      <member name="rgbp" value="99" c:identifier="GST_VIDEO_FORMAT_RGBP" version="1.20" glib:nick="rgbp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Planar 4:4:4 RGB, R-G-B order</doc>
       </member>
-      <member name="bgrp" value="100" c:identifier="GST_VIDEO_FORMAT_BGRP" glib:nick="bgrp">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 8 bits per channel (Since: 1.20)</doc>
+      <member name="bgrp" value="100" c:identifier="GST_VIDEO_FORMAT_BGRP" version="1.20" glib:nick="bgrp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Planar 4:4:4 RGB, B-G-R order</doc>
       </member>
-      <member name="av12" value="101" c:identifier="GST_VIDEO_FORMAT_AV12" glib:nick="av12">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Planar 4:2:0 YUV with interleaved UV plane with alpha as 3rd plane (Since: 1.20)</doc>
+      <member name="av12" value="101" c:identifier="GST_VIDEO_FORMAT_AV12" version="1.20" glib:nick="av12">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Planar 4:2:0 YUV with interleaved UV plane with alpha as
+3rd plane.</doc>
       </member>
-      <member name="argb64_le" value="102" c:identifier="GST_VIDEO_FORMAT_ARGB64_LE" glib:nick="argb64-le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel first, 16 bits per channel</doc>
+      <member name="argb64_le" value="102" c:identifier="GST_VIDEO_FORMAT_ARGB64_LE" version="1.20" glib:nick="argb64-le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel first, 16 bits (little endian)
+per channel.</doc>
       </member>
-      <member name="argb64_be" value="103" c:identifier="GST_VIDEO_FORMAT_ARGB64_BE" glib:nick="argb64-be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel first, 16 bits per channel</doc>
+      <member name="argb64_be" value="103" c:identifier="GST_VIDEO_FORMAT_ARGB64_BE" version="1.20" glib:nick="argb64-be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel first, 16 bits (big endian)
+per channel.</doc>
       </member>
-      <member name="rgba64_le" value="104" c:identifier="GST_VIDEO_FORMAT_RGBA64_LE" glib:nick="rgba64-le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel last, 16 bits per channel</doc>
+      <member name="rgba64_le" value="104" c:identifier="GST_VIDEO_FORMAT_RGBA64_LE" version="1.20" glib:nick="rgba64-le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel last, 16 bits (little endian)
+per channel.</doc>
       </member>
-      <member name="rgba64_be" value="105" c:identifier="GST_VIDEO_FORMAT_RGBA64_BE" glib:nick="rgba64-be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel last, 16 bits per channel</doc>
+      <member name="rgba64_be" value="105" c:identifier="GST_VIDEO_FORMAT_RGBA64_BE" version="1.20" glib:nick="rgba64-be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">RGB with alpha channel last, 16 bits (big endian)
+per channel.</doc>
       </member>
-      <member name="bgra64_le" value="106" c:identifier="GST_VIDEO_FORMAT_BGRA64_LE" glib:nick="bgra64-le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">reverse RGB with alpha channel last, 16 bits per channel</doc>
+      <member name="bgra64_le" value="106" c:identifier="GST_VIDEO_FORMAT_BGRA64_LE" version="1.20" glib:nick="bgra64-le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Reverse RGB with alpha channel last, 16 bits (little endian)
+per channel.</doc>
       </member>
-      <member name="bgra64_be" value="107" c:identifier="GST_VIDEO_FORMAT_BGRA64_BE" glib:nick="bgra64-be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">reverse RGB with alpha channel last, 16 bits per channel</doc>
+      <member name="bgra64_be" value="107" c:identifier="GST_VIDEO_FORMAT_BGRA64_BE" version="1.20" glib:nick="bgra64-be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Reverse RGB with alpha channel last, 16 bits (big endian)
+per channel.</doc>
       </member>
-      <member name="abgr64_le" value="108" c:identifier="GST_VIDEO_FORMAT_ABGR64_LE" glib:nick="abgr64-le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">reverse RGB with alpha channel first, 16 bits per channel</doc>
+      <member name="abgr64_le" value="108" c:identifier="GST_VIDEO_FORMAT_ABGR64_LE" version="1.20" glib:nick="abgr64-le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Reverse RGB with alpha channel first, 16 bits (little endian)
+per channel.</doc>
       </member>
-      <member name="abgr64_be" value="109" c:identifier="GST_VIDEO_FORMAT_ABGR64_BE" glib:nick="abgr64-be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">reverse RGB with alpha channel first, 16 bits per channel</doc>
+      <member name="abgr64_be" value="109" c:identifier="GST_VIDEO_FORMAT_ABGR64_BE" version="1.20" glib:nick="abgr64-be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Reverse RGB with alpha channel first, 16 bits (big endian)
+per channel.</doc>
       </member>
-      <member name="nv12_16l32s" value="110" c:identifier="GST_VIDEO_FORMAT_NV12_16L32S" glib:nick="nv12-16l32s">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 16x32 Y tiles and 16x16 UV tiles. (Since: 1.22)</doc>
+      <member name="nv12_16l32s" value="110" c:identifier="GST_VIDEO_FORMAT_NV12_16L32S" version="1.22" glib:nick="nv12-16l32s">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 16x32 Y tiles and 16x16 UV tiles.</doc>
       </member>
-      <member name="nv12_8l128" value="111" c:identifier="GST_VIDEO_FORMAT_NV12_8L128" glib:nick="nv12-8l128">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 8x128 tiles in linear order (Since: 1.22)</doc>
+      <member name="nv12_8l128" value="111" c:identifier="GST_VIDEO_FORMAT_NV12_8L128" version="1.22" glib:nick="nv12-8l128">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 with 8x128 tiles in linear order.</doc>
       </member>
-      <member name="nv12_10be_8l128" value="112" c:identifier="GST_VIDEO_FORMAT_NV12_10BE_8L128" glib:nick="nv12-10be-8l128">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 10bit big endian with 8x128 tiles in linear order (Since: 1.22)</doc>
+      <member name="nv12_10be_8l128" value="112" c:identifier="GST_VIDEO_FORMAT_NV12_10BE_8L128" version="1.22" glib:nick="nv12-10be-8l128">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">NV12 10bit big endian with 8x128 tiles in linear order.</doc>
       </member>
-      <member name="nv12_10le40_4l4" value="113" c:identifier="GST_VIDEO_FORMAT_NV12_10LE40_4L4" glib:nick="nv12-10le40-4l4">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">@GST_VIDEO_FORMAT_NV12_10LE40 with 4x4 pixels tiles (5 bytes per tile row) (Since: 1.24)</doc>
+      <member name="nv12_10le40_4l4" value="113" c:identifier="GST_VIDEO_FORMAT_NV12_10LE40_4L4" version="1.24" glib:nick="nv12-10le40-4l4">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">@GST_VIDEO_FORMAT_NV12_10LE40 with 4x4 pixels tiles (5 bytes
+ per tile row). This format is produced by Verisilicon/Hantro decoders.</doc>
       </member>
-      <member name="dma_drm" value="114" c:identifier="GST_VIDEO_FORMAT_DMA_DRM" glib:nick="dma-drm">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">DMA DRM special format. It's only used with
-                           memory:DMABuf #GstCapsFeatures, where an extra
-                           parameter (drm-format) is required to define the
-                           image format and its memory layout.</doc>
+      <member name="dma_drm" value="114" c:identifier="GST_VIDEO_FORMAT_DMA_DRM" version="1.24" glib:nick="dma-drm">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">@GST_VIDEO_FORMAT_DMA_DRM represent the DMA DRM special format. It's
+only used with memory:DMABuf #GstCapsFeatures, where an extra
+parameter (drm-format) is required to define the image format and
+its memory layout.</doc>
       </member>
-      <member name="mt2110t" value="115" c:identifier="GST_VIDEO_FORMAT_MT2110T" glib:nick="mt2110t">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, tiled 2 bits (Since: 1.24)</doc>
+      <member name="mt2110t" value="115" c:identifier="GST_VIDEO_FORMAT_MT2110T" version="1.24" glib:nick="mt2110t">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, tile 2
+bits.</doc>
       </member>
-      <member name="mt2110r" value="116" c:identifier="GST_VIDEO_FORMAT_MT2110R" glib:nick="mt2110r">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, raster 2 bits (Since: 1.24)</doc>
+      <member name="mt2110r" value="116" c:identifier="GST_VIDEO_FORMAT_MT2110R" version="1.24" glib:nick="mt2110r">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, raster
+2 bits.</doc>
       </member>
-      <member name="a422" value="117" c:identifier="GST_VIDEO_FORMAT_A422" glib:nick="a422">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 8 bits per channel (Since: 1.24)</doc>
+      <member name="a422" value="117" c:identifier="GST_VIDEO_FORMAT_A422" version="1.24" glib:nick="a422">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 8 bits per channel</doc>
       </member>
-      <member name="a444" value="118" c:identifier="GST_VIDEO_FORMAT_A444" glib:nick="a444">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 8 bits per channel (Since: 1.24)</doc>
+      <member name="a444" value="118" c:identifier="GST_VIDEO_FORMAT_A444" version="1.24" glib:nick="a444">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 8 bits per channel</doc>
       </member>
-      <member name="a444_12le" value="119" c:identifier="GST_VIDEO_FORMAT_A444_12LE" glib:nick="a444-12le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 12 bits per channel (Since: 1.24)</doc>
+      <member name="a444_12le" value="119" c:identifier="GST_VIDEO_FORMAT_A444_12LE" version="1.24" glib:nick="a444-12le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 12 bits per channel</doc>
       </member>
-      <member name="a444_12be" value="120" c:identifier="GST_VIDEO_FORMAT_A444_12BE" glib:nick="a444-12be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 12 bits per channel (Since: 1.24)</doc>
+      <member name="a444_12be" value="120" c:identifier="GST_VIDEO_FORMAT_A444_12BE" version="1.24" glib:nick="a444-12be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 12 bits per channel</doc>
       </member>
-      <member name="a422_12le" value="121" c:identifier="GST_VIDEO_FORMAT_A422_12LE" glib:nick="a422-12le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 12 bits per channel (Since: 1.24)</doc>
+      <member name="a422_12le" value="121" c:identifier="GST_VIDEO_FORMAT_A422_12LE" version="1.24" glib:nick="a422-12le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 12 bits per channel</doc>
       </member>
-      <member name="a422_12be" value="122" c:identifier="GST_VIDEO_FORMAT_A422_12BE" glib:nick="a422-12be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 12 bits per channel (Since: 1.24)</doc>
+      <member name="a422_12be" value="122" c:identifier="GST_VIDEO_FORMAT_A422_12BE" version="1.24" glib:nick="a422-12be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 12 bits per channel</doc>
       </member>
-      <member name="a420_12le" value="123" c:identifier="GST_VIDEO_FORMAT_A420_12LE" glib:nick="a420-12le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 12 bits per channel (Since: 1.24)</doc>
+      <member name="a420_12le" value="123" c:identifier="GST_VIDEO_FORMAT_A420_12LE" version="1.24" glib:nick="a420-12le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 12 bits per channel</doc>
       </member>
-      <member name="a420_12be" value="124" c:identifier="GST_VIDEO_FORMAT_A420_12BE" glib:nick="a420-12be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 12 bits per channel (Since: 1.24)</doc>
+      <member name="a420_12be" value="124" c:identifier="GST_VIDEO_FORMAT_A420_12BE" version="1.24" glib:nick="a420-12be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 12 bits per channel</doc>
       </member>
-      <member name="a444_16le" value="125" c:identifier="GST_VIDEO_FORMAT_A444_16LE" glib:nick="a444-16le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 16 bits per channel (Since: 1.24)</doc>
+      <member name="a444_16le" value="125" c:identifier="GST_VIDEO_FORMAT_A444_16LE" version="1.24" glib:nick="a444-16le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 16 bits per channel</doc>
       </member>
-      <member name="a444_16be" value="126" c:identifier="GST_VIDEO_FORMAT_A444_16BE" glib:nick="a444-16be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 16 bits per channel (Since: 1.24)</doc>
+      <member name="a444_16be" value="126" c:identifier="GST_VIDEO_FORMAT_A444_16BE" version="1.24" glib:nick="a444-16be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4:4 YUV, 16 bits per channel</doc>
       </member>
-      <member name="a422_16le" value="127" c:identifier="GST_VIDEO_FORMAT_A422_16LE" glib:nick="a422-16le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 16 bits per channel (Since: 1.24)</doc>
+      <member name="a422_16le" value="127" c:identifier="GST_VIDEO_FORMAT_A422_16LE" version="1.24" glib:nick="a422-16le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 16 bits per channel</doc>
       </member>
-      <member name="a422_16be" value="128" c:identifier="GST_VIDEO_FORMAT_A422_16BE" glib:nick="a422-16be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 16 bits per channel (Since: 1.24)</doc>
+      <member name="a422_16be" value="128" c:identifier="GST_VIDEO_FORMAT_A422_16BE" version="1.24" glib:nick="a422-16be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:2 YUV, 16 bits per channel</doc>
       </member>
-      <member name="a420_16le" value="129" c:identifier="GST_VIDEO_FORMAT_A420_16LE" glib:nick="a420-16le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 16 bits per channel (Since: 1.24)</doc>
+      <member name="a420_16le" value="129" c:identifier="GST_VIDEO_FORMAT_A420_16LE" version="1.24" glib:nick="a420-16le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 16 bits per channel</doc>
       </member>
-      <member name="a420_16be" value="130" c:identifier="GST_VIDEO_FORMAT_A420_16BE" glib:nick="a420-16be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 16 bits per channel (Since: 1.24)</doc>
+      <member name="a420_16be" value="130" c:identifier="GST_VIDEO_FORMAT_A420_16BE" version="1.24" glib:nick="a420-16be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:2:0 YUV, 16 bits per channel</doc>
       </member>
-      <member name="gbr_16le" value="131" c:identifier="GST_VIDEO_FORMAT_GBR_16LE" glib:nick="gbr-16le">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 16 bits per channel (Since: 1.24)</doc>
+      <member name="gbr_16le" value="131" c:identifier="GST_VIDEO_FORMAT_GBR_16LE" version="1.24" glib:nick="gbr-16le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 16 bits per channel</doc>
       </member>
-      <member name="gbr_16be" value="132" c:identifier="GST_VIDEO_FORMAT_GBR_16BE" glib:nick="gbr-16be">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 16 bits per channel (Since: 1.24)</doc>
+      <member name="gbr_16be" value="132" c:identifier="GST_VIDEO_FORMAT_GBR_16BE" version="1.24" glib:nick="gbr-16be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 16 bits per channel</doc>
       </member>
       <function name="from_fourcc" c:identifier="gst_video_format_from_fourcc">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Converts a FOURCC value into the corresponding #GstVideoFormat.
@@ -10385,9 +10391,8 @@ the #GstVideoFormat if there is one, or NULL otherwise.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">The format is tiled, there is tiling information
   in the last plane.</doc>
       </member>
-      <member name="subtiles" value="512" c:identifier="GST_VIDEO_FORMAT_FLAG_SUBTILES" glib:nick="subtiles">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">The tile size varies per plane
-  according to the subsampling. (Since: 1.22)</doc>
+      <member name="subtiles" value="512" c:identifier="GST_VIDEO_FORMAT_FLAG_SUBTILES" version="1.22" glib:nick="subtiles">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">The tile size varies per plane according to the subsampling.</doc>
       </member>
     </bitfield>
     <record name="VideoFormatInfo" c:type="GstVideoFormatInfo">
@@ -10505,8 +10510,8 @@ use tile_info[] array instead.</doc>
 use tile_info[] array instead.</doc>
         <type name="guint" c:type="guint"/>
       </field>
-      <field name="tile_info" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Per-plane tile information</doc>
+      <field name="tile_info" version="1.22" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Information about the tiles for each of the planes.</doc>
         <array zero-terminated="0" fixed-size="4">
           <type name="VideoTileInfo" c:type="GstVideoTileInfo"/>
         </array>
@@ -14662,16 +14667,24 @@ frames will only be rendered in PLAYING state.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h">Description of a tile. This structure allow to describe arbitrary tile
 dimensions and sizes.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h"/>
-      <field name="width" writable="1">
+      <field name="width" version="1.22" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h">The width in pixels of a tile. This value can be zero if the number of
+pixels per line is not an integer value.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="height" writable="1">
         <type name="guint" c:type="guint"/>
       </field>
-      <field name="stride" writable="1">
+      <field name="stride" version="1.22" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h">The stride (in bytes) of a tile line. Regardless if the tile have sub-tiles
+this stride multiplied by the height should be equal to
+#GstVideoTileInfo.size. This value is used to translate into linear stride
+when older APIs are being used to expose this format.</doc>
         <type name="guint" c:type="guint"/>
       </field>
-      <field name="size" writable="1">
+      <field name="size" version="1.22" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h">The size in bytes of a tile. This value must be divisible by
+#GstVideoTileInfo.stride.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="padding" readable="0" private="1">
@@ -14691,8 +14704,8 @@ dimensions and sizes.</doc>
    in memory in Z or flipped Z order. In case of odd rows, the last row
    of blocks is arranged in linear order.</doc>
       </member>
-      <member name="linear" value="131072" c:identifier="GST_VIDEO_TILE_MODE_LINEAR" glib:nick="linear">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h">Tiles are in row order. (Since: 1.18)</doc>
+      <member name="linear" value="131072" c:identifier="GST_VIDEO_TILE_MODE_LINEAR" version="1.18" glib:nick="linear">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-tile.h">Tiles are in row order.</doc>
       </member>
     </enumeration>
     <enumeration name="VideoTileType" glib:type-name="GstVideoTileType" glib:get-type="gst_video_tile_type_get_type" c:type="GstVideoTileType">
@@ -15450,11 +15463,8 @@ non-linear RGB (R'G'B') and linear RGB</doc>
                                   STD-B67 and Rec. ITU-R BT.2100-1 hybrid loggamma (HLG) system
                                   Since: 1.18</doc>
       </member>
-      <member name="bt601" value="16" c:identifier="GST_VIDEO_TRANSFER_BT601" glib:nick="bt601">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h">also known as SMPTE170M / ITU-R BT1358 525 or 625 / ITU-R BT1700 NTSC
-                           Functionally the same as the values
-                           GST_VIDEO_TRANSFER_BT709, and GST_VIDEO_TRANSFER_BT2020_10.
-                           Since: 1.18</doc>
+      <member name="bt601" value="16" c:identifier="GST_VIDEO_TRANSFER_BT601" version="1.18" glib:nick="bt601">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h">also known as SMPTE170M / ITU-R BT1358 525 or 625 / ITU-R BT1700 NTSC</doc>
       </member>
       <function name="decode" c:identifier="gst_video_transfer_function_decode" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">Convert @val to its gamma decoded value. This is the inverse operation of
@@ -16437,6 +16447,32 @@ in @align</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstvideo">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.c">This library contains some helper functions and includes the
+videosink and videofilter base classes.</doc>
+    </docsection>
+    <docsection name="gstvideoanc">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">A collection of objects and methods to assist with handling Ancillary Data
+present in Vertical Blanking Interval as well as Closed Caption.</doc>
+    </docsection>
+    <docsection name="gstvideochroma">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-chroma.c">The functions gst_video_chroma_from_string() and gst_video_chroma_to_string() convert
+between #GstVideoChromaSite and string descriptions.
+
+#GstVideoChromaResample is a utility object for resampling chroma planes
+and converting between different chroma sampling sitings.</doc>
+    </docsection>
+    <docsection name="gstvideopool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideopool.c">Special GstBufferPool subclass for raw video buffers.
+
+Allows configuration of video-specific requirements such as
+stride alignments or pixel padding, and can also be configured
+to automatically add #GstVideoMeta to the buffers.</doc>
+    </docsection>
+    <docsection name="gstvideosei">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-sei.c">A collection of objects and methods to assist with SEI User Data Unregistered
+metadata in H.264 and H.265 streams.</doc>
+    </docsection>
     <function name="is_video_overlay_prepare_window_handle_message" c:identifier="gst_is_video_overlay_prepare_window_handle_message">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/videooverlay.c">Convenience function to check if the given message is a
 "prepare-window-handle" message from a #GstVideoOverlay.</doc>
@@ -19424,5 +19460,14 @@ and "ITU-T H.273 Table 3".
         </parameter>
       </parameters>
     </function>
+    <docsection name="videoconverter">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">This object is used to convert video frames from one format to another.
+The object can perform conversion of:
+
+ * video format
+ * video colorspace
+ * chroma-siting
+ * video size</doc>
+    </docsection>
   </namespace>
 </repository>

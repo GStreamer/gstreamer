@@ -348,7 +348,7 @@ Pass 0 to stop updating the position.</doc>
     </class>
     <record name="TranscoderClass" c:type="GstTranscoderClass" glib:is-gtype-struct-for="Transcoder">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.20">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
     </record>

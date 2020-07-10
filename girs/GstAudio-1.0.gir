@@ -11691,6 +11691,16 @@ the #GstDsdFormat if there is one, or NULL otherwise.</doc>
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
       </return-value>
     </function>
+    <docsection name="gstaudio">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.c">This library contains some helper functions for audio elements.</doc>
+    </docsection>
+    <docsection name="gstaudiochannels">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">This library contains some helper functions for multichannel audio.</doc>
+    </docsection>
+    <docsection name="gstaudioiec61937">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioiec61937.c">This module contains some helper functions for encapsulating various
+audio formats in IEC 61937 headers and padding.</doc>
+    </docsection>
     <function name="stream_volume_convert_volume" c:identifier="gst_stream_volume_convert_volume" moved-to="StreamVolume.convert_volume">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/streamvolume.h"/>
       <return-value transfer-ownership="none">

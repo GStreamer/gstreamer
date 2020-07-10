@@ -4575,18 +4575,17 @@ and can be used as a binary.</doc>
       <field name="header_size_in_bytes" writable="1">
         <type name="guint16" c:type="guint16"/>
       </field>
-      <field name="tx_mode" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">specifies how the transform size is determined</doc>
+      <field name="tx_mode" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">Specifies how the transform size is determined.</doc>
         <type name="Vp9TxMode" c:type="GstVp9TxMode"/>
       </field>
-      <field name="reference_mode" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">is a derived syntax element that specifies the type of
-  inter prediction to be used</doc>
+      <field name="reference_mode" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">Is a derived syntax element that specifies the type of
+inter prediction to be used.</doc>
         <type name="Vp9ReferenceMode" c:type="GstVp9ReferenceMode"/>
       </field>
-      <field name="delta_probabilities" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">modification to the probabilities encoded in the
-  bitstream</doc>
+      <field name="delta_probabilities" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">Modification to the probabilities encoded in the bitstream.</doc>
         <type name="Vp9DeltaProbabilities" c:type="GstVp9DeltaProbabilities"/>
       </field>
       <field name="lossless_flag" writable="1">

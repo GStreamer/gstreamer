@@ -643,9 +643,11 @@ for more information.</doc>
       <member name="internal_failure" value="8" c:identifier="GST_WEBRTC_ERROR_INTERNAL_FAILURE" glib:nick="internal-failure">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">GStreamer-specific failure, not matching any other value from the specification</doc>
       </member>
-      <member name="invalid_modification" value="9" c:identifier="GST_WEBRTC_ERROR_INVALID_MODIFICATION" glib:nick="invalid-modification">
+      <member name="invalid_modification" value="9" c:identifier="GST_WEBRTC_ERROR_INVALID_MODIFICATION" version="1.22" glib:nick="invalid-modification">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">invalid-modification (part of WebIDL specification)</doc>
       </member>
-      <member name="type_error" value="10" c:identifier="GST_WEBRTC_ERROR_TYPE_ERROR" glib:nick="type-error">
+      <member name="type_error" value="10" c:identifier="GST_WEBRTC_ERROR_TYPE_ERROR" version="1.22" glib:nick="type-error">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">type-error (maps to JavaScript TypeError)</doc>
       </member>
       <function name="quark" c:identifier="gst_webrtc_error_quark" version="1.20">
         <return-value transfer-ownership="none">
@@ -2658,6 +2660,27 @@ answer.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">certificate</doc>
       </member>
     </enumeration>
+    <docsection name="gstwebrtc-datachannel">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">&lt;https://www.w3.org/TR/webrtc/#rtcdatachannel&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-dtlstransport">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/dtlstransport.c">&lt;https://www.w3.org/TR/webrtc/#rtcdtlstransport&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-icetransport">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">See the [specification](https://www.w3.org/TR/webrtc/#rtcicetransport)</doc>
+    </docsection>
+    <docsection name="gstwebrtc-receiver">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.c">&lt;https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-sender">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.c">&lt;https://www.w3.org/TR/webrtc/#rtcrtpsender-interface&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-sessiondescription">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">&lt;https://www.w3.org/TR/webrtc/#rtcsessiondescription-class&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-transceiver">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.c">&lt;https://www.w3.org/TR/webrtc/#rtcrtptransceiver-interface&gt;</doc>
+    </docsection>
     <function name="webrtc_error_quark" c:identifier="gst_webrtc_error_quark" moved-to="WebRTCError.quark" version="1.20">
       <return-value transfer-ownership="none">
         <type name="GLib.Quark" c:type="GQuark"/>

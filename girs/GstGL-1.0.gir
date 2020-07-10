@@ -1096,13 +1096,16 @@ is available and is not available within this element.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.c">The #GstGLContext in use by this #GstGLBaseMixer</doc>
         <type name="GLContext"/>
       </property>
-      <field name="parent">
+      <field name="parent" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">parent #GstVideoAggregator</doc>
         <type name="GstVideo.VideoAggregator" c:type="GstVideoAggregator"/>
       </field>
-      <field name="display">
+      <field name="display" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the currently configured #GstGLDisplay</doc>
         <type name="GLDisplay" c:type="GstGLDisplay*"/>
       </field>
-      <field name="context">
+      <field name="context" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the currently configured #GstGLContext</doc>
         <type name="GLContext" c:type="GstGLContext*"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -1116,10 +1119,12 @@ is available and is not available within this element.</doc>
     </class>
     <record name="GLBaseMixerClass" c:type="GstGLBaseMixerClass" glib:is-gtype-struct-for="GLBaseMixer" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the parent #GstVideoAggregatorClass</doc>
         <type name="GstVideo.VideoAggregatorClass" c:type="GstVideoAggregatorClass"/>
       </field>
-      <field name="supported_gl_api">
+      <field name="supported_gl_api" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the logical-OR of #GstGLAPI's supported by this element</doc>
         <type name="GLAPI" c:type="GstGLAPI"/>
       </field>
       <field name="gl_start">
@@ -1157,7 +1162,8 @@ is available and is not available within this element.</doc>
     </record>
     <class name="GLBaseMixerPad" c:symbol-prefix="gl_base_mixer_pad" c:type="GstGLBaseMixerPad" version="1.24" parent="GstVideo.VideoAggregatorPad" glib:type-name="GstGLBaseMixerPad" glib:get-type="gst_gl_base_mixer_pad_get_type" glib:type-struct="GLBaseMixerPadClass">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
-      <field name="parent">
+      <field name="parent" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">parent #GstVideoAggregatorPad</doc>
         <type name="GstVideo.VideoAggregatorPad" c:type="GstVideoAggregatorPad"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -1168,7 +1174,8 @@ is available and is not available within this element.</doc>
     </class>
     <record name="GLBaseMixerPadClass" c:type="GstGLBaseMixerPadClass" glib:is-gtype-struct-for="GLBaseMixerPad" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">parent #GstVideoAggregatorPadClass</doc>
         <type name="GstVideo.VideoAggregatorPadClass" c:type="GstVideoAggregatorPadClass"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -3445,15 +3452,21 @@ display's object lock held.</doc>
       <member name="gbm" value="128" c:identifier="GST_GL_DISPLAY_TYPE_GBM" glib:nick="gbm">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">Mesa3D GBM display</doc>
       </member>
-      <member name="egl_device" value="256" c:identifier="GST_GL_DISPLAY_TYPE_EGL_DEVICE" glib:nick="egl-device">
+      <member name="egl_device" value="256" c:identifier="GST_GL_DISPLAY_TYPE_EGL_DEVICE" version="1.18" glib:nick="egl-device">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">EGLDevice display.</doc>
       </member>
-      <member name="eagl" value="512" c:identifier="GST_GL_DISPLAY_TYPE_EAGL" glib:nick="eagl">
+      <member name="eagl" value="512" c:identifier="GST_GL_DISPLAY_TYPE_EAGL" version="1.20" glib:nick="eagl">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">EAGL display.</doc>
       </member>
-      <member name="winrt" value="1024" c:identifier="GST_GL_DISPLAY_TYPE_WINRT" glib:nick="winrt">
+      <member name="winrt" value="1024" c:identifier="GST_GL_DISPLAY_TYPE_WINRT" version="1.20" glib:nick="winrt">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">WinRT display.</doc>
       </member>
-      <member name="android" value="2048" c:identifier="GST_GL_DISPLAY_TYPE_ANDROID" glib:nick="android">
+      <member name="android" value="2048" c:identifier="GST_GL_DISPLAY_TYPE_ANDROID" version="1.20" glib:nick="android">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">Android display.</doc>
       </member>
-      <member name="egl_surfaceless" value="4096" c:identifier="GST_GL_DISPLAY_TYPE_EGL_SURFACELESS" glib:nick="egl-surfaceless">
+      <member name="egl_surfaceless" value="4096" c:identifier="GST_GL_DISPLAY_TYPE_EGL_SURFACELESS" version="1.24" glib:nick="egl-surfaceless">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">Mesa3D surfaceless display using the EGL_PLATFORM_SURFACELESS_MESA
+extension.</doc>
       </member>
       <member name="any" value="4294967295" c:identifier="GST_GL_DISPLAY_TYPE_ANY" glib:nick="any">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">any display type</doc>
@@ -4815,10 +4828,11 @@ Intended for use within implementations of
           </parameter>
         </parameters>
       </method>
-      <field name="parent">
+      <field name="parent" version="1.24">
         <type name="GLBaseMixer" c:type="GstGLBaseMixer"/>
       </field>
-      <field name="out_caps">
+      <field name="out_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">the configured output #GstCaps</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
       </field>
       <field name="priv" readable="0" private="1">
@@ -4832,7 +4846,7 @@ Intended for use within implementations of
     </class>
     <record name="GLMixerClass" c:type="GstGLMixerClass" glib:is-gtype-struct-for="GLMixer" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
         <type name="GLBaseMixerClass" c:type="GstGLBaseMixerClass"/>
       </field>
       <field name="process_buffers">
@@ -4893,10 +4907,12 @@ manually.</doc>
     </record>
     <class name="GLMixerPad" c:symbol-prefix="gl_mixer_pad" c:type="GstGLMixerPad" version="1.24" parent="GLBaseMixerPad" glib:type-name="GstGLMixerPad" glib:get-type="gst_gl_mixer_pad_get_type" glib:type-struct="GLMixerPadClass">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-      <field name="parent">
+      <field name="parent" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">parent #GstGLBaseMixerPad</doc>
         <type name="GLBaseMixerPad" c:type="GstGLBaseMixerPad"/>
       </field>
-      <field name="current_texture">
+      <field name="current_texture" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">the current input texture for this pad</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -4907,7 +4923,8 @@ manually.</doc>
     </class>
     <record name="GLMixerPadClass" c:type="GstGLMixerPadClass" glib:is-gtype-struct-for="GLMixerPad" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">parent #GstGLBaseMixerPadClass</doc>
         <type name="GLBaseMixerPadClass" c:type="GstGLBaseMixerPadClass"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -11650,6 +11667,17 @@ or a valid GLSL version and/or profile.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gstglapi">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglapi.c">Provides some helper API for dealing with OpenGL API's and platforms</doc>
+    </docsection>
+    <docsection name="gstglcontextconfig">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcontextconfig.c">A common list of well-known values for what a config retrievable from or set
+on a `GstGLContext` may contain.</doc>
+    </docsection>
+    <docsection name="gstglformat">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Some useful utilities for converting between various formats and OpenGL
+formats.</doc>
+    </docsection>
     <function name="is_gl_base_memory" c:identifier="gst_is_gl_base_memory" version="1.8">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasememory.h"/>
       <return-value transfer-ownership="none">

@@ -1865,13 +1865,16 @@ this message should chain up to the parent class implementation so the
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">GstBinFlags are a set of flags specific to bins. Most are set/used
 internally. They can be checked using the GST_OBJECT_FLAG_IS_SET() macro,
 and (un)set using GST_OBJECT_FLAG_SET() and GST_OBJECT_FLAG_UNSET().</doc>
-      <member name="no_resync" value="16384" c:identifier="GST_BIN_FLAG_NO_RESYNC" glib:nick="no-resync">
+      <member name="no_resync" value="16384" c:identifier="GST_BIN_FLAG_NO_RESYNC" version="1.0.5" glib:nick="no-resync">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">Don't resync a state change when elements are added or linked in the bin</doc>
       </member>
-      <member name="streams_aware" value="32768" c:identifier="GST_BIN_FLAG_STREAMS_AWARE" glib:nick="streams-aware">
+      <member name="streams_aware" value="32768" c:identifier="GST_BIN_FLAG_STREAMS_AWARE" version="1.10" glib:nick="streams-aware">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">Indicates whether the bin can handle elements that add/remove source pads
+at any point in time without first posting a no-more-pads signal.</doc>
       </member>
       <member name="last" value="524288" c:identifier="GST_BIN_FLAG_LAST" glib:nick="last">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">the last enum in the series of flags for bins.
-Derived classes can use this as first value in a list of flags.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbin.h">The last enum in the series of flags for bins. Derived classes can use this
+as first value in a list of flags.</doc>
       </member>
     </bitfield>
     <record name="BinPrivate" c:type="GstBinPrivate" disguised="1">
@@ -3512,7 +3515,8 @@ function to specify which items should be copied.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">flag indicating that buffer memory should be
   merged</doc>
       </member>
-      <member name="deep" value="32" c:identifier="GST_BUFFER_COPY_DEEP" glib:nick="deep">
+      <member name="deep" value="32" c:identifier="GST_BUFFER_COPY_DEEP" version="1.2" glib:nick="deep">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">flag indicating that memory should always be copied instead of reffed</doc>
       </member>
     </bitfield>
     <bitfield name="BufferFlags" glib:type-name="GstBufferFlags" glib:get-type="gst_buffer_flags_get_type" c:type="GstBufferFlags">
@@ -3567,9 +3571,17 @@ function to specify which items should be copied.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">this flag is set when memory of the buffer
                                 is added/removed</doc>
       </member>
-      <member name="sync_after" value="32768" c:identifier="GST_BUFFER_FLAG_SYNC_AFTER" glib:nick="sync-after">
+      <member name="sync_after" value="32768" c:identifier="GST_BUFFER_FLAG_SYNC_AFTER" version="1.6" glib:nick="sync-after">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">Elements which write to disk or permanent storage should ensure the data
+is synced after writing the contents of this buffer.</doc>
       </member>
-      <member name="non_droppable" value="65536" c:identifier="GST_BUFFER_FLAG_NON_DROPPABLE" glib:nick="non-droppable">
+      <member name="non_droppable" value="65536" c:identifier="GST_BUFFER_FLAG_NON_DROPPABLE" version="1.14" glib:nick="non-droppable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">This buffer is important and should not be dropped.
+
+This can be used to mark important buffers, e.g. to flag RTP packets
+carrying keyframes or codec setup data for RTP Forward Error Correction
+purposes, or to prevent still video frames from being dropped by elements
+due to QoS.</doc>
       </member>
       <member name="last" value="1048576" c:identifier="GST_BUFFER_FLAG_LAST" glib:nick="last">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">additional media specific flags can be added starting from
@@ -9555,7 +9567,8 @@ not be extended or allocated using a custom allocator.</doc>
       <member name="can_set_master" value="512" c:identifier="GST_CLOCK_FLAG_CAN_SET_MASTER" glib:nick="can-set-master">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.h">clock can be slaved to a master clock</doc>
       </member>
-      <member name="needs_startup_sync" value="1024" c:identifier="GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC" glib:nick="needs-startup-sync">
+      <member name="needs_startup_sync" value="1024" c:identifier="GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC" version="1.6" glib:nick="needs-startup-sync">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.h">clock needs to be synced before it can be used</doc>
       </member>
       <member name="last" value="4096" c:identifier="GST_CLOCK_FLAG_LAST" glib:nick="last">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.h">subclasses can add additional flags starting from this flag</doc>
@@ -10508,8 +10521,8 @@ gst_custom_meta_get_structure().</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">parent #GstMeta</doc>
         <type name="Meta" c:type="GstMeta"/>
       </field>
-      <field name="structure" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a #GstStructure containing custom metadata. (Since: 1.24)</doc>
+      <field name="structure" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">#GstStructure containing custom metadata.</doc>
         <type name="Structure" c:type="GstStructure*"/>
       </field>
       <method name="get_structure" c:identifier="gst_custom_meta_get_structure" version="1.20">
@@ -37244,8 +37257,8 @@ Either @new_query or the #GstQuery pointed to by @old_query may be %NULL.</doc>
       <member name="bitrate" value="51202" c:identifier="GST_QUERY_BITRATE" glib:nick="bitrate">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">the bitrate query (since 1.16)</doc>
       </member>
-      <member name="selectable" value="53763" c:identifier="GST_QUERY_SELECTABLE" glib:nick="selectable">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">Query stream selection capability (Since: 1.22)</doc>
+      <member name="selectable" value="53763" c:identifier="GST_QUERY_SELECTABLE" version="1.22" glib:nick="selectable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.h">Query stream selection capability.</doc>
       </member>
       <function name="get_flags" c:identifier="gst_query_type_get_flags">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">Gets the #GstQueryTypeFlags associated with @type.</doc>
@@ -49202,7 +49215,7 @@ Free-function: g_free</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">a #GstValueDeserializeFunc</doc>
         <type name="ValueDeserializeFunc" c:type="GstValueDeserializeFunc"/>
       </field>
-      <field name="deserialize_with_pspec" writable="1">
+      <field name="deserialize_with_pspec" version="1.20" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">a #GstValueDeserializeWithPSpecFunc</doc>
         <type name="ValueDeserializeWithPSpecFunc" c:type="GstValueDeserializeWithPSpecFunc"/>
       </field>
@@ -50693,6 +50706,12 @@ everything to log level 2.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="debugutils">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdebugutils.c">These utility functions help with generating dot graphs which can
+be rendered with [graphviz] to multiple formats.
+
+[graphviz]: https://graphviz.org/</doc>
+    </docsection>
     <function name="deinit" c:identifier="gst_deinit">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">Clean up any resources created by GStreamer in gst_init().
 
@@ -51160,6 +51179,271 @@ parent process.</doc>
         <type name="utf8" c:type="const gchar*"/>
       </return-value>
     </function>
+    <docsection name="gst">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gst.c">GStreamer is a framework for constructing graphs of various filters
+(termed elements here) that will handle streaming media.
+
+Any discrete (packetizable) media type is supported, with provisions for
+automatically determining source type.
+
+Formatting/framing information is provided with a powerful negotiation
+framework.
+
+Plugins are heavily used to provide for all elements, allowing one to
+construct plugins outside of the GST library, even released binary-only if
+license require (please don't).
+
+GStreamer covers a wide range of use cases including: playback, recording,
+editing, serving streams, voice over ip and video calls.
+
+The `GStreamer` library should be initialized with
+gst_init() before it can be used. You should pass pointers to the main `argc`
+and `argv` variables so that GStreamer can process its own command line
+options, as shown in the following example.
+
+## Initializing the gstreamer library
+
+``` C
+int main (int argc, char *argv[])
+{
+  // initialize the GStreamer library
+  gst_init (&amp;argc, &amp;argv);
+  ...
+}
+```
+
+It's allowed to pass two %NULL pointers to gst_init() in case you don't want
+to pass the command line args to GStreamer.
+
+You can also use #GOptionContext to initialize your own parameters as shown in
+the next code fragment:
+
+## Initializing own parameters when initializing GStreamer
+
+``` C
+static gboolean stats = FALSE;
+...
+int
+main (int argc, char *argv[])
+{
+ GOptionEntry options[] = {
+  {"tags", 't', 0, G_OPTION_ARG_NONE, &amp;tags,
+      N_("Output tags (also known as metadata)"), NULL},
+  {NULL}
+ };
+ ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
+ g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+ g_option_context_add_group (ctx, gst_init_get_option_group ());
+ if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
+   g_print ("Error initializing: %s\n", GST_STR_NULL (err-&gt;message));
+   exit (1);
+ }
+ g_option_context_free (ctx);
+...
+}
+```
+
+Use gst_version() to query the library version at runtime or use the
+GST_VERSION_* macros to find the version at compile time. Optionally
+gst_version_string() returns a printable string.
+
+The gst_deinit() call is used to clean up all internal resources used
+by GStreamer. It is mostly used in unit tests to check for leaks.</doc>
+    </docsection>
+    <docsection name="gstcompat">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcompat.h">Please do not use these in new code.
+These symbols are only available by defining GST_DISABLE_DEPRECATED.
+This can be done in CFLAGS for compiling old code.</doc>
+    </docsection>
+    <docsection name="gsterror">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsterror.c">GStreamer elements can throw non-fatal warnings and fatal errors.
+Higher-level elements and applications can programmatically filter
+the ones they are interested in or can recover from,
+and have a default handler handle the rest of them.
+
+The rest of this section will use the term "error"
+to mean both (non-fatal) warnings and (fatal) errors; they are treated
+similarly.
+
+Errors from elements are the combination of a #GError and a debug string.
+The #GError contains:
+- a domain type: CORE, LIBRARY, RESOURCE or STREAM
+- a code: an enum value specific to the domain
+- a translated, human-readable message
+- a non-translated additional debug string, which also contains
+- file and line information
+
+Elements do not have the context required to decide what to do with
+errors.  As such, they should only inform about errors, and stop their
+processing.  In short, an element doesn't know what it is being used for.
+
+It is the application or compound element using the given element that
+has more context about the use of the element. Errors can be received by
+listening to the #GstBus of the element/pipeline for #GstMessage objects with
+the type %GST_MESSAGE_ERROR or %GST_MESSAGE_WARNING. The thrown errors should
+be inspected, and filtered if appropriate.
+
+An application is expected to, by default, present the user with a
+dialog box (or an equivalent) showing the error message.  The dialog
+should also allow a way to get at the additional debug information,
+so the user can provide bug reporting information.
+
+A compound element is expected to forward errors by default higher up
+the hierarchy; this is done by default in the same way as for other types
+of #GstMessage.
+
+When applications or compound elements trigger errors that they can
+recover from, they can filter out these errors and take appropriate action.
+For example, an application that gets an error from xvimagesink
+that indicates all XVideo ports are taken, the application can attempt
+to use another sink instead.
+
+Elements throw errors using the #GST_ELEMENT_ERROR convenience macro:
+
+## Throwing an error
+
+  |[
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+      (_("No file name specified for reading.")), (NULL));
+  ]|
+
+Things to keep in mind:
+
+  * Don't go off inventing new error codes.  The ones
+    currently provided should be enough.  If you find your type of error
+    does not fit the current codes, you should use FAILED.
+  * Don't provide a message if the default one suffices.
+    this keeps messages more uniform.  Use (%NULL) - not forgetting the
+    parentheses.
+  * If you do supply a custom message, it should be
+    marked for translation.  The message should start with a capital
+    and end with a period.  The message should describe the error in short,
+    in a human-readable form, and without any complex technical terms.
+    A user interface will present this message as the first thing a user
+    sees.  Details, technical info, ... should go in the debug string.
+
+  * The debug string can be as you like.  Again, use (%NULL)
+    if there's nothing to add - file and line number will still be
+    passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
+    debug information on a system call error.</doc>
+    </docsection>
+    <docsection name="gstformat">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstformat.c">GstFormats functions are used to register a new format to the gstreamer
+core.  Formats can be used to perform seeking or conversions/query
+operations.</doc>
+    </docsection>
+    <docsection name="gstinfo">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">GStreamer's debugging subsystem is an easy way to get information about what
+the application is doing.  It is not meant for programming errors. Use GLib
+methods (g_warning and friends) for that.
+
+The debugging subsystem works only after GStreamer has been initialized
+- for example by calling gst_init().
+
+The debugging subsystem is used to log informational messages while the
+application runs.  Each messages has some properties attached to it. Among
+these properties are the debugging category, the severity (called "level"
+here) and an optional #GObject it belongs to. Each of these messages is sent
+to all registered debugging handlers, which then handle the messages.
+GStreamer attaches a default handler on startup, which outputs requested
+messages to stderr.
+
+Messages are output by using shortcut macros like #GST_DEBUG,
+#GST_CAT_ERROR_OBJECT or similar. These all expand to calling gst_debug_log()
+with the right parameters.
+The only thing a developer will probably want to do is define his own
+categories. This is easily done with 3 lines. At the top of your code,
+declare
+the variables and set the default category.
+|[&lt;!-- language="C" --&gt;
+  GST_DEBUG_CATEGORY_STATIC (my_category);  // define category (statically)
+  #define GST_CAT_DEFAULT my_category       // set as default
+]|
+After that you only need to initialize the category.
+|[&lt;!-- language="C" --&gt;
+  GST_DEBUG_CATEGORY_INIT (my_category, "my category",
+                           0, "This is my very own");
+]|
+Initialization must be done before the category is used first.
+Plugins do this
+in their plugin_init function, libraries and applications should do that
+during their initialization.
+
+The whole debugging subsystem can be disabled at build time with passing the
+--disable-gst-debug switch to configure. If this is done, every function,
+macro and even structs described in this file evaluate to default values or
+nothing at all.
+So don't take addresses of these functions or use other tricks.
+If you must do that for some reason, there is still an option.
+If the debugging
+subsystem was compiled out, GST_DISABLE_GST_DEBUG is defined in
+&lt;gst/gst.h&gt;,
+so you can check that before doing your trick.
+Disabling the debugging subsystem will give you a slight (read: unnoticeable)
+speed increase and will reduce the size of your compiled code. The GStreamer
+library itself becomes around 10% smaller.
+
+Please note that there are naming conventions for the names of debugging
+categories. These are explained at GST_DEBUG_CATEGORY_INIT().</doc>
+    </docsection>
+    <docsection name="gstparamspec">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.c">GParamSpec implementations specific to GStreamer.</doc>
+    </docsection>
+    <docsection name="gstparse">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">These function allow to create a pipeline based on the syntax used in the
+gst-launch-1.0 utility (see man-page for syntax documentation).
+
+Please note that these functions take several measures to create
+somewhat dynamic pipelines. Due to that such pipelines are not always
+reusable (set the state to NULL and back to PLAYING).</doc>
+    </docsection>
+    <docsection name="gstprotection">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstprotection.c">The GstProtectionMeta class enables the information needed to decrypt a
+#GstBuffer to be attached to that buffer.
+
+Typically, a demuxer element would attach GstProtectionMeta objects
+to the buffers that it pushes downstream. The demuxer would parse the
+protection information for a video/audio frame from its input data and use
+this information to populate the #GstStructure @info field,
+which is then encapsulated in a GstProtectionMeta object and attached to
+the corresponding output buffer using the gst_buffer_add_protection_meta()
+function. The information in this attached GstProtectionMeta would be
+used by a downstream decrypter element to recover the original unencrypted
+frame.</doc>
+    </docsection>
+    <docsection name="gststreams">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreams.c">A #GstStream is a high-level object defining a stream of data which is, or
+can be, present in a #GstPipeline.
+
+It is defined by a unique identifier, a "Stream ID". A #GstStream does not
+automatically imply the stream is present within a pipeline or element.
+
+Any element that can introduce new streams in a pipeline should create the
+appropriate #GstStream object, and can convey that object via the
+%GST_EVENT_STREAM_START event and/or the #GstStreamCollection.
+
+Elements that do not modify the nature of the stream can add extra information
+on it (such as enrich the #GstCaps, or #GstTagList). This is typically done
+by parsing elements.</doc>
+    </docsection>
+    <docsection name="gstvalue">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">GValue implementations specific to GStreamer.
+
+Note that operations on the same #GValue from multiple threads may lead to
+undefined behaviour.</doc>
+    </docsection>
+    <docsection name="gstversion">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstversion.h">Use the GST_VERSION_* macros e.g. when defining own plugins. The GStreamer
+runtime checks if these plugin and core version match and refuses to use a
+plugin compiled against a different version of GStreamer.
+You can also use the macros to keep the GStreamer version information in
+your application.
+
+Use the gst_version() function if you want to know which version of
+GStreamer you are currently linked against.
+
+The version macros get defined by including "gst/gst.h".</doc>
+    </docsection>
     <function-macro name="guint64_to_gdouble" c:identifier="gst_guint64_to_gdouble" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.h">Convert @value to a gdouble.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>

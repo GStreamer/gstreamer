@@ -847,11 +847,13 @@ CUDA stream is in use</doc>
     </record>
     <enumeration name="CudaMemoryAllocMethod" version="1.24" glib:type-name="GstCudaMemoryAllocMethod" glib:get-type="gst_cuda_memory_alloc_method_get_type" c:type="GstCudaMemoryAllocMethod">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">CUDA memory allocation method</doc>
-      <member name="unknown" value="0" c:identifier="GST_CUDA_MEMORY_ALLOC_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="0" c:identifier="GST_CUDA_MEMORY_ALLOC_UNKNOWN" version="1.24" glib:nick="unknown">
       </member>
-      <member name="malloc" value="1" c:identifier="GST_CUDA_MEMORY_ALLOC_MALLOC" glib:nick="malloc">
+      <member name="malloc" value="1" c:identifier="GST_CUDA_MEMORY_ALLOC_MALLOC" version="1.24" glib:nick="malloc">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">Memory allocated via cuMemAlloc or cuMemAllocPitch</doc>
       </member>
-      <member name="mmap" value="2" c:identifier="GST_CUDA_MEMORY_ALLOC_MMAP" glib:nick="mmap">
+      <member name="mmap" value="2" c:identifier="GST_CUDA_MEMORY_ALLOC_MMAP" version="1.24" glib:nick="mmap">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">Memory allocated via cuMemCreate and cuMemMap</doc>
       </member>
     </enumeration>
     <record name="CudaMemoryPrivate" c:type="GstCudaMemoryPrivate" disguised="1">
@@ -860,11 +862,14 @@ CUDA stream is in use</doc>
     <bitfield name="CudaMemoryTransfer" c:type="GstCudaMemoryTransfer">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">CUDA memory transfer flags</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
-      <member name="download" value="1048576" c:identifier="GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD">
+      <member name="download" value="1048576" c:identifier="GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">the device memory needs downloading to the staging memory</doc>
       </member>
-      <member name="upload" value="2097152" c:identifier="GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD">
+      <member name="upload" value="2097152" c:identifier="GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">the staging memory needs uploading to the device memory</doc>
       </member>
-      <member name="sync" value="4194304" c:identifier="GST_CUDA_MEMORY_TRANSFER_NEED_SYNC">
+      <member name="sync" value="4194304" c:identifier="GST_CUDA_MEMORY_TRANSFER_NEED_SYNC" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">the device memory needs synchronization</doc>
       </member>
     </bitfield>
     <class name="CudaPoolAllocator" c:symbol-prefix="cuda_pool_allocator" c:type="GstCudaPoolAllocator" version="1.24" parent="CudaAllocator" glib:type-name="GstCudaPoolAllocator" glib:get-type="gst_cuda_pool_allocator_get_type" glib:type-struct="CudaPoolAllocatorClass">

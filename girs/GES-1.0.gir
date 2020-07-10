@@ -15756,8 +15756,9 @@ account.</doc>
       <member name="crossfade" value="512" c:identifier="GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE" glib:nick="crossfade">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-enums.h">Crossfade</doc>
       </member>
-      <member name="fade_in" value="513" c:identifier="GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN" glib:nick="fade-in">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-enums.h">Similar to crossfade, but fade in the front video without fading out the background one (Since: 1.22)</doc>
+      <member name="fade_in" value="513" c:identifier="GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN" version="1.22" glib:nick="fade-in">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-enums.h">Similar to crossfade, but fade in the front video without fading out
+the background one</doc>
       </member>
     </enumeration>
     <enumeration name="VideoTestPattern" glib:type-name="GESVideoTestPattern" glib:get-type="ges_video_test_pattern_get_type" c:type="GESVideoTestPattern">
@@ -16240,6 +16241,37 @@ formatter asset.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="ges.h">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges.c">GES needs to be initialized after GStreamer itself. This section
+contains the various functions to do so.</doc>
+    </docsection>
+    <docsection name="gestimeoverlayclip">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-time-overlay-clip.c">A #GESSourceClip that overlays timing information on top.
+
+## Asset
+
+The default asset ID is "time-overlay" (of type #GES_TYPE_SOURCE_CLIP),
+but the framerate and video size can be overridden using an ID of the form:
+
+```
+time-overlay, framerate=60/1, width=1920, height=1080, max-duration=5.0
+```
+
+## Children properties
+
+{{ libs/GESTimeOverlayClip-children-props.md }}
+
+## Symbols</doc>
+    </docsection>
+    <docsection name="gestypes">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-types.h">GStreamer Editing Services data types</doc>
+    </docsection>
+    <docsection name="gesuriasset">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-asset.c">The #GESUriClipAsset is a special #GESAsset that lets you handle
+the media file to use inside the GStreamer Editing Services. It has APIs that
+let you get information about the medias. Also, the tags found in the media file are
+set as Metadata of the Asset.</doc>
+    </docsection>
     <function name="init" c:identifier="ges_init">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges.c">Initialize the GStreamer Editing Service. Call this before any usage of
 GES. You should take care of initilizing GStreamer before calling this

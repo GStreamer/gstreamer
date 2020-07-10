@@ -13847,6 +13847,12 @@ ISO-8859-1).</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gsttypefindhelper">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gsttypefindhelper.c">Utility functions for elements doing typefinding:
+gst_type_find_helper() does typefinding in pull mode, while
+gst_type_find_helper_for_buffer() is useful for elements needing to do
+typefinding in push mode from a chain function.</doc>
+    </docsection>
     <function name="queue_array_new" c:identifier="gst_queue_array_new" moved-to="QueueArray.new" version="1.2" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Allocates a new #GstQueueArray object with an initial
 queue size of @initial_size.</doc>

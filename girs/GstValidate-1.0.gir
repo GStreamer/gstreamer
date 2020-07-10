@@ -248,7 +248,8 @@ value to a GstClockTime.</doc>
       for mandatory streams.</doc>
         <type name="utf8" c:type="const gchar*"/>
       </field>
-      <field name="free" writable="1">
+      <field name="free" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">Function that frees the various members of the structure when done using</doc>
         <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
       </field>
       <field name="_gst_reserved" readable="0" private="1">
@@ -274,9 +275,12 @@ GST_VALIDATE_EXECUTE_ACTION_DONE:</doc>
       </member>
       <member name="async" value="2" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ASYNC" glib:nick="async">
       </member>
-      <member name="non_blocking" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING" glib:nick="non-blocking">
+      <member name="non_blocking" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING" version="1.20" glib:nick="non-blocking">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action will be executed asynchronously without blocking further
+actions to be executed</doc>
       </member>
       <member name="interlaced" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_INTERLACED" glib:nick="interlaced">
+        <doc-deprecated xml:space="preserve">Use #GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING instead.</doc-deprecated>
       </member>
       <member name="error_reported" value="4" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED" glib:nick="error-reported">
       </member>
@@ -357,9 +361,12 @@ GST_VALIDATE_EXECUTE_ACTION_DONE:</doc>
       <member name="async" value="4" c:identifier="GST_VALIDATE_ACTION_TYPE_ASYNC" glib:nick="async">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be executed ASYNC</doc>
       </member>
-      <member name="non_blocking" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_NON_BLOCKING" glib:nick="non-blocking">
+      <member name="non_blocking" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_NON_BLOCKING" version="1.20" glib:nick="non-blocking">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be executed asynchronously but without blocking further
+actions execution.</doc>
       </member>
       <member name="interlaced" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_INTERLACED" glib:nick="interlaced">
+        <doc-deprecated xml:space="preserve">Use #GST_VALIDATE_ACTION_TYPE_NON_BLOCKING instead.</doc-deprecated>
       </member>
       <member name="can_execute_on_addition" value="16" c:identifier="GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION" glib:nick="can-execute-on-addition">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action will be executed on 'element-added'
@@ -385,7 +392,11 @@ GST_VALIDATE_EXECUTE_ACTION_DONE:</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be used in config files even if it is not strictly a config
                                              action (ie. it needs a scenario to run).</doc>
       </member>
-      <member name="check" value="1024" c:identifier="GST_VALIDATE_ACTION_TYPE_CHECK" glib:nick="check">
+      <member name="check" value="1024" c:identifier="GST_VALIDATE_ACTION_TYPE_CHECK" version="1.22" glib:nick="check">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action is checking some state from objects in the pipeline. It means that it can
+be used as 'check' in different action which have a `check` "sub action", such as the 'wait' action type.
+This implies that the action can be executed from any thread and not only from the scenario thread as other
+types.</doc>
       </member>
     </bitfield>
     <record name="ActionTypePrivate" c:type="GstValidateActionTypePrivate" disguised="1">
@@ -799,7 +810,8 @@ GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE: Do not generate backtrace for the issue t
       </member>
       <member name="no_backtrace" value="2" c:identifier="GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE" glib:nick="no-backtrace">
       </member>
-      <member name="force_backtrace" value="4" c:identifier="GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE" glib:nick="force-backtrace">
+      <member name="force_backtrace" value="4" c:identifier="GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE" version="1.20" glib:nick="force-backtrace">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h">Always generate backtrace, even if not a critical issue</doc>
       </member>
     </bitfield>
     <function-macro name="MEDIA_DESCRIPTOR_GET_LOCK" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_GET_LOCK" introspectable="0">
@@ -3997,6 +4009,61 @@ target-element field.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gst-validate-bin-monitor">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-bin-monitor.c">TODO</doc>
+    </docsection>
+    <docsection name="gst-validate-element-monitor">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-element-monitor.c">TODO</doc>
+    </docsection>
+    <docsection name="gst-validate-monitor">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-monitor.c">TODO</doc>
+    </docsection>
+    <docsection name="gst-validate-monitor-factory">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-monitor-factory.c">To start monitoring and thus run GstValidate tests on a #GstPipeline, the only thing to
+do is to instanciate a #GstValidateRunner and then attach a #GstValidateMonitor
+to it with #gst_validate_monitor_factory_create</doc>
+    </docsection>
+    <docsection name="gst-validate-override">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-override.c">TODO</doc>
+    </docsection>
+    <docsection name="gst-validate-pad-monitor">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-pad-monitor.c">TODO</doc>
+    </docsection>
+    <docsection name="gst-validate-pipeline-monitor">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-pipeline-monitor.c">TODO</doc>
+    </docsection>
+    <docsection name="gst-validate-runner">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-runner.c">Allows you to test a pipeline within GstValidate. It is the object where
+all issue reporting is done.
+
+In the tools using GstValidate the only minimal code to be able to monitor
+your pipelines is:
+
+|[
+ GstPipeline *pipeline = gst_pipeline_new ("monitored-pipeline");
+ GstValidateRunner *runner = gst_validate_runner_new ();
+ GstValidateMonitor *monitor = gst_validate_monitor_factory_create (
+         GST_OBJECT (pipeline), runner, NULL);
+
+ // Run the pipeline and do whatever you want with it
+
+ // In that same order
+ gst_object_unref (pipeline);
+ gst_object_unref (runner);
+ gst_object_unref (monitor);
+]|</doc>
+    </docsection>
+    <docsection name="gst-validate-scenario">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.c">A #GstValidateScenario represents the scenario that will be executed on a #GstPipeline.
+It is basically an ordered list of #GstValidateAction that will be executed during the
+execution of the pipeline.
+
+Possible configurations (see [GST_VALIDATE_CONFIG](gst-validate-environment-variables.md)):
+ * scenario-action-execution-interval: Sets the interval in
+   milliseconds (1/1000ths of a second), between which actions
+   will be executed, setting it to 0 means "execute in idle".
+   The default value is 10ms.</doc>
+    </docsection>
     <function name="has_colored_output" c:identifier="gst_validate_has_colored_output">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.h"/>
       <return-value transfer-ownership="none">

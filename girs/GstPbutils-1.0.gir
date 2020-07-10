@@ -2944,9 +2944,9 @@ describe the format of the caps.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Container format can store any kind of
     stream type.</doc>
       </member>
-      <member name="metadata" value="128" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA" glib:nick="metadata">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe a metadata
-    format, or a container format that can store metadata.</doc>
+      <member name="metadata" value="128" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA" version="1.22" glib:nick="metadata">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe a metadata format, or a container format that can store
+metadata.</doc>
       </member>
     </bitfield>
     <function name="codec_utils_aac_caps_set_level_and_profile" c:identifier="gst_codec_utils_aac_caps_set_level_and_profile">
@@ -3708,6 +3708,324 @@ invalid Opus caps.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="encoding-profile">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Functions to create and handle encoding profiles.
+
+Encoding profiles describe the media types and settings one wishes to use for
+an encoding process. The top-level profiles are commonly
+#GstEncodingContainerProfile(s) (which contains a user-readable name and
+description along with which container format to use). These, in turn,
+reference one or more #GstEncodingProfile(s) which indicate which encoding
+format should be used on each individual streams.
+
+#GstEncodingProfile(s) can be provided to the 'encodebin' element, which will
+take care of selecting and setting up the required elements to produce an
+output stream conforming to the specifications of the profile.
+
+The encoding profiles do not necessarily specify which #GstElement to use for
+the various encoding and muxing steps, as they allow to specifying the format
+one wishes to use.
+
+Encoding profiles can be created at runtime by the application or loaded from
+(and saved to) file using the #GstEncodingTarget API.
+
+## The encoding profile serialization format
+
+Encoding profiles can be serialized to be used in the command line tools or
+to set it on other other #GObject-s using #gst_util_set_object_arg for
+example.
+
+The serialization format aims at being simple to understand although flexible
+enough to describe any possible encoding profile. There are several ways to
+describe the profile depending on the context but the general idea is that it
+is a colon separated list of EncodingProfiles descriptions, the first one
+needs to describe a #GstEncodingContainerProfile and the following ones
+describe elementary streams.
+
+### Using encoders and muxer element factory name
+
+```
+  muxer_factory_name:video_encoder_factory_name:audio_encoder_factory_name
+```
+
+For example to encode a stream into a WebM container, with an OGG audio
+stream and a VP8 video stream, the serialized #GstEncodingProfile looks like:
+
+```
+  webmmux:vp8enc:vorbisenc
+```
+
+### Define the encoding profile in a generic way using caps:
+
+```
+  muxer_source_caps:video_encoder_source_caps:audio_encoder_source_caps
+```
+
+For example to encode a stream into a WebM container, with an OGG audio
+stream and a VP8 video stream, the serialized #GstEncodingProfile looks like:
+
+```
+  video/webm:video/x-vp8:audio/x-vorbis
+```
+
+It is possible to mix caps and element type names so you can specify a
+specific video encoder while using caps for other encoders/muxer.
+
+### Using preset
+
+You can also set the preset name of the encoding profile using the
+caps+preset_name syntax as in:
+
+```
+  video/webm:video/x-vp8+youtube-preset:audio/x-vorbis
+```
+
+### Setting properties on muxers or on the encoding profile itself
+
+Moreover, you can set the extra properties:
+
+ * `|element-properties,property1=true` (See
+   #gst_encoding_profile_set_element_properties)
+ * `|presence=true` (See See #gst_encoding_profile_get_presence)
+ * `|single-segment=true` (See #gst_encoding_profile_set_single_segment)
+ * `|single-segment=true` (See
+   #gst_encoding_video_profile_set_variableframerate)
+
+for example:
+
+```
+  video/webm:video/x-vp8|presence=1|element-properties,target-bitrate=500000:audio/x-vorbis
+```
+
+### Enforcing properties to the stream itself (video size, number of audio channels, etc..)
+
+You can also use the `restriction_caps-&gt;encoded_format_caps` syntax to
+specify the restriction caps to be set on a #GstEncodingProfile
+
+It corresponds to the restriction #GstCaps to apply before the encoder that
+will be used in the profile (See #gst_encoding_profile_get_restriction). The
+fields present in restriction caps are properties of the raw stream (that is,
+before encoding), such as height and width for video and depth and sampling
+rate for audio. This property does not make sense for muxers. See
+#gst_encoding_profile_get_restriction for more details.
+
+To force a video stream to be encoded with a Full HD resolution (using WebM
+as the container format, VP8 as the video codec and Vorbis as the audio
+codec), you should use:
+
+```
+  "video/webm:video/x-raw,width=1920,height=1080-&gt;video/x-vp8:audio/x-vorbis"
+```
+
+&gt; NOTE: Make sure to enclose into quotes to avoid '&gt;' to be reinterpreted by
+&gt; the shell.
+
+In the case you are specifying encoders directly, the following is also
+possible:
+
+```
+  matroskamux:x264enc,width=1920,height=1080:audio/x-vorbis
+```
+
+## Some serialized encoding formats examples
+
+### MP3 audio and H264 in MP4**
+
+```
+  video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3
+```
+
+### Vorbis and theora in OGG
+
+```
+  application/ogg:video/x-theora:audio/x-vorbis
+```
+
+### AC3 and H264 in MPEG-TS
+
+```
+  video/mpegts:video/x-h264:audio/x-ac3
+```
+
+## Loading a profile from encoding targets
+
+Anywhere you have to use a string to define a #GstEncodingProfile, you
+can use load it from a #GstEncodingTarget using the following syntaxes:
+
+```
+  target_name[/profilename/category]
+```
+
+or
+
+```
+  /path/to/target.gep:profilename
+```
+
+## Examples
+
+### Creating a profile
+
+``` c
+#include &lt;gst/pbutils/encoding-profile.h&gt;
+...
+GstEncodingProfile *
+create_ogg_theora_profile(void)
+{
+ GstEncodingContainerProfile *prof;
+ GstCaps *caps;
+
+ caps = gst_caps_from_string("application/ogg");
+ prof = gst_encoding_container_profile_new("Ogg audio/video",
+    "Standard OGG/THEORA/VORBIS",
+    caps, NULL);
+ gst_caps_unref (caps);
+
+ caps = gst_caps_from_string("video/x-theora");
+ gst_encoding_container_profile_add_profile(prof,
+      (GstEncodingProfile*) gst_encoding_video_profile_new(caps, NULL, NULL, 0));
+ gst_caps_unref (caps);
+
+ caps = gst_caps_from_string("audio/x-vorbis");
+ gst_encoding_container_profile_add_profile(prof,
+      (GstEncodingProfile*) gst_encoding_audio_profile_new(caps, NULL, NULL, 0));
+ gst_caps_unref (caps);
+
+ return (GstEncodingProfile*) prof;
+}
+
+```
+
+### Example: Using an encoder preset with a profile
+
+``` c
+#include &lt;gst/pbutils/encoding-profile.h&gt;
+...
+GstEncodingProfile *
+create_ogg_theora_profile(void)
+{
+ GstEncodingVideoProfile *v;
+ GstEncodingAudioProfile *a;
+ GstEncodingContainerProfile *prof;
+ GstCaps *caps;
+ GstPreset *preset;
+
+ caps = gst_caps_from_string ("application/ogg");
+ prof = gst_encoding_container_profile_new ("Ogg audio/video",
+    "Standard OGG/THEORA/VORBIS",
+    caps, NULL);
+ gst_caps_unref (caps);
+
+ preset = GST_PRESET (gst_element_factory_make ("theoraenc", "theorapreset"));
+ g_object_set (preset, "bitrate", 1000, NULL);
+ // The preset will be saved on the filesystem,
+ // so try to use a descriptive name
+ gst_preset_save_preset (preset, "theora_bitrate_preset");
+ gst_object_unref (preset);
+
+ caps = gst_caps_from_string ("video/x-theora");
+ v = gst_encoding_video_profile_new (caps, "theora_bitrate_preset", NULL, 0);
+ gst_encoding_container_profile_add_profile (prof, (GstEncodingProfile*) v);
+ gst_caps_unref (caps);
+
+ caps = gst_caps_from_string ("audio/x-vorbis");
+ a = gst_encoding_audio_profile_new (caps, NULL, NULL, 0);
+ gst_encoding_container_profile_add_profile (prof, (GstEncodingProfile*) a);
+ gst_caps_unref (caps);
+
+ return (GstEncodingProfile*) prof;
+}
+
+```
+
+### Listing categories, targets and profiles
+
+``` c
+#include &lt;gst/pbutils/encoding-profile.h&gt;
+...
+GstEncodingProfile *prof;
+GList *categories, *tmpc;
+GList *targets, *tmpt;
+...
+categories = gst_encoding_list_available_categories ();
+
+... Show available categories to user ...
+
+for (tmpc = categories; tmpc; tmpc = tmpc-&gt;next) {
+  gchar *category = (gchar *) tmpc-&gt;data;
+
+  ... and we can list all targets within that category ...
+
+  targets = gst_encoding_list_all_targets (category);
+
+  ... and show a list to our users ...
+
+  g_list_foreach (targets, (GFunc) gst_encoding_target_unref, NULL);
+  g_list_free (targets);
+}
+
+g_list_foreach (categories, (GFunc) g_free, NULL);
+g_list_free (categories);
+
+...
+```</doc>
+    </docsection>
+    <docsection name="encoding-target">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-target.c">On top of the notion of profiles, we implement the notion of EncodingTarget.
+Encoding Targets are basically a higher level of abstraction to define formats
+for specific target types. Those can define several GstEncodingProfiles with
+different names, for example one for transcoding in full HD, another one for
+low res, etc.. which are defined in the same encoding target.
+
+Basically if you want to encode a stream to send it to, say, youtube you should
+have a Youtube encoding target defined in the "online-service" category.
+
+## Encoding target serialization format
+
+Encoding targets are serialized in a KeyFile like files.
+
+|[
+[GStreamer Encoding Target]
+name : &lt;name&gt;
+category : &lt;category&gt;
+\description : &lt;description&gt; #translatable
+
+[profile-&lt;profile1name&gt;]
+name : &lt;name&gt;
+\description : &lt;description&gt; #optional
+format : &lt;format&gt;
+preset : &lt;preset&gt;
+
+[streamprofile-&lt;id&gt;]
+parent : &lt;encodingprofile.name&gt;[,&lt;encodingprofile.name&gt;..]
+\type : &lt;type&gt; # "audio", "video", "text"
+format : &lt;format&gt;
+preset : &lt;preset&gt;
+restriction : &lt;restriction&gt;
+presence : &lt;presence&gt;
+pass : &lt;pass&gt;
+variableframerate : &lt;variableframerate&gt;
+]|
+
+## Location of encoding target files
+
+$GST_DATADIR/gstreamer-GST_API_VERSION/encoding-profile
+$HOME/gstreamer-GST_API_VERSION/encoding-profile
+
+There also is a GST_ENCODING_TARGET_PATH environment variable
+defining a list of folder containing encoding target files.
+
+## Naming convention
+
+|[
+  $(target.category)/$(target.name).gep
+]|
+
+## Naming restrictions:
+
+ * lowercase ASCII letter for the first character
+ * Same for all other characters + numerics + hyphens</doc>
+    </docsection>
     <function name="encoding_list_all_targets" c:identifier="gst_encoding_list_all_targets">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-target.c">List all available #GstEncodingTarget for the specified category, or all categories
 if @categoryname is %NULL.</doc>
@@ -3773,6 +4091,306 @@ of #GstEncodingTarget categories.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstpbutils">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/pbutils.c">libgstpbutils is a general utility library for plugins and applications.
+It currently provides the
+following:
+
+* human-readable description strings of codecs, elements, sources, decoders,
+encoders, or sinks from decoder/encoder caps, element names, or protocol
+names.
+
+* support for applications to initiate installation of missing plugins (if
+this is supported by the distribution or operating system used)
+
+* API for GStreamer elements to create missing-plugin messages in order to
+communicate to the application that a certain type of plugin is missing
+(decoder, encoder, URI protocol source, URI protocol sink, named element)
+
+* API for applications to recognise and handle missing-plugin messages
+
+## Linking to this library
+
+You should obtain the required CFLAGS and LIBS using pkg-config on the
+gstreamer-plugins-base-1.0 module. You will then also need to add
+'-lgstreamer-pbutils-1.0' manually to your LIBS line.
+
+## Library initialisation
+
+Before using any of its functions, applications and plugins must call
+gst_pb_utils_init() to initialise the library.</doc>
+    </docsection>
+    <docsection name="gstpbutilscodecutils">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Provides codec-specific ulility functions such as functions to provide the
+codec profile and level in human-readable string form from header data.</doc>
+    </docsection>
+    <docsection name="gstpbutilsdescriptions">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.c">The above functions provide human-readable strings for media formats
+and decoder/demuxer/depayloader/encoder/muxer/payloader elements for use
+in error dialogs or other messages shown to users.
+
+gst_pb_utils_add_codec_description_to_tag_list() is a utility function
+for demuxer and decoder elements to add audio/video codec tags from a
+given (fixed) #GstCaps.</doc>
+    </docsection>
+    <docsection name="gstpbutilsinstallplugins">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.c">## Overview
+
+Using this API, applications can request the installation of missing
+GStreamer plugins. These may be missing decoders/demuxers or
+encoders/muxers for a certain format, sources or sinks for a certain URI
+protocol (e.g. 'http'), or certain elements known by their element
+factory name ('audioresample').
+
+Whether plugin installation is supported or not depends on the operating
+system and/or distribution in question. The vendor of the operating
+system needs to make sure the necessary hooks and mechanisms are in
+place for plugin installation to work. See below for more detailed
+information.
+
+From the application perspective, plugin installation is usually
+triggered either
+
+-   when the application itself has found that it wants or needs to
+    install a certain element
+-   when the application has been notified by an element (such as
+    playbin or decodebin) that one or more plugins are missing *and* the
+    application has decided that it wants to install one or more of
+    those missing plugins
+
+The install functions in this section all take one or more 'detail
+strings'. These detail strings contain information about the type of
+plugin that needs to be installed (decoder, encoder, source, sink, or
+named element), and some additional information such GStreamer version
+used and a human-readable description of the component to install for
+user dialogs.
+
+Applications should not concern themselves with the composition of the
+string itself. They should regard the string as if it was a shared
+secret between GStreamer and the plugin installer application.
+
+Detail strings can be obtained using the function
+gst_missing_plugin_message_get_installer_detail() on a
+missing-plugin message. Such a message will either have been found by
+the application on a pipeline's #GstBus, or the application will have
+created it itself using gst_missing_element_message_new(),
+gst_missing_decoder_message_new(),
+gst_missing_encoder_message_new(),
+gst_missing_uri_sink_message_new(), or
+gst_missing_uri_source_message_new().
+
+For each GStreamer element/plugin/component that should be installed,
+the application needs one of those 'installer detail' string mentioned
+in the previous section. This string can be obtained, as already
+mentioned above, from a missing-plugin message using the function
+gst_missing_plugin_message_get_installer_detail(). The
+missing-plugin message is either posted by another element and then
+found on the bus by the application, or the application has created it
+itself as described above.
+
+The application will then call gst_install_plugins_async(), passing a
+NULL-terminated array of installer detail strings, and a function that
+should be called when the installation of the plugins has finished
+(successfully or not). Optionally, a #GstInstallPluginsContext created
+with gst_install_plugins_context_new() may be passed as well. This
+way additional optional arguments like the application window's XID can
+be passed to the external installer application.
+
+gst_install_plugins_async() will return almost immediately, with the
+return code indicating whether plugin installation was started or not.
+If the necessary hooks for plugin installation are in place and an
+external installer application has in fact been called, the passed in
+function will be called with a result code as soon as the external
+installer has finished. If the result code indicates that new plugins
+have been installed, the application will want to call
+gst_update_registry() so the run-time plugin registry is updated and
+the new plugins are made available to the application.
+
+&gt; A Gtk/GLib main loop must be running in order for the result function
+&gt; to be called when the external installer has finished. If this is not
+&gt; the case, make sure to regularly call in your code:
+&gt;
+&gt; g_main_context_iteration (NULL,FALSE);
+
+## 1. Installer hook
+
+When GStreamer applications initiate plugin installation via
+gst_install_plugins_async() or gst_install_plugins_sync(), a
+pre-defined helper application will be called.
+
+The exact path of the helper application to be called is set at compile
+time, usually by the build system based on the install prefix.
+For a normal package build into the `/usr` prefix, this will usually
+default to `/usr/libexec/gst-install-plugins-helper` or
+`/usr/lib/gst-install-plugins-helper`.
+
+Vendors/distros who want to support GStreamer plugin installation should
+either provide such a helper script/application or use the meson option
+`-Dinstall_plugins_helper'=/path/to/installer` to make GStreamer call an
+installer of their own directly.
+
+It is strongly recommended that vendors provide a small helper
+application as interlocutor to the real installer though, even more so
+if command line argument munging is required to transform the command
+line arguments passed by GStreamer to the helper application into
+arguments that are understood by the real installer.
+
+The helper application path defined at compile time can be overridden at
+runtime by setting the GST_INSTALL_PLUGINS_HELPER environment
+variable. This can be useful for testing/debugging purposes.
+
+## 2. Arguments passed to the install helper
+
+GStreamer will pass the following arguments to the install helper (this
+is in addition to the path of the executable itself, which is by
+convention argv[0]):
+
+-   none to many optional arguments in the form of `--foo-bar=val`.
+    Example: `--transient-for=XID` where XID is the X Window ID of the
+    main window of the calling application (so the installer can make
+    itself transient to that window). Unknown optional arguments should
+    be ignored by the installer.
+
+-   one 'installer detail string' argument for each plugin to be
+    installed; these strings will have a `gstreamer` prefix; the exact
+    format of the detail string is explained below
+
+## 3. Detail string describing the missing plugin
+
+The string is in UTF-8 encoding and is made up of several fields,
+separated by '|' characters (but neither the first nor the last
+character is a '|'). The fields are:
+
+-   plugin system identifier, ie. "gstreamer"
+    This identifier determines the format of the rest of the detail
+    string. Automatic plugin installers should not process detail
+    strings with unknown identifiers. This allows other plugin-based
+    libraries to use the same mechanism for their automatic plugin
+    installation needs, or for the format to be changed should it turn
+    out to be insufficient.
+-   plugin system version, e.g. "1.0"
+    This is required so that when there is GStreamer-2.0 at some point
+    in future, the different major versions can still co-exist and use
+    the same plugin install mechanism in the same way.
+-   application identifier, e.g. "totem"
+    This may also be in the form of "pid/12345" if the program name
+    can't be obtained for some reason.
+-   human-readable localised description of the required component, e.g.
+    "Vorbis audio decoder"
+-   identifier string for the required component (see below for details
+    about how to map this to the package/plugin that needs installing),
+    e.g.
+    -   urisource-$(PROTOCOL_REQUIRED), e.g. urisource-http or
+        urisource-mms
+    -   element-$(ELEMENT_REQUIRED), e.g. element-videoconvert
+    -   decoder-$(CAPS_REQUIRED), e.g. (do read below for more
+        details!):
+        -   decoder-audio/x-vorbis
+        -   decoder-application/ogg
+        -   decoder-audio/mpeg, mpegversion=(int)4
+        -   decoder-video/mpeg, systemstream=(boolean)true,
+            mpegversion=(int)2
+    -   encoder-$(CAPS_REQUIRED), e.g. encoder-audio/x-vorbis
+-   optional further fields not yet specified
+
+An entire ID string might then look like this, for example: `
+gstreamer|1.0|totem|Vorbis audio decoder|decoder-audio/x-vorbis`
+
+Plugin installers parsing this ID string should expect further fields
+also separated by '|' symbols and either ignore them, warn the user, or
+error out when encountering them.
+
+Those unfamiliar with the GStreamer 'caps' system should note a few
+things about the caps string used in the above decoder/encoder case:
+
+-   the first part ("video/mpeg") of the caps string is a GStreamer
+    media type and *not* a MIME type. Wherever possible, the GStreamer
+    media type will be the same as the corresponding MIME type, but
+    often it is not.
+-   a caps string may or may not have additional comma-separated fields
+    of various types (as seen in the examples above)
+-   the caps string of a 'required' component (as above) will always
+    have fields with fixed values, whereas an introspected string (see
+    below) may have fields with non-fixed values. Compare for example:
+    -   `audio/mpeg, mpegversion=(int)4` vs.
+        `audio/mpeg, mpegversion=(int){2, 4}`
+    -   `video/mpeg, mpegversion=(int)2` vs.
+        `video/mpeg, systemstream=(boolean){ true, false}, mpegversion=(int)[1, 2]`
+
+## 4. Exit codes the installer should return
+
+The installer should return one of the following exit codes when it
+exits:
+
+-   0 if all of the requested plugins could be installed
+    (#GST_INSTALL_PLUGINS_SUCCESS)
+-   1 if no appropriate installation candidate for any of the requested
+    plugins could be found. Only return this if nothing has been
+    installed (#GST_INSTALL_PLUGINS_NOT_FOUND)
+-   2 if an error occurred during the installation. The application will
+    assume that the user will already have seen an error message by the
+    installer in this case and will usually not show another one
+    (#GST_INSTALL_PLUGINS_ERROR)
+-   3 if some of the requested plugins could be installed, but not all
+    (#GST_INSTALL_PLUGINS_PARTIAL_SUCCESS)
+-   4 if the user aborted the installation
+    (#GST_INSTALL_PLUGINS_USER_ABORT)
+
+## 5. How to map the required detail string to packages
+
+It is up to the vendor to find mechanism to map required components from
+the detail string to the actual packages/plugins to install. This could
+be a hardcoded list of mappings, for example, or be part of the
+packaging system metadata.
+
+GStreamer plugin files can be introspected for this information. The
+`gst-inspect` utility has a special command line option that will output
+information similar to what is required. For example `
+$ gst-inspect-1.0 --print-plugin-auto-install-info /path/to/libgstvorbis.so
+should output something along the lines of
+`decoder-audio/x-vorbis`, `element-vorbisdec` `element-vorbisenc`
+`element-vorbisparse`, `element-vorbistag`, `encoder-audio/x-vorbis`
+
+Note that in the encoder and decoder case the introspected caps can be
+more complex with additional fields, e.g.
+`audio/mpeg,mpegversion=(int){2,4}`, so they will not always exactly
+match the caps wanted by the application. It is up to the installer to
+deal with this (either by doing proper caps intersection using the
+GStreamer #GstCaps API, or by only taking into account the media type).
+
+Another potential source of problems are plugins such as ladspa or
+libvisual where the list of elements depends on the installed
+ladspa/libvisual plugins at the time. This is also up to the
+distribution to handle (but usually not relevant for playback
+applications).</doc>
+    </docsection>
+    <docsection name="gstpbutilsmissingplugins">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">Functions to create, recognise and parse missing-plugins messages for
+applications and elements.
+
+Missing-plugin messages are posted on the bus by elements like decodebin
+or playbin if they can't find an appropriate source element or decoder
+element. The application can use these messages for two things:
+
+  * concise error/problem reporting to the user mentioning what exactly
+    is missing, see gst_missing_plugin_message_get_description()
+
+  * initiate installation of missing plugins, see
+    gst_missing_plugin_message_get_installer_detail() and
+    gst_install_plugins_async()
+
+Applications may also create missing-plugin messages themselves to install
+required elements that are missing, using the install mechanism mentioned
+above.</doc>
+    </docsection>
+    <docsection name="gstpluginsbaseversion">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.c">Use the GST_PLUGINS_BASE_VERSION_* macros e.g. to check what version of
+gst-plugins-base you are building against, and gst_plugins_base_version()
+if you need to check at runtime what version of the gst-plugins-base
+libraries are being used / you are currently linked against.
+
+The version macros get defined by including &lt;gst/pbutils/pbutils.h&gt;.</doc>
+    </docsection>
     <function name="install_plugins_async" c:identifier="gst_install_plugins_async">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.c">Requests plugin installation without blocking. Once the plugins have been
 installed or installation has failed, @func will be called with the result

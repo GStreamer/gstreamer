@@ -4221,6 +4221,9 @@ not equal #GST_RTSP_OK.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstrtspdefs">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Provides common defines for the RTSP library.</doc>
+    </docsection>
     <function name="rtsp_auth_credentials_free" c:identifier="gst_rtsp_auth_credentials_free" version="1.12">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.c">Free a %NULL-terminated array of credentials returned from
 gst_rtsp_message_parse_auth_credentials().</doc>

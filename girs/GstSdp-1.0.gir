@@ -4117,6 +4117,10 @@ time.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstmikey">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstmikey.c">The GstMIKEY helper functions makes it easy to parse and create MIKEY
+messages.</doc>
+    </docsection>
     <function name="sdp_address_is_multicast" c:identifier="gst_sdp_address_is_multicast">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Check if the given @addr is a multicast address.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>

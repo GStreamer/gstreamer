@@ -1,8 +1,11 @@
+#! /bin/bash
+
 set -eux
 
 # Fedora base image disable installing documentation files. See https://pagure.io/atomic-wg/issue/308
 # We need them to cleanly build our doc.
-sed -i "s/tsflags=nodocs//g" /etc/dnf/dnf.conf
+sed -i '/tsflags=nodocs/d' /etc/dnf/dnf.conf
+dnf -y swap coreutils-single coreutils-full
 
 dnf install -y git-core dnf-plugins-core python3-pip
 
@@ -28,6 +31,7 @@ dnf install -y \
     libcaca-devel \
     libdav1d \
     libdav1d-devel \
+    libdrm-devel \
     ccache \
     cmake \
     clang-devel \
@@ -39,6 +43,7 @@ dnf install -y \
     gdb \
     git-lfs \
     glslc \
+    gtk-doc \
     gtk3 \
     gtk3-devel \
     gtk4 \
@@ -62,10 +67,20 @@ dnf install -y \
     flex \
     flite \
     flite-devel \
+    libsoup \
+    libsoup-devel \
     mono-devel \
     procps-ng \
     patch \
-    qt5-devel \
+    qconf \
+    qt5-linguist \
+    qt5-qtbase-devel \
+    qt5-qtbase-private-devel \
+    qt5-qtdeclarative-devel \
+    qt5-qtquickcontrols2-devel \
+    qt5-qttools-common \
+    qt5-qtwayland-devel \
+    qt5-qtx11extras-devel \
     redhat-rpm-config \
     json-glib \
     json-glib-devel \
@@ -74,15 +89,20 @@ dnf install -y \
     libsodium-devel \
     libunwind \
     libunwind-devel \
+    libva-devel \
     libyaml-devel \
     libxml2-devel \
     libxslt-devel \
     llvm-devel \
     log4c-devel \
+    libxcb-devel \
+    libxkbcommon-devel \
+    libxkbcommon-x11-devel \
     make \
     nasm \
     neon \
     neon-devel \
+    ninja-build \
     nunit \
     npm \
     opencv \
@@ -99,12 +119,14 @@ dnf install -y \
     python3 \
     python3-devel \
     python3-libs \
+    python3-wheel \
     python3-gobject \
     python3-cairo \
     python3-cairo-devel \
     valgrind \
     vulkan \
     vulkan-devel \
+    vulkan-loader \
     mesa-libGL \
     mesa-libGL-devel \
     mesa-libGLU \
@@ -119,9 +141,9 @@ dnf install -y \
     mesa-libd3d-devel \
     mesa-libOSMesa \
     mesa-libOSMesa-devel \
+    mesa-dri-drivers \
     mesa-vulkan-drivers \
-    wpewebkit \
-    wpewebkit-devel \
+    xset \
     xorg-x11-server-utils \
     xorg-x11-server-Xvfb
 
@@ -142,7 +164,11 @@ dnf debuginfo-install -y gtk3 \
     libjpeg-turbo \
     glib-networking \
     libcurl \
+    libdrm \
     libsoup \
+    libxcb \
+    libxkbcommon \
+    libxkbcommon-x11 \
     nss \
     nss-softokn \
     nss-softokn-freebl \
@@ -162,6 +188,7 @@ dnf debuginfo-install -y gtk3 \
     libffi \
     libsrtp \
     libunwind \
+    libdvdread \
     mpg123-libs \
     neon \
     orc-compiler \
@@ -170,6 +197,8 @@ dnf debuginfo-install -y gtk3 \
     pulseaudio-libs \
     pulseaudio-libs-glib2 \
     wavpack \
+    "libwayland-*" \
+    "wayland-*" \
     webrtc-audio-processing \
     ffmpeg \
     ffmpeg-libs \
@@ -178,6 +207,7 @@ dnf debuginfo-install -y gtk3 \
     libmpeg2 \
     faac \
     fdk-aac \
+    vulkan-loader \
     x264 \
     x264-libs \
     x265 \
@@ -192,6 +222,7 @@ dnf builddep -y gstreamer1 \
     gstreamer1-plugins-base \
     gstreamer1-plugins-good \
     gstreamer1-plugins-good-extras \
+    gstreamer1-plugins-good-qt \
     gstreamer1-plugins-ugly \
     gstreamer1-plugins-ugly-free \
     gstreamer1-plugins-bad-free \
@@ -202,20 +233,21 @@ dnf builddep -y gstreamer1 \
     gstreamer1-vaapi \
     python3-gstreamer1
 
-dnf remove -y meson
-# FIXME: Install ninja from rpm when we update our base image as we fail building
-# documentation with rust plugins as we the version from F31 we hit:
-# `ninja: error: build.ninja:26557: multiple outputs aren't (yet?) supported by depslog; bring this up on the mailing list if it affects you
-pip3 install meson==1.1.1 hotdoc==0.15 python-gitlab ninja tomli
+dnf remove -y meson -x ninja-build
+pip3 install meson==1.2.3 hotdoc==0.15 python-gitlab tomli
 
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
 
-# FIXME: Why does installing directly with dnf doesn't actually install
-# the documentation files?
-dnf download glib2-doc gdk-pixbuf2-devel*x86_64* gtk3-devel-docs gtk4-devel-docs
-rpm -i --reinstall *.rpm
-rm -f *.rpm
+dnf install -y glib2-doc gdk-pixbuf2-devel gtk3-devel-docs gtk4-devel-docs libsoup-doc
+
+# Install gdk-pixbuf manually as fedora 34 doesn't build the docs/.devhelp2
+git clone --branch gdk-pixbuf-2-40 https://gitlab.gnome.org/GNOME/gdk-pixbuf.git
+cd gdk-pixbuf
+meson setup _build --prefix=/usr -Ddocs=true
+meson install -C _build
+cd ..
+rm -rf gdk-pixbuf
 
 # Install Rust
 RUSTUP_VERSION=1.26.0
