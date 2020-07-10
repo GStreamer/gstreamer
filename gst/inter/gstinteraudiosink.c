@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstinteraudiosink
+ * SECTION:element-interaudiosink
  * @title: gstinteraudiosink
  *
  * The interaudiosink element is an audio sink element.  It is used

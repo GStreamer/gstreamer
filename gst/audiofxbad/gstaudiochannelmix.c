@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstaudiochannelmix
+ * SECTION:element-audiochannelmix
  * @title: gstaudiochannelmix
  *
  * The audiochannelmix element mixes channels in stereo audio based on

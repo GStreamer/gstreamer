@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstintersubsink
+ * SECTION:element-intersubsink
  * @title: gstintersubsink
  *
  * The intersubsink element is a subtitle sink element.  It is used

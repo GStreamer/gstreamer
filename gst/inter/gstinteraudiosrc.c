@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstinteraudiosrc
+ * SECTION:element-interaudiosrc
  * @title: gstinteraudiosrc
  *
  * The interaudiosrc element is an audio source element.  It is used

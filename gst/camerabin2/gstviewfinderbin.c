@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-gstviewfinderbin
+ * SECTION:element-viewfinderbin
  * @title: gstviewfinderbin
  *
  * The gstviewfinderbin element is a displaying element for camerabin2.

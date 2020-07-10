@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-gstdiracparse
+ * SECTION:element-diracparse
  * @title: gstdiracparse
  *
  * The gstdiracparse element does FIXME stuff.

@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstzebrastripe
+ * SECTION:element-zebrastripe
  * @title: gstzebrastripe
  *
  * The zebrastripe element marks areas of images in a video stream

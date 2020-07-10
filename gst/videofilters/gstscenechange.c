@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstscenechange
+ * SECTION:element-scenechange
  * @title: gstscenechange
  *
  * The scenechange element detects scene changes (also known as shot

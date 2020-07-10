@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstcombdetect
+ * SECTION:element-combdetect
  * @title: gstcombdetect
  *
  * The combdetect element detects if combing artifacts are present in

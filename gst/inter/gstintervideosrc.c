@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstintervideosrc
+ * SECTION:element-intervideosrc
  * @title: gstintervideosrc
  *
  * The intervideosrc element is a video source element.  It is used

@@ -19,7 +19,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstrtmp2src
+ * SECTION:element-rtmp2src
  *
  * The rtmp2src element receives input streams from an RTMP server.
  *

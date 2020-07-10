@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstvideodiff
+ * SECTION:element-videodiff
  * @title: gstvideodiff
  *
  * The videodiff element highlights the difference between a frame and its

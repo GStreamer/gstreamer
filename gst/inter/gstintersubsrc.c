@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstintersubsrc
+ * SECTION:element-intersubsrc
  * @title: gstintersubsrc
  *
  * The intersubsrc element is a subtitle source element.  It is used

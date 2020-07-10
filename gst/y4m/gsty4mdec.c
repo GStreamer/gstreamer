@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-gsty4mdec
+ * SECTION:element-y4mdec
  * @title: gsty4mdec
  *
  * The gsty4mdec element decodes uncompressed video in YUV4MPEG format.

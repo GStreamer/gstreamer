@@ -19,7 +19,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstrtmp2sink
+ * SECTION:element-rtmp2sink
  *
  * The rtmp2sink element sends audio and video streams to an RTMP
  * server.

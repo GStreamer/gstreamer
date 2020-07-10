@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstclockselect
+ * SECTION:element-clockselect
  *
  * The clockselect element is a pipeline that enables one to choose its
  * clock. By default, pipelines chose a clock depending on its elements,

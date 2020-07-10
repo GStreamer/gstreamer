@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-gstchopmydata
+ * SECTION:element-chopmydata
  * @title: gstchopmydata
  *
  * The chopmydata element takes an incoming stream and chops it up

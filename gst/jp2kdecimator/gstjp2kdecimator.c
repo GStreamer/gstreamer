@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-gstjp2kdecimator
+ * SECTION:element-jp2kdecimator
  * @title: gstjp2kdecimator
  *
  * The jp2kdecimator element removes information from JPEG2000 images without reencoding.

@@ -18,7 +18,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstivtc
+ * SECTION:element-ivtc
  * @title: gstivtc
  *
  * The ivtc element is an inverse telecine filter.  It takes interlaced

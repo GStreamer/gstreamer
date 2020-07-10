@@ -18,7 +18,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstwatchdog
+ * SECTION:element-watchdog
  * @title: watchdog
  *
  * The watchdog element watches buffers and events flowing through

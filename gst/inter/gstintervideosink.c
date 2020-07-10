@@ -17,7 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstintervideosink
+ * SECTION:element-intervideosink
  * @title: gstintervideosink
  *
  * The intervideosink element is a video sink element.  It is used
