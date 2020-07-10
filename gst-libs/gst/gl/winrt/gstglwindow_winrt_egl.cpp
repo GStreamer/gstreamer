@@ -331,6 +331,27 @@ public:
     return false;
   }
 
+  HRESULT
+  GetHasThreadAccess (bool &has_access)
+  {
+    HRESULT hr;
+    boolean val;
+
+    if (!isValid_ || !dispatcher_)
+      return E_FAIL;
+
+    hr = dispatcher_->get_HasThreadAccess (&val);
+    if (FAILED (hr))
+      return hr;
+
+    if (val)
+      has_access = true;
+    else
+      has_access = false;
+
+    return hr;
+  }
+
 private:
   bool
   registerSizeChangedHandlerForCoreWindow (GstGLWindow * window)
@@ -500,6 +521,7 @@ static guintptr gst_gl_window_winrt_egl_get_window_handle (GstGLWindow *
 static void gst_gl_window_winrt_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_winrt_egl_show (GstGLWindow * window);
+static void gst_gl_window_winrt_egl_quit (GstGLWindow * window);
 
 static void
 gst_gl_window_winrt_egl_class_init (GstGLWindowWinRTEGLClass * klass)
@@ -518,6 +540,8 @@ gst_gl_window_winrt_egl_class_init (GstGLWindowWinRTEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_winrt_egl_set_window_handle);
   window_class->show =
       GST_DEBUG_FUNCPTR (gst_gl_window_winrt_egl_show);
+  window_class->quit =
+      GST_DEBUG_FUNCPTR (gst_gl_window_winrt_egl_quit);
 }
 
 static void
@@ -664,4 +688,34 @@ gst_gl_window_winrt_egl_on_resize (GstGLWindow * window,
   g_mutex_unlock (&priv->event_lock);
 
   gst_gl_window_resize (window, width, height);
+}
+
+static void
+gst_gl_window_winrt_egl_quit (GstGLWindow * window)
+{
+  GstGLWindowWinRTEGL *window_egl = GST_GL_WINDOW_WINRT_EGL (window);
+  GstGLWindowWinRTEGLPrivate *priv = window_egl->priv;
+
+  if (priv->resize_handler) {
+    HRESULT hr;
+    bool is_dispatcher_thread = false;
+
+    hr = priv->resize_handler->GetHasThreadAccess (is_dispatcher_thread);
+    if (SUCCEEDED (hr) && is_dispatcher_thread) {
+      /* In GstGLContext::destroy_context() -> eglDestroySurface(),
+       * ANGLE will wait a UI thread for its own operations to be called
+       * from the thread. Note that gst_gl_context_egl_destroy_context() will be
+       * called from GstGLContext's internal GL thread.
+       *
+       * A problem is that if GstGLWindow is being closed from the UI thread,
+       * ANGLE cannot access the UI thread as current thread is the thread.
+       */
+      GST_ERROR_OBJECT (window,
+          "Closing from a UI thread might cause a deadlock or crash");
+
+      g_warning ("GstGLWindowWinRTEGL should be closed from non-UI thread");
+    }
+  }
+
+  GST_GL_WINDOW_CLASS (parent_class)->quit (window);
 }
