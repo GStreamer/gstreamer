@@ -103,6 +103,10 @@ if opencv_found
 endif
 
 if opencv_found
+  # opencv4 seems to ship with .pc file that references non-existent include dir
+  # (/usr/include/opencv4/opencv instead of /usr/include/opencv4/opencv2)
+  gstopencv_cargs += cxx.get_supported_arguments(['-Wno-missing-include-dirs'])
+
   gstopencv = library('gstopencv',
     gstopencv_sources,
     cpp_args : gst_plugins_bad_args + gstopencv_cargs + [ '-DGST_USE_UNSTABLE_API' ],
