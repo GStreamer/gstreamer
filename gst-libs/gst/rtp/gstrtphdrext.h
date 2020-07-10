@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2012> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) <2020> Matthew Waters <matthew@centricular.com>
  *
  * gstrtphdrext.h: RTP header extensions
  *
@@ -49,6 +50,190 @@ gboolean       gst_rtp_hdrext_set_ntp_56  (gpointer data, guint size, guint64 nt
 
 GST_RTP_API
 gboolean       gst_rtp_hdrext_get_ntp_56  (gpointer data, guint size, guint64 *ntptime);
+
+/**
+ * GST_RTP_HDREXT_ELEMENT_CLASS:
+ *
+ * Constant string used in element classification to signal that this element
+ * is a RTP header extension.
+ *
+ * Since: 1.20
+ */
+#define GST_RTP_HDREXT_ELEMENT_CLASS "Network/Extension/RTPHeader"
+
+GST_RTP_API
+GType gst_rtp_header_extension_get_type (void);
+#define GST_TYPE_RTP_HEADER_EXTENSION (gst_rtp_header_extension_get_type())
+#define GST_RTP_HEADER_EXTENSION(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_HEADER_EXTENSION,GstRTPHeaderExtension))
+#define GST_RTP_HEADER_EXTENSION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_HEADER_EXTENSION,GstRTPHeaderExtensionClass))
+#define GST_RTP_HEADER_EXTENSION_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_RTP_HEADER_EXTENSION,GstRTPHeaderExtensionClass))
+#define GST_IS_RTP_HEADER_EXTENSION(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_HEADER_EXTENSION))
+#define GST_IS_RTP_HEADER_EXTENSION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_HEADER_EXTENSION))
+/**
+ * GST_RTP_HEADER_EXTENSION_CAST:
+ *
+ * Since: 1.20
+ */
+#define GST_RTP_HEADER_EXTENSION_CAST(obj) ((GstRTPHeaderExtension *)(obj))
+
+typedef struct _GstRTPHeaderExtension      GstRTPHeaderExtension;
+typedef struct _GstRTPHeaderExtensionClass GstRTPHeaderExtensionClass;
+
+/**
+ * GstRTPHeaderExtensionFlags:
+ * @GST_RTP_HEADER_EXTENSION_ONE_BYTE: The one byte rtp extension header.
+ *              1-16 data bytes per extension with a maximum of
+ *              14 extension ids in total.
+ * @GST_RTP_HEADER_EXTENSION_TWO_BYTE: The two byte rtp extension header.
+ *              256 data bytes per extension with a maximum of 255 (or 256
+ *              including appbits) extensions in total.
+ *
+ * Flags that apply to a RTP Audio/Video header extension.
+ *
+ * Since: 1.20
+ */
+typedef enum /*< underscore_name=gst_rtp_header_extension_flags >*/
+{
+  GST_RTP_HEADER_EXTENSION_ONE_BYTE = (1 << 0),
+  GST_RTP_HEADER_EXTENSION_TWO_BYTE = (1 << 1),
+} GstRTPHeaderExtensionFlags;
+
+/**
+ * GstRTPHeaderExtension:
+ * @parent: the parent #GObject
+ * @ext_id: the configured extension id
+ *
+ * Instance struct for a RTP Audio/Video header extension.
+ *
+ * Since: 1.20
+ */
+struct _GstRTPHeaderExtension
+{
+  GstElement parent;
+
+  guint ext_id;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
+ * GstRTPHeaderExtensionClass:
+ * @parent_class: the parent class
+ * @get_uri: retrieve the RTP extension uri
+ * @get_supported_flags: retrieve the supported flags
+ * @get_max_size: retrieve the maximum size for this extension based on the
+ *     information available from input_meta.  Implementations should attempt
+ *     to provide as accurate information as possible as the returned value
+ *     will be used to control the amount of possible data in the payload.
+ *     Implementations must return the maximum as the allocated size for
+ *     writing the extension will be at least the size of the returned value.
+ *     Return the amount of data read or <0 on failure.
+ * @write: write into @data the information for this extension.  Various
+ *     information is provided to help writing extensions in particular cases.
+ * @read: read from a rtp payloaded buffer and extract the extension
+ *     information, optionally adding some meta onto the output buffer.
+ * @set_attributes_from_caps: read the caps information to set the necesary
+ *     attributes that may be signaled e.g. with an SDP.
+ * @set_caps_from_attributes: write the necessary caps field/s for the configured
+ *     attributes e.g. as signalled with SDP.
+ *
+ * Base class for RTP Header extensions.
+ *
+ * Since: 1.20
+ */
+struct _GstRTPHeaderExtensionClass
+{
+  GstElementClass parent_class;
+
+  /*< public >*/
+  GstRTPHeaderExtensionFlags (*get_supported_flags) (GstRTPHeaderExtension * ext);
+
+  gsize                 (*get_max_size)             (GstRTPHeaderExtension * ext,
+                                                     const GstBuffer * input_meta);
+
+  gsize                 (*write)                    (GstRTPHeaderExtension * ext,
+                                                     const GstBuffer * input_meta,
+                                                     GstRTPHeaderExtensionFlags write_flags,
+                                                     GstBuffer * output,
+                                                     guint8 * data,
+                                                     gsize size);
+
+  gboolean              (*read)                     (GstRTPHeaderExtension * ext,
+                                                     GstRTPHeaderExtensionFlags read_flags,
+                                                     const guint8 * data,
+                                                     gsize size,
+                                                     GstBuffer * buffer);
+  gboolean              (*set_attributes_from_caps) (GstRTPHeaderExtension * ext,
+                                                     const GstCaps * caps);
+  gboolean              (*set_caps_from_attributes) (GstRTPHeaderExtension * ext,
+                                                     GstCaps * caps);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPHeaderExtension, gst_object_unref)
+
+/**
+ * GST_RTP_HEADER_EXTENSION_URI_METADATA_KEY:
+ *
+ * Since: 1.20
+ */
+#define GST_RTP_HEADER_EXTENSION_URI_METADATA_KEY "RTP-Header-Extension-URI"
+
+GST_RTP_API
+void                gst_rtp_header_extension_class_set_uri      (GstRTPHeaderExtensionClass *klass,
+                                                                 const gchar * uri);
+
+GST_RTP_API
+const gchar *       gst_rtp_header_extension_get_uri            (GstRTPHeaderExtension * ext);
+GST_RTP_API
+gsize               gst_rtp_header_extension_get_max_size       (GstRTPHeaderExtension * ext,
+                                                                 const GstBuffer * input_meta);
+GST_RTP_API
+GstRTPHeaderExtensionFlags gst_rtp_header_extension_get_supported_flags (GstRTPHeaderExtension * ext);
+GST_RTP_API
+guint               gst_rtp_header_extension_get_id             (GstRTPHeaderExtension * ext);
+GST_RTP_API
+void                gst_rtp_header_extension_set_id             (GstRTPHeaderExtension * ext,
+                                                                 guint ext_id);
+GST_RTP_API
+gsize               gst_rtp_header_extension_write              (GstRTPHeaderExtension * ext,
+                                                                 const GstBuffer * input_meta,
+                                                                 GstRTPHeaderExtensionFlags write_flags,
+                                                                 GstBuffer * output,
+                                                                 guint8 * data,
+                                                                 gsize size);
+GST_RTP_API
+gboolean            gst_rtp_header_extension_read               (GstRTPHeaderExtension * ext,
+                                                                 GstRTPHeaderExtensionFlags read_flags,
+                                                                 const guint8 * data,
+                                                                 gsize size,
+                                                                 GstBuffer * buffer);
+GST_RTP_API
+gboolean            gst_rtp_header_extension_set_caps_from_attributes (GstRTPHeaderExtension * ext,
+                                                                       GstCaps * caps);
+GST_RTP_API
+gboolean            gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
+                                                                       const GstCaps * caps);
+
+GST_RTP_API
+GList *             gst_rtp_get_header_extension_list           (void);
+GST_RTP_API
+GstRTPHeaderExtension * gst_rtp_header_extension_create_from_uri (const gchar * uri);
+
+GST_RTP_API
+gchar *	            gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext);
+GST_RTP_API
+gboolean           gst_rtp_header_extension_set_attributes_from_caps_simple_sdp (GstRTPHeaderExtension * ext, const GstCaps *caps);
+GST_RTP_API
+gboolean           gst_rtp_header_extension_set_caps_from_attributes_simple_sdp (GstRTPHeaderExtension * ext, GstCaps *caps);
 
 G_END_DECLS
 
