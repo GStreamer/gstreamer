@@ -157,6 +157,8 @@ tsmux_new (void)
   mux->new_stream_func = (TsMuxNewStreamFunc) tsmux_stream_new;
   mux->new_stream_data = NULL;
 
+  mux->first_pcr_ts = G_MININT64;
+
   return mux;
 }
 
@@ -1252,7 +1254,12 @@ get_current_pcr (TsMux * mux, gint64 cur_ts)
   if (!mux->bitrate)
     return ts_to_pcr (cur_ts);
 
-  return ts_to_pcr (CLOCK_BASE) +
+  if (mux->first_pcr_ts == G_MININT64) {
+    g_assert (cur_ts != G_MININT64);
+    mux->first_pcr_ts = cur_ts;
+  }
+
+  return ts_to_pcr (mux->first_pcr_ts) +
       gst_util_uint64_scale (mux->n_bytes * 8, TSMUX_SYS_CLOCK_FREQ,
       mux->bitrate);
 }

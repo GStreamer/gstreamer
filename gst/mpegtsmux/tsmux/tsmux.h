@@ -200,6 +200,8 @@ struct TsMux {
 
   /* For the per-PID continuity counter */
   guint8 pid_packet_counts[8192];
+
+  gint64 first_pcr_ts;
 };
 
 /* create/free new muxer session */
