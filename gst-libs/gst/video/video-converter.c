@@ -6682,6 +6682,8 @@ static const VideoTransform transforms[] = {
   /* scalers */
   {GST_VIDEO_FORMAT_GBR, GST_VIDEO_FORMAT_GBR, TRUE, FALSE, FALSE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_scale_planes},
+  {GST_VIDEO_FORMAT_GBRA, GST_VIDEO_FORMAT_GBRA, TRUE, FALSE, FALSE, TRUE,
+      TRUE, TRUE, FALSE, FALSE, 0, 0, convert_scale_planes},
 
   {GST_VIDEO_FORMAT_YVYU, GST_VIDEO_FORMAT_YVYU, TRUE, FALSE, FALSE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_scale_planes},
