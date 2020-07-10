@@ -14,10 +14,14 @@ if not opencv_dep.found()
   opencv_dep = dependency('opencv4', version : '>= 4.0.0', required : false)
 endif
 if opencv_dep.found()
+  # opencv4 seems to ship with .pc file that references non-existent include dir
+  # (/usr/include/opencv4/opencv instead of /usr/include/opencv4/opencv2)
+  gstopencv_cargs = cxx.get_supported_arguments(['-Wno-missing-include-dirs'])
+
   gstopencv = library('gstopencv-' + api_version,
     opencv_sources,
     c_args : gst_plugins_bad_args + ['-DBUILDING_GST_OPENCV'],
-    cpp_args : gst_plugins_bad_args + ['-DBUILDING_GST_OPENCV'],
+    cpp_args : gst_plugins_bad_args + gstopencv_cargs + ['-DBUILDING_GST_OPENCV'],
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
