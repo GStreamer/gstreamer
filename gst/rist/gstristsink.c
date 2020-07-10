@@ -700,10 +700,8 @@ gst_rist_sink_setup_rtcp_socket (GstRistSink * sink, RistSenderBond * bond)
 
 dns_resolve_failed:
   GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-      ("Could not resolve hostname '%s'", GST_STR_NULL (remote_addr)),
+      ("Could not resolve hostname '%s'", GST_STR_NULL (bond->address)),
       ("DNS resolver reported: %s", error->message));
-  g_free (remote_addr);
-  g_object_unref (iaddr);
   g_error_free (error);
   return GST_STATE_CHANGE_FAILURE;
 }
