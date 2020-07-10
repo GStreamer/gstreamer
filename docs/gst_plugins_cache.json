@@ -17001,6 +17001,38 @@
                 },
                 "rank": "none"
             },
+            "rtphdrexttwcc": {
+                "RTP-Header-Extension-URI": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "Extends RTP packets to add sequence number transport wide.",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionTWCC",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "Transport Wide Congestion Control",
+                "properties": {
+                    "n-streams": {
+                        "blurb": "The number of separate RTP streams this header applies to",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "-1",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            },
             "rtpjitterbuffer": {
                 "author": "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, Wim Taymans <wim.taymans@gmail.com>",
                 "description": "A buffer that deals with network jitter and other transmission faults",
