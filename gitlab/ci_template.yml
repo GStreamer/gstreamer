@@ -945,9 +945,9 @@ build cerbero cross win64:
     - rm clone_manifest_ref.py
 
     # extract our binaries
-    - rm -f gstreamer-1.0-android-universal-*-runtime.tar.bz2
+    - rm -f gstreamer-1.0-android-universal-*-runtime.tar.*
     - mkdir ${GSTREAMER_ROOT_ANDROID}
-    - tar -C ${GSTREAMER_ROOT_ANDROID} -xf gstreamer-1.0-android-universal-*.tar.bz2
+    - time tar -C ${GSTREAMER_ROOT_ANDROID} -xf gstreamer-1.0-android-universal-*.tar.*
 
     # gst-examples - player
     - chmod +x ${EXAMPLES_HOME}/gst-examples/playback/player/android/gradlew
