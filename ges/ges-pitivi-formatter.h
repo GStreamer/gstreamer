@@ -40,6 +40,9 @@ struct _GESPitiviFormatter {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+/**
+ * GESPitiviFormatterClass: (attributes doc.skip=true):
+ */
 struct _GESPitiviFormatterClass
 {
   /*< private >*/
