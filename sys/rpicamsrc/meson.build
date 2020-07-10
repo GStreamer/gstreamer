@@ -8,7 +8,7 @@ rpicamsrc_sources = [
 ]
 
 if host_system != 'linux' or (host_cpu != 'arm' and host_cpu != 'aarch64')
-  assert(not get_option('rpicamsrc').enabled())
+  assert(not get_option('rpicamsrc').enabled(), 'rpicamsrc was enabled by options but will not be built')
   subdir_done()
 endif
 
