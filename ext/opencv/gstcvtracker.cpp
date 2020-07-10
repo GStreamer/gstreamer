@@ -78,6 +78,7 @@ enum
   PROP_INITIAL_WIDTH,
   PROP_INITIAL_HEIGHT,
   PROP_ALGORITHM,
+  PROP_DRAW,
 };
 
 #define GST_OPENCV_TRACKER_ALGORITHM (tracker_algorithm_get_type ())
@@ -207,6 +208,11 @@ gst_cvtracker_class_init (GstCVTrackerClass * klass)
           GST_OPENCV_TRACKER_ALGORITHM_MEDIANFLOW,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_DRAW,
+      g_param_spec_boolean ("draw-rect", "Display",
+          "Draw rectangle around tracked object",
+          TRUE, (GParamFlags) G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (element_class,
       "cvtracker",
       "Filter/Effect/Video",
@@ -233,6 +239,7 @@ gst_cvtracker_init (GstCVTracker * filter)
 #else
   filter->tracker = cv::TrackerMedianFlow::create();
 #endif
+  filter->draw = TRUE;
   filter->post_debug_info = TRUE;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
@@ -261,6 +268,9 @@ gst_cvtracker_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ALGORITHM:
       filter->algorithm = g_value_get_enum (value);
+      break;
+    case PROP_DRAW:
+      filter->draw = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -338,6 +348,9 @@ gst_cvtracker_get_property (GObject * object, guint prop_id,
     case PROP_ALGORITHM:
       g_value_set_enum (value, filter->algorithm);
       break;
+    case PROP_DRAW:
+      g_value_set_boolean (value, filter->draw);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -382,6 +395,8 @@ gst_cvtracker_transform_ip (GstOpencvVideoFilter * base,
         filter->roi->x, filter->roi->y, filter->roi->width,
         filter->roi->height);
     gst_element_post_message (GST_ELEMENT (filter), msg);
+    if (filter->draw)
+      cv::rectangle (img, *filter->roi, cv::Scalar (255, 0, 0), 2, 1);
     if (!(filter->post_debug_info))
       filter->post_debug_info = TRUE;
   } else if (filter->post_debug_info) {

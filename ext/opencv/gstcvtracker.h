@@ -80,6 +80,7 @@ struct _GstCVTracker
   guint width;
   guint height;
   gint algorithm;
+  gboolean draw;
   gboolean post_debug_info;
 
   cv::Ptr<cv::Tracker> tracker;
