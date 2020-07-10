@@ -26,6 +26,8 @@
 #include <gst/check/gstharness.h>
 #include <gst/rtp/rtp.h>
 
+#include "rtpdummyhdrextimpl.c"
+
 #define DEFAULT_CLOCK_RATE (42)
 #define BUFFER_BEFORE_LIST (10)
 
@@ -300,6 +302,17 @@ validate_event (guint index, const gchar * name, const gchar * field, ...)
       framerate = gst_structure_get_string (gst_caps_get_structure (caps, 0),
           "a-framerate");
       fail_unless_equals_string (framerate, expected);
+    } else if (!g_strcmp0 (field, "extmap-str")) {
+      guint ext_id = va_arg (var_args, guint);
+      const gchar *expected_ext_str = va_arg (var_args, const gchar *);
+      GstCaps *caps;
+      const gchar *ext_str;
+      gchar *ext_field = g_strdup_printf ("extmap-%u", ext_id);
+      gst_event_parse_caps (event, &caps);
+      ext_str = gst_structure_get_string (gst_caps_get_structure (caps, 0),
+          ext_field);
+      fail_unless_equals_string (ext_str, expected_ext_str);
+      g_free (ext_field);
     } else {
       fail ("test cannot validate unknown event field '%s'", field);
     }
@@ -322,8 +335,8 @@ validate_normal_start_events (guint index)
 
 #define push_buffer(state, field, ...) \
 	push_buffer_full ((state), GST_FLOW_OK, (field), __VA_ARGS__)
-#define push_buffer_fails(state, field, ...) \
-	push_buffer_full ((state), GST_FLOW_FLUSHING, (field), __VA_ARGS__)
+#define push_buffer_fails(state, error, field, ...) \
+	push_buffer_full ((state), (error), (field), __VA_ARGS__)
 
 static void
 push_buffer_full (State * state, GstFlowReturn expected,
@@ -1969,53 +1982,280 @@ GST_START_TEST (rtp_base_payload_segment_time)
 
 GST_END_TEST;
 
-#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
-
-GST_START_TEST (rtp_base_payload_property_twcc_ext_id_test)
+GST_START_TEST (rtp_base_payload_one_byte_hdr_ext)
 {
-  GstHarness *h;
-  GstRtpDummyPay *pay;
-  GstBuffer *buf;
-  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-  guint8 ext_id = 10;
-  gpointer data;
-  guint size;
-  guint16 seqnum, twcc_seqnum;
-  GstCaps *caps, *expected_caps;
+  GstRTPHeaderExtension *ext;
+  State *state;
 
-  pay = rtp_dummy_pay_new ();
-  g_object_set (pay, "twcc-ext-id", ext_id, NULL);
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
+  ext = rtp_dummy_hdr_ext_new ();
+  GST_RTP_DUMMY_HDR_EXT (ext)->supported_flags =
+      GST_RTP_HEADER_EXTENSION_ONE_BYTE;
+  gst_rtp_header_extension_set_id (ext, 1);
 
-  h = gst_harness_new_with_element (GST_ELEMENT_CAST (pay), "sink", "src");
-  gst_harness_set_src_caps_str (h, "application/x-rtp");
+  g_signal_emit_by_name (state->element, "add-extension", ext);
 
-  /* verify the presence of the twcc-seqnum */
-  buf = gst_harness_push_and_pull (h, gst_buffer_new ());
-  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
-  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, ext_id,
-          0, &data, &size));
-  fail_unless_equals_int (2, size);
-  twcc_seqnum = GST_READ_UINT16_BE (data);
-  seqnum = gst_rtp_buffer_get_seq (&rtp);
-  fail_unless_equals_int (twcc_seqnum, seqnum);
-  gst_rtp_buffer_unmap (&rtp);
-  gst_buffer_unref (buf);
+  set_state (state, GST_STATE_PLAYING);
 
-  /* verify the presence of the twcc in caps */
-  caps = gst_pad_get_current_caps (GST_PAD_PEER (h->sinkpad));
-  expected_caps = gst_caps_from_string ("application/x-rtp, "
-      "extmap-10=" TWCC_EXTMAP_STR "");
-  fail_unless (gst_caps_is_subset (caps, expected_caps));
-  gst_caps_unref (caps);
-  gst_caps_unref (expected_caps);
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
 
-  g_object_unref (pay);
-  gst_harness_teardown (h);
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+
+  gst_object_unref (ext);
+  destroy_payloader (state);
 }
 
 GST_END_TEST;
 
+GST_START_TEST (rtp_base_payload_two_byte_hdr_ext)
+{
+  GstRTPHeaderExtension *ext;
+  State *state;
 
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
+  ext = rtp_dummy_hdr_ext_new ();
+  GST_RTP_DUMMY_HDR_EXT (ext)->supported_flags =
+      GST_RTP_HEADER_EXTENSION_TWO_BYTE;
+  gst_rtp_header_extension_set_id (ext, 1);
+
+  g_signal_emit_by_name (state->element, "add-extension", ext);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+
+  gst_object_unref (ext);
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_payload_clear_extensions)
+{
+  GstRTPHeaderExtension *ext;
+  State *state;
+
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
+  ext = rtp_dummy_hdr_ext_new ();
+  gst_rtp_header_extension_set_id (ext, 1);
+
+  g_signal_emit_by_name (state->element, "add-extension", ext);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+  g_signal_emit_by_name (state->element, "clear-extensions", ext);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (2);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+  validate_buffer (1, "pts", 1 * GST_SECOND, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+
+  gst_object_unref (ext);
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_payload_multiple_exts)
+{
+  GstRTPHeaderExtension *ext1, *ext2;
+  State *state;
+
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
+  ext1 = rtp_dummy_hdr_ext_new ();
+  gst_rtp_header_extension_set_id (ext1, 1);
+  ext2 = rtp_dummy_hdr_ext_new ();
+  gst_rtp_header_extension_set_id (ext2, 2);
+
+  g_signal_emit_by_name (state->element, "add-extension", ext1);
+  g_signal_emit_by_name (state->element, "add-extension", ext2);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext1)->write_count, 1);
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext2)->write_count, 1);
+
+  gst_object_unref (ext1);
+  gst_object_unref (ext2);
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
+static GstStaticPadTemplate sinktmpl_with_extmap_str =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp, payload=(int)98, ssrc=(uint)24, "
+        "timestamp-offset=(uint)212, seqnum-offset=(uint)2424, extmap-4=(string)"
+        DUMMY_HDR_EXT_URI));
+
+static GstRTPHeaderExtension *
+request_extension (GstRTPBasePayload * depayload, guint ext_id,
+    const gchar * ext_uri, gpointer user_data)
+{
+  GstRTPHeaderExtension *ext = user_data;
+
+  if (ext && gst_rtp_header_extension_get_id (ext) == ext_id
+      && g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) == 0)
+    return gst_object_ref (ext);
+
+  return NULL;
+}
+
+GST_START_TEST (rtp_base_payload_caps_request)
+{
+  GstRTPHeaderExtension *ext;
+  State *state;
+
+  state =
+      create_payloader ("application/x-rtp", &sinktmpl_with_extmap_str, NULL);
+
+  ext = rtp_dummy_hdr_ext_new ();
+  gst_rtp_header_extension_set_id (ext, 4);
+  g_signal_connect (state->element, "request-extension",
+      G_CALLBACK (request_extension), ext);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+
+  gst_object_unref (ext);
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
+static GstRTPHeaderExtension *
+request_extension_ignored (GstRTPBasePayload * depayload, guint ext_id,
+    const gchar * ext_uri, gpointer user_data)
+{
+  guint *request_counter = user_data;
+
+  *request_counter += 1;
+
+  return NULL;
+}
+
+GST_START_TEST (rtp_base_payload_caps_request_ignored)
+{
+  State *state;
+  guint request_counter = 0;
+
+  state =
+      create_payloader ("application/x-rtp", &sinktmpl_with_extmap_str, NULL);
+
+  g_signal_connect (state->element, "request-extension",
+      G_CALLBACK (request_extension_ignored), &request_counter);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  fail_unless_equals_int (request_counter, 1);
+
+  validate_buffers_received (1);
+
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_payload_extensions_in_output_caps)
+{
+  GstRTPHeaderExtension *ext;
+  State *state;
+
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
+  ext = rtp_dummy_hdr_ext_new ();
+  GST_RTP_DUMMY_HDR_EXT (ext)->supported_flags =
+      GST_RTP_HEADER_EXTENSION_TWO_BYTE;
+  gst_rtp_header_extension_set_id (ext, 1);
+
+  g_signal_emit_by_name (state->element, "add-extension", ext);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  validate_event (1, "caps", "extmap-str", 1, DUMMY_HDR_EXT_URI, NULL);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+  gst_object_unref (ext);
+  ext = NULL;
+
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -2052,12 +2292,19 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_payload_property_ptime_multiple_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_stats_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_source_info_test);
-  tcase_add_test (tc_chain, rtp_base_payload_property_twcc_ext_id_test);
 
   tcase_add_test (tc_chain, rtp_base_payload_framerate_attribute);
   tcase_add_test (tc_chain, rtp_base_payload_max_framerate_attribute);
 
   tcase_add_test (tc_chain, rtp_base_payload_segment_time);
+
+  tcase_add_test (tc_chain, rtp_base_payload_one_byte_hdr_ext);
+  tcase_add_test (tc_chain, rtp_base_payload_two_byte_hdr_ext);
+  tcase_add_test (tc_chain, rtp_base_payload_clear_extensions);
+  tcase_add_test (tc_chain, rtp_base_payload_multiple_exts);
+  tcase_add_test (tc_chain, rtp_base_payload_caps_request);
+  tcase_add_test (tc_chain, rtp_base_payload_caps_request_ignored);
+  tcase_add_test (tc_chain, rtp_base_payload_extensions_in_output_caps);
 
   return s;
 }
