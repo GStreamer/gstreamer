@@ -31,6 +31,7 @@
 
 #include "gstrtpbasedepayload.h"
 #include "gstrtpmeta.h"
+#include "gstrtphdrext.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpbasedepayload_debug);
 #define GST_CAT_DEFAULT (rtpbasedepayload_debug)
@@ -65,14 +66,22 @@ struct _GstRTPBaseDepayloadPrivate
   GstBuffer *input_buffer;
 
   GstFlowReturn process_flow_ret;
+
+  /* array of GstRTPHeaderExtension's * */
+  GPtrArray *header_exts;
 };
 
 /* Filter signals and args */
 enum
 {
-  /* FILL ME */
+  SIGNAL_0,
+  SIGNAL_REQUEST_EXTENSION,
+  SIGNAL_ADD_EXTENSION,
+  SIGNAL_CLEAR_EXTENSIONS,
   LAST_SIGNAL
 };
+
+static guint gst_rtp_base_depayload_signals[LAST_SIGNAL] = { 0 };
 
 #define DEFAULT_SOURCE_INFO FALSE
 #define DEFAULT_MAX_REORDER 100
@@ -116,6 +125,11 @@ static void gst_rtp_base_depayload_init (GstRTPBaseDepayload * rtpbasepayload,
     GstRTPBaseDepayloadClass * klass);
 static GstEvent *create_segment_event (GstRTPBaseDepayload * filter,
     guint rtptime, GstClockTime position);
+
+static void gst_rtp_base_depayload_add_extension (GstRTPBaseDepayload *
+    rtpbasepayload, GstRTPHeaderExtension * ext);
+static void gst_rtp_base_depayload_clear_extensions (GstRTPBaseDepayload *
+    rtpbasepayload);
 
 GType
 gst_rtp_base_depayload_get_type (void)
@@ -223,6 +237,54 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
           "Max seqnum reorder before assuming sender has restarted",
           0, G_MAXINT, DEFAULT_MAX_REORDER, G_PARAM_READWRITE));
 
+  /**
+   * GstRTPBaseDepayload::request-extension:
+   * @object: the #GstRTPBaseDepayload
+   * @ext_id: the extension id being requested
+   * @ext_uri: (nullable): the extension URI being requested
+   *
+   * The returned @ext must be configured with the correct @ext_id and with the
+   * necessary attributes as required by the extension implementation.
+   *
+   * Returns: (transfer full): the #GstRTPHeaderExtension for @ext_id, or %NULL
+   *
+   * Since: 1.20
+   */
+  gst_rtp_base_depayload_signals[SIGNAL_REQUEST_EXTENSION] =
+      g_signal_new_class_handler ("request-extension",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, NULL, NULL, NULL, NULL,
+      GST_TYPE_RTP_HEADER_EXTENSION, 2, G_TYPE_UINT, G_TYPE_STRING);
+
+  /**
+   * GstRTPBaseDepayload::add-extension:
+   * @object: the #GstRTPBaseDepayload
+   * @ext: (transfer full): the #GstRTPHeaderExtension
+   *
+   * Add @ext as an extension for reading part of an RTP header extension from
+   * incoming RTP packets.
+   *
+   * Since: 1.20
+   */
+  gst_rtp_base_depayload_signals[SIGNAL_ADD_EXTENSION] =
+      g_signal_new_class_handler ("add-extension", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_rtp_base_depayload_add_extension), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_RTP_HEADER_EXTENSION);
+
+  /**
+   * GstRTPBaseDepayload::clear-extensions:
+   * @object: the #GstRTPBaseDepayload
+   *
+   * Clear all RTP header extensions used by this depayloader.
+   *
+   * Since: 1.20
+   */
+  gst_rtp_base_depayload_signals[SIGNAL_ADD_EXTENSION] =
+      g_signal_new_class_handler ("clear-extensions", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_rtp_base_depayload_clear_extensions), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
+
   gstelement_class->change_state = gst_rtp_base_depayload_change_state;
 
   klass->packet_lost = gst_rtp_base_depayload_packet_lost;
@@ -276,12 +338,38 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->max_reorder = DEFAULT_MAX_REORDER;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
+
+  priv->header_exts =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 }
 
 static void
 gst_rtp_base_depayload_finalize (GObject * object)
 {
+  GstRTPBaseDepayload *rtpbasedepayload = GST_RTP_BASE_DEPAYLOAD (object);
+
+  g_ptr_array_unref (rtpbasedepayload->priv->header_exts);
+  rtpbasedepayload->priv->header_exts = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+add_and_ref_item (GstRTPHeaderExtension * ext, GPtrArray * ret)
+{
+  g_ptr_array_add (ret, gst_object_ref (ext));
+}
+
+static void
+remove_item_from (GstRTPHeaderExtension * ext, GPtrArray * ret)
+{
+  g_ptr_array_remove_fast (ret, ext);
+}
+
+static void
+add_item_to (GstRTPHeaderExtension * ext, GPtrArray * ret)
+{
+  g_ptr_array_add (ret, ext);
 }
 
 static gboolean
@@ -289,7 +377,7 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
   GstRTPBaseDepayloadClass *bclass;
   GstRTPBaseDepayloadPrivate *priv;
-  gboolean res;
+  gboolean res = TRUE;
   GstStructure *caps_struct;
   const GValue *value;
 
@@ -354,6 +442,132 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
     priv->clock_base = g_value_get_uint (value);
   else
     priv->clock_base = -1;
+
+  {
+    /* ensure we have header extension implementations for the list in the
+     * caps */
+    guint i, j, n_fields = gst_structure_n_fields (caps_struct);
+    GPtrArray *header_exts = g_ptr_array_new_with_free_func (gst_object_unref);
+    GPtrArray *to_add = g_ptr_array_new ();
+    GPtrArray *to_remove = g_ptr_array_new ();
+
+    GST_OBJECT_LOCK (filter);
+    g_ptr_array_foreach (filter->priv->header_exts,
+        (GFunc) add_and_ref_item, header_exts);
+    GST_OBJECT_UNLOCK (filter);
+
+    for (i = 0; i < n_fields; i++) {
+      const gchar *field_name = gst_structure_nth_field_name (caps_struct, i);
+      if (g_str_has_prefix (field_name, "extmap-")) {
+        const GValue *val;
+        const gchar *uri = NULL;
+        gchar *nptr;
+        guint64 ext_id;
+        GstRTPHeaderExtension *ext = NULL;
+
+        errno = 0;
+        ext_id = g_ascii_strtoull (&field_name[strlen ("extmap-")], &nptr, 10);
+        if (errno != 0 || (ext_id == 0 && field_name == nptr)) {
+          GST_WARNING_OBJECT (filter, "could not parse id from %s", field_name);
+          res = FALSE;
+          goto ext_out;
+        }
+
+        val = gst_structure_get_value (caps_struct, field_name);
+        if (G_VALUE_HOLDS_STRING (val)) {
+          uri = g_value_get_string (val);
+        } else if (GST_VALUE_HOLDS_ARRAY (val)) {
+          /* the uri is the second value in the array */
+          const GValue *str = gst_value_array_get_value (val, 1);
+          if (G_VALUE_HOLDS_STRING (str)) {
+            uri = g_value_get_string (str);
+          }
+        }
+
+        if (!uri) {
+          GST_WARNING_OBJECT (filter, "could not get extmap uri for "
+              "field %s", field_name);
+          res = FALSE;
+          goto ext_out;
+        }
+
+        /* try to find if this extension mapping already exists */
+        for (j = 0; j < header_exts->len; j++) {
+          ext = g_ptr_array_index (header_exts, j);
+          if (gst_rtp_header_extension_get_id (ext) == ext_id) {
+            if (g_strcmp0 (uri, gst_rtp_header_extension_get_uri (ext)) == 0) {
+              /* still matching, we're good, set attributes from caps in case
+               * the caps have changed */
+              if (!gst_rtp_header_extension_set_attributes_from_caps (ext,
+                      caps)) {
+                GST_WARNING_OBJECT (filter,
+                    "Failed to configure rtp header " "extension %"
+                    GST_PTR_FORMAT " attributes from caps %" GST_PTR_FORMAT,
+                    ext, caps);
+                res = FALSE;
+                goto ext_out;
+              }
+              break;
+            } else {
+              GST_DEBUG_OBJECT (filter, "extension id %" G_GUINT64_FORMAT
+                  "was replaced with a different extension uri "
+                  "original:\'%s' vs \'%s\'", ext_id,
+                  gst_rtp_header_extension_get_uri (ext), uri);
+              g_ptr_array_add (to_remove, ext);
+              ext = NULL;
+              break;
+            }
+          } else {
+            ext = NULL;
+          }
+        }
+
+        /* if no extension, attempt to request one */
+        if (!ext) {
+          GST_DEBUG_OBJECT (filter, "requesting extension for id %"
+              G_GUINT64_FORMAT " and uri %s", ext_id, uri);
+          g_signal_emit (filter,
+              gst_rtp_base_depayload_signals[SIGNAL_REQUEST_EXTENSION], 0,
+              ext_id, uri, &ext);
+          GST_DEBUG_OBJECT (filter, "request returned extension %p \'%s\' "
+              "for id %" G_GUINT64_FORMAT " and uri %s", ext,
+              ext ? GST_OBJECT_NAME (ext) : "", ext_id, uri);
+
+          if (ext && gst_rtp_header_extension_get_id (ext) != ext_id) {
+            g_warning ("\'request-extension\' signal provided an rtp header "
+                "extension for uri \'%s\' that does not match the requested "
+                "extension id %" G_GUINT64_FORMAT, uri, ext_id);
+            gst_clear_object (&ext);
+          }
+          /* it is the signal handler's responsibility to set attributes if
+           * required */
+
+          /* We don't create an extension implementation by default and require
+           * the caller to set the appropriate extension if it's required */
+          if (ext)
+            g_ptr_array_add (to_add, ext);
+        }
+      }
+    }
+
+    /* Note: we intentionally don't remove extensions that are not listed
+     * in caps */
+
+    GST_OBJECT_LOCK (filter);
+    g_ptr_array_foreach (to_remove, (GFunc) remove_item_from,
+        filter->priv->header_exts);
+    g_ptr_array_foreach (to_add, (GFunc) add_item_to,
+        filter->priv->header_exts);
+    GST_OBJECT_UNLOCK (filter);
+
+  ext_out:
+    g_ptr_array_unref (to_add);
+    g_ptr_array_unref (to_remove);
+    g_ptr_array_unref (header_exts);
+
+    if (!res)
+      return res;
+  }
 
   if (bclass->set_caps) {
     res = bclass->set_caps (filter, caps);
@@ -834,6 +1048,141 @@ add_rtp_source_meta (GstBuffer * outbuf, GstBuffer * rtpbuf)
   gst_rtp_buffer_unmap (&rtp);
 }
 
+static void
+gst_rtp_base_depayload_add_extension (GstRTPBaseDepayload * rtpbasepayload,
+    GstRTPHeaderExtension * ext)
+{
+  g_return_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext));
+  g_return_if_fail (gst_rtp_header_extension_get_id (ext) > 0);
+
+  /* XXX: check for duplicate ids? */
+  GST_OBJECT_LOCK (rtpbasepayload);
+  g_ptr_array_add (rtpbasepayload->priv->header_exts, gst_object_ref (ext));
+  GST_OBJECT_UNLOCK (rtpbasepayload);
+}
+
+static void
+gst_rtp_base_depayload_clear_extensions (GstRTPBaseDepayload * rtpbasepayload)
+{
+  GST_OBJECT_LOCK (rtpbasepayload);
+  g_ptr_array_set_size (rtpbasepayload->priv->header_exts, 0);
+  GST_OBJECT_UNLOCK (rtpbasepayload);
+}
+
+static void
+read_rtp_header_extensions (GstRTPBaseDepayload * depayload,
+    GstBuffer * input, GstBuffer * output)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint16 bit_pattern;
+  guint8 *pdata;
+  guint wordlen;
+
+  if (!input) {
+    GST_DEBUG_OBJECT (depayload, "no input buffer");
+    return;
+  }
+
+  if (!gst_rtp_buffer_map (input, GST_MAP_READ, &rtp)) {
+    GST_WARNING_OBJECT (depayload, "Failed to map buffer");
+    return;
+  }
+
+  if (gst_rtp_buffer_get_extension_data (&rtp, &bit_pattern, (gpointer) & pdata,
+          &wordlen)) {
+    GstRTPHeaderExtensionFlags ext_flags = 0;
+    gsize bytelen = wordlen * 4;
+    guint hdr_unit_bytes;
+    gsize offset = 0;
+
+    if (bit_pattern == 0xBEDE) {
+      /* one byte extensions */
+      hdr_unit_bytes = 1;
+      ext_flags |= GST_RTP_HEADER_EXTENSION_ONE_BYTE;
+    } else if (bit_pattern >> 4 == 0x100) {
+      /* two byte extensions */
+      hdr_unit_bytes = 2;
+      ext_flags |= GST_RTP_HEADER_EXTENSION_TWO_BYTE;
+    } else {
+      GST_DEBUG_OBJECT (depayload, "unknown extension bit pattern 0x%02x%02x",
+          bit_pattern >> 8, bit_pattern & 0xff);
+      goto out;
+    }
+
+    while (TRUE) {
+      guint8 read_id, read_len;
+      GstRTPHeaderExtension *ext = NULL;
+      guint i;
+
+      if (offset + hdr_unit_bytes >= bytelen)
+        /* not enough remaning data */
+        break;
+
+      if (ext_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
+        read_id = GST_READ_UINT8 (pdata + offset) >> 4;
+        read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
+        offset += 1;
+
+        if (read_id == 0)
+          /* padding */
+          continue;
+
+        if (read_id == 15)
+          /* special id for possible future expansion */
+          break;
+      } else {
+        read_id = GST_READ_UINT8 (pdata + offset);
+        offset += 1;
+
+        if (read_id == 0)
+          /* padding */
+          continue;
+
+        read_len = GST_READ_UINT8 (pdata + offset);
+        offset += 1;
+      }
+      GST_TRACE_OBJECT (depayload, "found rtp header extension with id %u and "
+          "length %u", read_id, read_len);
+
+      /* Ignore extension headers where the size does not fit */
+      if (offset + read_len > bytelen) {
+        GST_WARNING_OBJECT (depayload, "Extension length extends past the "
+            "size of the extension data");
+        break;
+      }
+
+      GST_OBJECT_LOCK (depayload);
+      for (i = 0; i < depayload->priv->header_exts->len; i++) {
+        ext = g_ptr_array_index (depayload->priv->header_exts, i);
+        if (read_id == gst_rtp_header_extension_get_id (ext)) {
+          gst_object_ref (ext);
+          break;
+        }
+        ext = NULL;
+      }
+
+      if (ext) {
+        if (!gst_rtp_header_extension_read (ext, ext_flags, &pdata[offset],
+                read_len, output)) {
+          GST_WARNING_OBJECT (depayload, "RTP header extension (%s) could "
+              "not read payloaded data", GST_OBJECT_NAME (ext));
+          GST_OBJECT_UNLOCK (ext);
+          gst_object_unref (ext);
+          goto out;
+        }
+
+        gst_object_unref (ext);
+      }
+      GST_OBJECT_UNLOCK (depayload);
+
+      offset += read_len;
+    }
+  }
+
+out:
+  gst_rtp_buffer_unmap (&rtp);
+}
+
 static gboolean
 set_headers (GstBuffer ** buffer, guint idx, GstRTPBaseDepayload * depayload)
 {
@@ -866,8 +1215,12 @@ set_headers (GstBuffer ** buffer, guint idx, GstRTPBaseDepayload * depayload)
   priv->dts = GST_CLOCK_TIME_NONE;
   priv->duration = GST_CLOCK_TIME_NONE;
 
-  if (priv->source_info && priv->input_buffer)
-    add_rtp_source_meta (*buffer, priv->input_buffer);
+  if (priv->input_buffer) {
+    if (priv->source_info)
+      add_rtp_source_meta (*buffer, priv->input_buffer);
+
+    read_rtp_header_extensions (depayload, priv->input_buffer, *buffer);
+  }
 
   return TRUE;
 }
