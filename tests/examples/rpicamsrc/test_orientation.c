@@ -10,7 +10,7 @@
 
 #define PIPELINE "rpicamsrc name=src preview=0 fullscreen=0 ! h264parse ! omxh264dec ! glimagesink sync=0"
 
-void
+static void
 configure_orientation (GstVideoOrientation * orientation)
 {
   gboolean flip;

@@ -2,6 +2,11 @@ subdir('audiofx')
 subdir('cairo')
 subdir('level')
 subdir('qt')
+
+if is_variable('gstrpicamsrc')
+  subdir('rpicamsrc')
+endif
+
 subdir('rtp')
 subdir('rtsp')
 subdir('shapewipe')

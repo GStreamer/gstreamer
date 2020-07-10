@@ -39,7 +39,7 @@ declare_value (CONTRAST, 0);
         return current_##name;                            \
     }
 
-gint
+static gint
 compute_value (GstColorBalanceChannel * channel, gint current_value)
 {
 #if CONTROL_SATURATION
