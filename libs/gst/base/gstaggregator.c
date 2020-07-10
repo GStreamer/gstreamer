@@ -41,16 +41,17 @@
  *  * When data is queued on all pads, the aggregate vmethod is called.
  *
  *  * One can peek at the data on any given GstAggregatorPad with the
- *    gst_aggregator_pad_peek_buffer () method, and remove it from the pad
+ *    gst_aggregator_pad_peek_buffer() method, and remove it from the pad
  *    with the gst_aggregator_pad_pop_buffer () method. When a buffer
  *    has been taken with pop_buffer (), a new buffer can be queued
  *    on that pad.
  *
  *  * If the subclass wishes to push a buffer downstream in its aggregate
  *    implementation, it should do so through the
- *    gst_aggregator_finish_buffer () method. This method will take care
+ *    gst_aggregator_finish_buffer() method. This method will take care
  *    of sending and ordering mandatory events such as stream start, caps
- *    and segment.
+ *    and segment. Buffer lists can also be pushed out with
+ *    gst_aggregator_finish_buffer_list().
  *
  *  * Same goes for EOS events, which should not be pushed directly by the
  *    subclass, it should instead return GST_FLOW_EOS in its aggregate
@@ -634,6 +635,48 @@ gst_aggregator_finish_buffer (GstAggregator * aggregator, GstBuffer * buffer)
   g_assert (klass->finish_buffer != NULL);
 
   return klass->finish_buffer (aggregator, buffer);
+}
+
+static GstFlowReturn
+gst_aggregator_default_finish_buffer_list (GstAggregator * self,
+    GstBufferList * bufferlist)
+{
+  gst_aggregator_push_mandatory_events (self);
+
+  GST_OBJECT_LOCK (self);
+  if (!self->priv->flushing && gst_pad_is_active (self->srcpad)) {
+    GST_TRACE_OBJECT (self, "pushing bufferlist%" GST_PTR_FORMAT, bufferlist);
+    GST_OBJECT_UNLOCK (self);
+    return gst_pad_push_list (self->srcpad, bufferlist);
+  } else {
+    GST_INFO_OBJECT (self, "Not pushing (active: %i, flushing: %i)",
+        self->priv->flushing, gst_pad_is_active (self->srcpad));
+    GST_OBJECT_UNLOCK (self);
+    gst_buffer_list_unref (bufferlist);
+    return GST_FLOW_OK;
+  }
+}
+
+/**
+ * gst_aggregator_finish_buffer_list:
+ * @aggregator: The #GstAggregator
+ * @bufferlist: (transfer full): the #GstBufferList to push.
+ *
+ * This method will push the provided output buffer list downstream. If needed,
+ * mandatory events such as stream-start, caps, and segment events will be
+ * sent before pushing the buffer.
+ *
+ * Since: 1.18
+ */
+GstFlowReturn
+gst_aggregator_finish_buffer_list (GstAggregator * aggregator,
+    GstBufferList * bufferlist)
+{
+  GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (aggregator);
+
+  g_assert (klass->finish_buffer_list != NULL);
+
+  return klass->finish_buffer_list (aggregator, bufferlist);
 }
 
 static void
@@ -2557,6 +2600,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
     g_type_class_adjust_private_offset (klass, &aggregator_private_offset);
 
   klass->finish_buffer = gst_aggregator_default_finish_buffer;
+  klass->finish_buffer_list = gst_aggregator_default_finish_buffer_list;
 
   klass->sink_event = gst_aggregator_default_sink_event;
   klass->sink_query = gst_aggregator_default_sink_query;

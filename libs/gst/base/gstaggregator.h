@@ -330,8 +330,19 @@ struct _GstAggregatorClass {
                                                  GstAggregatorPad *  aggregator_pad,
                                                  GstQuery         *  query);
 
+  /**
+   * GstAggregatorClass::finish_buffer_list:
+   *
+   * Optional. Equivalent of #GstAggregatorClass::finish_buffer for
+   * buffer lists.
+   *
+   * Since: 1.18
+   */
+  GstFlowReturn     (*finish_buffer_list) (GstAggregator    * aggregator,
+                                           GstBufferList    * bufferlist);
+
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING_LARGE-3];
+  gpointer          _gst_reserved[GST_PADDING_LARGE-4];
 };
 
 /************************************
@@ -355,6 +366,10 @@ struct _GstAggregatorClass {
 GST_BASE_API
 GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  aggregator,
                                                      GstBuffer                    *  buffer);
+
+GST_BASE_API
+GstFlowReturn  gst_aggregator_finish_buffer_list    (GstAggregator                *  aggregator,
+                                                     GstBufferList                *  bufferlist);
 
 GST_BASE_API
 void           gst_aggregator_set_src_caps          (GstAggregator                *  self,
