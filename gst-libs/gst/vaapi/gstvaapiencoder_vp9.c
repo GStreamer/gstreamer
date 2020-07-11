@@ -104,6 +104,7 @@ struct _GstVaapiEncoderVP9
   GstVaapiSurfaceProxy *ref_list[GST_VP9_REF_FRAMES];   /* reference list */
   guint ref_list_idx;           /* next free slot in ref_list */
   GstVaapiEntrypoint entrypoint;
+  GArray *allowed_profiles;
 
   /* Bitrate contral parameters, CPB = Coded Picture Buffer */
   guint bitrate_bits;           /* bitrate (bits) */
@@ -560,6 +561,19 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoderVP9 * encoder)
   memset (encoder->ref_list, 0,
       G_N_ELEMENTS (encoder->ref_list) * sizeof (encoder->ref_list[0]));
   encoder->ref_list_idx = 0;
+
+  encoder->allowed_profiles = NULL;
+}
+
+static void
+gst_vaapi_encoder_vp9_finalize (GObject * object)
+{
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (object);
+
+  if (encoder->allowed_profiles)
+    g_array_unref (encoder->allowed_profiles);
+
+  G_OBJECT_CLASS (gst_vaapi_encoder_vp9_parent_class)->finalize (object);
 }
 
 /**
@@ -678,6 +692,7 @@ gst_vaapi_encoder_vp9_class_init (GstVaapiEncoderVP9Class * klass)
 
   object_class->set_property = gst_vaapi_encoder_vp9_set_property;
   object_class->get_property = gst_vaapi_encoder_vp9_get_property;
+  object_class->finalize = gst_vaapi_encoder_vp9_finalize;
 
   properties[ENCODER_VP9_PROP_RATECONTROL] =
       g_param_spec_enum ("rate-control",
@@ -762,4 +777,23 @@ GstVaapiEncoder *
 gst_vaapi_encoder_vp9_new (GstVaapiDisplay * display)
 {
   return g_object_new (GST_TYPE_VAAPI_ENCODER_VP9, "display", display, NULL);
+}
+
+/**
+ * gst_vaapi_encoder_vp9_set_allowed_profiles:
+ * @encoder: a #GstVaapiEncoderVP9
+ * @profiles: a #GArray of all allowed #GstVaapiProfile.
+ *
+ * Set the all allowed profiles for the encoder.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_encoder_vp9_set_allowed_profiles (GstVaapiEncoderVP9 * encoder,
+    GArray * profiles)
+{
+  g_return_val_if_fail (profiles != 0, FALSE);
+
+  encoder->allowed_profiles = g_array_ref (profiles);
+  return TRUE;
 }
