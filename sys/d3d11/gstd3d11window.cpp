@@ -668,7 +668,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
   /* FIXME: need to verify video processor on Xbox
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1312
    */
-  if (!gst_d3d11_is_xbox_device (window->device)) {
+  if (gst_d3d11_get_device_vendor (window->device) !=
+      GST_D3D11_DEVICE_VENDOR_XBOX) {
       window->processor =
           gst_d3d11_video_processor_new (window->device,
           GST_VIDEO_INFO_WIDTH (&window->info),

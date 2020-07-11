@@ -27,6 +27,16 @@
 
 G_BEGIN_DECLS
 
+typedef enum
+{
+  GST_D3D11_DEVICE_VENDOR_UNKNOWN = 0,
+  GST_D3D11_DEVICE_VENDOR_AMD,
+  GST_D3D11_DEVICE_VENDOR_INTEL,
+  GST_D3D11_DEVICE_VENDOR_NVIDIA,
+  GST_D3D11_DEVICE_VENDOR_QUALCOMM,
+  GST_D3D11_DEVICE_VENDOR_XBOX,
+} GstD3D11DeviceVendor;
+
 gboolean        gst_d3d11_handle_set_context        (GstElement * element,
                                                      GstContext * context,
                                                      gint adapter,
@@ -42,7 +52,7 @@ gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
 
 gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
-gboolean        gst_d3d11_is_xbox_device            (GstD3D11Device * device);
+GstD3D11DeviceVendor gst_d3d11_get_device_vendor    (GstD3D11Device * device);
 
 gboolean       _gst_d3d11_result                    (HRESULT hr,
                                                      GstD3D11Device * device,
