@@ -80,8 +80,14 @@ static GstCaps *
 gst_vaapiencode_vp9_get_caps (GstVaapiEncode * base_encode)
 {
   GstCaps *caps;
+  GstVaapiProfile profile;
+  const gchar *profile_str;
 
   caps = gst_caps_from_string (GST_CODEC_CAPS);
+  profile = gst_vaapi_encoder_get_profile (base_encode->encoder);
+  profile_str = gst_vaapi_utils_vp9_get_profile_string (profile);
+  if (profile_str)
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_str, NULL);
 
   return caps;
 }
