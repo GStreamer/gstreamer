@@ -28,6 +28,7 @@
 #include "gstvaapiencoder_vp9.h"
 #include "gstvaapicodedbufferproxy_priv.h"
 #include "gstvaapisurface.h"
+#include "gstvaapiutils_vpx.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -146,26 +147,73 @@ ensure_bitrate (GstVaapiEncoderVP9 * encoder)
   }
 }
 
-/* Derives the profile that suits best to the configuration */
+static gboolean
+is_profile_allowed (GstVaapiEncoderVP9 * encoder, GstVaapiProfile profile)
+{
+  guint i;
+
+  if (encoder->allowed_profiles == NULL)
+    return TRUE;
+
+  for (i = 0; i < encoder->allowed_profiles->len; i++)
+    if (profile ==
+        g_array_index (encoder->allowed_profiles, GstVaapiProfile, i))
+      return TRUE;
+
+  return FALSE;
+}
+
+ /* Derives the profile that suits best to the configuration */
 static GstVaapiEncoderStatus
 ensure_profile (GstVaapiEncoderVP9 * encoder)
 {
+  const GstVideoFormat format =
+      GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+  guint depth, chrome;
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_YUV (gst_video_format_get_info (format)))
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
+  depth = GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info (format), 0);
+  chrome = gst_vaapi_utils_vp9_get_chroma_format_idc
+      (gst_vaapi_video_format_get_chroma_type
+      (GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder))));
+
+  encoder->profile = GST_VAAPI_PROFILE_UNKNOWN;
   /*
      Profile Color | Depth Chroma | Subsampling
      0             | 8 bit/sample | 4:2:0
      1             | 8 bit        | 4:2:2, 4:4:4
      2             | 10 or 12 bit | 4:2:0
      3             | 10 or 12 bit | 4:2:2, 4:4:4     */
-  const GstVideoFormat format =
-      GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
-  if (format == GST_VIDEO_FORMAT_P010_10LE)
-    encoder->profile = GST_VAAPI_PROFILE_VP9_2;
-  else
-    encoder->profile = GST_VAAPI_PROFILE_VP9_0;
+  if (chrome == 3 || chrome == 2) {
+    /* 4:4:4 and 4:2:2 */
+    if (depth == 8) {
+      encoder->profile = GST_VAAPI_PROFILE_VP9_1;
+    } else if (depth == 10 || depth == 12) {
+      encoder->profile = GST_VAAPI_PROFILE_VP9_3;
+    }
+  } else if (chrome == 1) {
+    /* 4:2:0 */
+    if (depth == 8) {
+      encoder->profile = GST_VAAPI_PROFILE_VP9_0;
+    } else if (depth == 10 || depth == 12) {
+      encoder->profile = GST_VAAPI_PROFILE_VP9_2;
+    }
+  }
+
+  if (encoder->profile == GST_VAAPI_PROFILE_UNKNOWN) {
+    GST_WARNING ("Failed to decide VP9 profile");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  }
+
+  if (!is_profile_allowed (encoder, encoder->profile)) {
+    GST_WARNING ("Failed to find an allowed VP9 profile");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  }
 
   /* Ensure bitrate if not set already */
   ensure_bitrate (encoder);
-
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
