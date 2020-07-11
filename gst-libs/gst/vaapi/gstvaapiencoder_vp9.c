@@ -217,39 +217,6 @@ ensure_profile (GstVaapiEncoderVP9 * encoder)
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
-/* Derives the profile supported by the underlying hardware */
-static gboolean
-ensure_hw_profile (GstVaapiEncoderVP9 * encoder)
-{
-  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
-  GstVaapiEntrypoint entrypoint = encoder->entrypoint;
-  GstVaapiProfile profile, profiles[2];
-  guint i, num_profiles = 0;
-
-  profiles[num_profiles++] = encoder->profile;
-
-  profile = GST_VAAPI_PROFILE_UNKNOWN;
-  for (i = 0; i < num_profiles; i++) {
-    if (gst_vaapi_display_has_encoder (display, profiles[i], entrypoint)) {
-      profile = profiles[i];
-      break;
-    }
-  }
-  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
-    goto error_unsupported_profile;
-
-  GST_VAAPI_ENCODER_CAST (encoder)->profile = profile;
-  return TRUE;
-
-  /* ERRORS */
-error_unsupported_profile:
-  {
-    GST_ERROR ("unsupported HW profile %s",
-        gst_vaapi_profile_get_va_name (encoder->profile));
-    return FALSE;
-  }
-}
-
 static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
@@ -259,8 +226,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
 
   /* FIXME: Maximum sizes for common headers (in bytes) */
 
-  if (!ensure_hw_profile (encoder))
-    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  GST_VAAPI_ENCODER_CAST (encoder)->profile = encoder->profile;
 
   base_encoder->num_ref_frames = 3 + DEFAULT_SURFACES_COUNT;
 
@@ -579,7 +545,7 @@ gst_vaapi_encoder_vp9_reconfigure (GstVaapiEncoder * base_encoder)
   encoder->entrypoint =
       gst_vaapi_encoder_get_entrypoint (base_encoder, encoder->profile);
   if (encoder->entrypoint == GST_VAAPI_ENTRYPOINT_INVALID) {
-    GST_WARNING ("Cannot find valid entrypoint");
+    GST_WARNING ("Cannot find valid profile/entrypoint pair");
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
   }
 
