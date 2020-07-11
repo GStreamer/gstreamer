@@ -506,10 +506,8 @@ gst_rtp_sink_start (GstRtpSink * self)
 
 dns_resolve_failed:
   GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-      ("Could not resolve hostname '%s'", GST_STR_NULL (remote_addr)),
+      ("Could not resolve hostname '%s'", gst_uri_get_host (self->uri)),
       ("DNS resolver reported: %s", error->message));
-  g_free (remote_addr);
-  g_object_unref (iaddr);
   g_error_free (error);
   return FALSE;
 }
