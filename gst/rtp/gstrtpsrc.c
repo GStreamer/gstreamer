@@ -547,8 +547,9 @@ gst_rtp_src_start (GstRtpSrc * self)
 {
   GstPad *pad;
   GSocket *socket;
-  GInetAddress *addr;
+  GInetAddress *iaddr;
   GstCaps *caps;
+  GError *error = NULL;
 
   /* Should not be NULL */
   g_return_val_if_fail (self->uri != NULL, FALSE);
@@ -559,13 +560,33 @@ gst_rtp_src_start (GstRtpSrc * self)
     GST_WARNING_OBJECT (self, "Could not retrieve RTCP src socket.");
   }
 
-  addr = g_inet_address_new_from_string (gst_uri_get_host (self->uri));
-  if (g_inet_address_get_is_multicast (addr)) {
+  iaddr = g_inet_address_new_from_string (gst_uri_get_host (self->uri));
+  if (!iaddr) {
+    GList *results;
+    GResolver *resolver = NULL;
+
+    resolver = g_resolver_get_default ();
+    results =
+        g_resolver_lookup_by_name (resolver, gst_uri_get_host (self->uri), NULL,
+        &error);
+
+    if (!results) {
+      g_object_unref (resolver);
+      goto dns_resolve_failed;
+    }
+
+    iaddr = G_INET_ADDRESS (g_object_ref (results->data));
+
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
+  }
+
+  if (g_inet_address_get_is_multicast (iaddr)) {
     /* mc-ttl is not supported by dynudpsink */
     g_socket_set_multicast_ttl (socket, self->ttl_mc);
     /* In multicast, send RTCP to the multicast group */
     self->rtcp_send_addr =
-        g_inet_socket_address_new (addr, gst_uri_get_port (self->uri) + 1);
+        g_inet_socket_address_new (iaddr, gst_uri_get_port (self->uri) + 1);
 
     /* set multicast-iface on the udpsrc and udpsink elements */
     g_object_set (self->rtcp_src, "multicast-iface", self->multi_iface, NULL);
@@ -580,7 +601,7 @@ gst_rtp_src_start (GstRtpSrc * self)
         gst_rtp_src_on_recv_rtcp, self, NULL);
     gst_object_unref (pad);
   }
-  g_object_unref (addr);
+  g_object_unref (iaddr);
 
   /* no need to set address if unicast */
   caps = gst_caps_new_empty_simple ("application/x-rtcp");
@@ -600,6 +621,13 @@ gst_rtp_src_start (GstRtpSrc * self)
   gst_element_sync_state_with_parent (self->rtcp_sink);
 
   return TRUE;
+
+dns_resolve_failed:
+  GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+      ("Could not resolve hostname '%s'", gst_uri_get_host (self->uri)),
+      ("DNS resolver reported: %s", error->message));
+  g_error_free (error);
+  return FALSE;
 }
 
 static void
