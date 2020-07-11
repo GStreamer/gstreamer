@@ -35,6 +35,9 @@ gst_vaapi_utils_vp9_get_profile_from_string (const gchar * str);
 const gchar *
 gst_vaapi_utils_vp9_get_profile_string (GstVaapiProfile profile);
 
+guint
+gst_vaapi_utils_vp9_get_chroma_format_idc (guint chroma_type);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_UTILS_VPX_H */

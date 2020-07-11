@@ -21,6 +21,7 @@
  */
 
 #include "gstvaapiutils_vpx.h"
+#include "gstvaapisurface.h"
 
 struct map
 {
@@ -85,4 +86,34 @@ gst_vaapi_utils_vp9_get_profile_string (GstVaapiProfile profile)
       map_lookup_value (gst_vaapi_vp9_profile_map, profile);
 
   return m ? m->name : NULL;
+}
+
+/** Returns VP9 chroma_format_idc value from GstVaapiChromaType */
+guint
+gst_vaapi_utils_vp9_get_chroma_format_idc (guint chroma_type)
+{
+  guint chroma_format_idc;
+
+  switch (chroma_type) {
+    case GST_VAAPI_CHROMA_TYPE_YUV400:
+      chroma_format_idc = 0;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV420:
+    case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
+      chroma_format_idc = 1;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV422:
+    case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
+      chroma_format_idc = 2;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV444:
+    case GST_VAAPI_CHROMA_TYPE_YUV444_10BPP:
+      chroma_format_idc = 3;
+      break;
+    default:
+      GST_DEBUG ("unsupported GstVaapiChromaType value");
+      chroma_format_idc = 1;
+      break;
+  }
+  return chroma_format_idc;
 }
