@@ -92,6 +92,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define DEFAULT_PROP_QUALITY    1
+#define DEFAULT_PROP_PIXEL_SIZE    3
 
 #define GST_TYPE_QRCODE_QUALITY (gst_qrcode_quality_get_type())
 static GType
@@ -160,7 +161,7 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_PIXEL_SIZE, g_param_spec_float ("pixel-size",
           "pixel-size", "Pixel size of each Qrcode pixel",
-          1, 100.0, 1, G_PARAM_READWRITE));
+          1, 100.0, DEFAULT_PROP_PIXEL_SIZE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       PROP_DATA_INTERVAL_BUFFERS,
@@ -226,7 +227,7 @@ gst_qr_overlay_init (GstQROverlay * filter)
   filter->extra_data_interval_buffers = 60;
   filter->extra_data_span_buffers = 1;
   filter->span_frame = 0;
-  filter->qrcode_size = 1;
+  filter->qrcode_size = DEFAULT_PROP_PIXEL_SIZE;
 }
 
 static void
