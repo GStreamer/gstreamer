@@ -184,17 +184,9 @@ gst_rtp_src_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_ADDRESS:{
-      GInetAddress *addr;
-
       gst_uri_set_host (self->uri, g_value_get_string (value));
       g_object_set_property (G_OBJECT (self->rtp_src), "address", value);
-
-      addr = g_inet_address_new_from_string (gst_uri_get_host (self->uri));
-      if (g_inet_address_get_is_multicast (addr)) {
-        g_object_set (self->rtcp_src, "address", gst_uri_get_host (self->uri),
-            NULL);
-      }
-      g_object_unref (addr);
+      g_object_set_property (G_OBJECT (self->rtcp_src), "address", value);
       break;
     }
     case PROP_PORT:{
