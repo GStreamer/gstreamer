@@ -586,12 +586,30 @@ gst_rist_src_setup_rtcp_socket (GstRistSrc * src, RistReceiverBond * bond)
   GSocket *socket = NULL;
   GInetAddress *iaddr = NULL;
   guint port = bond->port + 1;
+  GError *error = NULL;
 
   g_object_get (bond->rtcp_src, "used-socket", &socket, NULL);
   if (!socket)
     return GST_STATE_CHANGE_FAILURE;
 
   iaddr = g_inet_address_new_from_string (bond->address);
+  if (!iaddr) {
+    GList *results;
+    GResolver *resolver = NULL;
+
+    resolver = g_resolver_get_default ();
+    results = g_resolver_lookup_by_name (resolver, bond->address, NULL, &error);
+
+    if (!results) {
+      g_object_unref (resolver);
+      goto dns_resolve_failed;
+    }
+
+    iaddr = G_INET_ADDRESS (g_object_ref (results->data));
+
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
+  }
 
   if (g_inet_address_get_is_multicast (iaddr)) {
     /* mc-ttl is not supported by dynudpsink */
@@ -636,6 +654,14 @@ gst_rist_src_setup_rtcp_socket (GstRistSrc * src, RistReceiverBond * bond)
   gst_element_sync_state_with_parent (bond->rtcp_sink);
 
   return GST_STATE_CHANGE_SUCCESS;
+
+dns_resolve_failed:
+  GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+      ("Could not resolve hostname '%s'", GST_STR_NULL (bond->address)),
+      ("DNS resolver reported: %s", error->message));
+  g_error_free (error);
+  return GST_STATE_CHANGE_FAILURE;
+
 }
 
 static GstStateChangeReturn
