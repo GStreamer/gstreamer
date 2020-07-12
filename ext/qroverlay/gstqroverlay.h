@@ -23,20 +23,17 @@
 #define __GST_QR_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_QR_OVERLAY (gst_qr_overlay_get_type())
-G_DECLARE_FINAL_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY,
-    GstBaseTransform);
+G_DECLARE_FINAL_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstVideoFilter);
 
 struct _GstQROverlay
 {
-  GstBaseTransform element;
+  GstVideoFilter parent;
 
   guint32 frame_number;
-  guint32 width;
-  guint32 height;
   gfloat qrcode_size;
   guint qrcode_quality;
   guint array_counter;
