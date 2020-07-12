@@ -141,13 +141,13 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-h265", "screen-extended-main-444-10"},
 #endif
   {GST_VAAPI_PROFILE_VP9_0, VAProfileVP9Profile0,
-      "video/x-vp9", "profile0"},
+      "video/x-vp9", "0"},
   {GST_VAAPI_PROFILE_VP9_1, VAProfileVP9Profile1,
-      "video/x-vp9", "profile1"},
+      "video/x-vp9", "1"},
   {GST_VAAPI_PROFILE_VP9_2, VAProfileVP9Profile2,
-      "video/x-vp9", "profile2"},
+      "video/x-vp9", "2"},
   {GST_VAAPI_PROFILE_VP9_3, VAProfileVP9Profile3,
-      "video/x-vp9", "profile3"},
+      "video/x-vp9", "3"},
   {0,}
 };
 
