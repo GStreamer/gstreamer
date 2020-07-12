@@ -29,7 +29,7 @@
  * available to set the position and to define its size. You can add custom data
  * with the properties #debugqroverlay:extra-data-name and
  * #debugqroverlay:extra-data-array. You can also define the quality of the Qrcode
- * with #debugqroverlay:qrcode-error-correction. You can also define interval and
+ * with #GstBaseQROverlay:qrcode-error-correction. You can also define interval and
  * span of #debugqroverlay:extra-data-name #debugqroverlay:extra-data-array
  *
  * ## Example launch line
