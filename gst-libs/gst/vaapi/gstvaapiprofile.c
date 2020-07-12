@@ -341,6 +341,9 @@ gst_vaapi_profile_from_codec_data_h265 (GstBuffer * buffer)
   if (buf[1] & 0xc0)            /* general_profile_space = 0 */
     return 0;
 
+  /* We may not recognize the exactly correct profile, which needs more
+     info such as depth, chroma and constraint_flag. We just return the
+     first one that belongs to that profile IDC. */
   switch (buf[1] & 0x1f) {      /* HEVCProfileIndication */
     case 1:
       return GST_VAAPI_PROFILE_H265_MAIN;
@@ -350,10 +353,8 @@ gst_vaapi_profile_from_codec_data_h265 (GstBuffer * buffer)
       return GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
     case 4:
       return GST_VAAPI_PROFILE_H265_MAIN_422_10;
-    case 5:
-      return GST_VAAPI_PROFILE_H265_MAIN_444;
-    case 6:
-      return GST_VAAPI_PROFILE_H265_MAIN_444_10;
+    case 9:
+      return GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN;
   }
   return 0;
 }
