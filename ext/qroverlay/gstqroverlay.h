@@ -19,20 +19,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_QR_OVERLAY_H__
-#define __GST_QR_OVERLAY_H__
+#ifndef __GST_DEBUG_QR_OVERLAY_H__
+#define __GST_DEBUG_QR_OVERLAY_H__
 
 #include "gstbaseqroverlay.h"
 
 G_BEGIN_DECLS
-#define GST_TYPE_QR_OVERLAY (gst_qr_overlay_get_type())
+#define GST_TYPE_QR_OVERLAY (gst_debug_qr_overlay_get_type())
 
-G_DECLARE_FINAL_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstBaseQROverlay);
-
-struct _GstQROverlay
-{
-  GstBaseQROverlay parent;
-};
+G_DECLARE_FINAL_TYPE (GstDebugQROverlay, gst_debug_qr_overlay, GST, DEBUG_QR_OVERLAY, GstBaseQROverlay);
 
 G_END_DECLS
-#endif /* __GST_QR_OVERLAY_H__ */
+#endif /* __GST_DEBUG_QR_OVERLAY_H__ */

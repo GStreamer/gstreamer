@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:element-qroverlay
+ * SECTION:element-debugqroverlay
  *
  * This element will build a Json string that contains a description of the
  * buffer and will convert the string to a QRcode. The QRcode contains a
@@ -56,8 +56,8 @@
 
 #include "gstqroverlay.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_qr_overlay_debug);
-#define GST_CAT_DEFAULT gst_qr_overlay_debug
+GST_DEBUG_CATEGORY_STATIC (gst_debug_qr_overlay_debug);
+#define GST_CAT_DEFAULT gst_debug_qr_overlay_debug
 
 static gchar *get_qrcode_content (GstBaseQROverlay * filter,
     GstVideoFrame * frame);
@@ -71,9 +71,10 @@ enum
   PROP_EXTRA_DATA_ARRAY,
 };
 
-typedef struct _GstQROverlayPrivate GstQROverlayPrivate;
-struct _GstQROverlayPrivate
+struct _GstDebugQROverlay
 {
+  GstBaseQROverlay parent;
+
   guint32 frame_number;
   guint array_counter;
   guint array_size;
@@ -89,25 +90,21 @@ struct _GstQROverlayPrivate
   gboolean extra_data_enabled;
 };
 
-#define PRIV(s) gst_qr_overlay_get_instance_private (GST_QR_OVERLAY (s))
-
 #define DEFAULT_PROP_QUALITY    1
 #define DEFAULT_PROP_PIXEL_SIZE    3
 
-#define gst_qr_overlay_parent_class parent_class
-G_DEFINE_TYPE_WITH_PRIVATE (GstQROverlay, gst_qr_overlay,
+#define gst_debug_qr_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstDebugQROverlay, gst_debug_qr_overlay,
     GST_TYPE_BASE_QR_OVERLAY);
 
-static void gst_qr_overlay_set_property (GObject * object, guint prop_id,
+static void gst_debug_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_qr_overlay_get_property (GObject * object, guint prop_id,
+static void gst_debug_qr_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-/* GObject vmethod implementations */
 
 /* initialize the qroverlay's class */
 static void
-gst_qr_overlay_class_init (GstQROverlayClass * klass)
+gst_debug_qr_overlay_class_init (GstDebugQROverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -115,8 +112,8 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = gst_qr_overlay_set_property;
-  gobject_class->get_property = gst_qr_overlay_get_property;
+  gobject_class->set_property = gst_debug_qr_overlay_set_property;
+  gobject_class->get_property = gst_debug_qr_overlay_get_property;
 
   g_object_class_install_property (gobject_class,
       PROP_DATA_INTERVAL_BUFFERS,
@@ -160,44 +157,42 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
  * initialize instance structure
  */
 static void
-gst_qr_overlay_init (GstQROverlay * filter)
+gst_debug_qr_overlay_init (GstDebugQROverlay * filter)
 {
-  GstQROverlayPrivate *priv = PRIV (filter);
-
-  priv->frame_number = 1;
-  priv->x_percent = 50.0;
-  priv->y_percent = 50.0;
-  priv->array_counter = 0;
-  priv->array_size = 0;
-  priv->extra_data_interval_buffers = 60;
-  priv->extra_data_span_buffers = 1;
-  priv->span_frame = 0;
+  filter->frame_number = 1;
+  filter->x_percent = 50.0;
+  filter->y_percent = 50.0;
+  filter->array_counter = 0;
+  filter->array_size = 0;
+  filter->extra_data_interval_buffers = 60;
+  filter->extra_data_span_buffers = 1;
+  filter->span_frame = 0;
 }
 
 static void
-gst_qr_overlay_set_property (GObject * object, guint prop_id,
+gst_debug_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstQROverlayPrivate *priv = PRIV (object);
+  GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (object);
 
   switch (prop_id) {
     case PROP_DATA_INTERVAL_BUFFERS:
-      priv->extra_data_interval_buffers = g_value_get_int64 (value);
+      filter->extra_data_interval_buffers = g_value_get_int64 (value);
       break;
     case PROP_DATA_SPAN_BUFFERS:
-      priv->extra_data_span_buffers = g_value_get_int64 (value);
+      filter->extra_data_span_buffers = g_value_get_int64 (value);
       break;
     case PROP_EXTRA_DATA_NAME:
-      priv->extra_data_name = g_value_dup_string (value);
+      filter->extra_data_name = g_value_dup_string (value);
       break;
     case PROP_EXTRA_DATA_ARRAY:
     {
-      g_clear_pointer (&priv->extra_data_str, g_free);
-      g_clear_pointer (&priv->extra_data_array, g_strfreev);
-      priv->extra_data_str = g_value_dup_string (value);
-      if (priv->extra_data_str) {
-        priv->extra_data_array = g_strsplit (priv->extra_data_str, ",", -1);
-        priv->array_size = g_strv_length (priv->extra_data_array);
+      g_clear_pointer (&filter->extra_data_str, g_free);
+      g_clear_pointer (&filter->extra_data_array, g_strfreev);
+      filter->extra_data_str = g_value_dup_string (value);
+      if (filter->extra_data_str) {
+        filter->extra_data_array = g_strsplit (filter->extra_data_str, ",", -1);
+        filter->array_size = g_strv_length (filter->extra_data_array);
       }
       break;
     }
@@ -208,23 +203,23 @@ gst_qr_overlay_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_qr_overlay_get_property (GObject * object, guint prop_id,
+gst_debug_qr_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstQROverlayPrivate *priv = PRIV (object);
+  GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (object);
 
   switch (prop_id) {
     case PROP_DATA_INTERVAL_BUFFERS:
-      g_value_set_int64 (value, priv->extra_data_interval_buffers);
+      g_value_set_int64 (value, filter->extra_data_interval_buffers);
       break;
     case PROP_DATA_SPAN_BUFFERS:
-      g_value_set_int64 (value, priv->extra_data_span_buffers);
+      g_value_set_int64 (value, filter->extra_data_span_buffers);
       break;
     case PROP_EXTRA_DATA_NAME:
-      g_value_set_string (value, priv->extra_data_name);
+      g_value_set_string (value, filter->extra_data_name);
       break;
     case PROP_EXTRA_DATA_ARRAY:
-      g_value_set_string (value, priv->extra_data_str);
+      g_value_set_string (value, filter->extra_data_str);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -233,9 +228,9 @@ gst_qr_overlay_get_property (GObject * object, guint prop_id,
 }
 
 static gchar *
-get_qrcode_content (GstBaseQROverlay * filter, GstVideoFrame * frame)
+get_qrcode_content (GstBaseQROverlay * base, GstVideoFrame * frame)
 {
-  GstQROverlayPrivate *priv = PRIV (filter);
+  GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (base);
   GstBuffer *buf = frame->buffer;
   GString *res = g_string_new (NULL);
   JsonGenerator *jgen;
@@ -247,25 +242,26 @@ get_qrcode_content (GstBaseQROverlay * filter, GstVideoFrame * frame)
 
   json_object_set_int_member (jobj, "TIMESTAMP",
       (gint64) GST_BUFFER_TIMESTAMP (buf));
-  json_object_set_int_member (jobj, "BUFFERCOUNT", (gint64) priv->frame_number);
+  json_object_set_int_member (jobj, "BUFFERCOUNT",
+      (gint64) filter->frame_number);
   json_object_set_string_member (jobj, "FRAMERATE", framerate_string);
   json_object_set_string_member (jobj, "NAME", GST_ELEMENT_NAME (filter));
   g_free (framerate_string);
 
-  if (priv->extra_data_array && priv->extra_data_name &&
-      (priv->frame_number == 1
-          || priv->frame_number % priv->extra_data_interval_buffers == 1
-          || (priv->span_frame > 0
-              && priv->span_frame < priv->extra_data_span_buffers))) {
-    json_object_set_string_member (jobj, priv->extra_data_name,
-        priv->extra_data_array[priv->array_counter]);
+  if (filter->extra_data_array && filter->extra_data_name &&
+      (filter->frame_number == 1
+          || filter->frame_number % filter->extra_data_interval_buffers == 1
+          || (filter->span_frame > 0
+              && filter->span_frame < filter->extra_data_span_buffers))) {
+    json_object_set_string_member (jobj, filter->extra_data_name,
+        filter->extra_data_array[filter->array_counter]);
 
-    priv->span_frame++;
-    if (priv->span_frame == priv->extra_data_span_buffers) {
-      priv->array_counter++;
-      priv->span_frame = 0;
-      if (priv->array_counter >= priv->array_size)
-        priv->array_counter = 0;
+    filter->span_frame++;
+    if (filter->span_frame == filter->extra_data_span_buffers) {
+      filter->array_counter++;
+      filter->span_frame = 0;
+      if (filter->array_counter >= filter->array_size)
+        filter->array_counter = 0;
     }
   }
 
@@ -274,7 +270,7 @@ get_qrcode_content (GstBaseQROverlay * filter, GstVideoFrame * frame)
   json_generator_set_root (jgen, root);
   res = json_generator_to_gstring (jgen, res);
   g_object_unref (jgen);
-  priv->frame_number++;
+  filter->frame_number++;
 
   return g_strdup (g_string_free (res, FALSE));
 }
@@ -282,10 +278,10 @@ get_qrcode_content (GstBaseQROverlay * filter, GstVideoFrame * frame)
 static gboolean
 qroverlay_init (GstPlugin * qroverlay)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_qr_overlay_debug, "qroverlay", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_debug_qr_overlay_debug, "debugqroverlay", 0,
       "Qrcode overlay element");
 
-  return gst_element_register (qroverlay, "qroverlay", GST_RANK_NONE,
+  return gst_element_register (qroverlay, "debugqroverlay", GST_RANK_NONE,
       GST_TYPE_QR_OVERLAY);
 }
 
