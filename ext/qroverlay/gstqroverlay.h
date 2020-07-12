@@ -27,29 +27,11 @@
 
 G_BEGIN_DECLS
 #define GST_TYPE_QR_OVERLAY (gst_qr_overlay_get_type())
-G_DECLARE_FINAL_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstVideoFilter);
+G_DECLARE_DERIVABLE_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstVideoFilter);
 
-struct _GstQROverlay
+struct _GstQROverlayClass
 {
-  GstVideoFilter parent;
-
-  guint32 frame_number;
-  gfloat qrcode_size;
-  guint qrcode_quality;
-  guint array_counter;
-  guint array_size;
-  guint span_frame;
-  guint64 extra_data_interval_buffers;
-  guint64 extra_data_span_buffers;
-  QRecLevel level;
-  gchar *framerate_string;
-  gchar *extra_data_name;
-  gchar *extra_data_str;
-  gchar **extra_data_array;
-  gfloat x_percent;
-  gfloat y_percent;
-  gboolean silent;
-  gboolean extra_data_enabled;
+  GstVideoFilterClass parent;
 };
 
 G_END_DECLS
