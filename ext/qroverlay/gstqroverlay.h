@@ -22,16 +22,16 @@
 #ifndef __GST_QR_OVERLAY_H__
 #define __GST_QR_OVERLAY_H__
 
-#include <gst/gst.h>
-#include <gst/video/gstvideofilter.h>
+#include "gstbaseqroverlay.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_QR_OVERLAY (gst_qr_overlay_get_type())
-G_DECLARE_DERIVABLE_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstVideoFilter);
 
-struct _GstQROverlayClass
+G_DECLARE_FINAL_TYPE (GstQROverlay, gst_qr_overlay, GST, QR_OVERLAY, GstBaseQROverlay);
+
+struct _GstQROverlay
 {
-  GstVideoFilterClass parent;
+  GstBaseQROverlay parent;
 };
 
 G_END_DECLS
