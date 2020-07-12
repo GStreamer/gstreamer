@@ -895,9 +895,21 @@ GES_START_VALIDATE_ACTION (_set_control_source)
   TRY_GET ("interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL);
 
   element =
-      GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
+      (GESTrackElement *) (ges_timeline_get_element (timeline, element_name));
+  if (GES_IS_CLIP (element)) {
+    GList *tmp;
+    for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
+      if (ges_timeline_element_lookup_child (tmp->data, property_name, NULL,
+              NULL)) {
+        gst_object_replace ((GstObject **) & element, tmp->data);
+
+        break;
+      }
+    }
+  }
   REPORT_UNLESS (GES_IS_TRACK_ELEMENT (element), beach,
-      "Could not find element %s", element_name);
+      "Could not find track element element %s (got %" GST_PTR_FORMAT ")",
+      element_name, element);
 
   if (!binding_type)
     binding_type = g_strdup ("direct");

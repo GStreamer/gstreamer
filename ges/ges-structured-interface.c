@@ -171,7 +171,19 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   GET_AND_CHECK ("timestamp", GST_TYPE_CLOCK_TIME, &timestamp, done);
 
   element =
-      GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
+      (GESTrackElement *) ges_timeline_get_element (timeline, element_name);
+
+  if (GES_IS_CLIP (element)) {
+    GList *tmp;
+    for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
+      if (ges_timeline_element_lookup_child (tmp->data, property_name, NULL,
+              NULL)) {
+        gst_object_replace ((GstObject **) & element, tmp->data);
+
+        break;
+      }
+    }
+  }
 
   if (!GES_IS_TRACK_ELEMENT (element)) {
     *error =
