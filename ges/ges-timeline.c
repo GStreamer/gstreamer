@@ -496,6 +496,7 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
     }
 
     if (amessage) {
+      gst_message_unref (message);
       gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
       return;
     }

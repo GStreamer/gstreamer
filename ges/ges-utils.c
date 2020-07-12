@@ -34,6 +34,7 @@
 #include "ges-track.h"
 #include "ges-layer.h"
 #include "ges.h"
+#include <gst/base/base.h>
 
 static GstElementFactory *compositor_factory = NULL;
 
@@ -133,7 +134,9 @@ ges_pspec_hash (gconstpointer key_spec)
 static gboolean
 find_compositor (GstPluginFeatureFilter * feature, gpointer udata)
 {
+  gboolean res = FALSE;
   const gchar *klass;
+  GstPluginFeature *loaded_feature = NULL;
 
   if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
     return FALSE;
@@ -141,7 +144,20 @@ find_compositor (GstPluginFeatureFilter * feature, gpointer udata)
   klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY_CAST (feature),
       GST_ELEMENT_METADATA_KLASS);
 
-  return (strstr (klass, "Compositor") != NULL);
+  if (strstr (klass, "Compositor") == NULL)
+    return FALSE;
+
+  loaded_feature = gst_plugin_feature_load (feature);
+  if (!loaded_feature) {
+    GST_ERROR ("Could not load feature: %" GST_PTR_FORMAT, feature);
+    return FALSE;
+  }
+
+  res =
+      g_type_is_a (gst_element_factory_get_element_type (GST_ELEMENT_FACTORY
+          (loaded_feature)), GST_TYPE_AGGREGATOR);
+  gst_object_unref (loaded_feature);
+  return res;
 }
 
 gboolean

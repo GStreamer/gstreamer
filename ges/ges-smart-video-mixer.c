@@ -24,6 +24,7 @@
 #include "ges-types.h"
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
+#include <gst/base/base.h>
 
 #define GES_TYPE_SMART_MIXER_PAD             (ges_smart_mixer_pad_get_type ())
 typedef struct _GESSmartMixerPad GESSmartMixerPad;
@@ -123,29 +124,48 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 
 typedef struct _PadInfos
 {
+  volatile gint refcount;
+
   GESSmartMixer *self;
   GstPad *mixer_pad;
+  GstPad *ghostpad;
   GstElement *bin;
-  gulong probe_id;
 } PadInfos;
 
 static void
-destroy_pad (PadInfos * infos)
+pad_infos_unref (PadInfos * infos)
 {
-  gst_pad_remove_probe (infos->mixer_pad, infos->probe_id);
+  if (g_atomic_int_dec_and_test (&infos->refcount)) {
+    GST_DEBUG_OBJECT (infos->mixer_pad, "Releasing pad");
+    if (G_LIKELY (infos->bin)) {
+      gst_element_set_state (infos->bin, GST_STATE_NULL);
+      gst_element_unlink (infos->bin, infos->self->mixer);
+      gst_bin_remove (GST_BIN (infos->self), infos->bin);
+    }
 
-  if (G_LIKELY (infos->bin)) {
-    gst_element_set_state (infos->bin, GST_STATE_NULL);
-    gst_element_unlink (infos->bin, infos->self->mixer);
-    gst_bin_remove (GST_BIN (infos->self), infos->bin);
+    if (infos->mixer_pad) {
+      gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
+      gst_object_unref (infos->mixer_pad);
+    }
+
+    g_free (infos);
   }
+}
 
-  if (infos->mixer_pad) {
-    gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
-    gst_object_unref (infos->mixer_pad);
-  }
+static PadInfos *
+pad_infos_new (void)
+{
+  PadInfos *info = g_new0 (PadInfos, 1);
+  info->refcount = 1;
 
-  g_slice_free (PadInfos, infos);
+  return info;
+}
+
+static PadInfos *
+pad_infos_ref (PadInfos * info)
+{
+  g_atomic_int_inc (&info->refcount);
+  return info;
 }
 
 static gboolean
@@ -190,20 +210,19 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
 
 /* These metadata will get set by the upstream framepositioner element,
    added in the video sources' bin */
-static GstPadProbeReturn
-parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
-    GESSmartMixerPad * ghost)
+static void
+parse_metadata (GstPad * mixer_pad, GstBuffer * buf, GESSmartMixerPad * ghost)
 {
   GstFramePositionerMeta *meta;
   GESSmartMixer *self = GES_SMART_MIXER (GST_OBJECT_PARENT (ghost));
 
   meta =
-      (GstFramePositionerMeta *) gst_buffer_get_meta ((GstBuffer *) info->data,
+      (GstFramePositionerMeta *) gst_buffer_get_meta (buf,
       gst_frame_positioner_meta_api_get_type ());
 
   if (!meta) {
     GST_WARNING ("The current source should use a framepositioner");
-    return GST_PAD_PROBE_OK;
+    return;
   }
 
   if (!self->disable_zorder_alpha) {
@@ -215,7 +234,7 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
 
     GST_OBJECT_LOCK (ghost);
     stream_time = gst_segment_to_stream_time (&ghost->segment, GST_FORMAT_TIME,
-        GST_BUFFER_PTS (info->data));
+        GST_BUFFER_PTS (buf));
     GST_OBJECT_UNLOCK (ghost);
 
     if (GST_CLOCK_TIME_IS_VALID (stream_time))
@@ -227,8 +246,6 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
 
   g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
       meta->posy, "width", meta->width, "height", meta->height, NULL);
-
-  return GST_PAD_PROBE_OK;
 }
 
 /****************************************************
@@ -239,7 +256,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
   GstPad *videoconvert_srcpad, *videoconvert_sinkpad, *tmpghost;
-  PadInfos *infos = g_slice_new0 (PadInfos);
+  PadInfos *infos = pad_infos_new ();
   GESSmartMixer *self = GES_SMART_MIXER (element);
   GstPad *ghost;
   GstElement *videoconvert;
@@ -250,7 +267,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   if (infos->mixer_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstMixer");
-    g_slice_free (PadInfos, infos);
+    pad_infos_unref (infos);
 
     return NULL;
   }
@@ -271,6 +288,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_bin_add (GST_BIN (self), infos->bin);
   ghost = g_object_new (ges_smart_mixer_pad_get_type (), "name", name,
       "direction", GST_PAD_DIRECTION (tmpghost), NULL);
+  infos->ghostpad = ghost;
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), tmpghost);
   gst_pad_set_active (ghost, TRUE);
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
@@ -283,14 +301,13 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
   gst_pad_link (tmpghost, infos->mixer_pad);
 
-  infos->probe_id =
-      gst_pad_add_probe (infos->mixer_pad, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) parse_metadata, ghost, NULL);
   gst_pad_set_event_function (GST_PAD (ghost),
       ges_smart_mixer_sinkpad_event_func);
 
   LOCK (self);
   g_hash_table_insert (self->pads_infos, ghost, infos);
+  g_hash_table_insert (self->pads_infos, infos->mixer_pad,
+      pad_infos_ref (infos));
   UNLOCK (self);
 
   GST_DEBUG_OBJECT (self, "Returning new pad %" GST_PTR_FORMAT, ghost);
@@ -299,19 +316,38 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 could_not_add:
   {
     GST_ERROR_OBJECT (self, "could not add pad");
-    destroy_pad (infos);
+    pad_infos_unref (infos);
     return NULL;
   }
+}
+
+static PadInfos *
+ges_smart_mixer_find_pad_info (GESSmartMixer * self, GstPad * pad)
+{
+  PadInfos *info;
+
+  LOCK (self);
+  info = g_hash_table_lookup (self->pads_infos, pad);
+  UNLOCK (self);
+
+  if (info)
+    pad_infos_ref (info);
+
+  return info;
 }
 
 static void
 _release_pad (GstElement * element, GstPad * pad)
 {
   GstPad *peer;
+  GESSmartMixer *self = GES_SMART_MIXER (element);
+  PadInfos *info = ges_smart_mixer_find_pad_info (self, pad);
+
   GST_DEBUG_OBJECT (element, "Releasing pad %" GST_PTR_FORMAT, pad);
 
   LOCK (element);
   g_hash_table_remove (GES_SMART_MIXER (element)->pads_infos, pad);
+  g_hash_table_remove (GES_SMART_MIXER (element)->pads_infos, info->mixer_pad);
   peer = gst_pad_get_peer (pad);
   if (peer) {
     gst_pad_unlink (peer, pad);
@@ -321,6 +357,45 @@ _release_pad (GstElement * element, GstPad * pad)
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (element, pad);
   UNLOCK (element);
+
+  pad_infos_unref (info);
+}
+
+static gboolean
+compositor_sync_properties_with_meta (GstElement * compositor,
+    GstPad * sinkpad, GESSmartMixer * self)
+{
+  PadInfos *info = ges_smart_mixer_find_pad_info (self, sinkpad);
+  GstSample *sample;
+
+  if (!info) {
+    GST_WARNING_OBJECT (self, "Couldn't find pad info?!");
+
+    return TRUE;
+  }
+
+  sample = gst_aggregator_peek_next_sample (GST_AGGREGATOR (compositor),
+      GST_AGGREGATOR_PAD (sinkpad));
+
+  if (!sample) {
+    GST_INFO_OBJECT (sinkpad, "No sample set!");
+  } else {
+    parse_metadata (sinkpad, gst_sample_get_buffer (sample),
+        GES_SMART_MIXER_PAD (info->ghostpad));
+    gst_sample_unref (sample);
+  }
+  pad_infos_unref (info);
+
+  return TRUE;
+}
+
+static void
+ges_smart_mixer_samples_selected_cb (GstElement * compositor,
+    GstSegment * segment, GstClockTime pts, GstClockTime dts,
+    GstClockTime duration, GstStructure * info, GESSmartMixer * self)
+{
+  gst_element_foreach_sink_pad (compositor,
+      (GstElementForeachPadFunc) compositor_sync_properties_with_meta, self);
 }
 
 /****************************************************
@@ -361,7 +436,9 @@ ges_smart_mixer_constructed (GObject * obj)
   self->mixer =
       gst_element_factory_create (ges_get_compositor_factory (), cname);
   g_free (cname);
-  g_object_set (self->mixer, "background", 1, NULL);
+  g_object_set (self->mixer, "background", 1, "emit-signals", TRUE, NULL);
+  g_signal_connect (self->mixer, "samples-selected",
+      G_CALLBACK (ges_smart_mixer_samples_selected_cb), self);
 
   /* See https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/310 */
   GST_FIXME ("Stop dropping allocation query when it is not required anymore.");
@@ -393,7 +470,7 @@ ges_smart_mixer_class_init (GESSmartMixerClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_set_static_metadata (element_class, "GES Smart mixer",
       "Generic/Audio",
-      "Use mixer making use of GES informations",
+      "Use mixer making use of GES information",
       "Thibault Saunier <thibault.saunier@collabora.com>");
 
   element_class->request_new_pad = GST_DEBUG_FUNCPTR (_request_new_pad);
@@ -409,7 +486,7 @@ ges_smart_mixer_init (GESSmartMixer * self)
 {
   g_mutex_init (&self->lock);
   self->pads_infos = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, (GDestroyNotify) destroy_pad);
+      NULL, (GDestroyNotify) pad_infos_unref);
 }
 
 GstElement *

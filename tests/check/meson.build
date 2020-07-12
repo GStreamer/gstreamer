@@ -83,6 +83,7 @@ if gstvalidate_dep.found()
     'seek_with_stop.check_clock_sync': true,
     'edit_while_seeked_with_stop': true,
     'complex_effect_bin_desc': true,
+    'check_keyframes_in_compositor_two_sources': true,
   }
 
   foreach scenario, is_validatetest: scenarios
