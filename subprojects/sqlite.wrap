@@ -1,10 +1,10 @@
 [wrap-file]
-directory = sqlite-amalgamation-3250100
+directory = sqlite-amalgamation-3310100
 
-source_url = https://www.sqlite.org/2018/sqlite-amalgamation-3250100.zip
-source_filename = sqlite-amalgamation-3250100.zip
-source_hash = 6c68b6364fa0e01d9d05088ba473ac4e7a6fbc64f9b9aeb6d830f944e2a1fa03
+source_url = https://www.sqlite.org/2020/sqlite-amalgamation-3310100.zip
+source_filename = sqlite-amalgamation-3310100.zip
+source_hash = f3c79bc9f4162d0b06fa9fe09ee6ccd23bb99ce310b792c5145f87fbcc30efca
 
-patch_url = https://github.com/mesonbuild/sqlite/releases/download/3250100-2/sqlite.zip
-patch_filename = sqlite.zip
-patch_hash = b8b4c04b02f20a842b013a2609a8ebb367669a39e4077eba4892796ede39f6ec
+patch_url = https://wrapdb.mesonbuild.com/v1/projects/sqlite/3310100/1/get_zip
+patch_filename = sqlite-3310100-1-wrap.zip
+patch_hash = 81f8efc1cbed88226b2fcd7c0221a90f43613fd8c311b8f653c3487cc88363cd
