@@ -131,6 +131,8 @@ gst_rpi_cam_src_device_new (void)
   gst_value_list_append_value (&profiles, &val);
   g_value_set_static_string (&val, "main");
   gst_value_list_append_value (&profiles, &val);
+  g_value_set_static_string (&val, "constrained-baseline");
+  gst_value_list_append_value (&profiles, &val);
   g_value_set_static_string (&val, "baseline");
   gst_value_list_append_and_take_value (&profiles, &val);
   gst_structure_take_value (s, "profiles", &profiles);
