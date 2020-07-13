@@ -132,7 +132,7 @@ ges_pspec_hash (gconstpointer key_spec)
 }
 
 static gboolean
-find_compositor (GstPluginFeatureFilter * feature, gpointer udata)
+find_compositor (GstPluginFeature * feature, gpointer udata)
 {
   gboolean res = FALSE;
   const gchar *klass;

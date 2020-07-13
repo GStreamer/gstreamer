@@ -53,7 +53,7 @@ struct _GESSmartMixer
   GMutex lock;
 
   GstCaps *caps;
-  gboolean disable_zorder_alpha;
+  gboolean is_transition;
 
   gpointer _ges_reserved[GES_PADDING];
 };

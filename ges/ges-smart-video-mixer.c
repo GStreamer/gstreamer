@@ -208,12 +208,12 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
   return sinkpad;
 }
 
-/* These metadata will get set by the upstream framepositioner element,
-   added in the video sources' bin */
 static void
-parse_metadata (GstPad * mixer_pad, GstBuffer * buf, GESSmartMixerPad * ghost)
+set_pad_properties_from_positioner_meta (GstPad * mixer_pad, GstSample * sample,
+    GESSmartMixerPad * ghost)
 {
   GstFramePositionerMeta *meta;
+  GstBuffer *buf = gst_sample_get_buffer (sample);
   GESSmartMixer *self = GES_SMART_MIXER (GST_OBJECT_PARENT (ghost));
 
   meta =
@@ -225,18 +225,18 @@ parse_metadata (GstPad * mixer_pad, GstBuffer * buf, GESSmartMixerPad * ghost)
     return;
   }
 
-  if (!self->disable_zorder_alpha) {
+  if (!self->is_transition) {
     g_object_set (mixer_pad, "alpha", meta->alpha,
         "zorder", meta->zorder, NULL);
   } else {
     gint64 stream_time;
     gdouble transalpha;
 
-    GST_OBJECT_LOCK (ghost);
-    stream_time = gst_segment_to_stream_time (&ghost->segment, GST_FORMAT_TIME,
-        GST_BUFFER_PTS (buf));
-    GST_OBJECT_UNLOCK (ghost);
+    stream_time = gst_segment_to_stream_time (gst_sample_get_segment (sample),
+        GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
 
+    /* When used in a transition we aggregate the alpha value value if the
+     * transition pad and the alpha value from upstream frame positioner */
     if (GST_CLOCK_TIME_IS_VALID (stream_time))
       gst_object_sync_values (GST_OBJECT (ghost), stream_time);
 
@@ -377,12 +377,12 @@ compositor_sync_properties_with_meta (GstElement * compositor,
   sample = gst_aggregator_peek_next_sample (GST_AGGREGATOR (compositor),
       GST_AGGREGATOR_PAD (sinkpad));
 
-  if (!sample) {
-    GST_INFO_OBJECT (sinkpad, "No sample set!");
-  } else {
-    parse_metadata (sinkpad, gst_sample_get_buffer (sample),
-        GES_SMART_MIXER_PAD (info->ghostpad));
+  if (sample) {
+    set_pad_properties_from_positioner_meta (sinkpad,
+        sample, GES_SMART_MIXER_PAD (info->ghostpad));
     gst_sample_unref (sample);
+  } else {
+    GST_INFO_OBJECT (sinkpad, "No sample set!");
   }
   pad_infos_unref (info);
 
