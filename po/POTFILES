@@ -20,6 +20,7 @@ sys/oss4/oss4-source.c
 sys/oss/gstosssink.c
 sys/oss/gstosssrc.c
 sys/osxaudio/gstosxaudioringbuffer.c
+sys/rpicamsrc/gstrpicamsrcdeviceprovider.c
 sys/v4l2/gstv4l2bufferpool.c
 sys/v4l2/gstv4l2object.c
 sys/v4l2/gstv4l2radio.c

@@ -27,8 +27,7 @@
 
 #include "RaspiCapture.h"
 
-/* FIXME: translations */
-#define _(s) s
+#include <gst/gst-i18n-plugin.h>
 
 static GstRpiCamSrcDevice *gst_rpi_cam_src_device_new (void);
 
