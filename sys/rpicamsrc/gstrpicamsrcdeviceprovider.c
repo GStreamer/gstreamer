@@ -114,7 +114,7 @@ gst_rpi_cam_src_device_new (void)
   GstRpiCamSrcDevice *device;
   GValue profiles = G_VALUE_INIT;
   GValue val = G_VALUE_INIT;
-  GstStructure *s;
+  GstStructure *s, *jpeg_s;
   GstCaps *caps;
 
   /* FIXME: retrieve limits from the camera module, max width/height/fps etc. */
@@ -137,7 +137,13 @@ gst_rpi_cam_src_device_new (void)
   gst_value_list_append_and_take_value (&profiles, &val);
   gst_structure_take_value (s, "profiles", &profiles);
 
-  caps = gst_caps_new_full (s, NULL);
+  jpeg_s = gst_structure_new ("image/jpeg",
+      "width", GST_TYPE_INT_RANGE, 1, 1920,
+      "height", GST_TYPE_INT_RANGE, 1, 1080,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, RPICAMSRC_MAX_FPS, 1,
+      "parsed", G_TYPE_BOOLEAN, "true", NULL);
+
+  caps = gst_caps_new_full (s, jpeg_s, NULL);
 
   device = g_object_new (GST_TYPE_RPICAMSRC_DEVICE,
       "display-name", _("Raspberry Pi Camera Module"),
