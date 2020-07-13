@@ -313,9 +313,8 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 
   GST_INFO_OBJECT (vaapidecbin, "enabling VPP");
 
-  /* capsfilter to avoid negotiation with vaapidecode */
-  caps = gst_caps_from_string
-      ("video/x-raw(memory:VASurface), format=(string)NV12");
+  /* capsfilter to force memory:VASurface */
+  caps = gst_caps_from_string ("video/x-raw(memory:VASurface)");
   if (!caps)
     goto error_cannot_set_caps;
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
