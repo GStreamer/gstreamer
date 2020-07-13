@@ -314,7 +314,7 @@ gst_svtav1enc_init (GstSvtAv1Enc * svtav1enc)
   EbErrorType res =
       svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "svt_av1_enc_init_handle failed with error %d", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, INIT, (NULL), ("svt_av1_enc_init_handle failed with error %d", res));
     GST_OBJECT_UNLOCK (svtav1enc);
     return;
   }
@@ -583,7 +583,7 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
   EbErrorType res =
       svt_av1_enc_set_parameter(svtav1enc->svt_encoder, svtav1enc->svt_config);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "svt_av1_enc_set_parameter failed with error %d", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, INIT, (NULL), ("svt_av1_enc_set_parameter failed with error %d", res));
     return FALSE;
   }
   return TRUE;
@@ -597,7 +597,7 @@ gst_svtav1enc_start_svt (GstSvtAv1Enc * svtav1enc)
   G_UNLOCK (init_mutex);
 
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "svt_av1_enc_init failed with error %d", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, INIT, (NULL), ("svt_av1_enc_init failed with error %d", res));
     return FALSE;
   }
   return TRUE;
@@ -760,7 +760,7 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
 
   if (!gst_video_frame_map (&video_frame, &svtav1enc->state->info,
           frame->input_buffer, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (svtav1enc, "couldn't map input frame");
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("couldn't map input frame"));
     return GST_FLOW_ERROR;
   }
 
@@ -792,7 +792,7 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
 
   res = svt_av1_enc_send_picture(svtav1enc->svt_encoder, input_buffer);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "Issue %d sending picture to SVT-AV1.", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("error in sending picture to encoder"));
     ret = GST_FLOW_ERROR;
   }
   gst_video_frame_unmap (&video_frame);
@@ -816,7 +816,7 @@ gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc)
   ret = svt_av1_enc_send_picture(svtav1enc->svt_encoder, &input_buffer);
 
   if (ret != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "couldn't send EOS frame.");
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("couldn't send EOS frame."));
     return FALSE;
   }
 
@@ -864,7 +864,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
           ((output_buf->flags & EB_BUFFERFLAG_EOS) == EB_BUFFERFLAG_EOS);
 
     if (res == EB_ErrorMax) {
-      GST_ERROR_OBJECT (svtav1enc, "Error while encoding, return\n");
+      GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("encode failed"));
       return GST_FLOW_ERROR;
     } else if (res != EB_NoErrorEmptyQueue && output_frames && output_buf) {
       /* if p_app_private is indeed propagated, get the frame through it
@@ -878,8 +878,10 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
         frame_list_element = g_list_find_custom (pending_frames,
             &output_buf->pts, compare_video_code_frame_and_pts);
 
-        if (frame_list_element == NULL)
+        if (frame_list_element == NULL) {
+          GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("failed to get unfinished frame"));
           return GST_FLOW_ERROR;
+        }
 
         frame = (GstVideoCodecFrame *) frame_list_element->data;
       }
