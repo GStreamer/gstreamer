@@ -4334,6 +4334,7 @@ pack_A422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
 static void
 get_tile_NV12 (gint tile_width, gint ts, gint tx, gint ty,
+    GstVideoTileMode mode,
     const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES],
     gpointer tile_data[GST_VIDEO_MAX_PLANES],
@@ -4342,14 +4343,14 @@ get_tile_NV12 (gint tile_width, gint ts, gint tx, gint ty,
   gsize offset;
 
   /* index of Y tile */
-  offset = gst_video_tile_get_index (GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
+  offset = gst_video_tile_get_index (mode,
       tx, ty, GST_VIDEO_TILE_X_TILES (stride[0]),
       GST_VIDEO_TILE_Y_TILES (stride[0]));
   offset <<= ts;
   tile_data[0] = ((guint8 *) data[0]) + offset;
 
   /* index of UV tile */
-  offset = gst_video_tile_get_index (GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
+  offset = gst_video_tile_get_index (mode,
       tx, ty >> 1, GST_VIDEO_TILE_X_TILES (stride[1]),
       GST_VIDEO_TILE_Y_TILES (stride[1]));
   offset <<= ts;
@@ -4360,9 +4361,9 @@ get_tile_NV12 (gint tile_width, gint ts, gint tx, gint ty,
   tile_stride[0] = tile_stride[1] = tile_width;
 }
 
-#define PACK_NV12_64Z32 GST_VIDEO_FORMAT_AYUV, unpack_NV12_64Z32, 1, pack_NV12_64Z32
+#define PACK_NV12_TILED GST_VIDEO_FORMAT_AYUV, unpack_NV12_TILED, 1, pack_NV12_TILED
 static void
-unpack_NV12_64Z32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+unpack_NV12_TILED (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
@@ -4402,7 +4403,8 @@ unpack_NV12_64Z32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint tstride[GST_VIDEO_MAX_PLANES];
     gint unpack_width;
 
-    get_tile_NV12 (tile_width, ts, tx, ty, data, stride, tdata, tstride);
+    get_tile_NV12 (tile_width, ts, tx, ty, info->tile_mode,
+        data, stride, tdata, tstride);
 
     /* the number of bytes left to unpack */
     unpack_width = MIN (width - x, tile_width - x);
@@ -4416,7 +4418,7 @@ unpack_NV12_64Z32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 }
 
 static void
-pack_NV12_64Z32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+pack_NV12_TILED (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
@@ -4453,7 +4455,8 @@ pack_NV12_64Z32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint tstride[GST_VIDEO_MAX_PLANES];
     gint pack_width;
 
-    get_tile_NV12 (tile_width, ts, tx, ty, data, stride, tdata, tstride);
+    get_tile_NV12 (tile_width, ts, tx, ty, info->tile_mode,
+        data, stride, tdata, tstride);
 
     /* the number of bytes left to pack */
     pack_width = MIN (width, tile_width);
@@ -6365,6 +6368,7 @@ typedef struct
 
 /* tile_mode, tile_width, tile_height */
 #define TILE_64x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 6, 5
+#define TILE_4x4(mode) GST_VIDEO_TILE_MODE_ ##mode, 2, 2
 
 #define MAKE_YUV_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack ) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV, depth, pstride, plane, offs, sub, pack } }
@@ -6541,7 +6545,7 @@ static const VideoFormat formats[] = {
       DPTH888, PSTR122, PLANE011, OFFS001, SUB444, PACK_NV24),
   MAKE_YUV_T_FORMAT (NV12_64Z32, "raw video",
       GST_MAKE_FOURCC ('T', 'M', '1', '2'), DPTH888, PSTR122, PLANE011,
-      OFFS001, SUB420, PACK_NV12_64Z32, TILE_64x32 (ZFLIPZ_2X2)),
+      OFFS001, SUB420, PACK_NV12_TILED, TILE_64x32 (ZFLIPZ_2X2)),
   MAKE_YUVA_FORMAT (A420_10BE, "raw video", 0x00000000, DPTH10_10_10_10,
       PSTR2222, PLANE0123, OFFS0, SUB4204, PACK_A420_10BE),
   MAKE_YUVA_LE_FORMAT (A420_10LE, "raw video", 0x00000000, DPTH10_10_10_10,
@@ -6632,6 +6636,9 @@ static const VideoFormat formats[] = {
       PSTR8888, PLANE0, OFFS0, SUB4444, PACK_Y412_BE),
   MAKE_YUV_LE_FORMAT (Y412_LE, "raw video", 0x00000000, DPTH12_12_12_12_HI,
       PSTR8888, PLANE0, OFFS0, SUB4444, PACK_Y412_LE),
+  MAKE_YUV_T_FORMAT (NV12_4L4, "raw video",
+      GST_MAKE_FOURCC ('V', 'T', '1', '2'), DPTH888, PSTR122, PLANE011,
+      OFFS001, SUB420, PACK_NV12_TILED, TILE_4x4 (LINEAR)),
 };
 
 static GstVideoFormat
