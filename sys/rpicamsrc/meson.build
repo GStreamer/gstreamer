@@ -60,6 +60,8 @@ rpi_warn_flags = cc.get_supported_arguments([
   '-Wno-stringop-truncation',
 ])
 
+rpi_link_flags = cc.get_supported_link_arguments(['-Wl,--no-as-needed'])
+
 gnome = import('gnome')
 
 enums = gnome.mkenums_simple('gstrpicam-enum-types',
@@ -67,12 +69,13 @@ enums = gnome.mkenums_simple('gstrpicam-enum-types',
   identifier_prefix: 'GstRpiCamSrc',
   symbol_prefix: 'gst_rpi_cam_src')
 
-# we might need '-Wl,--no-as-needed' or b_asneeded=false on ubuntu, tbd
 gstrpicamsrc = library('gstrpicamsrc',
   rpicamsrc_sources, enums,
   c_args: [gst_plugins_good_args, rpi_inc_args, rpi_warn_flags],
+  link_args: rpi_link_flags,
   include_directories: [configinc, libsinc],
   dependencies: [gst_dep, gstbase_dep, gstvideo_dep] + mmal_deps,
+  override_options: ['b_asneeded=false'],
   install_dir: plugins_install_dir,
   install: true)
 
