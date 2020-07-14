@@ -128,7 +128,6 @@ gst_mf_capture_winrt_constructed (GObject * object)
     g_cond_wait (&self->cond, &self->lock);
   g_mutex_unlock (&self->lock);
 
-done:
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 

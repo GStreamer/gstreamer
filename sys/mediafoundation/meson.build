@@ -89,7 +89,7 @@ winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     #error "not win32"
     #endif''',
     dependencies: mf_lib_deps,
-    name: 'checking if building for Win32')
+    name: 'building for Win32')
 
 if runtimeobject_lib.found()
   winapi_app = cxx.compiles('''#include <winapifamily.h>
@@ -97,24 +97,32 @@ if runtimeobject_lib.found()
       #include <wrl.h>
       #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
       #error "not winrt"
+      #endif
+      #ifndef WINVER
+      #error "unknown minimum supported OS version"
+      #endif
+      #if (WINVER < 0x0A00)
+      #error "Windows 10 API is not guaranteed"
       #endif''',
       dependencies: [mf_lib_deps, runtimeobject_lib],
-      name: 'checking if building for WinRT')
+      name: 'building for WinRT')
 endif
 
 if not winapi_desktop and not winapi_app
   error('Neither Desktop partition nor App partition')
 endif
 
-winapi_app_only = winapi_app and not winapi_desktop
-if winapi_app_only
+if winapi_app
   mf_sources += mf_app_sources
   mf_lib_deps += [runtimeobject_lib]
-else
+endif
+
+if winapi_desktop
   mf_sources += mf_desktop_sources
 endif
 
-mf_config.set10('GST_MF_WINAPI_ONLY_APP', winapi_app_only)
+mf_config.set10('GST_MF_WINAPI_APP', winapi_app)
+mf_config.set10('GST_MF_WINAPI_DESKTOP', winapi_desktop)
 
 configure_file(
   output: 'gstmfconfig.h',

@@ -70,7 +70,7 @@ plugin_init (GstPlugin * plugin)
   }
 
   /* mfvideosrc should be primary rank for UWP */
-#if GST_MF_WINAPI_ONLY_APP
+#if (GST_MF_WINAPI_APP && !GST_MF_WINAPI_DESKTOP)
   rank = GST_RANK_PRIMARY + 1;
 #endif
 

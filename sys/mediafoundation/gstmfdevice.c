@@ -25,11 +25,7 @@
 
 #include "gstmfvideosrc.h"
 #include "gstmfutils.h"
-#if GST_MF_WINAPI_ONLY_APP
-#include "gstmfcapturewinrt.h"
-#else /* GST_MF_WINAPI_ONLY_APP */
-#include "gstmfsourcereader.h"
-#endif /* GST_MF_WINAPI_ONLY_APP */
+#include "gstmfsourceobject.h"
 
 #include "gstmfdevice.h"
 
@@ -180,12 +176,7 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
     gchar *device_name = NULL;
     gchar *device_path = NULL;
 
-#if GST_MF_WINAPI_ONLY_APP
-    obj = gst_mf_capture_winrt_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
-#else /* !GST_MF_WINAPI_ONLY_APP */
-    obj = gst_mf_source_reader_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
-#endif /* GST_MF_WINAPI_ONLY_APP  */
-
+    obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
     if (!obj)
       break;
 

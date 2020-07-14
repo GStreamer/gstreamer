@@ -42,17 +42,13 @@
 
 #include "gstmfvideosrc.h"
 #include "gstmfutils.h"
-#if GST_MF_WINAPI_ONLY_APP
-#include "gstmfcapturewinrt.h"
-#else /* GST_MF_WINAPI_ONLY_APP */
-#include "gstmfsourcereader.h"
-#endif /* !GST_MF_WINAPI_ONLY_APP */
+#include "gstmfsourceobject.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY (gst_mf_video_src_debug);
 #define GST_CAT_DEFAULT gst_mf_video_src_debug
 
-#if GST_MF_WINAPI_ONLY_APP
+#if (GST_MF_WINAPI_APP && !GST_MF_WINAPI_DESKTOP)
 /* FIXME: need support JPEG for UWP */
 #define SRC_TEMPLATE_CAPS \
     GST_VIDEO_CAPS_MAKE (GST_MF_VIDEO_FORMATS)
@@ -242,13 +238,8 @@ gst_mf_video_src_start (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (self, "Start");
 
-#if GST_MF_WINAPI_ONLY_APP
-  self->source = gst_mf_capture_winrt_new (GST_MF_SOURCE_TYPE_VIDEO,
+  self->source = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
       self->device_index, self->device_name, self->device_path);
-#else /* GST_MF_WINAPI_ONLY_APP */
-  self->source = gst_mf_source_reader_new (GST_MF_SOURCE_TYPE_VIDEO,
-      self->device_index, self->device_name, self->device_path);
-#endif /* GST_MF_WINAPI_ONLY_APP */
 
   self->first_pts = GST_CLOCK_TIME_NONE;
   self->n_frames = 0;

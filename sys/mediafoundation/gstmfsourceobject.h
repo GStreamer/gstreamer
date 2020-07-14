@@ -35,7 +35,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstMFSourceObject        GstMFSourceObject;
 typedef struct _GstMFSourceObjectClass   GstMFSourceObjectClass;
-typedef struct _GstMFSourceObjectPrivate GstMFSourceObjectPrivate;
 
 typedef enum
 {
@@ -45,39 +44,25 @@ typedef enum
 #define GST_TYPE_MF_SOURCE_TYPE (gst_mf_source_type_get_type())
 GType gst_mf_source_type_get_type (void);
 
-typedef struct
-{
-  IMFActivate *handle;
-  guint index;
-  gchar *name;
-  gchar *path;
-} GstMFDeviceActivate;
-
 struct _GstMFSourceObject
 {
   GstObject parent;
 
   gboolean opened;
 
+  GstMFSourceType source_type;
   gchar *device_path;
   gchar *device_name;
   gint device_index;
-
-  GstMFSourceObjectPrivate *priv;
 };
 
 struct _GstMFSourceObjectClass
 {
   GstObjectClass parent_class;
 
-  gboolean      (*open)        (GstMFSourceObject * object,
-                                IMFActivate * activate);
-
   gboolean      (*start)       (GstMFSourceObject * object);
 
   gboolean      (*stop)        (GstMFSourceObject * object);
-
-  gboolean      (*close)       (GstMFSourceObject * object);
 
   GstFlowReturn (*fill)        (GstMFSourceObject * object,
                                 GstBuffer * buffer);
@@ -116,6 +101,12 @@ GstCaps *       gst_mf_source_object_get_caps     (GstMFSourceObject * object);
 
 gboolean        gst_mf_source_object_set_caps     (GstMFSourceObject * object,
                                                    GstCaps * caps);
+
+/* A factory method for subclass impl. selection */
+GstMFSourceObject * gst_mf_source_object_new      (GstMFSourceType type,
+                                                   gint device_index,
+                                                   const gchar * device_name,
+                                                   const gchar * device_path);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMFSourceObject, gst_object_unref)
 
