@@ -10654,8 +10654,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   stream->stsd_entries_length = stsd_entry_count = QT_UINT32 (stsd_data + 12);
-  if (stream->stsd_entries_length == 0)
+  /* each stsd entry must contain at least 8 bytes */
+  if (stream->stsd_entries_length == 0
+      || stream->stsd_entries_length > stsd_len / 8) {
+    stream->stsd_entries_length = 0;
     goto corrupt_file;
+  }
   stream->stsd_entries = g_new0 (QtDemuxStreamStsdEntry, stsd_entry_count);
   GST_LOG_OBJECT (qtdemux, "stsd len:           %d", stsd_len);
   GST_LOG_OBJECT (qtdemux, "stsd entry count:   %u", stsd_entry_count);

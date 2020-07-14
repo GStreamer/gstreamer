@@ -123,6 +123,56 @@ GST_START_TEST (test_qtdemux_fuzzed0)
 
 GST_END_TEST;
 
+GST_START_TEST (test_qtdemux_fuzzed1)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  guchar *fuzzed_qtdemux;
+  gsize fuzzed_qtdemux_len;
+
+  /* The goal of this test is to check that qtdemux can properly handle
+   * a stream that claims it contains more stsd entries than it can possibly have,
+   * by correctly identifying the case and erroring out appropriately.
+   */
+
+  h = gst_harness_new_parse ("qtdemux");
+  gst_harness_set_src_caps_str (h, "video/quicktime");
+
+  fuzzed_qtdemux =
+      g_base64_decode
+      ("AAAAIGZ0eXBtcDQyAAAAAG1wNDJtcDQxaXNvbWlzbzIAAAAIZnJlZQAAAMltZGF0AAAADGdCwAyV"
+      "oQkgHhEI1AAAAARozjyAAAAAIWW4BA5///wRRQAfHAxwABAJkxWTk6xWuuuupaupa6668AAAABJB"
+      "4CBX8Zd3d3d3d3d3eJ7E8ZAAAABWQeBAO+opFAYoDFAYoDFAYkeKAzx4oDFAYkcPHBQGePPHF6jj"
+      "HP0Qdj/og7H/SHY/6jsf9R2P+o7H/Udj/qOx/1HY/6jsf9R2P+o7H/Udj/qOx/1HY/AAAAAGQeBg"
+      "O8IwAAAABkHggDvCMAAAA1dtb292AAAAbG12aGQAAAAA1lbpxdZW6cYAAAfQAAAH0AABAAABAAAA"
+      "AAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAACAAACpnRyYWsAAABcdGtoZAAAAAfWVunF1lbpxgAAAAEAAAAAAAAH0AAA"
+      "AAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAQAAAAEA"
+      "AAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAB9AAAAAAAAEAAAAAAeFtZGlhAAAAIG1kaGQAAAAA"
+      "1lbpxdZW6cYAAAH0AAAB9FXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVv"
+      "SGFuZGxlcgAAAAGMbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAA"
+      "AAABAAAADHVybCAAAAABAAABTHN0YmwAAADAc3RzZAAAAADv/wABAAAAsGF2YzEAAAAAAAAAAQAA"
+      "AAAAAAAAAAAAAAAAAAAAQABAAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAY//8AAAAjYXZjQwFCwAz/4QAMZ0LADJWhCSAeEQjUAQAEaM48gAAAABRidHJ0AAAA"
+      "AAAAAAAAAAYIAAAAE2NvbHJuY2x4AAYAAQAGAAAAABBwYXNwAAAAAQAAAAEAAAAYc3R0cwAAAAAA"
+      "AAABAAAABQAAAGQAAAAUc3RzcwAAAAAAAAABAAAAAQAAABxzdHNjAAAAAAAAAAEAAAABAAAABQAA"
+      "AAEAAAAoc3RzegAAAAAAAAAAAAAABQAAAD0AAAAWAAAAWgAAAAoAAAAKAAAAFHN0Y28AAAAAAAAA"
+      "AQAAADAAAAA9dWR0YQAAADVtZXRhAAAAAAAAACFoZGxyAAAAAG1obHJtZGlyAAAAAAAAAAAAAAAA"
+      "AAAAAAhpbHN0AAAAPXVkdGEAAAA1bWV0YQAAAAAAAAAhaGRscgAAAABtaGxybWRpcgAAAAAAAAAA"
+      "AAAAAAAAAAAIaWxzdA==", &fuzzed_qtdemux_len);
+
+  buf = gst_buffer_new_and_alloc (fuzzed_qtdemux_len);
+  gst_buffer_fill (buf, 0, fuzzed_qtdemux, fuzzed_qtdemux_len);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless (gst_harness_buffers_received (h) == 0);
+
+  g_free (fuzzed_qtdemux);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_qtdemux_input_gap)
 {
   GstElement *qtdemux;
@@ -698,6 +748,7 @@ qtdemux_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_qtdemux_fuzzed0);
+  tcase_add_test (tc_chain, test_qtdemux_fuzzed1);
   tcase_add_test (tc_chain, test_qtdemux_input_gap);
   tcase_add_test (tc_chain, test_qtdemux_duplicated_moov);
   tcase_add_test (tc_chain, test_qtdemux_stream_change);
