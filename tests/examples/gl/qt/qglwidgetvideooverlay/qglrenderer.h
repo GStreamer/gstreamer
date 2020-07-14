@@ -29,7 +29,7 @@ class QGLRenderer : public QGLWidget
     Q_OBJECT
 
 public:
-    QGLRenderer(const QString videoLocation, QWidget *parent = 0);
+    QGLRenderer(const QString videoLocation, QWidget *parent = nullptr);
     ~QGLRenderer();
     void paintEvent(QPaintEvent* event);
     void closeEvent (QCloseEvent* event);

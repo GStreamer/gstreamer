@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2008-2009 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2020 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,31 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef QRENDERER_H
-#define QRENDERER_H
+#include <gst/gl/gstglconfig.h>
 
-#include <QWidget>
-#include <QString>
-#include "gstthread.h"
-
-class QRenderer : public QWidget
-{
-    Q_OBJECT
-
-public:
-    QRenderer(const QString videoLocation, QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
-    ~QRenderer();
-    void paintEvent(QPaintEvent* event);
-    void mouseMoveEvent(QMouseEvent* event);
-    void closeEvent (QCloseEvent* event);
-
-signals:
-    void exposeRequested();
-    void closeRequested();
-    void mouseMoved();
-
-private:
-    GstThread m_gt;
-};
-
-#endif // QRENDERER_H
+/* The glext.h guard was renamed in 2018, but some software which
+ * includes their own copy of the GL headers (such as qt) might have
+ * older version which use the old guard. This would result in the
+ * header being included again (and symbols redefined).
+ *
+ * To avoid this, we define the "old" guard if the "new" guard is
+ * defined.*/
+#if GST_GL_HAVE_OPENGL
+#ifdef __gl_glext_h_
+#ifndef __glext_h_
+#define __glext_h_ 1
+#endif
+#endif
+#endif

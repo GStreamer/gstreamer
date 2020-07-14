@@ -19,9 +19,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "pipeline.h"
 #include <gst/gl/gl.h>
-
+#include "../gl-compat-defines.h"
+#include "pipeline.h"
 
 Pipeline::Pipeline (GstGLDisplay *display,
     GstGLContext * context, const QString & videoLocation, QObject * parent)
