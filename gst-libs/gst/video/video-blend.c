@@ -243,6 +243,7 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
 
 /*
  * A OVER B alpha compositing operation, with:
+ *  max: maximum value a color can have
  *  alphaG: global alpha to apply on the source color
  *     -> only needed for premultiplied source
  *  alphaA: source pixel alpha
@@ -254,24 +255,30 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
  */
 
 /* Source non-premultiplied, Destination non-premultiplied */
-#define OVER00(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
-  ((colorA * alphaA + colorB * alphaB * (255 - alphaA) / 255) / alphaD)
+#define OVER00_8BIT(max, alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaA + colorB * alphaB * (max - alphaA) / max) / alphaD)
+
+#define OVER00_16BIT(max, alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaA + (guint64) colorB * alphaB * (max - alphaA) / max) / alphaD)
 
 /* Source premultiplied, Destination non-premultiplied */
-#define OVER10(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
-  ((colorA * alphaG + colorB * alphaB * (255 - alphaA) / 255) / alphaD)
+#define OVER10_8BIT(max, alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaG + colorB * alphaB * (max - alphaA) / max) / alphaD)
+
+#define OVER10_16BIT(max, alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaG + (guint64) colorB * alphaB * (max - alphaA) / max) / alphaD)
 
 /* Source non-premultiplied, Destination premultiplied */
-#define OVER01(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
-  ((colorA * alphaA + colorB * (255 - alphaA)) / 255)
+#define OVER01(max, alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaA + colorB * (max - alphaA)) / max)
 
 /* Source premultiplied, Destination premultiplied */
-#define OVER11(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
-  ((colorA * alphaG + colorB * (255 - alphaA)) / 255)
+#define OVER11(max, alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaG + colorB * (max - alphaA)) / max)
 
 #define BLENDC(op, max, global_alpha, aa, ca, ab, cb, dest_alpha) \
 G_STMT_START { \
-  int c = op((global_alpha), (aa), (ca), (ab), (cb), (dest_alpha)); \
+  int c = op((max), (global_alpha), (aa), (ca), (ab), (cb), (dest_alpha)); \
   cb = MIN(c, (max)); \
 } G_STMT_END
 
@@ -301,8 +308,6 @@ gst_video_blend (GstVideoFrame * dest,
 
   g_assert (dest != NULL);
   g_assert (src != NULL);
-
-  global_alpha_val = 255.0 * global_alpha;
 
   dest_premultiplied_alpha =
       GST_VIDEO_INFO_FLAGS (&dest->info) & GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA;
@@ -346,6 +351,8 @@ gst_video_blend (GstVideoFrame * dest,
 
   /* Source is always 8 bit but destination might be 8 or 16 bit */
   bpp = 4 * (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) / 8);
+
+  global_alpha_val = (bpp == 4) ? 255.0 * global_alpha : 65535.0 * global_alpha;
 
   matrix = matrix_identity;
   if (GST_VIDEO_INFO_IS_RGB (&src->info) != GST_VIDEO_INFO_IS_RGB (&dest->info)) {
@@ -408,7 +415,7 @@ gst_video_blend (GstVideoFrame * dest,
       guint final_alpha;                                                                      \
       dest_type * dest = (dest_type *) tmpdestline;                                           \
                                                                                               \
-      asrc = ((guint) tmpsrcline[j]) * alpha_val / 255;                                       \
+      asrc = ((guint) tmpsrcline[j]) * alpha_val / max;                                       \
       asrc = asrc << shift;                                                                   \
       if (asrc == 0)                                                                          \
         continue;                                                                             \
@@ -432,9 +439,9 @@ gst_video_blend (GstVideoFrame * dest,
         } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
           BLENDLOOP (OVER01, guint8, 255, 0, 255);
         } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
-          BLENDLOOP (OVER10, guint8, 255, 0, 255);
+          BLENDLOOP (OVER10_8BIT, guint8, 255, 0, 255);
         } else {
-          BLENDLOOP (OVER00, guint8, 255, 0, 255);
+          BLENDLOOP (OVER00_8BIT, guint8, 255, 0, 255);
         }
       } else {
         if (src_premultiplied_alpha && dest_premultiplied_alpha) {
@@ -442,23 +449,23 @@ gst_video_blend (GstVideoFrame * dest,
         } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
           BLENDLOOP (OVER01, guint8, 255, 0, global_alpha_val);
         } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
-          BLENDLOOP (OVER10, guint8, 255, 0, global_alpha_val);
+          BLENDLOOP (OVER10_8BIT, guint8, 255, 0, global_alpha_val);
         } else {
-          BLENDLOOP (OVER00, guint8, 255, 0, global_alpha_val);
+          BLENDLOOP (OVER00_8BIT, guint8, 255, 0, global_alpha_val);
         }
       }
     } else {
       g_assert (bpp == 8);
 
-      if (G_LIKELY (global_alpha_val == 255)) {
+      if (G_LIKELY (global_alpha_val == 65535)) {
         if (src_premultiplied_alpha && dest_premultiplied_alpha) {
-          BLENDLOOP (OVER11, guint16, 65535, 8, 255);
+          BLENDLOOP (OVER11, guint16, 65535, 8, 65535);
         } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
-          BLENDLOOP (OVER01, guint16, 65535, 8, 255);
+          BLENDLOOP (OVER01, guint16, 65535, 8, 65535);
         } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
-          BLENDLOOP (OVER10, guint16, 65535, 8, 255);
+          BLENDLOOP (OVER10_16BIT, guint16, 65535, 8, 65535);
         } else {
-          BLENDLOOP (OVER00, guint16, 65535, 8, 255);
+          BLENDLOOP (OVER00_16BIT, guint16, 65535, 8, 65535);
         }
       } else {
         if (src_premultiplied_alpha && dest_premultiplied_alpha) {
@@ -466,9 +473,9 @@ gst_video_blend (GstVideoFrame * dest,
         } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
           BLENDLOOP (OVER01, guint16, 65535, 8, global_alpha_val);
         } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
-          BLENDLOOP (OVER10, guint16, 65535, 8, global_alpha_val);
+          BLENDLOOP (OVER10_16BIT, guint16, 65535, 8, global_alpha_val);
         } else {
-          BLENDLOOP (OVER00, guint16, 65535, 8, global_alpha_val);
+          BLENDLOOP (OVER00_16BIT, guint16, 65535, 8, global_alpha_val);
         }
       }
     }
