@@ -1439,15 +1439,6 @@ free_param_data (ParameterRequest * req)
 }
 
 static void
-free_param_queue (gpointer data)
-{
-  ParameterRequest *req = data;
-
-  gst_promise_expire (req->promise);
-  free_param_data (req);
-}
-
-static void
 gst_rtspsrc_finalize (GObject * object)
 {
   GstRTSPSrc *rtspsrc;
@@ -2422,6 +2413,7 @@ static void
 gst_rtspsrc_cleanup (GstRTSPSrc * src)
 {
   GList *walk;
+  ParameterRequest *req;
 
   GST_DEBUG_OBJECT (src, "cleanup");
 
@@ -2471,9 +2463,10 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
 
   GST_OBJECT_LOCK (src);
   /* free parameter requests queue */
-  if (!g_queue_is_empty (&src->set_get_param_q))
-    g_queue_free_full (&src->set_get_param_q, free_param_queue);
-
+  while ((req = g_queue_pop_head (&src->set_get_param_q))) {
+    gst_promise_expire (req->promise);
+    free_param_data (req);
+  }
   GST_OBJECT_UNLOCK (src);
 
 }
