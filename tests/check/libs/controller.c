@@ -1527,6 +1527,39 @@ GST_START_TEST (controller_trigger_tolerance)
 
 GST_END_TEST;
 
+GST_START_TEST (controller_first_value_in_range)
+{
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+
+  /* set object values */
+  GST_TEST_OBJ (elem)->val_int = 32;
+
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
+          gst_direct_control_binding_new_absolute (GST_OBJECT (elem), "int",
+              cs)));
+
+  /* Add 1 value of 0 (which is the default) */
+  fail_unless (gst_timed_value_control_source_set (tvcs, GST_SECOND, 0));
+  /* First sync outside interpolation range */
+  gst_object_sync_values (GST_OBJECT (elem), 0);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 32);
+
+  gst_object_sync_values (GST_OBJECT (elem), GST_SECOND);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
+
+  gst_object_unref (cs);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (controller_proxy)
 {
   GstControlBinding *cb, *cb2;
@@ -1665,6 +1698,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_lfo_rsaw);
   tcase_add_test (tc, controller_lfo_triangle);
   tcase_add_test (tc, controller_trigger_exact);
+  tcase_add_test (tc, controller_first_value_in_range);
   tcase_add_test (tc, controller_trigger_tolerance);
   tcase_add_test (tc, controller_proxy);
 

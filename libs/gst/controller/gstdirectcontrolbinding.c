@@ -215,6 +215,7 @@ gst_direct_control_binding_class_init (GstDirectControlBindingClass * klass)
 static void
 gst_direct_control_binding_init (GstDirectControlBinding * self)
 {
+  self->last_value = G_MAXDOUBLE;
 }
 
 static GObject *
