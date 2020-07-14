@@ -87,6 +87,13 @@ struct CData
   GstCaps *src_caps;
 };
 
+/* *INDENT-OFF* */
+static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
+            "{ NV12, P010_10LE }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }");
+/* *INDENT-ON* */
+
+static const gchar *sink_caps_str = "video/x-h264";
+
 static gboolean
 gst_va_h264_dec_end_picture (GstH264Decoder * decoder, GstH264Picture * picture)
 {
@@ -1266,6 +1273,8 @@ gst_va_h264_dec_dispose (GObject * object)
 static void
 gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 {
+  GstCaps *src_doc_caps, *sink_doc_caps;
+  GstPadTemplate *sink_pad_templ, *src_pad_templ;
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstH264DecoderClass *h264decoder_class = GST_H264_DECODER_CLASS (g_class);
@@ -1290,12 +1299,19 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
       "VA-API based H.264 video decoder",
       "Víctor Jáquez <vjaquez@igalia.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  sink_pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      cdata->sink_caps);
+  gst_element_class_add_pad_template (element_class, sink_pad_templ);
+  sink_doc_caps = gst_caps_from_string (sink_caps_str);
+  gst_pad_template_set_documentation_caps (sink_pad_templ, sink_doc_caps);
+  gst_caps_unref (sink_doc_caps);
+
+  src_pad_templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      cdata->src_caps);
+  gst_element_class_add_pad_template (element_class, src_pad_templ);
+  src_doc_caps = gst_caps_from_string (src_caps_str);
+  gst_pad_template_set_documentation_caps (src_pad_templ, src_doc_caps);
+  gst_caps_unref (src_doc_caps);
 
   gobject_class->dispose = gst_va_h264_dec_dispose;
 
