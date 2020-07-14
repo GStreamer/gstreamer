@@ -241,6 +241,27 @@ gst_vaapi_utils_h265_get_profile (GstH265SPS * sps)
         /* Main 422_10 Intra, recognize it as MAIN_422_10 */
         profile = GST_VAAPI_PROFILE_H265_MAIN_422_10;
         break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 0
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 0
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        profile = GST_VAAPI_PROFILE_H265_MAIN12;
+        break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 0
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 1
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        /* Main 12 Intra, recognize it as MAIN12 */
+        profile = GST_VAAPI_PROFILE_H265_MAIN12;
+        break;
       }
     case GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING:
       if (sps->profile_tier_level.max_14bit_constraint_flag == 1
@@ -458,6 +479,8 @@ gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
       else if (depth > 8 && depth <= 10)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
+      else if (depth > 10 && depth <= 12)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_12BPP;
       break;
     case 2:
       if (depth == 8)
@@ -493,6 +516,7 @@ gst_vaapi_utils_h265_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV420:
     case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
+    case GST_VAAPI_CHROMA_TYPE_YUV420_12BPP:
       chroma_format_idc = 1;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV422:

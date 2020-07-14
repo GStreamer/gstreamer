@@ -445,6 +445,8 @@ gst_vaapi_video_format_from_chroma (guint chroma_type)
       return GST_VIDEO_FORMAT_NV12;
     case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
       return GST_VIDEO_FORMAT_P010_10LE;
+    case GST_VAAPI_CHROMA_TYPE_YUV420_12BPP:
+      return GST_VIDEO_FORMAT_P012_LE;
     case GST_VAAPI_CHROMA_TYPE_YUV444:
       return GST_VIDEO_FORMAT_VUYA;
     case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
