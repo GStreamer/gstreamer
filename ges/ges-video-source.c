@@ -103,7 +103,7 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
 
   /* That positioner will add metadata to buffers according to its
      properties, acting like a proxy for our smart-mixer dynamic pads. */
-  positioner = gst_element_factory_make ("framepositioner", "frame_tagger");
+  positioner = gst_element_factory_make ("framepositioner", NULL);
   g_object_set (positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
   g_ptr_array_add (elements, positioner);
