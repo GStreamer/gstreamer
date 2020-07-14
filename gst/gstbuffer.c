@@ -192,7 +192,7 @@ gst_atomic_int64_inc (volatile gint64 * atomic)
   gint64 ret;
 
   G_LOCK (meta_seq);
-  ret = *atomic++;
+  ret = (*atomic)++;
   G_UNLOCK (meta_seq);
 
   return ret;
