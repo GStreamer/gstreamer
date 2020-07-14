@@ -4118,7 +4118,7 @@ GST_START_TEST (test_rate_effects_duration_limit)
 
   _assert_set_rate (videorate, "rate", 0.1, dval);
   assert_equals_int (limit_notify_count, 6);
-  _assert_set_rate (pitch, "tempo", 0.5, dval);
+  _assert_set_rate (pitch, "tempo", 0.5, fval);
 
   assert_equals_int (limit_notify_count, 7);
   _assert_duration_limit (clip, 256);
@@ -4133,7 +4133,7 @@ GST_START_TEST (test_rate_effects_duration_limit)
   _assert_rate_equal (pitch, "rate", 0.5, fval);
   _assert_rate_equal (pitch, "tempo", 0.5, fval);
 
-  _assert_set_rate (pitch, "tempo", 1.0, dval);
+  _assert_set_rate (pitch, "tempo", 1.0, fval);
   assert_equals_int (limit_notify_count, 8);
   _assert_set_rate (videorate, "rate", 0.5, dval);
 
