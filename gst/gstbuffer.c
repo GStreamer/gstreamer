@@ -183,7 +183,10 @@ gst_atomic_int64_inc (volatile gint64 * atomic)
   return InterlockedExchangeAdd64 (atomic, 1);
 }
 #else
-#warning No 64-bit atomic int defined for this platform/toolchain!
+#define STR_TOKEN(s) #s
+#define STR(s) STR_TOKEN(s)
+#pragma message "No 64-bit atomic int defined for this " STR(TARGET_CPU) " platform/toolchain!"
+
 #define NO_64BIT_ATOMIC_INT_FOR_PLATFORM
 G_LOCK_DEFINE_STATIC (meta_seq);
 static inline gint64
