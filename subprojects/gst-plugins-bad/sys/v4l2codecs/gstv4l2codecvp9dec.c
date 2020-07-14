@@ -26,6 +26,7 @@
 #include "gstv4l2codecalphadecodebin.h"
 #include "gstv4l2codecpool.h"
 #include "gstv4l2codecvp9dec.h"
+#include "gstv4l2format.h"
 #include "linux/v4l2-controls.h"
 #include "linux/videodev2.h"
 
@@ -57,8 +58,7 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
     GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{ NV12, YUY2, NV12_32L32, NV12_4L4 }")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)));
 
 struct _GstV4l2CodecVp9Dec
 {
