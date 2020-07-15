@@ -94,8 +94,10 @@ gst_wl_buffer_dispose (GObject * gobject)
    * the GstWlBuffer from another thread, unregister_buffer() will
    * block and in the end the display will increase the refcount
    * of this GstWlBuffer, so it will not be finalized */
-  if (self->display)
-    gst_wl_display_unregister_buffer (self->display, self->gstbuffer);
+  if (self->display) {
+    GstMemory *mem0 = gst_buffer_peek_memory (self->gstbuffer, 0);
+    gst_wl_display_unregister_buffer (self->display, mem0);
+  }
 
   G_OBJECT_CLASS (gst_wl_buffer_parent_class)->dispose (gobject);
 }
@@ -145,11 +147,11 @@ static const struct wl_buffer_listener buffer_listener = {
 };
 
 static void
-gstbuffer_disposed (GstWlBuffer * self)
+gstmemory_disposed (GstWlBuffer * self)
 {
   g_assert (!self->used_by_compositor);
 
-  GST_TRACE_OBJECT (self, "owning GstBuffer was finalized");
+  GST_TRACE_OBJECT (self, "owning GstMemory was finalized");
 
   /* this will normally destroy the GstWlBuffer, unless the display is
    * finalizing and it has taken an additional reference to it */
@@ -161,18 +163,20 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
     GstWlDisplay * display)
 {
   GstWlBuffer *self;
+  GstMemory *mem0;
 
   self = g_object_new (GST_TYPE_WL_BUFFER, NULL);
   self->gstbuffer = gstbuffer;
   self->wlbuffer = wlbuffer;
   self->display = display;
 
-  gst_wl_display_register_buffer (self->display, self->gstbuffer, self);
+  mem0 = gst_buffer_peek_memory (gstbuffer, 0);
+  gst_wl_display_register_buffer (self->display, mem0, self);
 
   wl_buffer_add_listener (self->wlbuffer, &buffer_listener, self);
 
-  gst_mini_object_weak_ref (GST_MINI_OBJECT (gstbuffer),
-      (GstMiniObjectNotify) gstbuffer_disposed, self);
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (mem0),
+      (GstMiniObjectNotify) gstmemory_disposed, self);
 
 
   return self;
@@ -181,7 +185,8 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
 GstWlBuffer *
 gst_buffer_get_wl_buffer (GstWlDisplay * display, GstBuffer * gstbuffer)
 {
-  return gst_wl_display_lookup_buffer (display, gstbuffer);
+  GstMemory *mem0 = gst_buffer_peek_memory (gstbuffer, 0);
+  return gst_wl_display_lookup_buffer (display, mem0);
 }
 
 void

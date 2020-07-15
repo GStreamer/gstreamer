@@ -385,36 +385,36 @@ gst_wl_display_new_existing (struct wl_display * display,
 }
 
 void
-gst_wl_display_register_buffer (GstWlDisplay * self, gpointer gstbuffer,
+gst_wl_display_register_buffer (GstWlDisplay * self, gpointer gstmem,
     gpointer wlbuffer)
 {
   g_assert (!self->shutting_down);
 
-  GST_TRACE_OBJECT (self, "registering GstWlBuffer %p to GstBuffer %p",
-      wlbuffer, gstbuffer);
+  GST_TRACE_OBJECT (self, "registering GstWlBuffer %p to GstMem %p",
+      wlbuffer, gstmem);
 
   g_mutex_lock (&self->buffers_mutex);
-  g_hash_table_replace (self->buffers, gstbuffer, wlbuffer);
+  g_hash_table_replace (self->buffers, gstmem, wlbuffer);
   g_mutex_unlock (&self->buffers_mutex);
 }
 
 gpointer
-gst_wl_display_lookup_buffer (GstWlDisplay * self, gpointer gstbuffer)
+gst_wl_display_lookup_buffer (GstWlDisplay * self, gpointer gstmem)
 {
   gpointer wlbuffer;
   g_mutex_lock (&self->buffers_mutex);
-  wlbuffer = g_hash_table_lookup (self->buffers, gstbuffer);
+  wlbuffer = g_hash_table_lookup (self->buffers, gstmem);
   g_mutex_unlock (&self->buffers_mutex);
   return wlbuffer;
 }
 
 void
-gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstbuffer)
+gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstmem)
 {
-  GST_TRACE_OBJECT (self, "unregistering GstWlBuffer owned by %p", gstbuffer);
+  GST_TRACE_OBJECT (self, "unregistering GstWlBuffer owned by %p", gstmem);
 
   g_mutex_lock (&self->buffers_mutex);
   if (G_LIKELY (!self->shutting_down))
-    g_hash_table_remove (self->buffers, gstbuffer);
+    g_hash_table_remove (self->buffers, gstmem);
   g_mutex_unlock (&self->buffers_mutex);
 }
