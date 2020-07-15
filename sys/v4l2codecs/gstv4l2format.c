@@ -34,6 +34,7 @@ struct FormatEntry
 static struct FormatEntry format_map[] = {
   {V4L2_PIX_FMT_NV12, 1, GST_VIDEO_FORMAT_NV12, 8, 420},
   {V4L2_PIX_FMT_YUYV, 1, GST_VIDEO_FORMAT_YUY2, 8, 422},
+  {V4L2_PIX_FMT_SUNXI_TILED_NV12, 1, GST_VIDEO_FORMAT_NV12_32L32, 8, 422},
   {0,}
 };
 
@@ -76,11 +77,12 @@ extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
 
   switch (finfo->format) {
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV12_32L32:
     case GST_VIDEO_FORMAT_NV12_64Z32:
-    case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_NV61:
+    case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_NV24:
+    case GST_VIDEO_FORMAT_NV61:
       estride = (plane == 0 ? 1 : 2) *
           GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
       break;
@@ -92,9 +94,31 @@ extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
   return estride;
 }
 
+static void
+set_stride (GstVideoInfo * info, gint plane, gint stride)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+    gint x_tiles, y_tiles, ws, hs, padded_height;
+
+    ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+
+    padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
+        info->height);
+    padded_height = GST_ROUND_UP_N (padded_height, 1 << hs);
+
+    x_tiles = stride >> ws;
+    y_tiles = padded_height >> hs;
+    info->stride[plane] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
+  } else {
+    info->stride[plane] = stride;
+  }
+}
+
 gboolean
-gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
-    GstVideoInfo * out_info)
+gst_v4l2_format_to_video_info (struct v4l2_format *fmt, GstVideoInfo * out_info)
 {
   struct FormatEntry *entry = lookup_v4l2_fmt (fmt->fmt.pix_mp.pixelformat);
   struct v4l2_pix_format_mplane *pix_mp = &fmt->fmt.pix_mp;
@@ -131,7 +155,7 @@ gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
     else
       stride = extrapolate_stride (out_info->finfo, plane, pix->bytesperline);
 
-    out_info->stride[plane] = stride;
+    set_stride (out_info, plane, stride);
     out_info->offset[plane] = offset;
 
     offset += stride * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_info->finfo,
