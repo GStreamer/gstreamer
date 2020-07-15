@@ -71,8 +71,8 @@ endif
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
   ['gstreamer', {'build-hotdoc': true}],
-  ['gst-plugins-base', {'build-hotdoc': true}],
-  ['gst-plugins-good', {'build-hotdoc': true}],
+  ['gst-plugins-base', {'option': get_option('base'), 'build-hotdoc': true}],
+  ['gst-plugins-good', {'option': get_option('good'), 'build-hotdoc': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
   ['gst-plugins-bad', { 'option': get_option('bad'), 'build-hotdoc': true}],
   ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true}],

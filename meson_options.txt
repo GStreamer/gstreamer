@@ -2,6 +2,8 @@
 option('python', type : 'feature', value : 'auto')
 option('libav', type : 'feature', value : 'auto')
 option('libnice', type : 'feature', value : 'auto')
+option('base', type : 'feature', value : 'enabled')
+option('good', type : 'feature', value : 'enabled')
 option('ugly', type : 'feature', value : 'auto')
 option('bad', type : 'feature', value : 'auto')
 option('devtools', type : 'feature', value : 'auto')
