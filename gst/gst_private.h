@@ -183,7 +183,8 @@ G_GNUC_INTERNAL  void _priv_gst_element_state_changed (GstElement *element,
 
 G_GNUC_INTERNAL
 gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
-                                                GString            * s);
+                                                GString            * s,
+                                                GstSerializeFlags flags);
 G_GNUC_INTERNAL
 gboolean priv__gst_structure_append_template_to_gstring (GQuark field_id,
                                                         const GValue *value,

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Check that the code follows a consistent code style
+# Check that the code follows a consistant code style
 #
 
 # Check for existence of indent, and error out if not present.

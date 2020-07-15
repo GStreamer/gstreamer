@@ -32,6 +32,9 @@ static const gchar *caps_list[] = {
   /* Some random checks */
   "video/x-raw, format = (string) { I420, Y42B, Y444 }, framerate = (fraction) [1/MAX, MAX], width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]",
 
+  /* Some nesting check */
+  "caps, nested=(GstCaps)[c1;c2;c3,deeply-nested-field=[deep-structure, test=true]]",
+
   "ANY",
   "EMPTY"
 };

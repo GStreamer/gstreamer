@@ -43,7 +43,16 @@ GST_START_TEST (test_from_string)
         "Could not convert caps back to string %s\n", caps_list[i]);
     caps2 = gst_caps_from_string (to_str);
     fail_if (caps2 == NULL, "Could not create caps from string %s\n", to_str);
+    g_free (to_str);
 
+    fail_unless (gst_caps_is_equal (caps, caps));
+    fail_unless (gst_caps_is_equal (caps, caps2));
+    gst_caps_unref (caps2);
+
+    to_str = gst_caps_serialize (caps, GST_SERIALIZE_FLAG_NONE);
+    fail_if (to_str == NULL,
+        "Could not convert caps back to string %s\n", caps_list[i]);
+    caps2 = gst_caps_from_string (to_str);
     fail_unless (gst_caps_is_equal (caps, caps));
     fail_unless (gst_caps_is_equal (caps, caps2));
 

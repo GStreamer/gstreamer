@@ -2291,29 +2291,13 @@ gst_caps_fixate (GstCaps * caps)
 
 /* utility */
 
-/**
- * gst_caps_to_string:
- * @caps: a #GstCaps
- *
- * Converts @caps to a string representation.  This string representation
- * can be converted back to a #GstCaps by gst_caps_from_string().
- *
- * For debugging purposes its easier to do something like this:
- * |[<!-- language="C" -->
- * GST_LOG ("caps are %" GST_PTR_FORMAT, caps);
- * ]|
- * This prints the caps in human readable form.
- *
- * The current implementation of serialization will lead to unexpected results
- * when there are nested #GstCaps / #GstStructure deeper than one level.
- *
- * Returns: (transfer full): a newly allocated string representing @caps.
- */
-gchar *
-gst_caps_to_string (const GstCaps * caps)
+static gchar *
+caps_serialize (const GstCaps * caps, GstSerializeFlags flags)
 {
   guint i, slen, clen;
   GString *s;
+  gboolean nested_structs_brackets =
+      !(flags & GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
 
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
@@ -2366,13 +2350,63 @@ gst_caps_to_string (const GstCaps * caps)
       priv_gst_caps_features_append_to_gstring (features, s);
       g_string_append_c (s, ')');
     }
-    priv_gst_structure_append_to_gstring (structure, s);
+    priv_gst_structure_append_to_gstring (structure, s,
+        nested_structs_brackets);
   }
   if (s->len && s->str[s->len - 1] == ';') {
     /* remove latest ';' */
     s->str[--s->len] = '\0';
   }
   return g_string_free (s, FALSE);
+}
+
+/**
+ * gst_caps_to_string:
+ * @caps: a #GstCaps
+ *
+ * Converts @caps to a string representation.  This string representation
+ * can be converted back to a #GstCaps by gst_caps_from_string().
+ *
+ * For debugging purposes its easier to do something like this:
+ * |[<!-- language="C" -->
+ * GST_LOG ("caps are %" GST_PTR_FORMAT, caps);
+ * ]|
+ * This prints the caps in human readable form.
+ *
+ * The current implementation of serialization will lead to unexpected results
+ * when there are nested #GstCaps / #GstStructure deeper than one level.
+ *
+ * Returns: (transfer full): a newly allocated string representing @caps.
+ */
+gchar *
+gst_caps_to_string (const GstCaps * caps)
+{
+  return caps_serialize (caps, GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
+}
+
+/**
+ * gst_caps_serialize:
+ * @caps: a #GstCaps
+ * @flags: a #GstSerializeFlags
+ *
+ * Converts @caps to a string representation.  This string representation can be
+ * converted back to a #GstCaps by gst_caps_from_string().
+ *
+ * This prints the caps in human readable form.
+ *
+ * This version of the caps serialization function introduces support for nested
+ * structures and caps but the resulting strings won't be parsable with
+ * GStreamer prior to 1.20 unless #GST_SERIALIZE_FLAG_BACKWARD_COMPAT is passed
+ * as @flag.
+ *
+ * Returns: (transfer full): a newly allocated string representing @caps.
+ *
+ * Since: 1.20
+ */
+gchar *
+gst_caps_serialize (const GstCaps * caps, GstSerializeFlags flags)
+{
+  return caps_serialize (caps, flags);
 }
 
 static gboolean

@@ -576,6 +576,8 @@ GstCaps *         gst_caps_fixate                  (GstCaps *caps) G_GNUC_WARN_U
 
 GST_API
 gchar *           gst_caps_to_string               (const GstCaps *caps) G_GNUC_MALLOC;
+GST_API
+gchar *           gst_caps_serialize               (const GstCaps *caps, GstSerializeFlags flags) G_GNUC_MALLOC;
 
 GST_API
 GstCaps *         gst_caps_from_string             (const gchar   *string) G_GNUC_WARN_UNUSED_RESULT;
