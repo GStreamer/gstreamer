@@ -34,6 +34,8 @@
 GST_DEBUG_CATEGORY_STATIC (rtpbasepayload_debug);
 #define GST_CAT_DEFAULT (rtpbasepayload_debug)
 
+static gboolean enable_experimental_twcc = FALSE;
+
 struct _GstRTPBasePayloadPrivate
 {
   gboolean ts_offset_random;
@@ -201,6 +203,9 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  if (g_getenv ("GST_RTP_ENABLE_EXPERIMENTAL_TWCC_PROPERTY"))
+    enable_experimental_twcc = TRUE;
+
   if (private_offset != 0)
     g_type_class_adjust_private_offset (klass, &private_offset);
 
@@ -352,17 +357,22 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * To use this across multiple bundled streams (transport wide), the
    * GstRTPFunnel can mux TWCC sequence-numbers together.
    * 
-   * This is experimental, as it is still a draft and not yet a standard.
+   * This is experimental and requires setting the
+   * 'GST_RTP_ENABLE_EXPERIMENTAL_TWCC_PROPERTY' environment variable as it is
+   * still a draft and not yet a standard.  This property may also be removed
+   * in the future for 1.20.
    *
    * Since: 1.18
    */
-  g_object_class_install_property (gobject_class, PROP_TWCC_EXT_ID,
-      g_param_spec_uint ("twcc-ext-id",
-          "Transport-wide Congestion Control Extension ID (experimental)",
-          "The RTP header-extension ID to use for tagging buffers with "
-          "Transport-wide Congestion Control sequencenumbers (0 = disable)",
-          0, 15, DEFAULT_TWCC_EXT_ID,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  if (enable_experimental_twcc) {
+    g_object_class_install_property (gobject_class, PROP_TWCC_EXT_ID,
+        g_param_spec_uint ("twcc-ext-id",
+            "Transport-wide Congestion Control Extension ID (experimental)",
+            "The RTP header-extension ID to use for tagging buffers with "
+            "Transport-wide Congestion Control sequencenumbers (0 = disable)",
+            0, 15, DEFAULT_TWCC_EXT_ID,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  }
 
   /**
    * GstRTPBasePayload:scale-rtptime:
@@ -1163,7 +1173,7 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
   update_max_ptime (payload);
 
 
-  if (payload->priv->twcc_ext_id > 0) {
+  if (enable_experimental_twcc && payload->priv->twcc_ext_id > 0) {
     /* TODO: put this as a separate utility-function for RTP extensions */
     gchar *name = g_strdup_printf ("extmap-%u", payload->priv->twcc_ext_id);
     gst_caps_set_simple (srccaps, name, G_TYPE_STRING,
@@ -1261,7 +1271,8 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
   gst_rtp_buffer_set_payload_type (&rtp, data->pt);
   gst_rtp_buffer_set_seq (&rtp, data->seqnum);
   gst_rtp_buffer_set_timestamp (&rtp, data->rtptime);
-  _set_twcc_seq (&rtp, data->seqnum, data->twcc_ext_id);
+  if (enable_experimental_twcc)
+    _set_twcc_seq (&rtp, data->seqnum, data->twcc_ext_id);
   gst_rtp_buffer_unmap (&rtp);
 
   /* increment the seqnum for each buffer */

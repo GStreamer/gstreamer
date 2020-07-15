@@ -2022,6 +2022,8 @@ rtp_basepayloading_suite (void)
   Suite *s = suite_create ("rtp_base_payloading_test");
   TCase *tc_chain = tcase_create ("payloading tests");
 
+  g_setenv ("GST_RTP_ENABLE_EXPERIMENTAL_TWCC_PROPERTY", "1", TRUE);
+
   tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
