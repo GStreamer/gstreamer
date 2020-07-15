@@ -1237,17 +1237,24 @@ tsmux_write_null_ts_header (guint8 * buf)
 }
 
 static gint64
+ts_to_pcr (gint64 ts)
+{
+  if (ts == G_MININT64) {
+    return 0;
+  }
+
+  return (ts - TSMUX_PCR_OFFSET) * (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
+}
+
+static gint64
 get_current_pcr (TsMux * mux, gint64 cur_ts)
 {
-  if (mux->bitrate)
-    return (CLOCK_BASE - TSMUX_PCR_OFFSET) * 300 +
-        gst_util_uint64_scale (mux->n_bytes * 8, TSMUX_SYS_CLOCK_FREQ,
-        mux->bitrate);
-  else if (cur_ts != G_MININT64)
-    return (cur_ts -
-        TSMUX_PCR_OFFSET) * (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
-  else
-    return 0;
+  if (!mux->bitrate)
+    return ts_to_pcr (cur_ts);
+
+  return ts_to_pcr (CLOCK_BASE) +
+      gst_util_uint64_scale (mux->n_bytes * 8, TSMUX_SYS_CLOCK_FREQ,
+      mux->bitrate);
 }
 
 static gint64
