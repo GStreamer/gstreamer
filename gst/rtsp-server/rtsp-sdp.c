@@ -280,8 +280,10 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
   mikey_msg = gst_mikey_message_new_from_caps (caps);
   if (mikey_msg) {
     /* add policy '0' for all sending SSRC */
-    if (!mikey_add_crypto_sessions (stream, mikey_msg))
+    if (!mikey_add_crypto_sessions (stream, mikey_msg)) {
+      gst_mikey_message_unref (mikey_msg);
       goto crypto_sessions_error;
+    }
 
     base64 = gst_mikey_message_base64_encode (mikey_msg);
     if (base64) {
