@@ -158,14 +158,6 @@ plugins_doc_dep = custom_target('plugins-doc-cache',
   capture: true,
 )
 
-foreach custom_subproj: get_option('custom_subprojects').split(',')
-    if custom_subproj != ''
-        message ('Adding custom subproject ' + custom_subproj)
-        subproject(custom_subproj)
-        subprojects_names += [custom_subproj]
-    endif
-endforeach
-
 if meson.is_cross_build() or build_machine.system() == 'windows'
     if get_option('doc').enabled()
         error('Documentation enabled but building the doc while cross building or building on windows is not supported yet.')
@@ -323,6 +315,14 @@ if get_option('default_library') == 'static'
     requires: requires,
     subdirs : 'gstreamer-1.0')
 endif
+
+foreach custom_subproj: get_option('custom_subprojects').split(',')
+    if custom_subproj != ''
+        message ('Adding custom subproject ' + custom_subproj)
+        subproject(custom_subproj)
+        subprojects_names += [custom_subproj]
+    endif
+endforeach
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 setenv = find_program('gst-env.py')
