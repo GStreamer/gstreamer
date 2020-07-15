@@ -1,6 +1,6 @@
 project('All GStreamer modules', 'c',
   version : '1.19.0.1',
-  meson_version : '>= 0.52.0',
+  meson_version : '>= 0.54.0',
   default_options : ['buildtype=debugoptimized'])
 
 gst_version = '>= @0@'.format(meson.project_version())
@@ -311,9 +311,15 @@ if get_option('default_library') == 'static'
     link_depends : link_deps,
     install : true,
   )
+
+  gst_full_dep = declare_dependency(link_with: gstfull.get_shared_lib(),
+    dependencies : gst_dep,
+    include_directories: include_directories('.')
+  )
   pkgconfig.generate(gstfull,
     requires: requires,
     subdirs : 'gstreamer-1.0')
+  meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 endif
 
 foreach custom_subproj: get_option('custom_subprojects').split(',')
