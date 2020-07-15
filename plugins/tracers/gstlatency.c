@@ -510,8 +510,11 @@ do_query_post (GstLatencyTracer * tracer, GstClockTime ts, GstPad * pad,
     while (value && value->peer_element == element) {
       min_prev = MAX (value->min, min_prev);
       max_prev = MAX (value->max, max_prev);
+      latency_query_table_value_destroy (value);
       value = local_latency_query_stack_pop ();
     }
+    if (value)
+      latency_query_table_value_destroy (value);
 
     /* Push to stack */
     value = g_new0 (struct LatencyQueryTableValue, 1);
