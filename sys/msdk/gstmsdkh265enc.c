@@ -75,7 +75,7 @@ enum
 #undef  COMMON_FORMAT
 #undef  PRFOLIE_STR
 #define FORMATS_1027    RAW_FORMATS ", Y410, Y210"
-#define PROFILES_1027   PROFILES "main-444-10, main-422-10"
+#define PROFILES_1027   PROFILES ", main-444-10, main-422-10"
 #define COMMON_FORMAT   "{ " FORMATS_1027 " }"
 #define PRFOLIE_STR     "{ " PROFILES_1027 " }"
 #endif
