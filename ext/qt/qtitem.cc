@@ -135,7 +135,7 @@ QtGLVideoItem::~QtGLVideoItem()
    * no qmlglsink's will call in again, and that
    * any ongoing calls are done by invalidating the proxy
    * pointer */
-  GST_INFO ("%p Destroying QtGLVideoItem and invalidating the proxy %p", this, proxy.get());
+  GST_INFO ("%p Destroying QtGLVideoItem and invalidating the proxy %p", this, proxy.data());
   proxy->invalidateRef();
   proxy.clear();
 
@@ -503,7 +503,7 @@ QtGLVideoItemInterface::getContext ()
 }
 
 GstGLDisplay *
-QtGLVideoItemInterface::getDisplay() 
+QtGLVideoItemInterface::getDisplay()
 {
   QMutexLocker locker(&lock);
 
