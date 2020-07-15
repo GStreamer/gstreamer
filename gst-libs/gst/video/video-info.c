@@ -1048,17 +1048,24 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
           GST_ROUND_UP_128 (width) * (GST_ROUND_UP_64 (height) / 2);
       break;
     case GST_VIDEO_FORMAT_NV12_4L4:
+    case GST_VIDEO_FORMAT_NV12_32L32:
+    {
+      gint ws = GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
+      gint hs = GST_VIDEO_FORMAT_INFO_TILE_HS (info->finfo);
       info->stride[0] =
-          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_4 (width) / 4,
-          GST_ROUND_UP_4 (height) / 4);
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (width, 1 << ws) >> ws,
+          GST_ROUND_UP_N (height, 1 << hs) >> hs);
       info->stride[1] =
-          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_4 (width) / 4,
-          GST_ROUND_UP_8 (height) / 8);
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (width, 1 << ws) >> ws,
+          GST_ROUND_UP_N (height, 1 << (hs + 1)) >> (hs + 1));
       info->offset[0] = 0;
-      info->offset[1] = GST_ROUND_UP_4 (width) * GST_ROUND_UP_4 (height);
+      info->offset[1] =
+          GST_ROUND_UP_N (width, 1 << ws) * GST_ROUND_UP_N (height, 1 << hs);
       info->size = info->offset[1] +
-          GST_ROUND_UP_4 (width) * (GST_ROUND_UP_8 (height) / 2);
+          GST_ROUND_UP_N (width, 1 << ws) *
+          (GST_ROUND_UP_N (height, 1 << (hs + 1)) / 2);
       break;
+    }
     case GST_VIDEO_FORMAT_A420_10LE:
     case GST_VIDEO_FORMAT_A420_10BE:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);

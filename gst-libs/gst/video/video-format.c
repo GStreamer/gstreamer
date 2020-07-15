@@ -6366,9 +6366,10 @@ typedef struct
 #define SUB4204           { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
 #define SUB4224           { 0, 1, 1, 0 }, { 0, 0, 0, 0 }
 
-/* tile_mode, tile_width, tile_height */
-#define TILE_64x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 6, 5
+/* tile_mode, tile_ws (width shift), tile_hs (height shift) */
 #define TILE_4x4(mode) GST_VIDEO_TILE_MODE_ ##mode, 2, 2
+#define TILE_32x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 5, 5
+#define TILE_64x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 6, 5
 
 #define MAKE_YUV_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack ) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV, depth, pstride, plane, offs, sub, pack } }
@@ -6639,6 +6640,9 @@ static const VideoFormat formats[] = {
   MAKE_YUV_T_FORMAT (NV12_4L4, "raw video",
       GST_MAKE_FOURCC ('V', 'T', '1', '2'), DPTH888, PSTR122, PLANE011,
       OFFS001, SUB420, PACK_NV12_TILED, TILE_4x4 (LINEAR)),
+  MAKE_YUV_T_FORMAT (NV12_32L32, "raw video",
+      GST_MAKE_FOURCC ('S', 'T', '1', '2'), DPTH888, PSTR122, PLANE011,
+      OFFS001, SUB420, PACK_NV12_TILED, TILE_32x32 (LINEAR)),
 };
 
 static GstVideoFormat
