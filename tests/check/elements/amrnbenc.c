@@ -28,10 +28,7 @@
     "layout = (string) interleaved, channels = (int) 1, rate = (int) 8000"
 #define SINK_CAPS "audio/AMR"
 
-GList *buffers;
-GList *current_buf = NULL;
-
-GstPad *srcpad, *sinkpad;
+static GstPad *srcpad, *sinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
