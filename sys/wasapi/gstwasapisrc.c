@@ -689,11 +689,12 @@ gst_wasapi_src_reset (GstAudioSrc * asrc)
 
   GST_OBJECT_LOCK (self);
   hr = IAudioClient_Stop (self->client);
-  HR_FAILED_RET (hr, IAudioClock::Stop,);
+  HR_FAILED_AND (hr, IAudioClock::Stop, goto err);
 
   hr = IAudioClient_Reset (self->client);
-  HR_FAILED_RET (hr, IAudioClock::Reset,);
+  HR_FAILED_AND (hr, IAudioClock::Reset, goto err);
 
+err:
   self->client_needs_restart = TRUE;
   GST_OBJECT_UNLOCK (self);
 }

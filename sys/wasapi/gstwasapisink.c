@@ -715,11 +715,12 @@ gst_wasapi_sink_reset (GstAudioSink * asink)
 
   GST_OBJECT_LOCK (self);
   hr = IAudioClient_Stop (self->client);
-  HR_FAILED_AND (hr, IAudioClient::Stop,);
+  HR_FAILED_AND (hr, IAudioClient::Stop, goto err);
 
   hr = IAudioClient_Reset (self->client);
-  HR_FAILED_AND (hr, IAudioClient::Reset,);
+  HR_FAILED_AND (hr, IAudioClient::Reset, goto err);
 
+err:
   self->client_needs_restart = TRUE;
   GST_OBJECT_UNLOCK (self);
 }
