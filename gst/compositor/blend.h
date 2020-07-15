@@ -38,10 +38,19 @@ typedef enum
   COMPOSITOR_BLEND_MODE_ADD,
 } GstCompositorBlendMode;
 
+/*
+ * @srcframe: source #GstVideoFrame
+ * @xpos: horizontal start position of @srcframe, leftmost pixel line.
+ * @ypos: vertical start position of @srcframe, topmost pixel line.
+ * @gdouble: src_alpha, alpha factor applied to @srcframe
+ * @destframe: destination #GstVideoFrame
+ * @dst_y_start: start position of where to write into @destframe. Used for splitting work across multiple sequences.
+ * @dst_y_end: end position of where to write into @destframe. Used for splitting work across multiple sequences.
+ */
 typedef void (*BlendFunction) (GstVideoFrame *srcframe, gint xpos, gint ypos, gdouble src_alpha, GstVideoFrame * destframe,
-    GstCompositorBlendMode mode);
-typedef void (*FillCheckerFunction) (GstVideoFrame * frame);
-typedef void (*FillColorFunction) (GstVideoFrame * frame, gint c1, gint c2, gint c3);
+    gint dst_y_start, gint dst_y_end, GstCompositorBlendMode mode);
+typedef void (*FillCheckerFunction) (GstVideoFrame * frame, guint y_start, guint y_end);
+typedef void (*FillColorFunction) (GstVideoFrame * frame, guint y_start, guint y_end, gint c1, gint c2, gint c3);
 
 extern BlendFunction gst_compositor_blend_argb;
 extern BlendFunction gst_compositor_blend_bgra;

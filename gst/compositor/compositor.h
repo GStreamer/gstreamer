@@ -76,6 +76,34 @@ typedef enum
   COMPOSITOR_OPERATOR_ADD,
 } GstCompositorOperator;
 
+/* copied from video-converter.c */
+typedef void (*GstParallelizedTaskFunc) (gpointer user_data);
+
+typedef struct _GstParallelizedTaskRunner GstParallelizedTaskRunner;
+typedef struct _GstParallelizedTaskThread GstParallelizedTaskThread;
+
+struct _GstParallelizedTaskThread
+{
+  GstParallelizedTaskRunner *runner;
+  guint idx;
+  GThread *thread;
+};
+
+struct _GstParallelizedTaskRunner
+{
+  guint n_threads;
+
+  GstParallelizedTaskThread *threads;
+
+  GstParallelizedTaskFunc func;
+  gpointer *task_data;
+
+  GMutex lock;
+  GCond cond_todo, cond_done;
+  gint n_todo, n_done;
+  gboolean quit;
+};
+
 /**
  * GstCompositor:
  *
@@ -92,6 +120,8 @@ struct _GstCompositor
   BlendFunction blend, overlay;
   FillCheckerFunction fill_checker;
   FillColorFunction fill_color;
+
+  GstParallelizedTaskRunner *blend_runner;
 };
 
 /**

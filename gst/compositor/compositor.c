@@ -827,20 +827,188 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
   return ret;
 }
 
+static gpointer
+gst_parallelized_task_thread_func (gpointer data)
+{
+  GstParallelizedTaskThread *self = data;
+
+  g_mutex_lock (&self->runner->lock);
+  self->runner->n_done++;
+  if (self->runner->n_done == self->runner->n_threads - 1)
+    g_cond_signal (&self->runner->cond_done);
+
+  do {
+    gint idx;
+
+    while (self->runner->n_todo == -1 && !self->runner->quit)
+      g_cond_wait (&self->runner->cond_todo, &self->runner->lock);
+
+    if (self->runner->quit)
+      break;
+
+    idx = self->runner->n_todo--;
+    g_assert (self->runner->n_todo >= -1);
+    g_mutex_unlock (&self->runner->lock);
+
+    g_assert (self->runner->func != NULL);
+
+    self->runner->func (self->runner->task_data[idx]);
+
+    g_mutex_lock (&self->runner->lock);
+    self->runner->n_done++;
+    if (self->runner->n_done == self->runner->n_threads - 1)
+      g_cond_signal (&self->runner->cond_done);
+  } while (TRUE);
+
+  g_mutex_unlock (&self->runner->lock);
+
+  return NULL;
+}
+
+static void
+gst_parallelized_task_runner_free (GstParallelizedTaskRunner * self)
+{
+  guint i;
+
+  g_mutex_lock (&self->lock);
+  self->quit = TRUE;
+  g_cond_broadcast (&self->cond_todo);
+  g_mutex_unlock (&self->lock);
+
+  for (i = 1; i < self->n_threads; i++) {
+    if (!self->threads[i].thread)
+      continue;
+
+    g_thread_join (self->threads[i].thread);
+  }
+
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond_todo);
+  g_cond_clear (&self->cond_done);
+  g_free (self->threads);
+  g_free (self);
+}
+
+static GstParallelizedTaskRunner *
+gst_parallelized_task_runner_new (guint n_threads)
+{
+  GstParallelizedTaskRunner *self;
+  guint i;
+  GError *err = NULL;
+
+  if (n_threads == 0)
+    n_threads = g_get_num_processors ();
+
+  self = g_new0 (GstParallelizedTaskRunner, 1);
+  self->n_threads = n_threads;
+  self->threads = g_new0 (GstParallelizedTaskThread, n_threads);
+
+  self->quit = FALSE;
+  self->n_todo = -1;
+  self->n_done = 0;
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond_todo);
+  g_cond_init (&self->cond_done);
+
+  /* Set when scheduling a job */
+  self->func = NULL;
+  self->task_data = NULL;
+
+  for (i = 0; i < n_threads; i++) {
+    self->threads[i].runner = self;
+    self->threads[i].idx = i;
+
+    /* First thread is the one calling run() */
+    if (i > 0) {
+      self->threads[i].thread =
+          g_thread_try_new ("compositor-blend",
+          gst_parallelized_task_thread_func, &self->threads[i], &err);
+      if (!self->threads[i].thread)
+        goto error;
+    }
+  }
+
+  g_mutex_lock (&self->lock);
+  while (self->n_done < self->n_threads - 1)
+    g_cond_wait (&self->cond_done, &self->lock);
+  self->n_done = 0;
+  g_mutex_unlock (&self->lock);
+
+  return self;
+
+error:
+  {
+    GST_ERROR ("Failed to start thread %u: %s", i, err->message);
+    g_clear_error (&err);
+
+    gst_parallelized_task_runner_free (self);
+    return NULL;
+  }
+}
+
+static void
+gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
+    GstParallelizedTaskFunc func, gpointer * task_data)
+{
+  guint n_threads = self->n_threads;
+
+  self->func = func;
+  self->task_data = task_data;
+
+  if (n_threads > 1) {
+    g_mutex_lock (&self->lock);
+    self->n_todo = self->n_threads - 2;
+    self->n_done = 0;
+    g_cond_broadcast (&self->cond_todo);
+    g_mutex_unlock (&self->lock);
+  }
+
+  self->func (self->task_data[self->n_threads - 1]);
+
+  if (n_threads > 1) {
+    g_mutex_lock (&self->lock);
+    while (self->n_done < self->n_threads - 1)
+      g_cond_wait (&self->cond_done, &self->lock);
+    self->n_done = 0;
+    g_mutex_unlock (&self->lock);
+  }
+
+  self->func = NULL;
+  self->task_data = NULL;
+}
+
 static gboolean
 _negotiated_caps (GstAggregator * agg, GstCaps * caps)
 {
+  GstCompositor *compositor = GST_COMPOSITOR (agg);
   GstVideoInfo v_info;
+  guint n_threads;
 
   GST_DEBUG_OBJECT (agg, "Negotiated caps %" GST_PTR_FORMAT, caps);
 
   if (!gst_video_info_from_caps (&v_info, caps))
     return FALSE;
 
-  if (!set_functions (GST_COMPOSITOR (agg), &v_info)) {
+  if (!set_functions (compositor, &v_info)) {
     GST_ERROR_OBJECT (agg, "Failed to setup vfuncs");
     return FALSE;
   }
+
+  n_threads = g_get_num_processors ();
+  /* Magic number of 200 lines */
+  if (GST_VIDEO_INFO_HEIGHT (&v_info) / n_threads < 200)
+    n_threads = (GST_VIDEO_INFO_HEIGHT (&v_info) + 199) / 200;
+  if (n_threads < 1)
+    n_threads = 1;
+
+  /* XXX: implement better thread count change */
+  if (compositor->blend_runner
+      && compositor->blend_runner->n_threads != n_threads) {
+    gst_parallelized_task_runner_free (compositor->blend_runner);
+    compositor->blend_runner = NULL;
+  }
+  if (!compositor->blend_runner)
+    compositor->blend_runner = gst_parallelized_task_runner_new (n_threads);
 
   return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
@@ -870,58 +1038,6 @@ _should_draw_background (GstVideoAggregator * vagg)
 }
 
 static gboolean
-_draw_background (GstVideoAggregator * vagg, GstVideoFrame * outframe,
-    BlendFunction * composite)
-{
-  GstCompositor *comp = GST_COMPOSITOR (vagg);
-
-  *composite = comp->blend;
-  /* If one of the frames to be composited completely obscures the background,
-   * don't bother drawing the background at all. We can also always use the
-   * 'blend' BlendFunction in that case because it only changes if we have to
-   * overlay on top of a transparent background. */
-  if (!_should_draw_background (vagg))
-    return FALSE;
-
-  switch (comp->background) {
-    case COMPOSITOR_BACKGROUND_CHECKER:
-      comp->fill_checker (outframe);
-      break;
-    case COMPOSITOR_BACKGROUND_BLACK:
-      comp->fill_color (outframe, 16, 128, 128);
-      break;
-    case COMPOSITOR_BACKGROUND_WHITE:
-      comp->fill_color (outframe, 240, 128, 128);
-      break;
-    case COMPOSITOR_BACKGROUND_TRANSPARENT:
-    {
-      guint i, plane, num_planes, height;
-
-      num_planes = GST_VIDEO_FRAME_N_PLANES (outframe);
-      for (plane = 0; plane < num_planes; ++plane) {
-        guint8 *pdata;
-        gsize rowsize, plane_stride;
-
-        pdata = GST_VIDEO_FRAME_PLANE_DATA (outframe, plane);
-        plane_stride = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, plane);
-        rowsize = GST_VIDEO_FRAME_COMP_WIDTH (outframe, plane)
-            * GST_VIDEO_FRAME_COMP_PSTRIDE (outframe, plane);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, plane);
-        for (i = 0; i < height; ++i) {
-          memset (pdata, 0, rowsize);
-          pdata += plane_stride;
-        }
-      }
-      /* use overlay to keep background transparent */
-      *composite = comp->overlay;
-      break;
-    }
-  }
-
-  return TRUE;
-}
-
-static gboolean
 frames_can_copy (const GstVideoFrame * frame1, const GstVideoFrame * frame2)
 {
   if (GST_VIDEO_FRAME_FORMAT (frame1) != GST_VIDEO_FRAME_FORMAT (frame2))
@@ -933,14 +1049,101 @@ frames_can_copy (const GstVideoFrame * frame1, const GstVideoFrame * frame2)
   return TRUE;
 }
 
+struct CompositePadInfo
+{
+  GstVideoFrame *prepared_frame;
+  GstCompositorPad *pad;
+  GstCompositorBlendMode blend_mode;
+};
+
+struct CompositeTask
+{
+  GstCompositor *compositor;
+  GstVideoFrame *out_frame;
+  guint dst_line_start;
+  guint dst_line_end;
+  gboolean draw_background;
+  guint n_pads;
+  struct CompositePadInfo *pads_info;
+};
+
+static void
+_draw_background (GstCompositor * comp, GstVideoFrame * outframe,
+    guint y_start, guint y_end, BlendFunction * composite)
+{
+  *composite = comp->blend;
+
+  switch (comp->background) {
+    case COMPOSITOR_BACKGROUND_CHECKER:
+      comp->fill_checker (outframe, y_start, y_end);
+      break;
+    case COMPOSITOR_BACKGROUND_BLACK:
+      comp->fill_color (outframe, y_start, y_end, 16, 128, 128);
+      break;
+    case COMPOSITOR_BACKGROUND_WHITE:
+      comp->fill_color (outframe, y_start, y_end, 240, 128, 128);
+      break;
+    case COMPOSITOR_BACKGROUND_TRANSPARENT:
+    {
+      guint i, plane, num_planes, height;
+
+      num_planes = GST_VIDEO_FRAME_N_PLANES (outframe);
+      for (plane = 0; plane < num_planes; ++plane) {
+        const GstVideoFormatInfo *info;
+        guint8 *pdata;
+        gsize rowsize, plane_stride;
+
+        info = outframe->info.finfo;
+        pdata = GST_VIDEO_FRAME_PLANE_DATA (outframe, plane);
+        plane_stride = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, plane);
+        rowsize = GST_VIDEO_FRAME_COMP_WIDTH (outframe, plane)
+            * GST_VIDEO_FRAME_COMP_PSTRIDE (outframe, plane);
+        height =
+            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, plane, y_end - y_start);
+        pdata += y_start * plane_stride;
+        for (i = 0; i < height; ++i) {
+          memset (pdata, 0, rowsize);
+          pdata += plane_stride;
+        }
+      }
+      /* use overlay to keep background transparent */
+      *composite = comp->overlay;
+      break;
+    }
+  }
+}
+
+static void
+blend_pads (struct CompositeTask *comp)
+{
+  BlendFunction composite;
+  guint i;
+
+  composite = comp->compositor->blend;
+
+  if (comp->draw_background) {
+    _draw_background (comp->compositor, comp->out_frame, comp->dst_line_start,
+        comp->dst_line_end, &composite);
+  }
+
+  for (i = 0; i < comp->n_pads; i++) {
+    composite (comp->pads_info[i].prepared_frame,
+        comp->pads_info[i].pad->xpos, comp->pads_info[i].pad->ypos,
+        comp->pads_info[i].pad->alpha, comp->out_frame, comp->dst_line_start,
+        comp->dst_line_end, comp->pads_info[i].blend_mode);
+  }
+}
+
 static GstFlowReturn
 gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
 {
+  GstCompositor *compositor = GST_COMPOSITOR (vagg);
   GList *l;
-  BlendFunction composite;
   GstVideoFrame out_frame, *outframe;
-  gboolean drew_background;
-  guint drawn_pads = 0;
+  gboolean draw_background;
+  guint drawn_a_pad = FALSE;
+  struct CompositePadInfo *pads_info;
+  guint i, n_pads = 0;
 
   if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, GST_MAP_WRITE)) {
     GST_WARNING_OBJECT (vagg, "Could not map output buffer");
@@ -948,9 +1151,26 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   }
 
   outframe = &out_frame;
-  drew_background = _draw_background (vagg, outframe, &composite);
+
+  /* If one of the frames to be composited completely obscures the background,
+   * don't bother drawing the background at all. We can also always use the
+   * 'blend' BlendFunction in that case because it only changes if we have to
+   * overlay on top of a transparent background. */
+  draw_background = _should_draw_background (vagg);
 
   GST_OBJECT_LOCK (vagg);
+  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    GstVideoAggregatorPad *pad = l->data;
+    GstVideoFrame *prepared_frame =
+        gst_video_aggregator_pad_get_prepared_frame (pad);
+
+    if (prepared_frame)
+      n_pads++;
+  }
+
+  pads_info = g_newa (struct CompositePadInfo, n_pads);
+  n_pads = 0;
+
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *pad = l->data;
     GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (pad);
@@ -978,16 +1198,53 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
        * background, and @prepared_frame has the same format, height, and width
        * as @outframe, then we can just copy it as-is. Subsequent pads (if any)
        * will be composited on top of it. */
-      if (drawn_pads == 0 && !drew_background &&
-          frames_can_copy (prepared_frame, outframe))
+      if (!drawn_a_pad && !draw_background &&
+          frames_can_copy (prepared_frame, outframe)) {
         gst_video_frame_copy (outframe, prepared_frame);
-      else
-        composite (prepared_frame,
-            compo_pad->xpos,
-            compo_pad->ypos, compo_pad->alpha, outframe, blend_mode);
-      drawn_pads++;
+      } else {
+        pads_info[n_pads].pad = compo_pad;
+        pads_info[n_pads].prepared_frame = prepared_frame;
+        pads_info[n_pads].blend_mode = blend_mode;
+        n_pads++;
+      }
+      drawn_a_pad = TRUE;
     }
   }
+
+  {
+    guint n_threads, lines_per_thread;
+    guint out_height;
+    struct CompositeTask *tasks;
+    struct CompositeTask **tasks_p;
+
+    n_threads = compositor->blend_runner->n_threads;
+
+    tasks = g_newa (struct CompositeTask, n_threads);
+    tasks_p = g_newa (struct CompositeTask *, n_threads);
+
+    out_height = GST_VIDEO_FRAME_HEIGHT (outframe);
+    lines_per_thread = (out_height + n_threads - 1) / n_threads;
+
+    for (i = 0; i < n_threads; i++) {
+      tasks[i].compositor = compositor;
+      tasks[i].n_pads = n_pads;
+      tasks[i].pads_info = pads_info;
+      tasks[i].out_frame = outframe;
+      tasks[i].draw_background = draw_background;
+      /* This is a dumb split of the work by number of output lines.
+       * If there is a section of the output that reads from a lot of source
+       * pads, then that thread will consume more time. Maybe tracking and
+       * splitting on the source fill rate would produce better results. */
+      tasks[i].dst_line_start = i * lines_per_thread;
+      tasks[i].dst_line_end = MIN ((i + 1) * lines_per_thread, out_height);
+
+      tasks_p[i] = &tasks[i];
+    }
+
+    gst_parallelized_task_runner_run (compositor->blend_runner,
+        (GstParallelizedTaskFunc) blend_pads, (gpointer *) tasks_p);
+  }
+
   GST_OBJECT_UNLOCK (vagg);
 
   gst_video_frame_unmap (outframe);
@@ -1077,6 +1334,18 @@ _sink_query (GstAggregator * agg, GstAggregatorPad * bpad, GstQuery * query)
   }
 }
 
+static void
+gst_compositor_finalize (GObject * object)
+{
+  GstCompositor *compositor = GST_COMPOSITOR (object);
+
+  if (compositor->blend_runner)
+    gst_parallelized_task_runner_free (compositor->blend_runner);
+  compositor->blend_runner = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 /* GObject boilerplate */
 static void
 gst_compositor_class_init (GstCompositorClass * klass)
@@ -1089,6 +1358,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
 
   gobject_class->get_property = gst_compositor_get_property;
   gobject_class->set_property = gst_compositor_set_property;
+  gobject_class->finalize = gst_compositor_finalize;
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_compositor_request_new_pad);
