@@ -137,8 +137,8 @@ typedef enum {
  * @GST_FLOW_EOS:                Pad is EOS.
  * @GST_FLOW_NOT_NEGOTIATED:	 Pad is not negotiated.
  * @GST_FLOW_ERROR:		 Some (fatal) error occurred. Element generating
- *                               this error should post an error message with more
- *                               details.
+ *                               this error should post an error message using
+ *                               GST_ELEMENT_ERROR() with more details.
  * @GST_FLOW_NOT_SUPPORTED:	 This operation is not supported.
  * @GST_FLOW_CUSTOM_SUCCESS:	 Elements can use values starting from
  *                               this (and higher) to define custom success
