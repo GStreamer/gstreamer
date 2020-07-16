@@ -281,20 +281,54 @@ __gst_audio_init_thread_priority (void)
  * Increases the priority of the thread it's called from
  */
 gboolean
-__gst_audio_set_thread_priority (void)
+__gst_audio_set_thread_priority (gpointer * handle)
 {
 #ifdef G_OS_WIN32
   DWORD taskIndex = 0;
 #endif
 
+  g_return_val_if_fail (handle != NULL, FALSE);
+
+  *handle = NULL;
+
   if (!__gst_audio_init_thread_priority ())
     return FALSE;
 
 #ifdef G_OS_WIN32
-  /* This is only used from ringbuffer thread functions, so we don't need to
-   * ever need to revert the thread priorities. */
-  return _gst_audio_avrt_tbl.AvSetMmThreadCharacteristics (TEXT ("Pro Audio"),
-      &taskIndex) != 0;
+  /* This is only used from ringbuffer thread functions */
+  *handle = (gpointer)
+      _gst_audio_avrt_tbl.AvSetMmThreadCharacteristics (TEXT ("Pro Audio"),
+      &taskIndex);
+  if (*handle == 0) {
+    gchar *errorMsg = g_win32_error_message (GetLastError ());
+
+    GST_WARNING
+        ("Failed to set thread priority, AvSetMmThreadCharacteristics returned: %s",
+        errorMsg);
+    g_free (errorMsg);
+  }
+
+  return *handle != 0;
+#else
+  return TRUE;
+#endif
+}
+
+/*
+ * Restores the priority of the thread that was increased
+ * with __gst_audio_set_thread_priority.
+ * This function must be called from the same thread that called the
+ * __gst_audio_set_thread_priority function.
+ * See https://docs.microsoft.com/en-us/windows/win32/api/avrt/nf-avrt-avsetmmthreadcharacteristicsw#remarks
+ */
+gboolean
+__gst_audio_restore_thread_priority (gpointer handle)
+{
+#ifdef G_OS_WIN32
+  if (!handle)
+    return FALSE;
+
+  return _gst_audio_avrt_tbl.AvRevertMmThreadCharacteristics ((HANDLE) handle);
 #else
   return TRUE;
 #endif

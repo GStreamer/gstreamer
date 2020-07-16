@@ -187,6 +187,7 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
   ReadFunc readfunc;
   GstMessage *message;
   GValue val = { 0 };
+  gpointer handle;
 
   src = GST_AUDIO_SRC (GST_OBJECT_PARENT (buf));
   csrc = GST_AUDIO_SRC_GET_CLASS (src);
@@ -196,7 +197,7 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
   if ((readfunc = csrc->read) == NULL)
     goto no_function;
 
-  if (G_UNLIKELY (!__gst_audio_set_thread_priority ()))
+  if (G_UNLIKELY (!__gst_audio_set_thread_priority (&handle)))
     GST_WARNING_OBJECT (src, "failed to set thread priority");
 
   message = gst_message_new_stream_status (GST_OBJECT_CAST (buf),
@@ -281,6 +282,9 @@ stop_running:
     g_value_unset (&val);
     GST_DEBUG_OBJECT (src, "posting LEAVE stream status");
     gst_element_post_message (GST_ELEMENT_CAST (src), message);
+
+    if (G_UNLIKELY (!__gst_audio_restore_thread_priority (handle)))
+      GST_WARNING_OBJECT (src, "failed to restore thread priority");
     return;
   }
 }
