@@ -98,8 +98,6 @@ gl_prototype_headers = [
 
 gl_x11_headers = []
 gl_wayland_headers = []
-gl_win32_headers = []
-gl_cocoa_headers = []
 gl_egl_headers = []
 
 glconf = configuration_data()
@@ -955,7 +953,6 @@ if build_gstgl
   message('Building libgstgl with GL winsys:   ' + ' '.join(enabled_gl_winsys))
 
   install_headers(gl_headers, subdir : 'gstreamer-1.0/gst/gl')
-  install_headers(gl_cocoa_headers, subdir : 'gstreamer-1.0/gst/gl/cocoa')
   install_headers(gl_egl_headers, subdir : 'gstreamer-1.0/gst/gl/egl')
   install_headers(gl_prototype_headers, subdir : 'gstreamer-1.0/gst/gl/glprototypes')
   install_headers(gl_x11_headers, subdir : 'gstreamer-1.0/gst/gl/x11')
@@ -991,7 +988,7 @@ if build_gstgl
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps])
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
-      sources : gl_sources + [gl_enumtypes_h] + [gl_enumtypes_c] + gir_gl_headers + gl_x11_headers + gl_wayland_headers + gl_win32_headers + gl_cocoa_headers + gl_egl_headers,
+      sources : gl_sources + [gl_enumtypes_h] + [gl_enumtypes_c] + gir_gl_headers + gl_x11_headers + gl_wayland_headers + gl_egl_headers,
       namespace : 'GstGL',
       nsversion : api_version,
       identifier_prefix : 'Gst',
