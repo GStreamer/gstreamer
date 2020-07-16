@@ -249,12 +249,27 @@ libraries_map = {
 
 if get_option('default_library') == 'static'
   # Generate a .c file which declare and register all built plugins
+  plugins_names = []
+  foreach plugin: all_plugins
+    plugins_names += plugin.full_path()
+  endforeach
+  all_plugin_names = ';'.join(plugins_names)
+
+  static_plugins = get_option('gst-full-plugins')
+  if static_plugins == '*'
+    static_plugins = all_plugin_names
+  endif
   generate_init_static_plugins = find_program('scripts/generate_init_static_plugins.py')
   init_static_plugins_c = configure_file(
     output: 'gstinitstaticplugins.c',
     command : [generate_init_static_plugins,
-               '@OUTPUT@',
-               all_plugins_paths]
+               '-o ' + '@OUTPUT@',
+               '-p ' + static_plugins,
+               '-e ' + get_option('gst-full-elements'),
+               '-t ' + get_option('gst-full-typefind-functions'),
+               '-d ' + get_option('gst-full-device-providers'),
+               '-T ' + get_option('gst-full-dynamic-types')
+               ]
   )
 
   gstfull_link_args = cc.get_supported_link_arguments(['-Wl,-Bsymbolic-functions'])

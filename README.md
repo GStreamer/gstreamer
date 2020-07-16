@@ -138,6 +138,33 @@ the gstreamer-full library, allowing the linker to garbage collect unused code
 and so reduce the total library size. A default script `gstreamer-full-default.map`
 declares only glib/gstreamer symbols as public.
 
+One can use the `gst-full-plugins` option to pass a list of plugins to be registered
+in the gstreamer-full library. The default value is '*' which means that all the plugins selected
+during the build process will be registered statically. An empty value will prevent any plugins to
+be registered.
+
+One can select a specific set of features with `gst-full-elements`, `gst-full-typefind-functions`, `gst-full-device-providers` or `gst-full-dynamic-types` to select specific feature from a plugin.
+When a feature has been listed in one of those options, the other features from its plugin will no longer be automatically included, even if the plugin is listed in `gst-full-plugins`.
+
+The user must insure that all selected plugins and features (element, typefind, etc.) have been
+enabled during the build configuration.
+
+To register features, the syntax is the following:
+plugins are separated by ';' and features from a plugin starts after ':' and are ',' separated.
+
+As an example:
+ * `-Dgst-full-plugins=coreelements;playback;typefindfunctions;alsa;pbtypes`: enable only `coreelements`, `playback`, `typefindfunctions`, `alsa`, `pbtypes` plugins.
+ * `-Dgst-full-elements=coreelements:filesrc,fakesink,identity;alsa:alsasrc`: enable only `filesrc`, `identity` and `fakesink` elements from `coreelements` and `alsasrc` element from `alsa` plugin.
+ * `-Dgst-full-typefind-functions=typefindfunctions:wav,flv`: enable only typefind func `wav` and `flv` from `typefindfunctions`
+ * `-Dgst-full-device-providers=alsa:alsadeviceprovider`: enable `alsadeviceprovider` from `alsa`.
+ * `-Dgst-full-dynamic-types=pbtypes:video_multiview_flagset`:  enable `video_multiview_flagset` from `pbtypes
+
+All features from the `playback` plugin will be enabled and the other plugins will be restricted to the specific features requested.
+
+All the selected features will be registered into a dedicated `NULL` plugin name.
+
+This will cause the features/plugins that are not registered to not be included in the final gstreamer-full library.
+
 This is an experimental feature, backward uncompatible changes could still be
 made in the future.
 

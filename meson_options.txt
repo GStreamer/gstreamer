@@ -23,6 +23,16 @@ option('gst-full-libraries', type : 'array', value : [],
   description : '''List of libraries to expose in gstreamer-full's ABI. gstreamer, glib and gobject are always included.''')
 option('gst-full-version-script', type : 'string', value: 'gstreamer-full-default.map',
   description : 'path of the version script to be used by the linker, see https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html')
+option('gst-full-plugins', type : 'string', value : '*',
+  description : '''List of plugins to expose in gstreamer-full's ABI with the syntax plugin1;plugin2. By default '*' will export all plugins enabled by the build process.''')
+option('gst-full-elements', type : 'string', value : '',
+  description : '''List of elements to expose in gstreamer-full's ABI with the syntax plugin1;plugin2:element1,element2. By default '' will export all element of the enabled plugin.''')
+option('gst-full-typefind-functions', type : 'string', value : '',
+  description : '''List of typefind functions to expose in gstreamer-full's ABI with the syntax plugin:func1,func2. By default '' will export all typefind functions of the enabled plugin.''')
+option('gst-full-device-providers', type : 'string', value : '',
+  description : '''List of device providers to expose in gstreamer-full's ABI with the syntax plugin1:dp1;plugin2:dp1:dp2. By default '' will export all device provider of the enabled plugin.''')
+option('gst-full-dynamic-types', type : 'string', value : '',
+  description : '''List of dynamic types to expose in gstreamer-full's ABI with the syntax plugin:dt1,dt2. By default '' will export all device provider of the enabled plugin.''')
 
 # Common options, automatically inherited by subprojects
 option('tests', type : 'feature', value : 'auto', description : 'Build tests')
