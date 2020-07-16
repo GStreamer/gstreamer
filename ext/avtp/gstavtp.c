@@ -134,12 +134,13 @@
  * ### Capabilities
  *
  * The `avtpsink` and `avtpsrc` elements open `AF_PACKET` sockets, which require
- * `CAP_NET_RAW` capability. Therefore, applications must have that capability
- * in order to successfully use this element. For instance, one can use:
+ * `CAP_NET_RAW` capability. Also, `avtpsink` needs `CAP_NET_ADMIN` to use ETF.
+ * Therefore, applications must have those capabilities in order to successfully
+ * use these elements. For instance, one can use:
  *
- *     $ sudo setcap cap_net_raw+ep <application>
+ *     $ sudo setcap cap_net_raw,cap_net_admin+ep <application>
  *
- * Applications can drop this capability after the sockets are open, after
+ * Applications can drop these capabilities after the sockets are open, after
  * `avtpsrc` or `avtpsink` elements transition to PAUSED state. See setcap(8)
  * man page for more information.
  *
@@ -182,25 +183,27 @@
  *
  * ### Running a sample pipeline
  *
- * The following pipelines assume a hypothetical `-k ptp` flag that forces the
- * pipeline clock to be GstPtpClock. A real application would programmatically
- * define GstPtpClock as the pipeline clock (see next section). It is also
- * assumed that `gst-launch-1.0` has CAP_NET_RAW capability.
+ * The following pipelines uses debugutilsbad "clockselect" element to force
+ * the pipeline clock to be GstPtpClock. A real application would
+ * programmatically define GstPtpClock as the pipeline clock (see next section).
+ * It is also assumes that `gst-launch-1.0` has CAP_NET_RAW and CAP_NET_ADMIN
+ * capabilities.
  *
  * On the AVTP talker, the following pipeline can be used to generate an H.264
  * stream to be sent via network using AVTP:
  *
- *     $ gst-launch-1.0 -k ptp videotestsrc is-live=true ! clockoverlay ! \
- *         x264enc ! avtpcvfpay processing-deadline=20000000 ! \
- *         avtpcrfsync ifname=$IFNAME ! avtpsink ifname=$IFNAME
+ *     $ gst-launch-1.0 clockselect. \( clockid=ptp \
+ *         videotestsrc is-live=true ! clockoverlay ! x264enc ! \
+ *         avtpcvfpay processing-deadline=20000000 ! \
+ *         avtpcrfsync ifname=$IFNAME ! avtpsink ifname=$IFNAME \)
  *
  * On the AVTP listener host, the following pipeline can be used to get the
  * AVTP stream, depacketize it and show it on the screen:
  *
- *     $ gst-launch-1.0 -k ptp avtpsrc ifname=$IFNAME ! \
+ *     $ gst-launch-1.0 clockselect. \( clockid=ptp avtpsrc ifname=$IFNAME ! \
  *         avtpcrfcheck ifname=$IFNAME ! avtpcvfdepay ! \
  *         vaapih264dec ! videoconvert ! clockoverlay halignment=right ! \
- *         queue ! autovideosink
+ *         queue ! autovideosink \)
  *
  * ### Pipeline clock
  *
