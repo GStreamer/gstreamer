@@ -1339,26 +1339,16 @@ _hresult_to_string_fallback (HRESULT hr)
 gchar *
 get_hresult_to_string (HRESULT hr)
 {
-  DWORD flags;
-  gchar *ret_text;
-  LPTSTR error_text = NULL;
+  gchar *error_text = NULL;
 
-  flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
-      | FORMAT_MESSAGE_IGNORE_INSERTS;
-  FormatMessage (flags, NULL, hr, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR) & error_text, 0, NULL);
+  error_text = g_win32_error_message ((gint) hr);
+  /* g_win32_error_message() doesn't cover all HERESULT return code,
+   * so it could be empty string, or null if there was an error
+   * in g_utf16_to_utf8() */
+  if (!error_text || strlen (error_text) == 0) {
+    g_free (error_text);
+    error_text = g_strdup (_hresult_to_string_fallback (hr));
+  }
 
-  /* If we couldn't get the error msg, try the fallback switch statement */
-  if (error_text == NULL)
-    return g_strdup (_hresult_to_string_fallback (hr));
-
-#ifdef UNICODE
-  /* If UNICODE is defined, LPTSTR is LPWSTR which is UTF-16 */
-  ret_text = g_utf16_to_utf8 (error_text, 0, NULL, NULL, NULL);
-#else
-  ret_text = g_strdup (error_text);
-#endif
-
-  LocalFree (error_text);
-  return ret_text;
+  return error_text;
 }

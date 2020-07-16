@@ -356,29 +356,6 @@ gst_mf_media_type_release (IMFMediaType * media_type)
     media_type->Release ();
 }
 
-static gchar *
-gst_mf_hr_to_string (HRESULT hr)
-{
-  DWORD flags;
-  gchar *ret_text;
-  LPTSTR error_text = NULL;
-
-  flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
-      | FORMAT_MESSAGE_IGNORE_INSERTS;
-  FormatMessage (flags, NULL, hr, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR) & error_text, 0, NULL);
-
-#ifdef UNICODE
-  ret_text = g_utf16_to_utf8 ((const gunichar2  *) error_text,
-      -1, NULL, NULL, NULL);
-#else
-  ret_text = g_strdup (error_text);
-#endif
-
-  LocalFree (error_text);
-  return ret_text;
-}
-
 gboolean
 _gst_mf_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
     const gchar * function, gint line)
@@ -389,9 +366,13 @@ _gst_mf_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
   if (FAILED (hr)) {
     gchar *error_text = NULL;
 
-    error_text = gst_mf_hr_to_string (hr);
+    error_text = g_win32_error_message ((gint) hr);
+    /* g_win32_error_message() doesn't cover all HERESULT return code,
+     * so it could be empty string, or null if there was an error
+     * in g_utf16_to_utf8() */
     gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
-        NULL, "MediaFoundation call failed: 0x%x, %s", (guint) hr, error_text);
+        NULL, "MediaFoundation call failed: 0x%x, %s", (guint) hr,
+        GST_STR_NULL (error_text));
     g_free (error_text);
 
     ret = FALSE;

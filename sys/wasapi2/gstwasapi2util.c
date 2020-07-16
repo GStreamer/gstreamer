@@ -157,33 +157,6 @@ hresult_to_string_fallback (HRESULT hr)
   return s;
 }
 
-static gchar *
-gst_wasapi2_util_hresult_to_string (HRESULT hr)
-{
-  DWORD flags;
-  gchar *ret_text;
-  LPTSTR error_text = NULL;
-
-  flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
-      | FORMAT_MESSAGE_IGNORE_INSERTS;
-  FormatMessage (flags, NULL, hr, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR) & error_text, 0, NULL);
-
-  /* If we couldn't get the error msg, try the fallback switch statement */
-  if (error_text == NULL)
-    return g_strdup (hresult_to_string_fallback (hr));
-
-#ifdef UNICODE
-  /* If UNICODE is defined, LPTSTR is LPWSTR which is UTF-16 */
-  ret_text = g_utf16_to_utf8 (error_text, 0, NULL, NULL, NULL);
-#else
-  ret_text = g_strdup (error_text);
-#endif
-
-  LocalFree (error_text);
-  return ret_text;
-}
-
 gboolean
 _gst_wasapi2_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
     const gchar * function, gint line)
@@ -193,11 +166,23 @@ _gst_wasapi2_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
 
   if (FAILED (hr)) {
     gchar *error_text = NULL;
+    gboolean free_string = TRUE;
 
-    error_text = gst_wasapi2_util_hresult_to_string (hr);
+    error_text = g_win32_error_message ((gint) hr);
+    /* g_win32_error_message() seems to be returning empty string for
+     * AUDCLNT_* cases */
+    if (!error_text || strlen (error_text) == 0) {
+      g_free (error_text);
+      error_text = (gchar *) hresult_to_string_fallback (hr);
+
+      free_string = FALSE;
+    }
+
     gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
         NULL, "WASAPI call failed: 0x%x, %s", (guint) hr, error_text);
-    g_free (error_text);
+
+    if (free_string)
+      g_free (error_text);
 
     ret = FALSE;
   }

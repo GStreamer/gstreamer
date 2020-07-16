@@ -386,29 +386,6 @@ gst_d3d11_get_device_vendor (GstD3D11Device * device)
   return vendor;
 }
 
-static gchar *
-gst_d3d11_hres_to_string (HRESULT hr)
-{
-  DWORD flags;
-  gchar *ret_text;
-  LPTSTR error_text = NULL;
-
-  flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
-      | FORMAT_MESSAGE_IGNORE_INSERTS;
-  FormatMessage (flags, NULL, hr, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR) & error_text, 0, NULL);
-
-#ifdef UNICODE
-  /* If UNICODE is defined, LPTSTR is LPWSTR which is UTF-16 */
-  ret_text = g_utf16_to_utf8 (error_text, 0, NULL, NULL, NULL);
-#else
-  ret_text = g_strdup (error_text);
-#endif
-
-  LocalFree (error_text);
-  return ret_text;
-}
-
 gboolean
 _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line)
@@ -419,9 +396,13 @@ _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
   if (FAILED (hr)) {
     gchar *error_text = NULL;
 
-    error_text = gst_d3d11_hres_to_string (hr);
+    error_text = g_win32_error_message ((guint) hr);
+    /* g_win32_error_message() doesn't cover all HERESULT return code,
+     * so it could be empty string, or null if there was an error
+     * in g_utf16_to_utf8() */
     gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
-        NULL, "D3D11 call failed: 0x%x, %s", (guint) hr, error_text);
+        NULL, "D3D11 call failed: 0x%x, %s", (guint) hr,
+        GST_STR_NULL (error_text));
     g_free (error_text);
 
     ret = FALSE;
