@@ -1209,6 +1209,43 @@ gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
   return ret;
 }
 
+#ifdef G_OS_WIN32
+static void
+_gst_debug_fprintf (FILE * file, const gchar * format, ...)
+{
+  va_list args;
+  gchar *str = NULL;
+  gint length;
+
+  va_start (args, format);
+  length = gst_info_vasprintf (&str, format, args);
+  va_end (args);
+
+  if (length == 0 || !str)
+    return;
+
+  /* Even if it's valid UTF-8 string, console might print broken string
+   * depending on codepage and the content of the given string.
+   * Fortunately, g_print* family will take care of the Windows' codepage
+   * specific behavior.
+   */
+  if (file == stderr) {
+    g_printerr ("%s", str);
+  } else if (file == stdout) {
+    g_print ("%s", str);
+  } else {
+    /* We are writing to file. Text editors/viewers should be able to
+     * decode valid UTF-8 string regardless of codepage setting */
+    fwrite (str, 1, length, file);
+
+    /* FIXME: fflush here might be redundant if setvbuf works as expected */
+    fflush (file);
+  }
+
+  g_free (str);
+}
+#endif
+
 /**
  * gst_debug_log_default:
  * @category: category to log
@@ -1242,6 +1279,16 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   GstDebugColorMode color_mode;
   const gchar *message_str;
   FILE *log_file = user_data ? user_data : stderr;
+#ifdef G_OS_WIN32
+#define FPRINTF_DEBUG _gst_debug_fprintf
+/* _gst_debug_fprintf will do fflush if it's required */
+#define FFLUSH_DEBUG(f) ((void)(f))
+#else
+#define FPRINTF_DEBUG fprintf
+#define FFLUSH_DEBUG(f) G_STMT_START { \
+    fflush (f); \
+  } G_STMT_END
+#endif
 
   _gst_debug_log_preamble (message, object, &file, &message_str, &obj,
       &elapsed);
@@ -1267,12 +1314,12 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       levelcolor = levelcolormap[level];
 
 #define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
-      fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
-          pidcolor, pid, clear, g_thread_self (), levelcolor,
-          gst_debug_level_get_name (level), clear, color,
+      FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT,
+          GST_TIME_ARGS (elapsed), pidcolor, pid, clear, g_thread_self (),
+          levelcolor, gst_debug_level_get_name (level), clear, color,
           gst_debug_category_get_name (category), file, line, function, obj,
           clear, message_str);
-      fflush (log_file);
+      FFLUSH_DEBUG (log_file);
 #undef PRINT_FMT
       g_free (color);
 #ifdef G_OS_WIN32
@@ -1284,40 +1331,36 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c)); \
   } G_STMT_END
       /* timestamp */
-      fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
-      fflush (log_file);
+      FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT " ",
+          GST_TIME_ARGS (elapsed));
       /* pid */
       SET_COLOR (available_colors[pid % G_N_ELEMENTS (available_colors)]);
-      fprintf (log_file, PID_FMT, pid);
-      fflush (log_file);
+      FPRINTF_DEBUG (log_file, PID_FMT, pid);
       /* thread */
       SET_COLOR (clear);
-      fprintf (log_file, " " PTR_FMT " ", g_thread_self ());
-      fflush (log_file);
+      FPRINTF_DEBUG (log_file, " " PTR_FMT " ", g_thread_self ());
       /* level */
       SET_COLOR (levelcolormap_w32[level]);
-      fprintf (log_file, "%s ", gst_debug_level_get_name (level));
-      fflush (log_file);
+      FPRINTF_DEBUG (log_file, "%s ", gst_debug_level_get_name (level));
       /* category */
       SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
               (category)));
-      fprintf (log_file, CAT_FMT, gst_debug_category_get_name (category),
+      FPRINTF_DEBUG (log_file, CAT_FMT, gst_debug_category_get_name (category),
           file, line, function, obj);
-      fflush (log_file);
       /* message */
       SET_COLOR (clear);
-      fprintf (log_file, " %s\n", message_str);
-      fflush (log_file);
+      FPRINTF_DEBUG (log_file, " %s\n", message_str);
     }
     G_UNLOCK (win_print_mutex);
 #endif
   } else {
     /* no color, all platforms */
-    fprintf (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT, GST_TIME_ARGS
-        (elapsed), pid, g_thread_self (), gst_debug_level_get_name (level),
+    FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
+        GST_TIME_ARGS (elapsed), pid, g_thread_self (),
+        gst_debug_level_get_name (level),
         gst_debug_category_get_name (category), file, line, function, obj,
         message_str);
-    fflush (log_file);
+    FFLUSH_DEBUG (log_file);
   }
 
   if (object != NULL)
