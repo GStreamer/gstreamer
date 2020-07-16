@@ -1540,7 +1540,7 @@ GST_END_TEST;
 GST_START_TEST (test_nopts_in_middle)
 {
   GstElement *videorate;
-  GstBuffer *first, *second, *third;
+  GstBuffer *first, *second;
   GstCaps *caps;
 
   videorate =
@@ -1576,33 +1576,10 @@ GST_START_TEST (test_nopts_in_middle)
   gst_buffer_ref (second);
 
   /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
-  /* ... and the first one should have been pushed out */
+  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_ERROR);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless_equals_int (g_list_length (buffers), 0);
 
-  /* ... and the first one was replaced */
-  assert_videorate_stats (videorate, "second", 2, 1, 0, 0);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
-
-  /* third buffer */
-  third = gst_buffer_new_and_alloc (4);
-  GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND;
-  gst_buffer_memset (third, 0, 0, 4);
-  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  gst_buffer_ref (third);
-
-  /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
-  /* ... and a copy is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-
-  /* and now it should have pushed out the second one */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
-  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  assert_videorate_stats (videorate, "third", 3, 2, 0, 0);
 
   /* cleanup */
   gst_buffer_unref (first);

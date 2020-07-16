@@ -1469,6 +1469,14 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
   if (videorate->to_rate_numerator == 0 && videorate->prevbuf &&
       !videorate->force_variable_rate) {
+    if (!GST_BUFFER_PTS_IS_VALID (buffer) ||
+        !GST_BUFFER_PTS_IS_VALID (videorate->prevbuf)) {
+      GST_ELEMENT_ERROR (videorate, STREAM, FAILED, (NULL),
+          ("videorate requires a non-variable framerate on the output caps or the"
+              " two first consecutive buffers to have valid timestamps to guess the"
+              " framerate."));
+      return GST_FLOW_ERROR;
+    }
     gst_video_rate_check_variable_rate (videorate, buffer);
   }
 
