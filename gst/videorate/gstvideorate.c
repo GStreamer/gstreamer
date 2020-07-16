@@ -705,13 +705,15 @@ gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
           videorate->to_rate_denominator * GST_SECOND,
           videorate->to_rate_numerator);
       GST_BUFFER_DURATION (outbuf) = videorate->next_ts - push_ts;
-    } else if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (outbuf))) {
-      videorate->next_ts =
-          GST_BUFFER_PTS (outbuf) + GST_BUFFER_DURATION (outbuf);
     } else {
       /* There must always be a valid duration on prevbuf if rate > 0,
        * it is ensured in the transform_ip function */
-      GST_FIXME_OBJECT (videorate, "No buffer duration known");
+      g_assert (GST_BUFFER_PTS_IS_VALID (outbuf));
+      g_assert (GST_BUFFER_DURATION_IS_VALID (outbuf));
+      g_assert (GST_BUFFER_DURATION (outbuf) != 0);
+
+      videorate->next_ts
+          = GST_BUFFER_PTS (outbuf) + GST_BUFFER_DURATION (outbuf);
     }
   }
 
