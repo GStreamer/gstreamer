@@ -1184,6 +1184,7 @@ static gboolean
 gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
 {
   GstCaps *caps, *allowed_sinkpad_caps;
+  GstPad *const sinkpad = GST_VIDEO_DECODER_SINK_PAD (decode);
   GArray *profiles;
   GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
   guint i;
@@ -1301,7 +1302,13 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
           add_h264_profile_in_caps (allowed_sinkpad_caps, "scalable-high");
     }
   }
-  decode->allowed_sinkpad_caps = gst_caps_simplify (allowed_sinkpad_caps);
+
+  caps = gst_pad_get_pad_template_caps (sinkpad);
+  decode->allowed_sinkpad_caps =
+      gst_caps_intersect (allowed_sinkpad_caps, caps);
+  gst_caps_unref (caps);
+  decode->allowed_sinkpad_caps =
+      gst_caps_simplify (decode->allowed_sinkpad_caps);
   GST_DEBUG_OBJECT (decode, "allowed sink caps %" GST_PTR_FORMAT,
       decode->allowed_sinkpad_caps);
 
