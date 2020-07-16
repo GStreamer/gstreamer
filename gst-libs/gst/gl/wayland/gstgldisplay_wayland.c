@@ -49,16 +49,12 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstGLDisplayWayland, gst_gl_display_wayland,
 
 static void gst_gl_display_wayland_finalize (GObject * object);
 static guintptr gst_gl_display_wayland_get_handle (GstGLDisplay * display);
-static gboolean gst_gl_display_wayland_get_foreign_display (GstGLDisplay *
-    display);
 
 static void
 gst_gl_display_wayland_class_init (GstGLDisplayWaylandClass * klass)
 {
   GST_GL_DISPLAY_CLASS (klass)->get_handle =
       GST_DEBUG_FUNCPTR (gst_gl_display_wayland_get_handle);
-  GST_GL_DISPLAY_CLASS (klass)->get_foreign_display =
-      GST_DEBUG_FUNCPTR (gst_gl_display_wayland_get_foreign_display);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_wayland_finalize;
 }
@@ -153,10 +149,4 @@ static guintptr
 gst_gl_display_wayland_get_handle (GstGLDisplay * display)
 {
   return (guintptr) GST_GL_DISPLAY_WAYLAND (display)->display;
-}
-
-static gboolean
-gst_gl_display_wayland_get_foreign_display (GstGLDisplay * display)
-{
-  return GST_GL_DISPLAY_WAYLAND (display)->foreign_display;
 }

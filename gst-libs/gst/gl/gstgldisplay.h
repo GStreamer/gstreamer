@@ -97,10 +97,9 @@ struct _GstGLDisplayClass
 
   guintptr          (*get_handle)           (GstGLDisplay * display);
   GstGLWindow *     (*create_window)        (GstGLDisplay * display);
-  gboolean          (*get_foreign_display)  (GstGLDisplay * display);
 
   /*< private >*/
-  gpointer _padding[GST_PADDING-1];
+  gpointer _padding[GST_PADDING];
 };
 
 GST_GL_API
@@ -113,8 +112,6 @@ GST_GL_API
 guintptr         gst_gl_display_get_handle             (GstGLDisplay * display);
 GST_GL_API
 GstGLDisplayType gst_gl_display_get_handle_type        (GstGLDisplay * display);
-GST_GL_API
-gboolean         gst_gl_display_get_foreign_display    (GstGLDisplay * display);
 GST_GL_API
 void             gst_gl_display_filter_gl_api          (GstGLDisplay * display,
                                                         GstGLAPI gl_api);

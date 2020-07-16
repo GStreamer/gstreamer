@@ -44,7 +44,6 @@ G_DEFINE_TYPE (GstGLDisplayX11, gst_gl_display_x11, GST_TYPE_GL_DISPLAY);
 
 static void gst_gl_display_x11_finalize (GObject * object);
 static guintptr gst_gl_display_x11_get_handle (GstGLDisplay * display);
-static gboolean gst_gl_display_x11_get_foreign_display (GstGLDisplay * display);
 
 G_GNUC_INTERNAL
     gboolean gst_gl_display_x11_handle_event (GstGLDisplayX11 * display_x11);
@@ -57,8 +56,6 @@ gst_gl_display_x11_class_init (GstGLDisplayX11Class * klass)
 {
   GST_GL_DISPLAY_CLASS (klass)->get_handle =
       GST_DEBUG_FUNCPTR (gst_gl_display_x11_get_handle);
-  GST_GL_DISPLAY_CLASS (klass)->get_foreign_display =
-      GST_DEBUG_FUNCPTR (gst_gl_display_x11_get_foreign_display);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_x11_finalize;
 }
@@ -169,12 +166,6 @@ static guintptr
 gst_gl_display_x11_get_handle (GstGLDisplay * display)
 {
   return (guintptr) GST_GL_DISPLAY_X11 (display)->display;
-}
-
-static gboolean
-gst_gl_display_x11_get_foreign_display (GstGLDisplay * display)
-{
-  return GST_GL_DISPLAY_X11 (display)->foreign_display;
 }
 
 static int

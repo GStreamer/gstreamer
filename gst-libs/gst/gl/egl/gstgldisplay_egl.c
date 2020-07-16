@@ -70,7 +70,6 @@ G_DEFINE_TYPE (GstGLDisplayEGL, gst_gl_display_egl, GST_TYPE_GL_DISPLAY);
 
 static void gst_gl_display_egl_finalize (GObject * object);
 static guintptr gst_gl_display_egl_get_handle (GstGLDisplay * display);
-static gboolean gst_gl_display_egl_get_foreign_display (GstGLDisplay * display);
 
 static void
 init_debug (void)
@@ -89,8 +88,6 @@ gst_gl_display_egl_class_init (GstGLDisplayEGLClass * klass)
 {
   GST_GL_DISPLAY_CLASS (klass)->get_handle =
       GST_DEBUG_FUNCPTR (gst_gl_display_egl_get_handle);
-  GST_GL_DISPLAY_CLASS (klass)->get_foreign_display =
-      GST_DEBUG_FUNCPTR (gst_gl_display_egl_get_foreign_display);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_egl_finalize;
 }
@@ -327,7 +324,6 @@ gst_gl_display_egl_from_gl_display (GstGLDisplay * display)
   GstGLDisplayEGL *ret;
   GstGLDisplayType display_type;
   guintptr native_display;
-  gboolean foreign_display;
 
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
@@ -353,7 +349,6 @@ gst_gl_display_egl_from_gl_display (GstGLDisplay * display)
 
   display_type = gst_gl_display_get_handle_type (display);
   native_display = gst_gl_display_get_handle (display);
-  foreign_display = gst_gl_display_get_foreign_display (display);
 
   g_return_val_if_fail (native_display != 0, NULL);
   g_return_val_if_fail (display_type != GST_GL_DISPLAY_TYPE_NONE, NULL);
@@ -363,14 +358,12 @@ gst_gl_display_egl_from_gl_display (GstGLDisplay * display)
 
   ret->display =
       gst_gl_display_egl_get_from_native (display_type, native_display);
-  ret->foreign_display = foreign_display;
 
   if (!ret->display) {
     GST_WARNING_OBJECT (ret, "failed to get EGLDisplay from native display");
     gst_object_unref (ret);
     return NULL;
   }
-
   g_object_set_data_full (G_OBJECT (display), GST_GL_DISPLAY_EGL_NAME,
       gst_object_ref (ret), (GDestroyNotify) gst_object_unref);
 
@@ -381,10 +374,4 @@ static guintptr
 gst_gl_display_egl_get_handle (GstGLDisplay * display)
 {
   return (guintptr) GST_GL_DISPLAY_EGL (display)->display;
-}
-
-static gboolean
-gst_gl_display_egl_get_foreign_display (GstGLDisplay * display)
-{
-  return GST_GL_DISPLAY_EGL (display)->foreign_display;
 }
