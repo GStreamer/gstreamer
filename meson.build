@@ -337,6 +337,9 @@ foreach custom_subproj: get_option('custom_subprojects').split(',')
 endforeach
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
+
+subdir('tests')
+
 setenv = find_program('gst-env.py')
 
 devenv_cmd = [setenv, '--builddir=@0@'.format(meson.build_root()),
