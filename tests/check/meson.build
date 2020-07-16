@@ -11,7 +11,7 @@ base_tests = [
   [ 'libs/baseaudiovisualizer.c' ],
   [ 'libs/discoverer.c' ],
   [ 'libs/fft.c' ],
-  [ 'libs/libsabi.c' ],
+  [ 'libs/libsabi.c', false, [ gstgl_dep ] ],
   [ 'libs/mikey.c' ],
   [ 'libs/navigation.c' ],
   [ 'libs/pbutils.c' ],
@@ -126,6 +126,10 @@ test_defines = [
 valgrind_dep = dependency('valgrind', required: false)
 if valgrind_dep.found()
   test_defines += ['-DHAVE_VALGRIND']
+endif
+
+if build_gstgl
+  test_defines += ['-DTEST_GST_GL_ABI_CHECK']
 endif
 
 test_deps = [gst_dep, gst_base_dep, gst_net_dep, gst_check_dep, audio_dep,
