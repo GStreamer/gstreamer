@@ -22,11 +22,13 @@ endif
 
 tracers_args = gst_c_args + ['-DGST_USE_UNSTABLE_API']
 
+thread_dep = dependency('threads', required : false)
+
 gst_tracers = library('gstcoretracers',
   gst_tracers_sources,
   c_args : tracers_args,
   include_directories : [configinc],
-  dependencies : [gst_dep],
+  dependencies : [gst_dep, thread_dep],
   install : true,
   install_dir : plugins_install_dir,
 )
