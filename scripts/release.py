@@ -134,8 +134,21 @@ if __name__ == "__main__":
         sys.exit(1)
 
     print("Generating %s" % os.path.realpath(os.path.join(os.path.curdir, outname)), file=sys.stderr)
+
+    # Filter out duplicate js search assets for devhelp dir
+    def exclude_filter(tarinfo):
+        if '/devhelp/books/GStreamer/' in tarinfo.name:
+            if '/assets/fonts' in tarinfo.name:
+                return None
+            if '/assets/js/search' in tarinfo.name:
+                return None
+            if '/dumped.trie' in tarinfo.name:
+                return None
+
+        return tarinfo
+
     tar = tarfile.open(outname, 'w:xz')
-    tar.add(files, release_name)
+    tar.add(files, release_name, filter=exclude_filter)
     os.chdir(os.path.dirname(readme))
     tar.add(os.path.basename(readme), os.path.join(release_name, os.path.basename(readme)))
     tar.close()
