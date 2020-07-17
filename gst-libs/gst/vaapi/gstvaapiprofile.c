@@ -132,6 +132,8 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-h265", "main-12"},
   {GST_VAAPI_PROFILE_H265_MAIN_444_12, VAProfileHEVCMain444_12,
       "video/x-h265", "main-444-12"},
+  {GST_VAAPI_PROFILE_H265_MAIN_422_12, VAProfileHEVCMain422_12,
+      "video/x-h265", "main-422-12"},
   {GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN, VAProfileHEVCSccMain,
       "video/x-h265", "screen-extended-main"},
   {GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_10, VAProfileHEVCSccMain10,

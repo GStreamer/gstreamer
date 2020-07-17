@@ -171,6 +171,11 @@ gst_vaapi_utils_h265_get_profile (GstH265SPS * sps)
     case GST_H265_PROFILE_MAIN_422_10_INTRA:
       vaapi_profile = GST_VAAPI_PROFILE_H265_MAIN_422_10;
       break;
+    case GST_H265_PROFILE_MAIN_422_12:
+      /* Main 422_12 Intra, recognize it as MAIN_422_12 */
+    case GST_H265_PROFILE_MAIN_422_12_INTRA:
+      vaapi_profile = GST_VAAPI_PROFILE_H265_MAIN_422_12;
+      break;
     case GST_H265_PROFILE_MAIN_444:
       /* Main 444 Intra, recognize it as MAIN_444 */
     case GST_H265_PROFILE_MAIN_444_INTRA:
@@ -374,6 +379,8 @@ gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
       else if (depth > 8 && depth <= 10)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
+      else if (depth > 10 && depth <= 12)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_12BPP;
       break;
     case 3:
       if (depth == 8)
@@ -410,6 +417,7 @@ gst_vaapi_utils_h265_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV422:
     case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
+    case GST_VAAPI_CHROMA_TYPE_YUV422_12BPP:
       chroma_format_idc = 2;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV444:
