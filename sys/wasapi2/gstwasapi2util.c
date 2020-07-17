@@ -26,8 +26,8 @@
 #include "gstwasapi2util.h"
 #include <audioclient.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_wasapi_debug);
-#define GST_CAT_DEFAULT gst_wasapi_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
+#define GST_CAT_DEFAULT gst_wasapi2_debug
 
 /* *INDENT-OFF* */
 static struct
