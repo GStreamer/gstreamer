@@ -338,7 +338,7 @@ clamp_rectangle (gint x, gint y, gint w, gint h, gint outer_width,
 /* Call this with the lock taken */
 static gboolean
 _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
-    const GstVideoRectangle rect, gboolean rect_transparent)
+    const GstVideoRectangle rect)
 {
   GstVideoRectangle pad_rect;
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
@@ -347,13 +347,11 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
   if (!gst_video_aggregator_pad_has_current_buffer (pad))
     return FALSE;
 
-  /* Can't obscure if it's transparent and if the format has an alpha
-   * component we'd have to inspect every pixel to know if the frame is
-   * opaque, so assume it doesn't obscure unless it uses the SOURCE operator.
-   * As a bonus, if the rectangle is fully transparent, we can also obscure it
-   * if we have alpha components on the pad */
-  if (cpad->op != COMPOSITOR_OPERATOR_SOURCE && !rect_transparent &&
-      (cpad->alpha != 1.0 || GST_VIDEO_INFO_HAS_ALPHA (&pad->info)))
+  /* Can't obscure if we introduce alpha or if the format has an alpha
+   * component as we'd have to inspect every pixel to know if the frame is
+   * opaque, so assume it doesn't obscure
+   */
+  if (cpad->alpha != 1.0 || GST_VIDEO_INFO_HAS_ALPHA (&pad->info))
     return FALSE;
 
   pad_rect.x = cpad->xpos;
@@ -420,7 +418,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    * higher-zorder frames */
   l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad)->next;
   for (; l; l = l->next) {
-    if (_pad_obscures_rectangle (vagg, l->data, frame_rect, FALSE)) {
+    if (_pad_obscures_rectangle (vagg, l->data, frame_rect)) {
       frame_obscured = TRUE;
       break;
     }
@@ -848,7 +846,7 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
 }
 
 static gboolean
-_should_draw_background (GstVideoAggregator * vagg, gboolean bg_transparent)
+_should_draw_background (GstVideoAggregator * vagg)
 {
   GstVideoRectangle bg_rect;
   gboolean draw = TRUE;
@@ -862,7 +860,7 @@ _should_draw_background (GstVideoAggregator * vagg, gboolean bg_transparent)
   /* Check if the background is completely obscured by a pad
    * TODO: Also skip if it's obscured by a combination of pads */
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
-    if (_pad_obscures_rectangle (vagg, l->data, bg_rect, bg_transparent)) {
+    if (_pad_obscures_rectangle (vagg, l->data, bg_rect)) {
       draw = FALSE;
       break;
     }
@@ -882,8 +880,7 @@ _draw_background (GstVideoAggregator * vagg, GstVideoFrame * outframe,
    * don't bother drawing the background at all. We can also always use the
    * 'blend' BlendFunction in that case because it only changes if we have to
    * overlay on top of a transparent background. */
-  if (!_should_draw_background (vagg,
-          comp->background == COMPOSITOR_BACKGROUND_TRANSPARENT))
+  if (!_should_draw_background (vagg))
     return FALSE;
 
   switch (comp->background) {
