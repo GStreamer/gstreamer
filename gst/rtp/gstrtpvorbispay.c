@@ -270,14 +270,18 @@ static void
 gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
     GstClockTime timestamp)
 {
+  guint len;
+
   GST_LOG_OBJECT (rtpvorbispay, "starting new packet, VDT: %d", VDT);
 
   gst_rtp_vorbis_pay_clear_packet (rtpvorbispay);
 
   /* new packet allocate max packet size */
-  rtpvorbispay->packet =
-      gst_rtp_buffer_new_allocate_len (GST_RTP_BASE_PAYLOAD_MTU
+  len = gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU
       (rtpvorbispay), 0, 0);
+  rtpvorbispay->packet =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtpvorbispay), len, 0, 0);
   gst_rtp_vorbis_pay_reset_packet (rtpvorbispay, VDT);
 
   GST_BUFFER_PTS (rtpvorbispay->packet) = timestamp;

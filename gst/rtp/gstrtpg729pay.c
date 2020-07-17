@@ -167,7 +167,9 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay, GstBuffer * buf)
       payload_len, GST_TIME_ARGS (rtpg729pay->next_ts));
 
   /* create buffer to hold the payload */
-  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtpg729pay), 0, 0, 0);
 
   gst_rtp_buffer_map (outbuf, GST_MAP_READWRITE, &rtp);
 

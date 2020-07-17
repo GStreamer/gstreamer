@@ -408,7 +408,8 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
         packet_len, payload_len);
 
     /* create buffer to hold the payload. */
-    outbuf = gst_rtp_buffer_new_allocate (header_len, 0, 0);
+    outbuf = gst_rtp_base_payload_allocate_output_buffer (basepayload,
+        header_len, 0, 0);
 
     /* copy payload */
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);

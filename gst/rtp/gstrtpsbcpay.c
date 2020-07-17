@@ -198,7 +198,9 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
     if (payload_length == 0)    /* Nothing to send */
       return GST_FLOW_OK;
 
-    outbuf = gst_rtp_buffer_new_allocate (RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
+    outbuf =
+        gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+        (sbcpay), RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
 
     /* get payload */
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);

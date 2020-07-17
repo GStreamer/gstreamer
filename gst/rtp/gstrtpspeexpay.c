@@ -279,8 +279,8 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
   duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one SPEEX frame per RTP packet for now */
+  outbuf = gst_rtp_base_payload_allocate_output_buffer (basepayload, 0, 0, 0);
 
-  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
   /* FIXME, assert for now */
   g_assert (gst_buffer_get_size (buffer) <=
       GST_RTP_BASE_PAYLOAD_MTU (rtpspeexpay));

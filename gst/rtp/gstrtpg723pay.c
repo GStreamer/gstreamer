@@ -144,8 +144,9 @@ gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
 
   avail = gst_adapter_available (pay->adapter);
 
-  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
-
+  outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD (pay),
+      0, 0, 0);
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
   GST_BUFFER_PTS (outbuf) = pay->timestamp;

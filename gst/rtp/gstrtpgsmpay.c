@@ -145,7 +145,7 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
   if (payload_len > GST_RTP_BASE_PAYLOAD_MTU (rtpgsmpay))
     goto too_big;
 
-  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  outbuf = gst_rtp_base_payload_allocate_output_buffer (basepayload, 0, 0, 0);
 
   /* copy timestamp and duration */
   GST_BUFFER_PTS (outbuf) = timestamp;

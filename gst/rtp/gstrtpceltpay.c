@@ -332,7 +332,9 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
       payload_len, GST_TIME_ARGS (rtpceltpay->qduration));
 
   /* get a big enough packet for the sizes + payloads */
-  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+  outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtpceltpay), payload_len, 0, 0);
 
   GST_BUFFER_DURATION (outbuf) = duration;
 

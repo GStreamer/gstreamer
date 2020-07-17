@@ -312,7 +312,9 @@ gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
     goto too_big;
 
   /* now alloc output buffer */
-  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+  outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (basepayload, payload_len, 0,
+      0);
 
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 

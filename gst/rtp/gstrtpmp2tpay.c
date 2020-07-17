@@ -152,7 +152,9 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
       break;
 
     /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+    outbuf =
+        gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+        (rtpmp2tpay), 0, 0, 0);
 
     /* get payload */
     paybuf = gst_adapter_take_buffer_fast (rtpmp2tpay->adapter, payload_len);
