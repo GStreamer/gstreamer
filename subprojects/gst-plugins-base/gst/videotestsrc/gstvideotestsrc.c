@@ -521,6 +521,59 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   return caps;
 }
 
+static gboolean
+gst_video_test_src_is_static_pattern (GstVideoTestSrc * videotestsrc)
+{
+  switch (videotestsrc->pattern_type) {
+    case GST_VIDEO_TEST_SRC_SMPTE:
+    case GST_VIDEO_TEST_SRC_SNOW:
+    case GST_VIDEO_TEST_SRC_BLINK:
+    case GST_VIDEO_TEST_SRC_BALL:
+      return FALSE;
+
+    case GST_VIDEO_TEST_SRC_ZONE_PLATE:
+    case GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE:
+      if (videotestsrc->kxt != 0 || videotestsrc->kyt != 0 ||
+          videotestsrc->kt != 0 || videotestsrc->kt2 != 0) {
+        return FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  switch (videotestsrc->pattern_type) {
+      /* Any pattern that's not a solid color is non-static
+       * with horizontal motion */
+    case GST_VIDEO_TEST_SRC_SMPTE:
+    case GST_VIDEO_TEST_SRC_SNOW:
+    case GST_VIDEO_TEST_SRC_CHECKERS1:
+    case GST_VIDEO_TEST_SRC_CHECKERS2:
+    case GST_VIDEO_TEST_SRC_CHECKERS4:
+    case GST_VIDEO_TEST_SRC_CHECKERS8:
+    case GST_VIDEO_TEST_SRC_CIRCULAR:
+    case GST_VIDEO_TEST_SRC_BLINK:
+    case GST_VIDEO_TEST_SRC_SMPTE75:
+    case GST_VIDEO_TEST_SRC_ZONE_PLATE:
+    case GST_VIDEO_TEST_SRC_GAMUT:
+    case GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE:
+    case GST_VIDEO_TEST_SRC_BALL:
+    case GST_VIDEO_TEST_SRC_SMPTE100:
+    case GST_VIDEO_TEST_SRC_BAR:
+    case GST_VIDEO_TEST_SRC_PINWHEEL:
+    case GST_VIDEO_TEST_SRC_SPOKES:
+    case GST_VIDEO_TEST_SRC_GRADIENT:
+    case GST_VIDEO_TEST_SRC_COLORS:
+      if (videotestsrc->horizontal_speed)
+        return FALSE;
+      break;
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     int pattern_type)
@@ -618,6 +671,7 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (object);
+  gboolean invalidate = TRUE;
 
   switch (prop_id) {
     case PROP_PATTERN:
@@ -625,9 +679,11 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TIMESTAMP_OFFSET:
       src->timestamp_offset = g_value_get_int64 (value);
+      invalidate = FALSE;
       break;
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
+      invalidate = FALSE;
       break;
     case PROP_K0:
       src->k0 = g_value_get_int (value);
@@ -685,6 +741,12 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
       break;
     default:
       break;
+  }
+
+  if (invalidate) {
+    /* Property change invalidated the current pattern - check if it's static now or not */
+    src->have_static_pattern = gst_video_test_src_is_static_pattern (src);
+    gst_clear_buffer (&src->cached);
   }
 }
 
@@ -964,6 +1026,8 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   videotestsrc->running_time = 0;
   videotestsrc->n_frames = 0;
 
+  gst_clear_buffer (&videotestsrc->cached);
+
   GST_OBJECT_UNLOCK (videotestsrc);
 
   return TRUE;
@@ -1132,10 +1196,9 @@ gst_video_test_src_is_seekable (GstBaseSrc * psrc)
 }
 
 static GstFlowReturn
-gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
+fill_image (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstVideoTestSrc *src;
-  GstClockTime next_time;
   GstVideoFrame frame;
   gconstpointer pal;
   gsize palsize;
@@ -1155,17 +1218,8 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     goto eos;
   }
 
-  GST_LOG_OBJECT (src,
-      "creating buffer from pool for frame %" G_GINT64_FORMAT, src->n_frames);
-
   if (!gst_video_frame_map (&frame, &src->info, buffer, GST_MAP_WRITE))
     goto invalid_frame;
-
-  GST_BUFFER_PTS (buffer) =
-      src->accum_rtime + src->timestamp_offset + src->running_time;
-  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
-
-  gst_object_sync_values (GST_OBJECT (psrc), GST_BUFFER_PTS (buffer));
 
   src->make_image (src, GST_BUFFER_PTS (buffer), &frame);
 
@@ -1175,6 +1229,69 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   }
 
   gst_video_frame_unmap (&frame);
+  return GST_FLOW_OK;
+
+not_negotiated:
+  {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->n_frames);
+    return GST_FLOW_EOS;
+  }
+invalid_frame:
+  {
+    GST_DEBUG_OBJECT (src, "invalid frame");
+    return GST_FLOW_OK;
+  }
+}
+
+static GstFlowReturn
+gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
+{
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (psrc);
+  GstClockTime next_time;
+  GstFlowReturn ret;
+
+  GstClockTime pts =
+      src->accum_rtime + src->timestamp_offset + src->running_time;
+
+  gst_object_sync_values (GST_OBJECT (src), pts);
+
+  if (src->have_static_pattern) {
+    GstVideoFrame sframe, dframe;
+
+    if (src->cached == NULL) {
+      src->cached = gst_buffer_new_allocate (NULL, src->info.size, NULL);
+
+      ret = fill_image (GST_PUSH_SRC (src), src->cached);
+      if (G_UNLIKELY (ret != GST_FLOW_OK))
+        goto fill_failed;
+    } else {
+      GST_LOG_OBJECT (src, "Reusing cached pattern buffer");
+    }
+
+    /* Do a memory copy instead of just passing a reference to this buffer to
+     * be consistent with other sources. This should make things clear for
+     * cases where downstream cannot queue the same buffer twice (such as v4l2)
+     */
+    gst_video_frame_map (&sframe, &src->info, src->cached, GST_MAP_READ);
+    gst_video_frame_map (&dframe, &src->info, buffer, GST_MAP_WRITE);
+
+    if (!gst_video_frame_copy (&dframe, &sframe))
+      goto copy_failed;
+
+    gst_video_frame_unmap (&sframe);
+    gst_video_frame_unmap (&dframe);
+  } else {
+    ret = fill_image (GST_PUSH_SRC (src), buffer);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto fill_failed;
+  }
+
+  GST_BUFFER_PTS (buffer) = pts;
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG_OBJECT (src, "Timestamp: %" GST_TIME_FORMAT " = accumulated %"
       GST_TIME_FORMAT " + offset: %"
@@ -1211,21 +1328,19 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   return GST_FLOW_OK;
 
-not_negotiated:
+fill_failed:
   {
-    return GST_FLOW_NOT_NEGOTIATED;
+    GST_DEBUG_OBJECT (src, "fill returned %d (%s)", ret,
+        gst_flow_get_name (ret));
+    return ret;
   }
-eos:
+copy_failed:
   {
-    GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->n_frames);
-    return GST_FLOW_EOS;
-  }
-invalid_frame:
-  {
-    GST_DEBUG_OBJECT (src, "invalid frame");
-    return GST_FLOW_OK;
+    GST_DEBUG_OBJECT (src, "Failed to copy cached buffer");
+    return GST_FLOW_ERROR;
   }
 }
+
 
 static gboolean
 gst_video_test_src_start (GstBaseSrc * basesrc)
@@ -1267,6 +1382,8 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
   g_free (src->lines);
   src->n_lines = 0;
   src->lines = NULL;
+
+  gst_clear_buffer (&src->cached);
 
   return TRUE;
 }

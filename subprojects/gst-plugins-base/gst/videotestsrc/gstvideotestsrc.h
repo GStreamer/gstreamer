@@ -206,6 +206,10 @@ struct _GstVideoTestSrc {
   guint n_lines;
   gint offset;
   gpointer *lines;
+
+  /* cached buffer used for static patterns that don't change */
+  GstBuffer *cached;
+  gboolean have_static_pattern;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (videotestsrc);
