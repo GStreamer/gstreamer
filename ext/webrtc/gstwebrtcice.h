@@ -81,6 +81,26 @@ gboolean                    gst_webrtc_ice_set_remote_credentials   (GstWebRTCIC
                                                                      gchar * pwd);
 gboolean                    gst_webrtc_ice_add_turn_server          (GstWebRTCICE * ice,
                                                                      const gchar * uri);
+
+void                        gst_webrtc_ice_set_is_controller        (GstWebRTCICE * ice,
+                                                                     gboolean controller);
+gboolean                    gst_webrtc_ice_get_is_controller        (GstWebRTCICE * ice);
+void                        gst_webrtc_ice_set_force_relay          (GstWebRTCICE * ice,
+                                                                     gboolean force_relay);
+void                        gst_webrtc_ice_set_stun_server          (GstWebRTCICE * ice,
+                                                                     const gchar * uri);
+gchar *                     gst_webrtc_ice_get_stun_server          (GstWebRTCICE * ice);
+void                        gst_webrtc_ice_set_turn_server          (GstWebRTCICE * ice,
+                                                                     const gchar * uri);
+gchar *                     gst_webrtc_ice_get_turn_server          (GstWebRTCICE * ice);
+
+typedef void (*GstWebRTCIceOnCandidateFunc) (GstWebRTCICE * ice, guint stream_id, gchar * candidate, gpointer user_data);
+
+void                        gst_webrtc_ice_set_on_ice_candidate     (GstWebRTCICE * ice,
+                                                                     GstWebRTCIceOnCandidateFunc func,
+                                                                     gpointer user_data,
+                                                                     GDestroyNotify notify);
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_ICE_H__ */

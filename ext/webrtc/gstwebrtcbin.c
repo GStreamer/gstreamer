@@ -3270,7 +3270,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   /* FIXME: can we add not matched transceivers? */
 
   /* XXX: only true for the initial offerer */
-  g_object_set (webrtc->priv->ice, "controller", FALSE, NULL);
+  gst_webrtc_ice_set_is_controller (webrtc->priv->ice, FALSE);
 
 out:
   g_strfreev (bundled);
@@ -4463,7 +4463,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
     /* get the current value so we don't change ice controller from TRUE to
      * FALSE on renegotiation or once set to TRUE for the initial local offer */
-    g_object_get (webrtc->priv->ice, "controller", &ice_controller, NULL);
+    ice_controller = gst_webrtc_ice_get_is_controller (webrtc->priv->ice);
 
     /* we control ice negotiation if we send the initial offer */
     ice_controller |=
@@ -4477,7 +4477,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
     GST_DEBUG_OBJECT (webrtc, "we are in ice controlling mode: %s",
         ice_controller ? "true" : "false");
-    g_object_set (webrtc->priv->ice, "controller", ice_controller, NULL);
+    gst_webrtc_ice_set_is_controller (webrtc->priv->ice, ice_controller);
   }
 
   if (new_signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
@@ -5880,8 +5880,12 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_STUN_SERVER:
+      gst_webrtc_ice_set_stun_server (webrtc->priv->ice,
+          g_value_get_string (value));
+      break;
     case PROP_TURN_SERVER:
-      g_object_set_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
+      gst_webrtc_ice_set_turn_server (webrtc->priv->ice,
+          g_value_get_string (value));
       break;
     case PROP_BUNDLE_POLICY:
       if (g_value_get_enum (value) == GST_WEBRTC_BUNDLE_POLICY_BALANCED) {
@@ -5892,9 +5896,9 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ICE_TRANSPORT_POLICY:
       webrtc->ice_transport_policy = g_value_get_enum (value);
-      g_object_set (webrtc->priv->ice, "force-relay",
+      gst_webrtc_ice_set_force_relay (webrtc->priv->ice,
           webrtc->ice_transport_policy ==
-          GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY ? TRUE : FALSE, NULL);
+          GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY ? TRUE : FALSE);
       break;
     case PROP_LATENCY:
       g_object_set_property (G_OBJECT (webrtc->rtpbin), "latency", value);
@@ -5956,8 +5960,12 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
       g_value_set_boxed (value, webrtc->pending_remote_description);
       break;
     case PROP_STUN_SERVER:
+      g_value_take_string (value,
+          gst_webrtc_ice_get_stun_server (webrtc->priv->ice));
+      break;
     case PROP_TURN_SERVER:
-      g_object_get_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
+      g_value_take_string (value,
+          gst_webrtc_ice_get_turn_server (webrtc->priv->ice));
       break;
     case PROP_BUNDLE_POLICY:
       g_value_set_enum (value, webrtc->bundle_policy);
@@ -5986,8 +5994,9 @@ gst_webrtc_bin_constructed (GObject * object)
 
   name = g_strdup_printf ("%s:ice", GST_OBJECT_NAME (webrtc));
   webrtc->priv->ice = gst_webrtc_ice_new (name);
-  g_signal_connect (webrtc->priv->ice, "on-ice-candidate",
-      G_CALLBACK (_on_local_ice_candidate_cb), webrtc);
+
+  gst_webrtc_ice_set_on_ice_candidate (webrtc->priv->ice,
+      (GstWebRTCIceOnCandidateFunc) _on_local_ice_candidate_cb, webrtc, NULL);
 
   g_free (name);
 }

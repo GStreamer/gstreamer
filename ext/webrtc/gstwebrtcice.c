@@ -46,8 +46,6 @@ gst_webrtc_ice_error_quark (void)
 enum
 {
   SIGNAL_0,
-  ON_ICE_CANDIDATE_SIGNAL,
-  ON_ICE_GATHERING_STATE_CHANGE_SIGNAL,
   ADD_LOCAL_IP_ADDRESS_SIGNAL,
   LAST_SIGNAL,
 };
@@ -55,12 +53,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_ICE_GATHERING_STATE,
-  PROP_STUN_SERVER,
-  PROP_TURN_SERVER,
-  PROP_CONTROLLER,
   PROP_AGENT,
-  PROP_FORCE_RELAY,
   PROP_ICE_TCP,
   PROP_ICE_UDP,
 };
@@ -78,6 +71,10 @@ struct _GstWebRTCICEPrivate
   GMainLoop *loop;
   GMutex lock;
   GCond cond;
+
+  GstWebRTCIceOnCandidateFunc on_candidate;
+  gpointer on_candidate_data;
+  GDestroyNotify on_candidate_notify;
 };
 
 #define gst_webrtc_ice_parent_class parent_class
@@ -515,8 +512,11 @@ _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
   }
 
   attr = nice_agent_generate_local_candidate_sdp (agent, candidate);
-  g_signal_emit (ice, gst_webrtc_ice_signals[ON_ICE_CANDIDATE_SIGNAL],
-      0, item->session_id, attr);
+
+  if (ice->priv->on_candidate)
+    ice->priv->on_candidate (ice, item->session_id, attr,
+        ice->priv->on_candidate_data);
+
   g_free (attr);
 }
 
@@ -728,6 +728,42 @@ gst_webrtc_ice_gather_candidates (GstWebRTCICE * ice,
   return gst_webrtc_ice_stream_gather_candidates (stream);
 }
 
+void
+gst_webrtc_ice_set_is_controller (GstWebRTCICE * ice, gboolean controller)
+{
+  g_object_set (G_OBJECT (ice->priv->nice_agent), "controlling-mode",
+      controller, NULL);
+}
+
+gboolean
+gst_webrtc_ice_get_is_controller (GstWebRTCICE * ice)
+{
+  gboolean ret;
+  g_object_get (G_OBJECT (ice->priv->nice_agent), "controlling-mode",
+      &ret, NULL);
+  return ret;
+}
+
+void
+gst_webrtc_ice_set_force_relay (GstWebRTCICE * ice, gboolean force_relay)
+{
+  g_object_set (G_OBJECT (ice->priv->nice_agent), "force-relay", force_relay,
+      NULL);
+}
+
+void
+gst_webrtc_ice_set_on_ice_candidate (GstWebRTCICE * ice,
+    GstWebRTCIceOnCandidateFunc func, gpointer user_data, GDestroyNotify notify)
+{
+  if (ice->priv->on_candidate_notify)
+    ice->priv->on_candidate_notify (ice->priv->on_candidate_data);
+  ice->priv->on_candidate = NULL;
+
+  ice->priv->on_candidate = func;
+  ice->priv->on_candidate_data = user_data;
+  ice->priv->on_candidate_notify = notify;
+}
+
 static void
 _clear_ice_stream (struct NiceStreamItem *item)
 {
@@ -816,6 +852,54 @@ out:
   return uri;
 }
 
+void
+gst_webrtc_ice_set_stun_server (GstWebRTCICE * ice, const gchar * uri_s)
+{
+  GstUri *uri = gst_uri_from_string (uri_s);
+  const gchar *msg = "must be of the form stun://<host>:<port>";
+
+  GST_DEBUG_OBJECT (ice, "setting stun server, %s", uri_s);
+
+  if (!uri) {
+    GST_ERROR_OBJECT (ice, "Couldn't parse stun server '%s', %s", uri_s, msg);
+    return;
+  }
+
+  if (ice->stun_server)
+    gst_uri_unref (ice->stun_server);
+  ice->stun_server = uri;
+}
+
+gchar *
+gst_webrtc_ice_get_stun_server (GstWebRTCICE * ice)
+{
+  if (ice->stun_server)
+    return gst_uri_to_string (ice->stun_server);
+  else
+    return NULL;
+}
+
+void
+gst_webrtc_ice_set_turn_server (GstWebRTCICE * ice, const gchar * uri_s)
+{
+  GstUri *uri = _validate_turn_server (ice, uri_s);
+
+  if (uri) {
+    if (ice->turn_server)
+      gst_uri_unref (ice->turn_server);
+    ice->turn_server = uri;
+  }
+}
+
+gchar *
+gst_webrtc_ice_get_turn_server (GstWebRTCICE * ice)
+{
+  if (ice->turn_server)
+    return gst_uri_to_string (ice->turn_server);
+  else
+    return NULL;
+}
+
 static void
 gst_webrtc_ice_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -823,41 +907,6 @@ gst_webrtc_ice_set_property (GObject * object, guint prop_id,
   GstWebRTCICE *ice = GST_WEBRTC_ICE (object);
 
   switch (prop_id) {
-    case PROP_STUN_SERVER:{
-      const gchar *s = g_value_get_string (value);
-      GstUri *uri = gst_uri_from_string (s);
-      const gchar *msg = "must be of the form stun://<host>:<port>";
-
-      GST_DEBUG_OBJECT (ice, "setting stun server, %s", s);
-
-      if (!uri) {
-        GST_ERROR_OBJECT (ice, "Couldn't parse stun server '%s', %s", s, msg);
-        return;
-      }
-
-      if (ice->stun_server)
-        gst_uri_unref (ice->stun_server);
-      ice->stun_server = uri;
-      break;
-    }
-    case PROP_TURN_SERVER:{
-      GstUri *uri = _validate_turn_server (ice, g_value_get_string (value));
-
-      if (uri) {
-        if (ice->turn_server)
-          gst_uri_unref (ice->turn_server);
-        ice->turn_server = uri;
-      }
-      break;
-    }
-    case PROP_CONTROLLER:
-      g_object_set_property (G_OBJECT (ice->priv->nice_agent),
-          "controlling-mode", value);
-      break;
-    case PROP_FORCE_RELAY:
-      g_object_set_property (G_OBJECT (ice->priv->nice_agent),
-          "force-relay", value);
-      break;
     case PROP_ICE_TCP:
       g_object_set_property (G_OBJECT (ice->priv->nice_agent),
           "ice-tcp", value);
@@ -879,28 +928,8 @@ gst_webrtc_ice_get_property (GObject * object, guint prop_id,
   GstWebRTCICE *ice = GST_WEBRTC_ICE (object);
 
   switch (prop_id) {
-    case PROP_STUN_SERVER:
-      if (ice->stun_server)
-        g_value_take_string (value, gst_uri_to_string (ice->stun_server));
-      else
-        g_value_take_string (value, NULL);
-      break;
-    case PROP_TURN_SERVER:
-      if (ice->turn_server)
-        g_value_take_string (value, gst_uri_to_string (ice->turn_server));
-      else
-        g_value_take_string (value, NULL);
-      break;
-    case PROP_CONTROLLER:
-      g_object_get_property (G_OBJECT (ice->priv->nice_agent),
-          "controlling-mode", value);
-      break;
     case PROP_AGENT:
       g_value_set_object (value, ice->priv->nice_agent);
-      break;
-    case PROP_FORCE_RELAY:
-      g_object_get_property (G_OBJECT (ice->priv->nice_agent),
-          "force-relay", value);
       break;
     case PROP_ICE_TCP:
       g_object_get_property (G_OBJECT (ice->priv->nice_agent),
@@ -924,6 +953,11 @@ gst_webrtc_ice_finalize (GObject * object)
   g_signal_handlers_disconnect_by_data (ice->priv->nice_agent, ice);
 
   _stop_thread (ice);
+
+  if (ice->priv->on_candidate_notify)
+    ice->priv->on_candidate_notify (ice->priv->on_candidate_data);
+  ice->priv->on_candidate = NULL;
+  ice->priv->on_candidate_notify = NULL;
 
   if (ice->turn_server)
     gst_uri_unref (ice->turn_server);
@@ -968,35 +1002,12 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
   gobject_class->finalize = gst_webrtc_ice_finalize;
 
   g_object_class_install_property (gobject_class,
-      PROP_STUN_SERVER,
-      g_param_spec_string ("stun-server", "STUN Server",
-          "The STUN server of the form stun://hostname:port",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_TURN_SERVER,
-      g_param_spec_string ("turn-server", "TURN Server",
-          "The TURN server of the form turn(s)://username:password@host:port",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_CONTROLLER,
-      g_param_spec_boolean ("controller", "ICE controller",
-          "Whether the ICE agent is the controller or controlled. "
-          "In WebRTC, the initial offerrer is the ICE controller.", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
       PROP_AGENT,
       g_param_spec_object ("agent", "ICE agent",
-          "ICE agent in use by this object", NICE_TYPE_AGENT,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_FORCE_RELAY,
-      g_param_spec_boolean ("force-relay", "Force Relay",
-          "Force all traffic to go through a relay.", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "ICE agent in use by this object. WARNING! Accessing this property "
+          "may have disastrous consequences for the operation of webrtcbin. "
+          "Other ICE implementations may not have the same interface.",
+          NICE_TYPE_AGENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_ICE_TCP,
@@ -1011,16 +1022,6 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstWebRTCICE::on-ice-candidate:
-   * @object: the #GstWebRTCBin
-   * @candidate: the ICE candidate
-   */
-  gst_webrtc_ice_signals[ON_ICE_CANDIDATE_SIGNAL] =
-      g_signal_new ("on-ice-candidate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
-      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_STRING);
-
-  /**
    * GstWebRTCICE::add-local-ip-address:
    * @object: the #GstWebRTCICE
    * @address: The local IP address
@@ -1028,6 +1029,8 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
    * Add a local IP address to use for ICE candidate gathering.  If none
    * are supplied, they will be discovered automatically. Calling this signal
    * stops automatic ICE gathering.
+   *
+   * Returns: whether the address could be added.
    */
   gst_webrtc_ice_signals[ADD_LOCAL_IP_ADDRESS_SIGNAL] =
       g_signal_new_class_handler ("add-local-ip-address",
