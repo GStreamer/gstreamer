@@ -222,7 +222,6 @@ exit:
 static struct
 {
   HMODULE dll;
-  gboolean tried_loading;
 
   FARPROC AvSetMmThreadCharacteristics;
   FARPROC AvRevertMmThreadCharacteristics;
@@ -234,29 +233,45 @@ static gboolean
 __gst_audio_init_thread_priority (void)
 {
 #ifdef G_OS_WIN32
-  if (_gst_audio_avrt_tbl.tried_loading)
-    return _gst_audio_avrt_tbl.dll != NULL;
+  static gsize init_once = 0;
+  static gboolean ret = FALSE;
 
-  if (!_gst_audio_avrt_tbl.dll)
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-    _gst_audio_avrt_tbl.dll = LoadPackagedLibrary (TEXT ("avrt.dll"), 0);
-#else
+  if (g_once_init_enter (&init_once)) {
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
     _gst_audio_avrt_tbl.dll = LoadLibrary (TEXT ("avrt.dll"));
-#endif
 
-  if (!_gst_audio_avrt_tbl.dll) {
-    GST_WARNING ("Failed to set thread priority, can't find avrt.dll");
-    _gst_audio_avrt_tbl.tried_loading = TRUE;
-    return FALSE;
+    if (!_gst_audio_avrt_tbl.dll) {
+      GST_WARNING ("Failed to set thread priority, can't find avrt.dll");
+      goto done;
+    }
+
+    _gst_audio_avrt_tbl.AvSetMmThreadCharacteristics =
+        GetProcAddress (_gst_audio_avrt_tbl.dll,
+        "AvSetMmThreadCharacteristicsA");
+    if (!_gst_audio_avrt_tbl.AvSetMmThreadCharacteristics) {
+      GST_WARNING ("Cannot load AvSetMmThreadCharacteristicsA symbol");
+      FreeLibrary (_gst_audio_avrt_tbl.dll);
+      goto done;
+    }
+
+    _gst_audio_avrt_tbl.AvRevertMmThreadCharacteristics =
+        GetProcAddress (_gst_audio_avrt_tbl.dll,
+        "AvRevertMmThreadCharacteristics");
+
+    if (!_gst_audio_avrt_tbl.AvRevertMmThreadCharacteristics) {
+      GST_WARNING ("Cannot load AvRevertMmThreadCharacteristics symbol");
+      FreeLibrary (_gst_audio_avrt_tbl.dll);
+      goto done;
+    }
+
+    ret = TRUE;
+
+  done:
+#endif
+    g_once_init_leave (&init_once, 1);
   }
 
-  _gst_audio_avrt_tbl.AvSetMmThreadCharacteristics =
-      GetProcAddress (_gst_audio_avrt_tbl.dll, "AvSetMmThreadCharacteristicsA");
-  _gst_audio_avrt_tbl.AvRevertMmThreadCharacteristics =
-      GetProcAddress (_gst_audio_avrt_tbl.dll,
-      "AvRevertMmThreadCharacteristics");
-
-  _gst_audio_avrt_tbl.tried_loading = TRUE;
+  return ret;
 #endif
 
   return TRUE;
