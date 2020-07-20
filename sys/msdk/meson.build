@@ -97,6 +97,21 @@ if have_mfx_ver126
   cdata.set10('USE_MSDK_VP9_ENC', 1)
 endif
 
+mfx_ver134_check_code = '''
+#include <mfxdefs.h>
+#if MFX_VERSION < 1034
+#error "The current version of mfx doesn't support AV1 decoding"
+#endif
+'''
+
+have_mfx_ver134 = cc.compiles(mfx_ver134_check_code,
+                include_directories : [configinc, mfx_inc])
+
+if have_mfx_ver134
+  msdk_sources += [ 'gstmsdkav1dec.c' ]
+  cdata.set10('USE_MSDK_AV1_DEC', 1)
+endif
+
 if host_machine.system() == 'windows'
   if cc.get_id() != 'msvc' and msdk_option.enabled()
     error('msdk plugin can only be built with MSVC')
