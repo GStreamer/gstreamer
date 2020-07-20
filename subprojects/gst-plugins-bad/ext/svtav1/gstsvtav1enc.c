@@ -643,14 +643,11 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->inter_intra_compound = -1;
   svt_config->enable_paeth = -1;
   svt_config->enable_smooth = -1;
-  svt_config->combine_class_12 = -1;
   svt_config->enable_mfmv = -1;
   svt_config->enable_redundant_blk = -1;
   svt_config->spatial_sse_fl = -1;
-  svt_config->enable_subpel = -1;
   svt_config->over_bndry_blk = -1;
   svt_config->new_nearest_comb_inject = -1;
-  svt_config->prune_unipred_me = -1;
   svt_config->prune_ref_rec_part = -1;
   svt_config->nsq_table = -1;
   svt_config->frame_end_cdf_update = -1;
