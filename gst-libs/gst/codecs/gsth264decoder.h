@@ -90,7 +90,15 @@ struct _GstH264DecoderClass
                                      const GstH264SPS * sps,
                                      gint max_dpb_size);
 
+  /**
+   * GstVideoDecoder:new_picture:
+   *
+   * @decoder: a #GstH264Decoder
+   * @frame: (transfer none): a #GstVideoCodecFrame
+   * @picture: (transfer none): a #GstH264Picture
+   */
   gboolean      (*new_picture)      (GstH264Decoder * decoder,
+                                     GstVideoCodecFrame * frame,
                                      GstH264Picture * picture);
 
   gboolean      (*start_picture)    (GstH264Decoder * decoder,

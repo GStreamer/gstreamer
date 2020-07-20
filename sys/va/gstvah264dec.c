@@ -518,24 +518,19 @@ fail:
 }
 
 static gboolean
-gst_va_h264_dec_new_picture (GstH264Decoder * decoder, GstH264Picture * picture)
+gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
+    GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
   GstVaDecodePicture *pic;
-  GstVideoCodecFrame *frame;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   VASurfaceID surface;
 
-  frame = gst_video_decoder_get_frame (vdec, picture->system_frame_number);
-  if (!frame)
-    return FALSE;               /* something failed before */
   self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (self->last_ret != GST_FLOW_OK)
     goto error;
 
   surface = gst_va_buffer_get_surface (frame->output_buffer, NULL);
-
-  gst_video_codec_frame_unref (frame);
 
   pic = gst_va_decoder_new_decode_picture (self->decoder, surface);
   gst_h264_picture_set_user_data (picture, pic,
@@ -547,7 +542,9 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder, GstH264Picture * picture)
 
 error:
   {
-    gst_video_codec_frame_unref (frame);
+    GST_WARNING_OBJECT (self,
+        "Failed to allocated output buffer, return %s",
+        gst_flow_get_name (self->last_ret));
     return FALSE;
   }
 }

@@ -544,7 +544,7 @@ gst_v4l2_codec_h264_dec_fill_slice_params (GstV4l2CodecH264Dec * self,
     .flags = (slice->header.field_pic_flag ? V4L2_H264_SLICE_FLAG_FIELD_PIC : 0) |
              (slice->header.bottom_field_flag ? V4L2_H264_SLICE_FLAG_BOTTOM_FIELD : 0) |
              (slice->header.direct_spatial_mv_pred_flag ? V4L2_H264_SLICE_FLAG_DIRECT_SPATIAL_MV_PRED : 0) |
-             (slice->header.sp_for_switch_flag ? V4L2_H264_SLICE_FLAG_SP_FOR_SWITCH : 0), 
+             (slice->header.sp_for_switch_flag ? V4L2_H264_SLICE_FLAG_SP_FOR_SWITCH : 0),
   };
   /* *INDENT-ON* */
 
@@ -747,6 +747,17 @@ gst_v4l2_codec_h264_dec_ensure_bitstream (GstV4l2CodecH264Dec * self)
 done:
   /* We use this field to track how much we have written */
   self->bitstream_map.size = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_v4l2_codec_h264_dec_new_picture (GstH264Decoder * decoder,
+    GstVideoCodecFrame * frame, GstH264Picture * picture)
+{
+  /* This user data will be referenced in _output_picture */
+  gst_video_codec_frame_set_user_data (frame,
+      gst_h264_picture_ref (picture), (GDestroyNotify) gst_h264_picture_unref);
 
   return TRUE;
 }
@@ -1249,6 +1260,8 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
 
   h264decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_sequence);
+  h264decoder_class->new_picture =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_picture);
   h264decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_output_picture);
   h264decoder_class->start_picture =

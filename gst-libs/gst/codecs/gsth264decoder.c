@@ -758,19 +758,18 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu,
     /* This allows accessing the frame from the picture. */
     picture->system_frame_number = priv->current_frame->system_frame_number;
 
+    priv->current_picture = picture;
+    g_assert (priv->current_frame);
+
     if (klass->new_picture)
-      ret = klass->new_picture (self, picture);
+      ret = klass->new_picture (self, priv->current_frame, picture);
 
     if (!ret) {
       GST_ERROR_OBJECT (self, "subclass does not want accept new picture");
+      priv->current_picture = NULL;
       gst_h264_picture_unref (picture);
       return FALSE;
     }
-
-    priv->current_picture = picture;
-    gst_video_codec_frame_set_user_data (priv->current_frame,
-        gst_h264_picture_ref (priv->current_picture),
-        (GDestroyNotify) gst_h264_picture_unref);
 
     if (!gst_h264_decoder_start_current_picture (self)) {
       GST_ERROR_OBJECT (self, "start picture failed");

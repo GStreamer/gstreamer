@@ -146,7 +146,7 @@ static gboolean gst_nv_h264_dec_src_query (GstVideoDecoder * decoder,
 static gboolean gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size);
 static gboolean gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
-    GstH264Picture * picture);
+    GstVideoCodecFrame * frame, GstH264Picture * picture);
 static GstFlowReturn gst_nv_h264_dec_output_picture (GstH264Decoder *
     decoder, GstH264Picture * picture);
 static gboolean gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
@@ -416,21 +416,23 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
 }
 
 static gboolean
-gst_nv_h264_dec_new_picture (GstH264Decoder * decoder, GstH264Picture * picture)
+gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
+    GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-  GstNvDecoderFrame *frame;
+  GstNvDecoderFrame *nv_frame;
 
-  frame = gst_nv_decoder_new_frame (self->decoder);
-  if (!frame) {
+  nv_frame = gst_nv_decoder_new_frame (self->decoder);
+  if (!nv_frame) {
     GST_ERROR_OBJECT (self, "No available decoder frame");
     return FALSE;
   }
 
-  GST_LOG_OBJECT (self, "New decoder frame %p (index %d)", frame, frame->index);
+  GST_LOG_OBJECT (self,
+      "New decoder frame %p (index %d)", nv_frame, nv_frame->index);
 
   gst_h264_picture_set_user_data (picture,
-      frame, (GDestroyNotify) gst_nv_decoder_frame_free);
+      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_free);
 
   return TRUE;
 }
