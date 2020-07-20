@@ -1217,6 +1217,7 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264DecoderClass *klass;
+  GstVideoCodecFrame *frame = NULL;
 
   picture->outputted = TRUE;
 
@@ -1237,10 +1238,23 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
 
   priv->last_output_poc = picture->pic_order_cnt;
 
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      picture->system_frame_number);
+
+  if (!frame) {
+    GST_ERROR_OBJECT (self,
+        "No available codec frame with frame number %d",
+        picture->system_frame_number);
+    priv->last_ret = GST_FLOW_ERROR;
+
+    return;
+  }
+
   klass = GST_H264_DECODER_GET_CLASS (self);
 
   g_assert (klass->output_picture);
-  priv->last_ret = klass->output_picture (self, picture);
+  priv->last_ret = klass->output_picture (self,
+      frame, gst_h264_picture_ref (picture));
 }
 
 static gboolean

@@ -115,7 +115,15 @@ struct _GstH264DecoderClass
   gboolean      (*end_picture)      (GstH264Decoder * decoder,
                                      GstH264Picture * picture);
 
+  /**
+   * GstVideoDecoder:output_picture:
+   *
+   * @decoder: a #GstH264Decoder
+   * @frame: (transfer full): a #GstVideoCodecFrame
+   * @picture: (transfer full): a #GstH264Picture
+   */
   GstFlowReturn (*output_picture)   (GstH264Decoder * decoder,
+                                     GstVideoCodecFrame * frame,
                                      GstH264Picture * picture);
 
   /*< private >*/

@@ -148,7 +148,7 @@ static gboolean gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder,
 static gboolean gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture);
 static GstFlowReturn gst_nv_h264_dec_output_picture (GstH264Decoder *
-    decoder, GstH264Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstH264Picture * picture);
 static gboolean gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb);
 static gboolean gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
@@ -439,11 +439,10 @@ gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
 
 static GstFlowReturn
 gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
-    GstH264Picture * picture)
+    GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-  GstVideoCodecFrame *frame = NULL;
-  GstBuffer *output_buffer = NULL;
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstNvDecoderFrame *decoder_frame;
   gboolean ret G_GNUC_UNUSED = FALSE;
 
@@ -454,24 +453,19 @@ gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
       (GstNvDecoderFrame *) gst_h264_picture_get_user_data (picture);
   if (!decoder_frame) {
     GST_ERROR_OBJECT (self, "No decoder frame in picture %p", picture);
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-  if (!frame) {
-    GST_ERROR_OBJECT (self, "Failed to retrieve codec frame");
-    return GST_FLOW_ERROR;
+  frame->output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
+  if (!frame->output_buffer) {
+    GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
+    goto error;
   }
-
-  output_buffer =
-      gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
-  frame->output_buffer = output_buffer;
 
   if (self->output_type == GST_NV_DECOCER_OUTPUT_TYPE_GL) {
     ret = gst_nv_decoder_finish_frame (self->decoder,
         GST_NV_DECOCER_OUTPUT_TYPE_GL, self->gl_context,
-        decoder_frame, output_buffer);
+        decoder_frame, frame->output_buffer);
 
     /* FIXME: This is the case where OpenGL context of downstream glbufferpool
      * belongs to non-nvidia (or different device).
@@ -487,14 +481,21 @@ gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
   if (!ret) {
     if (!gst_nv_decoder_finish_frame (self->decoder,
             GST_NV_DECOCER_OUTPUT_TYPE_SYSTEM, NULL, decoder_frame,
-            output_buffer)) {
+            frame->output_buffer)) {
       GST_ERROR_OBJECT (self, "Failed to finish frame");
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-      return GST_FLOW_ERROR;
+      goto error;
     }
   }
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  gst_h264_picture_unref (picture);
+
+  return gst_video_decoder_finish_frame (vdec, frame);
+
+error:
+  gst_video_decoder_drop_frame (vdec, frame);
+  gst_h264_picture_unref (picture);
+
+  return GST_FLOW_ERROR;
 }
 
 static GstNvDecoderFrame *

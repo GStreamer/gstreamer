@@ -854,12 +854,12 @@ gst_v4l2_codec_h264_dec_wait (GstV4l2CodecH264Dec * self,
 
 static GstFlowReturn
 gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
-    GstH264Picture * picture)
+    GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstV4l2Request *request = gst_h264_picture_get_user_data (picture);
   guint32 frame_num;
-  GstVideoCodecFrame *frame, *other_frame;
+  GstVideoCodecFrame *other_frame;
   GstH264Picture *other_pic;
   GstV4l2Request *other_request;
 
@@ -875,6 +875,8 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
       GST_ELEMENT_ERROR (self, STREAM, DECODE,
           ("Decoder did not produce a frame"), (NULL));
+      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (decoder), frame);
+      gst_h264_picture_unref (picture);
       return GST_FLOW_ERROR;
     }
 
@@ -886,16 +888,15 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     g_return_val_if_fail (other_frame, GST_FLOW_ERROR);
 
     other_pic = gst_video_codec_frame_get_user_data (other_frame);
-    other_request = gst_h264_picture_get_user_data (other_pic);
-    gst_v4l2_request_set_done (other_request);
+    if (other_pic) {
+      other_request = gst_h264_picture_get_user_data (other_pic);
+      gst_v4l2_request_set_done (other_request);
+    }
     gst_video_codec_frame_unref (other_frame);
   }
 
 finish_frame:
   gst_v4l2_request_set_done (request);
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-  g_return_val_if_fail (frame, GST_FLOW_ERROR);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
   /* Hold on reference buffers for the rest of the picture lifetime */
@@ -904,6 +905,22 @@ finish_frame:
 
   if (self->copy_frames)
     gst_v4l2_codec_h264_dec_copy_output_buffer (self, frame);
+
+  /* At this point, GstVideoCodecFrame holds
+   * - GstBuffer (GstVideoCodecFrame::output_buffer)
+   * - GstH264Picture and GstH264Picture holds GstBuffer as well.
+   * So the refcount of the output buffer would be at least 2 here
+   * if the given GstH264Picture is the last reference.
+   *
+   * To make a chance that only this GstVideoCodecFrame holds the reference
+   * of the GstBuffer, clear user data of GstVideoCodecFrame
+   * (i.e., drop the reference of GstH264Picture).
+   * Otherwise, if the reference count of the GstBuffer is not one,
+   * the buffer will be copied always
+   * by gst_buffer_make_writable() in gst_video_decoder_finish_frame()
+   */
+  gst_video_codec_frame_set_user_data (frame, NULL, NULL);
+  gst_h264_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }

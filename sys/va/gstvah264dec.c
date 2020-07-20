@@ -159,18 +159,15 @@ fail:
 
 static GstFlowReturn
 gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
-    GstH264Picture * picture)
+    GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
-  GstVideoCodecFrame *frame = NULL;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
 
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-
   if (self->last_ret != GST_FLOW_OK) {
+    gst_h264_picture_unref (picture);
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
     return self->last_ret;
   }
@@ -185,6 +182,8 @@ gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
 
   GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (frame->output_buffer)));
+
+  gst_h264_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }
