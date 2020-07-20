@@ -139,6 +139,10 @@ GST_CODECS_API
 void gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * self,
                                                  gboolean process);
 
+GST_CODECS_API
+GstH264Picture * gst_h264_decoder_get_picture   (GstH264Decoder * self,
+                                                 guint32 system_frame_number);
+
 G_END_DECLS
 
 #endif /* __GST_H264_DECODER_H__ */

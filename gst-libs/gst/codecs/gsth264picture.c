@@ -234,6 +234,32 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
 }
 
 /**
+ * gst_h264_dpb_delete_outputed:
+ * @dpb: a #GstH264Dpb
+ *
+ * Delete already outputted picture, even if they are referenced.
+ */
+void
+gst_h264_dpb_delete_outputed (GstH264Dpb * dpb)
+{
+  gint i;
+
+  g_return_if_fail (dpb != NULL);
+
+  for (i = 0; i < dpb->pic_list->len; i++) {
+    GstH264Picture *picture =
+        g_array_index (dpb->pic_list, GstH264Picture *, i);
+
+    if (picture->outputted) {
+      GST_TRACE ("remove picture %p (frame num %d) from dpb",
+          picture, picture->frame_num);
+      g_array_remove_index_fast (dpb->pic_list, i);
+      i--;
+    }
+  }
+}
+
+/**
  * gst_h264_dpb_delete_by_poc:
  * @dpb: a #GstH264Dpb
  * @poc: a poc of #GstH264Picture to remove
@@ -522,4 +548,30 @@ gst_h264_dpb_is_full (GstH264Dpb * dpb)
   g_return_val_if_fail (dpb != NULL, -1);
 
   return dpb->pic_list->len >= dpb->max_num_pics;
+}
+
+/**
+ * gst_h264_dpb_get_picture:
+ * @system_frame_number The system frame number
+ *
+ * Returns: the picture identitifed with the specified @system_frame_number.
+ */
+GstH264Picture *
+gst_h264_dpb_get_picture (GstH264Dpb * dpb, guint32 system_frame_number)
+{
+  gint i;
+
+  g_return_val_if_fail (dpb != NULL, NULL);
+
+  for (i = 0; i < dpb->pic_list->len; i++) {
+    GstH264Picture *picture =
+        g_array_index (dpb->pic_list, GstH264Picture *, i);
+
+    if (picture->system_frame_number == system_frame_number) {
+      gst_h264_picture_ref (picture);
+      return picture;
+    }
+  }
+
+  return NULL;
 }

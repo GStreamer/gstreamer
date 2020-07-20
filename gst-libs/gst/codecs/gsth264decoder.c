@@ -1320,15 +1320,20 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
   GstH264DecoderPrivate *priv = self->priv;
   GArray *to_output = priv->to_output;
 
+  /* We are around to drain, so we can get rist of everything that has been
+   * outputed already */
+  gst_h264_dpb_delete_outputed (priv->dpb);
   gst_h264_dpb_get_pictures_not_outputted (priv->dpb, to_output);
   g_array_sort (to_output, (GCompareFunc) poc_asc_compare);
-  gst_h264_dpb_clear (priv->dpb);
 
   while (to_output->len) {
     GstH264Picture *picture = g_array_index (to_output, GstH264Picture *, 0);
 
+    /* We want the last reference when outputing so take a ref and then remove
+     * from both arrays. */
     gst_h264_picture_ref (picture);
     g_array_remove_index (to_output, 0);
+    gst_h264_dpb_delete_by_poc (priv->dpb, picture->pic_order_cnt);
 
     GST_LOG_OBJECT (self, "Output picture %p (frame num %d, poc %d)", picture,
         picture->frame_num, picture->pic_order_cnt);
@@ -1336,6 +1341,8 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
   }
 
   g_array_set_size (to_output, 0);
+  gst_h264_dpb_clear (priv->dpb);
+  priv->last_output_poc = 0;
   return TRUE;
 }
 
@@ -2455,4 +2462,11 @@ gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * self,
     gboolean process)
 {
   self->priv->process_ref_pic_lists = process;
+}
+
+GstH264Picture *
+gst_h264_decoder_get_picture (GstH264Decoder * self,
+    guint32 system_frame_number)
+{
+  return gst_h264_dpb_get_picture (self->priv->dpb, system_frame_number);
 }

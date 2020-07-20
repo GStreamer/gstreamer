@@ -170,6 +170,9 @@ GST_CODECS_API
 void  gst_h264_dpb_delete_unused    (GstH264Dpb * dpb);
 
 GST_CODECS_API
+void gst_h264_dpb_delete_outputed   (GstH264Dpb * dpb);
+
+GST_CODECS_API
 void  gst_h264_dpb_delete_by_poc    (GstH264Dpb * dpb,
                                      gint poc);
 
@@ -204,6 +207,10 @@ void  gst_h264_dpb_get_pictures_long_term_ref  (GstH264Dpb * dpb,
 
 GST_CODECS_API
 GArray * gst_h264_dpb_get_pictures_all         (GstH264Dpb * dpb);
+
+GST_CODECS_API
+GstH264Picture * gst_h264_dpb_get_picture      (GstH264Dpb * dpb,
+                                                guint32 system_frame_number);
 
 GST_CODECS_API
 gint  gst_h264_dpb_get_size   (GstH264Dpb * dpb);
