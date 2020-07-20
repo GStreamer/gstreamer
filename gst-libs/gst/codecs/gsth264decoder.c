@@ -384,7 +384,6 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
   }
 
   gst_buffer_unmap (in_buf, &map);
-  priv->current_frame = NULL;
 
   if (!decode_ret) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
@@ -392,12 +391,14 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
     gst_video_decoder_drop_frame (decoder, frame);
 
     gst_h264_picture_clear (&priv->current_picture);
+    priv->current_frame = NULL;
 
     return priv->last_ret;
   }
 
   gst_h264_decoder_finish_current_picture (self);
   gst_video_codec_frame_unref (frame);
+  priv->current_frame = NULL;
 
   return priv->last_ret;
 }
@@ -1263,6 +1264,10 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
           priv->current_picture->frame_num,
           priv->current_picture->pic_order_cnt);
       priv->current_picture->nonexisting = TRUE;
+
+      /* this fake nonexisting picture will not trigger ouput_picture() */
+      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self),
+          gst_video_codec_frame_ref (priv->current_frame));
     }
   }
 
