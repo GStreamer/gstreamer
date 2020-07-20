@@ -25,7 +25,6 @@
 #include <gst/rtp/rtp.h>
 #include "rtpstats.h"
 
-typedef struct _RTPTWCCManager RTPTWCCManager;
 typedef struct _RTPTWCCPacket RTPTWCCPacket;
 typedef enum _RTPTWCCPacketStatus RTPTWCCPacketStatus;
 
