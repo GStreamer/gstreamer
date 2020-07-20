@@ -752,17 +752,6 @@ done:
 }
 
 static gboolean
-gst_v4l2_codec_h264_dec_new_picture (GstH264Decoder * decoder,
-    GstVideoCodecFrame * frame, GstH264Picture * picture)
-{
-  /* This user data will be referenced in _output_picture */
-  gst_video_codec_frame_set_user_data (frame,
-      gst_h264_picture_ref (picture), (GDestroyNotify) gst_h264_picture_unref);
-
-  return TRUE;
-}
-
-static gboolean
 gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
@@ -859,7 +848,6 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstV4l2Request *request = gst_h264_picture_get_user_data (picture);
   guint32 frame_num;
-  GstVideoCodecFrame *other_frame;
   GstH264Picture *other_pic;
   GstV4l2Request *other_request;
 
@@ -883,16 +871,12 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     if (frame_num == picture->system_frame_number)
       break;
 
-    other_frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-        frame_num);
-    g_return_val_if_fail (other_frame, GST_FLOW_ERROR);
-
-    other_pic = gst_video_codec_frame_get_user_data (other_frame);
+    other_pic = gst_h264_decoder_get_picture (decoder, frame_num);
     if (other_pic) {
       other_request = gst_h264_picture_get_user_data (other_pic);
       gst_v4l2_request_set_done (other_request);
+      gst_h264_picture_unref (other_pic);
     }
-    gst_video_codec_frame_unref (other_frame);
   }
 
 finish_frame:
@@ -1277,8 +1261,6 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
 
   h264decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_sequence);
-  h264decoder_class->new_picture =
-      GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_picture);
   h264decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_output_picture);
   h264decoder_class->start_picture =
