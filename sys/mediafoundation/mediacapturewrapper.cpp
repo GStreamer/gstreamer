@@ -260,38 +260,38 @@ GstWinRTMediaFrameSourceGroup::Fill
 
   hr = source_group->get_Id(hstr_id.GetAddressOf());
   if (!gst_mf_result(hr))
-    goto done;
+    goto error;
 
   id_ = convert_hstring_to_string (&hstr_id);
   if (id_.empty()) {
     GST_WARNING ("Emptry source group id");
     hr = E_FAIL;
-    goto done;
+    goto error;
   }
 
   hr = source_group->get_DisplayName (hstr_display_name.GetAddressOf());
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   display_name_ = convert_hstring_to_string (&hstr_display_name);
   if (display_name_.empty()) {
     GST_WARNING ("Empty display name");
     hr = E_FAIL;
-    goto done;
+    goto error;
   }
 
   hr = source_group->get_SourceInfos (&info_list);
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   hr = info_list->get_Size (&count);
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   if (count == 0) {
     GST_WARNING ("No available source info");
     hr = E_FAIL;
-    goto done;
+    goto error;
   }
 
   source_group_ = source_group;
@@ -370,15 +370,16 @@ GstWinRTMediaFrameSourceGroup::Fill
     }
   }
 
-done:
   if (source_list_.empty()) {
     GST_WARNING ("No usable source infos");
     hr = E_FAIL;
+    goto error;
   }
 
-  if (!gst_mf_result(hr))
-    Release();
+  return S_OK;
 
+error:
+  Release ();
   return hr;
 }
 
