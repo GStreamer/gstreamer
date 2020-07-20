@@ -1223,9 +1223,21 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
 
   /* if the memory is intact reset the size to the full size */
   if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY)) {
-    gsize offset;
-    gst_buffer_get_sizes (buffer, &offset, NULL);
-    gst_buffer_resize (buffer, -offset, pool->priv->size);
+    gsize offset, maxsize;
+    gst_buffer_get_sizes (buffer, &offset, &maxsize);
+    /* check if we can resize to at least the pool configured size.  If not,
+     * then this will fail internally in gst_buffer_resize().
+     * default_release_buffer() will drop the buffer from the pool if the
+     * sizes don't match */
+    if (maxsize >= pool->priv->size) {
+      gst_buffer_resize (buffer, -offset, pool->priv->size);
+    } else {
+      GST_WARNING_OBJECT (pool, "Buffer %p without the memory tag has "
+          "maxsize (%" G_GSIZE_FORMAT ") that is smaller than the "
+          "configured buffer pool size (%u). The buffer will be not be "
+          "reused. This is most likely a bug in this GstBufferPool subclass",
+          buffer, maxsize, pool->priv->size);
+    }
   }
 
   /* remove all metadata without the POOLED flag */
