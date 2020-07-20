@@ -56,6 +56,9 @@ link_elements (GstElement * bin, GPtrArray * elements)
 
   for (i = 0; i < elements->len; i++) {
     element = elements->pdata[i];
+    if (!element)
+      continue;
+
     gst_bin_add (GST_BIN (bin), element);
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", element, "sink",
