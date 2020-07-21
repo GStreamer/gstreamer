@@ -656,9 +656,9 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->compound_level = -1;
   svt_config->set_chroma_mode = -1;
   svt_config->disable_cfl_flag = -1;
-  svt_config->enable_obmc = 1;
+  svt_config->obmc_level = 1;
   svt_config->enable_rdoq = -1;
-  svt_config->enable_filter_intra = 1;
+  svt_config->filter_intra_level = 1;
   svt_config->enable_intra_edge_filter = -1;
   svt_config->pic_based_rate_est = -1;
   svt_config->use_default_me_hme = TRUE;
