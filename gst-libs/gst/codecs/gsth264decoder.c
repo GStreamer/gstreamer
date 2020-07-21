@@ -2458,15 +2458,15 @@ gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self)
 }
 
 void
-gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * self,
+gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * decoder,
     gboolean process)
 {
-  self->priv->process_ref_pic_lists = process;
+  decoder->priv->process_ref_pic_lists = process;
 }
 
 GstH264Picture *
-gst_h264_decoder_get_picture (GstH264Decoder * self,
+gst_h264_decoder_get_picture (GstH264Decoder * decoder,
     guint32 system_frame_number)
 {
-  return gst_h264_dpb_get_picture (self->priv->dpb, system_frame_number);
+  return gst_h264_dpb_get_picture (decoder->priv->dpb, system_frame_number);
 }

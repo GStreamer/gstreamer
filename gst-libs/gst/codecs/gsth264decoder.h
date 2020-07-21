@@ -136,11 +136,11 @@ GST_CODECS_API
 GType gst_h264_decoder_get_type (void);
 
 GST_CODECS_API
-void gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * self,
+void gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * decoder,
                                                  gboolean process);
 
 GST_CODECS_API
-GstH264Picture * gst_h264_decoder_get_picture   (GstH264Decoder * self,
+GstH264Picture * gst_h264_decoder_get_picture   (GstH264Decoder * decoder,
                                                  guint32 system_frame_number);
 
 G_END_DECLS
