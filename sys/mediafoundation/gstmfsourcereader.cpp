@@ -26,6 +26,9 @@
 #include "gstmfsourcereader.h"
 #include <string.h>
 #include <wrl.h>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 using namespace Microsoft::WRL;
 
@@ -160,6 +163,7 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
   gint i, j;
   HRESULT hr;
   GList *list = NULL;
+  std::vector<std::string> unhandled_caps;
 
   g_return_val_if_fail (source_reader != NULL, FALSE);
   g_return_val_if_fail (media_types != NULL, FALSE);
@@ -173,12 +177,27 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
       if (SUCCEEDED (hr)) {
         GstMFStreamMediaType *mtype;
         GstCaps *caps = NULL;
+        GstStructure *s;
+        std::string name;
 
         caps = gst_mf_media_type_to_caps (media_type.Get ());
 
         /* unknown format */
         if (!caps)
           continue;
+
+        s = gst_caps_get_structure (caps, 0);
+        name = gst_structure_get_name (s);
+        if (name != "video/x-raw" && name != "image/jpeg") {
+          auto it =
+              std::find(unhandled_caps.begin(), unhandled_caps.end(), name);
+          if (it == unhandled_caps.end()) {
+            GST_FIXME ("Skip not supported format %s", name.c_str());
+            unhandled_caps.push_back(name);
+          }
+          gst_caps_unref (caps);
+          continue;
+        }
 
         mtype = g_new0 (GstMFStreamMediaType, 1);
 
