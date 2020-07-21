@@ -362,6 +362,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
   offset = 0;
   for (i = 0; i < superframe_info.frames_in_superframe; i++) {
+    GstVideoCodecFrame *cur_frame = NULL;
     cur_hdr = &frame_hdr[i];
 
     if (cur_hdr->show_existing_frame) {
@@ -386,16 +387,13 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       picture->pts = GST_BUFFER_PTS (in_buf);
       picture->size = 0;
 
-      if (i == frame_idx_to_consume) {
-        gst_video_codec_frame_set_user_data (frame,
-            gst_vp9_picture_ref (picture),
-            (GDestroyNotify) gst_vp9_picture_unref);
-      }
+      if (i == frame_idx_to_consume)
+        cur_frame = gst_video_codec_frame_ref (frame);
 
       g_assert (klass->output_picture);
-      ret = klass->output_picture (self, picture);
 
-      gst_vp9_picture_unref (picture);
+      /* transfer ownership of picture */
+      ret = klass->output_picture (self, cur_frame, picture);
       picture = NULL;
     } else {
       picture = gst_vp9_picture_new ();
@@ -409,17 +407,11 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       picture->subsampling_y = priv->parser->subsampling_y;
       picture->bit_depth = priv->parser->bit_depth;
 
-      if (i == frame_idx_to_consume) {
-        /* This allows accessing the frame from the picture. */
-        picture->system_frame_number = frame->system_frame_number;
-        gst_video_codec_frame_set_user_data (frame,
-            gst_vp9_picture_ref (picture),
-            (GDestroyNotify) gst_vp9_picture_unref);
-      }
-
+      if (i == frame_idx_to_consume)
+        cur_frame = gst_video_codec_frame_ref (frame);
 
       if (klass->new_picture) {
-        if (!klass->new_picture (self, picture)) {
+        if (!klass->new_picture (self, cur_frame, picture)) {
           GST_ERROR_OBJECT (self, "new picture error");
           goto unmap_and_error;
         }
@@ -446,11 +438,16 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
         }
       }
 
+      /* Just pass our picture to dpb object.
+       * Even if this picture does not need to be added to dpb
+       * (i.e., not a reference frame), gst_vp9_dpb_add() will take care of
+       * the case as well */
+      gst_vp9_dpb_add (priv->dpb, gst_vp9_picture_ref (picture));
+
       g_assert (klass->output_picture);
-      ret = klass->output_picture (self, picture);
 
       /* transfer ownership of picture */
-      gst_vp9_dpb_add (priv->dpb, picture);
+      ret = klass->output_picture (self, cur_frame, picture);
       picture = NULL;
     }
 

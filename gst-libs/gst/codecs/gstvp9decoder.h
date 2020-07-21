@@ -87,7 +87,17 @@ struct _GstVp9DecoderClass
   gboolean        (*new_sequence)      (GstVp9Decoder * decoder,
                                         const GstVp9FrameHdr * frame_hdr);
 
+  /**
+   * GstVp9Decoder:new_picture:
+   * @decoder: a #GstVp9Decoder
+   * @frame: (nullable): (transfer none): a #GstVideoCodecFrame
+   * @picture: (transfer none): a #GstVp9Picture
+   *
+   * FIXME 1.20: vp9parse element can splitting super frames,
+   * and then we can ensure non-null @frame
+   */
   gboolean        (*new_picture)       (GstVp9Decoder * decoder,
+                                        GstVideoCodecFrame * frame,
                                         GstVp9Picture * picture);
 
   GstVp9Picture * (*duplicate_picture) (GstVp9Decoder * decoder,
@@ -103,7 +113,17 @@ struct _GstVp9DecoderClass
   gboolean        (*end_picture)       (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture);
 
+  /**
+   * GstVp9Decoder:output_picture:
+   * @decoder: a #GstVp9Decoder
+   * @frame: (nullable): (transfer full): a #GstVideoCodecFrame
+   * @picture: (transfer full): a #GstVp9Picture
+   *
+   * FIXME 1.20: vp9parse element can splitting super frames,
+   * and then we can ensure non-null @frame
+   */
   GstFlowReturn   (*output_picture)    (GstVp9Decoder * decoder,
+                                        GstVideoCodecFrame * frame,
                                         GstVp9Picture * picture);
 
   /*< private >*/

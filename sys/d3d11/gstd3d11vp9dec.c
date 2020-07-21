@@ -135,11 +135,11 @@ static gboolean gst_d3d11_vp9_dec_src_query (GstVideoDecoder * decoder,
 static gboolean gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     const GstVp9FrameHdr * frame_hdr);
 static gboolean gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
-    GstVp9Picture * picture);
+    GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder *
     decoder, GstVp9Picture * picture);
 static GstFlowReturn gst_d3d11_vp9_dec_output_picture (GstVp9Decoder *
-    decoder, GstVp9Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static gboolean gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture);
 static gboolean gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
@@ -407,7 +407,8 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 }
 
 static gboolean
-gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
+gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
+    GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstBuffer *view_buffer;
@@ -464,10 +465,10 @@ gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 
 static GstFlowReturn
 gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
-    GstVp9Picture * picture)
+    GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-  GstVideoCodecFrame *frame = NULL;
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstBuffer *output_buffer = NULL;
   GstFlowReturn ret;
   GstBuffer *view_buffer;
@@ -478,21 +479,20 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
 
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "Could not get output view");
-    return GST_FLOW_ERROR;
+    goto error;
   }
-
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
 
   if (!picture->frame_hdr.show_frame) {
     GST_LOG_OBJECT (self, "Decode only picture %p", picture);
     if (frame) {
       GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
+      gst_vp9_picture_unref (picture);
 
-      return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+      return gst_video_decoder_finish_frame (vdec, frame);
     } else {
-      GST_WARNING_OBJECT (self,
-          "Failed to find codec frame for picture %p", picture);
+      /* expected case if we are decoding super frame */
+      gst_vp9_picture_unref (picture);
+
       return GST_FLOW_OK;
     }
   }
@@ -514,18 +514,19 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
     mem = gst_buffer_peek_memory (output_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
   } else {
-    output_buffer =
-        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+    output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
   }
 
   if (!output_buffer) {
     GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   if (!frame) {
-    GST_WARNING_OBJECT (self,
-        "Failed to find codec frame for picture %p", picture);
+    /* this is the case where super frame has multiple displayable
+     * (non-decode-only) subframes. Should be rare case but it's possible
+     * in theory */
+    GST_WARNING_OBJECT (self, "No codec frame for picture %p", picture);
 
     GST_BUFFER_PTS (output_buffer) = picture->pts;
     GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
@@ -543,24 +544,33 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
           picture->frame_hdr.width, picture->frame_hdr.height,
           view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
-    if (frame)
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-    else
-      gst_buffer_unref (output_buffer);
-
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (output_buffer)));
 
+  gst_vp9_picture_unref (picture);
+
   if (frame) {
-    ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+    ret = gst_video_decoder_finish_frame (vdec, frame);
   } else {
     ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), output_buffer);
   }
 
   return ret;
+
+error:
+  if (frame) {
+    /* normal case */
+    gst_video_decoder_drop_frame (vdec, frame);
+  } else if (output_buffer) {
+    /* in case of super frame with multiple displayable subframes */
+    gst_buffer_unref (output_buffer);
+  }
+  gst_vp9_picture_unref (picture);
+
+  return GST_FLOW_ERROR;
 }
 
 static GstD3D11DecoderOutputView *
