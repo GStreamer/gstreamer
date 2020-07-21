@@ -668,7 +668,15 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
   /* FIXME: need to verify video processor on Xbox
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1312
    */
-  if (gst_d3d11_get_device_vendor (window->device) !=
+
+  /* XXX: Depending on driver/vendor, d3d11 video processor might not support
+   * HDR10 metadata. Even worse thing here is,
+   * although the d3d11 video processor's capability flag indicated that
+   * HDR10 metadata is supported, it would result to black screen when HDR10
+   * metadata is passed to d3d11 video processor. (without any error message).
+   * Let's disable d3d11 video processor.
+   */
+  if (!have_hdr10 && gst_d3d11_get_device_vendor (window->device) !=
       GST_D3D11_DEVICE_VENDOR_XBOX) {
       window->processor =
           gst_d3d11_video_processor_new (window->device,
