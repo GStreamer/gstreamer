@@ -108,6 +108,10 @@ GstMFSourceObject * gst_mf_source_object_new      (GstMFSourceType type,
                                                    const gchar * device_name,
                                                    const gchar * device_path);
 
+/* Utility methods */
+gint            gst_mf_source_object_caps_compare (GstCaps * caps1,
+                                                   GstCaps * caps2);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMFSourceObject, gst_object_unref)
 
 G_END_DECLS

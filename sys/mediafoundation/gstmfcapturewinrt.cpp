@@ -27,6 +27,7 @@
 #include "mediacapturewrapper.h"
 #include <memorybuffer.h>
 #include <memory>
+#include <algorithm>
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -161,6 +162,13 @@ gst_mf_capture_winrt_main_loop_running_cb (GstMFCaptureWinRT * self)
   return G_SOURCE_REMOVE;
 }
 
+static bool
+winrt_compare_caps_func (const GstWinRTMediaDescription & a,
+    const GstWinRTMediaDescription & b)
+{
+  return gst_mf_source_object_caps_compare (a.caps_, b.caps_) < 0;
+}
+
 static gpointer
 gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
 {
@@ -232,30 +240,33 @@ gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
     goto run_loop;
   }
 
+  if (target_group->source_list_.empty ()) {
+    GST_WARNING_OBJECT (self, "No available source list");
+    goto run_loop;
+  }
+
   self->capture->SetSourceGroup(*target_group);
 
-  for (auto iter: target_group->source_list_) {
-    if (!self->supported_caps)
-      self->supported_caps = gst_caps_ref (iter.caps_);
-    else
-      self->supported_caps =
-          gst_caps_merge (self->supported_caps, gst_caps_ref (iter.caps_));
-  }
+  std::sort (target_group->source_list_.begin (),
+      target_group->source_list_.end (), winrt_compare_caps_func);
+
+  self->supported_caps = gst_caps_new_empty ();
+
+  for (auto iter: target_group->source_list_)
+    gst_caps_append (self->supported_caps, gst_caps_copy (iter.caps_));
 
   GST_DEBUG_OBJECT (self, "Available output caps %" GST_PTR_FORMAT,
       self->supported_caps);
 
-  source->opened = !!self->supported_caps;
+  source->opened = TRUE;
 
-  if (source->opened) {
-    g_free (source->device_path);
-    source->device_path = g_strdup (target_group->id_.c_str());
+  g_free (source->device_path);
+  source->device_path = g_strdup (target_group->id_.c_str());
 
-    g_free (source->device_name);
-    source->device_name = g_strdup (target_group->display_name_.c_str());
+  g_free (source->device_name);
+  source->device_name = g_strdup (target_group->display_name_.c_str());
 
-    source->device_index = index;
-  }
+  source->device_index = index;
 
 run_loop:
   GST_DEBUG_OBJECT (self, "Starting main loop");

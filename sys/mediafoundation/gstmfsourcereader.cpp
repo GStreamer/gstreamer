@@ -244,6 +244,17 @@ gst_mf_stream_media_type_free (GstMFStreamMediaType * media_type)
   g_free (media_type);
 }
 
+static gint
+compare_caps_func (gconstpointer a, gconstpointer b)
+{
+  GstMFStreamMediaType *m1, *m2;
+
+  m1 = (GstMFStreamMediaType *) a;
+  m2 = (GstMFStreamMediaType *) b;
+
+  return gst_mf_source_object_caps_compare (m1->caps, m2->caps);
+}
+
 static gboolean
 gst_mf_source_reader_open (GstMFSourceReader * self, IMFActivate * activate)
 {
@@ -280,13 +291,15 @@ gst_mf_source_reader_open (GstMFSourceReader * self, IMFActivate * activate)
   self->source = source.Detach ();
   self->reader = reader.Detach ();
 
+  self->media_types = g_list_sort (self->media_types,
+      (GCompareFunc) compare_caps_func);
+
+  self->supported_caps = gst_caps_new_empty ();
+
   for (iter = self->media_types; iter; iter = g_list_next (iter)) {
     GstMFStreamMediaType *mtype = (GstMFStreamMediaType *) iter->data;
-    if (!self->supported_caps)
-      self->supported_caps = gst_caps_ref (mtype->caps);
-    else
-      self->supported_caps =
-          gst_caps_merge (self->supported_caps, gst_caps_ref (mtype->caps));
+
+    gst_caps_append (self->supported_caps, gst_caps_copy (mtype->caps));
   }
 
   GST_DEBUG_OBJECT (self, "Available output caps %" GST_PTR_FORMAT,

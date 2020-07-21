@@ -338,3 +338,64 @@ gst_mf_source_object_new (GstMFSourceType type, gint device_index,
 
   return NULL;
 }
+
+gint
+gst_mf_source_object_caps_compare (GstCaps * caps1, GstCaps * caps2)
+{
+  GstStructure *s1, *s2;
+  const gchar *n1, *n2;
+  gboolean m1_is_raw, m2_is_raw;
+  gint w1 = 0, h1 = 0, w2 = 0, h2 = 0;
+  gint r1, r2;
+  gint num1 = 0, den1 = 1, num2 = 0, den2 = 1;
+  gint fraction_cmp;
+
+  /* sorting priority
+   * - raw video > comprssed
+   *   - raw video format
+   * - higher resolution
+   * - higher framerate
+   */
+  s1 = gst_caps_get_structure (caps1, 0);
+  n1 = gst_structure_get_name (s1);
+
+  s2 = gst_caps_get_structure (caps2, 0);
+  n2 = gst_structure_get_name (s2);
+
+  m1_is_raw = g_strcmp0 (n1, "video/x-raw") == 0;
+  m2_is_raw = g_strcmp0 (n2, "video/x-raw") == 0;
+
+  if (m1_is_raw && !m2_is_raw)
+    return -1;
+  else if (!m1_is_raw && m2_is_raw)
+    return 1;
+
+  /* if both are raw formats */
+  if (m1_is_raw) {
+    gint format_cmp = g_strcmp0 (gst_structure_get_string (s1, "format"),
+        gst_structure_get_string (s2, "format"));
+    if (format_cmp)
+      return format_cmp;
+  }
+
+  /* resolution */
+  gst_structure_get_int (s1, "width", &w1);
+  gst_structure_get_int (s1, "height", &h1);
+  gst_structure_get_int (s2, "width", &w2);
+  gst_structure_get_int (s2, "height", &h2);
+
+  r1 = w1 * h1;
+  r2 = w2 * h2;
+
+  /* higher resolution first */
+  if (r1 != r2)
+    return r2 - r1;
+
+  gst_structure_get_fraction (s1, "framerate", &num1, &den1);
+  gst_structure_get_fraction (s2, "framerate", &num2, &den2);
+
+  fraction_cmp = gst_util_fraction_compare (num1, den1, num2, den2);
+
+  /* higher framerate first */
+  return fraction_cmp * -1;
+}
