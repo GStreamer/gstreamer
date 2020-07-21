@@ -83,6 +83,8 @@ struct _GstVaapiWindow
   guint check_geometry:1;
 
   /* for conversion */
+  GstVideoFormat surface_pool_format;
+  guint surface_pool_flags;
   GstVaapiVideoPool *surface_pool;
   GstVaapiFilter *filter;
   gboolean has_vpp;
@@ -137,6 +139,10 @@ GstVaapiSurface *
 gst_vaapi_window_vpp_convert_internal (GstVaapiWindow * window,
     GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect, guint flags);
+
+void
+gst_vaapi_window_set_vpp_format_internal (GstVaapiWindow * window,
+    GstVideoFormat format, guint flags);
 
 G_END_DECLS
 

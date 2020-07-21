@@ -98,6 +98,19 @@ error_unsupported_format:
   }
 }
 
+void
+gst_vaapi_window_set_vpp_format_internal (GstVaapiWindow * window,
+    GstVideoFormat format, guint flags)
+{
+  if (window->surface_pool_format == format &&
+      window->surface_pool_flags == flags)
+    return;
+
+  gst_vaapi_video_pool_replace (&window->surface_pool, NULL);
+  window->surface_pool_format = format;
+  window->surface_pool_flags = flags;
+}
+
 static gboolean
 ensure_filter_surface_pool (GstVaapiWindow * window)
 {
@@ -109,7 +122,8 @@ ensure_filter_surface_pool (GstVaapiWindow * window)
   /* Ensure VA surface pool is created */
   /* XXX: optimize the surface format to use. e.g. YUY2 */
   window->surface_pool = gst_vaapi_surface_pool_new (display,
-      GST_VIDEO_FORMAT_NV12, window->width, window->height, 0);
+      window->surface_pool_format, window->width, window->height,
+      window->surface_pool_flags);
   if (!window->surface_pool) {
     GST_WARNING ("failed to create surface pool for conversion");
     return FALSE;
@@ -228,6 +242,8 @@ gst_vaapi_window_new_internal (GType type, GstVaapiDisplay * display,
   window = g_object_new (type, "display", display, NULL);
   if (!window)
     return NULL;
+
+  window->surface_pool_format = GST_VIDEO_FORMAT_NV12;
 
   window->use_foreign_window = id != GST_VAAPI_ID_INVALID;
   GST_VAAPI_WINDOW_ID (window) = window->use_foreign_window ? id : 0;
