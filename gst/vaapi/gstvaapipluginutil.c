@@ -1244,3 +1244,34 @@ out:
 
   return out_caps;
 }
+
+/**
+ * gst_vaapi_structure_set_profiles:
+ * @st: a #GstStructure
+ * @list: a %NULL-terminated array of strings
+ *
+ * The @list of profiles are set in @st
+ **/
+void
+gst_vaapi_structure_set_profiles (GstStructure * st, gchar ** list)
+{
+  guint i;
+  GValue vlist = G_VALUE_INIT;
+  GValue value = G_VALUE_INIT;
+
+  g_value_init (&vlist, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_STRING);
+
+  for (i = 0; list[i]; i++) {
+    g_value_set_string (&value, list[i]);
+    gst_value_list_append_value (&vlist, &value);
+  }
+
+  if (i == 1)
+    gst_structure_set_value (st, "profile", &value);
+  else if (i > 1)
+    gst_structure_set_value (st, "profile", &vlist);
+
+  g_value_unset (&value);
+  g_value_unset (&vlist);
+}

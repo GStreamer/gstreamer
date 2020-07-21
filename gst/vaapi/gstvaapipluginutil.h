@@ -171,4 +171,8 @@ GstCaps *
 gst_vaapi_build_template_caps_by_codec (GstVaapiDisplay * display,
     GstVaapiContextUsage usage, GstVaapiCodec codec, GArray * extra_fmts);
 
+G_GNUC_INTERNAL
+void
+gst_vaapi_structure_set_profiles (GstStructure * st, gchar ** list);
+
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
