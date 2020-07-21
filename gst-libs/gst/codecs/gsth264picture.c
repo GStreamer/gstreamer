@@ -238,6 +238,8 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
  * @dpb: a #GstH264Dpb
  *
  * Delete already outputted picture, even if they are referenced.
+ *
+ * Since: 1.18
  */
 void
 gst_h264_dpb_delete_outputed (GstH264Dpb * dpb)
@@ -552,9 +554,14 @@ gst_h264_dpb_is_full (GstH264Dpb * dpb)
 
 /**
  * gst_h264_dpb_get_picture:
+ * @dpb: a #GstH264Dpb
  * @system_frame_number The system frame number
  *
- * Returns: the picture identitifed with the specified @system_frame_number.
+ * Returns: (transfer full): the picture identified with the specified
+ * @system_frame_number, or %NULL if DPB does not contain a #GstH264Picture
+ * corresponding to the @system_frame_number
+ *
+ * Since: 1.18
  */
 GstH264Picture *
 gst_h264_dpb_get_picture (GstH264Dpb * dpb, guint32 system_frame_number)

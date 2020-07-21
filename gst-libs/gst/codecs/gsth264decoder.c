@@ -2457,6 +2457,15 @@ gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self)
   return TRUE;
 }
 
+/**
+ * gst_h264_decoder_set_process_ref_pic_lists:
+ * @decoder: a #GstH264Decoder
+ * @process: whether subclass is requiring reference picture modification process
+ *
+ * Called to en/disable reference picture modification process.
+ *
+ * Since: 1.18
+ */
 void
 gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * decoder,
     gboolean process)
@@ -2464,6 +2473,18 @@ gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * decoder,
   decoder->priv->process_ref_pic_lists = process;
 }
 
+/**
+ * gst_h264_decoder_get_picture:
+ * @decoder: a #GstH264Decoder
+ * @system_frame_number: a target system frame number of #GstH264Picture
+ *
+ * Retrive DPB and return a #GstH264Picture corresponding to
+ * the @system_frame_number
+ *
+ * Returns: (transfer full): a #GstH264Picture if successful, or %NULL otherwise
+ *
+ * Since: 1.18
+ */
 GstH264Picture *
 gst_h264_decoder_get_picture (GstH264Decoder * decoder,
     guint32 system_frame_number)
