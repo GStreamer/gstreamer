@@ -91,8 +91,7 @@ struct _GstH264DecoderClass
                                      gint max_dpb_size);
 
   /**
-   * GstVideoDecoder:new_picture:
-   *
+   * GstH264Decoder:new_picture:
    * @decoder: a #GstH264Decoder
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstH264Picture
@@ -116,8 +115,7 @@ struct _GstH264DecoderClass
                                      GstH264Picture * picture);
 
   /**
-   * GstVideoDecoder:output_picture:
-   *
+   * GstH264Decoder:output_picture:
    * @decoder: a #GstH264Decoder
    * @frame: (transfer full): a #GstVideoCodecFrame
    * @picture: (transfer full): a #GstH264Picture
