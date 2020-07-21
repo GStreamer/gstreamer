@@ -304,11 +304,12 @@ def get_subprocess_env(options, gst_version):
             prepend_env_var(env, 'GST_PLUGIN_PATH', plugin_path,
                             options.sysroot)
 
-    for p in paths:
+    # Sort to iterate in a consistent order (`set`s and `hash`es are randomized)
+    for p in sorted(paths):
         prepend_env_var(env, 'PATH', p, options.sysroot)
 
     if os.name != 'nt':
-        for p in mono_paths:
+        for p in sorted(mono_paths):
             prepend_env_var(env, "MONO_PATH", p, options.sysroot)
 
     presets = set()
@@ -352,13 +353,13 @@ def get_subprocess_env(options, gst_version):
                 prepend_env_var(env, 'GST_OMX_CONFIG_DIR', os.path.dirname(path),
                                 options.sysroot)
 
-        for p in presets:
+        for p in sorted(presets):
             prepend_env_var(env, 'GST_PRESET_PATH', p, options.sysroot)
 
-        for t in encoding_targets:
+        for t in sorted(encoding_targets):
             prepend_env_var(env, 'GST_ENCODING_TARGET_PATH', t, options.sysroot)
 
-        for pkg_dir in pkg_dirs:
+        for pkg_dir in sorted(pkg_dirs):
             prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir, options.sysroot)
 
     # Check if meson has generated -uninstalled pkgconfig files
@@ -366,7 +367,7 @@ def get_subprocess_env(options, gst_version):
     if meson_uninstalled.is_dir():
         prepend_env_var(env, 'PKG_CONFIG_PATH', str(meson_uninstalled), options.sysroot)
 
-    for python_dir in python_dirs:
+    for python_dir in sorted(python_dirs):
         prepend_env_var(env, 'PYTHONPATH', python_dir, options.sysroot)
 
     mesonpath = os.path.join(SCRIPTDIR, "meson")
