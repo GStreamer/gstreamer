@@ -353,9 +353,12 @@ ges_video_transition_create_element (GESTrackElement * object)
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positioner,
       oconv, NULL);
 
-  mixer = ges_smart_mixer_new (NULL);
+  mixer =
+      g_object_new (GES_TYPE_SMART_MIXER, "name",
+      GES_TIMELINE_ELEMENT_NAME (object), NULL);
   GES_SMART_MIXER (mixer)->is_transition = TRUE;
-  g_object_set (GES_SMART_MIXER (mixer)->mixer, "background", 3, NULL); /* transparent */
+  gst_util_set_object_arg (G_OBJECT (GES_SMART_MIXER (mixer)->mixer),
+      "background", "transparent");
   gst_bin_add (GST_BIN (topbin), mixer);
 
   priv->mixer_sinka =
