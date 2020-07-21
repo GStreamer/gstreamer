@@ -181,12 +181,14 @@ static const GstVideoFormat formats_444[] =
 
 static void
 test_video_profile (const gchar * profile, gint profile_id,
-    const GstVideoFormat input_format)
+    const GstVideoFormat input_formats[], gint input_format_index)
 {
+  GstVideoFormat input_format = input_formats[input_format_index];
   GstElement *x264enc;
   GstBuffer *inbuffer, *outbuffer;
   int i, num_buffers;
   GstVideoInfo vinfo;
+  GstCaps *caps;
 
   fail_unless (gst_video_info_set_format (&vinfo, input_format, 384, 288));
 
@@ -200,6 +202,47 @@ test_video_profile (const gchar * profile, gint profile_id,
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  /* check that we only accept input formats compatible with the output caps */
+  caps = gst_pad_peer_query_caps (mysrcpad, NULL);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    const GValue *v, *vi;
+    guint vlen, j = 0;
+
+    v = gst_structure_get_value (s, "format");
+
+    if (G_VALUE_TYPE (v) == G_TYPE_STRING) {
+      vlen = 1;
+      vi = v;
+    } else if (G_VALUE_TYPE (v) == GST_TYPE_LIST) {
+      vlen = gst_value_list_get_size (v);
+      fail_unless (vlen > 0, "Got empty format list");
+      vi = gst_value_list_get_value (v, 0);
+    } else {
+      fail ("Bad format in structure: %" GST_PTR_FORMAT, s);
+      g_assert_not_reached ();
+    }
+
+    while (TRUE) {
+      const gchar *str = g_value_get_string (vi);
+      GstVideoFormat format = gst_video_format_from_string (str);
+      int k;
+
+      for (k = 0;; k++) {
+        fail_unless (input_formats[k] != GST_VIDEO_FORMAT_UNKNOWN,
+            "Bad format: %s", str);
+        if (input_formats[k] == format)
+          break;
+      }
+
+      if (++j < vlen)
+        vi = gst_value_list_get_value (v, j);
+      else
+        break;
+    }
+  }
+  gst_caps_unref (caps);
 
   /* corresponds to buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&vinfo));
@@ -296,7 +339,7 @@ test_video_profile (const gchar * profile, gint profile_id,
 GST_START_TEST (test_video_baseline)
 {
   for (int i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("constrained-baseline", 0x42, formats_420_8[i]);
+    test_video_profile ("constrained-baseline", 0x42, formats_420_8, i);
 }
 
 GST_END_TEST;
@@ -304,7 +347,7 @@ GST_END_TEST;
 GST_START_TEST (test_video_main)
 {
   for (int i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("main", 0x4d, formats_420_8[i]);
+    test_video_profile ("main", 0x4d, formats_420_8, i);
 }
 
 GST_END_TEST;
@@ -312,7 +355,7 @@ GST_END_TEST;
 GST_START_TEST (test_video_high)
 {
   for (int i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("high", 0x64, formats_420_8[i]);
+    test_video_profile ("high", 0x64, formats_420_8, i);
 }
 
 GST_END_TEST;
@@ -320,7 +363,7 @@ GST_END_TEST;
 GST_START_TEST (test_video_high10)
 {
   for (int i = 0; formats_420_10[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("high-10", 0x6e, formats_420_10[i]);
+    test_video_profile ("high-10", 0x6e, formats_420_10, i);
 }
 
 GST_END_TEST;
@@ -328,7 +371,7 @@ GST_END_TEST;
 GST_START_TEST (test_video_high422)
 {
   for (int i = 0; formats_422[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("high-4:2:2", 0x7A, formats_422[i]);
+    test_video_profile ("high-4:2:2", 0x7A, formats_422, i);
 }
 
 GST_END_TEST;
@@ -336,7 +379,7 @@ GST_END_TEST;
 GST_START_TEST (test_video_high444)
 {
   for (int i = 0; formats_444[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("high-4:4:4", 0xF4, formats_444[i]);
+    test_video_profile ("high-4:4:4", 0xF4, formats_444, i);
 }
 
 GST_END_TEST;
