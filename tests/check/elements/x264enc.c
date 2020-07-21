@@ -43,13 +43,15 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (VIDEO_CAPS_STRING));
 
+static void cleanup_x264enc (GstElement * x264enc);
+
 static GstElement *
 setup_x264enc (const gchar * profile, const gchar * stream_format,
     GstVideoFormat input_format)
 {
-  GstPadTemplate *sink_tmpl;
+  GstPadTemplate *sink_tmpl, *tmpl;
   GstElement *x264enc;
-  GstCaps *caps;
+  GstCaps *caps, *tmpl_caps;
 
   GST_DEBUG ("setup_x264enc");
 
@@ -68,7 +70,18 @@ setup_x264enc (const gchar * profile, const gchar * stream_format,
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_caps_set_simple (caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (input_format), NULL);
-  gst_check_setup_events (mysrcpad, x264enc, caps, GST_FORMAT_TIME);
+
+  tmpl = gst_element_get_pad_template (x264enc, "sink");
+  tmpl_caps = gst_pad_template_get_caps (tmpl);
+
+  if (gst_caps_can_intersect (caps, tmpl_caps)) {
+    gst_check_setup_events (mysrcpad, x264enc, caps, GST_FORMAT_TIME);
+  } else {
+    cleanup_x264enc (x264enc);
+    x264enc = NULL;
+  }
+
+  gst_caps_unref (tmpl_caps);
   gst_caps_unref (caps);
   gst_object_unref (sink_tmpl);
 
@@ -118,7 +131,8 @@ check_caps (GstCaps * caps, const gchar * profile, gint profile_id)
     fail_unless (buf != NULL);
     gst_buffer_map (buf, &map, GST_MAP_READ);
     fail_unless_equals_int (map.data[0], 1);
-    fail_unless (map.data[1] == profile_id);
+    fail_unless (map.data[1] == profile_id,
+        "Expected profile ID %#04x, got %#04x", profile_id, map.data[1]);
     gst_buffer_unmap (buf, &map);
   } else if (strcmp (stream_format, "byte-stream") == 0) {
     fail_if (gst_structure_get_value (s, "codec_data") != NULL);
@@ -138,10 +152,32 @@ static const GstVideoFormat formats_420_8[] =
     { GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_NV12,
   GST_VIDEO_FORMAT_UNKNOWN
 };
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+static const GstVideoFormat formats_420_10[] =
+    { GST_VIDEO_FORMAT_I420_10LE, GST_VIDEO_FORMAT_UNKNOWN };
 static const GstVideoFormat formats_422[] =
-    { GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UNKNOWN };
+    { GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I422_10LE,
+  GST_VIDEO_FORMAT_UNKNOWN
+};
+
 static const GstVideoFormat formats_444[] =
-    { GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UNKNOWN };
+    { GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y444_10LE,
+  GST_VIDEO_FORMAT_UNKNOWN
+};
+#else
+static const GstVideoFormat formats_420_10[] =
+    { GST_VIDEO_FORMAT_I420_10BE, GST_VIDEO_FORMAT_UNKNOWN };
+static const GstVideoFormat formats_422[] =
+    { GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I422_10BE,
+  GST_VIDEO_FORMAT_UNKNOWN
+};
+
+static const GstVideoFormat formats_444[] =
+    { GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y444_10BE,
+  GST_VIDEO_FORMAT_UNKNOWN
+};
+#endif
 
 static void
 test_video_profile (const gchar * profile, gint profile_id,
@@ -155,6 +191,12 @@ test_video_profile (const gchar * profile, gint profile_id,
   fail_unless (gst_video_info_set_format (&vinfo, input_format, 384, 288));
 
   x264enc = setup_x264enc (profile, "avc", input_format);
+  if (x264enc == NULL) {
+    g_printerr ("WARNING: input format '%s' not supported\n",
+        gst_video_format_to_string (input_format));
+    return;
+  }
+
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -275,6 +317,14 @@ GST_START_TEST (test_video_high)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_high10)
+{
+  for (int i = 0; formats_420_10[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+    test_video_profile ("high-10", 0x6e, formats_420_10[i]);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_high422)
 {
   for (int i = 0; formats_422[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
@@ -301,6 +351,7 @@ x264enc_suite (void)
   tcase_add_test (tc_chain, test_video_baseline);
   tcase_add_test (tc_chain, test_video_main);
   tcase_add_test (tc_chain, test_video_high);
+  tcase_add_test (tc_chain, test_video_high10);
   tcase_add_test (tc_chain, test_video_high422);
   tcase_add_test (tc_chain, test_video_high444);
 
