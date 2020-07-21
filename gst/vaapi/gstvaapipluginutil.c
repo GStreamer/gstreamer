@@ -1233,7 +1233,8 @@ gst_vaapi_build_template_caps_by_codec (GstVaapiDisplay * display,
   }
 
   out_caps = gst_vaapi_build_caps_from_formats (supported_fmts, 1, 1,
-      G_MAXINT, G_MAXINT, TRUE);
+      G_MAXINT, G_MAXINT,
+      from_GstVaapiBufferMemoryType (GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF));
 
 out:
   if (profiles)
