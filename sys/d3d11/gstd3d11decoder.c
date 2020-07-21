@@ -776,12 +776,18 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   GST_DEBUG_OBJECT (decoder, "ConfigDecoderSpecific 0x%x",
       best_config->ConfigDecoderSpecific);
 
+  /* FIXME: Revisit this at some point.
+   * Some 4K VP9 + super frame enabled streams would be broken with
+   * this configuration (driver crash) on Intel and Nvidia
+   */
+#if 0
   /* bit 14 is equal to 1b means this config support array of texture and
    * it's recommended type as per DXVA spec */
   if ((best_config->ConfigDecoderSpecific & 0x4000) == 0x4000) {
     GST_DEBUG_OBJECT (decoder, "Config support array of texture");
     priv->use_array_of_texture = TRUE;
   }
+#endif
 
   if (!gst_d3d11_decoder_prepare_output_view_pool (decoder,
           info, aligned_width, aligned_height, pool_size, &selected_profile)) {
