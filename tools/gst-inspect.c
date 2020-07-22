@@ -2049,8 +2049,10 @@ main (int argc, char *argv[])
             &minver_micro) < 2) {
       g_printerr ("Can't parse version '%s' passed to --atleast-version\n",
           min_version);
+      g_free (min_version);
       return -1;
     }
+    g_free (min_version);
     check_exists = TRUE;
   }
 
