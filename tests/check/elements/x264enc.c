@@ -338,7 +338,9 @@ test_video_profile (const gchar * profile, gint profile_id,
 
 GST_START_TEST (test_video_baseline)
 {
-  for (int i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+  gint i;
+
+  for (i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
     test_video_profile ("constrained-baseline", 0x42, formats_420_8, i);
 }
 
@@ -346,7 +348,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_main)
 {
-  for (int i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+  gint i;
+
+  for (i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
     test_video_profile ("main", 0x4d, formats_420_8, i);
 }
 
@@ -354,7 +358,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_high)
 {
-  for (int i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+  gint i;
+
+  for (i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
     test_video_profile ("high", 0x64, formats_420_8, i);
 }
 
@@ -362,7 +368,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_high10)
 {
-  for (int i = 0; formats_420_10[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+  gint i;
+
+  for (i = 0; formats_420_10[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
     test_video_profile ("high-10", 0x6e, formats_420_10, i);
 }
 
@@ -370,7 +378,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_high422)
 {
-  for (int i = 0; formats_422[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+  gint i;
+
+  for (i = 0; formats_422[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
     test_video_profile ("high-4:2:2", 0x7A, formats_422, i);
 }
 
@@ -378,7 +388,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_high444)
 {
-  for (int i = 0; formats_444[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+  gint i;
+
+  for (i = 0; formats_444[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
     test_video_profile ("high-4:4:4", 0xF4, formats_444, i);
 }
 
