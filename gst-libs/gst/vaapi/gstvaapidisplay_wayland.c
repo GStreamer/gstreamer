@@ -106,6 +106,42 @@ static const struct xdg_wm_base_listener xdg_wm_base_listener = {
 };
 
 static void
+dmabuf_format (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
+    uint32_t format)
+{
+}
+
+static void
+dmabuf_modifier (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
+    uint32_t format, uint32_t modifier_hi, uint32_t modifier_lo)
+{
+  GstVaapiDisplayWaylandPrivate *const priv = data;
+  GstDRMFormat drm_format = {
+    .format = format,
+    .modifier = (guint64) modifier_hi << 32 | modifier_lo
+  };
+
+  if (gst_vaapi_video_format_from_drm_format (format) ==
+      GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_LOG ("ignoring unknown format 0x%x with modifier 0x%" G_GINT64_MODIFIER
+        "x", format, drm_format.modifier);
+    return;
+  }
+
+  GST_LOG ("got format 0x%x (%s) with modifier 0x%" G_GINT64_MODIFIER "x",
+      format, gst_video_format_to_string (gst_vaapi_video_format_from_drm_format
+          (format)), drm_format.modifier);
+
+  g_array_append_val (priv->dmabuf_formats, drm_format);
+}
+
+static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+  dmabuf_format,
+  dmabuf_modifier,
+};
+
+
+static void
 registry_handle_global (void *data,
     struct wl_registry *registry,
     uint32_t id, const char *interface, uint32_t version)
@@ -126,6 +162,10 @@ registry_handle_global (void *data,
       priv->output = wl_registry_bind (registry, id, &wl_output_interface, 1);
       wl_output_add_listener (priv->output, &output_listener, priv);
     }
+  } else if (strcmp (interface, "zwp_linux_dmabuf_v1") == 0) {
+    priv->dmabuf =
+        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+    zwp_linux_dmabuf_v1_add_listener (priv->dmabuf, &dmabuf_listener, priv);
   }
 }
 
@@ -217,6 +257,8 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
   g_clear_pointer (&priv->compositor, wl_compositor_destroy);
   g_clear_pointer (&priv->registry, wl_registry_destroy);
 
+  g_array_unref (priv->dmabuf_formats);
+
   if (priv->wl_display) {
     if (!priv->use_foreign_display)
       wl_display_disconnect (priv->wl_display);
@@ -294,6 +336,7 @@ gst_vaapi_display_wayland_init (GstVaapiDisplayWayland * display)
 
   display->priv = priv;
   priv->event_fd = -1;
+  priv->dmabuf_formats = g_array_new (FALSE, FALSE, sizeof (GstDRMFormat));
 }
 
 static void

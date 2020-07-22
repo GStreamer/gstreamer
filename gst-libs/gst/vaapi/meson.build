@@ -174,12 +174,23 @@ if USE_WAYLAND
       command: [ wayland_scanner_bin, 'private-code', '@INPUT@', '@OUTPUT@' ],
       input: xdg_shell_xml_spec,
       output: 'xdg-shell-client-protocol.c')
+  dmabuf_xml_spec = join_paths(wayland_protocols_basedir, 'unstable', 'linux-dmabuf', 'linux-dmabuf-unstable-v1.xml')
+  dmabuf_header = custom_target('vaapi-dmabuf-client-header',
+      command: [ wayland_scanner_bin, 'client-header', '@INPUT@', '@OUTPUT@' ],
+      input: dmabuf_xml_spec,
+      output: 'linux-dmabuf-unstable-v1-client-protocol.h')
+  dmabuf_code = custom_target('vaapi-dmabuf-client-code',
+      command: [ wayland_scanner_bin, 'private-code', '@INPUT@', '@OUTPUT@' ],
+      input: dmabuf_xml_spec,
+      output: 'linux-dmabuf-unstable-v1-client-protocol.c')
 
   gstlibvaapi_sources += [
       'gstvaapidisplay_wayland.c',
       'gstvaapiwindow_wayland.c',
       xdg_shell_header,
       xdg_shell_code,
+      dmabuf_header,
+      dmabuf_code,
   ]
   gstlibvaapi_headers += [
       'gstvaapidisplay_wayland.h',

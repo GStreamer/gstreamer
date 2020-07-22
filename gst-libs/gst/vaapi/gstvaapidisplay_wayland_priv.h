@@ -25,6 +25,7 @@
 #define GST_VAAPI_DISPLAY_WAYLAND_PRIV_H
 
 #include "xdg-shell-client-protocol.h"
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
 
 #include <gst/vaapi/gstvaapidisplay_wayland.h>
 #include "gstvaapidisplay_priv.h"
@@ -57,6 +58,13 @@ typedef struct _GstVaapiDisplayWaylandClass     GstVaapiDisplayWaylandClass;
 #define GST_VAAPI_DISPLAY_WL_DISPLAY(display) \
     GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display)->wl_display
 
+typedef struct _GstDRMFormat GstDRMFormat;
+
+struct _GstDRMFormat {
+  guint format;
+  guint64 modifier;
+};
+
 struct _GstVaapiDisplayWaylandPrivate
 {
   gchar *display_name;
@@ -65,7 +73,9 @@ struct _GstVaapiDisplayWaylandPrivate
   struct wl_shell *wl_shell;
   struct xdg_wm_base *xdg_wm_base;
   struct wl_output *output;
+  struct zwp_linux_dmabuf_v1 *dmabuf;
   struct wl_registry *registry;
+  GArray *dmabuf_formats;
   guint width;
   guint height;
   guint phys_width;
