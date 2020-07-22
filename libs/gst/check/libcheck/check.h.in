@@ -422,20 +422,10 @@ static void __testname (int _i CK_ATTRIBUTE_UNUSED)\
 
 /*
  * This is called whenever an assertion fails.
- * Note that it only has the noreturn modifier when
- * using fork. If fork is unavailable, the function
- * calls longjmp() when a test assertion fails. Marking
- * the function as noreturn causes gcc to make assumptions
- * which are not valid, as longjmp() is like a return.
  */
-#if @HAVE_FORK@
 CK_DLL_EXP void CK_EXPORT
 _ck_assert_failed (const char *file, int line, const char *expr, ...)
     CK_ATTRIBUTE_NORETURN;
-#else
-CK_DLL_EXP void CK_EXPORT _ck_assert_failed (const char *file, int line,
-    const char *expr, ...);
-#endif
 
 /**
  * Fail the test if expression is false

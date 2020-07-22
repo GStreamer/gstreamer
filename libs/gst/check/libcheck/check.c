@@ -384,13 +384,12 @@ _ck_assert_failed (const char *file, int line, const char *expr, ...)
 
   va_end (ap);
   send_failure_info (to_send);
-  if (cur_fork_status () == CK_FORK) {
 #if defined(HAVE_FORK) && HAVE_FORK==1
+  if (cur_fork_status () == CK_FORK) {
     _exit (1);
-#endif /* HAVE_FORK */
-  } else {
-    longjmp (error_jmp_buffer, 1);
   }
+#endif /* HAVE_FORK */
+  longjmp (error_jmp_buffer, 1);
 }
 
 SRunner *
