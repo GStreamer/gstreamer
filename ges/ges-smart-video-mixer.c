@@ -129,7 +129,6 @@ typedef struct _PadInfos
   GESSmartMixer *self;
   GstPad *mixer_pad;
   GstPad *ghostpad;
-  GstElement *bin;
 } PadInfos;
 
 static void
@@ -137,12 +136,6 @@ pad_infos_unref (PadInfos * infos)
 {
   if (g_atomic_int_dec_and_test (&infos->refcount)) {
     GST_DEBUG_OBJECT (infos->mixer_pad, "Releasing pad");
-    if (G_LIKELY (infos->bin)) {
-      gst_element_set_state (infos->bin, GST_STATE_NULL);
-      gst_element_unlink (infos->bin, infos->self->mixer);
-      gst_bin_remove (GST_BIN (infos->self), infos->bin);
-    }
-
     if (infos->mixer_pad) {
       gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
       gst_object_unref (infos->mixer_pad);
@@ -255,11 +248,9 @@ static GstPad *
 _request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
-  GstPad *videoconvert_srcpad, *videoconvert_sinkpad, *tmpghost;
   PadInfos *infos = pad_infos_new ();
   GESSmartMixer *self = GES_SMART_MIXER (element);
   GstPad *ghost;
-  GstElement *videoconvert;
 
   infos->mixer_pad = gst_element_request_pad (self->mixer,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (self->mixer),
@@ -274,32 +265,13 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   infos->self = self;
 
-  infos->bin = gst_bin_new (NULL);
-  videoconvert = gst_element_factory_make ("videoconvert", NULL);
-
-  gst_bin_add (GST_BIN (infos->bin), videoconvert);
-
-  videoconvert_sinkpad = gst_element_get_static_pad (videoconvert, "sink");
-  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_sinkpad));
-  gst_object_unref (videoconvert_sinkpad);
-  gst_pad_set_active (tmpghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
-
-  gst_bin_add (GST_BIN (self), infos->bin);
   ghost = g_object_new (ges_smart_mixer_pad_get_type (), "name", name,
-      "direction", GST_PAD_DIRECTION (tmpghost), NULL);
+      "direction", GST_PAD_DIRECTION (infos->mixer_pad), NULL);
   infos->ghostpad = ghost;
-  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), tmpghost);
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), infos->mixer_pad);
   gst_pad_set_active (ghost, TRUE);
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
     goto could_not_add;
-
-  videoconvert_srcpad = gst_element_get_static_pad (videoconvert, "src");
-  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_srcpad));
-  gst_object_unref (videoconvert_srcpad);
-  gst_pad_set_active (tmpghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
-  gst_pad_link (tmpghost, infos->mixer_pad);
 
   gst_pad_set_event_function (GST_PAD (ghost),
       ges_smart_mixer_sinkpad_event_func);
@@ -428,7 +400,7 @@ static void
 ges_smart_mixer_constructed (GObject * obj)
 {
   GstPad *pad;
-  GstElement *identity;
+  GstElement *identity, *videoconvert;
 
   GESSmartMixer *self = GES_SMART_MIXER (obj);
   gchar *cname = g_strdup_printf ("%s-compositor", GST_OBJECT_NAME (self));
@@ -446,10 +418,13 @@ ges_smart_mixer_constructed (GObject * obj)
   g_object_set (identity, "drop-allocation", TRUE, NULL);
   g_assert (identity);
 
-  gst_bin_add_many (GST_BIN (self), self->mixer, identity, NULL);
-  gst_element_link (self->mixer, identity);
+  videoconvert = gst_element_factory_make ("videoconvert", NULL);
+  g_assert (videoconvert);
 
-  pad = gst_element_get_static_pad (identity, "src");
+  gst_bin_add_many (GST_BIN (self), self->mixer, identity, videoconvert, NULL);
+  gst_element_link_many (self->mixer, identity, videoconvert, NULL);
+
+  pad = gst_element_get_static_pad (videoconvert, "src");
   self->srcpad = gst_ghost_pad_new ("src", pad);
   gst_pad_set_active (self->srcpad, TRUE);
   gst_object_unref (pad);

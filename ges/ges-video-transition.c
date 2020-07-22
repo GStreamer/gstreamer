@@ -329,7 +329,7 @@ set_interpolation (GstObject * element, GESVideoTransitionPrivate * priv,
 static GstElement *
 ges_video_transition_create_element (GESTrackElement * object)
 {
-  GstElement *topbin, *iconva, *iconvb, *oconv;
+  GstElement *topbin, *iconva, *iconvb;
   GstElement *mixer = NULL;
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
   GESVideoTransition *self;
@@ -348,10 +348,8 @@ ges_video_transition_create_element (GESTrackElement * object)
       gst_element_factory_make ("framepositioner", "frame_tagger");
   g_object_set (priv->positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
-  oconv = gst_element_factory_make ("videoconvert", "tr-csp-output");
 
-  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positioner,
-      oconv, NULL);
+  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positioner, NULL);
 
   mixer =
       g_object_new (GES_TYPE_SMART_MIXER, "name",
@@ -379,11 +377,10 @@ ges_video_transition_create_element (GESTrackElement * object)
       GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "add" : "over");
 
   fast_element_link (mixer, priv->positioner);
-  fast_element_link (priv->positioner, oconv);
 
   sinka_target = gst_element_get_static_pad (iconva, "sink");
   sinkb_target = gst_element_get_static_pad (iconvb, "sink");
-  src_target = gst_element_get_static_pad (oconv, "src");
+  src_target = gst_element_get_static_pad (priv->positioner, "src");
 
   sinka = gst_ghost_pad_new ("sinka", sinka_target);
   sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
