@@ -566,15 +566,15 @@ gst_v4l2_codec_h264_dec_fill_slice_params (GstV4l2CodecH264Dec * self,
     }
   }
 
-  /* Skip l1 if this is not a B-Frames. */
+  /* Skip l1 if this is not a B-Frame. */
   if (slice->header.type % 5 != GST_H264_B_SLICE)
     return;
 
-  for (i = 0; i <= slice->header.num_ref_idx_l0_active_minus1; i++) {
-    params->pred_weight_table.weight_factors[0].luma_weight[i] =
-        slice->header.pred_weight_table.luma_weight_l0[i];
-    params->pred_weight_table.weight_factors[0].luma_offset[i] =
-        slice->header.pred_weight_table.luma_offset_l0[i];
+  for (i = 0; i <= slice->header.num_ref_idx_l1_active_minus1; i++) {
+    params->pred_weight_table.weight_factors[1].luma_weight[i] =
+        slice->header.pred_weight_table.luma_weight_l1[i];
+    params->pred_weight_table.weight_factors[1].luma_offset[i] =
+        slice->header.pred_weight_table.luma_offset_l1[i];
   }
 
   if (slice->header.pps->sequence->chroma_array_type != 0) {
