@@ -306,7 +306,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
 
   hr = media_type->GetUINT32 (MF_MT_VIDEO_CHROMA_SITING, &val);
   if (SUCCEEDED (hr)) {
-    GST_LOG ("have chroma site 0x%x", val);
+    gboolean known_value = TRUE;
 
     if ((val & MFVideoChromaSubsampling_MPEG2) ==
         MFVideoChromaSubsampling_MPEG2) {
@@ -318,8 +318,11 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
         MFVideoChromaSubsampling_Cosited) {
       chroma_site = GST_VIDEO_CHROMA_SITE_COSITED;
     } else {
-      GST_FIXME ("unhandled chroma site 0x%x", val);
+      known_value = FALSE;
     }
+
+    GST_LOG ("have %s chroma site value 0x%x",
+        known_value ? "known" : "unknown", val);
   }
 
   if (chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
