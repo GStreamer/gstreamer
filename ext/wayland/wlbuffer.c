@@ -95,8 +95,7 @@ gst_wl_buffer_dispose (GObject * gobject)
    * block and in the end the display will increase the refcount
    * of this GstWlBuffer, so it will not be finalized */
   if (self->display) {
-    GstMemory *mem0 = gst_buffer_peek_memory (self->gstbuffer, 0);
-    gst_wl_display_unregister_buffer (self->display, mem0);
+    gst_wl_display_unregister_buffer (self->display, self->gstmem);
   }
 
   G_OBJECT_CLASS (gst_wl_buffer_parent_class)->dispose (gobject);
@@ -133,13 +132,15 @@ static void
 buffer_release (void *data, struct wl_buffer *wl_buffer)
 {
   GstWlBuffer *self = data;
+  GstBuffer *buf = self->current_gstbuffer;
 
-  GST_LOG_OBJECT (self, "wl_buffer::release (GstBuffer: %p)", self->gstbuffer);
+  GST_LOG_OBJECT (self, "wl_buffer::release (GstBuffer: %p)", buf);
 
   self->used_by_compositor = FALSE;
+  self->current_gstbuffer = NULL;
 
   /* unref should be last, because it may end up destroying the GstWlBuffer */
-  gst_buffer_unref (self->gstbuffer);
+  gst_buffer_unref (buf);
 }
 
 static const struct wl_buffer_listener buffer_listener = {
@@ -163,19 +164,18 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
     GstWlDisplay * display)
 {
   GstWlBuffer *self;
-  GstMemory *mem0;
 
   self = g_object_new (GST_TYPE_WL_BUFFER, NULL);
-  self->gstbuffer = gstbuffer;
+  self->current_gstbuffer = gstbuffer;
   self->wlbuffer = wlbuffer;
   self->display = display;
+  self->gstmem = gst_buffer_peek_memory (gstbuffer, 0);
 
-  mem0 = gst_buffer_peek_memory (gstbuffer, 0);
-  gst_wl_display_register_buffer (self->display, mem0, self);
+  gst_wl_display_register_buffer (self->display, self->gstmem, self);
 
   wl_buffer_add_listener (self->wlbuffer, &buffer_listener, self);
 
-  gst_mini_object_weak_ref (GST_MINI_OBJECT (mem0),
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (self->gstmem),
       (GstMiniObjectNotify) gstmemory_disposed, self);
 
 
@@ -186,7 +186,10 @@ GstWlBuffer *
 gst_buffer_get_wl_buffer (GstWlDisplay * display, GstBuffer * gstbuffer)
 {
   GstMemory *mem0 = gst_buffer_peek_memory (gstbuffer, 0);
-  return gst_wl_display_lookup_buffer (display, mem0);
+  GstWlBuffer *wlbuf = gst_wl_display_lookup_buffer (display, mem0);
+  if (wlbuf)
+    wlbuf->current_gstbuffer = gstbuffer;
+  return wlbuf;
 }
 
 void
@@ -198,9 +201,9 @@ gst_wl_buffer_force_release_and_unref (GstBuffer * buf, GstWlBuffer * self)
    * at the same time from the event loop thread */
   if (self->used_by_compositor) {
     GST_DEBUG_OBJECT (self, "forcing wl_buffer::release (GstBuffer: %p)",
-        self->gstbuffer);
+        self->current_gstbuffer);
     self->used_by_compositor = FALSE;
-    gst_buffer_unref (self->gstbuffer);
+    gst_buffer_unref (self->current_gstbuffer);
   }
 
   /* Finalize this GstWlBuffer early.
@@ -214,7 +217,7 @@ gst_wl_buffer_force_release_and_unref (GstBuffer * buf, GstWlBuffer * self)
   wl_buffer_destroy (self->wlbuffer);
   self->wlbuffer = NULL;
   self->display = NULL;
-  self->gstbuffer = NULL;
+  self->current_gstbuffer = NULL;
 
   /* remove the reference that the caller (GstWlDisplay) owns */
   g_object_unref (self);
@@ -224,7 +227,8 @@ void
 gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface)
 {
   if (self->used_by_compositor) {
-    GST_DEBUG_OBJECT (self, "buffer used by compositor %p", self->gstbuffer);
+    GST_DEBUG_OBJECT (self, "buffer used by compositor %p",
+        self->current_gstbuffer);
     return;
   }
 
@@ -233,6 +237,6 @@ gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface)
   /* Add a reference to the buffer. This represents the fact that
    * the compositor is using the buffer and it should not return
    * back to the pool and be re-used until the compositor releases it. */
-  gst_buffer_ref (self->gstbuffer);
+  gst_buffer_ref (self->current_gstbuffer);
   self->used_by_compositor = TRUE;
 }

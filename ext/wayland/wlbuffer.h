@@ -40,7 +40,8 @@ struct _GstWlBuffer
   GObject parent_instance;
 
   struct wl_buffer * wlbuffer;
-  GstBuffer *gstbuffer;
+  GstBuffer *current_gstbuffer;
+  GstMemory *gstmem;
 
   GstWlDisplay *display;
 
