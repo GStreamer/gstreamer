@@ -970,9 +970,10 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   if ((old_caps = gst_pad_get_current_caps (pad))) {
     if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
-        && !gst_caps_is_equal (caps, old_caps)) {
+        && !gst_caps_is_subset (caps, old_caps)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
-          ("Caps changes are not supported by Matroska"));
+          ("Caps changes are not supported by Matroska\nCurrent: `%"
+              GST_PTR_FORMAT "`\nNew: `%" GST_PTR_FORMAT "`", old_caps, caps));
       gst_caps_unref (old_caps);
       goto refuse_caps;
     }
