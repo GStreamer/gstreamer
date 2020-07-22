@@ -337,6 +337,7 @@ gboolean     gst_v4l2_signal_strength (GstV4l2Object * v4l2object, gint tunernum
 /* attribute control */
 gboolean     gst_v4l2_get_attribute   (GstV4l2Object * v4l2object, int attribute, int * value);
 gboolean     gst_v4l2_set_attribute   (GstV4l2Object * v4l2object, int attribute, const int value);
+gboolean     gst_v4l2_set_string_attribute (GstV4l2Object * v4l2object, int attribute_num, const char *value);
 gboolean     gst_v4l2_set_controls    (GstV4l2Object * v4l2object, GstStructure * controls);
 
 G_END_DECLS
