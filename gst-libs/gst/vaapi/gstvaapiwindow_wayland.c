@@ -37,6 +37,8 @@
 #include "gstvaapifilter.h"
 #include "gstvaapisurfacepool.h"
 
+#include <unistd.h>
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
 #define GST_CAT_DEFAULT gst_debug_vaapi_window
 
@@ -113,6 +115,7 @@ struct _GstVaapiWindowWaylandPrivate
   volatile guint num_frames_pending;
   gint configure_pending;
   gboolean need_vpp;
+  gboolean dmabuf_broken;
 };
 
 /**
@@ -532,6 +535,299 @@ static const struct wl_buffer_listener frame_buffer_listener = {
   frame_release_callback
 };
 
+typedef enum
+{
+  GST_VAAPI_DMABUF_SUCCESS,
+  GST_VAAPI_DMABUF_BAD_FLAGS,
+  GST_VAAPI_DMABUF_BAD_FORMAT,
+  GST_VAAPI_DMABUF_BAD_MODIFIER,
+  GST_VAAPI_DMABUF_NOT_SUPPORTED,
+  GST_VAAPI_DMABUF_FLUSH,
+
+} GstVaapiDmabufStatus;
+
+#define DRM_FORMAT_MOD_INVALID 0xffffffffffffff
+
+static GstVaapiDmabufStatus
+dmabuf_format_supported (GstVaapiDisplayWaylandPrivate * const priv_display,
+    guint format, guint64 modifier)
+{
+  GArray *formats = priv_display->dmabuf_formats;
+  gboolean linear = FALSE;
+  gint i;
+
+  for (i = 0; i < formats->len; i++) {
+    GstDRMFormat fmt = g_array_index (formats, GstDRMFormat, i);
+    if (fmt.format == format && (fmt.modifier == modifier ||
+            (fmt.modifier == DRM_FORMAT_MOD_INVALID && modifier == 0)))
+      return GST_VAAPI_DMABUF_SUCCESS;
+    if (fmt.format == format && (fmt.modifier == 0 ||
+            fmt.modifier == DRM_FORMAT_MOD_INVALID))
+      linear = TRUE;
+  }
+  if (linear)
+    return GST_VAAPI_DMABUF_BAD_MODIFIER;
+  else
+    return GST_VAAPI_DMABUF_BAD_FORMAT;
+}
+
+GstVideoFormat
+check_format (GstVaapiDisplay * const display, gint index,
+    GstVideoFormat expect)
+{
+  GstVaapiDisplayWaylandPrivate *const priv_display =
+      GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
+  GArray *formats = priv_display->dmabuf_formats;
+  GstDRMFormat fmt = g_array_index (formats, GstDRMFormat, index);
+  GstVideoFormat format = gst_vaapi_video_format_from_drm_format (fmt.format);
+  GstVaapiSurface *surface;
+
+  /* unkown formats should be filtered out in the display */
+  g_assert (format != GST_VIDEO_FORMAT_UNKNOWN);
+
+  if ((expect != GST_VIDEO_FORMAT_UNKNOWN) && (format != expect))
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  surface = gst_vaapi_surface_new_with_format (display, format, 64, 64,
+      fmt.modifier == 0 ? GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE : 0);
+  if (!surface)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  gst_vaapi_surface_unref (surface);
+
+  return format;
+}
+
+GstVideoFormat
+choose_next_format (GstVaapiDisplay * const display, gint * next_index)
+{
+  GstVaapiDisplayWaylandPrivate *const priv_display =
+      GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
+  GArray *formats = priv_display->dmabuf_formats;
+  GstVideoFormat format;
+  gint i;
+
+  if (*next_index < 0) {
+    *next_index = 0;
+    /* try GST_VIDEO_FORMAT_RGBA first */
+    for (i = 0; i < formats->len; i++) {
+      format = check_format (display, i, GST_VIDEO_FORMAT_RGBA);
+      if (format != GST_VIDEO_FORMAT_UNKNOWN)
+        return format;
+    }
+  }
+
+  for (i = *next_index; i < formats->len; i++) {
+    format = check_format (display, i, GST_VIDEO_FORMAT_UNKNOWN);
+    if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+      *next_index = i + 1;
+      return format;
+    }
+  }
+  *next_index = formats->len;
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+static GstVaapiDmabufStatus
+dmabuf_buffer_from_surface (GstVaapiWindow * window, GstVaapiSurface * surface,
+    const GstVaapiRectangle * rect, guint va_flags,
+    struct wl_buffer **out_buffer)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_WINDOW_DISPLAY (window);
+  GstVaapiDisplayWaylandPrivate *const priv_display =
+      GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
+  struct zwp_linux_buffer_params_v1 *params;
+  struct wl_buffer *buffer = NULL;
+  VADRMPRIMESurfaceDescriptor desc;
+  VAStatus status;
+  GstVaapiDmabufStatus ret;
+  guint format, i, j, plane = 0;
+
+  if (!priv_display->dmabuf)
+    return GST_VAAPI_DMABUF_NOT_SUPPORTED;
+
+  if ((va_flags & (VA_TOP_FIELD | VA_BOTTOM_FIELD)) != VA_FRAME_PICTURE)
+    return GST_VAAPI_DMABUF_BAD_FLAGS;
+
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
+  status = vaExportSurfaceHandle (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      GST_VAAPI_SURFACE_ID (surface), VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+      VA_EXPORT_SURFACE_SEPARATE_LAYERS | VA_EXPORT_SURFACE_READ_ONLY, &desc);
+  /* Try again with composed layers, in case the format is supported there */
+  if (status == VA_STATUS_ERROR_INVALID_SURFACE)
+    status = vaExportSurfaceHandle (GST_VAAPI_DISPLAY_VADISPLAY (display),
+        GST_VAAPI_SURFACE_ID (surface), VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+        VA_EXPORT_SURFACE_COMPOSED_LAYERS | VA_EXPORT_SURFACE_READ_ONLY, &desc);
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
+
+  if (!vaapi_check_status (status, "vaExportSurfaceHandle()")) {
+    if (status == VA_STATUS_ERROR_UNIMPLEMENTED)
+      return GST_VAAPI_DMABUF_NOT_SUPPORTED;
+    else
+      return GST_VAAPI_DMABUF_BAD_FORMAT;
+  }
+
+  format = gst_vaapi_drm_format_from_va_fourcc (desc.fourcc);
+  params = zwp_linux_dmabuf_v1_create_params (priv_display->dmabuf);
+  for (i = 0; i < desc.num_layers; i++) {
+    for (j = 0; j < desc.layers[i].num_planes; ++j) {
+      gint object = desc.layers[i].object_index[j];
+      guint64 modifier = desc.objects[object].drm_format_modifier;
+
+      ret = dmabuf_format_supported (priv_display, format, modifier);
+      if (ret != GST_VAAPI_DMABUF_SUCCESS) {
+        GST_DEBUG ("skipping unsupported format/modifier %s/0x%"
+            G_GINT64_MODIFIER "x", gst_video_format_to_string
+            (gst_vaapi_video_format_from_drm_format (format)), modifier);
+        goto out;
+      }
+
+      zwp_linux_buffer_params_v1_add (params,
+          desc.objects[object].fd, plane, desc.layers[i].offset[j],
+          desc.layers[i].pitch[j], modifier >> 32,
+          modifier & G_GUINT64_CONSTANT (0xffffffff));
+      plane++;
+    }
+  }
+
+  buffer = zwp_linux_buffer_params_v1_create_immed (params, rect->width,
+      rect->height, format, 0);
+
+  if (!buffer)
+    ret = GST_VAAPI_DMABUF_NOT_SUPPORTED;
+
+out:
+  zwp_linux_buffer_params_v1_destroy (params);
+
+  for (i = 0; i < desc.num_objects; i++)
+    close (desc.objects[i].fd);
+
+  *out_buffer = buffer;
+  return ret;
+}
+
+static gboolean
+buffer_from_surface (GstVaapiWindow * window, GstVaapiSurface ** surf,
+    const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect,
+    guint flags, struct wl_buffer **buffer)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_WINDOW_DISPLAY (window);
+  GstVaapiWindowWaylandPrivate *const priv =
+      GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+  GstVaapiSurface *surface;
+  GstVaapiDmabufStatus ret;
+  guint va_flags;
+  VAStatus status;
+  gint format_index = -1;
+
+  va_flags = from_GstVaapiSurfaceRenderFlags (flags);
+
+again:
+  surface = *surf;
+  if (priv->need_vpp) {
+    GstVaapiSurface *vpp_surface = NULL;
+    if (window->has_vpp) {
+      GST_LOG ("VPP: %s <%d, %d, %d, %d> -> %s <%d, %d, %d, %d>",
+          gst_video_format_to_string (gst_vaapi_surface_get_format (surface)),
+          src_rect->x, src_rect->y, src_rect->width, src_rect->height,
+          gst_video_format_to_string (window->surface_pool_format),
+          dst_rect->x, dst_rect->y, dst_rect->width, dst_rect->height);
+      vpp_surface = gst_vaapi_window_vpp_convert_internal (window, surface,
+          src_rect, dst_rect, flags);
+    }
+    if (G_UNLIKELY (!vpp_surface)) {
+      /* Not all formats are supported as destination format during VPP.
+         So try again with the next format if VPP fails. */
+      GstVideoFormat format = choose_next_format (display, &format_index);
+      if ((format != GST_VIDEO_FORMAT_UNKNOWN) && window->has_vpp) {
+        GST_DEBUG ("VPP failed. Try again with format %s",
+            gst_video_format_to_string (format));
+        gst_vaapi_window_set_vpp_format_internal (window, format, 0);
+        goto again;
+      } else {
+        GST_WARNING ("VPP failed. No supported format found.");
+        priv->dmabuf_broken = TRUE;
+      }
+    } else {
+      surface = vpp_surface;
+      va_flags = VA_FRAME_PICTURE;
+    }
+  }
+  if (!priv->dmabuf_broken) {
+    ret = dmabuf_buffer_from_surface (window, surface, dst_rect, va_flags,
+        buffer);
+    switch (ret) {
+      case GST_VAAPI_DMABUF_SUCCESS:
+        goto out;
+      case GST_VAAPI_DMABUF_BAD_FLAGS:
+        /* FIXME: how should this be handed? */
+        break;
+      case GST_VAAPI_DMABUF_BAD_FORMAT:{
+        /* The Wayland server does not accept the current format or
+           vaExportSurfaceHandle() failed. Try again with a different format */
+        GstVideoFormat format = choose_next_format (display, &format_index);
+        if ((format != GST_VIDEO_FORMAT_UNKNOWN) && window->has_vpp) {
+          GST_DEBUG ("Failed to export buffer. Try again with format %s",
+              gst_video_format_to_string (format));
+          priv->need_vpp = TRUE;
+          gst_vaapi_window_set_vpp_format_internal (window, format, 0);
+          goto again;
+        }
+        if (window->has_vpp)
+          GST_WARNING ("Failed to export buffer and VPP not supported.");
+        else
+          GST_WARNING ("Failed to export buffer. No supported format found.");
+        priv->dmabuf_broken = TRUE;
+        break;
+      }
+      case GST_VAAPI_DMABUF_BAD_MODIFIER:
+        /* The format is supported by the Wayland server but not with the
+           current modifier. Try linear instead. */
+        if (window->has_vpp) {
+          GST_DEBUG ("Modifier rejected by the server. Try linear instead.");
+          priv->need_vpp = TRUE;
+          gst_vaapi_window_set_vpp_format_internal (window,
+              gst_vaapi_surface_get_format (surface),
+              GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
+          goto again;
+        }
+        GST_WARNING ("Modifier rejected by the server and VPP not supported.");
+        priv->dmabuf_broken = TRUE;
+        break;
+      case GST_VAAPI_DMABUF_NOT_SUPPORTED:
+        GST_DEBUG ("DMABuf protocol not supported");
+        priv->dmabuf_broken = TRUE;
+        break;
+      case GST_VAAPI_DMABUF_FLUSH:
+        return FALSE;
+    }
+  }
+
+  /* DMABuf is not available or does not work. Fall back to the old API.
+     There is no format negotiation so stick with NV12  */
+  gst_vaapi_window_set_vpp_format_internal (window, GST_VIDEO_FORMAT_NV12, 0);
+
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
+  status = vaGetSurfaceBufferWl (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      GST_VAAPI_SURFACE_ID (surface),
+      va_flags & (VA_TOP_FIELD | VA_BOTTOM_FIELD), buffer);
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
+
+  if (window->has_vpp && !priv->need_vpp &&
+      (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED ||
+          status == VA_STATUS_ERROR_UNIMPLEMENTED ||
+          status == VA_STATUS_ERROR_INVALID_IMAGE_FORMAT)) {
+    priv->need_vpp = TRUE;
+    goto again;
+  }
+  if (!vaapi_check_status (status, "vaGetSurfaceBufferWl()"))
+    return FALSE;
+
+out:
+  *surf = surface;
+  return TRUE;
+}
+
 static gboolean
 gst_vaapi_window_wayland_render (GstVaapiWindow * window,
     GstVaapiSurface * surface,
@@ -540,19 +836,18 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
 {
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
-  GstVaapiDisplay *const display = GST_VAAPI_WINDOW_DISPLAY (window);
   struct wl_display *const wl_display =
       GST_VAAPI_WINDOW_NATIVE_DISPLAY (window);
   struct wl_buffer *buffer;
   FrameState *frame;
-  guint width, height, va_flags;
-  VAStatus status;
+  guint width, height;
+  gboolean ret;
 
   /* Check that we don't need to crop source VA surface */
   gst_vaapi_surface_get_size (surface, &width, &height);
   if (src_rect->x != 0 || src_rect->y != 0)
     priv->need_vpp = TRUE;
-  if (src_rect->width != width || src_rect->height != height)
+  if (src_rect->width != width)
     priv->need_vpp = TRUE;
 
   /* Check that we don't render to a subregion of this window */
@@ -561,43 +856,15 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   if (dst_rect->width != window->width || dst_rect->height != window->height)
     priv->need_vpp = TRUE;
 
-  /* Try to construct a Wayland buffer from VA surface as is (without VPP) */
-  if (!priv->need_vpp) {
-    GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
-    va_flags = from_GstVaapiSurfaceRenderFlags (flags);
-    status = vaGetSurfaceBufferWl (GST_VAAPI_DISPLAY_VADISPLAY (display),
-        GST_VAAPI_SURFACE_ID (surface),
-        va_flags & (VA_TOP_FIELD | VA_BOTTOM_FIELD), &buffer);
-    GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
-    if (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED ||
-        status == VA_STATUS_ERROR_UNIMPLEMENTED ||
-        status == VA_STATUS_ERROR_INVALID_IMAGE_FORMAT)
-      priv->need_vpp = TRUE;
-    else if (!vaapi_check_status (status, "vaGetSurfaceBufferWl()"))
-      return FALSE;
-  }
+  ret = buffer_from_surface (window, &surface, src_rect, dst_rect, flags,
+      &buffer);
+  if (!ret)
+    return FALSE;
 
-  /* Try to construct a Wayland buffer with VPP */
+  /* if need_vpp is set then the vpp happend */
   if (priv->need_vpp) {
-    if (window->has_vpp) {
-      GstVaapiSurface *const vpp_surface =
-          gst_vaapi_window_vpp_convert_internal (window, surface, src_rect,
-          dst_rect, flags);
-      if (G_UNLIKELY (!vpp_surface))
-        priv->need_vpp = FALSE;
-      else {
-        surface = vpp_surface;
-        width = window->width;
-        height = window->height;
-      }
-    }
-
-    GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
-    status = vaGetSurfaceBufferWl (GST_VAAPI_DISPLAY_VADISPLAY (display),
-        GST_VAAPI_SURFACE_ID (surface), VA_FRAME_PICTURE, &buffer);
-    GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
-    if (!vaapi_check_status (status, "vaGetSurfaceBufferWl()"))
-      return FALSE;
+    width = window->width;
+    height = window->height;
   }
 
   /* Wait for the previous frame to complete redraw */
