@@ -223,7 +223,7 @@ get_window_size (const ComPtr<Core::ICoreDispatcher> &dispatcher,
     HANDLE cancellable,
     const ComPtr<Core::ICoreWindow> &window, Size *size)
 {
-  return run_async (dispatcher, cancellable, DEFAULT_ASYNC_TIMEOUT,
+  return run_async (dispatcher, cancellable, INFINITE,
       [window, size] {
         HRESULT hr;
         Rect bounds;
@@ -481,7 +481,7 @@ gst_d3d11_window_core_window_on_resize (GstD3D11Window * window,
   GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
   CoreWindowWinRTStorage *storage = self->storage;
 
-  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+  run_async (storage->dispatcher, storage->cancellable, INFINITE,
       [window] {
         gst_d3d11_window_core_window_on_resize_sync (window);
         return S_OK;
