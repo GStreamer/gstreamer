@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 }
 
 /* timeout to wait busy UI thread */
-#define DEFAULT_ASYNC_TIMEOUT (5 * 1000)
+#define DEFAULT_ASYNC_TIMEOUT (10 * 1000)
 
 typedef struct _SwapChainPanelWinRTStorage
 {
