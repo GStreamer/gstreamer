@@ -72,6 +72,17 @@ def prepend_env_var(env, var, value, sysroot):
     env[var] = val + env_val
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
 
+def get_target_install_filename(target, filename):
+    '''
+    Checks whether this file is one of the files installed by the target
+    '''
+    basename = os.path.basename(filename)
+    for install_filename in listify(target['install_filename']):
+        if install_filename.endswith(basename):
+            return install_filename
+    return None
+
+
 def is_library_target_and_not_plugin(target, filename):
     '''
     Don't add plugins to PATH/LD_LIBRARY_PATH because:
@@ -84,14 +95,9 @@ def is_library_target_and_not_plugin(target, filename):
     if not SHAREDLIB_REG.search(filename):
         return False
     # Check if it's installed to the gstreamer plugin location
-    for install_filename in listify(target['install_filename']):
-        if install_filename.endswith(os.path.basename(filename)):
-            break
-    else:
-        # None of the installed files in the target correspond to the built
-        # filename, so skip
+    install_filename = get_target_install_filename(target, filename)
+    if not install_filename:
         return False
-
     global GSTPLUGIN_FILEPATH_REG
     if GSTPLUGIN_FILEPATH_REG is None:
         GSTPLUGIN_FILEPATH_REG = re.compile(GSTPLUGIN_FILEPATH_REG_TEMPLATE)
@@ -103,12 +109,8 @@ def is_binary_target_and_in_path(target, filename, bindir):
     if target['type'] != 'executable':
         return False
     # Check if this file installed by this target is installed to bindir
-    for install_filename in listify(target['install_filename']):
-        if install_filename.endswith(os.path.basename(filename)):
-            break
-    else:
-        # None of the installed files in the target correspond to the built
-        # filename, so skip
+    install_filename = get_target_install_filename(target, filename)
+    if not install_filename:
         return False
     fpath = PurePath(install_filename)
     if fpath.parent != bindir:
