@@ -99,9 +99,9 @@ static gboolean gst_d3d11_vp8_dec_src_query (GstVideoDecoder * decoder,
 static gboolean gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr);
 static gboolean gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder,
-    GstVp8Picture * picture);
+    GstVideoCodecFrame * frame, GstVp8Picture * picture);
 static GstFlowReturn gst_d3d11_vp8_dec_output_picture (GstVp8Decoder *
-    decoder, GstVp8Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstVp8Picture * picture);
 static gboolean gst_d3d11_vp8_dec_start_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture);
 static gboolean gst_d3d11_vp8_dec_decode_picture (GstVp8Decoder * decoder,
@@ -335,7 +335,8 @@ gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 }
 
 static gboolean
-gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder, GstVp8Picture * picture)
+gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder,
+    GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   GstBuffer *view_buffer;
@@ -362,10 +363,10 @@ gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder, GstVp8Picture * picture)
 
 static GstFlowReturn
 gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
-    GstVp8Picture * picture)
+    GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
-  GstVideoCodecFrame *frame = NULL;
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
 
@@ -375,25 +376,16 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
 
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "Could not get output view");
-    return GST_FLOW_ERROR;
-  }
-
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-
-  if (!frame) {
-    GST_ERROR_OBJECT (self,
-        "No frame corresponding to system frame number %d",
-        picture->system_frame_number);
-
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   if (!picture->frame_hdr.show_frame) {
     GST_LOG_OBJECT (self, "Decode only picture %p", picture);
     GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
 
-    return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+    gst_vp8_picture_unref (picture);
+
+    return gst_video_decoder_finish_frame (vdec, frame);
   }
 
   /* if downstream is d3d11 element and forward playback case,
@@ -402,20 +394,19 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
    * up to gop size but our dpb pool cannot be increased */
   if (self->use_d3d11_output &&
       gst_d3d11_decoder_supports_direct_rendering (self->d3d11_decoder) &&
-      GST_VIDEO_DECODER (self)->input_segment.rate > 0) {
+      vdec->input_segment.rate > 0) {
     GstMemory *mem;
 
     output_buffer = gst_buffer_ref (view_buffer);
     mem = gst_buffer_peek_memory (output_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
   } else {
-    output_buffer =
-        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+    output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
   }
 
   if (!output_buffer) {
     GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   frame->output_buffer = output_buffer;
@@ -425,15 +416,21 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
           picture->frame_hdr.width, picture->frame_hdr.height,
           view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (output_buffer)));
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  gst_vp8_picture_unref (picture);
+
+  return gst_video_decoder_finish_frame (vdec, frame);
+
+error:
+  gst_video_decoder_drop_frame (vdec, frame);
+  gst_vp8_picture_unref (picture);
+
+  return GST_FLOW_ERROR;
 }
 
 static GstD3D11DecoderOutputView *

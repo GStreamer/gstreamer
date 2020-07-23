@@ -332,7 +332,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
   picture->system_frame_number = frame->system_frame_number;
 
   if (klass->new_picture) {
-    if (!klass->new_picture (self, picture)) {
+    if (!klass->new_picture (self, frame, picture)) {
       GST_ERROR_OBJECT (self, "subclass cannot handle new picture");
       goto unmap_and_error;
     }
@@ -361,15 +361,10 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_buffer_unmap (in_buf, &map);
 
-  gst_video_codec_frame_set_user_data (frame, gst_vp8_picture_ref (picture),
-      (GDestroyNotify) gst_vp8_picture_unref);
-  gst_video_codec_frame_unref (frame);
-
-  /* transfer ownership of picture */
-  gst_vp8_decoder_update_reference (self, picture);
+  gst_vp8_decoder_update_reference (self, gst_vp8_picture_ref (picture));
 
   g_assert (klass->output_picture);
-  return klass->output_picture (self, picture);
+  return klass->output_picture (self, frame, picture);
 
 unmap_and_error:
   {

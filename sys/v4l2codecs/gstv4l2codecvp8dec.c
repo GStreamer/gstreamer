@@ -657,18 +657,17 @@ fail:
 
 static GstFlowReturn
 gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
-    GstVp8Picture * picture)
+    GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_vp8_picture_get_user_data (picture);
   gint ret;
   guint32 frame_num;
-  GstVideoCodecFrame *frame, *other_frame;
-  GstVp8Picture *other_pic;
-  GstV4l2Request *other_request;
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
+  /* Unlikely, but it would not break this decoding flow */
   if (gst_v4l2_request_is_done (request))
     goto finish_frame;
 
@@ -676,38 +675,27 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
   if (ret == 0) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
         ("Decoding frame took too long"), (NULL));
-    return GST_FLOW_ERROR;
+    goto error;
   } else if (ret < 0) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
         ("Decoding request failed: %s", g_strerror (errno)), (NULL));
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
-  while (TRUE) {
-    if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
-      GST_ELEMENT_ERROR (self, STREAM, DECODE,
-          ("Decoder did not produce a frame"), (NULL));
-      return GST_FLOW_ERROR;
-    }
+  if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoder did not produce a frame"), (NULL));
+    goto error;
+  }
 
-    if (frame_num == picture->system_frame_number)
-      break;
-
-    other_frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-        frame_num);
-    g_return_val_if_fail (other_frame, GST_FLOW_ERROR);
-
-    other_pic = gst_video_codec_frame_get_user_data (other_frame);
-    other_request = gst_vp8_picture_get_user_data (other_pic);
-    gst_v4l2_request_set_done (other_request);
-    gst_video_codec_frame_unref (other_frame);
+  if (frame_num != picture->system_frame_number) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoder produced out of order frame"), (NULL));
+    goto error;
   }
 
 finish_frame:
   gst_v4l2_request_set_done (request);
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-  g_return_val_if_fail (frame, GST_FLOW_ERROR);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
   /* Hold on reference buffers for the rest of the picture lifetime */
@@ -717,7 +705,15 @@ finish_frame:
   if (self->copy_frames)
     gst_v4l2_codec_vp8_dec_copy_output_buffer (self, frame);
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  gst_vp8_picture_unref (picture);
+
+  return gst_video_decoder_finish_frame (vdec, frame);
+
+error:
+  gst_video_decoder_drop_frame (vdec, frame);
+  gst_vp8_picture_unref (picture);
+
+  return GST_FLOW_ERROR;
 }
 
 static void
