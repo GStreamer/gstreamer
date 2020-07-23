@@ -15,7 +15,8 @@ import sys
 import tempfile
 import pathlib
 import signal
-from pathlib import PurePath
+from functools import lru_cache
+from pathlib import PurePath, Path
 
 from distutils.sysconfig import get_python_lib
 from distutils.util import strtobool
@@ -82,6 +83,46 @@ def get_target_install_filename(target, filename):
             return install_filename
     return None
 
+def get_pkgconfig_variable_from_pcfile(pcfile, varname):
+    variables = {}
+    substre = re.compile('\$\{[^${}]+\}')
+    with open(pcfile, 'r', encoding='utf-8') as f:
+        for line in f:
+            if '=' not in line:
+                continue
+            key, value = line[:-1].split('=', 1)
+            subst = {}
+            for each in substre.findall(value):
+                substkey = each[2:-1]
+                subst[each] = variables.get(substkey, '')
+            for k, v in subst.items():
+                value = value.replace(k, v)
+            variables[key] = value
+    return variables.get(varname, '')
+
+@lru_cache()
+def get_pkgconfig_variable(builddir, pcname, varname):
+    '''
+    Parsing isn't perfect, but it's good enough.
+    '''
+    pcfile = Path(builddir) / 'meson-private' / (pcname + '.pc')
+    if pcfile.is_file():
+        return get_pkgconfig_variable_from_pcfile(pcfile, varname)
+    return subprocess.check_output(['pkg-config', pcname, '--variable=' + varname],
+                                   universal_newlines=True, encoding='utf-8')
+
+
+def is_gio_module(target, filename, builddir):
+    if target['type'] != 'shared module':
+        return False
+    install_filename = get_target_install_filename(target, filename)
+    if not install_filename:
+        return False
+    giomoduledir = PurePath(get_pkgconfig_variable(builddir, 'gio-2.0', 'giomoduledir'))
+    fpath = PurePath(install_filename)
+    if fpath.parent != giomoduledir:
+        return False
+    return True
 
 def is_library_target_and_not_plugin(target, filename):
     '''
@@ -89,7 +130,7 @@ def is_library_target_and_not_plugin(target, filename):
     1. We don't need to
     2. It causes us to exceed the PATH length limit on Windows and Wine
     '''
-    if not target['type'].startswith('shared'):
+    if target['type'] != 'shared library':
         return False
     # Check if this output of that target is a shared library
     if not SHAREDLIB_REG.search(filename):
@@ -298,6 +339,10 @@ def get_subprocess_env(options, gst_version):
                                 options.sysroot)
             elif is_binary_target_and_in_path(target, filename, bindir):
                 paths.add(os.path.join(options.builddir, root))
+            elif is_gio_module(target, filename, options.builddir):
+                prepend_env_var(env, 'GIO_EXTRA_MODULES',
+                                os.path.join(options.builddir, root),
+                                options.sysroot)
 
     with open(os.path.join(options.builddir, 'GstPluginsPath.json')) as f:
         for plugin_path in json.load(f):
