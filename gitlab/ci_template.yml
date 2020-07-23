@@ -19,6 +19,7 @@ variables:
   # to change any part of the string of the image you want.
   ###
   FEDORA_TAG:  '2020-07-03.1'
+  FEDORA_DOCS_TAG: '2020-07-03.0'
   CERBERO_TAG: '2020-06-25.0'
   ANDROID_TAG: '2020-06-25.0'
   MANIFEST_TAG: '2020-06-25.0'
@@ -35,6 +36,7 @@ variables:
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
 
   FEDORA_IMAGE:   "$CI_REGISTRY_IMAGE/$FEDORA_AMD64_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+  FEDORA_DOCS_IMAGE: "$CI_REGISTRY_IMAGE/$FEDORA_AMD64_SUFFIX:$FEDORA_DOCS_TAG-$GST_UPSTREAM_BRANCH"
   CERBERO_IMAGE:  "$CI_REGISTRY_IMAGE/$CERBERO_AMD64_SUFFIX:$CERBERO_TAG-$GST_UPSTREAM_BRANCH"
   ANDROID_IMAGE:  "$CI_REGISTRY_IMAGE/$ANDROID_AMD64_SUFFIX:$ANDROID_TAG-$GST_UPSTREAM_BRANCH"
   MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$MANIFEST_AMD64_SUFFIX:$MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
@@ -1060,7 +1062,7 @@ build cerbero cross-ios universal:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 documentation:
-  image: $FEDORA_IMAGE
+  image: $FEDORA_DOCS_IMAGE
   extends:
     - '.gst_build_ccache_vars'
   rules:
