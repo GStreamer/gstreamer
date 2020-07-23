@@ -1,3 +1,4 @@
+# Subproject options
 option('python', type : 'feature', value : 'auto')
 option('libav', type : 'feature', value : 'auto')
 option('libnice', type : 'feature', value : 'auto')
@@ -9,9 +10,12 @@ option('rtsp_server', type : 'feature', value : 'auto')
 option('omx', type : 'feature', value : 'disabled')
 option('vaapi', type : 'feature', value : 'disabled')
 option('sharp', type : 'feature', value : 'disabled')
-option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
-option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples')
 option('rs', type : 'feature', value : 'disabled')
+option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples')
+option('tls', type : 'feature', value : 'auto', description : 'TLS support using glib-networking')
+
+# Other options
+option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
 option('gst-full-libraries', type : 'array', value : [],
   description : '''List of libraries to expose in gstreamer-full's ABI. gstreamer, glib and gobject are always included.''')
 
