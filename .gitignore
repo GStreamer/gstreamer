@@ -40,6 +40,7 @@ subprojects/gstreamer
 subprojects/gstreamer-sharp
 subprojects/gstreamer-vaapi
 subprojects/glib
+subprojects/glib-networking
 subprojects/gl-headers
 subprojects/bindinator
 subprojects/dssim
@@ -62,5 +63,9 @@ subprojects/sqlite-*
 subprojects/libdrm-*
 subprojects/openjpeg*
 subprojects/avtp
+subprojects/graphene
+subprojects/libmicrodns
+subprojects/libpsl
 prefix/
 pygobject
+.gdbinit
