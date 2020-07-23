@@ -685,7 +685,8 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
   /* device_index 0 will be assigned for default device
    * so the number of available device is count + 1 (for default device) */
   if (self->device_index >= 0 && self->device_index > (gint) count) {
-    GST_WARNING_OBJECT (self, "Device index %d is unavailable");
+    GST_WARNING_OBJECT (self, "Device index %d is unavailable",
+        self->device_index);
     goto run_loop;
   }
 
