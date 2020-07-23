@@ -1063,23 +1063,17 @@ gst_harness_teardown (GstHarness * h)
     g_mutex_unlock (&priv->blocking_push_mutex);
   }
 
-  if (h->src_harness) {
+  if (h->src_harness)
     gst_harness_teardown (h->src_harness);
-  }
+  h->src_harness = NULL;
 
   HARNESS_LOCK (h);
   gst_object_replace ((GstObject **) & priv->sink_forward_pad, NULL);
   HARNESS_UNLOCK (h);
 
-  if (h->sink_harness) {
+  if (h->sink_harness)
     gst_harness_teardown (h->sink_harness);
-  }
-
-  if (priv->src_caps)
-    gst_caps_unref (priv->src_caps);
-
-  if (priv->sink_caps)
-    gst_caps_unref (priv->sink_caps);
+  h->sink_harness = NULL;
 
   if (h->srcpad) {
     if (gst_pad_is_request_pad (GST_PAD_PEER (h->srcpad)))
@@ -1097,6 +1091,7 @@ gst_harness_teardown (GstHarness * h)
 
     gst_object_unref (h->srcpad);
   }
+  h->srcpad = NULL;
 
   if (h->sinkpad) {
     if (gst_pad_is_request_pad (GST_PAD_PEER (h->sinkpad)))
@@ -1115,6 +1110,15 @@ gst_harness_teardown (GstHarness * h)
 
     gst_object_unref (h->sinkpad);
   }
+  h->sinkpad = NULL;
+
+  if (priv->src_caps)
+    gst_caps_unref (priv->src_caps);
+  priv->src_caps = NULL;
+
+  if (priv->sink_caps)
+    gst_caps_unref (priv->sink_caps);
+  priv->sink_caps = NULL;
 
   gst_object_replace ((GstObject **) & priv->propose_allocator, NULL);
   gst_object_replace ((GstObject **) & priv->allocator, NULL);
@@ -1122,6 +1126,7 @@ gst_harness_teardown (GstHarness * h)
 
   if (priv->propose_allocation_metas)
     g_array_unref (priv->propose_allocation_metas);
+  priv->propose_allocation_metas = NULL;
 
   /* if we hold the last ref, set to NULL */
   if (gst_harness_element_unref (h) == 0) {
@@ -1143,16 +1148,22 @@ gst_harness_teardown (GstHarness * h)
   priv->eos_received = FALSE;
 
   g_async_queue_unref (priv->buffer_queue);
+  priv->buffer_queue = NULL;
   g_async_queue_unref (priv->src_event_queue);
+  priv->src_event_queue = NULL;
   g_async_queue_unref (priv->sink_event_queue);
+  priv->sink_event_queue = NULL;
 
   g_ptr_array_unref (priv->stress);
+  priv->stress = NULL;
 
   gst_object_unref (h->element);
+  h->element = NULL;
 
   gst_object_replace ((GstObject **) & priv->testclock, NULL);
 
   g_free (h->priv);
+  h->priv = NULL;
   g_free (h);
 }
 
