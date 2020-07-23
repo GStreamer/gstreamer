@@ -106,15 +106,26 @@ libs = [
 ]
 
 if build_gstgl
-  libs += [['gl', gl_gir, gstgl_dep, [
+  libs += [['gl', gl_gir, gstgl_dep]]
+  if enabled_gl_platforms.contains('egl')
+    libs += [['gl-egl', gl_egl_gir, gstgl_dep, [
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstegl.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gsteglimage.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl_device.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstglmemoryegl.[ch]'),
+    ]]]
+  endif
+  if enabled_gl_winsys.contains('x11')
+    libs += [['gl-x11', gl_x11_gir, gstgl_dep, [
       join_paths('../gst-libs/gst', 'gl', 'x11', 'gstgldisplay_x11.[ch]'),
+    ]]]
+  endif
+  if enabled_gl_winsys.contains('wayland')
+    libs += [['gl-wayland', gl_wayland_gir, gstgl_dep, [
       join_paths('../gst-libs/gst', 'gl', 'wayland', 'gstgldisplay_wayland.[ch]'),
-  ]]]
+    ]]]
+  endif
 endif
 
 # Used to avoid conflicts with known plugin names

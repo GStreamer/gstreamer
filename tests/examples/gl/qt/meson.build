@@ -2,7 +2,7 @@ qt5_mod = import('qt5')
 
 qt5gui_dep = dependency('qt5', modules : ['Core', 'Gui', 'Widgets'], required : false)
 qt5opengl_dep = dependency('qt5', modules : ['OpenGL'], required : false)
-# FIXME: other platforms
+#FIXME; other platforms
 libgl = cc.find_library ('GL', required : false)
 
 qt_cxx_warn_less = cxx.get_supported_arguments(['-Wno-aggregate-return'])

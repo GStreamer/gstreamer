@@ -1,0 +1,11 @@
+prefix=
+exec_prefix=
+libdir=@gllibdir@
+includedir=@abs_top_builddir@/gst-libs
+
+Name: GStreamer OpenGL Plugins Libraries (OpenGL Prototypes), Uninstalled
+Description: Streaming media framework, OpenGL plugins libraries (OpenGL Prototypes), uninstalled
+Version: @VERSION@
+Requires: gstreamer-gl-@GST_API_VERSION@ @GL_PROTO_EXTRA_REQUIRES@
+
+Libs: @GL_PROTO_EXTRA_LIBS@

@@ -55,10 +55,6 @@ typedef struct _GstGLMemoryPBO GstGLMemoryPBO;
 typedef struct _GstGLMemoryPBOAllocator GstGLMemoryPBOAllocator;
 typedef struct _GstGLMemoryPBOAllocatorClass GstGLMemoryPBOAllocatorClass;
 
-typedef struct _GstGLMemoryEGL GstGLMemoryEGL;
-typedef struct _GstGLMemoryEGLAllocator GstGLMemoryEGLAllocator;
-typedef struct _GstGLMemoryEGLAllocatorClass GstGLMemoryEGLAllocatorClass;
-
 typedef struct _GstGLRenderbuffer GstGLRenderbuffer;
 typedef struct _GstGLRenderbufferAllocator GstGLRenderbufferAllocator;
 typedef struct _GstGLRenderbufferAllocatorClass GstGLRenderbufferAllocatorClass;

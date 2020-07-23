@@ -39,6 +39,10 @@ GST_GL_API GType gst_gl_memory_egl_allocator_get_type(void);
 #define GST_GL_MEMORY_EGL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, GstGLMemoryEGLAllocatorClass))
 #define GST_GL_MEMORY_EGL_ALLOCATOR_CAST(obj)            ((GstGLMemoryEGLAllocator *)(obj))
 
+typedef struct _GstGLMemoryEGL GstGLMemoryEGL;
+typedef struct _GstGLMemoryEGLAllocator GstGLMemoryEGLAllocator;
+typedef struct _GstGLMemoryEGLAllocatorClass GstGLMemoryEGLAllocatorClass;
+
 /**
  * GstGLMemoryEGL:
  *

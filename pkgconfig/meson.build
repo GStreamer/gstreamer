@@ -47,11 +47,49 @@ if build_gstgl
   gllibdir = join_paths(meson.build_root(), gstgl.outdir())
   pkgconf.set('gllibdir', gllibdir)
   pkgconf.set('glliblinkerflag', '-L' + gllibdir)
-  pkg_files += ['gstreamer-gl']
+  pkg_files += ['gstreamer-gl', 'gstreamer-gl-prototypes']
   pkgconf.set('GL_APIS', ' '.join(enabled_gl_apis))
   pkgconf.set('GL_WINDOWS', ' '.join(enabled_gl_winsys))
   pkgconf.set('GL_PLATFORMS', ' '.join(enabled_gl_platforms))
   pkgconf.set('gl_lib_name', 'gl')
+  gl_proto_requires = ''
+  gl_proto_libs = ''
+  if enabled_gl_apis.contains('gl')
+    if gl_dep.type_name() == 'pkgconfig'
+      gl_proto_requires += ' gl'
+    elif gl_dep.type_name() == 'library'
+      gl_proto_libs += ' -lGL'
+    elif gl_dep.type_name() == 'appleframework'
+      gl_proto_libs += ' -framework OpenGL'
+    endif
+  endif
+  if enabled_gl_apis.contains('gles2')
+    if gles2_dep.type_name() == 'pkgconfig'
+      gl_proto_requires += ' glesv2'
+    elif gles2_dep.type_name() == 'library'
+      gl_proto_libs += ' -lGLESv2'
+    elif gles2_dep.type_name() == 'appleframework'
+      gl_proto_libs += ' -framework OpenGLES'
+    endif
+  endif
+  pkgconf.set('GL_PROTO_EXTRA_REQUIRES', gl_proto_requires)
+  pkgconf.set('GL_PROTO_EXTRA_LIBS', gl_proto_libs)
+  if enabled_gl_platforms.contains('egl')
+    pkg_files += ['gstreamer-gl-egl']
+    if egl_dep.type_name() == 'pkgconfig'
+      pkgconf.set('GL_EGL_EXTRA_REQUIRES', 'egl')
+      pkgconf.set('GL_EGL_EXTRA_LIBS', '')
+    elif egl_dep.type_name() == 'library'
+      pkgconf.set('GL_EGL_EXTRA_REQUIRES', '')
+      pkgconf.set('GL_EGL_EXTRA_LIBS', '-lEGL')
+    endif
+  endif
+  if enabled_gl_winsys.contains('x11')
+    pkg_files += ['gstreamer-gl-x11']
+  endif
+  if enabled_gl_winsys.contains('wayland')
+    pkg_files += ['gstreamer-gl-wayland']
+  endif
 else
   pkgconf.set('glliblinkerflag', '')
   pkgconf.set('gl_lib_name', '')

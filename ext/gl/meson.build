@@ -95,13 +95,14 @@ if png_dep.found()
 endif
 
 if glconf.get('GST_GL_HAVE_WINDOW_COCOA', 0) == 1
+  corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : false)
   foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : false)
   quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : false)
-  if foundation_dep.found() and quartzcore_dep.found() # have cocoa
+  if corefoundation_dep.found() and foundation_dep.found() and quartzcore_dep.found() # have cocoa
     opengl_sources += [
       'caopengllayersink.m',
     ]
-    optional_deps += quartzcore_dep
+    optional_deps += [quartzcore_dep, foundation_dep, corefoundation_dep]
   endif
 endif
 

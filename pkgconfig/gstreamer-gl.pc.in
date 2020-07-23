@@ -2,7 +2,6 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_API_VERSION@
-pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
 gl_platforms=@GL_PLATFORMS@
 gl_winsys=@GL_WINDOWS@
 gl_apis=@GL_APIS@
