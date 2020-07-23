@@ -357,7 +357,7 @@ gst_v4l2_codec_vp8_dec_fill_frame_header (GstV4l2CodecVp8Dec * self,
     .first_part_header_bits = frame_hdr->header_size,
 
     .flags = (frame_hdr->key_frame ? V4L2_VP8_FRAME_HEADER_FLAG_KEY_FRAME : 0) |
-             (frame_hdr->show_frame ? V4L2_VP8_FRAME_HEADER_FLAG_SHOW_FRAME : 0) |	
+             (frame_hdr->show_frame ? V4L2_VP8_FRAME_HEADER_FLAG_SHOW_FRAME : 0) |
              (frame_hdr->mb_no_skip_coeff ? V4L2_VP8_FRAME_HEADER_FLAG_MB_NO_SKIP_COEFF : 0) |
              (frame_hdr->sign_bias_golden ? V4L2_VP8_FRAME_HEADER_FLAG_SIGN_BIAS_GOLDEN : 0) |
              (frame_hdr->sign_bias_alternate ? V4L2_VP8_FRAME_HEADER_FLAG_SIGN_BIAS_ALT : 0),
