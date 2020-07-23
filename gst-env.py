@@ -80,8 +80,6 @@ def is_library_target_and_not_plugin(target, filename):
     '''
     if not target['type'].startswith('shared'):
         return False
-    if not target['installed']:
-        return False
     # Check if this output of that target is a shared library
     if not SHAREDLIB_REG.search(filename):
         return False
@@ -103,8 +101,6 @@ def is_library_target_and_not_plugin(target, filename):
 
 def is_binary_target_and_in_path(target, filename, bindir):
     if target['type'] != 'executable':
-        return False
-    if not target['installed']:
         return False
     # Check if this file installed by this target is installed to bindir
     for install_filename in listify(target['install_filename']):
@@ -282,6 +278,8 @@ def get_subprocess_env(options, gst_version):
 
     for target in targets:
         filenames = listify(target['filename'])
+        if not target['installed']:
+            continue
         for filename in filenames:
             root = os.path.dirname(filename)
             if srcdir_path / "subprojects/gst-devtools/validate/plugins" in (srcdir_path / root).parents:
