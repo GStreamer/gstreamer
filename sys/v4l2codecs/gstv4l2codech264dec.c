@@ -889,20 +889,6 @@ finish_frame:
   if (self->copy_frames)
     gst_v4l2_codec_h264_dec_copy_output_buffer (self, frame);
 
-  /* At this point, GstVideoCodecFrame holds
-   * - GstBuffer (GstVideoCodecFrame::output_buffer)
-   * - GstH264Picture and GstH264Picture holds GstBuffer as well.
-   * So the refcount of the output buffer would be at least 2 here
-   * if the given GstH264Picture is the last reference.
-   *
-   * To make a chance that only this GstVideoCodecFrame holds the reference
-   * of the GstBuffer, clear user data of GstVideoCodecFrame
-   * (i.e., drop the reference of GstH264Picture).
-   * Otherwise, if the reference count of the GstBuffer is not one,
-   * the buffer will be copied always
-   * by gst_buffer_make_writable() in gst_video_decoder_finish_frame()
-   */
-  gst_video_codec_frame_set_user_data (frame, NULL, NULL);
   gst_h264_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (vdec, frame);
