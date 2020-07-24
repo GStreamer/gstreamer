@@ -1954,11 +1954,11 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
   return FALSE;
 }
 
-static gboolean
-add_stream_to_profile (GstEncodingContainerProfile * profile,
+static GstEncodingProfile *
+create_stream_profile_recurse (GstEncodingProfile * toplevel,
     GstDiscovererStreamInfo * sinfo)
 {
-  GstEncodingProfile *sprofile = NULL;
+  GstEncodingProfile *profile = NULL;
   GstStructure *s;
   GstCaps *caps;
 
@@ -1984,42 +1984,72 @@ add_stream_to_profile (GstEncodingContainerProfile * profile,
 
   GST_LOG ("Stream: %" GST_PTR_FORMAT, caps);
   if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
-    sprofile =
+    profile =
         (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL,
         NULL, 0);
   } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinfo)) {
-    sprofile =
+    profile =
         (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
         NULL, 0);
   } else if (GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
     GList *streams, *stream;
-    guint n_streams = 0;
 
     streams =
         gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
         (sinfo));
-    for (stream = streams; stream; stream = stream->next) {
-      if (add_stream_to_profile (profile,
-              (GstDiscovererStreamInfo *) stream->data))
-        n_streams++;
-    }
-    gst_discoverer_stream_info_list_free (streams);
-    gst_caps_unref (caps);
 
-    return n_streams != 0;
+    if (!toplevel || !GST_IS_ENCODING_CONTAINER_PROFILE (toplevel)) {
+      GstEncodingProfile *prev_toplevel = toplevel;
+
+      toplevel = (GstEncodingProfile *)
+          gst_encoding_container_profile_new ("auto-generated",
+          "Automatically generated from GstDiscovererInfo", caps, NULL);
+      if (prev_toplevel)
+        gst_encoding_container_profile_add_profile
+            (GST_ENCODING_CONTAINER_PROFILE (toplevel), prev_toplevel);
+    }
+
+    for (stream = streams; stream; stream = stream->next)
+      create_stream_profile_recurse (toplevel,
+          (GstDiscovererStreamInfo *) stream->data);
+    gst_discoverer_stream_info_list_free (streams);
   } else {
-    GST_WARNING ("Ignoring stream of type '%s'",
+    GST_FIXME ("Ignoring stream of type '%s'",
         g_type_name (G_OBJECT_TYPE (sinfo)));
     /* subtitles or other ? ignore for now */
   }
-  if (sprofile)
-    gst_encoding_container_profile_add_profile (profile, sprofile);
-  else
-    GST_ERROR ("Failed to create stream profile from caps %" GST_PTR_FORMAT,
-        caps);
   gst_caps_unref (caps);
 
-  return sprofile != NULL;
+  if (profile) {
+    const gchar *stream_id = gst_discoverer_stream_info_get_stream_id (sinfo);
+
+    if (stream_id) {
+      const gchar *subid = strchr (stream_id, '/');
+
+      gst_encoding_profile_set_name (profile, subid ? subid : stream_id);
+    }
+
+    if (GST_IS_ENCODING_CONTAINER_PROFILE (toplevel))
+      gst_encoding_container_profile_add_profile ((GstEncodingContainerProfile
+              *)
+          toplevel, profile);
+  }
+
+  if (!toplevel && profile)
+    toplevel = profile;
+
+  sinfo = gst_discoverer_stream_info_get_next (sinfo);
+  if (sinfo)
+    return create_stream_profile_recurse (toplevel, sinfo);
+
+  return toplevel;
+}
+
+static gint
+_compare_profile_names (const GstEncodingProfile * a,
+    const GstEncodingProfile * b)
+{
+  return g_strcmp0 (a->name, b->name);
 }
 
 /**
@@ -2035,11 +2065,8 @@ add_stream_to_profile (GstEncodingContainerProfile * profile,
 GstEncodingProfile *
 gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
 {
-  GstEncodingContainerProfile *profile;
+  GstEncodingProfile *profile;
   GstDiscovererStreamInfo *sinfo;
-  GList *streams, *stream;
-  GstCaps *caps = NULL;
-  guint n_streams = 0;
 
   if (!info || gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK)
     return NULL;
@@ -2048,32 +2075,19 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
   if (!sinfo)
     return NULL;
 
-  caps = gst_discoverer_stream_info_get_caps (sinfo);
-  GST_LOG ("Container: %" GST_PTR_FORMAT, caps);
-  profile =
-      gst_encoding_container_profile_new ("auto-generated",
-      "Automatically generated from GstDiscovererInfo", caps, NULL);
-  gst_caps_unref (caps);
-  if (!profile) {
-    GST_ERROR ("Failed to create container profile from caps %" GST_PTR_FORMAT,
-        caps);
-    return NULL;
-  }
+  profile = create_stream_profile_recurse (NULL, sinfo);
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
+    if (!gst_encoding_container_profile_get_profiles
+        (GST_ENCODING_CONTAINER_PROFILE (profile))) {
+      GST_ERROR ("Failed to add any streams");
+      g_object_unref (profile);
+      return NULL;
+    }
+    /* Sort by stream ID */
+    GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles =
+        g_list_sort (GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles,
+        (GCompareFunc) _compare_profile_names);
 
-  streams =
-      gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
-      (sinfo));
-  for (stream = streams; stream; stream = stream->next) {
-    if (add_stream_to_profile (profile,
-            (GstDiscovererStreamInfo *) stream->data))
-      n_streams++;
-  }
-  gst_discoverer_stream_info_list_free (streams);
-
-  if (n_streams == 0) {
-    GST_ERROR ("Failed to add any streams");
-    g_object_unref (profile);
-    return NULL;
   }
 
   return (GstEncodingProfile *) profile;
