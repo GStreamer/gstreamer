@@ -267,26 +267,32 @@ if get_option('default_library') == 'static'
   endif
 
 
-  gst_dep = subproject('gstreamer').get_variable('gst_dep')
-
   # Get a list of libraries that needs to be exposed in the ABI.
   exposed_libs = []
+  incdir_deps = []
   foreach name : get_option('gst-full-libraries') + ['gstreamer']
     info = libraries_map[name]
     exposed_libs += subproject(info[0]).get_variable(info[1])
+    depname = name == 'gstreamer' ? 'gstreamer-1.0' : 'gstreamer-@0@-1.0'.format(name)
+    incdir_deps += dependency(depname).partial_dependency(includes: true)
   endforeach
 
   # glib and gobject are part of our public API. If we are using glib from the
   # system then our pkg-config file must require it. If we built it as
   # subproject then we need to link_whole it.
-  requires = []
-  gobject_dep = dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])
+  glib_deps = []
+  glib_dep = dependency('glib-2.0')
+  gobject_dep = dependency('gobject-2.0')
   if gobject_dep.type_name() == 'internal'
-      glib_subproject = subproject('glib')
-      exposed_libs += glib_subproject.get_variable('libglib')
-      exposed_libs += glib_subproject.get_variable('libgobject')
+    glib_subproject = subproject('glib')
+    exposed_libs += glib_subproject.get_variable('libglib')
+    exposed_libs += glib_subproject.get_variable('libgobject')
+    incdir_deps += [
+      glib_dep.partial_dependency(includes: true),
+      gobject_dep.partial_dependency(includes: true),
+    ]
   else
-      requires = ['glib-2.0', 'gobject-2.0']
+    glib_deps = [glib_dep, gobject_dep]
   endif
 
   link_deps = []
@@ -307,17 +313,17 @@ if get_option('default_library') == 'static'
     link_with : all_plugins,
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
-    dependencies : gst_dep,
+    dependencies : incdir_deps + glib_deps,
     link_depends : link_deps,
     install : true,
   )
 
   gst_full_dep = declare_dependency(link_with: gstfull.get_shared_lib(),
-    dependencies : gst_dep,
+    dependencies : incdir_deps + glib_deps,
     include_directories: include_directories('.')
   )
   pkgconfig.generate(gstfull,
-    requires: requires,
+    requires: glib_deps,
     subdirs : 'gstreamer-1.0')
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 endif
