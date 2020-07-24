@@ -424,19 +424,7 @@ HRESULT
 MediaCaptureWrapper::EnumrateFrameSourceGroup
     (std::vector<GstWinRTMediaFrameSourceGroup> &group_list)
 {
-  HRESULT hr = S_OK;
-
-  if (dispatcher_) {
-    hr = runOnUIThread (INFINITE,
-      [this, &group_list] {
-          return enumrateFrameSourceGroup(group_list);
-      });
-
-  } else {
-    hr = enumrateFrameSourceGroup(group_list);
-  }
-
-  return hr;
+  return enumrateFrameSourceGroup (group_list);
 }
 
 HRESULT
@@ -490,39 +478,17 @@ MediaCaptureWrapper::StartCapture()
 {
   HRESULT hr = S_OK;
 
-  hr = openMediaCapture();
+  hr = openMediaCapture ();
   if (!gst_mf_result (hr))
     return hr;
 
-  if (dispatcher_) {
-    hr = runOnUIThread (INFINITE,
-      [this] {
-          return startCapture();
-      });
-
-  } else {
-    hr = startCapture();
-  }
-
-  return S_OK;
+  return startCapture ();
 }
 
 HRESULT
 MediaCaptureWrapper::StopCapture()
 {
-  HRESULT hr = S_OK;
-
-  if (dispatcher_) {
-    hr = runOnUIThread (INFINITE,
-      [this] {
-          return stopCapture();
-      });
-
-  } else {
-    hr = stopCapture();
-  }
-
-  return S_OK;
+  return stopCapture ();
 }
 
 HRESULT
