@@ -1480,16 +1480,32 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
   }
   g_mutex_unlock (&src->config_lock);
 
-  /* FIXME: Use custom allocator */
-  ret = raspi_capture_fill_buffer (src->capture_state, buf, clock, base_time);
-  if (*buf) {
-    GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
-        gst_buffer_get_size (*buf));
-    /* Only set the duration when we have a PTS update from the rpi encoder.
-     * not every buffer is a frame */
-    if (GST_BUFFER_PTS_IS_VALID (*buf))
-      GST_BUFFER_DURATION (*buf) = src->duration;
-  }
+  *buf = NULL;
+
+  do {
+    GstBuffer *cbuf = NULL;
+
+    /* FIXME: Use custom allocator */
+    ret =
+        raspi_capture_fill_buffer (src->capture_state, &cbuf, clock, base_time);
+
+    if (cbuf != NULL) {
+      GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
+          gst_buffer_get_size (cbuf));
+
+      if (*buf == NULL) {
+        /* Only set the duration when we have a PTS update from the rpi encoder.
+         * not every buffer is a frame */
+        if (GST_BUFFER_PTS_IS_VALID (cbuf))
+          GST_BUFFER_DURATION (cbuf) = src->duration;
+
+        *buf = cbuf;
+      } else {
+        *buf = gst_buffer_append (*buf, cbuf);
+      }
+      cbuf = NULL;
+    }
+  } while (ret == GST_FLOW_KEEP_ACCUMULATING);
 
   if (ret == GST_FLOW_ERROR_TIMEOUT) {
     GST_ELEMENT_ERROR (src, STREAM, FAILED,
@@ -1497,6 +1513,9 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
         ("Waiting for a buffer from the camera took too long."));
     ret = GST_FLOW_ERROR;
   }
+
+  if (ret != GST_FLOW_OK)
+    gst_clear_buffer (buf);
 
   if (clock)
     gst_object_unref (clock);

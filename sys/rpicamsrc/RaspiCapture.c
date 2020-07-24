@@ -971,11 +971,11 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
       if (runtime >= offset)
         gst_pts = runtime - offset;
     }
-    GST_LOG ("Buf (uS) PTS %" G_GINT64_FORMAT " DTS %" G_GINT64_FORMAT
-        " STC %" G_GINT64_FORMAT " (latency %" G_GINT64_FORMAT
-        "uS) TS %" GST_TIME_FORMAT,
-        buffer->pts, buffer->dts, param.value, param.value - buffer->pts,
-        GST_TIME_ARGS (gst_pts));
+    GST_LOG ("Buf %05u bytes FLAGS 0x%05x (uS) PTS %" G_GINT64_FORMAT
+        " DTS %" G_GINT64_FORMAT " STC %" G_GINT64_FORMAT
+        " (latency %" G_GINT64_FORMAT "uS) TS %" GST_TIME_FORMAT,
+        buffer->length, buffer->flags, buffer->pts, buffer->dts, param.value,
+        param.value - buffer->pts, GST_TIME_ARGS (gst_pts));
   }
   else {
     GST_LOG ("use-stc=false. Not applying STC to buffer");
@@ -988,7 +988,12 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
         GST_BUFFER_DTS(buf) = GST_BUFFER_PTS(buf) = gst_pts;
     /* FIXME: Can we avoid copies and give MMAL our own buffers to fill? */
     gst_buffer_fill(buf, 0, buffer->data, buffer->length);
-    ret = GST_FLOW_OK;
+
+    /* NAL_END is bogus and can't be trusted */
+    if ((buffer->flags & MMAL_BUFFER_HEADER_FLAG_FRAME_END))
+      ret = GST_FLOW_OK;
+    else
+      ret = GST_FLOW_KEEP_ACCUMULATING;
   }
 
   mmal_buffer_header_mem_unlock(buffer);
