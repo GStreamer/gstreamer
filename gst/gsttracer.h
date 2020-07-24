@@ -63,8 +63,6 @@ struct _GstTracerClass {
 GST_API
 GType gst_tracer_get_type          (void);
 
-#ifdef GST_USE_UNSTABLE_API
-
 GST_API
 void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail,
   GCallback func);
@@ -76,8 +74,6 @@ gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type
 
 GST_API
 GList* gst_tracing_get_active_tracers (void);
-
-#endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracer, gst_object_unref)
 

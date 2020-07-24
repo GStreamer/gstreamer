@@ -31,8 +31,6 @@
  * and needs to be done before any pipeline state is set to PAUSED.
  */
 
-#define GST_USE_UNSTABLE_API
-
 #include "gst_private.h"
 #include "gsttracer.h"
 #include "gsttracerfactory.h"

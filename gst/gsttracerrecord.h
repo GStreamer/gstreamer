@@ -91,8 +91,6 @@ typedef enum
   GST_TRACER_VALUE_FLAGS_AGGREGATED = (1 << 1),
 } GstTracerValueFlags;
 
-#ifdef GST_USE_UNSTABLE_API
-
 GST_API
 GstTracerRecord * gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...);
 
@@ -101,8 +99,6 @@ GST_API
 void              gst_tracer_record_log (GstTracerRecord *self, ...);
 #else
 #define gst_tracer_record_log(...) G_STMT_START {} G_STMT_END
-#endif
-
 #endif
 
 G_END_DECLS

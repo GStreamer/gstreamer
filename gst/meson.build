@@ -251,7 +251,7 @@ libgst = library('gstreamer-1.0', gst_sources,
 )
 
 if build_gir
-  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/gst.h', '-DGST_USE_UNSTABLE_API' ]
+  gst_gir_extra_args = gir_init_section + ['--c-include=gst/gst.h']
   if meson.is_subproject()
     # FIXME: There must be a better way to do this
     # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
