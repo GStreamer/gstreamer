@@ -2185,7 +2185,6 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
   gint max_width /* maxWidth */ , max_height /* maxHeight */ ;
   gint size_sb /* sizeSb */ ;
   gint widest_tile_sb /* widestTileSb */ ;
-  gint min_inner_tile_width = G_MAXINT /* min width of non-rightmost tile */ ;
 
   g_assert (parser->seq_header);
   seq_header = parser->seq_header;
@@ -2232,8 +2231,13 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
     }
     parser->state.mi_col_starts[i] = parser->state.mi_cols;
     parser->state.tile_cols = i;
-    if (parser->state.tile_cols > 1)
-      min_inner_tile_width = tile_width_sb << sb_size;
+
+    while (i >= 1) {
+      tile_info->width_in_sbs_minus_1[i - 1] =
+          ((parser->state.mi_col_starts[i] - parser->state.mi_col_starts[i - 1]
+              + ((1 << sb_shift) - 1)) >> sb_shift) - 1;
+      i--;
+    }
 
     min_log2_tile_rows = MAX (min_log2_tiles - parser->state.tile_cols_log2, 0);
     parser->state.tile_rows_log2 = min_log2_tile_rows;
@@ -2256,6 +2260,12 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
     }
     parser->state.mi_row_starts[i] = parser->state.mi_rows;
     parser->state.tile_rows = i;
+    while (i >= 1) {
+      tile_info->height_in_sbs_minus_1[i - 1] =
+          ((parser->state.mi_row_starts[i] - parser->state.mi_row_starts[i - 1]
+              + ((1 << sb_shift) - 1)) >> sb_shift) - 1;
+      i--;
+    }
   } else {
     widest_tile_sb = 0;
     start_sb = 0;
@@ -2270,8 +2280,6 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
       size_sb = tile_info->width_in_sbs_minus_1[i] + 1;
       widest_tile_sb = MAX (size_sb, widest_tile_sb);
       start_sb += size_sb;
-      if (i > 0 && ((size_sb << sb_size) < min_inner_tile_width))
-        min_inner_tile_width = size_sb << sb_size;
     }
     parser->state.mi_col_starts[i] = parser->state.mi_cols;
     parser->state.tile_cols = i;
@@ -2318,13 +2326,6 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
     parser->state.tile_size_bytes = tile_info->tile_size_bytes_minus_1 + 1;
   } else {
     tile_info->context_update_tile_id = 0;
-  }
-
-  if (min_inner_tile_width < (64 << (parser->state.upscaled_width !=
-              parser->state.frame_width))) {
-    GST_INFO ("Minimum tile width requirement not satisfied");
-    retval = GST_AV1_PARSER_BITSTREAM_ERROR;
-    goto error;
   }
 
   memcpy (tile_info->mi_col_starts, parser->state.mi_col_starts,
@@ -4396,6 +4397,11 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
       goto error;
   }
 
+  if (tile_group->tg_end < tile_group->tg_start) {
+    retval = GST_AV1_PARSER_NO_MORE_DATA;
+    goto error;
+  }
+
   if (!gst_bit_reader_skip_to_byte (br)) {
     retval = GST_AV1_PARSER_NO_MORE_DATA;
     goto error;
@@ -4404,6 +4410,7 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
   end_bit_pos = gst_bit_reader_get_pos (br);
   header_bytes = (end_bit_pos - start_bitpos) / 8;
   sz -= header_bytes;
+
   for (tile_num = tile_group->tg_start; tile_num <= tile_group->tg_end;
       tile_num++) {
     tile_row = tile_num / parser->state.tile_cols;
@@ -4420,6 +4427,11 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
       sz -= tile_size - parser->state.tile_size_bytes;
     }
 
+    tile_group->entry[tile_num].tile_size = tile_size;
+    tile_group->entry[tile_num].tile_offset = gst_bit_reader_get_pos (br) / 8;
+    tile_group->entry[tile_num].tile_row = tile_row;
+    tile_group->entry[tile_num].tile_col = tile_col;
+
     tile_group->entry[tile_num].mi_row_start =
         parser->state.mi_row_starts[tile_row];
     tile_group->entry[tile_num].mi_row_end =
@@ -4435,7 +4447,8 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
      */
 
     /* Skip the real data to the next one */
-    if (!gst_bit_reader_skip (br, tile_size)) {
+    if (tile_num < tile_group->tg_end &&
+        !gst_bit_reader_skip (br, tile_size * 8)) {
       retval = GST_AV1_PARSER_NO_MORE_DATA;
       goto error;
     }

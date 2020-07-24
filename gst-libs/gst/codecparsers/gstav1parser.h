@@ -1673,6 +1673,10 @@ struct _GstAV1TileListOBU {
  *   It is a requirement of bitstream conformance that the value of tg_end is greater
  *   than or equal to tg_start. It is a requirement of bitstream conformance that the
  *   value of tg_end for the last tile group in each frame is equal to num_tiles-1.
+ * @tile_offset: Offset from the OBU data, the real data start of this tile.
+ * @tg_size: Data size of this tile.
+ * @tile_row: Tile index in row.
+ * @tile_col: Tile index in column.
  * @mi_row_start: start position in mi rows
  * @mi_row_end: end position in mi rows
  * @mi_col_start: start position in mi cols
@@ -1684,6 +1688,10 @@ struct _GstAV1TileGroupOBU {
   guint8 tg_start;
   guint8 tg_end;
   struct {
+    guint32 tile_offset; /* Tile data offset from the OBU data. */
+    guint32 tile_size; /* Data size of this tile */
+    guint32 tile_row; /* tileRow */
+    guint32 tile_col; /* tileCol */
     /* global varialbes */
     guint32 mi_row_start; /* MiRowStart */
     guint32 mi_row_end; /* MiRowEnd */
