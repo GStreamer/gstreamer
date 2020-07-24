@@ -1516,7 +1516,7 @@ struct _GstAV1FilmGrainParams {
  */
 struct _GstAV1FrameHeaderOBU {
   gboolean show_existing_frame;
-  guint8 frame_to_show_map_idx;
+  gint8 frame_to_show_map_idx;
   guint32 frame_presentation_time;
   guint32 tu_presentation_delay;
   guint32 display_frame_id;
@@ -1538,8 +1538,8 @@ struct _GstAV1FrameHeaderOBU {
   gboolean allow_intrabc;
   gboolean frame_refs_short_signaling;
   guint8 last_frame_idx;
-  guint8 gold_frame_idx;
-  guint8 ref_frame_idx[GST_AV1_REFS_PER_FRAME];
+  gint8 gold_frame_idx;
+  gint8 ref_frame_idx[GST_AV1_REFS_PER_FRAME];
   gboolean allow_high_precision_mv;
   gboolean is_motion_mode_switchable;
   gboolean use_ref_frame_mvs;
@@ -1636,7 +1636,7 @@ struct _GstAV1TileListOBU {
   guint8 output_frame_height_in_tiles_minus_1;
   guint16 tile_count_minus_1;
   struct {
-    guint8 anchor_frame_idx;
+    gint8 anchor_frame_idx;
     guint8 anchor_tile_row;
     guint8 anchor_tile_col;
     guint16 tile_data_size_minus_1;

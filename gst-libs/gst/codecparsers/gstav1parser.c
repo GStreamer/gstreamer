@@ -4355,9 +4355,14 @@ gst_av1_parse_frame_header (GstAV1Parser * parser, GstAV1OBU * obu,
     GstBitReader * bit_reader, GstAV1FrameHeaderOBU * frame_header)
 {
   GstAV1ParserResult ret;
+  guint i;
 
   memset (frame_header, 0, sizeof (*frame_header));
   frame_header->frame_is_intra = 1;
+  frame_header->last_frame_idx = -1;
+  frame_header->gold_frame_idx = -1;
+  for (i = 0; i < GST_AV1_REFS_PER_FRAME; i++)
+    frame_header->ref_frame_idx[i] = -1;
 
   ret = gst_av1_parse_uncompressed_frame_header (parser, obu, bit_reader,
       frame_header);
