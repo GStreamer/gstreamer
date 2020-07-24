@@ -887,6 +887,60 @@ GST_START_TEST (basetransform_chain_ct3)
 
 GST_END_TEST;
 
+static gboolean transform_fixate_caps_invalid_called = FALSE;
+
+static GstCaps *
+transform_fixate_caps_invalid (G_GNUC_UNUSED GstBaseTransform * trans,
+    G_GNUC_UNUSED GstPadDirection direction, G_GNUC_UNUSED GstCaps * caps,
+    GstCaps * othercaps)
+{
+  transform_fixate_caps_invalid_called = TRUE;
+  gst_caps_unref (othercaps);
+  return NULL;
+}
+
+GST_START_TEST (basetransform_invalid_fixatecaps_impl)
+{
+  TestTransData *trans;
+  GstBuffer *buffer;
+  GstFlowReturn res;
+  GstCaps *caps;
+
+  klass_fixate_caps = transform_fixate_caps_invalid;
+
+  trans = gst_test_trans_new ();
+
+  gst_test_trans_push_segment (trans);
+
+  /* passthrough without caps */
+  buffer = gst_buffer_new_and_alloc (20);
+  res = gst_test_trans_push (trans, buffer);
+  fail_unless (res == GST_FLOW_OK);
+
+  buffer = gst_test_trans_pop (trans);
+  fail_unless (buffer != NULL);
+  fail_unless (gst_buffer_get_size (buffer) == 20);
+
+  /* try to set caps prior to push data
+   * all following attempts to fixate_caps would fail producing a g_critical */
+  gst_pad_push_event (trans->srcpad, gst_event_new_flush_start ());
+  gst_pad_push_event (trans->srcpad, gst_event_new_flush_stop (TRUE));
+
+  caps = gst_caps_from_string ("foo/x-bar");
+  ASSERT_CRITICAL (gst_test_trans_setcaps (trans, caps));
+  gst_caps_unref (caps);
+
+  ASSERT_CRITICAL (gst_test_trans_push_segment (trans));
+
+  ASSERT_CRITICAL (res = gst_test_trans_push (trans, buffer));
+  fail_unless (transform_fixate_caps_invalid_called == TRUE);
+  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+
+  gst_test_trans_free (trans);
+}
+
+GST_END_TEST;
+
 static void
 transform1_setup (void)
 {
@@ -903,6 +957,7 @@ transform1_teardown (void)
   klass_transform_caps = NULL;
   klass_transform_size = NULL;
   klass_set_caps = NULL;
+  klass_fixate_caps = NULL;
   klass_submit_input_buffer = NULL;
   klass_generate_output = NULL;
 }
@@ -926,6 +981,8 @@ gst_basetransform_suite (void)
   tcase_add_test (tc, basetransform_chain_ct1);
   tcase_add_test (tc, basetransform_chain_ct2);
   tcase_add_test (tc, basetransform_chain_ct3);
+
+  tcase_add_test (tc, basetransform_invalid_fixatecaps_impl);
 
   return s;
 }

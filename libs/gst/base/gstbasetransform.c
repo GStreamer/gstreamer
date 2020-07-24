@@ -1179,7 +1179,12 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
      * function, it needs to truncate itself */
     othercaps =
         klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
-    is_fixed = gst_caps_is_fixed (othercaps);
+
+    if (!othercaps) {
+      g_critical ("basetransform: second attempt to fixate caps returned "
+          "invalid (NULL) caps on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    }
+    is_fixed = othercaps && gst_caps_is_fixed (othercaps);
     GST_DEBUG_OBJECT (trans, "after fixating %" GST_PTR_FORMAT, othercaps);
   }
 

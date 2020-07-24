@@ -72,6 +72,8 @@ static GstFlowReturn (*klass_transform_ip) (GstBaseTransform * trans,
     GstBuffer * buf) = NULL;
 static gboolean (*klass_set_caps) (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps) = NULL;
+static GstCaps *(*klass_fixate_caps) (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps) = NULL;
 static GstCaps *(*klass_transform_caps) (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter) = NULL;
 static gboolean (*klass_transform_size) (GstBaseTransform * trans,
@@ -114,6 +116,8 @@ gst_test_trans_class_init (GstTestTransClass * klass)
     trans_class->transform_size = klass_transform_size;
   if (klass_set_caps != NULL)
     trans_class->set_caps = klass_set_caps;
+  if (klass_fixate_caps != NULL)
+    trans_class->fixate_caps = klass_fixate_caps;
   if (klass_submit_input_buffer != NULL)
     trans_class->submit_input_buffer = klass_submit_input_buffer;
   if (klass_generate_output)
