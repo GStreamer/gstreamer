@@ -117,7 +117,7 @@ typedef struct
 class MediaCaptureWrapper
 {
 public:
-  MediaCaptureWrapper();
+  MediaCaptureWrapper(gpointer dispatcher);
   ~MediaCaptureWrapper();
 
   void RegisterCb(const MediaCaptureWrapperCallbacks &cb,
@@ -163,7 +163,6 @@ private:
                          IMediaFrameArrivedEventArgs *args);
   HRESULT onCaptureFailed(IMediaCapture *capture,
                           IMediaCaptureFailedEventArgs *args);
-  void findCoreDispatcher();
   static HRESULT enumrateFrameSourceGroup(std::vector<GstWinRTMediaFrameSourceGroup> &list);
 
   template <typename CB>
@@ -213,5 +212,8 @@ private:
     return hr_callback;
   }
 };
+
+HRESULT
+FindCoreDispatcherForCurrentThread(ICoreDispatcher ** dispatcher);
 
 #endif /* __GST_MEDIA_CAPTURE_WRAPPER_H__ */

@@ -310,7 +310,7 @@ gst_mf_source_object_use_winrt_api (void)
 
 GstMFSourceObject *
 gst_mf_source_object_new (GstMFSourceType type, gint device_index,
-    const gchar * device_name, const gchar * device_path)
+    const gchar * device_name, const gchar * device_path, gpointer dispatcher)
 {
 #if (!GST_MF_WINAPI_APP)
   GST_INFO ("Try IMFSourceReader implementation");
@@ -320,12 +320,12 @@ gst_mf_source_object_new (GstMFSourceType type, gint device_index,
 #if (!GST_MF_WINAPI_DESKTOP)
   GST_INFO ("Try WinRT implementation");
   return gst_mf_capture_winrt_new (type,
-      device_index, device_name, device_path);
+      device_index, device_name, device_path, dispatcher);
 #else
   if (gst_mf_source_object_use_winrt_api ()) {
     GST_INFO ("Both Desktop and WinRT APIs were enabled, user choice: WinRT");
     return gst_mf_capture_winrt_new (type,
-        device_index, device_name, device_path);
+        device_index, device_name, device_path, dispatcher);
   } else {
     GST_INFO
         ("Both Desktop and WinRT APIs were enabled, default: IMFSourceReader");

@@ -106,7 +106,8 @@ gboolean        gst_mf_source_object_set_caps     (GstMFSourceObject * object,
 GstMFSourceObject * gst_mf_source_object_new      (GstMFSourceType type,
                                                    gint device_index,
                                                    const gchar * device_name,
-                                                   const gchar * device_path);
+                                                   const gchar * device_path,
+                                                   gpointer dispatcher);
 
 /* Utility methods */
 gint            gst_mf_source_object_caps_compare (GstCaps * caps1,

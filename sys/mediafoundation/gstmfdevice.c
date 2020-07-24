@@ -176,7 +176,8 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
     gchar *device_name = NULL;
     gchar *device_path = NULL;
 
-    obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO, i, NULL, NULL);
+    obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
+        i, NULL, NULL, NULL);
     if (!obj)
       break;
 

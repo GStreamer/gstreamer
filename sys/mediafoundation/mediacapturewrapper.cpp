@@ -383,14 +383,21 @@ error:
   return hr;
 }
 
-MediaCaptureWrapper::MediaCaptureWrapper()
+MediaCaptureWrapper::MediaCaptureWrapper(gpointer dispatcher)
   : user_data_(nullptr)
 {
   user_cb_.frame_arrived = nullptr;
   user_cb_.failed = nullptr;
 
-  /* Store CoreDispatecher if available */
-  findCoreDispatcher();
+  if (dispatcher) {
+    ComPtr<IInspectable> inspectable =
+        reinterpret_cast<IInspectable*> (dispatcher);
+    HRESULT hr;
+
+    hr = inspectable.As (&dispatcher_);
+    if (gst_mf_result (hr))
+      GST_INFO("Main UI dispatcher is available");
+  }
 }
 
 MediaCaptureWrapper::~MediaCaptureWrapper()
@@ -932,35 +939,6 @@ MediaCaptureWrapper::onCaptureFailed(IMediaCapture *capture,
   return S_OK;
 }
 
-void
-MediaCaptureWrapper::findCoreDispatcher()
-{
-  HStringReference hstr_core_app =
-      HStringReference(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication);
-  HRESULT hr;
-
-  ComPtr<ICoreApplication> core_app;
-  hr = GetActivationFactory (hstr_core_app.Get(), &core_app);
-  if (!gst_mf_result(hr))
-    return;
-
-  ComPtr<ICoreApplicationView> core_app_view;
-  hr = core_app->GetCurrentView (&core_app_view);
-  if (!gst_mf_result(hr))
-    return;
-
-  ComPtr<ICoreWindow> core_window;
-  hr = core_app_view->get_CoreWindow (&core_window);
-  if (!gst_mf_result(hr))
-    return;
-
-  hr = core_window->get_Dispatcher (&dispatcher_);
-  if (!gst_mf_result(hr))
-    return;
-
-  GST_DEBUG("Main UI dispatcher is available");
-}
-
 HRESULT
 MediaCaptureWrapper::enumrateFrameSourceGroup
     (std::vector<GstWinRTMediaFrameSourceGroup> &groupList)
@@ -1025,4 +1003,29 @@ MediaCaptureWrapper::enumrateFrameSourceGroup
   }
 
   return S_OK;
+}
+
+HRESULT
+FindCoreDispatcherForCurrentThread (ICoreDispatcher ** dispatcher)
+{
+  HStringReference hstr_core_app =
+      HStringReference(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication);
+  HRESULT hr;
+
+  ComPtr<ICoreApplication> core_app;
+  hr = GetActivationFactory (hstr_core_app.Get(), &core_app);
+  if (FAILED (hr))
+    return hr;
+
+  ComPtr<ICoreApplicationView> core_app_view;
+  hr = core_app->GetCurrentView (&core_app_view);
+  if (FAILED (hr))
+    return hr;
+
+  ComPtr<ICoreWindow> core_window;
+  hr = core_app_view->get_CoreWindow (&core_window);
+  if (FAILED (hr))
+    return hr;
+
+  return core_window->get_Dispatcher (dispatcher);
 }

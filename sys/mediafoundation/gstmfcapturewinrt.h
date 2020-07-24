@@ -32,7 +32,8 @@ G_DECLARE_FINAL_TYPE (GstMFCaptureWinRT, gst_mf_capture_winrt,
 GstMFSourceObject * gst_mf_capture_winrt_new (GstMFSourceType type,
                                               gint device_index,
                                               const gchar * device_name,
-                                              const gchar * device_path);
+                                              const gchar * device_path,
+                                              gpointer dispatcher);
 
 G_END_DECLS
 

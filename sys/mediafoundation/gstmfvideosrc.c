@@ -80,6 +80,7 @@ struct _GstMFVideoSrc
   gchar *device_path;
   gchar *device_name;
   gint device_index;
+  gpointer dispatcher;
 };
 
 enum
@@ -88,6 +89,7 @@ enum
   PROP_DEVICE_PATH,
   PROP_DEVICE_NAME,
   PROP_DEVICE_INDEX,
+  PROP_DISPATCHER,
 };
 
 #define DEFAULT_DEVICE_PATH     NULL
@@ -141,6 +143,15 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
           "The zero-based device index", -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
+#if GST_MF_WINAPI_APP
+  g_object_class_install_property (gobject_class, PROP_DISPATCHER,
+      g_param_spec_pointer ("dispatcher", "Dispatcher",
+          "ICoreDispatcher COM object to use. In order for application to ask "
+          "permission of capture device, device activation should be running "
+          "on UI thread via ICoreDispatcher",
+          GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   gst_element_class_set_static_metadata (element_class,
       "Media Foundation Video Source",
@@ -201,6 +212,11 @@ gst_mf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DEVICE_INDEX:
       g_value_set_int (value, self->device_index);
       break;
+#if GST_MF_WINAPI_APP
+    case PROP_DISPATCHER:
+      g_value_set_pointer (value, self->dispatcher);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -225,6 +241,11 @@ gst_mf_video_src_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE_INDEX:
       self->device_index = g_value_get_int (value);
       break;
+#if GST_MF_WINAPI_APP
+    case PROP_DISPATCHER:
+      self->dispatcher = g_value_get_pointer (value);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -239,7 +260,7 @@ gst_mf_video_src_start (GstBaseSrc * src)
   GST_DEBUG_OBJECT (self, "Start");
 
   self->source = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
-      self->device_index, self->device_name, self->device_path);
+      self->device_index, self->device_name, self->device_path, NULL);
 
   self->first_pts = GST_CLOCK_TIME_NONE;
   self->n_frames = 0;
