@@ -108,7 +108,7 @@ if applemedia_found_deps
         objcpp_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args,
         link_args : noseh_link_args,
         include_directories : [configinc, libsinc],
-        dependencies : [gstvideo_dep, gstaudio_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep] + applemedia_frameworks,
+        dependencies : [gstvideo_dep, gstaudio_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep] + applemedia_frameworks,
         install : true,
         install_dir : plugins_install_dir,
     )

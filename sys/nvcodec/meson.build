@@ -29,7 +29,7 @@ gstnvcodec = library('gstnvcodec',
   nvcodec_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
   include_directories : plugin_incdirs,
-  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gmodule_dep, gstcodecs_dep],
+  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gstglproto_dep, gmodule_dep, gstcodecs_dep],
   install : true,
   install_dir : plugins_install_dir,
 )
