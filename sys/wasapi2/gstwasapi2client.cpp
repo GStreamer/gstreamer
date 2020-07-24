@@ -77,14 +77,22 @@ public:
   }
 
   HRESULT
-  RuntimeClassInitialize (GstWasapi2Client * listener)
+  RuntimeClassInitialize (GstWasapi2Client * listener, gpointer dispatcher)
   {
     if (!listener)
       return E_INVALIDARG;
 
     listener_ = listener;
 
-    findCoreDispatcher ();
+    if (dispatcher) {
+      ComPtr<IInspectable> inspectable =
+        reinterpret_cast<IInspectable*> (dispatcher);
+      HRESULT hr;
+
+      hr = inspectable.As (&dispatcher_);
+      if (gst_wasapi2_result (hr))
+        GST_INFO("Main UI dispatcher is available");
+    }
 
     return S_OK;
   }
@@ -150,36 +158,6 @@ public:
       });
   }
 
-  /* Try to find ICoreDispatcher of main UI so that active audio
-   * interface on main UI thread */
-  void findCoreDispatcher(void)
-  {
-    HRESULT hr;
-    HStringReference hstr_core_app =
-        HStringReference(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication);
-    ComPtr<ICoreApplication> core_app;
-    ComPtr<ICoreApplicationView> core_app_view;
-    ComPtr<ICoreWindow> core_window;
-
-    hr = GetActivationFactory (hstr_core_app.Get(), &core_app);
-    if (!gst_wasapi2_result (hr))
-      return;
-
-    hr = core_app->GetCurrentView (&core_app_view);
-    if (!gst_wasapi2_result (hr))
-      return;
-
-    hr = core_app_view->get_CoreWindow (&core_window);
-    if (!gst_wasapi2_result (hr))
-      return;
-
-    hr = core_window->get_Dispatcher (&dispatcher_);
-    if (!gst_wasapi2_result (hr))
-      return;
-
-    GST_DEBUG ("Main UI dispatcher is available");
-  }
-
   template <typename CB>
   HRESULT
   runOnUIThread (DWORD timeout, CB && cb)
@@ -242,6 +220,7 @@ struct _GstWasapi2Client
   gchar *device_id;
   gchar *device_name;
   gint device_index;
+  gpointer dispatcher;
 
   IAudioClient3 *audio_client;
   IAudioCaptureClient *audio_capture_client;
@@ -284,6 +263,7 @@ enum
   PROP_DEVICE_INDEX,
   PROP_DEVICE_CLASS,
   PROP_LOW_LATENCY,
+  PROP_DISPATCHER,
 };
 
 #define DEFAULT_DEVICE_INDEX  -1
@@ -356,6 +336,9 @@ gst_wasapi2_client_class_init (GstWasapi2ClientClass * klass)
       g_param_spec_boolean ("low-latency", "Low latency",
           "Optimize all settings for lowest latency. Always safe to enable.",
           DEFAULT_LOW_LATENCY, param_flags));
+  g_object_class_install_property (gobject_class, PROP_DISPATCHER,
+      g_param_spec_pointer ("dispatcher", "Dispatcher",
+          "ICoreDispatcher COM object to use", param_flags));
 }
 
 static void
@@ -468,6 +451,9 @@ gst_wasapi2_client_get_property (GObject * object, guint prop_id,
     case PROP_LOW_LATENCY:
       g_value_set_boolean (value, self->low_latency);
       break;
+    case PROP_DISPATCHER:
+      g_value_set_pointer (value, self->dispatcher);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -498,6 +484,9 @@ gst_wasapi2_client_set_property (GObject * object, guint prop_id,
       break;
     case PROP_LOW_LATENCY:
       self->low_latency = g_value_get_boolean (value);
+      break;
+    case PROP_DISPATCHER:
+      self->dispatcher = g_value_get_pointer (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -604,7 +593,8 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
        self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE ? "capture" :
        "render", GST_STR_NULL (self->device_id), self->device_index);
 
-  hr = MakeAndInitialize<GstWasapiDeviceActivator> (&activator, self);
+  hr = MakeAndInitialize<GstWasapiDeviceActivator> (&activator,
+      self, self->dispatcher);
   if (!gst_wasapi2_result (hr))
     goto run_loop;
 
@@ -1776,15 +1766,65 @@ gst_wasapi2_client_get_volume (GstWasapi2Client * client, gfloat * volume)
   return TRUE;
 }
 
+static HRESULT
+find_dispatcher (ICoreDispatcher ** dispatcher)
+{
+  HStringReference hstr_core_app =
+      HStringReference(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication);
+  HRESULT hr;
+
+  ComPtr<ICoreApplication> core_app;
+  hr = GetActivationFactory (hstr_core_app.Get(), &core_app);
+  if (!gst_wasapi2_result (hr))
+    return hr;
+
+  ComPtr<ICoreApplicationView> core_app_view;
+  hr = core_app->GetCurrentView (&core_app_view);
+  if (!gst_wasapi2_result (hr))
+    return hr;
+
+  ComPtr<ICoreWindow> core_window;
+  hr = core_app_view->get_CoreWindow (&core_window);
+  if (!gst_wasapi2_result (hr))
+    return hr;
+
+  return core_window->get_Dispatcher (dispatcher);
+}
+
 GstWasapi2Client *
 gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
-    gboolean low_latency, gint device_index, const gchar * device_id)
+    gboolean low_latency, gint device_index, const gchar * device_id,
+    gpointer dispatcher)
 {
   GstWasapi2Client *self;
+  ComPtr<ICoreDispatcher> core_dispatcher;
+  /* Multiple COM init is allowed */
+  RoInitializeWrapper init_wrapper (RO_INIT_MULTITHREADED);
+
+  /* If application didn't pass ICoreDispatcher object,
+   * try to get dispatcher object for the current thread */
+  if (!dispatcher) {
+    HRESULT hr;
+
+    hr = find_dispatcher (&core_dispatcher);
+    if (gst_wasapi2_result (hr)) {
+      GST_DEBUG ("UI dispatcher is available");
+      dispatcher = core_dispatcher.Get ();
+    } else {
+      GST_DEBUG ("UI dispatcher is unavailable");
+    }
+  } else {
+    GST_DEBUG ("Use user passed UI dispatcher");
+  }
 
   self = (GstWasapi2Client *) g_object_new (GST_TYPE_WASAPI2_CLIENT,
       "device-class", device_class, "low-latency", low_latency,
-      "device-index", device_index, "device", device_id, NULL);
+      "device-index", device_index, "device", device_id,
+      "dispatcher", dispatcher, NULL);
+
+  /* Reset explicitly to ensure that it happens before
+   * RoInitializeWrapper dtor is called */
+  core_dispatcher.Reset ();
 
   if (!self->audio_client) {
     gst_object_unref (self);

@@ -182,7 +182,7 @@ gst_wasapi2_device_provider_probe_internal (GstWasapi2DeviceProvider * self,
     gchar *device_id = NULL;
     gchar *device_name = NULL;
 
-    client = gst_wasapi2_client_new (client_class, FALSE, i, NULL);
+    client = gst_wasapi2_client_new (client_class, FALSE, i, NULL, NULL);
 
     if (!client)
       return;

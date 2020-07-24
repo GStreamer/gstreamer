@@ -69,6 +69,7 @@ enum
   PROP_LOW_LATENCY,
   PROP_MUTE,
   PROP_VOLUME,
+  PROP_DISPATCHER,
 };
 
 struct _GstWasapi2Sink
@@ -84,6 +85,7 @@ struct _GstWasapi2Sink
   gboolean low_latency;
   gboolean mute;
   gdouble volume;
+  gpointer dispatcher;
 
   gboolean mute_changed;
   gboolean volume_changed;
@@ -155,6 +157,14 @@ gst_wasapi2_sink_class_init (GstWasapi2SinkClass * klass)
       g_param_spec_double ("volume", "Volume", "Volume of this stream",
           0.0, 1.0, DEFAULT_VOLUME,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DISPATCHER,
+      g_param_spec_pointer ("dispatcher", "Dispatcher",
+          "ICoreDispatcher COM object to use. In order for application to ask "
+          "permission of audio device, device activation should be running "
+          "on UI thread via ICoreDispatcher",
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
@@ -233,6 +243,9 @@ gst_wasapi2_sink_set_property (GObject * object, guint prop_id,
     case PROP_VOLUME:
       gst_wasapi2_sink_set_volume (self, g_value_get_double (value));
       break;
+    case PROP_DISPATCHER:
+      self->dispatcher = g_value_get_pointer (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -257,6 +270,9 @@ gst_wasapi2_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_wasapi2_sink_get_volume (self));
+      break;
+    case PROP_DISPATCHER:
+      g_value_set_pointer (value, self->dispatcher);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -303,7 +319,7 @@ gst_wasapi2_sink_open_unlocked (GstAudioSink * asink)
 
   self->client =
       gst_wasapi2_client_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
-      self->low_latency, -1, self->device_id);
+      self->low_latency, -1, self->device_id, self->dispatcher);
 
   return ! !self->client;
 }
