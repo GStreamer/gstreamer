@@ -100,3 +100,32 @@ class TestTimeline(GESSimpleTimelineTest):
             GES.Asset.needs_reload(GES.UriClip, uri)
             GES.Asset.request_async(GES.UriClip, uri, None, asset_loaded_cb, mainloop)
             mainloop.run()
+
+    def test_asset_metadata_on_reload(self):
+            mainloop = GLib.MainLoop()
+
+            unused, xges_path = tempfile.mkstemp(suffix=".xges")
+            project_uri = Gst.filename_to_uri(os.path.abspath(xges_path))
+
+            asset_uri = Gst.filename_to_uri(os.path.join(__file__, "../../assets/audio_video.ogg"))
+            xges = """<ges version='0.3'>
+                <project properties='properties;' metadatas='metadatas;'>
+                    <ressources>
+                        <asset id='%(uri)s' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)2003000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)und, application-name=(string)Lavc56.60.100, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)80000, bitrate=(uint)80000, video-codec=(string)&quot;On2\ VP8&quot;, file-size=(guint64)223340, foo=(string)bar;' >
+                        </asset>
+                    </ressources>
+                </project>
+                </ges>"""% {"uri": asset_uri}
+            with open(xges_path, "w") as xges_file:
+                xges_file.write(xges)
+
+
+            def loaded_cb(project, timeline):
+                asset = project.list_assets(GES.Extractable)[0]
+                self.assertEqual(asset.get_meta("foo"), "bar")
+                mainloop.quit()
+
+            loaded_project = GES.Project(uri=project_uri, extractable_type=GES.Timeline)
+            loaded_project.connect("loaded", loaded_cb)
+            timeline = loaded_project.extract()
+            mainloop.run()

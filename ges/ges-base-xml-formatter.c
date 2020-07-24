@@ -718,6 +718,10 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
     ges_asset_try_proxy (asset, passet->proxy_id);
   }
 
+  if (passet->metadatas)
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (asset),
+        passet->metadatas);
+
   /* And now add to the project */
   ges_project_add_asset (self->project, asset);
   gst_object_unref (self);
