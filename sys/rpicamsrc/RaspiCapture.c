@@ -987,7 +987,7 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
     if (config->useSTC)
         GST_BUFFER_DTS(buf) = GST_BUFFER_PTS(buf) = gst_pts;
     /* FIXME: Can we avoid copies and give MMAL our own buffers to fill? */
-    gst_buffer_fill(buf, 0, buffer->data, buffer->length);
+    gst_buffer_fill(buf, 0, buffer->data + buffer->offset, buffer->length);
 
     if ((buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG))
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
