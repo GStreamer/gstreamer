@@ -3830,7 +3830,12 @@ gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         GstEvent *ev = gst_event_new_segment (&parse->segment);
-        parse->priv->segment_seqnum = gst_event_get_seqnum (ev);
+
+        if (parse->priv->segment_seqnum != GST_SEQNUM_INVALID)
+          gst_event_set_seqnum (ev, parse->priv->segment_seqnum);
+        else
+          parse->priv->segment_seqnum = gst_event_get_seqnum (ev);
+
         parse->priv->pending_events =
             g_list_prepend (parse->priv->pending_events, ev);
         result = TRUE;
@@ -4608,6 +4613,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
   seqnum = gst_event_get_seqnum (event);
+  parse->priv->segment_seqnum = seqnum;
 
   GST_DEBUG_OBJECT (parse, "seek to format %s, rate %f, "
       "start type %d at %" GST_TIME_FORMAT ", end type %d at %"
