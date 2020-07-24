@@ -989,6 +989,13 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
     /* FIXME: Can we avoid copies and give MMAL our own buffers to fill? */
     gst_buffer_fill(buf, 0, buffer->data, buffer->length);
 
+    if ((buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG))
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+    else if ((buffer->flags & MMAL_BUFFER_HEADER_FLAG_KEYFRAME))
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    else
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
     /* NAL_END is bogus and can't be trusted */
     if ((buffer->flags & MMAL_BUFFER_HEADER_FLAG_FRAME_END))
       ret = GST_FLOW_OK;
