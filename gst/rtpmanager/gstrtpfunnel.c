@@ -121,9 +121,9 @@ struct _GstRtpFunnel
   GstElement element;
 
   GstPad *srcpad;
-  GstCaps *srccaps;
+  GstCaps *srccaps;             /* protected by OBJECT_LOCK */
   gboolean send_sticky_events;
-  GHashTable *ssrc_to_pad;
+  GHashTable *ssrc_to_pad;      /* protected by OBJECT_LOCK */
   /* The last pad data was chained on */
   GstPad *current_pad;
 
@@ -167,7 +167,12 @@ gst_rtp_funnel_send_sticky (GstRtpFunnel * funnel, GstPad * pad)
     goto done;
   }
 
+  /* We modify these caps in our sink pad event handlers, so make sure to
+   * send a copy downstream so that we can keep our internal caps writable */
+  GST_OBJECT_LOCK (funnel);
   caps = gst_caps_copy (funnel->srccaps);
+  GST_OBJECT_UNLOCK (funnel);
+
   caps_ev = gst_event_new_caps (caps);
   gst_caps_unref (caps);
   if (caps_ev && !gst_pad_push_event (funnel->srcpad, caps_ev)) {
@@ -292,8 +297,12 @@ gst_rtp_funnel_set_twcc_ext_id (GstRtpFunnel * funnel, guint8 twcc_ext_id)
     return;
 
   name = g_strdup_printf ("extmap-%u", twcc_ext_id);
+
+  GST_OBJECT_LOCK (funnel);
   gst_caps_set_simple (funnel->srccaps, name, G_TYPE_STRING, TWCC_EXTMAP_STR,
       NULL);
+  GST_OBJECT_UNLOCK (funnel);
+
   g_free (name);
 
   /* make sure we update the sticky with the new caps */
@@ -348,13 +357,16 @@ gst_rtp_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstStructure *s;
       guint ssrc;
       guint8 ext_id;
+
       gst_event_parse_caps (event, &caps);
 
+      GST_OBJECT_LOCK (funnel);
       if (!gst_caps_can_intersect (funnel->srccaps, caps)) {
         GST_ERROR_OBJECT (funnel, "Can't intersect with caps %" GST_PTR_FORMAT,
             caps);
         g_assert_not_reached ();
       }
+      GST_OBJECT_UNLOCK (funnel);
 
       s = gst_caps_get_structure (caps, 0);
       if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
@@ -401,12 +413,14 @@ gst_rtp_funnel_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       gst_query_parse_caps (query, &filter_caps);
 
+      GST_OBJECT_LOCK (funnel);
       if (filter_caps) {
         new_caps = gst_caps_intersect_full (funnel->srccaps, filter_caps,
             GST_CAPS_INTERSECT_FIRST);
       } else {
         new_caps = gst_caps_copy (funnel->srccaps);
       }
+      GST_OBJECT_UNLOCK (funnel);
 
       if (funnel->common_ts_offset >= 0)
         gst_caps_set_simple (new_caps, "timestamp-offset", G_TYPE_UINT,
@@ -422,13 +436,18 @@ gst_rtp_funnel_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstCaps *caps;
       gboolean result;
+
       gst_query_parse_accept_caps (query, &caps);
+
+      GST_OBJECT_LOCK (funnel);
       result = gst_caps_is_subset (caps, funnel->srccaps);
       if (!result) {
         GST_ERROR_OBJECT (pad,
             "caps: %" GST_PTR_FORMAT " were not compatible with: %"
             GST_PTR_FORMAT, caps, funnel->srccaps);
       }
+      GST_OBJECT_UNLOCK (funnel);
+
       gst_query_set_accept_caps_result (query, result);
       break;
     }
