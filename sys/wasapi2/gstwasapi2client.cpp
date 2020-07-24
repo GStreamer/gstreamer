@@ -68,12 +68,13 @@ class GstWasapiDeviceActivator
 {
 public:
   GstWasapiDeviceActivator ()
-    : listener_(nullptr)
   {
+    g_weak_ref_init (&listener_, nullptr);
   }
 
   ~GstWasapiDeviceActivator ()
   {
+    g_weak_ref_set (&listener_, nullptr);
   }
 
   HRESULT
@@ -82,7 +83,7 @@ public:
     if (!listener)
       return E_INVALIDARG;
 
-    listener_ = listener;
+    g_weak_ref_set (&listener_, listener);
 
     if (dispatcher) {
       ComPtr<IInspectable> inspectable =
@@ -104,112 +105,129 @@ public:
     HRESULT hr = S_OK;
     HRESULT hr_async_op = S_OK;
     ComPtr<IUnknown> audio_interface;
+    GstWasapi2Client *client;
 
-    if (!listener_) {
+    client = (GstWasapi2Client *) g_weak_ref_get (&listener_);
+
+    if (!client) {
+      this->Release ();
       GST_WARNING ("No listener was configured");
       return S_OK;
     }
 
-    GST_INFO_OBJECT (listener_, "AsyncOperation done");
+    GST_INFO_OBJECT (client, "AsyncOperation done");
 
     hr = async_op->GetActivateResult(&hr_async_op, &audio_interface);
 
     if (!gst_wasapi2_result (hr)) {
-      GST_WARNING_OBJECT (listener_, "Failed to get activate result, hr: 0x%x", hr);
+      GST_WARNING_OBJECT (client, "Failed to get activate result, hr: 0x%x", hr);
       goto done;
     }
 
     if (!gst_wasapi2_result (hr_async_op)) {
-      GST_WARNING_OBJECT (listener_, "Failed to activate device");
+      GST_WARNING_OBJECT (client, "Failed to activate device");
       goto done;
     }
 
     hr = audio_interface.As (&audio_client);
     if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (listener_, "Failed to get IAudioClient3 interface");
+      GST_ERROR_OBJECT (client, "Failed to get IAudioClient3 interface");
       goto done;
     }
 
   done:
     /* Should call this method anyway, listener will wait this event */
-    gst_wasapi2_client_on_device_activated (listener_, audio_client.Get());
-
+    gst_wasapi2_client_on_device_activated (client, audio_client.Get());
+    gst_object_unref (client);
     /* return S_OK anyway, but listener can know it's succeeded or not
      * by passed IAudioClient handle via gst_wasapi2_client_on_device_activated
      */
+
+    this->Release ();
+
     return S_OK;
   }
 
   HRESULT
   ActivateDeviceAsync(const std::wstring &device_id)
   {
-    return runOnUIThread (INFINITE,
-      [this, device_id] {
-        ComPtr<IActivateAudioInterfaceAsyncOperation> async_op;
-        HRESULT hr = S_OK;
-
-        hr = ActivateAudioInterfaceAsync (device_id.c_str (),
-              __uuidof(IAudioClient3), nullptr, this, &async_op);
-
-        /* for debugging */
-        gst_wasapi2_result (hr);
-
-        return hr;
-      });
-  }
-
-  template <typename CB>
-  HRESULT
-  runOnUIThread (DWORD timeout, CB && cb)
-  {
     ComPtr<IAsyncAction> async_action;
+    bool run_async = false;
     HRESULT hr;
-    HRESULT hr_cb;
-    boolean can_now;
-    DWORD wait_ret;
 
-    if (!dispatcher_)
-      return cb();
+    auto work_item = Callback<Implements<RuntimeClassFlags<ClassicCom>,
+        IDispatchedHandler, FtmBase>>([this, device_id]{
+      ComPtr<IActivateAudioInterfaceAsyncOperation> async_op;
+      HRESULT async_hr = S_OK;
 
-    hr = dispatcher_->get_HasThreadAccess (&can_now);
+      async_hr = ActivateAudioInterfaceAsync (device_id.c_str (),
+            __uuidof(IAudioClient3), nullptr, this, &async_op);
 
-    if (FAILED (hr))
-      return hr;
+      /* for debugging */
+      gst_wasapi2_result (async_hr);
 
-    if (can_now)
-      return cb ();
+      return async_hr;
+    });
 
-    Event event (CreateEventEx (NULL, NULL, CREATE_EVENT_MANUAL_RESET,
-        EVENT_ALL_ACCESS));
+    if (dispatcher_) {
+      boolean can_now;
+      hr = dispatcher_->get_HasThreadAccess (&can_now);
 
-    if (!event.IsValid())
-      return E_FAIL;
+      if (!gst_wasapi2_result (hr))
+        return hr;
 
-    auto handler =
-        Callback<Implements<RuntimeClassFlags<ClassicCom>,
-            IDispatchedHandler, FtmBase>>([&hr_cb, &cb, &event] {
-          hr_cb = cb ();
-          SetEvent (event.Get());
-          return S_OK;
-        });
+      if (!can_now)
+        run_async = true;
+    }
 
-    hr = dispatcher_->RunAsync (CoreDispatcherPriority_Normal,
-        handler.Get(), &async_action);
+    if (run_async && dispatcher_) {
+      hr = dispatcher_->RunAsync (CoreDispatcherPriority_Normal,
+          work_item.Get (), &async_action);
+    } else {
+      hr = work_item->Invoke ();
+    }
 
-    if (FAILED (hr))
-      return hr;
-
-    wait_ret = WaitForSingleObject (event.Get(), timeout);
-    if (wait_ret != WAIT_OBJECT_0)
-      return E_FAIL;
+    /* We should hold activator object until activation callback has executed,
+     * because OS doesn't hold reference of this callback COM object.
+     * otherwise access violation would happen
+     * See https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/nf-mmdeviceapi-activateaudiointerfaceasync
+     *
+     * This reference count will be decreased by self later on callback,
+     * which will be called from device worker thread.
+     */
+    if (gst_wasapi2_result (hr))
+      this->AddRef ();
 
     return hr;
   }
 
 private:
-  GstWasapi2Client * listener_;
+  GWeakRef listener_;
   ComPtr<ICoreDispatcher> dispatcher_;
 };
+
+typedef enum
+{
+  GST_WASAPI2_CLIENT_ACTIVATE_FAILED = -1,
+  GST_WASAPI2_CLIENT_ACTIVATE_INIT = 0,
+  GST_WASAPI2_CLIENT_ACTIVATE_WAIT,
+  GST_WASAPI2_CLIENT_ACTIVATE_DONE,
+} GstWasapi2ClientActivateState;
+
+enum
+{
+  PROP_0,
+  PROP_DEVICE,
+  PROP_DEVICE_NAME,
+  PROP_DEVICE_INDEX,
+  PROP_DEVICE_CLASS,
+  PROP_LOW_LATENCY,
+  PROP_DISPATCHER,
+};
+
+#define DEFAULT_DEVICE_INDEX  -1
+#define DEFAULT_DEVICE_CLASS  GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE
+#define DEFAULT_LOW_LATENCY   FALSE
 
 struct _GstWasapi2Client
 {
@@ -226,6 +244,7 @@ struct _GstWasapi2Client
   IAudioCaptureClient *audio_capture_client;
   IAudioRenderClient *audio_render_client;
   ISimpleAudioVolume *audio_volume;
+  GstWasapiDeviceActivator *activator;
 
   WAVEFORMATEX *mix_format;
   GstCaps *supported_caps;
@@ -252,23 +271,8 @@ struct _GstWasapi2Client
   /* To wait ActivateCompleted event */
   GMutex init_lock;
   GCond init_cond;
-  gboolean init_done;
+  GstWasapi2ClientActivateState activate_state;
 };
-
-enum
-{
-  PROP_0,
-  PROP_DEVICE,
-  PROP_DEVICE_NAME,
-  PROP_DEVICE_INDEX,
-  PROP_DEVICE_CLASS,
-  PROP_LOW_LATENCY,
-  PROP_DISPATCHER,
-};
-
-#define DEFAULT_DEVICE_INDEX  -1
-#define DEFAULT_DEVICE_CLASS  GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE
-#define DEFAULT_LOW_LATENCY   FALSE
 
 GType
 gst_wasapi2_client_device_class_get_type (void)
@@ -357,6 +361,7 @@ gst_wasapi2_client_init (GstWasapi2Client * self)
 
   g_mutex_init (&self->init_lock);
   g_cond_init (&self->init_cond);
+  self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_INIT;
 
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
@@ -366,6 +371,7 @@ static void
 gst_wasapi2_client_constructed (GObject * object)
 {
   GstWasapi2Client *self = GST_WASAPI2_CLIENT (object);
+  ComPtr<GstWasapiDeviceActivator> activator;
 
   /* Create a new thread to ensure that COM thread can be MTA thread.
    * We cannot ensure whether CoInitializeEx() was called outside of here for
@@ -516,8 +522,11 @@ gst_wasapi2_client_on_device_activated (GstWasapi2Client * self,
   if (audio_client) {
     audio_client->AddRef();
     self->audio_client = audio_client;
+    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_DONE;
+  } else {
+    GST_WARNING_OBJECT (self, "IAudioClient is unavailable");
+    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
   }
-  self->init_done = TRUE;
   g_cond_broadcast (&self->init_cond);
   g_mutex_unlock (&self->init_lock);
 }
@@ -565,12 +574,11 @@ gst_wasapi2_client_get_default_device_id (GstWasapi2Client * self)
   return ret;
 }
 
-static void
-gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
+static gboolean
+gst_wasapi2_client_activate_async (GstWasapi2Client * self,
+    GstWasapiDeviceActivator * activator)
 {
   HRESULT hr;
-  GSource *source;
-  ComPtr<GstWasapiDeviceActivator> activator;
   ComPtr<IDeviceInformationStatics> device_info_static;
   ComPtr<IAsyncOperation<DeviceInformationCollection*>> async_op;
   ComPtr<IVectorView<DeviceInformation*>> device_list;
@@ -586,17 +594,10 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
   std::string target_device_name;
   gboolean use_default_device = FALSE;
 
-  g_main_context_push_thread_default (self->context);
-
   GST_INFO_OBJECT (self,
       "requested device info, device-class: %s, device: %s, device-index: %d",
        self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE ? "capture" :
        "render", GST_STR_NULL (self->device_id), self->device_index);
-
-  hr = MakeAndInitialize<GstWasapiDeviceActivator> (&activator,
-      self, self->dispatcher);
-  if (!gst_wasapi2_result (hr))
-    goto run_loop;
 
   if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE) {
     device_class = DeviceClass::DeviceClass_AudioCapture;
@@ -607,7 +608,7 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
   default_device_id_wstring = gst_wasapi2_client_get_default_device_id (self);
   if (default_device_id_wstring.empty ()) {
     GST_WARNING_OBJECT (self, "Couldn't get default device id");
-    goto run_loop;
+    goto failed;
   }
 
   default_device_id = convert_wstring_to_string (default_device_id_wstring);
@@ -647,29 +648,29 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
 
   hr = GetActivationFactory (hstr_device_info.Get(), &device_info_static);
   if (!gst_wasapi2_result (hr))
-    goto run_loop;
+    goto failed;
 
   hr = device_info_static->FindAllAsyncDeviceClass (device_class, &async_op);
   device_info_static.Reset ();
   if (!gst_wasapi2_result (hr))
-    goto run_loop;
+    goto failed;
 
   hr = SyncWait<DeviceInformationCollection*>(async_op.Get ());
   if (!gst_wasapi2_result (hr))
-    goto run_loop;
+    goto failed;
 
   hr = async_op->GetResults (&device_list);
   async_op.Reset ();
   if (!gst_wasapi2_result (hr))
-    goto run_loop;
+    goto failed;
 
   hr = device_list->get_Size (&count);
   if (!gst_wasapi2_result (hr))
-    goto run_loop;
+    goto failed;
 
   if (count == 0) {
     GST_WARNING_OBJECT (self, "No available device");
-    goto run_loop;
+    goto failed;
   }
 
   /* device_index 0 will be assigned for default device
@@ -677,7 +678,7 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
   if (self->device_index >= 0 && self->device_index > (gint) count) {
     GST_WARNING_OBJECT (self, "Device index %d is unavailable",
         self->device_index);
-    goto run_loop;
+    goto failed;
   }
 
   GST_DEBUG_OBJECT (self, "Available device count: %d", count);
@@ -767,7 +768,7 @@ gst_wasapi2_client_thread_func_internal (GstWasapi2Client * self)
 
   if (target_device_id_wstring.empty ()) {
     GST_WARNING_OBJECT (self, "Couldn't find target device");
-    goto run_loop;
+    goto failed;
   }
 
 activate:
@@ -783,18 +784,70 @@ activate:
   hr = activator->ActivateDeviceAsync (target_device_id_wstring);
   if (!gst_wasapi2_result (hr)) {
     GST_WARNING_OBJECT (self, "Failed to activate device");
+    goto failed;
+  }
+
+  g_mutex_lock (&self->lock);
+  if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_INIT)
+    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_WAIT;
+  g_mutex_unlock (&self->lock);
+
+  return TRUE;
+
+failed:
+  self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
+
+  return FALSE;
+}
+
+static const gchar *
+activate_state_to_string (GstWasapi2ClientActivateState state)
+{
+  switch (state) {
+    case GST_WASAPI2_CLIENT_ACTIVATE_FAILED:
+      return "FAILED";
+    case GST_WASAPI2_CLIENT_ACTIVATE_INIT:
+      return "INIT";
+    case GST_WASAPI2_CLIENT_ACTIVATE_WAIT:
+      return "WAIT";
+    case GST_WASAPI2_CLIENT_ACTIVATE_DONE:
+      return "DONE";
+  }
+
+  g_assert_not_reached ();
+
+  return "Undefined";
+}
+
+static gpointer
+gst_wasapi2_client_thread_func (GstWasapi2Client * self)
+{
+  RoInitializeWrapper initialize (RO_INIT_MULTITHREADED);
+  GSource *source;
+  HRESULT hr;
+  ComPtr<GstWasapiDeviceActivator> activator;
+
+  hr = MakeAndInitialize<GstWasapiDeviceActivator> (&activator,
+      self, self->dispatcher);
+  if (!gst_wasapi2_result (hr)) {
+    GST_ERROR_OBJECT (self, "Could not create activator object");
+    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
     goto run_loop;
   }
 
-  /* Wait ActivateCompleted event */
-  GST_DEBUG_OBJECT (self, "Wait device activation");
-  g_mutex_lock (&self->init_lock);
-  while (!self->init_done)
-    g_cond_wait (&self->init_cond, &self->init_lock);
-  g_mutex_unlock (&self->init_lock);
-  GST_DEBUG_OBJECT (self, "Done device activation");
+  gst_wasapi2_client_activate_async (self, activator.Get ());
+
+  if (!self->dispatcher) {
+    /* In case that dispatcher is unavailable, wait activation synchroniously */
+    GST_DEBUG_OBJECT (self, "Wait device activation");
+    gst_wasapi2_client_ensure_activation (self);
+    GST_DEBUG_OBJECT (self, "Device activation result %s",
+        activate_state_to_string (self->activate_state));
+  }
 
 run_loop:
+  g_main_context_push_thread_default (self->context);
+
   source = g_idle_source_new ();
   g_source_set_callback (source,
       (GSourceFunc) gst_wasapi2_client_main_loop_running_cb, self, NULL);
@@ -829,19 +882,11 @@ run_loop:
     self->audio_client = NULL;
   }
 
+  /* Reset explicitly to ensure that it happens before
+   * RoInitializeWrapper dtor is called */
+  activator.Reset ();
+
   GST_DEBUG_OBJECT (self, "Exit thread function");
-
-  return;
-}
-
-static gpointer
-gst_wasapi2_client_thread_func (GstWasapi2Client * self)
-{
-  RoInitializeWrapper initialize (RO_INIT_MULTITHREADED);
-
-  /* Wrap thread function so that ensure everything happens inside of
-   * RoInitializeWrapper */
-  gst_wasapi2_client_thread_func_internal (self);
 
   return NULL;
 }
@@ -1766,6 +1811,22 @@ gst_wasapi2_client_get_volume (GstWasapi2Client * client, gfloat * volume)
   return TRUE;
 }
 
+gboolean
+gst_wasapi2_client_ensure_activation (GstWasapi2Client * client)
+{
+  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), FALSE);
+
+  /* should not happen */
+  g_assert (client->activate_state != GST_WASAPI2_CLIENT_ACTIVATE_INIT);
+
+  g_mutex_lock (&client->init_lock);
+  while (client->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_WAIT)
+    g_cond_wait (&client->init_cond, &client->init_lock);
+  g_mutex_unlock (&client->init_lock);
+
+  return client->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_DONE;
+}
+
 static HRESULT
 find_dispatcher (ICoreDispatcher ** dispatcher)
 {
@@ -1775,17 +1836,17 @@ find_dispatcher (ICoreDispatcher ** dispatcher)
 
   ComPtr<ICoreApplication> core_app;
   hr = GetActivationFactory (hstr_core_app.Get(), &core_app);
-  if (!gst_wasapi2_result (hr))
+  if (FAILED (hr))
     return hr;
 
   ComPtr<ICoreApplicationView> core_app_view;
   hr = core_app->GetCurrentView (&core_app_view);
-  if (!gst_wasapi2_result (hr))
+  if (FAILED (hr))
     return hr;
 
   ComPtr<ICoreWindow> core_window;
   hr = core_app_view->get_CoreWindow (&core_window);
-  if (!gst_wasapi2_result (hr))
+  if (FAILED (hr))
     return hr;
 
   return core_window->get_Dispatcher (dispatcher);
@@ -1807,7 +1868,7 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
     HRESULT hr;
 
     hr = find_dispatcher (&core_dispatcher);
-    if (gst_wasapi2_result (hr)) {
+    if (SUCCEEDED (hr)) {
       GST_DEBUG ("UI dispatcher is available");
       dispatcher = core_dispatcher.Get ();
     } else {
@@ -1826,7 +1887,7 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
    * RoInitializeWrapper dtor is called */
   core_dispatcher.Reset ();
 
-  if (!self->audio_client) {
+  if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_FAILED) {
     gst_object_unref (self);
     return NULL;
   }

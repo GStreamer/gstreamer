@@ -70,6 +70,8 @@ gboolean  gst_wasapi2_client_set_volume (GstWasapi2Client * client,
 gboolean  gst_wasapi2_client_get_volume (GstWasapi2Client * client,
                                          gfloat * volume);
 
+gboolean gst_wasapi2_client_ensure_activation (GstWasapi2Client * client);
+
 GstWasapi2Client * gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
                                            gboolean low_latency,
                                            gint device_index,

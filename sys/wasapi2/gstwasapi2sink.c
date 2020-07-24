@@ -286,13 +286,20 @@ gst_wasapi2_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstWasapi2Sink *self = GST_WASAPI2_SINK (bsink);
   GstCaps *caps = NULL;
 
-  /* store one caps here so that we can return device caps even if
-   * audioclient was closed due to unprepare() */
-  if (!self->cached_caps && self->client)
-    self->cached_caps = gst_wasapi2_client_get_caps (self->client);
+  /* In case of UWP, device activation might not be finished yet */
+  if (self->client && !gst_wasapi2_client_ensure_activation (self->client)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
+        ("Failed to activate device"));
+    return NULL;
+  }
 
   if (self->client)
     caps = gst_wasapi2_client_get_caps (self->client);
+
+  /* store one caps here so that we can return device caps even if
+   * audioclient was closed due to unprepare() */
+  if (!self->cached_caps && caps)
+    self->cached_caps = gst_caps_ref (caps);
 
   if (!caps && self->cached_caps)
     caps = gst_caps_ref (self->cached_caps);
@@ -371,6 +378,11 @@ gst_wasapi2_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   GST_WASAPI2_SINK_LOCK (self);
   if (!self->client && !gst_wasapi2_sink_open_unlocked (asink)) {
     GST_ERROR_OBJECT (self, "No audio client was configured");
+    goto done;
+  }
+
+  if (!gst_wasapi2_client_ensure_activation (self->client)) {
+    GST_ERROR_OBJECT (self, "Couldn't activate audio device");
     goto done;
   }
 
