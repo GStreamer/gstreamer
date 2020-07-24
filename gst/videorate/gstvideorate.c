@@ -836,9 +836,6 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         gst_video_rate_swap_prev (videorate, NULL, 0);
       }
 
-      videorate->base_ts = 0;
-      videorate->out_frame_count = 0;
-      videorate->next_ts = GST_CLOCK_TIME_NONE;
 
       /* We just want to update the accumulated stream_time  */
 
@@ -847,6 +844,15 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
       if (GST_CLOCK_TIME_IS_VALID (segment.stop))
         segment.stop = (gint64) (segment.stop / videorate->rate);
       segment.time = (gint64) (segment.time / videorate->rate);
+
+      videorate->base_ts = gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME,
+          gst_segment_to_running_time (&videorate->segment, GST_FORMAT_TIME,
+              videorate->base_ts));
+      videorate->next_ts = gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME,
+          gst_segment_to_running_time (&videorate->segment, GST_FORMAT_TIME,
+              videorate->next_ts));
 
       gst_segment_copy_into (&segment, &videorate->segment);
       GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,
