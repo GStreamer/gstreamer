@@ -79,7 +79,7 @@ if gst_gl_have_window_x11 and gst_gl_have_platform_glx
   # FIXME: automagic
   qt5x11extras = dependency('qt5', modules : ['X11Extras'], required : false)
   if qt5x11extras.found()
-    optional_deps += qt5x11extras
+    optional_deps += [qt5x11extras, gstglx11_dep]
     qt_defines += ['-DHAVE_QT_X11']
     have_qt_windowing = true
   endif
@@ -88,8 +88,7 @@ endif
 if gst_gl_have_platform_egl
   # Embedded linux (e.g. i.MX6) with or without windowing support
   qt_defines += ['-DHAVE_QT_EGLFS']
-  egl_dep = dependency('egl', required : false)
-  optional_deps += egl_dep
+  optional_deps += gstglegl_dep
   have_qt_windowing = true
   if have_qpa_include
     # Wayland windowing
@@ -97,7 +96,7 @@ if gst_gl_have_platform_egl
       # FIXME: automagic
       qt5waylandextras = dependency('qt5', modules : ['WaylandClient'], required : false)
       if qt5waylandextras.found()
-        optional_deps += qt5waylandextras
+        optional_deps += [qt5waylandextras, gstglwayland_dep]
         qt_defines += ['-DHAVE_QT_WAYLAND']
         have_qt_windowing = true
       endif
@@ -156,7 +155,7 @@ if have_qt_windowing
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],
-    dependencies : [glib_deps, gst_dep, gstvideo_dep, gstgl_dep, qt5qml_dep, optional_deps],
+    dependencies : [glib_deps, gst_dep, gstvideo_dep, gstgl_dep, gstglproto_dep, qt5qml_dep, optional_deps],
     override_options : ['cpp_std=c++11'],
     install: true,
     install_dir : plugins_install_dir)

@@ -20,7 +20,7 @@ if gtk_dep.found()
       # FIXME: automagic
       gtk_x11_dep = dependency('gtk+-x11-3.0', required : false)
       if gtk_x11_dep.found()
-        optional_deps += gtk_x11_dep
+        optional_deps += [gtk_x11_dep, gstglx11_dep]
         have_gtk3_gl_windowing = true
       endif
     endif
@@ -29,7 +29,7 @@ if gtk_dep.found()
       # FIXME: automagic
       gtk_wayland_dep = dependency('gtk+-wayland-3.0', required : false)
       if gtk_wayland_dep.found()
-        optional_deps += gtk_wayland_dep
+        optional_deps += [gtk_wayland_dep, gstglegl_dep, gstglwayland_dep]
         have_gtk3_gl_windowing = true
       endif
     endif
@@ -39,7 +39,7 @@ if gtk_dep.found()
         'gstgtkglsink.c',
         'gtkgstglwidget.c',
       ]
-      optional_deps += gstgl_dep
+      optional_deps += [gstgl_dep, gstglproto_dep]
       gtk_defines += ['-DGST_USE_UNSTABLE_API', '-DHAVE_GTK3_GL']
     endif
   endif

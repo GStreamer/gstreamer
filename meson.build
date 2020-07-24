@@ -271,6 +271,10 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
 # FIXME: automagic
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
+gstglproto_dep = dependency('', required : false)
+gstglx11_dep = dependency('', required : false)
+gstglwayland_dep = dependency('', required : false)
+gstglegl_dep = dependency('', required : false)
 
 have_gstgl = gstgl_dep.found()
 
@@ -301,6 +305,25 @@ if have_gstgl
   foreach api : ['gl', 'gles2']
     set_variable('gst_gl_have_api_@0@'.format(api), gst_gl_apis.contains(api))
   endforeach
+
+  gstglproto_dep = dependency('gstreamer-gl-prototypes-1.0', version : gst_req,
+      fallback : ['gst-plugins-base', 'gstglproto_dep'], required: true)
+  # Behind specific checks because meson fails at optional dependencies with a
+  # fallback to the same subproject.  On the first failure, meson will never
+  # check the system again even if the fallback never existed.
+  # Last checked with meson 0.54.3
+  if gst_gl_have_window_x11
+    gstglx11_dep = dependency('gstreamer-gl-x11-1.0', version : gst_req,
+       fallback : ['gst-plugins-base', 'gstglx11_dep'], required: true)
+  endif
+  if gst_gl_have_window_wayland
+    gstglwayland_dep = dependency('gstreamer-gl-wayland-1.0', version : gst_req,
+        fallback : ['gst-plugins-base', 'gstglwayland_dep'], required: true)
+  endif
+  if gst_gl_have_platform_egl
+    gstglegl_dep = dependency('gstreamer-gl-egl-1.0', version : gst_req,
+        fallback : ['gst-plugins-base', 'gstglegl_dep'], required: true)
+  endif
 endif
 
 zlib_dep = dependency('zlib', required : false)
