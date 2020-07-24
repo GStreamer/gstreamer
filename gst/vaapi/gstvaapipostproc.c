@@ -2110,21 +2110,37 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL;
       break;
     case PROP_CROP_LEFT:
+    {
+      guint prev_crop_left = postproc->crop_left;
       postproc->crop_left = g_value_get_uint (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      do_reconf = (prev_crop_left != postproc->crop_left);
       break;
+    }
     case PROP_CROP_RIGHT:
+    {
+      guint prev_crop_right = postproc->crop_right;
       postproc->crop_right = g_value_get_uint (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      do_reconf = (prev_crop_right != postproc->crop_right);
       break;
+    }
     case PROP_CROP_TOP:
+    {
+      guint prev_crop_top = postproc->crop_top;
       postproc->crop_top = g_value_get_uint (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      do_reconf = (prev_crop_top != postproc->crop_top);
       break;
+    }
     case PROP_CROP_BOTTOM:
+    {
+      guint prev_crop_bottom = postproc->crop_bottom;
       postproc->crop_bottom = g_value_get_uint (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      do_reconf = (prev_crop_bottom != postproc->crop_bottom);
       break;
+    }
     case PROP_HDR_TONE_MAP:
       postproc->hdr_tone_map = g_value_get_enum (value);
       break;
