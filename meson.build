@@ -1,6 +1,6 @@
 project('gst-editing-services', 'c',
   version : '1.17.2.1',
-  meson_version : '>= 0.48',
+  meson_version : '>= 0.49',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -32,6 +32,9 @@ cc = meson.get_compiler('c')
 mathlib = cc.find_library('m', required : false)
 
 cdata = configuration_data()
+
+prefix = get_option('prefix')
+datadir = prefix / get_option('datadir')
 
 # Ignore several spurious warnings for things gstreamer does very commonly
 # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
