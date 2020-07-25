@@ -241,10 +241,14 @@ python3 = import('python').find_installation()
 configinc = include_directories('.')
 subdir('ges')
 subdir('plugins')
-subdir('tools')
+if not get_option('tools').disabled()
+  subdir('tools')
+endif
 subdir('pkgconfig')
 subdir('tests')
-subdir('examples')
+if not get_option('examples').disabled()
+  subdir('examples')
+endif
 subdir('docs')
 
 override_detector = '''
