@@ -175,6 +175,10 @@ option('hls', type : 'feature', value : 'auto', description : 'HTTP Live Streami
 option('hls-crypto', type : 'combo', value : 'auto', choices : ['auto', 'nettle', 'libgcrypt', 'openssl'],
        description: 'Crypto library to use for HLS plugin')
 
+# SCTP plugin options
+option('sctp-internal-usrsctp', type: 'feature', value : 'enabled',
+       description: 'Whether to use the bundled usrsctp library or the system one')
+
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)

@@ -1,9 +1,3 @@
-# Project definition
-project('usrsctplib', 'c',
-    version: '1.0.0',
-    default_options: ['c_std=c99'],
-    meson_version: '>=0.49.0')
-
 # Set compiler warning flags
 compiler = meson.get_compiler('c')
 if compiler.get_argument_syntax() == 'msvc'
@@ -21,9 +15,6 @@ if compiler.get_argument_syntax() == 'msvc'
     ])
 else
     compiler_args = compiler.get_supported_arguments([
-        '-pedantic',
-        '-Wall',
-        '-Wextra',
         '-Wfloat-equal',
         '-Wshadow',
         '-Wpointer-arith',
@@ -32,12 +23,21 @@ else
         '-Wno-unused-parameter',
         '-Wno-unreachable-code',
         '-Wstrict-prototypes',
+        # fix GStreamer build with -Werror
+        '-Wno-missing-prototypes',
+        '-Wno-incompatible-pointer-types-discards-qualifiers',
+        '-Wno-address-of-packed-member',
+        '-Wno-discarded-qualifiers',
+        '-Wno-missing-declarations',
+        '-Wno-old-style-definition',
+        '-Wno-redundant-decls',
+        '-Wno-error',
     ])
 endif
-add_project_arguments(compiler_args, language: 'c')
 
 # Configuration
-compile_args = []
+
+compile_args = [compiler_args]
 
 # Dependency: Threads
 thread_dep = dependency('threads', required: true)
@@ -48,55 +48,57 @@ dependencies = [
 ]
 
 # Global settings
-add_project_arguments([
+compile_args += [
     '-D__Userspace__',
     '-DSCTP_SIMPLE_ALLOCATOR',
     '-DSCTP_PROCESS_LEVEL_LOCKS',
-], language: 'c')
+]
 
 # OS-specific settings
 system = host_machine.system()
 if system in ['linux', 'android']
-    add_project_arguments([
+    compile_args += [
         '-D_GNU_SOURCE',
-    ], language: 'c')
+    ]
 elif system == 'freebsd'
-    add_project_arguments(compiler.get_supported_arguments([
+    compile_args += [compiler.get_supported_arguments([
             '-Wno-address-of-packed-member',
-        ]), language: 'c')
+        ])]
 elif system in ['darwin', 'ios']
-    add_project_arguments([
+    compile_args += [[
             '-D__APPLE_USE_RFC_2292',
         ] + compiler.get_supported_arguments([
             '-Wno-address-of-packed-member',
             '-Wno-deprecated-declarations',
-        ]), language: 'c')
+        ])]
 elif system == 'windows'
     dependencies += compiler.find_library('ws2_32', required: true)
     dependencies += compiler.find_library('iphlpapi', required: true)
     if compiler.get_id() == 'gcc'
-        add_project_arguments(compiler.get_supported_arguments([
+        compile_args += [compiler.get_supported_arguments([
             '-Wno-format',
             '-D_WIN32_WINNT=0x601',  # Enables inet_ntop and friends
-        ]), language: 'c')
+        ])]
     endif
 else
-    error('Unknown system: @0@'.format(system))
+    warning('Unknown system: @0@'.format(system))
+    usrsctp_dep = dependency('', required: false)
+    subdir_done()
 endif
 
 # Feature: sys/queue
 if compiler.has_header('sys/queue.h')
-    add_project_arguments('-DHAVE_SYS_QUEUE_H', language: 'c')
+    compile_args += ['-DHAVE_SYS_QUEUE_H']
 endif
 
 # Feature: sys/socket, linux/ifaddr, linux/rtnetlink
 if compiler.has_header('sys/socket.h')
     if compiler.has_header('linux/if_addr.h')
-        add_project_arguments('-DHAVE_LINUX_IF_ADDR_H', language: 'c')
+        compile_args += ['-DHAVE_LINUX_IF_ADDR_H']
     endif
 
     if compiler.has_header('linux/rtnetlink.h')
-        add_project_arguments('-DHAVE_LINUX_RTNETLINK_H', language: 'c')
+        compile_args += ['-DHAVE_LINUX_RTNETLINK_H']
     endif
 endif
 
@@ -106,12 +108,12 @@ have_netinet_in = compiler.has_header('netinet/in.h')
 have_netinet_ip = compiler.has_header('netinet/ip.h')
 have_netinet_ip_icmp = compiler.has_header('netinet/ip_icmp.h')
 if have_sys_types and have_netinet_in and have_netinet_ip and have_netinet_ip_icmp
-    add_project_arguments('-DHAVE_NETINET_IP_ICMP_H', language: 'c')
+    compile_args += ['-DHAVE_NETINET_IP_ICMP_H']
 endif
 
 # Feature: stdatomic
 if compiler.has_header('stdatomic.h')
-    add_project_arguments('-DHAVE_STDATOMIC_H', language: 'c')
+    compile_args += ['-DHAVE_STDATOMIC_H']
 endif
 
 # Feature: sockaddr.sa_len
@@ -121,7 +123,7 @@ prefix = '''
 '''
 have_sa_len = compiler.has_member('struct sockaddr', 'sa_len', prefix: prefix)
 if have_sa_len
-    add_project_arguments('-DHAVE_SA_LEN', language: 'c')
+    compile_args += ['-DHAVE_SA_LEN']
 endif
 
 # Feature: sockaddr_in.sin_len / sockaddr_in6.sin6_len / sockaddr_conn.sconn_len
@@ -131,90 +133,46 @@ prefix = '''
 '''
 have_sin_len = compiler.has_member('struct sockaddr_in', 'sin_len', prefix: prefix)
 if have_sin_len
-    add_project_arguments('-DHAVE_SIN_LEN', language: 'c')
+    compile_args += ['-DHAVE_SIN_LEN']
 endif
 have_sin6_len = compiler.has_member('struct sockaddr_in6', 'sin6_len', prefix: prefix)
 if have_sin6_len
-    add_project_arguments('-DHAVE_SIN6_LEN', language: 'c')
+    compile_args += ['-DHAVE_SIN6_LEN']
 endif
 have_sconn_len = compiler.has_member('struct sockaddr_conn', 'sconn_len', prefix: '#include "usrsctp.h"', include_directories: include_directories('usrsctplib'))
 if have_sconn_len
-    add_project_arguments('-DHAVE_SCONN_LEN', language: 'c')
+    compile_args += ['-DHAVE_SCONN_LEN']
 endif
 
 # Options
-if get_option('sctp_invariants')
-    add_project_arguments('-DINVARIANTS', language: 'c')
+if false
+    compile_args += ['-DINVARIANTS']
 endif
-if get_option('sctp_debug')
-    add_project_arguments('-DSCTP_DEBUG', language: 'c')
-    compile_args += '-DSCTP_DEBUG'
+if not gst_debug_disabled
+    compile_args += ['-DSCTP_DEBUG']
 endif
-if get_option('sctp_inet')
-    add_project_arguments('-DINET', language: 'c')
+# We do not need the socket API in GStreamer since we will wrap inside a
+# DTLS packet anyway, because we use SCTP for WebRTC data channels.
+if false
+    compile_args += ['-DINET']
 endif
-if get_option('sctp_inet6')
-    add_project_arguments('-DINET6', language: 'c')
+if false
+    compile_args += ['-DINET6']
 endif
+
+compile_args += ['-DSCTP_STDINT_INCLUDE=<stdint.h>']
 
 # Library
 subdir('usrsctplib')
 
 # Build library
-if compiler.get_id() == 'msvc' and get_option('default_library') == 'shared'
-    # Needed by usrsctp_def
-    find_program('dumpbin')
-
-    usrsctp_static = static_library('usrsctp-static', sources,
-        dependencies: dependencies,
-        include_directories: include_dirs)
-
-   usrsctp_def = custom_target('usrsctp.def',
-        command: [find_program('gen-def.py'), '@INPUT@'],
-        input: usrsctp_static,
-        output: 'usrsctp.def',
-        capture: true)
-
-    usrsctp = shared_library('usrsctp',
-        link_whole: usrsctp_static,
-        dependencies: dependencies,
-        vs_module_defs: usrsctp_def,
-        install: true,
-        version: meson.project_version())
-else
-    usrsctp = library('usrsctp', sources,
-        dependencies: dependencies,
-        include_directories: include_dirs,
-        install: true,
-        version: meson.project_version(),
-        c_args: '-U__APPLE__')
-endif
+usrsctp_static = static_library('usrsctp-static', sources,
+    c_args: compile_args,
+    dependencies: dependencies,
+    include_directories: include_dirs,
+    install: false)
 
 # Declare dependency
 usrsctp_dep = declare_dependency(
-    compile_args: compile_args,
     include_directories: include_dirs,
-    link_with: usrsctp)
-
-# Generate pkg-config file
-pkg = import('pkgconfig')
-pkg.generate(usrsctp,
-    name: 'usrsctp',
-    description: 'A portable SCTP userland stack',
-    url: 'https://github.com/sctplab/usrsctp',
-    extra_cflags: compile_args)
-
-# Programs (optional)
-if get_option('sctp_build_programs')
-    subdir('programs')
-
-    # Build executables
-    foreach name, sources : programs
-        executable(
-            name,
-            programs_helper_sources + sources,
-            dependencies: dependencies,
-            link_with: usrsctp,
-            include_directories: include_dirs)
-    endforeach
-endif
+    link_with: usrsctp_static)

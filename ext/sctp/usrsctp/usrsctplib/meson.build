@@ -15,6 +15,3 @@ sources = files([
 
 subdir('netinet')
 subdir('netinet6')
-
-# Install usrsctp.h
-install_headers('usrsctp.h')
