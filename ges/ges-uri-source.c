@@ -61,6 +61,8 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
 {
   GstElement *nlesrc;
   GstCaps *downstream_caps;
+  GstQuery *segment_query = NULL;
+  GstFormat segment_format;
   GstAutoplugSelectResult res = GST_AUTOPLUG_SELECT_TRY;
   gchar *stream_id = gst_pad_get_stream_id (pad);
   const gchar *wanted_id =
@@ -79,13 +81,30 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
     goto done;
   }
 
+  segment_query = gst_query_new_segment (GST_FORMAT_TIME);
+  if (!gst_pad_query (pad, segment_query)) {
+    GST_DEBUG_OBJECT (pad, "Could not query segment");
+
+    goto done;
+  }
+
+  gst_query_parse_segment (segment_query, NULL, &segment_format, NULL, NULL);
+  if (segment_format != GST_FORMAT_TIME) {
+    GST_DEBUG_OBJECT (pad,
+        "Segment not in %s != time for %" GST_PTR_FORMAT
+        "... continue plugin elements", gst_format_get_name (segment_format),
+        caps);
+
+    goto done;
+  }
+
   nlesrc = ges_track_element_get_nleobject (self->element);
   downstream_caps = gst_pad_peer_query_caps (nlesrc->srcpads->data, NULL);
   if (downstream_caps && gst_caps_can_intersect (downstream_caps, caps)) {
     if (wanted) {
       res = GST_AUTOPLUG_SELECT_EXPOSE;
-      GST_DEBUG_OBJECT (self, "Exposing %" GST_PTR_FORMAT " with stream id: %s",
-          pad, stream_id);
+      GST_INFO_OBJECT (self, "Exposing %" GST_PTR_FORMAT " with stream id: %s",
+          caps, stream_id);
     } else {
       res = GST_AUTOPLUG_SELECT_SKIP;
       GST_DEBUG_OBJECT (self->element, "Totally skipping %s", stream_id);
@@ -95,6 +114,8 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
 
 done:
   g_free (stream_id);
+  gst_clear_query (&segment_query);
+
   return res;
 }
 
