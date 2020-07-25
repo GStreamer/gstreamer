@@ -723,7 +723,16 @@ gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
         gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
       }
     } else {
-      gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
+      if (!GST_IS_DISCOVERER_AUDIO_INFO (info)
+          && !GST_IS_DISCOVERER_AUDIO_INFO (info)
+          && gst_discoverer_stream_info_get_next (streaminfo)) {
+        ((GstValidateMediaDescriptor *) writer)->filenode->caps =
+            gst_discoverer_stream_info_get_caps (streaminfo);
+        streaminfo = gst_discoverer_stream_info_get_next (streaminfo);
+      }
+      do {
+        gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
+      } while ((streaminfo = gst_discoverer_stream_info_get_next (streaminfo)));
     }
   } else {
     GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_INFO,
