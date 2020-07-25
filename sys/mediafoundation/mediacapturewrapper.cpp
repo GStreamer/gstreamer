@@ -174,7 +174,7 @@ GstWinRTMediaDescription::Fill(HString &source_id,
 
   format = gst_media_capture_subtype_to_video_format (subtype);
   if (format.empty()) {
-    GST_FIXME ("Unhandled subtype %s", subtype.c_str());
+    GST_DEBUG ("Unhandled subtype %s", subtype.c_str());
     return E_FAIL;
   }
 
@@ -363,7 +363,7 @@ GstWinRTMediaFrameSourceGroup::Fill
 
       GstWinRTMediaDescription media_desc;
       hr = media_desc.Fill(source_id, desc);
-      if (!gst_mf_result(hr))
+      if (FAILED (hr))
         continue;
 
       source_list_.push_back(media_desc);
