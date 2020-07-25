@@ -109,8 +109,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
     }                                                                          \
   }                                                                            \
   G_STMT_END
-#else /* G_HAVE_GNUC_VARARGS */
-#ifdef G_HAVE_GNUC_VARARGS
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define REPORT_UNLESS(condition, errpoint, args...)                            \
   G_STMT_START {                                                               \
     if (!(condition)) {                                                        \
@@ -121,8 +120,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
     }                                                                          \
   }                                                                            \
   G_STMT_END
-#endif /* G_HAVE_ISO_VARARGS */
-#endif /* G_HAVE_GNUC_VARARGS */
+#endif
 
 enum
 {
