@@ -24,6 +24,7 @@
 
 #include "gstwasapi2device.h"
 #include "gstwasapi2client.h"
+#include "gstwasapi2util.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
@@ -190,7 +191,8 @@ gst_wasapi2_device_provider_probe_internal (GstWasapi2DeviceProvider * self,
     caps = gst_wasapi2_client_get_caps (client);
     if (!caps) {
       GST_WARNING_OBJECT (self, "Couldn't get caps from client %d", i);
-      goto next;
+      /* this might be a case where device activation is not finished yet */
+      caps = gst_caps_from_string (GST_WASAPI2_STATIC_CAPS);
     }
 
     g_object_get (client,
