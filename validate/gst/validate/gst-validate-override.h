@@ -79,12 +79,14 @@ GST_VALIDATE_API
 GType gst_validate_override_get_type (void) G_GNUC_CONST;
 
 /* TYPE MACROS */
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_OVERRIDE (gst_validate_override_get_type ())
 #define GST_VALIDATE_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverride))
 #define GST_VALIDATE_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverrideClass))
 #define GST_IS_VALIDATE_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VALIDATE_OVERRIDE))
 #define GST_IS_VALIDATE_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VALIDATE_OVERRIDE))
 #define GST_VALIDATE_OVERRIDE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverrideClass))
+#endif
 
 GST_VALIDATE_API
 GstValidateOverride *    gst_validate_override_new (void);

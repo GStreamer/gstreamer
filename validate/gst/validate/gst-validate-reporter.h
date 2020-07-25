@@ -33,11 +33,13 @@ typedef struct _GstValidateReporterInterface GstValidateReporterInterface;
 G_BEGIN_DECLS
 
 /* GstValidateReporter interface declarations */
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_REPORTER                (gst_validate_reporter_get_type ())
 #define GST_VALIDATE_REPORTER(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VALIDATE_REPORTER, GstValidateReporter))
 #define GST_IS_VALIDATE_REPORTER(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_REPORTER))
 #define GST_VALIDATE_REPORTER_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VALIDATE_REPORTER, GstValidateReporterInterface))
 #define GST_VALIDATE_REPORTER_CAST(obj)           ((GstValidateReporter *) obj)
+#endif
 
 /**
  * GST_VALIDATE_REPORT:

@@ -32,12 +32,14 @@ G_BEGIN_DECLS
 GST_VALIDATE_API
 GType gst_validate_media_descriptor_parser_get_type (void);
 
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER            (gst_validate_media_descriptor_parser_get_type ())
 #define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER, GstValidateMediaDescriptorParser))
 #define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER, GstValidateMediaDescriptorParserClass))
 #define GST_IS_VALIDATE_MEDIA_DESCRIPTOR_PARSER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER))
 #define GST_IS_VALIDATE_MEDIA_DESCRIPTOR_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER))
 #define GST_VALIDATE_MEDIA_DESCRIPTOR_PARSER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER, GstValidateMediaDescriptorParserClass))
+#endif
 
 typedef struct _GstValidateMediaDescriptorParserPrivate GstValidateMediaDescriptorParserPrivate;
 

@@ -35,6 +35,7 @@ typedef struct _GstValidatePadSeekData GstValidatePadSeekData;
 
 G_BEGIN_DECLS
 
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_PAD_MONITOR			(gst_validate_pad_monitor_get_type ())
 #define GST_IS_VALIDATE_PAD_MONITOR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_PAD_MONITOR))
 #define GST_IS_VALIDATE_PAD_MONITOR_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_PAD_MONITOR))
@@ -43,7 +44,7 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_PAD_MONITOR_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_PAD_MONITOR, GstValidatePadMonitorClass))
 #define GST_VALIDATE_PAD_MONITOR_CAST(obj)            ((GstValidatePadMonitor*)(obj))
 #define GST_VALIDATE_PAD_MONITOR_CLASS_CAST(klass)    ((GstValidatePadMonitorClass*)(klass))
-
+#endif
 
 /**
  * GstValidatePadMonitor:

@@ -36,6 +36,7 @@ typedef struct _GstValidateMonitorClass GstValidateMonitorClass;
 
 G_BEGIN_DECLS
 
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_MONITOR			(gst_validate_monitor_get_type ())
 #define GST_IS_VALIDATE_MONITOR(obj)		        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_MONITOR))
 #define GST_IS_VALIDATE_MONITOR_CLASS(klass)	        (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_MONITOR))
@@ -44,6 +45,7 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_MONITOR_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_MONITOR, GstValidateMonitorClass))
 #define GST_VALIDATE_MONITOR_CAST(obj)                ((GstValidateMonitor*)(obj))
 #define GST_VALIDATE_MONITOR_CLASS_CAST(klass)        ((GstValidateMonitorClass*)(klass))
+#endif
 
 #define GST_VALIDATE_MONITOR_GET_PARENT(m) (GST_VALIDATE_MONITOR_CAST (m)->parent)
 

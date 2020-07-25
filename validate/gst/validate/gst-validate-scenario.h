@@ -30,12 +30,14 @@
 
 G_BEGIN_DECLS
 
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_SCENARIO            (gst_validate_scenario_get_type ())
 #define GST_VALIDATE_SCENARIO(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenario))
 #define GST_VALIDATE_SCENARIO_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioClass))
 #define GST_IS_VALIDATE_SCENARIO(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_SCENARIO))
 #define GST_IS_VALIDATE_SCENARIO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VALIDATE_SCENARIO))
 #define GST_VALIDATE_SCENARIO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioClass))
+#endif
 
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
 typedef struct _GstValidateActionParameter GstValidateActionParameter;
@@ -159,9 +161,12 @@ GstValidateAction* gst_validate_action_ref             (GstValidateAction * acti
 GST_VALIDATE_API
 void gst_validate_action_unref                         (GstValidateAction * action);
 
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
 #define GST_VALIDATE_ACTION_GET_TYPE(obj)   ((GstValidateActionType*)gst_validate_get_action_type(((GstValidateAction*)obj)->type))
+#endif
+
 GST_VALIDATE_API
 GType gst_validate_action_get_type (void);
 
@@ -235,9 +240,12 @@ struct _GstValidateActionType
   gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank) - 2];
 };
 
+#ifndef __GI_SCANNER__
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())
 #define GST_IS_VALIDATE_ACTION_TYPE(obj)    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION_TYPE))
 #define GST_VALIDATE_ACTION_TYPE(obj)       ((GstValidateActionType*) obj)
+#endif
+
 GST_VALIDATE_API
 GType gst_validate_action_type_get_type     (void);
 
