@@ -162,7 +162,7 @@ load_from_builder (const gchar * filename, gboolean register_sig_handler,
 
   builder = gtk_builder_new_from_resource (filename);
   if (builder == NULL) {
-    g_print ("ERROR: failed to load %s \n", filename);
+    gst_print ("ERROR: failed to load %s \n", filename);
     return NULL;
   }
 
@@ -1358,7 +1358,7 @@ gtk_widget_apply_css (GtkWidget * widget, const gchar * filename)
   provider = GTK_STYLE_PROVIDER (gtk_css_provider_new ());
   bytes = g_resources_lookup_data (filename, 0, &err);
   if (err) {
-    g_print ("ERROR: failed to apply css %s '%s' \n", filename, err->message);
+    gst_print ("ERROR: failed to apply css %s '%s' \n", filename, err->message);
     return;
   }
   data = g_bytes_get_data (bytes, &data_size);
@@ -1612,12 +1612,12 @@ gtk_play_get_cover_image (GstPlayerMediaInfo * media_info)
   if ((type != GST_TAG_IMAGE_TYPE_FRONT_COVER) &&
       (type != GST_TAG_IMAGE_TYPE_UNDEFINED) &&
       (type != GST_TAG_IMAGE_TYPE_NONE)) {
-    g_print ("unsupport type ... %d \n", type);
+    gst_print ("unsupport type ... %d \n", type);
     return NULL;
   }
 
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
-    g_print ("failed to map gst buffer \n");
+    gst_print ("failed to map gst buffer \n");
     return NULL;
   }
 
@@ -1628,7 +1628,7 @@ gtk_play_get_cover_image (GstPlayerMediaInfo * media_info)
     if (pixbuf) {
       g_object_ref (pixbuf);
     } else {
-      g_print ("failed to convert gst buffer to pixbuf %s \n", err->message);
+      gst_print ("failed to convert gst buffer to pixbuf %s \n", err->message);
       g_error_free (err);
     }
   }

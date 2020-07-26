@@ -260,7 +260,7 @@ on_offer_created_cb (GstPromise * promise, gpointer user_data)
   gst_promise_unref (local_desc_promise);
 
   sdp_string = gst_sdp_message_as_text (offer->sdp);
-  g_print ("Negotiation offer created:\n%s\n", sdp_string);
+  gst_print ("Negotiation offer created:\n%s\n", sdp_string);
 
   sdp_json = json_object_new ();
   json_object_set_string_member (sdp_json, "type", "sdp");
@@ -287,7 +287,7 @@ on_negotiation_needed_cb (GstElement * webrtcbin, gpointer user_data)
   GstPromise *promise;
   ReceiverEntry *receiver_entry = (ReceiverEntry *) user_data;
 
-  g_print ("Creating negotiation offer\n");
+  gst_print ("Creating negotiation offer\n");
 
   promise = gst_promise_new_with_change_func (on_offer_created_cb,
       (gpointer) receiver_entry, NULL);
@@ -399,7 +399,7 @@ soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
     }
     sdp_string = json_object_get_string_member (data_json_object, "sdp");
 
-    g_print ("Received SDP:\n%s\n", sdp_string);
+    gst_print ("Received SDP:\n%s\n", sdp_string);
 
     ret = gst_sdp_message_new (&sdp);
     g_assert_cmphex (ret, ==, GST_SDP_OK);
@@ -440,7 +440,7 @@ soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
     candidate_string = json_object_get_string_member (data_json_object,
         "candidate");
 
-    g_print ("Received ICE candidate with mline index %u; candidate: %s\n",
+    gst_print ("Received ICE candidate with mline index %u; candidate: %s\n",
         mline_index, candidate_string);
 
     g_signal_emit_by_name (receiver_entry->webrtcbin, "add-ice-candidate",
@@ -466,7 +466,7 @@ soup_websocket_closed_cb (SoupWebsocketConnection * connection,
 {
   GHashTable *receiver_entry_table = (GHashTable *) user_data;
   g_hash_table_remove (receiver_entry_table, connection);
-  g_print ("Closed websocket connection %p\n", (gpointer) connection);
+  gst_print ("Closed websocket connection %p\n", (gpointer) connection);
 }
 
 
@@ -503,7 +503,7 @@ soup_websocket_handler (G_GNUC_UNUSED SoupServer * server,
   ReceiverEntry *receiver_entry;
   GHashTable *receiver_entry_table = (GHashTable *) user_data;
 
-  g_print ("Processing new websocket connection %p", (gpointer) connection);
+  gst_print ("Processing new websocket connection %p", (gpointer) connection);
 
   g_signal_connect (G_OBJECT (connection), "closed",
       G_CALLBACK (soup_websocket_closed_cb), (gpointer) receiver_entry_table);
@@ -536,7 +536,7 @@ get_string_from_json_object (JsonObject * object)
 gboolean
 exit_sighandler (gpointer user_data)
 {
-  g_print ("Caught signal, stopping mainloop\n");
+  gst_print ("Caught signal, stopping mainloop\n");
   GMainLoop *mainloop = (GMainLoop *) user_data;
   g_main_loop_quit (mainloop);
   return TRUE;
@@ -573,7 +573,7 @@ main (int argc, char *argv[])
   soup_server_listen_all (soup_server, SOUP_HTTP_PORT,
       (SoupServerListenOptions) 0, NULL);
 
-  g_print ("WebRTC page link: http://127.0.0.1:%d/\n", (gint) SOUP_HTTP_PORT);
+  gst_print ("WebRTC page link: http://127.0.0.1:%d/\n", (gint) SOUP_HTTP_PORT);
 
   g_main_loop_run (mainloop);
 

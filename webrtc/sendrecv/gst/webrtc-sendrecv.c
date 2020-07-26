@@ -65,7 +65,7 @@ static gboolean
 cleanup_and_quit_loop (const gchar * msg, enum AppState state)
 {
   if (msg)
-    g_printerr ("%s\n", msg);
+    gst_printerr ("%s\n", msg);
   if (state > 0)
     app_state = state;
 
@@ -114,7 +114,7 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
   GstElement *q, *conv, *resample, *sink;
   GstPadLinkReturn ret;
 
-  g_print ("Trying to handle stream with %s ! %s", convert_name, sink_name);
+  gst_print ("Trying to handle stream with %s ! %s", convert_name, sink_name);
 
   q = gst_element_factory_make ("queue", NULL);
   g_assert_nonnull (q);
@@ -156,7 +156,7 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
   const gchar *name;
 
   if (!gst_pad_has_current_caps (pad)) {
-    g_printerr ("Pad '%s' has no caps, can't do anything, ignoring\n",
+    gst_printerr ("Pad '%s' has no caps, can't do anything, ignoring\n",
         GST_PAD_NAME (pad));
     return;
   }
@@ -169,7 +169,7 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
   } else if (g_str_has_prefix (name, "audio")) {
     handle_media_stream (pad, pipe, "audioconvert", "autoaudiosink");
   } else {
-    g_printerr ("Unknown pad %s, ignoring", GST_PAD_NAME (pad));
+    gst_printerr ("Unknown pad %s, ignoring", GST_PAD_NAME (pad));
   }
 }
 
@@ -233,10 +233,10 @@ send_sdp_to_peer (GstWebRTCSessionDescription * desc)
   sdp = json_object_new ();
 
   if (desc->type == GST_WEBRTC_SDP_TYPE_OFFER) {
-    g_print ("Sending offer:\n%s\n", text);
+    gst_print ("Sending offer:\n%s\n", text);
     json_object_set_string_member (sdp, "type", "offer");
   } else if (desc->type == GST_WEBRTC_SDP_TYPE_ANSWER) {
-    g_print ("Sending answer:\n%s\n", text);
+    gst_print ("Sending answer:\n%s\n", text);
     json_object_set_string_member (sdp, "type", "answer");
   } else {
     g_assert_not_reached ();
@@ -310,7 +310,7 @@ static void
 data_channel_on_open (GObject * dc, gpointer user_data)
 {
   GBytes *bytes = g_bytes_new ("data", strlen ("data"));
-  g_print ("data channel opened\n");
+  gst_print ("data channel opened\n");
   g_signal_emit_by_name (dc, "send-string", "Hi! from GStreamer");
   g_signal_emit_by_name (dc, "send-data", bytes);
   g_bytes_unref (bytes);
@@ -325,7 +325,7 @@ data_channel_on_close (GObject * dc, gpointer user_data)
 static void
 data_channel_on_message_string (GObject * dc, gchar * str, gpointer user_data)
 {
-  g_print ("Received data channel message: %s\n", str);
+  gst_print ("Received data channel message: %s\n", str);
 }
 
 static void
@@ -368,7 +368,7 @@ on_ice_gathering_state_notify (GstElement * webrtcbin, GParamSpec * pspec,
       new_state = "complete";
       break;
   }
-  g_print ("ICE gathering state changed to %s\n", new_state);
+  gst_print ("ICE gathering state changed to %s\n", new_state);
 }
 
 static gboolean
@@ -386,7 +386,7 @@ start_pipeline (void)
       "queue ! " RTP_CAPS_OPUS "97 ! sendrecv. ", &error);
 
   if (error) {
-    g_printerr ("Failed to parse launch: %s\n", error->message);
+    gst_printerr ("Failed to parse launch: %s\n", error->message);
     g_error_free (error);
     goto err;
   }
@@ -411,10 +411,10 @@ start_pipeline (void)
   g_signal_emit_by_name (webrtc1, "create-data-channel", "channel", NULL,
       &send_channel);
   if (send_channel) {
-    g_print ("Created data channel\n");
+    gst_print ("Created data channel\n");
     connect_data_channel_signals (send_channel);
   } else {
-    g_print ("Could not create data channel, is usrsctp available?\n");
+    gst_print ("Could not create data channel, is usrsctp available?\n");
   }
 
   g_signal_connect (webrtc1, "on-data-channel", G_CALLBACK (on_data_channel),
@@ -425,7 +425,7 @@ start_pipeline (void)
   /* Lifetime is the same as the pipeline itself */
   gst_object_unref (webrtc1);
 
-  g_print ("Starting pipeline\n");
+  gst_print ("Starting pipeline\n");
   ret = gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto err;
@@ -452,7 +452,7 @@ setup_call (void)
   if (!peer_id)
     return FALSE;
 
-  g_print ("Setting up signalling server call with %s\n", peer_id);
+  gst_print ("Setting up signalling server call with %s\n", peer_id);
   app_state = PEER_CONNECTING;
   msg = g_strdup_printf ("SESSION %s", peer_id);
   soup_websocket_connection_send_text (ws_conn, msg);
@@ -471,7 +471,7 @@ register_with_server (void)
     return FALSE;
 
   our_id = g_random_int_range (10, 10000);
-  g_print ("Registering id %i with server\n", our_id);
+  gst_print ("Registering id %i with server\n", our_id);
   app_state = SERVER_REGISTERING;
 
   /* Register with the server with a random integer id. Reply will be received
@@ -550,7 +550,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
 
   switch (type) {
     case SOUP_WEBSOCKET_DATA_BINARY:
-      g_printerr ("Received unknown binary message, ignoring\n");
+      gst_printerr ("Received unknown binary message, ignoring\n");
       return;
     case SOUP_WEBSOCKET_DATA_TEXT:{
       gsize size;
@@ -571,7 +571,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       goto out;
     }
     app_state = SERVER_REGISTERED;
-    g_print ("Registered with server\n");
+    gst_print ("Registered with server\n");
     /* Ask signalling server to connect us with a specific peer */
     if (!setup_call ()) {
       cleanup_and_quit_loop ("ERROR: Failed to setup call", PEER_CALL_ERROR);
@@ -616,14 +616,14 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     JsonObject *object, *child;
     JsonParser *parser = json_parser_new ();
     if (!json_parser_load_from_data (parser, text, -1, NULL)) {
-      g_printerr ("Unknown message '%s', ignoring", text);
+      gst_printerr ("Unknown message '%s', ignoring", text);
       g_object_unref (parser);
       goto out;
     }
 
     root = json_parser_get_root (parser);
     if (!JSON_NODE_HOLDS_OBJECT (root)) {
-      g_printerr ("Unknown json message '%s', ignoring", text);
+      gst_printerr ("Unknown json message '%s', ignoring", text);
       g_object_unref (parser);
       goto out;
     }
@@ -660,7 +660,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       g_assert_cmphex (ret, ==, GST_SDP_OK);
 
       if (g_str_equal (sdptype, "answer")) {
-        g_print ("Received answer:\n%s\n", text);
+        gst_print ("Received answer:\n%s\n", text);
         answer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER,
             sdp);
         g_assert_nonnull (answer);
@@ -675,7 +675,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         }
         app_state = PEER_CALL_STARTED;
       } else {
-        g_print ("Received offer:\n%s\n", text);
+        gst_print ("Received offer:\n%s\n", text);
         on_offer_received (sdp);
       }
 
@@ -691,7 +691,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       g_signal_emit_by_name (webrtc1, "add-ice-candidate", sdpmlineindex,
           candidate);
     } else {
-      g_printerr ("Ignoring unknown JSON message:\n%s\n", text);
+      gst_printerr ("Ignoring unknown JSON message:\n%s\n", text);
     }
     g_object_unref (parser);
   }
@@ -716,7 +716,7 @@ on_server_connected (SoupSession * session, GAsyncResult * res,
   g_assert_nonnull (ws_conn);
 
   app_state = SERVER_CONNECTED;
-  g_print ("Connected to signalling server\n");
+  gst_print ("Connected to signalling server\n");
 
   g_signal_connect (ws_conn, "closed", G_CALLBACK (on_server_closed), NULL);
   g_signal_connect (ws_conn, "message", G_CALLBACK (on_server_message), NULL);
@@ -748,7 +748,7 @@ connect_to_websocket_server_async (void)
 
   message = soup_message_new (SOUP_METHOD_GET, server_url);
 
-  g_print ("Connecting to server...\n");
+  gst_print ("Connecting to server...\n");
 
   /* Once connected, we will register */
   soup_session_websocket_connect_async (session, message, NULL, NULL, NULL,
@@ -772,7 +772,7 @@ check_plugins (void)
   for (i = 0; i < g_strv_length ((gchar **) needed); i++) {
     plugin = gst_registry_find_plugin (registry, needed[i]);
     if (!plugin) {
-      g_print ("Required gstreamer plugin '%s' not found\n", needed[i]);
+      gst_print ("Required gstreamer plugin '%s' not found\n", needed[i]);
       ret = FALSE;
       continue;
     }
@@ -791,7 +791,7 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (context, entries, NULL);
   g_option_context_add_group (context, gst_init_get_option_group ());
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
-    g_printerr ("Error initializing: %s\n", error->message);
+    gst_printerr ("Error initializing: %s\n", error->message);
     return -1;
   }
 
@@ -799,7 +799,7 @@ main (int argc, char *argv[])
     return -1;
 
   if (!peer_id) {
-    g_printerr ("--peer-id is a required argument\n");
+    gst_printerr ("--peer-id is a required argument\n");
     return -1;
   }
 
@@ -822,7 +822,7 @@ main (int argc, char *argv[])
 
   if (pipe1) {
     gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_NULL);
-    g_print ("Pipeline stopped\n");
+    gst_print ("Pipeline stopped\n");
     gst_object_unref (pipe1);
   }
 

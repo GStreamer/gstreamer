@@ -78,7 +78,7 @@ static gboolean
 cleanup_and_quit_loop (const gchar * msg, enum AppState state)
 {
   if (msg)
-    g_printerr ("%s\n", msg);
+    gst_printerr ("%s\n", msg);
   if (state > 0)
     app_state = state;
 
@@ -153,7 +153,7 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
   const gchar *name;
 
   if (!gst_pad_has_current_caps (pad)) {
-    g_printerr ("Pad '%s' has no caps, can't do anything, ignoring\n",
+    gst_printerr ("Pad '%s' has no caps, can't do anything, ignoring\n",
         GST_PAD_NAME (pad));
     return;
   }
@@ -166,7 +166,7 @@ on_incoming_decodebin_stream (GstElement * decodebin, GstPad * pad,
   } else if (g_str_has_prefix (name, "audio")) {
     handle_media_stream (pad, pipe, "audioconvert", "autoaudiosink");
   } else {
-    g_printerr ("Unknown pad %s, ignoring", GST_PAD_NAME (pad));
+    gst_printerr ("Unknown pad %s, ignoring", GST_PAD_NAME (pad));
   }
 }
 
@@ -240,7 +240,7 @@ send_room_peer_sdp (GstWebRTCSessionDescription * desc, const gchar * peer_id)
     g_assert_not_reached ();
 
   text = gst_sdp_message_as_text (desc->sdp);
-  g_print ("Sending sdp %s to %s:\n%s\n", sdptype, peer_id, text);
+  gst_print ("Sending sdp %s to %s:\n%s\n", sdptype, peer_id, text);
 
   sdp = json_object_new ();
   json_object_set_string_member (sdp, "type", sdptype);
@@ -420,12 +420,12 @@ start_pipeline (void)
       "queue ! " RTP_CAPS_OPUS (96) " ! audiotee. ", &error);
 
   if (error) {
-    g_printerr ("Failed to parse launch: %s\n", error->message);
+    gst_printerr ("Failed to parse launch: %s\n", error->message);
     g_error_free (error);
     goto err;
   }
 
-  g_print ("Starting pipeline, not transmitting yet\n");
+  gst_print ("Starting pipeline, not transmitting yet\n");
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto err;
@@ -433,7 +433,7 @@ start_pipeline (void)
   return TRUE;
 
 err:
-  g_print ("State change failure\n");
+  gst_print ("State change failure\n");
   if (pipeline)
     g_clear_object (&pipeline);
   return FALSE;
@@ -451,7 +451,7 @@ join_room_on_server (void)
   if (!room_id)
     return FALSE;
 
-  g_print ("Joining room %s\n", room_id);
+  gst_print ("Joining room %s\n", room_id);
   app_state = ROOM_JOINING;
   msg = g_strdup_printf ("ROOM %s", room_id);
   soup_websocket_connection_send_text (ws_conn, msg);
@@ -468,7 +468,7 @@ register_with_server (void)
       SOUP_WEBSOCKET_STATE_OPEN)
     return FALSE;
 
-  g_print ("Registering id %s with server\n", local_id);
+  gst_print ("Registering id %s with server\n", local_id);
   app_state = SERVER_REGISTERING;
 
   /* Register with the server with a random integer id. Reply will be received
@@ -497,7 +497,7 @@ do_registration (void)
     return FALSE;
   }
   app_state = SERVER_REGISTERED;
-  g_print ("Registered with server\n");
+  gst_print ("Registered with server\n");
   /* Ask signalling server that we want to join a room */
   if (!join_room_on_server ()) {
     cleanup_and_quit_loop ("ERROR: Failed to join room", ROOM_CALL_ERROR);
@@ -523,7 +523,7 @@ do_join_room (const gchar * text)
   }
 
   app_state = ROOM_JOINED;
-  g_print ("Room joined\n");
+  gst_print ("Room joined\n");
   /* Start recording, but not transmitting */
   if (!start_pipeline ()) {
     cleanup_and_quit_loop ("ERROR: Failed to start pipeline", ROOM_CALL_ERROR);
@@ -536,11 +536,11 @@ do_join_room (const gchar * text)
   /* There are peers in the room already. We need to start negotiation
    * (exchange SDP and ICE candidates) and transmission of media. */
   if (len > 1 && strlen (peer_ids[1]) > 0) {
-    g_print ("Found %i peers already in room\n", len - 1);
+    gst_print ("Found %i peers already in room\n", len - 1);
     app_state = ROOM_CALL_OFFERING;
     for (ii = 1; ii < len; ii++) {
       gchar *peer_id = g_strdup (peer_ids[ii]);
-      g_print ("Negotiating with peer %s\n", peer_id);
+      gst_print ("Negotiating with peer %s\n", peer_id);
       /* This might fail asynchronously */
       call_peer (peer_id);
       peers = g_list_prepend (peers, peer_id);
@@ -621,7 +621,7 @@ handle_sdp_offer (const gchar * peer_id, const gchar * text)
 
   g_assert_cmpint (app_state, ==, ROOM_CALL_ANSWERING);
 
-  g_print ("Received offer:\n%s\n", text);
+  gst_print ("Received offer:\n%s\n", text);
 
   ret = gst_sdp_message_new (&sdp);
   g_assert_cmpint (ret, ==, GST_SDP_OK);
@@ -661,7 +661,7 @@ handle_sdp_answer (const gchar * peer_id, const gchar * text)
 
   g_assert_cmpint (app_state, >=, ROOM_CALL_OFFERING);
 
-  g_print ("Received answer:\n%s\n", text);
+  gst_print ("Received answer:\n%s\n", text);
 
   ret = gst_sdp_message_new (&sdp);
   g_assert_cmpint (ret, ==, GST_SDP_OK);
@@ -690,19 +690,20 @@ handle_peer_message (const gchar * peer_id, const gchar * msg)
   JsonObject *object, *child;
   JsonParser *parser = json_parser_new ();
   if (!json_parser_load_from_data (parser, msg, -1, NULL)) {
-    g_printerr ("Unknown message '%s' from '%s', ignoring", msg, peer_id);
+    gst_printerr ("Unknown message '%s' from '%s', ignoring", msg, peer_id);
     g_object_unref (parser);
     return FALSE;
   }
 
   root = json_parser_get_root (parser);
   if (!JSON_NODE_HOLDS_OBJECT (root)) {
-    g_printerr ("Unknown json message '%s' from '%s', ignoring", msg, peer_id);
+    gst_printerr ("Unknown json message '%s' from '%s', ignoring", msg,
+        peer_id);
     g_object_unref (parser);
     return FALSE;
   }
 
-  g_print ("Message from peer %s: %s\n", peer_id, msg);
+  gst_print ("Message from peer %s: %s\n", peer_id, msg);
 
   object = json_node_get_object (root);
   /* Check type of JSON message */
@@ -750,7 +751,7 @@ handle_peer_message (const gchar * peer_id, const gchar * msg)
         candidate);
     gst_object_unref (webrtc);
   } else {
-    g_printerr ("Ignoring unknown JSON message:\n%s\n", msg);
+    gst_printerr ("Ignoring unknown JSON message:\n%s\n", msg);
   }
   g_object_unref (parser);
   return TRUE;
@@ -765,7 +766,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
 
   switch (type) {
     case SOUP_WEBSOCKET_DATA_BINARY:
-      g_printerr ("Received unknown binary message, ignoring\n");
+      gst_printerr ("Received unknown binary message, ignoring\n");
       return;
     case SOUP_WEBSOCKET_DATA_TEXT:{
       gsize size;
@@ -803,18 +804,18 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         peers = g_list_prepend (peers, g_strdup (splitm[1]));
         peer_id = find_peer_from_list (splitm[1]);
         g_assert_nonnull (peer_id);
-        g_print ("Peer %s has joined the room\n", peer_id);
+        gst_print ("Peer %s has joined the room\n", peer_id);
       } else if (g_str_has_prefix (text, "ROOM_PEER_LEFT")) {
         splitm = g_strsplit (text, " ", 2);
         peer_id = find_peer_from_list (splitm[1]);
         g_assert_nonnull (peer_id);
         peers = g_list_remove (peers, peer_id);
-        g_print ("Peer %s has left the room\n", peer_id);
+        gst_print ("Peer %s has left the room\n", peer_id);
         remove_peer_from_pipeline (peer_id);
         g_free ((gchar *) peer_id);
         /* TODO: cleanup pipeline */
       } else {
-        g_printerr ("WARNING: Ignoring unknown message %s\n", text);
+        gst_printerr ("WARNING: Ignoring unknown message %s\n", text);
       }
       g_strfreev (splitm);
     } else {
@@ -856,7 +857,7 @@ on_server_connected (SoupSession * session, GAsyncResult * res,
   g_assert_nonnull (ws_conn);
 
   app_state = SERVER_CONNECTED;
-  g_print ("Connected to signalling server\n");
+  gst_print ("Connected to signalling server\n");
 
   g_signal_connect (ws_conn, "closed", G_CALLBACK (on_server_closed), NULL);
   g_signal_connect (ws_conn, "message", G_CALLBACK (on_server_message), NULL);
@@ -888,7 +889,7 @@ connect_to_websocket_server_async (void)
 
   message = soup_message_new (SOUP_METHOD_GET, server_url);
 
-  g_print ("Connecting to server...\n");
+  gst_print ("Connecting to server...\n");
 
   /* Once connected, we will register */
   soup_session_websocket_connect_async (session, message, NULL, NULL, NULL,
@@ -912,7 +913,7 @@ check_plugins (void)
     GstPlugin *plugin;
     plugin = gst_registry_find_plugin (registry, needed[i]);
     if (!plugin) {
-      g_print ("Required gstreamer plugin '%s' not found\n", needed[i]);
+      gst_print ("Required gstreamer plugin '%s' not found\n", needed[i]);
       ret = FALSE;
       continue;
     }
@@ -931,7 +932,7 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (context, entries, NULL);
   g_option_context_add_group (context, gst_init_get_option_group ());
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
-    g_printerr ("Error initializing: %s\n", error->message);
+    gst_printerr ("Error initializing: %s\n", error->message);
     return -1;
   }
 
@@ -939,7 +940,7 @@ main (int argc, char *argv[])
     return -1;
 
   if (!room_id) {
-    g_printerr ("--room-id is a required argument\n");
+    gst_printerr ("--room-id is a required argument\n");
     return -1;
   }
 
@@ -949,7 +950,7 @@ main (int argc, char *argv[])
   /* Sanitize by removing whitespace, modifies string in-place */
   g_strdelimit (local_id, " \t\n\r", '-');
 
-  g_print ("Our local id is %s\n", local_id);
+  gst_print ("Our local id is %s\n", local_id);
 
   if (!server_url)
     server_url = g_strdup (default_server_url);
@@ -971,7 +972,7 @@ main (int argc, char *argv[])
   g_main_loop_run (loop);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  g_print ("Pipeline stopped\n");
+  gst_print ("Pipeline stopped\n");
 
   gst_object_unref (pipeline);
   g_free (server_url);

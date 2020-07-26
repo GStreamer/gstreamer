@@ -184,12 +184,12 @@ void MediaInfo::update(GstPlayerMediaInfo *info)
     if ((type != GST_TAG_IMAGE_TYPE_FRONT_COVER) &&
         (type != GST_TAG_IMAGE_TYPE_UNDEFINED) &&
         (type != GST_TAG_IMAGE_TYPE_NONE)) {
-      g_print ("unsupport type ... %d \n", type);
+      gst_print ("unsupport type ... %d \n", type);
       return;
     }
 
     if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
-      g_print ("failed to map gst buffer \n");
+      gst_print ("failed to map gst buffer \n");
       return;
     }
 

@@ -56,7 +56,7 @@ static gboolean caps_resolved = FALSE;
 static void
 remove_client (Client * client)
 {
-  g_print ("Removing connection %s\n", client->name);
+  gst_print ("Removing connection %s\n", client->name);
 
   G_LOCK (clients);
   clients = g_list_remove (clients, client);
@@ -96,7 +96,7 @@ write_bytes (Client * client, const gchar * data, guint len)
 
   if (w <= 0) {
     if (err) {
-      g_print ("Write error %s\n", err->message);
+      gst_print ("Write error %s\n", err->message);
       g_clear_error (&err);
     }
     remove_client (client);
@@ -167,15 +167,15 @@ client_message (Client * client, const gchar * data, guint len)
         g_source_destroy (client->tosource);
         g_source_unref (client->tosource);
         client->tosource = NULL;
-        g_print ("Starting to stream to %s\n", client->name);
+        gst_print ("Starting to stream to %s\n", client->name);
         g_signal_emit_by_name (multisocketsink, "add", client->socket);
       }
 
       if (!started) {
-        g_print ("Starting pipeline\n");
+        gst_print ("Starting pipeline\n");
         if (gst_element_set_state (pipeline,
                 GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-          g_print ("Failed to start pipeline\n");
+          gst_print ("Failed to start pipeline\n");
           g_main_loop_quit (loop);
         }
         started = TRUE;
@@ -204,7 +204,7 @@ client_message (Client * client, const gchar * data, guint len)
 static gboolean
 on_timeout (Client * client)
 {
-  g_print ("Timeout\n");
+  gst_print ("Timeout\n");
   remove_client (client);
 
   return FALSE;
@@ -250,14 +250,14 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
     }
 
     if (client->current_message->len >= 1024 * 1024) {
-      g_print ("No complete request after 1MB of data\n");
+      gst_print ("No complete request after 1MB of data\n");
       remove_client (client);
       return FALSE;
     }
 
     return TRUE;
   } else {
-    g_print ("Read error %s\n", err->message);
+    gst_print ("Read error %s\n", err->message);
     g_clear_error (&err);
     remove_client (client);
     return FALSE;
@@ -284,7 +284,7 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
   g_free (ip);
   g_object_unref (addr);
 
-  g_print ("New connection %s\n", client->name);
+  gst_print ("New connection %s\n", client->name);
 
   client->waiting_200_ok = FALSE;
   client->http_version = g_strdup ("");
@@ -324,7 +324,7 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
       GError *err;
 
       gst_message_parse_error (message, &err, &debug);
-      g_print ("Error %s\n", err->message);
+      gst_print ("Error %s\n", err->message);
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
@@ -335,13 +335,13 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
       GError *err;
 
       gst_message_parse_warning (message, &err, &debug);
-      g_print ("Warning %s\n", err->message);
+      gst_print ("Warning %s\n", err->message);
       g_error_free (err);
       g_free (debug);
       break;
     }
     case GST_MESSAGE_EOS:{
-      g_print ("EOS\n");
+      gst_print ("EOS\n");
       g_main_loop_quit (loop);
     }
     default:
@@ -404,7 +404,7 @@ on_stream_caps_changed (GObject * obj, GParamSpec * pspec, gpointer user_data)
       } else {
         content_type = g_strdup_printf ("Content-Type: %s\r\n", mimetype);
       }
-      g_print ("%s", content_type);
+      gst_print ("%s", content_type);
       break;
     }
     i++;
@@ -443,7 +443,7 @@ main (gint argc, gchar ** argv)
   gst_init (&argc, &argv);
 
   if (argc < 4) {
-    g_print ("usage: %s PORT <launch line>\n"
+    gst_print ("usage: %s PORT <launch line>\n"
         "example: %s 8080 ( videotestsrc ! theoraenc ! oggmux name=stream )\n",
         argv[0], argv[0]);
     return -1;
@@ -454,21 +454,21 @@ main (gint argc, gchar ** argv)
 
   bin = gst_parse_launchv ((const gchar **) argv + 2, &err);
   if (!bin) {
-    g_print ("invalid pipeline: %s\n", err->message);
+    gst_print ("invalid pipeline: %s\n", err->message);
     g_clear_error (&err);
     return -2;
   }
 
   stream = gst_bin_get_by_name (GST_BIN (bin), "stream");
   if (!stream) {
-    g_print ("no element with name \"stream\" found\n");
+    gst_print ("no element with name \"stream\" found\n");
     gst_object_unref (bin);
     return -3;
   }
 
   srcpad = gst_element_get_static_pad (stream, "src");
   if (!srcpad) {
-    g_print ("no \"src\" pad in element \"stream\" found\n");
+    gst_print ("no \"src\" pad in element \"stream\" found\n");
     gst_object_unref (stream);
     gst_object_unref (bin);
     return -4;
@@ -514,7 +514,7 @@ main (gint argc, gchar ** argv)
           GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
     gst_object_unref (pipeline);
     g_main_loop_unref (loop);
-    g_print ("Failed to set pipeline to ready\n");
+    gst_print ("Failed to set pipeline to ready\n");
     return -5;
   }
 
@@ -526,7 +526,7 @@ main (gint argc, gchar ** argv)
 
   g_socket_service_start (service);
 
-  g_print ("Listening on http://127.0.0.1:%d/\n", port);
+  gst_print ("Listening on http://127.0.0.1:%d/\n", port);
 
   g_main_loop_run (loop);
 
