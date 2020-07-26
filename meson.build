@@ -274,7 +274,7 @@ if get_option('default_library') == 'static'
     info = libraries_map[name]
     exposed_libs += subproject(info[0]).get_variable(info[1])
     depname = name == 'gstreamer' ? 'gstreamer-1.0' : 'gstreamer-@0@-1.0'.format(name)
-    incdir_deps += dependency(depname).partial_dependency(includes: true)
+    incdir_deps += dependency(depname).partial_dependency(includes: true, sources: true)
   endforeach
 
   # glib and gobject are part of our public API. If we are using glib from the
