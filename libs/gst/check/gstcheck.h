@@ -206,6 +206,8 @@ void gst_check_objects_destroyed_on_unref (gpointer object_to_unref, gpointer fi
 GST_CHECK_API
 void gst_check_object_destroyed_on_unref (gpointer object_to_unref);
 
+#ifndef __GI_SCANNER__
+
 #define fail_unless_message_error(msg, domain, code)            \
 gst_check_message_error (msg, GST_MESSAGE_ERROR,                \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code)
@@ -746,6 +748,8 @@ G_STMT_START {                                                  \
 
 #define tcase_skip_broken_loop_test(chain,test_func,a,b)        \
   tcase_skip_broken_test (chain, test_func)
+
+#endif /* !__GI_SCANNER__ */
 
 G_END_DECLS
 
