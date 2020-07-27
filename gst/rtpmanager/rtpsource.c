@@ -105,7 +105,7 @@ rtp_source_class_init (RTPSourceClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * RTPSource::sdes
+   * RTPSource:sdes
    *
    * The current SDES items of the source. Returns a structure with name
    * application/x-rtp-source-sdes and may contain the following fields:
@@ -127,7 +127,7 @@ rtp_source_class_init (RTPSourceClass * klass)
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * RTPSource::stats
+   * RTPSource:stats
    *
    * This property returns a GstStructure named application/x-rtp-source-stats with
    * fields useful for statistics and diagnostics.
@@ -241,7 +241,7 @@ rtp_source_class_init (RTPSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * RTPSession::disable-rtcp:
+   * RTPSource:disable-rtcp:
    *
    * Allow disabling the sending of RTCP packets for this source.
    */

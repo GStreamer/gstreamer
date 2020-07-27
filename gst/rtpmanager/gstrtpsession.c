@@ -736,14 +736,14 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpSession::stats:
+   * GstRtpSession:stats:
    *
-   * Various session statistics. This property returns a GstStructure
-   * with name application/x-rtp-session-stats with the following fields:
+   * Various session statistics. This property returns a #GstStructure
+   * with name `application/x-rtp-session-stats` with the following fields:
    *
-   *  "recv-rtx-req-count  G_TYPE_UINT   The number of retransmission event
+   *  "recv-rtx-req-count"  G_TYPE_UINT   The number of retransmission events
    *      received from downstream (in receiver mode) (Since 1.16)
-   *  "sent-rtx-req-count" G_TYPE_UINT   The number of retransmission event
+   *  "sent-rtx-req-count" G_TYPE_UINT   The number of retransmission events
    *      sent downstream (in sender mode) (Since 1.16)
    *  "rtx-count"          G_TYPE_UINT   DEPRECATED Since 1.16, same as
    *      "recv-rtx-req-count".
@@ -751,7 +751,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
    *      dropped (due to bandwidth constraints)
    *  "sent-nack-count"    G_TYPE_UINT   Number of NACKs sent
    *  "recv-nack-count"    G_TYPE_UINT   Number of NACKs received
-   *  "source-stats"       G_TYPE_BOXED  GValueArray of #RTPSource::stats for all
+   *  "source-stats"       G_TYPE_BOXED  GValueArray of #RTPSource:stats for all
    *      RTP sources (Since 1.8)
    *
    * Since: 1.4
@@ -762,7 +762,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpSession::twcc-stats:
+   * GstRtpSession:twcc-stats:
    *
    * Various statistics derived from TWCC. This property returns a GstStructure
    * with name RTPTWCCStats with the following fields:
@@ -772,11 +772,11 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
    *  "packets-sent"     G_TYPE_UINT    Number of packets sent
    *  "packets-recv"     G_TYPE_UINT    Number of packets reported recevied
    *  "packet-loss-pct"  G_TYPE_DOUBLE  Packetloss percentage, based on
-          packets reported as lost from the recevier.
+   *      packets reported as lost from the recevier.
    *  "avg-delta-of-delta", G_TYPE_INT64 In nanoseconds, a moving window
-          average of the difference in inter-packet spacing between
-          sender and receiver. A sudden increase in this number can indicate
-          network congestion.
+   *      average of the difference in inter-packet spacing between
+   *      sender and receiver. A sudden increase in this number can indicate
+   *      network congestion.
    *
    * Since: 1.18
    */
