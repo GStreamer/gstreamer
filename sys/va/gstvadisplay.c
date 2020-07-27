@@ -24,6 +24,7 @@
 
 #include "gstvadisplay.h"
 #include "gstvaprofile.h"
+#include "gstvavideoformat.h"
 
 GST_DEBUG_CATEGORY (gst_va_display_debug);
 #define GST_CAT_DEFAULT gst_va_display_debug
@@ -365,5 +366,49 @@ gst_va_display_get_profiles (GstVaDisplay * self, guint32 codec,
 bail:
   g_free (entrypoints);
   g_free (profiles);
+  return ret;
+}
+
+GArray *
+gst_va_display_get_image_formats (GstVaDisplay * self)
+{
+  GArray *ret = NULL;
+  GstVideoFormat format;
+  VADisplay dpy = gst_va_display_get_va_dpy (self);
+  VAImageFormat *va_formats;
+  VAStatus status;
+  int i, max, num = 0;
+
+  gst_va_display_lock (self);
+  max = vaMaxNumImageFormats (dpy);
+  gst_va_display_unlock (self);
+  if (max == 0)
+    return NULL;
+
+  va_formats = g_new (VAImageFormat, max);
+
+  gst_va_display_lock (self);
+  status = vaQueryImageFormats (dpy, va_formats, &num);
+  gst_va_display_unlock (self);
+
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR ("vaQueryImageFormats: %s", vaErrorStr (status));
+    goto bail;
+  }
+
+  ret = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), num);
+  for (i = 0; i < num; i++) {
+    format = gst_va_video_format_from_va_image_format (&va_formats[i]);
+    if (format != GST_VIDEO_FORMAT_UNKNOWN)
+      g_array_append_val (ret, format);
+  }
+
+  if (ret->len == 0) {
+    g_array_unref (ret);
+    ret = NULL;
+  }
+
+bail:
+  g_free (va_formats);
   return ret;
 }

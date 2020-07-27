@@ -29,5 +29,6 @@ GstVideoFormat        gst_va_video_format_from_va_fourcc  (guint fourcc);
 guint                 gst_va_fourcc_from_video_format     (GstVideoFormat format);
 guint                 gst_va_chroma_from_video_format     (GstVideoFormat format);
 const VAImageFormat * gst_va_image_format_from_video_format (GstVideoFormat format);
+GstVideoFormat        gst_va_video_format_from_va_image_format (const VAImageFormat * va_format);
 
 G_END_DECLS

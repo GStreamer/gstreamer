@@ -125,6 +125,46 @@ get_format_map_from_video_format (GstVideoFormat format)
   return NULL;
 }
 
+static inline gboolean
+va_format_is_rgb (const VAImageFormat * va_format)
+{
+  return va_format->depth != 0;
+}
+
+static inline gboolean
+va_format_is_same_rgb (const VAImageFormat * fmt1, const VAImageFormat * fmt2)
+{
+  return (fmt1->red_mask == fmt2->red_mask
+      && fmt1->green_mask == fmt2->green_mask
+      && fmt1->blue_mask == fmt2->blue_mask
+      && fmt1->alpha_mask == fmt2->alpha_mask);
+}
+
+static inline gboolean
+va_format_is_same (const VAImageFormat * fmt1, const VAImageFormat * fmt2)
+{
+  if (fmt1->fourcc != fmt2->fourcc)
+    return FALSE;
+  if (fmt1->byte_order != VA_NSB_FIRST
+      && fmt2->byte_order != VA_NSB_FIRST
+      && fmt1->byte_order != fmt2->byte_order)
+    return FALSE;
+  return va_format_is_rgb (fmt1) ? va_format_is_same_rgb (fmt1, fmt2) : TRUE;
+}
+
+static const struct FormatMap *
+get_format_map_from_va_image_format (const VAImageFormat * va_format)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (va_format_is_same (&format_map[i].va_format, va_format))
+      return &format_map[i];
+  }
+
+  return NULL;
+}
+
 GstVideoFormat
 gst_va_video_format_from_va_fourcc (guint va_fourcc)
 {
@@ -155,4 +195,12 @@ gst_va_image_format_from_video_format (GstVideoFormat format)
   const struct FormatMap *map = get_format_map_from_video_format (format);
 
   return map ? &map->va_format : NULL;
+}
+
+GstVideoFormat
+gst_va_video_format_from_va_image_format (const VAImageFormat * va_format)
+{
+  const struct FormatMap *map = get_format_map_from_va_image_format (va_format);
+
+  return map ? map->format : GST_VIDEO_FORMAT_UNKNOWN;
 }
