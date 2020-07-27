@@ -419,7 +419,11 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
           GstClockTime running_time;
           gchar *entry_location;
 
-          g_assert (sink->current_location != NULL);
+          if (!sink->current_location) {
+            GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, ((NULL)),
+                ("Fragment closed without knowing its location"));
+            break;
+          }
 
           gst_structure_get_clock_time (s, "running-time", &running_time);
 
