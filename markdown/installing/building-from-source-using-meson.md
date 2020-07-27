@@ -52,8 +52,11 @@ cd gst-build
 gst-build contains a few notable scripts and directories:
 1. `meson.build` is the top-level build definition which will recursively
    configure all dependencies. It also defines some helper commands allowing you
-   to have an uninstalled environment or easily update all git modules.
-2. `submodules` is the location of the submodules.
+   to have an uninstalled development environment or easily update all git
+   repositories for various GStreamer modules.
+ 2. `subprojects/` is the directory containing GStreamer modules and
+   and a selection of dependencies.
+
 
 
 ## Basic meson and ninja usage
