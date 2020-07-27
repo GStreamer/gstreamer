@@ -84,6 +84,8 @@ extern const gchar *Parameters_EFFECT_POSTERIZE;
 extern const gchar *Parameters_EFFECT_WHITEBOARD;
 extern const gchar *Parameters_EFFECT_BLACKBOARD;
 extern const gchar *Parameters_EFFECT_AQUA;
+/* EMBOSS, SKETCH and NEON are not standard Android API
+ * but are available only on some Qualcomm devices */
 extern const gchar *Parameters_EFFECT_EMBOSS;
 extern const gchar *Parameters_EFFECT_SKETCH;
 extern const gchar *Parameters_EFFECT_NEON;
@@ -112,9 +114,12 @@ extern const gchar *Parameters_SCENE_MODE_SPORTS;
 extern const gchar *Parameters_SCENE_MODE_PARTY;
 extern const gchar *Parameters_SCENE_MODE_CANDLELIGHT;
 extern const gchar *Parameters_SCENE_MODE_BARCODE;
+/* BACKLIGHT, FLOWERS and AR are not standard Android API
+ * but are available only on some Qualcomm devices. */
 extern const gchar *Parameters_SCENE_MODE_BACKLIGHT;
 extern const gchar *Parameters_SCENE_MODE_FLOWERS;
 extern const gchar *Parameters_SCENE_MODE_AR;
+/* HDR is available in API 17+ (Android 4.2) */
 extern const gchar *Parameters_SCENE_MODE_HDR;
 extern const gchar *Parameters_FOCUS_MODE_AUTO;
 extern const gchar *Parameters_FOCUS_MODE_INFINITY;
