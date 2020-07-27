@@ -165,7 +165,7 @@ gst_va_decoder_init (GstVaDecoder * self)
   self->profile = VAProfileNone;
   self->config = VA_INVALID_ID;
   self->context = VA_INVALID_ID;
-  self->rt_format = VA_RT_FORMAT_YUV420;
+  self->rt_format = 0;
   self->coded_width = 0;
   self->coded_height = 0;
 }
