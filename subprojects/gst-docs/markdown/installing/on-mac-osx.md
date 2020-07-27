@@ -32,8 +32,11 @@ There are 3 sets of files in the SDK:
     with [PackageMaker](https://developer.apple.com/library/mac/#documentation/DeveloperTools/Conceptual/PackageMakerUserGuide/Introduction/Introduction.html)
     to deploy GStreamer with your application
 
-Get **both the runtime and the development installers** from [here](https://gstreamer.freedesktop.org/data/pkg/osx/).
-
+Get **both the runtime and the development installers** from
+the [GStreamer download page](https://gstreamer.freedesktop.org/download/#macos)
+and **please install both of them**:
+ - The runtime installer is e.g. `gstreamer-1.0-{VERSION}-x86_64.pkg`, and
+ - The development installer is e.g. `gstreamer-1.0-devel-{VERSION}-x86_64.pkg`
 
 > ![Warning](images/icons/emoticons/warning.svg)
 > On Mac OS X 10.6 (Snow Leopard) you have to install Python 2.7 manually. It is included in later versions of OS X already. You can get it from [here](http://www.python.org/getit).
