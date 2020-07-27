@@ -870,10 +870,10 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
   GstAudioAggregatorPad *first_configured_pad =
       gst_audio_aggregator_get_first_configured_pad (agg);
   GstCaps *downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
+  GstCaps *rate_caps;
   GstAudioInfo info;
   gboolean ret = TRUE;
-  gint downstream_rate;
-  GstStructure *s;
+  gboolean downstream_supports_rate;
 
   /* Returns NULL if there is no downstream peer */
   if (!downstream_caps)
@@ -888,14 +888,18 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
     GST_WARNING_OBJECT (agg, "Rejecting invalid caps: %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
-  s = gst_caps_get_structure (downstream_caps, 0);
 
   /* TODO: handle different rates on sinkpads, a bit complex
    * because offsets will have to be updated, and audio resampling
    * has a latency to take into account
    */
-  if ((gst_structure_get_int (s, "rate", &downstream_rate)
-          && info.rate != downstream_rate) || (first_configured_pad
+  rate_caps =
+      gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, info.rate, NULL);
+  downstream_supports_rate =
+      gst_caps_can_intersect (rate_caps, downstream_caps);
+  gst_caps_unref (rate_caps);
+
+  if (!downstream_supports_rate || (first_configured_pad
           && info.rate != first_configured_pad->info.rate)) {
     gst_pad_push_event (GST_PAD (aaggpad), gst_event_new_reconfigure ());
     ret = FALSE;
