@@ -869,20 +869,9 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
 {
   GstAudioAggregatorPad *first_configured_pad =
       gst_audio_aggregator_get_first_configured_pad (agg);
-  GstCaps *downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
-  GstCaps *rate_caps;
   GstAudioInfo info;
   gboolean ret = TRUE;
-  gboolean downstream_supports_rate;
-
-  /* Returns NULL if there is no downstream peer */
-  if (!downstream_caps)
-    downstream_caps = gst_pad_get_pad_template_caps (agg->srcpad);
-
-  if (gst_caps_is_empty (downstream_caps)) {
-    ret = FALSE;
-    goto done;
-  }
+  gboolean downstream_supports_rate = TRUE;
 
   if (!gst_audio_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (agg, "Rejecting invalid caps: %" GST_PTR_FORMAT, caps);
@@ -893,11 +882,28 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
    * because offsets will have to be updated, and audio resampling
    * has a latency to take into account
    */
-  rate_caps =
-      gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, info.rate, NULL);
-  downstream_supports_rate =
-      gst_caps_can_intersect (rate_caps, downstream_caps);
-  gst_caps_unref (rate_caps);
+
+  /* Only check against the downstream caps if we didn't configure any caps
+   * so far. Otherwise we already know that downstream supports the rate
+   * because we negotiated with downstream */
+  if (!first_configured_pad) {
+    GstCaps *downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
+
+    /* Returns NULL if there is no downstream peer */
+    if (downstream_caps) {
+      GstCaps *rate_caps =
+          gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, info.rate,
+          NULL);
+
+      gst_caps_set_features_simple (rate_caps,
+          gst_caps_features_copy (GST_CAPS_FEATURES_ANY));
+
+      downstream_supports_rate =
+          gst_caps_can_intersect (rate_caps, downstream_caps);
+      gst_caps_unref (rate_caps);
+      gst_caps_unref (downstream_caps);
+    }
+  }
 
   if (!downstream_supports_rate || (first_configured_pad
           && info.rate != first_configured_pad->info.rate)) {
@@ -913,12 +919,8 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
     GST_OBJECT_UNLOCK (aaggpad);
   }
 
-done:
   if (first_configured_pad)
     gst_object_unref (first_configured_pad);
-
-  if (downstream_caps)
-    gst_caps_unref (downstream_caps);
 
   return ret;
 }
