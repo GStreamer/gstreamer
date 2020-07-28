@@ -56,7 +56,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer user_data)
       g_error_free (err);
 
       /* TODO Not sure if we should post an Error or Warning here */
-      GST_ELEMENT_ERROR (data, CORE, FAILED,
+      GST_ELEMENT_ERROR (data->element, CORE, FAILED,
           ("fatal error in preview pipeline, disposing the pipeline"), (NULL));
 
       /* Possible error situations:
