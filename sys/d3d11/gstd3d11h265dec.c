@@ -120,9 +120,9 @@ static gboolean gst_d3d11_h265_dec_src_query (GstVideoDecoder * decoder,
 static gboolean gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     const GstH265SPS * sps, gint max_dpb_size);
 static gboolean gst_d3d11_h265_dec_new_picture (GstH265Decoder * decoder,
-    GstH265Picture * picture);
+    GstVideoCodecFrame * cframe, GstH265Picture * picture);
 static GstFlowReturn gst_d3d11_h265_dec_output_picture (GstH265Decoder *
-    decoder, GstH265Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstH265Picture * picture);
 static gboolean gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice, GstH265Dpb * dpb);
 static gboolean gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
@@ -624,7 +624,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
 
 static gboolean
 gst_d3d11_h265_dec_new_picture (GstH265Decoder * decoder,
-    GstH265Picture * picture)
+    GstVideoCodecFrame * cframe, GstH265Picture * picture)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
   GstBuffer *view_buffer;
@@ -651,10 +651,10 @@ gst_d3d11_h265_dec_new_picture (GstH265Decoder * decoder,
 
 static GstFlowReturn
 gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
-    GstH265Picture * picture)
+    GstVideoCodecFrame * frame, GstH265Picture * picture)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
-  GstVideoCodecFrame *frame = NULL;
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
 
@@ -665,16 +665,7 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
 
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "Could not get output view");
-    return GST_FLOW_ERROR;
-  }
-
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-
-  /* FIXME: Sync with other codec implementation */
-  if (!frame) {
-    GST_ERROR_OBJECT (self, "Couldn't get codec frame");
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   /* if downstream is d3d11 element and forward playback case,
@@ -696,9 +687,7 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
 
   if (!output_buffer) {
     GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
   frame->output_buffer = output_buffer;
@@ -710,11 +699,18 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
           view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-
-    return GST_FLOW_ERROR;
+    goto error;
   }
 
+  gst_h265_picture_unref (picture);
+
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+
+error:
+  gst_video_decoder_drop_frame (vdec, frame);
+  gst_h265_picture_unref (picture);
+
+  return GST_FLOW_ERROR;
 }
 
 static gboolean

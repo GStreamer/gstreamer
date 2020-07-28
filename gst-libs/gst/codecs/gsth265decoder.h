@@ -87,9 +87,7 @@ struct _GstH265Decoder
  *                  Called per one #GstH265Picture to notify subclass to finish
  *                  decoding process for the #GstH265Picture
  * @output_picture: Called with a #GstH265Picture which is required to be outputted.
- *                  Subclass can retrieve parent #GstVideoCodecFrame by using
- *                  gst_video_decoder_get_frame() with system_frame_number
- *                  and the #GstVideoCodecFrame must be consumed by subclass via
+ *                  The #GstVideoCodecFrame must be consumed by subclass via
  *                  gst_video_decoder_{finish,drop,release}_frame().
  */
 struct _GstH265DecoderClass
@@ -99,8 +97,14 @@ struct _GstH265DecoderClass
   gboolean      (*new_sequence)     (GstH265Decoder * decoder,
                                      const GstH265SPS * sps,
                                      gint max_dpb_size);
-
+  /**
+   * GstH265Decoder:new_picture:
+   * @decoder: a #GstH265Decoder
+   * @frame: (transfer none): a #GstVideoCodecFrame
+   * @picture: (transfer none): a #GstH265Picture
+   */
   gboolean      (*new_picture)      (GstH265Decoder * decoder,
+                                     GstVideoCodecFrame * frame,
                                      GstH265Picture * picture);
 
   gboolean      (*start_picture)    (GstH265Decoder * decoder,
@@ -114,8 +118,14 @@ struct _GstH265DecoderClass
 
   gboolean      (*end_picture)      (GstH265Decoder * decoder,
                                      GstH265Picture * picture);
-
+  /**
+   * GstH265Decoder:output_picture:
+   * @decoder: a #GstH265Decoder
+   * @frame: (transfer full): a #GstVideoCodecFrame
+   * @picture: (transfer full): a #GstH265Picture
+   */
   GstFlowReturn (*output_picture)   (GstH265Decoder * decoder,
+                                     GstVideoCodecFrame * frame,
                                      GstH265Picture * picture);
 
   /*< private >*/
@@ -126,6 +136,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265Decoder, gst_object_unref)
 
 GST_CODECS_API
 GType gst_h265_decoder_get_type (void);
+
+GST_CODECS_API
+GstH265Picture * gst_h265_decoder_get_picture   (GstH265Decoder * decoder,
+                                                 guint32 system_frame_number);
 
 G_END_DECLS
 

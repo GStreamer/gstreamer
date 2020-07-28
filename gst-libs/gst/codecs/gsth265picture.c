@@ -232,6 +232,34 @@ gst_h265_dpb_delete_unused (GstH265Dpb * dpb)
 }
 
 /**
+ * gst_h265_dpb_delete_outputted:
+ * @dpb: a #GstH265Dpb
+ *
+ * Delete already outputted picture, even if they are referenced.
+ *
+ * Since: 1.20
+ */
+void
+gst_h265_dpb_delete_outputted (GstH265Dpb * dpb)
+{
+  gint i;
+
+  g_return_if_fail (dpb != NULL);
+
+  for (i = 0; i < dpb->pic_list->len; i++) {
+    GstH265Picture *picture =
+        g_array_index (dpb->pic_list, GstH265Picture *, i);
+
+    if (picture->outputted) {
+      GST_TRACE ("remove picture %p (poc %d) from dpb",
+          picture, picture->pic_order_cnt);
+      g_array_remove_index_fast (dpb->pic_list, i);
+      i--;
+    }
+  }
+}
+
+/**
  * gst_h265_dpb_delete_by_poc:
  * @dpb: a #GstH265Dpb
  * @poc: a poc of #GstH265Picture to remove
@@ -423,13 +451,13 @@ gst_h265_dpb_get_long_ref_by_poc (GstH265Dpb * dpb, gint poc)
 /**
  * gst_h265_dpb_get_pictures_not_outputted:
  * @dpb: a #GstH265Dpb
- * @out: (out) (element-type GstH265Picture) (transfer full): a list
- *   of #GstH265Dpb
+ * @out: (out) (element-type GstH265Picture) (transfer full): an array
+ *   of #GstH265Picture pointer
  *
  * Retrieve all not-outputted pictures from @dpb
  */
 void
-gst_h265_dpb_get_pictures_not_outputted (GstH265Dpb * dpb, GList ** out)
+gst_h265_dpb_get_pictures_not_outputted (GstH265Dpb * dpb, GArray * out)
 {
   gint i;
 
@@ -440,8 +468,10 @@ gst_h265_dpb_get_pictures_not_outputted (GstH265Dpb * dpb, GList ** out)
     GstH265Picture *picture =
         g_array_index (dpb->pic_list, GstH265Picture *, i);
 
-    if (!picture->outputted)
-      *out = g_list_append (*out, gst_h265_picture_ref (picture));
+    if (!picture->outputted) {
+      gst_h265_picture_ref (picture);
+      g_array_append_val (out, picture);
+    }
   }
 }
 
@@ -486,4 +516,35 @@ gst_h265_dpb_is_full (GstH265Dpb * dpb)
   g_return_val_if_fail (dpb != NULL, -1);
 
   return dpb->pic_list->len >= dpb->max_num_pics;
+}
+
+/**
+ * gst_h265_dpb_get_picture:
+ * @dpb: a #GstH265Dpb
+ * @system_frame_number The system frame number
+ *
+ * Returns: (transfer full): the picture identified with the specified
+ * @system_frame_number, or %NULL if DPB does not contain a #GstH265Picture
+ * corresponding to the @system_frame_number
+ *
+ * Since: 1.20
+ */
+GstH265Picture *
+gst_h265_dpb_get_picture (GstH265Dpb * dpb, guint32 system_frame_number)
+{
+  gint i;
+
+  g_return_val_if_fail (dpb != NULL, NULL);
+
+  for (i = 0; i < dpb->pic_list->len; i++) {
+    GstH265Picture *picture =
+        g_array_index (dpb->pic_list, GstH265Picture *, i);
+
+    if (picture->system_frame_number == system_frame_number) {
+      gst_h265_picture_ref (picture);
+      return picture;
+    }
+  }
+
+  return NULL;
 }

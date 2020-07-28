@@ -161,6 +161,9 @@ GST_CODECS_API
 void  gst_h265_dpb_delete_unused    (GstH265Dpb * dpb);
 
 GST_CODECS_API
+void gst_h265_dpb_delete_outputted   (GstH265Dpb * dpb);
+
+GST_CODECS_API
 void  gst_h265_dpb_delete_by_poc    (GstH265Dpb * dpb,
                                      gint poc);
 
@@ -188,10 +191,14 @@ GstH265Picture * gst_h265_dpb_get_long_ref_by_poc  (GstH265Dpb * dpb,
 
 GST_CODECS_API
 void  gst_h265_dpb_get_pictures_not_outputted  (GstH265Dpb * dpb,
-                                                GList ** out);
+                                                GArray * out);
 
 GST_CODECS_API
 GArray * gst_h265_dpb_get_pictures_all         (GstH265Dpb * dpb);
+
+GST_CODECS_API
+GstH265Picture * gst_h265_dpb_get_picture      (GstH265Dpb * dpb,
+                                                guint32 system_frame_number);
 
 GST_CODECS_API
 gint  gst_h265_dpb_get_size   (GstH265Dpb * dpb);
