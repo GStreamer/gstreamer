@@ -18,6 +18,7 @@ endif
 libva_req = ['>= 0.39.0', '!= 0.99.0']
 glib_req = '>= 2.44.0'
 libwayland_req = '>= 1.11.0'
+libdrm_req = '>= 2.4.98'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
@@ -76,7 +77,8 @@ libva_dep = dependency('libva', version: libva_req)
 libva_drm_dep = dependency('libva-drm', version: libva_req, required: false)
 libva_wayland_dep = dependency('libva-wayland', version: libva_req, required: false)
 libva_x11_dep = dependency('libva-x11', version: libva_req, required: false)
-libdrm_dep = dependency('libdrm', required: false)
+libdrm_dep = dependency('libdrm', version: libdrm_req, required: false,
+  fallback: ['libdrm', 'ext_libdrm'])
 libudev_dep = dependency('libudev', required: false)
 egl_dep = dependency('egl', required: false)
 gl_dep = dependency('gl', required: false)
