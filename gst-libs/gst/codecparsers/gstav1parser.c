@@ -2311,7 +2311,7 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
     if (retval != GST_AV1_PARSER_OK)
       goto error;
 
-    tile_info->tile_size_bytes_minus_1 = AV1_READ_BIT_CHECKED (br, &retval);
+    tile_info->tile_size_bytes_minus_1 = AV1_READ_BITS_CHECKED (br, 2, &retval);
     if (retval != GST_AV1_PARSER_OK)
       goto error;
 
