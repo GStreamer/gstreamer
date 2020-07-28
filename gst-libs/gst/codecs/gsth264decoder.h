@@ -77,9 +77,7 @@ struct _GstH264Decoder
  *                  Called per one #GstH264Picture to notify subclass to finish
  *                  decoding process for the #GstH264Picture
  * @output_picture: Called with a #GstH264Picture which is required to be outputted.
- *                  Subclass can retrieve parent #GstVideoCodecFrame by using
- *                  gst_video_decoder_get_frame() with system_frame_number
- *                  and the #GstVideoCodecFrame must be consumed by subclass via
+ *                  The #GstVideoCodecFrame must be consumed by subclass via
  *                  gst_video_decoder_{finish,drop,release}_frame().
  */
 struct _GstH264DecoderClass

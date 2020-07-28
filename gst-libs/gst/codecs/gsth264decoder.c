@@ -141,7 +141,7 @@ struct _GstH264DecoderPrivate
   GArray *ref_pic_list0;
   GArray *ref_pic_list1;
 
-  /* Cached array to handle pictures to be outputed */
+  /* Cached array to handle pictures to be outputted */
   GArray *to_output;
 };
 
@@ -1320,9 +1320,9 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
   GstH264DecoderPrivate *priv = self->priv;
   GArray *to_output = priv->to_output;
 
-  /* We are around to drain, so we can get rist of everything that has been
-   * outputed already */
-  gst_h264_dpb_delete_outputed (priv->dpb);
+  /* We are about to drain, so we can get rid of everything that has been
+   * outputted already */
+  gst_h264_dpb_delete_outputted (priv->dpb);
   gst_h264_dpb_get_pictures_not_outputted (priv->dpb, to_output);
   g_array_sort (to_output, (GCompareFunc) poc_asc_compare);
 
@@ -1675,7 +1675,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
         gst_h264_dpb_add (priv->dpb, gst_h264_picture_ref (picture));
       }
 
-      /* and mark current picture is handled */
+      /* and mark current picture as handled */
       picture = NULL;
     }
 

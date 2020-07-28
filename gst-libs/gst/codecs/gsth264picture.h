@@ -170,7 +170,7 @@ GST_CODECS_API
 void  gst_h264_dpb_delete_unused    (GstH264Dpb * dpb);
 
 GST_CODECS_API
-void gst_h264_dpb_delete_outputed   (GstH264Dpb * dpb);
+void gst_h264_dpb_delete_outputted  (GstH264Dpb * dpb);
 
 GST_CODECS_API
 void  gst_h264_dpb_delete_by_poc    (GstH264Dpb * dpb,

@@ -234,7 +234,7 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
 }
 
 /**
- * gst_h264_dpb_delete_outputed:
+ * gst_h264_dpb_delete_outputted:
  * @dpb: a #GstH264Dpb
  *
  * Delete already outputted picture, even if they are referenced.
@@ -242,7 +242,7 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
  * Since: 1.18
  */
 void
-gst_h264_dpb_delete_outputed (GstH264Dpb * dpb)
+gst_h264_dpb_delete_outputted (GstH264Dpb * dpb)
 {
   gint i;
 
