@@ -30,6 +30,9 @@
 #include <gst/gst.h>
 #include "basecamerabinsrc-prelude.h"
 
+/**
+ * GstCameraBinPreviewPipelineData: (skip)
+ */
 typedef struct
 {
   GstElement *pipeline;

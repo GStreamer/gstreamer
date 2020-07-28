@@ -31,6 +31,8 @@
 
 G_BEGIN_DECLS
 
+/* FIXME: these should be properly namespaced if they're meant as exposed API */
+#ifndef __GI_SCANNER__
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
 #define DEFAULT_CAPTURE_WIDTH 800
@@ -38,8 +40,10 @@ G_BEGIN_DECLS
 #define DEFAULT_FPS_N 0         /* makes it use the default */
 #define DEFAULT_FPS_D 1
 #define DEFAULT_ZOOM MIN_ZOOM
+#endif /* !__GI_SCANNER__ */
 
 
+/* FIXME: properly namespace these enums */
 /**
  * GstCameraBinMode:
  * @MODE_IMAGE: image capture
@@ -54,7 +58,7 @@ typedef enum
   MODE_VIDEO = 2,
 } GstCameraBinMode;
 
-
+/* FIXME: should be CAMERA_BIN_MODE and camera_bin_mode */
 #define GST_TYPE_CAMERABIN_MODE (gst_camerabin_mode_get_type ())
 GST_BASE_CAMERA_BIN_SRC_API
 GType gst_camerabin_mode_get_type (void);

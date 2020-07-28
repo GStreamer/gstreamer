@@ -130,9 +130,12 @@ struct _GstBaseCameraSrcClass
 };
 
 
+/* FIXME: these should be properly namespaced if they're meant as exposed API */
+#ifndef __GI_SCANNER__
 #define MIN_ZOOM 1.0f
 #define MAX_ZOOM 10.0f
 #define ZOOM_1X MIN_ZOOM
+#endif /* !__GI_SCANNER__ */
 
 GST_BASE_CAMERA_BIN_SRC_API
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
