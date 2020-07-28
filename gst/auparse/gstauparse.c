@@ -417,9 +417,9 @@ gst_au_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstAuParse *auparse;
   gint avail, sendnow = 0;
-  gint64 timestamp;
-  gint64 duration;
-  gint64 offset;
+  gint64 timestamp = 0;
+  gint64 duration = 0;
+  gint64 offset = 0;
 
   auparse = GST_AU_PARSE (parent);
 
