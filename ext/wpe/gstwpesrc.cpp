@@ -116,6 +116,8 @@ struct _GstWpeSrc
 
   GBytes *bytes;
   gboolean gl_enabled;
+
+  gint64 n_frames;              /* total frames sent */
 };
 
 static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
@@ -153,9 +155,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static GstFlowReturn
 gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer ** buf)
 {
+  GstGLBaseSrc *gl_src = GST_GL_BASE_SRC (bsrc);
   GstWpeSrc *src = GST_WPE_SRC (bsrc);
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstBuffer *locked_buffer;
+  GstClockTime next_time;
+  gint64 ts_offset = 0;
 
   GST_OBJECT_LOCK (src);
   if (src->gl_enabled) {
@@ -166,9 +171,30 @@ gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer *
   locked_buffer = src->view->buffer ();
 
   if (locked_buffer != NULL) {
-    *buf = gst_buffer_ref (locked_buffer);
+    *buf = gst_buffer_copy_deep (locked_buffer);
     ret = GST_FLOW_OK;
   }
+
+  g_object_get(gl_src, "timestamp-offset", &ts_offset, NULL);
+
+  /* The following code mimics the behaviour of GLBaseSrc::fill */
+  GST_BUFFER_TIMESTAMP (*buf) = ts_offset + gl_src->running_time;
+  GST_BUFFER_OFFSET (*buf) = src->n_frames;
+  src->n_frames++;
+  GST_BUFFER_OFFSET_END (*buf) = src->n_frames;
+  if (gl_src->out_info.fps_n) {
+    next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
+        gl_src->out_info.fps_d, gl_src->out_info.fps_n);
+    GST_BUFFER_DURATION (*buf) = next_time - gl_src->running_time;
+  } else {
+    next_time = ts_offset;
+    GST_BUFFER_DURATION (*buf) = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_LOG_OBJECT (src, "Created buffer from SHM %" GST_PTR_FORMAT, *buf);
+
+  gl_src->running_time = next_time;
+
   GST_OBJECT_UNLOCK (src);
   return ret;
 }
@@ -240,6 +266,8 @@ gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
     g_bytes_unref (src->bytes);
     src->bytes = NULL;
   }
+
+  src->n_frames = 0;
 
   GST_OBJECT_UNLOCK (src);
   if (!result) {
