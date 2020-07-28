@@ -1289,7 +1289,7 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
 
     profile_name = gst_vaapi_profile_get_name (profile);
     if (!profile_name)
-      continue;
+      goto merge_caps;
 
     /* Add all according -intra profile for HEVC */
     if (profile == GST_VAAPI_PROFILE_H265_MAIN
@@ -1346,8 +1346,8 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
           profile_name, NULL);
     }
 
+  merge_caps:
     gst_vaapi_profile_caps_append_decoder (display, profile, structure);
-
     allowed_sinkpad_caps = gst_caps_merge (allowed_sinkpad_caps, caps);
   }
 
