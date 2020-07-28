@@ -293,15 +293,33 @@ gst_rtp_src_finalize (GObject * gobject)
 }
 
 static void
+gst_rtp_src_handle_message (GstBin * bin, GstMessage * message)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STREAM_START:
+    case GST_MESSAGE_EOS:
+      /* drop stream-start & eos from our internal udp sink(s);
+         https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1368 */
+      gst_message_unref (message);
+      break;
+    default:
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
+  }
+}
+
+static void
 gst_rtp_src_class_init (GstRtpSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstBinClass *gstbin_class = GST_BIN_CLASS (klass);
 
   gobject_class->set_property = gst_rtp_src_set_property;
   gobject_class->get_property = gst_rtp_src_get_property;
   gobject_class->finalize = gst_rtp_src_finalize;
   gstelement_class->change_state = gst_rtp_src_change_state;
+  gstbin_class->handle_message = gst_rtp_src_handle_message;
 
   /**
    * GstRtpSrc:uri:
