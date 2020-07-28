@@ -1108,6 +1108,28 @@ GST_START_TEST (test_url_get_media_fragment_table)
 
 GST_END_TEST;
 
+GST_START_TEST (test_url_unescape_equals_in_http_query)
+{
+  GstUri *url;
+  gchar *query_string;
+
+  url =
+      gst_uri_from_string
+      ("http://abc.manifest?token=exp=123~acl=/QualityLevels(*~hmac=0cb");
+
+  fail_unless_equals_string (gst_uri_get_scheme (url), "http");
+  query_string = gst_uri_get_query_string (url);
+  fail_unless_equals_string (query_string,
+      "token=exp=123~acl=/QualityLevels(*~hmac=0cb");
+  g_free (query_string);
+  fail_unless (gst_uri_query_has_key (url, "token"));
+  fail_unless_equals_string (gst_uri_get_query_value (url, "token"),
+      "exp=123~acl=/QualityLevels(*~hmac=0cb");
+  gst_uri_unref (url);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_uri_suite (void)
 {
@@ -1135,6 +1157,7 @@ gst_uri_suite (void)
   tcase_add_test (tc_chain, test_url_constructors);
   tcase_add_test (tc_chain, test_url_get_set);
   tcase_add_test (tc_chain, test_url_get_media_fragment_table);
+  tcase_add_test (tc_chain, test_url_unescape_equals_in_http_query);
 
   return s;
 }

@@ -1265,7 +1265,7 @@ _gst_uri_escape_http_query_element (const gchar * element)
 {
   gchar *ret, *c;
 
-  ret = g_uri_escape_string (element, "!$'()*,;:@/? ", FALSE);
+  ret = g_uri_escape_string (element, "!$'()*,;:@/?= ", FALSE);
   for (c = ret; *c; c++)
     if (*c == ' ')
       *c = '+';
