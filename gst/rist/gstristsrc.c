@@ -474,6 +474,22 @@ missing_plugin:
   }
 }
 
+static void
+gst_rist_src_handle_message (GstBin * bin, GstMessage * message)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STREAM_START:
+    case GST_MESSAGE_EOS:
+      /* drop stream-start & eos from our internal udp sink(s);
+         https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1368 */
+      gst_message_unref (message);
+      break;
+    default:
+      GST_BIN_CLASS (gst_rist_src_parent_class)->handle_message (bin, message);
+      break;
+  }
+}
+
 static GstPadProbeReturn
 gst_rist_src_on_recv_rtcp (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
@@ -1236,6 +1252,7 @@ gst_rist_src_finalize (GObject * object)
 static void
 gst_rist_src_class_init (GstRistSrcClass * klass)
 {
+  GstBinClass *bin_class = (GstBinClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *object_class = (GObjectClass *) klass;
 
@@ -1244,6 +1261,8 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
       "Source that implements RIST TR-06-1 streaming specification",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com");
   gst_element_class_add_static_pad_template (element_class, &src_templ);
+
+  bin_class->handle_message = gst_rist_src_handle_message;
 
   element_class->change_state = gst_rist_src_change_state;
 
