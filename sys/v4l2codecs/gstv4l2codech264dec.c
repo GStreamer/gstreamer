@@ -848,9 +848,6 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_h264_picture_get_user_data (picture);
-  guint32 frame_num;
-  GstH264Picture *other_pic;
-  GstV4l2Request *other_request;
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
@@ -861,6 +858,10 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     goto error;
 
   while (TRUE) {
+    guint32 frame_num;
+    GstH264Picture *other_pic;
+    GstV4l2Request *other_request;
+
     if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
       GST_ELEMENT_ERROR (self, STREAM, DECODE,
           ("Decoder did not produce a frame"), (NULL));
