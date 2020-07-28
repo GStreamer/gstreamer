@@ -1138,7 +1138,7 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
         retval = GST_AV1_PARSER_BITSTREAM_ERROR;
         goto error;
       }
-      if (seq_header->operating_points[i].seq_level_idx > GST_AV1_SEQ_LEVEL_4_0) {
+      if (seq_header->operating_points[i].seq_level_idx > GST_AV1_SEQ_LEVEL_3_3) {
         seq_header->operating_points[i].seq_tier = AV1_READ_BIT (br);
       } else {
         seq_header->operating_points[i].seq_tier = 0;
