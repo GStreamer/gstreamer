@@ -70,7 +70,7 @@ private:
     static void s_releaseSHMBuffer(gpointer);
 #endif
 
-    static void s_loadEvent(WebKitWebView*, WebKitLoadEvent, gpointer);
+    static void s_loadFailed(WebKitWebView*, WebKitLoadEvent, gchar*, GError*, gpointer);
 
     static gpointer s_viewThread(gpointer);
     struct {
@@ -78,6 +78,7 @@ private:
         GCond cond;
         GMutex ready_mutex;
         GCond ready_cond;
+        gboolean ready;
         GThread* thread { nullptr };
     } threading;
 

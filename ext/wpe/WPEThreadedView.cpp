@@ -170,18 +170,35 @@ struct wpe_view_backend* WPEThreadedView::backend() const
     return wpe.exportable ? wpe_view_backend_exportable_fdo_get_view_backend(wpe.exportable) : nullptr;
 }
 
-void WPEThreadedView::s_loadEvent(WebKitWebView*, WebKitLoadEvent event, gpointer data)
+struct InitializeContext {
+    GstWpeSrc* src;
+    WPEThreadedView& view;
+    GstGLContext* context;
+    GstGLDisplay* display;
+    EGLDisplay eglDisplay;
+    int width;
+    int height;
+    bool result;
+    gulong loadFailedHandler;
+};
+
+void WPEThreadedView::s_loadFailed(WebKitWebView*, WebKitLoadEvent event, gchar *failing_uri, GError *error, gpointer data)
 {
-    if (event == WEBKIT_LOAD_COMMITTED) {
-        auto& view = *static_cast<WPEThreadedView*>(data);
-        GMutexHolder lock(view.threading.ready_mutex);
-        g_cond_signal(&view.threading.ready_cond);
-    }
+    InitializeContext *ctx = (InitializeContext*) data;
+    GMutexHolder lock(ctx->view.threading.ready_mutex);
+
+
+    GST_ERROR_OBJECT (ctx->src, "Failed to load %s (%s)", failing_uri, error->message);
+    ctx->result = false;
+
+    ctx->view.threading.ready = true;
+    g_cond_signal(&ctx->view.threading.ready_cond);
 }
 
 bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     GST_DEBUG("context %p display %p, size (%d,%d)", context, display, width, height);
+    threading.ready = FALSE;
 
     static std::once_flag s_loaderFlag;
     std::call_once(s_loaderFlag,
@@ -197,16 +214,7 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
                                                       gst_gl_display_get_handle(display));
     GST_DEBUG("eglDisplay %p", eglDisplay);
 
-    struct InitializeContext {
-        GstWpeSrc* src;
-        WPEThreadedView& view;
-        GstGLContext* context;
-        GstGLDisplay* display;
-        EGLDisplay eglDisplay;
-        int width;
-        int height;
-        bool result;
-    } initializeContext { src, *this, context, display, eglDisplay, width, height, FALSE };
+    struct InitializeContext initializeContext { src, *this, context, display, eglDisplay, width, height, FALSE, 0 };
 
     GSource* source = g_idle_source_new();
     g_source_set_callback(source,
@@ -261,7 +269,8 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 
             gst_wpe_src_configure_web_view(initializeContext.src, view.webkit.view);
 
-            g_signal_connect(view.webkit.view, "load-changed", G_CALLBACK(s_loadEvent), &view);
+            initializeContext.loadFailedHandler = g_signal_connect(view.webkit.view,
+                "load-failed", G_CALLBACK(s_loadFailed), &initializeContext);
 
             const gchar* location;
             gboolean drawBackground = TRUE;
@@ -286,9 +295,14 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
     if (initializeContext.result && webkit.uri) {
         GST_DEBUG("waiting load to finish");
         GMutexHolder lock(threading.ready_mutex);
-        g_cond_wait(&threading.ready_cond, &threading.ready_mutex);
+        while (!threading.ready)
+          g_cond_wait(&threading.ready_cond, &threading.ready_mutex);
         GST_DEBUG("done");
     }
+
+    if (initializeContext.loadFailedHandler)
+      g_signal_handler_disconnect (webkit.view, initializeContext.loadFailedHandler);
+
     return initializeContext.result;
 }
 
@@ -566,6 +580,14 @@ void WPEThreadedView::handleExportedImage(gpointer image)
 
       GST_TRACE("EGLImage %p wrapped in GstEGLImage %" GST_PTR_FORMAT, eglImage, gstImage);
       egl.pending = gstImage;
+
+      {
+        GMutexHolder lock(threading.ready_mutex);
+        if (!threading.ready) {
+          threading.ready = TRUE;
+          g_cond_signal(&threading.ready_cond);
+        }
+      }
     }
 }
 
@@ -645,6 +667,13 @@ void WPEThreadedView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* b
         GMutexHolder lock(images_mutex);
         GST_TRACE("SHM buffer %p wrapped in buffer %" GST_PTR_FORMAT, buffer, gstBuffer);
         shm.pending = gstBuffer;
+      {
+        GMutexHolder lock(threading.ready_mutex);
+        if (!threading.ready) {
+          threading.ready = TRUE;
+          g_cond_signal(&threading.ready_cond);
+        }
+      }
     }
 }
 #endif
