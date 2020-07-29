@@ -683,7 +683,7 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
     caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
     if (!caps)
       continue;
-    gst_caps_set_features (caps, 0, gst_caps_features_copy (features));
+    gst_caps_set_features_simple (caps, gst_caps_features_copy (features));
 
     for (j = 0; j < G_N_ELEMENTS (feature_list); j++) {
       if (gst_vaapi_caps_feature_contains (caps, feature_list[j])
@@ -699,33 +699,23 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
       break;
   }
 
-  if (!caps)
-    goto cleanup;
-
 find_format:
+  if (!caps)
+    caps = gst_caps_ref (out_caps);
+
   if (out_format_ptr) {
     GstVideoFormat out_format;
     GstStructure *structure = NULL;
     const GValue *format_list;
-    GstCapsFeatures *features;
 
-    /* if the best feature is SystemMemory, we should choose the
-     * vidoe/x-raw caps in the filtered peer caps set. If not, use
-     * the first caps, which is the preferred by downstream. */
-    if (feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY) {
-      gst_caps_replace (&caps, out_caps);
-      num_structures = gst_caps_get_size (caps);
-      for (i = 0; i < num_structures; i++) {
+    num_structures = gst_caps_get_size (caps);
+    for (i = 0; i < num_structures; i++) {
+      GstCapsFeatures *const features = gst_caps_get_features (caps, i);
+      if (gst_caps_features_contains (features,
+              gst_vaapi_caps_feature_to_string (feature))) {
         structure = gst_caps_get_structure (caps, i);
-        features = gst_caps_get_features (caps, i);
-        if (!gst_caps_features_is_any (features)
-            && gst_caps_features_contains (features,
-                gst_vaapi_caps_feature_to_string
-                (GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)))
-          break;
+        break;
       }
-    } else {
-      structure = gst_caps_get_structure (caps, 0);
     }
     if (!structure)
       goto cleanup;
