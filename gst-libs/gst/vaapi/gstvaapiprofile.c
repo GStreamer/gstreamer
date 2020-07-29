@@ -458,6 +458,48 @@ gst_vaapi_profile_from_caps (const GstCaps * caps)
 }
 
 /**
+ * gst_vaapi_get_codec_from_caps:
+ * @caps: a #GstCaps
+ *
+ * Converts @caps into the corresponding #GstVaapiCodec. If we can
+ * not recognize the #GstVaapiCodec, then zero is returned.
+ *
+ * Return value: the #GstVaapiCodec describing the @caps
+ */
+GstVaapiCodec
+gst_vaapi_get_codec_from_caps (const GstCaps * caps)
+{
+  GstStructure *structure;
+  const gchar *name;
+  gsize namelen;
+  const GstVaapiProfileMap *m;
+  GstVaapiProfile profile;
+
+  if (!caps)
+    return 0;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (!structure)
+    return 0;
+
+  name = gst_structure_get_name (structure);
+  namelen = strlen (name);
+
+  profile = GST_VAAPI_PROFILE_UNKNOWN;
+  for (m = gst_vaapi_profiles; m->profile; m++) {
+    if (strncmp (name, m->media_str, namelen) == 0) {
+      profile = m->profile;
+      break;
+    }
+  }
+
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    return 0;
+
+  return gst_vaapi_profile_get_codec (profile);
+}
+
+/**
  * gst_vaapi_profile_get_va_profile:
  * @profile: a #GstVaapiProfile
  *

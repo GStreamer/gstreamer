@@ -420,14 +420,9 @@ set_caps (GstVaapiDecoder * decoder, const GstCaps * caps)
 {
   GstVideoCodecState *const codec_state = decoder->codec_state;
   GstStructure *const structure = gst_caps_get_structure (caps, 0);
-  GstVaapiProfile profile;
   const GValue *v_codec_data;
 
-  profile = gst_vaapi_profile_from_caps (caps);
-  if (!profile)
-    return FALSE;
-
-  decoder->codec = gst_vaapi_profile_get_codec (profile);
+  decoder->codec = gst_vaapi_get_codec_from_caps (caps);
   if (!decoder->codec)
     return FALSE;
 
@@ -1142,7 +1137,6 @@ gboolean
 gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps)
 {
   GstCaps *decoder_caps;
-  GstVaapiProfile profile;
   GstVaapiCodec codec;
 
   g_return_val_if_fail (decoder != NULL, FALSE);
@@ -1155,10 +1149,7 @@ gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps)
   if (gst_caps_is_always_compatible (caps, decoder_caps))
     return set_caps (decoder, caps);
 
-  profile = gst_vaapi_profile_from_caps (caps);
-  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
-    return FALSE;
-  codec = gst_vaapi_profile_get_codec (profile);
+  codec = gst_vaapi_get_codec_from_caps (caps);
   if (codec == 0)
     return FALSE;
   if (codec == decoder->codec) {

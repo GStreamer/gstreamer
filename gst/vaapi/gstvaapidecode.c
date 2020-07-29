@@ -881,12 +881,6 @@ gst_vaapidecode_ensure_display (GstVaapiDecode * decode)
   return gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (decode));
 }
 
-static inline guint
-gst_vaapi_codec_from_caps (GstCaps * caps)
-{
-  return gst_vaapi_profile_get_codec (gst_vaapi_profile_from_caps (caps));
-}
-
 static gboolean
 gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
 {
@@ -896,7 +890,7 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
     return FALSE;
   dpy = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
 
-  switch (gst_vaapi_codec_from_caps (caps)) {
+  switch (gst_vaapi_get_codec_from_caps (caps)) {
     case GST_VAAPI_CODEC_MPEG2:
       decode->decoder = gst_vaapi_decoder_mpeg2_new (dpy, caps);
       break;
