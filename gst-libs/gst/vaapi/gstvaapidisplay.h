@@ -242,6 +242,10 @@ gst_vaapi_display_has_decoder (GstVaapiDisplay * display,
 GArray *
 gst_vaapi_display_get_encode_profiles (GstVaapiDisplay * display);
 
+GArray *
+gst_vaapi_display_get_encode_profiles_by_codec (GstVaapiDisplay * display,
+    GstVaapiCodec codec);
+
 gboolean
 gst_vaapi_display_has_encoder (GstVaapiDisplay * display,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);

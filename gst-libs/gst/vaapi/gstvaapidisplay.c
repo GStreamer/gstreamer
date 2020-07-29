@@ -326,7 +326,7 @@ compare_profiles (gconstpointer a, gconstpointer b)
 
 /* Convert configs array to profiles as GstCaps */
 static GArray *
-get_profiles (GPtrArray * configs)
+get_profiles (GPtrArray * configs, GstVaapiCodec codec)
 {
   GstVaapiProfileConfig *config;
   GArray *out_profiles;
@@ -341,7 +341,8 @@ get_profiles (GPtrArray * configs)
 
   for (i = 0; i < configs->len; i++) {
     config = g_ptr_array_index (configs, i);
-    g_array_append_val (out_profiles, config->profile);
+    if (!codec || (codec == gst_vaapi_profile_get_codec (config->profile)))
+      g_array_append_val (out_profiles, config->profile);
   }
   return out_profiles;
 }
@@ -1560,7 +1561,7 @@ gst_vaapi_display_has_video_processing (GstVaapiDisplay * display)
  * reference to the resulting array of #GstVaapiProfile elements, so
  * it shall be released with g_array_unref() after usage.
  *
- * Return value: a newly allocated #GArray, or %NULL or error or if
+ * Return value: a newly allocated #GArray, or %NULL if error or if
  *   decoding is not supported at all
  */
 GArray *
@@ -1570,7 +1571,7 @@ gst_vaapi_display_get_decode_profiles (GstVaapiDisplay * display)
 
   if (!ensure_profiles (display))
     return NULL;
-  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->decoders);
+  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->decoders, 0);
 }
 
 /**
@@ -1604,7 +1605,7 @@ gst_vaapi_display_has_decoder (GstVaapiDisplay * display,
  * reference to the resulting array of #GstVaapiProfile elements, so
  * it shall be released with g_array_unref() after usage.
  *
- * Return value: a newly allocated #GArray, or %NULL or error or if
+ * Return value: a newly allocated #GArray, or %NULL if error or if
  *   encoding is not supported at all
  */
 GArray *
@@ -1614,7 +1615,32 @@ gst_vaapi_display_get_encode_profiles (GstVaapiDisplay * display)
 
   if (!ensure_profiles (display))
     return NULL;
-  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->encoders);
+  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->encoders, 0);
+}
+
+/**
+ * gst_vaapi_display_get_encode_profiles_by_codec:
+ * @display: a #GstVaapiDisplay
+ * @codec: a #GstVaapiCodec
+ *
+ * Gets the supported profiles which belongs to @codec for encoding.
+ * The caller owns an extra reference to the resulting array of
+ * #GstVaapiProfile elements, so it shall be released with g_array_unref()
+ * after usage.
+ *
+ * Return value: a newly allocated #GArray, or %NULL if error or if
+ *   no encoding profile is found specified by the @codec.
+ */
+GArray *
+gst_vaapi_display_get_encode_profiles_by_codec (GstVaapiDisplay * display,
+    GstVaapiCodec codec)
+{
+  g_return_val_if_fail (display != NULL, NULL);
+
+  if (!ensure_profiles (display))
+    return NULL;
+  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->encoders,
+      codec);
 }
 
 /**
