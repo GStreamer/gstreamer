@@ -83,22 +83,76 @@ gst_vaapiencode_h265_set_config (GstVaapiEncode * base_encode)
 {
   GstVaapiEncoderH265 *const encoder =
       GST_VAAPI_ENCODER_H265 (base_encode->encoder);
-  GstCaps *allowed_caps;
-  GArray *profiles;
+  GstCaps *allowed_caps = NULL;
+  GstCaps *template_caps = NULL;
+  GArray *profiles = NULL;
+  GArray *profiles_hw = NULL;
+  GArray *profiles_allowed = NULL;
+  GstVaapiProfile profile;
   gboolean ret = TRUE;
+  guint i, j;
 
+  profiles_hw = gst_vaapi_display_get_encode_profiles_by_codec
+      (GST_VAAPI_PLUGIN_BASE_DISPLAY (base_encode), GST_VAAPI_CODEC_H265);
+  if (!profiles_hw) {
+    ret = FALSE;
+    goto out;
+  }
+
+  template_caps =
+      gst_pad_get_pad_template_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD
+      (base_encode));
   allowed_caps =
       gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (base_encode));
-  if (!allowed_caps)
-    return TRUE;
+  if (!allowed_caps || allowed_caps == template_caps) {
+    ret = gst_vaapi_encoder_h265_set_allowed_profiles (encoder, profiles_hw);
+    goto out;
+  } else if (gst_caps_is_empty (allowed_caps)) {
+    ret = FALSE;
+    goto out;
+  }
 
   profiles = gst_vaapi_encoder_get_profiles_from_caps (allowed_caps,
       gst_vaapi_utils_h265_get_profile_from_string);
-  gst_caps_unref (allowed_caps);
-  if (profiles) {
-    ret = gst_vaapi_encoder_h265_set_allowed_profiles (encoder, profiles);
-    g_array_unref (profiles);
+  if (!profiles) {
+    ret = FALSE;
+    goto out;
   }
+
+  profiles_allowed = g_array_new (FALSE, FALSE, sizeof (GstVaapiProfile));
+  if (!profiles_allowed) {
+    ret = FALSE;
+    goto out;
+  }
+
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    for (j = 0; j < profiles_hw->len; j++) {
+      GstVaapiProfile p = g_array_index (profiles_hw, GstVaapiProfile, j);
+      if (p == profile) {
+        g_array_append_val (profiles_allowed, profile);
+        break;
+      }
+    }
+  }
+  if (profiles_allowed->len == 0) {
+    ret = FALSE;
+    goto out;
+  }
+
+  ret = gst_vaapi_encoder_h265_set_allowed_profiles (encoder, profiles_allowed);
+
+out:
+  if (allowed_caps)
+    gst_caps_unref (allowed_caps);
+  if (template_caps)
+    gst_caps_unref (template_caps);
+  if (profiles)
+    g_array_unref (profiles);
+  if (profiles_hw)
+    g_array_unref (profiles_hw);
+  if (profiles_allowed)
+    g_array_unref (profiles_allowed);
 
   return ret;
 }
