@@ -109,6 +109,8 @@ typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
  *   the value by 50 when calculating quantization from quality level
  * @GST_VAAPI_DRIVER_QUIRK_HEVC_ENC_SLICE_NOT_SPAN_TILE: The requirement
  *   that one slice should not span tiles when tile is enabled.
+ * @GST_VAAPI_DRIVER_QUIRK_JPEG_DEC_BROKEN_FORMATS: i965 driver does not
+ *   report all the handled formats for JPEG decoding.
  */
 typedef enum
 {
@@ -118,6 +120,7 @@ typedef enum
   GST_VAAPI_DRIVER_QUIRK_MISSING_RGBA_IMAGE_FORMAT = (1U << 3),
   GST_VAAPI_DRIVER_QUIRK_JPEG_ENC_SHIFT_VALUE_BY_50 = (1U << 4),
   GST_VAAPI_DRIVER_QUIRK_HEVC_ENC_SLICE_NOT_SPAN_TILE = (1U << 5),
+  GST_VAAPI_DRIVER_QUIRK_JPEG_DEC_BROKEN_FORMATS = (1U << 6),
 } GstVaapiDriverQuirks;
 
 /**

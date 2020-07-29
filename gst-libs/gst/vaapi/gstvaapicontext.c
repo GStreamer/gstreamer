@@ -61,6 +61,17 @@ _init_vaapi_context_debug (void)
 #endif
 }
 
+static inline gboolean
+_context_is_broken_jpeg_decoder (GstVaapiContext * context)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_CONTEXT_DISPLAY (context);
+
+  return (context->info.profile == GST_VAAPI_PROFILE_JPEG_BASELINE
+      && context->info.entrypoint == GST_VAAPI_ENTRYPOINT_VLD
+      && gst_vaapi_display_has_driver_quirks (display,
+          GST_VAAPI_DRIVER_QUIRK_JPEG_DEC_BROKEN_FORMATS));
+}
+
 static gboolean
 ensure_attributes (GstVaapiContext * context)
 {
@@ -70,7 +81,17 @@ ensure_attributes (GstVaapiContext * context)
   context->attribs =
       gst_vaapi_config_surface_attributes_get (GST_VAAPI_CONTEXT_DISPLAY
       (context), context->va_config);
-  return (context->attribs != NULL);
+
+  if (!context->attribs)
+    return FALSE;
+
+  if (_context_is_broken_jpeg_decoder (context)) {
+    GstVideoFormat fmt = GST_VIDEO_FORMAT_NV12;
+    g_array_prepend_val (context->attribs->formats, fmt);
+
+    context->attribs->mem_types &= ~VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
+  }
+  return TRUE;
 }
 
 /* XXX(victor): verify the preferred video format concords with the
@@ -85,6 +106,9 @@ ensure_preferred_format (GstVaapiContext * context)
   guint i;
 
   if (context->preferred_format != GST_VIDEO_FORMAT_UNKNOWN)
+    return;
+
+  if (_context_is_broken_jpeg_decoder (context))
     return;
 
   if (!ensure_attributes (context) || !context->attribs->formats)
