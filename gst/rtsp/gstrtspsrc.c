@@ -8917,6 +8917,7 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
   rtspsrc = GST_RTSPSRC (bin);
 
   switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STREAM_START:
     case GST_MESSAGE_EOS:
       gst_message_unref (message);
       break;
