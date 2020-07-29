@@ -73,20 +73,22 @@ ensure_attributes (GstVaapiContext * context)
   return (context->attribs != NULL);
 }
 
-/* looks for the (very arbritrary) preferred format from the requested
- * context chroma type, in the context attributes */
-static GstVideoFormat
-get_preferred_format (GstVaapiContext * context)
+/* XXX(victor): verify the preferred video format concords with the
+ * chroma type; otherwise it is changed for the (very arbritrary)
+ * preferred format from the requested context chroma type, in the
+ * context attributes */
+static void
+ensure_preferred_format (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GArray *formats;
   guint i;
 
   if (context->preferred_format != GST_VIDEO_FORMAT_UNKNOWN)
-    return context->preferred_format;
+    return;
 
   if (!ensure_attributes (context) || !context->attribs->formats)
-    return GST_VIDEO_FORMAT_UNKNOWN;
+    return;
 
   formats = context->attribs->formats;
   for (i = 0; i < formats->len; i++) {
@@ -97,7 +99,7 @@ get_preferred_format (GstVaapiContext * context)
     }
   }
 
-  return context->preferred_format;
+  return;
 }
 
 static inline gboolean
@@ -167,7 +169,8 @@ context_ensure_surfaces (GstVaapiContext * context)
   GstVideoFormat format;
   guint i, capacity;
 
-  format = get_preferred_format (context);
+  ensure_preferred_format (context);
+  format = context->preferred_format;
   for (i = context->surfaces->len; i < num_surfaces; i++) {
     if (format != GST_VIDEO_FORMAT_UNKNOWN) {
       surface = gst_vaapi_surface_new_with_format (display, format, cip->width,
