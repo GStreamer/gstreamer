@@ -1129,7 +1129,14 @@ print_preset_list (GstElement * element)
     n_print ("\n");
     n_print ("%sPresets%s:\n", HEADING_COLOR, RESET_COLOR);
     for (preset = presets; *preset; preset++) {
-      n_print ("  \"%s\"\n", *preset);
+      gchar *comment = NULL;
+      n_print ("  \"%s\"", *preset);
+
+      if (gst_preset_get_meta (GST_PRESET (element), *preset, "comment",
+              &comment) && comment)
+        g_print (": %s", comment);
+      g_free (comment);
+      g_print ("\n");
     }
     g_strfreev (presets);
   }
