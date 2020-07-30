@@ -48,8 +48,13 @@ using namespace ABI::Windows::Graphics;
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
 
-/* timeout to wait busy UI thread */
-#define DEFAULT_ASYNC_TIMEOUT (5 * 1000)
+/* timeout to wait busy UI thread, 15 seconds */
+/* XXX: If UI is not responsible in this amount of time, that means
+ * there were something wrong situation at the application side.
+ * Note that ANGLE uses 10 seconds timeout value, so even if a timeout happens
+ * on our side, it would be a timeout condition of ANGLE as well.
+ */
+#define DEFAULT_ASYNC_TIMEOUT (15 * 1000)
 
 static void gst_gl_window_winrt_egl_on_resize (GstGLWindow * window,
     guint width, guint height);
