@@ -1302,7 +1302,8 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
         || profile == GST_VAAPI_PROFILE_H265_MAIN_422_10
         || profile == GST_VAAPI_PROFILE_H265_MAIN_444
         || profile == GST_VAAPI_PROFILE_H265_MAIN_444_10
-        || profile == GST_VAAPI_PROFILE_H265_MAIN12) {
+        || profile == GST_VAAPI_PROFILE_H265_MAIN12
+        || profile == GST_VAAPI_PROFILE_H265_MAIN_444_12) {
       gchar *profiles[3], *intra_name;
 
       intra_name = g_strdup_printf ("%s-intra", profile_name);

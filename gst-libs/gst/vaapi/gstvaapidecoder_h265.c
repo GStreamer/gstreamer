@@ -533,7 +533,8 @@ is_range_extension_profile (GstVaapiProfile profile)
   if (profile == GST_VAAPI_PROFILE_H265_MAIN_422_10
       || profile == GST_VAAPI_PROFILE_H265_MAIN_444
       || profile == GST_VAAPI_PROFILE_H265_MAIN_444_10
-      || profile == GST_VAAPI_PROFILE_H265_MAIN12)
+      || profile == GST_VAAPI_PROFILE_H265_MAIN12
+      || profile == GST_VAAPI_PROFILE_H265_MAIN_444_12)
     return TRUE;
   return FALSE;
 }
