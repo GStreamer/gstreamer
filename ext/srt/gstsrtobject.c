@@ -768,13 +768,15 @@ thread_func (gpointer data)
 
 static gboolean
 gst_srt_object_wait_connect (GstSRTObject * srtobject,
-    GCancellable * cancellable, gpointer sa, size_t sa_len, GError ** error)
+    GCancellable * cancellable, GSocketFamily sa_family, gpointer sa,
+    size_t sa_len, GError ** error)
 {
   SRTSOCKET sock = SRT_INVALID_SOCK;
   const gchar *local_address = NULL;
   guint local_port = 0;
   gint sock_flags = SRT_EPOLL_ERR | SRT_EPOLL_IN;
 
+  GSocketFamily bind_sa_family;
   gpointer bind_sa;
   gsize bind_sa_len;
   GSocketAddress *bind_addr;
@@ -793,6 +795,7 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
   bind_addr = g_inet_socket_address_new_from_string (local_address, local_port);
   bind_sa_len = g_socket_address_get_native_size (bind_addr);
   bind_sa = g_alloca (bind_sa_len);
+  bind_sa_family = g_socket_address_get_family (bind_addr);
 
   if (!g_socket_address_to_native (bind_addr, bind_sa, bind_sa_len, error)) {
     goto failed;
@@ -800,7 +803,7 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
 
   g_clear_object (&bind_addr);
 
-  sock = srt_socket (AF_INET, SOCK_DGRAM, 0);
+  sock = srt_socket (bind_sa_family, SOCK_DGRAM, 0);
   if (sock == SRT_INVALID_SOCK) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, "%s",
         srt_getlasterror_str ());
@@ -867,8 +870,8 @@ failed:
 
 static gboolean
 gst_srt_object_connect (GstSRTObject * srtobject,
-    GstSRTConnectionMode connection_mode, gpointer sa, size_t sa_len,
-    GError ** error)
+    GstSRTConnectionMode connection_mode, GSocketFamily sa_family, gpointer sa,
+    size_t sa_len, GError ** error)
 {
   SRTSOCKET sock;
   gint option_val = -1;
@@ -876,7 +879,7 @@ gst_srt_object_connect (GstSRTObject * srtobject,
   guint local_port = 0;
   const gchar *local_address = NULL;
 
-  sock = srt_socket (AF_INET, SOCK_DGRAM, 0);
+  sock = srt_socket (sa_family, SOCK_DGRAM, 0);
   if (sock == SRT_INVALID_SOCK) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, "%s",
         srt_getlasterror_str ());
@@ -986,16 +989,18 @@ failed:
 static gboolean
 gst_srt_object_open_connection (GstSRTObject * srtobject,
     GCancellable * cancellable, GstSRTConnectionMode connection_mode,
-    gpointer sa, size_t sa_len, GError ** error)
+    GSocketFamily sa_family, gpointer sa, size_t sa_len, GError ** error)
 {
   gboolean ret = FALSE;
 
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
     ret =
-        gst_srt_object_wait_connect (srtobject, cancellable, sa, sa_len, error);
+        gst_srt_object_wait_connect (srtobject, cancellable, sa_family, sa,
+        sa_len, error);
   } else {
     ret =
-        gst_srt_object_connect (srtobject, connection_mode, sa, sa_len, error);
+        gst_srt_object_connect (srtobject, connection_mode, sa_family, sa,
+        sa_len, error);
   }
 
   return ret;
@@ -1006,8 +1011,9 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
     GCancellable * cancellable, GError ** error)
 {
   GSocketAddress *socket_address = NULL;
-  GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
+  GstSRTConnectionMode connection_mode;
 
+  GSocketFamily sa_family;
   gpointer sa;
   size_t sa_len;
   const gchar *addr_str;
@@ -1050,13 +1056,7 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
     goto out;
   }
 
-  /* FIXME: Unfortunately, SRT doesn't support IPv6 currently. */
-  if (g_socket_address_get_family (socket_address) != G_SOCKET_FAMILY_IPV4) {
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
-        "SRT supports IPv4 only");
-    goto out;
-  }
-
+  sa_family = g_socket_address_get_family (socket_address);
   sa_len = g_socket_address_get_native_size (socket_address);
   sa = g_alloca (sa_len);
 
@@ -1068,7 +1068,7 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
 
   ret =
       gst_srt_object_open_connection
-      (srtobject, cancellable, connection_mode, sa, sa_len, error);
+      (srtobject, cancellable, connection_mode, sa_family, sa, sa_len, error);
 
   GST_OBJECT_LOCK (srtobject->element);
   srtobject->opened = ret;
