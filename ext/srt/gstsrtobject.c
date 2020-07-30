@@ -215,11 +215,7 @@ gst_srt_object_new (GstElement * element)
 
   srtobject = g_new0 (GstSRTObject, 1);
   srtobject->element = element;
-  srtobject->parameters = gst_structure_new ("application/x-srt-params",
-      "poll-timeout", G_TYPE_INT, GST_SRT_DEFAULT_POLL_TIMEOUT,
-      "latency", G_TYPE_INT, GST_SRT_DEFAULT_LATENCY,
-      "mode", GST_TYPE_SRT_CONNECTION_MODE, GST_SRT_DEFAULT_MODE, NULL);
-
+  srtobject->parameters = gst_structure_new_empty ("application/x-srt-params");
   srtobject->sock = SRT_INVALID_SOCK;
   srtobject->poll_id = srt_epoll_create ();
   srtobject->listener_sock = SRT_INVALID_SOCK;
@@ -561,6 +557,14 @@ gst_srt_object_set_uint_value (GstStructure * s, const gchar * key,
 }
 
 static void
+gst_srt_object_set_int_value (GstStructure * s, const gchar * key,
+    const gchar * value)
+{
+  gst_structure_set (s, key, G_TYPE_INT,
+      (gint) g_ascii_strtoll (value, NULL, 10), NULL);
+}
+
+static void
 gst_srt_object_validate_parameters (GstStructure * s, GstUri * uri)
 {
   GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
@@ -618,6 +622,11 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
   g_clear_pointer (&srtobject->uri, gst_uri_unref);
   srtobject->uri = gst_uri_from_string (uri);
 
+  g_clear_pointer (&srtobject->parameters, gst_structure_free);
+  srtobject->parameters = gst_structure_new ("application/x-srt-params",
+      "poll-timeout", G_TYPE_INT, GST_SRT_DEFAULT_POLL_TIMEOUT,
+      "latency", G_TYPE_INT, GST_SRT_DEFAULT_LATENCY, NULL);
+
   query_table = gst_uri_get_query_table (srtobject->uri);
 
   GST_DEBUG_OBJECT (srtobject->element,
@@ -650,6 +659,10 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
             GST_TYPE_SRT_KEY_LENGTH, key, value);
       } else if (!g_strcmp0 ("streamid", key)) {
         gst_srt_object_set_string_value (srtobject->parameters, key, value);
+      } else if (!g_strcmp0 ("latency", key)) {
+        gst_srt_object_set_int_value (srtobject->parameters, key, value);
+      } else if (!g_strcmp0 ("poll-timeout", key)) {
+        gst_srt_object_set_int_value (srtobject->parameters, key, value);
       }
     }
 
@@ -1005,8 +1018,16 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
 
   srtobject->opened = FALSE;
 
+  if (!gst_structure_get_enum (srtobject->parameters,
+          "mode", GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode)) {
+    GST_WARNING_OBJECT (srtobject->element,
+        "Cannot get connection mode information." " Use default mode");
+    connection_mode = GST_SRT_DEFAULT_MODE;
+  }
+
   addr_str = gst_uri_get_host (srtobject->uri);
   if (addr_str == NULL) {
+    connection_mode = GST_SRT_CONNECTION_MODE_LISTENER;
     addr_str = GST_SRT_DEFAULT_LOCALADDRESS;
     GST_DEBUG_OBJECT (srtobject->element,
         "Given uri doesn't have hostname or address. Use any (%s) and"
@@ -1018,13 +1039,6 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
   GST_DEBUG_OBJECT (srtobject->element,
       "Opening SRT socket with parameters: %" GST_PTR_FORMAT,
       srtobject->parameters);
-
-  if (!gst_structure_get_enum (srtobject->parameters,
-          "mode", GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode)) {
-    GST_WARNING_OBJECT (srtobject->element,
-        "Cannot get connection mode information." " Use default mode");
-    connection_mode = GST_TYPE_SRT_CONNECTION_MODE;
-  }
 
   GST_OBJECT_UNLOCK (srtobject->element);
 
