@@ -31,6 +31,8 @@ GST_DEBUG_CATEGORY_STATIC (smart_encoder_debug);
 /* FIXME : Update this with new caps */
 /* WARNING : We can only allow formats with closed-GOP */
 #define ALLOWED_CAPS "video/x-h263;video/x-intel-h263;"\
+  "video/x-vp8;"\
+  "video/x-vp9;"\
   "video/x-h264;"\
   "video/mpeg,mpegversion=(int)1,systemstream=(boolean)false;"\
   "video/mpeg,mpegversion=(int)2,systemstream=(boolean)false;"
@@ -126,15 +128,21 @@ internal_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_parse_caps (event, &caps);
       caps = gst_caps_copy (caps);
       if (self->last_caps) {
-        GstBuffer *codec_data;
+        GstBuffer *codec_data = NULL, *stream_header;
         GstCaps *new_caps;
         GstStructure *last_struct = gst_caps_get_structure (self->last_caps, 0);
 
-        gst_structure_get (last_struct, "codec_data", GST_TYPE_BUFFER,
-            &codec_data, NULL);
-        if (codec_data)
+        if (gst_structure_get (last_struct, "codec_data", GST_TYPE_BUFFER,
+                &codec_data, NULL) && codec_data) {
           gst_structure_set (gst_caps_get_structure (caps, 0), "codec_data",
               GST_TYPE_BUFFER, codec_data, NULL);
+        }
+
+        if (gst_structure_get (last_struct, "stream_header", GST_TYPE_BUFFER,
+                &stream_header, NULL) && stream_header) {
+          gst_structure_set (gst_caps_get_structure (caps, 0), "stream_header",
+              GST_TYPE_BUFFER, stream_header, NULL);
+        }
 
         new_caps = gst_caps_intersect (self->last_caps, caps);
         if (!new_caps || gst_caps_is_empty (new_caps)) {
