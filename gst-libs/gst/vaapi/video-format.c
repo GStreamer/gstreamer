@@ -112,6 +112,7 @@ static const GstVideoFormatMap gst_vaapi_video_default_formats[] = {
 
   DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y210, Y210, ('Y', '2', '1', '0'), 32, 422_10BPP),
   DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y410, Y410, ('Y', '4', '1', '0'), 32, 444_10BPP),
+  DEF_YUV (VA_BYTE_ORDER_NOT_CARE, Y412_LE, Y412, ('Y', '4', '1', '2'), 32, 444_12BPP),
 
   /* RGB formats */
   DEF_RGB (VA_LSB_FIRST, ARGB, BGRA8888, ('A', 'R', 'G', 'B'), 32, 32, 0x0000ff00,
