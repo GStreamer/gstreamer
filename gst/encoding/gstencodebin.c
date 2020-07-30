@@ -1273,7 +1273,8 @@ setup_smart_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   gst_bin_add_many (GST_BIN (reencoder_bin),
       gst_object_ref (encoder),
-      parser ? gst_object_ref (parser) : sgroup->smart_capsfilter,
+      parser ? gst_object_ref (parser) :
+      gst_object_ref (sgroup->smart_capsfilter),
       parser ? gst_object_ref (sgroup->smart_capsfilter) : NULL, NULL);
   if (!native_video) {
     convert = gst_element_factory_make ("videoconvert", NULL);
