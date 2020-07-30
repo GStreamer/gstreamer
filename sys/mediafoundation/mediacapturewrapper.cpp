@@ -74,7 +74,8 @@ gst_media_capture_subtype_to_video_format (const std::string &subtype)
     return "NV12";
   else if (g_ascii_strcasecmp (subtype.c_str(), "YV12") == 0)
     return "YV12";
-  else if (g_ascii_strcasecmp (subtype.c_str(), "IYUV") == 0)
+  else if (g_ascii_strcasecmp (subtype.c_str(), "IYUV") == 0 ||
+           g_ascii_strcasecmp (subtype.c_str(), "I420") == 0)
     return "I420";
   else if (g_ascii_strcasecmp (subtype.c_str(), "YUY2") == 0)
     return "YUY2";
@@ -654,6 +655,8 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
   UINT32 count = 0;
   GstVideoInfo videoInfo;
   HRESULT hr;
+  bool is_I420_subtype = false;
+  std::string target_subtype;
   ComPtr<ITypedEventHandler<MediaFrameReader*, MediaFrameArrivedEventArgs*>>
       frame_arrived_handler = Callback<ITypedEventHandler<MediaFrameReader*,
           MediaFrameArrivedEventArgs*>> ([&]
@@ -675,6 +678,12 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
     hr = E_FAIL;
     goto done;
   }
+
+  /* Windows defines two I420 format, one is I420 and the other is IYUV.
+   * So, if requested video format was I420, we should accept both I420 and
+   * IYUV formats */
+  is_I420_subtype = GST_VIDEO_INFO_FORMAT (&videoInfo) == GST_VIDEO_FORMAT_I420;
+  target_subtype = convert_hstring_to_string (&media_desc_->subtype_);
 
   hr = media_capture.As (&media_capture5);
   if (!gst_mf_result (hr))
@@ -809,11 +818,16 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
     if (!gst_mf_result (hr))
       continue;
 
-    if (wcscmp (subtype.GetRawBuffer (nullptr),
-        media_desc_->subtype_.GetRawBuffer (nullptr))) {
-      std::string cur_subtype = convert_hstring_to_string (&subtype);
-      std::string target_subtype =
-          convert_hstring_to_string (&media_desc_->subtype_);
+    std::string cur_subtype = convert_hstring_to_string (&subtype);
+
+    if (is_I420_subtype) {
+      /* Special handling for I420 */
+      if (cur_subtype != "I420" && cur_subtype != "IYUV") {
+        GST_LOG ("IMediaFrameFormat[%d], subtype %s is not equal to target %s",
+          i, cur_subtype.c_str (), target_subtype.c_str ());
+        continue;
+      }
+    } else if (cur_subtype != target_subtype) {
       GST_LOG ("IMediaFrameFormat[%d], subtype %s is not equal to target %s",
           i, cur_subtype.c_str (), target_subtype.c_str ());
       continue;
