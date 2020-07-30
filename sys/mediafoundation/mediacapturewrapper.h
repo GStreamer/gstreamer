@@ -50,7 +50,9 @@ public:
   void Release();
   bool IsValid() const;
   HRESULT Fill(HString &source_id,
-               const ComPtr<IMediaCaptureVideoProfileMediaDescription>& desc);
+               const ComPtr<IMediaCaptureVideoProfileMediaDescription>& desc,
+               unsigned int info_index,
+               unsigned int desc_index);
 
   GstWinRTMediaDescription& operator=(const GstWinRTMediaDescription& rhs)
   {
@@ -84,7 +86,8 @@ public:
   ~GstWinRTMediaFrameSourceGroup();
   void Release();
   bool Contain(const GstWinRTMediaDescription &desc);
-  HRESULT Fill(const ComPtr<IMediaFrameSourceGroup> &source_group);
+  HRESULT Fill(const ComPtr<IMediaFrameSourceGroup> &source_group,
+               unsigned int index);
 
   GstWinRTMediaFrameSourceGroup& operator=(const GstWinRTMediaFrameSourceGroup& rhs)
   {

@@ -128,7 +128,8 @@ GstWinRTMediaDescription::IsValid() const
 
 HRESULT
 GstWinRTMediaDescription::Fill(HString &source_id,
-    const ComPtr<IMediaCaptureVideoProfileMediaDescription>& desc)
+    const ComPtr<IMediaCaptureVideoProfileMediaDescription>& desc,
+    unsigned int info_index, unsigned int desc_index)
 {
   Release();
 
@@ -174,7 +175,8 @@ GstWinRTMediaDescription::Fill(HString &source_id,
 
   format = gst_media_capture_subtype_to_video_format (subtype);
   if (format.empty()) {
-    GST_DEBUG ("Unhandled subtype %s", subtype.c_str());
+    GST_LOG ("source-info %d, desc %d, unhandled subtype %s",
+        info_index, desc_index, subtype.c_str());
     return E_FAIL;
   }
 
@@ -189,6 +191,9 @@ GstWinRTMediaDescription::Fill(HString &source_id,
   source_id.CopyTo (source_id_.GetAddressOf());
   hstr_subtype.CopyTo (subtype_.GetAddressOf());
   caps_ = caps;
+
+  GST_LOG ("source-info %d, desc %d, %" GST_PTR_FORMAT,
+      info_index, desc_index, caps_);
 
   return S_OK;
 }
@@ -248,7 +253,7 @@ GstWinRTMediaFrameSourceGroup::Contain(const GstWinRTMediaDescription& desc)
 
 HRESULT
 GstWinRTMediaFrameSourceGroup::Fill
-    (const ComPtr<IMediaFrameSourceGroup> &source_group)
+    (const ComPtr<IMediaFrameSourceGroup> &source_group, unsigned int index)
 {
   HRESULT hr = S_OK;
   HString hstr_id;
@@ -264,7 +269,7 @@ GstWinRTMediaFrameSourceGroup::Fill
 
   id_ = convert_hstring_to_string (&hstr_id);
   if (id_.empty()) {
-    GST_WARNING ("Emptry source group id");
+    GST_WARNING ("source-group %d, Emptry source group id", index);
     hr = E_FAIL;
     goto error;
   }
@@ -275,7 +280,7 @@ GstWinRTMediaFrameSourceGroup::Fill
 
   display_name_ = convert_hstring_to_string (&hstr_display_name);
   if (display_name_.empty()) {
-    GST_WARNING ("Empty display name");
+    GST_WARNING ("source-group %d, Empty display name", index);
     hr = E_FAIL;
     goto error;
   }
@@ -296,7 +301,7 @@ GstWinRTMediaFrameSourceGroup::Fill
 
   source_group_ = source_group;
 
-  GST_DEBUG ("source-group has %d entries", count);
+  GST_DEBUG ("source-group %d has %d entries", index, count);
 
   for (UINT32 i = 0; i < count; i++) {
     ComPtr<IMediaFrameSourceInfo> info;
@@ -306,6 +311,7 @@ GstWinRTMediaFrameSourceGroup::Fill
     MediaStreamType source_type;
     UINT32 desc_count = 0;
     HString source_id;
+    std::string source_id_str;
 
     hr = info_list->GetAt(i, &info);
     if (!gst_mf_result (hr))
@@ -322,8 +328,8 @@ GstWinRTMediaFrameSourceGroup::Fill
     /* This can be depth, infrared or others */
     /* FIXME: add audio support */
     if (source_kind != MediaFrameSourceKind::MediaFrameSourceKind_Color) {
-      GST_FIXME ("source-info has non-color source kind %d",
-          (gint) source_kind);
+      GST_FIXME ("source-group %d, source-info %d, non-color source kind %d",
+          index, i, (gint) source_kind);
       continue;
     }
 
@@ -334,6 +340,9 @@ GstWinRTMediaFrameSourceGroup::Fill
     /* FIXME: support audio */
     if (source_type != MediaStreamType::MediaStreamType_VideoPreview &&
         source_type != MediaStreamType::MediaStreamType_VideoRecord) {
+      GST_FIXME ("source-group %d, source-info %d, "
+          "type %d is not VideoPreview or VideoRecord",
+          index, i, (gint) source_type);
       continue;
     }
 
@@ -350,9 +359,15 @@ GstWinRTMediaFrameSourceGroup::Fill
       continue;
 
     if (desc_count == 0) {
-      GST_WARNING("source-info has empty media description");
+      GST_WARNING ("source-group %d, source-info %d, empty media description",
+          index, i);
       continue;
     }
+
+    source_id_str = convert_hstring_to_string (&source_id);
+    GST_DEBUG ("source-group %d, source-info %d, source-id %s source-type %d, "
+        "has %d desc", index, i, source_id_str.c_str (), (gint) source_type,
+        desc_count);
 
     for (UINT32 j = 0; j < desc_count; j++) {
       ComPtr<IMediaCaptureVideoProfileMediaDescription> desc;
@@ -362,7 +377,7 @@ GstWinRTMediaFrameSourceGroup::Fill
         continue;
 
       GstWinRTMediaDescription media_desc;
-      hr = media_desc.Fill(source_id, desc);
+      hr = media_desc.Fill(source_id, desc, i, j);
       if (FAILED (hr))
         continue;
 
@@ -655,7 +670,8 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
     goto done;
 
   if (!gst_video_info_from_caps (&videoInfo, media_desc_->caps_)) {
-    GST_WARNING ("Couldn't convert caps to videoinfo");
+    GST_WARNING ("Couldn't convert caps %" GST_PTR_FORMAT " to videoinfo",
+        media_desc_->caps_);
     hr = E_FAIL;
     goto done;
   }
@@ -696,6 +712,64 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
     goto done;
   }
 
+  GST_DEBUG ("Has %d available formats", count);
+  GST_INFO ("Finding matching IMediaFrameFormat with %" GST_PTR_FORMAT,
+      media_desc_->caps_);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_LOG) {
+    GST_LOG ("Dump IMediaFrameFormat list");
+    for (UINT32 i = 0; i < count; i++) {
+      ComPtr<IMediaFrameFormat> fmt;
+      ComPtr<IVideoMediaFrameFormat> videoFmt;
+      ComPtr<IMediaRatio> ratio;
+      HString subtype;
+      UINT32 width = 0;
+      UINT32 height = 0;
+      UINT32 fps_n = 0;
+      UINT32 fps_d = 1;
+
+      hr = formatList->GetAt (i, &fmt);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = fmt->get_VideoFormat (&videoFmt);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = videoFmt->get_Width (&width);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = videoFmt->get_Height (&height);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = fmt->get_FrameRate (&ratio);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = ratio->get_Numerator (&fps_n);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = ratio->get_Denominator (&fps_d);
+      if (!gst_mf_result (hr))
+        continue;
+
+      hr = fmt->get_Subtype (subtype.GetAddressOf ());
+      if (!gst_mf_result (hr))
+        continue;
+
+      std::string cur_subtype = convert_hstring_to_string (&subtype);
+
+      GST_LOG ("\tIMediaFrameFormat[%d] subtpye: %s, resolution: %dx%d, "
+          "framerate: %d/%d", i, cur_subtype.c_str (), width, height, fps_n,
+          fps_d);
+    }
+  }
+#endif
+
   /* FIXME: support audio */
   for (UINT32 i = 0; i < count; i++) {
     ComPtr<IMediaFrameFormat> fmt;
@@ -721,11 +795,14 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
     if (!gst_mf_result (hr))
       continue;
 
-    if (width != GST_VIDEO_INFO_WIDTH (&videoInfo))
+    if (width != GST_VIDEO_INFO_WIDTH (&videoInfo) ||
+        height != GST_VIDEO_INFO_HEIGHT (&videoInfo)) {
+      GST_DEBUG ("IMediaFrameFormat[%d], resolution %dx%d is not equal to "
+          "target resolution %dx%d", i, width, height,
+          GST_VIDEO_INFO_WIDTH (&videoInfo),
+          GST_VIDEO_INFO_HEIGHT (&videoInfo));
       continue;
-
-    if (height != GST_VIDEO_INFO_HEIGHT (&videoInfo))
-      continue;
+    }
 
     /* TODO: check major type for audio */
     hr = fmt->get_Subtype (subtype.GetAddressOf ());
@@ -733,8 +810,14 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
       continue;
 
     if (wcscmp (subtype.GetRawBuffer (nullptr),
-        media_desc_->subtype_.GetRawBuffer (nullptr)))
+        media_desc_->subtype_.GetRawBuffer (nullptr))) {
+      std::string cur_subtype = convert_hstring_to_string (&subtype);
+      std::string target_subtype =
+          convert_hstring_to_string (&media_desc_->subtype_);
+      GST_LOG ("IMediaFrameFormat[%d], subtype %s is not equal to target %s",
+          i, cur_subtype.c_str (), target_subtype.c_str ());
       continue;
+    }
 
     format = fmt;
     break;
@@ -742,9 +825,12 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
 
   if (!format) {
     GST_ERROR (
-        "Couldn't find matching IMediaFrameFormat interface");
+        "Couldn't find matching IMediaFrameFormat interface for %"
+        GST_PTR_FORMAT, media_desc_->caps_);
     hr = E_FAIL;
     goto done;
+  } else {
+    GST_INFO ("Found matching IMediaFrameFormat");
   }
 
   hr = source->SetFormatAsync (format.Get (), &set_format_async);
@@ -956,7 +1042,7 @@ MediaCaptureWrapper::enumrateFrameSourceGroup
       continue;
 
     GstWinRTMediaFrameSourceGroup source_group;
-    hr = source_group.Fill(group);
+    hr = source_group.Fill(group, i);
     if (!gst_mf_result (hr))
       continue;
 
