@@ -68,8 +68,6 @@ struct _GstSRTObject
 
   GList                        *callers;
 
-  gchar                        *passphrase;
-
   gboolean                     wait_for_connection;
 
   guint64                      previous_bytes;

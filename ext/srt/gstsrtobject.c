@@ -130,6 +130,7 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     GError ** error)
 {
   struct srt_constant_params *params = srt_params;
+  const gchar *passphrase;
 
   GST_OBJECT_LOCK (srtobject->element);
 
@@ -142,11 +143,12 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     }
   }
 
-  if (srtobject->passphrase != NULL && srtobject->passphrase[0] != '\0') {
+  passphrase = gst_structure_get_string (srtobject->parameters, "passphrase");
+  if (passphrase != NULL && passphrase[0] != '\0') {
     gint pbkeylen;
 
-    if (srt_setsockopt (sock, 0, SRTO_PASSPHRASE, srtobject->passphrase,
-            strlen (srtobject->passphrase))) {
+    if (srt_setsockopt (sock, 0, SRTO_PASSPHRASE, passphrase,
+            strlen (passphrase))) {
       g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
           "failed to set passphrase (reason: %s)", srt_getlasterror_str ());
 
@@ -244,8 +246,6 @@ gst_srt_object_destroy (GstSRTObject * srtobject)
   GST_DEBUG_OBJECT (srtobject->element, "Destroying srtobject");
   gst_structure_free (srtobject->parameters);
 
-  g_free (srtobject->passphrase);
-
   if (g_atomic_int_dec_and_test (&srt_init_refcount)) {
     srt_cleanup ();
     GST_DEBUG_OBJECT (srtobject->element, "Cleaning up SRT");
@@ -282,8 +282,7 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       gst_structure_set_value (srtobject->parameters, "localport", value);
       break;
     case PROP_PASSPHRASE:
-      g_free (srtobject->passphrase);
-      srtobject->passphrase = g_value_dup_string (value);
+      gst_structure_set_value (srtobject->parameters, "passphrase", value);
       break;
     case PROP_PBKEYLEN:
       gst_structure_set_value (srtobject->parameters, "pbkeylen", value);
@@ -655,8 +654,7 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
       } else if (!g_strcmp0 ("localport", key)) {
         gst_srt_object_set_uint_value (srtobject->parameters, key, value);
       } else if (!g_strcmp0 ("passphrase", key)) {
-        g_free (srtobject->passphrase);
-        srtobject->passphrase = g_strdup (value);
+        gst_srt_object_set_string_value (srtobject->parameters, key, value);
       } else if (!g_strcmp0 ("pbkeylen", key)) {
         gst_srt_object_set_enum_value (srtobject->parameters,
             GST_TYPE_SRT_KEY_LENGTH, key, value);
