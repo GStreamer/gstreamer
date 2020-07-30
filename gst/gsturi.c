@@ -1497,19 +1497,8 @@ gst_uri_new_with_base (GstUri * base, const gchar * scheme,
   return new_uri;
 }
 
-/**
- * gst_uri_from_string:
- * @uri: The URI string to parse.
- *
- * Parses a URI string into a new #GstUri object. Will return NULL if the URI
- * cannot be parsed.
- *
- * Returns: (transfer full) (nullable): A new #GstUri object, or NULL.
- *
- * Since: 1.6
- */
-GstUri *
-gst_uri_from_string (const gchar * uri)
+static GstUri *
+_gst_uri_from_string_internal (const gchar * uri, gboolean unescape)
 {
   const gchar *orig_uri = uri;
   GstUri *uri_obj;
@@ -1545,7 +1534,10 @@ gst_uri_from_string (const gchar * uri)
       /* find end of userinfo */
       eoui = strchr (uri, '@');
       if (eoui != NULL && eoui < eoa) {
-        uri_obj->userinfo = g_uri_unescape_segment (uri, eoui, NULL);
+        if (unescape)
+          uri_obj->userinfo = g_uri_unescape_segment (uri, eoui, NULL);
+        else
+          uri_obj->userinfo = g_strndup (uri, eoui - uri);
         uri = eoui + 1;
       }
       /* find end of host */
@@ -1565,8 +1557,10 @@ gst_uri_from_string (const gchar * uri)
           reoh = eoh = eoa;
       }
       /* don't capture empty host strings */
-      if (eoh != uri)
+      if (eoh != uri) {
+        /* always unescape hostname */
         uri_obj->host = g_uri_unescape_segment (uri, eoh, NULL);
+      }
 
       uri = reoh;
       if (uri < eoa) {
@@ -1620,11 +1614,59 @@ gst_uri_from_string (const gchar * uri)
       }
     }
     if (uri != NULL && uri[0] == '#') {
-      uri_obj->fragment = g_uri_unescape_string (uri + 1, NULL);
+      if (unescape)
+        uri_obj->fragment = g_uri_unescape_string (uri + 1, NULL);
+      else
+        uri_obj->fragment = g_strdup (uri + 1);
     }
   }
 
   return uri_obj;
+}
+
+/**
+ * gst_uri_from_string:
+ * @uri: The URI string to parse.
+ *
+ * Parses a URI string into a new #GstUri object. Will return NULL if the URI
+ * cannot be parsed.
+ *
+ * Returns: (transfer full) (nullable): A new #GstUri object, or NULL.
+ *
+ * Since: 1.6
+ */
+GstUri *
+gst_uri_from_string (const gchar * uri)
+{
+  return _gst_uri_from_string_internal (uri, TRUE);
+}
+
+/**
+ * gst_uri_from_string_escaped:
+ * @uri: The URI string to parse.
+ *
+ * Parses a URI string into a new #GstUri object. Will return NULL if the URI
+ * cannot be parsed. This is identical to gst_uri_from_string() except that
+ * the userinfo and fragment components of the URI will not be unescaped while
+ * parsing.
+ *
+ * Use this when you need to extract a username and password from the userinfo
+ * such as https://user:password@example.com since either may contain
+ * a URI-escaped ':' character. gst_uri_from_string() will unescape the entire
+ * userinfo component, which will make it impossible to know which ':'
+ * delineates the username and password.
+ *
+ * The same applies to the fragment component of the URI, such as
+ * https://example.com/path#fragment which may contain a URI-escaped '#'.
+ *
+ * Returns: (transfer full) (nullable): A new #GstUri object, or NULL.
+ *
+ * Since: 1.18
+ */
+GstUri *
+gst_uri_from_string_escaped (const gchar * uri)
+{
+  return _gst_uri_from_string_internal (uri, FALSE);
 }
 
 /**

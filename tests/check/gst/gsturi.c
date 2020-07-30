@@ -336,6 +336,21 @@ struct URITest
         {"scheme", "us:er:pa:ss", "hostname", 123, "/path", {{"query", NULL}, \
               {NULL, NULL}}, "frag#ment"}},
 
+#define ESCAPED_URI_TESTS \
+  /* Test cases for gst_uri_from_string_escaped */ \
+  {"scheme://user%20info@hostname", \
+        {"scheme", "user%20info", "hostname", GST_URI_NO_PORT, NULL, {{NULL, \
+                  NULL}}, NULL}}, \
+  {"scheme://userinfo@hostname:123/path?query#frag%23ment", \
+        {"scheme", "userinfo", "hostname", 123, "/path", {{"query", NULL}, \
+              {NULL, NULL}}, "frag%23ment"}}, \
+  {"scheme://us%3Aer:pass@hostname", \
+        {"scheme", "us%3Aer:pass", "hostname", GST_URI_NO_PORT, NULL, {{NULL, \
+                  NULL}}, NULL}}, \
+  {"scheme://us%3Aer:pa%3Ass@hostname:123/path?query#frag%23ment", \
+        {"scheme", "us%3Aer:pa%3Ass", "hostname", 123, "/path", {{"query", NULL}, \
+              {NULL, NULL}}, "frag%23ment"}},
+
 
 static const struct URITest tests[] = {
   COMMON_URI_TESTS UNESCAPED_URI_TESTS
@@ -382,6 +397,63 @@ GST_START_TEST (test_url_parsing)
                 tests[i].uri.query[j].key), tests[i].uri.query[j].value);
       } else {
         fail_unless (gst_uri_query_has_key (uri, tests[i].uri.query[j].key));
+      }
+    }
+    list = gst_uri_get_query_keys (uri);
+    fail_unless_equals_int (j, g_list_length (list));
+    g_list_free (list);
+    gst_uri_unref (uri);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (unparsable_uri_tests); i++) {
+    GST_DEBUG ("Testing unparsable URI '%s'", unparsable_uri_tests[i]);
+
+    uri = gst_uri_from_string (unparsable_uri_tests[i]);
+    fail_unless (uri == NULL);
+  }
+}
+
+GST_END_TEST;
+
+
+static const struct URITest escaped_tests[] = {
+  COMMON_URI_TESTS ESCAPED_URI_TESTS
+};
+
+GST_START_TEST (test_url_parsing_escaped)
+{
+  GstUri *uri;
+  GList *list;
+  gchar *tmp_str;
+  guint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (escaped_tests); i++) {
+    GST_DEBUG ("Testing URI '%s'", escaped_tests[i].str);
+
+    uri = gst_uri_from_string_escaped (escaped_tests[i].str);
+    fail_unless (uri != NULL);
+    fail_unless_equals_string (gst_uri_get_scheme (uri),
+        escaped_tests[i].uri.scheme);
+    fail_unless_equals_string (gst_uri_get_userinfo (uri),
+        escaped_tests[i].uri.userinfo);
+    fail_unless_equals_string (gst_uri_get_host (uri),
+        escaped_tests[i].uri.host);
+    fail_unless_equals_int (gst_uri_get_port (uri), escaped_tests[i].uri.port);
+    tmp_str = gst_uri_get_path (uri);
+    fail_unless_equals_string (tmp_str, escaped_tests[i].uri.path);
+    g_free (tmp_str);
+
+    for (j = 0; j < 10; j++) {
+      if (!escaped_tests[i].uri.query[j].key)
+        break;
+
+      if (escaped_tests[i].uri.query[j].value) {
+        fail_unless_equals_string (gst_uri_get_query_value (uri,
+                escaped_tests[i].uri.query[j].key),
+            escaped_tests[i].uri.query[j].value);
+      } else {
+        fail_unless (gst_uri_query_has_key (uri,
+                escaped_tests[i].uri.query[j].key));
       }
     }
     list = gst_uri_get_query_keys (uri);
@@ -1141,6 +1213,7 @@ gst_uri_suite (void)
   tcase_add_test (tc_chain, test_win32_uri);
 #endif
   tcase_add_test (tc_chain, test_url_parsing);
+  tcase_add_test (tc_chain, test_url_parsing_escaped);
   tcase_add_test (tc_chain, test_url_presenting);
   tcase_add_test (tc_chain, test_url_normalization);
   tcase_add_test (tc_chain, test_url_joining);

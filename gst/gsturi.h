@@ -236,6 +236,9 @@ GST_API
 GstUri * gst_uri_from_string           (const gchar * uri) G_GNUC_MALLOC;
 
 GST_API
+GstUri * gst_uri_from_string_escaped   (const gchar * uri) G_GNUC_MALLOC;
+
+GST_API
 GstUri * gst_uri_from_string_with_base (GstUri * base,
                                         const gchar * uri) G_GNUC_MALLOC;
 GST_API
