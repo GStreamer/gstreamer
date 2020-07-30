@@ -24,6 +24,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/base/gstbaseparse.h>
 
 static GstPad *mysrcpad, *mysinkpad;
@@ -56,6 +57,9 @@ struct _GstParserTester
 
   guint min_frame_size;
   guint last_frame_size;
+
+  /* don't immediately set the src caps when receiving sink caps */
+  gboolean delay_srccaps;
 };
 
 struct _GstParserTesterClass
@@ -80,7 +84,11 @@ gst_parser_tester_stop (GstBaseParse * parse)
 static gboolean
 gst_parser_tester_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 {
-  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+  GstParserTester *test = (GstParserTester *) parse;
+
+  if (!test->delay_srccaps)
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+
   return TRUE;
 }
 
@@ -672,6 +680,48 @@ GST_START_TEST (parser_pull_frame_growth)
 
 GST_END_TEST;
 
+GST_START_TEST (parser_initial_gap_prefer_upstream_caps)
+{
+  GstHarness *h;
+  GstCaps *upstream_caps, *downstream_caps, *caps;
+  GstEvent *e;
+
+  parsetest = g_object_new (GST_PARSER_TESTER_TYPE, NULL);
+  /* we need this so that baseparse tries to negotiate default caps */
+  ((GstParserTester *) parsetest)->delay_srccaps = TRUE;
+
+  h = gst_harness_new_with_element (parsetest, "sink", "src");
+  downstream_caps =
+      gst_caps_new_simple ("video/x-test-custom", "width", GST_TYPE_INT_RANGE,
+      TEST_VIDEO_WIDTH - 2, TEST_VIDEO_WIDTH + 2, "height", G_TYPE_INT,
+      TEST_VIDEO_HEIGHT, "framerate", GST_TYPE_FRACTION, TEST_VIDEO_FPS_N,
+      TEST_VIDEO_FPS_D, NULL);
+  upstream_caps =
+      gst_caps_new_simple ("video/x-test-custom", "width", G_TYPE_INT,
+      TEST_VIDEO_WIDTH * 2, "height", G_TYPE_INT, TEST_VIDEO_HEIGHT * 2,
+      "framerate", GST_TYPE_FRACTION, TEST_VIDEO_FPS_N, TEST_VIDEO_FPS_D, NULL);
+  gst_harness_set_caps (h, upstream_caps, downstream_caps);
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0,
+              GST_CLOCK_TIME_NONE)));
+
+  fail_unless (e = gst_harness_pull_event (h));
+  fail_unless_equals_int (GST_EVENT_STREAM_START, GST_EVENT_TYPE (e));
+  gst_event_unref (e);
+
+  fail_unless (e = gst_harness_pull_event (h));
+  fail_unless_equals_int (GST_EVENT_CAPS, GST_EVENT_TYPE (e));
+  gst_event_parse_caps (e, &caps);
+  gst_event_unref (e);
+
+  fail_unless (gst_caps_can_intersect (caps, downstream_caps));
+
+  gst_harness_teardown (h);
+  gst_object_unref (parsetest);
+}
+
+GST_END_TEST;
+
 
 static void
 baseparse_setup (void)
@@ -704,6 +754,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_reverse_playback);
   tcase_add_test (tc, parser_pull_short_read);
   tcase_add_test (tc, parser_pull_frame_growth);
+  tcase_add_test (tc, parser_initial_gap_prefer_upstream_caps);
 
   return s;
 }

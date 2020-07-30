@@ -1117,8 +1117,11 @@ update_upstream_provided (GQuark field_id, const GValue * value,
   caps_size = gst_caps_get_size (default_caps);
   for (i = 0; i < caps_size; i++) {
     GstStructure *structure = gst_caps_get_structure (default_caps, i);
-    if (gst_structure_id_has_field (structure, field_id))
+    if (!gst_structure_id_has_field (structure, field_id)) {
       gst_structure_id_set_value (structure, field_id, value);
+    }
+    /* XXX: maybe try to fixate better than gst_caps_fixate() the
+     * downstream caps based on upstream values if possible */
   }
 
   return TRUE;
