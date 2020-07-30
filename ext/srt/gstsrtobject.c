@@ -539,10 +539,7 @@ gst_srt_object_set_enum_value (GstStructure * s, GType enum_type,
   enum_value = g_enum_get_value_by_nick (enum_class, value);
 
   if (enum_value) {
-    GValue v = G_VALUE_INIT;
-    g_value_init (&v, enum_type);
-    g_value_set_enum (&v, enum_value->value);
-    gst_structure_set_value (s, key, &v);
+    gst_structure_set (s, key, enum_type, enum_value->value, NULL);
   }
 
   g_type_class_unref (enum_class);
@@ -552,22 +549,15 @@ static void
 gst_srt_object_set_string_value (GstStructure * s, const gchar * key,
     const gchar * value)
 {
-  GValue v = G_VALUE_INIT;
-  g_value_init (&v, G_TYPE_STRING);
-  g_value_set_static_string (&v, value);
-  gst_structure_set_value (s, key, &v);
-  g_value_unset (&v);
+  gst_structure_set (s, key, G_TYPE_STRING, value, NULL);
 }
 
 static void
 gst_srt_object_set_uint_value (GstStructure * s, const gchar * key,
     const gchar * value)
 {
-  GValue v = G_VALUE_INIT;
-  g_value_init (&v, G_TYPE_UINT);
-  g_value_set_uint (&v, (guint) strtoul (value, NULL, 10));
-  gst_structure_set_value (s, key, &v);
-  g_value_unset (&v);
+  gst_structure_set (s, key, G_TYPE_UINT,
+      (guint) g_ascii_strtoll (value, NULL, 10), NULL);
 }
 
 static void
