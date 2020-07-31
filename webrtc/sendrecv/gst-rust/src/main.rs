@@ -142,13 +142,6 @@ impl App {
         // Channel for outgoing WebSocket messages from other threads
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 
-        // Asynchronously set the pipeline to Playing
-        pipeline.call_async(|pipeline| {
-            pipeline
-                .set_state(gst::State::Playing)
-                .expect("Couldn't set pipeline to Playing");
-        });
-
         let app = App(Arc::new(AppInner {
             args,
             pipeline,
@@ -226,6 +219,13 @@ impl App {
                     ("Failed to set pipeline to Playing")
                 );
             }
+        });
+
+        // Asynchronously set the pipeline to Playing
+        app.pipeline.call_async(|pipeline| {
+            pipeline
+                .set_state(gst::State::Playing)
+                .expect("Couldn't set pipeline to Playing");
         });
 
         Ok((app, send_gst_msg_rx, send_ws_msg_rx))
