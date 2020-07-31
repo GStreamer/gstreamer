@@ -1331,7 +1331,7 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
             } else {
               GST_SPLITMUX_WAIT_OUTPUT (splitmux);
             }
-          } while (splitmux->output_state ==
+          } while (!ctx->flushing && splitmux->output_state ==
               SPLITMUX_OUTPUT_STATE_AWAITING_COMMAND);
           /* loop and re-check the state */
           continue;
@@ -1551,7 +1551,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   if (info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM ||
       info->type & GST_PAD_PROBE_TYPE_EVENT_FLUSH) {
     GstEvent *event = gst_pad_probe_info_get_event (info);
-    gboolean locked = FALSE;
+    gboolean locked = FALSE, wait = !ctx->is_reference;
 
     GST_LOG_OBJECT (pad, "Event %" GST_PTR_FORMAT, event);
 
@@ -1570,12 +1570,14 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         if (ctx->is_reference)
           splitmux->queued_keyframes = 0;
         ctx->flushing = FALSE;
+        wait = FALSE;
         break;
       case GST_EVENT_FLUSH_START:
         GST_SPLITMUX_LOCK (splitmux);
         locked = TRUE;
         GST_LOG_OBJECT (pad, "Flush start");
         ctx->flushing = TRUE;
+        GST_SPLITMUX_BROADCAST_INPUT (splitmux);
         GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
         break;
       case GST_EVENT_EOS:
@@ -1691,7 +1693,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
      * until the muxer / sink are ready for it */
     if (!locked)
       GST_SPLITMUX_LOCK (splitmux);
-    if (!ctx->is_reference)
+    if (wait)
       complete_or_wait_on_out (splitmux, ctx);
     GST_SPLITMUX_UNLOCK (splitmux);
 
