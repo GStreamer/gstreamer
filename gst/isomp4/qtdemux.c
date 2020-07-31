@@ -12384,6 +12384,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 entry->bytes_per_frame = QT_UINT32 (alac_data + 12);
                 entry->n_channels = QT_UINT8 (alac_data + 21);
                 entry->rate = QT_UINT32 (alac_data + 32);
+                samplesize = QT_UINT8 (alac_data + 16 + 1);
               }
             }
             gst_caps_set_simple (entry->caps,
