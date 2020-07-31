@@ -35,8 +35,7 @@ check_aggregated_buffer (GstElement * agg, GstPad * pad,
       gst_aggregator_peek_next_sample (GST_AGGREGATOR (agg),
       GST_AGGREGATOR_PAD (pad));
 
-  g_hash_table_steal_extended (consumed_buffers, pad, NULL,
-      (gpointer *) & pad_consumed_buffers);
+  pad_consumed_buffers = g_hash_table_lookup (consumed_buffers, pad);
 
   for (tmp = pad_consumed_buffers; tmp; tmp = tmp->next) {
     GstBuffer *consumed_buffer = (GstBuffer *) tmp->data;
@@ -56,6 +55,7 @@ check_aggregated_buffer (GstElement * agg, GstPad * pad,
   }
 
   g_list_free_full (pad_consumed_buffers, (GDestroyNotify) gst_buffer_unref);
+  g_hash_table_steal (consumed_buffers, pad);
 
   return TRUE;
 }
@@ -73,14 +73,18 @@ pad_buffer_consumed_cb (GstAggregatorPad * pad, GstBuffer * buffer,
     GHashTable * consumed_buffers)
 {
   GList *pad_consumed_buffers;
+  gboolean was_empty;
 
-  g_hash_table_steal_extended (consumed_buffers, pad, NULL,
-      (gpointer *) & pad_consumed_buffers);
+  pad_consumed_buffers = g_hash_table_lookup (consumed_buffers, pad);
+
+  was_empty = (pad_consumed_buffers == NULL);
 
   pad_consumed_buffers =
       g_list_append (pad_consumed_buffers, gst_buffer_ref (buffer));
 
-  g_hash_table_insert (consumed_buffers, pad, pad_consumed_buffers);
+  /* we know the list's head pointer doesn't change when items get appended */
+  if (was_empty)
+    g_hash_table_insert (consumed_buffers, pad, pad_consumed_buffers);
 }
 
 static gboolean
