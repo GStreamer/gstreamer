@@ -137,7 +137,7 @@ impl App {
 
         // Create a stream for handling the GStreamer message asynchronously
         let bus = pipeline.get_bus().unwrap();
-        let send_gst_msg_rx = gst::BusStream::new(&bus);
+        let send_gst_msg_rx = bus.stream();
 
         // Channel for outgoing WebSocket messages from other threads
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
@@ -277,7 +277,7 @@ impl App {
         println!("starting negotiation");
 
         let app_clone = self.downgrade();
-        let promise = gst::Promise::new_with_change_func(move |reply| {
+        let promise = gst::Promise::with_change_func(move |reply| {
             let app = upgrade_weak!(app_clone);
 
             if let Err(err) = app.on_offer_created(reply) {
@@ -300,12 +300,15 @@ impl App {
     // WebSocket connection
     fn on_offer_created(
         &self,
-        reply: Result<&gst::StructureRef, gst::PromiseError>,
+        reply: Result<Option<&gst::StructureRef>, gst::PromiseError>,
     ) -> Result<(), anyhow::Error> {
         let reply = match reply {
-            Ok(reply) => reply,
+            Ok(Some(reply)) => reply,
+            Ok(None) => {
+                bail!("Offer creation future got no reponse");
+            }
             Err(err) => {
-                bail!("Offer creation future got no reponse: {:?}", err);
+                bail!("Offer creation future got error reponse: {:?}", err);
             }
         };
 
@@ -343,12 +346,15 @@ impl App {
     // WebSocket connection
     fn on_answer_created(
         &self,
-        reply: Result<&gst::StructureRef, gst::PromiseError>,
+        reply: Result<Option<&gst::StructureRef>, gst::PromiseError>,
     ) -> Result<(), anyhow::Error> {
         let reply = match reply {
-            Ok(reply) => reply,
+            Ok(Some(reply)) => reply,
+            Ok(None) => {
+                bail!("Answer creation future got no reponse");
+            }
             Err(err) => {
-                bail!("Answer creation future got no reponse: {:?}", err);
+                bail!("Answer creation future got error reponse: {:?}", err);
             }
         };
 
@@ -420,7 +426,7 @@ impl App {
                     .unwrap();
 
                 let app_clone = app.downgrade();
-                let promise = gst::Promise::new_with_change_func(move |reply| {
+                let promise = gst::Promise::with_change_func(move |reply| {
                     let app = upgrade_weak!(app_clone);
 
                     if let Err(err) = app.on_answer_created(reply) {

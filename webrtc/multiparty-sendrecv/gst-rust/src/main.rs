@@ -193,7 +193,7 @@ impl App {
 
         // Create a stream for handling the GStreamer message asynchronously
         let bus = pipeline.get_bus().unwrap();
-        let send_gst_msg_rx = gst::BusStream::new(&bus);
+        let send_gst_msg_rx = bus.stream();
 
         // Channel for outgoing WebSocket messages from other threads
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
@@ -338,7 +338,7 @@ impl App {
         let audio_queue = peer_bin
             .get_by_name("audio-queue")
             .expect("can't find audio-queue");
-        let audio_sink_pad = gst::GhostPad::new(
+        let audio_sink_pad = gst::GhostPad::with_target(
             Some("audio_sink"),
             &audio_queue.get_static_pad("sink").unwrap(),
         )
@@ -348,7 +348,7 @@ impl App {
         let video_queue = peer_bin
             .get_by_name("video-queue")
             .expect("can't find video-queue");
-        let video_sink_pad = gst::GhostPad::new(
+        let video_sink_pad = gst::GhostPad::with_target(
             Some("video_sink"),
             &video_queue.get_static_pad("sink").unwrap(),
         )
@@ -629,7 +629,7 @@ impl Peer {
         println!("starting negotiation with peer {}", self.peer_id);
 
         let peer_clone = self.downgrade();
-        let promise = gst::Promise::new_with_change_func(move |reply| {
+        let promise = gst::Promise::with_change_func(move |reply| {
             let peer = upgrade_weak!(peer_clone);
 
             if let Err(err) = peer.on_offer_created(reply) {
@@ -652,12 +652,15 @@ impl Peer {
     // WebSocket connection
     fn on_offer_created(
         &self,
-        reply: Result<&gst::StructureRef, gst::PromiseError>,
+        reply: Result<Option<&gst::StructureRef>, gst::PromiseError>,
     ) -> Result<(), anyhow::Error> {
         let reply = match reply {
-            Ok(reply) => reply,
+            Ok(Some(reply)) => reply,
+            Ok(None) => {
+                bail!("Offer creation future got no reponse");
+            }
             Err(err) => {
-                bail!("Offer creation future got no reponse: {:?}", err);
+                bail!("Offer creation future got error reponse: {:?}", err);
             }
         };
 
@@ -698,12 +701,15 @@ impl Peer {
     // WebSocket connection
     fn on_answer_created(
         &self,
-        reply: Result<&gst::StructureRef, gst::PromiseError>,
+        reply: Result<Option<&gst::StructureRef>, gst::PromiseError>,
     ) -> Result<(), anyhow::Error> {
         let reply = match reply {
-            Ok(reply) => reply,
+            Ok(Some(reply)) => reply,
+            Ok(None) => {
+                bail!("Answer creation future got no reponse");
+            }
             Err(err) => {
-                bail!("Answer creation future got no reponse: {:?}", err);
+                bail!("Answer creation future got error reponse: {:?}", err);
             }
         };
 
@@ -778,7 +784,7 @@ impl Peer {
                     .unwrap();
 
                 let peer_clone = peer.downgrade();
-                let promise = gst::Promise::new_with_change_func(move |reply| {
+                let promise = gst::Promise::with_change_func(move |reply| {
                     let peer = upgrade_weak!(peer_clone);
 
                     if let Err(err) = peer.on_answer_created(reply) {
@@ -869,12 +875,14 @@ impl Peer {
         // Add a ghost pad on our conv bin that proxies the sink pad of the decodebin
         let dbin = conv.get_by_name("dbin").unwrap();
         let sinkpad =
-            gst::GhostPad::new(Some("sink"), &dbin.get_static_pad("sink").unwrap()).unwrap();
+            gst::GhostPad::with_target(Some("sink"), &dbin.get_static_pad("sink").unwrap())
+                .unwrap();
         conv.add_pad(&sinkpad).unwrap();
 
         // And another one that proxies the source pad of the last element
         let src = conv.get_by_name("src").unwrap();
-        let srcpad = gst::GhostPad::new(Some("src"), &src.get_static_pad("src").unwrap()).unwrap();
+        let srcpad =
+            gst::GhostPad::with_target(Some("src"), &src.get_static_pad("src").unwrap()).unwrap();
         conv.add_pad(&srcpad).unwrap();
 
         self.bin.add(&conv).unwrap();
@@ -886,11 +894,11 @@ impl Peer {
 
         // And then add a new ghost pad to the peer bin that proxies the source pad we added above
         if media_type == "video" {
-            let srcpad = gst::GhostPad::new(Some("video_src"), &srcpad).unwrap();
+            let srcpad = gst::GhostPad::with_target(Some("video_src"), &srcpad).unwrap();
             srcpad.set_active(true).unwrap();
             self.bin.add_pad(&srcpad).unwrap();
         } else if media_type == "audio" {
-            let srcpad = gst::GhostPad::new(Some("audio_src"), &srcpad).unwrap();
+            let srcpad = gst::GhostPad::with_target(Some("audio_src"), &srcpad).unwrap();
             srcpad.set_active(true).unwrap();
             self.bin.add_pad(&srcpad).unwrap();
         }

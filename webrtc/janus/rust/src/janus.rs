@@ -210,11 +210,11 @@ impl Peer {
         info!("starting negotiation with peer");
 
         let peer_clone = self.downgrade();
-        let promise = gst::Promise::new_with_change_func(move |res| {
-            let s = res.expect("no answer");
+        let promise = gst::Promise::with_change_func(move |res| {
+            let s = res.ok().flatten().expect("no answer");
             let peer = upgrade_weak!(peer_clone);
 
-            if let Err(err) = peer.on_offer_created(&s.to_owned()) {
+            if let Err(err) = peer.on_offer_created(s) {
                 gst_element_error!(
                     peer.bin,
                     gst::LibraryError::Failed,
@@ -231,7 +231,7 @@ impl Peer {
 
     // Once webrtcbin has create the offer SDP for us, handle it by sending it to the peer via the
     // WebSocket connection
-    fn on_offer_created(&self, reply: &gst::Structure) -> Result<(), anyhow::Error> {
+    fn on_offer_created(&self, reply: &gst::StructureRef) -> Result<(), anyhow::Error> {
         let offer = reply
             .get_value("offer")?
             .get::<gst_webrtc::WebRTCSessionDescription>()
@@ -328,8 +328,8 @@ impl Peer {
                     .expect("Unable to set remote description");
 
                 let peer_clone = peer.downgrade();
-                let promise = gst::Promise::new_with_change_func(move |reply| {
-                    let s = reply.expect("No answer");
+                let promise = gst::Promise::with_change_func(move |reply| {
+                    let s = reply.ok().flatten().expect("No answer");
                     let peer = upgrade_weak!(peer_clone);
 
                     if let Err(err) = peer.on_answer_created(&s.to_owned()) {
@@ -493,8 +493,8 @@ impl JanusGateway {
             encoding_name=webrtc_codec.encoding_name
         );
 
-        let encode_bin = gst::parse_bin_from_description(bin_description, false)?;
-        encode_bin.set_name("encode-bin")?;
+        let encode_bin =
+            gst::parse_bin_from_description_with_name(bin_description, false, "encode-bin")?;
 
         pipeline.add(&encode_bin).expect("Failed to add encode bin");
 
@@ -508,7 +508,7 @@ impl JanusGateway {
             .get_static_pad("sink")
             .expect("Failed to get sink pad from encoder");
 
-        if let Ok(video_ghost_pad) = gst::GhostPad::new(Some("video_sink"), &sinkpad) {
+        if let Ok(video_ghost_pad) = gst::GhostPad::with_target(Some("video_sink"), &sinkpad) {
             encode_bin.add_pad(&video_ghost_pad)?;
             srcpad.link(&video_ghost_pad)?;
         }
@@ -522,7 +522,8 @@ impl JanusGateway {
         let srcpad = vsink
             .get_static_pad("src")
             .expect("Element without src pad");
-        if let Ok(webrtc_ghost_pad) = gst::GhostPad::new(Some("webrtc_video_src"), &srcpad) {
+        if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
+        {
             encode_bin.add_pad(&webrtc_ghost_pad)?;
             webrtc_ghost_pad.link(&sinkpad2)?;
         }
