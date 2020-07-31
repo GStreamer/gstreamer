@@ -1192,6 +1192,8 @@ gst_vaapi_decoder_get_surface_attributes (GstVaapiDecoder * decoder,
   if (ret)
     attribs.formats = gst_vaapi_context_get_surface_formats (decoder->context);
 
+  if (!attribs.formats)
+    return NULL;
   if (attribs.formats->len == 0) {
     g_array_unref (attribs.formats);
     return NULL;
