@@ -106,7 +106,7 @@ static const GstVideoFormatMap gst_vaapi_video_default_formats[] = {
   DEF_YUV (VA_BYTE_ORDER_NOT_CARE, GRAY8, INVALID, ('Y', '8', '0', '0'), 8, 400),
 
   DEF_YUV (VA_LSB_FIRST, P010_10LE, P010, ('P', '0', '1', '0'), 24, 420_10BPP),
-  DEF_YUV (VA_LSB_FIRST, P012_LE, P012, ('P', '0', '1', '2'), 24, 420_10BPP),
+  DEF_YUV (VA_LSB_FIRST, P012_LE, P012, ('P', '0', '1', '2'), 24, 420_12BPP),
   /* AYUV is a clear defined format by doc */
   DEF_YUV (VA_LSB_FIRST, VUYA, AYUV, ('A', 'Y', 'U', 'V'), 32, 444),
 
