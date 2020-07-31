@@ -61,6 +61,7 @@ struct _FrameState
   GstVaapiWindow *window;
   GstVaapiSurface *surface;
   GstVaapiVideoPool *surface_pool;
+  struct wl_buffer *buffer;
   struct wl_callback *callback;
   gboolean done;
 };
@@ -82,23 +83,6 @@ frame_state_new (GstVaapiWindow * window)
   return frame;
 }
 
-static void
-frame_state_free (FrameState * frame)
-{
-  if (!frame)
-    return;
-
-  if (frame->surface) {
-    if (frame->surface_pool)
-      gst_vaapi_video_pool_put_object (frame->surface_pool, frame->surface);
-    frame->surface = NULL;
-  }
-  gst_vaapi_video_pool_replace (&frame->surface_pool, NULL);
-
-  g_clear_pointer (&frame->callback, wl_callback_destroy);
-  g_slice_free (FrameState, frame);
-}
-
 struct _GstVaapiWindowWaylandPrivate
 {
   struct xdg_surface *xdg_surface;
@@ -107,6 +91,7 @@ struct _GstVaapiWindowWaylandPrivate
   struct wl_surface *surface;
   struct wl_subsurface *video_subsurface;
   struct wl_event_queue *event_queue;
+  GList *frames;
   FrameState *last_frame;
   GstPoll *poll;
   GstPollFD pollfd;
@@ -154,6 +139,29 @@ enum
 };
 
 static guint signals[N_SIGNALS];
+
+static void
+frame_state_free (FrameState * frame)
+{
+  GstVaapiWindowWaylandPrivate *priv;
+
+  if (!frame)
+    return;
+
+  priv = GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
+  priv->frames = g_list_remove (priv->frames, frame);
+
+  if (frame->surface) {
+    if (frame->surface_pool)
+      gst_vaapi_video_pool_put_object (frame->surface_pool, frame->surface);
+    frame->surface = NULL;
+  }
+  gst_vaapi_video_pool_replace (&frame->surface_pool, NULL);
+
+  g_clear_pointer (&frame->callback, wl_callback_destroy);
+  wl_buffer_destroy (frame->buffer);
+  g_slice_free (FrameState, frame);
+}
 
 static void
 handle_xdg_toplevel_configure (void *data, struct xdg_toplevel *xdg_toplevel,
@@ -499,6 +507,9 @@ gst_vaapi_window_wayland_finalize (GObject * object)
   if (priv->event_queue)
     wl_display_roundtrip_queue (wl_display, priv->event_queue);
 
+  while (priv->frames)
+    frame_state_free ((FrameState *) priv->frames->data);
+
   g_clear_pointer (&priv->xdg_surface, xdg_surface_destroy);
   g_clear_pointer (&priv->wl_shell_surface, wl_shell_surface_destroy);
   g_clear_pointer (&priv->video_subsurface, wl_subsurface_destroy);
@@ -581,7 +592,6 @@ frame_release_callback (void *data, struct wl_buffer *wl_buffer)
   if (!frame->done)
     if (!frame_done (frame))
       GST_INFO ("cannot remove last frame because it didn't match or empty");
-  wl_buffer_destroy (wl_buffer);
   frame_state_free (frame);
 }
 
@@ -971,8 +981,10 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
   wl_proxy_set_queue ((struct wl_proxy *) buffer, priv->event_queue);
   wl_buffer_add_listener (buffer, &frame_buffer_listener, frame);
 
+  frame->buffer = buffer;
   frame->callback = wl_surface_frame (priv->surface);
   wl_callback_add_listener (frame->callback, &frame_callback_listener, frame);
+  priv->frames = g_list_append (priv->frames, frame);
 
   wl_surface_commit (priv->surface);
   wl_display_flush (wl_display);
