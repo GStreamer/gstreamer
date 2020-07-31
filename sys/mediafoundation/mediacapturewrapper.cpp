@@ -787,6 +787,8 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
     HString subtype;
     UINT32 width = 0;
     UINT32 height = 0;
+    UINT32 fps_n = 0;
+    UINT32 fps_d = 1;
 
     hr = formatList->GetAt (i, &fmt);
     if (!gst_mf_result (hr))
@@ -810,6 +812,27 @@ MediaCaptureWrapper::mediaCaptureInitPost (ComPtr<IAsyncAction> init_async,
           "target resolution %dx%d", i, width, height,
           GST_VIDEO_INFO_WIDTH (&videoInfo),
           GST_VIDEO_INFO_HEIGHT (&videoInfo));
+      continue;
+    }
+
+    hr = fmt->get_FrameRate (&ratio);
+    if (!gst_mf_result (hr))
+      continue;
+
+    hr = ratio->get_Numerator (&fps_n);
+    if (!gst_mf_result (hr))
+      continue;
+
+    hr = ratio->get_Denominator (&fps_d);
+    if (!gst_mf_result (hr))
+      continue;
+
+    if ((gint) fps_n != GST_VIDEO_INFO_FPS_N (&videoInfo) ||
+        (gint) fps_d != GST_VIDEO_INFO_FPS_D (&videoInfo)) {
+      GST_DEBUG ("IMediaFrameFormat[%d], framerate %d/%d is not equal to "
+          "target framerate %d/%d", i, width, height,
+          GST_VIDEO_INFO_FPS_N (&videoInfo),
+          GST_VIDEO_INFO_FPS_D (&videoInfo));
       continue;
     }
 
