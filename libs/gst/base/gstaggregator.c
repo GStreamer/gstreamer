@@ -920,8 +920,6 @@ gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
         PAD_LOCK (pad);
         if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
           pad->priv->negotiated = ret;
-          if (!ret)
-            pad->priv->flow_return = data->flow_ret = GST_FLOW_NOT_NEGOTIATED;
         }
         if (g_queue_peek_tail (&pad->priv->data) == event)
           gst_event_unref (g_queue_pop_tail (&pad->priv->data));
