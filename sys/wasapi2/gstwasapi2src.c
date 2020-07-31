@@ -156,13 +156,22 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstWasapi2Src:dispatcher:
+   *
+   * ICoreDispatcher COM object used for activating device from UI thread.
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_DISPATCHER,
       g_param_spec_pointer ("dispatcher", "Dispatcher",
           "ICoreDispatcher COM object to use. In order for application to ask "
           "permission of audio device, device activation should be running "
-          "on UI thread via ICoreDispatcher",
-          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          "on UI thread via ICoreDispatcher. This element will increase "
+          "the reference count of given ICoreDispatcher and release it after "
+          "use. Therefore, caller does not need to consider additional "
+          "reference count management",
+          GST_PARAM_MUTABLE_READY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class, "Wasapi2Src",
@@ -267,9 +276,6 @@ gst_wasapi2_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_wasapi2_src_get_volume (self));
-      break;
-    case PROP_DISPATCHER:
-      g_value_set_pointer (value, self->dispatcher);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

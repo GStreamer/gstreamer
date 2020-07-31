@@ -144,13 +144,23 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 #if GST_MF_WINAPI_APP
+  /**
+   * GstMFVideoSrc:dispatcher:
+   *
+   * ICoreDispatcher COM object used for activating device from UI thread.
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_DISPATCHER,
       g_param_spec_pointer ("dispatcher", "Dispatcher",
           "ICoreDispatcher COM object to use. In order for application to ask "
           "permission of capture device, device activation should be running "
-          "on UI thread via ICoreDispatcher",
+          "on UI thread via ICoreDispatcher. This element will increase "
+          "the reference count of given ICoreDispatcher and release it after "
+          "use. Therefore, caller does not need to consider additional "
+          "reference count management",
           GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gst_element_class_set_static_metadata (element_class,
@@ -212,11 +222,6 @@ gst_mf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DEVICE_INDEX:
       g_value_set_int (value, self->device_index);
       break;
-#if GST_MF_WINAPI_APP
-    case PROP_DISPATCHER:
-      g_value_set_pointer (value, self->dispatcher);
-      break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
