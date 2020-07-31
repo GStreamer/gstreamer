@@ -102,6 +102,12 @@ struct _GstH265DecoderPrivate
   gboolean new_bitstream;
   gboolean prev_nal_is_eos;
 
+  /* Reference picture lists, constructed for each slice */
+  gboolean process_ref_pic_lists;
+  GArray *ref_pic_list_tmp;
+  GArray *ref_pic_list0;
+  GArray *ref_pic_list1;
+
   /* Cached array to handle pictures to be outputted */
   GArray *to_output;
 };
@@ -156,6 +162,13 @@ gst_h265_decoder_init (GstH265Decoder * self)
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
 
   self->priv = priv = gst_h265_decoder_get_instance_private (self);
+
+  priv->ref_pic_list_tmp = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH265Picture *), 32);
+  priv->ref_pic_list0 = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH265Picture *), 32);
+  priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH265Picture *), 32);
 
   priv->to_output = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH265Picture *), 16);
@@ -346,6 +359,118 @@ gst_h265_decoder_parse_pps (GstH265Decoder * self, GstH265NalUnit * nalu)
   return TRUE;
 }
 
+static void
+gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
+    GstH265Picture * curr_pic, GstH265Slice * slice,
+    GArray ** ref_pic_list0, GArray ** ref_pic_list1)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  GstH265RefPicListModification *ref_mod =
+      &slice->header.ref_pic_list_modification;
+  GstH265PPSSccExtensionParams *scc_ext =
+      &slice->header.pps->pps_scc_extension_params;
+  GArray *tmp_refs;
+  gint num_tmp_refs, i;
+
+  *ref_pic_list0 = priv->ref_pic_list0;
+  *ref_pic_list1 = priv->ref_pic_list1;
+
+  /* There is nothing to be done for I slices */
+  if (GST_H265_IS_I_SLICE (&slice->header))
+    return;
+
+  /* 8.3.4 Deriving l0 */
+  tmp_refs = priv->ref_pic_list_tmp;
+
+  /* (8-8)
+   * Deriving l0 consist of appending in loop RefPicSetStCurrBefore,
+   * RefPicSetStCurrAfter and RefPicSetLtCurr until NumRpsCurrTempList0 item
+   * has been reached.
+   */
+
+  /* NumRpsCurrTempList0 */
+  num_tmp_refs = MAX (slice->header.num_ref_idx_l0_active_minus1 + 1,
+      slice->header.NumPocTotalCurr);
+
+  while (tmp_refs->len < num_tmp_refs) {
+    for (i = 0; i < self->NumPocStCurrBefore && tmp_refs->len < num_tmp_refs;
+        i++)
+      g_array_append_val (tmp_refs, self->RefPicSetStCurrBefore[i]);
+    for (i = 0; i < self->NumPocStCurrAfter && tmp_refs->len < num_tmp_refs;
+        i++)
+      g_array_append_val (tmp_refs, self->RefPicSetStCurrAfter[i]);
+    for (i = 0; i < self->NumPocLtCurr && tmp_refs->len < num_tmp_refs; i++)
+      g_array_append_val (tmp_refs, self->RefPicSetLtCurr[i]);
+    if (scc_ext->pps_curr_pic_ref_enabled_flag)
+      g_array_append_val (tmp_refs, curr_pic);
+  }
+
+  /* (8-9)
+   * If needed, apply the modificaiton base on the lookup table found in the
+   * slice header (list_entry_l0).
+   */
+  for (i = 0; i <= slice->header.num_ref_idx_l0_active_minus1; i++) {
+    GstH265Picture **tmp = (GstH265Picture **) tmp_refs->data;
+
+    if (ref_mod->ref_pic_list_modification_flag_l0)
+      g_array_append_val (*ref_pic_list0, tmp[ref_mod->list_entry_l0[i]]);
+    else
+      g_array_append_val (*ref_pic_list0, tmp[i]);
+  }
+
+  if (scc_ext->pps_curr_pic_ref_enabled_flag &&
+      !ref_mod->ref_pic_list_modification_flag_l0 &&
+      num_tmp_refs > (slice->header.num_ref_idx_l0_active_minus1 + 1)) {
+    g_array_index (*ref_pic_list0, GstH265Picture *,
+        slice->header.num_ref_idx_l0_active_minus1) = curr_pic;
+  }
+
+  g_array_set_size (tmp_refs, 0);
+
+  /* For P slices we only need l0 */
+  if (GST_H265_IS_P_SLICE (&slice->header))
+    return;
+
+  /* 8.3.4 Deriving l1 */
+  /* (8-10)
+   * Deriving l1 consist of appending in loop RefPicSetStCurrAfter,
+   * RefPicSetStCurrBefore and RefPicSetLtCurr until NumRpsCurrTempList0 item
+   * has been reached.
+   */
+
+  /* NumRpsCurrTempList1 */
+  num_tmp_refs = MAX (slice->header.num_ref_idx_l1_active_minus1 + 1,
+      slice->header.NumPocTotalCurr);
+
+  while (tmp_refs->len < num_tmp_refs) {
+    for (i = 0; i < self->NumPocStCurrAfter && tmp_refs->len < num_tmp_refs;
+        i++)
+      g_array_append_val (tmp_refs, self->RefPicSetStCurrAfter[i]);
+    for (i = 0; i < self->NumPocStCurrBefore && tmp_refs->len < num_tmp_refs;
+        i++)
+      g_array_append_val (tmp_refs, self->RefPicSetStCurrBefore[i]);
+    for (i = 0; i < self->NumPocLtCurr && tmp_refs->len < num_tmp_refs; i++)
+      g_array_append_val (tmp_refs, self->RefPicSetLtCurr[i]);
+    if (scc_ext->pps_curr_pic_ref_enabled_flag)
+      g_array_append_val (tmp_refs, curr_pic);
+  }
+
+  /* (8-11)
+   * If needed, apply the modificaiton base on the lookup table found in the
+   * slice header (list_entry_l1).
+   */
+  for (i = 0; i <= slice->header.num_ref_idx_l1_active_minus1; i++) {
+    GstH265Picture **tmp = (GstH265Picture **) tmp_refs->data;
+
+    if (ref_mod->ref_pic_list_modification_flag_l1)
+      g_array_append_val (*ref_pic_list1, tmp[ref_mod->list_entry_l1[i]]);
+    else
+      g_array_append_val (*ref_pic_list1, tmp[i]);
+  }
+
+  g_array_set_size (tmp_refs, 0);
+}
+
 static gboolean
 gst_h265_decoder_decode_slice (GstH265Decoder * self)
 {
@@ -353,6 +478,9 @@ gst_h265_decoder_decode_slice (GstH265Decoder * self)
   GstH265DecoderPrivate *priv = self->priv;
   GstH265Slice *slice = &priv->current_slice;
   GstH265Picture *picture = priv->current_picture;
+  GArray *l0 = NULL;
+  GArray *l1 = NULL;
+  gboolean ret;
 
   if (!picture) {
     GST_ERROR_OBJECT (self, "No current picture");
@@ -361,8 +489,20 @@ gst_h265_decoder_decode_slice (GstH265Decoder * self)
 
   g_assert (klass->decode_slice);
 
-  /* FIXME ref_pic_list0, ref_pic_list1 */
-  return klass->decode_slice (self, picture, slice);
+  if (priv->process_ref_pic_lists) {
+    l0 = priv->ref_pic_list0;
+    l1 = priv->ref_pic_list1;
+    gst_h265_decoder_process_ref_pic_lists (self, picture, slice, &l0, &l1);
+  }
+
+  ret = klass->decode_slice (self, picture, slice, l0, l1);
+
+  if (priv->process_ref_pic_lists) {
+    g_array_set_size (l0, 0);
+    g_array_set_size (l1, 0);
+  }
+
+  return ret;
 }
 
 static gboolean
@@ -1535,6 +1675,22 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
   gst_video_codec_frame_unref (frame);
 
   return priv->last_ret;
+}
+
+/**
+ * gst_h265_decoder_set_process_ref_pic_lists:
+ * @decoder: a #GstH265Decoder
+ * @process: whether subclass is requiring reference picture modification process
+ *
+ * Called to en/disable reference picture modification process.
+ *
+ * Since: 1.20
+ */
+void
+gst_h265_decoder_set_process_ref_pic_lists (GstH265Decoder * decoder,
+    gboolean process)
+{
+  decoder->priv->process_ref_pic_lists = process;
 }
 
 /**

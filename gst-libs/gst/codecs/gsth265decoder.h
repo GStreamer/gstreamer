@@ -114,7 +114,9 @@ struct _GstH265DecoderClass
 
   gboolean      (*decode_slice)     (GstH265Decoder * decoder,
                                      GstH265Picture * picture,
-                                     GstH265Slice * slice);
+                                     GstH265Slice * slice,
+                                     GArray * ref_pic_list0,
+                                     GArray * ref_pic_list1);
 
   gboolean      (*end_picture)      (GstH265Decoder * decoder,
                                      GstH265Picture * picture);
@@ -136,6 +138,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265Decoder, gst_object_unref)
 
 GST_CODECS_API
 GType gst_h265_decoder_get_type (void);
+
+GST_CODECS_API
+void gst_h265_decoder_set_process_ref_pic_lists (GstH265Decoder * decoder,
+                                                 gboolean process);
 
 GST_CODECS_API
 GstH265Picture * gst_h265_decoder_get_picture   (GstH265Decoder * decoder,
