@@ -660,6 +660,8 @@ gst_qt_mux_pad_reset (GstQTMuxPad * qtpad)
 
   gst_buffer_replace (&qtpad->last_buf, NULL);
 
+  gst_caps_replace (&qtpad->configured_caps, NULL);
+
   if (qtpad->tags) {
     gst_tag_list_unref (qtpad->tags);
     qtpad->tags = NULL;
@@ -5569,7 +5571,8 @@ find_best_pad (GstQTMux * qtmux)
     gboolean push_stored = FALSE;
 
     GST_OBJECT_LOCK (qtmux);
-    if (GST_ELEMENT (qtmux)->sinkpads->next || qtmux->force_chunks) {
+    if ((GST_ELEMENT (qtmux)->sinkpads && GST_ELEMENT (qtmux)->sinkpads->next)
+        || qtmux->force_chunks) {
       /* Only switch pads if we have more than one, otherwise
        * we can just put everything into a single chunk and save
        * a few bytes of offsets.
@@ -5734,30 +5737,30 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
 static gboolean
 gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
 {
-  GstCaps *current_caps;
+  GstQTMuxPad *qtmuxpad = GST_QT_MUX_PAD_CAST (pad);
 
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
-  current_caps = gst_pad_get_current_caps (pad);
 
-  if (!current_caps)
+  if (!qtmuxpad->configured_caps) {
+    GST_DEBUG_OBJECT (qtmux, "pad %s accepted caps %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), caps);
     return TRUE;
+  }
 
   g_assert (caps != NULL);
 
-  if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
-    gst_caps_unref (current_caps);
+  if (!gst_qtmux_caps_is_subset_full (qtmux, qtmuxpad->configured_caps, caps)) {
     GST_WARNING_OBJECT (qtmux,
-        "pad %s refused renegotiation to %" GST_PTR_FORMAT,
-        GST_PAD_NAME (pad), caps);
+        "pad %s refused renegotiation to %" GST_PTR_FORMAT " from %"
+        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, qtmuxpad->configured_caps);
     return FALSE;
   }
 
   GST_DEBUG_OBJECT (qtmux,
       "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
-      GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
-  gst_caps_unref (current_caps);
+      GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, qtmuxpad->configured_caps);
 
   return TRUE;
 }
@@ -6827,6 +6830,10 @@ gst_qt_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
       g_assert (qtmux_pad->set_caps);
 
       ret = qtmux_pad->set_caps (qtmux_pad, caps);
+
+      if (ret)
+        gst_caps_replace (&qtmux_pad->configured_caps, caps);
+
       gst_event_unref (event);
       event = NULL;
       break;
@@ -6893,8 +6900,11 @@ static void
 gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstQTMux *mux = GST_QT_MUX_CAST (element);
+  GstQTMuxPad *muxpad = GST_QT_MUX_PAD_CAST (pad);
 
   GST_DEBUG_OBJECT (element, "Releasing %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  gst_qt_mux_pad_reset (muxpad);
 
   gst_element_remove_pad (element, pad);
 

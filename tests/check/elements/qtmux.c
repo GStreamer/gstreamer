@@ -27,6 +27,7 @@
 #include <glib/gstdio.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/pbutils/encoding-profile.h>
 
 /* For ease of programming we use globals to keep refs for our floating
@@ -1806,6 +1807,52 @@ GST_START_TEST (test_muxing_initial_gap)
 
 GST_END_TEST;
 
+GST_START_TEST (test_caps_renego)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GstPad *pad;
+
+  h = gst_harness_new_with_padnames ("qtmux", "video_0", "src");
+  /* appease the harness */
+  pad = gst_element_get_static_pad (h->element, "video_0");
+
+  fail_unless (gst_harness_push_event (h,
+          gst_event_new_stream_start ("random")));
+
+  /* caps event with not enough information, should probably fail but
+   * currently only does from aggregate() */
+  caps = gst_caps_from_string
+      ("video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)16, height=(int)16");
+  fail_unless (gst_harness_push_event (h, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+  /* subsequent caps event with enough information should succeed */
+  caps = gst_caps_from_string
+      ("video/x-h264, width=(int)800, height=(int)600, "
+      "framerate=(fraction)1/1, stream-format=(string)avc, codec_data=(buffer)0000,"
+      " alignment=(string)au, level=(int)2, profile=(string)high");
+  fail_unless (gst_harness_push_event (h, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_harness_push_event (h, gst_event_new_segment (&segment)));
+
+  buf = create_buffer (0 * GST_SECOND, 0, GST_SECOND, 4096);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  buf = gst_harness_pull (h);
+  fail_unless (buf != NULL);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+  gst_object_unref (pad);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtmux_suite (void)
 {
@@ -1851,6 +1898,8 @@ qtmux_suite (void)
   tcase_add_test (tc_chain, test_muxing_non_zero_segment_different);
   tcase_add_test (tc_chain, test_muxing_dts_outside_segment);
   tcase_add_test (tc_chain, test_muxing_initial_gap);
+
+  tcase_add_test (tc_chain, test_caps_renego);
 
   return s;
 }
