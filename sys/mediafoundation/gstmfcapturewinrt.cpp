@@ -214,13 +214,6 @@ gst_mf_capture_winrt_main_loop_running_cb (GstMFCaptureWinRT * self)
   return G_SOURCE_REMOVE;
 }
 
-static bool
-winrt_compare_caps_func (const GstWinRTMediaDescription & a,
-    const GstWinRTMediaDescription & b)
-{
-  return gst_mf_source_object_caps_compare (a.caps_, b.caps_) < 0;
-}
-
 static gpointer
 gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
 {
@@ -300,7 +293,7 @@ gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
   self->capture->SetSourceGroup(*target_group);
 
   std::sort (target_group->source_list_.begin (),
-      target_group->source_list_.end (), winrt_compare_caps_func);
+      target_group->source_list_.end (), WinRTCapsCompareFunc);
 
   self->supported_caps = gst_caps_new_empty ();
 

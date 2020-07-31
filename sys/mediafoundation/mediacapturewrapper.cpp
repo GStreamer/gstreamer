@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include "gstmfutils.h"
+#include "gstmfsourceobject.h"
 #include "mediacapturewrapper.h"
 
 #include "AsyncOperations.h"
@@ -30,6 +31,8 @@
 #include <locale>
 #include <codecvt>
 #include <string.h>
+#include <algorithm>
+#include <iterator>
 
 using namespace ABI::Windows::ApplicationModel::Core;
 using namespace ABI::Windows::Foundation::Collections;
@@ -261,6 +264,8 @@ GstWinRTMediaFrameSourceGroup::Fill
   HString hstr_display_name;
   ComPtr<IVectorView<MediaFrameSourceInfo*>> info_list;
   UINT32 count = 0;
+  std::vector<GstWinRTMediaDescription> preview_list;
+  std::vector<GstWinRTMediaDescription> record_list;
 
   Release();
 
@@ -313,6 +318,7 @@ GstWinRTMediaFrameSourceGroup::Fill
     UINT32 desc_count = 0;
     HString source_id;
     std::string source_id_str;
+    std::vector<GstWinRTMediaDescription> *target_list = nullptr;
 
     hr = info_list->GetAt(i, &info);
     if (!gst_mf_result (hr))
@@ -339,8 +345,21 @@ GstWinRTMediaFrameSourceGroup::Fill
       continue;
 
     /* FIXME: support audio */
-    if (source_type != MediaStreamType::MediaStreamType_VideoPreview &&
-        source_type != MediaStreamType::MediaStreamType_VideoRecord) {
+    if (source_type == MediaStreamType::MediaStreamType_VideoPreview) {
+      if (!preview_list.empty ()) {
+        GST_FIXME ("VideoPreview type was checked already");
+        continue;
+      }
+
+      target_list = &preview_list;
+    } else if (source_type == MediaStreamType::MediaStreamType_VideoRecord) {
+      if (!record_list.empty ()) {
+        GST_FIXME ("VideoRecord type was checked already");
+        continue;
+      }
+
+      target_list = &record_list;
+    } else {
       GST_FIXME ("source-group %d, source-info %d, "
           "type %d is not VideoPreview or VideoRecord",
           index, i, (gint) source_type);
@@ -382,8 +401,48 @@ GstWinRTMediaFrameSourceGroup::Fill
       if (FAILED (hr))
         continue;
 
-      source_list_.push_back(media_desc);
+      target_list->push_back(media_desc);
     }
+  }
+
+  if (!preview_list.empty () && !record_list.empty ()) {
+    /* FIXME: Some devices (e.g., Surface Book 2, Surface Pro X) will expose
+     * both MediaStreamType_VideoPreview and MediaStreamType_VideoRecord types
+     * for a logical device. And for some reason, MediaStreamType_VideoPreview
+     * seems to be selected between them while initiailzing device.
+     * But I cannot find any documentation for the decision rule.
+     * To be safe, we will select common formats between them.
+     */
+    std::vector<GstWinRTMediaDescription> common;
+
+    /* Sort first */
+    std::sort (preview_list.begin (),
+        preview_list.end (), WinRTCapsCompareFunc);
+    std::sort (record_list.begin (),
+        record_list.end (), WinRTCapsCompareFunc);
+
+    /* Find common formats */
+    std::set_intersection(preview_list.begin (), preview_list.end(),
+        record_list.begin (), record_list.end (), std::back_inserter (common),
+        WinRTCapsCompareFunc);
+    source_list_.insert (source_list_.end (), common.begin (),
+        common.end ());
+
+#ifndef GST_DISABLE_GST_DEBUG
+    std::vector<GstWinRTMediaDescription> diff;
+    std::set_difference(preview_list.begin (), preview_list.end(),
+        record_list.begin (), record_list.end (),
+        std::inserter (diff, diff.begin ()), WinRTCapsCompareFunc);
+
+    for (auto iter: diff)
+      GST_FIXME ("Drop uncommon format %" GST_PTR_FORMAT, iter.caps_);
+#endif
+  } else if (!preview_list.empty ()) {
+    source_list_.insert (source_list_.end (), preview_list.begin (),
+        preview_list.end ());
+  } else if (!record_list.empty ()) {
+    source_list_.insert (source_list_.end (), record_list.begin (),
+        record_list.end ());
   }
 
   if (source_list_.empty()) {
@@ -1117,4 +1176,11 @@ FindCoreDispatcherForCurrentThread (ICoreDispatcher ** dispatcher)
     return hr;
 
   return core_window->get_Dispatcher (dispatcher);
+}
+
+bool
+WinRTCapsCompareFunc (const GstWinRTMediaDescription & a,
+    const GstWinRTMediaDescription & b)
+{
+  return gst_mf_source_object_caps_compare (a.caps_, b.caps_) < 0;
 }

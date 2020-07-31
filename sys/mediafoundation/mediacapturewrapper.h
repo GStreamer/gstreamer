@@ -172,4 +172,8 @@ private:
 HRESULT
 FindCoreDispatcherForCurrentThread(ICoreDispatcher ** dispatcher);
 
+bool
+WinRTCapsCompareFunc(const GstWinRTMediaDescription & a,
+                     const GstWinRTMediaDescription & b);
+
 #endif /* __GST_MEDIA_CAPTURE_WRAPPER_H__ */
