@@ -291,6 +291,12 @@ _parse_userinfo (const gchar * userinfo, gchar ** user, gchar ** pass)
     return;
   }
 
+  /* Check that the first occurence is also the last occurence */
+  if (colon != g_strrstr (userinfo, ":"))
+    GST_WARNING ("userinfo %s contains more than one ':', will assume that the "
+        "first ':' delineates user:pass. You should escape the user and pass "
+        "before adding to the URI.", userinfo);
+
   *user = g_strndup (userinfo, colon - userinfo);
   *pass = g_strdup (&colon[1]);
 }

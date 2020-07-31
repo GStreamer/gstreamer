@@ -221,6 +221,11 @@ uri_handler_set_uri (GstURIHandler * handler, const gchar * string,
       goto out;
     }
 
+    if (g_strrstr (split[1], ":") != NULL)
+      GST_WARNING_OBJECT (self, "userinfo %s contains more than one ':', will "
+          "assume that the first ':' delineates user:pass. You should escape "
+          "the user and pass before adding to the URI.", userinfo);
+
     g_object_set (self, "username", split[0], "password", split[1], NULL);
     g_strfreev (split);
   }
