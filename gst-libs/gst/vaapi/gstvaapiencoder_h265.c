@@ -383,6 +383,26 @@ bs_write_profile_tier_level (GstBitWriter * bs,
         /* lower_bit_rate_constraint_flag */
         WRITE_UINT32 (bs, 1, 1);
         break;
+      case GST_VAAPI_PROFILE_H265_MAIN12:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
       default:
         GST_WARNING ("do not support the profile: %s of range extensions",
             gst_vaapi_profile_get_va_name (profile));
@@ -1081,7 +1101,7 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
   const GstVideoFormat format =
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
   guint depth, chrome;
-  GstVaapiProfile profile_candidates[3];
+  GstVaapiProfile profile_candidates[4];
   guint num, i;
 
   g_assert (GST_VIDEO_FORMAT_INFO_IS_YUV (gst_video_format_get_info (format)));
@@ -1106,8 +1126,11 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
       profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN;
     if (depth <= 10)
       profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN10;
-    /* Always add STILL_PICTURE as a candidate. */
-    profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
+    if (depth <= 12)
+      profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN12;
+    /* Always add STILL_PICTURE as a candidate for Main and Main10. */
+    if (depth <= 10)
+      profile_candidates[num++] = GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
   }
 
   if (num == 0) {
