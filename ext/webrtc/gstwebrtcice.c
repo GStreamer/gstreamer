@@ -780,7 +780,7 @@ _clear_ice_stream (struct NiceStreamItem *item)
 static GstUri *
 _validate_turn_server (GstWebRTCICE * ice, const gchar * s)
 {
-  GstUri *uri = gst_uri_from_string (s);
+  GstUri *uri = gst_uri_from_string_escaped (s);
   const gchar *userinfo, *scheme;
   GList *keys = NULL, *l;
   gchar *user = NULL, *pass = NULL;
@@ -855,7 +855,7 @@ out:
 void
 gst_webrtc_ice_set_stun_server (GstWebRTCICE * ice, const gchar * uri_s)
 {
-  GstUri *uri = gst_uri_from_string (uri_s);
+  GstUri *uri = gst_uri_from_string_escaped (uri_s);
   const gchar *msg = "must be of the form stun://<host>:<port>";
 
   GST_DEBUG_OBJECT (ice, "setting stun server, %s", uri_s);

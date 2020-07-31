@@ -165,7 +165,7 @@ uri_handler_set_uri (GstURIHandler * handler, const gchar * string,
 
   {
     gchar *string_without_path = g_strndup (string, path_sep - string);
-    uri = gst_uri_from_string (string_without_path);
+    uri = gst_uri_from_string_escaped (string_without_path);
     g_free (string_without_path);
   }
 
