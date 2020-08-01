@@ -153,7 +153,12 @@ ges_source_create_topbin (GESSource * source, const gchar * bin_name,
   priv->topbin = gst_object_ref (bin);
   last = link_elements (bin, elements);
   if (last) {
-    priv->first_converter = gst_object_ref (elements->pdata[0]);
+    gint i = 0;
+
+    while (!elements->pdata[i])
+      i++;
+
+    priv->first_converter = gst_object_ref (elements->pdata[i]);
     priv->last_converter = gst_object_ref (last);
   }
 
