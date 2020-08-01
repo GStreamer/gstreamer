@@ -204,3 +204,35 @@ gst_va_video_format_from_va_image_format (const VAImageFormat * va_format)
 
   return map ? map->format : GST_VIDEO_FORMAT_UNKNOWN;
 }
+
+GstVideoFormat
+gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
+    GArray * surface_formats)
+{
+  GstVideoFormat surface_format;
+  guint i, image_chroma, surface_chroma;
+
+  if (image_format == GST_VIDEO_FORMAT_UNKNOWN)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  if (!surface_formats || surface_formats->len == 0)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  image_chroma = gst_va_chroma_from_video_format (image_format);
+  if (image_chroma == 0)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  for (i = 0; i < surface_formats->len; i++) {
+    surface_format = g_array_index (surface_formats, GstVideoFormat, i);
+
+    if (surface_format == image_format)
+      return surface_format;
+
+    surface_chroma = gst_va_chroma_from_video_format (surface_format);
+
+    if (surface_chroma == image_chroma)
+      return surface_format;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}

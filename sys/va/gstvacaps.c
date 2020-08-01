@@ -140,25 +140,6 @@ _gst_caps_set_format_array (GstCaps * caps, GArray * formats)
   return TRUE;
 }
 
-/* extra formats to add to raw caps bacause *in theory* all drivers
- * could create images from surface's native format (NV12) to
- * these. */
-static const GstVideoFormat extra_formats[] = {
-  GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YV12
-};
-
-gboolean
-gst_va_video_format_is_extra (guint format)
-{
-  guint i;
-
-  for (i = 0; i < G_N_ELEMENTS (extra_formats); i++) {
-    if (extra_formats[i] == format)
-      return TRUE;
-  }
-  return FALSE;
-}
-
 GstCaps *
 gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 {

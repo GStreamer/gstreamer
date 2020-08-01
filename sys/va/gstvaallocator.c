@@ -558,6 +558,7 @@ struct _GstVaAllocator
 
   GstVaDisplay *display;
   gboolean use_derived;
+  GArray *surface_formats;
 };
 
 typedef struct _GstVaMemory GstVaMemory;
@@ -588,6 +589,7 @@ gst_va_allocator_dispose (GObject * object)
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
   gst_clear_object (&self->display);
+  g_clear_pointer (&self->surface_formats, g_array_unref);
 
   G_OBJECT_CLASS (gst_va_allocator_parent_class)->dispose (object);
 }
@@ -864,15 +866,20 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  format = GST_VIDEO_INFO_FORMAT (&params->info);
-  if (gst_va_video_format_is_extra (format))
-    format = GST_VIDEO_FORMAT_NV12;
+  format =
+      gst_va_video_surface_format_from_image_format (GST_VIDEO_INFO_FORMAT
+      (&params->info), self->surface_formats);
+  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (allocator, "Unsupported format: %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&params->info)));
+    return NULL;
+  }
 
   fourcc = gst_va_fourcc_from_video_format (format);
   rt_format = gst_va_chroma_from_video_format (format);
   if (fourcc == 0 || rt_format == 0) {
     GST_ERROR_OBJECT (allocator, "Unsupported format: %s",
-        gst_video_format_to_string (format));
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&params->info)));
     return NULL;
   }
 
@@ -902,7 +909,7 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 }
 
 GstAllocator *
-gst_va_allocator_new (GstVaDisplay * display)
+gst_va_allocator_new (GstVaDisplay * display, GArray * surface_formats)
 {
   GstVaAllocator *self;
 
@@ -910,6 +917,7 @@ gst_va_allocator_new (GstVaDisplay * display)
 
   self = g_object_new (GST_TYPE_VA_ALLOCATOR, NULL);
   self->display = gst_object_ref (display);
+  self->surface_formats = surface_formats;
   gst_object_ref_sink (self);
 
   return GST_ALLOCATOR (self);

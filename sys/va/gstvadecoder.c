@@ -26,6 +26,7 @@
 
 #include "gstvacaps.h"
 #include "gstvadisplay_wrapped.h"
+#include "gstvavideoformat.h"
 
 struct _GstVaDecoder
 {
@@ -445,6 +446,50 @@ gst_va_decoder_get_mem_types (GstVaDecoder * self)
   g_free (attribs);
 
   return ret;
+}
+
+GArray *
+gst_va_decoder_get_surface_formats (GstVaDecoder * self)
+{
+  GArray *formats;
+  GstVideoFormat format;
+  VASurfaceAttrib *attribs;
+  guint i, attrib_count;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), NULL);
+
+  if (!gst_va_decoder_is_open (self))
+    return NULL;
+
+  attribs = gst_va_get_surface_attribs (self->display, self->config,
+      &attrib_count);
+  if (!attribs)
+    return NULL;
+
+  formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+
+  for (i = 0; i < attrib_count; i++) {
+    if (attribs[i].value.type != VAGenericValueTypeInteger)
+      continue;
+    switch (attribs[i].type) {
+      case VASurfaceAttribPixelFormat:
+        format = gst_va_video_format_from_va_fourcc (attribs[i].value.value.i);
+        if (format != GST_VIDEO_FORMAT_UNKNOWN)
+          g_array_append_val (formats, format);
+        break;
+      default:
+        break;
+    }
+  }
+
+  g_free (attribs);
+
+  if (formats->len == 0) {
+    g_array_unref (formats);
+    return NULL;
+  }
+
+  return formats;
 }
 
 gboolean

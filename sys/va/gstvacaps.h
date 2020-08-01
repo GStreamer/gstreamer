@@ -37,7 +37,5 @@ VASurfaceAttrib *     gst_va_get_surface_attribs          (GstVaDisplay * displa
 GstCaps *             gst_va_create_raw_caps_from_config  (GstVaDisplay * display,
                                                            VAConfigID config);
 
-gboolean              gst_va_video_format_is_extra        (guint format);
-
 G_END_DECLS
 

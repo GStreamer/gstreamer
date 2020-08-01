@@ -1104,8 +1104,11 @@ _create_allocator (GstVaH264Dec * self, GstCaps * caps, guint * size)
 
   if (_caps_is_dmabuf (self, caps))
     allocator = gst_va_dmabuf_allocator_new (display);
-  else
-    allocator = gst_va_allocator_new (display);
+  else {
+    GArray *surface_formats =
+        gst_va_decoder_get_surface_formats (self->decoder);
+    allocator = gst_va_allocator_new (display, surface_formats);
+  }
 
   gst_object_unref (display);
 

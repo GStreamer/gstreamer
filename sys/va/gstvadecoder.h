@@ -51,6 +51,7 @@ GstCaps *             gst_va_decoder_get_sinkpad_caps     (GstVaDecoder * self);
 gboolean              gst_va_decoder_has_profile          (GstVaDecoder * self,
 							   VAProfile profile);
 gint                  gst_va_decoder_get_mem_types        (GstVaDecoder * self);
+GArray *              gst_va_decoder_get_surface_formats  (GstVaDecoder * self);
 
 gboolean              gst_va_decoder_add_param_buffer     (GstVaDecoder * self,
 							   GstVaDecodePicture * pic,
