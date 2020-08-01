@@ -186,6 +186,13 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
     }
   }
 
+  /* if driver doesn't report surface formats for current
+   * chroma. Gallium AMD bug for 4:2:2 */
+  if (formats->len == 0) {
+    caps = NULL;
+    goto bail;
+  }
+
   base_caps = gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
       min_width, max_width, "height", GST_TYPE_INT_RANGE, min_height,
       max_height, NULL);
@@ -256,6 +263,8 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   }
 
   gst_caps_unref (base_caps);
+
+bail:
   g_array_unref (formats);
   g_free (attribs);
 
