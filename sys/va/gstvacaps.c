@@ -94,20 +94,6 @@ bail:
 }
 
 static gboolean
-_array_has_format (GArray * formats, GstVideoFormat format)
-{
-  GstVideoFormat fmt;
-  guint i;
-
-  for (i = 0; i < formats->len; i++) {
-    fmt = g_array_index (formats, GstVideoFormat, i);
-    if (fmt == format)
-      return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean
 _gst_caps_set_format_array (GstCaps * caps, GArray * formats)
 {
   GstVideoFormat fmt;
@@ -241,21 +227,51 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
     caps = gst_caps_merge (caps, feature_caps);
   }
   /* raw caps */
+  /* XXX(victor): assumption -- drivers can only download to image
+   * formats with same chroma of surface's format
+   */
   {
-    feature_caps =
-        gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
-        min_width, max_width, "height", GST_TYPE_INT_RANGE, min_height,
-        max_height, NULL);
+    GstCaps *raw_caps;
+    GArray *image_formats = gst_va_display_get_image_formats (display);
 
-    if (_array_has_format (formats, GST_VIDEO_FORMAT_NV12)) {
-      for (i = 0; i < G_N_ELEMENTS (extra_formats); i++)
-        g_array_append_val (formats, extra_formats[i]);
+    if (!image_formats) {
+      raw_caps = gst_caps_copy (base_caps);
+    } else {
+      GArray *raw_formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+      guint j, surface_chroma, image_chroma;
+      GstVideoFormat image_format;
+
+      raw_caps =
+          gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
+          min_width, max_width, "height", GST_TYPE_INT_RANGE, min_height,
+          max_height, NULL);
+
+      for (i = 0; i < formats->len; i++) {
+        format = g_array_index (formats, GstVideoFormat, i);
+        surface_chroma = gst_va_chroma_from_video_format (format);
+        if (surface_chroma == 0)
+          continue;
+
+        g_array_append_val (raw_formats, format);
+
+        for (j = 0; j < image_formats->len; j++) {
+          image_format = g_array_index (image_formats, GstVideoFormat, j);
+          image_chroma = gst_va_chroma_from_video_format (image_format);
+          if (image_format != format && surface_chroma == image_chroma)
+            g_array_append_val (raw_formats, image_format);
+        }
+      }
+
+      if (!_gst_caps_set_format_array (raw_caps, raw_formats)) {
+        gst_caps_unref (raw_caps);
+        raw_caps = gst_caps_copy (base_caps);
+      }
+
+      g_array_unref (raw_formats);
+      g_array_unref (image_formats);
     }
 
-    if (_gst_caps_set_format_array (feature_caps, formats))
-      caps = gst_caps_merge (caps, feature_caps);
-    else
-      gst_clear_caps (&feature_caps);
+    caps = gst_caps_merge (caps, raw_caps);
   }
 
   gst_caps_unref (base_caps);
