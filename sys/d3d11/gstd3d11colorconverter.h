@@ -32,6 +32,11 @@ GstD3D11ColorConverter * gst_d3d11_color_converter_new  (GstD3D11Device * device
                                                          GstVideoInfo * in_info,
                                                          GstVideoInfo * out_info);
 
+GstD3D11ColorConverter * gst_d3d11_color_converter_new_with_alpha (GstD3D11Device * device,
+                                                                   GstVideoInfo * in_info,
+                                                                   GstVideoInfo * out_info,
+                                                                   gfloat alpha);
+
 void                     gst_d3d11_color_converter_free (GstD3D11ColorConverter * converter);
 
 gboolean                 gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,

@@ -95,7 +95,10 @@ static const PixelShaderTemplate templ_RGB_to_YUV =
     { COLOR_TRANSFORM_COEFF, HLSL_FUNC_RGB_TO_YUV };
 
 static const gchar templ_REORDER_BODY[] =
-    "  output.Plane_0 = shaderTexture[0].Sample(samplerState, input.Texture);\n";
+    "  float4 xyza;\n"
+    "  xyza.xyz = shaderTexture[0].Sample(samplerState, input.Texture).xyz;\n"
+    "  xyza.a = shaderTexture[0].Sample(samplerState, input.Texture).a * %f;\n"
+    "  output.Plane_0 = xyza;\n";
 
 static const gchar templ_VUYA_to_RGB_BODY[] =
     "  float4 sample, rgba;\n"
@@ -315,6 +318,7 @@ struct _GstD3D11ColorConverter
   GstD3D11Device *device;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+  gfloat alpha;
 
   const GstD3D11Format *in_d3d11_format;
   const GstD3D11Format *out_d3d11_format;
@@ -575,7 +579,7 @@ setup_convert_info_rgb_to_rgb (GstD3D11ColorConverter * self,
   ConvertInfo *convert_info = &self->convert_info;
 
   convert_info->templ = &templ_REORDER;
-  convert_info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY);
+  convert_info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY, self->alpha);
 
   return TRUE;
 }
@@ -801,7 +805,7 @@ setup_convert_info_vuya_to_vuya (GstD3D11ColorConverter * self,
 
   info->templ = &templ_REORDER;
 
-  info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY);
+  info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY, self->alpha);
 
   return TRUE;
 }
@@ -1267,9 +1271,9 @@ clear:
   return ret;
 }
 
-GstD3D11ColorConverter *
-gst_d3d11_color_converter_new (GstD3D11Device * device,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
+static GstD3D11ColorConverter *
+gst_d3d11_color_converter_new_internal (GstD3D11Device * device,
+    GstVideoInfo * in_info, GstVideoInfo * out_info, gfloat alpha)
 {
   const GstVideoInfo *unknown_info;
   const GstD3D11Format *in_d3d11_format;
@@ -1306,6 +1310,7 @@ gst_d3d11_color_converter_new (GstD3D11Device * device,
 
   converter = g_new0 (GstD3D11ColorConverter, 1);
   converter->device = gst_object_ref (device);
+  converter->alpha = alpha;
 
   if (GST_VIDEO_INFO_IS_RGB (in_info)) {
     if (GST_VIDEO_INFO_IS_RGB (out_info)) {
@@ -1385,6 +1390,25 @@ conversion_not_supported:
     gst_d3d11_color_converter_free (converter);
     return NULL;
   }
+}
+
+GstD3D11ColorConverter *
+gst_d3d11_color_converter_new (GstD3D11Device * device,
+    GstVideoInfo * in_info, GstVideoInfo * out_info)
+{
+  return gst_d3d11_color_converter_new_internal (device, in_info, out_info,
+      1.0f);
+}
+
+GstD3D11ColorConverter *
+gst_d3d11_color_converter_new_with_alpha (GstD3D11Device * device,
+    GstVideoInfo * in_info, GstVideoInfo * out_info, gfloat alpha)
+{
+  g_return_val_if_fail (alpha >= 0.0f, NULL);
+  g_return_val_if_fail (alpha <= 1.0f, NULL);
+
+  return gst_d3d11_color_converter_new_internal (device, in_info, out_info,
+      alpha);
 }
 
 void
