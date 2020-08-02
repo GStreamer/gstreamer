@@ -33,6 +33,7 @@
 #include "gstvadisplay_drm.h"
 #include "gstvapool.h"
 #include "gstvaprofile.h"
+#include "gstvautils.h"
 #include "gstvavideoformat.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264dec_debug);
@@ -56,6 +57,7 @@ struct _GstVaH264Dec
 {
   GstH264Decoder parent;
 
+  GstVaDisplay *display;
   GstVaDecoder *decoder;
 
   GstBufferPool *other_pool;
@@ -747,19 +749,15 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
 static gboolean
 gst_va_h264_dec_open (GstVideoDecoder * decoder)
 {
-  GstVaDisplay *display;
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
   GstVaH264DecClass *klass = GST_VA_H264_DEC_GET_CLASS (decoder);
 
-  /* @XXX(victor): query pipeline's context */
-  display = gst_va_display_drm_new_from_path (klass->render_device_path);
-  if (!display)
+  if (!gst_va_ensure_element_data (decoder, klass->render_device_path,
+          &self->display))
     return FALSE;
 
   if (!self->decoder)
-    self->decoder = gst_va_decoder_new (display, H264);
-
-  gst_object_unref (display);
+    self->decoder = gst_va_decoder_new (self->display, H264);
 
   return (self->decoder != NULL);
 }
@@ -770,6 +768,7 @@ gst_va_h264_dec_close (GstVideoDecoder * decoder)
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
 
   gst_clear_object (&self->decoder);
+  gst_clear_object (&self->display);
 
   return TRUE;
 }
@@ -837,6 +836,10 @@ gst_va_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:{
+      return gst_va_handle_context_query (GST_ELEMENT_CAST (self), query,
+          self->display);
+    }
     case GST_QUERY_CAPS:{
       GstCaps *caps = NULL, *tmp, *filter = NULL;
 
@@ -865,6 +868,19 @@ gst_va_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   return ret;
+}
+
+static gboolean
+gst_va_h264_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
+    return gst_va_handle_context_query (GST_ELEMENT_CAST (self), query,
+        self->display);
+  }
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
 }
 
 static gboolean
@@ -1277,6 +1293,29 @@ wrong_caps:
 }
 
 static void
+gst_va_h264_dec_set_context (GstElement * element, GstContext * context)
+{
+  GstVaDisplay *old_display, *new_display;
+  GstVaH264Dec *self = GST_VA_H264_DEC (element);
+  GstVaH264DecClass *klass = GST_VA_H264_DEC_GET_CLASS (self);
+
+  old_display = self->display ? gst_object_ref (self->display) : NULL;
+  gst_va_handle_set_context (element, context, klass->render_device_path,
+      &self->display);
+  new_display = self->display ? gst_object_ref (self->display) : NULL;
+
+  if (old_display && new_display && old_display != new_display && self->decoder) {
+    GST_ELEMENT_WARNING (element, RESOURCE, BUSY,
+        ("Can't replace VA display while operating"), (NULL));
+  }
+
+  gst_clear_object (&old_display);
+  gst_clear_object (&new_display);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+static void
 gst_va_h264_dec_dispose (GObject * object)
 {
   gst_va_h264_dec_close (GST_VIDEO_DECODER (object));
@@ -1328,11 +1367,14 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 
   gobject_class->dispose = gst_va_h264_dec_dispose;
 
+  element_class->set_context = gst_va_h264_dec_set_context;
+
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_va_h264_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_va_h264_dec_close);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_va_h264_dec_stop);
   decoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_va_h264_dec_sink_getcaps);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_va_h264_dec_src_query);
+  decoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_va_h264_dec_sink_query);
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_va_h264_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_va_h264_dec_decide_allocation);

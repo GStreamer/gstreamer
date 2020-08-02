@@ -10,6 +10,7 @@ va_sources = [
   'gstvah264dec.c',
   'gstvapool.c',
   'gstvaprofile.c',
+  'gstvautils.c',
   'gstvavideoformat.c',
 ]
 
