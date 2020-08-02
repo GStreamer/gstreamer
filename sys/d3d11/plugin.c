@@ -107,7 +107,11 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin,
       "d3d11download", GST_RANK_NONE, GST_TYPE_D3D11_DOWNLOAD);
   gst_element_register (plugin,
-      "d3d11convert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
+      "d3d11convert", GST_RANK_NONE, GST_TYPE_D3D11_CONVERT);
+  gst_element_register (plugin,
+      "d3d11colorconvert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
+  gst_element_register (plugin,
+      "d3d11scale", GST_RANK_NONE, GST_TYPE_D3D11_SCALE);
   gst_element_register (plugin,
       "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
 

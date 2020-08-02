@@ -54,8 +54,8 @@
 #include "gstd3d11device.h"
 #include "gstd3d11bufferpool.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_d3d11_color_convert_debug);
-#define GST_CAT_DEFAULT gst_d3d11_color_convert_debug
+GST_DEBUG_CATEGORY_STATIC (gst_d3d11_convert_debug);
+#define GST_CAT_DEFAULT gst_d3d11_convert_debug
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -79,7 +79,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             GST_D3D11_SRC_FORMATS))
     );
 
-struct _GstD3D11ColorConvert
+struct _GstD3D11Convert
 {
   GstD3D11BaseFilter parent;
 
@@ -101,34 +101,122 @@ struct _GstD3D11ColorConvert
   D3D11_BOX out_src_box;
 };
 
-#define gst_d3d11_color_convert_parent_class parent_class
-G_DEFINE_TYPE (GstD3D11ColorConvert,
-    gst_d3d11_color_convert, GST_TYPE_D3D11_BASE_FILTER);
+struct _GstD3D11ColorConvert
+{
+  GstD3D11Convert parent;
+};
 
-static void gst_d3d11_color_convert_dispose (GObject * object);
-static GstCaps *gst_d3d11_color_convert_transform_caps (GstBaseTransform *
+struct _GstD3D11Scale
+{
+  GstD3D11Convert parent;
+};
+
+#define gst_d3d11_convert_parent_class parent_class
+G_DEFINE_TYPE (GstD3D11Convert, gst_d3d11_convert, GST_TYPE_D3D11_BASE_FILTER);
+
+static void gst_d3d11_convert_dispose (GObject * object);
+static GstCaps *gst_d3d11_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static GstCaps *gst_d3d11_color_convert_fixate_caps (GstBaseTransform *
+static GstCaps *gst_d3d11_convert_fixate_caps (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_d3d11_color_convert_filter_meta (GstBaseTransform * trans,
+static gboolean gst_d3d11_convert_filter_meta (GstBaseTransform * trans,
     GstQuery * query, GType api, const GstStructure * params);
 static gboolean
-gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
+gst_d3d11_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query);
 static gboolean
-gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
+gst_d3d11_convert_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
 
-static GstFlowReturn gst_d3d11_color_convert_transform (GstBaseTransform *
+static GstFlowReturn gst_d3d11_convert_transform (GstBaseTransform *
     trans, GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
+static gboolean gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
 
 /* copies the given caps */
 static GstCaps *
-gst_d3d11_color_convert_caps_remove_format_and_rangify_size_info (GstCaps *
-    caps)
+gst_d3d11_convert_caps_remove_format_info (GstCaps * caps)
+{
+  GstStructure *st;
+  GstCapsFeatures *f;
+  gint i, n;
+  GstCaps *res;
+  GstCapsFeatures *feature =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
+      continue;
+
+    st = gst_structure_copy (st);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f, feature)) {
+      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
+          NULL);
+    }
+
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
+  }
+  gst_caps_features_free (feature);
+
+  return res;
+}
+
+static GstCaps *
+gst_d3d11_convert_caps_rangify_size_info (GstCaps * caps)
+{
+  GstStructure *st;
+  GstCapsFeatures *f;
+  gint i, n;
+  GstCaps *res;
+  GstCapsFeatures *feature =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
+      continue;
+
+    st = gst_structure_copy (st);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f, feature)) {
+      gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (st, "pixel-aspect-ratio")) {
+        gst_structure_set (st, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      }
+    }
+
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
+  }
+  gst_caps_features_free (feature);
+
+  return res;
+}
+
+static GstCaps *
+gst_d3d11_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
 {
   GstStructure *st;
   GstCapsFeatures *f;
@@ -172,14 +260,14 @@ gst_d3d11_color_convert_caps_remove_format_and_rangify_size_info (GstCaps *
 }
 
 static void
-gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
+gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstD3D11BaseFilterClass *bfilter_class = GST_D3D11_BASE_FILTER_CLASS (klass);
 
-  gobject_class->dispose = gst_d3d11_color_convert_dispose;
+  gobject_class->dispose = gst_d3d11_convert_dispose;
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -194,32 +282,28 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
   trans_class->passthrough_on_same_caps = TRUE;
 
   trans_class->transform_caps =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_transform_caps);
-  trans_class->fixate_caps =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_fixate_caps);
-  trans_class->filter_meta =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_filter_meta);
+      GST_DEBUG_FUNCPTR (gst_d3d11_convert_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d11_convert_fixate_caps);
+  trans_class->filter_meta = GST_DEBUG_FUNCPTR (gst_d3d11_convert_filter_meta);
   trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_propose_allocation);
+      GST_DEBUG_FUNCPTR (gst_d3d11_convert_propose_allocation);
   trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_decide_allocation);
-  trans_class->transform =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_transform);
+      GST_DEBUG_FUNCPTR (gst_d3d11_convert_decide_allocation);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_convert_transform);
 
-  bfilter_class->set_info =
-      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_set_info);
+  bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_convert_set_info);
 
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_color_convert_debug,
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_convert_debug,
       "d3d11convert", 0, "d3d11convert element");
 }
 
 static void
-gst_d3d11_color_convert_init (GstD3D11ColorConvert * self)
+gst_d3d11_convert_init (GstD3D11Convert * self)
 {
 }
 
 static void
-gst_d3d11_color_convert_clear_shader_resource (GstD3D11ColorConvert * self)
+gst_d3d11_convert_clear_shader_resource (GstD3D11Convert * self)
 {
   gint i;
 
@@ -256,24 +340,24 @@ gst_d3d11_color_convert_clear_shader_resource (GstD3D11ColorConvert * self)
 }
 
 static void
-gst_d3d11_color_convert_dispose (GObject * object)
+gst_d3d11_convert_dispose (GObject * object)
 {
-  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (object);
+  GstD3D11Convert *self = GST_D3D11_CONVERT (object);
 
-  gst_d3d11_color_convert_clear_shader_resource (self);
+  gst_d3d11_convert_clear_shader_resource (self);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstCaps *
-gst_d3d11_color_convert_transform_caps (GstBaseTransform *
+gst_d3d11_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *tmp, *tmp2;
   GstCaps *result;
 
   /* Get all possible caps that we can transform to */
-  tmp = gst_d3d11_color_convert_caps_remove_format_and_rangify_size_info (caps);
+  tmp = gst_d3d11_convert_caps_remove_format_and_rangify_size_info (caps);
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -414,7 +498,7 @@ score_value (GstBaseTransform * base, const GstVideoFormatInfo * in_info,
 }
 
 static void
-gst_d3d11_color_convert_fixate_format (GstBaseTransform * trans,
+gst_d3d11_convert_fixate_format (GstBaseTransform * trans,
     GstCaps * caps, GstCaps * result)
 {
   GstStructure *ins, *outs;
@@ -446,8 +530,7 @@ gst_d3d11_color_convert_fixate_format (GstBaseTransform * trans,
 
     tests = gst_caps_get_structure (result, i);
     format = gst_structure_get_value (tests, "format");
-    gst_structure_remove_fields (tests, "height", "width", "pixel-aspect-ratio",
-        "display-aspect-ratio", NULL);
+
     /* should not happen */
     if (format == NULL)
       continue;
@@ -477,7 +560,7 @@ gst_d3d11_color_convert_fixate_format (GstBaseTransform * trans,
 }
 
 static GstCaps *
-gst_d3d11_color_convert_get_fixed_format (GstBaseTransform * trans,
+gst_d3d11_convert_get_fixed_format (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstCaps *result;
@@ -488,7 +571,7 @@ gst_d3d11_color_convert_get_fixed_format (GstBaseTransform * trans,
     result = gst_caps_copy (othercaps);
   }
 
-  gst_d3d11_color_convert_fixate_format (trans, caps, result);
+  gst_d3d11_convert_fixate_format (trans, caps, result);
 
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
@@ -503,7 +586,7 @@ gst_d3d11_color_convert_get_fixed_format (GstBaseTransform * trans,
 }
 
 static GstCaps *
-gst_d3d11_color_convert_fixate_size (GstBaseTransform * base,
+gst_d3d11_convert_fixate_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *ins, *outs;
@@ -939,16 +1022,16 @@ done:
 }
 
 static GstCaps *
-gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
+gst_d3d11_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  GstCaps *format;
+  GstCaps *format = NULL;
 
   GST_DEBUG_OBJECT (base,
       "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
       GST_PTR_FORMAT, othercaps, caps);
 
-  format = gst_d3d11_color_convert_get_fixed_format (base, direction, caps,
+  format = gst_d3d11_convert_get_fixed_format (base, direction, caps,
       othercaps);
 
   if (gst_caps_is_empty (format)) {
@@ -956,8 +1039,9 @@ gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
     return format;
   }
 
-  othercaps =
-      gst_d3d11_color_convert_fixate_size (base, direction, caps, othercaps);
+  /* convert mode is "all" or "size" here */
+  othercaps = gst_d3d11_convert_fixate_size (base, direction, caps, othercaps);
+
   if (gst_caps_get_size (othercaps) == 1) {
     gint i;
     const gchar *format_fields[] = { "format", "colorimetry", "chroma-site" };
@@ -984,7 +1068,7 @@ gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
 }
 
 static gboolean
-gst_d3d11_color_convert_filter_meta (GstBaseTransform * trans,
+gst_d3d11_convert_filter_meta (GstBaseTransform * trans,
     GstQuery * query, GType api, const GstStructure * params)
 {
   /* This element cannot passthrough the crop meta, because it would convert the
@@ -998,7 +1082,7 @@ gst_d3d11_color_convert_filter_meta (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
+gst_d3d11_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
@@ -1082,8 +1166,7 @@ config_failed:
 }
 
 static gboolean
-gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query)
+gst_d3d11_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstCaps *outcaps = NULL;
@@ -1153,7 +1236,7 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
 }
 
 static gboolean
-create_shader_input_resource (GstD3D11ColorConvert * self,
+create_shader_input_resource (GstD3D11Convert * self,
     GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
 {
   D3D11_TEXTURE2D_DESC texture_desc = { 0, };
@@ -1268,7 +1351,7 @@ error:
 }
 
 static gboolean
-create_shader_output_resource (GstD3D11ColorConvert * self,
+create_shader_output_resource (GstD3D11Convert * self,
     GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
 {
   D3D11_TEXTURE2D_DESC texture_desc = { 0, };
@@ -1381,17 +1464,17 @@ error:
 }
 
 static gboolean
-gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
+gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
 {
-  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (filter);
+  GstD3D11Convert *self = GST_D3D11_CONVERT (filter);
   const GstVideoInfo *unknown_info;
 
   if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (filter)))
     return TRUE;
 
-  gst_d3d11_color_convert_clear_shader_resource (self);
+  gst_d3d11_convert_clear_shader_resource (self);
 
   GST_DEBUG_OBJECT (self, "Setup convert with format %s -> %s",
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
@@ -1465,11 +1548,11 @@ format_unknown:
 }
 
 static GstFlowReturn
-gst_d3d11_color_convert_transform (GstBaseTransform * trans,
+gst_d3d11_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (trans);
+  GstD3D11Convert *self = GST_D3D11_CONVERT (trans);
   ID3D11DeviceContext *context_handle;
   ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
@@ -1596,4 +1679,151 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
   }
 
   return GST_FLOW_OK;
+}
+
+static GstCaps *gst_d3d11_color_convert_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+
+G_DEFINE_TYPE (GstD3D11ColorConvert, gst_d3d11_color_convert,
+    GST_TYPE_D3D11_CONVERT);
+
+static void
+gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class,
+      "Direct3D11 colorspace converter",
+      "Filter/Converter/Video/Hardware",
+      "Color conversion using D3D11",
+      "Seungha Yang <seungha.yang@navercorp.com>, "
+      "Jeongki Kim <jeongki.kim@jeongki.kim>");
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_transform_caps);
+  trans_class->fixate_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_fixate_caps);
+}
+
+static void
+gst_d3d11_color_convert_init (GstD3D11ColorConvert * self)
+{
+}
+
+static GstCaps *
+gst_d3d11_color_convert_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *tmp, *tmp2;
+  GstCaps *result;
+
+  /* Get all possible caps that we can transform to */
+  tmp = gst_d3d11_convert_caps_remove_format_info (caps);
+
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
+  }
+
+  result = tmp;
+
+  GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, result);
+
+  return result;
+}
+
+static GstCaps *
+gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstCaps *format = NULL;
+
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  format = gst_d3d11_convert_get_fixed_format (base, direction, caps,
+      othercaps);
+
+  if (gst_caps_is_empty (format)) {
+    GST_ERROR_OBJECT (base, "Could not convert formats");
+  } else {
+    GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, format);
+  }
+
+  return format;
+}
+
+static GstCaps *gst_d3d11_scale_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_d3d11_scale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+
+G_DEFINE_TYPE (GstD3D11Scale, gst_d3d11_scale, GST_TYPE_D3D11_CONVERT);
+
+static void
+gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class,
+      "Direct3D11 scaler",
+      "Filter/Converter/Video/Scaler/Hardware",
+      "Resizes video using D3D11",
+      "Seungha Yang <seungha.yang@navercorp.com>, "
+      "Jeongki Kim <jeongki.kim@jeongki.kim>");
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d11_scale_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d11_scale_fixate_caps);
+}
+
+static void
+gst_d3d11_scale_init (GstD3D11Scale * self)
+{
+}
+
+static GstCaps *
+gst_d3d11_scale_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *tmp, *tmp2;
+  GstCaps *result;
+
+  /* Get all possible caps that we can transform to */
+  tmp = gst_d3d11_convert_caps_rangify_size_info (caps);
+
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
+  }
+
+  result = tmp;
+
+  GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, result);
+
+  return result;
+}
+
+static GstCaps *
+gst_d3d11_scale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  othercaps = gst_d3d11_convert_fixate_size (base, direction, caps, othercaps);
+
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
 }
