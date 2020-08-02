@@ -538,7 +538,7 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
 
   surface = gst_va_buffer_get_surface (frame->output_buffer, NULL);
 
-  pic = gst_va_decoder_new_decode_picture (self->decoder, surface);
+  pic = gst_va_decode_picture_new (surface);
   gst_h264_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
 

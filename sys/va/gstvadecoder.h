@@ -69,8 +69,7 @@ gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
 gboolean              gst_va_decoder_destroy_buffers      (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
 
-GstVaDecodePicture *  gst_va_decoder_new_decode_picture   (GstVaDecoder * self,
-                                                           VASurfaceID surface);
+GstVaDecodePicture *  gst_va_decode_picture_new           (VASurfaceID surface);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
 
 G_END_DECLS

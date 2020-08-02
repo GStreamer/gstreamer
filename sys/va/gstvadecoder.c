@@ -671,11 +671,10 @@ gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
 
 
 GstVaDecodePicture *
-gst_va_decoder_new_decode_picture (GstVaDecoder * self, VASurfaceID surface)
+gst_va_decode_picture_new (VASurfaceID surface)
 {
   GstVaDecodePicture *pic;
 
-  g_return_val_if_fail (GST_IS_VA_DECODER (self), NULL);
   g_return_val_if_fail (surface != VA_INVALID_ID, NULL);
 
   pic = g_slice_new (GstVaDecodePicture);
