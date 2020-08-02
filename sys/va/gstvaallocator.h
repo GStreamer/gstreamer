@@ -50,6 +50,8 @@ G_DECLARE_FINAL_TYPE (GstVaAllocator, gst_va_allocator, GST, VA_ALLOCATOR, GstAl
 
 #define GST_ALLOCATOR_VASURFACE   "VAMemory"
 
+#define GST_MAP_VA (GST_MAP_FLAG_LAST << 1)
+
 GstAllocator *        gst_va_allocator_new                (GstVaDisplay * display,
                                                            GArray * surface_formats);
 GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator,

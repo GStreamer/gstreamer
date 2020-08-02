@@ -706,6 +706,11 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
         (GST_VIDEO_INFO_FORMAT (&mem->info) == mem->surface_format);
   }
 
+  if (flags & GST_MAP_VA) {
+    mem->mapped_data = &mem->surface;
+    goto success;
+  }
+
   if (!_ensure_image (display, mem->surface, &mem->info, &mem->image,
           &mem->is_derived))
     return NULL;
@@ -757,6 +762,9 @@ _va_unmap_unlocked (GstVaMemory * mem)
   if (!g_atomic_int_dec_and_test (&mem->map_count))
     return TRUE;
 
+  if (mem->prev_mapflags & GST_MAP_VA)
+    goto bail;
+
   display = GST_VA_ALLOCATOR (allocator)->display;
 
   if (mem->image.image_id != VA_INVALID_ID) {
@@ -771,6 +779,7 @@ _va_unmap_unlocked (GstVaMemory * mem)
   ret &= _unmap_buffer (display, mem->image.buf);
   ret &= _destroy_image (display, mem->image.image_id);
 
+bail:
   _clean_mem (mem);
 
   return ret;
