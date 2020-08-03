@@ -1288,7 +1288,7 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
-  klass->render_device_path = cdata->render_device_path;
+  klass->render_device_path = g_strdup (cdata->render_device_path);
 
   if (cdata->description) {
     long_name = g_strdup_printf ("VA-API H.264 Decoder in %s",
@@ -1343,6 +1343,7 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 
   g_free (long_name);
   g_free (cdata->description);
+  g_free (cdata->render_device_path);
   gst_caps_unref (cdata->src_caps);
   gst_caps_unref (cdata->sink_caps);
   g_free (cdata);
