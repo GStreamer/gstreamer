@@ -248,7 +248,7 @@ gst_auto_convert_set_property (GObject * object,
         GList *factories = g_value_get_pointer (value);
         factories = g_list_copy (factories);
         if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
-                NULL, factories))
+                (GList *) NULL, factories))
           g_list_foreach (factories, (GFunc) g_object_ref, NULL);
         else
           g_list_free (factories);
@@ -895,8 +895,8 @@ gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
 
   g_assert (all_factories);
 
-  if (!g_atomic_pointer_compare_and_exchange (&autoconvert->factories, NULL,
-          all_factories)) {
+  if (!g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
+          (GList *) NULL, all_factories)) {
     gst_plugin_feature_list_free (all_factories);
   }
 
