@@ -11,6 +11,7 @@ subdir('mxf')
 subdir('nvcodec')
 subdir('opencv', if_found: opencv_dep)
 subdir('uvch264')
+subdir('va')
 subdir('waylandsink')
 subdir('webrtc')
 
