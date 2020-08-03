@@ -381,8 +381,8 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
    * an element at the same moment
    */
   oclass = GST_ELEMENT_GET_CLASS (element);
-  if (!g_atomic_pointer_compare_and_exchange (&oclass->elementfactory, NULL,
-          factory))
+  if (!g_atomic_pointer_compare_and_exchange (&oclass->elementfactory,
+          (GstElementFactory *) NULL, factory))
     gst_object_unref (factory);
   else
     /* This ref will never be dropped as the class is never destroyed */

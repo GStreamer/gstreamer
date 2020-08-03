@@ -292,7 +292,8 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
    * an device provider at the same moment
    */
   oclass = GST_DEVICE_PROVIDER_GET_CLASS (device_provider);
-  if (!g_atomic_pointer_compare_and_exchange (&oclass->factory, NULL, factory)) {
+  if (!g_atomic_pointer_compare_and_exchange (&oclass->factory,
+          (GstDeviceProviderFactory *) NULL, factory)) {
     gst_object_unref (factory);
   } else {
     /* This ref will never be dropped as the class is never destroyed */
@@ -302,8 +303,8 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
   gst_object_ref_sink (device_provider);
 
   /* We use an atomic to make sure we don't create two in parallel */
-  if (!g_atomic_pointer_compare_and_exchange (&newfactory->provider, NULL,
-          device_provider)) {
+  if (!g_atomic_pointer_compare_and_exchange (&newfactory->provider,
+          (GstDeviceProvider *) NULL, device_provider)) {
     gst_object_unref (device_provider);
 
     device_provider = g_atomic_pointer_get (&newfactory->provider);

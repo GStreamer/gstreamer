@@ -603,7 +603,7 @@ gst_structure_take (GstStructure ** oldstr_ptr, GstStructure * newstr)
       return FALSE;
     }
   } while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
-              oldstr_ptr, oldstr, newstr)));
+              oldstr_ptr, (gpointer) oldstr, newstr)));
 
   if (oldstr)
     gst_structure_free (oldstr);

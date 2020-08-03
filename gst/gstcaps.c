@@ -929,7 +929,8 @@ gst_caps_get_features (const GstCaps * caps, guint index)
     gst_caps_features_set_parent_refcount (features, &GST_CAPS_REFCOUNT (caps));
 
     storage = gst_caps_get_features_storage_unchecked (caps, index);
-    if (!g_atomic_pointer_compare_and_exchange (storage, NULL, features)) {
+    if (!g_atomic_pointer_compare_and_exchange (storage,
+            (GstCapsFeatures *) NULL, features)) {
       /* Someone did the same we just tried in the meantime */
       gst_caps_features_set_parent_refcount (features, NULL);
       gst_caps_features_free (features);

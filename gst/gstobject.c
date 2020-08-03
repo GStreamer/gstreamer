@@ -349,7 +349,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
       newobj ? G_OBJECT (newobj)->ref_count : 0);
 #endif
 
-  oldptr = g_atomic_pointer_get ((gpointer *) oldobj);
+  oldptr = (GstObject *) g_atomic_pointer_get ((gpointer *) oldobj);
 
   if (G_UNLIKELY (oldptr == newobj))
     return FALSE;
@@ -358,7 +358,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
     gst_object_ref (newobj);
 
   while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
-              oldobj, oldptr, newobj))) {
+              oldobj, (gpointer) oldptr, newobj))) {
     oldptr = g_atomic_pointer_get ((gpointer *) oldobj);
     if (G_UNLIKELY (oldptr == newobj))
       break;
