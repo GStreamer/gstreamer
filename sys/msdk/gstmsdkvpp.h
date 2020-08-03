@@ -144,7 +144,8 @@ struct _GstMsdkVPP
   guint num_extra_params;
 
   mfxFrameAllocRequest request[2];
-  GList* locked_msdk_surfaces;
+  GList* locked_in_surfaces;
+  GList* locked_out_surfaces;
 };
 
 struct _GstMsdkVPPClass

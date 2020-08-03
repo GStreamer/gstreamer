@@ -188,12 +188,11 @@ free_msdk_surface (gpointer p)
 }
 
 static void
-release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface, GList ** list)
 {
   if (surface->surface) {
     if (surface->surface->Data.Locked) {
-      thiz->locked_msdk_surfaces =
-          g_list_append (thiz->locked_msdk_surfaces, surface);
+      *list = g_list_append (*list, surface);
     } else {
       free_msdk_surface (surface);
     }
@@ -201,28 +200,48 @@ release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
 }
 
 static void
-free_unlocked_msdk_surfaces (GstMsdkVPP * thiz)
+release_in_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+{
+  release_msdk_surface (thiz, surface, &thiz->locked_in_surfaces);
+}
+
+static void
+release_out_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+{
+  release_msdk_surface (thiz, surface, &thiz->locked_out_surfaces);
+}
+
+static void
+free_unlocked_msdk_surfaces_from_list (GstMsdkVPP * thiz, GList ** list)
 {
   GList *l;
   MsdkSurface *surface;
 
-  for (l = thiz->locked_msdk_surfaces; l;) {
+  for (l = *list; l;) {
     GList *next = l->next;
     surface = l->data;
     if (surface->surface->Data.Locked == 0) {
       free_msdk_surface (surface);
-      thiz->locked_msdk_surfaces =
-          g_list_delete_link (thiz->locked_msdk_surfaces, l);
+      *list = g_list_delete_link (*list, l);
     }
     l = next;
   }
 }
 
 static void
+free_unlocked_msdk_surfaces (GstMsdkVPP * thiz)
+{
+  free_unlocked_msdk_surfaces_from_list (thiz, &thiz->locked_in_surfaces);
+  free_unlocked_msdk_surfaces_from_list (thiz, &thiz->locked_out_surfaces);
+}
+
+static void
 free_all_msdk_surfaces (GstMsdkVPP * thiz)
 {
-  g_list_free_full (thiz->locked_msdk_surfaces, free_msdk_surface);
-  thiz->locked_msdk_surfaces = NULL;
+  g_list_free_full (thiz->locked_in_surfaces, free_msdk_surface);
+  thiz->locked_in_surfaces = NULL;
+  g_list_free_full (thiz->locked_out_surfaces, free_msdk_surface);
+  thiz->locked_out_surfaces = NULL;
 }
 
 static void
@@ -925,8 +944,8 @@ error_push_buffer:
       gst_flow_get_name (ret));
 
 transform_end:
-  release_msdk_surface (thiz, in_surface);
-  release_msdk_surface (thiz, out_surface);
+  release_in_surface (thiz, in_surface);
+  release_out_surface (thiz, out_surface);
 
   return ret;
 }
