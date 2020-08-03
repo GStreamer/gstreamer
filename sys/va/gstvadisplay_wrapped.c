@@ -59,7 +59,7 @@ gst_va_display_wrapped_new (guintptr handle)
 
   g_return_val_if_fail (handle, NULL);
 
-  dpy = g_object_new (GST_TYPE_VA_DISPLAY_WRAPPED, "display", handle, NULL);
+  dpy = g_object_new (GST_TYPE_VA_DISPLAY_WRAPPED, "va-display", handle, NULL);
   if (!gst_va_display_initialize (dpy)) {
     gst_object_unref (dpy);
     return NULL;
