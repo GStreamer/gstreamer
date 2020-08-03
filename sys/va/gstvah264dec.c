@@ -1037,6 +1037,15 @@ _caps_is_dmabuf (GstVaH264Dec * self, GstCaps * caps)
       & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME);
 }
 
+static inline gboolean
+_caps_is_va_memory (GstCaps * caps)
+{
+  GstCapsFeatures *features;
+
+  features = gst_caps_get_features (caps, 0);
+  return gst_caps_features_contains (features, "memory:VAMemory");
+}
+
 static inline void
 _shall_copy_frames (GstVaH264Dec * self, GstVideoInfo * info)
 {
@@ -1083,7 +1092,8 @@ _try_allocator (GstVaH264Dec * self, GstAllocator * allocator, GstCaps * caps,
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     if (!gst_va_allocator_try (allocator, &params))
       return FALSE;
-    _shall_copy_frames (self, &params.info);
+    if (!_caps_is_va_memory (caps))
+      _shall_copy_frames (self, &params.info);
   } else {
     return FALSE;
   }
@@ -1191,7 +1201,7 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   } else {
     size = GST_VIDEO_INFO_SIZE (&info);
 
-    if (!self->has_videometa) {
+    if (!self->has_videometa && !_caps_is_va_memory (caps)) {
       GST_DEBUG_OBJECT (self, "making new other pool for copy");
       self->other_pool = gst_video_buffer_pool_new ();
       config = gst_buffer_pool_get_config (self->other_pool);
