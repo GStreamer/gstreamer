@@ -1172,8 +1172,8 @@ FILL_BUFFER (double, sine, sin (i * 0.01));
 FILL_BUFFER (double, sine2, sin (i * 1.8));
 FILL_BUFFER (gint16, sine, (gint16) (32767 * sinf (i * 0.01f)));
 FILL_BUFFER (gint16, sine2, (gint16) (32767 * sinf (i * 1.8f)));
-FILL_BUFFER (gint32, sine, (gint32) (2147483647 * sinf (i * 0.01f)));
-FILL_BUFFER (gint32, sine2, (gint32) (2147483647 * sinf (i * 1.8f)));
+FILL_BUFFER (gint32, sine, (gint32) (2147483647.0 * sin (i * 0.01)));
+FILL_BUFFER (gint32, sine2, (gint32) (2147483647.0 * sin (i * 1.8)));
 
 static void
 run_fft_pipeline (int inrate, int outrate, int quality, int width,
