@@ -6,13 +6,13 @@ subdir('d3d11videosink')
 subdir('directfb')
 subdir('ipcpipeline')
 subdir('mpegts')
+subdir('msdk')
 subdir('mxf')
 subdir('nvcodec')
 subdir('opencv', if_found: opencv_dep)
 subdir('uvch264')
 subdir('waylandsink')
 subdir('webrtc')
-subdir('msdk')
 
 executable('playout',
   'playout.c',
