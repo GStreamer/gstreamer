@@ -531,7 +531,7 @@ gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,
   if (G_UNLIKELY (!g_atomic_pointer_get (&klass->pool))) {
     GThreadPool *t_pool;
     t_pool = g_thread_pool_new ((GFunc) do_loop, klass, -1, FALSE, NULL);
-    if (!g_atomic_pointer_compare_and_exchange (&klass->pool, NULL, t_pool))
+    if (!g_atomic_pointer_compare_and_exchange (&klass->pool, (GThreadPool *) NULL, t_pool))
       g_thread_pool_free (t_pool, FALSE, TRUE);
   }
 
