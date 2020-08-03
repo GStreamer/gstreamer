@@ -543,9 +543,11 @@ gst_lv2_object_get_property (GstLV2 * lv2, GObject * object,
     case G_TYPE_BOOLEAN:
       g_value_set_boolean (value, controls[prop_id] > 0.0f);
       break;
-    case G_TYPE_INT:
-      g_value_set_int (value, CLAMP (controls[prop_id], G_MININT, G_MAXINT));
+    case G_TYPE_INT:{
+      gint64 ival = CLAMP ((gint64) controls[prop_id], G_MININT, G_MAXINT);
+      g_value_set_int (value, ival);
       break;
+    }
     case G_TYPE_FLOAT:
       g_value_set_float (value, controls[prop_id]);
       break;
