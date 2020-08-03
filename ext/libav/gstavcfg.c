@@ -339,8 +339,13 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
       case AV_OPT_TYPE_UINT64:
         /* ffmpeg expresses all ranges with doubles, this is appalling */
         pspec = g_param_spec_uint64 (name, name, help,
-            (gint64) (min == (gdouble) 0 ? 0 : min),
-            (gint64) (max == (gdouble) UINT64_MAX ? UINT64_MAX : min),
+            (guint64) (min <= (gdouble) 0 ? 0 : (guint64) min),
+            (guint64) (max >=
+                /* Biggest value before UINT64_MAX that can be represented as double */
+                (gdouble) 18446744073709550000.0 ?
+                /* The Double conversion rounds UINT64_MAX to a bigger */
+                /* value, so the following smaller limit must be used. */
+                G_GUINT64_CONSTANT (18446744073709550000) : (guint64) max),
             opt->default_val.i64, G_PARAM_READWRITE);
         g_object_class_install_property (gobject_class, prop_id++, pspec);
         break;
