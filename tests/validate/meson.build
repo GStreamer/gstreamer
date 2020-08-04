@@ -6,6 +6,8 @@ gst_tester = executable('gst-tester-' + apiversion,
     dependencies : [gio_dep],
 )
 
+meson.override_find_program('gst-tester-' + apiversion, gst_tester)
+
 tests = [
     'simplest',
 ]
