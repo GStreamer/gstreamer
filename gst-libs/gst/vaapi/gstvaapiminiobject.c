@@ -193,7 +193,7 @@ gst_vaapi_mini_object_replace (GstVaapiMiniObject ** old_object_ptr,
     gst_vaapi_mini_object_ref_internal (new_object);
 
   while (!g_atomic_pointer_compare_and_exchange ((gpointer *) old_object_ptr,
-          old_object, new_object))
+          (gpointer) old_object, new_object))
     old_object = g_atomic_pointer_get ((gpointer *) old_object_ptr);
 
   if (old_object)
