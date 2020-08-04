@@ -1202,6 +1202,8 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
         if (!self->has_videometa || (!has_videoalignment
                 && self->need_cropping)) {
+          GST_DEBUG_OBJECT (self,
+              "keeping other pool for copy %" GST_PTR_FORMAT, pool);
           gst_object_replace ((GstObject **) & self->other_pool,
               (GstObject *) pool);
           gst_object_unref (pool);      /* decrease previous increase */
