@@ -38,9 +38,10 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
   const gchar *context_type;
 
   if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_NEED_CONTEXT)
-    return GST_BUS_DROP;
+    return GST_BUS_PASS;
 
   gst_message_parse_context_type (msg, &context_type);
+
   gst_println ("got need context %s", context_type);
 
   if (g_strcmp0 (context_type, "gst.va.display.handle") == 0) {
@@ -51,7 +52,10 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
     s = gst_context_writable_structure (context);
     gst_structure_set (s, "va-display", G_TYPE_POINTER, app->va_dpy, NULL);
     gst_element_set_context (GST_ELEMENT (msg->src), context);
+    gst_context_unref (context);
   }
+
+  gst_message_unref (msg);
 
   return GST_BUS_DROP;
 }
@@ -59,10 +63,6 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
 static void
 delete_event_cb (GtkWidget * widget, GdkEvent * event, gpointer data)
 {
-  struct _app *app = data;
-
-  gst_element_set_state (app->pipeline, GST_STATE_NULL);
-
   gtk_main_quit ();
 }
 
@@ -175,10 +175,13 @@ new_sample_cb (GstAppSink * sink, gpointer data)
   return GST_FLOW_OK;
 }
 
-static void
-end_stream_cb (GstBus * bus, GstMessage * msg, gpointer data)
+static gboolean
+message_handler (GstBus * bus, GstMessage * msg, gpointer data)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_EOS:
+      gtk_main_quit ();
+      break;
     case GST_MESSAGE_ERROR:{
       gchar *debug = NULL;
       GError *err = NULL;
@@ -190,13 +193,15 @@ end_stream_cb (GstBus * bus, GstMessage * msg, gpointer data)
         g_free (debug);
       if (err)
         g_error_free (err);
+
+      gtk_main_quit ();
       break;
     }
     default:
       break;
   }
 
-  gtk_main_quit ();
+  return TRUE;
 }
 
 static gboolean
@@ -223,16 +228,15 @@ build_pipeline (struct _app *app)
   gst_object_unref (src);
 
   sink = gst_bin_get_by_name (GST_BIN (app->pipeline), "sink");
-  caps = gst_caps_from_string ("video/x-raw (memory:VAMemory)");
+  caps = gst_caps_from_string ("video/x-raw(memory:VAMemory)");
   g_object_set (sink, "caps", caps, NULL);
   gst_caps_unref (caps);
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks, app, NULL);
-  gst_object_unref (src);
+  gst_object_unref (sink);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
-  gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), app);
   gst_bus_set_sync_handler (bus, context_handler, app, NULL);
+  gst_bus_add_watch (bus, message_handler, app);
   gst_object_unref (bus);
 
   return TRUE;
@@ -268,6 +272,7 @@ int
 main (int argc, char **argv)
 {
   GdkDisplay *gdk_dpy;
+  GstBus *bus;
   VAStatus va_status;
   struct _app app = { NULL, };
   int maj, min, ret = EXIT_FAILURE;
@@ -306,11 +311,20 @@ main (int argc, char **argv)
 
   gtk_main ();
 
+  if (app.sample)
+    gst_sample_unref (app.sample);
+
+  gst_element_set_state (app.pipeline, GST_STATE_NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (app.pipeline));
+  gst_bus_remove_watch (bus);
+  gst_object_unref (bus);
+
   ret = EXIT_SUCCESS;
 
 va_failed:
-  vaTerminate (app.va_dpy);
   gst_object_unref (app.pipeline);
+  vaTerminate (app.va_dpy);
 gst_failed:
   g_mutex_clear (&app.mutex);
 gtk_failed:
