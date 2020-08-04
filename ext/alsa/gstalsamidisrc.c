@@ -198,8 +198,7 @@ schedule_next_tick (GstAlsaMidiSrc * alsamidisrc)
   GST_TIME_TO_TIMESPEC (alsamidisrc->tick * MIDI_TICK_PERIOD_MS * GST_MSECOND,
       time);
 
-  snd_seq_ev_schedule_real (&ev, alsamidisrc->queue, SND_SEQ_TIME_MODE_ABS,
-      &time);
+  snd_seq_ev_schedule_real (&ev, alsamidisrc->queue, 0, &time);
 
   ret = snd_seq_event_output (alsamidisrc->seq, &ev);
   if (ret < 0)
