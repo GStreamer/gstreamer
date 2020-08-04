@@ -110,15 +110,14 @@ bool
   guint8 *frame;
   GstMpeg2enc *enc;
   GstVideoFrame vframe;
-  GstVideoCodecFrame *inframe;
+  GstVideoCodecFrame *inframe = NULL;
 
   enc = GST_MPEG2ENC (element);
 
   GST_MPEG2ENC_MUTEX_LOCK (enc);
 
-  inframe =  (GstVideoCodecFrame *)g_queue_pop_head (enc->frames);
   /* hang around until the element provides us with a buffer */
-  while (!inframe) {
+  while (!(inframe = (GstVideoCodecFrame *)g_queue_pop_head (enc->frames))) {
     if (enc->eos) {
       GST_MPEG2ENC_MUTEX_UNLOCK (enc);
       /* inform the mpeg encoding loop that it can give up */
@@ -129,7 +128,6 @@ bool
 
   gst_video_frame_map (&vframe, &enc->input_state->info, inframe->input_buffer, GST_MAP_READ);
 
-//  frame = GST_BUFFER_DATA (enc->buffer);
   frame = GST_VIDEO_FRAME_COMP_DATA (&vframe, 0);
   s = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);
   x = encparams.horizontal_size;
@@ -154,8 +152,6 @@ bool
     frame += s;
   }
   gst_video_frame_unmap (&vframe);
-
-  gst_video_codec_frame_unref (inframe);
 
   /* inform the element the buffer has been processed */
   GST_MPEG2ENC_SIGNAL (enc);

@@ -50,6 +50,7 @@ GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
   GstVideoCodecFrame *frame;
   GstBuffer *buf;
   GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
+  GstFlowReturn ret;
 
   frame = gst_video_encoder_get_oldest_frame (video_encoder);
   g_assert (frame != NULL);
@@ -59,12 +60,12 @@ GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
   flushed += flush_upto;
   frame->output_buffer = buf;
 
-
   /* this should not block anything else (e.g. handle_frame), but if it does,
    * it's ok as mpeg2enc is not really a loop-based element, but push-based */
+  ret = gst_video_encoder_finish_frame (video_encoder, frame);
+  gst_video_codec_frame_unref (frame);
   GST_MPEG2ENC_MUTEX_LOCK (enc);
-  enc->srcresult = gst_video_encoder_finish_frame (video_encoder, frame);
-  gst_buffer_unref (buf);
+  enc->srcresult = ret;
   GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 }
 

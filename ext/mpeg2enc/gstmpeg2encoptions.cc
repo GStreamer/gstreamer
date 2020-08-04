@@ -500,7 +500,6 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
           "Dual Prime Motion Estimation Mode for MPEG-2 I/P-frame only "
           "streams.  Quite some players do not support this.",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-#endif
 
   gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_ASPECT, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FORMAT, (GstPluginAPIFlags) 0);

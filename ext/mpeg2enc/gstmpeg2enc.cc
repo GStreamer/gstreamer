@@ -104,6 +104,8 @@ static void gst_mpeg2enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_mpeg2enc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
+static gboolean gst_mpeg2enc_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
 
 #define gst_mpeg2enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstMpeg2enc, gst_mpeg2enc, GST_TYPE_VIDEO_ENCODER,
@@ -177,7 +179,36 @@ gst_mpeg2enc_init (GstMpeg2enc * enc)
   enc->frames = g_queue_new ();
   enc->started = FALSE;
 
+  gst_pad_set_activatemode_function (GST_VIDEO_ENCODER_SRC_PAD (enc),
+      GST_DEBUG_FUNCPTR (gst_mpeg2enc_src_activate_mode));
+
   gst_mpeg2enc_reset (enc);
+}
+
+static gboolean
+gst_mpeg2enc_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean result = TRUE;
+  GstMpeg2enc *enc;
+
+  enc = GST_MPEG2ENC (parent);
+
+  if (mode != GST_PAD_MODE_PUSH)
+    return FALSE;
+
+  if (active) {
+    /* setcaps will start task once encoder is setup */
+  } else {
+    /* can only end the encoding loop by forcing eos */
+    GST_MPEG2ENC_MUTEX_LOCK (enc);
+    enc->eos = TRUE;
+    enc->srcresult = GST_FLOW_FLUSHING;
+    GST_MPEG2ENC_SIGNAL (enc);
+    GST_MPEG2ENC_MUTEX_UNLOCK (enc);
+  }
+
+  return result;
 }
 
 static void
@@ -189,8 +220,7 @@ gst_mpeg2enc_reset (GstMpeg2enc * enc)
   enc->srcresult = GST_FLOW_OK;
 
   /* in case of error'ed ending */
-  while ((frame = (GstVideoCodecFrame *) g_queue_pop_head (enc->frames)))
-    gst_video_codec_frame_unref (frame);
+  while ((frame = (GstVideoCodecFrame *) g_queue_pop_head (enc->frames)));
 
   if (enc->encoder) {
     delete enc->encoder;
@@ -307,8 +337,8 @@ gst_mpeg2enc_set_format (GstVideoEncoder * video_encoder, GstVideoCodecState * s
   enc->input_state = gst_video_codec_state_ref (state);
 
   /* does not go well to restart stream mid-way */
-  //if (enc->srcresult != GST_FLOW_CUSTOM_SUCCESS)
-  //  goto refuse_renegotiation;
+  if (enc->encoder != NULL)
+    goto refuse_renegotiation;
 
 
   /* since mpeg encoder does not really check, let's check caps */
@@ -319,15 +349,12 @@ gst_mpeg2enc_set_format (GstVideoEncoder * video_encoder, GstVideoCodecState * s
       "systemstream", G_TYPE_BOOLEAN, FALSE,
       "mpegversion", G_TYPE_INT, (enc->options->mpeg == 1)?1:2, NULL);
 
-
   output_state =
     gst_video_encoder_set_output_state (video_encoder,
     caps, state);
   gst_video_codec_state_unref (output_state);
 
   gst_video_encoder_negotiate (GST_VIDEO_ENCODER (enc));
-
-
 
   return TRUE;
 
@@ -337,15 +364,13 @@ refuse_caps:
 
     return FALSE;
   }
-/*
 refuse_renegotiation:
   {
     GST_WARNING_OBJECT (enc, "refused renegotiation (to %" GST_PTR_FORMAT ")",
-        caps);
+        state->caps);
 
     return FALSE;
   }
-*/
 }
 
 static GstStructure *
@@ -437,7 +462,6 @@ gst_mpeg2enc_getcaps (GstVideoEncoder * video_encoder, GstCaps * filter)
       break;
   }
 
-  GST_DEBUG_OBJECT (enc, "returned caps %" GST_PTR_FORMAT, caps);
   return caps;
 }
 
@@ -520,8 +544,6 @@ static void
 gst_mpeg2enc_loop (GstVideoEncoder * video_encoder)
 {
   GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
-  GstCaps *othercaps = NULL;
-  gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (enc, "encoding task loop:START");
   /* do not try to resume or start when output problems;
@@ -556,20 +578,6 @@ gst_mpeg2enc_loop (GstVideoEncoder * video_encoder)
   }
   GST_DEBUG_OBJECT (enc, "encoding task loop: setup and init DONE");
 
-  /* and set caps on other side, which should accept anyway */
-  othercaps = enc->encoder->getFormat ();
-  ret = gst_pad_set_caps (video_encoder->srcpad, othercaps);
-  gst_caps_unref (othercaps);
-  othercaps = NULL;
-  if (!ret) {
-    GST_MPEG2ENC_MUTEX_LOCK (enc);
-    enc->srcresult = GST_FLOW_NOT_NEGOTIATED;
-    GST_MPEG2ENC_SIGNAL (enc);
-    GST_MPEG2ENC_MUTEX_UNLOCK (enc);
-    goto refuse_caps;
-  }
-  GST_DEBUG_OBJECT (enc, "encoding task loop: caps OK");
-
   /* note that init performs a pre-fill and therefore needs buffers */
   /* task will stay in here during all of the encoding */
   enc->encoder->encode ();
@@ -600,12 +608,6 @@ done:
     gst_pad_pause_task (video_encoder->srcpad);
 
     return;
-  }
-refuse_caps:
-  {
-    GST_WARNING_OBJECT (enc, "refused caps %" GST_PTR_FORMAT, enc->input_state->caps);
-
-    goto done;
   }
 encoder:
   {
@@ -638,6 +640,7 @@ gst_mpeg2enc_handle_frame (GstVideoEncoder *video_encoder, GstVideoCodecFrame *f
   GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
 
   GST_DEBUG_OBJECT (video_encoder, "handle_frame");
+  GST_MPEG2ENC_MUTEX_LOCK (enc);
 
   if (G_UNLIKELY (enc->eos))
     goto eos;
@@ -647,7 +650,8 @@ gst_mpeg2enc_handle_frame (GstVideoEncoder *video_encoder, GstVideoCodecFrame *f
     goto ignore;
   GST_DEBUG_OBJECT (video_encoder, "handle_frame: flow OK");
 
-  g_queue_push_tail (enc->frames, gst_video_codec_frame_ref (frame));
+  g_queue_push_tail (enc->frames, frame);
+
   /* frame will be released by task */
 
   if (g_queue_get_length (enc->frames) > 0 && !enc->started) {
@@ -661,13 +665,16 @@ gst_mpeg2enc_handle_frame (GstVideoEncoder *video_encoder, GstVideoCodecFrame *f
   if (enc->started)
     GST_MPEG2ENC_SIGNAL (enc);
 
+  GST_MPEG2ENC_MUTEX_UNLOCK (enc);
+
   return GST_FLOW_OK;
 eos:
   {
     GST_DEBUG_OBJECT (enc, "ignoring frame at end-of-stream");
     GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 
-    gst_video_codec_frame_unref (frame);
+    gst_video_encoder_finish_frame (video_encoder, frame);
+
     return GST_FLOW_EOS;
   }
 ignore:
@@ -677,13 +684,12 @@ ignore:
     GST_DEBUG_OBJECT (enc,
         "ignoring frame because encoding task encountered %s",
         gst_flow_get_name (enc->srcresult));
+
+    enc->eos = TRUE;
+
     GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 
-#if 0
-    /* encoding loop should have ended now and can be joined */
--   result = gst_pad_stop_task (video_encoder->srcpad);
-#endif
-    gst_video_codec_frame_unref (frame);
+    gst_video_encoder_finish_frame (video_encoder, frame);
 
     return ret;
   }
