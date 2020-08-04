@@ -70,7 +70,8 @@ enum
   ARG_CORRECT_SVCD_HDS,
   ARG_ALTSCAN_MPEG2,
   ARG_CONSTRAINTS,
-  ARG_DUALPRIME_MPEG2
+  ARG_DUALPRIME_MPEG2,
+  ARG_DISABLE_ENCODE_RETRIES,
       /* FILL ME */
 };
 
@@ -302,6 +303,7 @@ MPEG2EncOptions ()
 
   /* set some default(s) not set in base class */
   bitrate = DEFAULT_BITRATE * 1000;
+  disable_encode_retries = FALSE;
 }
 
 /*
@@ -501,6 +503,25 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
           "streams.  Quite some players do not support this.",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * mpeg2enc:disable-encode-retries:
+   *
+   * Prevent the encoder from reencoding pictures in a second pass.
+   *
+   * This can vastly improve performance, but potentially affect reaching
+   * bitrate targets.
+   *
+   * See https://sourceforge.net/p/mjpeg/bugs/141/ for some background.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (klass, ARG_DISABLE_ENCODE_RETRIES,
+      g_param_spec_boolean ("disable-encode-retries", "Disable encode retries",
+          "Prevent the encoder from reencoding pictures in a second pass."
+          " This can vastly improve performance, but potentially affect reaching"
+          " bitrate targets.",
+          FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_ASPECT, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FORMAT, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_MPEG2ENC_FRAMERATE, (GstPluginAPIFlags) 0);
@@ -632,6 +653,9 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
       break;
     case ARG_DUALPRIME_MPEG2:
       g_value_set_boolean (value, hack_dualprime);
+      break;
+    case ARG_DISABLE_ENCODE_RETRIES:
+      g_value_set_boolean (value, disable_encode_retries);
       break;
     default:
       break;
@@ -768,6 +792,9 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
       break;
     case ARG_DUALPRIME_MPEG2:
       hack_dualprime = g_value_get_boolean (value);
+      break;
+    case ARG_DISABLE_ENCODE_RETRIES:
+      disable_encode_retries = g_value_get_boolean (value);
       break;
     default:
       break;

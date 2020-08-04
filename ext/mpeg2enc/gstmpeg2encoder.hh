@@ -48,6 +48,7 @@ private:
   GstElement *element;
   GstCaps *caps;
   gboolean init_done;
+  gboolean disable_encode_retries;
 };
 
 #endif /* __GST_MPEG2ENCODER_H__ */

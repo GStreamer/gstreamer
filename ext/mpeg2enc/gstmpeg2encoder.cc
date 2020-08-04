@@ -40,6 +40,14 @@
 #include "gstmpeg2enc.hh"
 #include "gstmpeg2encoder.hh"
 
+class GstOnTheFlyPass2 : public OnTheFlyPass2 {
+  public:
+    GstOnTheFlyPass2 (EncoderParams &encoder, gboolean disable_encode_retries): OnTheFlyPass2(encoder), disable_encode_retries(disable_encode_retries) {}
+    bool ReencodeRequired() const { return disable_encode_retries ? false : OnTheFlyPass2::ReencodeRequired(); }
+  private:
+    gboolean disable_encode_retries;
+};
+
 /*
  * Class init stuff.
  */
@@ -52,6 +60,7 @@ MPEG2Encoder (*options)
   caps = in_caps;
   gst_caps_ref (in_caps);
   init_done = FALSE;
+  disable_encode_retries = options->disable_encode_retries;
 }
 
 GstMpeg2Encoder::~GstMpeg2Encoder ()
@@ -89,7 +98,7 @@ gboolean GstMpeg2Encoder::setup ()
   /* encoding internals */
   quantizer = new Quantizer (parms);
   pass1ratectl = new OnTheFlyPass1 (parms);
-  pass2ratectl = new OnTheFlyPass2 (parms);
+  pass2ratectl = new GstOnTheFlyPass2 (parms, disable_encode_retries);
   /* sequencer */
   seqencoder = new SeqEncoder (parms, *reader, *quantizer,
       *writer, *pass1ratectl, *pass2ratectl);
