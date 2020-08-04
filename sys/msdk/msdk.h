@@ -43,7 +43,19 @@
 #include <gst/allocators/allocators.h>
 
 #include <mfxvideo.h>
+
+#if (MFX_VERSION < 2000)
 #include <mfxplugin.h>
+#else
+#define mfxPluginUID char
+static const char MFX_PLUGINID_HEVCD_SW;
+static const char MFX_PLUGINID_HEVCD_HW;
+static const char MFX_PLUGINID_HEVCE_SW;
+static const char MFX_PLUGINID_HEVCE_HW;
+static const char MFX_PLUGINID_VP8D_HW;
+static const char MFX_PLUGINID_VP9E_HW;
+static const char MFX_PLUGINID_VP9D_HW;
+#endif
 
 G_BEGIN_DECLS
 
