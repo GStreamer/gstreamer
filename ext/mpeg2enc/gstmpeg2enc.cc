@@ -559,11 +559,37 @@ gst_mpeg2enc_loop (GstVideoEncoder * video_encoder)
 
   if (!enc->encoder) {
     gboolean ret;
+    GstClockTime latency;
+    GstVideoInfo *info = &enc->input_state->info;
+
     /* create new encoder with these settings */
     enc->encoder = new GstMpeg2Encoder (enc->options, GST_ELEMENT (video_encoder),
                         gst_pad_get_current_caps(video_encoder->sinkpad));
 
     ret = enc->encoder->setup ();
+
+    /* We must have a fixated max GOP size after setting up */
+    g_assert (enc->options->max_GOP_size != -1);
+
+    /* mjpeg tools outputs encoded data on a GOP basis, our latency is
+     * thus at least max_GOP_size. It also introduces a 5-frame delay on
+     * top of that, this was determined empirically, a surface level inspection
+     * of the code didn't show where and why that delay is introduced exactly,
+     * and this is not specifically documented, but it needs to be taken
+     * into account when calculating the latency
+     */
+    if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
+      /* Assume 25fps for unknown framerates. Better than reporting
+       * that we introduce no latency while we actually do
+       */
+      latency = gst_util_uint64_scale (enc->options->max_GOP_size + 5,
+          1 * GST_SECOND, 25);
+    } else {
+      latency = gst_util_uint64_scale (enc->options->max_GOP_size + 5,
+          GST_VIDEO_INFO_FPS_D (info) * GST_SECOND, GST_VIDEO_INFO_FPS_N (info));
+    }
+
+    gst_video_encoder_set_latency (video_encoder, latency, latency);
 
     /* SeqEncoder init requires at least two frames */
     enc->encoder->init ();
