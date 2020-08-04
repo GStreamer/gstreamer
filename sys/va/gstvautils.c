@@ -250,7 +250,7 @@ gst_va_handle_context_query (GstElement * element, GstQuery * query,
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
-  g_return_val_if_fail (display && GST_IS_VA_DISPLAY (display), FALSE);
+  g_return_val_if_fail (!display || GST_IS_VA_DISPLAY (display), FALSE);
 
   GST_CAT_LOG_OBJECT (GST_CAT_CONTEXT, element,
       "handle context query %" GST_PTR_FORMAT, query);
