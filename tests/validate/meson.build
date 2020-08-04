@@ -1,22 +1,6 @@
-if gst_dep.type_name() == 'internal'
-   if meson.version().version_compare('>= 0.51')
-    gst_tester = gst_proj.get_variable('gst_tester', disabler())
-    if is_disabler(gst_tester)
-        if get_option('tests').enabled()
-            error('Tests are enabled for gst-plugins-base but were not enabled for the gstreamer subproject')
-        endif
-        subdir_done()
-    endif
-  else
-    # Workaround for meson < 0.51. Remove once we bump the requirement.
-    # If you hit this, disable tests in gst-plugins-base.
-    gst_tester = gst_proj.get_variable('gst_tester')
-  endif
-else
-    gst_tester = find_program('gst-tester-@0@'.format(api_version), required: get_option('tests'))
-    if not gst_tester.found()
-        subdir_done()
-    endif
+gst_tester = find_program('gst-tester-@0@'.format(api_version), required: get_option('tests'))
+if not gst_tester.found()
+    subdir_done()
 endif
 
 tests = [
