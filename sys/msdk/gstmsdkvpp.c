@@ -200,9 +200,16 @@ release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface, GList ** list)
 }
 
 static void
-release_in_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+release_in_surface (GstMsdkVPP * thiz, MsdkSurface * surface,
+    gboolean locked_by_others)
 {
-  release_msdk_surface (thiz, surface, &thiz->locked_in_surfaces);
+  if (locked_by_others) {
+    /* mfxFrameSurface1 locked by others, others will hold the surface->buf reference */
+    /* we are good to release it here */
+    free_msdk_surface (surface);
+  } else {
+    release_msdk_surface (thiz, surface, &thiz->locked_in_surfaces);
+  }
 }
 
 static void
@@ -841,6 +848,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   mfxFrameInfo *in_info = NULL;
   MsdkSurface *in_surface = NULL;
   MsdkSurface *out_surface = NULL;
+  gboolean locked_by_others;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   free_unlocked_msdk_surfaces (thiz);
@@ -854,6 +862,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     free_msdk_surface (in_surface);
     return GST_FLOW_ERROR;
   }
+  locked_by_others = ! !in_surface->surface->Data.Locked;
 
   if (gst_msdk_is_msdk_buffer (outbuf)) {
     out_surface = g_slice_new0 (MsdkSurface);
@@ -944,7 +953,7 @@ error_push_buffer:
       gst_flow_get_name (ret));
 
 transform_end:
-  release_in_surface (thiz, in_surface);
+  release_in_surface (thiz, in_surface, locked_by_others);
   release_out_surface (thiz, out_surface);
 
   return ret;
