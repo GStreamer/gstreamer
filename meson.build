@@ -16,8 +16,15 @@ else
 endif
 gst_version_is_dev = gst_version_minor % 2 == 1 and gst_version_micro < 90
 
+host_system = host_machine.system()
+
 have_cxx = add_languages('cpp', native: false, required: false)
-have_objc = add_languages('objc', native: false, required: false)
+
+if host_system in ['ios', 'darwin']
+  have_objc = add_languages('objc', native: false)
+else
+  have_objc = false
+endif
 
 glib_req = '>= 2.44.0'
 orc_req = '>= 0.4.24'
@@ -35,7 +42,6 @@ plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 plugins = []
 
 cc = meson.get_compiler('c')
-host_system = host_machine.system()
 
 if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
