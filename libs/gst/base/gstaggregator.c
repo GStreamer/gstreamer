@@ -944,9 +944,9 @@ gst_aggregator_pad_skip_buffers (GstElement * self, GstPad * epad,
 
   PAD_LOCK (aggpad);
 
-  item = g_queue_peek_head_link (&aggpad->priv->data);
+  item = g_queue_peek_tail_link (&aggpad->priv->data);
   while (item) {
-    GList *next = item->next;
+    GList *prev = item->prev;
 
     if (GST_IS_BUFFER (item->data)
         && klass->skip_buffer (aggpad, agg, item->data)) {
@@ -958,7 +958,7 @@ gst_aggregator_pad_skip_buffers (GstElement * self, GstPad * epad,
       break;
     }
 
-    item = next;
+    item = prev;
   }
 
   PAD_UNLOCK (aggpad);
