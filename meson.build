@@ -33,8 +33,15 @@ plugins = []
 
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
+host_system = host_machine.system()
 
-have_objc = add_languages('objc', native: false, required: false)
+if host_system in ['ios', 'darwin']
+  have_objc = add_languages('objc', native: false)
+  have_objcpp = add_languages('objcpp', native: false)
+else
+  have_objc = false
+  have_objcpp = false
+endif
 
 cdata = configuration_data()
 
@@ -243,7 +250,6 @@ cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
 cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # FIXME: This should be exposed as a configuration option
-host_system = host_machine.system()
 if host_system == 'linux'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'v4l2src')
 elif ['darwin', 'ios'].contains(host_system)
@@ -369,7 +375,6 @@ if ['darwin', 'ios'].contains(host_system)
 #    cdata.set('HAVE_VIDEOTOOLBOX_10_9_6', 1)
 #  endif
 endif
-have_objcpp = add_languages('objcpp', native: false, required: false)
 
 have_orcc = false
 orcc_args = []
