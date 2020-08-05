@@ -1737,7 +1737,7 @@ clean_pad (GstElement * agg, GstPad * pad, gpointer user_data)
 static GstFlowReturn
 gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
     GstClockTime output_start_time, GstClockTime output_end_time,
-    GstBuffer ** outbuf)
+    GstClockTime output_start_running_time, GstBuffer ** outbuf)
 {
   GstAggregator *agg = GST_AGGREGATOR (vagg);
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1772,7 +1772,8 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
       &out_stream_time);
 
   /* Let the application know that input buffers have been staged */
-  gst_aggregator_selected_samples (agg);
+  gst_aggregator_selected_samples (agg, GST_BUFFER_PTS (*outbuf),
+      GST_BUFFER_DTS (*outbuf), GST_BUFFER_DURATION (*outbuf));
 
   /* Convert all the frames the subclass has before aggregating */
   gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), prepare_frames, NULL);
@@ -1953,7 +1954,7 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   jitter = gst_video_aggregator_do_qos (vagg, output_start_time);
   if (jitter <= 0) {
     flow_ret = gst_video_aggregator_do_aggregate (vagg, output_start_time,
-        output_end_time, &outbuf);
+        output_end_time, output_start_running_time, &outbuf);
     if (flow_ret != GST_FLOW_OK)
       goto done;
     vagg->priv->qos_processed++;

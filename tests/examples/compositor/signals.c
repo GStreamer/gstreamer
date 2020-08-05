@@ -61,9 +61,13 @@ check_aggregated_buffer (GstElement * agg, GstPad * pad,
 }
 
 static void
-samples_selected_cb (GstElement * agg, GHashTable * consumed_buffers)
+samples_selected_cb (GstElement * agg, GstSegment * segment, GstClockTime pts,
+    GstClockTime dts, GstClockTime duration, GHashTable * consumed_buffers)
 {
-  gst_printerr ("Compositor has selected the samples it will aggregate\n");
+  gst_printerr
+      ("Compositor has selected the samples it will aggregate for output buffer with PTS %"
+      GST_TIME_FORMAT " and duration %" GST_TIME_FORMAT "\n",
+      GST_TIME_ARGS (pts), GST_TIME_ARGS (duration));
   gst_element_foreach_sink_pad (agg,
       (GstElementForeachPadFunc) check_aggregated_buffer, consumed_buffers);
 }
