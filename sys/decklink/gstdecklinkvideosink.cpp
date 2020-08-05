@@ -1089,7 +1089,7 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
 
       /* See SMPTE 2016-3 Section 4 */
       /* AFD and AR */
-      if (self->mode < (gint) GST_DECKLINK_MODE_NTSC_WIDESCREEN) {
+      if (self->mode <= (gint) GST_DECKLINK_MODE_PAL_P) {
         afd_bar_data_ptr[0] = (afd << 3) | 0x0;
       } else {
         afd_bar_data_ptr[0] = (afd << 3) | 0x4;

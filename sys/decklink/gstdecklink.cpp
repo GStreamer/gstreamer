@@ -48,12 +48,6 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_NTSC_P, "NTSC SD 60p", "ntsc-p"},
     {GST_DECKLINK_MODE_PAL_P, "PAL SD 50p", "pal-p"},
 
-    {GST_DECKLINK_MODE_NTSC_WIDESCREEN, "NTSC SD 60i Widescreen", "ntsc-widescreen"},
-    {GST_DECKLINK_MODE_NTSC2398_WIDESCREEN, "NTSC SD 60i Widescreen (24 fps)", "ntsc2398-widescreen"},
-    {GST_DECKLINK_MODE_PAL_WIDESCREEN, "PAL SD 50i Widescreen", "pal-widescreen"},
-    {GST_DECKLINK_MODE_NTSC_P_WIDESCREEN, "NTSC SD 60p Widescreen", "ntsc-p-widescreen"},
-    {GST_DECKLINK_MODE_PAL_P_WIDESCREEN, "PAL SD 50p Widescreen", "pal-p-widescreen"},
-
     {GST_DECKLINK_MODE_1080p2398, "HD1080 23.98p", "1080p2398"},
     {GST_DECKLINK_MODE_1080p24, "HD1080 24p", "1080p24"},
     {GST_DECKLINK_MODE_1080p25, "HD1080 25p", "1080p25"},
@@ -93,6 +87,12 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_2160p50, "4k 50p", "2160p50"},
     {GST_DECKLINK_MODE_2160p5994, "4k 59.94p", "2160p5994"},
     {GST_DECKLINK_MODE_2160p60, "4k 60p", "2160p60"},
+
+    {GST_DECKLINK_MODE_NTSC_WIDESCREEN, "NTSC SD 60i Widescreen", "ntsc-widescreen"},
+    {GST_DECKLINK_MODE_NTSC2398_WIDESCREEN, "NTSC SD 60i Widescreen (24 fps)", "ntsc2398-widescreen"},
+    {GST_DECKLINK_MODE_PAL_WIDESCREEN, "PAL SD 50i Widescreen", "pal-widescreen"},
+    {GST_DECKLINK_MODE_NTSC_P_WIDESCREEN, "NTSC SD 60p Widescreen", "ntsc-p-widescreen"},
+    {GST_DECKLINK_MODE_PAL_P_WIDESCREEN, "PAL SD 50p Widescreen", "pal-p-widescreen"},
 
     {0, NULL, NULL}
   };
