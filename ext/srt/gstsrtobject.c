@@ -125,6 +125,56 @@ static struct srt_constant_params srt_params[] = {
 
 static gint srt_init_refcount = 0;
 
+static GSocketAddress *
+gst_srt_object_resolve (GstSRTObject * srtobject, const gchar * address,
+    guint port, GCancellable * cancellable, GError ** err_out)
+{
+  GError *err = NULL;
+  GSocketAddress *saddr;
+  GResolver *resolver;
+
+  saddr = g_inet_socket_address_new_from_string (address, port);
+  if (!saddr) {
+    GList *results;
+
+    GST_DEBUG_OBJECT (srtobject->element, "resolving IP address for host %s",
+        address);
+    resolver = g_resolver_get_default ();
+    results = g_resolver_lookup_by_name (resolver, address, cancellable, &err);
+    if (!results)
+      goto name_resolve;
+
+    saddr = g_inet_socket_address_new (G_INET_ADDRESS (results->data), port);
+
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *ip =
+        g_inet_address_to_string (g_inet_socket_address_get_address
+        (G_INET_SOCKET_ADDRESS (saddr)));
+
+    GST_DEBUG_OBJECT (srtobject->element, "IP address for host %s is %s",
+        address, ip);
+    g_free (ip);
+  }
+#endif
+
+  return saddr;
+
+name_resolve:
+  {
+    GST_WARNING_OBJECT (srtobject->element, "Failed to resolve %s: %s", address,
+        err->message);
+    g_set_error (err_out, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+        "Failed to resolve host '%s': %s", address, err->message);
+    g_clear_error (&err);
+    g_object_unref (resolver);
+    return NULL;
+  }
+}
+
 static gboolean
 gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     GError ** error)
@@ -779,7 +829,7 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
   GSocketFamily bind_sa_family;
   gpointer bind_sa;
   gsize bind_sa_len;
-  GSocketAddress *bind_addr;
+  GSocketAddress *bind_addr = NULL;
 
   GST_OBJECT_LOCK (srtobject->element);
 
@@ -792,7 +842,13 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
 
   GST_OBJECT_UNLOCK (srtobject->element);
 
-  bind_addr = g_inet_socket_address_new_from_string (local_address, local_port);
+  bind_addr =
+      gst_srt_object_resolve (srtobject, local_address, local_port, cancellable,
+      error);
+  if (!bind_addr) {
+    goto failed;
+  }
+
   bind_sa_len = g_socket_address_get_native_size (bind_addr);
   bind_sa = g_alloca (bind_sa_len);
   bind_sa_family = g_socket_address_get_family (bind_addr);
@@ -869,7 +925,7 @@ failed:
 }
 
 static gboolean
-gst_srt_object_connect (GstSRTObject * srtobject,
+gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
     GstSRTConnectionMode connection_mode, GSocketFamily sa_family, gpointer sa,
     size_t sa_len, GError ** error)
 {
@@ -930,8 +986,12 @@ gst_srt_object_connect (GstSRTObject * srtobject,
     gsize bind_sa_len;
 
     GSocketAddress *bind_addr =
-        g_inet_socket_address_new_from_string (local_address,
-        local_port);
+        gst_srt_object_resolve (srtobject, local_address,
+        local_port, cancellable, error);
+
+    if (!bind_addr) {
+      goto failed;
+    }
 
     bind_sa_len = g_socket_address_get_native_size (bind_addr);
     bind_sa = g_alloca (bind_sa_len);
@@ -999,8 +1059,8 @@ gst_srt_object_open_connection (GstSRTObject * srtobject,
         sa_len, error);
   } else {
     ret =
-        gst_srt_object_connect (srtobject, connection_mode, sa_family, sa,
-        sa_len, error);
+        gst_srt_object_connect (srtobject, cancellable, connection_mode,
+        sa_family, sa, sa_len, error);
   }
 
   return ret;
@@ -1048,11 +1108,9 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
 
   GST_OBJECT_UNLOCK (srtobject->element);
 
-  socket_address = g_inet_socket_address_new_from_string (addr_str, port);
-
+  socket_address =
+      gst_srt_object_resolve (srtobject, addr_str, port, cancellable, error);
   if (socket_address == NULL) {
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
-        "Invalid host");
     goto out;
   }
 
