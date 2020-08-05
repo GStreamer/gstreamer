@@ -180,8 +180,12 @@ rtp_pipeline_create (const guint8 * frame_data, int frame_data_size,
   p->pipeline = gst_pipeline_new (pipeline_name);
   g_free (pipeline_name);
   p->appsrc = gst_element_factory_make ("appsrc", NULL);
-  p->rtppay = gst_element_factory_make (pay, NULL);
-  p->rtpdepay = gst_element_factory_make (depay, NULL);
+  p->rtppay =
+      gst_parse_bin_from_description_full (pay, TRUE, NULL,
+      GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, NULL);
+  p->rtpdepay =
+      gst_parse_bin_from_description_full (depay, TRUE, NULL,
+      GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, NULL);
   p->fakesink = gst_element_factory_make ("fakesink", NULL);
 
   /* One or more elements are not created successfully or failed to create p? */
@@ -867,7 +871,7 @@ GST_START_TEST (rtp_h264_list_lt_mtu)
   rtp_pipeline_test (rtp_h264_list_lt_mtu_frame_data,
       rtp_h264_list_lt_mtu_frame_data_size, rtp_h264_list_lt_mtu_frame_count,
       "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
-      "rtph264pay", "rtph264depay",
+      "rtph264pay aggregate-mode=zero-latency", "rtph264depay",
       rtp_h264_list_lt_mtu_bytes_sent, rtp_h264_list_lt_mtu_mtu_size, TRUE);
 }
 
@@ -893,7 +897,7 @@ GST_START_TEST (rtp_h264_list_lt_mtu_avc)
       rtp_h264_list_lt_mtu_frame_data_size, rtp_h264_list_lt_mtu_frame_count,
       "video/x-h264,stream-format=(string)avc,alignment=(string)au,"
       "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c",
-      "rtph264pay", "rtph264depay",
+      "rtph264pay aggregate-mode=zero-latency", "rtph264depay",
       rtp_h264_list_lt_mtu_bytes_sent_avc, rtp_h264_list_lt_mtu_mtu_size, TRUE);
 }
 
@@ -1045,8 +1049,9 @@ GST_START_TEST (rtp_h265_list_lt_mtu_hvc1)
       "01840010c01ffff01c000000300800000030000030099ac0900a10001003042010101c00"
       "0000300800000030000030099a00a080f1fe36bbb5377725d602dc040404100000300010"
       "00003000a0800a2000100074401c172b02240",
-      "rtph265pay", "rtph265depay", rtp_h265_list_lt_mtu_bytes_sent_hvc1,
-      rtp_h265_list_lt_mtu_mtu_size, TRUE);
+      "rtph265pay aggregate-mode=zero-latency", "rtph265depay",
+      rtp_h265_list_lt_mtu_bytes_sent_hvc1, rtp_h265_list_lt_mtu_mtu_size,
+      TRUE);
 }
 
 GST_END_TEST;

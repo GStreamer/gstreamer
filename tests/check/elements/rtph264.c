@@ -675,7 +675,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_two_slices_timestamp)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -736,7 +737,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_marker_for_flag)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -815,7 +817,8 @@ GST_END_TEST;
 GST_START_TEST (test_rtph264pay_marker_for_fragmented_au)
 {
   GstHarness *h =
-      gst_harness_new_parse ("rtph264pay timestamp-offset=123 mtu=40");
+      gst_harness_new_parse ("rtph264pay timestamp-offset=123 mtu=40"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *slice1, *slice2, *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -865,8 +868,7 @@ GST_START_TEST (test_rtph264pay_aggregate_two_slices_per_buffer)
   gst_harness_set_src_caps_str (h,
       "video/x-h264,alignment=nal,stream-format=byte-stream");
 
-  /* No aggregation latency mode */
-
+  /* No aggregation mode */
   g_object_set (e, "aggregate-mode", 0, NULL);
 
   buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
@@ -979,7 +981,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_aggregate_with_aud)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -1090,7 +1093,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_aggregate_with_discont)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -1148,7 +1152,7 @@ GST_END_TEST;
 GST_START_TEST (test_rtph264pay_aggregate_until_vcl)
 {
   GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
-      " name=p");
+      " name=p aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -1190,7 +1194,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_avc)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -1251,7 +1256,8 @@ GST_END_TEST;
 static void
 test_rtph264pay_avc_two_slices (gsize memory1_len, guint num_slices)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *slice1;
   GstBuffer *slice2;

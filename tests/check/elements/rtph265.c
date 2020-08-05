@@ -463,7 +463,8 @@ static guint8 h265_idr_slice_2[] = {
 
 GST_START_TEST (test_rtph265pay_two_slices_timestamp)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -524,7 +525,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph265pay_marker_for_flag)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -602,7 +604,8 @@ GST_END_TEST;
 GST_START_TEST (test_rtph265pay_marker_for_fragmented_au)
 {
   GstHarness *h =
-      gst_harness_new_parse ("rtph265pay timestamp-offset=123 mtu=40");
+      gst_harness_new_parse ("rtph265pay timestamp-offset=123 mtu=40"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *slice1, *slice2, *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -770,7 +773,8 @@ static guint8 h265_aud[] = {
 
 GST_START_TEST (test_rtph265pay_aggregate_with_aud)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -877,7 +881,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph265pay_aggregate_with_discont)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -939,7 +944,7 @@ static guint8 h265_eos[] = {
 GST_START_TEST (test_rtph265pay_aggregate_until_vcl)
 {
   GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
-      " name=p");
+      " name=p aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -1004,7 +1009,7 @@ GST_END_TEST;
 GST_START_TEST (test_rtph265pay_aggregate_verify_nalu_hdr)
 {
   GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
-      " name=p");
+      " name=p aggregate-mode=zero-latency");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;

@@ -14809,12 +14809,12 @@
                 },
                 "properties": {
                     "aggregate-mode": {
-                        "blurb": "Bundle suitable SPS/PPS NAL units into STAP-A aggregate packets. ",
+                        "blurb": "Bundle suitable SPS/PPS NAL units into STAP-A aggregate packets",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "zero-latency (1)",
+                        "default": "none (0)",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstRtpH264AggregateMode",
@@ -14909,7 +14909,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "zero-latency (1)",
+                        "default": "none (0)",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstRtpH265AggregateMode",

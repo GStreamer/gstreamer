@@ -133,7 +133,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define DEFAULT_CONFIG_INTERVAL         0
-#define DEFAULT_AGGREGATE_MODE          GST_RTP_H265_AGGREGATE_ZERO_LATENCY
+#define DEFAULT_AGGREGATE_MODE          GST_RTP_H265_AGGREGATE_NONE
 
 enum
 {
@@ -192,6 +192,19 @@ gst_rtp_h265_pay_class_init (GstRtpH265PayClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
+  /**
+   * GstRtpH265Pay:aggregate-mode
+   *
+   * Bundle suitable SPS/PPS NAL units into STAP-A aggregate packets.
+   *
+   * This can potentially reduce RTP packetization overhead but not all
+   * RTP implementations handle it correctly.
+   *
+   * For best compatibility, it is recommended to set this to "none" (the
+   * default) for RTSP and for WebRTC to "zero-latency".
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_AGGREGATE_MODE,
       g_param_spec_enum ("aggregate-mode",
