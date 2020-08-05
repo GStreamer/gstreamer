@@ -37,22 +37,28 @@ typedef struct _GstEGLImage GstEGLImage;
 #define ENABLE_SHM_BUFFER_SUPPORT 0
 #endif
 
-class WPEThreadedView {
+class WPEView {
 public:
-    WPEThreadedView();
-    ~WPEThreadedView();
+    WPEView(WebKitWebContext*, GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    ~WPEView();
 
-    bool initialize(GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    bool operator!() const { return m_isValid; }
 
+    /*  Used by wpesrc */
     void resize(int width, int height);
     void loadUri(const gchar*);
     void loadData(GBytes*);
     void setDrawBackground(gboolean);
-
     GstEGLImage* image();
     GstBuffer* buffer();
 
-    struct wpe_view_backend* backend() const;
+    void dispatchKeyboardEvent(struct wpe_input_keyboard_event&);
+    void dispatchPointerEvent(struct wpe_input_pointer_event&);
+    void dispatchAxisEvent(struct wpe_input_axis_event&);
+
+    /*  Used by WPEContextThread */
+    bool hasUri() const { return webkit.uri; }
+    void disconnectLoadFailedSignal();
 
 protected:
     void handleExportedImage(gpointer);
@@ -61,6 +67,7 @@ protected:
 #endif
 
 private:
+    struct wpe_view_backend* backend() const;
     void frameComplete();
     void loadUriUnlocked(const gchar*);
 
@@ -69,23 +76,6 @@ private:
     void releaseSHMBuffer(gpointer);
     static void s_releaseSHMBuffer(gpointer);
 #endif
-
-    static void s_loadFailed(WebKitWebView*, WebKitLoadEvent, gchar*, GError*, gpointer);
-
-    static gpointer s_viewThread(gpointer);
-    struct {
-        GMutex mutex;
-        GCond cond;
-        GMutex ready_mutex;
-        GCond ready_cond;
-        gboolean ready;
-        GThread* thread { nullptr };
-    } threading;
-
-    struct {
-        GMainContext* context;
-        GMainLoop* loop;
-    } glib { nullptr, nullptr };
 
     struct {
         GstGLContext* context;
@@ -109,6 +99,8 @@ private:
         WebKitWebView* view;
     } webkit = { nullptr, nullptr };
 
+    bool m_isValid { false };
+
     // This mutex guards access to either egl or shm resources declared below,
     // depending on the runtime behavior.
     GMutex images_mutex;
@@ -122,4 +114,37 @@ private:
         GstBuffer* pending;
         GstBuffer* committed;
     } shm { nullptr, nullptr };
+
+};
+
+class WPEContextThread {
+public:
+    static WPEContextThread& singleton();
+
+    WPEContextThread();
+    ~WPEContextThread();
+
+    WPEView* createWPEView(GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+
+    template<typename Function>
+    void dispatch(Function);
+
+    void notifyLoadFinished();
+
+private:
+    static gpointer s_viewThread(gpointer);
+    struct {
+        GMutex mutex;
+        GCond cond;
+        GMutex ready_mutex;
+        GCond ready_cond;
+        gboolean ready;
+        GThread* thread { nullptr };
+    } threading;
+
+    struct {
+        GMainContext* context;
+        GMainLoop* loop;
+        WebKitWebContext* web_context;
+    } glib { nullptr, nullptr, nullptr };
 };
