@@ -98,7 +98,9 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     GST_LOG_OBJECT (self, "No caption pad, passing through video");
     video_buf = self->current_video_buffer;
     self->current_video_buffer = NULL;
-    gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self));
+    gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self),
+        GST_BUFFER_PTS (video_buf), GST_BUFFER_DTS (video_buf),
+        GST_BUFFER_DURATION (video_buf));
     goto done;
   }
 
@@ -204,7 +206,10 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     gst_aggregator_pad_drop_buffer (caption_pad);
   } while (TRUE);
 
-  gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self));
+  gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self),
+      GST_BUFFER_PTS (self->current_video_buffer),
+      GST_BUFFER_DTS (self->current_video_buffer),
+      GST_BUFFER_DURATION (self->current_video_buffer));
 
   if (self->current_frame_captions->len > 0) {
     guint i;
