@@ -105,7 +105,9 @@ endif
 if opencv_found
   # opencv4 seems to ship with .pc file that references non-existent include dir
   # (/usr/include/opencv4/opencv instead of /usr/include/opencv4/opencv2)
-  gstopencv_cargs += cxx.get_supported_arguments(['-Wno-missing-include-dirs'])
+  # clang 10 complains about the following header in opencv4
+  # /usr/include/opencv4/opencv2/flann/logger.h:83:36: error: format string is not a string literal [-Werror,-Wformat-nonliteral]
+  gstopencv_cargs += cxx.get_supported_arguments(['-Wno-missing-include-dirs', '-Wno-format-nonliteral'])
 
   gstopencv = library('gstopencv',
     gstopencv_sources,
