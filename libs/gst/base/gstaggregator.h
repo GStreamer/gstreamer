@@ -418,7 +418,10 @@ GstSample     * gst_aggregator_peek_next_sample     (GstAggregator *self,
                                                      GstAggregatorPad * pad);
 
 GST_BASE_API
-void            gst_aggregator_selected_samples     (GstAggregator                * self);
+void            gst_aggregator_selected_samples     (GstAggregator                * self,
+                                                     GstClockTime                   pts,
+                                                     GstClockTime                   dts,
+                                                     GstClockTime                   duration);
 
 /**
  * GstAggregatorStartTimeSelection:

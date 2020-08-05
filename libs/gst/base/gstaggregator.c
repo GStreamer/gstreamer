@@ -2735,6 +2735,10 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   /**
    * GstAggregator::samples-selected:
+   * @segment: The #GstSegment the next output buffer is part of
+   * @pts: The presentation timestamp of the next output buffer
+   * @dts: The decoding timestamp of the next output buffer
+   * @duration: The duration of the next output buffer
    *
    * Signals that the #GstAggregator subclass has selected the next set
    * of input samples it will aggregate. Handlers may call
@@ -2744,7 +2748,9 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
    */
   gst_aggregator_signals[SIGNAL_SAMPLES_SELECTED] =
       g_signal_new ("samples-selected", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 4,
+      GST_TYPE_SEGMENT | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_CLOCK_TIME,
+      GST_TYPE_CLOCK_TIME, GST_TYPE_CLOCK_TIME);
 }
 
 static inline gpointer
@@ -3584,6 +3590,9 @@ gst_aggregator_simple_get_next_time (GstAggregator * self)
  * source pad, instead of directly pushing new segment events
  * downstream.
  *
+ * Subclasses MUST call this before gst_aggregator_selected_samples(),
+ * if it is used at all.
+ *
  * Since: 1.18
  */
 void
@@ -3603,6 +3612,9 @@ gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
 
 /**
  * gst_aggregator_selected_samples:
+ * @pts: The presentation timestamp of the next output buffer
+ * @dts: The decoding timestamp of the next output buffer
+ * @duration: The duration of the next output buffer
  *
  * Subclasses should call this when they have prepared the
  * buffers they will aggregate for each of their sink pads, but
@@ -3610,15 +3622,20 @@ gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
  * *how* aggregation should be performed, for example z-index
  * for video aggregators.
  *
+ * If gst_aggregator_update_segment() is used by the subclass,
+ * it MUST be called before gst_aggregator_selected_samples().
+ *
  * Since: 1.18
  */
 void
-gst_aggregator_selected_samples (GstAggregator * self)
+gst_aggregator_selected_samples (GstAggregator * self,
+    GstClockTime pts, GstClockTime dts, GstClockTime duration)
 {
   g_return_if_fail (GST_IS_AGGREGATOR (self));
 
   if (self->priv->emit_signals) {
-    g_signal_emit (self, gst_aggregator_signals[SIGNAL_SAMPLES_SELECTED], 0);
+    g_signal_emit (self, gst_aggregator_signals[SIGNAL_SAMPLES_SELECTED], 0,
+        &GST_AGGREGATOR_PAD (self->srcpad)->segment, pts, dts, duration);
   }
 
   self->priv->selected_samples_called_or_warned = TRUE;
