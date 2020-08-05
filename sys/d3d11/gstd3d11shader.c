@@ -274,7 +274,6 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
   g_return_val_if_fail (pixel_shader != NULL, NULL);
   g_return_val_if_fail (vertex_shader != NULL, NULL);
   g_return_val_if_fail (layout != NULL, NULL);
-  g_return_val_if_fail (sampler != NULL, NULL);
   g_return_val_if_fail (vertex_buffer != NULL, NULL);
   g_return_val_if_fail (vertex_stride > 0, NULL);
   g_return_val_if_fail (index_buffer != NULL, NULL);
@@ -298,7 +297,8 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
   ID3D11PixelShader_AddRef (pixel_shader);
   ID3D11VertexShader_AddRef (vertex_shader);
   ID3D11InputLayout_AddRef (layout);
-  ID3D11SamplerState_AddRef (sampler);
+  if (sampler)
+    ID3D11SamplerState_AddRef (sampler);
 
   if (blend)
     ID3D11BlendState_AddRef (blend);
@@ -380,8 +380,6 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
   g_return_val_if_fail (quad != NULL, FALSE);
   g_return_val_if_fail (viewport != NULL, FALSE);
   g_return_val_if_fail (num_viewport <= GST_VIDEO_MAX_PLANES, FALSE);
-  g_return_val_if_fail (srv != NULL, FALSE);
-  g_return_val_if_fail (num_srv <= GST_VIDEO_MAX_PLANES, FALSE);
   g_return_val_if_fail (rtv != NULL, FALSE);
   g_return_val_if_fail (num_rtv <= GST_VIDEO_MAX_PLANES, FALSE);
 
@@ -395,7 +393,8 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
   ID3D11DeviceContext_IASetIndexBuffer (context_handle,
       quad->index_buffer, quad->index_format, 0);
 
-  ID3D11DeviceContext_PSSetSamplers (context_handle, 0, 1, &quad->sampler);
+  if (quad->sampler)
+    ID3D11DeviceContext_PSSetSamplers (context_handle, 0, 1, &quad->sampler);
   ID3D11DeviceContext_VSSetShader (context_handle, quad->vs, NULL, 0);
   ID3D11DeviceContext_PSSetShader (context_handle, quad->ps, NULL, 0);
   ID3D11DeviceContext_RSSetViewports (context_handle, num_viewport, viewport);
@@ -404,7 +403,8 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
     ID3D11DeviceContext_PSSetConstantBuffers (context_handle,
         0, 1, &quad->const_buffer);
 
-  ID3D11DeviceContext_PSSetShaderResources (context_handle, 0, num_srv, srv);
+  if (srv)
+    ID3D11DeviceContext_PSSetShaderResources (context_handle, 0, num_srv, srv);
   ID3D11DeviceContext_OMSetRenderTargets (context_handle, num_rtv, rtv, dsv);
   if (!blend_state)
     blend_state = quad->blend;
@@ -415,8 +415,10 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
 
   ID3D11DeviceContext_DrawIndexed (context_handle, quad->index_count, 0, 0);
 
-  ID3D11DeviceContext_PSSetShaderResources (context_handle,
-      0, num_srv, clear_view);
+  if (srv) {
+    ID3D11DeviceContext_PSSetShaderResources (context_handle,
+        0, num_srv, clear_view);
+  }
   ID3D11DeviceContext_OMSetRenderTargets (context_handle, 0, NULL, NULL);
 
   return TRUE;
