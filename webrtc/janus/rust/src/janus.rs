@@ -66,7 +66,7 @@ const VP8: VideoParameter = VideoParameter {
 const H264: VideoParameter = VideoParameter {
     encoder: "x264enc tune=zerolatency",
     encoding_name: "H264",
-    payloader: "rtph264pay",
+    payloader: "rtph264pay aggregate-mode=zero-latency",
 };
 
 impl std::str::FromStr for VideoParameter {
