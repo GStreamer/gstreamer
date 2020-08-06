@@ -350,12 +350,12 @@ gst_v4l2radio_finalize (GstV4l2Radio * radio)
 }
 
 static gboolean
-gst_v4l2radio_open (GstV4l2Radio * radio)
+gst_v4l2radio_open (GstV4l2Radio * radio, GstV4l2Error * error)
 {
   GstV4l2Object *v4l2object;
 
   v4l2object = radio->v4l2object;
-  if (gst_v4l2_open (v4l2object))
+  if (gst_v4l2_open (v4l2object, error))
     return gst_v4l2radio_fill_channel_list (radio);
   else
     return FALSE;
@@ -406,9 +406,9 @@ gst_v4l2radio_set_defaults (GstV4l2Radio * radio)
 }
 
 static gboolean
-gst_v4l2radio_start (GstV4l2Radio * radio)
+gst_v4l2radio_start (GstV4l2Radio * radio, GstV4l2Error * error)
 {
-  if (!gst_v4l2radio_open (radio))
+  if (!gst_v4l2radio_open (radio, error))
     return FALSE;
 
   gst_v4l2radio_set_defaults (radio);
@@ -429,13 +429,14 @@ static GstStateChangeReturn
 gst_v4l2radio_change_state (GstElement * element, GstStateChange transition)
 {
   GstV4l2Radio *radio;
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   radio = GST_V4L2RADIO (element);
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /*start radio */
-      if (!gst_v4l2radio_start (radio))
+      if (!gst_v4l2radio_start (radio, &error))
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -457,6 +458,7 @@ gst_v4l2radio_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
+  gst_v4l2_error (radio, &error);
   return ret;
 }
 

@@ -437,6 +437,7 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (element);
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
 
   GST_DEBUG_OBJECT (v4l2sink, "%d -> %d",
       GST_STATE_TRANSITION_CURRENT (transition),
@@ -445,8 +446,10 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* open the device */
-      if (!gst_v4l2_object_open (v4l2sink->v4l2object))
+      if (!gst_v4l2_object_open (v4l2sink->v4l2object, &error)) {
+        gst_v4l2_error (v4l2sink, &error);
         return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     default:
       break;

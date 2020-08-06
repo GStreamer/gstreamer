@@ -110,11 +110,12 @@ static gboolean
 gst_v4l2_video_enc_open (GstVideoEncoder * encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstCaps *codec_caps;
 
   GST_DEBUG_OBJECT (self, "Opening");
 
-  if (!gst_v4l2_object_open (self->v4l2output))
+  if (!gst_v4l2_object_open (self->v4l2output, &error))
     goto failure;
 
   if (!gst_v4l2_object_open_shared (self->v4l2capture, self->v4l2output))
@@ -158,6 +159,8 @@ failure:
 
   gst_caps_replace (&self->probed_srccaps, NULL);
   gst_caps_replace (&self->probed_sinkcaps, NULL);
+
+  gst_v4l2_error (self, &error);
 
   return FALSE;
 }

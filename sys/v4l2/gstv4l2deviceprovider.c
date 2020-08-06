@@ -116,7 +116,7 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   v4l2obj = gst_v4l2_object_new (NULL, GST_OBJECT (provider),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, device_path, NULL, NULL, NULL);
 
-  if (!gst_v4l2_open (v4l2obj))
+  if (!gst_v4l2_open (v4l2obj, NULL))
     goto destroy;
 
   gst_structure_set (props, "device.api", G_TYPE_STRING, "v4l2", NULL);

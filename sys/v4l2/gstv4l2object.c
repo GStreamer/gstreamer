@@ -896,9 +896,9 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
 }
 
 gboolean
-gst_v4l2_object_open (GstV4l2Object * v4l2object)
+gst_v4l2_object_open (GstV4l2Object * v4l2object, GstV4l2Error * error)
 {
-  if (gst_v4l2_open (v4l2object))
+  if (gst_v4l2_open (v4l2object, error))
     gst_v4l2_set_defaults (v4l2object);
   else
     return FALSE;

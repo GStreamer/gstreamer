@@ -794,12 +794,15 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstV4l2Src *v4l2src = GST_V4L2SRC (element);
   GstV4l2Object *obj = v4l2src->v4l2object;
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* open the device */
-      if (!gst_v4l2_object_open (obj))
+      if (!gst_v4l2_object_open (obj, &error)) {
+        gst_v4l2_error (v4l2src, &error);
         return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     default:
       break;

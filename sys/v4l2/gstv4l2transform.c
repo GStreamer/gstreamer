@@ -115,9 +115,11 @@ gst_v4l2_transform_get_property (GObject * object,
 static gboolean
 gst_v4l2_transform_open (GstV4l2Transform * self)
 {
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
+
   GST_DEBUG_OBJECT (self, "Opening");
 
-  if (!gst_v4l2_object_open (self->v4l2output))
+  if (!gst_v4l2_object_open (self->v4l2output, &error))
     goto failure;
 
   if (!gst_v4l2_object_open_shared (self->v4l2capture, self->v4l2output))
@@ -159,6 +161,8 @@ failure:
 
   gst_caps_replace (&self->probed_srccaps, NULL);
   gst_caps_replace (&self->probed_sinkcaps, NULL);
+
+  gst_v4l2_error (self, &error);
 
   return FALSE;
 }

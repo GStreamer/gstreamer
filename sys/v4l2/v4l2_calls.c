@@ -516,7 +516,7 @@ gst_v4l2_adjust_buf_type (GstV4l2Object * v4l2object)
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 gboolean
-gst_v4l2_open (GstV4l2Object * v4l2object)
+gst_v4l2_open (GstV4l2Object * v4l2object, GstV4l2Error * error)
 {
   struct stat st;
   int libv4l2_fd = -1;
@@ -605,46 +605,43 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   /* ERRORS */
 stat_failed:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
+    GST_V4L2_ERROR (error, RESOURCE, NOT_FOUND,
         (_("Cannot identify device '%s'."), v4l2object->videodev),
         GST_ERROR_SYSTEM);
     goto error;
   }
 no_device:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
+    GST_V4L2_ERROR (error, RESOURCE, NOT_FOUND,
         (_("This isn't a device '%s'."), v4l2object->videodev),
         GST_ERROR_SYSTEM);
     goto error;
   }
 not_open:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ_WRITE,
+    GST_V4L2_ERROR (error, RESOURCE, OPEN_READ_WRITE,
         (_("Could not open device '%s' for reading and writing."),
             v4l2object->videodev), GST_ERROR_SYSTEM);
     goto error;
   }
 not_capture:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Device '%s' is not a capture device."),
-            v4l2object->videodev),
+    GST_V4L2_ERROR (error, RESOURCE, NOT_FOUND,
+        (_("Device '%s' is not a capture device."), v4l2object->videodev),
         ("Capabilities: 0x%x", v4l2object->device_caps));
     goto error;
   }
 not_output:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Device '%s' is not a output device."),
-            v4l2object->videodev),
+    GST_V4L2_ERROR (error, RESOURCE, NOT_FOUND,
+        (_("Device '%s' is not a output device."), v4l2object->videodev),
         ("Capabilities: 0x%x", v4l2object->device_caps));
     goto error;
   }
 not_m2m:
   {
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Device '%s' is not a M2M device."),
-            v4l2object->videodev),
+    GST_V4L2_ERROR (error, RESOURCE, NOT_FOUND,
+        (_("Device '%s' is not a M2M device."), v4l2object->videodev),
         ("Capabilities: 0x%x", v4l2object->device_caps));
     goto error;
   }
