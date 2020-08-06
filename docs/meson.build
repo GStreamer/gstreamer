@@ -198,8 +198,12 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
         gst_c_sources: [
             join_paths(root_rel, 'sys/*/*.[ch]'),
             join_paths(root_rel, 'sys/*/*.cpp'),
+            join_paths(root_rel, 'sys/*/*.cc'),
+            join_paths(root_rel, 'sys/*/*.hh'),
             join_paths(root_rel, 'ext/*/*.[ch]'),
             join_paths(root_rel, 'ext/*/*.cpp'),
+            join_paths(root_rel, 'ext/*/*.cc'),
+            join_paths(root_rel, 'ext/*/*.hh'),
             join_paths(root_rel, 'gst/*/*.[ch]'),
         ],
         dependencies: [gst_dep, plugins],
