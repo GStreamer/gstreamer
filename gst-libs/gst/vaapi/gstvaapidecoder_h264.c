@@ -3099,8 +3099,6 @@ init_picture_refs (GstVaapiDecoderH264 * decoder,
       break;
   }
 
-  ret = ret && exec_picture_refs_modification (decoder, picture, slice_hdr);
-
   switch (slice_hdr->type % 5) {
     case GST_H264_B_SLICE:
       num_refs = 1 + slice_hdr->num_ref_idx_l1_active_minus1;
@@ -3119,6 +3117,8 @@ init_picture_refs (GstVaapiDecoderH264 * decoder,
     default:
       break;
   }
+
+  ret = ret && exec_picture_refs_modification (decoder, picture, slice_hdr);
 
   mark_picture_refs (decoder, picture);
 
