@@ -24,7 +24,6 @@ subdir('gst')
 subdir('gst-libs')
 subdir('launcher')
 subdir('tools')
-subdir('pkgconfig')
 if not get_option('tests').disabled()
   subdir('tests')
 endif

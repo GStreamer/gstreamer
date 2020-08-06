@@ -75,6 +75,13 @@ gstvalidatetracer = library('gstvalidatetracer',
     install_dir : plugins_install_dir,
     dependencies : validate_deps)
 
+pkgconfig.generate(gstvalidate,
+  libraries : [gst_dep],
+  subdirs : pkgconfig_subdirs,
+  name : 'gst-validate-1.0',
+  description : 'Gstreamer Validate',
+)
+
 validate_gen_sources = []
 if build_gir
     gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
@@ -103,5 +110,7 @@ validate_dep = declare_dependency(link_with : gstvalidate,
   dependencies : validate_deps,
   sources : validate_gen_sources
 )
+
+meson.override_dependency('gst-validate-1.0', validate_dep)
 
 pkgconfig.generate(gstvalidatetracer, install_dir : plugins_pkgconfig_install_dir)

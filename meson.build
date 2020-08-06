@@ -139,6 +139,7 @@ if get_option('default_library') == 'shared'
   # If we don't build static plugins there is no need to generate pc files
   plugins_pkgconfig_install_dir = disabler()
 endif
+pkgconfig_subdirs = ['gstreamer-1.0']
 
 plugins = []
 i18n = import('i18n')
