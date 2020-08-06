@@ -47,6 +47,10 @@ variables:
 
   WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v11-master'
 
+  # FIXME: after merging the script
+  # CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
+  CERBERO_SCRIPT_URL: 'https://gitlab.freedesktop.org/alatiera/gst-ci/-/raw/alatiera/cerbero-script-2/gitlab/cerbero_setup.sh'
+
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
@@ -648,16 +652,6 @@ valgrind ges:
 # CONFIG: The name of the configuration file to use
 # ARCH: The cerbero <os>_<cpu> (used in cache key)
 #
-# Produces runtime and devel tarball packages for linux/android or .pkg for macos
-.cerbero template: &cerbero_package_and_check
-  - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
-  # Run gst-inspect-1.0 for some basic checks. Can't do this for cross-(android|ios)-universal, of course.
-  - |-
-      [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX --version
-  - |-
-      [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX
-  - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
-
 .cerbero:
   stage: "build"
   image: $CERBERO_IMAGE
@@ -690,29 +684,11 @@ valgrind ges:
     # location where cerbero is cached on the host
     CERBERO_HOST_DIR: "/cerbero/"
   before_script:
-    # FIXME Wrong namespace
-    # Workaround build-tools having hardcoded internal path
-    - pwd
-    - mkdir -p ../../gstreamer
-    - ln -sf $(pwd) ../../gstreamer/cerbero
-    - mkdir -p ../../${CI_PROJECT_NAMESPACE}
-    - ln -sf $(pwd) ../../${CI_PROJECT_NAMESPACE}/cerbero
-    - rsync -aH ${CERBERO_HOST_DIR} .
-    - echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" >> localconf.cbc
-    - echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
-    - ./cerbero-uninstalled --self-update manifest.xml
+    - curl -L -o cerbero_script.sh "${CERBERO_SCRIPT_URL}"
+    - chmod +x cerbero_script.sh
+    - ./cerbero_script.sh cerbero_before_script
   script:
-    - test "x${HAVE_CCACHE}" = "xyes" && ccache --show-stats
-    - $CERBERO $CERBERO_ARGS show-config
-    - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
-    - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
-    - $CERBERO $CERBERO_ARGS fetch-cache --branch ${GST_UPSTREAM_BRANCH}
-    - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
-          && test -d ${CERBERO_HOME}/dist/${ARCH}
-          && mkdir -p ${CERBERO_OVERRIDDEN_DIST_DIR}
-          && rsync -aH ${CERBERO_HOME}/dist/${ARCH}/ ${CERBERO_OVERRIDDEN_DIST_DIR}
-    - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
-    - *cerbero_package_and_check
+    - ./cerbero_script.sh cerbero_script
   cache:
     key: "${CI_JOB_NAME}"
     paths:
@@ -856,22 +832,7 @@ build msys2 :
   rules:
     - if: '$CI_PROJECT_NAME == "cerbero"'
   script:
-    - test "x${HAVE_CCACHE}" = "xyes" && ccache --show-stats
-    - $CERBERO $CERBERO_ARGS show-config
-    - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
-    - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
-    - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
-    - $CERBERO $CERBERO_ARGS build-deps --offline
-          gstreamer-1.0 gst-plugins-base-1.0 gst-plugins-good-1.0
-          gst-plugins-bad-1.0 gst-plugins-ugly-1.0 gst-rtsp-server-1.0
-          gst-libav-1.0 gst-devtools-1.0 gst-editing-services-1.0 libnice
-    - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
-          && mkdir -p ${CERBERO_HOME}/dist/${ARCH}
-          && rsync -aH ${CERBERO_OVERRIDDEN_DIST_DIR}/ ${CERBERO_HOME}/dist/${ARCH}
-    - $CERBERO $CERBERO_ARGS gen-cache --branch ${GST_UPSTREAM_BRANCH}
-    - test "x${CERBERO_PRIVATE_SSH_KEY}" = "x"
-          || $CERBERO $CERBERO_ARGS upload-cache --branch ${GST_UPSTREAM_BRANCH}
-    - *cerbero_package_and_check
+    - ./cerbero_script.sh cerbero_deps_script
 
 #
 # Cerbero Linux X86_64 build
