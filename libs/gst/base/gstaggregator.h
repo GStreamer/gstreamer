@@ -421,7 +421,8 @@ GST_BASE_API
 void            gst_aggregator_selected_samples     (GstAggregator                * self,
                                                      GstClockTime                   pts,
                                                      GstClockTime                   dts,
-                                                     GstClockTime                   duration);
+                                                     GstClockTime                   duration,
+                                                     GstStructure                 * info);
 
 /**
  * GstAggregatorStartTimeSelection:

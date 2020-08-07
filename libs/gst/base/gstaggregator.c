@@ -2739,6 +2739,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
    * @pts: The presentation timestamp of the next output buffer
    * @dts: The decoding timestamp of the next output buffer
    * @duration: The duration of the next output buffer
+   * @info: (nullable): a #GstStructure containing additional information
    *
    * Signals that the #GstAggregator subclass has selected the next set
    * of input samples it will aggregate. Handlers may call
@@ -2748,9 +2749,10 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
    */
   gst_aggregator_signals[SIGNAL_SAMPLES_SELECTED] =
       g_signal_new ("samples-selected", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 4,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 5,
       GST_TYPE_SEGMENT | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_CLOCK_TIME,
-      GST_TYPE_CLOCK_TIME, GST_TYPE_CLOCK_TIME);
+      GST_TYPE_CLOCK_TIME, GST_TYPE_CLOCK_TIME,
+      GST_TYPE_STRUCTURE | G_SIGNAL_TYPE_STATIC_SCOPE);
 }
 
 static inline gpointer
@@ -3615,6 +3617,7 @@ gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
  * @pts: The presentation timestamp of the next output buffer
  * @dts: The decoding timestamp of the next output buffer
  * @duration: The duration of the next output buffer
+ * @info: (nullable): a #GstStructure containing additional information
  *
  * Subclasses should call this when they have prepared the
  * buffers they will aggregate for each of their sink pads, but
@@ -3629,13 +3632,14 @@ gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
  */
 void
 gst_aggregator_selected_samples (GstAggregator * self,
-    GstClockTime pts, GstClockTime dts, GstClockTime duration)
+    GstClockTime pts, GstClockTime dts, GstClockTime duration,
+    GstStructure * info)
 {
   g_return_if_fail (GST_IS_AGGREGATOR (self));
 
   if (self->priv->emit_signals) {
     g_signal_emit (self, gst_aggregator_signals[SIGNAL_SAMPLES_SELECTED], 0,
-        &GST_AGGREGATOR_PAD (self->srcpad)->segment, pts, dts, duration);
+        &GST_AGGREGATOR_PAD (self->srcpad)->segment, pts, dts, duration, info);
   }
 
   self->priv->selected_samples_called_or_warned = TRUE;
