@@ -8,7 +8,14 @@ show_ccache_sum() {
 
 # Produces runtime and devel tarball packages for linux/android or .pkg for macos
 cerbero_package_and_check() {
-    $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o "$(pwd)" gstreamer-1.0
+    # FIXME: mingw translates $(pwd) in a broken way
+    if [[ $CONFIG == win??.cbc ]]; then
+        PACKAGE_PATH="$CI_PROJECT_DIR"
+    else
+        PACKAGE_PATH=$(pwd)
+    fi
+
+    $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o "$PACKAGE_PATH" gstreamer-1.0
 
     # Run gst-inspect-1.0 for some basic checks. Can't do this for cross-(android|ios)-universal, of course.
     if [[ $CONFIG != *universal* ]]; then
@@ -27,9 +34,41 @@ cerbero_before_script() {
     ln -sf "$(pwd)" "../../gstreamer/cerbero"
     mkdir -p "../../${CI_PROJECT_NAMESPACE}"
     ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
+
+    # Make sure there isn't a pre-existing config hanging around
+    rm -v -f localconf.cbc
+    rm -v -f ${CERBERO_HOST_DIR}/localconf.cbc
+
+    if [[ $CONFIG == win??.cbc ]]; then
+        # For windows hardcode the path so it doesn't get
+        # mangled by msys path handling
+        # FIXME: make the sources point to pwd/$CI_PROJECT_DIR like the rest
+        echo 'local_sources="C:/cerbero/cerbero-sources"' > localconf.cbc
+        echo 'home_dir="C:/cerbero/cerbero-build"' >> localconf.cbc
+
+        # Visual Studio 2017 build tools install path
+        echo 'vs_install_path = "C:/BuildTools"' >> localconf.cbc
+        echo 'vs_install_version = "vs15"' >> localconf.cbc
+    else
+        echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" > localconf.cbc
+        echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
+    fi
+
+    cat localconf.cbc
+
     rsync -aH "${CERBERO_HOST_DIR}" .
-    echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" >> localconf.cbc
-    echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
+
+    cat localconf.cbc
+
+    # FIXME: if you comment out this line it fails like so, no clue why. Its not windows defender either.
+    # From https://gitlab.freedesktop.org/gstreamer/cerbero
+    #    b02080cb..d6923e42  master     -> origin/master
+    # Fetching origin
+    # error: unable to create file cerbero-uninstalled: Permission denied
+    # fatal: Could not reset index file to revision 'd6923e4216c8a17759527a3db070d15cf7ff10a0'.
+    # ERROR: Failed to proceed with self update Command Error: Running ['git', 'reset', '--hard', 'd6923e4216c8a17759527a3db070d15cf7ff10a0'] returned 128
+    git status
+
     ./cerbero-uninstalled --self-update manifest.xml
 }
 

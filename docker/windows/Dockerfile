@@ -18,3 +18,6 @@ ARG DEFAULT_BRANCH="master"
 
 COPY prepare_gst_env.ps1 C:\
 RUN C:\prepare_gst_env.ps1
+
+COPY prepare_cerbero_env.sh  C:\
+RUN C:\MinGW\msys\1.0\bin\bash.exe --login -c "C:/prepare_cerbero_env.sh"

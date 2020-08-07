@@ -45,11 +45,11 @@ variables:
   TEST_MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$TEST_MANIFEST_AMD64_SUFFIX:$TEST_MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
   INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG-$GST_UPSTREAM_BRANCH"
 
-  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v11-master'
+  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v12-master'
 
   # FIXME: after merging the script
   # CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
-  CERBERO_SCRIPT_URL: 'https://gitlab.freedesktop.org/alatiera/gst-ci/-/raw/alatiera/cerbero-script-2/gitlab/cerbero_setup.sh'
+  CERBERO_SCRIPT_URL: 'https://gitlab.freedesktop.org/alatiera/gst-ci/-/raw/alatiera/cerbero-windows-attempt-6/gitlab/cerbero_setup.sh'
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
@@ -1178,3 +1178,46 @@ build gst-omx tizonia fedora x86_64:
     - ninja -C build
     - ninja -C build install
     - cd ..
+
+#
+# Cerbero Native Windows builds
+#
+.cerbero windows native:
+  needs: ['manifest']
+  image: $WINDOWS_IMAGE
+  tags:
+    - 'docker'
+    - 'windows'
+    - 'gstreamer-windows'
+    - '1809'
+  variables:
+    CONFIG: 'win64.cbc'
+    ARCH: 'msvc_x86_64'
+    # rsync doesn't like windows paths like `C:/cerbero`
+    CERBERO_HOST_DIR: "/c/cerbero/"
+    CERBERO_HOME: "C:/cerbero-build"
+    CERBERO_SOURCES: "C:/cerbero-sources"
+    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v visualstudio -v nowerror"
+    CERBERO_RUN_SUFFIX: ".exe"
+    HAVE_CCACHE: ""
+  # FIXME: for some reason the runner is hanging when trying to upload artifacts
+  artifacts:
+    paths: []
+  before_script:
+    - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\', '/')
+    - $env:CERBERO_SCRIPTS_PATH = "$env:CI_PROJECT_DIR/cerbero_setup.sh"
+
+    - Invoke-WebRequest -Uri $env:CERBERO_SCRIPT_URL -OutFile $env:CERBERO_SCRIPTS_PATH
+    - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_before_script"
+
+cerbero deps msvc x86_64:
+  extends: ['.cerbero deps', '.cerbero windows native']
+  script:
+    - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_deps_script"
+
+build cerbero msvc x86_64:
+  extends: ['.cerbero', '.cerbero windows native']
+  script:
+    - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_script"
+  rules:
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
