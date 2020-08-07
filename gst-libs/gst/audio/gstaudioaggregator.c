@@ -60,6 +60,20 @@
  * have the same sample rate as either the downstream requirement,
  * or the first configured pad, or a combination of both (when
  * downstream specifies a range or a set of acceptable rates).
+ *
+ * The #GstAggregator::samples-selected signal is provided with some
+ * additional information about the output buffer:
+ * - "offset"  G_TYPE_UINT64   Offset in samples since segment start
+ *   for the position that is next to be filled in the output buffer.
+ * - "frames"  G_TYPE_UINT   Number of frames per output buffer.
+ *
+ * In addition the gst_aggregator_peek_next_sample() function returns
+ * additional information in the info #GstStructure of the returned sample:
+ * - "output-offset"  G_TYPE_UINT64   Sample offset in output segment relative to
+ *   the output segment's start where the current position of this input
+ *   buffer would be placed
+ * - "position"  G_TYPE_UINT   current position in the input buffer in samples
+ * - "size"  G_TYPE_UINT   size of the input buffer in samples
  */
 
 
@@ -89,8 +103,8 @@ struct _GstAudioAggregatorPadPrivate
   GstBuffer *input_buffer;
 
   guint64 output_offset;        /* Sample offset in output segment relative to
-                                   pad.segment.start that position refers to
-                                   in the current buffer. */
+                                   srcpad.segment.start where the current position
+                                   of this input_buffer would be placed. */
 
   guint64 next_offset;          /* Next expected sample offset relative to
                                    pad.segment.start */
@@ -389,6 +403,10 @@ struct _GstAudioAggregatorPrivate
 
   /* Sample offset starting from 0 at aggregator.segment.start */
   gint64 offset;
+
+  /* info structure passed to selected-samples signal, must only be accessed
+   * from the aggregate thread */
+  GstStructure *selected_samples_info;
 };
 
 #define GST_AUDIO_AGGREGATOR_LOCK(self)   g_mutex_lock (&(self)->priv->mutex);
@@ -427,6 +445,8 @@ gst_audio_aggregator_update_src_caps (GstAggregator * agg,
     GstCaps * caps, GstCaps ** ret);
 static GstCaps *gst_audio_aggregator_fixate_src_caps (GstAggregator * agg,
     GstCaps * caps);
+static GstSample *gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
+    GstAggregatorPad * aggpad);
 
 #define DEFAULT_OUTPUT_BUFFER_DURATION (10 * GST_MSECOND)
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
@@ -560,6 +580,7 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
   gstaggregator_class->fixate_src_caps = gst_audio_aggregator_fixate_src_caps;
   gstaggregator_class->negotiated_src_caps =
       gst_audio_aggregator_negotiated_src_caps;
+  gstaggregator_class->peek_next_sample = gst_audio_aggregator_peek_next_sample;
 
   klass->create_output_buffer = gst_audio_aggregator_create_output_buffer;
 
@@ -618,6 +639,9 @@ gst_audio_aggregator_init (GstAudioAggregator * aagg)
   gst_audio_aggregator_recalculate_latency (aagg);
 
   aagg->current_caps = NULL;
+
+  aagg->priv->selected_samples_info =
+      gst_structure_new_empty ("GstAudioAggregatorSelectedSamplesInfo");
 }
 
 static void
@@ -626,6 +650,8 @@ gst_audio_aggregator_dispose (GObject * object)
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (object);
 
   gst_caps_replace (&aagg->current_caps, NULL);
+
+  gst_clear_structure (&aagg->priv->selected_samples_info);
 
   g_mutex_clear (&aagg->priv->mutex);
 
@@ -1871,6 +1897,33 @@ sync_pad_values (GstElement * aagg, GstPad * pad, gpointer user_data)
   return TRUE;
 }
 
+static GstSample *
+gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
+    GstAggregatorPad * aggpad)
+{
+  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
+  GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (aggpad);
+  GstSample *sample = NULL;
+
+  if (pad->priv->buffer && pad->priv->output_offset >= aagg->priv->offset
+      && pad->priv->output_offset <
+      aagg->priv->offset + aagg->priv->samples_per_buffer) {
+    GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
+    GstStructure *info =
+        gst_structure_new ("GstAudioAggregatorPadNextSampleInfo",
+        "output-offset", G_TYPE_UINT64, pad->priv->output_offset,
+        "position", G_TYPE_UINT, pad->priv->position,
+        "size", G_TYPE_UINT, pad->priv->size,
+        NULL);
+
+    sample = gst_sample_new (pad->priv->buffer, caps, &aggpad->segment, info);
+    gst_caps_unref (caps);
+    gst_structure_free (info);
+  }
+
+  return sample;
+}
+
 static GstFlowReturn
 gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 {
@@ -2117,8 +2170,27 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     }
 
     g_assert (pad->priv->buffer);
+    GST_OBJECT_UNLOCK (pad);
+  }
+  GST_OBJECT_UNLOCK (agg);
 
-    if (pad->priv->output_offset >= aagg->priv->offset
+  {
+    gst_structure_set (aagg->priv->selected_samples_info, "offset",
+        G_TYPE_UINT64, aagg->priv->offset, "frames", G_TYPE_UINT, blocksize,
+        NULL);
+    gst_aggregator_selected_samples (agg, agg_segment->position,
+        GST_CLOCK_TIME_NONE, next_timestamp - agg_segment->position,
+        aagg->priv->selected_samples_info);
+  }
+
+  GST_OBJECT_LOCK (agg);
+  for (iter = element->sinkpads; iter; iter = iter->next) {
+    GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
+    GstAggregatorPad *aggpad = (GstAggregatorPad *) iter->data;
+
+    GST_OBJECT_LOCK (pad);
+
+    if (pad->priv->buffer && pad->priv->output_offset >= aagg->priv->offset
         && pad->priv->output_offset < aagg->priv->offset + blocksize) {
       gboolean drop_buf;
 
