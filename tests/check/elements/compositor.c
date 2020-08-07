@@ -2170,7 +2170,8 @@ static GstBuffer *expected_selected_buffer = NULL;
 
 static void
 samples_selected_cb (GstAggregator * agg, GstSegment * segment,
-    GstClockTime pts, GstClockTime dts, GstClockTime duration, gint * called)
+    GstClockTime pts, GstClockTime dts, GstClockTime duration,
+    GstStructure * info, gint * called)
 {
   GstPad *pad;
   GstSample *sample;

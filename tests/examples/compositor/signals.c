@@ -62,7 +62,8 @@ check_aggregated_buffer (GstElement * agg, GstPad * pad,
 
 static void
 samples_selected_cb (GstElement * agg, GstSegment * segment, GstClockTime pts,
-    GstClockTime dts, GstClockTime duration, GHashTable * consumed_buffers)
+    GstClockTime dts, GstClockTime duration, GstStructure * info,
+    GHashTable * consumed_buffers)
 {
   gst_printerr
       ("Compositor has selected the samples it will aggregate for output buffer with PTS %"

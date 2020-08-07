@@ -1773,7 +1773,7 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
 
   /* Let the application know that input buffers have been staged */
   gst_aggregator_selected_samples (agg, GST_BUFFER_PTS (*outbuf),
-      GST_BUFFER_DTS (*outbuf), GST_BUFFER_DURATION (*outbuf));
+      GST_BUFFER_DTS (*outbuf), GST_BUFFER_DURATION (*outbuf), NULL);
 
   /* Convert all the frames the subclass has before aggregating */
   gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), prepare_frames, NULL);
