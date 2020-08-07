@@ -70,7 +70,9 @@ GstBuffer *expected_video_buffer = NULL;
 GstBuffer *expected_caption_buffer = NULL;
 
 static void
-samples_selected_cb (GstAggregator * agg)
+samples_selected_cb (GstAggregator * agg, GstSegment * segment,
+    GstClockTime pts, GstClockTime dts, GstClockTime duration,
+    GstStructure * info, gpointer user_data)
 {
   GstBufferList *buflist;
   GstPad *caption_pad =

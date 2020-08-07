@@ -100,7 +100,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     self->current_video_buffer = NULL;
     gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self),
         GST_BUFFER_PTS (video_buf), GST_BUFFER_DTS (video_buf),
-        GST_BUFFER_DURATION (video_buf));
+        GST_BUFFER_DURATION (video_buf), NULL);
     goto done;
   }
 
@@ -209,7 +209,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
   gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self),
       GST_BUFFER_PTS (self->current_video_buffer),
       GST_BUFFER_DTS (self->current_video_buffer),
-      GST_BUFFER_DURATION (self->current_video_buffer));
+      GST_BUFFER_DURATION (self->current_video_buffer), NULL);
 
   if (self->current_frame_captions->len > 0) {
     guint i;
