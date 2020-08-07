@@ -53,6 +53,10 @@ gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req
     fallback : ['gst-plugins-bad', 'gstcodecparsers_dep'])
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
+gstglproto_dep = dependency('', required : false)
+gstglx11_dep = dependency('', required : false)
+gstglwayland_dep = dependency('', required : false)
+gstglegl_dep = dependency('', required : false)
 
 # Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'
@@ -116,10 +120,31 @@ USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() a
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
 USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner_bin.found() and get_option('with_wayland') != 'no'
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
-USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl_dep.found() and get_option('with_glx') != 'no' and USE_X11
+USE_GLX = gl_dep.found() and libdl_dep.found() and get_option('with_glx') != 'no' and USE_X11
 
 if not (USE_DRM or USE_X11 or USE_WAYLAND)
   error('No renderer API found (it is requried either DRM, X11 and/or WAYLAND)')
+endif
+
+if gstgl_dep.found()
+  gstglproto_dep = dependency('gstreamer-gl-prototypes-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'gstglproto_dep'], required: true)
+  # Behind specific checks because meson fails at optional dependencies with a
+  # fallback to the same subproject.  On the first failure, meson will never
+  # check the system again even if the fallback never existed.
+  # Last checked with meson 0.54.3
+  if USE_X11
+    gstglx11_dep = dependency('gstreamer-gl-x11-1.0', version : gst_req,
+       fallback : ['gst-plugins-base', 'gstglx11_dep'], required: true)
+  endif
+  if USE_WAYLAND
+    gstglwayland_dep = dependency('gstreamer-gl-wayland-1.0', version : gst_req,
+        fallback : ['gst-plugins-base', 'gstglwayland_dep'], required: true)
+  endif
+  if USE_EGL
+    gstglegl_dep = dependency('gstreamer-gl-egl-1.0', version : gst_req,
+        fallback : ['gst-plugins-base', 'gstglegl_dep'], required: true)
+  endif
 endif
 
 driverdir = libva_dep.get_pkgconfig_variable('driverdir')

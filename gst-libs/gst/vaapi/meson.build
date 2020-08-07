@@ -203,6 +203,7 @@ endif
 gstlibvaapi_deps = [ gstbase_dep,
                      gstvideo_dep,
                      gstgl_dep,
+                     gstglproto_dep,
                      gstcodecparsers_dep,
                      libva_dep,
                      libm ]
@@ -210,16 +211,16 @@ if USE_DRM
   gstlibvaapi_deps  += [libva_drm_dep, libdrm_dep, libudev_dep]
 endif
 if USE_EGL
-  gstlibvaapi_deps  += [egl_dep, gmodule_dep]
+  gstlibvaapi_deps  += [egl_dep, gmodule_dep, gstglegl_dep]
 endif
 if USE_GLX
   gstlibvaapi_deps  += [libva_x11_dep, x11_dep, gl_dep, libdl_dep]
 endif
 if USE_WAYLAND
-  gstlibvaapi_deps  += [libva_wayland_dep, wayland_client_dep, wayland_protocols_dep]
+  gstlibvaapi_deps  += [libva_wayland_dep, gstglwayland_dep, wayland_client_dep, wayland_protocols_dep]
 endif
 if USE_X11
-  gstlibvaapi_deps  += [libva_x11_dep, x11_dep, xrandr_dep]
+  gstlibvaapi_deps  += [libva_x11_dep, x11_dep, xrandr_dep, gstglx11_dep]
 endif
 
 gstlibvaapi = static_library('gstlibvaapi-@0@'.format(api_version),
