@@ -677,6 +677,39 @@ _format_changed (GstVaH264Dec * self, VAProfile new_profile, guint new_rtformat,
       && width == new_width && height == new_height);
 }
 
+static void
+_set_latency (GstVaH264Dec * self, const GstH264SPS * sps)
+{
+  GstClockTime duration, min, max;
+  gint fps_d, fps_n;
+  guint32 num_reorder_frames;
+
+  fps_d = self->output_state->info.fps_d;
+  fps_n = self->output_state->info.fps_n;
+
+  /* if 0/1 then 25/1 */
+  if (fps_n == 0) {
+    fps_n = 25;
+    fps_d = 1;
+  }
+
+  num_reorder_frames = 1;
+  if (sps->vui_parameters_present_flag
+      && sps->vui_parameters.bitstream_restriction_flag)
+    num_reorder_frames = sps->vui_parameters.num_reorder_frames;
+  if (num_reorder_frames > self->dpb_size)
+    num_reorder_frames = 1;
+
+  duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+  min = num_reorder_frames * duration;
+  max = self->dpb_size * duration;
+
+  GST_LOG_OBJECT (self,
+      "latency min %" G_GUINT64_FORMAT " max %" G_GUINT64_FORMAT, min, max);
+
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), min, max);
+}
+
 static gboolean
 gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gint max_dpb_size)
@@ -739,6 +772,8 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
     }
+
+    _set_latency (self, sps);
   }
 
   return TRUE;
