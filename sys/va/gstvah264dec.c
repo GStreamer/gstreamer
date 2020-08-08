@@ -1300,13 +1300,16 @@ gst_va_h264_dec_set_context (GstElement * element, GstContext * context)
   GstVaDisplay *old_display, *new_display;
   GstVaH264Dec *self = GST_VA_H264_DEC (element);
   GstVaH264DecClass *klass = GST_VA_H264_DEC_GET_CLASS (self);
+  gboolean ret;
 
   old_display = self->display ? gst_object_ref (self->display) : NULL;
-  gst_va_handle_set_context (element, context, klass->render_device_path,
+  ret = gst_va_handle_set_context (element, context, klass->render_device_path,
       &self->display);
   new_display = self->display ? gst_object_ref (self->display) : NULL;
 
-  if (old_display && new_display && old_display != new_display && self->decoder) {
+  if (!ret
+      || (old_display && new_display && old_display != new_display
+          && self->decoder)) {
     GST_ELEMENT_WARNING (element, RESOURCE, BUSY,
         ("Can't replace VA display while operating"), (NULL));
   }
