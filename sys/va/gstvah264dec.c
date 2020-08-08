@@ -741,8 +741,6 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     }
   }
 
-  /* @TODO: check if it is required to copy surfaces to downstream */
-
   return TRUE;
 }
 
