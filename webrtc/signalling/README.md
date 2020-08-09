@@ -13,7 +13,7 @@ In three separate tabs, run consecutively:
 
 ```console
 $ ./generate_cert.sh
-$ ./simple-server.py
+$ ./simple_server.py
 ```
 
 ### Session Based
