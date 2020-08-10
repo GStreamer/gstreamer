@@ -8,4 +8,4 @@ typelibdir=@abs_top_builddir@/gst-libs/gst/gl
 Name: GStreamer OpenGL Plugins Libraries (Wayland Specifics), Uninstalled
 Description: Streaming media framework, OpenGL plugins libraries (Wayland specifics), uninstalled
 Version: @VERSION@
-Requires: gtreamer-gl-@GST_API_VERSION@ wayland-egl wayland-client
+Requires: gstreamer-gl-@GST_API_VERSION@ wayland-egl wayland-client

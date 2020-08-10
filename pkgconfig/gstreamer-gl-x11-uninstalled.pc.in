@@ -8,4 +8,4 @@ typelibdir=@abs_top_builddir@/gst-libs/gst/gl
 Name: GStreamer OpenGL Plugins Libraries (X11 Specifics), Uninstalled
 Description: Streaming media framework, OpenGL plugins libraries (X11 specifics), uninstalled
 Version: @VERSION@
-Requires: gtreamer-gl-@GST_API_VERSION@ x11-xcb
+Requires: gstreamer-gl-@GST_API_VERSION@ x11-xcb
