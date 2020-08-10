@@ -1921,7 +1921,7 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts)
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (pads);
         /* Clear the best pad and start again. It might have disappeared */
-        gst_object_replace ((GstObject **) best, NULL);
+        gst_object_replace ((GstObject **) & best, NULL);
         best_ts = GST_CLOCK_TIME_NONE;
         break;
       case GST_ITERATOR_ERROR:
