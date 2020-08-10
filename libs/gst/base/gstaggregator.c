@@ -2735,6 +2735,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   /**
    * GstAggregator::samples-selected:
+   * @aggregator: The #GstAggregator that emitted the signal
    * @segment: The #GstSegment the next output buffer is part of
    * @pts: The presentation timestamp of the next output buffer
    * @dts: The decoding timestamp of the next output buffer
@@ -3189,6 +3190,7 @@ gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
 
   /**
    * GstAggregatorPad:buffer-consumed:
+   * @aggregator: The #GstAggregator that emitted the signal
    * @buffer: The buffer that was consumed
    *
    * Signals that a buffer was consumed. As aggregator pads store buffers
