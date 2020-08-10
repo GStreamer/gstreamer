@@ -1324,8 +1324,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
           if (!gst_base_src_new_segment (bsrc, segment)) {
             GST_ERROR_OBJECT (appsrc,
                 "Couldn't set new segment %" GST_PTR_FORMAT, event);
-            ret = GST_FLOW_ERROR;
-            break;
+            gst_event_unref (event);
+            goto invalid_segment;
           }
           gst_segment_copy_into (segment, &priv->current_segment);
         }
@@ -1403,6 +1403,14 @@ seek_error:
     g_mutex_unlock (&priv->mutex);
     GST_ELEMENT_ERROR (appsrc, RESOURCE, READ, ("failed to seek"),
         GST_ERROR_SYSTEM);
+    return GST_FLOW_ERROR;
+  }
+
+invalid_segment:
+  {
+    g_mutex_unlock (&priv->mutex);
+    GST_ELEMENT_ERROR (appsrc, LIBRARY, SETTINGS,
+        (NULL), ("Failed to configure the provided input segment."));
     return GST_FLOW_ERROR;
   }
 }
