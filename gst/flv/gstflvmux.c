@@ -1959,6 +1959,12 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     }
 
     best = gst_flv_mux_find_best_pad (aggregator, &ts);
+    if (!best) {
+      if (!gst_flv_mux_are_all_pads_eos (mux))
+        return GST_AGGREGATOR_FLOW_NEED_DATA;
+      else
+        return GST_FLOW_OK;
+    }
 
     ret = gst_flv_mux_write_header (mux);
     if (ret != GST_FLOW_OK) {
@@ -2006,6 +2012,8 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
         GST_STIME_FORMAT, GST_TIME_ARGS (best->pts),
         GST_STIME_ARGS (best->dts));
   } else {
+    if (!gst_flv_mux_are_all_pads_eos (mux))
+      return GST_AGGREGATOR_FLOW_NEED_DATA;
     best_time = GST_CLOCK_STIME_NONE;
   }
 
