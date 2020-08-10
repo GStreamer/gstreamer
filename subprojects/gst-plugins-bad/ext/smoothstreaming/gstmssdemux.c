@@ -310,11 +310,20 @@ gst_mss_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
   ret = gst_mss_stream_get_fragment_url (mssstream->manifest_stream, &path);
 
   if (ret == GST_FLOW_OK) {
-    stream->fragment.uri = g_strdup_printf ("%s/%s", mssdemux->base_url, path);
+    GstUri *base_url, *frag_url;
+
+    base_url = gst_uri_from_string (mssdemux->base_url);
+    frag_url = gst_uri_from_string_with_base (base_url, path);
+
+    g_free (stream->fragment.uri);
+    stream->fragment.uri = gst_uri_to_string (frag_url);
     stream->fragment.timestamp =
         gst_mss_stream_get_fragment_gst_timestamp (mssstream->manifest_stream);
     stream->fragment.duration =
         gst_mss_stream_get_fragment_gst_duration (mssstream->manifest_stream);
+
+    gst_uri_unref (base_url);
+    gst_uri_unref (frag_url);
   }
   g_free (path);
 
@@ -519,25 +528,14 @@ static void
 gst_mss_demux_update_base_url (GstMssDemux * mssdemux)
 {
   GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (mssdemux);
-  gchar *baseurl_end;
 
   g_free (mssdemux->base_url);
 
   mssdemux->base_url =
       g_strdup (demux->manifest_base_uri ? demux->manifest_base_uri : demux->
       manifest_uri);
-  baseurl_end = g_strrstr (mssdemux->base_url, "/Manifest");
-  if (baseurl_end == NULL) {
-    /* second try */
-    baseurl_end = g_strrstr (mssdemux->base_url, "/manifest");
-  }
-  if (baseurl_end) {
-    /* set the new end of the string */
-    baseurl_end[0] = '\0';
-  } else {
-    GST_WARNING_OBJECT (mssdemux, "Stream's URI didn't end with /manifest");
-  }
 
+  GST_DEBUG ("base url: %s", mssdemux->base_url);
 }
 
 static gboolean
