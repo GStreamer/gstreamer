@@ -634,6 +634,18 @@ void GstQuickRenderer::initializeGstGL ()
         return;
     }
     GST_INFO ("current QOpenGLContext %p", QOpenGLContext::currentContext());
+
+    /* XXX: Avoid an assertion inside QSGDefaultRenderContext::initialize()
+     * from an unused (in this scenario) property when using multiple
+     * QQuickRenderControl's with the same QOpenGLContext.
+     *
+     * First noticed with Qt 5.15.  Idea from:
+     * https://forum.qt.io/topic/55888/is-it-impossible-that-2-qquickrendercontrol-use-same-qopenglcontext/2
+     *
+     * ASSERT: "!m_gl->property(QSG_RENDERCONTEXT_PROPERTY).isValid()" in file /path/to/qt5/qtdeclarative/src/quick/scenegraph/qsgdefaultrendercontext.cpp, line 121
+     */
+    m_sharedRenderData->m_context->setProperty("_q_sgrendercontext", QVariant());
+
     m_renderControl->initialize(m_sharedRenderData->m_context);
 
     /* 1. QAnimationDriver's are thread-specific
