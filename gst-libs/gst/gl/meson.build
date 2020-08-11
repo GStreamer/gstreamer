@@ -501,6 +501,7 @@ if need_platform_egl != 'no'
       'egl/gstgldisplay_egl_device.c',
     ]
     gl_egl_headers += [
+      'egl/egl.h',
       'egl/gstegl.h',
       'egl/gsteglimage.h',
       'egl/gstgldisplay_egl.h',
@@ -584,6 +585,7 @@ if need_win_wayland != 'no'
         xdg_shell_code,
       ]
       gl_wayland_headers += [
+        'wayland/wayland.h',
         'wayland/gstgldisplay_wayland.h'
       ]
       glconf.set('GST_GL_HAVE_WINDOW_WAYLAND', 1)
@@ -621,6 +623,7 @@ if need_win_x11 != 'no'
       'x11/xcb_event_source.c',
     ]
     gl_x11_headers += [
+      'x11/x11.h',
       'x11/gstgldisplay_x11.h',
     ]
     glconf.set('GST_GL_HAVE_WINDOW_X11', 1)
@@ -1029,7 +1032,7 @@ if build_gstgl
         export_packages : 'gstreamer-gl-x11-1.0',
         includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', gl_gir[0]],
         install : true,
-        extra_args : gir_init_section + ['--c-include=gst/gl/gl.h'],
+        extra_args : gir_init_section + ['--c-include=gst/gl/x11/x11.h'],
         dependencies : [video_dep, gst_dep, gst_base_dep]
       )
     endif
@@ -1050,7 +1053,7 @@ if build_gstgl
         export_packages : 'gstreamer-gl-wayland-1.0',
         includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', gl_gir[0]],
         install : true,
-        extra_args : gir_init_section + ['--c-include=gst/gl/gl.h'],
+        extra_args : gir_init_section + ['--c-include=gst/gl/wayland/wayland.h'],
         dependencies : [video_dep, gst_dep, gst_base_dep]
       )
     endif
@@ -1071,7 +1074,7 @@ if build_gstgl
         export_packages : 'gstreamer-gl-egl-1.0',
         includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', gl_gir[0]],
         install : true,
-        extra_args : gir_init_section + ['--c-include=gst/gl/gl.h'],
+        extra_args : gir_init_section + ['--c-include=gst/gl/egl/egl.h'],
         dependencies : [video_dep, gst_dep, gst_base_dep]
       )
     endif
