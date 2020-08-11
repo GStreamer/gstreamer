@@ -68,6 +68,8 @@ v4l2_profile_from_string (const gchar * profile)
     v4l2_profile = V4L2_MPEG_VIDEO_H264_PROFILE_STEREO_HIGH;
   } else if (g_str_equal (profile, "multiview-high")) {
     v4l2_profile = V4L2_MPEG_VIDEO_H264_PROFILE_MULTIVIEW_HIGH;
+  } else if (g_str_equal (profile, "constrained-high")) {
+    v4l2_profile = V4L2_MPEG_VIDEO_H264_PROFILE_CONSTRAINED_HIGH;
   } else {
     GST_WARNING ("Unsupported profile string '%s'", profile);
   }
@@ -113,6 +115,8 @@ v4l2_profile_to_string (gint v4l2_profile)
       return "stereo-high";
     case V4L2_MPEG_VIDEO_H264_PROFILE_MULTIVIEW_HIGH:
       return "multiview-high";
+    case V4L2_MPEG_VIDEO_H264_PROFILE_CONSTRAINED_HIGH:
+      return "constrained-high";
     default:
       GST_WARNING ("Unsupported V4L2 profile %i", v4l2_profile);
       break;
@@ -158,6 +162,14 @@ v4l2_level_from_string (const gchar * level)
     v4l2_level = V4L2_MPEG_VIDEO_H264_LEVEL_5_0;
   else if (g_str_equal (level, "5.1"))
     v4l2_level = V4L2_MPEG_VIDEO_H264_LEVEL_5_1;
+  else if (g_str_equal (level, "5.2"))
+    v4l2_level = V4L2_MPEG_VIDEO_H264_LEVEL_5_2;
+  else if (g_str_equal (level, "6"))
+    v4l2_level = V4L2_MPEG_VIDEO_H264_LEVEL_6_0;
+  else if (g_str_equal (level, "6.1"))
+    v4l2_level = V4L2_MPEG_VIDEO_H264_LEVEL_6_1;
+  else if (g_str_equal (level, "6.2"))
+    v4l2_level = V4L2_MPEG_VIDEO_H264_LEVEL_6_2;
   else
     GST_WARNING ("Unsupported level '%s'", level);
 
@@ -200,6 +212,14 @@ v4l2_level_to_string (gint v4l2_level)
       return "5";
     case V4L2_MPEG_VIDEO_H264_LEVEL_5_1:
       return "5.1";
+    case V4L2_MPEG_VIDEO_H264_LEVEL_5_2:
+      return "5.2";
+    case V4L2_MPEG_VIDEO_H264_LEVEL_6_0:
+      return "6";
+    case V4L2_MPEG_VIDEO_H264_LEVEL_6_1:
+      return "6.1";
+    case V4L2_MPEG_VIDEO_H264_LEVEL_6_2:
+      return "6.2";
     default:
       GST_WARNING ("Unsupported V4L2 level %i", v4l2_level);
       break;
