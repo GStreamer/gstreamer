@@ -1,0 +1,9 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
+
+Name: GStreamer Vulkan (Wayland Specifics)
+Description: GStreamer Vulkan support (Wayland Specifics)
+Requires: gstreamer-vulkan-@GST_API_VERSION@ wayland-client
+Version: @VERSION@

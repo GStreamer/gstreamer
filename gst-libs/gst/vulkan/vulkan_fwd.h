@@ -22,6 +22,7 @@
 #define __GST_VULKAN_FWD_H__
 
 #include <gst/gst.h>
+#include <gst/vulkan/vulkan-prelude.h>
 
 G_BEGIN_DECLS
 

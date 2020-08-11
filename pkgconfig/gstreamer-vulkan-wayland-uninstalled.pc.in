@@ -1,0 +1,9 @@
+prefix=
+exec_prefix=
+libdir=@vulkanlibdir@
+includedir=@abs_top_srcdir@/gst-libs
+
+Name: GStreamer Vulkan (Wayland Specifics), Uninstalled
+Description: GStreamer Vulkan support (Wayland Specifics), uninstalled
+Requires: gstreamer-vulkan-@GST_API_VERSION@ wayland-client
+Version: @VERSION@

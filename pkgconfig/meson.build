@@ -42,7 +42,15 @@ pkg_libs = [
 
 if gstvulkan_dep.found()
   pkgconf.set('vulkanlibdir', join_paths(meson.build_root(), gstvulkan.outdir()))
+  pkgconf.set('VULKAN_WINSYS', ' '.join(enabled_vulkan_winsys))
   pkg_libs += 'vulkan'
+
+  if enabled_vulkan_winsys.contains('xcb')
+    pkg_libs += 'vulkan-xcb'
+  endif
+  if enabled_vulkan_winsys.contains('wayland')
+    pkg_libs += 'vulkan-wayland'
+  endif
 endif
 
 foreach p : pkg_libs

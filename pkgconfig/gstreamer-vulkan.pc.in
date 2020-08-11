@@ -2,6 +2,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_API_VERSION@
+vulkan_winsys=@VULKAN_WINSYS@
 
 Name: GStreamer Vulkan
 Description: GStreamer Vulkan support

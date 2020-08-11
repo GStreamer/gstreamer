@@ -2,6 +2,8 @@ prefix=
 exec_prefix=
 libdir=@vulkanlibdir@
 includedir=@abs_top_srcdir@/gst-libs
+vulkan_winsys=@VULKAN_WINSYS@
+
 
 Name: GStreamer Vulkan, Uninstalled
 Description: GStreamer Vulkan support, uninstalled

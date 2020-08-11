@@ -100,7 +100,8 @@ foreach f: [
         'ext/*/*.h',
         'sys/*/*.h',
         'gst/*/*.h',
-        'gst-libs/gst/*/*-prelude.h'
+        'gst-libs/gst/*/*-prelude.h',
+        'gst-libs/gst/vulkan/vulkan_fwd.h'
     ]
     excludes += [join_paths(meson.current_source_dir(), root_rel, f)]
 endforeach
@@ -119,7 +120,27 @@ if build_gir
         {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
         {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},
         {'name': 'codecs', 'gir': codecs_gir, 'lib': gstcodecs_dep},
-   ]
+    ]
+
+    if gstvulkan_dep.found()
+        libs += [
+             {'name': 'vulkan', 'gir': vulkan_gir, 'lib': gstvulkan_dep, 'suffix': 'lib'},
+        ]
+        if enabled_vulkan_winsys.contains('xcb')
+            libs += [
+                {'name': 'vulkan-xcb', 'gir': vulkan_xcb_gir, 'lib': gstvulkanxcb_dep, 'extra_sources' : [
+                    join_paths(root_rel, 'gst-libs/gst/vulkan/xcb/gstvkdisplay_xcb.[ch]'),
+                ]},
+            ]
+        endif
+        if enabled_vulkan_winsys.contains('wayland')
+            libs += [
+                {'name': 'vulkan-wayland', 'gir': vulkan_wayland_gir, 'lib': gstvulkanwayland_dep, 'extra_sources' : [
+                    join_paths(root_rel, 'gst-libs/gst/vulkan/wayland/gstvkdisplay_wayland.[ch]'),
+                ]},
+            ]
+        endif
+    endif
 endif
 
 has_gi_extension = hotdoc.has_extensions('gi-extension')
@@ -128,12 +149,14 @@ libs_doc = []
 foreach lib_def: libs
   name = lib_def['name']
   lib = lib_def['lib']
+  extra_sources = lib_def.get('extra_sources', [])
 
   c_source_patterns = lib_def.get('c_source_patterns', ['*.[hc]'])
   c_sources = []
   foreach pattern: c_source_patterns
     c_sources += join_paths(root_rel, 'gst-libs/gst', name, pattern)
   endforeach
+  c_sources += extra_sources
 
     if lib_def.has_key('gir')
         if has_gi_extension
