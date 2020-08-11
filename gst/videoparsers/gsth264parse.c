@@ -1997,6 +1997,10 @@ get_level_string (GstH264SPS * sps)
         return "5.1";
       case 52:
         return "5.2";
+      case 61:
+        return "6.1";
+      case 62:
+        return "6.2";
       default:
         return NULL;
     }
