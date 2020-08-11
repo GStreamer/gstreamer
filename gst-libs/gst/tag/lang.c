@@ -370,6 +370,10 @@ gst_tag_get_language_code_iso_639_1 (const gchar * lang_code)
     if (strcmp (lang_code, iso_639_codes[i].iso_639_1) == 0 ||
         strcmp (lang_code, iso_639_codes[i].iso_639_2) == 0) {
       c = iso_639_codes[i].iso_639_1;
+
+      /* If the language code does not have a 2-letter representation, the table
+       * holds an empty string. We want to return NULL in that case. */
+      c = c[0] != '\0' ? c : NULL;
       break;
     }
   }
