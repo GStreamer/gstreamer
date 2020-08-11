@@ -711,6 +711,10 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
         return "5.1";
       case 52:
         return "5.2";
+      case 61:
+        return "6.1";
+      case 62:
+        return "6.2";
       default:
         return NULL;
     }
@@ -764,6 +768,12 @@ gst_codec_utils_h264_get_level_idc (const gchar * level)
     return 51;
   else if (!strcmp (level, "5.2"))
     return 52;
+  else if (!strcmp (level, "6"))
+    return 60;
+  else if (!strcmp (level, "6.1"))
+    return 61;
+  else if (!strcmp (level, "6.2"))
+    return 62;
 
   GST_WARNING ("Invalid level %s", level);
   return 0;
