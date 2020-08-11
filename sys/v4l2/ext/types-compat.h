@@ -24,6 +24,8 @@
 #ifndef __TYPES_COMPAT_H__
 #define __TYPES_COMPAT_H__
 
+#define __user
+
 #ifdef   __linux__
 #include <linux/types.h>
 #include <asm/ioctl.h>
