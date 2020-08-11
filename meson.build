@@ -297,6 +297,18 @@ if get_option('default_library') == 'static'
       requires = ['glib-2.0', 'gobject-2.0']
   endif
 
+  link_deps = []
+  if get_option('gst-full-version-script') != ''
+    symbol_map = meson.current_source_dir() / get_option('gst-full-version-script')
+    link_arg = '-Wl,--version-script=' + symbol_map
+    if cc.has_link_argument(link_arg)
+      gstfull_link_args += link_arg
+    else
+      error('Failed to link with version script (' + symbol_map + '), check logs for details')
+    endif
+    link_deps += symbol_map
+  endif
+
   # Build both shared and static library
   gstfull = both_libraries('gstreamer-full-1.0',
     init_static_plugins_c,
@@ -304,6 +316,7 @@ if get_option('default_library') == 'static'
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
     dependencies : gst_dep,
+    link_depends : link_deps,
     install : true,
   )
   pkgconfig.generate(gstfull,

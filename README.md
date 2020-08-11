@@ -131,6 +131,12 @@ Since *1.20.0* `gst_init_static_plugins()` is called automatically by
 `gst_init()` and applications must not call it manually any more. The header
 file has been removed from public API.
 
+One can use the `gst-full-version-script` option to pass a
+[version script](https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html)
+to the linker. This can be used to control the exact symbols that are exported by
+the gstreamer-full library, allowing the linker to garbage collect unused code
+and so reduce the total library size.
+
 This is an experimental feature, backward uncompatible changes could still be
 made in the future.
 
