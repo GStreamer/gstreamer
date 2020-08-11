@@ -23,20 +23,24 @@
 
 #include <gst/gst.h>
 
-#include "gstogg.h"
+#include "gstoggelements.h"
 #include "gstoggdemux.h"
 #include "gstoggmux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_ogg_demux_plugin_init (plugin);
-  gst_ogg_mux_plugin_init (plugin);
-  gst_ogm_parse_plugin_init (plugin);
-  gst_ogg_parse_plugin_init (plugin);
-  gst_ogg_avi_parse_plugin_init (plugin);
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (oggdemux, plugin);
+  ret |= GST_ELEMENT_REGISTER (oggmux, plugin);
+  ret |= GST_ELEMENT_REGISTER (ogmaudioparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (ogmvideoparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (ogmtextparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (oggparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (oggaviparse, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

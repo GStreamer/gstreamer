@@ -1,7 +1,6 @@
 /* GStreamer
- * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
- *
- * gstoggdemux.c: ogg stream demuxer
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <scerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,13 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_OGG_H__
-#define __GST_OGG_H__
+#ifndef __GST_OGG_ELEMENT_H__
+#define __GST_OGG_ELEMENT_H__
 
 #include <gst/gst.h>
 
-gboolean gst_ogm_parse_plugin_init (GstPlugin * plugin);
-gboolean gst_ogg_parse_plugin_init (GstPlugin * plugin);
-gboolean gst_ogg_avi_parse_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (oggdemux);
+GST_ELEMENT_REGISTER_DECLARE (oggmux);
+GST_ELEMENT_REGISTER_DECLARE (ogmaudioparse);
+GST_ELEMENT_REGISTER_DECLARE (ogmvideoparse);
+GST_ELEMENT_REGISTER_DECLARE (ogmtextparse);
+GST_ELEMENT_REGISTER_DECLARE (oggparse);
+GST_ELEMENT_REGISTER_DECLARE (oggaviparse);
 
-#endif /* __GST_OGG_H__ */
+#endif /* __GST_OGG_ELEMENT_H__ */

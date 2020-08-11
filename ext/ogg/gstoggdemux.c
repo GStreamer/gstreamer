@@ -44,6 +44,7 @@
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
 
+#include "gstoggelements.h"
 #include "gstoggdemux.h"
 
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
@@ -2291,9 +2292,15 @@ static GstStateChangeReturn gst_ogg_demux_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_ogg_print (GstOggDemux * demux);
+static gboolean gst_ogg_demux_plugin_init (GstPlugin * plugin);
 
 #define gst_ogg_demux_parent_class parent_class
 G_DEFINE_TYPE (GstOggDemux, gst_ogg_demux, GST_TYPE_ELEMENT);
+
+#define _do_init \
+    ret |= gst_ogg_demux_plugin_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggdemux, "oggdemux", GST_RANK_PRIMARY,
+    GST_TYPE_OGG_DEMUX, _do_init);
 
 static void
 gst_ogg_demux_class_init (GstOggDemuxClass * klass)
@@ -5253,7 +5260,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
   return result;
 }
 
-gboolean
+static gboolean
 gst_ogg_demux_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_debug, "oggdemux", 0, "ogg demuxer");
@@ -5267,8 +5274,7 @@ gst_ogg_demux_plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  return gst_element_register (plugin, "oggdemux", GST_RANK_PRIMARY,
-      GST_TYPE_OGG_DEMUX);
+  return TRUE;
 }
 
 /* prints all info about the element */

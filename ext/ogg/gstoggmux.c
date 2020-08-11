@@ -43,6 +43,7 @@
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 
+#include "gstoggelements.h"
 #include "gstoggmux.h"
 
 /* memcpy - if someone knows a way to get rid of it, please speak up
@@ -134,9 +135,16 @@ static GstStateChangeReturn gst_ogg_mux_change_state (GstElement * element,
     GstStateChange transition);
 
 /*static guint gst_ogg_mux_signals[LAST_SIGNAL] = { 0 }; */
+
+
 #define gst_ogg_mux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOggMux, gst_ogg_mux, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_ogg_mux_debug, "oggmux", 0, "ogg muxer");
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggmux, "oggmux", GST_RANK_PRIMARY,
+    GST_TYPE_OGG_MUX, _do_init);
 
 static void
 gst_ogg_mux_class_init (GstOggMuxClass * klass)
@@ -2252,13 +2260,4 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_ogg_mux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_ogg_mux_debug, "oggmux", 0, "ogg muxer");
-
-  return gst_element_register (plugin, "oggmux", GST_RANK_PRIMARY,
-      GST_TYPE_OGG_MUX);
 }

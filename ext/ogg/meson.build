@@ -1,7 +1,7 @@
 ogg_sources = [
   'dirac_parse.c',
   'gstoggaviparse.c',
-  'gstogg.c',
+  'gstoggplugin.c',
   'gstoggdemux.c',
   'gstoggmux.c',
   'gstoggparse.c',

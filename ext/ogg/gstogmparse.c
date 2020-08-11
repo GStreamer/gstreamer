@@ -30,7 +30,7 @@
 #include <gst/riff/riff-media.h>
 #include <gst/riff/riff-read.h>
 
-#include "gstogg.h"
+#include "gstoggelements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
 #define GST_CAT_DEFAULT gst_ogm_parse_debug
@@ -150,6 +150,7 @@ static void gst_ogm_parse_init (GstOgmParse * ogm);
 static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
+static gboolean gst_ogm_parse_element_init (GstPlugin * plugin);
 
 static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -269,6 +270,16 @@ gst_ogm_text_parse_get_type (void)
 
   return ogm_text_parse_type;
 }
+
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ogmaudioparse, "ogmaudioparse",
+    GST_RANK_PRIMARY, GST_TYPE_OGM_AUDIO_PARSE,
+    gst_ogm_parse_element_init (plugin));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ogmvideoparse, "ogmvideoparse",
+    GST_RANK_PRIMARY, GST_TYPE_OGM_VIDEO_PARSE,
+    gst_ogm_parse_element_init (plugin));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ogmtextparse, "ogmtextparse",
+    GST_RANK_PRIMARY, GST_TYPE_OGM_TEXT_PARSE,
+    gst_ogm_parse_element_init (plugin));
 
 static void
 gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
@@ -955,17 +966,14 @@ gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-gboolean
-gst_ogm_parse_plugin_init (GstPlugin * plugin)
+static gboolean
+gst_ogm_parse_element_init (GstPlugin * plugin)
 {
-  gst_riff_init ();
-
-  GST_DEBUG_CATEGORY_INIT (gst_ogm_parse_debug, "ogmparse", 0, "ogm parser");
-
-  return gst_element_register (plugin, "ogmaudioparse", GST_RANK_PRIMARY,
-      GST_TYPE_OGM_AUDIO_PARSE) &&
-      gst_element_register (plugin, "ogmvideoparse", GST_RANK_PRIMARY,
-      GST_TYPE_OGM_VIDEO_PARSE) &&
-      gst_element_register (plugin, "ogmtextparse", GST_RANK_PRIMARY,
-      GST_TYPE_OGM_TEXT_PARSE);
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    gst_riff_init ();
+    GST_DEBUG_CATEGORY_INIT (gst_ogm_parse_debug, "ogmparse", 0, "ogm parser");
+    g_once_init_leave (&res, TRUE);
+  }
+  return res;
 }

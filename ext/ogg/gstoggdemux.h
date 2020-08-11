@@ -219,8 +219,6 @@ struct _GstOggDemuxClass
   GstElementClass parent_class;
 };
 
-gboolean gst_ogg_demux_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_OGG_DEMUX_H__ */
