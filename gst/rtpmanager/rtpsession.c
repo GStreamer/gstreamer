@@ -589,11 +589,11 @@ rtp_session_class_init (RTPSessionClass * klass)
    * Various session statistics. This property returns a GstStructure
    * with name application/x-rtp-session-stats with the following fields:
    *
-   *  "rtx-drop-count"  G_TYPE_UINT   The number of retransmission events
+   * * "rtx-drop-count"  G_TYPE_UINT   The number of retransmission events
    *      dropped (due to bandwidth constraints)
-   *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
-   *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
-   *  "source-stats"    G_TYPE_BOXED  GValueArray of #RTPSource:stats for all
+   * *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
+   * *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
+   * *  "source-stats"    G_TYPE_BOXED  GValueArray of #RTPSource:stats for all
    *      RTP sources (Since 1.8)
    *
    * Since: 1.4

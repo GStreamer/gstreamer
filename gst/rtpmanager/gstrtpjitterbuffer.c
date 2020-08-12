@@ -844,6 +844,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * * #guint64 `num-lost`: the number of packets considered lost.
    * * #guint64 `num-late`: the number of packets arriving too late.
    * * #guint64 `num-duplicates`: the number of duplicate packets.
+   * * #guint64 `avg-jitter`: the average jitter in nanoseconds.
    * * #guint64 `rtx-count`: the number of retransmissions requested.
    * * #guint64 `rtx-success-count`: the number of successful retransmissions.
    * * #gdouble `rtx-per-packet`: average number of RTX per packet.

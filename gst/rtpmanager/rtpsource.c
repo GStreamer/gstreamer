@@ -144,77 +144,77 @@ rtp_source_class_init (RTPSourceClass * klass)
    *
    * The following fields are always present.
    *
-   *  "ssrc"         G_TYPE_UINT     the SSRC of this source
-   *  "internal"     G_TYPE_BOOLEAN  this source is a source of the session
-   *  "validated"    G_TYPE_BOOLEAN  the source is validated
-   *  "received-bye" G_TYPE_BOOLEAN  we received a BYE from this source
-   *  "is-csrc"      G_TYPE_BOOLEAN  this source was found as CSRC
-   *  "is-sender"    G_TYPE_BOOLEAN  this source is a sender
-   *  "seqnum-base"  G_TYPE_INT      first seqnum if known
-   *  "clock-rate"   G_TYPE_INT      the clock rate of the media
+   * * "ssrc"         G_TYPE_UINT     the SSRC of this source
+   * * "internal"     G_TYPE_BOOLEAN  this source is a source of the session
+   * * "validated"    G_TYPE_BOOLEAN  the source is validated
+   * * "received-bye" G_TYPE_BOOLEAN  we received a BYE from this source
+   * * "is-csrc"      G_TYPE_BOOLEAN  this source was found as CSRC
+   * * "is-sender"    G_TYPE_BOOLEAN  this source is a sender
+   * * "seqnum-base"  G_TYPE_INT      first seqnum if known
+   * * "clock-rate"   G_TYPE_INT      the clock rate of the media
    *
    * The following fields are only present when known.
    *
-   *  "rtp-from"     G_TYPE_STRING   where we received the last RTP packet from
-   *  "rtcp-from"    G_TYPE_STRING   where we received the last RTCP packet from
+   * * "rtp-from"     G_TYPE_STRING   where we received the last RTP packet from
+   * * "rtcp-from"    G_TYPE_STRING   where we received the last RTCP packet from
    *
    * The following fields make sense for internal sources and will only increase
    * when "is-sender" is TRUE.
    *
-   *  "octets-sent"  G_TYPE_UINT64   number of payload bytes we sent
-   *  "packets-sent" G_TYPE_UINT64   number of packets we sent
+   * * "octets-sent"  G_TYPE_UINT64   number of payload bytes we sent
+   * * "packets-sent" G_TYPE_UINT64   number of packets we sent
    *
    * The following fields make sense for non-internal sources and will only
    * increase when "is-sender" is TRUE.
    *
-   *  "octets-received"  G_TYPE_UINT64  total number of payload bytes received
-   *  "packets-received" G_TYPE_UINT64  total number of packets received
-   *  "bytes-received"   G_TYPE_UINT64  total number of bytes received including lower level headers overhead
+   * * "octets-received"  G_TYPE_UINT64  total number of payload bytes received
+   * * "packets-received" G_TYPE_UINT64  total number of packets received
+   * * "bytes-received"   G_TYPE_UINT64  total number of bytes received including lower level headers overhead
    *
    * Following fields are updated when "is-sender" is TRUE.
    *
-   *  "bitrate"      G_TYPE_UINT64   bitrate in bits per second
-   *  "jitter"       G_TYPE_UINT     estimated jitter (in clock rate units)
-   *  "packets-lost" G_TYPE_INT      estimated amount of packets lost
+   * * "bitrate"      G_TYPE_UINT64   bitrate in bits per second
+   * * "jitter"       G_TYPE_UINT     estimated jitter (in clock rate units)
+   * * "packets-lost" G_TYPE_INT      estimated amount of packets lost
    *
    * The last SR report this source sent. This only updates when "is-sender" is
    * TRUE.
    *
-   *  "have-sr"         G_TYPE_BOOLEAN  the source has sent SR
-   *  "sr-ntptime"      G_TYPE_UINT64   NTP time of SR (in NTP Timestamp Format, 32.32 fixed point)
-   *  "sr-rtptime"      G_TYPE_UINT     RTP time of SR (in clock rate units)
-   *  "sr-octet-count"  G_TYPE_UINT     the number of bytes in the SR
-   *  "sr-packet-count" G_TYPE_UINT     the number of packets in the SR
+   * * "have-sr"         G_TYPE_BOOLEAN  the source has sent SR
+   * * "sr-ntptime"      G_TYPE_UINT64   NTP time of SR (in NTP Timestamp Format, 32.32 fixed point)
+   * * "sr-rtptime"      G_TYPE_UINT     RTP time of SR (in clock rate units)
+   * * "sr-octet-count"  G_TYPE_UINT     the number of bytes in the SR
+   * * "sr-packet-count" G_TYPE_UINT     the number of packets in the SR
    *
    * The following fields are only present for non-internal sources and
    * represent the content of the last RB packet that was sent to this source.
    * These values are only updated when the source is sending.
    *
-   *  "sent-rb"               G_TYPE_BOOLEAN  we have sent an RB
-   *  "sent-rb-fractionlost"  G_TYPE_UINT     calculated lost 8-bit fraction
-   *  "sent-rb-packetslost"   G_TYPE_INT      lost packets
-   *  "sent-rb-exthighestseq" G_TYPE_UINT     last seen seqnum
-   *  "sent-rb-jitter"        G_TYPE_UINT     jitter (in clock rate units)
-   *  "sent-rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
-   *  "sent-rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
+   * * "sent-rb"               G_TYPE_BOOLEAN  we have sent an RB
+   * * "sent-rb-fractionlost"  G_TYPE_UINT     calculated lost 8-bit fraction
+   * * "sent-rb-packetslost"   G_TYPE_INT      lost packets
+   * * "sent-rb-exthighestseq" G_TYPE_UINT     last seen seqnum
+   * * "sent-rb-jitter"        G_TYPE_UINT     jitter (in clock rate units)
+   * * "sent-rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
+   * * "sent-rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
    *
    * The following fields are only present for non-internal sources and
    * represents the last RB that this source sent. This is only updated
    * when the source is receiving data and sending RB blocks.
    *
-   *  "have-rb"          G_TYPE_BOOLEAN  the source has sent RB
-   *  "rb-fractionlost"  G_TYPE_UINT     lost 8-bit fraction
-   *  "rb-packetslost"   G_TYPE_INT      lost packets
-   *  "rb-exthighestseq" G_TYPE_UINT     highest received seqnum
-   *  "rb-jitter"        G_TYPE_UINT     reception jitter (in clock rate units)
-   *  "rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
-   *  "rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
+   * * "have-rb"          G_TYPE_BOOLEAN  the source has sent RB
+   * * "rb-fractionlost"  G_TYPE_UINT     lost 8-bit fraction
+   * * "rb-packetslost"   G_TYPE_INT      lost packets
+   * * "rb-exthighestseq" G_TYPE_UINT     highest received seqnum
+   * * "rb-jitter"        G_TYPE_UINT     reception jitter (in clock rate units)
+   * * "rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
+   * * "rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
    *
    * The round trip of this source is calculated from the last RB
    * values and the reception time of the last RB packet. It is only present for
    * non-internal sources.
    *
-   *  "rb-round-trip"    G_TYPE_UINT     the round-trip time (seconds in NTP Short Format, 16.16 fixed point)
+   * * "rb-round-trip"    G_TYPE_UINT     the round-trip time (seconds in NTP Short Format, 16.16 fixed point)
    *
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
