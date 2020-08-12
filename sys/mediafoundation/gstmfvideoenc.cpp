@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include "gstmfvideoenc.h"
 #include <wrl.h>
+#include "gstmfvideobuffer.h"
 
 using namespace Microsoft::WRL;
 
@@ -276,6 +277,99 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   return TRUE;
 }
 
+static void
+gst_mf_video_buffer_free (GstVideoFrame * frame)
+{
+  if (!frame)
+    return;
+
+  gst_video_frame_unmap (frame);
+  g_free (frame);
+}
+
+static gboolean
+gst_mf_video_enc_frame_needs_copy (GstVideoFrame * vframe)
+{
+  /* Single plane data can be used without copy */
+  if (GST_VIDEO_FRAME_N_PLANES (vframe) == 1)
+    return FALSE;
+
+  switch (GST_VIDEO_FRAME_FORMAT (vframe)) {
+    case GST_VIDEO_FORMAT_I420:
+    {
+      guint8 *data, *other_data;
+      guint size;
+
+      /* Unexpected stride size, Media Foundation doesn't provide API for
+       * per plane stride information */
+      if (GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0) !=
+          2 * GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 1) ||
+          GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 1) !=
+          GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 2)) {
+        return TRUE;
+      }
+
+      size = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0) *
+          GST_VIDEO_FRAME_HEIGHT (vframe);
+      if (size + GST_VIDEO_FRAME_PLANE_OFFSET (vframe, 0) !=
+          GST_VIDEO_FRAME_PLANE_OFFSET (vframe, 1))
+        return TRUE;
+
+      data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0);
+      other_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 1);
+      if (data + size != other_data)
+        return TRUE;
+
+      size = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 1) *
+          GST_VIDEO_FRAME_COMP_HEIGHT (vframe, 1);
+      if (size + GST_VIDEO_FRAME_PLANE_OFFSET (vframe, 1) !=
+          GST_VIDEO_FRAME_PLANE_OFFSET (vframe, 2))
+        return TRUE;
+
+      data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 1);
+      other_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 2);
+      if (data + size != other_data)
+        return TRUE;
+
+      return FALSE;
+    }
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P016_LE:
+    {
+      guint8 *data, *other_data;
+      guint size;
+
+      /* Unexpected stride size, Media Foundation doesn't provide API for
+       * per plane stride information */
+      if (GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0) !=
+          GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 1)) {
+        return TRUE;
+      }
+
+      size = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0) *
+          GST_VIDEO_FRAME_HEIGHT (vframe);
+
+      /* Unexpected padding */
+      if (size + GST_VIDEO_FRAME_PLANE_OFFSET (vframe, 0) !=
+          GST_VIDEO_FRAME_PLANE_OFFSET (vframe, 1))
+        return TRUE;
+
+      data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0);
+      other_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 1);
+      if (data + size != other_data)
+        return TRUE;
+
+      return FALSE;
+    }
+    default:
+      g_assert_not_reached ();
+      return TRUE;
+  }
+
+  return TRUE;
+}
+
 typedef struct
 {
   GstClockTime mf_pts;
@@ -289,62 +383,82 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
   HRESULT hr;
   ComPtr<IMFSample> sample;
   ComPtr<IMFMediaBuffer> media_buffer;
+  ComPtr<IGstMFVideoBuffer> video_buffer;
   GstVideoInfo *info = &self->input_state->info;
   gint i, j;
-  BYTE *data;
-  GstVideoFrame vframe;
-  gboolean res = FALSE;
+  GstVideoFrame *vframe = NULL;
   gboolean unset_force_keyframe = FALSE;
   GstMFVideoEncFrameData *frame_data = NULL;
+  BYTE *data = NULL;
+  gboolean need_copy;
 
-  if (!gst_video_frame_map (&vframe, info, frame->input_buffer, GST_MAP_READ)) {
+  vframe = g_new0 (GstVideoFrame, 1);
+
+  if (!gst_video_frame_map (vframe, info, frame->input_buffer, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Couldn't map input frame");
+    g_free (vframe);
     return FALSE;
   }
 
-  hr = MFCreateSample (sample.GetAddressOf ());
+  hr = MFCreateSample (&sample);
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
-  hr = MFCreateMemoryBuffer (GST_VIDEO_INFO_SIZE (info),
-      media_buffer.GetAddressOf ());
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = media_buffer->Lock (&data, NULL, NULL);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    guint8 *src, *dst;
-    gint src_stride, dst_stride;
-    gint width;
-
-    src = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, i);
-    dst = data + GST_VIDEO_INFO_PLANE_OFFSET (info, i);
-
-    src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, i);
-    dst_stride = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
-
-    width = GST_VIDEO_INFO_COMP_WIDTH (info, i)
-        * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
-
-    for (j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (info, i); j++) {
-      memcpy (dst, src, width);
-      src += src_stride;
-      dst += dst_stride;
-    }
+  /* Check if we can forward this memory to Media Foundation without copy */
+  need_copy = gst_mf_video_enc_frame_needs_copy (vframe);
+  if (need_copy) {
+    GST_TRACE_OBJECT (self, "Copy input buffer into Media Foundation memory");
+    hr = MFCreateMemoryBuffer (GST_VIDEO_INFO_SIZE (info), &media_buffer);
+  } else {
+    GST_TRACE_OBJECT (self, "Can use input buffer without copy");
+    hr = IGstMFVideoBuffer::CreateInstanceWrapped (&vframe->info,
+      (BYTE *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0),
+      GST_VIDEO_INFO_SIZE (&vframe->info), &media_buffer);
   }
 
-  media_buffer->Unlock ();
+  if (!gst_mf_result (hr))
+    goto error;
+
+  if (!need_copy) {
+    hr = media_buffer.As (&video_buffer);
+    if (!gst_mf_result (hr))
+      goto error;
+  } else {
+    hr = media_buffer->Lock (&data, NULL, NULL);
+    if (!gst_mf_result (hr))
+      goto error;
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      guint8 *src, *dst;
+      gint src_stride, dst_stride;
+      gint width;
+
+      src = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, i);
+      dst = data + GST_VIDEO_INFO_PLANE_OFFSET (info, i);
+
+      src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, i);
+      dst_stride = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+
+      width = GST_VIDEO_INFO_COMP_WIDTH (info, i)
+          * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
+
+      for (j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (info, i); j++) {
+        memcpy (dst, src, width);
+        src += src_stride;
+        dst += dst_stride;
+      }
+    }
+
+    media_buffer->Unlock ();
+  }
 
   hr = media_buffer->SetCurrentLength (GST_VIDEO_INFO_SIZE (info));
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   hr = sample->AddBuffer (media_buffer.Get ());
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   frame_data = g_new0 (GstMFVideoEncFrameData, 1);
   frame_data->mf_pts = frame->pts / 100;
@@ -354,12 +468,12 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
 
   hr = sample->SetSampleTime (frame_data->mf_pts);
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   hr = sample->SetSampleDuration (
       GST_CLOCK_TIME_IS_VALID (frame->duration) ? frame->duration / 100 : 0);
   if (!gst_mf_result (hr))
-    goto done;
+    goto error;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
     if (klass->can_force_keyframe) {
@@ -371,9 +485,22 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
     }
   }
 
+  if (!need_copy) {
+    /* IGstMFVideoBuffer will hold GstVideoFrame (+ GstBuffer), then it will be
+     * cleared when it's no more referenced by Media Foundation internals */
+    hr = video_buffer->SetUserData ((gpointer) vframe,
+        (GDestroyNotify) gst_mf_video_buffer_free);
+    if (!gst_mf_result (hr))
+      goto error;
+  } else {
+    gst_video_frame_unmap (vframe);
+    g_free (vframe);
+    vframe = NULL;
+  }
+
   if (!gst_mf_transform_process_input (self->transform, sample.Get ())) {
     GST_ERROR_OBJECT (self, "Failed to process input");
-    goto done;
+    goto error;
   }
 
   if (unset_force_keyframe) {
@@ -381,12 +508,15 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
         &CODECAPI_AVEncVideoForceKeyFrame, FALSE);
   }
 
-  res = TRUE;
+  return TRUE;
 
-done:
-  gst_video_frame_unmap (&vframe);
+error:
+  if (vframe) {
+    gst_video_frame_unmap (vframe);
+    g_free (vframe);
+  }
 
-  return res;
+  return FALSE;
 }
 
 static GstVideoCodecFrame *

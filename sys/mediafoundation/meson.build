@@ -12,6 +12,7 @@ mf_sources = [
   'gstmfaudioenc.cpp',
   'gstmfaacenc.cpp',
   'gstmfmp3enc.cpp',
+  'gstmfvideobuffer.cpp',
 ]
 
 mf_desktop_sources = [
