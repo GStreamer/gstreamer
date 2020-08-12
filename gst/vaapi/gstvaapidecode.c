@@ -200,6 +200,7 @@ gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode, GstCaps * caps)
 static gboolean
 gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 {
+  GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
   GstCaps *out_caps, *raw_caps, *va_caps, *dma_caps, *gltexup_caps, *base_caps;
   GArray *formats;
   gint min_width, min_height, max_width, max_height;
@@ -209,7 +210,7 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   if (decode->allowed_srcpad_caps)
     return TRUE;
 
-  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
+  if (!display)
     return FALSE;
 
   if (!decode->decoder)
@@ -228,14 +229,41 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   gst_vaapi_caps_set_width_and_height_range (base_caps, min_width, min_height,
       max_width, max_height);
 
-  raw_caps = gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps
-      (GST_VAAPI_PLUGIN_BASE (decode),
-      GST_VIDEO_INFO_FORMAT (&decode->decoded_info));
-  if (!raw_caps)
-    goto bail;
-  raw_caps = gst_caps_copy (raw_caps);
-  gst_vaapi_caps_set_width_and_height_range (raw_caps, min_width, min_height,
-      max_width, max_height);
+  {
+    GArray *img_formats = gst_vaapi_display_get_image_formats (display);
+    GstVideoFormat decoded_format =
+        GST_VIDEO_INFO_FORMAT (&decode->decoded_info);
+
+    if (!img_formats)
+      img_formats = g_array_ref (formats);
+
+    if (decoded_format != GST_VIDEO_FORMAT_UNKNOWN) {
+      guint decoded_chroma =
+          gst_vaapi_video_format_get_chroma_type (decoded_format);
+      GArray *new_img_formats =
+          g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+      gint i;
+
+      for (i = 0; i < img_formats->len; i++) {
+        const GstVideoFormat fmt =
+            g_array_index (img_formats, GstVideoFormat, i);
+        if (gst_vaapi_video_format_get_chroma_type (fmt) == decoded_chroma)
+          g_array_append_val (new_img_formats, fmt);
+      }
+
+      if (new_img_formats->len == 0) {
+        g_clear_pointer (&new_img_formats, g_array_unref);
+      } else {
+        g_clear_pointer (&img_formats, g_array_unref);
+        img_formats = new_img_formats;
+      }
+    }
+
+    raw_caps = gst_vaapi_video_format_new_template_caps_from_list (img_formats);
+    gst_vaapi_caps_set_width_and_height_range (raw_caps, min_width, min_height,
+        max_width, max_height);
+    g_array_unref (img_formats);
+  }
 
   va_caps = gst_caps_copy (base_caps);
   gst_caps_set_features_simple (va_caps,
@@ -446,6 +474,10 @@ is_surface_resolution_changed (GstVaapiDecode * decode,
     if (surface_format == GST_VIDEO_FORMAT_UNKNOWN)
       surface_format = GST_VIDEO_FORMAT_NV12;
   }
+
+  /* reset allowed source caps since they are dependant of the decoded
+   * surface format */
+  gst_caps_replace (&decode->allowed_srcpad_caps, NULL);
 
   gst_video_info_set_format (vinfo, surface_format, surface_width,
       surface_height);
