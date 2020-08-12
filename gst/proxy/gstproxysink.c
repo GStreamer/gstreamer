@@ -226,8 +226,10 @@ gst_proxy_sink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       self->pending_sticky_events = TRUE;
       ret = TRUE;
     }
-  } else
+  } else {
     gst_event_unref (event);
+    ret = TRUE;
+  }
 
   return ret;
 }
