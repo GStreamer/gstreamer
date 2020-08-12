@@ -73,7 +73,7 @@ gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
   if (g_strcmp0 (context_type, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE) == 0) {
     const GstStructure *str;
     GstD3D11Device *other_device = NULL;
-    gint other_adapter = 0;
+    guint other_adapter = 0;
 
     /* If we had device already, will not replace it */
     if (*device)
@@ -82,8 +82,8 @@ gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
     str = gst_context_get_structure (context);
 
     if (gst_structure_get (str, "device", GST_TYPE_D3D11_DEVICE,
-            &other_device, "adapter", G_TYPE_INT, &other_adapter, NULL)) {
-      if (adapter == -1 || adapter == other_adapter) {
+            &other_device, "adapter", G_TYPE_UINT, &other_adapter, NULL)) {
+      if (adapter == -1 || (guint) adapter == other_adapter) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT,
             element, "Found D3D11 device context");
         *device = other_device;
@@ -102,7 +102,7 @@ static void
 context_set_d3d11_device (GstContext * context, GstD3D11Device * device)
 {
   GstStructure *s;
-  gint adapter;
+  guint adapter;
 
   g_return_if_fail (context != NULL);
 
@@ -115,7 +115,7 @@ context_set_d3d11_device (GstContext * context, GstD3D11Device * device)
 
   s = gst_context_writable_structure (context);
   gst_structure_set (s, "device", GST_TYPE_D3D11_DEVICE,
-      device, "adapter", G_TYPE_INT, adapter, NULL);
+      device, "adapter", G_TYPE_UINT, adapter, NULL);
 }
 
 /**
