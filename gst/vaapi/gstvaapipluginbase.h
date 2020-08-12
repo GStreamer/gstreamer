@@ -302,11 +302,6 @@ GstCaps *
 gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
-GstCaps *
-gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps (
-    GstVaapiPluginBase * plugin, GstVideoFormat format);
-
-G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
     GstObject * object);
