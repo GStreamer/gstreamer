@@ -1500,7 +1500,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
       h264parse->aud_needed = FALSE;
     }
 
-    /* Do not push immediatly if we don't have all headers. This ensure that
+    /* Do not push immediately if we don't have all headers. This ensure that
      * our caps are complete, avoiding a renegotiation */
     if (h264parse->align == GST_H264_PARSE_ALIGN_NAL &&
         !GST_H264_PARSE_STATE_VALID (h264parse,
@@ -3117,7 +3117,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* Fixme: setting passthrough mode causing multiple issues:
    * For nal aligned multiresoluton streams, passthrough mode make h264parse
-   * unable to advertise the new resoultions. Also causing issues while
+   * unable to advertise the new resolutions. Also causing issues while
    * parsing MVC streams when it has two layers.
    * Disabing passthourgh mode for now */
 #if 0
