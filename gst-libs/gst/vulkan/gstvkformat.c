@@ -24,6 +24,13 @@
 
 #include "gstvkformat.h"
 
+/**
+ * SECTION:vkformat
+ * @title: GstVulkanFormat
+ * @short_description: Vulkan formats
+ * @see_also: #GstVulkanDevice, #GstVulkanMemory, #GstVulkanImageMemory
+ */
+
 #define FORMAT(name, scaling) \
     G_PASTE(G_PASTE(VK_FORMAT_,name),G_PASTE(_,scaling)), G_STRINGIFY(G_PASTE(G_PASTE(name,_),scaling)), G_PASTE(GST_VULKAN_FORMAT_SCALING_, scaling)
 #define FLAG(v) \
@@ -408,6 +415,14 @@ FIXME: implement:
 #endif
 };
 
+/**
+ * gst_vulkan_format_get_info:
+ * @format: a valid `VkFormat`
+ *
+ * Returns: the #GstVulkanFormatInfo for @format or %NULL
+ *
+ * Since: 1.18
+ */
 const GstVulkanFormatInfo *
 gst_vulkan_format_get_info (VkFormat format)
 {

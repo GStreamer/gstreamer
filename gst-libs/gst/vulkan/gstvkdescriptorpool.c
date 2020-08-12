@@ -28,7 +28,7 @@
  * SECTION:vkdescriptorpool
  * @title: GstVulkanDescriptorPool
  * @short_description: Vulkan descriptor pool
- * @see_also: #GstVulkanDevice
+ * @see_also: #GstVulkanDescriptorSet, #GstVulkanDescriptorCache, #GstVulkanDevice
  */
 
 #define GET_PRIV(pool) gst_vulkan_descriptor_pool_get_instance_private (pool)
@@ -89,7 +89,8 @@ gst_vulkan_descriptor_pool_finalize (GObject * object)
 /**
  * gst_vulkan_descriptor_pool_new_wrapped:
  * @device: a #GstVulkanDevice
- * @pool: (transfer full): a #VkDescriptorPool
+ * @pool: (transfer full): a `VkDescriptorPool`
+ * @max_sets: maximum descriptor sets allocatable wit @pool
  *
  * Returns: (transfer full): a new #GstVulkanDescriptorPool
  *
@@ -139,6 +140,8 @@ gst_vulkan_descriptor_pool_get_device (GstVulkanDescriptorPool * pool)
  * @pool: a #GstVulkanDescriptorPool
  *
  * Returns: the maximum number of sets allocatable from @pool
+ *
+ * Since: 1.18
  */
 gsize
 gst_vulkan_descriptor_pool_get_max_sets (GstVulkanDescriptorPool * pool)

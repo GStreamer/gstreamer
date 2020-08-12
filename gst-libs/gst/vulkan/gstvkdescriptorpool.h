@@ -32,6 +32,14 @@ GType gst_vulkan_descriptor_pool_get_type       (void);
 #define GST_IS_VULKAN_DESCRIPTOR_POOL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_VULKAN_DESCRIPTOR_POOL))
 #define GST_VULKAN_DESCRIPTOR_POOL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_DESCRIPTOR_POOL, GstVulkanDescriptorPoolClass))
 
+/**
+ * GstVulkanDescriptorPool:
+ * @parent: the parent #GstObject
+ * @device: the #GstVulkanDevice for descriptor sets
+ * @pool: the vulksn descriptor pool handle
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDescriptorPool
 {
   GstObject parent;
@@ -39,11 +47,23 @@ struct _GstVulkanDescriptorPool
   GstVulkanDevice *device;
 
   VkDescriptorPool pool; /* hides a pointer */
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanDescriptorPoolClass:
+ * @parent_class: the parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDescriptorPoolClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

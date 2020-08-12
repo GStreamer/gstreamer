@@ -300,7 +300,7 @@ gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, gsize size,
 /**
  * gst_vulkan_buffer_memory_wrapped:
  * @device: a #GstVulkanDevice
- * @buffer: a #VkBuffer
+ * @buffer: a `VkBuffer`
  * @usage: usage flags of @buffer
  * @user_data: (allow-none): user data to call @notify with
  * @notify: (allow-none): a #GDestroyNotify called when @buffer is no longer in use

@@ -31,7 +31,7 @@
  * SECTION:vkdevice
  * @title: GstVulkanDevice
  * @short_description: Vulkan device
- * @see_also: #GstVulkanInstance, #GstVulkanPhysicalDevice
+ * @see_also: #GstVulkanPhysicalDevice, #GstVulkanInstance
  *
  * A #GstVulkanDevice encapsulates a VkDevice
  */
@@ -255,7 +255,7 @@ gst_vulkan_device_finalize (GObject * object)
  * @device: a #GstVulkanDevice
  * @error: a #GError
  *
- * Attempts to create the internal #VkDevice object.
+ * Attempts to create the internal `VkDevice` object.
  *
  * Returns: whether a vulkan device could be created
  *
@@ -422,7 +422,7 @@ gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
  * @device: a #GstVulkanDevice
  * @name: name of the function to retrieve
  *
- * Performs vkGetDeviceProcAddr() with @device and @name
+ * Performs `vkGetDeviceProcAddr()` with @device and @name
  *
  * Returns: the function pointer for @name or %NULL
  *
@@ -624,6 +624,15 @@ gst_vulkan_device_run_context_query (GstElement * element,
   return FALSE;
 }
 
+/**
+ * gst_vulkan_device_create_fence:
+ * @device: a #GstVulkanDevice
+ * @error: a #GError to fill on failure
+ *
+ * Returns: a new #GstVulkanFence or %NULL
+ *
+ * Since: 1.18
+ */
 GstVulkanFence *
 gst_vulkan_device_create_fence (GstVulkanDevice * device, GError ** error)
 {
@@ -669,6 +678,8 @@ gst_vulkan_device_is_extension_enabled_unlocked (GstVulkanDevice * device,
  * @name: extension name
  *
  * Returns: whether extension @name is enabled
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_device_is_extension_enabled (GstVulkanDevice * device,
@@ -714,6 +725,8 @@ gst_vulkan_device_enable_extension_unlocked (GstVulkanDevice * device,
  * only have an effect before the call to gst_vulkan_device_open().
  *
  * Returns: whether the Vulkan extension could be enabled.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_device_enable_extension (GstVulkanDevice * device,
@@ -760,6 +773,8 @@ gst_vulkan_device_disable_extension_unlocked (GstVulkanDevice * device,
  * an effect before the call to gst_vulkan_device_open().
  *
  * Returns: whether the Vulkan extension could be disabled.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_device_disable_extension (GstVulkanDevice * device,
@@ -792,6 +807,8 @@ gst_vulkan_device_is_layer_enabled_unlocked (GstVulkanDevice * device,
  * @name: layer name
  *
  * Returns: whether layer @name is enabled
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_device_is_layer_enabled (GstVulkanDevice * device,
@@ -837,6 +854,8 @@ gst_vulkan_device_enable_layer_unlocked (GstVulkanDevice * device,
  * only have an effect before the call to gst_vulkan_device_open().
  *
  * Returns: whether the Vulkan layer could be enabled.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_device_enable_layer (GstVulkanDevice * device, const gchar * name)

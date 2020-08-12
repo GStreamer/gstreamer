@@ -25,6 +25,16 @@
 #include "gstvktrash.h"
 #include "gstvkhandle.h"
 
+/**
+ * SECTION:vktrash
+ * @title: GstVulkanTrash
+ * @short_description: Vulkan helper object for freeing resources after a #GstVulkanFence is signalled
+ * @see_also: #GstVulkanFence, #GstVulkanQueue
+ *
+ * #GstVulkanTrash is a helper object for freeing resources after a
+ * #GstVulkanFence is signalled.
+ */
+
 GST_DEBUG_CATEGORY (gst_debug_vulkan_trash);
 #define GST_CAT_DEFAULT gst_debug_vulkan_trash
 
@@ -115,6 +125,8 @@ gst_vulkan_trash_init (GstVulkanTrash * trash, GstVulkanFence * fence,
  * to call when @fence is signalled.
  *
  * Returns: (transfer full): a new #GstVulkanTrash
+ *
+ * Since: 1.18
  */
 GstVulkanTrash *
 gst_vulkan_trash_new (GstVulkanFence * fence, GstVulkanTrashNotify notify,
@@ -175,6 +187,16 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
   return trash; \
 }
 
+/**
+ * gst_vulkan_trash_new_free_semaphore:
+ * @fence: the #GstVulkanFence
+ * @semaphore: a `VkSemaphore` to free
+ *
+ * Returns: (transfer full): a new #GstVulkanTrash object that will the free
+ *     @semaphore when @fence is signalled
+ *
+ * Since: 1.18
+ */
 FREE_DESTROY_FUNC (vkDestroySemaphore, VkSemaphore, semaphore);
 #define FREE_WITH_VK_PARENT(func, type, type_name, parent_type) \
 struct G_PASTE(free_parent_info_,type_name) \
@@ -206,12 +228,32 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
   return trash; \
 }
 
+/**
+ * gst_vulkan_trash_object_unref:
+ * @device: the #GstVulkanDevice
+ * @user_data: the #GstMiniObject
+ *
+ * A #GstVulkanTrashNotify implementation for unreffing a #GstObject when the
+ * associated #GstVulkanFence is signalled
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_trash_object_unref (GstVulkanDevice * device, gpointer user_data)
 {
   gst_object_unref ((GstObject *) user_data);
 }
 
+/**
+ * gst_vulkan_trash_mini_object_unref:
+ * @device: the #GstVulkanDevice
+ * @user_data: the #GstMiniObject
+ *
+ * A #GstVulkanTrashNotify implementation for unreffing a #GstMiniObject when the
+ * associated #GstVulkanFence is signalled
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_trash_mini_object_unref (GstVulkanDevice * device,
     gpointer user_data)
@@ -222,6 +264,15 @@ gst_vulkan_trash_mini_object_unref (GstVulkanDevice * device,
 G_DEFINE_TYPE_WITH_CODE (GstVulkanTrashList, gst_vulkan_trash_list,
     GST_TYPE_VULKAN_HANDLE_POOL, _init_debug ());
 
+/**
+ * gst_vulkan_trash_list_gc:
+ * @trash_list: the #GstVulkanTrashList
+ *
+ * Remove any stored #GstVulkanTrash objects that have had their associated
+ * #GstVulkanFence signalled.
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_trash_list_gc (GstVulkanTrashList * trash_list)
 {
@@ -233,6 +284,15 @@ gst_vulkan_trash_list_gc (GstVulkanTrashList * trash_list)
   trash_class->gc_func (trash_list);
 }
 
+/**
+ * gst_vulkan_trash_list_add:
+ * @trash_list: the #GstVulkanTrashList
+ * @trash: #GstVulkanTrash object to add to the list
+ *
+ * Returns: whether @trash could be added to @trash_list
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_trash_list_add (GstVulkanTrashList * trash_list,
     GstVulkanTrash * trash)
@@ -245,6 +305,15 @@ gst_vulkan_trash_list_add (GstVulkanTrashList * trash_list,
   return trash_class->add_func (trash_list, trash);
 }
 
+/**
+ * gst_vulkan_trash_list_wait:
+ * @trash_list: the #GstVulkanTrashList
+ * @timeout: timeout in ns to wait, -1 for indefinite
+ *
+ * Returns: whether the wait succeeded in waiting for all objects to be freed.
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_trash_list_wait (GstVulkanTrashList * trash_list, guint64 timeout)
 {
@@ -308,6 +377,8 @@ gst_vulkan_trash_list_init (GstVulkanTrashList * trash_list)
  *
  * Returns: (transfer full): a new or reused #GstVulkanTrash for the provided
  *          parameters.
+ *
+ * Since: 1.18
  */
 GstVulkanTrash *
 gst_vulkan_trash_list_acquire (GstVulkanTrashList * trash_list,
@@ -451,6 +522,13 @@ gst_vulkan_trash_fence_list_init (GstVulkanTrashFenceList * trash_list)
 {
 }
 
+/**
+ * gst_vulkan_trash_fence_list_new:
+ *
+ * Returns: (transfer full): a new #gst_vulkan_trash_fence_list_new
+ *
+ * Since: a.18
+ */
 GstVulkanTrashList *
 gst_vulkan_trash_fence_list_new (void)
 {

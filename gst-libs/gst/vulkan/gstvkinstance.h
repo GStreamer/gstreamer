@@ -34,8 +34,22 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_instance_get_type       (void);
 
+/**
+ * GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR "gst.vulkan.instance"
 
+/**
+ * GstVulkanInstance:
+ * @parent: parent #GstObject
+ * @instance: the Vulkan instance handle
+ * @physical_devices: list of vulkan physical device handles
+ * @n_physical_device: number of entries in @physical_devices
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanInstance
 {
   GstObject parent;
@@ -43,11 +57,23 @@ struct _GstVulkanInstance
   VkInstance instance; /* hides a pointer */
   VkPhysicalDevice *physical_devices; /* hides a pointer */
   guint32 n_physical_devices;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanInstanceClass:
+ * @parent_class: parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanInstanceClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

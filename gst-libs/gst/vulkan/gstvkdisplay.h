@@ -33,11 +33,21 @@ G_BEGIN_DECLS
 #define GST_VULKAN_DISPLAY_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VULKAN_DISPLAY,GstVulkanDisplayClass))
 #define GST_IS_VULKAN_DISPLAY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VULKAN_DISPLAY))
 #define GST_IS_VULKAN_DISPLAY_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VULKAN_DISPLAY))
-#define GST_VULKAN_DISPLAY_CAST(obj)        ((GstVulkanDisplay*)(obj))
 #define GST_VULKAN_DISPLAY_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_DISPLAY, GstVulkanDisplayClass))
 GST_VULKAN_API
 GType gst_vulkan_display_get_type (void);
+/**
+ * GST_VULKAN_DISPLAY_CAST
+ *
+ * Since: 1.18
+ */
+#define GST_VULKAN_DISPLAY_CAST(obj)        ((GstVulkanDisplay*)(obj))
 
+/**
+ * GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR "gst.vulkan.display"
 
 typedef struct _GstVulkanDisplay GstVulkanDisplay;
@@ -52,6 +62,9 @@ typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;
  * @GST_VULKAN_DISPLAY_TYPE_COCOA: cocoa display for macOS
  * @GST_VULKAN_DISPLAY_TYPE_IOS: ios display
  * @GST_VULKAN_DISPLAY_TYPE_WIN32: win32 display
+ * @GST_VULKAN_DISPLAY_TYPE_ANY: any display type
+ *
+ * Since: 1.18
  */
 typedef enum
 {
@@ -71,6 +84,8 @@ typedef enum
  *
  * The contents of a #GstVulkanDisplay are private and should only be accessed
  * through the provided API
+ *
+ * Since: 1.18
  */
 struct _GstVulkanDisplay
 {
@@ -86,14 +101,28 @@ struct _GstVulkanDisplay
   GMainContext             *main_context;
   GMainLoop                *main_loop;
   GSource                  *event_source;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanDisplayClass:
+ * @object_class: parent #GstObjectClass
+ * @get_handle: get the native handle to the display
+ * @create_window: create a window
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDisplayClass
 {
   GstObjectClass object_class;
 
   gpointer          (*get_handle)           (GstVulkanDisplay * display);
   GstVulkanWindow * (*create_window)        (GstVulkanDisplay * display);
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

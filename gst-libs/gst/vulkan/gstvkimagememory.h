@@ -37,11 +37,34 @@ GType gst_vulkan_image_memory_allocator_get_type(void);
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanImageMemoryAllocatorClass))
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanImageMemoryAllocator))
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanImageMemoryAllocatorClass))
+/**
+ * GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_CAST(obj)            ((GstVulkanImageMemoryAllocator *)(obj))
 
+/**
+ * GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME "VulkanImage"
+/**
+ * GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE:
+ *
+ * Since: 1.18
+ */
 #define GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE "memory:VulkanImage"
 
+/**
+ * GstVulkanBarrierImageInfo:
+ * @parent: parent #GstVulkanBarrierMemoryInfo
+ * @image_layout: the image layout of this barrier
+ * @subresource_range: what subresource the barrier applies to
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanBarrierImageInfo
 {
   GstVulkanBarrierMemoryInfo parent;
@@ -51,6 +74,20 @@ struct _GstVulkanBarrierImageInfo
   VkImageSubresourceRange subresource_range;
 };
 
+/**
+ * GstVulkanImageMemory:
+ * @parent: parent #GstMemory
+ * @device: the #GstVulkanDevice to allocate images from
+ * @image: the Vulkan image handle
+ * @vk_mem: the backing #GstVulkanMemory for @image
+ * @create_info: creation information for @image
+ * @requirements: memory requirements for @image
+ * @format_properties: format properties
+ * @usage: intended usage for @image
+ * @barrier: last set barrier for @image
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanImageMemory
 {
   GstMemory parent;
@@ -67,6 +104,7 @@ struct _GstVulkanImageMemory
 
   GstVulkanBarrierImageInfo barrier;
 
+  /* <private> */
   GMutex lock;
   gboolean wrapped;
   GDestroyNotify notify;
@@ -83,27 +121,41 @@ struct _GstVulkanImageMemory
  *
  * Function definition used to find views.  Return %TRUE if @view matches the
  * criteria.
+ *
+ * Since: 1.18
  */
 typedef gboolean (*GstVulkanImageMemoryFindViewFunc) (GstVulkanImageView * view, gpointer user_data);
 
 /**
  * GstVulkanImageMemoryAllocator
+ * @parent: the parent #GstAllocator
  *
  * Opaque #GstVulkanImageMemoryAllocator struct
+ *
+ * Since: 1.18
  */
 struct _GstVulkanImageMemoryAllocator
 {
   GstAllocator parent;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
  * GstVulkanImageMemoryAllocatorClass:
+ * @parent_class: the parent #GstAllocatorClass
  *
  * The #GstVulkanImageMemoryAllocatorClass only contains private data
+ *
+ * Since: 1.18
  */
 struct _GstVulkanImageMemoryAllocatorClass
 {
   GstAllocatorClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

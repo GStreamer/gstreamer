@@ -311,6 +311,8 @@ gst_vulkan_queue_run_context_query (GstElement * element,
  *
  * Locks the queue for command submission using `vkQueueSubmit()` to meet the
  * Vulkan requirements for externally synchronised resources.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_queue_submit_lock (GstVulkanQueue * queue)
@@ -327,6 +329,8 @@ gst_vulkan_queue_submit_lock (GstVulkanQueue * queue)
  * Unlocks the queue for command submission using `vkQueueSubmit()`.
  *
  * See gst_vulkan_queue_submit_lock() for details on when this call is needed.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_queue_submit_unlock (GstVulkanQueue * queue)

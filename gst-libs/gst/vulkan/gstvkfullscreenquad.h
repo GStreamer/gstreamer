@@ -37,10 +37,31 @@ GType gst_vulkan_full_screen_quad_get_type (void);
 #define GST_IS_VULKAN_FULL_SCREEN_QUAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VULKAN_FULL_SCREEN_QUAD))
 #define GST_VULKAN_FULL_SCREEN_QUAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VULKAN_FULL_SCREEN_QUAD, GstVulkanFullScreenQuadClass))
 
+/**
+ * GstVulkanFullScreenQuad:
+ * @parent: the parent #GstObject
+ * @in_info: the configured input #GstVideoInfo
+ * @out_info: the configured output #GstVideoInfo
+ * @queue: the #GstVulkanQueue to submit #GstVulkanCommandBuffer's on
+ * @render_pass: the configured `VkRenderPass`
+ * @pipeline_layout: the configured `VkPipelineLayout`
+ * @graphics_pipeline: the configured `VkPipeline`
+ * @descriptor_set_layout: the configured `VkDescriptorSetLayout`
+ * @descriptor_cache: the configured #GstVulkanDescriptorCache
+ * @descriptor_set: the configured #GstVulkanDescriptorSet
+ * @framebuffer: the configured `VkFramebuffer`
+ * @sampler: the configured `VkSampler`
+ * @cmd_pool: the #GstVulkanCommandPool to allocate #GstVulkanCommandBuffer's from
+ * @trash_list: the #GstVulkanTrashList for freeing unused resources
+ * @last_fence: the last configured #GstVulkanFences
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanFullScreenQuad
 {
   GstObject                         parent;
 
+  /* <protected> */
   GstVideoInfo                      out_info;
   GstVideoInfo                      in_info;
 
@@ -59,11 +80,23 @@ struct _GstVulkanFullScreenQuad
 
   GstVulkanTrashList               *trash_list;
   GstVulkanFence                   *last_fence;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanFullScreenQuadClass:
+ * @parent_class: the parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanFullScreenQuadClass
 {
   GstObjectClass                    parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

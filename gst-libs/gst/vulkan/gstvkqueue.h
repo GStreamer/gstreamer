@@ -33,8 +33,23 @@
 GST_VULKAN_API
 GType gst_vulkan_queue_get_type       (void);
 
+/**
+ * GST_VULKAN_QUEUE_CONTEXT_TYPE_STR:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_QUEUE_CONTEXT_TYPE_STR "gst.vulkan.queue"
 
+/**
+ * GstVulkanQueue:
+ * @parent: the parent #GstObject
+ * @device: the #GstVulkanDevice this queue was allocated from
+ * @queue: the vulkan queue handle
+ * @family: the vulkan queue family
+ * @index: the vulkan queue index
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanQueue
 {
   GstObject parent;
@@ -44,11 +59,23 @@ struct _GstVulkanQueue
   VkQueue queue; /* hides a pointer */
   guint32 family;
   guint32 index;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanQueueClass:
+ * @parent_class: the parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanQueueClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

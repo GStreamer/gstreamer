@@ -36,14 +36,47 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_window_get_type     (void);
 
+/**
+ * GST_VULKAN_WINDOW_LOCK:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_WINDOW_LOCK(w) g_mutex_lock(&GST_VULKAN_WINDOW(w)->lock)
+/**
+ * GST_VULKAN_WINDOW_UNLOCK:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_WINDOW_UNLOCK(w) g_mutex_unlock(&GST_VULKAN_WINDOW(w)->lock)
+/**
+ * GST_VULKAN_WINDOW_GET_LOCK:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_WINDOW_GET_LOCK(w) (&GST_VULKAN_WINDOW(w)->lock)
 
+/**
+ * GST_VULKAN_WINDOW_ERROR:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_WINDOW_ERROR (gst_vulkan_window_error_quark ())
+/**
+ * gst_vulkan_window_error_quark:
+ *
+ * Since: 1.18
+ */
 GST_VULKAN_API
 GQuark gst_vulkan_window_error_quark (void);
 
+/**
+ * GstVulkanWindowError:
+ * @GST_VULKAN_WINDOW_ERROR_FAILED: failed
+ * @GST_VULKAN_WINDOW_ERROR_OLD_LIBS: old libraries
+ * @GST_VULKAN_WINDOW_ERROR_RESOURCE_UNAVAILABLE: resource unavailable
+ *
+ * Since: 1.18
+ */
 typedef enum
 {
   GST_VULKAN_WINDOW_ERROR_FAILED,
@@ -56,6 +89,8 @@ typedef enum
  *
  * #GstVulkanWindow is an opaque struct and should only be accessed through the
  * provided api.
+ *
+ * Since: 1.18
  */
 struct _GstVulkanWindow {
   /*< private >*/
@@ -63,7 +98,7 @@ struct _GstVulkanWindow {
 
   GstVulkanDisplay       *display;
 
-  GMutex                  lock;
+//  GMutex                  lock;
 
   gpointer                _reserved[GST_PADDING];
 };
@@ -73,6 +108,13 @@ struct _GstVulkanWindow {
  * @parent_class: Parent class
  * @open: open the connection to the display
  * @close: close the connection to the display
+ * @get_surface: retrieve the vulkan surface for this window
+ * @get_presentation_support: retrieve whether this window supports presentation
+ * @set_window_handle: set the external window handle to render into
+ * @get_surface_dimensions: retrieve the current size of the window
+ * @handle_event: set whether to handle extra window system events
+ *
+ * Since: 1.18
  */
 struct _GstVulkanWindowClass {
   GstObjectClass parent_class;

@@ -130,6 +130,8 @@ gst_vulkan_fence_new (GstVulkanDevice * device, GError ** error)
  * gst_vulkan_fence_new_always_signalled:
  *
  * Returns: a new #GstVulkanFence that is always in the signalled state
+ *
+ * Since: 1.18
  */
 GstVulkanFence *
 gst_vulkan_fence_new_always_signalled (GstVulkanDevice * device)

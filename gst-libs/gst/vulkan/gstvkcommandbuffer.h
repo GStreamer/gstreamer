@@ -28,12 +28,31 @@
 
 G_BEGIN_DECLS
 
+/**
+ * gst_vulkan_command_buffer_get_type:
+ *
+ * Since: 1.18
+ */
 GST_VULKAN_API
 GType gst_vulkan_command_buffer_get_type (void);
+/**
+ * GST_TYPE_VULKAN_COMMAND_BUFFER:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_VULKAN_COMMAND_BUFFER (gst_vulkan_command_buffer_get_type ())
 
 typedef struct _GstVulkanCommandBuffer GstVulkanCommandBuffer;
 
+/**
+ * GstVulkanCommandBuffer:
+ * @parent: the parent #GstMiniObject
+ * @cmd: the vulkan command buffer handle
+ * @pool: the parent #GstVulkanCommandPool for command buffer reuse and locking
+ * @level: the level of the vulkan command buffer
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanCommandBuffer
 {
   GstMiniObject             parent;
@@ -44,7 +63,8 @@ struct _GstVulkanCommandBuffer
   GstVulkanCommandPool     *pool;
   VkCommandBufferLevel      level;
 
-  GMutex                    lock;
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
@@ -53,7 +73,9 @@ struct _GstVulkanCommandBuffer
  *
  * Increases the refcount of the given buffer by one.
  *
- * Returns: (transfer full): @buf
+ * Returns: (transfer full): @cmd
+ *
+ * Since: 1.18
  */
 static inline GstVulkanCommandBuffer* gst_vulkan_command_buffer_ref(GstVulkanCommandBuffer* cmd);
 static inline GstVulkanCommandBuffer *
@@ -68,6 +90,8 @@ gst_vulkan_command_buffer_ref (GstVulkanCommandBuffer * cmd)
  *
  * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
  * will be freed.
+ *
+ * Since: 1.18
  */
 static inline void gst_vulkan_command_buffer_unref(GstVulkanCommandBuffer* cmd);
 static inline void
@@ -82,13 +106,13 @@ gst_vulkan_command_buffer_unref (GstVulkanCommandBuffer * cmd)
  *
  * Clears a reference to a #GstVulkanCommandBuffer.
  *
- * @buf_ptr must not be %NULL.
+ * @cmd_ptr must not be %NULL.
  *
  * If the reference is %NULL then this function does nothing. Otherwise, the
  * reference count of the command buffer is decreased and the pointer is set
  * to %NULL.
  *
- * Since: 1.16
+ * Since: 1.18
  */
 static inline void
 gst_clear_vulkan_command_buffer (GstVulkanCommandBuffer ** cmd_ptr)
@@ -96,7 +120,25 @@ gst_clear_vulkan_command_buffer (GstVulkanCommandBuffer ** cmd_ptr)
   gst_clear_mini_object ((GstMiniObject **) cmd_ptr);
 }
 
+/**
+ * gst_vulkan_command_buffer_lock:
+ * @cmd: the #GstVulkanCommandBuffer
+ *
+ * Lock @cmd for writing cmmands to @cmd.  Must be matched by a corresponding
+ * gst_vulkan_command_buffer_unlock().
+ *
+ * Since: 1.18
+ */
 #define gst_vulkan_command_buffer_lock(cmd) (gst_vulkan_command_pool_lock((cmd)->pool))
+/**
+ * gst_vulkan_command_buffer_unlock:
+ * @cmd: the #GstVulkanCommandBuffer
+ *
+ * Unlock @cmd for writing cmmands to @cmd.  Must be matched by a corresponding
+ * gst_vulkan_command_buffer_lock().
+ *
+ * Since: 1.18
+ */
 #define gst_vulkan_command_buffer_unlock(cmd) (gst_vulkan_command_pool_unlock((cmd)->pool))
 
 GST_VULKAN_API

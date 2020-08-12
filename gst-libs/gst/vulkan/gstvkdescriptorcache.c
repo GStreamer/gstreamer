@@ -28,7 +28,7 @@
  * SECTION:vkdescriptorcache
  * @title: GstVulkanDescriptorCache
  * @short_description: Vulkan descriptor cache
- * @see_also: #GstVulkanDevice
+ * @see_also: #GstVulkanDescriptorSet, #GstVulkanDescriptorPool, #GstVulkanDevice
  */
 
 #define GET_PRIV(cache) gst_vulkan_descriptor_cache_get_instance_private (cache)

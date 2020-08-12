@@ -35,6 +35,20 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_physical_device_get_type       (void);
 
+/**
+ * GstVulkanPhysicalDevice:
+ * @parent: the parent #GstObject
+ * @instance: the parent #GstVulkanInstance for this physical device
+ * @device_index: the index into the physical device list in @instance
+ * @device: the vulkan physical device handle
+ * @properties: retrieved physical device properties
+ * @features: retrieved physical device features
+ * @memory_properties: retrieved physical device memory properties
+ * @queue_family_props: vulkan family properties
+ * @n_queue_families: number of elements in @queue_family_props
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanPhysicalDevice
 {
   GstObject parent;
@@ -50,11 +64,23 @@ struct _GstVulkanPhysicalDevice
 
   VkQueueFamilyProperties *queue_family_props;
   guint32 n_queue_families;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanPhysicalDeviceClass:
+ * @parent_class: the parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanPhysicalDeviceClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

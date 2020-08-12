@@ -20,7 +20,9 @@
 
 /**
  * SECTION:vulkancommandbuffer
- * @title: vulkancommandbuffer
+ * @title: GstVulkanCommandBuffer
+ * @short_description: Vulkan command buffer
+ * @see_also: #GstVulkanCommandPool
  *
  * vulkancommandbuffer holds information about a command buffer.
  */
@@ -97,6 +99,8 @@ gst_vulkan_command_buffer_init (GstVulkanCommandBuffer * cmd,
  * @level: the VkCommandBufferLevel for @cmd
  *
  * Returns: (transfer full): a new #GstVulkanCommandBuffer
+ *
+ * Since: 1.18
  */
 GstVulkanCommandBuffer *
 gst_vulkan_command_buffer_new_wrapped (VkCommandBuffer cmd,

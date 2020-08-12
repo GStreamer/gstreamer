@@ -21,6 +21,9 @@
 #ifndef __GST_VULKAN_API_H__
 #define __GST_VULKAN_API_H__
 
+/**
+ * VK_PROTOTYPES: (attributes doc.skip=true)
+ */
 #define VK_PROTOTYPES
 
 #include <gst/vulkan/gstvkconfig.h>

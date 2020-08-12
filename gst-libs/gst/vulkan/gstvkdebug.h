@@ -27,9 +27,32 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_VULKAN_EXTENT3D_FORMAT:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_EXTENT3D_FORMAT G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT
+
+/**
+ * GST_VULKAN_EXTENT3D_ARGS:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_EXTENT3D_ARGS(var) (var).width, (var).height, (var).depth
+
+/**
+ * GST_VULKAN_EXTENT2D_FORMAT:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_EXTENT2D_FORMAT G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT
+
+/**
+ * GST_VULKAN_EXTENT2D_ARGS:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_EXTENT2D_ARGS(var) (var).width, (var).height
 
 GST_VULKAN_API

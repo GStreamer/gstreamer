@@ -22,7 +22,7 @@
  * SECTION:vkwindow
  * @title: GstVulkanWindow
  * @short_description: window/surface abstraction
- * @see_also: #GstVulkanDisplay
+ * @see_also: #GstVulkanDisplay, #GstVulkanSwapper
  *
  * GstVulkanWindow represents a window that elements can render into.  A window can
  * either be a user visible window (onscreen) or hidden (offscreen).
@@ -535,6 +535,8 @@ gst_vulkan_window_send_mouse_event (GstVulkanWindow * window,
  * events are not propagated in the window hierarchy if a client is listening
  * for them. This method allows you to disable events handling completely
  * from the @window.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_window_handle_events (GstVulkanWindow * window,

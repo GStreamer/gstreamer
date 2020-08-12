@@ -27,10 +27,27 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_VULKAN_ERROR:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_ERROR (gst_vulkan_error_quark ())
+
+/**
+ * gst_vulkan_error_quark:
+ *
+ * Since: 1.18
+ */
 GST_VULKAN_API
 GQuark gst_vulkan_error_quark (void);
 
+/**
+ * GstVulkanError:
+ * @GST_VULKAN_FAILED: undetermined error
+ *
+ * Since: 1.18
+ */
 /* custom error values */
 typedef enum
 {

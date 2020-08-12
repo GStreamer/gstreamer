@@ -52,6 +52,8 @@ typedef struct _GstVulkanDisplayXCBClass GstVulkanDisplayXCBClass;
  *
  * the contents of a #GstVulkanDisplayXCB are private and should only be accessed
  * through the provided API
+ *
+ * Since: 1.18
  */
 struct _GstVulkanDisplayXCB
 {
@@ -65,11 +67,22 @@ struct _GstVulkanDisplayXCB
   gboolean foreign_display;
 
   GSource *event_source;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanDisplayXCBClass:
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDisplayXCBClass
 {
   GstVulkanDisplayClass object_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

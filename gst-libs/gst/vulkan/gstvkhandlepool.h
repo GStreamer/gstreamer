@@ -36,8 +36,22 @@ GType gst_vulkan_handle_pool_get_type (void);
 #define GST_IS_VULKAN_HANDLE_POOL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VULKAN_HANDLE_POOL))
 #define GST_IS_VULKAN_HANDLE_POOL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VULKAN_HANDLE_POOL))
 #define GST_VULKAN_HANDLE_POOL_GET_CLASS(o)    (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_HANDLE_POOL, GstVulkanHandlePoolClass))
+/**
+ * GST_VULKAN_HANDLE_POOL_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_HANDLE_POOL_CAST(o)         ((GstVulkanHandlePool *) o)
 
+/**
+ * GstVulkanHandlePool:
+ * @parent: the parent #GstObject
+ * @device: the #GstVulkanDevice handles are allocated from
+ * @outstanding: the collection of outstanding handles
+ * @available: the collection of allocated and available handles
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanHandlePool
 {
   GstObject                 parent;
@@ -52,6 +66,16 @@ struct _GstVulkanHandlePool
   gpointer                  _padding[GST_PADDING];
 };
 
+/**
+ * GstVulkanHandlePoolClass:
+ * @parent: the parent #GstObjectClass
+ * @alloc: allocate a new handle
+ * @acquire: acquire a handle for usage
+ * @release: release a handle for possible reuse at the next call to @acquire
+ * @free: free a handle
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanHandlePoolClass
 {
   GstObjectClass        parent;
@@ -60,6 +84,9 @@ struct _GstVulkanHandlePoolClass
   gpointer              (*acquire)          (GstVulkanHandlePool * pool, GError ** error);
   void                  (*release)          (GstVulkanHandlePool * pool, gpointer handle);
   void                  (*free)             (GstVulkanHandlePool * pool, gpointer handle);
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 GST_VULKAN_API

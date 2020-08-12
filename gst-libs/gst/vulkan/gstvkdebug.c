@@ -28,6 +28,13 @@
 #include "gstvkdebug.h"
 #include "gstvkdebug-private.h"
 
+/**
+ * SECTION:vkdebug
+ * @title: GstVulkanDebug
+ * @short_description: Vulkan debugging utilities
+ * @see_also: #GstVulkanDevice
+ */
+
 #define FLAGS_TO_STRING(under_name, VkType)                                     \
 gchar * G_PASTE(G_PASTE(gst_vulkan_,under_name),_flags_to_string) (VkType flag_bits) \
 {                                                                               \
@@ -65,6 +72,11 @@ static const struct
   {VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD, "device-uncached"},
 #endif
 };
+/**
+ * gst_vulkan_memory_property_flags_to_string:
+ *
+ * Since: 1.18
+ */
 FLAGS_TO_STRING(memory_property, VkMemoryPropertyFlags);
 
 static const struct 
@@ -77,6 +89,11 @@ static const struct
   {VK_MEMORY_HEAP_MULTI_INSTANCE_BIT, "multi-instance"},
 #endif
 };
+/**
+ * gst_vulkan_memory_heap_flags_to_string:
+ *
+ * Since: 1.18
+ */
 FLAGS_TO_STRING(memory_heap, VkMemoryHeapFlagBits);
 
 static const struct 
@@ -92,6 +109,11 @@ static const struct
   {VK_QUEUE_PROTECTED_BIT, "protected"},
 #endif
 };
+/**
+ * gst_vulkan_queue_flags_to_string:
+ *
+ * Since: 1.18
+ */
 FLAGS_TO_STRING(queue, VkQueueFlags);
 
 static const struct 
@@ -107,9 +129,22 @@ static const struct
   {VK_SAMPLE_COUNT_32_BIT, "32"},
   {VK_SAMPLE_COUNT_64_BIT, "64"},
 };
+/**
+ * gst_vulkan_sample_count_flags_to_string:
+ *
+ * Since: 1.18
+ */
 FLAGS_TO_STRING(sample_count, VkSampleCountFlags);
 /* *INDENT-ON* */
 
+/**
+ * gst_vulkan_physical_device_type_to_string:
+ * @type: a `VkPhysicalDeviceType
+ *
+ * Returns: name of @type
+ *
+ * Since: 1.18
+ */
 const gchar *
 gst_vulkan_physical_device_type_to_string (VkPhysicalDeviceType type)
 {

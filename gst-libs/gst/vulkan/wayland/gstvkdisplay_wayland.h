@@ -38,6 +38,11 @@ GType gst_vulkan_display_wayland_get_type (void);
 #define GST_VULKAN_DISPLAY_WAYLAND_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VULKAN_DISPLAY_WAYLAND,GstVulkanDisplayWaylandClass))
 #define GST_IS_VULKAN_DISPLAY_WAYLAND(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VULKAN_DISPLAY_WAYLAND))
 #define GST_IS_VULKAN_DISPLAY_WAYLAND_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VULKAN_DISPLAY_WAYLAND))
+/**
+ * GST_VULKAN_DISPLAY_WAYLAND_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_DISPLAY_WAYLAND_CAST(obj)        ((GstVulkanDisplayWayland*)(obj))
 
 typedef struct _GstVulkanDisplayWayland GstVulkanDisplayWayland;
@@ -48,6 +53,8 @@ typedef struct _GstVulkanDisplayWaylandClass GstVulkanDisplayWaylandClass;
  *
  * the contents of a #GstVulkanDisplayWayland are private and should only be accessed
  * through the provided API
+ *
+ * Since: 1.18
  */
 struct _GstVulkanDisplayWayland
 {
@@ -63,11 +70,21 @@ struct _GstVulkanDisplayWayland
   gboolean foreign_display;
 };
 
+/**
+ * GstVulkanDisplayWaylandClass:s
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDisplayWaylandClass
 {
   GstVulkanDisplayClass object_class;
 };
 
+/**
+ * GST_VULKAN_DISPLAY_WAYLAND_DISPLAY
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_DISPLAY_WAYLAND_DISPLAY(display_) (GST_VULKAN_DISPLAY_WAYLAND (display_)->display)
 
 GST_VULKAN_API

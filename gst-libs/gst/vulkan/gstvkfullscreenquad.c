@@ -24,6 +24,16 @@
 
 #include "gstvkfullscreenquad.h"
 
+/**
+ * SECTION:vkfullscreenquad
+ * @title: GstVulkanFullScreenQuad
+ * @short_description: Vulkan full screen quad
+ * @see_also: #GstVulkanDevice, #GstVulkanImageMemory
+ *
+ * A #GstVulkanFullScreenQuad is a helper object for rendering a single input
+ * image to an output #GstBuffer
+ */
+
 #define GST_CAT_DEFAULT gst_vulkan_full_screen_quad_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -620,84 +630,33 @@ gst_vulkan_full_screen_quad_get_last_fence (GstVulkanFullScreenQuad * self)
   return LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
 }
 
-static void
-clear_descriptor_set (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->descriptor_set)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->descriptor_set));
-  self->descriptor_set = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
+#define clear_field(field,type,trash_free_func) \
+static void \
+G_PASTE(clear_,field) (GstVulkanFullScreenQuad * self) \
+{ \
+  GstVulkanFence *last_fence = \
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device); \
+ \
+  if (self->field) \
+    gst_vulkan_trash_list_add (self->trash_list, \
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence, \
+            trash_free_func, (type) self->field)); \
+  self->field = NULL; \
+ \
+  gst_vulkan_fence_unref (last_fence); \
 }
 
-static void
-clear_framebuffer (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+#define clear_field_mini_object(field) clear_field (field,GstMiniObject *,gst_vulkan_trash_mini_object_unref);
+#define clear_field_object(field) clear_field (field,GstObject *,gst_vulkan_trash_object_unref);
 
-  if (self->framebuffer)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->framebuffer));
-  self->framebuffer = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_command_pool (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->cmd_pool)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_object_unref, (GstObject *) self->cmd_pool));
-  self->cmd_pool = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_sampler (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->sampler)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->sampler));
-  self->sampler = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_descriptor_cache (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->descriptor_cache)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_object_unref,
-            (GstObject *) self->descriptor_cache));
-  self->descriptor_cache = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
+clear_field_mini_object (descriptor_set);
+clear_field_mini_object (framebuffer);
+clear_field_mini_object (sampler);
+clear_field_mini_object (pipeline_layout);
+clear_field_mini_object (graphics_pipeline);
+clear_field_mini_object (descriptor_set_layout);
+clear_field_object (cmd_pool);
+clear_field_object (descriptor_cache);
 
 static void
 clear_shaders (GstVulkanFullScreenQuad * self)
@@ -791,54 +750,6 @@ clear_render_pass (GstVulkanFullScreenQuad * self)
 }
 
 static void
-clear_pipeline_layout (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->pipeline_layout)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->pipeline_layout));
-  self->pipeline_layout = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_graphics_pipeline (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->graphics_pipeline)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->graphics_pipeline));
-  self->graphics_pipeline = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
-clear_descriptor_set_layout (GstVulkanFullScreenQuad * self)
-{
-  GstVulkanFence *last_fence =
-      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
-
-  if (self->descriptor_set_layout)
-    gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
-            gst_vulkan_trash_mini_object_unref,
-            (GstMiniObject *) self->descriptor_set_layout));
-  self->descriptor_set_layout = NULL;
-
-  gst_vulkan_fence_unref (last_fence);
-}
-
-static void
 destroy_pipeline (GstVulkanFullScreenQuad * self)
 {
   GstVulkanFence *last_fence =
@@ -860,6 +771,14 @@ gst_vulkan_full_screen_quad_init (GstVulkanFullScreenQuad * self)
   self->trash_list = gst_vulkan_trash_fence_list_new ();
 }
 
+/**
+ * gst_vulkan_full_screen_quad_new:
+ * @queue: a #GstVulkanQueue
+ *
+ * Returns: (transfer full): a new #GstVulkanFullScreenQuad
+ *
+ * Since: 1.18
+ */
 GstVulkanFullScreenQuad *
 gst_vulkan_full_screen_quad_new (GstVulkanQueue * queue)
 {
@@ -869,6 +788,8 @@ gst_vulkan_full_screen_quad_new (GstVulkanQueue * queue)
 
   self = g_object_new (GST_TYPE_VULKAN_FULL_SCREEN_QUAD, NULL);
   self->queue = gst_object_ref (queue);
+
+  gst_object_ref_sink (self);
 
   return self;
 }
@@ -880,7 +801,7 @@ gst_vulkan_full_screen_quad_finalize (GObject * object)
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
 
   destroy_pipeline (self);
-  clear_command_pool (self);
+  clear_cmd_pool (self);
   clear_sampler (self);
   clear_framebuffer (self);
   clear_descriptor_set (self);
@@ -912,6 +833,16 @@ gst_vulkan_full_screen_quad_class_init (GstVulkanFullScreenQuadClass * klass)
   obj_class->finalize = gst_vulkan_full_screen_quad_finalize;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_info:
+ * @self: the #GstVulkanFullScreenQuad
+ * @in_info: the input #GstVideoInfo to set
+ * @out_info: the output #GstVideoInfo to set
+ *
+ * Returns: whether the information could be successfully set
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_info (GstVulkanFullScreenQuad * self,
     GstVideoInfo * in_info, GstVideoInfo * out_info)
@@ -928,6 +859,16 @@ gst_vulkan_full_screen_quad_set_info (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_input_buffer:
+ * @self: the #GstVulkanFullScreenQuad
+ * @buffer: the input #GstBuffer to set
+ * @error: #GError to fill on failure
+ *
+ * Returns: whether the input buffer could be changed
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_input_buffer (GstVulkanFullScreenQuad * self,
     GstBuffer * buffer, GError ** error)
@@ -943,6 +884,16 @@ gst_vulkan_full_screen_quad_set_input_buffer (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_output_buffer:
+ * @self: the #GstVulkanFullScreenQuad
+ * @buffer: the output #GstBuffer to set
+ * @error: #GError to fill on failure
+ *
+ * Returns: whether the input buffer could be changed
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_output_buffer (GstVulkanFullScreenQuad * self,
     GstBuffer * buffer, GError ** error)
@@ -958,6 +909,16 @@ gst_vulkan_full_screen_quad_set_output_buffer (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_shaders:
+ * @self: the #GstVulkanFullScreenQuad
+ * @vert: the vertex shader to set
+ * @frag: the fragment shader to set
+ *
+ * Returns: whether the shaders could be set
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_shaders (GstVulkanFullScreenQuad * self,
     GstVulkanHandle * vert, GstVulkanHandle * frag)
@@ -981,6 +942,16 @@ gst_vulkan_full_screen_quad_set_shaders (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_uniform_buffer:
+ * @self: the #GstVulkanFullScreenQuad
+ * @uniforms: the uniform data to set. Must be a #GstVulkanBufferMemory
+ * @error: a #GError to fill on failure
+ *
+ * Returns: whether the shaders could be set
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_uniform_buffer (GstVulkanFullScreenQuad * self,
     GstMemory * uniforms, GError ** error)
@@ -1002,6 +973,19 @@ gst_vulkan_full_screen_quad_set_uniform_buffer (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_index_buffer:
+ * @self: the #GstVulkanFullScreenQuad
+ * @indices: the index data.  Must be a #GstVulkanBufferMemory
+ * @n_indices: number of indices in @indices
+ * @error: #GError to fill on failure
+ *
+ * See also gst_vulkan_full_screen_quad_set_vertex_buffer()
+ *
+ * Returns: whether the index data could be set
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_index_buffer (GstVulkanFullScreenQuad * self,
     GstMemory * indices, gsize n_indices, GError ** error)
@@ -1023,6 +1007,16 @@ gst_vulkan_full_screen_quad_set_index_buffer (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_set_vertex_buffer:
+ * @self: the #GstVulkanFullScreenQuad
+ * @vertices: the vertex data. Must be a #GstVulkanBufferMemory
+ * @error: #GError to fill on failure
+ *
+ * Returns: whether the index data could be set
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_set_vertex_buffer (GstVulkanFullScreenQuad * self,
     GstMemory * vertices, GError ** error)
@@ -1104,6 +1098,22 @@ failure:
   return FALSE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_draw:
+ * @self: the #GstVulkanFullScreenQuad
+ * @error: a #GError filled on error
+ *
+ * Helper function for creation and submission of a command buffer that draws
+ * a full screen quad.  If you need to add other things to the command buffer,
+ * create the command buffer manually and call
+ * gst_vulkan_full_screen_quad_prepare_draw(),
+ * gst_vulkan_full_screen_quad_fill_command_buffer() and
+ * gst_vulkan_full_screen_quad_submit() instead.
+ *
+ * Returns: whether the draw was successful
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_draw (GstVulkanFullScreenQuad * self,
     GError ** error)
@@ -1167,6 +1177,17 @@ error:
   return FALSE;
 }
 
+/**
+ * gst_vulkan_full_screen_quad_prepare_draw:
+ * @self: the #GstVulkanFullScreenQuad
+ * @fence: a #GstVulkanFence that will be signalled after submission
+ * @error: a #GError filled on error
+ *
+ * Returns: whether the necessary information could be generated for drawing a
+ * frame.
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
     GstVulkanFence * fence, GError ** error)
@@ -1251,6 +1272,8 @@ error:
  * @error: a #GError to fill on error
  *
  * Returns: whether @cmd could be filled with the necessary commands
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
@@ -1405,6 +1428,8 @@ error:
  * @error: a #GError to fill on error
  *
  * Returns: whether @cmd could be submitted to the queue
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_full_screen_quad_submit (GstVulkanFullScreenQuad * self,

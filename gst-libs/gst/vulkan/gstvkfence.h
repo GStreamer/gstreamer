@@ -25,13 +25,37 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_TYPE_VULKAN_FENCE:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_VULKAN_FENCE (gst_vulkan_fence_get_type ())
 GST_VULKAN_API
 GType gst_vulkan_fence_get_type (void);
 
+/**
+ * GST_VULKAN_FENCE_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_FENCE_CAST(f) ((GstVulkanFence *) f)
+/**
+ * GST_VULKAN_FENCE_FENCE:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_FENCE_FENCE(f) (GST_VULKAN_FENCE_CAST(f)->fence)
 
+/**
+ * GstVulkanFence:
+ * @parent: the parent #GstMiniObject
+ * @device: the #GstVulkanDevice this fence is allocated from
+ * @cache: the parent #GstVulkanFenceCache for fence reuse
+ * @fence: the vulkan fence handle
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanFence
 {
   GstMiniObject parent;
@@ -40,6 +64,9 @@ struct _GstVulkanFence
   GstVulkanFenceCache *cache;
 
   VkFence fence;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API
@@ -75,6 +102,12 @@ GType gst_vulkan_fence_cache_get_type       (void);
 #define GST_IS_VULKAN_FENCE_CACHE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_VULKAN_FENCE_CACHE))
 #define GST_VULKAN_FENCE_CACHE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_FENCE_CACHE, GstVulkanFenceCacheClass))
 
+/**
+ * GstVulkanFenceCache:
+ * @parent: the parent #GstVulkanHandlePool
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanFenceCache
 {
   GstVulkanHandlePool       parent;
@@ -83,13 +116,31 @@ struct _GstVulkanFenceCache
   gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanFenceCacheClass:
+ * @parent_class: the parent #GstVulkanHandlePoolClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanFenceCacheClass
 {
   GstVulkanHandlePoolClass  parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GstVulkanFenceCache *       gst_vulkan_fence_cache_new         (GstVulkanDevice * device);
 
+/**
+ * gst_vulkan_fence_cache_acquire:
+ * @o: the #GstVulkanFenceCache
+ * @e: a #GError
+ *
+ * A helper define for internally calling @gst_vulkan_handle_pool_acquire()
+ *
+ * Since: 1.18
+ */
 #define gst_vulkan_fence_cache_acquire(o,e) (GstVulkanFence *) gst_vulkan_handle_pool_acquire (GST_VULKAN_HANDLE_POOL (o),e);
 
 G_END_DECLS

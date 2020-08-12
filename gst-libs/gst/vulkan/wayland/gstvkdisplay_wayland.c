@@ -107,10 +107,12 @@ gst_vulkan_display_wayland_finalize (GObject * object)
  * gst_vulkan_display_wayland_new:
  * @name: (allow-none): a display name
  *
- * Create a new #GstVulkanDisplayWayland from the wayland display name.  See wl_display_connect()
+ * Create a new #GstVulkanDisplayWayland from the wayland display name.  See `wl_display_connect`()
  * for details on what is a valid name.
  *
  * Returns: (transfer full): a new #GstVulkanDisplayWayland or %NULL
+ *
+ * Since: 1.18
  */
 GstVulkanDisplayWayland *
 gst_vulkan_display_wayland_new (const gchar * name)
@@ -147,6 +149,8 @@ gst_vulkan_display_wayland_new (const gchar * name)
  * Creates a new display connection from a wl_display Display.
  *
  * Returns: (transfer full): a new #GstVulkanDisplayWayland
+ *
+ * Since: 1.18
  */
 GstVulkanDisplayWayland *
 gst_vulkan_display_wayland_new_with_display (struct wl_display * display)

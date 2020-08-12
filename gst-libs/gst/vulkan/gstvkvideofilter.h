@@ -39,6 +39,19 @@ GType gst_vulkan_video_filter_get_type(void);
 typedef struct _GstVulkanVideoFilter GstVulkanVideoFilter;
 typedef struct _GstVulkanVideoFilterClass GstVulkanVideoFilterClass;
 
+/**
+ * GstVulkanVideoFilter:
+ * @parent: the parent #GstBaseTransform
+ * @instance: the configured #GstVulkanInstance
+ * @device: the configured #GstVulkanDevice
+ * @queue: the configured #GstVulkanQueue
+ * @in_caps: the configured input #GstCaps
+ * @in_info: the configured input #GstVideoInfo
+ * @out_caps: the configured output #GstCaps
+ * @out_info: the configured output #GstVideoInfo
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanVideoFilter
 {
   GstBaseTransform      parent;
@@ -51,11 +64,23 @@ struct _GstVulkanVideoFilter
   GstVideoInfo          in_info;
   GstCaps              *out_caps;
   GstVideoInfo          out_info;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanVideoFilterClass:
+ * @parent_class: the parent #GstBaseTransformClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanVideoFilterClass
 {
-  GstBaseTransformClass video_sink_class;
+  GstBaseTransformClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 G_END_DECLS

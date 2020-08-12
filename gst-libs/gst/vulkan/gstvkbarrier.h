@@ -26,6 +26,15 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstVulkanBarrierType:
+ * @GST_VULKAN_BARRIER_NONE: no barrier type
+ * @GST_VULKAN_BARRIER_MEMORY: memory barrier
+ * @GST_VULKAN_BARRIER_BUFFER: buffer barrier
+ * @GST_VULKAN_BARRIER_IMAGE: image barrier
+ *
+ * Since: 1.18
+ */
 typedef enum
 {
   GST_VULKAN_BARRIER_NONE = 0,
@@ -34,11 +43,27 @@ typedef enum
   GST_VULKAN_BARRIER_TYPE_IMAGE = 3,
 } GstVulkanBarrierType;
 
+/**
+ * GstVulkanBarrierFlags:
+ * @GST_VULKAN_BARRIER_FLAGS_NONE: no flags
+ *
+ * Since: 1.18
+ */
 typedef enum
 {
   GST_VULKAN_BARRIER_FLAG_NONE = 0,
 } GstVulkanBarrierFlags;
 
+/**
+ * GstVulkanBarrierMemoryInfo:
+ * @type: the #GstVulkanBarrierType of the barrier
+ * @flags the #GstVulkanBarrierFlags of the barrier
+ * @queue: the #GstVulkanQueue this barrier is to execute with
+ * @pipeline_stages: the stages in the graphics pipeline to execute the barrier
+ * @access_flags: access flags
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanBarrierMemoryInfo
 {
   GstVulkanBarrierType type;
@@ -46,6 +71,9 @@ struct _GstVulkanBarrierMemoryInfo
   GstVulkanQueue * queue;
   VkPipelineStageFlags pipeline_stages;
   VkAccessFlags access_flags;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 G_END_DECLS

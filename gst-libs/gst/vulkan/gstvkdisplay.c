@@ -429,7 +429,7 @@ gst_vulkan_display_find_window (GstVulkanDisplay * display, gpointer data,
 
 /**
  * gst_vulkan_display_remove_window:
- * @display: a #GstVUlkanDisplay:
+ * @display: a #GstVulkanDisplay
  * @window: the #GstVulkanWindow to remove
  *
  * Returns: whether the window was successfully removed
@@ -612,7 +612,7 @@ gst_vulkan_display_choose_type_unlocked (GstVulkanInstance * instance)
  * gst_vulkan_display_choose_type:
  * @instance: a #GstVulkanInstance
  *
- * This function will read the %GST_VULKAN_WINDOW environment variable for
+ * This function will read the `GST_VULKAN_WINDOW` environment variable for
  * a user choice or choose the first supported implementation.
  *
  * gst_vulkan_instance_fill_info() must have been called prior to this function.

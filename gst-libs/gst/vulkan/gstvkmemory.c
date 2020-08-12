@@ -32,7 +32,7 @@
  * SECTION:vkmemory
  * @title: GstVulkanMemory
  * @short_description: memory subclass for Vulkan device memory
- * @see_also: #GstMemory, #GstAllocator
+ * @see_also: #GstVulkanDevice, #GstMemory, #GstAllocator
  *
  * GstVulkanMemory is a #GstMemory subclass providing support for the mapping of
  * Vulkan device memory.

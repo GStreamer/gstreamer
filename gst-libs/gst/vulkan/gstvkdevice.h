@@ -35,10 +35,29 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_device_get_type       (void);
 
+/**
+ * GST_VULKAN_DEVICE_CONTEXT_TYPE_STR:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_DEVICE_CONTEXT_TYPE_STR "gst.vulkan.device"
 
+/**
+ * GstVulkanDeviceForEachQueueFunc:
+ *
+ * Since: 1.18
+ */
 typedef gboolean (*GstVulkanDeviceForEachQueueFunc) (GstVulkanDevice * device, GstVulkanQueue * queue, gpointer user_data);
 
+/**
+ * GstVulkanDevice:
+ * @parent: the parent #GstObject
+ * @instance: the #GstVulkanInstance this device was allocated with
+ * @physical_device: the #GstVulkanPhysicalDevice this device was allocated with
+ * @device: the vulkan device handle
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDevice
 {
   GstObject parent;
@@ -46,11 +65,23 @@ struct _GstVulkanDevice
   GstVulkanInstance *instance;
   GstVulkanPhysicalDevice *physical_device;
   VkDevice device; /* hides a pointer */
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanDeviceClass:
+ * @parent_class: the parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDeviceClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

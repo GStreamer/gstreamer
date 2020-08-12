@@ -19,8 +19,10 @@
  */
 
 /**
- * SECTION:vulkanhandle
- * @title: vulkanhandle
+ * SECTION:vkhandle
+ * @title: GstVulkanHandle
+ * @short_description: Vulkan handles
+ * @see_also: #GstVulkanHandlePool, #GstVulkanDevice
  *
  * #GstVulkanHandle holds information about a vulkan handle.
  */
@@ -86,6 +88,8 @@ gst_vulkan_handle_init (GstVulkanHandle * handle, GstVulkanDevice * device,
  * @user_data: data to pass to @notify
  *
  * Returns: (transfer full): a new #GstVulkanHandle wrapping @handle
+ *
+ * Since: 1.18
  */
 GstVulkanHandle *
 gst_vulkan_handle_new_wrapped (GstVulkanDevice * device,
@@ -108,6 +112,8 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstVulkanHandle, gst_vulkan_handle);
  * @user_data: callback user data
  *
  * Frees the descriptor set layout in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_descriptor_set_layout (GstVulkanHandle * handle,
@@ -128,6 +134,8 @@ gst_vulkan_handle_free_descriptor_set_layout (GstVulkanHandle * handle,
  * @user_data: callback user data
  *
  * Frees the pipeline in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_pipeline (GstVulkanHandle * handle, gpointer user_data)
@@ -145,6 +153,8 @@ gst_vulkan_handle_free_pipeline (GstVulkanHandle * handle, gpointer user_data)
  * @user_data: callback user data
  *
  * Frees the pipeline layout in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_pipeline_layout (GstVulkanHandle * handle,
@@ -164,6 +174,8 @@ gst_vulkan_handle_free_pipeline_layout (GstVulkanHandle * handle,
  * @user_data: callback user data
  *
  * Frees the render pass in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_render_pass (GstVulkanHandle * handle,
@@ -183,6 +195,8 @@ gst_vulkan_handle_free_render_pass (GstVulkanHandle * handle,
  * @user_data: callback user data
  *
  * Frees the sampler in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_sampler (GstVulkanHandle * handle, gpointer user_data)
@@ -200,6 +214,8 @@ gst_vulkan_handle_free_sampler (GstVulkanHandle * handle, gpointer user_data)
  * @user_data: callback user data
  *
  * Frees the framebuffer in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_framebuffer (GstVulkanHandle * handle,
@@ -219,6 +235,8 @@ gst_vulkan_handle_free_framebuffer (GstVulkanHandle * handle,
  * @user_data: callback user data
  *
  * Frees the shader in @handle
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_handle_free_shader (GstVulkanHandle * handle, gpointer user_data)

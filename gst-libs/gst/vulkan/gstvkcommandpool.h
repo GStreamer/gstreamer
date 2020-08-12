@@ -32,6 +32,14 @@
 GST_VULKAN_API
 GType gst_vulkan_command_pool_get_type       (void);
 
+/**
+ * GstVulkanCommandPool:
+ * @parent: the parent #GstObject
+ * @queue: the #GstVulkanQueue to command buffers will be allocated from
+ * @pool: the vulkan command pool handle
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanCommandPool
 {
   GstObject parent;
@@ -39,11 +47,23 @@ struct _GstVulkanCommandPool
   GstVulkanQueue *queue;
 
   VkCommandPool pool; /* hides a pointer */
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanCommandPoolClass:
+ * @parent_class: the parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanCommandPoolClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

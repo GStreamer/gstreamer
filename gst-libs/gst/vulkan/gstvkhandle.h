@@ -28,16 +28,33 @@
 
 G_BEGIN_DECLS
 
+/**
+ * gst_vulkan_handle_get_type:
+ *
+ * Since: 1.18
+ */
 GST_VULKAN_API
 GType gst_vulkan_handle_get_type (void);
+/**
+ * GST_TYPE_VULKAN_HANDLE:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_VULKAN_HANDLE (gst_vulkan_handle_get_type ())
 
+/**
+ * GstVulkanHandleTypedef:
+ *
+ * Since: 1.18
+ */
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(GstVulkanHandleTypedef)
 
 /**
  * GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT:
  *
  * The printf format specifier for raw Vulkan non dispatchable handles.
+ *
+ * Since: 1.18
  */
 #if GLIB_SIZEOF_VOID_P == 8
 # define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT "p"
@@ -53,9 +70,23 @@ VK_DEFINE_NON_DISPATCHABLE_HANDLE(GstVulkanHandleTypedef)
  * Function definition called when the #GstVulkanHandle is no longer in use.
  * All implementations of this callback must free the internal handle stored
  * inside @handle.
+ *
+ * Since: 1.18
  */
 typedef void (*GstVulkanHandleDestroyNotify) (GstVulkanHandle * handle, gpointer user_data);
 
+/**
+ * GstVulkanHandleType:
+ * @GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT: descripter set layout
+ * @GST_VULKAN_HANDLE_TYPE_PIPELINE_LAYOUT: pipeline layout
+ * @GST_VULKAN_HANDLE_TYPE_PIPELINE: pipeline
+ * @GST_VULKAN_HANDLE_TYPE_RENDER_PASS: render pass
+ * @GST_VULKAN_HANDLE_TYPE_SAMPLER: sampler
+ * @GST_VULKAN_HANDLE_TYPE_FRAMEBUFFER: framebuffer
+ * @GST_VULKAN_HANDLE_TYPE_SHADER: shader
+ *
+ * Since: 1.18
+ */
 typedef enum
 {
   GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT          = 1,
@@ -74,7 +105,12 @@ typedef enum
  * @type: the type of handle
  * @handle: the handle value
  *
- * Holds information about a vulkan non dispatchable handle
+ * Holds information about a vulkan non dispatchable handle that only has
+ * a vulkan device as a parent and no specific host synchronisation
+ * requirements.  Command buffers have extra requirements that are serviced by
+ * more specific implementations (#GstVulkanCommandBuffer, #GstVulkanCommandPool).
+ *
+ * Since: 1.18
  */
 struct _GstVulkanHandle
 {

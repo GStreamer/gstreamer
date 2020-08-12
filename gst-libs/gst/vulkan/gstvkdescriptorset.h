@@ -28,12 +28,33 @@
 
 G_BEGIN_DECLS
 
+/**
+ * gst_vulkan_descriptor_set_get_type:
+ *
+ * Since: 1.18
+ */
 GST_VULKAN_API
 GType gst_vulkan_descriptor_set_get_type (void);
+/**
+ * GST_TYPE_VULKAN_DESCRIPTOR_SET:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_VULKAN_DESCRIPTOR_SET (gst_vulkan_descriptor_set_get_type ())
 
 typedef struct _GstVulkanDescriptorSet GstVulkanDescriptorSet;
 
+/**
+ * GstVulkanDescriptorSet:
+ * @parent: the parent #GstMiniObject
+ * @set: the vulkan descriptor set handle
+ * @pool: the parent #GstVulkanDescriptorPool for pooling
+ * @cache: the parent #GstVulkanDescriptorCache for reuse
+ * @n_layouts: number of layouts applied to this descriptor set
+ * @layouts: layouts applied to this descriptor set
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanDescriptorSet
 {
   GstMiniObject             parent;
@@ -47,7 +68,8 @@ struct _GstVulkanDescriptorSet
   guint                     n_layouts;
   GstVulkanHandle         **layouts;
 
-  GMutex                    lock;
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
@@ -56,7 +78,9 @@ struct _GstVulkanDescriptorSet
  *
  * Increases the refcount of the given buffer by one.
  *
- * Returns: (transfer full): @buf
+ * Returns: (transfer full): @set
+ *
+ * Since: 1.18
  */
 static inline GstVulkanDescriptorSet* gst_vulkan_descriptor_set_ref(GstVulkanDescriptorSet* set);
 static inline GstVulkanDescriptorSet *
@@ -71,6 +95,8 @@ gst_vulkan_descriptor_set_ref (GstVulkanDescriptorSet * set)
  *
  * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
  * will be freed.
+ *
+ * Since: 1.18
  */
 static inline void gst_vulkan_descriptor_set_unref(GstVulkanDescriptorSet* set);
 static inline void
@@ -85,22 +111,19 @@ gst_vulkan_descriptor_set_unref (GstVulkanDescriptorSet * set)
  *
  * Clears a reference to a #GstVulkanDescriptorSet.
  *
- * @buf_ptr must not be %NULL.
+ * @set_ptr must not be %NULL.
  *
  * If the reference is %NULL then this function does nothing. Otherwise, the
  * reference count of the descriptor set is decreased and the pointer is set
  * to %NULL.
  *
- * Since: 1.16
+ * Since: 1.18
  */
 static inline void
 gst_clear_vulkan_descriptor_set (GstVulkanDescriptorSet ** set_ptr)
 {
   gst_clear_mini_object ((GstMiniObject **) set_ptr);
 }
-
-#define gst_vulkan_descriptor_set_lock(set) g_mutex_lock (&((set)->lock))
-#define gst_vulkan_descriptor_set_unlock(set) g_mutex_unlock (&((set)->lock))
 
 GST_VULKAN_API
 GstVulkanDescriptorSet *    gst_vulkan_descriptor_set_new_wrapped       (GstVulkanDescriptorPool * pool,

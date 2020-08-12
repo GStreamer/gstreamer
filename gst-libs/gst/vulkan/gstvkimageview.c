@@ -28,7 +28,7 @@
  * SECTION:vkimageview
  * @title: GstVulkanImageView
  * @short_description: wrapper for `VkImageView`'s
- * @see_also: #GstVulkanImageMemory
+ * @see_also: #GstVulkanImageMemory, #GstVulkanDevice
  *
  * #GstVulkanImageView is a wrapper around a `VkImageView` mostly for
  * usage across element boundaries with #GstVulkanImageMemory
@@ -91,6 +91,8 @@ gst_vulkan_image_view_free (GstVulkanImageView * view)
  *
  * Returns: (transfer full): A new #GstVulkanImageView from @image and
  *          @create_info
+ *
+ * Since: 1.18
  */
 GstVulkanImageView *
 gst_vulkan_image_view_new (GstVulkanImageMemory * image,

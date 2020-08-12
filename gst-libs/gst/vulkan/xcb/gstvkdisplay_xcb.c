@@ -88,6 +88,8 @@ _get_screen_from_connection (xcb_connection_t * connection, int screen_no)
  * for details on what is a valid name.
  *
  * Returns: (transfer full): a new #GstVulkanDisplayXCB or %NULL
+ *
+ * Since: 1.18
  */
 GstVulkanDisplayXCB *
 gst_vulkan_display_xcb_new (const gchar * name)
@@ -114,12 +116,15 @@ gst_vulkan_display_xcb_new (const gchar * name)
 }
 
 /**
- * gst_vulkan_display_xcb_new_with_connection:
- * @display: an existing, xcb display
+ * gst_vulkan_display_xcb_new_with_connection: (skip)
+ * @connection: an existing, xcb display
+ * @screen_no: XCB screen number
  *
  * Creates a new display connection from a XCB Display.
  *
  * Returns: (transfer full): a new #GstVulkanDisplayXCB
+ *
+ * Since: 1.18
  */
 GstVulkanDisplayXCB *
 gst_vulkan_display_xcb_new_with_connection (xcb_connection_t * connection,

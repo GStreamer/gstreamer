@@ -25,10 +25,30 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_TYPE_VULKAN_IMAGE_VIEW:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_VULKAN_IMAGE_VIEW (gst_vulkan_image_view_get_type())
 GST_VULKAN_API
+/**
+ * gst_vulkan_image_view_get_type:
+ *
+ * Since: 1.18
+ */
 GType gst_vulkan_image_view_get_type(void);
 
+/**
+ * GstVulkanImageView:
+ * @parent: the parent #GstMiniObject
+ * @device: the #GstVulkanDevice
+ * @image: the associated #GstVulkanImageMemory for this view
+ * @view: the vulkan image view handle
+ * @create_info: the creation information for this view
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanImageView
 {
   GstMiniObject parent;
@@ -39,6 +59,9 @@ struct _GstVulkanImageView
   VkImageView view;
 
   VkImageViewCreateInfo create_info;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
@@ -48,6 +71,8 @@ struct _GstVulkanImageView
  * Increases the refcount of the given trash object by one.
  *
  * Returns: (transfer full): @trash
+ *
+ * Since: 1.18
  */
 static inline GstVulkanImageView* gst_vulkan_image_view_ref(GstVulkanImageView* trash);
 static inline GstVulkanImageView *
@@ -62,12 +87,34 @@ gst_vulkan_image_view_ref (GstVulkanImageView * trash)
  *
  * Decreases the refcount of the trash object. If the refcount reaches 0, the
  * trash will be freed.
+ *
+ * Since: 1.18
  */
 static inline void gst_vulkan_image_view_unref(GstVulkanImageView* trash);
 static inline void
 gst_vulkan_image_view_unref (GstVulkanImageView * trash)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (trash));
+}
+
+/**
+ * gst_clear_vulkan_image_view: (skip)
+ * @view_ptr: a pointer to a #GstVulkanImageView reference
+ *
+ * Clears a reference to a #GstVulkanImageView.
+ *
+ * @view_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the descriptor set is decreased and the pointer is set
+ * to %NULL.
+ *
+ * Since: 1.18
+ */
+static inline void
+gst_clear_vulkan_image_view (GstVulkanImageView ** view_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) view_ptr);
 }
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

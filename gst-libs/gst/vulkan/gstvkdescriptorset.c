@@ -19,8 +19,10 @@
  */
 
 /**
- * SECTION:vulkandescriptorset
- * @title: vulkandescriptorset
+ * SECTION:vkdescriptorset
+ * @title: GstVulkanDescriptorSet
+ * @short_description: Vulkan descriptor set
+ * @see_also: #GstVulkanDescriptorPool, #GstVulkanDescriptorCache, #GstVulkanDevice
  *
  * vulkandescriptorset holds information about a descriptor set.
  */
@@ -117,6 +119,8 @@ gst_vulkan_descriptor_set_init (GstVulkanDescriptorSet * set,
  * @set: a VkDescriptorSet
  *
  * Returns: (transfer full): a new #GstVulkanDescriptorSet
+ *
+ * Since: 1.18
  */
 GstVulkanDescriptorSet *
 gst_vulkan_descriptor_set_new_wrapped (GstVulkanDescriptorPool * pool,

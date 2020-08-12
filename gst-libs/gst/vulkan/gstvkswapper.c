@@ -26,6 +26,16 @@
 
 #include "gstvkswapper.h"
 
+/**
+ * SECTION:vkswapper
+ * @title: GstVulkanSwapper
+ * @short_description: Vulkan helper object for rendering to a surface
+ * @see_also: #GstVulkanWindow, #GstVulkanQueue
+ *
+ * #GstVulkanSwapper is a helper object for rendering to a surface exposed by
+ * #GstVulkanWindow.
+ */
+
 #define GST_CAT_DEFAULT gst_vulkan_swapper_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
@@ -1449,6 +1459,8 @@ _on_window_resize (GstVulkanWindow * window, guint width, guint height,
  *      output surface is located relative to its parent
  * @display_rect: (out) (nullable): The #GstVideoRectangle for where the input
  *      images are placed inside @surface_location
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_swapper_get_surface_rectangles (GstVulkanSwapper * swapper,

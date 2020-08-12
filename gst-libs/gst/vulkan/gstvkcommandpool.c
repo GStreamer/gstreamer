@@ -29,7 +29,7 @@
  * SECTION:vkcommandpool
  * @title: GstVulkanCommandPool
  * @short_description: Vulkan command pool
- * @see_also: #GstVulkanDevice
+ * @see_also: #GstVulkanCommandBuffer, #GstVulkanDevice
  */
 
 #define GST_VULKAN_COMMAND_POOL_LARGE_OUTSTANDING 1024
@@ -242,6 +242,8 @@ gst_vulkan_command_pool_release_buffer (GstVulkanCommandPool * pool,
  * gst_vulkan_command_pool_lock()/gst_vulkan_command_pool_unlock() pair to meet
  * the Vulkan API requirements that host access to the command pool is
  * externally synchronised.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_command_pool_lock (GstVulkanCommandPool * pool)
@@ -258,6 +260,8 @@ gst_vulkan_command_pool_lock (GstVulkanCommandPool * pool)
  *
  * See the documentation for gst_vulkan_command_pool_lock() for when you would
  * need to use this function.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_command_pool_unlock (GstVulkanCommandPool * pool)

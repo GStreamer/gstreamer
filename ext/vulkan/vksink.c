@@ -149,10 +149,6 @@ gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
   gst_element_class_add_static_pad_template (element_class,
       &gst_vulkan_sink_template);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_VULKAN_DEVICE, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_VULKAN_PHYSICAL_DEVICE, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_VULKAN_INSTANCE, 0);
-
   gobject_class->finalize = gst_vulkan_sink_finalize;
 
   gstelement_class->change_state = gst_vulkan_sink_change_state;

@@ -26,6 +26,13 @@
 
 #include "gstvkerror.h"
 
+/**
+ * SECTION:vkerror
+ * @title: GstVulkanError
+ * @short_description: Vulkan errors
+ * @see_also: #GstVulkanInstance, #GstVulkanDevice
+ */
+
 /* *INDENT-OFF* */
 static const struct
 {
@@ -79,7 +86,7 @@ _vk_result_to_string (VkResult result)
  * @format: the printf-like format to write into the #GError
  * @...: arguments for @format
  *
- * if @result indicates an error condition, fills out #Gerror with details of
+ * if @result indicates an error condition, fills out #GError with details of
  * the error
  *
  * Returns: @result for easy chaining

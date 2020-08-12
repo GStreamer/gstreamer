@@ -34,28 +34,46 @@ GType gst_vulkan_buffer_pool_get_type (void);
 #define GST_TYPE_VULKAN_BUFFER_POOL      (gst_vulkan_buffer_pool_get_type())
 #define GST_IS_VULKAN_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VULKAN_BUFFER_POOL))
 #define GST_VULKAN_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VULKAN_BUFFER_POOL, GstVulkanBufferPool))
+/**
+ * GST_VULKAN_BUFFER_POOL_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_BUFFER_POOL_CAST(obj) ((GstVulkanBufferPool*)(obj))
 
 /**
  * GstVulkanBufferPool:
+ * @bufferpool: the parent #GstBufferPool
+ * @device: the #GstVulkanDevice to allocate Vulkan buffers from
  *
- * Opaque GstVulkanBufferPool struct
+ * Opaque #GstVulkanBufferPool struct
+ *
+ * Since: 1.18
  */
 struct _GstVulkanBufferPool
 {
   GstBufferPool bufferpool;
 
   GstVulkanDevice *device;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 /**
  * GstVulkanBufferPoolClass:
+ * @parent_class: the parent #GstBufferPoolClass
  *
  * The #GstVulkanBufferPoolClass structure contains only private data
+ *
+ * Since: 1.18
  */
 struct _GstVulkanBufferPoolClass
 {
   GstBufferPoolClass parent_class;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 GST_VULKAN_API

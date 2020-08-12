@@ -28,7 +28,7 @@
  * SECTION:vkimagememory
  * @title: GstVulkanImageMemory
  * @short_description: memory subclass for Vulkan image memory
- * @see_also: #GstMemory, #GstAllocator
+ * @see_also: #GstVulkanDevice, #GstMemory, #GstAllocator
  *
  * GstVulkanImageMemory is a #GstMemory subclass providing support for the
  * mapping of Vulkan device memory.
@@ -473,7 +473,7 @@ gst_vulkan_image_memory_alloc (GstVulkanDevice * device, VkFormat format,
  * @tiling: tiling of @image
  * @usage: usage flags of @image
  * @user_data: (nullable): user data for @notify
- * @notify: a #DestroyNotify when @image is no longer needed
+ * @notify: a #GDestroyNotify when @image is no longer needed
  *
  * Return: a new #GstVulkanImageMemory wrapping @image
  *

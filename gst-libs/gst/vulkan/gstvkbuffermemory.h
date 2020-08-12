@@ -39,12 +39,34 @@ GType gst_vulkan_buffer_memory_allocator_get_type(void);
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanBufferMemoryAllocatorClass))
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanBufferMemoryAllocator))
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanBufferMemoryAllocatorClass))
+/**
+ * GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_CAST(obj)            ((GstVulkanBufferMemoryAllocator *)(obj))
 
+/**
+ * GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_NAME:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_NAME "VulkanBuffer"
+/**
+ * GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER:
+ *
+ * Since: 1.18
+ */
 #define GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER "memory:VulkanBuffer"
 
-
+/**
+ * GstVulkanBarrierBufferInfo:
+ * @parent: parent #GstVulkanBarrierMemoryInfo
+ * @offset: offset into the vulkan buffer to execute the barrier with
+ * @size: size of memory to execute barrier over
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanBarrierBufferInfo
 {
   GstVulkanBarrierMemoryInfo parent;
@@ -52,7 +74,18 @@ struct _GstVulkanBarrierBufferInfo
   VkDeviceSize offset;
   VkDeviceSize size;
 };
-
+/**
+ * GstVulkanBufferMemory:
+ * @parent: parent #GstMemory
+ * @device: the #GstVulkanDevice this vulkan buffer is allocated from
+ * @buffer: Vulkan buffer object
+ * @vk_mem: backing #GstVulkanMemory for @buffer
+ * @requirements: allocation requirements for @buffer
+ * @usage: intended usage for @buffer
+ * @barrier: the last set barrier information
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanBufferMemory
 {
   GstMemory parent;
@@ -67,6 +100,7 @@ struct _GstVulkanBufferMemory
 
   GstVulkanBarrierBufferInfo barrier;
 
+  /* <private> */
   GMutex lock;
   gboolean wrapped;
   GDestroyNotify notify;
@@ -75,22 +109,34 @@ struct _GstVulkanBufferMemory
 
 /**
  * GstVulkanBufferMemoryAllocator
+ * @parent: the parent #GstAllocator
  *
  * Opaque #GstVulkanBufferMemoryAllocator struct
+ *
+ * Since: 1.18
  */
 struct _GstVulkanBufferMemoryAllocator
 {
   GstAllocator parent;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
  * GstVulkanBufferMemoryAllocatorClass:
+ * @parent_class: the parent #GstAllocatorClass
  *
  * The #GstVulkanBufferMemoryAllocatorClass only contains private data
+ *
+ * Since: 1.18
  */
 struct _GstVulkanBufferMemoryAllocatorClass
 {
   GstAllocatorClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

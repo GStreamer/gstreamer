@@ -20,7 +20,9 @@
 
 /**
  * SECTION:vulkanhandlepool
- * @title: vulkanhandlepool
+ * @title: GstVulkanHandlePool
+ * @short_description: Vulkan handle pool
+ * @see_also: #GstVulkanHandle, #GstVulkanDevice
  *
  * #GstVulkanHandlePool holds a number of handles that are pooled together.
  */

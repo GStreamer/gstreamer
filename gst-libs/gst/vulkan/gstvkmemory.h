@@ -38,10 +38,30 @@ GType gst_vulkan_memory_allocator_get_type(void);
 #define GST_VULKAN_MEMORY_ALLOCATOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanMemoryAllocatorClass))
 #define GST_VULKAN_MEMORY_ALLOCATOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanMemoryAllocator))
 #define GST_VULKAN_MEMORY_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VULKAN_MEMORY_ALLOCATOR, GstVulkanMemoryAllocatorClass))
+/**
+ * GST_VULKAN_MEMORY_ALLOCATOR_CAST:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_MEMORY_ALLOCATOR_CAST(obj)            ((GstVulkanMemoryAllocator *)(obj))
 
+/**
+ * GST_VULKAN_MEMORY_ALLOCATOR_NAME:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_MEMORY_ALLOCATOR_NAME "Vulkan"
 
+/**
+ * GstVulkanMemory
+ * @mem: the parent #GstMemory
+ * @device: the #GstVulkanDevice this memory is allocated from
+ * @mem_ptr: the vulkan memory handle
+ * @lock: lock for accessing/changing memory informat
+ * @map_count: number of times this memory is mapped
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanMemory
 {
   GstMemory                 mem;
@@ -66,26 +86,41 @@ struct _GstVulkanMemory
    * relation to the root memory */
   guint64                   vk_offset;
   gboolean                  wrapped;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
  * GstVulkanMemoryAllocator
+ * @parent: the parent #GstAllocator
  *
  * Opaque #GstVulkanMemoryAllocator struct
+ *
+ * Since: 1.18
  */
 struct _GstVulkanMemoryAllocator
 {
   GstAllocator parent;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
  * GstVulkanMemoryAllocatorClass:
+ * @parent_class: the parent #GstAllocatorClass
  *
  * The #GstVulkanMemoryAllocatorClass only contains private data
+ *
+ * Since: 1.18
  */
 struct _GstVulkanMemoryAllocatorClass
 {
   GstAllocatorClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API

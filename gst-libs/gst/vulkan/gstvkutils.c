@@ -29,8 +29,6 @@
  * @title: Vulkan Utils
  * @short_description: Vulkan utilities
  * @see_also: #GstVulkanInstance, #GstVulkanDevice
- *
- * GstVulkanQueue encapsulates the vulkan command queue.
  */
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -457,6 +455,15 @@ find_compatible_view (GstVulkanImageView * view, VkImageViewCreateInfo * info)
       info->subresourceRange.layerCount;
 }
 
+/**
+ * gst_vulkan_get_or_create_image_view
+ * @image: a #GstVulkanImageMemory
+ *
+ * Returns: (transfer full): a #GstVulkanImageView for @image matching the
+ *                           original layout and format of @image
+ *
+ * Since: 1.18
+ */
 GstVulkanImageView *
 gst_vulkan_get_or_create_image_view (GstVulkanImageMemory * image)
 {
@@ -479,6 +486,18 @@ gst_vulkan_get_or_create_image_view (GstVulkanImageMemory * image)
 #define SPIRV_MAGIC_NUMBER_NE 0x07230203
 #define SPIRV_MAGIC_NUMBER_OE 0x03022307
 
+/**
+ * gst_vulkan_create_shader
+ * @device: a #GstVulkanDevice
+ * @code: the SPIR-V shader byte code
+ * @size: length of @code.  Must be a multiple of 4
+ * @error: a #GError to fill on failure
+ *
+ * Returns: (transfer full): a #GstVulkanHandle for @image matching the
+ *                           original layout and format of @image or %NULL
+ *
+ * Since: 1.18
+ */
 GstVulkanHandle *
 gst_vulkan_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
     GError ** error)

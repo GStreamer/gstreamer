@@ -30,7 +30,7 @@
  * SECTION:vkinstance
  * @title: GstVulkanInstance
  * @short_description: GStreamer Vulkan instance
- * @see_also: #GstVulkanPhysicalDevice, #GstVulkanDevice
+ * @see_also: #GstVulkanPhysicalDevice, #GstVulkanDevice, #GstVulkanDisplay
  *
  * #GstVulkanInstance encapsulates the necessary information for the toplevel
  * Vulkan instance object.
@@ -115,6 +115,13 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanInstance)
     _init_debug ());
 
+/**
+ * gst_vulkan_instance_new:
+ *
+ * Returns: (transfer full): a new uninitialized #GstVulkanInstance
+ *
+ * Since: 1.18
+ */
 GstVulkanInstance *
 gst_vulkan_instance_new (void)
 {
@@ -220,6 +227,11 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
   gobject_class->set_property = gst_vulkan_instance_set_property;
   gobject_class->finalize = gst_vulkan_instance_finalize;
 
+  /**
+   * GstVulkanInstance:requested-api-major:
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class,
       PROP_REQUESTED_API_MAJOR_VERSION,
       g_param_spec_uint ("requested-api-major", "Requested API Major",
@@ -227,6 +239,11 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
           0, G_MAXUINT, DEFAULT_REQUESTED_API_VERSION_MAJOR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVulkanInstance:requested-api-minor:
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class,
       PROP_REQUESTED_API_MINOR_VERSION,
       g_param_spec_uint ("requested-api-minor", "Requested API Minor",
@@ -473,6 +490,8 @@ gst_vulkan_instance_is_extension_enabled_unlocked (GstVulkanInstance * instance,
  * @name: extension name
  *
  * Returns: whether extension @name is enabled
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_instance_is_extension_enabled (GstVulkanInstance * instance,
@@ -528,6 +547,8 @@ gst_vulkan_instance_enable_extension_unlocked (GstVulkanInstance * instance,
  * only have an effect before the call to gst_vulkan_instance_open().
  *
  * Returns: whether the Vulkan extension could be enabled.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_instance_enable_extension (GstVulkanInstance * instance,
@@ -581,6 +602,8 @@ gst_vulkan_instance_disable_extension_unlocked (GstVulkanInstance * instance,
  * an effect before the call to gst_vulkan_instance_open().
  *
  * Returns: whether the Vulkan extension could be disabled.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_instance_disable_extension (GstVulkanInstance * instance,
@@ -613,6 +636,8 @@ gst_vulkan_instance_is_layer_enabled_unlocked (GstVulkanInstance * instance,
  * @name: layer name
  *
  * Returns: whether layer @name is enabled
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_instance_is_layer_enabled (GstVulkanInstance * instance,
@@ -667,6 +692,8 @@ gst_vulkan_instance_enable_layer_unlocked (GstVulkanInstance * instance,
  * only have an effect before the call to gst_vulkan_instance_open().
  *
  * Returns: whether the Vulkan layer could be enabled.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_vulkan_instance_enable_layer (GstVulkanInstance * instance,
@@ -1034,7 +1061,7 @@ error:
  * @instance: a #GstVulkanInstance
  * @name: name of the function to retrieve
  *
- * Performs vkGetInstanceProcAddr() with @instance and @name
+ * Performs `vkGetInstanceProcAddr()` with @instance and @name
  *
  * Returns: the function pointer for @name or %NULL
  *
@@ -1059,7 +1086,7 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
 
 /**
  * gst_vulkan_instance_create_device:
- * @instance: a #GstVulkanIncstance
+ * @instance: a #GstVulkanInstance
  *
  * Returns: (transfer full): a new #GstVulkanDevice
  *

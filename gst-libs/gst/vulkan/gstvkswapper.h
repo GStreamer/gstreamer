@@ -36,12 +36,27 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_swapper_get_type       (void);
 
+/**
+ * GST_VULKAN_SWAPPER_VIDEO_FORMATS:
+ *
+ * Since: 1.18
+ */
 #define GST_VULKAN_SWAPPER_VIDEO_FORMATS " { RGBA, BGRA, RGB, BGR } "
 
 typedef struct _GstVulkanSwapper GstVulkanSwapper;
 typedef struct _GstVulkanSwapperClass GstVulkanSwapperClass;
 typedef struct _GstVulkanSwapperPrivate GstVulkanSwapperPrivate;
 
+/**
+ * GstVulkanSwapper:
+ * @parent: parent #GstObject
+ * @device: the #GstVulkanDevice
+ * @window: the #GstVulkanWindow to display into
+ * @queue: the #GstVulkanQueue to display with
+ * @cmd_pool: the #GstVulkanCommandPool to allocate command buffers from
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanSwapper
 {
   GstObject parent;
@@ -50,11 +65,23 @@ struct _GstVulkanSwapper
   GstVulkanWindow *window;
   GstVulkanQueue *queue;
   GstVulkanCommandPool *cmd_pool;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanSwapperClass:
+ * @parent_class: parent #GstObjectClass
+ *
+ * Since: 1.18
+ */
 struct _GstVulkanSwapperClass
 {
   GstObjectClass parent_class;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 GST_VULKAN_API
