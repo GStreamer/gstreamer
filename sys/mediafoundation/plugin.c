@@ -43,6 +43,12 @@ GST_DEBUG_CATEGORY (gst_mf_transform_debug);
 
 #define GST_CAT_DEFAULT gst_mf_debug
 
+static void
+plugin_deinit (gpointer data)
+{
+  MFShutdown ();
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -84,6 +90,17 @@ plugin_init (GstPlugin * plugin)
 
   gst_mf_aac_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_mp3_enc_plugin_init (plugin, GST_RANK_SECONDARY);
+
+  /* So that call MFShutdown() when this plugin is no more used
+   * (i.e., gst_deinit). Otherwise valgrind-like tools would complain
+   * about un-released media foundation resources.
+   *
+   * NOTE: MFStartup and MFShutdown can be called multiple times, but the number
+   * of each MFStartup and MFShutdown call should be identical. This rule is
+   * simliar to that of CoInitialize/CoUninitialize pair */
+  g_object_set_data_full (G_OBJECT (plugin),
+      "plugin-mediafoundation-shutdown", "shutdown-data",
+      (GDestroyNotify) plugin_deinit);
 
   return TRUE;
 }
