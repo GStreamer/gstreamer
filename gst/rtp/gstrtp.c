@@ -117,8 +117,6 @@
 #include "gstrtpreddec.h"
 #include "gstrtpulpfecdec.h"
 #include "gstrtpulpfecenc.h"
-#include "gstrtpreddec.h"
-#include "gstrtpredenc.h"
 #include "gstrtpstorage.h"
 
 static gboolean
@@ -409,14 +407,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "rtpulpfecenc", GST_RANK_NONE,
           GST_TYPE_RTP_ULPFEC_ENC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpreddec", GST_RANK_NONE,
-          GST_TYPE_RTP_RED_DEC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpredenc", GST_RANK_NONE,
-          GST_TYPE_RTP_RED_ENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "rtpstorage", GST_RANK_NONE,
