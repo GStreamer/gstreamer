@@ -756,6 +756,8 @@ _get_target_object_property (GstValidateScenario * scenario,
           done = TRUE;
       }
     }
+
+    gst_iterator_free (it);
   }
   REPORT_UNLESS (target, err, "Could not find pad: %s::%s", elemname, padname);
 
@@ -4259,6 +4261,13 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
     }
 
     action->action_number = priv->num_actions++;
+
+    if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK) {
+      GST_DEBUG_OBJECT (scenario,
+          "Unrefing action that has already been executed");
+      gst_validate_action_unref (action);
+      action = NULL;
+    }
   }
 
   /* max-latency and max-dropped can be overridden using config */
