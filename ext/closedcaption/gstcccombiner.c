@@ -521,6 +521,7 @@ gst_cc_combiner_src_query (GstAggregator * aggregator, GstQuery * query)
       gst_query_parse_accept_caps (query, &caps);
       gst_query_set_accept_caps_result (query, gst_caps_is_subset (caps,
               templ));
+      gst_caps_unref (templ);
       ret = TRUE;
       break;
     }
@@ -553,7 +554,8 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
         ret = gst_pad_peer_query (srcpad, query);
       } else {
         ret =
-            GST_AGGREGATOR_CLASS (parent_class)->src_query (aggregator, query);
+            GST_AGGREGATOR_CLASS (parent_class)->sink_query (aggregator,
+            aggpad, query);
       }
       break;
     case GST_QUERY_CAPS:
@@ -587,11 +589,13 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
         gst_query_parse_accept_caps (query, &caps);
         gst_query_set_accept_caps_result (query, gst_caps_is_subset (caps,
                 templ));
+        gst_caps_unref (templ);
         ret = TRUE;
       }
       break;
     default:
-      ret = GST_AGGREGATOR_CLASS (parent_class)->src_query (aggregator, query);
+      ret = GST_AGGREGATOR_CLASS (parent_class)->sink_query (aggregator,
+          aggpad, query);
       break;
   }
 
