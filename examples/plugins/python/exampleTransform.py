@@ -37,10 +37,10 @@ class ExampleTransform(GstBase.BaseTransform):
         self.height = struct.get_int("height").value
         return True
 
-    def do_transform(self, buf_in, buf_out):
+    def do_transform_ip(self, buf):
         try:
             # Create a read-only memoryview
-            success, info = buf_in.map(Gst.MapFlags.READ)
+            success, info = buf.map(Gst.MapFlags.READ)
             if success == False:
                 raise RuntimeError("Could not map buffer to bytes object.")
             
@@ -48,11 +48,11 @@ class ExampleTransform(GstBase.BaseTransform):
             image_in = np.ndarray(shape = (self.height, self.width), dtype = np.uint8, buffer = info.data)
             image_out = np.invert(image_in)
 
-            # Copy data in image_out to buf_out
-            buf_out.fill(0, image_out.tobytes())
-
             # Unmap the memoryview
-            buf_in.unmap(info)
+            buf.unmap(info)
+
+            # Copy data in image_out to buf
+            buf.fill(0, image_out.tobytes())
 
             return Gst.FlowReturn.OK
         except RuntimeError as e:
