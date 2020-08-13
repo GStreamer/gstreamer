@@ -62,7 +62,7 @@ GType gst_gl_memory_allocator_get_type(void);
  * List of video formats that are supported by #GstGLMemory
  */
 #define GST_GL_MEMORY_VIDEO_FORMATS_STR \
-    "{ RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, " \
+    "{ RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, GBRA, GBR, RGB, BGR, RGB16, BGR16, " \
     "AYUV, VUYA, Y410, I420, YV12, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, Y41B, " \
     "Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64" \
     GST_GL_MEMORY_VIDEO_EXT_FORMATS "}"

@@ -100,7 +100,7 @@ struct _GstGLColorConvertClass
  * The currently supported formats that can be converted
  */
 #define GST_GL_COLOR_CONVERT_FORMATS "{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, " \
-                               "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
+                               "xBGR, ARGB, ABGR, GBRA, GBR, Y444, I420, YV12, Y42B, " \
                                "Y41B, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, AYUV, " \
                                "VUYA, Y410, GRAY8, GRAY16_LE, GRAY16_BE, " \
                                "RGB16, BGR16, ARGB64 " \
