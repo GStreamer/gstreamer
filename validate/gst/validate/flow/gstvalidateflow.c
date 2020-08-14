@@ -461,7 +461,7 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
       &error);
   if (!error) {
     gboolean colored = gst_validate_has_colored_output ();
-    GSubprocess *process;
+    GSubprocess *process2;
     gchar *fname = NULL;
     gint f = g_file_open_tmp ("XXXXXX.diff", &fname, NULL);
 
@@ -470,12 +470,12 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
       g_file_set_contents (fname, stdout_text, -1, NULL);
       close (f);
 
-      process =
+      process2 =
           g_subprocess_new (G_SUBPROCESS_FLAGS_STDOUT_PIPE, &error, "bat", "-l",
           "diff", "--paging", "never", "--color", colored ? "always" : "never",
           fname, NULL);
 
-      g_subprocess_communicate_utf8 (process, NULL, NULL, &tmpstdout, NULL,
+      g_subprocess_communicate_utf8 (process2, NULL, NULL, &tmpstdout, NULL,
           &error);
       if (!error) {
         g_free (stdout_text);
@@ -485,6 +485,7 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
         GST_DEBUG ("Could not use bat: %s", error->message);
         g_clear_error (&error);
       }
+      g_clear_object (&process2);
       g_free (fname);
     }
 

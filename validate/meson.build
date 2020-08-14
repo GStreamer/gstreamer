@@ -15,6 +15,7 @@ cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 if cc.has_header('unistd.h')
   cdata.set('HAVE_UNISTD_H', 1)
 endif
+
 configure_file(output : 'config.h', configuration : cdata)
 
 validate_plugins_install_dir = '@0@/gstreamer-1.0/validate'.format(get_option('libdir'))

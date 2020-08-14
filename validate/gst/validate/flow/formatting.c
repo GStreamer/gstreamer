@@ -243,7 +243,6 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
   gchar *flags_str, *meta_str, *buffer_str;
   gchar *buffer_parts[7];
   int buffer_parts_index = 0;
-  gchar *sum;
   GstMapInfo map;
   gchar **logged_fields =
       logged_fields_struct ? gst_validate_utils_get_strv (logged_fields_struct,
@@ -268,7 +267,7 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
 
       buffer_parts[buffer_parts_index++] = g_string_free (content, FALSE);
     } else {
-      sum =
+      gchar *sum =
           g_compute_checksum_for_data (checksum_type ==
           CHECKSUM_TYPE_AS_ID ? G_CHECKSUM_SHA1 : checksum_type, map.data,
           map.size);
