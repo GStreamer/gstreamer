@@ -200,7 +200,6 @@ check_headers = [
   'sys/wait.h',
   'ucontext.h',
   'unistd.h',
-  'valgrind/valgrind.h',
   'sys/resource.h',
   'sys/uio.h',
 ]

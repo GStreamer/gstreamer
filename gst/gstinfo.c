@@ -305,36 +305,6 @@ static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 static volatile gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
 static volatile gint G_GNUC_MAY_ALIAS __use_color = GST_DEBUG_COLOR_MODE_ON;
 
-/* FIXME: export this? */
-gboolean
-_priv_gst_in_valgrind (void)
-{
-  static enum
-  {
-    GST_VG_UNCHECKED,
-    GST_VG_NO_VALGRIND,
-    GST_VG_INSIDE
-  }
-  in_valgrind = GST_VG_UNCHECKED;
-
-  if (in_valgrind == GST_VG_UNCHECKED) {
-#ifdef HAVE_VALGRIND_VALGRIND_H
-    if (RUNNING_ON_VALGRIND) {
-      GST_CAT_INFO (GST_CAT_GST_INIT, "we're running inside valgrind");
-      in_valgrind = GST_VG_INSIDE;
-    } else {
-      GST_CAT_LOG (GST_CAT_GST_INIT, "not doing extra valgrind stuff");
-      in_valgrind = GST_VG_NO_VALGRIND;
-    }
-#else
-    in_valgrind = GST_VG_NO_VALGRIND;
-#endif
-    g_assert (in_valgrind == GST_VG_NO_VALGRIND ||
-        in_valgrind == GST_VG_INSIDE);
-  }
-  return (in_valgrind == GST_VG_INSIDE);
-}
-
 static gchar *
 _replace_pattern_in_gst_debug_file_name (gchar * name, const char *token,
     guint val)
@@ -462,9 +432,6 @@ _priv_gst_debug_init (void)
   GST_CAT_CONTEXT = _gst_debug_category_new ("GST_CONTEXT", 0, NULL);
   _priv_GST_CAT_PROTECTION =
       _gst_debug_category_new ("GST_PROTECTION", 0, "protection");
-
-  /* print out the valgrind message if we're in valgrind */
-  _priv_gst_in_valgrind ();
 
   env = g_getenv ("GST_DEBUG_OPTIONS");
   if (env != NULL) {
@@ -2501,12 +2468,6 @@ gint
 gst_debug_construct_win_color (guint colorinfo)
 {
   return 0;
-}
-
-gboolean
-_priv_gst_in_valgrind (void)
-{
-  return FALSE;
 }
 
 void

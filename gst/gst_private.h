@@ -116,8 +116,6 @@ G_GNUC_INTERNAL  gboolean _priv_plugin_deps_env_vars_changed (GstPlugin * plugin
 
 G_GNUC_INTERNAL  gboolean _priv_plugin_deps_files_changed (GstPlugin * plugin);
 
-G_GNUC_INTERNAL  gboolean _priv_gst_in_valgrind (void);
-
 /* init functions called from gst_init(). */
 G_GNUC_INTERNAL  void  _priv_gst_quarks_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_mini_object_initialize (void);
