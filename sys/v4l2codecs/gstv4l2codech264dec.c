@@ -76,6 +76,7 @@ struct _GstV4l2CodecH264Dec
   gboolean need_negotiation;
   gboolean need_sequence;
   gboolean copy_frames;
+  gboolean scaling_matrix_present;
 
   struct v4l2_ctrl_h264_sps sps;
   struct v4l2_ctrl_h264_pps pps;
@@ -491,7 +492,7 @@ gst_v4l2_codec_h264_dec_fill_pps (GstV4l2CodecH264Dec * self, GstH264PPS * pps)
         | (pps->constrained_intra_pred_flag ? V4L2_H264_PPS_FLAG_CONSTRAINED_INTRA_PRED : 0)
         | (pps->redundant_pic_cnt_present_flag ? V4L2_H264_PPS_FLAG_REDUNDANT_PIC_CNT_PRESENT : 0)
         | (pps->transform_8x8_mode_flag ? V4L2_H264_PPS_FLAG_TRANSFORM_8X8_MODE : 0)
-        | V4L2_H264_PPS_FLAG_SCALING_MATRIX_PRESENT,
+        | (self->scaling_matrix_present ? V4L2_H264_PPS_FLAG_SCALING_MATRIX_PRESENT : 0),
   };
   /* *INDENT-ON* */
 }
@@ -865,8 +866,20 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
   if (!gst_v4l2_codec_h264_dec_ensure_bitstream (self))
     return FALSE;
 
+  /*
+   * Scaling matrix is present if there's one provided
+   * by either the SPS or the PPS. This flag must be
+   * set to true or false, before filling the PPS V4L2 control.
+   */
+  self->scaling_matrix_present =
+      slice->header.pps->sequence->scaling_matrix_present_flag ||
+      slice->header.pps->pic_scaling_matrix_present_flag;
+
   gst_v4l2_codec_h264_dec_fill_pps (self, slice->header.pps);
-  gst_v4l2_codec_h264_dec_fill_scaling_matrix (self, slice->header.pps);
+
+  if (self->scaling_matrix_present)
+    gst_v4l2_codec_h264_dec_fill_scaling_matrix (self, slice->header.pps);
+
   gst_v4l2_codec_h264_dec_fill_decoder_params (self, &slice->header, picture,
       dpb);
 
@@ -1024,15 +1037,11 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
       .size = sizeof (self->pps),
     },
     {
-      .id = V4L2_CID_STATELESS_H264_SCALING_MATRIX,
-      .ptr = &self->scaling_matrix,
-      .size = sizeof (self->scaling_matrix),
-    },
-    {
       .id = V4L2_CID_STATELESS_H264_DECODE_PARAMS,
       .ptr = &self->decode_params,
       .size = sizeof (self->decode_params),
     },
+    { },
     { },
     { },
     { },
@@ -1071,8 +1080,8 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
-  /* Always set PPS, SCALING_MATRIX and DECODE_PARAMS */
-  count = 3;
+  /* Always set PPS and DECODE_PARAMS */
+  count = 2;
 
   if (self->need_sequence) {
     control[count].id = V4L2_CID_STATELESS_H264_SPS;
@@ -1080,6 +1089,13 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     control[count].size = sizeof (self->sps);
     count++;
     self->need_sequence = FALSE;
+  }
+
+  if (self->scaling_matrix_present) {
+    control[count].id = V4L2_CID_STATELESS_H264_SCALING_MATRIX;
+    control[count].ptr = &self->scaling_matrix;
+    control[count].size = sizeof (self->scaling_matrix);
+    count++;
   }
 
   /* If it's not slice-based then it doesn't support per-slice controls. */
