@@ -1414,7 +1414,7 @@ gst_av1_parse_metadata_itut_t35 (GstAV1Parser * parser, GstBitReader * br,
   if (ret != GST_AV1_PARSER_OK)
     return ret;
 
-  if (itut_t35->itu_t_t35_country_code) {
+  if (itut_t35->itu_t_t35_country_code == 0xFF) {
     itut_t35->itu_t_t35_country_code_extention_byte =
         AV1_READ_BITS_CHECKED (br, 8, &ret);
     if (ret != GST_AV1_PARSER_OK)
@@ -1689,6 +1689,12 @@ gst_av1_parser_parse_metadata_obu (GstAV1Parser * parser, GstAV1OBU * obu,
     goto error;
 
   retval = av1_skip_trailing_bits (parser, &bit_reader, obu);
+  if (retval != GST_AV1_PARSER_OK) {
+    GST_WARNING ("Metadata type %d may have wrong trailings.",
+        metadata->metadata_type);
+    retval = GST_AV1_PARSER_OK;
+  }
+
   return retval;
 
 error:
