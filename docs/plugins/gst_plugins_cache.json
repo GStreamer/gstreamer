@@ -2445,6 +2445,18 @@
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
+                    },
+                    "drop-mode": {
+                        "blurb": "The drop mode to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "drop-all (0)",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "GstValveDropMode",
+                        "writable": true
                     }
                 },
                 "rank": "none"
@@ -2794,6 +2806,26 @@
                         "desc": "Only one src pad can be active in pull mode",
                         "name": "single",
                         "value": "1"
+                    }
+                ]
+            },
+            "GstValveDropMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Drop all buffers and events",
+                        "name": "drop-all",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Drop all buffers but forward sticky events",
+                        "name": "forward-sticky-events",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Convert all dropped buffers into gap events and forward sticky events",
+                        "name": "transform-to-gap",
+                        "value": "2"
                     }
                 ]
             }

@@ -45,6 +45,23 @@ typedef struct _GstValve GstValve;
 typedef struct _GstValveClass GstValveClass;
 
 /**
+ * GstValveDropMode:
+ * @GST_VALVE_DROP_MODE_DROP_ALL: Drop all buffers, buffer lists and events.
+ * @GST_VALVE_DROP_MODE_FORWARD_STICKY_EVENTS: Drop all buffers, buffer lists
+ *     and non-sticky events but forward sticky events.
+ * @GST_VALVE_DROP_MODE_TRANSFORM_TO_GAP: Drop all buffers, buffer lists and
+ *     non-sticky events but forward sticky events and forward GAP events for each
+ *     dropped buffer.
+ *
+ * Since: 1.20
+ */
+typedef enum {
+  GST_VALVE_DROP_MODE_DROP_ALL,
+  GST_VALVE_DROP_MODE_FORWARD_STICKY_EVENTS,
+  GST_VALVE_DROP_MODE_TRANSFORM_TO_GAP,
+} GstValveDropMode;
+
+/**
  * GstValve:
  *
  * The private valve structure
@@ -56,6 +73,8 @@ struct _GstValve
 
   /* atomic boolean */
   volatile gint drop;
+
+  GstValveDropMode drop_mode;
 
   /* Protected by the stream lock */
   gboolean discont;
