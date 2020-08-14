@@ -296,12 +296,7 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     stream_format = gst_structure_get_string (structure, "stream-format");
     encode->is_avc = (g_strcmp0 (stream_format, "avc") == 0);
 
-    if (gst_structure_has_field (structure, "level")) {
-      /* @TODO(victor): add a mechansim for user set a specific
-       * level */
-      GST_WARNING_OBJECT (encode, "cannot set level configuration");
-      ret = FALSE;
-    } else if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
+    if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
       GST_INFO ("using %s profile as target decoder constraints",
           gst_vaapi_utils_h264_get_profile_string (profile));
       ret = gst_vaapi_encoder_h264_set_max_profile (encoder, profile);
