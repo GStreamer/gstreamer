@@ -214,18 +214,25 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
     g_mutex_init(&images_mutex);
     if (context)
         gst.context = GST_GL_CONTEXT(gst_object_ref(context));
-    if (display)
+    if (display) {
         gst.display = GST_GL_DISPLAY(gst_object_ref(display));
+    }
 
     wpe.width = width;
     wpe.height = height;
 
-    EGLDisplay eglDisplay = EGL_NO_DISPLAY;
-    if (context && display)
-        eglDisplay = gst_gl_display_egl_get_from_native(GST_GL_DISPLAY_TYPE_WAYLAND, gst_gl_display_get_handle(display));
-    GST_DEBUG("eglDisplay %p", eglDisplay);
+    if (context && display) {
+      if (gst_gl_context_get_gl_platform(context) == GST_GL_PLATFORM_EGL) {
+        gst.display_egl = gst_gl_display_egl_from_gl_display (gst.display);
+      } else {
+        GST_DEBUG ("Available GStreamer GL Context is not EGL - not creating an EGL display from it");
+      }
+    }
 
-    if (eglDisplay) {
+    if (gst.display_egl) {
+        EGLDisplay eglDisplay = (EGLDisplay)gst_gl_display_get_handle (GST_GL_DISPLAY(gst.display_egl));
+        GST_DEBUG("eglDisplay %p", eglDisplay);
+
         m_isValid = wpe_fdo_initialize_for_egl_display(eglDisplay);
         GST_DEBUG("FDO EGL display initialisation result: %d", m_isValid);
     } else {
@@ -239,7 +246,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
     if (!m_isValid)
         return;
 
-    if (eglDisplay) {
+    if (gst.display_egl) {
         wpe.exportable = wpe_view_backend_exportable_fdo_egl_create(&s_exportableEGLClient, this, wpe.width, wpe.height);
     } else {
 #if ENABLE_SHM_BUFFER_SUPPORT
@@ -304,6 +311,11 @@ WPEView::~WPEView()
             webkit.view = nullptr;
         }
     });
+
+    if (gst.display_egl) {
+        gst_object_unref(gst.display_egl);
+        gst.display_egl = nullptr;
+    }
 
     if (gst.display) {
         gst_object_unref(gst.display);

@@ -22,6 +22,7 @@
 #include <EGL/egl.h>
 #include <glib.h>
 #include <gst/gl/gstglfuncs.h>
+#include <gst/gl/egl/gstgldisplay_egl.h>
 #include <wpe/fdo.h>
 #include <wpe/fdo-egl.h>
 #include <wpe/webkit.h>
@@ -82,7 +83,8 @@ private:
     struct {
         GstGLContext* context;
         GstGLDisplay* display;
-    } gst { nullptr, nullptr };
+        GstGLDisplayEGL* display_egl;
+    } gst { nullptr, nullptr, nullptr };
 
     static struct wpe_view_backend_exportable_fdo_egl_client s_exportableEGLClient;
 #if ENABLE_SHM_BUFFER_SUPPORT
