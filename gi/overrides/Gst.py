@@ -606,11 +606,21 @@ class MapInfo:
         self.user_data = None
         self.__parent__ = None
 
+    def __iter__(self):
+        # Make it behave like a tuple similar to the PyGObject generated API for
+        # the `Gst.Buffer.map()` and friends.
+        for i in (self.__parent__ is not None, self):
+            yield i
+
     def __enter__(self):
+        if not self.__parent__:
+            raise MapError('MappingError', 'Mapping was not successful')
+
         return self
 
     def __exit__(self, type, value, tb):
-        self.__parent__.unmap(self)
+        if not self.__parent__.unmap(self):
+            raise MapError('MappingError', 'Unmapping was not successful')
 
 __all__.append("MapInfo")
 
@@ -620,20 +630,19 @@ class Buffer(Gst.Buffer):
         mapinfo = MapInfo()
         if (_gi_gst.buffer_override_map_range(self, mapinfo, idx, length, int(flags))):
             mapinfo.__parent__ = self
-            return (mapinfo)
-        raise MapError('MappingError','Buffer mapping was not successfull')
+
+        return mapinfo
 
     def map(self, flags):
         mapinfo = MapInfo()
         if _gi_gst.buffer_override_map(self, mapinfo, int(flags)):
             mapinfo.__parent__ = self
-            return mapinfo
-        raise MapError('MappingError','Buffer mapping was not successfull')
+
+        return mapinfo
 
     def unmap(self, mapinfo):
         mapinfo.__parent__ = None
-        if _gi_gst.buffer_override_unmap(self, mapinfo) is not True:
-            raise MapError('UnmappingError','Buffer unmapping was not successfull')
+        return _gi_gst.buffer_override_unmap(self, mapinfo)
 
 Buffer = override(Buffer)
 __all__.append('Buffer')
@@ -644,13 +653,12 @@ class Memory(Gst.Memory):
         mapinfo = MapInfo()
         if (_gi_gst.memory_override_map(self, mapinfo, int(flags))):
             mapinfo.__parent__ = self
-            return (mapinfo)
-        raise MapError('MappingError','Memory mapping was not successfull')
+
+        return mapinfo
 
     def unmap(self, mapinfo):
         mapinfo.__parent__ = None
-        if _gi_gst.memory_override_unmap(self, mapinfo) is not True:
-            raise MapError('UnmappingError','Memory unmapping was not successfull')
+        return _gi_gst.memory_override_unmap(self, mapinfo)
 
 Memory = override(Memory)
 __all__.append('Memory')
