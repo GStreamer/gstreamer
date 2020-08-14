@@ -41,8 +41,8 @@
 #include <sys/time.h>
 
 #include <gst/video/gstvideometa.h>
+
 #include "gstaasink.h"
-#include "gstaatv.h"
 
 /* aasink signals and args */
 enum
@@ -92,6 +92,7 @@ static GstStateChangeReturn gst_aasink_change_state (GstElement * element,
 
 #define gst_aasink_parent_class parent_class
 G_DEFINE_TYPE (GstAASink, gst_aasink, GST_TYPE_VIDEO_SINK);
+GST_ELEMENT_REGISTER_DEFINE (aasink, "aasink", GST_RANK_NONE, GST_TYPE_AASINK);
 
 #define GST_TYPE_AADRIVERS (gst_aasink_drivers_get_type())
 static GType
@@ -582,21 +583,3 @@ open_failed:
     return GST_STATE_CHANGE_FAILURE;
   }
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "aasink", GST_RANK_NONE, GST_TYPE_AASINK))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "aatv", GST_RANK_NONE, GST_TYPE_AATV))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    aasink,
-    "ASCII Art video sink & filter",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

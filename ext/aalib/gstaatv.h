@@ -84,6 +84,8 @@ G_DECLARE_FINAL_TYPE (GstAATv, gst_aatv, GST, AATV, GstVideoFilter)
     struct aa_renderparams ascii_parms;
   };
 
+GST_ELEMENT_REGISTER_DECLARE (aatv);
+
 G_END_DECLS
 
 

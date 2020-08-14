@@ -47,6 +47,8 @@ struct _GstAASink {
   gint aa_driver;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (aasink);
+
 G_END_DECLS
 
 #endif /* __GST_AASINKE_H__ */

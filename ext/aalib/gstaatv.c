@@ -130,6 +130,7 @@ gst_aatv_rain_mode_get_type (void)
 
 #define gst_aatv_parent_class parent_class
 G_DEFINE_TYPE (GstAATv, gst_aatv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (aatv, "aatv", GST_RANK_NONE, GST_TYPE_AATV);
 
 static void
 gst_aatv_scale (GstAATv * aatv, guchar * src, guchar * dest,
