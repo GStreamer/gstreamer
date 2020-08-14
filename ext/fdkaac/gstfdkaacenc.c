@@ -92,6 +92,7 @@ static GstFlowReturn gst_fdkaacenc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 static GstCaps *gst_fdkaacenc_get_caps (GstAudioEncoder * enc,
     GstCaps * filter);
+static void gst_fdkaacenc_flush (GstAudioEncoder * enc);
 
 G_DEFINE_TYPE (GstFdkAacEnc, gst_fdkaacenc, GST_TYPE_AUDIO_ENCODER);
 
@@ -146,9 +147,12 @@ gst_fdkaacenc_stop (GstAudioEncoder * enc)
 
   GST_DEBUG_OBJECT (self, "stop");
 
-  if (self->enc)
+  if (self->enc) {
     aacEncClose (&self->enc);
+    self->enc = NULL;
+  }
 
+  self->is_drained = TRUE;
   return TRUE;
 }
 
@@ -199,10 +203,11 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   AACENC_InfoStruct enc_info = { 0 };
   gint bitrate;
 
-  if (self->enc) {
+  if (self->enc && !self->is_drained) {
     /* drain */
     gst_fdkaacenc_handle_frame (enc, NULL);
     aacEncClose (&self->enc);
+    self->is_drained = TRUE;
   }
 
   allowed_caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (self));
@@ -457,6 +462,10 @@ gst_fdkaacenc_handle_frame (GstAudioEncoder * enc, GstBuffer * inbuf)
     in_el_sizes = 0;
     in_desc.numBufs = 0;
   }
+  /* We unset is_drained even if there's no inbuf. Basically this is a
+   * workaround for aacEncEncode always producing 1024 bytes even without any
+   * input, thus messing up with the base class counting */
+  self->is_drained = FALSE;
 
   in_desc.bufferIdentifiers = &in_id;
   in_desc.bufs = (void *) &imap.data;
@@ -518,10 +527,25 @@ out:
 }
 
 static void
+gst_fdkaacenc_flush (GstAudioEncoder * enc)
+{
+  GstFdkAacEnc *self = GST_FDKAACENC (enc);
+  GstAudioInfo *info = gst_audio_encoder_get_audio_info (enc);
+
+  aacEncClose (&self->enc);
+  self->enc = NULL;
+  self->is_drained = TRUE;
+
+  if (GST_AUDIO_INFO_IS_VALID (info))
+    gst_fdkaacenc_set_format (enc, info);
+}
+
+static void
 gst_fdkaacenc_init (GstFdkAacEnc * self)
 {
   self->bitrate = DEFAULT_BITRATE;
   self->enc = NULL;
+  self->is_drained = TRUE;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (self), TRUE);
 }
@@ -541,6 +565,7 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_fdkaacenc_set_format);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_fdkaacenc_get_caps);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_fdkaacenc_handle_frame);
+  base_class->flush = GST_DEBUG_FUNCPTR (gst_fdkaacenc_flush);
 
   g_object_class_install_property (object_class, PROP_BITRATE,
       g_param_spec_int ("bitrate",
