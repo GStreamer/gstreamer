@@ -450,11 +450,6 @@ gst_init_check (int *argc, char **argv[], GError ** error)
  * WARNING: This function will terminate your program if it was unable to
  * initialize GStreamer for some reason. If you want your program to fall back,
  * use gst_init_check() instead.
- *
- * WARNING: This function does not work in the same way as corresponding
- * functions in other glib-style libraries, such as gtk_init\(\). In
- * particular, unknown command line options cause this function to
- * abort program execution.
  */
 void
 gst_init (int *argc, char **argv[])
