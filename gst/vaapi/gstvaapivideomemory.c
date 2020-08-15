@@ -367,7 +367,7 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
 
   vip = &allocator->image_info;
   gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
-      gst_object_ref (allocator), NULL, GST_VIDEO_INFO_SIZE (vip), 0,
+      base_allocator, NULL, GST_VIDEO_INFO_SIZE (vip), 0,
       0, GST_VIDEO_INFO_SIZE (vip));
 
   mem->proxy = NULL;
@@ -607,7 +607,6 @@ gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
   gst_vaapi_video_memory_reset_image (mem);
   gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
   gst_vaapi_video_meta_replace (&mem->meta, NULL);
-  gst_object_unref (GST_MEMORY_CAST (mem)->allocator);
   g_mutex_clear (&mem->lock);
   g_slice_free (GstVaapiVideoMemory, mem);
 }
