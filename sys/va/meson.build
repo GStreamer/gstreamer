@@ -7,11 +7,13 @@ va_sources = [
   'gstvadisplay_drm.c',
   'gstvadisplay_wrapped.c',
   'gstvadevice.c',
+  'gstvafilter.c',
   'gstvah264dec.c',
   'gstvapool.c',
   'gstvaprofile.c',
   'gstvautils.c',
   'gstvavideoformat.c',
+  'gstvavpp.c'
 ]
 
 va_option = get_option('va')

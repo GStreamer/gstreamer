@@ -31,6 +31,7 @@
 #include "gstvadevice.h"
 #include "gstvah264dec.h"
 #include "gstvaprofile.h"
+#include "gstvavpp.h"
 
 #define GST_CAT_DEFAULT gstva_debug
 GST_DEBUG_CATEGORY (gstva_debug);
@@ -138,6 +139,13 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
   }
 }
 
+static void
+plugin_register_vpp (GstPlugin * plugin, GstVaDevice * device)
+{
+  if (!gst_va_vpp_register (plugin, device, GST_RANK_NONE))
+    GST_WARNING ("Failed to register postproc: %s", device->render_device_path);
+}
+
 static inline void
 _insert_profile_in_table (GHashTable * table, VAProfile profile)
 {
@@ -167,7 +175,7 @@ plugin_register_elements (GstPlugin * plugin, GstVaDevice * device)
   VAStatus status;
   GHashTable *decoders, *encoders, *encoderslp, *encodersimg;
   gint i, j, num_entrypoints = 0, num_profiles = 0;
-  gboolean ret = FALSE;
+  gboolean has_vpp = FALSE, ret = FALSE;
 
   decoders = g_hash_table_new_full (g_int64_hash, g_int64_equal,
       (GDestroyNotify) g_free, (GDestroyNotify) g_array_unref);
@@ -204,11 +212,25 @@ plugin_register_elements (GstPlugin * plugin, GstVaDevice * device)
     }
   }
 
+  status = vaQueryConfigEntrypoints (dpy, VAProfileNone, entrypoints,
+      &num_entrypoints);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR ("vaQueryConfigEntrypoints: %s", vaErrorStr (status));
+    goto bail;
+  }
+
+  for (j = 0; j < num_entrypoints; j++) {
+    if ((has_vpp = (entrypoints[j] == VAEntrypointVideoProc)))
+      break;
+  }
+
   plugin_register_decoders (plugin, device, decoders);
   plugin_register_encoders (plugin, device, encoders, VAEntrypointEncSlice);
   plugin_register_encoders (plugin, device, encoderslp, VAEntrypointEncSliceLP);
   plugin_register_encoders (plugin, device, encodersimg,
       VAEntrypointEncPicture);
+  if (has_vpp)
+    plugin_register_vpp (plugin, device);
 
   ret = TRUE;
 
