@@ -133,8 +133,10 @@ do_create_surface_with_egl_image_unlocked (GstVaapiDisplayEGL * display,
       g_string_append (str, "V4L2 ");
     if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR)
       g_string_append (str, "PTR ");
+#if VA_CHECK_VERSION(1,1,0)
     if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2)
       g_string_append (str, "PRIME_2 ");
+#endif
 
     GST_ERROR ("missing EGL extensions for memory types: %s", str->str);
     g_string_free (str, TRUE);
