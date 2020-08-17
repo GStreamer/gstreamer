@@ -113,7 +113,6 @@ if build_gir
         {'name': 'player', 'gir': player_gir, 'lib': gstplayer_dep},
         {'name': 'insertbin', 'gir': insertbin_gir, 'lib': gstinsertbin_dep},
         {'name': 'codecparsers', 'lib': gstcodecparsers_dep},
-        {'name': 'opencv', 'lib': gstopencv_dep, 'c_source_patterns': ['*.h', '*.cpp'], 'extra_c_flags': ['-x c++']},
         {'name': 'adaptivedemux', 'lib': gstadaptivedemux_dep},
         {'name': 'basecamerabinsrc', 'gir': basecamerabin_gir, 'lib': gstbasecamerabin_dep},
         {'name': 'webrtc', 'gir': webrtc_gir, 'lib': gstwebrtc_dep, 'suffix': 'lib'},
@@ -121,6 +120,12 @@ if build_gir
         {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},
         {'name': 'codecs', 'gir': codecs_gir, 'lib': gstcodecs_dep},
     ]
+
+    if gstopencv_dep.found()
+        libs += [
+            {'name': 'opencv', 'lib': gstopencv_dep, 'c_source_patterns': ['*.h', '*.cpp'], 'extra_c_flags': ['-x c++']},
+        ]
+    endif
 
     if gstvulkan_dep.found()
         libs += [
