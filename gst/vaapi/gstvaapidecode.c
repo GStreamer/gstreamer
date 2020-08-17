@@ -292,7 +292,7 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
     gst_caps_append (out_caps, dma_caps);
   if (gltexup_caps)
     gst_caps_append (out_caps, gltexup_caps);
-  gst_caps_append (out_caps, gst_caps_copy (raw_caps));
+  gst_caps_append (out_caps, raw_caps);
   decode->allowed_srcpad_caps = out_caps;
 
   GST_INFO_OBJECT (decode, "allowed srcpad caps: %" GST_PTR_FORMAT,
@@ -1360,6 +1360,7 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
   decode->allowed_sinkpad_caps =
       gst_caps_intersect (allowed_sinkpad_caps, caps);
   gst_caps_unref (caps);
+  gst_caps_unref (allowed_sinkpad_caps);
   decode->allowed_sinkpad_caps =
       gst_caps_simplify (decode->allowed_sinkpad_caps);
   GST_DEBUG_OBJECT (decode, "allowed sink caps %" GST_PTR_FORMAT,
