@@ -135,5 +135,7 @@ struct _GstAV1EncClass
 
 GType gst_av1_enc_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (av1enc);
+
 G_END_DECLS
 #endif /* __GST_AV1_ENC_H__ */

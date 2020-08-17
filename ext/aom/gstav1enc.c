@@ -198,6 +198,8 @@ static void gst_av1_enc_destroy_encoder (GstAV1Enc * av1enc);
 
 #define gst_av1_enc_parent_class parent_class
 G_DEFINE_TYPE (GstAV1Enc, gst_av1_enc, GST_TYPE_VIDEO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (av1enc, "av1enc", GST_RANK_PRIMARY,
+    GST_TYPE_AV1_ENC);
 
 /* *INDENT-OFF* */
 static GstStaticPadTemplate gst_av1_enc_sink_pad_template =

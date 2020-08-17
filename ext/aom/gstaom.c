@@ -29,18 +29,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "av1enc", GST_RANK_PRIMARY,
-          GST_TYPE_AV1_ENC)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (av1enc, plugin);
+  ret |= GST_ELEMENT_REGISTER (av1dec, plugin);
 
-  if (!gst_element_register (plugin, "av1dec", GST_RANK_PRIMARY,
-          GST_TYPE_AV1_DEC)) {
-    return FALSE;
-  }
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
