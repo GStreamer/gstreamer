@@ -93,13 +93,16 @@ bail:
   return NULL;
 }
 
-static gboolean
-_gst_caps_set_format_array (GstCaps * caps, GArray * formats)
+gboolean
+gst_caps_set_format_array (GstCaps * caps, GArray * formats)
 {
   GstVideoFormat fmt;
   GValue v_formats = G_VALUE_INIT;
   const gchar *format;
   guint i;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (formats, FALSE);
 
   if (formats->len == 1) {
     fmt = g_array_index (formats, GstVideoFormat, 0);
@@ -144,7 +147,7 @@ GstCaps *
 gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 {
   GArray *formats;
-  GstCaps *caps, *base_caps, *feature_caps;
+  GstCaps *caps = NULL, *base_caps, *feature_caps;
   GstCapsFeatures *features;
   GstVideoFormat format;
   VASurfaceAttrib *attribs;
@@ -188,16 +191,17 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 
   /* if driver doesn't report surface formats for current
    * chroma. Gallium AMD bug for 4:2:2 */
-  if (formats->len == 0) {
-    caps = NULL;
+  if (formats->len == 0)
     goto bail;
-  }
 
   base_caps = gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
       min_width, max_width, "height", GST_TYPE_INT_RANGE, min_height,
       max_height, NULL);
 
-  _gst_caps_set_format_array (base_caps, formats);
+  if (!gst_caps_set_format_array (base_caps, formats)) {
+    gst_caps_unref (base_caps);
+    goto bail;
+  }
 
   caps = gst_caps_new_empty ();
 
@@ -250,7 +254,7 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
         }
       }
 
-      if (!_gst_caps_set_format_array (raw_caps, raw_formats)) {
+      if (!gst_caps_set_format_array (raw_caps, raw_formats)) {
         gst_caps_unref (raw_caps);
         raw_caps = gst_caps_copy (base_caps);
       }
