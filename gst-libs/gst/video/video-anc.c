@@ -1162,6 +1162,53 @@ gst_video_afd_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
   return TRUE;
 }
 
+static gboolean
+gst_video_afd_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstVideoAFDMeta *smeta = (GstVideoAFDMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GST_DEBUG ("copy AFD metadata");
+    gst_buffer_add_video_afd_meta (dest, smeta->field, smeta->spec, smeta->afd);
+    return TRUE;
+  } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
+    GstVideoMetaTransform *trans = data;
+    gdouble diff;
+    gint ow, oh, nw, nh;
+    gint opn, opd, npn, npd;
+
+    ow = GST_VIDEO_INFO_WIDTH (trans->in_info);
+    nw = GST_VIDEO_INFO_WIDTH (trans->out_info);
+    oh = GST_VIDEO_INFO_HEIGHT (trans->in_info);
+    nh = GST_VIDEO_INFO_HEIGHT (trans->out_info);
+    opn = GST_VIDEO_INFO_PAR_N (trans->in_info);
+    opd = GST_VIDEO_INFO_PAR_D (trans->in_info);
+    npn = GST_VIDEO_INFO_PAR_N (trans->out_info);
+    npd = GST_VIDEO_INFO_PAR_D (trans->out_info);
+
+    /* if the aspect ratio stays the same we can copy the meta, otherwise
+     * we can't know if the aspect ratio was changed or black borders were
+     * introduced. Both would invalidate the AFD meta */
+
+    diff =
+        ABS (((gdouble) ow / (gdouble) oh) * ((gdouble) opn / (gdouble) opd) -
+        ((gdouble) nw / (gdouble) nh) * ((gdouble) npn / (gdouble) npd));
+    if (diff < 0.0001) {
+      GST_DEBUG ("copying AFD metadata, aspect ratio did not change");
+      gst_buffer_add_video_afd_meta (dest, smeta->field, smeta->spec,
+          smeta->afd);
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
+  }
+
+}
+
 const GstMetaInfo *
 gst_video_afd_meta_get_info (void)
 {
@@ -1173,7 +1220,7 @@ gst_video_afd_meta_get_info (void)
         sizeof (GstVideoAFDMeta),
         gst_video_afd_meta_init,
         NULL,
-        NULL);
+        gst_video_afd_meta_transform);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
@@ -1255,6 +1302,22 @@ gst_video_bar_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
   return TRUE;
 }
 
+static gboolean
+gst_video_bar_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstVideoBarMeta *smeta = (GstVideoBarMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GST_DEBUG ("copy Bar metadata");
+    gst_buffer_add_video_bar_meta (dest, smeta->field, smeta->is_letterbox,
+        smeta->bar_data1, smeta->bar_data2);
+    return TRUE;
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
+  }
+}
 
 const GstMetaInfo *
 gst_video_bar_meta_get_info (void)
@@ -1267,7 +1330,7 @@ gst_video_bar_meta_get_info (void)
         sizeof (GstVideoBarMeta),
         gst_video_bar_meta_init,
         NULL,
-        NULL);
+        gst_video_bar_meta_transform);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
