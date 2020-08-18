@@ -24,6 +24,8 @@
 
 #include "gstvah264dec.h"
 
+#include <gst/codecs/gsth264decoder.h>
+
 #include <va/va_drmcommon.h>
 
 #include "gstvaallocator.h"
@@ -1214,11 +1216,11 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &other_params);
-    if (allocator && !self->has_videometa
-        && !GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
+    if (allocator && !(GST_IS_VA_DMABUF_ALLOCATOR (allocator)
+            || GST_IS_VA_ALLOCATOR (allocator))) {
       /* save the allocator for the other pool */
-      if ((other_allocator = allocator))
-        allocator = NULL;
+      other_allocator = allocator;
+      allocator = NULL;
     }
     update_allocator = TRUE;
   } else {
@@ -1405,7 +1407,7 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 
   gobject_class->dispose = gst_va_h264_dec_dispose;
 
-  element_class->set_context = gst_va_h264_dec_set_context;
+  element_class->set_context = GST_DEBUG_FUNCPTR (gst_va_h264_dec_set_context);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_va_h264_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_va_h264_dec_close);

@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include <gst/codecs/gsth264decoder.h>
-
 #include "gstvadevice.h"
 
 G_BEGIN_DECLS
