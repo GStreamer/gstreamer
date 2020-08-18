@@ -2339,9 +2339,18 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
         splitmux->reference_ctx->in_running_time - splitmux->gop_start_time;
 
   GST_LOG_OBJECT (splitmux, " queued_bytes %" G_GUINT64_FORMAT, queued_bytes);
+  GST_LOG_OBJECT (splitmux, "mq at TS %" GST_STIME_FORMAT
+      " bytes %" G_GUINT64_FORMAT " in running time %" GST_STIME_FORMAT
+      " gop start time %" GST_STIME_FORMAT,
+      GST_STIME_ARGS (queued_time), queued_bytes,
+      GST_STIME_ARGS (splitmux->reference_ctx->in_running_time),
+      GST_STIME_ARGS (splitmux->gop_start_time));
 
-  g_assert (queued_gop_time >= 0);
-  g_assert (queued_time >= splitmux->fragment_start_time);
+  if (queued_gop_time < 0)
+    goto error_gop_duration;
+
+  if (queued_time < splitmux->fragment_start_time)
+    goto error_queued_time;
 
   queued_time -= splitmux->fragment_start_time;
   if (queued_time < queued_gop_time)
@@ -2349,13 +2358,6 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
 
   /* Expand queued bytes estimate by muxer overhead */
   queued_bytes += (queued_bytes * splitmux->mux_overhead);
-
-  GST_LOG_OBJECT (splitmux, "mq at TS %" GST_STIME_FORMAT
-      " bytes %" G_GUINT64_FORMAT " in running time %" GST_STIME_FORMAT
-      " gop start time %" GST_STIME_FORMAT,
-      GST_STIME_ARGS (queued_time), queued_bytes,
-      GST_STIME_ARGS (splitmux->reference_ctx->in_running_time),
-      GST_STIME_ARGS (splitmux->gop_start_time));
 
   /* Check for overrun - have we output at least one byte and overrun
    * either threshold? */
@@ -2435,6 +2437,20 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   }
 
   splitmux->gop_total_bytes = 0;
+  return;
+
+error_gop_duration:
+  GST_ELEMENT_ERROR (splitmux,
+      STREAM, FAILED, ("Timestamping error on input streams"),
+      ("Queued GOP time is negative %" GST_STIME_FORMAT,
+          GST_STIME_ARGS (queued_gop_time)));
+  return;
+error_queued_time:
+  GST_ELEMENT_ERROR (splitmux,
+      STREAM, FAILED, ("Timestamping error on input streams"),
+      ("Queued time is negative. Input went backwards. queued_time - %"
+          GST_STIME_FORMAT, GST_STIME_ARGS (queued_time)));
+  return;
 }
 
 /* Called with splitmux lock held */
