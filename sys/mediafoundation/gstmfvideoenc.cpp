@@ -47,6 +47,9 @@ static GstFlowReturn gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
 static GstFlowReturn gst_mf_video_enc_finish (GstVideoEncoder * enc);
 static gboolean gst_mf_video_enc_flush (GstVideoEncoder * enc);
 
+static HRESULT gst_mf_video_on_new_sample (GstMFTransform * object,
+    IMFSample * sample, GstMFVideoEnc * self);
+
 static void
 gst_mf_video_enc_class_init (GstMFVideoEncClass * klass)
 {
@@ -93,6 +96,20 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
 
   if (!ret)
     GST_ERROR_OBJECT (self, "Cannot create MFT object");
+
+  /* In case of hardware MFT, it will be running on async mode.
+   * And new output sample callback will be called from Media Foundation's
+   * internal worker queue thread */
+  if (self->transform &&
+      (enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE) ==
+          MFT_ENUM_FLAG_HARDWARE) {
+    self->async_mft = TRUE;
+    gst_mf_transform_set_new_sample_callback (self->transform,
+        (GstMFTransformNewSampleCallback) gst_mf_video_on_new_sample,
+        self);
+  } else {
+    self->async_mft = FALSE;
+  }
 
   return ret;
 }
@@ -391,6 +408,7 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
   GstMFVideoEncFrameData *frame_data = NULL;
   BYTE *data = NULL;
   gboolean need_copy;
+  gboolean res = FALSE;
 
   vframe = g_new0 (GstVideoFrame, 1);
 
@@ -498,14 +516,26 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
     vframe = NULL;
   }
 
-  if (!gst_mf_transform_process_input (self->transform, sample.Get ())) {
-    GST_ERROR_OBJECT (self, "Failed to process input");
-    goto error;
-  }
+  /* Unlock temporary so that we can output frame from Media Foundation's
+   * worker thread.
+   * While we are processing input, MFT might notify
+   * METransformHaveOutput event from Media Foundation's internal worker queue
+   * thread. Then we will output encoded data from the thread synchroniously,
+   * not from streaming (this) thread */
+  if (self->async_mft)
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+  res = gst_mf_transform_process_input (self->transform, sample.Get ());
+  if (self->async_mft)
+      GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
   if (unset_force_keyframe) {
     gst_mf_transform_set_codec_api_uint32 (self->transform,
         &CODECAPI_AVEncVideoForceKeyFrame, FALSE);
+  }
+
+  if (!res) {
+    GST_ERROR_OBJECT (self, "Failed to process input");
+    goto error;
   }
 
   return TRUE;
@@ -570,13 +600,12 @@ gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, UINT64 mf_dts,
   return ret;
 }
 
-static GstFlowReturn
-gst_mf_video_enc_process_output (GstMFVideoEnc * self)
+static HRESULT
+gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
 {
-  HRESULT hr;
+  HRESULT hr = S_OK;
   BYTE *data;
   ComPtr<IMFMediaBuffer> media_buffer;
-  ComPtr<IMFSample> sample;
   GstBuffer *buffer;
   GstFlowReturn res = GST_FLOW_ERROR;
   GstVideoCodecFrame *frame;
@@ -586,18 +615,13 @@ gst_mf_video_enc_process_output (GstMFVideoEnc * self)
   UINT64 mf_dts = GST_CLOCK_TIME_NONE;
   DWORD buffer_len;
 
-  res = gst_mf_transform_get_output (self->transform, sample.GetAddressOf ());
-
-  if (res != GST_FLOW_OK)
-    return res;
-
   hr = sample->GetBufferByIndex (0, media_buffer.GetAddressOf ());
   if (!gst_mf_result (hr))
-    return GST_FLOW_ERROR;
+    goto done;
 
   hr = media_buffer->Lock (&data, NULL, &buffer_len);
   if (!gst_mf_result (hr))
-    return GST_FLOW_ERROR;
+    goto done;
 
   buffer = gst_buffer_new_allocate (NULL, buffer_len, NULL);
   gst_buffer_fill (buffer, 0, data, buffer_len);
@@ -608,8 +632,10 @@ gst_mf_video_enc_process_output (GstMFVideoEnc * self)
   sample->GetUINT32 (MFSampleExtension_CleanPoint, &keyframe);
 
   hr = sample->GetUINT64 (MFSampleExtension_DecodeTimestamp, &mf_dts);
-  if (FAILED (hr))
+  if (FAILED (hr)) {
     mf_dts = sample_timestamp;
+    hr = S_OK;
+  }
 
   frame = gst_mf_video_enc_find_output_frame (self,
       mf_dts, (UINT64) sample_timestamp);
@@ -646,7 +672,26 @@ gst_mf_video_enc_process_output (GstMFVideoEnc * self)
     res = gst_pad_push (GST_VIDEO_ENCODER_SRC_PAD (self), buffer);
   }
 
-  return res;
+done:
+  self->last_ret = res;
+
+  return hr;
+}
+
+static GstFlowReturn
+gst_mf_video_enc_process_output (GstMFVideoEnc * self)
+{
+  ComPtr<IMFSample> sample;
+  GstFlowReturn res = GST_FLOW_ERROR;
+
+  res = gst_mf_transform_get_output (self->transform, &sample);
+
+  if (res != GST_FLOW_OK)
+    return res;
+
+  gst_mf_video_enc_finish_sample (self, sample.Get ());
+
+  return self->last_ret;
 }
 
 static GstFlowReturn
@@ -662,9 +707,14 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
     goto done;
   }
 
-  do {
-    ret = gst_mf_video_enc_process_output (self);
-  } while (ret == GST_FLOW_OK);
+  /* Don't call process_output for async (hardware) MFT. We will output
+   * encoded data from gst_mf_video_on_new_sample() callback which is called
+   * from Media Foundation's internal worker queue thread */
+  if (!self->async_mft) {
+    do {
+      ret = gst_mf_video_enc_process_output (self);
+    } while (ret == GST_FLOW_OK);
+  }
 
   if (ret == GST_MF_TRANSFORM_FLOW_NEED_DATA)
     ret = GST_FLOW_OK;
@@ -684,11 +734,21 @@ gst_mf_video_enc_finish (GstVideoEncoder * enc)
   if (!self->transform)
     return GST_FLOW_OK;
 
+  /* Unlock temporary so that we can output frame from Media Foundation's
+   * worker thread */
+  if (self->async_mft)
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (enc);
+
   gst_mf_transform_drain (self->transform);
 
-  do {
-    ret = gst_mf_video_enc_process_output (self);
-  } while (ret == GST_FLOW_OK);
+  if (self->async_mft)
+    GST_VIDEO_ENCODER_STREAM_LOCK (enc);
+
+  if (!self->async_mft) {
+    do {
+      ret = gst_mf_video_enc_process_output (self);
+    } while (ret == GST_FLOW_OK);
+  }
 
   if (ret == GST_MF_TRANSFORM_FLOW_NEED_DATA)
     ret = GST_FLOW_OK;
@@ -704,7 +764,28 @@ gst_mf_video_enc_flush (GstVideoEncoder * enc)
   if (!self->transform)
     return TRUE;
 
+  /* Unlock while flushing, while flushing, new sample callback might happen */
+  if (self->async_mft)
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (enc);
+
   gst_mf_transform_flush (self->transform);
 
+  if (self->async_mft)
+    GST_VIDEO_ENCODER_STREAM_LOCK (enc);
+
   return TRUE;
+}
+static HRESULT
+gst_mf_video_on_new_sample (GstMFTransform * object,
+    IMFSample * sample, GstMFVideoEnc * self)
+{
+  GST_LOG_OBJECT (self, "New Sample callback");
+
+  /* NOTE: this callback will be called from Media Foundation's internal
+   * worker queue thread */
+  GST_VIDEO_ENCODER_STREAM_LOCK (self);
+  gst_mf_video_enc_finish_sample (self, sample);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+
+  return S_OK;
 }

@@ -37,6 +37,184 @@ GST_DEBUG_CATEGORY_EXTERN (gst_mf_transform_debug);
 
 G_END_DECLS
 
+typedef HRESULT (*GstMFTransformAsyncCallbackOnEvent) (MediaEventType event,
+    GstObject * client);
+
+class GstMFTransformAsyncCallback : public IMFAsyncCallback
+{
+public:
+  static HRESULT
+  CreateInstance (IMFTransform * mft,
+      GstMFTransformAsyncCallbackOnEvent event_cb, GstObject * client,
+      GstMFTransformAsyncCallback ** callback)
+  {
+    HRESULT hr;
+    GstMFTransformAsyncCallback *self;
+
+    if (!mft || !callback)
+      return E_INVALIDARG;
+
+    self = new GstMFTransformAsyncCallback ();
+
+    if (!self)
+      return E_OUTOFMEMORY;
+
+    hr = self->Initialize (mft, event_cb, client);
+
+    if (!gst_mf_result (hr)) {
+      self->Release ();
+      return hr;
+    }
+
+    *callback = self;
+
+    return S_OK;
+  }
+
+  HRESULT
+  BeginGetEvent (void)
+  {
+    if (!gen_)
+      return E_FAIL;
+
+    /* we are running already */
+    if (running_)
+      return S_OK;
+
+    running_ = true;
+
+    return gen_->BeginGetEvent (this, nullptr);
+  }
+
+  HRESULT
+  Stop (void)
+  {
+    running_ = false;
+
+    return S_OK;
+  }
+
+  /* IUnknown */
+  STDMETHODIMP
+  QueryInterface (REFIID riid, void ** object)
+  {
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP_ (ULONG)
+  AddRef (void)
+  {
+    GST_TRACE ("%p, %d", this, ref_count_);
+    return InterlockedIncrement (&ref_count_);
+  }
+
+  STDMETHODIMP_ (ULONG)
+  Release (void)
+  {
+    ULONG ref_count;
+
+    GST_TRACE ("%p, %d", this, ref_count_);
+    ref_count = InterlockedDecrement (&ref_count_);
+
+    if (ref_count == 0) {
+      GST_TRACE ("Delete instance %p", this);
+      delete this;
+    }
+
+    return ref_count;
+  }
+
+  /* IMFAsyncCallback */
+  STDMETHODIMP
+  GetParameters (DWORD * flags, DWORD * queue)
+  {
+    /* this callback could be blocked */
+    *flags = MFASYNC_BLOCKING_CALLBACK;
+    *queue = MFASYNC_CALLBACK_QUEUE_MULTITHREADED;
+    return S_OK;
+  }
+
+  STDMETHODIMP
+  Invoke (IMFAsyncResult * async_result)
+  {
+    ComPtr<IMFMediaEvent> event;
+    HRESULT hr;
+    bool do_next = true;
+
+    hr = gen_->EndGetEvent (async_result, &event);
+
+    if (!gst_mf_result (hr))
+      return hr;
+
+    if (event) {
+      MediaEventType type;
+      GstObject *client = nullptr;
+      hr = event->GetType(&type);
+      if (!gst_mf_result (hr))
+        return hr;
+
+      if (!event_cb_)
+        return S_OK;
+
+      client = (GstObject *) g_weak_ref_get (&client_);
+      if (!client)
+        return S_OK;
+
+      hr = event_cb_ (type, client);
+      gst_object_unref (client);
+      if (!gst_mf_result (hr))
+        return hr;
+
+      /* On Drain event, this callback object will stop calling BeginGetEvent()
+       * since there might be no more following events. Client should call
+       * our BeginGetEvent() method to run again */
+      if (type == METransformDrainComplete)
+        do_next = false;
+    }
+
+    if (do_next)
+      gen_->BeginGetEvent(this, nullptr);
+
+    return S_OK;
+  }
+
+private:
+  GstMFTransformAsyncCallback ()
+    : ref_count_ (1)
+    , running_ (false)
+  {
+    g_weak_ref_init (&client_, NULL);
+  }
+
+  ~GstMFTransformAsyncCallback ()
+  {
+    g_weak_ref_clear (&client_);
+  }
+
+  HRESULT
+  Initialize (IMFTransform * mft, GstMFTransformAsyncCallbackOnEvent event_cb,
+      GstObject * client)
+  {
+    HRESULT hr = mft->QueryInterface(IID_PPV_ARGS(&gen_));
+
+    if (!gst_mf_result (hr))
+      return hr;
+
+    event_cb_ = event_cb;
+    g_weak_ref_set (&client_, client);
+
+    return S_OK;
+  }
+
+private:
+  volatile ULONG ref_count_;
+  ComPtr<IMFMediaEventGenerator> gen_;
+  GstMFTransformAsyncCallbackOnEvent event_cb_;
+  GWeakRef client_;
+
+  bool running_;
+};
+
 enum
 {
   PROP_0,
@@ -58,7 +236,7 @@ struct _GstMFTransform
   IMFActivate *activate;
   IMFTransform *transform;
   ICodecAPI * codec_api;
-  IMFMediaEventGenerator *event_gen;
+  GstMFTransformAsyncCallback *callback_object;
 
   GQueue *output_queue;
 
@@ -68,13 +246,19 @@ struct _GstMFTransform
   gboolean running;
 
   gint pending_need_input;
-  gint pending_have_output;
 
   GThread *thread;
   GMutex lock;
   GCond cond;
+  GMutex event_lock;
+  GCond event_cond;
   GMainContext *context;
   GMainLoop *loop;
+  gboolean draining;
+  gboolean flushing;
+
+  GstMFTransformNewSampleCallback callback;
+  gpointer user_data;
 };
 
 #define gst_mf_transform_parent_class parent_class
@@ -89,6 +273,8 @@ static void gst_mf_transform_set_property (GObject * object,
 
 static gpointer gst_mf_transform_thread_func (GstMFTransform * self);
 static gboolean gst_mf_transform_close (GstMFTransform * self);
+static HRESULT gst_mf_transform_on_event (MediaEventType event,
+    GstMFTransform * self);
 
 static void
 gst_mf_transform_class_init (GstMFTransformClass * klass)
@@ -121,7 +307,9 @@ gst_mf_transform_init (GstMFTransform * self)
   self->output_queue = g_queue_new ();
 
   g_mutex_init (&self->lock);
+  g_mutex_init (&self->event_lock);
   g_cond_init (&self->cond);
+  g_cond_init (&self->event_cond);
 
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
@@ -174,7 +362,9 @@ gst_mf_transform_finalize (GObject * object)
   gst_mf_transform_clear_enum_params (&self->enum_params);
   g_free (self->device_name);
   g_mutex_clear (&self->lock);
+  g_mutex_clear (&self->event_lock);
   g_cond_clear (&self->cond);
+  g_cond_clear (&self->event_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -325,68 +515,6 @@ run_loop:
   return NULL;
 }
 
-static HRESULT
-gst_mf_transform_pop_event (GstMFTransform * self,
-    gboolean no_wait, MediaEventType * event_type)
-{
-  ComPtr<IMFMediaEvent> event;
-  MediaEventType type;
-  HRESULT hr;
-  DWORD flags = 0;
-
-  if (!self->hardware || !self->event_gen)
-    return MF_E_NO_EVENTS_AVAILABLE;
-
-  if (no_wait)
-    flags = MF_EVENT_FLAG_NO_WAIT;
-
-  hr = self->event_gen->GetEvent (flags, event.GetAddressOf ());
-
-  if (hr == MF_E_NO_EVENTS_AVAILABLE)
-    return hr;
-  else if (!gst_mf_result (hr))
-    return hr;
-
-  hr = event->GetType (&type);
-  if (!gst_mf_result (hr)) {
-    GST_ERROR_OBJECT (self, "Failed to get event, hr: 0x%x", (guint) hr);
-
-    return hr;
-  }
-
-  *event_type = type;
-  return S_OK;
-}
-
-static void
-gst_mf_transform_drain_all_events (GstMFTransform * self)
-{
-  HRESULT hr;
-
-  if (!self->hardware)
-    return;
-
-  do {
-    MediaEventType type;
-
-    hr = gst_mf_transform_pop_event (self, TRUE, &type);
-    if (hr == MF_E_NO_EVENTS_AVAILABLE || !gst_mf_result (hr))
-      return;
-
-    switch (type) {
-      case METransformNeedInput:
-        self->pending_need_input++;
-        break;
-      case METransformHaveOutput:
-        self->pending_have_output++;
-        break;
-      default:
-        GST_DEBUG_OBJECT (self, "Unhandled event %d", type);
-        break;
-    }
-  } while (SUCCEEDED (hr));
-}
-
 static GstFlowReturn
 gst_mf_transform_process_output (GstMFTransform * self)
 {
@@ -437,9 +565,6 @@ gst_mf_transform_process_output (GstMFTransform * self)
 
   hr = transform->ProcessOutput (0, 1, &out_data, &status);
 
-  if (self->hardware)
-    self->pending_have_output--;
-
   if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
     GST_LOG_OBJECT (self, "Need more input data");
     ret = GST_MF_TRANSFORM_FLOW_NEED_DATA;
@@ -465,8 +590,13 @@ gst_mf_transform_process_output (GstMFTransform * self)
 
     ret = GST_MF_TRANSFORM_FLOW_NEED_DATA;
   } else if (!gst_mf_result (hr)) {
-    GST_ERROR_OBJECT (self, "ProcessOutput error");
-    ret = GST_FLOW_ERROR;
+    if (self->flushing) {
+      GST_DEBUG_OBJECT (self, "Ignore error on flushing");
+      ret = GST_FLOW_FLUSHING;
+    } else {
+      GST_ERROR_OBJECT (self, "ProcessOutput error, hr 0x%x", hr);
+      ret = GST_FLOW_ERROR;
+    }
   }
 
 done:
@@ -482,11 +612,18 @@ done:
     return GST_FLOW_OK;
   }
 
+  if (self->callback) {
+    self->callback (self, out_data.pSample, self->user_data);
+    out_data.pSample->Release ();
+    return GST_FLOW_OK;
+  }
+
   g_queue_push_tail (self->output_queue, out_data.pSample);
 
   return GST_FLOW_OK;
 }
 
+/* Must be called with event_lock */
 static gboolean
 gst_mf_transform_process_input_sync (GstMFTransform * self,
     IMFSample * sample)
@@ -506,7 +643,7 @@ gst_mf_transform_process_input (GstMFTransform * object,
     IMFSample * sample)
 {
   HRESULT hr;
-  GstFlowReturn ret;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
   g_return_val_if_fail (sample != NULL, FALSE);
@@ -516,101 +653,80 @@ gst_mf_transform_process_input (GstMFTransform * object,
   if (!object->transform)
     return FALSE;
 
+  g_mutex_lock (&object->event_lock);
   if (!object->running) {
+    object->pending_need_input = 0;
+
     hr = object->transform->ProcessMessage (MFT_MESSAGE_NOTIFY_START_OF_STREAM,
         0);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "Cannot post start-of-stream message");
-      return FALSE;
+      goto done;
     }
 
     hr = object->transform->ProcessMessage (MFT_MESSAGE_NOTIFY_BEGIN_STREAMING,
         0);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "Cannot post begin-stream message");
-      return FALSE;
+      goto done;
+    }
+
+    if (object->callback_object) {
+      hr = object->callback_object->BeginGetEvent ();
+      if (!gst_mf_result (hr)) {
+        GST_ERROR_OBJECT (object, "BeginGetEvent failed");
+        goto done;
+      }
     }
 
     GST_DEBUG_OBJECT (object, "MFT is running now");
 
     object->running = TRUE;
+    object->flushing = FALSE;
   }
 
-  gst_mf_transform_drain_all_events (object);
-
+  /* Wait METransformNeedInput event. While waiting METransformNeedInput
+   * event, we can still output data if MFT notifyes METransformHaveOutput
+   * event. */
   if (object->hardware) {
-  process_output:
-    /* Process pending output first */
-    while (object->pending_have_output > 0) {
-      GST_TRACE_OBJECT (object,
-          "Pending have output %d", object->pending_have_output);
-      ret = gst_mf_transform_process_output (object);
-      if (ret != GST_FLOW_OK) {
-        if (ret == GST_VIDEO_ENCODER_FLOW_NEED_DATA) {
-          GST_TRACE_OBJECT (object, "Need more data");
-          ret = GST_FLOW_OK;
-          break;
-        } else {
-          GST_WARNING_OBJECT (object,
-              "Couldn't process output, ret %s", gst_flow_get_name (ret));
-          return FALSE;
-        }
-      }
-    }
-
-    while (object->pending_need_input == 0) {
-      MediaEventType type;
-      HRESULT hr;
-
-      GST_TRACE_OBJECT (object, "No pending need input, waiting event");
-
-      hr = gst_mf_transform_pop_event (object, FALSE, &type);
-      if (hr != MF_E_NO_EVENTS_AVAILABLE && !gst_mf_result (hr)) {
-        GST_DEBUG_OBJECT (object, "failed to pop event, hr: 0x%x", (guint) hr);
-        return FALSE;
-      }
-
-      GST_TRACE_OBJECT (object, "Got event type %d", (gint) type);
-
-      switch (type) {
-        case METransformNeedInput:
-          object->pending_need_input++;
-          break;
-        case METransformHaveOutput:
-          object->pending_have_output++;
-          break;
-        default:
-          GST_DEBUG_OBJECT (object, "Unhandled event %d", type);
-          break;
-      }
-
-      /* If MFT doesn't want to handle input yet but we have pending output,
-       * process output again */
-      if (object->pending_have_output > 0 && object->pending_need_input == 0) {
-        GST_TRACE_OBJECT (object,
-            "Only have pending output, process output again");
-        goto process_output;
-      }
-    }
+    while (object->pending_need_input == 0 && !object->flushing)
+      g_cond_wait (&object->event_cond, &object->event_lock);
   }
 
-  return gst_mf_transform_process_input_sync (object, sample);
+  if (object->flushing) {
+    GST_DEBUG_OBJECT (object, "We are flushing");
+    ret = TRUE;
+    goto done;
+  }
+
+  ret = gst_mf_transform_process_input_sync (object, sample);
+
+done:
+  g_mutex_unlock (&object->event_lock);
+
+  return ret;
 }
 
 GstFlowReturn
 gst_mf_transform_get_output (GstMFTransform * object,
     IMFSample ** sample)
 {
+  GstFlowReturn ret;
+
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), GST_FLOW_ERROR);
   g_return_val_if_fail (sample != NULL, GST_FLOW_ERROR);
+  /* Hardware MFT must not call this method, instead client must install
+   * new sample callback so that outputting data from Media Foundation's
+   * worker thread */
+  g_return_val_if_fail (!object->hardware, GST_FLOW_ERROR);
 
   if (!object->transform)
     return GST_FLOW_ERROR;
 
-  gst_mf_transform_drain_all_events (object);
+  ret = gst_mf_transform_process_output (object);
 
-  if (!object->hardware || object->pending_have_output)
-    gst_mf_transform_process_output (object);
+  if (ret != GST_MF_TRANSFORM_FLOW_NEED_DATA && ret != GST_FLOW_OK)
+    return ret;
 
   if (g_queue_is_empty (object->output_queue))
     return GST_MF_TRANSFORM_FLOW_NEED_DATA;
@@ -625,11 +741,23 @@ gst_mf_transform_flush (GstMFTransform * object)
 {
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
 
-  if (object->transform) {
-    if (object->running)
-      object->transform->ProcessMessage (MFT_MESSAGE_COMMAND_FLUSH, 0);
+  g_mutex_lock (&object->event_lock);
+  object->flushing = TRUE;
+  g_cond_broadcast (&object->event_cond);
+  g_mutex_unlock (&object->event_lock);
 
-    object->pending_have_output = 0;
+  if (object->transform) {
+    /* In case of async MFT, there would be no more event after FLUSH,
+     * then callback object shouldn't wait another event.
+     * Call Stop() so that our callback object can stop calling BeginGetEvent()
+     * from it's Invoke() method */
+    if (object->callback_object)
+      object->callback_object->Stop ();
+
+    if (object->running) {
+      object->transform->ProcessMessage (MFT_MESSAGE_COMMAND_FLUSH, 0);
+    }
+
     object->pending_need_input = 0;
   }
 
@@ -654,46 +782,27 @@ gst_mf_transform_drain (GstMFTransform * object)
     return TRUE;
 
   object->running = FALSE;
+  object->draining = TRUE;
+
+  GST_DEBUG_OBJECT (object, "Start drain");
+
   object->transform->ProcessMessage (MFT_MESSAGE_COMMAND_DRAIN, 0);
 
   if (object->hardware) {
-    MediaEventType type;
-    HRESULT hr;
-
-    do {
-      hr = gst_mf_transform_pop_event (object, FALSE, &type);
-      if (hr != MF_E_NO_EVENTS_AVAILABLE && FAILED (hr)) {
-        GST_DEBUG_OBJECT (object, "failed to pop event, hr: 0x%x", (guint) hr);
-        break;
-      }
-
-      switch (type) {
-        case METransformNeedInput:
-          GST_DEBUG_OBJECT (object, "Ignore need input during finish");
-          break;
-        case METransformHaveOutput:
-          object->pending_have_output++;
-          gst_mf_transform_process_output (object);
-          break;
-        case METransformDrainComplete:
-          GST_DEBUG_OBJECT (object, "Drain complete");
-          return TRUE;
-        default:
-          GST_DEBUG_OBJECT (object, "Unhandled event %d", type);
-          break;
-      }
-    } while (SUCCEEDED (hr));
-
-    /* and drain all the other events if any */
-    gst_mf_transform_drain_all_events (object);
-
-    object->pending_have_output = 0;
-    object->pending_need_input = 0;
+    g_mutex_lock (&object->event_lock);
+    while (object->draining)
+      g_cond_wait (&object->event_cond, &object->event_lock);
+    g_mutex_unlock (&object->event_lock);
   } else {
     do {
       ret = gst_mf_transform_process_output (object);
     } while (ret == GST_FLOW_OK);
   }
+
+  GST_DEBUG_OBJECT (object, "End drain");
+
+  object->draining = FALSE;
+  object->pending_need_input = 0;
 
   return TRUE;
 }
@@ -737,9 +846,14 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
       goto done;
     }
 
-    hr = object->transform->QueryInterface (IID_IMFMediaEventGenerator,
-        (void **) &object->event_gen);
-    if (!gst_mf_result (hr)) {
+    /* Create our IMFAsyncCallback object so that listen METransformNeedInput
+     * and METransformHaveOutput events. The event callback will be called from
+     * Media Foundation's worker queue thread */
+    hr = GstMFTransformAsyncCallback::CreateInstance (object->transform,
+        (GstMFTransformAsyncCallbackOnEvent) gst_mf_transform_on_event,
+        GST_OBJECT_CAST (object), &object->callback_object);
+
+    if (!object->callback_object) {
       GST_ERROR_OBJECT (object, "IMFMediaEventGenerator unavailable");
       goto done;
     }
@@ -795,6 +909,16 @@ gst_mf_transform_open (GstMFTransform * object)
   return data.ret;
 }
 
+void
+gst_mf_transform_set_new_sample_callback (GstMFTransform * object,
+    GstMFTransformNewSampleCallback callback, gpointer user_data)
+{
+  g_return_if_fail (GST_IS_MF_TRANSFORM (object));
+
+  object->callback = callback;
+  object->user_data = user_data;
+}
+
 static gboolean
 gst_mf_transform_close (GstMFTransform * object)
 {
@@ -802,9 +926,9 @@ gst_mf_transform_close (GstMFTransform * object)
 
   gst_mf_transform_flush (object);
 
-  if (object->event_gen) {
-    object->event_gen->Release ();
-    object->event_gen = NULL;
+  if (object->callback_object) {
+    object->callback_object->Release ();
+    object->callback_object = nullptr;
   }
 
   if (object->codec_api) {
@@ -818,6 +942,57 @@ gst_mf_transform_close (GstMFTransform * object)
   }
 
   return TRUE;
+}
+
+static gchar *
+gst_mf_transform_event_type_to_string (MediaEventType event)
+{
+  switch (event) {
+    case METransformNeedInput:
+      return "METransformNeedInput";
+    case METransformHaveOutput:
+      return "METransformHaveOutput";
+    case METransformDrainComplete:
+      return "METransformDrainComplete";
+    case METransformMarker:
+      return "METransformMarker";
+    case METransformInputStreamStateChanged:
+      return "METransformInputStreamStateChanged";
+    default:
+      break;
+  }
+
+  return "Unknown";
+}
+
+static HRESULT
+gst_mf_transform_on_event (MediaEventType event,
+    GstMFTransform * self)
+{
+  GST_TRACE_OBJECT (self, "Have event %s (%d)",
+      gst_mf_transform_event_type_to_string (event), (gint) event);
+
+  switch (event) {
+    case METransformNeedInput:
+      g_mutex_lock (&self->event_lock);
+      self->pending_need_input++;
+      g_cond_broadcast (&self->event_cond);
+      g_mutex_unlock (&self->event_lock);
+      break;
+    case METransformHaveOutput:
+      gst_mf_transform_process_output (self);
+      break;
+    case METransformDrainComplete:
+      g_mutex_lock (&self->event_lock);
+      self->draining = FALSE;
+      g_cond_broadcast (&self->event_cond);
+      g_mutex_unlock (&self->event_lock);
+      break;
+    default:
+      break;
+  }
+
+  return S_OK;
 }
 
 IMFActivate *

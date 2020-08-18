@@ -43,6 +43,8 @@ struct _GstMFVideoEnc
   GstVideoEncoder parent;
 
   GstMFTransform *transform;
+  gboolean async_mft;
+  GstFlowReturn last_ret;
 
   GstVideoCodecState *input_state;
 };

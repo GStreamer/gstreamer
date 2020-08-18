@@ -44,9 +44,17 @@ typedef struct _GstMFTransformEnumParams
   guint device_index;
 } GstMFTransformEnumParams;
 
+typedef HRESULT (*GstMFTransformNewSampleCallback) (GstMFTransform * object,
+                                                    IMFSample * sample,
+                                                    gpointer user_data);
+
 GstMFTransform * gst_mf_transform_new             (GstMFTransformEnumParams * params);
 
 gboolean        gst_mf_transform_open             (GstMFTransform * object);
+
+void            gst_mf_transform_set_new_sample_callback (GstMFTransform * object,
+                                                          GstMFTransformNewSampleCallback callback,
+                                                          gpointer user_data);
 
 IMFActivate *   gst_mf_transform_get_activate_handle (GstMFTransform * object);
 
