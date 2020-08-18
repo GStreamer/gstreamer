@@ -615,7 +615,7 @@ gst_rtmp2_sink_event (GstBaseSink * sink, GstEvent * event)
       break;
   }
 
-  return GST_BASE_SINK_CLASS (gst_rtmp2_sink_parent_class)->event (sink, event);;
+  return GST_BASE_SINK_CLASS (gst_rtmp2_sink_parent_class)->event (sink, event);
 }
 
 static gboolean
