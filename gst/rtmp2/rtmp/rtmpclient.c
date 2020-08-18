@@ -166,6 +166,26 @@ gst_rtmp_authmod_get_nick (GstRtmpAuthmod value)
   return ev ? ev->value_nick : "(unknown)";
 }
 
+GType
+gst_rtmp_stop_commands_get_type (void)
+{
+  static volatile gsize stop_commands_type = 0;
+  static const GFlagsValue stop_commands[] = {
+    {GST_RTMP_STOP_COMMANDS_NONE, "No command", "none"},
+    {GST_RTMP_STOP_COMMANDS_FCUNPUBLISH, "FCUnpublish", "fcunpublish"},
+    {GST_RTMP_STOP_COMMANDS_CLOSE_STREAM, "closeStream", "closestream"},
+    {GST_RTMP_STOP_COMMANDS_DELETE_STREAM, "deleteStream", "deletestream"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&stop_commands_type)) {
+    GType tmp = g_flags_register_static ("GstRtmpStopCommands", stop_commands);
+    g_once_init_leave (&stop_commands_type, tmp);
+  }
+
+  return (GType) stop_commands_type;
+}
+
 void
 gst_rtmp_location_copy (GstRtmpLocation * dest, const GstRtmpLocation * src)
 {
@@ -1365,17 +1385,17 @@ send_stop (GstRtmpConnection * connection, const gchar * stream,
   command_object = gst_amf_node_new_null ();
   stream_name = gst_amf_node_new_string (stream, -1);
 
-  if (stop_commands & GST_RTMP_STOP_COMMAND_FCUNPUBLISH) {
+  if (stop_commands & GST_RTMP_STOP_COMMANDS_FCUNPUBLISH) {
     GST_DEBUG ("Sending stop command 'FCUnpublish' for stream '%s'", stream);
     gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
         "FCUnpublish", command_object, stream_name, NULL);
   }
-  if (stop_commands & GST_RTMP_STOP_COMMAND_CLOSE_STREAM) {
+  if (stop_commands & GST_RTMP_STOP_COMMANDS_CLOSE_STREAM) {
     GST_DEBUG ("Sending stop command 'closeStream' for stream '%s'", stream);
     gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
         "closeStream", command_object, stream_name, NULL);
   }
-  if (stop_commands & GST_RTMP_STOP_COMMAND_DELETE_STREAM) {
+  if (stop_commands & GST_RTMP_STOP_COMMANDS_DELETE_STREAM) {
     GST_DEBUG ("Sending stop command 'deleteStream' for stream '%s'", stream);
     gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
         "deleteStream", command_object, stream_name, NULL);

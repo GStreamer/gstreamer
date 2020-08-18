@@ -38,6 +38,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_type_mark_as_plugin_api (GST_TYPE_RTMP_SCHEME, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_RTMP_AUTHMOD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_STOP_COMMANDS, 0);
 
   return TRUE;
 }

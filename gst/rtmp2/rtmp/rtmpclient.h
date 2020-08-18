@@ -56,6 +56,22 @@ GType gst_rtmp_authmod_get_type (void);
 
 
 
+#define GST_TYPE_RTMP_STOP_COMMANDS (gst_rtmp_stop_commands_get_type ())
+#define GST_RTMP_DEFAULT_STOP_COMMANDS (GST_RTMP_STOP_COMMANDS_FCUNPUBLISH | \
+    GST_RTMP_STOP_COMMANDS_DELETE_STREAM) /* FCUnpublish + deleteStream */
+
+typedef enum
+{
+  GST_RTMP_STOP_COMMANDS_NONE = 0,
+  GST_RTMP_STOP_COMMANDS_FCUNPUBLISH = (1 << 0),
+  GST_RTMP_STOP_COMMANDS_CLOSE_STREAM = (1 << 1),
+  GST_RTMP_STOP_COMMANDS_DELETE_STREAM = (1 << 2)
+} GstRtmpStopCommands;
+
+GType gst_rtmp_stop_commands_get_type (void);
+
+
+
 typedef struct _GstRtmpLocation
 {
   GstRtmpScheme scheme;
@@ -72,14 +88,6 @@ typedef struct _GstRtmpLocation
   gchar *flash_ver;
   gboolean publish;
 } GstRtmpLocation;
-
-typedef enum
-{
-  GST_RTMP_STOP_COMMAND_NONE = 0,
-  GST_RTMP_STOP_COMMAND_FCUNPUBLISH = (1 << 0),
-  GST_RTMP_STOP_COMMAND_CLOSE_STREAM = (1 << 1),
-  GST_RTMP_STOP_COMMAND_DELETE_STREAM = (1 << 2)
-} GstRtmpStopCommands;
 
 void gst_rtmp_location_copy (GstRtmpLocation * dest,
     const GstRtmpLocation * src);

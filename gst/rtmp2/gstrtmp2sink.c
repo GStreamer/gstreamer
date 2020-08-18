@@ -67,6 +67,7 @@ typedef struct
   gboolean async_connect;
   guint peak_kbps;
   guint32 chunk_size;
+  GstRtmpStopCommands stop_commands;
   GstStructure *stats;
 
   /* If both self->lock and OBJECT_LOCK are needed,
@@ -88,8 +89,6 @@ typedef struct
 
   GPtrArray *headers;
   guint64 last_ts, base_ts;     /* timestamp fixup */
-
-  GstRtmpStopCommands stop_commands;
 } GstRtmp2Sink;
 
 typedef struct
@@ -152,32 +151,6 @@ enum
   PROP_STATS,
   PROP_STOP_COMMANDS,
 };
-
-#define DEFAULT_STOP_COMMANDS  GST_RTMP_STOP_COMMAND_FCUNPUBLISH | \
-    GST_RTMP_STOP_COMMAND_DELETE_STREAM /* FCUnpublish + deleteStream */
-
-#define GST_RTMP_STOP_COMMANDS_TYPE \
-    (gst_rtmp2_sink_stop_commands_get_type())
-
-static GType
-gst_rtmp2_sink_stop_commands_get_type (void)
-{
-  static GType type = 0;
-  static const GFlagsValue types[] = {
-    {GST_RTMP_STOP_COMMAND_NONE, "No command", "none"},
-    {GST_RTMP_STOP_COMMAND_FCUNPUBLISH, "FCUnpublish", "fcunpublish"},
-    {GST_RTMP_STOP_COMMAND_CLOSE_STREAM, "closeStream", "closestream"},
-    {GST_RTMP_STOP_COMMAND_DELETE_STREAM, "deleteStream", "deletestream"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&type)) {
-    GType tmp = g_flags_register_static ("GstRtmp2SinkStopCommandsFlags",
-        types);
-    g_once_init_leave (&type, tmp);
-  }
-  return type;
-}
 
 /* pad templates */
 
@@ -261,7 +234,7 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_STOP_COMMANDS,
       g_param_spec_flags ("stop-commands", "Stop commands",
           "RTMP commands to send on EOS event before closing connection",
-          GST_RTMP_STOP_COMMANDS_TYPE, DEFAULT_STOP_COMMANDS,
+          GST_TYPE_RTMP_STOP_COMMANDS, GST_RTMP_DEFAULT_STOP_COMMANDS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_type_mark_as_plugin_api (GST_TYPE_RTMP_LOCATION_HANDLER, 0);
@@ -276,6 +249,7 @@ gst_rtmp2_sink_init (GstRtmp2Sink * self)
   self->location.publish = TRUE;
   self->async_connect = TRUE;
   self->chunk_size = GST_RTMP_DEFAULT_CHUNK_SIZE;
+  self->stop_commands = GST_RTMP_DEFAULT_STOP_COMMANDS;
 
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -286,8 +260,6 @@ gst_rtmp2_sink_init (GstRtmp2Sink * self)
 
   self->headers = g_ptr_array_new_with_free_func
       ((GDestroyNotify) gst_mini_object_unref);
-
-  self->stop_commands = DEFAULT_STOP_COMMANDS;
 }
 
 static void
@@ -612,7 +584,7 @@ stop_publish_invoker (gpointer user_data)
 
   if (self->connection) {
     GST_OBJECT_LOCK (self);
-    if (self->stop_commands != GST_RTMP_STOP_COMMAND_NONE) {
+    if (self->stop_commands != GST_RTMP_STOP_COMMANDS_NONE) {
       gst_rtmp_client_stop_publish (self->connection, self->location.stream,
           self->stop_commands);
     }
