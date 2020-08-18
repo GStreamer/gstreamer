@@ -217,12 +217,13 @@ gst_va_decoder_open (GstVaDecoder * self, VAProfile profile, guint rt_format)
     .type = VAConfigAttribRTFormat,
     .value = rt_format,
   };
+  VAConfigID config;
   VADisplay dpy;
   VAStatus status;
 
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
 
-  if (self->config != VA_INVALID_ID)
+  if (gst_va_decoder_is_open (self))
     return TRUE;
 
   if (!gst_va_decoder_has_profile (self, profile)) {
@@ -232,8 +233,7 @@ gst_va_decoder_open (GstVaDecoder * self, VAProfile profile, guint rt_format)
 
   dpy = gst_va_display_get_va_dpy (self->display);
   gst_va_display_lock (self->display);
-  status = vaCreateConfig (dpy, profile, VAEntrypointVLD, &attrib, 1,
-      &self->config);
+  status = vaCreateConfig (dpy, profile, VAEntrypointVLD, &attrib, 1, &config);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
@@ -241,6 +241,7 @@ gst_va_decoder_open (GstVaDecoder * self, VAProfile profile, guint rt_format)
   }
 
   GST_OBJECT_LOCK (self);
+  self->config = config;
   self->profile = profile;
   self->rt_format = rt_format;
   GST_OBJECT_UNLOCK (self);
@@ -294,6 +295,7 @@ gboolean
 gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
     gint coded_height, GArray * surfaces)
 {
+  VAContextID context;
   VADisplay dpy;
   VAStatus status;
   VASurfaceID *render_targets = NULL;
@@ -301,10 +303,13 @@ gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
 
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
 
+  GST_OBJECT_LOCK (self);
   if (self->context != VA_INVALID_ID) {
-    GST_WARNING_OBJECT (self, "decoder already has a format");
+    GST_OBJECT_UNLOCK (self);
+    GST_INFO_OBJECT (self, "decoder already has a format");
     return TRUE;
   }
+  GST_OBJECT_UNLOCK (self);
 
   if (!gst_va_decoder_is_open (self)) {
     GST_ERROR_OBJECT (self, "decoder has not been opened yet");
@@ -320,7 +325,7 @@ gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
 
   gst_va_display_lock (self->display);
   status = vaCreateContext (dpy, self->config, coded_width, coded_height,
-      VA_PROGRESSIVE, render_targets, num_render_targets, &self->context);
+      VA_PROGRESSIVE, render_targets, num_render_targets, &context);
   gst_va_display_unlock (self->display);
 
   if (status != VA_STATUS_SUCCESS) {
@@ -329,6 +334,7 @@ gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
   }
 
   GST_OBJECT_LOCK (self);
+  self->context = context;
   self->coded_width = coded_width;
   self->coded_height = coded_height;
   GST_OBJECT_UNLOCK (self);
