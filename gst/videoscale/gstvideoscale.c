@@ -543,7 +543,9 @@ gst_video_scale_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
     GstVideoMetaTransform trans =
         { &videofilter->in_info, &videofilter->out_info };
 
-    return info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+    if (info->transform_func)
+      return info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+    return FALSE;
   }
 
   /* No need to transform, we can safely copy this meta */
