@@ -1218,19 +1218,23 @@ gst_srt_object_wait_caller (GstSRTObject * srtobject,
 
     while (!g_cancellable_is_cancelled (cancellable)) {
       ret = (srtobject->callers != NULL);
-      if (ret)
+      if (ret) {
+        GST_DEBUG_OBJECT (srtobject->element, "Got a connection");
         break;
+      }
 
       g_cond_wait (&srtobject->sock_cond, &srtobject->sock_lock);
     }
-
-    GST_DEBUG_OBJECT (srtobject->element, "Got %s connection",
-        ret ? "a" : "no");
   } else {
     ret = TRUE;
   }
 
   g_mutex_unlock (&srtobject->sock_lock);
+
+  if (!ret) {
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Canceled waiting for a connection.");
+  }
 
   return ret;
 }
