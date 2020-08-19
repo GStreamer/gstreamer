@@ -231,6 +231,13 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
       g_param_spec_boxed ("stats", "Stats", "Retrieve a statistics structure",
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtmp2Sink:stop-commands:
+   *
+   * Which commands (if any) to send on EOS event before closing connection
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_STOP_COMMANDS,
       g_param_spec_flags ("stop-commands", "Stop commands",
           "RTMP commands to send on EOS event before closing connection",
