@@ -975,7 +975,7 @@ gst_va_memory_get_surface (GstMemory * mem, GstVideoInfo * info)
   if (!mem->allocator)
     return VA_INVALID_ID;
 
-  if (GST_IS_VA_DMABUF_ALLOCATOR (mem->allocator)) {
+  if (GST_IS_DMABUF_ALLOCATOR (mem->allocator)) {
     GstVaBufferSurface *buf;
 
     buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
