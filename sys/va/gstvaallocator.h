@@ -45,6 +45,14 @@ gboolean              gst_va_dmabuf_setup_buffer          (GstAllocator * alloca
 gboolean              gst_va_dmabuf_try                   (GstAllocator * allocator,
                                                            GstVaAllocationParams * params);
 
+gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * display,
+                                                           GstVideoInfo * info,
+                                                           guint n_planes,
+                                                           GstMemory * mem[GST_VIDEO_MAX_PLANES],
+                                                           uintptr_t * fds,
+                                                           gsize offset[GST_VIDEO_MAX_PLANES],
+                                                           guint usage_hint);
+
 #define GST_TYPE_VA_ALLOCATOR (gst_va_allocator_get_type())
 G_DECLARE_FINAL_TYPE (GstVaAllocator, gst_va_allocator, GST, VA_ALLOCATOR, GstAllocator);
 

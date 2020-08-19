@@ -54,6 +54,7 @@ G_DEFINE_TYPE_WITH_CODE (GstVaDmabufAllocator, gst_va_dmabuf_allocator,
 typedef struct _GstVaBufferSurface GstVaBufferSurface;
 struct _GstVaBufferSurface
 {
+  GstVaDisplay *display;
   GstVideoInfo info;
   VASurfaceID surface;
   volatile gint ref_count;
@@ -427,6 +428,21 @@ gst_va_dmabuf_allocator_new (GstVaDisplay * display)
   return GST_ALLOCATOR (self);
 }
 
+static void
+_buffer_surface_unref (gpointer data)
+{
+  GstVaBufferSurface *buf = data;
+
+  g_return_if_fail (buf && GST_IS_VA_DISPLAY (buf->display));
+
+  if (g_atomic_int_dec_and_test (&buf->ref_count)) {
+    GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
+    _destroy_surfaces (buf->display, &buf->surface, 1);
+    gst_object_unref (buf->display);
+    g_slice_free (GstVaBufferSurface, buf);
+  }
+}
+
 static GstVaBufferSurface *
 _create_buffer_surface (VASurfaceID surface, GstVideoFormat format,
     gint width, gint height)
@@ -567,6 +583,73 @@ gst_va_dmabuf_try (GstAllocator * allocator, GstVaAllocationParams * params)
   gst_buffer_unref (buffer);
 
   return ret;
+}
+
+gboolean
+gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
+    guint n_planes, GstMemory * mem[GST_VIDEO_MAX_PLANES],
+    uintptr_t * fds, gsize offset[GST_VIDEO_MAX_PLANES], guint usage_hint)
+{
+  GstVideoFormat format;
+  GstVaBufferSurface *buf;
+  /* *INDENT-OFF* */
+  VASurfaceAttribExternalBuffers ext_buf = {
+    .width = GST_VIDEO_INFO_WIDTH (info),
+    .height = GST_VIDEO_INFO_HEIGHT (info),
+    .data_size = GST_VIDEO_INFO_SIZE (info),
+    .num_planes = GST_VIDEO_INFO_N_PLANES (info),
+    .buffers = fds,
+    .num_buffers = GST_VIDEO_INFO_N_PLANES (info),
+  };
+  /* *INDENT-ON* */
+  VASurfaceID surface;
+  guint32 fourcc, rt_format;
+  guint i;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
+
+  format = GST_VIDEO_INFO_FORMAT (info);
+  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  rt_format = gst_va_chroma_from_video_format (format);
+  if (rt_format == 0)
+    return FALSE;
+
+  fourcc = gst_va_fourcc_from_video_format (format);
+  if (fourcc == 0)
+    return FALSE;
+
+  ext_buf.pixel_format = fourcc;
+
+  for (i = 0; i < MIN (n_planes, 4); i++) {
+    ext_buf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+    ext_buf.offsets[i] = offset[i];
+  }
+
+  ret = _create_surfaces (display, rt_format, ext_buf.pixel_format,
+      ext_buf.width, ext_buf.height, usage_hint, &ext_buf, &surface, 1);
+  if (!ret)
+    return FALSE;
+
+  GST_LOG_OBJECT (display, "Created surface %#x [%dx%d]", surface,
+      ext_buf.width, ext_buf.height);
+
+  buf = _create_buffer_surface (surface, rt_format, ext_buf.width,
+      ext_buf.height);
+  buf->info = *info;
+  buf->display = gst_object_ref (display);
+
+  for (i = 0; i < n_planes; i++) {
+    g_atomic_int_add (&buf->ref_count, 1);
+    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem[i]),
+        gst_va_buffer_surface_quark (), buf, _buffer_surface_unref);
+    GST_INFO_OBJECT (display, "setting surface %#x to dmabuf fd %d",
+        buf->surface, gst_dmabuf_memory_get_fd (mem[i]));
+  }
+
+  return TRUE;
 }
 
 /*===================== GstVaAllocator / GstVaMemory =========================*/
