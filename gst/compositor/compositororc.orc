@@ -50,14 +50,19 @@ splatbl a, tb
 x4 convubw a_wide, a
 x4 mullw a_wide, a_wide, alpha
 x4 div255w a_wide, a_wide
+
 x4 convubw s_wide, t
-loadl t, d
-x4 convubw d_wide, t
-x4 subw s_wide, s_wide, d_wide
 x4 mullw s_wide, s_wide, a_wide
 
-x4 div255w s_wide, s_wide
+# calc 255-alpha
+x4 subw a_wide, 0xff, a_wide
+
+loadl t, d
+x4 convubw d_wide, t
+x4 mullw d_wide, d_wide, a_wide
+
 x4 addw d_wide, d_wide, s_wide
+x4 div255w d_wide, d_wide
 x4 convwb t, d_wide
 orl t, t, a_alpha
 storel d, t
@@ -116,13 +121,18 @@ x4 mullw a_wide, a_wide, alpha
 x4 div255w a_wide, a_wide
 
 x4 convubw s_wide, t
+x4 mullw s_wide, s_wide, a_wide
+
+# calc 255-alpha
+x4 subw a_wide, 0xff, a_wide
+
 loadl t, d
 x4 convubw d_wide, t
-x4 subw s_wide, s_wide, d_wide
-x4 mullw s_wide, s_wide, a_wide
-x4 div255w s_wide, s_wide
+x4 mullw d_wide, d_wide, a_wide
 
 x4 addw d_wide, d_wide, s_wide
+x4 div255w d_wide, d_wide
+
 x4 convwb t, d_wide
 orl t, t, a_alpha
 storel d, t
