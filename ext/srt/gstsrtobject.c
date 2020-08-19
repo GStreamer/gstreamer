@@ -1207,7 +1207,7 @@ gst_srt_object_close (GstSRTObject * srtobject)
 
 static gboolean
 gst_srt_object_wait_caller (GstSRTObject * srtobject,
-    GCancellable * cancellable, GError ** errorj)
+    GCancellable * cancellable, GError ** error)
 {
   gboolean ret;
 
