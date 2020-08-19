@@ -1422,6 +1422,10 @@ gst_aggregator_start (GstAggregator * self)
   self->priv->send_eos = TRUE;
   self->priv->srccaps = NULL;
 
+  self->priv->has_peer_latency = FALSE;
+  self->priv->peer_latency_live = FALSE;
+  self->priv->peer_latency_min = self->priv->peer_latency_max = 0;
+
   gst_aggregator_set_allocation (self, NULL, NULL, NULL, NULL);
 
   klass = GST_AGGREGATOR_GET_CLASS (self);
