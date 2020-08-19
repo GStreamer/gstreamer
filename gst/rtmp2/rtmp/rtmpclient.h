@@ -60,6 +60,15 @@ GType gst_rtmp_authmod_get_type (void);
 #define GST_RTMP_DEFAULT_STOP_COMMANDS (GST_RTMP_STOP_COMMANDS_FCUNPUBLISH | \
     GST_RTMP_STOP_COMMANDS_DELETE_STREAM) /* FCUnpublish + deleteStream */
 
+/**
+ * GstRtmpStopCommands:
+ * @GST_RTMP_STOP_COMMANDS_NONE: Don't send any commands
+ * @GST_RTMP_STOP_COMMANDS_FCUNPUBLISH: Send FCUnpublish command
+ * @GST_RTMP_STOP_COMMANDS_CLOSE_STREAM: Send closeStream command
+ * @GST_RTMP_STOP_COMMANDS_DELETE_STREAM: Send deleteStream command
+ *
+ * Since: 1.18
+ */
 typedef enum
 {
   GST_RTMP_STOP_COMMANDS_NONE = 0,

@@ -233,6 +233,7 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
             join_paths(root_rel, 'ext/*/*.cc'),
             join_paths(root_rel, 'ext/*/*.hh'),
             join_paths(root_rel, 'gst/*/*.[ch]'),
+            join_paths(root_rel, 'gst/rtmp2/*/*.[ch]'),
         ],
         dependencies: [gst_dep, plugins],
         install: false,
