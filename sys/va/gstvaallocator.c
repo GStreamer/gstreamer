@@ -409,8 +409,8 @@ gst_va_dmabuf_allocator_new (GstVaDisplay * display)
 }
 
 static GstVaBufferSurface *
-_create_buffer_surface (GstVaDmabufAllocator * self, VASurfaceID surface,
-    GstVideoFormat format, gint width, gint height)
+_create_buffer_surface (VASurfaceID surface, GstVideoFormat format,
+    gint width, gint height)
 {
   GstVaBufferSurface *buf = g_slice_new (GstVaBufferSurface);
 
@@ -485,7 +485,7 @@ gst_va_dmabuf_setup_buffer (GstAllocator * allocator, GstBuffer * buffer,
     goto failed;
   }
 
-  buf = _create_buffer_surface (self, surface, format, desc.width, desc.height);
+  buf = _create_buffer_surface (surface, format, desc.width, desc.height);
 
   for (i = 0; i < desc.num_objects; i++) {
     gint fd = desc.objects[i].fd;
