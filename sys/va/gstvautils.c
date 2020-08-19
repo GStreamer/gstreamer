@@ -294,10 +294,13 @@ gst_context_get_va_display (GstContext * context, const gchar * type_name,
   s = gst_context_get_structure (context);
   if (gst_structure_get (s, "gst-display", GST_TYPE_VA_DISPLAY, &display, NULL)) {
     gchar *device_path = NULL;
+    gboolean ret;
 
     if (GST_IS_VA_DISPLAY_DRM (display)) {
       g_object_get (display, "path", &device_path, NULL);
-      if (g_strcmp0 (device_path, render_device_path) == 0)
+      ret = (g_strcmp0 (device_path, render_device_path) == 0);
+      g_free (device_path);
+      if (ret)
         goto accept;
     } else if (!is_devnode) {
       goto accept;
