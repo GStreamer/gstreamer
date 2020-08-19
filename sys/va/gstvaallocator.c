@@ -95,12 +95,13 @@ _destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
 
 static gboolean
 _create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
-    guint width, guint height, gint usage_hint, VASurfaceID * surfaces,
+    guint width, guint height, gint usage_hint,
+    VASurfaceAttribExternalBuffers * ext_buf, VASurfaceID * surfaces,
     guint num_surfaces)
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   /* *INDENT-OFF* */
-  VASurfaceAttrib attrs[] = {
+  VASurfaceAttrib attrs[5] = {
     {
       .type = VASurfaceAttribUsageHint,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
@@ -108,26 +109,44 @@ _create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
       .value.value.i = usage_hint,
     },
     {
-      .type = VASurfaceAttribPixelFormat,
-      .flags = VA_SURFACE_ATTRIB_SETTABLE,
-      .value.type = VAGenericValueTypeInteger,
-      .value.value.i = fourcc,
-    },
-    {
       .type = VASurfaceAttribMemoryType,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
       .value.type = VAGenericValueTypeInteger,
-      .value.value.i = VA_SURFACE_ATTRIB_MEM_TYPE_VA,
+      .value.value.i = ext_buf ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
+                               : VA_SURFACE_ATTRIB_MEM_TYPE_VA,
     },
   };
   /* *INDENT-ON* */
   VAStatus status;
+  guint num_attrs = 2;
 
   g_return_val_if_fail (num_surfaces > 0, FALSE);
 
+  if (fourcc > 0) {
+    /* *INDENT-OFF* */
+    attrs[num_attrs++] = (VASurfaceAttrib) {
+      .type = VASurfaceAttribPixelFormat,
+      .flags = VA_SURFACE_ATTRIB_SETTABLE,
+      .value.type = VAGenericValueTypeInteger,
+      .value.value.i = fourcc,
+    };
+    /* *INDENT-ON* */
+  }
+
+  if (ext_buf) {
+    /* *INDENT-OFF* */
+    attrs[num_attrs++] = (VASurfaceAttrib) {
+      .type = VASurfaceAttribExternalBufferDescriptor,
+      .flags = VA_SURFACE_ATTRIB_SETTABLE,
+      .value.type = VAGenericValueTypePointer,
+      .value.value.p = ext_buf,
+    };
+    /* *INDENT-ON* */
+  }
+
   gst_va_display_lock (display);
   status = vaCreateSurfaces (dpy, rt_format, width, height, surfaces,
-      num_surfaces, attrs, G_N_ELEMENTS (attrs));
+      num_surfaces, attrs, num_attrs);
   gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaCreateSurfaces: %s", vaErrorStr (status));
@@ -466,8 +485,8 @@ gst_va_dmabuf_setup_buffer (GstAllocator * allocator, GstBuffer * buffer,
 
   if (!_create_surfaces (self->display, rt_format, fourcc,
           GST_VIDEO_INFO_WIDTH (&params->info),
-          GST_VIDEO_INFO_HEIGHT (&params->info), params->usage_hint, &surface,
-          1))
+          GST_VIDEO_INFO_HEIGHT (&params->info), params->usage_hint, NULL,
+          &surface, 1))
     return FALSE;
 
   /* Each layer will contain exactly one plane.  For example, an NV12
@@ -894,8 +913,8 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 
   if (!_create_surfaces (self->display, rt_format, fourcc,
           GST_VIDEO_INFO_WIDTH (&params->info),
-          GST_VIDEO_INFO_HEIGHT (&params->info), params->usage_hint, &surface,
-          1))
+          GST_VIDEO_INFO_HEIGHT (&params->info), params->usage_hint, NULL,
+          &surface, 1))
     return NULL;
 
   image.image_id = VA_INVALID_ID;
