@@ -1,3 +1,69 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:15:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-08-03 19:34:30 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  rtsp-thread-pool.c: fix clang 10 warning
+	  clang 10 is complaining about incompatible types due to the
+	  glib typesystem.
+	  ```
+	  ../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.c:534:10: error: incompatible pointer types passing 'typeof ((((void *)0))) *' (aka 'void **') to parameter of type 'GThreadPool **' (aka 'struct _GThreadPool **') [-Werror,-Wincompatible-pointer-types]
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/145>
+
+2020-08-03 19:34:30 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  rtsp-thread-pool.c: fix clang 10 warning
+	  clang 10 is complaining about incompatible types due to the
+	  glib typesystem.
+	  ```
+	  ../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.c:534:10: error: incompatible pointer types passing 'typeof ((((void *)0))) *' (aka 'void **') to parameter of type 'GThreadPool **' (aka 'struct _GThreadPool **') [-Werror,-Wincompatible-pointer-types]
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/145>
+
+2020-07-15 11:19:40 +0200  Srimanta Panda <srimanta@axis.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Fix resource leak in mikey messsage
+	  Fixed a resource leak for mikey message while adding crypto session
+	  failed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/144>
+
+2020-07-08 17:28:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* scripts/extract-release-date-from-doap-file.py:
+	  meson: set release date from .doap file for releases
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/143>
+
+2020-07-02 23:52:47 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: explicitly set caps on udpsrc elements
+	  This causes them to send caps events before data flow, which is
+	  usually a pretty correct thing to do!
+	  Not doing so manifested in a bug where ssrcdemux wouldn't forward
+	  the caps it had received with an extra ssrc field, as it hadn't
+	  received any caps event.
+	  Fixes #85
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/141>
+
+2020-07-03 02:04:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:33:54 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +71,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.17.2
