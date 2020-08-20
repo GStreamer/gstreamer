@@ -1,3 +1,925 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:16:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-08-17 11:43:53 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface_egl.c:
+	  libs: surface: egl: guard memory type
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/384>
+
+2020-08-17 19:26:43 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  plugin: decode: Fix two mem leaks because of caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/385>
+
+2020-08-16 01:57:15 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  plugin: allocator: No need to ref allocator when create mem.
+	  We do not need to ref the allocator when creating GstVaapiVideoMemory
+	  kind memory, and then release it in _free(). The framework already
+	  does it for us.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/383>
+
+2020-08-14 10:42:51 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: ignore level without breaking negotiation
+	  Since commit 9f627ef2 if the user sets level in the encoder src caps
+	  the caps negotiation is rejected.
+	  But since the same commit the same encoder set the autoconfigured
+	  level in caps. Some change in the base class might fixed the operation
+	  order so now the caps are set and later negotiated.
+	  This patch removes the level check.
+	  Fixes: #273
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/382>
+
+2019-07-09 19:17:48 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/egl_vtable.h:
+	* gst-libs/gst/vaapi/gstvaapisurface_egl.c:
+	* gst-libs/gst/vaapi/gstvaapisurface_egl.h:
+	* gst-libs/gst/vaapi/gstvaapitexture_egl.c:
+	  libs: egl: surface: export EGLImage as DMABuf if GEM not supported
+	  This code path is used when frames are rendered as textures through
+	  GstVideoGLTextureUploadMeta with EGL, mainly under Wayland.
+	  Originally the EGLImage was exported as GEM, which was handled by
+	  Intel drivers, but Gallium ones cannot create VA surfaces from
+	  GEM buffers, only DMABuf.
+	  This patch checks the memory types supported by VA driver to choose
+	  the render the EGLImages from GEM or DMABuf, because GEM is still
+	  better where supported.
+	  DMABuf is well handled either by intel-vaapi-driver and gallium.
+	  Fixes: #137
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/122>
+
+2020-05-26 16:18:32 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* gst-libs/gst/vaapi/gstvaapifilter.h:
+	  libs: filter: gst_vaapi_filter_get_memory_types()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/122>
+
+2020-08-12 18:48:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: remove gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps()
+	  Since nobody uses it, just remove it.
+	  Thus extract_allowed_surface_formats() is refactored to attend only
+	  gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps().
+	  Now a surface is created when the image chorma is different from the
+	  previous one. And if the driver has the quirk, it outputs all the
+	  supported image formats without trying them.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/381>
+
+2020-08-12 17:50:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: expose raw src caps with same chroma
+	  The try-and-error approach for getting the possible image formats from
+	  a surface has brought several problems in different drivers, from
+	  crashes to drop in performance.
+	  Instead of that we change the algorithm to determine the possible
+	  image formats based in the surface chroma: only those available image
+	  formats with same chroma are exposed as possible raw caps.
+	  Do this is important to avoid performance degrading in raw sinks
+	  which doesn't handle NV12 but it does YV12 or I420.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/381>
+
+2020-07-10 17:05:38 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	  libs: util: h265: use common parser API to get vaapi profiles.
+	  We can reuse H265 parser's API to recognize the correct profile and
+	  then just need to convert them to VAAPI profiles.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/356>
+
+2020-08-07 16:41:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/meson.build:
+	* gst/vaapi/meson.build:
+	* meson.build:
+	  build: update for gl pkg-config file split
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/378>
+
+2020-08-06 12:51:27 +0800  Xu Guangxin <guangxin.xu@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  h264dec: mark remaining frames as unreference before exec_picture_refs_modification
+	  8.2.4.2 required this. Some clips will crash if we do not fill the reference list like this.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/376>
+
+2020-07-31 18:22:46 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	  libs: encoder: H265: Enable Main 12 profile support.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/375>
+
+2020-07-31 19:17:39 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/video-format.c:
+	  video format: Fix P012_LE's chrome type typo.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/375>
+
+2020-08-04 21:15:01 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapiminiobject.c:
+	  gstvaapiminiobject.c:   fix clang 10 warnings
+	  the typesystem checks in g_atomic_pointer_compare_and_exchange
+	  seem to trigger some false positives with clang 10
+	  similar to gstreamer!584
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/377>
+
+2020-07-31 11:07:23 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: destroy all wayland buffers during finalize
+	  Some buffers and the associated FrameState state may still be pending at
+	  that point. If the wayland connection is shared, then messages for the
+	  buffer may still arrive. However, the associated event queue is already
+	  deleted. So the result is a crash.
+	  With a private connection the associated memory is leaked instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-18 20:25:18 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* tests/examples/test-vaapicontext.c:
+	  test: vaapicontext: fix draw callback with multiple videos
+	  The callback is called for both windows. So make sure that
+	  gst_video_overlay_set_render_rectangle() is called for the correct one.
+	  Otherwise, the left video will be randomly moved behind the right video.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-19 09:23:52 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* tests/examples/meson.build:
+	* tests/examples/test-vaapicontext.c:
+	  test: vaapicontext: support wayland display
+	  On Wayland, The whole gtk window is one Wayland surface. So
+	  gtk_widget_get_window() must be called on the top-level widget.
+	  For any other widget the following gdk_window_ensure_native() may create a
+	  new top-level Wayland surface that is never visible.
+	  As a result, the coordinates passed to
+	  gst_video_overlay_set_render_rectangle() must be relativ to the top-level
+	  window. Otherwise the video is placed incorrectly.
+	  Original-Patch-By: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2017-12-01 20:18:28 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/examples/test-vaapicontext.c:
+	  test: vaapicontext: use playbin to test files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2017-11-29 11:11:39 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/examples/test-vaapicontext.c:
+	  test: vaapicontext: add PLAY and NULL buttons
+	  They only appear when only one sink is instanciated and their purpose
+	  is to test the NULL-PLAY use case in context sharing.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-19 21:26:52 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: wayland: update the opaque region in set_render_rect
+	  gst_vaapi_window_wayland_set_render_rect() may be called from an arbitrary
+	  thread. That thread may be responsible for making the window visible.
+	  At that point another thread will block in gst_vaapi_window_wayland_sync()
+	  because the frame callback will not be called until the window is visible.
+	  If that happens, then acquiring the display lock in
+	  gst_vaapi_window_wayland_set_render_rect() would result in a deadlock.
+	  Cache the size of the opaque rectangle separately and create the opaque
+	  region right before applying it to the surface.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-19 09:21:16 +0200  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst/vaapi/gstvaapisink.c:
+	  libs: window: implements gst_vaapi_window_set_render_rectangle
+	  Implements new vmethod gst_vaapi_window_set_render_rectangle,
+	  which is doing set the information of the rendered rectangle set by
+	  user.
+	  This is necessary on wayland at least to get exact information of
+	  external surface.
+	  And vaapisink calls this when gst_video_overlay_set_render_rectangle is
+	  called.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2017-11-08 13:23:39 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: implements gst_vaapisink_wayland_create_window_from_handle()
+	  Implements gst_vaapisink_wayland_create_window_from_handle() to support
+	  using external wl_surface.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-19 09:11:20 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.h:
+	  libs: wayland: implement video overlay API
+	  The Wayland sub-surfaces API is used to embed the video into an application
+	  window.
+	  See Appendix A. Wayland Protocol Specification as the following.
+	  """
+	  The aim of sub-surfaces is to offload some of the compositing work
+	  within a window from clients to the compositor. A prime example is
+	  a video player with decorations and video in separate wl_surface
+	  objects.
+	  This should allow the compositor to pass YUV video buffer processing to
+	  dedicated overlay hardware when possible.
+	  """
+	  Added new method gst_vaapi_window_wayland_new_with_surface()
+	  Original-Patch-By: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+	  Zhao Halley <halley.zhao@intel.com>
+	  changzhix.wei@intel.com
+	  Hyunjun Ko <zzoon@igalia.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-19 21:54:52 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  doc: libs: wayland: add 'transfer full' to the returnvalye of gst_vaapi_window_wayland_new
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-06-11 08:25:57 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: always call close_display()
+	  All close_display() have their own checks for use_foreign_display and only
+	  destroy locally created objects in that case.
+	  Without this objects other than the actuall foreign display itself are
+	  leaked.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/342>
+
+2020-07-30 23:37:10 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/video-format.h:
+	  video-format: Add the missing P012_LE into GST_VAAPI_FORMATS_ALL.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/373>
+
+2020-05-25 17:02:26 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  plugins: add gst_vaapi_caps_set_width_and_height_range()
+	  This utility function is called internally by
+	  gst_vaapi_build_caps_from_formats() and can be used outside.
+	  This function sets frame size and framerates ranges.
+	  Also gst_vaapi_build_caps_from_formats() is simplified.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/374>
+
+2020-07-31 15:27:38 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	  libs: decoder: fix a crash issue when get_surface_formats.
+	  Some context does not report any valid format that we can support.
+	  For example, the HEVC 444 12 bits decoder context, all the formats
+	  it reports is not supported now, which make the formats list a NULL
+	  array. We should check that pointer before we use it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/372>
+
+2020-07-03 19:28:28 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: choose the profile based on allowed list.
+	  We can decide the profile in ensure_profile(), based on allowed list
+	  passed by the encode. We also need to check whether the entrypoint is
+	  available. Once it is decided, no need to check the hw entrypoint
+	  them again.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/349>
+
+2020-07-29 22:05:41 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  plugins: encode: h265: set all allowed profiles to encoder.
+	  We should collect all allowed profiles and pass them to the inside
+	  encoder, rather than just calculate the max profile idc.
+	  The allowed profiles should also be supported by the HW.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/349>
+
+2020-07-29 22:32:55 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.h:
+	  libs: display: Add a helper function to get profiles by codec.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/349>
+
+2020-07-03 01:28:28 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  plugins: encode: h265: collect all allowed profiles to encoder.
+	  We should collect all allowed profiles and pass them to the inside
+	  encoder, rather than just calculate the max profile idc.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/349>
+
+2020-07-03 00:53:31 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.h:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  libs: encoder: h265: modify set_max_profile to set_allowed_profiles.
+	  In h265, bigger profile idc may not be compatible with the small profile
+	  idc. And more important, there are multi profiles with the same profile
+	  idc. Such as main-422-10, main-444 and main-444-10, they all have profile
+	  idc 4.
+	  So recording the max profile idc is not enough, the encoder needs to know
+	  all allowed profiles when deciding the real profile.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/349>
+
+2020-07-02 23:33:31 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: No need to check hw_max_profile.
+	  In h265, higher profile idc number does not mean better compression
+	  performance and may be not compatible with the lower profile idc.
+	  So, it is not suitable to find the heighest idc for hw to ensure the
+	  compatibility.
+	  On the other side, when the entrypoint of the selected profile is valid,
+	  it means the hw really support this profile, no need to check it again.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/349>
+
+2020-04-08 19:41:09 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: early return if fixate srcpad caps fails
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/371>
+
+2020-07-29 13:39:44 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  vaapipluginutil: simplify gst_vaapi_find_preferred_caps_feature()
+	  Generalize the way how the preferred color format is chosen. Also
+	  use new GStreamre API as syntatic sugar.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/370>
+
+2020-07-29 14:22:18 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.h:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapiencode.c:
+	  libs: profile: Use get_codec_from_caps to get codec type.
+	  There is no need to get a profile from the caps and then convert
+	  that profile into codec type. We can get the codec type by caps's
+	  name easily.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/358>
+
+2020-07-12 19:42:40 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	  libs: profile: h265: Fix return value of from_codec_data_h265.
+	  profile_from_codec_data_h265() returns wrong GstVaapiProfile for h265.
+	  The codec data of caps contain the profile IDC, but the mapping between
+	  profile IDC and GstVaapiProfile is wrong.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/358>
+
+2020-07-07 00:46:23 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_vp9.c:
+	  plugins: encode: vp9: Implement vp9's allowed_profiles() func.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/188>
+
+2020-07-08 16:30:17 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  plugin: util: rename h26x_encoder_get_profiles_from_caps().
+	  Change its name to encoder_get_profiles_from_caps(). Other codecs such
+	  as VP9 also needs to use this function.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/188>
+
+2020-07-06 23:35:12 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_vpx.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_vpx.h:
+	* gst-libs/gst/vaapi/meson.build:
+	  libs: utils: vpx: Add utils vpx to handle VP8/9 misc things.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/188>
+
+2020-07-29 10:17:31 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.h:
+	  libs: display, context: handle broken jpeg decoder for i965 driver
+	  JPEG decoding in i965 driver is pretty much broken, and the driver is
+	  deprecated which mean authors only accept trivial fixes.
+	  Surfaces for JPEG decoder context in i965 only handle IMC3[1] color
+	  format which is not a common format in GStreamer. It can export it to
+	  I420 at mapping raw bytes, but DMABuf exporting is problematic.
+	  This patch artificially adds NV12 to the context format list when it's
+	  JPEG decoder for i965 and force the usage of old VA-API for surface
+	  creation without specifying color format. Also it artificially
+	  disables the DMABuf announcement.
+	  1. https://docs.microsoft.com/en-us/windows/win32/medfound/recommended-8-bit-yuv-formats-for-video-rendering#420-formats-16-bits-per-pixel
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/369>
+
+2020-07-29 12:02:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: context: change function to internal code style
+	  Instead of a getter the function `get_preferred_format()` to
+	  `ensure_preferred_format()` which aligns to the code style.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/369>
+
+2020-07-28 20:00:09 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: always merge profile caps in sink caps
+	  This commit fixes a regression of e962069d, where if the profile's
+	  caps doesn't have a caps profile, it's ignored.
+	  This patch add a conditional jump if the caps doesn't have a profile
+	  field to merge it.
+	  Fixes: #271
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/368>
+
+2020-07-28 12:22:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	  build: request libdrm >= 2.4.98 and fallback
+	  Fixes: #270
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/367>
+
+2020-05-18 17:32:27 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: dma caps only use reported color format
+	  This fix pipelines without vaapipostproc after vaapi decoder, such as
+	  gst-launch-1.0 filesrc location=~/file.mp4 ! parsebin ! vaapih264dec ! glimagesink
+	  On EGL platforms, so DMABuf is used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/366>
+
+2020-02-07 17:10:45 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: use allowed srcpad caps for caps query
+	  Instead of using just the template caps use the current allowed
+	  srcpad caps, which is created considering the current decoder
+	  context.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/366>
+
+2020-01-22 17:41:28 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder.h:
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: build allowed srcpad caps from va context
+	  Instead of generating allowed srcpad caps with generic information,
+	  now it takes the size an formats limits from the decoder's context.
+	  This is possible since srcpad caps are generated after the internal
+	  decoder is created.
+	  The patch replaces gst_vaapi_decoder_get_surface_formats() with
+	  gst_vaapi_decoder_get_suface_attributes().
+	  From these attributes, formats are only used for VASurface memory
+	  caps feature. For system memory caps feature, the old
+	  gst_vaapi_plugin_get_allowed_srcpad_caps() is still used, since
+	  i965 jpeg decoder cannot deliver mappable format for gstreamer.
+	  And for the other caps features (dmabuf and texture upload) the
+	  same static list are used.
+	  This patch also adds DMABuf caps feature only if the context
+	  supports that memory type. Nonetheless, we keep the pre-defined
+	  formats since they are the subset of common derive formats formats
+	  supported either by amd/gallium and both intel drivers, since,
+	  when exporting the fd through vaAcquireBufferHandle()/
+	  vaReleaseBufferHandle(), the formats of the derivable image cannot
+	  be retriebable from the driver. Later we'll use the attribute
+	  formats for the DMABuf feature too, when the code be ported to
+	  vaExportSurfaceHandle().
+	  Finally, the allowed srcpad caps are removed if the internal decoder
+	  is destroyed, since context attribues will change.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/366>
+
+2020-02-07 16:50:52 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: reorder src caps template
+	  Since negotiation depends on caps order, first is VA, then DMABuf,
+	  later GLUploadTexture (deprecated) and finally raw.
+	  Also, for decoders, the possible available color formats for DMABuf
+	  is extended to all the possible VA color formats.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/366>
+
+2020-07-22 10:01:41 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: use dmabuf protocol if available
+	  Currently vaGetSurfaceBufferWl() is used to create wayland buffers.
+	  Unfortunately this is not implemented by the 'media-driver' and Mesa VA-API
+	  drivers. And the implementation provided by 'intel-vaapi-driver' is not
+	  compatible with a Wayland server that uses the iris Mesa driver.
+	  So create the Wayland buffers manually with the zwp_linux_dmabuf_v1 wayland
+	  protocol. Formats and modifiers supported by the Wayland server are taken
+	  into account. If necessary, VPP is enabled to convert the buffer into a
+	  supported format.
+	  Fall back to vaGetSurfaceBufferWl() if creating buffers via dambuf protocol
+	  fails.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/346>
+
+2020-07-21 10:03:19 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_priv.h:
+	  libs: window: allow choosing the format for the vpp pool
+	  Signed-off-by: Michael Olbrich <m.olbrich@pengutronix.de>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/346>
+
+2020-06-28 17:42:29 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst-libs/gst/vaapi/video-format.h:
+	  video-format: add DRM formats to the mapping table
+	  This will be needed for the DMABuf protocol support to map DRM formats to
+	  vaapi and gstreamer formats.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/346>
+
+2020-07-22 09:36:18 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland_priv.h:
+	* gst-libs/gst/vaapi/meson.build:
+	  libs: display: wayland: add basic dmabuf protocol support
+	  This is just the basic infrastructure. Hook up the interface and collect
+	  all supported formats.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/346>
+
+2020-07-06 09:59:40 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: wait for configure before committing the first buffer
+	  Committing the first buffer for a surface must not be done before
+	  ack_configure() has been sent for the xdg_surface.
+	  With weston, the commit will fail with "error 3: xdg_surface has never been
+	  configured".
+	  Wait in gst_vaapi_window_wayland_show() until configure is done to avoid
+	  this.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/346>
+
+2020-07-01 14:50:51 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: set no P frame automatically.
+	  The double reference lists may be required by drivers and there should
+	  be no P frames in the of stream. The old way of converting P frames to
+	  B frames is by setting `low-delay-b` property, which is unconvenient
+	  and has bad user experience, since most of the users do not know when
+	  to set this property, and if it is not set correctly, the encoding
+	  pipeline fails or even hangs on some platforms. VA driver now provides
+	  a attribute to query whether both reference lists must be un-NULL for
+	  a profile/entrypoint pair.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/284>
+
+2020-04-15 16:26:55 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: Deprecate the low-delay-b property.
+	  In HEVC, P and B definitions are different from AVC: P frames have
+	  just one reference list and so 1 MV, while B frames have two reference
+	  lists and so 2 MVs. No matter B or P, ist reference lists can contain
+	  forward/backward reference. So P and B can both have bi-directions
+	  dependency, the difference is just their reference list
+	  number (i.e. MV number). This is different from the AVC.
+	  The *low delay b mode* refers to a special HEVC mode, in which the
+	  stream just contain I and B frames, without P frames, and all B frames
+	  only have forward direction dependencies (i.e. all inter frames have 2
+	  reference lists but no backward reference in both lists).  This is
+	  similar to AVC I/P mode, but changing the P to the forward dependent
+	  B.
+	  The `low-delay-b` property is now just used to simply convert all P
+	  frames to B frames when driver does not support P frames (so both
+	  reference lists have the same references frames). This is a little
+	  different from the meaning of low delay b mode (the two ref lists may
+	  have the different reference frames). And the driver now can report
+	  whether it supports P frames correctly, so there is no need to use
+	  this property and deprecate it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/284>
+
+2020-07-24 12:54:31 +0200  Marc Leeman <m.leeman@televic.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  postproc: reconfigure after changing cropping values
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/365>
+
+2020-07-09 13:49:29 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode.h:
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	* gst/vaapi/gstvaapiencode_jpeg.c:
+	* gst/vaapi/gstvaapiencode_mpeg2.c:
+	* gst/vaapi/gstvaapiencode_vp8.c:
+	* gst/vaapi/gstvaapiencode_vp9.c:
+	  plugin: encode: Add static caps for template documentation.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 19:03:14 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_vp9.c:
+	  plugin: encode: vp9: Use the dynamically built src template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 19:02:45 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_vp8.c:
+	  plugin: encode: vp8: Use the dynamically built src template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 19:02:23 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_jpeg.c:
+	  plugin: encode: jpeg: Use the dynamically built src template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 19:00:39 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_mpeg2.c:
+	  plugin: encode: mpeg2: Use the dynamically built src template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 18:59:18 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  plugin: encode: h265: Use the dynamically built src template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 18:57:26 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  plugin: encode: h264: Use the dynamically built src template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 18:46:58 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode.h:
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	* gst/vaapi/gstvaapiencode_jpeg.c:
+	* gst/vaapi/gstvaapiencode_mpeg2.c:
+	* gst/vaapi/gstvaapiencode_vp8.c:
+	* gst/vaapi/gstvaapiencode_vp9.c:
+	  plugin: encode: Store the coded caps in type's init data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-08 18:30:00 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  plugin: util: add helper function build_template_coded_caps_by_codec()
+	  Like build_template_raw_caps_by_codec(), this function can detect and
+	  build the caps for specified codec based on the query of the profiles.
+	  The result is coded caps such as video/x-h265, video/x-h264. The result
+	  can be used as the template of encode's src or decode's sink.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-07 17:16:41 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode.h:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  plugins: utils: rename build_template_caps_by_codec.
+	  Rename the function build_template_caps_by_codec() to the name of
+	  build_template_raw_caps_by_codec(). It can be used to collect all
+	  raw video formats for encode's sink and decode's src.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/354>
+
+2020-07-21 20:14:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  vaapidecode: merge common profiles before setting size range
+	  The synthetic profiles, such as H264 baseline, H265 intra, etc. are
+	  added at the end of processing all available VA profiles. This
+	  generated an non-optimal caps for negotiation, since the synthetic
+	  profiles don't have frame size ranges.
+	  This patch adds those possible synthetic profiles when the associated
+	  profile is processed, with its frame size ranges.
+	  Now allowed sink caps are simpler.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/363>
+
+2020-07-21 22:05:08 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugin: util: Add the missing DMA buffer input in template caps.
+	  We pass the wrong parameter to gst_vaapi_build_caps_from_formats()
+	  and lose the DMA feature in caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/362>
+
+2020-07-14 18:13:56 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  libs: decoder: H265: Add MAIN_12 profile supporting.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/359>
+
+2020-07-09 23:07:38 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiimage.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	  video-format: Add P012_LE format.
+	  It can be used as HEVC YUV_4:2:0 12bits stream's decoder output, and
+	  also can be used as the input format for encoding HEVC YUV_4:2:0 12bits
+	  stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/359>
+
+2020-07-17 00:45:53 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  plugin: decode: correct ensure_allowed_sinkpad_caps's caps.
+	  The decode allowed caps returned by ensure_allowed_sinkpad_caps()
+	  contains all profiles of the whole VAAPI, like:
+	  image/jpeg, width=(int)[ 0, 1638 4 ], height=(int)[ 0, 16384 ];
+	  video/mpeg, mpegversion=(int)2, profile=(string){ simple, main },
+	  width=(int)[ 0, 2048 ], height=(int)[ 0, 2048 ]; video/x-h264,
+	  profile=(string){ main, high, constrained-baseline }, width=(int)[ 0,
+	  4096 ], height=(int)[ 0, 4096 ]; video/x-h264, profile=(string){
+	  constrained-high, progressive-high, baseline }; video/x-h265,
+	  profile=(string){ main, main-intra }, width=(int)[ 0, 8192 ],
+	  height=(int)[ 0, 8192 ]; video/x-vp8, width=(int)[ 0, 4096 ],
+	  height=(int)[ 0, 4096 ]; video/x-wmv, wmvversion=(int)3,
+	  format=(string)WVC1, profile=(string)advanced, width=(int)[ 0, 3840 ],
+	  height=(int)[ 0, 3840 ]; video/x-wmv, wmvversion=(int)3,
+	  profile=(string){ simple, main }, width=(int)[ 0, 3840 ],
+	  height=(int)[ 0, 3840 ]
+	  Which is verbose and may have latent problems. It should only contains
+	  the profiles belong to its codec type. For example, h265 should only
+	  return:
+	  video/x-h265, profile=(string){ main, main-intra },
+	  width=(int)[ 0, 8192 ], height=(int)[ 0, 8192 ]
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/361>
+
+2020-07-13 11:06:18 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: don't force NV12 since P010_10LE is now possible
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/360>
+
+2020-07-12 20:34:31 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	  libs: profile: The VP9 profiles' name should be just "0,1,2,3"
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/357>
+
+2020-07-08 17:33:32 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder.h:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode.h:
+	* tests/internal/simple-decoder.c:
+	  vaapidecode: Remove NO_SURFACE error handling
+	  Since surfaces are not bounded to decoding context it makes no sense
+	  to keep the surface semaphore. This patch removes the handling of
+	  this error.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/353>
+
+2020-07-08 17:48:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode.h:
+	  Revert "vaapidecode: drop non-keyframe in reverse playback"
+	  Since the number of surfaces are not bounded to decoder context,
+	  this hack is no longer needed.
+	  This reverts commit 19c0c8a97385ce119440c4aad2d689fc79297435.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/353>
+
+2019-12-06 14:21:33 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: decoder: context: remove surfaces binding from context.
+	  The vaCreateContext do not need to specify the surfaces for the
+	  context creation now. So we do not need to bind any surface to the
+	  context anymore. Surfaces should be the resource belong to display
+	  and just be used in encoder/decoder context.
+	  The previous manner has big limitation for decoder. The context's
+	  surface number is decided by dpb size. All the surfaces in dpb will
+	  be attached to a gstbuffer and be pushed to down stream, and the
+	  decoder need to wait down stream free the surface and go on if not
+	  enough surface available. For more and more use cases, this causes
+	  deadlock. For example,
+	  gst-launch-1.0 filesrc location=a.h264 ! h264parse ! vaapih264dec
+	  ! x264enc ! filesink location=./output.h264
+	  will cause deadlock and make the whole pipeline hang.
+	  the x264enc encoder need to cache more than dpb size surfaces.
+	  The best solution is seperating the surfaces number and the dpb size.
+	  dpb and dpb size shoule be virtual concepts maintained by the decoder.
+	  And let the surfaces_pool in context maintain the re-use of all surfaces.
+	  For encoder, the situation is better, all the surfaces are just used
+	  as reference frame and no need to be pushed to down stream. We can
+	  just reserve and set the capacity of the surfaces_pool to meet the
+	  request.
+	  Fix: #147
+	  Fix: #88
+	  Co-Author: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/353>
+
+2020-07-08 17:50:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* scripts/extract-release-date-from-doap-file.py:
+	  meson: set release date from .doap file for releases
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/355>
+
+2020-07-08 11:57:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: use VA allocator by default on raw caps
+	  Instead of using dmabuf allocator in source pad, when raw video caps
+	  are negotiated, it uses VA allocator as before, since it is stable
+	  in more use cases, for example transcoding, and more backend drivers.
+	  Dmabuf allocator is only used when dmabuf caps feature is negotiated.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/352>
+
+2020-06-06 18:47:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  vaapisink: rank it as secondary
+	  iHD doesn't provide a full implemention for rendering surfaces and
+	  i965 has problems in wayland. And I suspect this path is followed
+	  by other driver implementations.
+	  This patch demotes the rank of vaapisink to secondary, so it will
+	  not be autoplugged avoiding bad experience of users.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/336>
+
+2020-06-19 10:44:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h264, h265: in context at least 16 reference surfaces
+	  Registering only stream's DBP size number of surfaces for decoding VA
+	  surfaces brings issues for certain streams. This change register all
+	  possible number of reference surfaces in a stream, which is 16.
+	  Fixes: #94
+
+2020-07-04 21:21:57 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  plugins: encode: h265: Add profile,level,tier to output caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/350>
+
+2020-07-04 21:08:20 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: init tier to GST_VAAPI_TIER_H265_UNKNOWN.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/350>
+
+2020-07-04 21:05:49 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fix a bug to get get_profile_tier_level.
+	  0 is a valid value for h265 tier.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/350>
+
+2020-07-02 19:19:35 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: no need to check the high compression tune.
+	  The h265 encoder just support tune mode:
+	  (0): none             - None
+	  (3): low-power        - Low power mode
+	  So, no need to check and set the high compression parameters.
+	  And by the way, the current ensure_tuning_high_compression manner
+	  of choosing the hightest profile idc as the best compression profile
+	  is not correct. Unlike h264, in h265 the higher profile idc number
+	  does not mean it has more compression tools, and so it has better
+	  compression performance. It may even be un-compatible with the lower
+	  profile idc. For example, the SCREEN_CONTENT_CODING profile with idc
+	  9 is not compatible with 3D_MAIN profile with idc 8.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/348>
+
+2020-07-03 02:04:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:36:40 +0100  Tim-Philipp Müller <tim@centricular.com>
