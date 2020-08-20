@@ -217,6 +217,7 @@ plugin_init (GstPlugin * plugin)
   gboolean we_initialized = FALSE;
   GModule *libpython;
   gpointer has_python = NULL;
+  const gchar *override_path;
 
   GST_DEBUG_CATEGORY_INIT (pyplugindebug, "pyplugin", 0,
       "Python plugin loader");
@@ -252,6 +253,22 @@ plugin_init (GstPlugin * plugin)
   } else {
     GST_LOG ("python was already initialized");
     state = PyGILState_Ensure ();
+  }
+
+  if ((override_path = g_getenv ("GST_OVERRIDE_SRC_PATH"))) {
+    gchar *overrides_setup =
+        g_build_filename (override_path, "..", "..", "testsuite",
+        "overrides_hack.py", NULL);
+    FILE *fd = fopen (overrides_setup, "rb");
+
+    if (!fd || PyRun_SimpleFileExFlags (fd, overrides_setup, 1, 0)) {
+      g_free (overrides_setup);
+
+      return FALSE;
+    } else {
+      g_free (overrides_setup);
+      GST_INFO ("Imported overrides setup");
+    }
   }
 
   GST_LOG ("Running with python version '%s'", Py_GetVersion ());
