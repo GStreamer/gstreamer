@@ -1,22 +1,14 @@
+GStreamer 1.18 Release Notes
 
-
-GSTREAMER 1.18 RELEASE NOTES
-
-
-THESE RELEASE NOTES ARE A PLACEHOLDER, PLEASE BEAR WITH US WHILE WE
-FINISH WRITING UP THE REAL THING.
+These release notes are a placeholder, please bear with us while we
+finish writing up the real thing.
 
 GStreamer 1.18.0 has not yet been released. It is scheduled for release
-in summer 2020 now.
+in late August / early September 2020.
 
 1.17.x is the unstable development series that is currently being
 developed in the git master branch and which will eventually result in
-1.18, and 1.17.2 is the current development release in that series.
-
-The schedule for the 1.18 development cycle is yet to be confirmed, but
-it is expected that feature freeze will be in June/July 2020, followed
-by several 1.17 pre-releases and then a new 1.18 stable release in
-July/August 2020.
+1.18, and 1.17.90 is the current 1.18 pre-release in that series.
 
 1.18 will be backwards-compatible to the stable 1.16, 1.14, 1.12, 1.10,
 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
@@ -24,8 +16,7 @@ July/August 2020.
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
 
-_Last updated: Wednesday 1 July 2020, 23:50 UTC (log)_
-
+Last updated: Wednesday 20 August 2020, 11:00 UTC (log)
 
 Introduction
 
@@ -36,11 +27,9 @@ framework!
 As always, this release is again packed with many new features, bug
 fixes and other improvements.
 
-
 Highlights
 
 -   FIXME
-
 
 Major new features and changes
 
@@ -66,11 +55,9 @@ The following plugins have been removed from gst-plugins-bad:
 
 -   FIXME
 
-
 Miscellaneous API additions
 
 -   FIXME
-
 
 Miscellaneous performance and memory optimisations
 
@@ -88,7 +75,6 @@ GstPlayer
 
 -   FIXME
 
-
 Miscellaneous changes
 
 -   FIXME
@@ -97,61 +83,49 @@ OpenGL integration
 
 -   FIXME
 
-
 Tracing framework and debugging improvements
 
 -   FIXME
-
 
 Tools
 
 -   FIXME
 
-
 GStreamer RTSP server
 
 -   FIXME
-
 
 GStreamer VAAPI
 
 -   FIXME
 
-
 GStreamer OMX
 
 -   FIXME
-
 
 GStreamer Editing Services and NLE
 
 -   FIXME
 
-
 GStreamer validate
 
 -   FIXME
-
 
 GStreamer Python Bindings
 
 -   FIXME
 
-
 GStreamer C# Bindings
 
 -   FIXME
-
 
 GStreamer Rust Bindings
 
 -   FIXME
 
-
 GStreamer Rust Plugins
 
 -   FIXME
-
 
 Build and Dependencies
 
@@ -177,7 +151,6 @@ Cerbero has seen a number of improvements:
 
 -   FIXME
 
-
 Platform-specific changes and improvements
 
 Android
@@ -194,14 +167,12 @@ Windows
 
 -   FIXME
 
-
 Contributors
 
 -   FIXME
 
 … and many others who have contributed bug reports, translations, sent
 suggestions or helped testing.
-
 
 Stable 1.18 branch
 
@@ -215,11 +186,9 @@ the git 1.18 branch, which will be a stable branch.
 
 1.18.0 has not been released yet.
 
-
 Known Issues
 
 -   FIXME
-
 
 Schedule for 1.20
 
@@ -234,7 +203,7 @@ The plan for the 1.20 development cycle is yet to be confirmed.
 
 ------------------------------------------------------------------------
 
-_These release notes have been prepared by Tim-Philipp Müller with_
-_contributions from … (FIXME)_
+These release notes have been prepared by Tim-Philipp Müller with
+contributions from … (FIXME)
 
-_License: CC BY-SA 4.0_
+License: CC BY-SA 4.0

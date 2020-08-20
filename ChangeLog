@@ -1,3 +1,340 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:16:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-07-31 22:02:01 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-source.c:
+	  ges:source: Handle missing elements in converters
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-22 12:02:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-video-transition.c:
+	* tests/check/scenarios/check_keyframes_in_compositor_two_sources/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/edit_while_seeked_with_stop/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	  smart-mixer: Move the videoconvert to after the mixer
+	  So that it tries to negotiate with alpha and the alpha channel is
+	  dropped as late as possible in the pipeline.
+	  The compositor is able to do video conversion internally in any case
+	  so having a videoconvert before it is useless.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-21 08:49:35 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-transition.c:
+	  transition: Enhance name of the elements
+	  Making it simpler to debug
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-20 17:32:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-source.c:
+	  source: Handle missing elements in converter
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-14 00:09:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	  video-source: Stop giving useless name to frame positioner
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-13 18:18:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-utils.c:
+	* ges/ges-video-transition.c:
+	  transition: Better document the way alpha is computed for transitions
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-12 13:51:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-timeline.c:
+	* ges/ges-utils.c:
+	* tests/check/meson.build:
+	* tests/check/scenarios/check_keyframes_in_compositor_two_sources.validatetest:
+	* tests/check/scenarios/check_keyframes_in_compositor_two_sources/flow-expectations/log-videosink-sink-expected:
+	  smart-mixer: Use the new 'samples-selected' signal to handle queuing in aggregator pads
+	  Since aggregator introduced queueing in its sinkpads the way we set
+	  properties on the pads is incorrect as it doesn't take it into account.
+	  This fixes the issue by using the newly introduced `samples-selected`
+	  signal in aggregator to set the properties right before the compositing
+	  is done.
+	  Also require the compositor we use to be an aggregator.
+	  And add a validate test for it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-12 13:49:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	* ges/ges-validate.c:
+	  ges:validate: Allow setting keyframes using the clips directly
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/204>
+
+2020-07-25 13:14:56 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-source.c:
+	  ges-source: Ensure that we output stream with segments in time
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-09 11:10:41 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Restrict the presence only if the user didn't explicitly provided one
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-08 15:47:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Add a simplified version of track selection signal
+	  Most user do not need to select several tracks for a single
+	  TrackElement and this signal is not binding friendly so
+	  this is adding a simpler, more user and binding friendly version
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-08 15:47:12 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-source.c:
+	  uri-source: Respect user stream selection
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-08 08:02:27 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-validate.c:
+	  launch: Also print the position when disabling validate
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-08 08:01:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* tools/ges-launcher.c:
+	* tools/meson.build:
+	* tools/utils.c:
+	* tools/utils.h:
+	  launch: Print more useful information to stdout
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-08 07:42:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson_options.txt:
+	* tools/ges-launcher.c:
+	  build: Add an option to disable examples
+	  And make it yield as in other modules
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 18:21:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launcher: Re activate smart rendering support
+	  Trying to get the best encoding profile for smart rendering when
+	  the user didn't specify anything.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 18:16:13 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-enums.h:
+	* ges/ges-internal.h:
+	* ges/ges-pipeline.c:
+	* ges/ges-source.c:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline-tree.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	* ges/ges-uri-source.c:
+	  ges: Fix smart rendering
+	  Smart rendering has been broken since, mostly forever, but some code
+	  was there pretending it was supported... let's try to stop pretending.
+	  We now keep track of the smart rendering state in the timeline, track
+	  and sources to be able to:
+	  * tell decodebin to stop plugging more (decoding elements) as soon as
+	  downstream supports the format.
+	  * avoid plugging converters after the source element when smart
+	  rendering.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 18:00:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Pipe debug output to a file when discovering scenarios
+	  Otherwise `gst-validate-launcher` can get veeery noisy
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 17:59:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlesource.c:
+	  nle: Minor debug enhancement
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 17:58:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/clip.c:
+	  tests: Mark audio identity as audio
+	  Otherwise GES fallbacks to video...
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-01-13 13:08:24 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-pipeline.c:
+	* ges/ges-track.c:
+	  pipeline: stop setting the track caps
+	  Stop setting the track 'caps' property. The previous code could
+	  overwrite a users own setting of the caps for video and audio caps.
+	  Moreover, the 'caps' property is listed as construct only, and users
+	  will likely expect it to stay the same after a track has been added to a
+	  timeline.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 17:41:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launcher: Delay setting rendering setting to right before rendering
+	  So that user settings have been applied to the timeline taking into
+	  account any `validatetest` arguments
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 17:18:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-internal.h:
+	* ges/ges-source.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	  source: Refactor the way we plug converter elements
+	  Paving the way to skipping converters when rendering smartly
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 17:02:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Do not name urisink as `urisink` as it is useless
+	  And actually harmful in case you are debugging several pipelines.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 17:01:18 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Remove urisink from timeline instead of unrefing it
+	  Doing what was suggested in the FIXME and avoiding to unref
+	  something it while we do not actually own it ourself.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 16:52:06 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Discard encoding profiles that don't match any track
+	  Otherwise we get a 'not linked' error and we should just help
+	  the user as we can here.
+	  If the user adds a new track, he should set a new encoding profile
+	  anyway.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-03 16:34:21 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-uri-source.c:
+	* ges/ges-uri-source.h:
+	* ges/ges-video-uri-source.c:
+	* ges/ges-video-uri-source.h:
+	* ges/meson.build:
+	  uri*source: Factor out common logic into a GESUriSource private data
+	  The two classes are *very* close but have different hierarchy so this
+	  introduces a new GESUriSource structure that is used as private
+	  structure by both subclasses and makes most of the logic shared this
+	  way.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-06-24 11:11:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-video-uri-source.c:
+	  *uri-source: Call free from the object ->finalize not ->dispose
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/198>
+
+2020-07-25 19:16:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* tools/meson.build:
+	  meson: install bash completion helper for ges-launch-1.0
+	  Fixes #77
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/203>
+
+2020-07-25 19:09:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add 'tools' and 'examples' options
+	  To optionally disable build of those.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/203>
+
+2020-07-24 07:43:05 +0530  AsociTon <asociton@outlook.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* tests/check/python/test_assets.py:
+	  Fix retrieving asset metadata on project reload.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/202>
+
+2020-01-21 16:02:56 +0530  yatinmaan1@gmail.com <yatinmaan1@gmail.com>
+
+	* tests/check/python/test_clip.py:
+	  tests: Add test for ges_clip_get_top_effect_index
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/201>
+
+2020-07-14 10:20:32 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* tests/check/ges/clip.c:
+	  tests: clip: fix test_rate_effects_duration_limit
+	  Fix this assertion:
+	  g_value_copy: assertion 'g_value_type_compatible (G_VALUE_TYPE (src_value), G_VALUE_TYPE (dest_value))' failed
+	  'tempo' is a float, not a double.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/199>
+
+2020-07-10 08:16:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/meson.build:
+	  build: Add version.h to the headers list
+	  So it is properly installed and the gir contains the required information
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/75
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/197>
+
+2020-07-09 21:42:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pitivi-formatter.h:
+	  pitivi-formatter: Also skip the class
+
+2020-07-08 17:33:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* scripts/extract-release-date-from-doap-file.py:
+	  meson: set release date from .doap file for releases
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/196>
+
+2020-07-08 10:03:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-title-clip.h:
+	  title: Make deprecated symbols visible API
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/195>
+
+2020-07-03 02:04:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:35:20 +0100  Tim-Philipp Müller <tim@centricular.com>
