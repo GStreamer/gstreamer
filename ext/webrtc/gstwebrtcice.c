@@ -611,6 +611,47 @@ _candidate_type_to_string (NiceCandidateType type)
 }
 #endif
 
+/* parse the address for possible resolution */
+static gboolean
+get_candidate_address (const gchar * candidate, gchar ** prefix,
+    gchar ** address, gchar ** postfix)
+{
+  char **tokens = NULL;
+
+  if (!g_str_has_prefix (candidate, "a=candidate:")) {
+    GST_ERROR ("candidate \"%s\" does not start with \"a=candidate:\"",
+        candidate);
+    goto failure;
+  }
+
+  if (!(tokens = g_strsplit (candidate, " ", 6))) {
+    GST_ERROR ("candidate \"%s\" could not be tokenized", candidate);
+    goto failure;
+  }
+
+  if (g_strv_length (tokens) < 6) {
+    GST_ERROR ("candidate \"%s\" tokenization resulted in not enough tokens",
+        candidate);
+    goto failure;
+  }
+
+  if (address)
+    *address = g_strdup (tokens[4]);
+  tokens[4] = NULL;
+  if (prefix)
+    *prefix = g_strjoinv (" ", tokens);
+  if (postfix)
+    *postfix = g_strdup (tokens[5]);
+
+  g_strfreev (tokens);
+  return TRUE;
+
+failure:
+  if (tokens)
+    g_strfreev (tokens);
+  return FALSE;
+}
+
 /* must start with "a=candidate:" */
 void
 gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
@@ -627,8 +668,58 @@ gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
       nice_agent_parse_remote_candidate_sdp (ice->priv->nice_agent,
       item->nice_stream_id, candidate);
   if (!cand) {
-    GST_WARNING_OBJECT (ice, "Could not parse candidate \'%s\'", candidate);
-    return;
+    /* might be a .local candidate */
+    char *prefix = NULL, *address = NULL, *postfix = NULL;
+    char *new_addr, *new_candidate;
+    char *new_candv[4] = { NULL, };
+
+    if (!get_candidate_address (candidate, &prefix, &address, &postfix)) {
+      GST_WARNING_OBJECT (ice, "Failed to retrieve address from candidate %s",
+          candidate);
+      goto fail;
+    }
+
+    if (!g_str_has_suffix (address, ".local")) {
+      GST_WARNING_OBJECT (ice, "candidate address \'%s\' does not end "
+          "with \'.local\'", address);
+      goto fail;
+    }
+
+    /* FIXME: async */
+    if (!(new_addr = _resolve_host (ice, address))) {
+      GST_WARNING_OBJECT (ice, "Failed to resolve %s", address);
+      goto fail;
+    }
+
+    new_candv[0] = prefix;
+    new_candv[1] = new_addr;
+    new_candv[2] = postfix;
+    new_candv[3] = NULL;
+    new_candidate = g_strjoinv (" ", new_candv);
+
+    GST_DEBUG_OBJECT (ice, "resolved to candidate %s", new_candidate);
+
+    cand =
+        nice_agent_parse_remote_candidate_sdp (ice->priv->nice_agent,
+        item->nice_stream_id, new_candidate);
+    g_free (new_candidate);
+    if (!cand) {
+      GST_WARNING_OBJECT (ice, "Could not parse candidate \'%s\'",
+          new_candidate);
+      goto fail;
+    }
+
+    g_free (prefix);
+    g_free (new_addr);
+    g_free (postfix);
+
+    if (0) {
+    fail:
+      g_free (prefix);
+      g_free (address);
+      g_free (postfix);
+      return;
+    }
   }
 
   candidates = g_slist_append (candidates, cand);
