@@ -981,29 +981,6 @@ gst_video_aggregator_default_update_src_caps (GstAggregator * agg,
 {
   GstVideoAggregatorClass *vagg_klass = GST_VIDEO_AGGREGATOR_GET_CLASS (agg);
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
-  gboolean at_least_one_pad_configured = FALSE;
-  GList *l;
-
-  GST_OBJECT_LOCK (vagg);
-  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
-    GstVideoAggregatorPad *mpad = l->data;
-
-    if (GST_VIDEO_INFO_WIDTH (&mpad->info) == 0
-        || GST_VIDEO_INFO_HEIGHT (&mpad->info) == 0)
-      continue;
-
-    at_least_one_pad_configured = TRUE;
-  }
-  GST_OBJECT_UNLOCK (vagg);
-
-  if (!at_least_one_pad_configured) {
-    /* We couldn't decide the output video info because the sinkpads don't have
-     * all the caps yet, so we mark the pad as needing a reconfigure. This
-     * allows aggregate() to skip ahead a bit and try again later. */
-    GST_DEBUG_OBJECT (vagg, "Couldn't decide output video info");
-    gst_pad_mark_reconfigure (agg->srcpad);
-    return GST_AGGREGATOR_FLOW_NEED_DATA;
-  }
 
   g_assert (vagg_klass->update_caps);
 
