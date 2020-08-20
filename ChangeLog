@@ -1,3 +1,125 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:12:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-07-15 10:49:03 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* tests/check/elements/amrnbenc.c:
+	  amrnbenc: remove global variables
+	  gstcheck is declaring its own buffers glist which ends up
+	  overwritten, loks like the code meant to use that already
+	  gcc 10 is also complaining about this, but only on static
+	  builds for some reason
+	  ```
+	  FAILED: subprojects/gst-plugins-ugly/tests/check/elements_amrnbenc
+	  /usr/bin/ld: subprojects/gstreamer/libs/gst/check/libgstcheck-1.0.a(gstcheck.c.o):(.bss+0x38): multiple definition of `buffers'; subprojects/gst-plugins-ugly/tests/check/708af1f@@elements_amrnbenc@exe/elements_amrnbenc.c.o:(.bss+0x18): first defined here
+	  collect2: error: ld returned 1 exit status
+	  ```
+	  also remove unused var `current_buf`
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/62>
+
+2020-04-02 03:27:26 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Don't ignore the return value of gst_segment_do_seek()
+	  If gst_segment_do_seek() fails, fail the seek.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/45>
+
+2020-04-01 19:34:30 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't ignore the return result of gst_segment_do_seek()
+	  gst_segment_do_seek() can fail, and our seek should fail
+	  accordingly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/45>
+
+2020-04-17 11:34:16 -0500  Derek Lesho <dlesho@codeweavers.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Only forward SEEK event when in push mode.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/48>
+
+2020-07-25 21:19:20 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* meson.build:
+	  meson: add a plugin summary
+	  This summary displays a list of plugins which
+	  have been enabled.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/65>
+
+2018-10-03 13:32:11 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/x264/GstX264Enc.prs:
+	  x264enc: Add a 'Zero Latency' profile
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/42>
+
+2020-07-22 17:31:37 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tests/check/elements/x264enc.c:
+	  tests/x264enc: Don't declare variables inside the for loop header
+	  This is a C99 feature
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/64>
+
+2020-07-21 15:40:26 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* tests/check/elements/x264enc.c:
+	  tests: x264enc: Test formats are compatible with profile
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/59>
+
+2020-07-01 16:11:09 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Separate high-10 video formats from 8-bit formats
+	  If downstream is constrained to an 8-bit profile, caps queries would
+	  still allow I420_10LE as input. If upstream actually sends such a caps
+	  event, downstream would fail to accept the high-10 profile.
+	  The following pipeline now fails earlier, during the negotiation phase
+	  instead of the stream start:
+	  gst-launch-1.0 videotestsrc ! video/x-raw,format=I420_10LE \
+	  ! x264enc ! video/x-h264,profile=constrained-baseline \
+	  ! fakesink
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/59>
+
+2020-07-21 15:39:31 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* tests/check/elements/x264enc.c:
+	  tests: x264enc: Test 10-bit formats
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/59>
+
+2020-07-21 15:33:57 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* tests/check/elements/x264enc.c:
+	  tests: x264enc: Test all (8-bit) video formats
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/59>
+
+2020-07-06 22:13:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Forward downstream colorimetry and chroma-site upstream
+	  So that the value can be used by upstream converters when necessary.
+	  This whole logic has been copied from `__gst_video_element_proxy_caps`
+	  but those 2 fields were missing.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/60>
+
+2020-07-08 17:07:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* scripts/extract-release-date-from-doap-file.py:
+	  meson: set release date from .doap file for releases
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/61>
+
+2020-07-03 02:03:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
