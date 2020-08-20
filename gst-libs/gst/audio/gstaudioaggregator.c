@@ -1099,6 +1099,9 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     GST_INFO_OBJECT (aagg, "setting caps to %" GST_PTR_FORMAT, caps);
     gst_caps_replace (&aagg->current_caps, caps);
 
+    if (old_info.rate != info.rate)
+      aagg->priv->offset = -1;
+
     memcpy (&srcpad->info, &info, sizeof (info));
 
     gst_audio_aggregator_update_converters (aagg, &info, &old_info);
