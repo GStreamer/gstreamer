@@ -1,3 +1,69 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:14:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-08-03 19:28:29 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcfg.c:
+	  gstavcfg.c: fix max->min typo in limits and implict double conversion
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/86>
+
+2020-07-23 15:37:05 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  Revert "docs: update plugins doc cache"
+	  This reverts commit d1b20eb6558b5188fe539a2aba3dc15630e703b0.
+	  See https://gitlab.freedesktop.org/gstreamer/gst-ci/-/merge_requests/324
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/85>
+
+2020-07-03 12:45:44 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: update plugins doc cache
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/80>
+
+2020-07-08 17:23:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* scripts/extract-release-date-from-doap-file.py:
+	  meson: set release date from .doap file for releases
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/84>
+
+2020-07-07 00:33:22 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix typo that duplicated closed caption meta
+	  We examined the output buffer, instead of the input buffer, for
+	  existence of cc meta.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/83>
+
+2020-07-02 12:28:34 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* ext/libav/gstavviddec.c:
+	  gstavviddec: Only allow a single closed caption meta
+	  Following discussion in
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/1396#note_556068
+	  While it is technically possible to store multiple closed caption metas
+	  in the same buffer, we don't currently do that anywhere and for
+	  H264/MPEG2 both parts have to be stored in the same packet, and also the
+	  number of CC bytes you can store per frame is rather limited. This
+	  restriction might be relaxed later once we figured out how to do it
+	  without breaking things.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/82>
+
+2020-07-03 02:04:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:33:33 +0100  Tim-Philipp Müller <tim@centricular.com>
