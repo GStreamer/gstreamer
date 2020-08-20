@@ -106,10 +106,8 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GST_LOG_OBJECT (vpool, "%dx%d - %u | caps %" GST_PTR_FORMAT, width, height,
       size, caps);
 
-  if (vpool->allocator)
-    gst_object_unref (vpool->allocator);
-  if ((vpool->allocator = allocator))
-    gst_object_ref (allocator);
+  gst_object_replace ((GstObject **) & vpool->allocator,
+      GST_OBJECT (allocator));
 
   /* enable metadata based on config of the pool */
   vpool->add_videometa = gst_buffer_pool_config_has_option (config,
