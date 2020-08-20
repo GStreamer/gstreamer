@@ -1,3 +1,104 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:16:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-08-13 21:55:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate:check: Blacklist new ges valgrind test
+	  I can't find what the issue is and the test is very long anyway
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/219>
+
+2020-08-13 20:51:52 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	* validate/gst/validate/flow/gstvalidateflow.c:
+	* validate/meson.build:
+	  validate: flow: Plug some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/219>
+
+2020-08-13 16:19:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Plug some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/219>
+
+2020-08-14 00:27:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  launcher: add webrtcbin datachannel tests to valgrind skip list
+	  They were previously not run because the sctp plugin wasn't built
+	  but they will be run now that we bundle libusrsctp.
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/1465
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/218>
+
+2020-07-25 21:12:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.h:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: silence g-ir-scanner warnings about GST_IS_VALIDATE_*
+	  Which it complains about because we say our prefix is 'gst_validate'
+	  so it should really be GST_VALIDATE_IS_* instead.
+	  Hide the boilerplate defines from g-ir-scanner, it doesn't need
+	  to process them.
+	  Fixes #46
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/214>
+
+2020-07-27 09:06:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	  Revert "validate: fix up gir namespace and symbol prefix"
+	  This reverts commit b73e81614021a856fc7d3ff221a9bbf5ebf2ce6e.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/214>
+
+2020-07-25 23:40:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: fix up gir namespace and symbol prefix
+	  Change gir namespace and symbol prefix from
+	  GstValidate / gst_validate to Gst / gst, same
+	  as we do for other libs like GstVideo etc.
+	  Helps with warnings about GST_IS_VALIDATE_*
+	  Fixes #46, Closes !214
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/215>
+
+2020-07-25 13:57:01 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Fix media descriptor mp3 like formats
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/216>
+
+2020-07-25 20:27:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: reflow #ifdef to work around bogus g-ir-scanner warning
+	  Looks like a scanner bug.
+	  The endif comments are the wrong way round too, but that's not it.
+	  gst-validate-scenario.c:126: mismatched #endif  /* G_HAVE_GNUC_VARARGS */
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/213>
+
+2020-07-03 02:04:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:37:27 +0100  Tim-Philipp Müller <tim@centricular.com>
