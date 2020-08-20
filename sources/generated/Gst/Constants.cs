@@ -168,9 +168,9 @@ namespace Gst {
 		public const int VALUE_LESS_THAN = -1;
 		public const int VALUE_UNORDERED = 2;
 		public const int VERSION_MAJOR = 1;
-		public const int VERSION_MICRO = 2;
+		public const int VERSION_MICRO = 90;
 		public const int VERSION_MINOR = 17;
-		public const int VERSION_NANO = 1;
+		public const int VERSION_NANO = 0;
 #endregion
 	}
 }
