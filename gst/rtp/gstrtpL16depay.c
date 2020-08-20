@@ -280,12 +280,14 @@ wrong_payload_size:
   {
     GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
         ("Wrong Payload Size."), (NULL));
+    gst_buffer_unref (outbuf);
     return NULL;
   }
 reorder_failed:
   {
     GST_ELEMENT_ERROR (rtpL16depay, STREAM, DECODE,
         ("Channel reordering failed."), (NULL));
+    gst_buffer_unref (outbuf);
     return NULL;
   }
 }
