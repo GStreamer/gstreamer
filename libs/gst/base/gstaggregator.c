@@ -3611,6 +3611,9 @@ gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
   GST_OBJECT_LOCK (self);
   GST_AGGREGATOR_PAD (self->srcpad)->segment = *segment;
   self->priv->send_segment = TRUE;
+  /* we have a segment from the subclass now and really shouldn't override
+   * anything in that segment anymore, like the segment.position */
+  self->priv->first_buffer = FALSE;
   GST_OBJECT_UNLOCK (self);
 }
 
