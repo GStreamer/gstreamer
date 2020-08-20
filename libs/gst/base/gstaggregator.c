@@ -1834,6 +1834,11 @@ gst_aggregator_change_state (GstElement * element, GstStateChange transition)
       if (!gst_aggregator_start (self))
         goto error_start;
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* Wake up any waiting as now we have a clock and can do
+       * proper waiting on the clock if necessary */
+      SRC_BROADCAST (self);
+      break;
     default:
       break;
   }
@@ -1850,6 +1855,11 @@ gst_aggregator_change_state (GstElement * element, GstStateChange transition)
         /* What to do in this case? Error out? */
         GST_ERROR_OBJECT (self, "Subclass failed to stop.");
       }
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* Wake up any waiting as now clock might be gone and we might
+       * need to wait on the condition variable again */
+      SRC_BROADCAST (self);
       break;
     default:
       break;
