@@ -1,3 +1,62 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:16:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-08-14 19:43:41 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: Fix buffer API break
+	  When introducing zero copy buffers/memory mapping we broke the API,
+	  this brings back the exact same API as before for all the previously
+	  handled cases but still raises an exception when using a context
+	  to map buffers.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-python/-/issues/40
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/39>
+
+2020-05-08 22:01:50 +0100  Jose Quaresma <quaresma.jose@gmail.com>
+
+	* gi/overrides/gstmodule.c:
+	  overrides: memory and buffer unmap code can be shared
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/35>
+
+2020-05-08 21:25:03 +0100  Jose Quaresma <quaresma.jose@gmail.com>
+
+	* gi/overrides/gstmodule.c:
+	  overrides: _remap: refactor to avoid memory leaks with PyObject
+	  - unref PyObject on exit with Py_XDECREF
+	  - better error handling
+	  - free memory view in case of erros
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/34>
+
+2020-06-14 16:54:28 +0100  Jose Quaresma <quaresma.jose@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  Gst.py: raise an error if we can't unmap the memory
+
+2020-06-14 16:48:45 +0100  Jose Quaresma <quaresma.jose@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  Gst.py: unref __parent__ on unmap otherwise it cause a memory leak
+
+2020-06-14 16:34:50 +0100  Jose Quaresma <quaresma.jose@gmail.com>
+
+	* gi/overrides/gstmodule.c:
+	  overrides: fix memory leak in pyg_boxed_new
+	  pyg_boxed_new cause a memory leak if it hold a copy of the boxed wrapper and freed when the wrapper is deallocated.
+	  use the boxed wrapper value itself and don't hold a copy of the value.
+
+2020-07-03 02:04:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:36:19 +0100  Tim-Philipp Müller <tim@centricular.com>
