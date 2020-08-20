@@ -1,3 +1,27 @@
+=== release 1.17.90 ===
+
+2020-08-20 16:16:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.17.90
+
+2020-07-08 17:39:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-omx.doap:
+	* meson.build:
+	* scripts/extract-release-date-from-doap-file.py:
+	  meson: set release date from .doap file for releases
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/69>
+
+2020-07-03 02:04:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.17.2 ===
 
 2020-07-03 00:37:06 +0100  Tim-Philipp Müller <tim@centricular.com>
