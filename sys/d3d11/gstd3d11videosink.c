@@ -287,7 +287,7 @@ gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
         D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
     overlaycaps = gst_caps_copy (caps);
     features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
     gst_caps_set_features_simple (overlaycaps, features);
     gst_caps_append (caps, overlaycaps);
   }
