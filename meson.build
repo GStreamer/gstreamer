@@ -438,7 +438,7 @@ subdir('ext')
 subdir('tests')
 subdir('docs')
 
-if have_orcc
+if have_orcc and orc_targets.length() > 0
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')
 
   orc_update_targets = []
