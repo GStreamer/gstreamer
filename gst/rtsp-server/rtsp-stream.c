@@ -5179,35 +5179,47 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstRTSPStreamPrivate *priv;
   GstRTSPStream *stream;
   GstBuffer *buffer = NULL;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
 
   stream = user_data;
   priv = stream->priv;
 
-  GST_DEBUG_OBJECT (pad, "now blocking");
-
   g_mutex_lock (&priv->lock);
-  priv->blocking = TRUE;
 
   if ((info->type & GST_PAD_PROBE_TYPE_BUFFER)) {
     buffer = gst_pad_probe_info_get_buffer (info);
+    priv->position = GST_BUFFER_TIMESTAMP (buffer);
   } else if ((info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST)) {
     GstBufferList *list = gst_pad_probe_info_get_buffer_list (info);
     buffer = gst_buffer_list_get (list, 0);
+    priv->position = GST_BUFFER_TIMESTAMP (buffer);
+  } else if ((info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)) {
+    if (GST_EVENT_TYPE (info->data) == GST_EVENT_GAP) {
+      gst_event_parse_gap (info->data, &priv->position, NULL);
+    } else {
+      ret = GST_PAD_PROBE_PASS;
+      g_mutex_unlock (&priv->lock);
+      goto done;
+    }
   } else {
     g_assert_not_reached ();
   }
 
-  g_assert (buffer);
-  priv->position = GST_BUFFER_TIMESTAMP (buffer);
-  GST_DEBUG_OBJECT (stream, "buffer position: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+  priv->blocking = TRUE;
+
+  GST_DEBUG_OBJECT (pad, "Now blocking");
+
+  GST_DEBUG_OBJECT (stream, "position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (priv->position));
+
   g_mutex_unlock (&priv->lock);
 
   gst_element_post_message (priv->payloader,
       gst_message_new_element (GST_OBJECT_CAST (priv->payloader),
           gst_structure_new_empty ("GstRTSPStreamBlocking")));
 
-  return GST_PAD_PROBE_OK;
+done:
+  return ret;
 }
 
 static void
@@ -5233,7 +5245,8 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
         priv->blocking = FALSE;
         priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
             GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
-            GST_PAD_PROBE_TYPE_BUFFER_LIST, pad_blocking,
+            GST_PAD_PROBE_TYPE_BUFFER_LIST |
+            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, pad_blocking,
             g_object_ref (stream), g_object_unref);
       }
     }
