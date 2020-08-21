@@ -559,6 +559,17 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
       }
       break;
     }
+    case GST_EVENT_GAP:
+    {
+      if (G_UNLIKELY (rtpbasepayload->priv->pending_segment)) {
+        gst_pad_push_event (rtpbasepayload->srcpad,
+            rtpbasepayload->priv->pending_segment);
+        rtpbasepayload->priv->pending_segment = FALSE;
+        rtpbasepayload->priv->delay_segment = FALSE;
+      }
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
+      break;
+    }
     default:
       res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
       break;
