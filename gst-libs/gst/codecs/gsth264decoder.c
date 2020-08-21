@@ -1351,7 +1351,7 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
     GstH264Picture * picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  gint i;
+  gint i, j;
 
   for (i = 0; i < G_N_ELEMENTS (picture->dec_ref_pic_marking.ref_pic_marking);
       i++) {
@@ -1410,14 +1410,13 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
 
       case 4:{
         GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
-        gint i;
 
         /* Unmark all reference pictures with long_term_frame_idx over new max */
         priv->max_long_term_frame_idx =
             ref_pic_marking->max_long_term_frame_idx_plus1 - 1;
 
-        for (i = 0; i < pictures->len; i++) {
-          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, i);
+        for (j = 0; j < pictures->len; j++) {
+          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, j);
           if (pic->long_term &&
               pic->long_term_frame_idx > priv->max_long_term_frame_idx)
             pic->ref = FALSE;
@@ -1436,13 +1435,12 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
 
       case 6:{
         GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
-        gint i;
 
         /* Replace long term reference pictures with current picture.
          * First unmark if any existing with this long_term_frame_idx... */
 
-        for (i = 0; i < pictures->len; i++) {
-          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, i);
+        for (j = 0; j < pictures->len; j++) {
+          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, j);
 
           if (pic->long_term &&
               pic->long_term_frame_idx == ref_pic_marking->long_term_frame_idx)
@@ -1693,6 +1691,8 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       /* If we haven't managed to output anything to free up space in DPB
        * to store this picture, it's an error in the stream */
       GST_WARNING_OBJECT (self, "Could not free up space in DPB");
+
+      g_array_set_size (not_outputted, 0);
       return FALSE;
     }
 
