@@ -1137,18 +1137,18 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_string_append_printf (x264enc_defaults, ":cabac=%d", ARG_CABAC_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_MIN,
       g_param_spec_uint ("qp-min", "Minimum Quantizer",
-          "Minimum quantizer", 0, 51, ARG_QP_MIN_DEFAULT,
+          "Minimum quantizer", 0, 63, ARG_QP_MIN_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":qpmin=%d", ARG_QP_MIN_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_MAX,
       g_param_spec_uint ("qp-max", "Maximum Quantizer",
-          "Maximum quantizer", 0, 51, ARG_QP_MAX_DEFAULT,
+          "Maximum quantizer", 0, 63, ARG_QP_MAX_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":qpmax=%d", ARG_QP_MAX_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_STEP,
       g_param_spec_uint ("qp-step", "Maximum Quantizer Difference",
           "Maximum quantizer difference between frames",
-          0, 50, ARG_QP_STEP_DEFAULT,
+          0, 63, ARG_QP_STEP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":qpstep=%d", ARG_QP_STEP_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_IP_FACTOR,
