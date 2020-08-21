@@ -295,7 +295,7 @@ vulkan_enumtypes_h = custom_target('gstvulkanenum_h',
   output : 'vulkan-enumtypes.h',
   input : vulkan_headers,
   install : true,
-  install_dir : join_paths(get_option('includedir'), 'include/gstreamer-1.0/gst/vulkan/'),
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan/'),
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 
 vulkan_enumtypes_c = custom_target('gstvulkanenum_c',
