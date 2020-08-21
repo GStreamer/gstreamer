@@ -334,7 +334,7 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
     GstUri * turn_server)
 {
   gboolean ret;
-  gchar *user, *pass;
+  gchar *user, *user_unesc, *pass, *pass_unesc;
   const gchar *host, *userinfo, *transport, *scheme;
   NiceRelayType relays[4] = { 0, };
   int i, relay_n = 0;
@@ -358,6 +358,8 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
   transport = gst_uri_get_query_value (turn_server, "transport");
   userinfo = gst_uri_get_userinfo (turn_server);
   _parse_userinfo (userinfo, &user, &pass);
+  user_unesc = g_uri_unescape_string (user, NULL);
+  pass_unesc = g_uri_unescape_string (pass, NULL);
 
   if (g_strcmp0 (scheme, "turns") == 0) {
     relays[relay_n++] = NICE_RELAY_TYPE_TURN_TLS;
@@ -372,8 +374,8 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
   for (i = 0; i < relay_n; i++) {
     ret = nice_agent_set_relay_info (ice->priv->nice_agent,
         item->nice_stream_id, NICE_COMPONENT_TYPE_RTP,
-        gst_uri_get_host (turn_server), gst_uri_get_port (turn_server), user,
-        pass, relays[i]);
+        gst_uri_get_host (turn_server), gst_uri_get_port (turn_server),
+        user_unesc, pass_unesc, relays[i]);
     if (!ret) {
       gchar *uri = gst_uri_to_string (turn_server);
       GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
@@ -382,8 +384,8 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
     }
     ret = nice_agent_set_relay_info (ice->priv->nice_agent,
         item->nice_stream_id, NICE_COMPONENT_TYPE_RTCP,
-        gst_uri_get_host (turn_server), gst_uri_get_port (turn_server), user,
-        pass, relays[i]);
+        gst_uri_get_host (turn_server), gst_uri_get_port (turn_server),
+        user_unesc, pass_unesc, relays[i]);
     if (!ret) {
       gchar *uri = gst_uri_to_string (turn_server);
       GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
@@ -393,6 +395,8 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
   }
   g_free (user);
   g_free (pass);
+  g_free (user_unesc);
+  g_free (pass_unesc);
 
 out:
   g_free (ip);
