@@ -3633,6 +3633,9 @@ gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
  * If gst_aggregator_update_segment() is used by the subclass,
  * it MUST be called before gst_aggregator_selected_samples().
  *
+ * This function MUST only be called from the #GstAggregatorClass::aggregate()
+ * function.
+ *
  * Since: 1.18
  */
 void
