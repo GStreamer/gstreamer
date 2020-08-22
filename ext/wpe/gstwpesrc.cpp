@@ -234,23 +234,18 @@ gst_wpe_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
 }
 
 static gboolean
-gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
+gst_wpe_src_start (GstWpeSrc * src)
 {
-  GstWpeSrc *src = GST_WPE_SRC (base_src);
-  GstCapsFeatures *caps_features;
   GstGLContext *context = NULL;
   GstGLDisplay *display = NULL;
+  GstGLBaseSrc *base_src = GST_GL_BASE_SRC (src);
 
   GST_INFO_OBJECT (src, "Starting up");
   GST_OBJECT_LOCK (src);
 
-  caps_features = gst_caps_get_features (base_src->out_caps, 0);
-  if (caps_features != NULL && gst_caps_features_contains (caps_features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-    src->gl_enabled = TRUE;
+  if (src->gl_enabled) {
     context = base_src->context;
     display = base_src->display;
-  } else {
-    src->gl_enabled = FALSE;
   }
 
   GST_DEBUG_OBJECT (src, "Will fill GLMemories: %d\n", src->gl_enabled);
@@ -278,14 +273,71 @@ gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
   return TRUE;
 }
 
-static void
-gst_wpe_src_gl_stop (GstGLBaseSrc * base_src)
+static gboolean
+gst_wpe_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
+{
+  GstGLBaseSrc *gl_src = GST_GL_BASE_SRC (base_src);
+  GstWpeSrc *src = GST_WPE_SRC (base_src);
+  GstCapsFeatures *caps_features;
+
+  GST_OBJECT_LOCK (src);
+  caps_features = gst_caps_get_features (gl_src->out_caps, 0);
+  if (caps_features != NULL && gst_caps_features_contains (caps_features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    src->gl_enabled = TRUE;
+  } else {
+    src->gl_enabled = FALSE;
+  }
+
+  if (src->gl_enabled) {
+    GST_OBJECT_UNLOCK (src);
+    return GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, decide_allocation, (base_src, query), FALSE);
+  }
+  GST_OBJECT_UNLOCK (src);
+  return gst_wpe_src_start (src);
+}
+
+static gboolean
+gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
 {
   GstWpeSrc *src = GST_WPE_SRC (base_src);
+  return gst_wpe_src_start (src);
+}
+
+static void
+gst_wpe_src_stop_unlocked (GstWpeSrc * src)
+{
   if (src->view) {
     delete src->view;
     src->view = NULL;
   }
+}
+
+static void
+gst_wpe_src_gl_stop (GstGLBaseSrc * base_src)
+{
+  GstWpeSrc *src = GST_WPE_SRC (base_src);
+
+  GST_OBJECT_LOCK (src);
+  gst_wpe_src_stop_unlocked (src);
+  GST_OBJECT_UNLOCK (src);
+}
+
+static gboolean
+gst_wpe_src_stop (GstBaseSrc * base_src)
+{
+  GstWpeSrc *src = GST_WPE_SRC (base_src);
+
+  GST_OBJECT_LOCK (src);
+
+  if (src->gl_enabled) {
+    GST_OBJECT_UNLOCK (src);
+    // Let glbasesrc call our gl_stop() within its GL context.
+    return GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, stop, (base_src), FALSE);
+  }
+
+  gst_wpe_src_stop_unlocked (src);
+  GST_OBJECT_UNLOCK (src);
+  return TRUE;
 }
 
 static GstCaps *
@@ -619,6 +671,8 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
 
   base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_wpe_src_fixate);
   base_src_class->create = GST_DEBUG_FUNCPTR (gst_wpe_src_create);
+  base_src_class->decide_allocation = GST_DEBUG_FUNCPTR (gst_wpe_src_decide_allocation);
+  base_src_class->stop = GST_DEBUG_FUNCPTR (gst_wpe_src_stop);
 
   gl_base_src_class->supported_gl_api =
       static_cast < GstGLAPI >
