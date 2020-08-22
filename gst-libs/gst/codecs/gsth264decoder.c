@@ -1884,6 +1884,52 @@ h264_level_to_max_dpb_mbs (GstH264DecoderLevel level)
   return 0;
 }
 
+static void
+gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
+    gint max_dpb_size)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  GstCaps *caps;
+  GstClockTime min, max;
+  GstStructure *structure;
+  gint fps_d = 1, fps_n = 0;
+  guint32 num_reorder_frames;
+
+  caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SRC_PAD (self));
+  if (!caps)
+    return;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+    if (fps_n == 0) {
+      /* variable framerate: see if we have a max-framerate */
+      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+    }
+  }
+
+  /* if no fps or variable, then 25/1 */
+  if (fps_n == 0) {
+    fps_n = 25;
+    fps_d = 1;
+  }
+
+  num_reorder_frames = priv->is_live ? 0 : 1;
+  if (sps->vui_parameters_present_flag
+      && sps->vui_parameters.bitstream_restriction_flag)
+    num_reorder_frames = sps->vui_parameters.num_reorder_frames;
+  if (num_reorder_frames > max_dpb_size)
+    num_reorder_frames = priv->is_live ? 0 : 1;
+
+  min = gst_util_uint64_scale_int (num_reorder_frames * GST_SECOND, fps_d,
+      fps_n);
+  max = gst_util_uint64_scale_int (max_dpb_size * GST_SECOND, fps_d, fps_n);
+
+  GST_LOG_OBJECT (self,
+      "latency min %" G_GUINT64_FORMAT " max %" G_GUINT64_FORMAT, min, max);
+
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), min, max);
+}
+
 static gboolean
 gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 {
@@ -1964,6 +2010,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
     priv->width = sps->width;
     priv->height = sps->height;
 
+    gst_h264_decoder_set_latency (self, sps, max_dpb_size);
     gst_h264_dpb_set_max_num_pics (priv->dpb, max_dpb_size);
   }
 
