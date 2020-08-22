@@ -62,7 +62,7 @@ GST_START_TEST (info_ptr_format_printf_extension)
   gst_debug_remove_log_function (gst_debug_log_default);
   gst_debug_add_log_function (printf_extension_log_func, NULL, NULL);
 
-  gst_debug_set_default_threshold (GST_LEVEL_LOG);
+  gst_debug_set_threshold_from_string ("LOG", TRUE);
 
   /* NULL object */
   GST_LOG ("NULL: %" GST_PTR_FORMAT, (gpointer) NULL);
@@ -148,7 +148,7 @@ GST_START_TEST (info_segment_format_printf_extension)
   gst_debug_remove_log_function (gst_debug_log_default);
   gst_debug_add_log_function (printf_extension_log_func, NULL, NULL);
 
-  gst_debug_set_default_threshold (GST_LEVEL_LOG);
+  gst_debug_set_threshold_from_string ("LOG", TRUE);
 
   /* TIME segment */
   {
@@ -252,7 +252,7 @@ GST_START_TEST (info_log_handler_get_line)
   gst_debug_remove_log_function (gst_debug_log_default);
   gst_debug_add_log_function (compare_gst_log_func, NULL, NULL);
 
-  gst_debug_set_default_threshold (GST_LEVEL_LOG);
+  gst_debug_set_threshold_from_string ("LOG", TRUE);
   GST_DEBUG ("test message");
 
   /* clean up */
@@ -330,7 +330,7 @@ GST_START_TEST (info_old_printf_extensions)
   gst_debug_remove_log_function (gst_debug_log_default);
   gst_debug_add_log_function (printf_extension_log_func, NULL, NULL);
 
-  gst_debug_set_default_threshold (GST_LEVEL_LOG);
+  gst_debug_set_threshold_from_string ("LOG", TRUE);
 
   save_messages = TRUE;
 
@@ -389,21 +389,20 @@ GST_END_TEST;
 
 GST_START_TEST (info_set_and_unset_single)
 {
-  GstDebugLevel orig = gst_debug_get_default_threshold ();
   GstDebugLevel cat1, cat2;
   GstDebugCategory *states;
 
   GST_DEBUG_CATEGORY_GET (states, "GST_STATES");
   fail_unless (states != NULL);
 
-  gst_debug_set_default_threshold (GST_LEVEL_WARNING);
+  gst_debug_set_threshold_from_string ("WARNING", TRUE);
 
   gst_debug_set_threshold_for_name ("GST_STATES", GST_LEVEL_DEBUG);
   cat1 = gst_debug_category_get_threshold (states);
   gst_debug_unset_threshold_for_name ("GST_STATES");
   cat2 = gst_debug_category_get_threshold (states);
 
-  gst_debug_set_default_threshold (orig);
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
   fail_unless_equals_int (cat1, GST_LEVEL_DEBUG);
   fail_unless_equals_int (cat2, GST_LEVEL_WARNING);
 }
@@ -412,7 +411,6 @@ GST_END_TEST;
 
 GST_START_TEST (info_set_and_unset_multiple)
 {
-  GstDebugLevel orig = gst_debug_get_default_threshold ();
   GstDebugLevel cat1, cat2, cat3;
   GstDebugCategory *states;
   GstDebugCategory *caps;
@@ -422,7 +420,7 @@ GST_START_TEST (info_set_and_unset_multiple)
   fail_unless (states != NULL);
   fail_unless (caps != NULL);
 
-  gst_debug_set_default_threshold (GST_LEVEL_WARNING);
+  gst_debug_set_threshold_from_string ("WARNING", TRUE);
 
   gst_debug_set_threshold_for_name ("GST_STATES", GST_LEVEL_DEBUG);
   gst_debug_set_threshold_for_name ("GST_CAPS", GST_LEVEL_DEBUG);
@@ -432,7 +430,7 @@ GST_START_TEST (info_set_and_unset_multiple)
   cat2 = gst_debug_category_get_threshold (states);
   cat3 = gst_debug_category_get_threshold (caps);
 
-  gst_debug_set_default_threshold (orig);
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
 
   fail_unless_equals_int (cat1, GST_LEVEL_DEBUG);
   fail_unless_equals_int (cat2, GST_LEVEL_WARNING);
@@ -487,34 +485,31 @@ GST_START_TEST (info_post_gst_init_category_registration)
     g_free (name);
   }
 
-  /* These checks will only work if no one else set anything externally */
-  if (g_getenv ("GST_DEBUG") == NULL) {
-    /* none */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0]),
-        GST_LEVEL_DEFAULT);
-    /* d*:2 */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[1]),
-        GST_LEVEL_WARNING);
-    /* none */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[2]),
-        GST_LEVEL_DEFAULT);
-    /* d*:2 */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[3]),
-        GST_LEVEL_WARNING);
-    /* *c:3 */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xc]),
-        GST_LEVEL_FIXME);
-    /* *c:3 */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0x4c]),
-        GST_LEVEL_FIXME);
-    /* *a*b:6 and d*:2, but d*:2 takes priority here as cat name is "dog-a1b"
-     * and order matters: items listed later override earlier ones. */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xa1b]),
-        GST_LEVEL_WARNING);
-    /* *a*0:6 */
-    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xb10]),
-        GST_LEVEL_LOG);
-  }
+  /* none */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[0]),
+      GST_LEVEL_DEFAULT);
+  /* d*:2 */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[1]),
+      GST_LEVEL_WARNING);
+  /* none */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[2]),
+      GST_LEVEL_DEFAULT);
+  /* d*:2 */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[3]),
+      GST_LEVEL_WARNING);
+  /* *c:3 */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xc]),
+      GST_LEVEL_FIXME);
+  /* *c:3 */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[0x4c]),
+      GST_LEVEL_FIXME);
+  /* *a*b:6 and d*:2, but d*:2 takes priority here as cat name is "dog-a1b"
+   * and order matters: items listed later override earlier ones. */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xa1b]),
+      GST_LEVEL_WARNING);
+  /* *a*0:6 */
+  fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xb10]),
+      GST_LEVEL_LOG);
 }
 
 GST_END_TEST;
