@@ -316,6 +316,8 @@ typedef struct
 }
 LevelNameEntry;
 
+static void clear_level_names (void);
+
 /* list of all categories */
 static GMutex __cat_mutex;
 static GSList *__categories = NULL;
@@ -2171,8 +2173,10 @@ gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)
 
   g_assert (list);
 
-  if (reset)
+  if (reset) {
+    clear_level_names ();
     gst_debug_set_default_threshold (GST_LEVEL_DEFAULT);
+  }
 
   split = g_strsplit (list, ",", 0);
 
@@ -2272,6 +2276,19 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
   g_mutex_unlock (&__dbg_functions_mutex);
 }
 
+static void
+clear_level_names (void)
+{
+  g_mutex_lock (&__level_name_mutex);
+  while (__level_name) {
+    LevelNameEntry *level_name_entry = __level_name->data;
+    g_pattern_spec_free (level_name_entry->pat);
+    g_slice_free (LevelNameEntry, level_name_entry);
+    __level_name = g_slist_delete_link (__level_name, __level_name);
+  }
+  g_mutex_unlock (&__level_name_mutex);
+}
+
 void
 _priv_gst_debug_cleanup (void)
 {
@@ -2294,14 +2311,7 @@ _priv_gst_debug_cleanup (void)
   }
   g_mutex_unlock (&__cat_mutex);
 
-  g_mutex_lock (&__level_name_mutex);
-  while (__level_name) {
-    LevelNameEntry *level_name_entry = __level_name->data;
-    g_pattern_spec_free (level_name_entry->pat);
-    g_slice_free (LevelNameEntry, level_name_entry);
-    __level_name = g_slist_delete_link (__level_name, __level_name);
-  }
-  g_mutex_unlock (&__level_name_mutex);
+  clear_level_names ();
 
   g_mutex_lock (&__log_func_mutex);
   while (__log_functions) {
