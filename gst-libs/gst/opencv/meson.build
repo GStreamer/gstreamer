@@ -9,6 +9,11 @@ opencv_headers = [
   'gstopencvvideofilter.h',
 ]
 
+if get_option('opencv').disabled()
+  gstopencv_dep = disabler()
+  subdir_done()
+endif
+
 opencv_dep = dependency('opencv', version : '>= 3.0.0', required : false)
 if not opencv_dep.found()
   opencv_dep = dependency('opencv4', version : '>= 4.0.0', required : false)
