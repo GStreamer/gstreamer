@@ -1457,6 +1457,9 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
     }
     gst_queue_array_push_tail (priv->queue, new_caps);
     gst_caps_replace (&priv->last_caps, new_caps);
+
+    if ((priv->wait_status & STREAM_WAITING))
+      g_cond_broadcast (&priv->cond);
   }
 
   GST_OBJECT_UNLOCK (appsrc);
