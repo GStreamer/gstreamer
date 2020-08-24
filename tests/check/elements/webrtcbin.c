@@ -1739,6 +1739,7 @@ have_data_channel_transfer_data (struct test_webrtc *t, GstElement * element,
   g_signal_connect (other, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
   g_signal_emit_by_name (other, "send-data", data);
+  g_bytes_unref (data);
 }
 
 GST_START_TEST (test_data_channel_transfer_data)
@@ -1906,7 +1907,8 @@ have_data_channel_transfer_large_data (struct test_webrtc *t,
   for (i = 0; i < size; i++)
     random_data[i] = (guint8) (i & 0xff);
 
-  data = g_bytes_new_static (random_data, size);
+  data = g_bytes_new_with_free_func (random_data, size,
+      (GDestroyNotify) g_free, random_data);
 
   g_object_set_data_full (our, "expected", g_bytes_ref (data),
       (GDestroyNotify) g_bytes_unref);
@@ -1914,6 +1916,7 @@ have_data_channel_transfer_large_data (struct test_webrtc *t,
 
   g_signal_connect (other, "on-error", G_CALLBACK (on_channel_error), t);
   g_signal_emit_by_name (other, "send-data", data);
+  g_bytes_unref (data);
 }
 
 GST_START_TEST (test_data_channel_max_message_size)
