@@ -169,11 +169,13 @@ gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer *
   }
 
   locked_buffer = src->view->buffer ();
-
-  if (locked_buffer != NULL) {
-    *buf = gst_buffer_copy_deep (locked_buffer);
-    ret = GST_FLOW_OK;
+  if (locked_buffer == NULL) {
+    GST_OBJECT_UNLOCK (src);
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
+        ("WPE View did not render a buffer"), (NULL));
+    return ret;
   }
+  *buf = gst_buffer_copy_deep (locked_buffer);
 
   g_object_get(gl_src, "timestamp-offset", &ts_offset, NULL);
 
@@ -195,6 +197,7 @@ gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer *
 
   gl_src->running_time = next_time;
 
+  ret = GST_FLOW_OK;
   GST_OBJECT_UNLOCK (src);
   return ret;
 }
