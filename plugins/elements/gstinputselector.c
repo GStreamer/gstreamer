@@ -1821,9 +1821,11 @@ gst_input_selector_request_new_pad (GstElement * element,
 static void
 gst_input_selector_release_pad (GstElement * element, GstPad * pad)
 {
+  GstSelectorPad *selpad;
   GstInputSelector *sel;
 
   sel = GST_INPUT_SELECTOR (element);
+  selpad = GST_SELECTOR_PAD (pad);
   GST_LOG_OBJECT (sel, "Releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   GST_INPUT_SELECTOR_LOCK (sel);
@@ -1834,6 +1836,13 @@ gst_input_selector_release_pad (GstElement * element, GstPad * pad)
     sel->active_sinkpad = NULL;
     sel->active_sinkpad_from_user = FALSE;
   }
+
+  /* wake up the pad if it's currently waiting for EOS or a running time to be
+   * reached. Otherwise we'll deadlock on the streaming thread further below
+   * when deactivating the pad. */
+  selpad->flushing = TRUE;
+  GST_INPUT_SELECTOR_BROADCAST (sel);
+
   sel->n_pads--;
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
