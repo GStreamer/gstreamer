@@ -353,6 +353,7 @@ subdir('tests')
 setenv = find_program('gst-env.py')
 
 devenv_cmd = [setenv, '--builddir=@0@'.format(meson.build_root()),
+              '--gstbuilddir=@0@'.format(meson.current_build_dir()),
               '--srcdir=@0@'.format(meson.source_root())]
 
 if meson.has_exe_wrapper() and build_machine.system() == 'linux' and host_machine.system() == 'windows'

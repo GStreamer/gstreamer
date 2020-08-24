@@ -367,7 +367,7 @@ def get_subprocess_env(options, gst_version):
                                 os.path.join(options.builddir, root),
                                 options.sysroot)
 
-    with open(os.path.join(options.builddir, 'GstPluginsPath.json')) as f:
+    with open(os.path.join(options.gstbuilddir, 'GstPluginsPath.json')) as f:
         for plugin_path in json.load(f):
             prepend_env_var(env, 'GST_PLUGIN_PATH', plugin_path,
                             options.sysroot)
@@ -465,6 +465,9 @@ if __name__ == "__main__":
     parser.add_argument("--builddir",
                         default=DEFAULT_BUILDDIR,
                         help="The meson build directory")
+    parser.add_argument("--gstbuilddir",
+                        default=None,
+                        help="The meson gst-build build directory (defaults to builddir)")
     parser.add_argument("--srcdir",
                         default=SCRIPTDIR,
                         help="The top level source directory")
@@ -487,7 +490,16 @@ if __name__ == "__main__":
         print("GStreamer not built in %s\n\nBuild it and try again" %
               options.builddir)
         exit(1)
+
+    if options.gstbuilddir and not os.path.exists(options.gstbuilddir):
+        print("gst-build is not built in %s\n\nBuild it and try again" %
+              options.gstbuilddir)
+        exit(1)
+    elif not options.gstbuilddir:
+        options.gstbuilddir = options.builddir
+
     options.builddir = os.path.abspath(options.builddir)
+    options.gstbuilddir = os.path.abspath(options.gstbuilddir)
 
     if not os.path.exists(options.srcdir):
         print("The specified source dir does not exist" %
