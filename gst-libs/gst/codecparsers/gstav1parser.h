@@ -1087,8 +1087,8 @@ struct _GstAV1LoopFilterParams {
   gboolean loop_filter_delta_enabled;
   gboolean loop_filter_delta_update;
 
-  guint8 loop_filter_ref_deltas[GST_AV1_TOTAL_REFS_PER_FRAME];
-  guint8 loop_filter_mode_deltas[2];
+  gint8 loop_filter_ref_deltas[GST_AV1_TOTAL_REFS_PER_FRAME];
+  gint8 loop_filter_mode_deltas[2];
 
   gboolean delta_lf_present;
   guint8 delta_lf_res;

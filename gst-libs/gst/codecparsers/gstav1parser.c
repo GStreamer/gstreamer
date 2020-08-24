@@ -2276,13 +2276,8 @@ gst_av1_parse_loop_filter_params (GstAV1Parser * parser,
   lf_params = &frame_header->loop_filter_params;
 
   if (frame_header->coded_lossless || frame_header->allow_intrabc) {
-    lf_params->loop_filter_delta_enabled = 0;
-    lf_params->loop_filter_delta_update = 0;
-    lf_params->loop_filter_sharpness = 0;
     lf_params->loop_filter_level[0] = 0;
     lf_params->loop_filter_level[1] = 0;
-    lf_params->loop_filter_level[2] = 0;
-    lf_params->loop_filter_level[3] = 0;
     lf_params->loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME] = 1;
     lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME] = 0;
     lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME] = 0;
@@ -2295,58 +2290,6 @@ gst_av1_parse_loop_filter_params (GstAV1Parser * parser,
       lf_params->loop_filter_mode_deltas[i] = 0;
 
     goto success;
-  }
-
-  lf_params->loop_filter_delta_enabled = 0;
-  lf_params->loop_filter_delta_update = 0;
-  lf_params->loop_filter_sharpness = 0;
-  lf_params->loop_filter_level[0] = 0;
-  lf_params->loop_filter_level[1] = 0;
-  lf_params->loop_filter_level[2] = 0;
-  lf_params->loop_filter_level[3] = 0;
-  if (frame_header->primary_ref_frame != GST_AV1_PRIMARY_REF_NONE) {
-    /* Copy it from prime_ref */
-    GstAV1LoopFilterParams *ref_lf_params =
-        &parser->state.ref_info.entry[frame_header->
-        ref_frame_idx[frame_header->primary_ref_frame]].ref_lf_params;
-
-    g_assert (parser->state.ref_info.
-        entry[frame_header->ref_frame_idx[frame_header->primary_ref_frame]].
-        ref_valid);
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST3_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST3_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_BWDREF_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_BWDREF_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_GOLDEN_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_GOLDEN_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF2_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF2_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF_FRAME] =
-        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF_FRAME];
-    for (i = 0; i < 2; i++)
-      lf_params->loop_filter_mode_deltas[i] =
-          ref_lf_params->loop_filter_mode_deltas[i];
-  } else {
-    /* Set default value */
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME] = 1;
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME] = 0;
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME] =
-        lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST3_FRAME] =
-        lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_BWDREF_FRAME] =
-        lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME];
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_GOLDEN_FRAME] = -1;
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF2_FRAME] = -1;
-    lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF_FRAME] = -1;
-    for (i = 0; i < 2; i++)
-      lf_params->loop_filter_mode_deltas[i] = 0;
   }
 
   if (AV1_REMAINING_BITS (br) < 6 + 6) {
@@ -2392,8 +2335,7 @@ gst_av1_parse_loop_filter_params (GstAV1Parser * parser,
               av1_bitstreamfn_su (br, 7, &retval);
           if (retval != GST_AV1_PARSER_OK)
             goto error;
-        } else
-          lf_params->loop_filter_ref_deltas[i] = 0;
+        }
       }
       for (i = 0; i < 2; i++) {
         update_mode_deltas = AV1_READ_BIT_CHECKED (br, &retval);
@@ -2405,8 +2347,7 @@ gst_av1_parse_loop_filter_params (GstAV1Parser * parser,
               av1_bitstreamfn_su (br, 7, &retval);
           if (retval != GST_AV1_PARSER_OK)
             goto error;
-        } else
-          lf_params->loop_filter_mode_deltas[i] = 0;
+        }
       }
     }
   }
@@ -3881,13 +3822,61 @@ gst_av1_parse_uncompressed_frame_header (GstAV1Parser * parser, GstAV1OBU * obu,
     goto error;
   }
 
+  if (frame_header->primary_ref_frame == GST_AV1_PRIMARY_REF_NONE) {
+    /* do something in setup_past_independence() of parser level */
+    gint8 *loop_filter_ref_deltas =
+        frame_header->loop_filter_params.loop_filter_ref_deltas;
+
+    frame_header->loop_filter_params.loop_filter_delta_enabled = 1;
+    loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME] = 1;
+    loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME] = 0;
+    loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME] = 0;
+    loop_filter_ref_deltas[GST_AV1_REF_LAST3_FRAME] = 0;
+    loop_filter_ref_deltas[GST_AV1_REF_BWDREF_FRAME] = 0;
+    loop_filter_ref_deltas[GST_AV1_REF_GOLDEN_FRAME] = -1;
+    loop_filter_ref_deltas[GST_AV1_REF_ALTREF_FRAME] = -1;
+    loop_filter_ref_deltas[GST_AV1_REF_ALTREF2_FRAME] = -1;
+    frame_header->loop_filter_params.loop_filter_mode_deltas[0] = 0;
+    frame_header->loop_filter_params.loop_filter_mode_deltas[1] = 0;
+  } else {
+    /* do something in load_previous() of parser level */
+    /*   load_loop_filter_params() */
+    GstAV1LoopFilterParams *ref_lf_params =
+        &parser->state.ref_info.entry[frame_header->
+        ref_frame_idx[frame_header->primary_ref_frame]].ref_lf_params;
+    gint8 *loop_filter_ref_deltas =
+        frame_header->loop_filter_params.loop_filter_ref_deltas;
+
+    /* Copy all from prime_ref */
+    g_assert (parser->state.ref_info.
+        entry[frame_header->ref_frame_idx[frame_header->primary_ref_frame]].
+        ref_valid);
+    loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_INTRA_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST2_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_LAST3_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_LAST3_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_BWDREF_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_BWDREF_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_GOLDEN_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_GOLDEN_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_ALTREF2_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF2_FRAME];
+    loop_filter_ref_deltas[GST_AV1_REF_ALTREF_FRAME] =
+        ref_lf_params->loop_filter_ref_deltas[GST_AV1_REF_ALTREF_FRAME];
+    for (i = 0; i < 2; i++)
+      frame_header->loop_filter_params.loop_filter_mode_deltas[i] =
+          ref_lf_params->loop_filter_mode_deltas[i];
+  }
+
   /* @TODO:
      if ( primary_ref_frame == PRIMARY_REF_NONE ) {
      init_non_coeff_cdfs( )
-     setup_past_independence( )
      } else {
      load_cdfs( ref_frame_idx[primary_ref_frame] )
-     load_previous( )
      }
    */
   /* @TODO:
