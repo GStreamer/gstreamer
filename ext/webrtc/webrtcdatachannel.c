@@ -416,7 +416,9 @@ _parse_control_packet (WebRTCDataChannel * channel, guint8 * data,
     memcpy (proto, src, proto_len);
     proto[proto_len] = '\0';
 
+    g_free (channel->parent.label);
     channel->parent.label = label;
+    g_free (channel->parent.protocol);
     channel->parent.protocol = proto;
     channel->parent.priority = priority_uint_to_type (priority);
     channel->parent.ordered = !(reliability & 0x80);

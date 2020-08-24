@@ -84,6 +84,7 @@ gst_webrtc_data_channel_set_property (GObject * object, guint prop_id,
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
   switch (prop_id) {
     case PROP_LABEL:
+      g_free (channel->label);
       channel->label = g_value_dup_string (value);
       break;
     case PROP_ORDERED:
@@ -96,6 +97,7 @@ gst_webrtc_data_channel_set_property (GObject * object, guint prop_id,
       channel->max_retransmits = g_value_get_int (value);
       break;
     case PROP_PROTOCOL:
+      g_free (channel->protocol);
       channel->protocol = g_value_dup_string (value);
       break;
     case PROP_NEGOTIATED:
