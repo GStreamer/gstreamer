@@ -285,8 +285,10 @@ _transport_closed (WebRTCDataChannel * channel)
   channel->stored_error = NULL;
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
 
-  if (error)
+  if (error) {
     gst_webrtc_data_channel_on_error (GST_WEBRTC_DATA_CHANNEL (channel), error);
+    g_clear_error (&error);
+  }
   gst_webrtc_data_channel_on_close (GST_WEBRTC_DATA_CHANNEL (channel));
 }
 
