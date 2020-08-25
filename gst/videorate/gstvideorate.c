@@ -535,7 +535,7 @@ gst_video_rate_fixate_caps (GstBaseTransform * trans,
   if ((par = gst_structure_get_value (s, "pixel-aspect-ratio")))
     gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
 
-  return othercaps;
+  return gst_caps_fixate (othercaps);
 }
 
 static gboolean
