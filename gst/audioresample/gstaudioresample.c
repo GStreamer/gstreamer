@@ -362,7 +362,7 @@ gst_audio_resample_fixate_caps (GstBaseTransform * base,
   s = gst_caps_get_structure (othercaps, 0);
   gst_structure_fixate_field_nearest_int (s, "rate", rate);
 
-  return othercaps;
+  return gst_caps_fixate (othercaps);
 }
 
 static GstStructure *

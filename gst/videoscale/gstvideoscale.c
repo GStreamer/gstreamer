@@ -1149,6 +1149,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   }
 
 done:
+  othercaps = gst_caps_fixate (othercaps);
+
   GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
 
   if (from_par == &fpar)
