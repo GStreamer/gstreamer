@@ -2093,7 +2093,8 @@ gst_av1_parse_segmentation_params (GstAV1Parser * parser, GstBitReader * br,
             gint bits_to_read = segmentation_feature_bits[j];
             gint limit = segmentation_feature_max[j];
             if (segmentation_feature_signed[j]) {
-              feature_value = av1_bitstreamfn_su (br, bits_to_read, &retval);
+              feature_value =
+                  av1_bitstreamfn_su (br, 1 + bits_to_read, &retval);
               if (retval != GST_AV1_PARSER_OK)
                 goto error;
 
