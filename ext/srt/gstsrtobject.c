@@ -1638,8 +1638,9 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
       case SRTS_BROKEN:
       case SRTS_NONEXIST:
       case SRTS_CLOSED:
-        GST_WARNING_OBJECT (srtobject->element,
-            "Invalid SRT socket. Trying to reconnect");
+        GST_ELEMENT_WARNING (srtobject->element, RESOURCE, WRITE, NULL,
+            ("Invalid SRT socket. Trying to reconnect. (%s)",
+                srt_getlasterror_str ()));
         gst_srt_object_close (srtobject);
         if (!gst_srt_object_open_internal (srtobject, cancellable, error)) {
           return -1;
