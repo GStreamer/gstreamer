@@ -293,8 +293,8 @@ av1_bitstreamfn_su (GstBitReader * br, guint8 n, GstAV1ParserResult * retval)
 /* 4.10.7
  *
  * Unsigned encoded integer with maximum number of values n */
-static guint8
-av1_bitstreamfn_ns (GstBitReader * br, guint8 n, GstAV1ParserResult * retval)
+static guint32
+av1_bitstreamfn_ns (GstBitReader * br, guint32 n, GstAV1ParserResult * retval)
 {
   gint w, m, v;
   gint extra_bit;
