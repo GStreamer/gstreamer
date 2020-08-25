@@ -59,6 +59,7 @@ G_BEGIN_DECLS
 #define GST_AV1_GM_TRANS_PREC_BITS             6
 #define GST_AV1_GM_TRANS_ONLY_PREC_BITS        3
 #define GST_AV1_WARPEDMODEL_PREC_BITS          16
+#define GST_AV1_WARP_PARAM_REDUCE_BITS         6
 #define GST_AV1_SELECT_SCREEN_CONTENT_TOOLS    2
 #define GST_AV1_SELECT_INTEGER_MV              2
 #define GST_AV1_RESTORATION_TILESIZE_MAX       256
@@ -78,6 +79,11 @@ G_BEGIN_DECLS
 #define GST_AV1_MAX_NUM_CR_POINTS              16
 #define GST_AV1_MAX_NUM_POS_LUMA               25
 #define GST_AV1_MAX_NUM_PLANES                 3
+
+#define GST_AV1_DIV_LUT_PREC_BITS              14
+#define GST_AV1_DIV_LUT_BITS                   8
+#define GST_AV1_DIV_LUT_NUM                    (1 << GST_AV1_DIV_LUT_BITS)
+
 
 typedef struct _GstAV1Parser GstAV1Parser;
 
@@ -1257,6 +1263,14 @@ struct _GstAV1LoopRestorationParams {
  * @gm_params: is set equal to SavedGmParams[ frame_to_show_map_idx ][ ref ][ j ] for
  *   ref = LAST_FRAME..ALTREF_FRAME, for j = 0..5.
  * @gm_type: specifying the type of global motion.
+ * @invalid: whether this global motion parameters is invalid. (Since: 1.20)
+ */
+/**
+ * _GstAV1GlobalMotionParams.invalid:
+ *
+ * whether this global motion parameters is invalid.
+ *
+ * Since: 1.20
  */
 struct _GstAV1GlobalMotionParams {
   gboolean is_global[GST_AV1_NUM_REF_FRAMES];
@@ -1265,6 +1279,7 @@ struct _GstAV1GlobalMotionParams {
   gint32 gm_params[GST_AV1_NUM_REF_FRAMES][6];
 
   GstAV1WarpModelType gm_type[GST_AV1_NUM_REF_FRAMES]; /* GmType */
+  gboolean invalid[GST_AV1_NUM_REF_FRAMES];
 };
 
 /**
