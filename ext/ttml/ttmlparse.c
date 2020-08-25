@@ -1926,6 +1926,7 @@ ttml_find_child (xmlNodePtr parent, const gchar * name)
   return child;
 }
 
+#define XML_START_TAG "<?xml"
 #define TTML_END_TAG "</tt>"
 
 guint
@@ -1941,7 +1942,8 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration,
   guint cellres_x, cellres_y;
   TtmlWhitespaceMode doc_whitespace_mode = TTML_WHITESPACE_MODE_DEFAULT;
   guint consumed = 0;
-  gchar *end_tt;
+  guint start_offset = 0;
+  gchar *start_xml, *end_tt;
 
   g_return_val_if_fail (parsed != NULL, 0);
 
@@ -1952,14 +1954,16 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration,
   }
   GST_CAT_LOG (ttmlparse_debug, "Input:\n%s", input);
 
+  start_xml = g_strstr_len (input, strlen (input), XML_START_TAG);
   end_tt = g_strstr_len (input, strlen (input), TTML_END_TAG);
 
-  if (!end_tt) {
+  if (!start_xml || !end_tt) {
     GST_CAT_DEBUG (ttmlparse_debug, "Need more data");
     return 0;
   }
 
   consumed = end_tt - input + strlen (TTML_END_TAG);
+  start_offset = start_xml - input;
 
   styles_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) ttml_delete_element);
@@ -1967,7 +1971,8 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration,
       (GDestroyNotify) ttml_delete_element);
 
   /* Parse input. */
-  doc = xmlReadMemory (input, consumed, "any_doc_name", NULL, 0);
+  doc = xmlReadMemory (start_xml, consumed - start_offset, "any_doc_name",
+      NULL, 0);
   if (!doc) {
     GST_CAT_ERROR (ttmlparse_debug, "Failed to parse document.");
     return 0;
