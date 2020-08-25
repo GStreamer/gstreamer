@@ -4582,21 +4582,14 @@ default_unsuspend (GstRTSPMedia * media)
       if (gst_rtsp_media_is_receive_only (media))
         break;
       if (media_streams_blocking (media)) {
-        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
-        /* at this point the media pipeline has been updated and contain all
-         * specific transport parts: all active streams contain at least one sink
-         * element and it's safe to unblock all blocked streams */
-        media_streams_set_blocked (media, FALSE);
-      } else {
-        /* streams are not blocked and media is suspended from PAUSED */
-        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
-      }
-      g_rec_mutex_unlock (&priv->state_lock);
-      if (gst_rtsp_media_get_status (media) == GST_RTSP_MEDIA_STATUS_ERROR) {
+        g_rec_mutex_unlock (&priv->state_lock);
+        if (gst_rtsp_media_get_status (media) == GST_RTSP_MEDIA_STATUS_ERROR) {
+          g_rec_mutex_lock (&priv->state_lock);
+          goto preroll_failed;
+        }
         g_rec_mutex_lock (&priv->state_lock);
-        goto preroll_failed;
       }
-      g_rec_mutex_lock (&priv->state_lock);
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       break;
     case GST_RTSP_SUSPEND_MODE_PAUSE:
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
