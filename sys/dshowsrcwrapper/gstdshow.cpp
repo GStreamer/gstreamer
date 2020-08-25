@@ -446,7 +446,7 @@ gst_dshow_select_device (const GUID * device_category,
     } else if (!device && device_name && g_strcmp0 (device_name, entry->device_name) == 0) {
       selected = entry;
       break;
-    } else if (!device && !deviceName && device_index == entry->device_index) {
+    } else if (!device && !device_name && device_index == entry->device_index) {
       selected = entry;
       break;
     }
