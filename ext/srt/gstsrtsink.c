@@ -146,13 +146,9 @@ static gboolean
 gst_srt_sink_start (GstBaseSink * bsink)
 {
   GstSRTSink *self = GST_SRT_SINK (bsink);
-  GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
 
   GError *error = NULL;
   gboolean ret = FALSE;
-
-  gst_structure_get_enum (self->srtobject->parameters, "mode",
-      GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
 
   ret = gst_srt_object_open (self->srtobject, self->cancellable, &error);
 
