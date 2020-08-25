@@ -1952,7 +1952,7 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration,
   }
   GST_CAT_LOG (ttmlparse_debug, "Input:\n%s", input);
 
-  end_tt = g_strrstr (input, TTML_END_TAG);
+  end_tt = g_strstr_len (input, strlen (input), TTML_END_TAG);
 
   if (!end_tt) {
     GST_CAT_DEBUG (ttmlparse_debug, "Need more data");
