@@ -52,7 +52,6 @@ G_BEGIN_DECLS
 #define GST_AV1_SUPERRES_DENOM_MIN             9
 #define GST_AV1_SUPERRES_DENOM_BITS            3
 #define GST_AV1_MAX_LOOP_FILTER                63
-#define GST_AV1_GM_ABS_ALPHA_BITS              12
 #define GST_AV1_GM_ABS_TRANS_BITS              12
 #define GST_AV1_GM_ABS_TRANS_ONLY_BITS         9
 #define GST_AV1_GM_ABS_ALPHA_BITS              12
