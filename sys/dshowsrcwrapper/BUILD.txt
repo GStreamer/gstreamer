@@ -20,6 +20,9 @@ First build the SDK "baseclasses" sample; they should have been
 installed in <SDK>/Samples/multimedia/directshow/baseclasses. Just
 open the SLN and build both Debug_MBCS and Release_MBCS.
 
+If you get a build error "ctype.h: no such file or directory", try
+retargetting the solution from the Project menu.
+
 Then go to sys/dshowsrcwrapper and use CMake to generate the project
 file for your chosen version of Visual Studio. There are two influential
 variables:

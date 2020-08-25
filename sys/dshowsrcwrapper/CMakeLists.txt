@@ -24,6 +24,9 @@ INCLUDE_DIRECTORIES(
   ${GST_INSTALL_BASE}/lib/glib-2.0/include
   ${GST_INSTALL_BASE}/lib/gstreamer-1.0/include
   ${SDK_INSTALL_BASE}/Samples/multimedia/directshow/baseclasses
+
+  # When building from the Cerbero build dir, this is where config.h is.
+  ${PROJECT_SOURCE_DIR}/../../_builddir
 )
 
 IF ("${CMAKE_GENERATOR}" MATCHES "Win64")
