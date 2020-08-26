@@ -2561,7 +2561,8 @@ _add_data_channel_offer (GstWebRTCBin * webrtc, GstSDPMessage * msg,
 
 /* TODO: use the options argument */
 static GstSDPMessage *
-_create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
+_create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
+    GError ** error)
 {
   GstSDPMessage *ret;
   GString *bundled_mids = NULL;
@@ -2604,8 +2605,8 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     guint bundle_media_index;
 
     reserved_pts = gather_reserved_pts (webrtc);
-    if (last_offer && _parse_bundle (last_offer, &last_bundle) && last_bundle
-        && last_bundle && last_bundle[0]
+    if (last_offer && _parse_bundle (last_offer, &last_bundle, NULL)
+        && last_bundle && last_bundle && last_bundle[0]
         && _get_bundle_index (last_offer, last_bundle, &bundle_media_index)) {
       bundle_ufrag =
           g_strdup (_media_get_ice_ufrag (last_offer, bundle_media_index));
@@ -2881,7 +2882,8 @@ _get_rtx_target_pt_and_ssrc_from_caps (GstCaps * answer_caps, gint * target_pt,
 
 /* TODO: use the options argument */
 static GstSDPMessage *
-_create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
+_create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
+    GError ** error)
 {
   GstSDPMessage *ret = NULL;
   const GstWebRTCSessionDescription *pending_remote =
@@ -2896,12 +2898,13 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   GstSDPMessage *last_answer = _get_latest_self_generated_sdp (webrtc);
 
   if (!webrtc->pending_remote_description) {
-    GST_ERROR_OBJECT (webrtc,
+    g_set_error_literal (error, GST_WEBRTC_BIN_ERROR,
+        GST_WEBRTC_BIN_ERROR_INVALID_STATE,
         "Asked to create an answer without a remote description");
     return NULL;
   }
 
-  if (!_parse_bundle (pending_remote->sdp, &bundled))
+  if (!_parse_bundle (pending_remote->sdp, &bundled, error))
     goto out;
 
   if (bundled) {
@@ -2909,8 +2912,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     guint bundle_media_index;
 
     if (!_get_bundle_index (pending_remote->sdp, bundled, &bundle_idx)) {
-      GST_ERROR_OBJECT (webrtc, "Bundle tag is %s but no media found matching",
-          bundled[0]);
+      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+          "Bundle tag is %s but no media found matching", bundled[0]);
       goto out;
     }
 
@@ -2918,7 +2921,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
       bundled_mids = g_string_new ("BUNDLE");
     }
 
-    if (last_answer && _parse_bundle (last_answer, &last_bundle)
+    if (last_answer && _parse_bundle (last_answer, &last_bundle, NULL)
         && last_bundle && last_bundle[0]
         && _get_bundle_index (last_answer, last_bundle, &bundle_media_index)) {
       bundle_ufrag =
@@ -3305,14 +3308,15 @@ _create_sdp_task (GstWebRTCBin * webrtc, struct create_sdp *data)
   GstWebRTCSessionDescription *desc = NULL;
   GstSDPMessage *sdp = NULL;
   GstStructure *s = NULL;
+  GError *error = NULL;
 
   GST_INFO_OBJECT (webrtc, "creating %s sdp with options %" GST_PTR_FORMAT,
       gst_webrtc_sdp_type_to_string (data->type), data->options);
 
   if (data->type == GST_WEBRTC_SDP_TYPE_OFFER)
-    sdp = _create_offer_task (webrtc, data->options);
+    sdp = _create_offer_task (webrtc, data->options, &error);
   else if (data->type == GST_WEBRTC_SDP_TYPE_ANSWER)
-    sdp = _create_answer_task (webrtc, data->options);
+    sdp = _create_answer_task (webrtc, data->options, &error);
   else {
     g_assert_not_reached ();
     goto out;
@@ -3323,6 +3327,13 @@ _create_sdp_task (GstWebRTCBin * webrtc, struct create_sdp *data)
     s = gst_structure_new ("application/x-gst-promise",
         gst_webrtc_sdp_type_to_string (data->type),
         GST_TYPE_WEBRTC_SESSION_DESCRIPTION, desc, NULL);
+  } else {
+    g_warn_if_fail (error != NULL);
+    GST_WARNING_OBJECT (webrtc, "returning error: %s",
+        error ? error->message : "Unknown");
+    s = gst_structure_new ("application/x-gstwebrtcbin-error",
+        "error", G_TYPE_ERROR, error, NULL);
+    g_clear_error (&error);
   }
 
 out:
@@ -3775,7 +3786,7 @@ static void
 _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     const GstSDPMessage * sdp, guint media_idx,
     TransportStream * stream, GstWebRTCRTPTransceiver * rtp_trans,
-    GStrv bundled, guint bundle_idx)
+    GStrv bundled, guint bundle_idx, GError ** error)
 {
   WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
   GstWebRTCRTPTransceiverDirection prev_dir = rtp_trans->current_direction;
@@ -3812,20 +3823,28 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     local_setup = _get_dtls_setup_from_media (local_media);
     remote_setup = _get_dtls_setup_from_media (remote_media);
     new_setup = _get_final_setup (local_setup, remote_setup);
-    if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE)
+    if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE) {
+      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+          "Cannot intersect direction attributes for media %u", media_idx);
       return;
+    }
 
     local_dir = _get_direction_from_media (local_media);
     remote_dir = _get_direction_from_media (remote_media);
     new_dir = _get_final_direction (local_dir, remote_dir);
-
-    if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE)
+    if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE) {
+      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+          "Cannot intersect dtls setup attributes for media %u", media_idx);
       return;
+    }
 
     if (prev_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
         && new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE
         && prev_dir != new_dir) {
-      GST_FIXME_OBJECT (webrtc, "implement transceiver direction changes");
+      g_set_error (error, GST_WEBRTC_BIN_ERROR,
+          GST_WEBRTC_BIN_ERROR_NOT_IMPLEMENTED,
+          "transceiver direction changes are not implemented. Media %u",
+          media_idx);
       return;
     }
 
@@ -4023,7 +4042,8 @@ _generate_data_channel_id (GstWebRTCBin * webrtc)
 
 static void
 _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
-    const GstSDPMessage * sdp, guint media_idx, TransportStream * stream)
+    const GstSDPMessage * sdp, guint media_idx, TransportStream * stream,
+    GError ** error)
 {
   const GstSDPMedia *local_media, *remote_media;
   GstWebRTCDTLSSetup local_setup, remote_setup, new_setup;
@@ -4042,8 +4062,11 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   local_setup = _get_dtls_setup_from_media (local_media);
   remote_setup = _get_dtls_setup_from_media (remote_media);
   new_setup = _get_final_setup (local_setup, remote_setup);
-  if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE)
+  if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE) {
+    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+        "Cannot intersect dtls setup for media %u", media_idx);
     return;
+  }
 
   /* data channel is always rtcp-muxed to avoid generating ICE candidates
    * for RTCP */
@@ -4052,8 +4075,12 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
 
   local_port = _get_sctp_port_from_media (local_media);
   remote_port = _get_sctp_port_from_media (local_media);
-  if (local_port == -1 || remote_port == -1)
+  if (local_port == -1 || remote_port == -1) {
+    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+        "Could not find sctp port for media %u (local %i, remote %i)",
+        media_idx, local_port, remote_port);
     return;
+  }
 
   if (0 == (local_max_size =
           _get_sctp_max_message_size_from_media (local_media)))
@@ -4166,7 +4193,7 @@ done:
 
 static gboolean
 _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
-    GstWebRTCSessionDescription * sdp)
+    GstWebRTCSessionDescription * sdp, GError ** error)
 {
   int i;
   gboolean ret = FALSE;
@@ -4177,14 +4204,14 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
   /* FIXME: With some peers, it's possible we could have
    * multiple bundles to deal with, although I've never seen one yet */
   if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE)
-    if (!_parse_bundle (sdp->sdp, &bundled))
+    if (!_parse_bundle (sdp->sdp, &bundled, error))
       goto done;
 
   if (bundled) {
 
     if (!_get_bundle_index (sdp->sdp, bundled, &bundle_idx)) {
-      GST_ERROR_OBJECT (webrtc, "Bundle tag is %s but no media found matching",
-          bundled[0]);
+      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+          "Bundle tag is %s but no media found matching", bundled[0]);
       goto done;
     }
 
@@ -4235,7 +4262,8 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
       webrtc_transceiver_set_transport ((WebRTCTransceiver *) trans, stream);
 
     if (source == SDP_LOCAL && sdp->type == GST_WEBRTC_SDP_TYPE_OFFER && !trans) {
-      GST_ERROR ("State mismatch.  Could not find local transceiver by mline.");
+      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+          "State mismatch.  Could not find local transceiver by mline %u", i);
       goto done;
     } else {
       if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0 ||
@@ -4258,9 +4286,10 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
         }
 
         _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
-            trans, bundled, bundle_idx);
+            trans, bundled, bundle_idx, error);
       } else if (_message_media_is_datachannel (sdp->sdp, i)) {
-        _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream);
+        _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream,
+            error);
       } else {
         GST_ERROR_OBJECT (webrtc, "Unknown media type in SDP at index %u", i);
       }
@@ -4284,12 +4313,50 @@ done:
   return ret;
 }
 
+static gboolean
+check_transceivers_not_removed (GstWebRTCBin * webrtc,
+    GstWebRTCSessionDescription * previous, GstWebRTCSessionDescription * new)
+{
+  if (!previous)
+    return TRUE;
+
+  if (gst_sdp_message_medias_len (previous->sdp) >
+      gst_sdp_message_medias_len (new->sdp))
+    return FALSE;
+
+  return TRUE;
+}
+
 struct set_description
 {
   GstPromise *promise;
   SDPSource source;
   GstWebRTCSessionDescription *sdp;
 };
+
+static GstWebRTCSessionDescription *
+get_previous_description (GstWebRTCBin * webrtc, SDPSource source,
+    GstWebRTCSDPType type)
+{
+  switch (type) {
+    case GST_WEBRTC_SDP_TYPE_OFFER:
+    case GST_WEBRTC_SDP_TYPE_PRANSWER:
+    case GST_WEBRTC_SDP_TYPE_ANSWER:
+      if (source == SDP_LOCAL) {
+        return webrtc->current_local_description;
+      } else {
+        return webrtc->current_remote_description;
+      }
+    case GST_WEBRTC_SDP_TYPE_ROLLBACK:
+      return NULL;
+    default:
+      /* other values mean memory corruption/uninitialized! */
+      g_assert_not_reached ();
+      break;
+  }
+
+  return NULL;
+}
 
 /* http://w3c.github.io/webrtc-pc/#set-description */
 static void
@@ -4316,27 +4383,29 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     g_free (type_str);
   }
 
-  if (!validate_sdp (webrtc->signaling_state, sd->source, sd->sdp, &error)) {
-    GST_ERROR_OBJECT (webrtc, "%s", error->message);
-    g_clear_error (&error);
+  if (!validate_sdp (webrtc->signaling_state, sd->source, sd->sdp, &error))
     goto out;
-  }
-
-  if (webrtc->priv->is_closed) {
-    GST_WARNING_OBJECT (webrtc, "we are closed");
-    goto out;
-  }
 
   if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE)
-    if (!_parse_bundle (sd->sdp->sdp, &bundled))
+    if (!_parse_bundle (sd->sdp->sdp, &bundled, &error))
       goto out;
 
   if (bundled) {
     if (!_get_bundle_index (sd->sdp->sdp, bundled, &bundle_idx)) {
-      GST_ERROR_OBJECT (webrtc, "Bundle tag is %s but no media found matching",
-          bundled[0]);
+      g_set_error (&error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+          "Bundle tag is %s but no matching media found", bundled[0]);
       goto out;
     }
+  }
+
+  if (!check_transceivers_not_removed (webrtc,
+          get_previous_description (webrtc, sd->source, sd->sdp->type),
+          sd->sdp)) {
+    g_set_error_literal (&error, GST_WEBRTC_BIN_ERROR,
+        GST_WEBRTC_BIN_ERROR_BAD_SDP,
+        "m=lines removed from the SDP. Processing a completely new connection "
+        "is not currently supported.");
+    goto out;
   }
 
   switch (sd->sdp->type) {
@@ -4484,7 +4553,8 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     GList *tmp;
 
     /* media modifications */
-    _update_transceivers_from_sdp (webrtc, sd->source, sd->sdp);
+    if (!_update_transceivers_from_sdp (webrtc, sd->source, sd->sdp, &error))
+      goto out;
 
     for (tmp = webrtc->priv->pending_sink_transceivers; tmp;) {
       GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (tmp->data);
@@ -4664,7 +4734,15 @@ out:
   g_strfreev (bundled);
 
   PC_UNLOCK (webrtc);
-  gst_promise_reply (sd->promise, NULL);
+  if (error) {
+    GST_WARNING_OBJECT (webrtc, "returning error: %s", error->message);
+    gst_promise_reply (sd->promise,
+        gst_structure_new ("application/x-getwebrtcbin-error", "error",
+            G_TYPE_ERROR, error, NULL));
+    g_clear_error (&error);
+  } else {
+    gst_promise_reply (sd->promise, NULL);
+  }
   PC_LOCK (webrtc);
 }
 

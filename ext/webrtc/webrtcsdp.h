@@ -101,7 +101,8 @@ gboolean                            _get_bundle_index                       (Gst
                                                                              guint * idx);
 G_GNUC_INTERNAL
 gboolean                            _parse_bundle                           (GstSDPMessage * sdp,
-                                                                             GStrv * bundled);
+                                                                             GStrv * bundled,
+                                                                             GError ** error);
 
 G_GNUC_INTERNAL
 const gchar *                       _media_get_ice_pwd                  (const GstSDPMessage * msg,

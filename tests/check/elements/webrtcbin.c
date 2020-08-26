@@ -177,14 +177,19 @@ _on_answer_received (GstPromise * promise, gpointer user_data)
   GstElement *answerer = TEST_GET_ANSWERER (t);
   const GstStructure *reply;
   GstWebRTCSessionDescription *answer = NULL;
-  gchar *desc;
+  GError *error = NULL;
 
   reply = gst_promise_get_reply (promise);
-  gst_structure_get (reply, "answer",
-      GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &answer, NULL);
-  desc = gst_sdp_message_as_text (answer->sdp);
-  GST_INFO ("Created Answer: %s", desc);
-  g_free (desc);
+  if (gst_structure_get (reply, "answer",
+          GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &answer, NULL)) {
+    gchar *desc = gst_sdp_message_as_text (answer->sdp);
+    GST_INFO ("Created Answer: %s", desc);
+    g_free (desc);
+  } else if (gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL)) {
+    GST_INFO ("Creating answer resulted in error: %s", error->message);
+  } else {
+    g_assert_not_reached ();
+  }
 
   g_mutex_lock (&t->lock);
 
@@ -196,15 +201,28 @@ _on_answer_received (GstPromise * promise, gpointer user_data)
   }
   gst_promise_unref (promise);
 
-  promise = gst_promise_new_with_change_func (_on_answer_set, t, NULL);
-  g_signal_emit_by_name (answerer, "set-local-description", t->answer_desc,
-      promise);
-  promise = gst_promise_new_with_change_func (_on_answer_set, t, NULL);
-  g_signal_emit_by_name (offeror, "set-remote-description", t->answer_desc,
-      promise);
+  if (error)
+    goto error;
+
+  if (t->answer_desc) {
+    promise = gst_promise_new_with_change_func (_on_answer_set, t, NULL);
+    g_signal_emit_by_name (answerer, "set-local-description", t->answer_desc,
+        promise);
+    promise = gst_promise_new_with_change_func (_on_answer_set, t, NULL);
+    g_signal_emit_by_name (offeror, "set-remote-description", t->answer_desc,
+        promise);
+  }
 
   test_webrtc_signal_state_unlocked (t, STATE_ANSWER_CREATED);
   g_mutex_unlock (&t->lock);
+  return;
+
+error:
+  g_clear_error (&error);
+  if (t->state < STATE_ERROR)
+    test_webrtc_signal_state_unlocked (t, STATE_ERROR);
+  g_mutex_unlock (&t->lock);
+  return;
 }
 
 static void
@@ -232,14 +250,19 @@ _on_offer_received (GstPromise * promise, gpointer user_data)
   GstElement *answerer = TEST_GET_ANSWERER (t);
   const GstStructure *reply;
   GstWebRTCSessionDescription *offer = NULL;
-  gchar *desc;
+  GError *error = NULL;
 
   reply = gst_promise_get_reply (promise);
-  gst_structure_get (reply, "offer",
-      GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
-  desc = gst_sdp_message_as_text (offer->sdp);
-  GST_INFO ("Created offer: %s", desc);
-  g_free (desc);
+  if (gst_structure_get (reply, "offer",
+          GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL)) {
+    gchar *desc = gst_sdp_message_as_text (offer->sdp);
+    GST_INFO ("Created offer: %s", desc);
+    g_free (desc);
+  } else if (gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL)) {
+    GST_INFO ("Creating offer resulted in error: %s", error->message);
+  } else {
+    g_assert_not_reached ();
+  }
 
   g_mutex_lock (&t->lock);
 
@@ -251,18 +274,31 @@ _on_offer_received (GstPromise * promise, gpointer user_data)
   }
   gst_promise_unref (promise);
 
-  promise = gst_promise_new_with_change_func (_on_offer_set, t, NULL);
-  g_signal_emit_by_name (offeror, "set-local-description", t->offer_desc,
-      promise);
-  promise = gst_promise_new_with_change_func (_on_offer_set, t, NULL);
-  g_signal_emit_by_name (answerer, "set-remote-description", t->offer_desc,
-      promise);
+  if (error)
+    goto error;
 
-  promise = gst_promise_new_with_change_func (_on_answer_received, t, NULL);
-  g_signal_emit_by_name (answerer, "create-answer", NULL, promise);
+  if (t->offer_desc) {
+    promise = gst_promise_new_with_change_func (_on_offer_set, t, NULL);
+    g_signal_emit_by_name (offeror, "set-local-description", t->offer_desc,
+        promise);
+    promise = gst_promise_new_with_change_func (_on_offer_set, t, NULL);
+    g_signal_emit_by_name (answerer, "set-remote-description", t->offer_desc,
+        promise);
+
+    promise = gst_promise_new_with_change_func (_on_answer_received, t, NULL);
+    g_signal_emit_by_name (answerer, "create-answer", NULL, promise);
+  }
 
   test_webrtc_signal_state_unlocked (t, STATE_OFFER_CREATED);
   g_mutex_unlock (&t->lock);
+  return;
+
+error:
+  g_clear_error (&error);
+  if (t->state < STATE_ERROR)
+    test_webrtc_signal_state_unlocked (t, STATE_ERROR);
+  g_mutex_unlock (&t->lock);
+  return;
 }
 
 static gboolean
@@ -2053,7 +2089,7 @@ _check_bundle_tag (struct test_webrtc *t, GstElement * element,
   GStrv expected = user_data;
   guint i;
 
-  fail_unless (_parse_bundle (sd->sdp, &bundled));
+  fail_unless (_parse_bundle (sd->sdp, &bundled, NULL));
 
   if (!bundled) {
     fail_unless_equals_int (g_strv_length (expected), 0);
@@ -2745,6 +2781,98 @@ GST_START_TEST (test_renego_transceiver_set_direction)
 
 GST_END_TEST;
 
+static void
+offer_remove_last_media (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+  guint i, n;
+  GstSDPMessage *new, *old;
+  const GstSDPOrigin *origin;
+  const GstSDPConnection *conn;
+
+  old = t->offer_desc->sdp;
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_new (&new));
+
+  origin = gst_sdp_message_get_origin (old);
+  conn = gst_sdp_message_get_connection (old);
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_set_version (new,
+          gst_sdp_message_get_version (old)));
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_set_origin (new,
+          origin->username, origin->sess_id, origin->sess_version,
+          origin->nettype, origin->addrtype, origin->addr));
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_set_session_name (new,
+          gst_sdp_message_get_session_name (old)));
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_set_information (new,
+          gst_sdp_message_get_information (old)));
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_set_uri (new,
+          gst_sdp_message_get_uri (old)));
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_set_connection (new,
+          conn->nettype, conn->addrtype, conn->address, conn->ttl,
+          conn->addr_number));
+
+  n = gst_sdp_message_attributes_len (old);
+  for (i = 0; i < n; i++) {
+    const GstSDPAttribute *a = gst_sdp_message_get_attribute (old, i);
+    fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_add_attribute (new,
+            a->key, a->value));
+  }
+
+  n = gst_sdp_message_medias_len (old);
+  fail_unless (n > 0);
+  for (i = 0; i < n - 1; i++) {
+    const GstSDPMedia *m = gst_sdp_message_get_media (old, i);
+    GstSDPMedia *new_m;
+
+    fail_unless_equals_int (GST_SDP_OK, gst_sdp_media_copy (m, &new_m));
+    fail_unless_equals_int (GST_SDP_OK, gst_sdp_message_add_media (new, new_m));
+    gst_sdp_media_init (new_m);
+    gst_sdp_media_free (new_m);
+  }
+
+  gst_webrtc_session_description_free (t->offer_desc);
+  t->offer_desc = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER,
+      new);
+}
+
+static void
+offer_set_produced_error (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+  const GstStructure *reply;
+  GError *error = NULL;
+
+  reply = gst_promise_get_reply (promise);
+  fail_unless (gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL));
+  GST_INFO ("error produced: %s", error->message);
+  g_clear_error (&error);
+
+  test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
+}
+
+GST_START_TEST (test_renego_lose_media_fails)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
+
+  /* check that removing an m=line will produce an error */
+
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_reset_negotiation (t);
+
+  t->on_offer_created = offer_remove_last_media;
+  t->on_offer_set = offer_set_produced_error;
+  t->on_answer_created = NULL;
+
+  test_webrtc_create_offer (t, t->webrtc1);
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -2785,6 +2913,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_renego_add_stream);
     tcase_add_test (tc, test_bundle_max_compat_max_bundle_renego_add_stream);
     tcase_add_test (tc, test_renego_transceiver_set_direction);
+    tcase_add_test (tc, test_renego_lose_media_fails);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
