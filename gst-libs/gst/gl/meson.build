@@ -973,15 +973,20 @@ if build_gstgl
     install_dir : get_option('libdir') + '/gstreamer-1.0/include/gst/gl',
     configuration : glconf)
 
-  gl_enums = gnome.mkenums_simple('gl-enumtypes',
-    sources : gir_gl_headers,
-    body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
-    header_prefix : '#include <gst/gl/gl-prelude.h>',
-    decorator : 'GST_GL_API',
-    install_header: true,
-    install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/gl'))
-  gl_enumtypes_c = gl_enums[0]
-  gl_enumtypes_h = gl_enums[1]
+  glib_mkenums = find_program('glib-mkenums')
+  mkenums = find_program('gl_mkenum.py')
+  gl_enumtypes_h = custom_target('gstglenumtypes_h',
+    output : 'gl-enumtypes.h',
+    input : gir_gl_headers,
+    install : true,
+    install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/gl/'),
+    command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+
+  gl_enumtypes_c = custom_target('gstglenumtypes_c',
+    output : 'gl-enumtypes.c',
+    input : gir_gl_headers,
+    depends : [gl_enumtypes_h],
+    command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
   gen_sources = [gl_enumtypes_h]
 
   gstgl = library('gstgl-' + api_version,
@@ -995,7 +1000,9 @@ if build_gstgl
     darwin_versions : osxversion,
     install : true,
     dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
-                    gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps])
+                    gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
+    # don't confuse EGL/egl.h with gst-libs/gl/egl/egl.h on case-insensitive file systems
+    implicit_include_directories : true)
 
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
