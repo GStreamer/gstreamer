@@ -5355,6 +5355,16 @@ unknown_session:
   }
 }
 
+static gboolean
+_merge_structure (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstStructure *s = user_data;
+
+  gst_structure_id_set_value (s, field_id, value);
+
+  return TRUE;
+}
+
 static GstElement *
 on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
     GstWebRTCBin * webrtc)
@@ -5363,23 +5373,22 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
   gboolean have_rtx = FALSE;
   GstStructure *pt_map = NULL;
   GstElement *ret = NULL;
-  GstWebRTCRTPTransceiver *trans;
 
   stream = _find_transport_for_session (webrtc, session_id);
-  trans = _find_transceiver (webrtc, &session_id,
-      (FindTransceiverFunc) transceiver_match_for_mline);
 
   if (stream)
     have_rtx = transport_stream_get_pt (stream, "RTX") != 0;
 
   GST_LOG_OBJECT (webrtc, "requesting aux sender for stream %" GST_PTR_FORMAT
-      " with transport %" GST_PTR_FORMAT " and pt map %" GST_PTR_FORMAT, stream,
-      trans, pt_map);
+      " with pt map %" GST_PTR_FORMAT, stream, pt_map);
 
   if (have_rtx) {
     GstElement *rtx;
     GstPad *pad;
     gchar *name;
+    GstStructure *merged_local_rtx_ssrc_map =
+        gst_structure_new_empty ("application/x-rtp-ssrc-map");
+    guint i;
 
     if (stream->rtxsend) {
       GST_WARNING_OBJECT (webrtc, "rtprtxsend already created! rtpbin bug?!");
@@ -5392,9 +5401,18 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
     g_object_set (rtx, "max-size-packets", 500, NULL);
     _set_rtx_ptmap_from_stream (webrtc, stream);
 
-    if (WEBRTC_TRANSCEIVER (trans)->local_rtx_ssrc_map)
-      g_object_set (rtx, "ssrc-map",
-          WEBRTC_TRANSCEIVER (trans)->local_rtx_ssrc_map, NULL);
+    for (i = 0; i < webrtc->priv->transceivers->len; i++) {
+      WebRTCTransceiver *trans =
+          WEBRTC_TRANSCEIVER (g_ptr_array_index (webrtc->priv->transceivers,
+              i));
+
+      if (trans->stream == stream && trans->local_rtx_ssrc_map)
+        gst_structure_foreach (trans->local_rtx_ssrc_map,
+            _merge_structure, merged_local_rtx_ssrc_map);
+    }
+
+    g_object_set (rtx, "ssrc-map", merged_local_rtx_ssrc_map, NULL);
+    gst_structure_free (merged_local_rtx_ssrc_map);
 
     gst_bin_add (GST_BIN (ret), rtx);
 
