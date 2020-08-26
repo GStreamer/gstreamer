@@ -361,8 +361,8 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
 
   /**
    * GstSRTSrc::caller-added:
-   * @gstsrtsink: the srtsink element that emitted this signal
-   * @sock: the client socket descriptor that was added to srtsink
+   * @gstsrtsrc: the srtsrc element that emitted this signal
+   * @sock: the client socket descriptor that was added to srtsrc
    * @addr: the #GSocketAddress that describes the @sock
    *
    * The given socket descriptor was added to srtsink.
@@ -374,11 +374,11 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
 
   /**
    * GstSRTSrc::caller-removed:
-   * @gstsrtsink: the srtsink element that emitted this signal
-   * @sock: the client socket descriptor that was added to srtsink
+   * @gstsrtsrc: the srtsrc element that emitted this signal
+   * @sock: the client socket descriptor that was added to srtsrc
    * @addr: the #GSocketAddress that describes the @sock
    *
-   * The given socket descriptor was removed from srtsink.
+   * The given socket descriptor was removed from srtsrc.
    */
   signals[SIG_CALLER_REMOVED] =
       g_signal_new ("caller-removed", G_TYPE_FROM_CLASS (klass),
