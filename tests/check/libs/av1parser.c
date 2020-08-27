@@ -225,7 +225,7 @@ GST_START_TEST (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16)
   assert_equals_int (frame.frame_header.loop_filter_params.
       loop_filter_delta_update, 1);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[0], 0);
+      loop_filter_params.loop_filter_ref_deltas[0], 1);
   assert_equals_int (frame.frame_header.
       loop_filter_params.loop_filter_ref_deltas[1], 0);
   assert_equals_int (frame.frame_header.
@@ -233,13 +233,13 @@ GST_START_TEST (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16)
   assert_equals_int (frame.frame_header.
       loop_filter_params.loop_filter_ref_deltas[3], 0);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[4], 0);
+      loop_filter_params.loop_filter_ref_deltas[4], -1);
   assert_equals_int (frame.frame_header.
       loop_filter_params.loop_filter_ref_deltas[5], 0);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[6], 0);
+      loop_filter_params.loop_filter_ref_deltas[6], -1);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[7], 0);
+      loop_filter_params.loop_filter_ref_deltas[7], -1);
   assert_equals_int (frame.frame_header.loop_filter_params.
       loop_filter_mode_deltas[0], 0);
   assert_equals_int (frame.frame_header.loop_filter_params.
@@ -333,7 +333,7 @@ GST_START_TEST (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16)
   assert_equals_int (frame.frame_header.loop_filter_params.
       loop_filter_delta_update, 1);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[0], 0);
+      loop_filter_params.loop_filter_ref_deltas[0], 1);
   assert_equals_int (frame.frame_header.
       loop_filter_params.loop_filter_ref_deltas[1], 0);
   assert_equals_int (frame.frame_header.
@@ -341,13 +341,13 @@ GST_START_TEST (test_av1_parse_aom_testdata_av1_1_b8_01_size_16x16)
   assert_equals_int (frame.frame_header.
       loop_filter_params.loop_filter_ref_deltas[3], 0);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[4], 0);
+      loop_filter_params.loop_filter_ref_deltas[4], -1);
   assert_equals_int (frame.frame_header.
       loop_filter_params.loop_filter_ref_deltas[5], 0);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[6], 0);
+      loop_filter_params.loop_filter_ref_deltas[6], -1);
   assert_equals_int (frame.frame_header.
-      loop_filter_params.loop_filter_ref_deltas[7], 0);
+      loop_filter_params.loop_filter_ref_deltas[7], -1);
   assert_equals_int (frame.frame_header.loop_filter_params.
       loop_filter_mode_deltas[0], 0);
   assert_equals_int (frame.frame_header.loop_filter_params.
