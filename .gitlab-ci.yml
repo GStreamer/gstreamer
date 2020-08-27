@@ -3,8 +3,6 @@ include: "gitlab/ci_template.yml"
 test manifest:
   variables:
     GIT_STRATEGY: fetch
-  rules:
-    - when: 'always'
   image: "$TEST_MANIFEST_IMAGE"
   stage: "preparation"
   script:
