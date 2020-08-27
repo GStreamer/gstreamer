@@ -2769,6 +2769,21 @@ gst_adaptive_demux_eos_handling (GstAdaptiveDemuxStream * stream)
       || !klass->need_another_chunk (stream)
       || stream->fragment.chunk_size == 0) {
     stream->fragment.finished = TRUE;
+
+    /* Last chance to figure out a fallback nominal bitrate if neither baseclass
+       nor the HTTP Content-Length implementation worked. */
+    if (stream->fragment.bitrate == 0 && stream->fragment.duration != 0 &&
+        stream->fragment_bytes_downloaded != 0) {
+      guint bitrate = MIN (G_MAXUINT,
+          gst_util_uint64_scale (stream->fragment_bytes_downloaded,
+              8 * GST_SECOND, stream->fragment.duration));
+      GST_LOG_OBJECT (stream->pad,
+          "Fragment has size %" G_GUINT64_FORMAT " duration %" GST_TIME_FORMAT
+          " = bitrate %u", stream->fragment_bytes_downloaded,
+          GST_TIME_ARGS (stream->fragment.duration), bitrate);
+      stream->fragment.bitrate = bitrate;
+      stream->bitrate_changed = TRUE;
+    }
     ret = klass->finish_fragment (stream->demux, stream);
   }
   gst_adaptive_demux_stream_fragment_download_finish (stream, ret, NULL);
