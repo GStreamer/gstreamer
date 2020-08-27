@@ -255,6 +255,10 @@ string_of_VAProfile (VAProfile profile)
       MAP (VP9Profile1);
       MAP (VP9Profile2);
       MAP (VP9Profile3);
+#if VA_CHECK_VERSION(1,8,0)
+      MAP (AV1Profile0);
+      MAP (AV1Profile1);
+#endif
 #undef MAP
     default:
       break;

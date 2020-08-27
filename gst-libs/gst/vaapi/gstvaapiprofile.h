@@ -42,6 +42,7 @@ G_BEGIN_DECLS
  * @GST_VAAPI_CODEC_JPEG: JPEG (ITU-T 81)
  * @GST_VAAPI_CODEC_H265: H.265 aka MPEG-H Part 2 (ITU-T H.265)
  * @GST_VAAPI_CODEC_VP9: VP9 (libvpx)
+ * @GST_VAAPI_CODEC_AV1: AV1 (aom)
  *
  * The set of all codecs for #GstVaapiCodec.
  */
@@ -57,6 +58,7 @@ typedef enum {
     GST_VAAPI_CODEC_VP8         = GST_MAKE_FOURCC('V','P','8',0),
     GST_VAAPI_CODEC_H265        = GST_MAKE_FOURCC('2','6','5',0),
     GST_VAAPI_CODEC_VP9         = GST_MAKE_FOURCC('V','P','9',0),
+    GST_VAAPI_CODEC_AV1         = GST_MAKE_FOURCC('A','V','1',0),
 } GstVaapiCodec;
 
 /**
@@ -142,6 +144,10 @@ typedef enum {
  *   VP9 prfile 2, bitdepth=10/12, 420
  * @GST_VAAPI_PROFILE_VP9_3:
  *   VP9 prfile 3 bitdepth=10/12, 422/444/440/RGB
+ * @GST_VAAPI_PROFILE_AV1_0:
+ *   AV1 prfile 0, bitdepth=8/10, 420/400
+ * @GST_VAAPI_PROFILE_AV1_1:
+ *   AV1 prfile 1 bitdepth=8/10, 444
  *
  * The set of all profiles for #GstVaapiProfile.
  */
@@ -196,6 +202,9 @@ typedef enum {
     GST_VAAPI_PROFILE_VP9_1                   = GST_VAAPI_MAKE_PROFILE(VP9,2),
     GST_VAAPI_PROFILE_VP9_2                   = GST_VAAPI_MAKE_PROFILE(VP9,3),
     GST_VAAPI_PROFILE_VP9_3                   = GST_VAAPI_MAKE_PROFILE(VP9,4),
+
+    GST_VAAPI_PROFILE_AV1_0                   = GST_VAAPI_MAKE_PROFILE(AV1,1),
+    GST_VAAPI_PROFILE_AV1_1                   = GST_VAAPI_MAKE_PROFILE(AV1,2),
 } GstVaapiProfile;
 
 /**

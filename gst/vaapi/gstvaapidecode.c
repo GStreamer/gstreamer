@@ -44,6 +44,9 @@
 #include <gst/vaapi/gstvaapidecoder_vp8.h>
 #include <gst/vaapi/gstvaapidecoder_h265.h>
 #include <gst/vaapi/gstvaapidecoder_vp9.h>
+#if USE_AV1_DECODER
+#include <gst/vaapi/gstvaapidecoder_av1.h>
+#endif
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -75,6 +78,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-wmv")
     GST_CAPS_CODEC("video/x-vp8")
     GST_CAPS_CODEC("video/x-vp9")
+    GST_CAPS_CODEC("video/x-av1")
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
@@ -118,6 +122,7 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
   {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8", NULL},
   {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9", NULL},
   {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265", NULL},
+  {GST_VAAPI_CODEC_AV1, GST_RANK_PRIMARY, "av1", "video/x-av1", NULL},
   {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
       gst_vaapidecode_sink_caps_str, NULL},
 };
@@ -979,6 +984,11 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
     case GST_VAAPI_CODEC_VP9:
       decode->decoder = gst_vaapi_decoder_vp9_new (dpy, caps);
       break;
+#if USE_AV1_DECODER
+    case GST_VAAPI_CODEC_AV1:
+      decode->decoder = gst_vaapi_decoder_av1_new (dpy, caps);
+      break;
+#endif
     default:
       decode->decoder = NULL;
       break;
@@ -1547,7 +1557,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
       "Halley Zhao <halley.zhao@intel.com>, "
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
-      "Wind Yuan <feng.yuan@intel.com>");
+      "Wind Yuan <feng.yuan@intel.com>, Junyan He <junyan.he@intel.com>");
 
   g_free (longname);
   g_free (description);

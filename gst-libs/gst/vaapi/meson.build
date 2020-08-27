@@ -110,6 +110,11 @@ if USE_VP9_ENCODER
   gstlibvaapi_headers += 'gstvaapiencoder_vp9.h'
 endif
 
+if USE_AV1_DECODER
+  gstlibvaapi_sources += 'gstvaapidecoder_av1.c'
+  gstlibvaapi_headers += 'gstvaapidecoder_av1.h'
+endif
+
 if USE_DRM
   gstlibvaapi_sources += [
       'gstvaapidisplay_drm.c',
