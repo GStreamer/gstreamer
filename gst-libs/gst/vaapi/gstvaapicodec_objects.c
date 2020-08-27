@@ -68,9 +68,10 @@ gst_vaapi_codec_object_create (GstVaapiCodecObject * object,
 }
 
 GstVaapiCodecObject *
-gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
-    GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
-    gconstpointer data, guint data_size, guint flags)
+gst_vaapi_codec_object_new_with_param_num (const GstVaapiCodecObjectClass *
+    object_class, GstVaapiCodecBase * codec, gconstpointer param,
+    guint param_size, guint param_num, gconstpointer data,
+    guint data_size, guint flags)
 {
   GstVaapiCodecObject *obj;
   GstVaapiCodecObjectConstructorArgs args;
@@ -85,6 +86,7 @@ gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
 
   args.param = param;
   args.param_size = param_size;
+  args.param_num = param_num;
   args.data = data;
   args.data_size = data_size;
   args.flags = flags;
@@ -94,6 +96,15 @@ gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
 
   gst_vaapi_codec_object_unref (obj);
   return NULL;
+}
+
+GstVaapiCodecObject *
+gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
+    GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
+    gconstpointer data, guint data_size, guint flags)
+{
+  return gst_vaapi_codec_object_new_with_param_num (object_class, codec, param,
+      param_size, 1, data, data_size, flags);
 }
 
 #define GET_DECODER(obj)    GST_VAAPI_DECODER_CAST((obj)->parent_instance.codec)

@@ -59,6 +59,7 @@ typedef struct
 {
   gconstpointer param;
   guint param_size;
+  guint param_num;
   gconstpointer data;
   guint data_size;
   guint flags;
@@ -104,6 +105,13 @@ GstVaapiCodecObject *
 gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
     GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
     gconstpointer data, guint data_size, guint flags);
+
+G_GNUC_INTERNAL
+GstVaapiCodecObject *
+gst_vaapi_codec_object_new_with_param_num (const GstVaapiCodecObjectClass *
+    object_class, GstVaapiCodecBase * codec, gconstpointer param,
+    guint param_size, guint param_num, gconstpointer data,
+    guint data_size, guint flags);
 
 #define gst_vaapi_codec_object_ref(object) \
   ((gpointer) gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (object)))

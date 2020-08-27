@@ -457,9 +457,10 @@ gst_vaapi_slice_create (GstVaapiSlice * slice,
   if (!success)
     return FALSE;
 
-  success = vaapi_create_buffer (GET_VA_DISPLAY (slice), GET_VA_CONTEXT (slice),
-      VASliceParameterBufferType, args->param_size, args->param,
-      &slice->param_id, &slice->param);
+  g_assert (args->param_num >= 1);
+  success = vaapi_create_n_elements_buffer (GET_VA_DISPLAY (slice),
+      GET_VA_CONTEXT (slice), VASliceParameterBufferType, args->param_size,
+      args->param, &slice->param_id, &slice->param, args->param_num);
   if (!success)
     return FALSE;
 
@@ -478,5 +479,18 @@ gst_vaapi_slice_new (GstVaapiDecoder * decoder,
 
   object = gst_vaapi_codec_object_new (&GstVaapiSliceClass,
       GST_VAAPI_CODEC_BASE (decoder), param, param_size, data, data_size, 0);
+  return GST_VAAPI_SLICE_CAST (object);
+}
+
+GstVaapiSlice *
+gst_vaapi_slice_new_n_params (GstVaapiDecoder * decoder,
+    gconstpointer param, guint param_size, guint param_num, const guchar * data,
+    guint data_size)
+{
+  GstVaapiCodecObject *object;
+
+  object = gst_vaapi_codec_object_new_with_param_num (&GstVaapiSliceClass,
+      GST_VAAPI_CODEC_BASE (decoder), param, param_size, param_num, data,
+      data_size, 0);
   return GST_VAAPI_SLICE_CAST (object);
 }
