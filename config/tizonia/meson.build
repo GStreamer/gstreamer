@@ -1,6 +1,5 @@
-infile = 'gstomx.conf.in'
-outfile = 'gstomx.conf'
-configure_file(input : infile,
-               output : outfile,
-               configuration : cdata,
+tizonia_cdata = cdata
+configure_file(input : 'gstomx.conf.in',
+               output : 'gstomx.conf',
+               configuration : tizonia_cdata,
                install_dir : omx_conf_dir)
