@@ -6,17 +6,16 @@ recommended to use Cerbero to cross compile GStreamer when other external
 dependencies are required.
 
 Once the toolchain is installed and a Meson cross file is created, to build
-GStreamer simply run for example: `meson --cross-file cross-files/mingw_w64_x86-64.txt builddir`.
+GStreamer simply run for example: `meson --cross-file data/cross-files/mingw_w64_x86-64.txt builddir`.
 
 ## Android
 
 Requires Android API level >= 28, previous versions are missing *iconv* dependency.
 
 - Download and extract the [NDK](https://developer.android.com/ndk/)
-- Create a standalone toolchain targeting your arch and API level:
-`./build/tools/make_standalone_toolchain.py --arch $arch --api $api --install-dir $toolchain_path`
 - Create a Meson cross file, you can use `android_arm64_api28.txt` as example
-  and change CPU architectures and toolchain path.
+  and change CPU architectures and toolchain path using the prebuilt toolchains
+  from the NDK.
 
 Notes:
 - On fedora the Android NDK requires the `ncurses-compat-libs` package.
