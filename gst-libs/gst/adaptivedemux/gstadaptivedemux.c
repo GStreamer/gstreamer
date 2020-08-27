@@ -2662,11 +2662,11 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       if (stream->fragment.bitrate == 0 &&
           stream->fragment.duration != 0 &&
           gst_element_query_duration (stream->uri_handler, GST_FORMAT_BYTES,
-              &chunk_size)) {
+              &chunk_size) && chunk_size != -1) {
         guint bitrate = MIN (G_MAXUINT, gst_util_uint64_scale (chunk_size,
                 8 * GST_SECOND, stream->fragment.duration));
         GST_LOG_OBJECT (demux,
-            "Fragment has size %" G_GUINT64_FORMAT " duration %" GST_TIME_FORMAT
+            "Fragment has size %" G_GINT64_FORMAT " duration %" GST_TIME_FORMAT
             " = bitrate %u", chunk_size,
             GST_TIME_ARGS (stream->fragment.duration), bitrate);
         stream->fragment.bitrate = bitrate;
