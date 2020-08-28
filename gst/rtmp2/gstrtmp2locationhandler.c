@@ -212,6 +212,7 @@ uri_handler_set_uri (GstURIHandler * handler, const gchar * string,
 
   userinfo = gst_uri_get_userinfo (uri);
   if (userinfo) {
+    gchar *user, *pass;
     gchar **split = g_strsplit (userinfo, ":", 2);
 
     if (!split || !split[0] || !split[1]) {
@@ -226,8 +227,13 @@ uri_handler_set_uri (GstURIHandler * handler, const gchar * string,
           "assume that the first ':' delineates user:pass. You should escape "
           "the user and pass before adding to the URI.", userinfo);
 
-    g_object_set (self, "username", split[0], "password", split[1], NULL);
+    user = g_uri_unescape_string (split[0], NULL);
+    pass = g_uri_unescape_string (split[1], NULL);
     g_strfreev (split);
+
+    g_object_set (self, "username", user, "password", pass, NULL);
+    g_free (user);
+    g_free (pass);
   }
 
   ret = TRUE;
