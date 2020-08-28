@@ -26178,12 +26178,12 @@
                         "writable": true
                     },
                     "deadline": {
-                        "blurb": "Deadline per frame (usec, 0=disabled)",
+                        "blurb": "Deadline per frame (usec, 0=best, 1=realtime)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "0",
+                        "default": "1000000",
                         "max": "9223372036854775807",
                         "min": "0",
                         "mutable": "null",

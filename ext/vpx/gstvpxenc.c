@@ -85,7 +85,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vpxenc_debug);
 #define DEFAULT_V_SCALING_MODE VP8E_NORMAL
 #define DEFAULT_CPU_USED 0
 #define DEFAULT_ENABLE_AUTO_ALT_REF FALSE
-#define DEFAULT_DEADLINE VPX_DL_BEST_QUALITY
+#define DEFAULT_DEADLINE VPX_DL_GOOD_QUALITY
 #define DEFAULT_NOISE_SENSITIVITY 0
 #define DEFAULT_SHARPNESS 0
 
@@ -578,7 +578,7 @@ gst_vpx_enc_class_init (GstVPXEncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEADLINE,
       g_param_spec_int64 ("deadline", "Deadline",
-          "Deadline per frame (usec, 0=disabled)",
+          "Deadline per frame (usec, 0=best, 1=realtime)",
           0, G_MAXINT64, DEFAULT_DEADLINE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_DOC_SHOW_DEFAULT)));
