@@ -1776,6 +1776,13 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
         gst_vpx_error_name (status));
   }
 
+  if (vpx_enc_class->configure_encoder
+      && !vpx_enc_class->configure_encoder (encoder)) {
+    ret = FALSE;
+    g_mutex_unlock (&encoder->encoder_lock);
+    goto done;
+  }
+
   if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
     /* FIXME: Assume 25fps for unknown framerates. Better than reporting
      * that we introduce no latency while we actually do
@@ -1823,6 +1830,7 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
 
   gst_video_encoder_negotiate (GST_VIDEO_ENCODER (encoder));
 
+done:
   return ret;
 }
 

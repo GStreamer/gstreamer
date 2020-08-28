@@ -61,7 +61,7 @@ struct _GstVPXEnc
 {
   GstVideoEncoder base_video_encoder;
 
-  /* < private > */
+  /* < protected > */
   vpx_codec_ctx_t encoder;
   GMutex encoder_lock;
 
@@ -120,6 +120,8 @@ struct _GstVPXEncClass
   vpx_codec_iface_t* (*get_algo) (GstVPXEnc *enc);
   /*enabled scaling*/
   gboolean (*enable_scaling) (GstVPXEnc *enc);
+  /*called from set_format with lock taken*/
+  gboolean (*configure_encoder) (GstVPXEnc *enc);
   /*set image format info*/
   void (*set_image_format) (GstVPXEnc *enc, vpx_image_t *image);
   /*get new simple caps*/
