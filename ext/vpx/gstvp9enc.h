@@ -43,7 +43,10 @@ G_DECLARE_FINAL_TYPE (GstVP9Enc, gst_vp9_enc, GST, VP9_ENC, GstVPXEnc)
 
 struct _GstVP9Enc
 {
-	GstVPXEnc base_vpx_encoder;
+  GstVPXEnc base_vpx_encoder;
+
+  guint tile_columns;
+  guint tile_rows;
 };
 
 G_END_DECLS

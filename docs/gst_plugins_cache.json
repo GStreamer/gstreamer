@@ -25884,7 +25884,36 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
+                "properties": {
+                    "tile-columns": {
+                        "blurb": "Number of tile columns, log2",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "6",
+                        "max": "6",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "tile-rows": {
+                        "blurb": "Number of tile rows, log2",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
                 "rank": "primary"
             }
         },

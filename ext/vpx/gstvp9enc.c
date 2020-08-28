@@ -68,6 +68,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vp9enc_debug);
 #define GST_CAT_DEFAULT gst_vp9enc_debug
 
+#define DEFAULT_TILE_COLUMNS 6
+#define DEFAULT_TILE_ROWS 0
+enum
+{
+  PROP_0,
+  PROP_TILE_COLUMNS,
+  PROP_TILE_ROWS,
+};
 
 /* FIXME: Y42B do not work yet it seems */
 static GstStaticPadTemplate gst_vp9_enc_sink_template =
@@ -101,17 +109,53 @@ static GstFlowReturn gst_vp9_enc_handle_invisible_frame_buffer (GstVPXEnc * enc,
     void *user_data, GstBuffer * buffer);
 static void gst_vp9_enc_set_frame_user_data (GstVPXEnc * enc,
     GstVideoCodecFrame * frame, vpx_image_t * image);
+static void gst_vp9_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_vp9_enc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static gboolean gst_vp9_enc_configure_encoder (GstVPXEnc * encoder);
 
 #define DEFAULT_BITS_PER_PIXEL 0.0289
 
 static void
 gst_vp9_enc_class_init (GstVP9EncClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstVPXEncClass *vpx_encoder_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   vpx_encoder_class = GST_VPX_ENC_CLASS (klass);
+
+  gobject_class->set_property = gst_vp9_enc_set_property;
+  gobject_class->get_property = gst_vp9_enc_get_property;
+
+  /**
+   * GstVP9Enc:tile-columns:
+   *
+   * Number of tile columns, log2
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_TILE_COLUMNS,
+      g_param_spec_int ("tile-columns", "Tile Columns",
+          "Number of tile columns, log2",
+          0, 6, DEFAULT_TILE_COLUMNS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstVP9Enc:tile-rows:
+   *
+   * Number of tile rows, log2
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_TILE_ROWS,
+      g_param_spec_int ("tile-rows", "Tile Rows",
+          "Number of tile rows, log2",
+          0, 2, DEFAULT_TILE_ROWS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_vp9_enc_src_template);
@@ -134,6 +178,7 @@ gst_vp9_enc_class_init (GstVP9EncClass * klass)
   vpx_encoder_class->handle_invisible_frame_buffer =
       gst_vp9_enc_handle_invisible_frame_buffer;
   vpx_encoder_class->set_frame_user_data = gst_vp9_enc_set_frame_user_data;
+  vpx_encoder_class->configure_encoder = gst_vp9_enc_configure_encoder;
 
   GST_DEBUG_CATEGORY_INIT (gst_vp9enc_debug, "vp9enc", 0, "VP9 Encoder");
 }
@@ -156,6 +201,103 @@ gst_vp9_enc_init (GstVP9Enc * gst_vp9_enc)
     gst_vpx_enc->have_default_config = TRUE;
   }
   gst_vpx_enc->bits_per_pixel = DEFAULT_BITS_PER_PIXEL;
+
+  gst_vp9_enc->tile_columns = DEFAULT_TILE_COLUMNS;
+  gst_vp9_enc->tile_rows = DEFAULT_TILE_ROWS;
+}
+
+static void
+gst_vp9_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVPXEnc *gst_vpx_enc = GST_VPX_ENC (object);
+  GstVP9Enc *gst_vp9_enc = GST_VP9_ENC (object);
+  vpx_codec_err_t status;
+
+  g_mutex_lock (&gst_vpx_enc->encoder_lock);
+
+  switch (prop_id) {
+    case PROP_TILE_COLUMNS:
+      gst_vp9_enc->tile_columns = g_value_get_int (value);
+      if (gst_vpx_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_TILE_COLUMNS,
+            gst_vp9_enc->tile_columns);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vpx_enc,
+              "Failed to set VP9E_SET_TILE_COLUMNS: %s",
+              gst_vpx_error_name (status));
+        }
+      }
+      break;
+    case PROP_TILE_ROWS:
+      gst_vp9_enc->tile_rows = g_value_get_int (value);
+      if (gst_vpx_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_TILE_ROWS,
+            gst_vp9_enc->tile_rows);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vpx_enc,
+              "Failed to set VP9E_SET_TILE_ROWS: %s",
+              gst_vpx_error_name (status));
+        }
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  g_mutex_unlock (&gst_vpx_enc->encoder_lock);
+}
+
+static void
+gst_vp9_enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstVPXEnc *gst_vpx_enc = GST_VPX_ENC (object);
+  GstVP9Enc *gst_vp9_enc = GST_VP9_ENC (object);
+
+  g_mutex_lock (&gst_vpx_enc->encoder_lock);
+
+  switch (prop_id) {
+    case PROP_TILE_COLUMNS:
+      g_value_set_int (value, gst_vp9_enc->tile_columns);
+      break;
+    case PROP_TILE_ROWS:
+      g_value_set_int (value, gst_vp9_enc->tile_rows);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  g_mutex_unlock (&gst_vpx_enc->encoder_lock);
+}
+
+static gboolean
+gst_vp9_enc_configure_encoder (GstVPXEnc * encoder)
+{
+  GstVP9Enc *vp9enc = GST_VP9_ENC (encoder);
+  vpx_codec_err_t status;
+
+  status =
+      vpx_codec_control (&encoder->encoder, VP9E_SET_TILE_COLUMNS,
+      vp9enc->tile_columns);
+  if (status != VPX_CODEC_OK) {
+    GST_DEBUG_OBJECT (encoder, "Failed to set VP9E_SET_TILE_COLUMNS: %s",
+        gst_vpx_error_name (status));
+  }
+
+  status =
+      vpx_codec_control (&encoder->encoder, VP9E_SET_TILE_ROWS,
+      vp9enc->tile_rows);
+  if (status != VPX_CODEC_OK) {
+    GST_DEBUG_OBJECT (encoder, "Failed to set VP9E_SET_TILE_ROWS: %s",
+        gst_vpx_error_name (status));
+  }
+
+  return TRUE;
 }
 
 static vpx_codec_iface_t *
