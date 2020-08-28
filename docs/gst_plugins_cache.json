@@ -25885,6 +25885,18 @@
                     }
                 },
                 "properties": {
+                    "row-mt": {
+                        "blurb": "Whether each row should be encoded using multiple threads",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "tile-columns": {
                         "blurb": "Number of tile columns, log2",
                         "conditionally-available": false,
