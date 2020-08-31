@@ -2294,6 +2294,10 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
     GstBuffer *buffer;
 
     buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best));
+    if (!buffer) {
+      /* We might have gotten a flush event after we picked the pad */
+      goto done;
+    }
 
     ret =
         gst_base_ts_mux_aggregate_buffer (GST_BASE_TS_MUX (agg),
