@@ -1853,8 +1853,8 @@ static GstFlvMuxPad *
 gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
     gboolean timeout)
 {
+  GstFlvMux *mux = GST_FLV_MUX (aggregator);
   GstFlvMuxPad *best = NULL;
-  GstBuffer *buffer;
   GstClockTime best_ts = GST_CLOCK_TIME_NONE;
   GstIterator *pads;
   GValue padptr = { 0, };
@@ -1865,22 +1865,19 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
   while (!done) {
     switch (gst_iterator_next (pads, &padptr)) {
       case GST_ITERATOR_OK:{
-
-        GstFlvMux *mux = GST_FLV_MUX (aggregator);
         GstAggregatorPad *apad = g_value_get_object (&padptr);
         GstFlvMuxPad *fpad = GST_FLV_MUX_PAD (apad);
-        gint64 t = GST_CLOCK_TIME_NONE;
+        GstClockTime t = GST_CLOCK_TIME_NONE;
+        GstBuffer *buffer;
 
         buffer = gst_aggregator_pad_peek_buffer (apad);
         if (!buffer) {
-          if (timeout || GST_PAD_IS_EOS (apad)) {
-            continue;
-          } else {
-            if (best)
-              gst_object_replace ((GstObject **) & best, NULL);
+          if (!timeout && !GST_PAD_IS_EOS (apad)) {
+            gst_object_replace ((GstObject **) & best, NULL);
             best_ts = GST_CLOCK_TIME_NONE;
-            break;
+            done = TRUE;
           }
+          break;
         }
 
         if (fpad->drop_deltas) {
@@ -1890,14 +1887,12 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
                 "Dropped buffer %" GST_PTR_FORMAT " until keyframe", buffer);
             gst_buffer_unref (buffer);
             gst_aggregator_pad_drop_buffer (apad);
-            if (timeout) {
-              continue;
-            } else {
-              if (best)
-                gst_object_replace ((GstObject **) & best, NULL);
+            if (!timeout) {
+              gst_object_replace ((GstObject **) & best, NULL);
               best_ts = GST_CLOCK_TIME_NONE;
-              break;
+              done = TRUE;
             }
+            break;
           } else {
             /* drop-deltas is set and the buffer isn't delta, drop flag */
             fpad->drop_deltas = FALSE;
@@ -1918,14 +1913,12 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
             gst_aggregator_pad_drop_buffer (apad);
             /* Look for non-delta buffer */
             fpad->drop_deltas = TRUE;
-            if (timeout) {
-              continue;
-            } else {
-              if (best)
-                gst_object_replace ((GstObject **) & best, NULL);
+            if (!timeout) {
+              gst_object_replace ((GstObject **) & best, NULL);
               best_ts = GST_CLOCK_TIME_NONE;
-              break;
+              done = TRUE;
             }
+            break;
           }
         }
 
@@ -1935,7 +1928,6 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
           best_ts = t;
         }
         gst_buffer_unref (buffer);
-        g_value_reset (&padptr);
         break;
       }
       case GST_ITERATOR_DONE:
@@ -1952,13 +1944,19 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
         g_assert_not_reached ();
         break;
     }
+    g_value_reset (&padptr);
   }
   g_value_unset (&padptr);
   gst_iterator_free (pads);
 
-  GST_DEBUG_OBJECT (aggregator,
-      "Best pad found with %" GST_TIME_FORMAT ": %" GST_PTR_FORMAT,
-      GST_TIME_ARGS (best_ts), best);
+  if (best) {
+    GST_DEBUG_OBJECT (aggregator,
+        "Best pad found with TS %" GST_TIME_FORMAT ": %" GST_PTR_FORMAT,
+        GST_TIME_ARGS (best_ts), best);
+  } else {
+    GST_DEBUG_OBJECT (aggregator, "Best pad not found");
+  }
+
   if (ts)
     *ts = best_ts;
   return best;
