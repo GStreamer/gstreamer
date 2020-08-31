@@ -46,6 +46,24 @@
  *    has been taken with pop_buffer (), a new buffer can be queued
  *    on that pad.
  *
+ *  * When gst_aggregator_pad_peek_buffer() or gst_aggregator_pad_has_buffer()
+ *    are called, a reference is taken to the returned buffer, which stays
+ *    valid until either:
+ *
+ *      - gst_aggregator_pad_pop_buffer() is called, in which case the caller
+ *        is guaranteed that the buffer they receive is the same as the peeked
+ *        buffer.
+ *      - gst_aggregator_pad_drop_buffer() is called, in which case the caller
+ *        is guaranteed that the dropped buffer is the one that was peeked.
+ *      - the subclass implementation of #GstAggregatorClass.aggregate returns.
+ *
+ *    Subsequent calls to gst_aggregator_pad_peek_buffer() or
+ *    gst_aggregator_pad_has_buffer() return / check the same buffer that was
+ *    returned / checked, until one of the conditions listed above is met.
+ *
+ *    Subclasses are only allowed to call these methods from the aggregate
+ *    thread.
+ *
  *  * If the subclass wishes to push a buffer downstream in its aggregate
  *    implementation, it should do so through the
  *    gst_aggregator_finish_buffer() method. This method will take care
@@ -127,7 +145,7 @@ static GstClockTime gst_aggregator_get_latency_property (GstAggregator * agg);
 static GstClockTime gst_aggregator_get_latency_unlocked (GstAggregator * self);
 
 static void gst_aggregator_pad_buffer_consumed (GstAggregatorPad * pad,
-    GstBuffer * buffer);
+    GstBuffer * buffer, gboolean dequeued);
 
 GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
 #define GST_CAT_DEFAULT aggregator_debug
@@ -239,6 +257,7 @@ struct _GstAggregatorPadPrivate
   GQueue data;                  /* buffers, events and queries */
   GstBuffer *clipped_buffer;
   guint num_buffers;
+  GstBuffer *peeked_buffer;
 
   /* used to track fill state of queues, only used with live-src and when
    * latency property is set to > 0 */
@@ -951,7 +970,8 @@ gst_aggregator_pad_skip_buffers (GstElement * self, GstPad * epad,
     if (GST_IS_BUFFER (item->data)
         && klass->skip_buffer (aggpad, agg, item->data)) {
       GST_LOG_OBJECT (aggpad, "Skipping %" GST_PTR_FORMAT, item->data);
-      gst_aggregator_pad_buffer_consumed (aggpad, GST_BUFFER (item->data));
+      gst_aggregator_pad_buffer_consumed (aggpad, GST_BUFFER (item->data),
+          TRUE);
       gst_buffer_unref (item->data);
       g_queue_delete_link (&aggpad->priv->data, item);
     } else {
@@ -965,6 +985,22 @@ gst_aggregator_pad_skip_buffers (GstElement * self, GstPad * epad,
 
   return TRUE;
 }
+
+static gboolean
+gst_aggregator_pad_reset_peeked_buffer (GstElement * self, GstPad * epad,
+    gpointer user_data)
+{
+  GstAggregatorPad *aggpad = (GstAggregatorPad *) epad;
+
+  PAD_LOCK (aggpad);
+
+  gst_buffer_replace (&aggpad->priv->peeked_buffer, NULL);
+
+  PAD_UNLOCK (aggpad);
+
+  return TRUE;
+}
+
 
 static void
 gst_aggregator_pad_set_flushing (GstAggregatorPad * aggpad,
@@ -1300,8 +1336,11 @@ gst_aggregator_aggregate_func (GstAggregator * self)
 
     /* Ensure we have buffers ready (either in clipped_buffer or at the head of
      * the queue */
-    if (!gst_aggregator_wait_and_check (self, &timeout))
+    if (!gst_aggregator_wait_and_check (self, &timeout)) {
+      gst_element_foreach_sink_pad (GST_ELEMENT_CAST (self),
+          gst_aggregator_pad_reset_peeked_buffer, NULL);
       continue;
+    }
 
     if (gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (self))) {
       if (!gst_aggregator_negotiate_unlocked (self)) {
@@ -1318,6 +1357,9 @@ gst_aggregator_aggregate_func (GstAggregator * self)
       GST_TRACE_OBJECT (self, "Actually aggregating!");
       flow_return = klass->aggregate (self, timeout);
     }
+
+    gst_element_foreach_sink_pad (GST_ELEMENT_CAST (self),
+        gst_aggregator_pad_reset_peeked_buffer, NULL);
 
     if (!priv->selected_samples_called_or_warned) {
       GST_FIXME_OBJECT (self,
@@ -3249,9 +3291,12 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
 
 /* Must be called with the PAD_LOCK held */
 static void
-gst_aggregator_pad_buffer_consumed (GstAggregatorPad * pad, GstBuffer * buffer)
+gst_aggregator_pad_buffer_consumed (GstAggregatorPad * pad, GstBuffer * buffer,
+    gboolean dequeued)
 {
-  pad->priv->num_buffers--;
+  if (dequeued)
+    pad->priv->num_buffers--;
+
   if (buffer && pad->priv->emit_signals) {
     g_signal_emit (pad, gst_aggregator_pad_signals[PAD_SIGNAL_BUFFER_CONSUMED],
         0, buffer);
@@ -3292,7 +3337,7 @@ gst_aggregator_pad_clip_buffer_unlocked (GstAggregatorPad * pad)
       buffer = aggclass->clip (self, pad, buffer);
 
       if (buffer == NULL) {
-        gst_aggregator_pad_buffer_consumed (pad, buffer);
+        gst_aggregator_pad_buffer_consumed (pad, buffer, TRUE);
         GST_TRACE_OBJECT (pad, "Clipping consumed the buffer");
       }
     }
@@ -3316,22 +3361,44 @@ gst_aggregator_pad_clip_buffer_unlocked (GstAggregatorPad * pad)
 GstBuffer *
 gst_aggregator_pad_pop_buffer (GstAggregatorPad * pad)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   PAD_LOCK (pad);
 
-  if (pad->priv->flow_return != GST_FLOW_OK) {
-    PAD_UNLOCK (pad);
-    return NULL;
+  /* If the subclass has already peeked a buffer, we guarantee
+   * that it receives the same buffer, no matter if the pad has
+   * errored out / been flushed in the meantime.
+   */
+  if (pad->priv->peeked_buffer) {
+    buffer = pad->priv->peeked_buffer;
+    goto done;
   }
 
-  gst_aggregator_pad_clip_buffer_unlocked (pad);
+  if (pad->priv->flow_return != GST_FLOW_OK)
+    goto done;
 
+  gst_aggregator_pad_clip_buffer_unlocked (pad);
   buffer = pad->priv->clipped_buffer;
 
+done:
   if (buffer) {
-    pad->priv->clipped_buffer = NULL;
-    gst_aggregator_pad_buffer_consumed (pad, buffer);
+    if (pad->priv->clipped_buffer != NULL) {
+      /* Here we still hold a reference to both the clipped buffer
+       * and possibly the peeked buffer, we transfer the first and
+       * potentially release the second
+       */
+      gst_aggregator_pad_buffer_consumed (pad, buffer, TRUE);
+      pad->priv->clipped_buffer = NULL;
+      gst_buffer_replace (&pad->priv->peeked_buffer, NULL);
+    } else {
+      /* Here our clipped buffer has already been released, for
+       * example because of a flush. We thus transfer the reference
+       * to the peeked buffer to the caller, and we don't decrement
+       * pad.num_buffers as it has already been done elsewhere
+       */
+      gst_aggregator_pad_buffer_consumed (pad, buffer, FALSE);
+      pad->priv->peeked_buffer = NULL;
+    }
     GST_DEBUG_OBJECT (pad, "Consumed: %" GST_PTR_FORMAT, buffer);
   }
 
@@ -3373,24 +3440,29 @@ gst_aggregator_pad_drop_buffer (GstAggregatorPad * pad)
 GstBuffer *
 gst_aggregator_pad_peek_buffer (GstAggregatorPad * pad)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   PAD_LOCK (pad);
 
-  if (pad->priv->flow_return != GST_FLOW_OK) {
-    PAD_UNLOCK (pad);
-    return NULL;
+  if (pad->priv->peeked_buffer) {
+    buffer = gst_buffer_ref (pad->priv->peeked_buffer);
+    goto done;
   }
+
+  if (pad->priv->flow_return != GST_FLOW_OK)
+    goto done;
 
   gst_aggregator_pad_clip_buffer_unlocked (pad);
 
   if (pad->priv->clipped_buffer) {
     buffer = gst_buffer_ref (pad->priv->clipped_buffer);
+    pad->priv->peeked_buffer = gst_buffer_ref (buffer);
   } else {
     buffer = NULL;
   }
-  PAD_UNLOCK (pad);
 
+done:
+  PAD_UNLOCK (pad);
   return buffer;
 }
 
@@ -3412,8 +3484,15 @@ gst_aggregator_pad_has_buffer (GstAggregatorPad * pad)
   gboolean has_buffer;
 
   PAD_LOCK (pad);
-  gst_aggregator_pad_clip_buffer_unlocked (pad);
-  has_buffer = (pad->priv->clipped_buffer != NULL);
+
+  if (pad->priv->peeked_buffer) {
+    has_buffer = TRUE;
+  } else {
+    gst_aggregator_pad_clip_buffer_unlocked (pad);
+    has_buffer = (pad->priv->clipped_buffer != NULL);
+    if (has_buffer)
+      pad->priv->peeked_buffer = gst_buffer_ref (pad->priv->clipped_buffer);
+  }
   PAD_UNLOCK (pad);
 
   return has_buffer;

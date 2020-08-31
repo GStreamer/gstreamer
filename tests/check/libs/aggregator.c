@@ -58,6 +58,7 @@ struct _GstTestAggregator
 
   guint64 timestamp;
   gboolean gap_expected;
+  gboolean do_flush_on_aggregate;
 };
 
 struct _GstTestAggregatorClass
@@ -100,7 +101,21 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
           testagg->gap_expected = FALSE;
         }
 
-        gst_aggregator_pad_drop_buffer (pad);
+        if (testagg->do_flush_on_aggregate) {
+          GstBuffer *popped_buf;
+          buf = gst_aggregator_pad_peek_buffer (pad);
+
+          GST_DEBUG_OBJECT (pad, "Flushing on aggregate");
+
+          gst_pad_send_event (GST_PAD (pad), gst_event_new_flush_start ());
+          popped_buf = gst_aggregator_pad_pop_buffer (pad);
+
+          fail_unless (buf == popped_buf);
+          gst_buffer_unref (buf);
+          gst_buffer_unref (popped_buf);
+        } else {
+          gst_aggregator_pad_drop_buffer (pad);
+        }
 
         g_value_reset (&value);
         break;
@@ -1259,6 +1274,37 @@ GST_START_TEST (test_change_state_intensive)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flush_on_aggregate)
+{
+  GThread *thread1, *thread2;
+  ChainData data1 = { 0, };
+  ChainData data2 = { 0, };
+  TestData test = { 0, };
+
+  _test_data_init (&test, FALSE);
+  ((GstTestAggregator *) test.aggregator)->do_flush_on_aggregate = TRUE;
+  _chain_data_init (&data1, test.aggregator, gst_buffer_new (), NULL);
+  _chain_data_init (&data2, test.aggregator, gst_buffer_new (), NULL);
+
+  thread1 = g_thread_try_new ("gst-check", push_data, &data1, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_data, &data2, NULL);
+
+  g_main_loop_run (test.ml);
+  g_source_remove (test.timeout_id);
+
+  /* these will return immediately as when the data is popped the threads are
+   * unlocked and will terminate */
+  g_thread_join (thread1);
+  g_thread_join (thread2);
+
+  _chain_data_clear (&data1);
+  _chain_data_clear (&data2);
+  _test_data_clear (&test);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_aggregator_suite (void)
 {
@@ -1286,6 +1332,7 @@ gst_aggregator_suite (void)
   tcase_add_test (general, test_timeout_pipeline_with_wait);
   tcase_add_test (general, test_add_remove);
   tcase_add_test (general, test_change_state_intensive);
+  tcase_add_test (general, test_flush_on_aggregate);
 
   return suite;
 }
