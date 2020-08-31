@@ -34,6 +34,8 @@
     NICE_VERSION_MICRO >= (micro)))
 #endif
 
+#define HTTP_PROXY_PORT_DEFAULT 3128
+
 /* XXX:
  *
  * - are locally generated remote candidates meant to be readded to libnice?
@@ -74,6 +76,8 @@ struct _GstWebRTCNicePrivate
   GstUri *turn_server;
 
   GHashTable *turn_servers;
+
+  GstUri *http_proxy;
 };
 
 #define gst_webrtc_nice_parent_class parent_class
@@ -1391,6 +1395,106 @@ out:
 }
 
 static void
+on_http_proxy_resolved (GstWebRTCICE * ice, GAsyncResult * res,
+    gpointer user_data)
+{
+  GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
+  GstUri *uri = user_data;
+  GList *addresses;
+  GError *error = NULL;
+  const gchar *userinfo;
+  gchar *user = NULL;
+  gchar *pass = NULL;
+  gchar *ip = NULL;
+  guint port = GST_URI_NO_PORT;
+
+  if (!(addresses = resolve_host_finish (nice, res, &error))) {
+    GST_WARNING_OBJECT (ice, "Failed to resolve http proxy: %s",
+        error->message);
+    g_clear_error (&error);
+    return;
+  }
+
+  /* XXX: only the first IP is used */
+  ip = g_inet_address_to_string (addresses->data);
+
+  if (!ip) {
+    GST_ERROR_OBJECT (ice, "failed to resolve host for proxy");
+    gst_uri_unref (uri);
+    return;
+  }
+
+  port = gst_uri_get_port (uri);
+  if (port == GST_URI_NO_PORT) {
+    port = HTTP_PROXY_PORT_DEFAULT;
+    GST_DEBUG_OBJECT (ice, "Proxy server has no port, assuming %u",
+        HTTP_PROXY_PORT_DEFAULT);
+  }
+
+  userinfo = gst_uri_get_userinfo (uri);
+  _parse_userinfo (userinfo, &user, &pass);
+
+  g_object_set (nice->priv->nice_agent,
+      "proxy-ip", ip, "proxy-port", port, "proxy-type", NICE_PROXY_TYPE_HTTP,
+      "proxy-username", user, "proxy-password", pass, NULL);
+
+  g_free (ip);
+  g_free (user);
+  g_free (pass);
+}
+
+static GstUri *
+_set_http_proxy (GstWebRTCICE * ice, const gchar * s)
+{
+  GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
+  GstUri *uri = gst_uri_from_string_escaped (s);
+  const gchar *msg =
+      "must be of the form http://[username:password@]<host>[:<port>]";
+  const gchar *host = NULL;
+  const gchar *userinfo;
+  gchar *user = NULL, *pass = NULL;
+
+  GST_DEBUG_OBJECT (ice, "setting http proxy %s", s);
+
+  if (!uri) {
+    GST_ERROR_OBJECT (ice, "Couldn't parse http proxy uri '%s', %s", s, msg);
+    return NULL;
+  }
+
+  if (g_strcmp0 (gst_uri_get_scheme (uri), "http") != 0) {
+    GST_ERROR_OBJECT (ice,
+        "Couldn't parse uri scheme for http proxy server '%s', %s", s, msg);
+    gst_uri_unref (uri);
+    return NULL;
+  }
+
+  host = gst_uri_get_host (uri);
+  if (!host) {
+    GST_ERROR_OBJECT (ice, "http proxy server '%s' has no host, %s", s, msg);
+    gst_uri_unref (uri);
+    return NULL;
+  }
+
+  userinfo = gst_uri_get_userinfo (uri);
+  _parse_userinfo (userinfo, &user, &pass);
+  if ((pass && pass[0] != '\0') && (!user || user[0] == '\0')) {
+    GST_ERROR_OBJECT (ice,
+        "Password specified without user for http proxy '%s', %s", s, msg);
+    uri = NULL;
+    goto out;
+  }
+
+  resolve_host_async (nice, host, (GAsyncReadyCallback) on_http_proxy_resolved,
+      gst_uri_ref (uri), (GDestroyNotify) gst_uri_unref);
+
+out:
+  g_free (user);
+  g_free (pass);
+
+  return uri;
+}
+
+static void
 gst_webrtc_nice_set_stun_server (GstWebRTCICE * ice, const gchar * uri_s)
 {
   GstUri *uri = gst_uri_from_string_escaped (uri_s);
@@ -1439,6 +1543,30 @@ gst_webrtc_nice_get_turn_server (GstWebRTCICE * ice)
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
   if (nice->priv->turn_server)
     return gst_uri_to_string (nice->priv->turn_server);
+  else
+    return NULL;
+}
+
+static void
+gst_webrtc_nice_set_http_proxy (GstWebRTCICE * ice, const gchar * http_proxy)
+{
+  GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
+  GstUri *uri = _set_http_proxy (ice, http_proxy);
+
+  if (uri) {
+    if (nice->priv->http_proxy)
+      gst_uri_unref (nice->priv->http_proxy);
+    nice->priv->http_proxy = uri;
+  }
+}
+
+static gchar *
+gst_webrtc_nice_get_http_proxy (GstWebRTCICE * ice)
+{
+  GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
+
+  if (nice->priv->http_proxy)
+    return gst_uri_to_string (nice->priv->http_proxy);
   else
     return NULL;
 }
@@ -1526,6 +1654,8 @@ gst_webrtc_nice_finalize (GObject * object)
     gst_uri_unref (ice->priv->turn_server);
   if (ice->priv->stun_server)
     gst_uri_unref (ice->priv->stun_server);
+  if (ice->priv->http_proxy)
+    gst_uri_unref (ice->priv->http_proxy);
 
   g_mutex_clear (&ice->priv->lock);
   g_cond_clear (&ice->priv->cond);
@@ -1573,6 +1703,7 @@ gst_webrtc_nice_class_init (GstWebRTCNiceClass * klass)
   gst_webrtc_ice_class->get_is_controller = gst_webrtc_nice_get_is_controller;
   gst_webrtc_ice_class->get_stun_server = gst_webrtc_nice_get_stun_server;
   gst_webrtc_ice_class->get_turn_server = gst_webrtc_nice_get_turn_server;
+  gst_webrtc_ice_class->get_http_proxy = gst_webrtc_nice_get_http_proxy;
   gst_webrtc_ice_class->set_force_relay = gst_webrtc_nice_set_force_relay;
   gst_webrtc_ice_class->set_is_controller = gst_webrtc_nice_set_is_controller;
   gst_webrtc_ice_class->set_local_credentials =
@@ -1582,6 +1713,7 @@ gst_webrtc_nice_class_init (GstWebRTCNiceClass * klass)
   gst_webrtc_ice_class->set_stun_server = gst_webrtc_nice_set_stun_server;
   gst_webrtc_ice_class->set_tos = gst_webrtc_nice_set_tos;
   gst_webrtc_ice_class->set_turn_server = gst_webrtc_nice_set_turn_server;
+  gst_webrtc_ice_class->set_http_proxy = gst_webrtc_nice_set_http_proxy;
   gst_webrtc_ice_class->set_on_ice_candidate =
       gst_webrtc_nice_set_on_ice_candidate;
   gst_webrtc_ice_class->get_local_candidates =

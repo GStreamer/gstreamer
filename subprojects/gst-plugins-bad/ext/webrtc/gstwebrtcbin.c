@@ -533,6 +533,7 @@ enum
   PROP_ICE_AGENT,
   PROP_LATENCY,
   PROP_SCTP_TRANSPORT,
+  PROP_HTTP_PROXY
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -8058,6 +8059,10 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
     case PROP_ICE_AGENT:
       webrtc->priv->ice = g_value_get_object (value);
       break;
+    case PROP_HTTP_PROXY:
+      gst_webrtc_ice_set_http_proxy (webrtc->priv->ice,
+          g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -8134,6 +8139,10 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCTP_TRANSPORT:
       g_value_set_object (value, webrtc->priv->sctp_transport);
+      break;
+    case PROP_HTTP_PROXY:
+      g_value_take_string (value,
+          gst_webrtc_ice_get_http_proxy (webrtc->priv->ice));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -8418,6 +8427,21 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           "Default duration to buffer in the jitterbuffers (in ms)",
           0, G_MAXUINT, DEFAULT_JB_LATENCY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCBin:http-proxy:
+   *
+   * A HTTP proxy for use with TURN/TCP of the form
+   * http://[username:password@]hostname[:port]
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_HTTP_PROXY,
+      g_param_spec_string ("http-proxy", "HTTP Proxy",
+          "A HTTP proxy for use with TURN/TCP of the form "
+          "http://[username:password@]hostname[:port]",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin:sctp-transport:

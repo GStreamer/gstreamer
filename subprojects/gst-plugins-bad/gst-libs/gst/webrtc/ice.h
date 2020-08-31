@@ -106,6 +106,33 @@ struct _GstWebRTCICEClass {
   void (*set_turn_server)                              (GstWebRTCICE * ice,
                                                         const gchar * uri);
   gchar * (*get_turn_server)                           (GstWebRTCICE * ice);
+
+  /**
+   * GstWebRTCICEClass::set_http_proxy:
+   * @ice: a #GstWebRTCICE
+   * @uri: (transfer none): URI of the HTTP proxy of the form
+   *   http://[username:password@]hostname[:port]
+   *
+   * Set HTTP Proxy to be used when connecting to TURN server.
+   *
+   * Since: 1.22
+   */
+  void (*set_http_proxy)                               (GstWebRTCICE * ice,
+                                                        const gchar * uri);
+
+  /**
+   * GstWebRTCICEClass::get_http_proxy:
+   * @ice: a #GstWebRTCICE
+   *
+   * Get HTTP Proxy to be used when connecting to TURN server.
+   *
+   * Returns: (transfer full): URI of the HTTP proxy of the form
+   *   http://[username:password@]hostname[:port]
+   *
+   * Since: 1.22
+   */
+  gchar * (*get_http_proxy)                            (GstWebRTCICE * ice);
+
   void (*set_tos)                                      (GstWebRTCICE * ice,
                                                         GstWebRTCICEStream * stream,
                                                         guint tos);
@@ -185,6 +212,13 @@ void                        gst_webrtc_ice_set_turn_server          (GstWebRTCIC
 
 GST_WEBRTC_API
 gchar *                     gst_webrtc_ice_get_turn_server          (GstWebRTCICE * ice);
+
+GST_WEBRTC_API
+void                        gst_webrtc_ice_set_http_proxy           (GstWebRTCICE * ice,
+                                                                     const gchar * uri);
+
+GST_WEBRTC_API
+gchar *                     gst_webrtc_ice_get_http_proxy           (GstWebRTCICE * ice);
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_on_ice_candidate     (GstWebRTCICE * ice,
