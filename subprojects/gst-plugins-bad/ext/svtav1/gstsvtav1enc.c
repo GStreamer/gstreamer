@@ -638,7 +638,9 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->enable_restoration_filtering = -1;
   svt_config->sg_filter_mode = -1;
   svt_config->wn_filter_mode = -1;
+  #if 0 //!REMOVE_EDGE_SKIP_ANGLE_INTRA
   svt_config->edge_skp_angle_intra = -1;
+  #endif
   svt_config->intra_angle_delta = -1;
   svt_config->inter_intra_compound = -1;
   svt_config->enable_paeth = -1;
@@ -648,7 +650,9 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->spatial_sse_full_loop_level = -1;
   svt_config->over_bndry_blk = -1;
   svt_config->new_nearest_comb_inject = -1;
+  #if 0 //!REMOVE_REF_FOR_RECT_PART
   svt_config->prune_ref_rec_part = -1;
+  #endif
   svt_config->nsq_table = -1;
   svt_config->frame_end_cdf_update = -1;
   svt_config->pred_me = -1;
