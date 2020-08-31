@@ -2005,6 +2005,15 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     best = gst_flv_mux_find_best_pad (aggregator, &ts, timeout);
   }
 
+  if (best) {
+    buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best));
+    if (!buffer) {
+      /* We might have gotten a flush event after we picked the pad */
+      gst_object_unref (best);
+      return GST_AGGREGATOR_FLOW_NEED_DATA;
+    }
+  }
+
   if (mux->new_tags && mux->streamable) {
     GstBuffer *buf = gst_flv_mux_create_metadata (mux);
     if (buf)
@@ -2013,8 +2022,6 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   }
 
   if (best) {
-    buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best));
-    g_assert (buffer);
     best->dts =
         gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD
         (best)->segment, GST_BUFFER_DTS_OR_PTS (buffer));
