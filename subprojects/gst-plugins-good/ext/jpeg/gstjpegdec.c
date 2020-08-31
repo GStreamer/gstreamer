@@ -880,7 +880,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
   gint lines, v_samp[3];
   guchar *base[3], *last[3];
   gint stride[3];
-  guint height, field_height;
+  guint field_height;
 
   line[0] = y;
   line[1] = u;
@@ -893,7 +893,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
   if (G_UNLIKELY (v_samp[0] > 2 || v_samp[1] > 2 || v_samp[2] > 2))
     goto format_not_supported;
 
-  height = field_height = GST_VIDEO_FRAME_HEIGHT (frame);
+  field_height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   /* XXX: division by 2 here might not be a good idea yes. But we are doing this
    * already in gst_jpeg_dec_handle_frame() for interlaced jpeg */
@@ -943,7 +943,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
   } else
 #endif
   {
-    for (i = 0; i < height; i += v_samp[0] * DCTSIZE) {
+    for (i = 0; i < field_height; i += v_samp[0] * DCTSIZE) {
       for (j = 0; j < (v_samp[0] * DCTSIZE); ++j) {
         /* Y */
         line[0][j] = base[0] + (i + j) * stride[0];
