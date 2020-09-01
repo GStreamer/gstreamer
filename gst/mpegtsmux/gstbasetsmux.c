@@ -1714,7 +1714,7 @@ gst_base_ts_mux_start (GstAggregator * agg)
 static gboolean
 gst_base_ts_mux_stop (GstAggregator * agg)
 {
-  gst_base_ts_mux_reset (GST_BASE_TS_MUX (agg), FALSE);
+  gst_base_ts_mux_reset (GST_BASE_TS_MUX (agg), TRUE);
 
   return TRUE;
 }
