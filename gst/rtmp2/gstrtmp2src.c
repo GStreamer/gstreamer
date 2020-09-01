@@ -1008,18 +1008,7 @@ gst_rtmp2_src_get_stats (GstRtmp2Src * self)
   g_mutex_lock (&self->lock);
 
   if (self->connection) {
-    GstRtmpConnection *connection = g_object_ref (self->connection);
-
-    g_mutex_unlock (&self->lock);
-
-    /* We need to do this without holding the lock as the g_async_queue_pop
-     * waits on the loop thread to deliver the stats. The loop thread might
-     * attempt to take the lock as well, leading to a deadlock. */
-    s = gst_rtmp_connection_get_stats (connection);
-
-    g_mutex_lock (&self->lock);
-
-    g_object_unref (connection);
+    s = gst_rtmp_connection_get_stats (self->connection);
   } else if (self->stats) {
     s = gst_structure_copy (self->stats);
   } else {
