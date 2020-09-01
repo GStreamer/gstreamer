@@ -514,6 +514,50 @@ GST_START_TEST (info_post_gst_init_category_registration)
 
 GST_END_TEST;
 
+GST_START_TEST (info_set_and_reset_string)
+{
+  GstDebugCategory *states;
+  GstDebugCategory *caps;
+  GstDebugLevel cat;
+
+  GST_DEBUG_CATEGORY_GET (states, "GST_STATES");
+  GST_DEBUG_CATEGORY_GET (caps, "GST_CAPS");
+  fail_unless (states != NULL);
+  fail_unless (caps != NULL);
+
+  gst_debug_set_threshold_from_string ("WARNING,GST_CAPS:DEBUG", TRUE);
+  cat = gst_debug_category_get_threshold (states);
+  fail_unless_equals_int (cat, GST_LEVEL_WARNING);
+  cat = gst_debug_category_get_threshold (caps);
+  fail_unless_equals_int (cat, GST_LEVEL_DEBUG);
+
+  gst_debug_set_threshold_from_string ("GST_STATES:TRACE", FALSE);
+  cat = gst_debug_category_get_threshold (states);
+  fail_unless_equals_int (cat, GST_LEVEL_TRACE);
+  cat = gst_debug_category_get_threshold (caps);
+  fail_unless_equals_int (cat, GST_LEVEL_DEBUG);
+
+  gst_debug_set_threshold_from_string ("INFO,GST_CAPS:FIXME", FALSE);
+  cat = gst_debug_category_get_threshold (states);
+  fail_unless_equals_int (cat, GST_LEVEL_TRACE);
+  cat = gst_debug_category_get_threshold (caps);
+  fail_unless_equals_int (cat, GST_LEVEL_FIXME);
+
+  gst_debug_set_threshold_from_string ("INFO,GST_CAPS:FIXME", TRUE);
+  cat = gst_debug_category_get_threshold (states);
+  fail_unless_equals_int (cat, GST_LEVEL_INFO);
+  cat = gst_debug_category_get_threshold (caps);
+  fail_unless_equals_int (cat, GST_LEVEL_FIXME);
+
+  gst_debug_set_threshold_from_string ("", TRUE);
+  cat = gst_debug_category_get_threshold (states);
+  fail_unless_equals_int (cat, GST_LEVEL_DEFAULT);
+  cat = gst_debug_category_get_threshold (caps);
+  fail_unless_equals_int (cat, GST_LEVEL_DEFAULT);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_info_suite (void)
 {
@@ -536,6 +580,7 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_set_and_unset_single);
   tcase_add_test (tc_chain, info_set_and_unset_multiple);
   tcase_add_test (tc_chain, info_post_gst_init_category_registration);
+  tcase_add_test (tc_chain, info_set_and_reset_string);
 #endif
 
   return s;
