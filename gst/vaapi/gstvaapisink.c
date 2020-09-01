@@ -1401,6 +1401,9 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
   update_colorimetry (sink, &GST_VIDEO_INFO_COLORIMETRY (vip));
   gst_caps_replace (&sink->caps, caps);
 
+  /* Reset the rotation to the default when new caps are coming in. This
+   * forces re-evaluating if the rotation needs to be done */
+  sink->rotation = DEFAULT_ROTATION;
   gst_vaapisink_ensure_colorbalance (sink);
   gst_vaapisink_ensure_rotation (sink, FALSE);
 
