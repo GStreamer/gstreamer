@@ -2871,3 +2871,65 @@ gst_reference_timestamp_meta_get_info (void)
 
   return meta_info;
 }
+
+/**
+ * gst_buffer_add_custom_meta:
+ * @buffer: (transfer none): a #GstBuffer
+ * @name: the registered name of the desired custom meta
+ *
+ * Creates and adds a #GstCustomMeta for the desired @name. @name must have
+ * been successfully registered with gst_meta_register_custom().
+ *
+ * Returns: (transfer none) (nullable): The #GstCustomMeta that was added to the buffer
+ *
+ * Since: 1.20
+ */
+GstCustomMeta *
+gst_buffer_add_custom_meta (GstBuffer * buffer, const gchar * name)
+{
+  GstCustomMeta *meta;
+  const GstMetaInfo *info;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+
+  info = gst_meta_get_info (name);
+
+  if (info == NULL || !gst_meta_info_is_custom (info))
+    return NULL;
+
+  meta = (GstCustomMeta *) gst_buffer_add_meta (buffer, info, NULL);
+
+  return meta;
+}
+
+/**
+ * gst_buffer_get_custom_meta:
+ * @buffer: a #GstBuffer
+ * @name: the registered name of the custom meta to retrieve.
+ *
+ * Find the first #GstCustomMeta on @buffer for the desired @name.
+ *
+ * Returns: (transfer none) (nullable): the #GstCustomMeta or %NULL when there
+ * is no such metadata on @buffer.
+ *
+ * Since: 1.20
+ */
+GstCustomMeta *
+gst_buffer_get_custom_meta (GstBuffer * buffer, const gchar * name)
+{
+  const GstMetaInfo *info;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  info = gst_meta_get_info (name);
+
+  if (!info)
+    return NULL;
+
+  if (!gst_meta_info_is_custom (info))
+    return NULL;
+
+  return (GstCustomMeta *) gst_buffer_get_meta (buffer, info->api);
+}

@@ -688,6 +688,115 @@ GST_START_TEST (test_meta_seqnum)
 
 GST_END_TEST;
 
+GST_START_TEST (test_meta_custom)
+{
+  GstBuffer *buffer;
+  const GstMetaInfo *info;
+  GstCustomMeta *meta;
+  GstMeta *it;
+  GstStructure *s, *expected;
+  gpointer state = NULL;
+  const gchar *tags[] = { "test-tag", NULL };
+
+  info = gst_meta_register_custom ("test-custom", tags, NULL, NULL, NULL);
+
+  fail_unless (info != NULL);
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta = gst_buffer_add_custom_meta (buffer, "test-custom");
+  fail_if (meta == NULL);
+
+  fail_unless (gst_custom_meta_has_name ((GstCustomMeta *) meta,
+          "test-custom"));
+
+  expected = gst_structure_new_empty ("test-custom");
+  s = gst_custom_meta_get_structure (meta);
+  fail_unless (gst_structure_is_equal (s, expected));
+  gst_structure_free (expected);
+
+  gst_structure_set (s, "test-field", G_TYPE_INT, 42, NULL);
+  gst_buffer_ref (buffer);
+  ASSERT_CRITICAL (gst_structure_set (s, "test-field", G_TYPE_INT, 43, NULL));
+  gst_buffer_unref (buffer);
+  expected = gst_structure_new ("test-custom",
+      "test-field", G_TYPE_INT, 42, NULL);
+  fail_unless (gst_structure_is_equal (s, expected));
+  gst_structure_free (expected);
+
+  it = gst_buffer_iterate_meta (buffer, &state);
+
+  fail_unless ((GstCustomMeta *) it == meta);
+
+  fail_unless (it->info == info);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+static gboolean
+transform_custom (GstBuffer * transbuf, GstMeta * meta, GstBuffer * buffer,
+    GQuark type, gpointer data, gint * user_data)
+{
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GstStructure *s;
+    GstCustomMeta *custom;
+
+    custom = (GstCustomMeta *) gst_buffer_add_meta (transbuf, meta->info, NULL);
+    s = gst_custom_meta_get_structure (custom);
+    gst_structure_set (s, "test-field", G_TYPE_INT, *user_data, NULL);
+  } else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+GST_START_TEST (test_meta_custom_transform)
+{
+  GstBuffer *buffer, *buffer_copy;
+  const GstMetaInfo *info;
+  GstCustomMeta *meta;
+  GstStructure *s, *expected;
+  const gchar *tags[] = { "test-tag", NULL };
+  gint *user_data;
+
+  /* That memory should be deallocated at gst_deinit time */
+  user_data = g_malloc (sizeof (gint));
+  *user_data = 42;
+  info =
+      gst_meta_register_custom ("test-custom", tags,
+      (GstCustomMetaTransformFunction) transform_custom, user_data, g_free);
+
+  fail_unless (info != NULL);
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta = gst_buffer_add_custom_meta (buffer, "test-custom");
+  fail_if (meta == NULL);
+
+  buffer_copy = gst_buffer_copy (buffer);
+  meta = gst_buffer_get_custom_meta (buffer_copy, "test-custom");
+  fail_unless (meta != NULL);
+  expected =
+      gst_structure_new ("test-custom", "test-field", G_TYPE_INT, 42, NULL);
+  s = gst_custom_meta_get_structure (meta);
+  fail_unless (gst_structure_is_equal (s, expected));
+  gst_structure_free (expected);
+
+  /* clean up */
+  gst_buffer_unref (buffer_copy);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffermeta_suite (void)
 {
@@ -705,6 +814,8 @@ gst_buffermeta_suite (void)
   tcase_add_test (tc_chain, test_meta_foreach_remove_several);
   tcase_add_test (tc_chain, test_meta_iterate);
   tcase_add_test (tc_chain, test_meta_seqnum);
+  tcase_add_test (tc_chain, test_meta_custom);
+  tcase_add_test (tc_chain, test_meta_custom_transform);
 
   return s;
 }

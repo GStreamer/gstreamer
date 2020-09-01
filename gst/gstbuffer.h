@@ -664,6 +664,14 @@ gboolean        gst_buffer_foreach_meta         (GstBuffer *buffer,
                                                  GstBufferForeachMetaFunc func,
                                                  gpointer user_data);
 
+GST_API
+GstCustomMeta * gst_buffer_add_custom_meta      (GstBuffer *buffer,
+                                                 const gchar *name);
+
+GST_API
+GstCustomMeta * gst_buffer_get_custom_meta      (GstBuffer *buffer,
+                                                 const gchar *name);
+
 /**
  * gst_value_set_buffer:
  * @v: a #GValue to receive the data

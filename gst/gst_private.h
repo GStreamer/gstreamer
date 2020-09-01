@@ -148,6 +148,7 @@ G_GNUC_INTERNAL  void  _priv_gst_allocator_cleanup (void);
 G_GNUC_INTERNAL  void  _priv_gst_caps_features_cleanup (void);
 G_GNUC_INTERNAL  void  _priv_gst_caps_cleanup (void);
 G_GNUC_INTERNAL  void  _priv_gst_debug_cleanup (void);
+G_GNUC_INTERNAL  void  _priv_gst_meta_cleanup (void);
 
 /* called from gst_task_cleanup_all(). */
 G_GNUC_INTERNAL  void  _priv_gst_element_cleanup (void);
