@@ -1,8 +1,5 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 
-git config --global user.email "gst-build@gstreamer.net"
-git config --global user.name "Gstbuild Runner"
-
 # FIXME: Python fails to validate github.com SSL certificate, unless we first
 # run a dummy download to force refreshing Windows' CA database.
 # See: https://bugs.python.org/issue36137

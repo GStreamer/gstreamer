@@ -9,6 +9,8 @@ ENV ErrorActionPreference='Stop'
 COPY install_choco.ps1 C:\
 RUN C:\install_choco.ps1
 
+RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
+
 COPY install_toolchain.ps1 C:\
 RUN C:\install_toolchain.ps1
 
