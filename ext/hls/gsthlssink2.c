@@ -536,9 +536,9 @@ gst_hls_sink2_release_pad (GstElement * element, GstPad * pad)
 
   g_return_if_fail (pad == sink->audio_sink || pad == sink->video_sink);
 
-  peer = gst_pad_get_peer (pad);
+  peer = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
   if (peer) {
-    gst_element_release_request_pad (sink->splitmuxsink, pad);
+    gst_element_release_request_pad (sink->splitmuxsink, peer);
     gst_object_unref (peer);
   }
 
