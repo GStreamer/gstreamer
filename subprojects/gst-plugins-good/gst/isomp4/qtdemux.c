@@ -10266,8 +10266,8 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segments = NULL;
   if ((edts = qtdemux_tree_get_child_by_type (trak, FOURCC_edts))) {
     GNode *elst;
-    gint n_segments;
-    gint segment_number, entry_size;
+    guint n_segments;
+    guint segment_number, entry_size;
     guint64 time;
     GstClockTime stime;
     const guint8 *buffer;
@@ -10975,7 +10975,7 @@ qtdemux_parse_stereo_svmi_atom (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /*parse svmi header if existing */
   svmi = qtdemux_tree_get_child_by_type (stbl, FOURCC_svmi);
   if (svmi) {
-    guint len = QT_UINT32 ((guint8 *) svmi->data);
+    guint32 len = QT_UINT32 ((guint8 *) svmi->data);
     guint32 version = QT_UINT32 ((guint8 *) svmi->data + 8);
     if (!version) {
       GstVideoMultiviewMode mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
@@ -11382,7 +11382,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             break;
         }
       } else {
-        gint i, j, start, end;
+        guint i, j, start, end;
 
         if (len < 94)
           goto corrupt_file;
@@ -11498,7 +11498,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
       if (pasp) {
         const guint8 *pasp_data = (const guint8 *) pasp->data;
-        gint len = QT_UINT32 (pasp_data);
+        guint len = QT_UINT32 (pasp_data);
 
         if (len == 16) {
           CUR_STREAM (stream)->par_w = QT_UINT32 (pasp_data + 8);
@@ -11514,7 +11514,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
       if (fiel) {
         const guint8 *fiel_data = (const guint8 *) fiel->data;
-        gint len = QT_UINT32 (fiel_data);
+        guint len = QT_UINT32 (fiel_data);
 
         if (len == 10) {
           CUR_STREAM (stream)->interlace_mode = GST_READ_UINT8 (fiel_data + 8);
@@ -11524,7 +11524,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
       if (colr) {
         const guint8 *colr_data = (const guint8 *) colr->data;
-        gint len = QT_UINT32 (colr_data);
+        guint len = QT_UINT32 (colr_data);
 
         if (len == 19 || len == 18) {
           guint32 color_type = GST_READ_UINT32_LE (colr_data + 8);
@@ -11561,14 +11561,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_avc1:
           case FOURCC_avc3:
           {
-            gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *avc_data = stsd_entry_data + 0x56;
 
             /* find avcC */
             while (len >= 0x8) {
-              gint size;
+              guint size;
 
-              if (QT_UINT32 (avc_data) <= len)
+              if (QT_UINT32 (avc_data) <= 0x8)
+                size = 0;
+              else if (QT_UINT32 (avc_data) <= len)
                 size = QT_UINT32 (avc_data) - 0x8;
               else
                 size = len - 0x8;
@@ -11675,14 +11678,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_dvh1:
           case FOURCC_dvhe:
           {
-            gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *hevc_data = stsd_entry_data + 0x56;
 
             /* find hevc */
             while (len >= 0x8) {
-              gint size;
+              guint size;
 
-              if (QT_UINT32 (hevc_data) <= len)
+              if (QT_UINT32 (hevc_data) <= 0x8)
+                size = 0;
+              else if (QT_UINT32 (hevc_data) <= len)
                 size = QT_UINT32 (hevc_data) - 0x8;
               else
                 size = len - 0x8;
@@ -11738,7 +11744,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             if (glbl) {
               guint8 *data;
               GstBuffer *buf;
-              gint len;
+              guint len;
 
               GST_DEBUG_OBJECT (qtdemux, "found glbl data in stsd");
               data = glbl->data;
@@ -11922,7 +11928,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             /* add codec_data if provided */
             if (prefix) {
               GstBuffer *buf;
-              gint len;
+              guint len;
 
               GST_DEBUG_OBJECT (qtdemux, "found prefix data in stsd");
               data = prefix->data;
@@ -11944,7 +11950,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             GstBuffer *buf;
             GstBuffer *seqh = NULL;
             const guint8 *gamma_data = NULL;
-            gint len = QT_UINT32 (stsd_data);   /* FIXME review - why put the whole stsd in codec data? */
+            guint len = QT_UINT32 (stsd_data);  /* FIXME review - why put the whole stsd in codec data? */
 
             qtdemux_parse_svq3_stsd_data (qtdemux, stsd_entry_data, &gamma_data,
                 &seqh);
@@ -12096,14 +12102,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           }
           case FOURCC_vc_1:
           {
-            gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *vc1_data = stsd_entry_data + 0x56;
 
             /* find dvc1 */
             while (len >= 8) {
-              gint size;
+              guint size;
 
-              if (QT_UINT32 (vc1_data) <= len)
+              if (QT_UINT32 (vc1_data) <= 8)
+                size = 0;
+              else if (QT_UINT32 (vc1_data) <= len)
                 size = QT_UINT32 (vc1_data) - 8;
               else
                 size = len - 8;
@@ -12135,14 +12144,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           }
           case FOURCC_av01:
           {
-            gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *av1_data = stsd_entry_data + 0x56;
 
             /* find av1C */
             while (len >= 0x8) {
-              gint size;
+              guint size;
 
-              if (QT_UINT32 (av1_data) <= len)
+              if (QT_UINT32 (av1_data) <= 0x8)
+                size = 0;
+              else if (QT_UINT32 (av1_data) <= len)
                 size = QT_UINT32 (av1_data) - 0x8;
               else
                 size = len - 0x8;
@@ -12214,14 +12226,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
              * vp08, vp09, and vp10 fourcc. */
           case FOURCC_vp09:
           {
-            gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *vpcc_data = stsd_entry_data + 0x56;
 
             /* find vpcC */
             while (len >= 0x8) {
-              gint size;
+              guint size;
 
-              if (QT_UINT32 (vpcc_data) <= len)
+              if (QT_UINT32 (vpcc_data) <= 0x8)
+                size = 0;
+              else if (QT_UINT32 (vpcc_data) <= len)
                 size = QT_UINT32 (vpcc_data) - 0x8;
               else
                 size = len - 0x8;
@@ -12369,7 +12384,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     } else if (stream->subtype == FOURCC_soun) {
       GNode *wave;
-      int version, samplesize;
+      guint version, samplesize;
       guint16 compression_id;
       gboolean amrwb = FALSE;
 
@@ -12684,7 +12699,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_wma_:
         {
-          gint len = QT_UINT32 (stsd_entry_data) - offset;
+          guint len = QT_UINT32 (stsd_entry_data);
+          len = len <= offset ? 0 : len - offset;
           const guint8 *wfex_data = stsd_entry_data + offset;
           const gchar *codec_name = NULL;
           gint version = 1;
@@ -12708,9 +12724,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
           /* find wfex */
           while (len >= 8) {
-            gint size;
+            guint size;
 
-            if (QT_UINT32 (wfex_data) <= len)
+            if (QT_UINT32 (wfex_data) <= 0x8)
+              size = 0;
+            else if (QT_UINT32 (wfex_data) <= len)
               size = QT_UINT32 (wfex_data) - 8;
             else
               size = len - 8;
