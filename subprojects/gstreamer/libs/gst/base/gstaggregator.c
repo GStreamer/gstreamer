@@ -1852,38 +1852,21 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      guint32 seqnum = gst_event_get_seqnum (event);
-
-      PAD_FLUSH_LOCK (aggpad);
-      PAD_LOCK (aggpad);
-      aggpad->priv->last_flush_stop_seqnum = seqnum;
-      PAD_UNLOCK (aggpad);
-
-      gst_aggregator_pad_flush (aggpad, self);
-
       GST_OBJECT_LOCK (self);
-      if (priv->flushing
-          && gst_aggregator_all_flush_stop_received (self, seqnum)) {
+      /* No need to check if all pads have stream start. If we are here, it
+       * means the task got activated from pre_queue */
+      if (priv->flushing) {
         GST_OBJECT_UNLOCK (self);
         /* That means we received FLUSH_STOP/FLUSH_STOP on
          * all sinkpads -- Seeking is Done... sending FLUSH_STOP */
         gst_aggregator_flush (self);
         gst_pad_push_event (self->srcpad, event);
         event = NULL;
-        SRC_LOCK (self);
-        priv->send_eos = TRUE;
-        priv->got_eos_event = FALSE;
-        SRC_BROADCAST (self);
-        SRC_UNLOCK (self);
 
         GST_INFO_OBJECT (self, "Flush stopped");
-
-        gst_aggregator_start_srcpad_task (self);
       } else {
         GST_OBJECT_UNLOCK (self);
       }
-
-      PAD_FLUSH_UNLOCK (aggpad);
 
       /* We never forward the event */
       goto eat;
@@ -2065,6 +2048,46 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
     SRC_BROADCAST (self);
     PAD_UNLOCK (aggpad);
     SRC_UNLOCK (self);
+  } else if (event_type == GST_EVENT_FLUSH_STOP) {
+    guint32 seqnum = gst_event_get_seqnum (event);
+
+    PAD_FLUSH_LOCK (aggpad);
+    PAD_LOCK (aggpad);
+    aggpad->priv->last_flush_stop_seqnum = seqnum;
+    PAD_UNLOCK (aggpad);
+
+    gst_aggregator_pad_flush (aggpad, self);
+
+    GST_PAD_STREAM_LOCK (self->srcpad);
+
+    SRC_LOCK (self);
+    GST_OBJECT_LOCK (self);
+    if (priv->flushing && gst_aggregator_all_flush_stop_received (self, seqnum)) {
+      GST_OBJECT_UNLOCK (self);
+      /* That means we received FLUSH_STOP/FLUSH_STOP on
+       * all sinkpads -- Seeking is Done... sending FLUSH_STOP */
+
+      GST_INFO_OBJECT (self, "Have flush stop on all pads");
+
+      gst_aggregator_start_srcpad_task (self);
+      PAD_LOCK (aggpad);
+      GST_DEBUG_OBJECT (aggpad, "Store event in queue: %" GST_PTR_FORMAT,
+          event);
+      g_queue_push_head (&aggpad->priv->data, event);
+      priv->send_eos = TRUE;
+      priv->got_eos_event = FALSE;
+      SRC_BROADCAST (self);
+      PAD_UNLOCK (aggpad);
+      SRC_UNLOCK (self);
+    } else {
+      /* Eat up this event while waiting for other pads */
+      gst_event_unref (event);
+      GST_OBJECT_UNLOCK (self);
+      SRC_UNLOCK (self);
+    }
+    GST_PAD_STREAM_UNLOCK (self->srcpad);
+    PAD_FLUSH_UNLOCK (aggpad);
+
   } else {
     GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (self);
 
