@@ -176,7 +176,7 @@ struct GstBaseTsMux {
   guint pcr_interval;
   guint scte35_pid;
   guint scte35_null_interval;
-  
+
   /* state */
   gboolean first;
   GstClockTime pending_key_unit_ts;
