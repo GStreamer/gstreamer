@@ -44,11 +44,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef G_OS_WIN32
+#include <windows.h>
 #include <io.h>                 /* lseek, open, close, read */
 /* On win32, stat* default to 32 bit; we need the 64-bit
  * variants, so explicitly define it that way. */
-#undef fstat
-#define fstat _fstat64
 #undef lseek
 #define lseek _lseeki64
 #undef off_t
@@ -57,6 +56,7 @@
  * _stat*, since we're explicitly overriding that */
 #undef _INC_STAT_INL
 #endif
+
 #include <fcntl.h>
 
 #ifdef HAVE_UNISTD_H
@@ -432,7 +432,6 @@ gst_file_src_is_seekable (GstBaseSrc * basesrc)
 static gboolean
 gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
-  struct_stat stat_results;
   GstFileSrc *src;
 
   src = GST_FILE_SRC (basesrc);
@@ -442,11 +441,27 @@ gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
      * succeed, and wrongly say our length is zero. */
     return FALSE;
   }
+#ifdef G_OS_WIN32
+  {
+    HANDLE h = _get_osfhandle (src->fd);
+    DWORD size_low, size_high;
 
-  if (fstat (src->fd, &stat_results) < 0)
-    goto could_not_stat;
+    size_low = GetFileSize (h, &size_high);
+    if (size_low == INVALID_FILE_SIZE)
+      goto could_not_stat;
 
-  *size = stat_results.st_size;
+    *size = (((guint64) size_high) << 32) | size_low;
+  }
+#else
+  {
+    struct_stat stat_results;
+
+    if (fstat (src->fd, &stat_results) < 0)
+      goto could_not_stat;
+
+    *size = stat_results.st_size;
+  }
+#endif
 
   return TRUE;
 
@@ -462,7 +477,6 @@ static gboolean
 gst_file_src_start (GstBaseSrc * basesrc)
 {
   GstFileSrc *src = GST_FILE_SRC (basesrc);
-  struct_stat stat_results;
 
   if (src->filename == NULL || src->filename[0] == '\0')
     goto no_filename;
@@ -475,21 +489,41 @@ gst_file_src_start (GstBaseSrc * basesrc)
   if (src->fd < 0)
     goto open_failed;
 
-  /* check if it is a regular file, otherwise bail out */
-  if (fstat (src->fd, &stat_results) < 0)
-    goto no_stat;
+#ifdef G_OS_WIN32
+  {
+    HANDLE h = _get_osfhandle (src->fd);
+    BY_HANDLE_FILE_INFORMATION file_info;
 
-  if (S_ISDIR (stat_results.st_mode))
-    goto was_directory;
+    if (!GetFileInformationByHandle (h, &file_info))
+      goto no_stat;
 
-  if (S_ISSOCK (stat_results.st_mode))
-    goto was_socket;
+    if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      goto was_directory;
+
+    /* everything's a regular file on Windows */
+    src->is_regular = TRUE;
+  }
+#else
+  {
+    struct_stat stat_results;
+
+    /* check if it is a regular file, otherwise bail out */
+    if (fstat (src->fd, &stat_results) < 0)
+      goto no_stat;
+
+    if (S_ISDIR (stat_results.st_mode))
+      goto was_directory;
+
+    if (S_ISSOCK (stat_results.st_mode))
+      goto was_socket;
+
+    /* record if it's a regular (hence seekable and lengthable) file */
+    if (S_ISREG (stat_results.st_mode))
+      src->is_regular = TRUE;
+  }
+#endif
 
   src->read_position = 0;
-
-  /* record if it's a regular (hence seekable and lengthable) file */
-  if (S_ISREG (stat_results.st_mode))
-    src->is_regular = TRUE;
 
   /* We need to check if the underlying file is seekable. */
   {
@@ -554,12 +588,14 @@ was_directory:
         (_("\"%s\" is a directory."), src->filename), (NULL));
     goto error_close;
   }
+#ifndef G_OS_WIN32
 was_socket:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("File \"%s\" is a socket."), src->filename), (NULL));
     goto error_close;
   }
+#endif
 lseek_wonky:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
