@@ -47,8 +47,6 @@
 #include <io.h>                 /* lseek, open, close, read */
 /* On win32, stat* default to 32 bit; we need the 64-bit
  * variants, so explicitly define it that way. */
-#undef stat
-#define stat __stat64
 #undef fstat
 #define fstat _fstat64
 #undef lseek
