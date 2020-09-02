@@ -58,7 +58,11 @@ if build_gstgl
     if gl_dep.type_name() == 'pkgconfig'
       gl_proto_requires += ' gl'
     elif gl_dep.type_name() == 'library'
-      gl_proto_libs += ' -lGL'
+      if 'wgl' in enabled_gl_platforms
+        gl_proto_libs += ' -lopengl32'
+      else
+        gl_proto_libs += ' -lGL'
+      endif
     elif gl_dep.type_name() == 'appleframework'
       gl_proto_libs += ' -framework OpenGL'
     endif
