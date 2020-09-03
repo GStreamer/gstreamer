@@ -285,7 +285,7 @@ gboolean        gst_gl_memory_copy_teximage     (GstGLMemory * src,
 
 GST_GL_API
 gboolean        gst_gl_memory_read_pixels       (GstGLMemory * gl_mem,
-                                                 gpointer read_pointer);
+                                                 gpointer write_pointer);
 GST_GL_API
 void            gst_gl_memory_texsubimage       (GstGLMemory * gl_mem,
                                                  gpointer read_pointer);

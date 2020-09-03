@@ -701,7 +701,7 @@ gst_gl_memory_pbo_allocator_init (GstGLMemoryPBOAllocator * allocator)
  * @stride: stride of the backing texture data
  * @respecify: whether to copy the data or copy per texel
  *
- * Copies @gl_mem into the texture specfified by @tex_id.  The format of @tex_id
+ * Copies @gl_mem into the texture specified by @tex_id.  The format of @tex_id
  * is specified by @tex_format, @width and @height.
  *
  * If @respecify is %TRUE, then the copy is performed in terms of the texture

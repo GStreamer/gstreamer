@@ -360,10 +360,10 @@ gst_gl_memory_init (GstGLMemory * mem, GstAllocator * allocator,
 /**
  * gst_gl_memory_read_pixels:
  * @gl_mem: a #GstGLMemory
- * @read_pointer: the data pointer to pass to glReadPixels
+ * @write_pointer: the data pointer to pass to glReadPixels
  *
- * Reads the texture in #GstGLMemory into @read_pointer if no buffer is bound
- * to `GL_PIXEL_PACK_BUFFER`.  Otherwise @read_pointer is the byte offset into
+ * Reads the texture in #GstGLMemory into @write_pointer if no buffer is bound
+ * to `GL_PIXEL_PACK_BUFFER`.  Otherwise @write_pointer is the byte offset into
  * the currently bound `GL_PIXEL_PACK_BUFFER` buffer to store the result of
  * glReadPixels.  See the OpenGL specification for glReadPixels for more
  * details.
@@ -373,7 +373,7 @@ gst_gl_memory_init (GstGLMemory * mem, GstAllocator * allocator,
  * Since: 1.8
  */
 gboolean
-gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
+gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer write_pointer)
 {
   GstGLContext *context = gl_mem->mem.context;
   const GstGLFuncs *gl = context->gl_vtable;
@@ -419,7 +419,7 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
 
   _gst_gl_memory_start_log (gl_mem, "glReadPixels");
   gl->ReadPixels (0, 0, gl_mem->tex_width, GL_MEM_HEIGHT (gl_mem), format,
-      type, read_pointer);
+      type, write_pointer);
   _gst_gl_memory_end_log (gl_mem);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
@@ -517,6 +517,8 @@ _upload_cpu_write (GstGLMemory * gl_mem, GstMapInfo * info, gsize maxsize)
  * gst_gl_memory_texsubimage:
  * @gl_mem: a #GstGLMemory
  * @read_pointer: the data pointer to pass to glTexSubImage
+ *
+ * Reads the texture in @read_pointer into @gl_mem.
  *
  * See gst_gl_memory_read_pixels() for what @read_pointer signifies.
  *
@@ -982,7 +984,7 @@ gst_gl_memory_allocator_init (GstGLMemoryAllocator * allocator)
  * @width: width of @tex_id
  * @height: height of @tex_id
  *
- * Copies @gl_mem into the texture specfified by @tex_id.  The format of @tex_id
+ * Copies @gl_mem into the texture specified by @tex_id.  The format of @tex_id
  * is specified by @tex_format, @width and @height.
  *
  * Returns: Whether the copy succeeded
