@@ -411,7 +411,7 @@ gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr,
  * Depending on @func, different formulas might be applied. Some formulas
  * encode a linear segment in the lower range.
  *
- * Returns: the gamme encoded value of @val
+ * Returns: the gamma encoded value of @val
  *
  * Since: 1.6
  */
@@ -529,7 +529,7 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
  * Depending on @func, different formulas might be applied. Some formulas
  * encode a linear segment in the lower range.
  *
- * Returns: the gamme decoded value of @val
+ * Returns: the gamma decoded value of @val
  *
  * Since: 1.6
  */
