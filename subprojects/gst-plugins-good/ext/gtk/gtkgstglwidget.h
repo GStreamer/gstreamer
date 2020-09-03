@@ -72,6 +72,12 @@ GstGLDisplay *  gtk_gst_gl_widget_get_display          (GtkGstGLWidget * widget)
 GstGLContext *  gtk_gst_gl_widget_get_context          (GtkGstGLWidget * widget);
 GstGLContext *  gtk_gst_gl_widget_get_gtk_context      (GtkGstGLWidget * widget);
 
+void gtk_gst_gl_widget_set_rotate_method (GtkGstGLWidget * gst_widget,
+    GstVideoOrientationMethod method, gboolean from_tag);
+GstVideoOrientationMethod gtk_gst_gl_widget_get_rotate_method (
+    GtkGstGLWidget * gst_widget);
+
+
 G_END_DECLS
 
 #endif /* __GTK_GST_GL_WIDGET_H__ */

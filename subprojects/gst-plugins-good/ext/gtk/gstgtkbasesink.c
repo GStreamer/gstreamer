@@ -214,6 +214,24 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   return gtk_sink->widget;
 }
 
+GtkWidget *
+gst_gtk_base_sink_acquire_widget (GstGtkBaseSink * gtk_sink)
+{
+  gpointer widget = NULL;
+
+  GST_OBJECT_LOCK (gtk_sink);
+  if (gtk_sink->widget != NULL)
+    widget = gtk_sink->widget;
+  GST_OBJECT_UNLOCK (gtk_sink);
+
+  if (!widget)
+    widget =
+        gst_gtk_invoke_on_main ((GThreadFunc) gst_gtk_base_sink_get_widget,
+        gtk_sink);
+
+  return widget;
+}
+
 static void
 gst_gtk_base_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -223,19 +241,7 @@ gst_gtk_base_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WIDGET:
     {
-      GObject *widget = NULL;
-
-      GST_OBJECT_LOCK (gtk_sink);
-      if (gtk_sink->widget != NULL)
-        widget = G_OBJECT (gtk_sink->widget);
-      GST_OBJECT_UNLOCK (gtk_sink);
-
-      if (!widget)
-        widget =
-            gst_gtk_invoke_on_main ((GThreadFunc) gst_gtk_base_sink_get_widget,
-            gtk_sink);
-
-      g_value_set_object (value, widget);
+      g_value_set_object (value, gst_gtk_base_sink_acquire_widget (gtk_sink));
       break;
     }
     case PROP_FORCE_ASPECT_RATIO:

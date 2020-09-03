@@ -7114,7 +7114,20 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
+                "properties": {
+                    "rotate-method": {
+                        "blurb": "rotate method",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "identity (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoOrientationMethod",
+                        "writable": true
+                    }
+                },
                 "rank": "none"
             },
             "gtksink": {

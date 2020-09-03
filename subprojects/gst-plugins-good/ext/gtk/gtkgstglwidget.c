@@ -66,6 +66,9 @@ struct _GtkGstGLWidgetPrivate
   GLint attr_texture;
   GLuint current_tex;
   GstGLOverlayCompositor *overlay_compositor;
+  GstVideoOrientationMethod rotate_method;
+  GstVideoOrientationMethod current_rotate_method;
+  const gfloat *transform_matrix;
 };
 
 static const GLfloat vertices[] = {
@@ -119,9 +122,18 @@ gtk_gst_gl_widget_init_redisplay (GtkGstGLWidget * gst_widget)
   GtkGstGLWidgetPrivate *priv = gst_widget->priv;
   const GstGLFuncs *gl = priv->context->gl_vtable;
   GError *error = NULL;
+  GstGLSLStage *frag_stage, *vert_stage;
+
+  vert_stage = gst_glsl_stage_new_with_string (priv->context,
+      GL_VERTEX_SHADER, GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
+      gst_gl_shader_string_vertex_mat4_vertex_transform);
+  frag_stage = gst_glsl_stage_new_default_fragment (priv->context);
 
   gst_gl_insert_debug_marker (priv->other_context, "initializing redisplay");
-  if (!(priv->shader = gst_gl_shader_new_default (priv->context, &error))) {
+  if (!(priv->shader =
+          gst_gl_shader_new_link_with_stages (priv->context, &error, vert_stage,
+              frag_stage, NULL))) {
     GST_ERROR ("Failed to initialize shader: %s", error->message);
     return;
   }
@@ -154,35 +166,106 @@ gtk_gst_gl_widget_init_redisplay (GtkGstGLWidget * gst_widget)
   priv->initted = TRUE;
 }
 
+/* rotate 90 */
+static const gfloat clockwise_matrix[] = {
+  0.0f, -1.0f, 0.0f, 0.0f,
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
+/* rotate 180 */
+static const gfloat clockwise_180_matrix[] = {
+  -1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, -1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
+/* rotate 270 */
+static const gfloat counterclockwise_matrix[] = {
+  0.0f, 1.0f, 0.0f, 0.0f,
+  -1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
+/* horizontal-flip */
+static const gfloat horizontal_flip_matrix[] = {
+  -1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
+/* vertical-flip */
+static const gfloat vertical_flip_matrix[] = {
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, -1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
+/* upper-left-diagonal */
+static const gfloat upper_left_matrix[] = {
+  0.0f, 1.0f, 0.0f, 0.0f,
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
+/* upper-right-diagonal */
+static const gfloat upper_right_matrix[] = {
+  0.0f, -1.0f, 0.0f, 0.0f,
+  -1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 1.0f,
+};
+
 static void
 _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 {
   GtkGstGLWidgetPrivate *priv = gst_widget->priv;
   const GstGLFuncs *gl = priv->context->gl_vtable;
   const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+  GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (gst_widget);
+  GtkWidget *widget = GTK_WIDGET (gst_widget);
+
 
   if (gst_widget->base.force_aspect_ratio) {
     GstVideoRectangle src, dst, result;
-    gint widget_width, widget_height, widget_scale;
+    gint video_width, video_height, widget_scale;
 
     gl->ClearColor (0.0, 0.0, 0.0, 0.0);
     gl->Clear (GL_COLOR_BUFFER_BIT);
 
-    widget_scale = gtk_widget_get_scale_factor ((GtkWidget *) gst_widget);
-    widget_width = gtk_widget_get_allocated_width ((GtkWidget *) gst_widget);
-    widget_height = gtk_widget_get_allocated_height ((GtkWidget *) gst_widget);
+    widget_scale = gtk_widget_get_scale_factor (widget);
+
+    if (priv->current_rotate_method == GST_VIDEO_ORIENTATION_90R
+        || priv->current_rotate_method == GST_VIDEO_ORIENTATION_90L
+        || priv->current_rotate_method == GST_VIDEO_ORIENTATION_UL_LR
+        || priv->current_rotate_method == GST_VIDEO_ORIENTATION_UR_LL) {
+      video_width = base_widget->display_height;
+      video_height = base_widget->display_width;
+    } else {
+      video_width = base_widget->display_width;
+      video_height = base_widget->display_height;
+    }
 
     src.x = 0;
     src.y = 0;
-    src.w = gst_widget->base.display_width;
-    src.h = gst_widget->base.display_height;
+    src.w = video_width;
+    src.h = video_height;
 
     dst.x = 0;
     dst.y = 0;
-    dst.w = widget_width * widget_scale;
-    dst.h = widget_height * widget_scale;
+    dst.w = gtk_widget_get_allocated_width (widget) * widget_scale;
+    dst.h = gtk_widget_get_allocated_height (widget) * widget_scale;
 
     gst_video_sink_center_rect (src, dst, &result, TRUE);
+
+    GST_LOG ("Center src %dx%d into dst %dx%d result -> %dx%d",
+        src.w, src.h, dst.w, dst.h, result.w, result.h);
 
     gl->Viewport (result.x, result.y, result.w, result.h);
   }
@@ -196,6 +279,26 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, tex);
   gst_gl_shader_set_uniform_1i (priv->shader, "tex", 0);
+
+  {
+    GstVideoAffineTransformationMeta *af_meta;
+    gfloat matrix[16];
+
+    af_meta =
+        gst_buffer_get_video_affine_transformation_meta (base_widget->buffer);
+
+    if (priv->transform_matrix) {
+      gfloat tmp[16];
+
+      gst_gl_get_affine_transformation_meta_as_ndc (af_meta, tmp);
+      gst_gl_multiply_matrix4 (tmp, priv->transform_matrix, matrix);
+    } else {
+      gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
+    }
+
+    gst_gl_shader_set_uniform_matrix_4fv (priv->shader,
+        "u_transformation", 1, FALSE, matrix);
+  }
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
@@ -578,4 +681,79 @@ gtk_gst_gl_widget_get_display (GtkGstGLWidget * gst_widget)
     return NULL;
 
   return gst_object_ref (gst_widget->priv->display);
+}
+
+void
+gtk_gst_gl_widget_set_rotate_method (GtkGstGLWidget * gst_widget,
+    GstVideoOrientationMethod method, gboolean from_tag)
+{
+  GstVideoOrientationMethod tag_method = GST_VIDEO_ORIENTATION_AUTO;
+  GtkGstGLWidgetPrivate *priv = gst_widget->priv;
+
+  if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    GST_WARNING_OBJECT (gst_widget, "unsupported custom orientation");
+    return;
+  }
+
+  GTK_GST_BASE_WIDGET_LOCK (gst_widget);
+  if (from_tag)
+    tag_method = method;
+  else
+    priv->rotate_method = method;
+
+  if (priv->rotate_method == GST_VIDEO_ORIENTATION_AUTO)
+    method = tag_method;
+  else
+    method = priv->rotate_method;
+
+  if (method != priv->current_rotate_method) {
+    GST_DEBUG ("Changing method from %d to %d",
+        priv->current_rotate_method, method);
+
+    switch (method) {
+      case GST_VIDEO_ORIENTATION_IDENTITY:
+        priv->transform_matrix = NULL;
+        break;
+      case GST_VIDEO_ORIENTATION_90R:
+        priv->transform_matrix = clockwise_matrix;
+        break;
+      case GST_VIDEO_ORIENTATION_180:
+        priv->transform_matrix = clockwise_180_matrix;
+        break;
+      case GST_VIDEO_ORIENTATION_90L:
+        priv->transform_matrix = counterclockwise_matrix;
+        break;
+      case GST_VIDEO_ORIENTATION_HORIZ:
+        priv->transform_matrix = horizontal_flip_matrix;
+        break;
+      case GST_VIDEO_ORIENTATION_VERT:
+        priv->transform_matrix = vertical_flip_matrix;
+        break;
+      case GST_VIDEO_ORIENTATION_UL_LR:
+        priv->transform_matrix = upper_left_matrix;
+        break;
+      case GST_VIDEO_ORIENTATION_UR_LL:
+        priv->transform_matrix = upper_right_matrix;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    priv->current_rotate_method = method;
+  }
+  GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
+}
+
+GstVideoOrientationMethod
+gtk_gst_gl_widget_get_rotate_method (GtkGstGLWidget * gst_widget)
+{
+  GtkGstGLWidgetPrivate *priv = gst_widget->priv;
+  GstVideoOrientationMethod method;
+
+  GTK_GST_BASE_WIDGET_LOCK (gst_widget);
+  method = priv->current_rotate_method;
+  GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
+
+  return method;
 }

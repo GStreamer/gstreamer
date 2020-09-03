@@ -91,6 +91,9 @@ struct _GstGtkBaseSinkClass
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstGtkBaseSink, gst_object_unref)
 
+GtkWidget *
+gst_gtk_base_sink_acquire_widget (GstGtkBaseSink * gtk_sink);
+
 G_END_DECLS
 
 #endif /* __GST_GTK_BASE_SINK_H__ */

@@ -28,12 +28,18 @@
 #endif
 
 #include <gst/gl/gstglfuncs.h>
+#include <gst/video/gstvideoaffinetransformationmeta.h>
 
 #include "gstgtkglsink.h"
 #include "gtkgstglwidget.h"
 
 GST_DEBUG_CATEGORY (gst_debug_gtk_gl_sink);
 #define GST_CAT_DEFAULT gst_debug_gtk_gl_sink
+
+static void gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_gtk_gl_sink_start (GstBaseSink * bsink);
 static gboolean gst_gtk_gl_sink_stop (GstBaseSink * bsink);
@@ -42,6 +48,7 @@ static gboolean gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 static GstCaps *gst_gtk_gl_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
+static gboolean gst_gtk_gl_sink_event (GstBaseSink * sink, GstEvent * event);
 
 static void gst_gtk_gl_sink_finalize (GObject * object);
 
@@ -63,6 +70,12 @@ GST_ELEMENT_REGISTER_DEFINE (gtkglsink, "gtkglsink", GST_RANK_NONE,
     GST_TYPE_GTK_GL_SINK);
 
 
+enum
+{
+  PROP_0,
+  PROP_ROTATE_METHOD,
+};
+
 static void
 gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
 {
@@ -76,6 +89,8 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstgtkbasesink_class = (GstGtkBaseSinkClass *) klass;
 
+  gobject_class->set_property = gst_gtk_gl_sink_set_property;
+  gobject_class->get_property = gst_gtk_gl_sink_get_property;
   gobject_class->finalize = gst_gtk_gl_sink_finalize;
 
   gstbasesink_class->query = gst_gtk_gl_sink_query;
@@ -83,9 +98,24 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
   gstbasesink_class->start = gst_gtk_gl_sink_start;
   gstbasesink_class->stop = gst_gtk_gl_sink_stop;
   gstbasesink_class->get_caps = gst_gtk_gl_sink_get_caps;
+  gstbasesink_class->event = gst_gtk_gl_sink_event;
 
   gstgtkbasesink_class->create_widget = gtk_gst_gl_widget_new;
   gstgtkbasesink_class->window_title = "Gtk+ GL renderer";
+
+  /**
+   * gtkglsink:rotate-method:
+   *
+   * Rotation method #GstVideoOrientationMethod used to render the media
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATE_METHOD,
+      g_param_spec_enum ("rotate-method",
+          "rotate method",
+          "rotate method",
+          GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (gstelement_class, "Gtk GL Video Sink",
       "Sink/Video", "A video sink that renders to a GtkWidget using OpenGL",
@@ -98,6 +128,41 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
 static void
 gst_gtk_gl_sink_init (GstGtkGLSink * gtk_sink)
 {
+}
+
+static void
+gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  switch (prop_id) {
+    case PROP_ROTATE_METHOD:
+      gtk_gst_gl_widget_set_rotate_method (GTK_GST_GL_WIDGET
+          (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object))),
+          g_value_get_enum (value), FALSE);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
+static void
+gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  switch (prop_id) {
+    case PROP_ROTATE_METHOD:
+      g_value_set_enum (value,
+          gtk_gst_gl_widget_get_rotate_method (GTK_GST_GL_WIDGET
+              (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object)))));
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -296,6 +361,8 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE, 0);
 
   if (gtk_sink->context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
@@ -364,4 +431,36 @@ gst_gtk_gl_sink_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+
+static gboolean
+gst_gtk_gl_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstTagList *taglist;
+  GstVideoOrientationMethod orientation;
+  gboolean ret;
+  GtkGstGLWidget *widget;
+
+  GST_DEBUG_OBJECT (sink, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_event_parse_tag (event, &taglist);
+
+      if (gst_video_orientation_from_tag (taglist, &orientation)) {
+
+        widget = GTK_GST_GL_WIDGET
+            (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (sink)));
+
+        gtk_gst_gl_widget_set_rotate_method (widget, orientation, TRUE);
+      }
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+
+  return ret;
 }
