@@ -30,3 +30,34 @@ Choosing to strip the search folders in both, either or neither
 package is ultimately left to the packagers' discretion, users
 of most distributions should usually have enough disk space
 to accomodate these.
+
+## Licensing
+
+The content of this module comes from a number of different sources and is
+licensed in different ways:
+
+### Tutorial source code
+
+All tutorial code is licensed under any of the following licenses (your choice):
+
+ - 2-clause BSD license ("simplified BSD license") (`LICENSE.BSD`)
+ - MIT license (`LICENSE.MIT`)
+ - LGPL v2.1 (`LICENSE.LGPL-2.1`)
+
+This means developers have maximum flexibility and can pick the right license
+for any derivative work.
+
+### Application Developer Manual and Plugin Writer's Guide
+
+These are licensed under the [Open Publication License v1.0][op-license]
+(`LICENSE.OPL`), for historical reasons.
+
+[op-license]: http://www.opencontent.org/openpub/
+
+### Documentation
+
+Mostly licensed under the [Creative Commons CC-BY-SA-4.0 license][cc-by-sa-4.0],
+but some parts of the documentation may still be licensed differently
+(e.g. LGPLv2.1) for historical reasons.
+
+[cc-by-sa-4.0]: https://creativecommons.org/licenses/by-sa/4.0/
