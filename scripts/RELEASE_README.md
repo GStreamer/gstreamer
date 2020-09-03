@@ -42,7 +42,7 @@ All tutorial code is licensed under any of the following licenses (your choice):
 
  - 2-clause BSD license ("simplified BSD license") (`LICENSE.BSD`)
  - MIT license (`LICENSE.MIT`)
- - LGPL v2.1 (`LICENSE.LGPL-2.1`)
+ - LGPL v2.1 (`LICENSE.LGPL-2.1`), or (at your option) any later version
 
 This means developers have maximum flexibility and can pick the right license
 for any derivative work.
@@ -56,8 +56,15 @@ These are licensed under the [Open Publication License v1.0][op-license]
 
 ### Documentation
 
-Mostly licensed under the [Creative Commons CC-BY-SA-4.0 license][cc-by-sa-4.0],
-but some parts of the documentation may still be licensed differently
-(e.g. LGPLv2.1) for historical reasons.
+#### Tutorials
+
+The tutorials are licensed under the [Creative Commons CC-BY-SA-4.0 license][cc-by-sa-4.0]
+(`LICENSE.CC-BY-SA-4.0`).
 
 [cc-by-sa-4.0]: https://creativecommons.org/licenses/by-sa/4.0/
+
+#### API Reference and Design Documentation
+
+The remaining documentation, including the API reference and Design Documentation,
+is licensed under the LGPL v2.1 (`LICENSE.LGPL-2.1`), or (at your option) any later
+version.
