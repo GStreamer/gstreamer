@@ -39,6 +39,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_line_21_encoder_debug);
 #define GST_CAT_DEFAULT gst_line_21_encoder_debug
 
+enum
+{
+  PROP_0,
+  PROP_REMOVE_CAPTION_META,
+};
+
 /* FIXME: add and test support for PAL resolutions */
 #define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY }, width=(int)720, height=(int){ 525, 486 }, interlace-mode=interleaved"
 
@@ -60,15 +66,40 @@ static gboolean gst_line_21_encoder_set_info (GstVideoFilter * filter,
     GstCaps * outcaps, GstVideoInfo * out_info);
 static GstFlowReturn gst_line_21_encoder_transform_ip (GstVideoFilter * filter,
     GstVideoFrame * frame);
+static void gst_line_21_encoder_set_property (GObject * self, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_line_21_encoder_get_property (GObject * self, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 
 static void
 gst_line_21_encoder_class_init (GstLine21EncoderClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstVideoFilterClass *filter_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   filter_class = (GstVideoFilterClass *) klass;
+
+  gobject_class->set_property = gst_line_21_encoder_set_property;
+  gobject_class->get_property = gst_line_21_encoder_get_property;
+
+  /**
+   * line21encoder:remove-caption-meta
+   *
+   * Selects whether the encoded #GstVideoCaptionMeta should be removed from
+   * the outgoing video buffers or whether it should be kept.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_REMOVE_CAPTION_META, g_param_spec_boolean ("remove-caption-meta",
+          "Remove Caption Meta",
+          "Remove encoded caption meta from outgoing video buffers", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Line 21 CC Encoder",
@@ -90,6 +121,38 @@ gst_line_21_encoder_class_init (GstLine21EncoderClass * klass)
 static void
 gst_line_21_encoder_init (GstLine21Encoder * filter)
 {
+}
+
+static void
+gst_line_21_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstLine21Encoder *enc = GST_LINE21ENCODER (object);
+
+  switch (prop_id) {
+    case PROP_REMOVE_CAPTION_META:
+      enc->remove_caption_meta = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_line_21_encoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstLine21Encoder *enc = GST_LINE21ENCODER (object);
+
+  switch (prop_id) {
+    case PROP_REMOVE_CAPTION_META:
+      g_value_set_boolean (value, enc->remove_caption_meta);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static vbi_pixfmt
@@ -445,8 +508,8 @@ gst_line_21_encoder_transform_ip (GstVideoFilter * filter,
     }
   }
 
-  /* We've encoded this meta, it can now be removed */
-  if (cc_meta)
+  /* We've encoded this meta, it can now be removed if required */
+  if (cc_meta && self->remove_caption_meta)
     gst_buffer_remove_meta (frame->buffer, (GstMeta *) cc_meta);
 
   /* When dealing with standard NTSC resolution, field 1 goes at line 21,

@@ -42,7 +42,8 @@ GST_START_TEST (basic)
       "interlace-mode", G_TYPE_STRING, "interleaved",
       NULL);
 
-  h = gst_harness_new_parse ("line21encoder ! line21decoder");
+  h = gst_harness_new_parse
+      ("line21encoder remove-caption-meta=true ! line21decoder");
   gst_harness_set_caps (h, gst_caps_ref (caps), gst_caps_ref (caps));
 
   gst_video_info_from_caps (&info, caps);
