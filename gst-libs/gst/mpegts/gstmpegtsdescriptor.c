@@ -988,6 +988,38 @@ gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
   return NULL;
 }
 
+/**
+ * gst_mpegts_find_descriptor_with_extension:
+ * @descriptors: (element-type GstMpegtsDescriptor) (transfer none): an array
+ * of #GstMpegtsDescriptor
+ * @tag: the tag to look for
+ *
+ * Finds the first descriptor of type @tag with @tag_extension in the array.
+ *
+ * Note: To look for descriptors that can be present more than once in an
+ * array of descriptors, iterate the #GArray manually.
+ *
+ * Returns: (transfer none): the first descriptor matchin @tag with @tag_extension, else %NULL.
+ *
+ * Since: 1.20
+ */
+const GstMpegtsDescriptor *
+gst_mpegts_find_descriptor_with_extension (GPtrArray * descriptors, guint8 tag,
+    guint8 tag_extension)
+{
+  guint i, nb_desc;
+
+  g_return_val_if_fail (descriptors != NULL, NULL);
+
+  nb_desc = descriptors->len;
+  for (i = 0; i < nb_desc; i++) {
+    GstMpegtsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    if ((desc->tag == tag) && (desc->tag_extension == tag_extension))
+      return (const GstMpegtsDescriptor *) desc;
+  }
+  return NULL;
+}
+
 /* GST_MTS_DESC_REGISTRATION (0x05) */
 /**
  * gst_mpegts_descriptor_from_registration:

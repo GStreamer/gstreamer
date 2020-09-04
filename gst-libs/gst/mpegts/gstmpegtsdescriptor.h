@@ -274,6 +274,10 @@ GST_MPEGTS_API
 const GstMpegtsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
 							guint8 tag);
 
+GST_MPEGTS_API
+const GstMpegtsDescriptor * gst_mpegts_find_descriptor_with_extension (GPtrArray *descriptors,
+							guint8 tag, guint8 tag_extension);
+
 /* GST_MTS_DESC_REGISTRATION (0x05) */
 
 GST_MPEGTS_API
@@ -375,6 +379,12 @@ GST_MPEGTS_API
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 *data, gsize length);
 
+
+/**
+ * gst_mpegts_descriptor_from_custom_with_extension:
+ *
+ * Since: 1.20
+ */
 GST_MPEGTS_API
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom_with_extension (guint8 tag, guint8 tag_extension, const guint8 *data, gsize length);

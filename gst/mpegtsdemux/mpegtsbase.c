@@ -325,6 +325,20 @@ mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
   return gst_mpegts_find_descriptor (pmt->descriptors, tag);
 }
 
+const GstMpegtsDescriptor *
+mpegts_get_descriptor_from_stream_with_extension (MpegTSBaseStream * stream,
+    guint8 tag, guint8 tag_extension)
+{
+  GstMpegtsPMTStream *pmt = stream->stream;
+
+  GST_DEBUG ("Searching for tag 0x%02x tag_extension 0x%02x "
+      "in stream 0x%04x (stream_type 0x%02x)",
+      tag, tag_extension, stream->pid, stream->stream_type);
+
+  return gst_mpegts_find_descriptor_with_extension (pmt->descriptors, tag,
+      tag_extension);
+}
+
 typedef struct
 {
   gboolean res;

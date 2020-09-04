@@ -1266,10 +1266,9 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
        * types also, depending on registratino descriptors also
        */
 
-      desc =
-          mpegts_get_descriptor_from_stream (bstream,
-          GST_MTS_DESC_DVB_EXTENSION);
-      if (desc != NULL && desc->tag_extension == GST_MTS_DESC_EXT_DVB_AC4) {
+      desc = mpegts_get_descriptor_from_stream_with_extension (bstream,
+          GST_MTS_DESC_DVB_EXTENSION, GST_MTS_DESC_EXT_DVB_AC4);
+      if (desc) {
         GST_LOG ("ac4 audio");
         is_audio = TRUE;
         caps = gst_caps_new_empty_simple ("audio/x-ac4");

@@ -234,6 +234,8 @@ G_GNUC_INTERNAL MpegTSBaseProgram *mpegts_base_get_program (MpegTSBase * base, g
 G_GNUC_INTERNAL MpegTSBaseProgram *mpegts_base_add_program (MpegTSBase * base, gint program_number, guint16 pmt_pid);
 
 G_GNUC_INTERNAL const GstMpegtsDescriptor *mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag);
+G_GNUC_INTERNAL const GstMpegtsDescriptor *mpegts_get_descriptor_from_stream_with_extension (MpegTSBaseStream * stream,
+    guint8 tag, guint8 tag_extension);
 G_GNUC_INTERNAL const GstMpegtsDescriptor *mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag);
 
 G_GNUC_INTERNAL gboolean
