@@ -32,6 +32,12 @@ import os  #noqa
 import unittest  # noqa
 import tempfile  # noqa
 
+try:
+    gi.require_version("GstTranscoder", "1.0")
+    from gi.repository import GstTranscoder
+except ValueError:
+    GstTranscoder = None
+
 Gst.init(None)
 GES.init()
 
@@ -97,6 +103,28 @@ def created_project_file(xges):
     yield Gst.filename_to_uri(os.path.abspath(xges_path))
 
     os.remove(xges_path)
+
+
+def can_generate_assets():
+    if GstTranscoder is None:
+        return False, "GstTranscoder is not available"
+
+    if not Gst.ElementFactory.make("testsrcbin"):
+        return False, "testbinsrc is not available"
+
+    return True, None
+
+
+@contextlib.contextmanager
+def created_video_asset(uri=None, num_bufs=30):
+    with tempfile.NamedTemporaryFile(suffix=".ogg") as f:
+        if not uri:
+            uri = Gst.filename_to_uri(f.name)
+        transcoder = GstTranscoder.Transcoder.new("testbin://video,num-buffers=%s" % num_bufs,
+            uri, "application/ogg:video/x-theora:audio/x-vorbis")
+        transcoder.run()
+
+        yield uri
 
 
 def get_asset_uri(name):
@@ -217,7 +245,11 @@ class GESSimpleTimelineTest(GESTest):
         while len(self.timeline.get_layers()) < layer + 1:
             self.timeline.append_layer()
         layer = self.timeline.get_layers()[layer]
-        clip = GES.Asset.request(asset_type, asset_id).extract()
+        if asset_type == GES.UriClip:
+            asset = GES.UriClipAsset.request_sync(asset_id)
+        else:
+            asset = GES.Asset.request(asset_type, asset_id)
+        clip = asset.extract()
         clip.props.start = layer.get_duration()
         clip.props.duration = 10
         self.assertTrue(layer.add_clip(clip))

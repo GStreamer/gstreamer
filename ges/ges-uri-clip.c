@@ -224,6 +224,27 @@ extractable_get_id (GESExtractable * self)
   return g_strdup (GES_URI_CLIP (self)->priv->uri);
 }
 
+static GList *
+get_auto_transitions_around_source (GESTrackElement * child)
+{
+  GList *transitions = NULL;
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
+  gint i;
+  GESEdge edges[] = { GES_EDGE_START, GES_EDGE_END };
+
+  if (!timeline)
+    return NULL;
+
+  for (i = 0; i < G_N_ELEMENTS (edges); i++) {
+    GESAutoTransition *transition =
+        ges_timeline_get_auto_transition_at_edge (timeline, child, edges[i]);
+    if (transition)
+      transitions = g_list_prepend (transitions, transition);
+  }
+
+  return transitions;
+}
+
 static gboolean
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
@@ -235,9 +256,11 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (self);
   GESLayer *layer = ges_clip_get_layer (clip);
   GList *tmp, *children;
-  GHashTable *source_by_track;
+  GHashTable *source_by_track, *auto_transitions_on_sources;
   GstClockTime max_duration;
   GESAsset *prev_asset;
+  GList *transitions = NULL;
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
 
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
 
@@ -300,23 +323,36 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
   source_by_track = g_hash_table_new_full (NULL, NULL,
       gst_object_unref, gst_object_unref);
-  children = ges_container_get_children (container, FALSE);
+  auto_transitions_on_sources = g_hash_table_new_full (NULL, NULL,
+      gst_object_unref, (GDestroyNotify) g_list_free);
 
+  if (timeline)
+    ges_timeline_freeze_auto_transitions (timeline, TRUE);
+
+  children = ges_container_get_children (container, FALSE);
   for (tmp = children; tmp; tmp = tmp->next) {
     GESTrackElement *child = tmp->data;
-    GESTrack *track = ges_track_element_get_track (child);
-    /* remove our core children */
-    if (ges_track_element_is_core (child)) {
-      if (track)
-        g_hash_table_insert (source_by_track, gst_object_ref (track),
-            gst_object_ref (child));
+    GESTrack *track;
 
-      /* removing the track element from its clip whilst it is in a
-       * timeline will remove it from its track */
-      /* removing the core element will also empty its non-core siblings
-       * from the same track */
-      ges_container_remove (container, GES_TIMELINE_ELEMENT (child));
-    }
+    /* remove our core children */
+    if (!ges_track_element_is_core (child))
+      continue;
+
+    track = ges_track_element_get_track (child);
+    if (track)
+      g_hash_table_insert (source_by_track, gst_object_ref (track),
+          gst_object_ref (child));
+
+    transitions = get_auto_transitions_around_source (child);
+    if (transitions)
+      g_hash_table_insert (auto_transitions_on_sources, gst_object_ref (child),
+          transitions);
+
+    /* removing the track element from its clip whilst it is in a
+     * timeline will remove it from its track */
+    /* removing the core element will also empty its non-core siblings
+     * from the same track */
+    ges_container_remove (container, GES_TIMELINE_ELEMENT (child));
   }
   g_list_free_full (children, g_object_unref);
 
@@ -343,17 +379,32 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
        * the same source! */
       for (tmp = container->children; tmp; tmp = tmp->next) {
         GESTrackElement *child = tmp->data;
-        if (ges_track_element_is_core (child)) {
-          GESTrackElement *orig_source = g_hash_table_lookup (source_by_track,
-              ges_track_element_get_track (child));
-          contains_core = TRUE;
+        GESTrackElement *orig_source;
 
-          if (orig_source) {
-            ges_track_element_copy_properties (GES_TIMELINE_ELEMENT
-                (orig_source), GES_TIMELINE_ELEMENT (child));
-            ges_track_element_copy_bindings (orig_source, child,
-                GST_CLOCK_TIME_NONE);
-          }
+        if (!ges_track_element_is_core (child))
+          continue;
+
+        contains_core = TRUE;
+        orig_source = g_hash_table_lookup (source_by_track,
+            ges_track_element_get_track (child));
+
+        if (!orig_source)
+          continue;
+
+        ges_track_element_copy_properties (GES_TIMELINE_ELEMENT
+            (orig_source), GES_TIMELINE_ELEMENT (child));
+        ges_track_element_copy_bindings (orig_source, child,
+            GST_CLOCK_TIME_NONE);
+
+        transitions =
+            g_hash_table_lookup (auto_transitions_on_sources, orig_source);
+        for (; transitions; transitions = transitions->next) {
+          GESAutoTransition *transition = transitions->data;
+
+          if (transition->previous_source == orig_source)
+            ges_auto_transition_set_source (transition, child, GES_EDGE_START);
+          else if (transition->next_source == orig_source)
+            ges_auto_transition_set_source (transition, child, GES_EDGE_END);
         }
       }
     } else {
@@ -363,6 +414,10 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     gst_object_unref (layer);
   }
   g_hash_table_unref (source_by_track);
+  g_hash_table_unref (auto_transitions_on_sources);
+
+  if (timeline)
+    ges_timeline_freeze_auto_transitions (timeline, FALSE);
 
   if (res) {
     g_free (uriclip->priv->uri);

@@ -112,7 +112,8 @@ G_GNUC_INTERNAL void
 ges_timeline_freeze_auto_transitions (GESTimeline * timeline, gboolean freeze);
 
 G_GNUC_INTERNAL GESAutoTransition *
-ges_timeline_get_auto_transition_at_end (GESTimeline * timeline, GESTrackElement * source);
+ges_timeline_get_auto_transition_at_edge (GESTimeline * timeline, GESTrackElement * source,
+  GESEdge edge);
 
 G_GNUC_INTERNAL gboolean ges_timeline_is_disposed (GESTimeline* timeline);
 
@@ -183,7 +184,7 @@ G_GNUC_INTERNAL gboolean
 ges_timeline_get_smart_rendering (GESTimeline *timeline);
 
 G_GNUC_INTERNAL void
-ges_auto_transition_set_previous_source (GESAutoTransition * self, GESTrackElement * source);
+ges_auto_transition_set_source (GESAutoTransition * self, GESTrackElement * source, GESEdge edge);
 
 
 

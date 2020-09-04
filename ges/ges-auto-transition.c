@@ -104,6 +104,11 @@ static void
 _track_changed_cb (GESTrackElement * track_element,
     GParamSpec * arg G_GNUC_UNUSED, GESAutoTransition * self)
 {
+  if (self->frozen) {
+    GST_LOG_OBJECT (self, "Not updating because frozen");
+    return;
+  }
+
   if (ges_track_element_get_track (track_element) == NULL) {
     GST_DEBUG_OBJECT (self, "Neighboor %" GST_PTR_FORMAT
         " removed from track ... auto destructing", track_element);
@@ -134,12 +139,16 @@ _disconnect_from_source (GESAutoTransition * self, GESTrackElement * source)
 }
 
 void
-ges_auto_transition_set_previous_source (GESAutoTransition * self,
-    GESTrackElement * source)
+ges_auto_transition_set_source (GESAutoTransition * self,
+    GESTrackElement * source, GESEdge edge)
 {
   _disconnect_from_source (self, self->previous_source);
   _connect_to_source (self, source);
-  self->previous_source = source;
+
+  if (edge == GES_EDGE_END)
+    self->next_source = source;
+  else
+    self->previous_source = source;
 }
 
 static void

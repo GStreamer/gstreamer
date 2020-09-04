@@ -3491,11 +3491,12 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
           gst_object_ref (track));
 
     trans = timeline ?
-        ges_timeline_get_auto_transition_at_end (timeline, orig) : NULL;
+        ges_timeline_get_auto_transition_at_edge (timeline, orig,
+        GES_EDGE_END) : NULL;
 
     if (trans) {
       trans->frozen = TRUE;
-      ges_auto_transition_set_previous_source (trans, copy);
+      ges_auto_transition_set_source (trans, copy, GES_EDGE_START);
       transitions = g_list_append (transitions, trans);
     }
   }

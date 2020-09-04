@@ -201,6 +201,29 @@ class TestTimeline(common.GESSimpleTimelineTest):
             ]
         ])
 
+    @unittest.skipUnless(*common.can_generate_assets())
+    def test_auto_transition_type_after_setting_proxy_asset(self):
+        self.track_types = [GES.TrackType.VIDEO]
+        super().setUp()
+
+        self.timeline.props.auto_transition = True
+        with common.created_video_asset() as uri:
+            self.append_clip(asset_type=GES.UriClip, asset_id=uri)
+            self.append_clip(asset_type=GES.UriClip, asset_id=uri).props.start = 5
+            clip1, transition, clip2 = self.layer.get_clips()
+            video_transition, = transition.get_children(True)
+            video_transition.set_transition_type(GES.VideoStandardTransitionType.BAR_WIPE_LR)
+            self.assertEqual(video_transition.get_transition_type(), GES.VideoStandardTransitionType.BAR_WIPE_LR)
+
+            with common.created_video_asset() as uri2:
+                proxy_asset = GES.UriClipAsset.request_sync(uri2)
+                clip1.set_asset(proxy_asset)
+                clip1, transition1, clip2 = self.layer.get_clips()
+
+                video_transition1, = transition1.get_children(True)
+                self.assertEqual(video_transition, video_transition1)
+                self.assertEqual(video_transition.get_transition_type(), GES.VideoStandardTransitionType.BAR_WIPE_LR)
+
     def test_frame_info(self):
         self.track_types = [GES.TrackType.VIDEO]
         super().setUp()
@@ -345,12 +368,10 @@ class TestEditing(common.GESSimpleTimelineTest):
 
         def _snapped_cb(timeline, elem1, elem2, position):
             self.snapped_at.append(position)
-            Gst.error('%s' % position)
 
         def _snapped_end_cb(timeline, elem1, elem2, position):
             if self.snapped_at:  # Ignoring first snap end.
                 self.snapped_at.append(Gst.CLOCK_TIME_NONE)
-                Gst.error('%s' % position)
 
         self.timeline.connect("snapping-started", _snapped_cb)
         self.timeline.connect("snapping-ended", _snapped_end_cb)
