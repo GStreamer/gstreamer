@@ -2368,9 +2368,8 @@ create_transition_if_needed (GESTimeline * timeline, GESTrackElement * prev,
     ges_timeline_create_transition (timeline, prev, next, NULL, layer,
         _START (next), duration);
   } else {
-    GST_INFO ("Already have transition %" GES_FORMAT " between %" GES_FORMAT
-        " and %" GES_FORMAT, GES_ARGS (trans), GES_ARGS (prev),
-        GES_ARGS (next));
+    GST_INFO ("Already have transition %" GST_PTR_FORMAT " between %" GES_FORMAT
+        " and %" GES_FORMAT, trans, GES_ARGS (prev), GES_ARGS (next));
   }
 }
 

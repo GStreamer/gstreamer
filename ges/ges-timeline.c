@@ -1074,8 +1074,8 @@ ges_timeline_find_auto_transition (GESTimeline * timeline,
 }
 
 GESAutoTransition *
-ges_timeline_get_auto_transition_at_end (GESTimeline * timeline,
-    GESTrackElement * source)
+ges_timeline_get_auto_transition_at_edge (GESTimeline * timeline,
+    GESTrackElement * source, GESEdge edge)
 {
   GList *tmp, *auto_transitions;
   GESAutoTransition *ret = NULL;
@@ -1090,7 +1090,10 @@ ges_timeline_get_auto_transition_at_end (GESTimeline * timeline,
 
     /* We already have a transition linked to one of the elements we want to
      * find a transition for */
-    if (auto_trans->previous_source == source) {
+    if (edge == GES_EDGE_END && auto_trans->previous_source == source) {
+      ret = gst_object_ref (auto_trans);
+      break;
+    } else if (edge == GES_EDGE_START && auto_trans->next_source == source) {
       ret = gst_object_ref (auto_trans);
       break;
     }
