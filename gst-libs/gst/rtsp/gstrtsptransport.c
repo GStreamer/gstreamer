@@ -700,7 +700,11 @@ gst_rtsp_transport_as_text (GstRTSPTransport * transport)
       if (transport->client_port.min < 65536
           && transport->client_port.max < 65536) {
         g_ptr_array_add (strs, g_strdup (";client_port="));
-        g_ptr_array_add (strs, range_as_text (&transport->client_port));
+        if (transport->client_port.max > 0)
+          g_ptr_array_add (strs, range_as_text (&transport->client_port));
+        else
+          g_ptr_array_add (strs, g_strdup_printf ("%d",
+                  transport->client_port.min));
       } else
         goto invalid_transport;
     }
@@ -711,7 +715,11 @@ gst_rtsp_transport_as_text (GstRTSPTransport * transport)
       if (transport->server_port.min < 65536
           && transport->server_port.max < 65536) {
         g_ptr_array_add (strs, g_strdup (";server_port="));
-        g_ptr_array_add (strs, range_as_text (&transport->server_port));
+        if (transport->server_port.max > 0)
+          g_ptr_array_add (strs, range_as_text (&transport->server_port));
+        else
+          g_ptr_array_add (strs, g_strdup_printf ("%d",
+                  transport->server_port.min));
       } else
         goto invalid_transport;
     }
