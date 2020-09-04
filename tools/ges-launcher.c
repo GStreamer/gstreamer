@@ -31,6 +31,18 @@
 #include "ges-launcher.h"
 #include "ges-validate.h"
 #include "utils.h"
+#include "ges-launcher-kb.h"
+
+typedef enum
+{
+  GST_PLAY_TRICK_MODE_NONE = 0,
+  GST_PLAY_TRICK_MODE_DEFAULT,
+  GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO,
+  GST_PLAY_TRICK_MODE_KEY_UNITS,
+  GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO,
+  GST_PLAY_TRICK_MODE_INSTANT_RATE,
+  GST_PLAY_TRICK_MODE_LAST
+} GstPlayTrickMode;
 
 struct _GESLauncherPrivate
 {
@@ -41,6 +53,11 @@ struct _GESLauncherPrivate
   guint signal_watch_id;
 #endif
   GESLauncherParsedOptions parsed_options;
+
+  GstPlayTrickMode trick_mode;
+  gdouble rate;
+
+  GstState desired_state;       /* as per user interaction, PAUSED or PLAYING */
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESLauncher, ges_launcher, G_TYPE_APPLICATION);
@@ -55,6 +72,240 @@ static const gchar *HELP_SUMMARY =
     "  if ges-launch-1.0 has been compiled with gst-validate, see\n"
     "  `ges-launch-1.0 --inspect-action-type` for the available commands.\n\n"
     "  By default, ges-launch-1.0 is in \"playback-mode\".";
+
+static gboolean
+play_do_seek (GESLauncher * self, gint64 pos, gdouble rate,
+    GstPlayTrickMode mode)
+{
+  GstSeekFlags seek_flags;
+  GstEvent *seek;
+
+  seek_flags = 0;
+
+  switch (mode) {
+    case GST_PLAY_TRICK_MODE_DEFAULT:
+      seek_flags |= GST_SEEK_FLAG_TRICKMODE;
+      break;
+    case GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO:
+      seek_flags |= GST_SEEK_FLAG_TRICKMODE | GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+      break;
+    case GST_PLAY_TRICK_MODE_KEY_UNITS:
+      seek_flags |= GST_SEEK_FLAG_TRICKMODE_KEY_UNITS;
+      break;
+    case GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO:
+      seek_flags |=
+          GST_SEEK_FLAG_TRICKMODE_KEY_UNITS | GST_SEEK_FLAG_TRICKMODE_NO_AUDIO;
+      break;
+    case GST_PLAY_TRICK_MODE_NONE:
+    default:
+      break;
+  }
+
+  /* See if we can do an instant rate change (not changing dir) */
+  if (mode & GST_PLAY_TRICK_MODE_INSTANT_RATE && rate * self->priv->rate > 0) {
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        seek_flags | GST_SEEK_FLAG_INSTANT_RATE_CHANGE,
+        GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
+        GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+    if (gst_element_send_event (GST_ELEMENT (self->priv->pipeline), seek)) {
+      goto done;
+    }
+  }
+
+  /* No instant rate change, need to do a flushing seek */
+  seek_flags |= GST_SEEK_FLAG_FLUSH;
+  if (rate >= 0)
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        seek_flags | GST_SEEK_FLAG_ACCURATE,
+        /* start */ GST_SEEK_TYPE_SET, pos,
+        /* stop */ GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
+  else
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        seek_flags | GST_SEEK_FLAG_ACCURATE,
+        /* start */ GST_SEEK_TYPE_SET, 0,
+        /* stop */ GST_SEEK_TYPE_SET, pos);
+
+  if (!gst_element_send_event (GST_ELEMENT (self->priv->pipeline), seek))
+    return FALSE;
+
+done:
+  self->priv->rate = rate;
+  self->priv->trick_mode = mode & ~GST_PLAY_TRICK_MODE_INSTANT_RATE;
+  return TRUE;
+}
+
+static void
+restore_terminal (void)
+{
+  gst_play_kb_set_key_handler (NULL, NULL);
+}
+
+static void
+toggle_paused (GESLauncher * self)
+{
+  if (self->priv->desired_state == GST_STATE_PLAYING)
+    self->priv->desired_state = GST_STATE_PAUSED;
+  else
+    self->priv->desired_state = GST_STATE_PLAYING;
+
+  gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
+      self->priv->desired_state);
+}
+
+static void
+relative_seek (GESLauncher * self, gdouble percent)
+{
+  gint64 pos = -1, step, dur;
+
+  g_return_if_fail (percent >= -1.0 && percent <= 1.0);
+
+  if (!gst_element_query_position (GST_ELEMENT (self->priv->pipeline),
+          GST_FORMAT_TIME, &pos))
+    goto seek_failed;
+
+  if (!gst_element_query_duration (GST_ELEMENT (self->priv->pipeline),
+          GST_FORMAT_TIME, &dur)) {
+    goto seek_failed;
+  }
+
+  step = dur * percent;
+  if (ABS (step) < GST_SECOND)
+    step = (percent < 0) ? -GST_SECOND : GST_SECOND;
+
+  pos = pos + step;
+  if (pos > dur) {
+    gst_print ("\n%s\n", "Reached end of self list.");
+    g_application_quit (G_APPLICATION (self));
+  } else {
+    if (pos < 0)
+      pos = 0;
+
+    play_do_seek (self, pos, self->priv->rate, self->priv->trick_mode);
+  }
+
+  return;
+
+seek_failed:
+  {
+    gst_print ("\nCould not seek.\n");
+  }
+}
+
+static gboolean
+play_set_rate_and_trick_mode (GESLauncher * self, gdouble rate,
+    GstPlayTrickMode mode)
+{
+  gint64 pos = -1;
+
+  g_return_val_if_fail (rate != 0, FALSE);
+
+  if (!gst_element_query_position (GST_ELEMENT (self->priv->pipeline),
+          GST_FORMAT_TIME, &pos))
+    return FALSE;
+
+  return play_do_seek (self, pos, rate, mode);
+}
+
+static void
+play_set_playback_rate (GESLauncher * self, gdouble rate)
+{
+  GstPlayTrickMode mode = self->priv->trick_mode;
+
+  if (play_set_rate_and_trick_mode (self, rate, mode)) {
+    gst_print ("Playback rate: %.2f", rate);
+    gst_print ("                               \n");
+  } else {
+    gst_print ("\n");
+    gst_print ("Could not change playback rate to %.2f", rate);
+    gst_print (".\n");
+  }
+}
+
+static void
+play_set_relative_playback_rate (GESLauncher * self, gdouble rate_step,
+    gboolean reverse_direction)
+{
+  gdouble new_rate = self->priv->rate + rate_step;
+
+  play_set_playback_rate (self, new_rate);
+}
+
+static const gchar *
+trick_mode_get_description (GstPlayTrickMode mode)
+{
+  switch (mode) {
+    case GST_PLAY_TRICK_MODE_NONE:
+      return "normal playback, trick modes disabled";
+    case GST_PLAY_TRICK_MODE_DEFAULT:
+      return "trick mode: default";
+    case GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO:
+      return "trick mode: default, no audio";
+    case GST_PLAY_TRICK_MODE_KEY_UNITS:
+      return "trick mode: key frames only";
+    case GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO:
+      return "trick mode: key frames only, no audio";
+    default:
+      break;
+  }
+  return "unknown trick mode";
+}
+
+static void
+play_switch_trick_mode (GESLauncher * self)
+{
+  GstPlayTrickMode new_mode = ++self->priv->trick_mode;
+  const gchar *mode_desc;
+
+  if (new_mode == GST_PLAY_TRICK_MODE_LAST)
+    new_mode = GST_PLAY_TRICK_MODE_NONE;
+
+  mode_desc = trick_mode_get_description (new_mode);
+
+  if (play_set_rate_and_trick_mode (self, self->priv->rate, new_mode)) {
+    gst_print ("Rate: %.2f (%s)                      \n", self->priv->rate,
+        mode_desc);
+  } else {
+    gst_print ("\nCould not change trick mode to %s.\n", mode_desc);
+  }
+}
+
+static void
+print_keyboard_help (void)
+{
+  static struct
+  {
+    const gchar *key_desc;
+    const gchar *key_help;
+  } key_controls[] = {
+    {
+    "space", "pause/unpause"}, {
+    "q or ESC", "quit"}, {
+    "\342\206\222", "seek forward"}, {
+    "\342\206\220", "seek backward"}, {
+    "+", "increase playback rate"}, {
+    "-", "decrease playback rate"}, {
+    "t", "enable/disable trick modes"}, {
+    "s", "change subtitle track"}, {
+    "0", "seek to beginning"}, {
+  "k", "show keyboard shortcuts"},};
+  guint i, chars_to_pad, desc_len, max_desc_len = 0;
+
+  gst_print ("\n\n%s\n\n", "Interactive mode - keyboard controls:");
+
+  for (i = 0; i < G_N_ELEMENTS (key_controls); ++i) {
+    desc_len = g_utf8_strlen (key_controls[i].key_desc, -1);
+    max_desc_len = MAX (max_desc_len, desc_len);
+  }
+  ++max_desc_len;
+
+  for (i = 0; i < G_N_ELEMENTS (key_controls); ++i) {
+    chars_to_pad = max_desc_len - g_utf8_strlen (key_controls[i].key_desc, -1);
+    gst_print ("\t%s", key_controls[i].key_desc);
+    gst_print ("%-*s: ", chars_to_pad, "");
+    gst_print ("%s\n", key_controls[i].key_help);
+  }
+  gst_print ("\n");
+}
 
 static gboolean
 _parse_track_type (const gchar * option_name, const gchar * value,
@@ -971,6 +1222,10 @@ ges_launcher_parse_options (GESLauncher * self,
           "Embed nested timelines when saving.",
         }
     ,
+    {"no-interactive", 0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
+          &opts->interactive,
+        "Disable interactive control via the keyboard", NULL}
+    ,
     {NULL}
   };
 
@@ -1091,6 +1346,68 @@ done:
 }
 
 static void
+keyboard_cb (const gchar * key_input, gpointer user_data)
+{
+  GESLauncher *self = (GESLauncher *) user_data;
+  gchar key = '\0';
+
+  /* only want to switch/case on single char, not first char of string */
+  if (key_input[0] != '\0' && key_input[1] == '\0')
+    key = g_ascii_tolower (key_input[0]);
+
+  switch (key) {
+    case 'k':
+      print_keyboard_help ();
+      break;
+    case ' ':
+      toggle_paused (self);
+      break;
+    case 'q':
+    case 'Q':
+      g_application_quit (G_APPLICATION (self));
+      break;
+    case '+':
+      if (ABS (self->priv->rate) < 2.0)
+        play_set_relative_playback_rate (self, 0.1, FALSE);
+      else if (ABS (self->priv->rate) < 4.0)
+        play_set_relative_playback_rate (self, 0.5, FALSE);
+      else
+        play_set_relative_playback_rate (self, 1.0, FALSE);
+      break;
+    case '-':
+      if (ABS (self->priv->rate) <= 2.0)
+        play_set_relative_playback_rate (self, -0.1, FALSE);
+      else if (ABS (self->priv->rate) <= 4.0)
+        play_set_relative_playback_rate (self, -0.5, FALSE);
+      else
+        play_set_relative_playback_rate (self, -1.0, FALSE);
+      break;
+    case 't':
+      play_switch_trick_mode (self);
+      break;
+    case 27:                   /* ESC */
+      if (key_input[1] == '\0') {
+        g_application_quit (G_APPLICATION (self));
+        break;
+      }
+    case '0':
+      play_do_seek (self, 0, self->priv->rate, self->priv->trick_mode);
+      break;
+    default:
+      if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
+        relative_seek (self, +0.08);
+      } else if (strcmp (key_input, GST_PLAY_KB_ARROW_LEFT) == 0) {
+        relative_seek (self, -0.01);
+      } else {
+        GST_INFO ("keyboard input:");
+        for (; *key_input != '\0'; ++key_input)
+          GST_INFO ("  code %3d", *key_input);
+      }
+      break;
+  }
+}
+
+static void
 _startup (GApplication * application)
 {
   GESLauncher *self = GES_LAUNCHER (application);
@@ -1105,6 +1422,15 @@ _startup (GApplication * application)
   if (!ges_init ()) {
     ges_printerr ("Error initializing GES\n");
     goto done;
+  }
+
+  if (opts->interactive && !opts->outputuri) {
+    if (gst_play_kb_set_key_handler (keyboard_cb, self)) {
+      gst_print ("Press 'k' to see a list of keyboard shortcuts.\n");
+      atexit (restore_terminal);
+    } else {
+      gst_print ("Interactive keyboard handling in terminal not available.\n");
+    }
   }
 
   if (opts->list_transitions) {
@@ -1202,6 +1528,10 @@ ges_launcher_init (GESLauncher * self)
   self->priv = ges_launcher_get_instance_private (self);
   self->priv->parsed_options.track_types =
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
+  self->priv->parsed_options.interactive = TRUE;
+  self->priv->desired_state = GST_STATE_PLAYING;
+  self->priv->rate = 1.0;
+  self->priv->trick_mode = GST_PLAY_TRICK_MODE_NONE;
 }
 
 gint

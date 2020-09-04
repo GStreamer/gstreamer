@@ -7,7 +7,7 @@ if gstvalidate_dep.found()
 endif
 
 ges_launch = executable('ges-launch-@0@'.format(apiversion),
-    'ges-validate.c', 'ges-launch.c', 'ges-launcher.c', 'utils.c',
+    'ges-validate.c', 'ges-launch.c', 'ges-launcher.c', 'utils.c', 'ges-launcher-kb.c',
     c_args : [ges_tool_args],
     dependencies : deps,
     install: true

@@ -54,6 +54,7 @@ typedef struct
   gboolean disable_validate;
 
   gboolean ignore_eos;
+  gboolean interactive;
 } GESLauncherParsedOptions;
 
 struct _GESLauncher {
