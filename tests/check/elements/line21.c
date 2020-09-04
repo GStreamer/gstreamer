@@ -33,12 +33,12 @@ GST_START_TEST (basic)
   GstVideoInfo info;
   GstVideoCaptionMeta *in_cc_meta, *out_cc_meta;
   guint i;
-  guint8 empty_data[] = { 0x90, 0x80, 0x80, 0x0, 0x80, 0x80 };
-  guint8 full_data[] = { 0x90, 0x42, 0x43, 0x0, 0x44, 0x45 };
+  guint8 empty_data[] = { 0x8c, 0x80, 0x80, 0x0, 0x80, 0x80 };
+  guint8 full_data[] = { 0x8c, 0x42, 0x43, 0x0, 0x44, 0x45 };
   GstCaps *caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, "I420",
       "width", G_TYPE_INT, 720,
-      "height", G_TYPE_INT, 625,
+      "height", G_TYPE_INT, 525,
       "interlace-mode", G_TYPE_STRING, "interleaved",
       NULL);
 
@@ -62,7 +62,7 @@ GST_START_TEST (basic)
   fail_unless (out_cc_meta->size == 6);
 
   for (i = 0; i < out_cc_meta->size; i++)
-    fail_unless (out_cc_meta->data[i] == empty_data[i]);
+    fail_unless_equals_int (out_cc_meta->data[i], empty_data[i]);
 
   gst_buffer_unref (outbuf);
 

@@ -39,7 +39,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_line_21_encoder_debug);
 #define GST_CAT_DEFAULT gst_line_21_encoder_debug
 
-#define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY }, width=(int)720, height=(int)[ 23, MAX ], interlace-mode=interleaved"
+/* FIXME: add and test support for PAL resolutions */
+#define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY }, width=(int)720, height=(int){ 525, 486 }, interlace-mode=interleaved"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -370,6 +371,7 @@ gst_line_21_encoder_transform_ip (GstVideoFilter * filter,
   vbi_sliced sliced[2];
   gpointer iter = NULL;
   GstFlowReturn ret = GST_FLOW_ERROR;
+  guint offset;
 
   sliced[0].id = VBI_SLICED_CAPTION_525_F1;
   sliced[0].line = self->sp.start[0];
@@ -447,9 +449,14 @@ gst_line_21_encoder_transform_ip (GstVideoFilter * filter,
   if (cc_meta)
     gst_buffer_remove_meta (frame->buffer, (GstMeta *) cc_meta);
 
+  /* When dealing with standard NTSC resolution, field 1 goes at line 21,
+   * when dealing with a reduced height the image has 3 VBI lines at the
+   * top and 3 at the bottom, and field 1 goes at line 1 */
+  offset = self->info.height == 525 ? 21 : 1;
+
   buf =
       (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (frame,
-      0) + 21 * GST_VIDEO_INFO_COMP_STRIDE (&self->info, 0);
+      0) + offset * GST_VIDEO_INFO_COMP_STRIDE (&self->info, 0);
 
   if (!vbi_raw_video_image (buf, GST_VIDEO_INFO_COMP_STRIDE (&self->info,
               0) * 2, &self->sp, 0, 0, 0, 0x000000FF, 0, sliced, 2)) {
