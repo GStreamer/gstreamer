@@ -152,6 +152,14 @@ typedef enum {
   GST_MTS_DESC_EXT_DVB_T2MI                     = 0x11,
   GST_MTS_DESC_EXT_DVB_URI_LINKAGE              = 0x13,
   GST_MTS_DESC_EXT_DVB_AC4                      = 0x15,
+  /**
+   * GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION:
+   *
+   * Provide all avaliable audio programme for user selection
+   *
+   * Since: 1.20
+   */
+  GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION       = 0x19
 } GstMpegtsDVBExtendedDescriptorType;
 
 /* GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER (0x13) */
@@ -1054,6 +1062,75 @@ void gst_mpegts_t2_delivery_system_descriptor_free (GstMpegtsT2DeliverySystemDes
 GST_MPEGTS_API
 gboolean gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
               *descriptor, GstMpegtsT2DeliverySystemDescriptor ** res);
+
+/**
+ * GstMpegtsAudioPreselectionDescriptor:
+ * @preselection_id: 5-bit
+ * @audio_rendering_indication: 3-bit field
+ * @audio_description: visually impaired
+ * @spoken_subtitles:
+ * @dialogue_enhancement:
+ * @interactivity_enabled:
+ * @language_code_present:
+ * @text_label_present:
+ * @multi_stream_info_present: indicates if this PID conveys a complete audio programme
+ * @future_extension:
+ * @language_code: NULL terminated ISO 639 language code.
+ * @message_id:
+ * @items: (element-type GstMpegtsExtendedEventItem): the #GstMpegtsExtendedEventItem
+ * @text:
+ *
+ * Table 110: Audio Preselection Descriptor (ETSI EN 300 468 v1.16.1)
+ *
+ * Since: 1.20
+ */
+typedef struct _GstMpegtsAudioPreselectionDescriptor GstMpegtsAudioPreselectionDescriptor;
+struct _GstMpegtsAudioPreselectionDescriptor
+{
+  guint8                                preselection_id;
+  guint8                                audio_rendering_indication;
+  gboolean                              audio_description;
+  gboolean                              spoken_subtitles;
+  gboolean                              dialogue_enhancement;
+  gboolean                              interactivity_enabled;
+  gboolean                              language_code_present;
+  gboolean                              text_label_present;
+  gboolean                              multi_stream_info_present;
+  gboolean                              future_extension;
+  gchar                                 *language_code;
+  guint8                                message_id;
+};
+
+/**
+ * gst_mpegts_descriptor_parse_audio_preselection_list:
+ *
+ * Since: 1.20
+ */
+GST_MPEGTS_API
+gboolean
+gst_mpegts_descriptor_parse_audio_preselection_list (const GstMpegtsDescriptor
+    * descriptor, GPtrArray ** list);
+
+/**
+ * gst_mpegts_descriptor_parse_audio_preselection_free:
+ *
+ * Since: 1.20
+ */
+GST_MPEGTS_API
+void
+gst_mpegts_descriptor_parse_audio_preselection_free (GstMpegtsAudioPreselectionDescriptor
+    * source);
+
+/**
+ * gst_mpegts_descriptor_parse_audio_preselection_dump:
+ *
+ * Since: 1.20
+ */
+GST_MPEGTS_API
+void
+gst_mpegts_descriptor_parse_audio_preselection_dump (GstMpegtsAudioPreselectionDescriptor
+    * source);
+
 
 G_END_DECLS
 

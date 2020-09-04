@@ -2460,3 +2460,116 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
   *desc = res;
   return TRUE;
 }
+
+/**
+ * gst_mpegts_descriptor_parse_audio_selection_list:
+ * @descriptor: a %GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION #GstMpegtsDescriptor
+ * @list: (out) (transfer full) (element-type GstMpegtsAudioPreselectionDescriptor):
+ * the list of audio preselection
+ *
+ *
+ * Parses out a list of audio preselection from the @descriptor.
+ *
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_audio_preselection_list (const GstMpegtsDescriptor
+    * descriptor, GPtrArray ** list)
+{
+  guint8 *data;
+  guint8 i, num_preselections, num_aux_components, future_extension_length;
+  GstMpegtsAudioPreselectionDescriptor *item;
+
+  g_return_val_if_fail (descriptor != NULL && list != NULL, FALSE);
+  __common_desc_ext_check_base (descriptor,
+      GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION, FALSE);
+
+  *list = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_mpegts_descriptor_parse_audio_preselection_free);
+
+  data = (guint8 *) descriptor->data + 3;
+  num_preselections = (guint8) ((*data & 0xF8) >> 3);
+  data += 1;
+
+  for (i = 0; i < num_preselections; i++) {
+    item = g_slice_new0 (GstMpegtsAudioPreselectionDescriptor);
+    g_ptr_array_add (*list, item);
+
+    item->preselection_id = (*data & 0xF8) >> 3;
+    item->audio_rendering_indication = *data & 0x7;
+    data += 1;
+
+    item->audio_description = (*data & 0x80) >> 7;
+    item->spoken_subtitles = (*data & 0x40) >> 6;
+    item->dialogue_enhancement = (*data & 0x20) >> 5;
+    item->interactivity_enabled = (*data & 0x10) >> 4;
+    item->language_code_present = (*data & 0x08) >> 3;
+    item->text_label_present = (*data & 0x04) >> 2;
+    item->multi_stream_info_present = (*data & 0x02) >> 1;
+    item->future_extension = (*data) & 0x01;
+    data += 1;
+
+    if (item->language_code_present == 1) {
+      item->language_code = convert_lang_code (data);
+      data += 3;
+    }
+
+    if (item->text_label_present == 1) {
+      item->message_id = *data;
+      data += 1;
+    }
+
+    if (item->multi_stream_info_present == 1) {
+      num_aux_components = (*data & 0xE0) >> 5;
+      data += 1;
+      for (i = 0; i < num_aux_components; i++) {
+        data += 1;
+      }
+    }
+
+    if (item->future_extension == 1) {
+      future_extension_length = *data & 0x1F;
+      data += 1;
+      for (i = 0; i < future_extension_length; i++) {
+        data += 1;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
+void gst_mpegts_descriptor_parse_audio_preselection_free
+    (GstMpegtsAudioPreselectionDescriptor * source)
+{
+  if (source->language_code_present == 1) {
+    g_free (source->language_code);
+  }
+  g_slice_free (GstMpegtsAudioPreselectionDescriptor, source);
+}
+
+void gst_mpegts_descriptor_parse_audio_preselection_dump
+    (GstMpegtsAudioPreselectionDescriptor * source)
+{
+  GST_DEBUG ("[Audio Preselection Descriptor]");
+  GST_DEBUG ("           preselection_id: 0x%02x", source->preselection_id);
+  GST_DEBUG ("audio_rendering_indication: 0x%02x",
+      source->audio_rendering_indication);
+  GST_DEBUG ("         audio_description: %d", source->audio_description);
+  GST_DEBUG ("          spoken_subtitles: %d", source->spoken_subtitles);
+  GST_DEBUG ("      dialogue_enhancement: %d", source->dialogue_enhancement);
+  GST_DEBUG ("     interactivity_enabled: %d", source->interactivity_enabled);
+  GST_DEBUG ("     language_code_present: %d", source->language_code_present);
+  GST_DEBUG ("        text_label_present: %d", source->text_label_present);
+  GST_DEBUG (" multi_stream_info_present: %d",
+      source->multi_stream_info_present);
+  GST_DEBUG ("          future_extension: %d", source->future_extension);
+
+  if (source->language_code_present == 1) {
+    GST_DEBUG ("             language_code: %s", source->language_code);
+  }
+  if (source->text_label_present == 1) {
+    GST_DEBUG ("                message_id: 0x%02x", source->message_id);
+  }
+  GST_DEBUG ("-------------------------------");
+}

@@ -1147,6 +1147,32 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
         g_free (lang_code);
       }
   }
+
+  if (bstream->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS) {
+    desc = mpegts_get_descriptor_from_stream_with_extension (bstream,
+        GST_MTS_DESC_DVB_EXTENSION, GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION);
+
+    if (desc) {
+      GPtrArray *list;
+      GstMpegtsAudioPreselectionDescriptor *item;
+
+      if (gst_mpegts_descriptor_parse_audio_preselection_list (desc, &list)) {
+        GST_DEBUG ("Found AUDIO PRESELECTION descriptor (%d entries)",
+            list->len);
+
+        for (i = 0; i < list->len; i++) {
+          item = g_ptr_array_index (list, i);
+          gst_mpegts_descriptor_parse_audio_preselection_dump (item);
+
+          if (item->language_code_present) {
+            add_iso639_language_to_tags (stream, item->language_code);
+            break;
+          }
+        }
+        g_ptr_array_unref (list);
+      }
+    }
+  }
 }
 
 static GstPad *
