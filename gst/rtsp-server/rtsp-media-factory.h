@@ -258,6 +258,13 @@ void                  gst_rtsp_media_factory_set_dscp_qos (GstRTSPMediaFactory *
 GST_RTSP_SERVER_API
 gint                  gst_rtsp_media_factory_get_dscp_qos (GstRTSPMediaFactory * factory);
 
+GST_RTSP_SERVER_API
+void                  gst_rtsp_media_factory_set_enable_rtcp (GstRTSPMediaFactory * factory,
+                                                              gboolean enable);
+
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_factory_is_enable_rtcp (GstRTSPMediaFactory * factory);
+
 /* creating the media from the factory and a url */
 
 GST_RTSP_SERVER_API

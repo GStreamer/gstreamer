@@ -41,6 +41,7 @@
 #include "config.h"
 #endif
 
+#include "rtsp-server-internal.h"
 #include "rtsp-media-factory.h"
 
 #define GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)       (&(GST_RTSP_MEDIA_FACTORY_CAST(f)->priv->lock))
@@ -65,6 +66,7 @@ struct _GstRTSPMediaFactoryPrivate
   gchar *multicast_iface;
   guint max_mcast_ttl;
   gboolean bind_mcast_address;
+  gboolean enable_rtcp;
 
   GstClockTime rtx_time;
   guint latency;
@@ -95,6 +97,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
 #define DEFAULT_DO_RETRANSMISSION FALSE
 #define DEFAULT_DSCP_QOS        (-1)
+#define DEFAULT_ENABLE_RTCP     TRUE
 
 enum
 {
@@ -113,6 +116,7 @@ enum
   PROP_MAX_MCAST_TTL,
   PROP_BIND_MCAST_ADDRESS,
   PROP_DSCP_QOS,
+  PROP_ENABLE_RTCP,
   PROP_LAST
 };
 
@@ -247,6 +251,18 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           DEFAULT_BIND_MCAST_ADDRESS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPMediaFactory:enable-rtcp:
+   *
+   * Whether the created media should send and receive RTCP
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_ENABLE_RTCP,
+      g_param_spec_boolean ("enable-rtcp", "Enable RTCP",
+          "Whether the created media should send and receive RTCP",
+          DEFAULT_ENABLE_RTCP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_DSCP_QOS,
       g_param_spec_int ("dscp-qos", "DSCP QoS",
           "The IP DSCP field to use", -1, 63,
@@ -295,6 +311,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
+  priv->enable_rtcp = DEFAULT_ENABLE_RTCP;
   priv->dscp_qos = DEFAULT_DSCP_QOS;
 
   g_mutex_init (&priv->lock);
@@ -381,6 +398,10 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_DSCP_QOS:
       g_value_set_int (value, gst_rtsp_media_factory_get_dscp_qos (factory));
       break;
+    case PROP_ENABLE_RTCP:
+      g_value_set_boolean (value,
+          gst_rtsp_media_factory_is_enable_rtcp (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -441,6 +462,10 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
       break;
     case PROP_DSCP_QOS:
       gst_rtsp_media_factory_set_dscp_qos (factory, g_value_get_int (value));
+      break;
+    case PROP_ENABLE_RTCP:
+      gst_rtsp_media_factory_set_enable_rtcp (factory,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1686,6 +1711,57 @@ gst_rtsp_media_factory_is_bind_mcast_address (GstRTSPMediaFactory * factory)
   return result;
 }
 
+/**
+ * gst_rtsp_media_factory_set_enable_rtcp:
+ * @factory: a #GstRTSPMediaFactory
+ * @enable: the new value
+ *
+ * Decide whether the created media should send and receive RTCP
+ *
+ * Since: 1.20
+ */
+void
+gst_rtsp_media_factory_set_enable_rtcp (GstRTSPMediaFactory * factory,
+    gboolean enable)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->enable_rtcp = enable;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_is_enable_rtcp:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Check if created media will send and receive RTCP
+ *
+ * Returns: %TRUE if created media will send and receive RTCP
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_rtsp_media_factory_is_enable_rtcp (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = priv->enable_rtcp;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
 static gchar *
 default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -1757,6 +1833,7 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   GstElement *element, *pipeline;
   GstRTSPMediaFactoryClass *klass;
   GType media_gtype;
+  gboolean enable_rtcp;
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
@@ -1769,12 +1846,16 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   media_gtype = factory->priv->media_gtype;
+  enable_rtcp = factory->priv->enable_rtcp;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   /* create a new empty media */
   media =
       g_object_new (media_gtype, "element", element, "transport-mode",
       factory->priv->transport_mode, NULL);
+
+  /* We need to call this prior to collecting streams */
+  gst_rtsp_media_set_enable_rtcp (media, enable_rtcp);
 
   gst_rtsp_media_collect_streams (media);
 

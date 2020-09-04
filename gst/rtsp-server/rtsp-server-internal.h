@@ -58,6 +58,9 @@ gboolean                 gst_rtsp_stream_transport_check_back_pressure (GstRTSPS
 
 gboolean                 gst_rtsp_stream_is_tcp_receiver (GstRTSPStream * stream);
 
+void                     gst_rtsp_media_set_enable_rtcp (GstRTSPMedia *media, gboolean enable);
+void                     gst_rtsp_stream_set_enable_rtcp (GstRTSPStream *stream, gboolean enable);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SERVER_INTERNAL_H__ */

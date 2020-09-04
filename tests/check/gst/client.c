@@ -206,7 +206,7 @@ create_connection (GstRTSPConnection ** conn)
 }
 
 static GstRTSPClient *
-setup_client (const gchar * launch_line)
+setup_client (const gchar * launch_line, gboolean enable_rtcp)
 {
   GstRTSPClient *client;
   GstRTSPSessionPool *session_pool;
@@ -226,6 +226,8 @@ setup_client (const gchar * launch_line)
         "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
   else
     gst_rtsp_media_factory_set_launch (factory, launch_line);
+
+  gst_rtsp_media_factory_set_enable_rtcp (factory, enable_rtcp);
 
   gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
   gst_rtsp_client_set_mount_points (client, mount_points);
@@ -515,7 +517,7 @@ GST_START_TEST (test_describe)
   g_object_unref (client);
 
   /* simple DESCRIBE for an existing url */
-  client = setup_client (NULL);
+  client = setup_client (NULL, TRUE);
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
           "rtsp://localhost/test") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
@@ -688,7 +690,7 @@ GST_START_TEST (test_setup_tcp)
   GstRTSPMessage request = { 0, };
   gchar *str;
 
-  client = setup_client (NULL);
+  client = setup_client (NULL, TRUE);
   create_connection (&conn);
   fail_unless (gst_rtsp_client_set_connection (client, conn));
 
@@ -714,6 +716,40 @@ GST_START_TEST (test_setup_tcp)
 
 GST_END_TEST;
 
+GST_START_TEST (test_setup_no_rtcp)
+{
+  GstRTSPClient *client;
+  GstRTSPConnection *conn;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+
+  client = setup_client (NULL, FALSE);
+  create_connection (&conn);
+  fail_unless (gst_rtsp_client_set_connection (client, conn));
+
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP;unicast;client_port=5000-5001");
+
+  gst_rtsp_client_set_send_func (client, test_setup_response_200, NULL, NULL);
+  /* We want to verify that server_port holds a single number, not a range */
+  expected_transport =
+      "RTP/AVP;unicast;client_port=5000-5001;server_port=[0-9]+;ssrc=.*;mode=\"PLAY\"";
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+
+  gst_rtsp_message_unset (&request);
+
+  send_teardown (client);
+  teardown_client (client);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_setup_tcp_two_streams_same_channels)
 {
   GstRTSPClient *client;
@@ -721,7 +757,7 @@ GST_START_TEST (test_setup_tcp_two_streams_same_channels)
   GstRTSPMessage request = { 0, };
   gchar *str;
 
-  client = setup_client (NULL);
+  client = setup_client (NULL, TRUE);
   create_connection (&conn);
   fail_unless (gst_rtsp_client_set_connection (client, conn));
 
@@ -1044,7 +1080,7 @@ test_client_sdp (const gchar * launch_line, guint * bandwidth_val)
   gchar *str;
 
   /* simple DESCRIBE for an existing url */
-  client = setup_client (launch_line);
+  client = setup_client (launch_line, TRUE);
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
           "rtsp://localhost/test") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
@@ -2044,6 +2080,7 @@ rtspclient_suite (void)
   tcase_add_test (tc, test_options);
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_setup_tcp);
+  tcase_add_test (tc, test_setup_no_rtcp);
   tcase_add_test (tc, test_setup_tcp_two_streams_same_channels);
   tcase_add_test (tc, test_client_multicast_transport_404);
   tcase_add_test (tc, test_client_multicast_transport);

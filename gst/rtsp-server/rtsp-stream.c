@@ -220,6 +220,9 @@ struct _GstRTSPStreamPrivate
   guint32 blocked_seqnum;
   guint32 blocked_rtptime;
   GstClockTime blocked_running_time;
+
+  /* Whether we should send and receive RTCP */
+  gboolean enable_rtcp;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -229,6 +232,7 @@ struct _GstRTSPStreamPrivate
 #define DEFAULT_MAX_MCAST_TTL   255
 #define DEFAULT_BIND_MCAST_ADDRESS FALSE
 #define DEFAULT_DO_RATE_CONTROL TRUE
+#define DEFAULT_ENABLE_RTCP TRUE
 
 enum
 {
@@ -328,6 +332,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
   priv->do_rate_control = DEFAULT_DO_RATE_CONTROL;
+  priv->enable_rtcp = DEFAULT_ENABLE_RTCP;
 
   g_mutex_init (&priv->lock);
 
@@ -1422,6 +1427,7 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
 
   /* Start with random port */
   tmp_rtp = 0;
+  tmp_rtcp = 0;
 
   if (use_transport_settings) {
     if (!multicast)
@@ -1453,14 +1459,16 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
     }
   }
 
-  rtcp_socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
-      G_SOCKET_PROTOCOL_UDP, NULL);
-  if (!rtcp_socket)
-    goto no_udp_protocol;
-  g_socket_set_multicast_loopback (rtcp_socket, FALSE);
+  if (priv->enable_rtcp) {
+    rtcp_socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
+        G_SOCKET_PROTOCOL_UDP, NULL);
+    if (!rtcp_socket)
+      goto no_udp_protocol;
+    g_socket_set_multicast_loopback (rtcp_socket, FALSE);
+  }
 
-  /* try to allocate 2 UDP ports, the RTP port should be an even
-   * number and the RTCP port should be the next (uneven) port */
+  /* try to allocate UDP ports, the RTP port should be an even
+   * number and the RTCP port (if enabled) should be the next (uneven) port */
 again:
 
   if (rtp_socket == NULL) {
@@ -1496,7 +1504,8 @@ again:
       if (*server_addr_out)
         addr = *server_addr_out;
       else
-        addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
+        addr = gst_rtsp_address_pool_acquire_address (pool, flags,
+            priv->enable_rtcp ? 2 : 1);
 
       if (addr == NULL)
         goto no_address;
@@ -1556,18 +1565,20 @@ again:
   g_object_unref (rtp_sockaddr);
 
   /* set port */
-  tmp_rtcp = tmp_rtp + 1;
+  if (priv->enable_rtcp) {
+    tmp_rtcp = tmp_rtp + 1;
 
-  rtcp_sockaddr = g_inet_socket_address_new (inetaddr, tmp_rtcp);
-  if (!g_socket_bind (rtcp_socket, rtcp_sockaddr, FALSE, NULL)) {
-    GST_DEBUG_OBJECT (stream, "rctp bind() failed, will try again");
+    rtcp_sockaddr = g_inet_socket_address_new (inetaddr, tmp_rtcp);
+    if (!g_socket_bind (rtcp_socket, rtcp_sockaddr, FALSE, NULL)) {
+      GST_DEBUG_OBJECT (stream, "rctp bind() failed, will try again");
+      g_object_unref (rtcp_sockaddr);
+      g_clear_object (&rtp_socket);
+      if (transport_settings_defined)
+        goto transport_settings_error;
+      goto again;
+    }
     g_object_unref (rtcp_sockaddr);
-    g_clear_object (&rtp_socket);
-    if (transport_settings_defined)
-      goto transport_settings_error;
-    goto again;
   }
-  g_object_unref (rtcp_sockaddr);
 
   if (!addr) {
     addr = g_slice_new0 (GstRTSPAddress);
@@ -1585,15 +1596,21 @@ again:
   if (multicast && (ct->ttl > 0) && (ct->ttl <= priv->max_mcast_ttl)) {
     GST_DEBUG ("setting mcast ttl to %d", ct->ttl);
     g_socket_set_multicast_ttl (rtp_socket, ct->ttl);
-    g_socket_set_multicast_ttl (rtcp_socket, ct->ttl);
+    if (rtcp_socket)
+      g_socket_set_multicast_ttl (rtcp_socket, ct->ttl);
   }
 
   socket_out[0] = rtp_socket;
   socket_out[1] = rtcp_socket;
   *server_addr_out = addr;
 
-  GST_DEBUG_OBJECT (stream, "allocated address: %s and ports: %d, %d",
-      addr->address, tmp_rtp, tmp_rtcp);
+  if (priv->enable_rtcp) {
+    GST_DEBUG_OBJECT (stream, "allocated address: %s and ports: %d, %d",
+        addr->address, tmp_rtp, tmp_rtcp);
+  } else {
+    GST_DEBUG_OBJECT (stream, "allocated address: %s and port: %d",
+        addr->address, tmp_rtp);
+  }
 
   g_list_free_full (rejected_addresses, (GDestroyNotify) gst_rtsp_address_free);
 
@@ -1922,14 +1939,18 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
   if (family == G_SOCKET_FAMILY_IPV4) {
     if (server_port && priv->server_addr_v4) {
       server_port->min = priv->server_addr_v4->port;
-      server_port->max =
-          priv->server_addr_v4->port + priv->server_addr_v4->n_ports - 1;
+      if (priv->enable_rtcp) {
+        server_port->max =
+            priv->server_addr_v4->port + priv->server_addr_v4->n_ports - 1;
+      }
     }
   } else {
     if (server_port && priv->server_addr_v6) {
       server_port->min = priv->server_addr_v6->port;
-      server_port->max =
-          priv->server_addr_v6->port + priv->server_addr_v6->n_ports - 1;
+      if (priv->enable_rtcp) {
+        server_port->max =
+            priv->server_addr_v6->port + priv->server_addr_v6->n_ports - 1;
+      }
     }
   }
   g_mutex_unlock (&priv->lock);
@@ -2260,6 +2281,16 @@ gst_rtsp_stream_is_bind_mcast_address (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return result;
+}
+
+void
+gst_rtsp_stream_set_enable_rtcp (GstRTSPStream * stream, gboolean enable)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->enable_rtcp = enable;
+  g_mutex_unlock (&stream->priv->lock);
 }
 
 /* executed from streaming thread */
@@ -3518,10 +3549,10 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
     g_object_set (priv->payloader, "onvif-no-rate-control",
         !priv->do_rate_control, NULL);
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < (priv->enable_rtcp ? 2 : 1); i++) {
     gboolean link_tee = FALSE;
     /* For the sender we create this bit of pipeline for both
-     * RTP and RTCP.
+     * RTP and RTCP (when enabled).
      * Initially there will be only one active transport for
      * the stream, so the pipeline will look like this:
      *
@@ -3674,9 +3705,9 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
       "RTP caps: %" GST_PTR_FORMAT " RTCP caps: %" GST_PTR_FORMAT, rtp_caps,
       rtcp_caps);
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < (priv->enable_rtcp ? 2 : 1); i++) {
     /* For the receiver we create this bit of pipeline for both
-     * RTP and RTCP. We receive RTP/RTCP on appsrc and udpsrc
+     * RTP and RTCP (when enabled). We receive RTP/RTCP on appsrc and udpsrc
      * and it is all funneled into the rtpbin receive pad.
      *
      *
@@ -3938,12 +3969,15 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     g_free (name);
   }
 
-  name = g_strdup_printf ("send_rtcp_src_%u", idx);
-  priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
-  g_free (name);
-  name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
-  priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
-  g_free (name);
+  if (priv->enable_rtcp) {
+    name = g_strdup_printf ("send_rtcp_src_%u", idx);
+    priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
+    g_free (name);
+
+    name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
+    priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
+    g_free (name);
+  }
 
   /* get the session */
   g_signal_emit_by_name (rtpbin, "get-internal-session", idx, &priv->session);
@@ -4085,7 +4119,7 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     priv->recv_rtp_src = NULL;
   }
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < (priv->enable_rtcp ? 2 : 1); i++) {
     clear_element (bin, &priv->udpsrc_v4[i]);
     clear_element (bin, &priv->udpsrc_v6[i]);
     clear_element (bin, &priv->udpqueue[i]);
@@ -4115,9 +4149,11 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     priv->send_src[0] = NULL;
   }
 
-  gst_element_release_request_pad (rtpbin, priv->send_src[1]);
-  gst_object_unref (priv->send_src[1]);
-  priv->send_src[1] = NULL;
+  if (priv->enable_rtcp) {
+    gst_element_release_request_pad (rtpbin, priv->send_src[1]);
+    gst_object_unref (priv->send_src[1]);
+    priv->send_src[1] = NULL;
+  }
 
   g_object_unref (priv->session);
   priv->session = NULL;
@@ -6206,8 +6242,8 @@ gst_rtsp_stream_set_rate_control (GstRTSPStream * stream, gboolean enabled)
   if (stream->priv->appsink[0])
     g_object_set (stream->priv->appsink[0], "sync", enabled, NULL);
   if (stream->priv->payloader
-      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->
-              priv->payloader), "onvif-no-rate-control"))
+      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->priv->
+              payloader), "onvif-no-rate-control"))
     g_object_set (stream->priv->payloader, "onvif-no-rate-control", !enabled,
         NULL);
   if (stream->priv->session) {

@@ -22,12 +22,16 @@
 #include <gst/rtsp-server/rtsp-server.h>
 
 #define DEFAULT_RTSP_PORT "8554"
+#define DEFAULT_DISABLE_RTCP FALSE
 
 static char *port = (char *) DEFAULT_RTSP_PORT;
+static gboolean disable_rtcp = DEFAULT_DISABLE_RTCP;
 
 static GOptionEntry entries[] = {
   {"port", 'p', 0, G_OPTION_ARG_STRING, &port,
       "Port to listen on (default: " DEFAULT_RTSP_PORT ")", "PORT"},
+  {"disable-rtcp", '\0', 0, G_OPTION_ARG_NONE, &disable_rtcp,
+      "Whether RTCP should be disabled (default false)", NULL},
   {NULL}
 };
 
@@ -70,6 +74,7 @@ main (int argc, char *argv[])
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, argv[1]);
   gst_rtsp_media_factory_set_shared (factory, TRUE);
+  gst_rtsp_media_factory_set_enable_rtcp (factory, !disable_rtcp);
 
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
