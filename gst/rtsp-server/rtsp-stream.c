@@ -3790,6 +3790,20 @@ done:
   return ret;
 }
 
+gboolean
+gst_rtsp_stream_is_tcp_receiver (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean ret = FALSE;
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  ret = (priv->sinkpad != NULL && priv->appsrc[0] != NULL);
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
 static gboolean
 check_mcast_client_addr (GstRTSPStream * stream, const GstRTSPTransport * tr)
 {

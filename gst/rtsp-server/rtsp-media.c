@@ -84,6 +84,7 @@
 #define HMAC_80_KEY_LEN 10
 
 #include "rtsp-media.h"
+#include "rtsp-server-internal.h"
 
 struct _GstRTSPMediaPrivate
 {
@@ -1645,6 +1646,25 @@ gst_rtsp_media_get_do_retransmission (GstRTSPMedia * media)
   return res;
 }
 
+static void
+update_stream_storage_size (GstRTSPMedia * media, GstRTSPStream * stream,
+    guint sessid)
+{
+  GObject *storage = NULL;
+
+  g_signal_emit_by_name (G_OBJECT (media->priv->rtpbin), "get-storage",
+      sessid, &storage);
+
+  if (storage) {
+    guint size_time = 0;
+
+    if (!gst_rtsp_stream_is_tcp_receiver (stream))
+      size_time = (media->priv->latency + 50) * GST_MSECOND;
+
+    g_object_set (storage, "size-time", size_time, NULL);
+  }
+}
+
 /**
  * gst_rtsp_media_set_latency:
  * @media: a #GstRTSPMedia
@@ -1670,13 +1690,8 @@ gst_rtsp_media_set_latency (GstRTSPMedia * media, guint latency)
     g_object_set (priv->rtpbin, "latency", latency, NULL);
 
     for (i = 0; i < media->priv->streams->len; i++) {
-      GObject *storage = NULL;
-
-      g_signal_emit_by_name (G_OBJECT (media->priv->rtpbin), "get-storage",
-          i, &storage);
-      if (storage)
-        g_object_set (storage, "size-time",
-            (media->priv->latency + 50) * GST_MSECOND, NULL);
+      GstRTSPStream *stream = g_ptr_array_index (media->priv->streams, i);
+      update_stream_storage_size (media, stream, i);
     }
   }
 
@@ -3617,14 +3632,6 @@ request_fec_decoder (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
   return res;
 }
 
-static void
-new_storage_cb (GstElement * rtpbin, GObject * storage, guint sessid,
-    GstRTSPMedia * media)
-{
-  g_object_set (storage, "size-time", (media->priv->latency + 50) * GST_MSECOND,
-      NULL);
-}
-
 static gboolean
 start_prepare (GstRTSPMedia * media)
 {
@@ -3636,8 +3643,6 @@ start_prepare (GstRTSPMedia * media)
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
     goto no_longer_preparing;
 
-  g_signal_connect (priv->rtpbin, "new-storage", G_CALLBACK (new_storage_cb),
-      media);
   g_signal_connect (priv->rtpbin, "request-fec-decoder",
       G_CALLBACK (request_fec_decoder), media);
 
@@ -5010,6 +5015,8 @@ gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)
       g_mutex_unlock (&priv->lock);
       return FALSE;
     }
+
+    update_stream_storage_size (media, stream, i);
   }
 
   priv->complete = TRUE;
