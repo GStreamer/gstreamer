@@ -426,7 +426,9 @@ gst_rtp_src_rtpbin_pad_added_cb (GstElement * element, GstPad * pad,
 {
   GstRtpSrc *self = GST_RTP_SRC (data);
   GstCaps *caps = gst_pad_query_caps (pad, NULL);
-  GstPad *upad;
+  const GstStructure *s;
+  GstPad *upad = NULL;
+  gint pt = -1;
   gchar name[48];
 
   /* Expose RTP data pad only */
@@ -458,15 +460,26 @@ gst_rtp_src_rtpbin_pad_added_cb (GstElement * element, GstPad * pad,
 
     return;
   }
+
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "payload", &pt);
   gst_caps_unref (caps);
 
   GST_RTP_SRC_LOCK (self);
-  g_snprintf (name, 48, "src_%u", GST_ELEMENT (self)->numpads);
-  upad = gst_ghost_pad_new (name, pad);
+  g_snprintf (name, 48, "src_%u", pt);
+  upad = gst_element_get_static_pad (GST_ELEMENT (self), name);
 
-  gst_pad_set_active (upad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (self), upad);
+  if (!upad) {
+    GST_DEBUG_OBJECT (self, "Adding new pad: %s", name);
 
+    upad = gst_ghost_pad_new (name, pad);
+    gst_pad_set_active (upad, TRUE);
+    gst_element_add_pad (GST_ELEMENT (self), upad);
+  } else {
+    GST_DEBUG_OBJECT (self, "Re-using existing pad: %s", GST_PAD_NAME (upad));
+    gst_ghost_pad_set_target (GST_GHOST_PAD (upad), pad);
+    gst_object_unref (upad);
+  }
   GST_RTP_SRC_UNLOCK (self);
 }
 
