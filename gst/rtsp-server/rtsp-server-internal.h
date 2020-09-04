@@ -56,6 +56,8 @@ void                     gst_rtsp_stream_transport_set_back_pressure_callback (G
 gboolean                 gst_rtsp_stream_transport_check_back_pressure (GstRTSPStreamTransport *trans,
                                                                   gboolean is_rtp);
 
+gboolean                 gst_rtsp_stream_is_tcp_receiver (GstRTSPStream * stream);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SERVER_INTERNAL_H__ */
