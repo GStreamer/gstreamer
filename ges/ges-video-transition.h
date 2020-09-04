@@ -67,16 +67,16 @@ gboolean ges_video_transition_set_transition_type (GESVideoTransition * self,
 GES_API GESVideoStandardTransitionType
 ges_video_transition_get_transition_type          (GESVideoTransition * trans);
 
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties)
 void ges_video_transition_set_border              (GESVideoTransition * self,
                                                          guint value);
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties)
 gint ges_video_transition_get_border              (GESVideoTransition * self);
 
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_element_set_children_properties)
 void ges_video_transition_set_inverted            (GESVideoTransition * self,
                                                          gboolean inverted);
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_element_get_children_properties)
 gboolean ges_video_transition_is_inverted        (GESVideoTransition * self);
 
 G_END_DECLS
