@@ -29,6 +29,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 #include <gst/video/video.h>
 #include <string.h>
 
@@ -147,6 +148,218 @@ gst_line_21_encoder_set_info (GstVideoFilter * filter,
   return TRUE;
 }
 
+#define MAX_CDP_PACKET_LEN 256
+#define MAX_CEA608_LEN 32
+
+/* Converts CDP into raw CEA708 cc_data, taken from ccconverter */
+static guint
+convert_cea708_cdp_cea708_cc_data_internal (GstLine21Encoder * self,
+    const guint8 * cdp, guint cdp_len, guint8 cc_data[256])
+{
+  GstByteReader br;
+  guint16 u16;
+  guint8 u8;
+  guint8 flags;
+  guint len = 0;
+
+  /* Header + footer length */
+  if (cdp_len < 11) {
+    GST_WARNING_OBJECT (self, "cdp packet too short (%u). expected at "
+        "least %u", cdp_len, 11);
+    return 0;
+  }
+
+  gst_byte_reader_init (&br, cdp, cdp_len);
+  u16 = gst_byte_reader_get_uint16_be_unchecked (&br);
+  if (u16 != 0x9669) {
+    GST_WARNING_OBJECT (self, "cdp packet does not have initial magic bytes "
+        "of 0x9669");
+    return 0;
+  }
+
+  u8 = gst_byte_reader_get_uint8_unchecked (&br);
+  if (u8 != cdp_len) {
+    GST_WARNING_OBJECT (self, "cdp packet length (%u) does not match passed "
+        "in value (%u)", u8, cdp_len);
+    return 0;
+  }
+
+  gst_byte_reader_skip_unchecked (&br, 1);
+
+  flags = gst_byte_reader_get_uint8_unchecked (&br);
+  /* No cc_data? */
+  if ((flags & 0x40) == 0) {
+    GST_DEBUG_OBJECT (self, "cdp packet does have any cc_data");
+    return 0;
+  }
+
+  /* cdp_hdr_sequence_cntr */
+  gst_byte_reader_skip_unchecked (&br, 2);
+
+  /* time_code_present */
+  if (flags & 0x80) {
+    if (gst_byte_reader_get_remaining (&br) < 5) {
+      GST_WARNING_OBJECT (self, "cdp packet does not have enough data to "
+          "contain a timecode (%u). Need at least 5 bytes",
+          gst_byte_reader_get_remaining (&br));
+      return 0;
+    }
+
+    gst_byte_reader_skip_unchecked (&br, 5);
+  }
+
+  /* ccdata_present */
+  if (flags & 0x40) {
+    guint8 cc_count;
+
+    if (gst_byte_reader_get_remaining (&br) < 2) {
+      GST_WARNING_OBJECT (self, "not enough data to contain valid cc_data");
+      return 0;
+    }
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if (u8 != 0x72) {
+      GST_WARNING_OBJECT (self, "missing cc_data start code of 0x72, "
+          "found 0x%02x", u8);
+      return 0;
+    }
+
+    cc_count = gst_byte_reader_get_uint8_unchecked (&br);
+    if ((cc_count & 0xe0) != 0xe0) {
+      GST_WARNING_OBJECT (self, "reserved bits are not 0xe0, found 0x%02x", u8);
+      return 0;
+    }
+    cc_count &= 0x1f;
+
+    len = 3 * cc_count;
+    if (gst_byte_reader_get_remaining (&br) < len)
+      return 0;
+
+    memcpy (cc_data, gst_byte_reader_get_data_unchecked (&br, len), len);
+  }
+
+  /* skip everything else we don't care about */
+  return len;
+}
+
+#define VAL_OR_0(v) ((v) ? (*(v)) : 0)
+
+static guint
+compact_cc_data (guint8 * cc_data, guint cc_data_len)
+{
+  gboolean started_ccp = FALSE;
+  guint out_len = 0;
+  guint i;
+
+  if (cc_data_len % 3 != 0) {
+    GST_WARNING ("Invalid cc_data buffer size");
+    cc_data_len = cc_data_len - (cc_data_len % 3);
+  }
+
+  for (i = 0; i < cc_data_len / 3; i++) {
+    gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
+    guint8 cc_type = cc_data[i * 3] & 0x03;
+
+    if (!started_ccp && (cc_type == 0x00 || cc_type == 0x01)) {
+      if (cc_valid) {
+        /* copy over valid 608 data */
+        cc_data[out_len++] = cc_data[i * 3];
+        cc_data[out_len++] = cc_data[i * 3 + 1];
+        cc_data[out_len++] = cc_data[i * 3 + 2];
+      }
+      continue;
+    }
+
+    if (cc_type & 0x10)
+      started_ccp = TRUE;
+
+    if (!cc_valid)
+      continue;
+
+    if (cc_type == 0x00 || cc_type == 0x01) {
+      GST_WARNING ("Invalid cc_data.  cea608 bytes after cea708");
+      return 0;
+    }
+
+    cc_data[out_len++] = cc_data[i * 3];
+    cc_data[out_len++] = cc_data[i * 3 + 1];
+    cc_data[out_len++] = cc_data[i * 3 + 2];
+  }
+
+  GST_LOG ("compacted cc_data from %u to %u", cc_data_len, out_len);
+
+  return out_len;
+}
+
+static gint
+cc_data_extract_cea608 (guint8 * cc_data, guint cc_data_len,
+    guint8 * cea608_field1, guint * cea608_field1_len,
+    guint8 * cea608_field2, guint * cea608_field2_len)
+{
+  guint i, field_1_len = 0, field_2_len = 0;
+
+  if (cea608_field1_len) {
+    field_1_len = *cea608_field1_len;
+    *cea608_field1_len = 0;
+  }
+  if (cea608_field2_len) {
+    field_2_len = *cea608_field2_len;
+    *cea608_field2_len = 0;
+  }
+
+  if (cc_data_len % 3 != 0) {
+    GST_WARNING ("Invalid cc_data buffer size %u. Truncating to a multiple "
+        "of 3", cc_data_len);
+    cc_data_len = cc_data_len - (cc_data_len % 3);
+  }
+
+  for (i = 0; i < cc_data_len / 3; i++) {
+    gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
+    guint8 cc_type = cc_data[i * 3] & 0x03;
+
+    GST_TRACE ("0x%02x 0x%02x 0x%02x, valid: %u, type: 0b%u%u",
+        cc_data[i * 3 + 0], cc_data[i * 3 + 1], cc_data[i * 3 + 2], cc_valid,
+        cc_type & 0x2, cc_type & 0x1);
+
+    if (cc_type == 0x00) {
+      if (!cc_valid)
+        continue;
+
+      if (cea608_field1 && cea608_field1_len) {
+        if (*cea608_field1_len + 2 > field_1_len) {
+          GST_WARNING ("Too many cea608 input bytes %u for field 1",
+              *cea608_field1_len + 2);
+          return -1;
+        }
+        cea608_field1[(*cea608_field1_len)++] = cc_data[i * 3 + 1];
+        cea608_field1[(*cea608_field1_len)++] = cc_data[i * 3 + 2];
+      }
+    } else if (cc_type == 0x01) {
+      if (!cc_valid)
+        continue;
+
+      if (cea608_field2 && cea608_field2_len) {
+        if (*cea608_field2_len + 2 > field_2_len) {
+          GST_WARNING ("Too many cea608 input bytes %u for field 2",
+              *cea608_field2_len + 2);
+          return -1;
+        }
+        cea608_field2[(*cea608_field2_len)++] = cc_data[i * 3 + 1];
+        cea608_field2[(*cea608_field2_len)++] = cc_data[i * 3 + 2];
+      }
+    } else {
+      /* all cea608 packets must be at the beginning of a cc_data */
+      break;
+    }
+  }
+
+  g_assert_cmpint (i * 3, <=, cc_data_len);
+
+  GST_LOG ("Extracted cea608-1 of length %u and cea608-2 of length %u",
+      VAL_OR_0 (cea608_field1_len), VAL_OR_0 (cea608_field2_len));
+
+  return i * 3;
+}
+
 static GstFlowReturn
 gst_line_21_encoder_transform_ip (GstVideoFilter * filter,
     GstVideoFrame * frame)
@@ -175,32 +388,59 @@ gst_line_21_encoder_transform_ip (GstVideoFilter * filter,
     guint n = cc_meta->size;
     guint i;
 
-    if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A)
-      continue;
+    if (cc_meta->caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_CDP) {
+      guint8 cc_data[MAX_CDP_PACKET_LEN];
+      guint8 cea608_field1[MAX_CEA608_LEN];
+      guint8 cea608_field2[MAX_CEA608_LEN];
+      guint cea608_field1_len = MAX_CEA608_LEN;
+      guint cea608_field2_len = MAX_CEA608_LEN;
+      guint cc_data_len = 0;
 
-    if (n % 3 != 0) {
-      GST_ERROR_OBJECT (filter, "Invalid S334-1A CEA608 buffer size");
-      goto done;
-    }
+      cc_data_len =
+          convert_cea708_cdp_cea708_cc_data_internal (self, cc_meta->data,
+          cc_meta->size, cc_data);
 
-    n /= 3;
+      cc_data_len = compact_cc_data (cc_data, cc_data_len);
 
-    if (n >= 3) {
-      GST_ERROR_OBJECT (filter, "Too many S334-1A CEA608 triplets %u", n);
-      goto done;
-    }
+      cc_data_extract_cea608 (cc_data, cc_data_len,
+          cea608_field1, &cea608_field1_len, cea608_field2, &cea608_field2_len);
 
-    for (i = 0; i < n; i++) {
-      if (cc_meta->data[i * 3] & 0x80) {
-        sliced[0].data[0] = cc_meta->data[i * 3 + 1];
-        sliced[0].data[1] = cc_meta->data[i * 3 + 2];
-      } else {
-        sliced[1].data[0] = cc_meta->data[i * 3 + 1];
-        sliced[1].data[1] = cc_meta->data[i * 3 + 2];
+      if (cea608_field1_len == 2) {
+        sliced[0].data[0] = cea608_field1[0];
+        sliced[0].data[1] = cea608_field1[1];
       }
-    }
 
-    break;
+      if (cea608_field2_len == 2) {
+        sliced[1].data[0] = cea608_field2[0];
+        sliced[1].data[1] = cea608_field2[1];
+      }
+
+      break;
+    } else if (cc_meta->caption_type == GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A) {
+      if (n % 3 != 0) {
+        GST_ERROR_OBJECT (filter, "Invalid S334-1A CEA608 buffer size");
+        goto done;
+      }
+
+      n /= 3;
+
+      if (n >= 3) {
+        GST_ERROR_OBJECT (filter, "Too many S334-1A CEA608 triplets %u", n);
+        goto done;
+      }
+
+      for (i = 0; i < n; i++) {
+        if (cc_meta->data[i * 3] & 0x80) {
+          sliced[0].data[0] = cc_meta->data[i * 3 + 1];
+          sliced[0].data[1] = cc_meta->data[i * 3 + 2];
+        } else {
+          sliced[1].data[0] = cc_meta->data[i * 3 + 1];
+          sliced[1].data[1] = cc_meta->data[i * 3 + 2];
+        }
+      }
+
+      break;
+    }
   }
 
   /* We've encoded this meta, it can now be removed */
