@@ -26,7 +26,7 @@
                         "presence": "sometimes"
                     },
                     "sink": {
-                        "caps": "text/x-xptv:\napplication/xges:\n",
+                        "caps": "application/xges:\ntext/x-xptv:\napplication/vnd.pixar.opentimelineio+json:\napplication/vnd.apple-xmeml+xml:\napplication/vnd.apple-fcp+xml:\n",
                         "direction": "sink",
                         "presence": "always"
                     },

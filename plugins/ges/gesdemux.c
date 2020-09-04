@@ -48,6 +48,12 @@ GST_DEBUG_CATEGORY_STATIC (gesdemux);
 #define GST_CAT_DEFAULT gesdemux
 
 G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, DEMUX, GESBaseBin);
+#define GES_DEMUX_DOC_CAPS \
+  "application/xges;" \
+  "text/x-xptv;" \
+  "application/vnd.pixar.opentimelineio+json;" \
+  "application/vnd.apple-xmeml+xml;" \
+  "application/vnd.apple-fcp+xml;" \
 
 struct _GESDemux
 {
@@ -189,9 +195,10 @@ ges_demux_set_property (GObject * object, guint property_id,
 static void
 ges_demux_class_init (GESDemuxClass * self_class)
 {
+  GstPadTemplate *pad_template;
   GObjectClass *gclass = G_OBJECT_CLASS (self_class);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (self_class);
-  GstCaps *sinkpad_caps;
+  GstCaps *sinkpad_caps, *doc_caps;
 
   GST_DEBUG_CATEGORY_INIT (gesdemux, "gesdemux", 0, "ges demux element");
 
@@ -218,9 +225,12 @@ ges_demux_class_init (GESDemuxClass * self_class)
       "Demuxer for complex timeline file formats using GES.",
       "Thibault Saunier <tsaunier@igalia.com");
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          sinkpad_caps));
+  pad_template =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sinkpad_caps);
+  doc_caps = gst_caps_from_string (GES_DEMUX_DOC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_template, doc_caps);
+  gst_clear_caps (&doc_caps);
+  gst_element_class_add_pad_template (gstelement_klass, pad_template);
   gst_caps_unref (sinkpad_caps);
 }
 
