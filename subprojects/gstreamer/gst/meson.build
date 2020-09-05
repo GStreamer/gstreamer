@@ -150,6 +150,12 @@ gst_headers = files(
 )
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
+extra_deps = []
+if host_system == 'android'
+  gst_sources += 'gstandroid.c'
+  extra_deps += cc.find_library('log')
+endif
+
 gst_registry = get_option('registry')
 if gst_registry
   gst_registry_sources = files('gstregistrybinary.c')
@@ -246,8 +252,8 @@ libgst = library('gstreamer-1.0', gst_sources,
     include_directories('parse')],
   link_with : printf_lib,
   install : true,
-  dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, dl_dep] + backtrace_deps
-                   + platform_deps,
+  dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, dl_dep,
+                  backtrace_deps, platform_deps, extra_deps],
 )
 
 pkg_name = 'gstreamer-1.0'
