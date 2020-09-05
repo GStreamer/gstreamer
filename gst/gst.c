@@ -631,6 +631,24 @@ gst_register_core_elements (GstPlugin * plugin)
   return TRUE;
 }
 
+static void
+init_static_plugins (void)
+{
+  GModule *module;
+
+  /* Call gst_init_static_plugins() defined in libgstreamer-full-1.0 in the case
+   * libgstreamer is static linked with some plugins. */
+  module = g_module_open (NULL, G_MODULE_BIND_LOCAL);
+  if (module) {
+    void (*func) (void);
+    if (g_module_symbol (module, "gst_init_static_plugins",
+            (gpointer *) & func)) {
+      func ();
+    }
+    g_module_close (module);
+  }
+}
+
 /*
  * this bit handles:
  * - initialization of threads if we use them
@@ -788,6 +806,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
       "staticelements", "core elements linked into the GStreamer library",
       gst_register_core_elements, VERSION, GST_LICENSE, PACKAGE,
       GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+
+  init_static_plugins ();
 
   /*
    * Any errors happening below this point are non-fatal, we therefore mark
