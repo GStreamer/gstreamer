@@ -459,9 +459,9 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   tmp_info = *in_info;
   tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
   if (gst_video_info_is_equal (&tmp_info, out_info)) {
-    if (gst_video_color_transfer_is_equivalent (in_info->colorimetry.transfer,
-            in_info->finfo->bits, out_info->colorimetry.transfer,
-            out_info->finfo->bits)) {
+    if (gst_video_transfer_function_is_equivalent (in_info->
+            colorimetry.transfer, in_info->finfo->bits,
+            out_info->colorimetry.transfer, out_info->finfo->bits)) {
       gstbasetransform_class->passthrough_on_same_caps = FALSE;
       gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
       return TRUE;

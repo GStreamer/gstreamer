@@ -669,7 +669,7 @@ gst_video_color_matrix_to_iso (GstVideoColorMatrix matrix)
 }
 
 /**
- * gst_video_color_transfer_to_iso:
+ * gst_video_transfer_function_to_iso:
  * @func: a #GstVideoTransferFunction
  *
  * Converts #GstVideoTransferFunction to the "transfer characteristics"
@@ -682,7 +682,7 @@ gst_video_color_matrix_to_iso (GstVideoColorMatrix matrix)
  * Since: 1.18
  */
 guint
-gst_video_color_transfer_to_iso (GstVideoTransferFunction func)
+gst_video_transfer_function_to_iso (GstVideoTransferFunction func)
 {
   switch (func) {
     case GST_VIDEO_TRANSFER_BT709:
@@ -804,7 +804,7 @@ gst_video_color_matrix_from_iso (guint value)
 }
 
 /**
- * gst_video_color_transfer_from_iso:
+ * gst_video_transfer_function_from_iso:
  * @value: a ITU-T H.273 transfer characteristics value
  *
  * Converts the @value to the #GstVideoTransferFunction
@@ -818,7 +818,7 @@ gst_video_color_matrix_from_iso (guint value)
  * Since: 1.18
  */
 GstVideoTransferFunction
-gst_video_color_transfer_from_iso (guint value)
+gst_video_transfer_function_from_iso (guint value)
 {
   switch (value) {
     case 1:
@@ -918,7 +918,7 @@ map_equivalent_transfer (GstVideoTransferFunction func, guint bpp)
 }
 
 /**
- * gst_video_color_transfer_is_equivalent:
+ * gst_video_transfer_function_is_equivalent:
  * @from_func: #GstVideoTransferFunction to convert from
  * @from_bpp: bits per pixel to convert from
  * @to_func: #GstVideoTransferFunction to convert into
@@ -935,7 +935,7 @@ map_equivalent_transfer (GstVideoTransferFunction func, guint bpp)
  * Since: 1.18
  */
 gboolean
-gst_video_color_transfer_is_equivalent (GstVideoTransferFunction from_func,
+gst_video_transfer_function_is_equivalent (GstVideoTransferFunction from_func,
     guint from_bpp, GstVideoTransferFunction to_func, guint to_bpp)
 {
   from_func = map_equivalent_transfer (from_func, from_bpp);

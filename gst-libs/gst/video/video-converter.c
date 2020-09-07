@@ -6764,7 +6764,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
 
   /* fastpaths don't do gamma */
   if (CHECK_GAMMA_REMAP (convert) && (!same_size
-          || !gst_video_color_transfer_is_equivalent (in_transf, in_bpp,
+          || !gst_video_transfer_function_is_equivalent (in_transf, in_bpp,
               out_transf, out_bpp)))
     return FALSE;
 

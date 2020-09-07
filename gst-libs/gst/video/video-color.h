@@ -275,7 +275,7 @@ GST_VIDEO_API
 guint                     gst_video_color_matrix_to_iso      (GstVideoColorMatrix matrix);
 
 GST_VIDEO_API
-guint                     gst_video_color_transfer_to_iso    (GstVideoTransferFunction func);
+guint                     gst_video_transfer_function_to_iso    (GstVideoTransferFunction func);
 
 GST_VIDEO_API
 guint                     gst_video_color_primaries_to_iso   (GstVideoColorPrimaries primaries);
@@ -284,16 +284,16 @@ GST_VIDEO_API
 GstVideoColorMatrix       gst_video_color_matrix_from_iso    (guint value);
 
 GST_VIDEO_API
-GstVideoTransferFunction  gst_video_color_transfer_from_iso  (guint value);
+GstVideoTransferFunction  gst_video_transfer_function_from_iso  (guint value);
 
 GST_VIDEO_API
 GstVideoColorPrimaries    gst_video_color_primaries_from_iso (guint value);
 
 GST_VIDEO_API
-gboolean                  gst_video_color_transfer_is_equivalent (GstVideoTransferFunction from_func,
-                                                               guint from_bpp,
-                                                               GstVideoTransferFunction to_func,
-                                                               guint to_bpp);
+gboolean                  gst_video_transfer_function_is_equivalent (GstVideoTransferFunction from_func,
+                                                                    guint from_bpp,
+                                                                    GstVideoTransferFunction to_func,
+                                                                    guint to_bpp);
 
 G_END_DECLS
 

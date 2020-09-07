@@ -3208,7 +3208,7 @@ GST_START_TEST (test_video_color_from_to_iso)
   }
 
   for (i = 0; i <= GST_VIDEO_TRANSFER_ARIB_STD_B67; i++) {
-    guint transfer_val = gst_video_color_transfer_to_iso (i);
+    guint transfer_val = gst_video_transfer_function_to_iso (i);
 
     /* don't know how to map below values to spec. */
     if (i == GST_VIDEO_TRANSFER_GAMMA18 || i == GST_VIDEO_TRANSFER_GAMMA20
@@ -3217,7 +3217,7 @@ GST_START_TEST (test_video_color_from_to_iso)
       continue;
     }
 
-    fail_unless_equals_int (gst_video_color_transfer_from_iso (transfer_val),
+    fail_unless_equals_int (gst_video_transfer_function_from_iso (transfer_val),
         i);
   }
 
