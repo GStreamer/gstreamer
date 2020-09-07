@@ -1131,7 +1131,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   /**
    * GstRTSPSrc::push-backchannel-buffer:
    * @rtspsrc: a #GstRTSPSrc
-   * @buffer: RTP buffer to send back
+   * @sample: RTP sample to send back
    *
    *
    */
@@ -1139,7 +1139,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_signal_new ("push-backchannel-buffer", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
           push_backchannel_buffer), NULL, NULL, NULL,
-      GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_BUFFER);
+      GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_SAMPLE);
 
   /**
    * GstRTSPSrc::get-parameter:

@@ -20776,7 +20776,7 @@
                             },
                             {
                                 "name": "arg1",
-                                "type": "GstBuffer"
+                                "type": "GstSample"
                             }
                         ],
                         "return-type": "GstFlowReturn",
