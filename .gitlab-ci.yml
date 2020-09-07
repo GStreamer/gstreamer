@@ -250,9 +250,14 @@ commitlint:
   - date -R
   - ci/scripts/handle-subprojects-cache.py subprojects/
   - date -R
-  - echo $MESON_ARGS
+  - export ARGS="$MESON_ARGS"
+  - |-
+    if [ $GST_WERROR == "true" ]; then
+      export ARGS="$ARGS $MESON_GST_WERROR"
+    fi
+  - echo $ARGS
   - date -R
-  - meson build/ $MESON_ARGS
+  - meson build/ $ARGS
   - date -R
   - ninja -C build/
   - date -R
@@ -297,7 +302,6 @@ commitlint:
   -Dgst-omx:target=generic
   -Ddoc=disabled
   ${MESON_BUILDTYPE_ARGS}
-  ${MESON_GST_WERROR}
 
 .build:
   stage: 'build'
@@ -309,7 +313,8 @@ commitlint:
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
+    GST_WERROR: "true"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS}"
   script:
     - *build
     - ./gst-env.py gst-inspect-1.0 --version
@@ -338,6 +343,7 @@ commitlint:
     - "trigger"
     - "fedora amd64 docker"
   variables:
+    GST_WERROR: "true"
     MESON_ARGS: *simple_build
 
 build fedora x86_64:
@@ -364,7 +370,7 @@ build nodebug fedora x86_64:
     - "trigger"
     - "fedora amd64 docker"
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS}"
 
 build clang fedora x86_64:
   extends: '.build fedora x86_64'
@@ -493,6 +499,7 @@ build msys2 :
   needs:
     - "trigger"
   variables:
+    GST_WERROR: "true"
     MESON_ARGS: *simple_build
 
     # Disable colored output to avoid weird rendering issues
@@ -589,7 +596,6 @@ gstreamer-full static build:
     MESON_ARGS: >
       --default-library=static
       -Ddoc=disabled
-      $MESON_GST_WERROR
 
   script:
   - *build
@@ -604,6 +610,7 @@ gstreamer-full-minimal static build:
   extends: 'gstreamer-full static build'
   stage: 'build'
   variables:
+    GST_WERROR: "true"
     MESON_ARGS: >
       --default-library=static
       -Ddoc=disabled
@@ -618,7 +625,6 @@ gstreamer-full-minimal static build:
       -Dgst-full-typefind-functions=typefindfunctions:wav,flv
       -Dgst-full-device-providers=alsa:alsadeviceprovider
       -Dgst-full-dynamic-types=pbtypes:video_multiview_flagset
-      $MESON_GST_WERROR
 
   script:
   - *build
@@ -739,7 +745,7 @@ valgrind ges:
     MESON_ARGS: *simple_build
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled -Drs=enabled -Dgst-docs:fatal_warnings=true"
     # Disable werror for the docs build, we don't need it
-    MESON_GST_WERROR: ''
+    GST_WERROR: 'false'
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
   - export PATH=/usr/local/cargo/bin/:/usr/local/bin/:$PATH
