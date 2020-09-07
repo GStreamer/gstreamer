@@ -1,13 +1,16 @@
-This is GStreamer gst-plugins-ugly 1.17.90.
+This is GStreamer gst-plugins-ugly 1.18.0.
 
-GStreamer 1.17 is the development branch leading up to the next major
-stable version which will be 1.18.
+The GStreamer team is thrilled to announce a new major feature release
+of your favourite cross-platform multimedia framework!
 
-The 1.17 development series adds new features on top of the 1.16 series and is
+As always, this release is again packed with new features, bug fixes and
+other improvements.
+
+The 1.18 release series adds new features on top of the 1.16 series and is
 part of the API and ABI-stable 1.x release series of the GStreamer multimedia
 framework.
 
-Full release notes will one day be found at:
+Full release notes can be found at:
 
   https://gstreamer.freedesktop.org/releases/1.18/
 

@@ -1,3 +1,38 @@
+=== release 1.18.0 ===
+
+2020-09-08 00:05:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* README:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.18.0
+
+2020-09-07 22:40:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* scripts/dist-translations.py:
+	* scripts/meson.build:
+	  meson: dist pot file in tarball
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/69>
+
+2020-09-07 12:14:13 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264: Update for gst_video_transfer_function_*() function renaming
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/68>
+
+2020-08-21 10:35:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/x264/gstx264enc.c:
+	  x264enc: Allow maximum quantizer value of 63 instead of 51
+	  QP_MAX_SPEC in x264 is set to 63 nowadays and in theory it allows even
+	  up to 81 (QP_MAX) but that seems to be outside the spec.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/67>
+
 === release 1.17.90 ===
 
 2020-08-20 16:12:23 +0100  Tim-Philipp Müller <tim@centricular.com>
