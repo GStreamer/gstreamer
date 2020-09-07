@@ -598,7 +598,7 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   vui->colourPrimaries =
       gst_video_color_primaries_to_iso (info->colorimetry.primaries);
   vui->transferCharacteristics =
-      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (info->colorimetry.transfer);
 
   gst_nv_h265_enc_clear_stream_data (h265enc);
 

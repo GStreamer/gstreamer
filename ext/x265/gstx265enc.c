@@ -893,7 +893,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   encoder->x265param.vui.colorPrimaries =
       gst_video_color_primaries_to_iso (info->colorimetry.primaries);
   encoder->x265param.vui.transferCharacteristics =
-      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (info->colorimetry.transfer);
 
   if (encoder->qp != -1) {
     /* CQP */

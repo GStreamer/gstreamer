@@ -369,7 +369,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
         (format->video_signal_description.color_primaries);
 
     colorimetry.transfer =
-        gst_video_color_transfer_from_iso
+        gst_video_transfer_function_from_iso
         (format->video_signal_description.transfer_characteristics);
 
     colorimetry.matrix =

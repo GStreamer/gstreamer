@@ -2062,7 +2062,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
       ci.matrix = gst_video_color_matrix_from_iso (vui->matrix_coefficients);
       ci.transfer =
-          gst_video_color_transfer_from_iso (vui->transfer_characteristics);
+          gst_video_transfer_function_from_iso (vui->transfer_characteristics);
       ci.primaries = gst_video_color_primaries_from_iso (vui->colour_primaries);
 
       old_colorimetry =
