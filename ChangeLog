@@ -1,3 +1,34 @@
+=== release 1.18.0 ===
+
+2020-09-08 00:09:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.18.0
+
+2020-09-04 10:43:05 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* plugins/ges/gesdemux.c:
+	  demux: Fixate documentation caps
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/210>
+
+2020-08-22 00:57:06 +1000  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
+	  complex_effect_bin_desc: Regenerate expectation for compositor change
+	  Part of: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/merge_requests/796
+
+2020-08-20 21:09:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/meson.build:
+	  tests: Fix running tests fully uninstalled
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/118
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/206>
+
 === release 1.17.90 ===
 
 2020-08-20 16:16:01 +0100  Tim-Philipp Müller <tim@centricular.com>
