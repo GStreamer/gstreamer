@@ -2968,7 +2968,7 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
   context->color_primaries =
       gst_video_color_primaries_to_iso (info->colorimetry.primaries);
   context->color_trc =
-      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (info->colorimetry.transfer);
   context->colorspace =
       gst_video_color_matrix_to_iso (info->colorimetry.matrix);
 

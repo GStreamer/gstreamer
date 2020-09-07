@@ -1250,7 +1250,7 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   if (!gst_structure_has_field (in_s, "colorimetry")
       || in_info->colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN) {
     out_info->colorimetry.transfer =
-        gst_video_color_transfer_from_iso (context->color_trc);
+        gst_video_transfer_function_from_iso (context->color_trc);
   }
 
   if (!gst_structure_has_field (in_s, "colorimetry")
