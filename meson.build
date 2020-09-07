@@ -499,6 +499,8 @@ if find_program('xgettext', required : get_option('nls')).found()
   subdir('po')
 endif
 
+subdir('scripts')
+
 # Set release date
 if gst_version_nano == 0
   extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
