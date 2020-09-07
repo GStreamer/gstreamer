@@ -268,6 +268,7 @@ if find_program('xgettext', required : get_option('nls')).found()
   subdir('po')
 endif
 subdir('docs')
+subdir('scripts')
 
 # Set release date
 if gst_version_nano == 0
