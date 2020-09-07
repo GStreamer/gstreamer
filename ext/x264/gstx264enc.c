@@ -1678,7 +1678,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       gst_video_color_primaries_to_iso (info->colorimetry.primaries);
 
   encoder->x264param.vui.i_transfer =
-      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (info->colorimetry.transfer);
 
   encoder->x264param.vui.i_colmatrix =
       gst_video_color_matrix_to_iso (info->colorimetry.matrix);
