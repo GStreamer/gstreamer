@@ -1,4 +1,4 @@
-include: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/ci_template.yml"
+include: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/1.18/gitlab/ci_template.yml"
 
 .local-rules: &local-rules
   rules:

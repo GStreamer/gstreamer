@@ -1,3 +1,31 @@
+=== release 1.18.0 ===
+
+2020-09-08 00:10:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.18.0
+
+2020-08-26 15:47:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  Revert "Revert "launcher: add webrtcbin datachannel tests to valgrind skip list""
+	  This reverts commit ff79af843bc40a554795ee2a0682cfd12272dd24.
+	  Looks like most of these are still problematic and flaky in valgrind,
+	  so re-add to skiplist for now.
+	  https://gitlab.freedesktop.org/thaytan/gst-plugins-base/-/jobs/4275045
+
+2020-08-24 23:59:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  Revert "launcher: add webrtcbin datachannel tests to valgrind skip list"
+	  This reverts commit 369c74941f1607b421bc2f16edcaea0b887926a9.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1383
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/220>
+
 === release 1.17.90 ===
 
 2020-08-20 16:16:50 +0100  Tim-Philipp Müller <tim@centricular.com>
