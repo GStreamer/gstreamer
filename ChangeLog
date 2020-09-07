@@ -1,3 +1,21 @@
+=== release 1.18.0 ===
+
+2020-09-08 00:08:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.18.0
+
+2020-09-07 12:15:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavviddec.c:
+	  Update for gst_video_transfer_function_*() function renaming
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/89>
+
 === release 1.17.90 ===
 
 2020-08-20 16:14:50 +0100  Tim-Philipp Müller <tim@centricular.com>
