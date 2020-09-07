@@ -1622,7 +1622,7 @@ fill_color_standard (GstVideoColorimetry * colorimetry,
   properties->colour_primaries =
       gst_video_color_primaries_to_iso (colorimetry->primaries);
   properties->transfer_characteristics =
-      gst_video_color_transfer_to_iso (colorimetry->transfer);
+      gst_video_transfer_function_to_iso (colorimetry->transfer);
   properties->matrix_coefficients =
       gst_video_color_matrix_to_iso (colorimetry->matrix);
 
