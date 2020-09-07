@@ -2626,7 +2626,7 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
 
   matrix_id = gst_video_color_matrix_to_iso (videocontext->colorimetry.matrix);
   transfer_id =
-      gst_video_color_transfer_to_iso (videocontext->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (videocontext->colorimetry.transfer);
   primaries_id =
       gst_video_color_primaries_to_iso (videocontext->colorimetry.primaries);
 

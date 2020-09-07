@@ -4260,7 +4260,8 @@ build_colr_extension (const GstVideoColorimetry * colorimetry, gboolean is_mp4)
   guint16 matrix;
 
   primaries = gst_video_color_primaries_to_iso (colorimetry->primaries);
-  transfer_function = gst_video_color_transfer_to_iso (colorimetry->transfer);
+  transfer_function =
+      gst_video_transfer_function_to_iso (colorimetry->transfer);
   matrix = gst_video_color_matrix_to_iso (colorimetry->matrix);
 
   atom_data_alloc_mem (atom_data, 10 + (is_mp4 ? 1 : 0));

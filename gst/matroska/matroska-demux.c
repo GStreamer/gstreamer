@@ -616,7 +616,8 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto beach;
 
-        colorimetry.transfer = gst_video_color_transfer_from_iso ((guint) num);
+        colorimetry.transfer =
+            gst_video_transfer_function_from_iso ((guint) num);
         break;
       }
 

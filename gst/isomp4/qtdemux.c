@@ -10942,7 +10942,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             CUR_STREAM (stream)->colorimetry.primaries =
                 gst_video_color_primaries_from_iso (primaries);
             CUR_STREAM (stream)->colorimetry.transfer =
-                gst_video_color_transfer_from_iso (transfer_function);
+                gst_video_transfer_function_from_iso (transfer_function);
             CUR_STREAM (stream)->colorimetry.matrix =
                 gst_video_color_matrix_from_iso (matrix);
             CUR_STREAM (stream)->colorimetry.range =
@@ -11739,7 +11739,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   cinfo.primaries =
                       gst_video_color_primaries_from_iso (vpcc_data[15]);
                   cinfo.transfer =
-                      gst_video_color_transfer_from_iso (vpcc_data[16]);
+                      gst_video_transfer_function_from_iso (vpcc_data[16]);
                   cinfo.matrix =
                       gst_video_color_matrix_from_iso (vpcc_data[17]);
 
