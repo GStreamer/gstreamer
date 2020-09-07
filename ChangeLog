@@ -1,3 +1,28 @@
+=== release 1.18.0 ===
+
+2020-09-08 00:09:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.18.0
+
+2020-09-07 12:15:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	  Update for gst_video_transfer_function_*() function renaming
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/391>
+
+2020-08-22 12:53:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  Revert "libs: decoder: h264, h265: in context at least 16 reference surfaces"
+	  This reverts commit b387081a4d77d3da202da72686ab40fb9c83ee1e as discussed in
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/commit/b387081a4d77d3da202da72686ab40fb9c83ee1e
+
 === release 1.17.90 ===
 
 2020-08-20 16:16:25 +0100  Tim-Philipp Müller <tim@centricular.com>
