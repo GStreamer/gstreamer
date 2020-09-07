@@ -1,3 +1,22 @@
+=== release 1.18.0 ===
+
+2020-09-08 00:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.18.0
+
+2020-08-27 17:19:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* config/tizonia/meson.build:
+	  meson: fix Tizonia build
+	  Was failing for release versions with
+	  meson.build:414:10: ERROR: Can not set values on configuration object that has been used.
+	  Caused by !69, but CI didn't notice at the time because it was set to a git version.
+
 === release 1.17.90 ===
 
 2020-08-20 16:16:35 +0100  Tim-Philipp Müller <tim@centricular.com>
