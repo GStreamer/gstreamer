@@ -1244,7 +1244,8 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   gboolean srcpad_info_changed = FALSE;
   gboolean deinterlace;
 
-  if (gst_caps_get_features (caps, 0) != gst_caps_get_features (out_caps, 0))
+  if (!gst_caps_features_is_equal (gst_caps_get_features (caps, 0),
+          gst_caps_get_features (out_caps, 0)))
     thiz->need_vpp = 1;
 
   gst_video_info_from_caps (&in_info, caps);
