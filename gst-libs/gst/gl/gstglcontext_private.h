@@ -29,6 +29,18 @@ G_GNUC_INTERNAL extern GstDebugCategory *gst_gl_context_debug;
 G_GNUC_INTERNAL
 gboolean            _gst_gl_context_debug_is_enabled            (GstGLContext * context);
 
+#define GST_GL_CONTEXT_WRAPPED_GL_CONFIG_NAME "gst.gl.context.wrapped.config"
+
+#define GST_TYPE_GL_WRAPPED_CONTEXT (gst_gl_wrapped_context_get_type())
+G_GNUC_INTERNAL
+GType gst_gl_wrapped_context_get_type (void);
+
+#define GST_GL_WRAPPED_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WRAPPED_CONTEXT, GstGLWrappedContext))
+#define GST_GL_WRAPPED_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT, GstGLContextClass))
+#define GST_IS_GL_WRAPPED_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WRAPPED_CONTEXT))
+#define GST_IS_GL_WRAPPED_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WRAPPED_CONTEXT))
+#define GST_GL_WRAPPED_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WRAPPED_CONTEXT, GstGLWrappedContextClass))
+
 G_END_DECLS
 
 #endif /* __GST_GL_CONTEXT_PRIVATE_H__ */

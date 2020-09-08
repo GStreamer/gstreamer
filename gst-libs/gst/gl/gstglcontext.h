@@ -117,6 +117,34 @@ struct _GstGLContext {
  * @destroy_context: destroy the OpenGL context
  * @swap_buffers: swap the default framebuffer's front/back buffers
  */
+/**
+ * GstGLContextClass::get_config:
+ * @context: the #GstGLContext
+ *
+ * Retrieve the configuration in use by this context.  See also
+ * gst_gl_context_get_config().
+ *
+ * Returns: (transfer full) (nullable): the configuration chosen for this
+ *          #GstGLContext
+ *
+ * Since: 1.20
+ */
+/**
+ * GstGLContextClass::request_config:
+ * @context: the #GstGLContext
+ * @gl_config: (nullable) (transfer full): a configuration structure for
+ *             configuring on @context
+ *
+ * Request a configuration for this @context to use.
+ *
+ * Unknown fields within @gl_config should be ignored by subclasses.
+ *
+ * See also gst_gl_context_request_config().
+ *
+ * Returns: Whether @gl_config could be successfull set on @context.
+ *
+ * Since: 1.20
+ */
 struct _GstGLContextClass {
   GstObjectClass parent_class;
 
@@ -133,9 +161,11 @@ struct _GstGLContextClass {
   void          (*swap_buffers)       (GstGLContext *context);
   gboolean      (*check_feature)      (GstGLContext *context, const gchar *feature);
   void          (*get_gl_platform_version) (GstGLContext *context, gint *major, gint *minor);
+  GstStructure *(*get_config)         (GstGLContext * context);
+  gboolean      (*request_config)     (GstGLContext * context, GstStructure * gl_config);
 
   /*< private >*/
-  gpointer _reserved[GST_PADDING];
+  gpointer _reserved[GST_PADDING-2];
 };
 
 /* methods */
@@ -147,6 +177,11 @@ GstGLContext * gst_gl_context_new_wrapped (GstGLDisplay *display,
                                            guintptr handle,
                                            GstGLPlatform context_type,
                                            GstGLAPI available_apis);
+
+GST_GL_API
+GstStructure * gst_gl_context_get_config      (GstGLContext * context);
+GST_GL_API
+gboolean      gst_gl_context_request_config   (GstGLContext * context, GstStructure * gl_config);
 
 GST_GL_API
 gboolean      gst_gl_context_activate         (GstGLContext *context, gboolean activate);

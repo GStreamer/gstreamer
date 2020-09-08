@@ -50,6 +50,7 @@ static void gst_gl_context_eagl_swap_buffers (GstGLContext * context);
 static GstGLAPI gst_gl_context_eagl_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_eagl_get_gl_platform (GstGLContext *
     context);
+GstStructure *gst_gl_context_eagl_get_config (GstGLContext * context);
 
 struct _GstGLContextEaglPrivate
 {
@@ -87,6 +88,7 @@ gst_gl_context_eagl_class_init (GstGLContextEaglClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_eagl_get_gl_api);
   context_class->get_gl_platform =
       GST_DEBUG_FUNCPTR (gst_gl_context_eagl_get_gl_platform);
+  context_class->get_config = GST_DEBUG_FUNCPTR (gst_gl_context_eagl_get_config);
 }
 
 static void
@@ -106,6 +108,71 @@ gst_gl_context_eagl_new (GstGLDisplay * display)
   gst_object_ref_sink (context);
 
   return context;
+}
+
+enum EAGLFormat
+{
+  FORMAT_RGBA8 = 1,
+  FORMAT_RGB565,
+};
+
+static GstStructure *
+layer_config_to_structure (GstGLContextEagl *eagl, CAEAGLLayer * layer)
+{
+  GstStructure *ret;
+  NSDictionary *drawableProps = [layer drawableProperties];
+  NSString *color_format;
+  enum EAGLFormat eagl_format = FORMAT_RGBA8;
+
+  ret = gst_structure_new (GST_GL_CONFIG_STRUCTURE_NAME,
+      GST_GL_CONFIG_STRUCTURE_SET_ARGS(PLATFORM, GstGLPlatform, GST_GL_PLATFORM_EAGL),
+      NULL);
+
+  color_format = [drawableProps objectForKey:kEAGLDrawablePropertyColorFormat];
+  if (!color_format)
+    color_format = [layer contentsFormat];
+
+  if (!color_format) {
+    GST_WARNING_OBJECT (eagl, "Could not retrieve color format from layer %p", layer);
+    goto failure;
+  }
+
+  if (color_format == kEAGLColorFormatRGBA8 || color_format == kCAContentsFormatRGBA8Uint) {
+    eagl_format = FORMAT_RGBA8;
+  } else if (color_format == kEAGLColorFormatRGB565) {
+    eagl_format = FORMAT_RGB565;
+  } else {
+    GST_WARNING_OBJECT (eagl, "unknown drawable format: %s", [color_format UTF8String]);
+    goto failure;
+  }
+
+  /* XXX: defaults chosen by _update_layer() */
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(DEPTH_SIZE, int, 16), NULL);
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(STENCIL_SIZE, int, 0), NULL);
+
+  switch (eagl_format) {
+    case FORMAT_RGBA8:
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(RED_SIZE, int, 8), NULL);
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(GREEN_SIZE, int, 8), NULL);
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(BLUE_SIZE, int, 8), NULL);
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(ALPHA_SIZE, int, 8), NULL);
+      break;
+    case FORMAT_RGB565:
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(RED_SIZE, int, 5), NULL);
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(GREEN_SIZE, int, 6), NULL);
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(BLUE_SIZE, int, 5), NULL);
+      gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(ALPHA_SIZE, int, 0), NULL);
+      break;
+    default:
+      GST_WARNING_OBJECT (eagl, "Unhandled format!");
+      goto failure;
+  }
+
+  return ret;
+
+failure:
+  gst_structure_free (ret);
+  return NULL;
 }
 
 void
@@ -167,6 +234,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context, gpointer layer)
   GstGLContextEagl *context_eagl = GST_GL_CONTEXT_EAGL (context);
   GstGLContextEaglPrivate *priv = context_eagl->priv;
   GstGLWindow *window = gst_gl_context_get_window (context);
+  GstStructure *fmt;
 
   if (!layer || !gst_gl_window_get_window_handle (window)) {
     GST_INFO_OBJECT (context, "window handle not set yet, not updating layer");
@@ -214,6 +282,12 @@ gst_gl_context_eagl_update_layer (GstGLContext * context, gpointer layer)
   priv->framebuffer = framebuffer;
   priv->color_renderbuffer = color_renderbuffer;
   priv->depth_renderbuffer = depth_renderbuffer;
+
+  fmt = layer_config_to_structure (context_eagl, eagl_layer);
+  if (fmt) {
+    GST_DEBUG_OBJECT (context_eagl, "chosen config %" GST_PTR_FORMAT, fmt);
+    gst_structure_free (fmt);
+  }
 
 out:
   if (window)
@@ -383,4 +457,15 @@ guintptr
 gst_gl_context_eagl_get_current_context (void)
 {
   return (guintptr) [EAGLContext currentContext];
+}
+
+GstStructure *
+gst_gl_context_eagl_get_config (GstGLContext * context)
+{
+  GstGLContextEagl *eagl = GST_GL_CONTEXT_EAGL (context);
+
+  if (!eagl->priv->eagl_layer)
+    return NULL;
+
+  return layer_config_to_structure (eagl, (__bridge CAEAGLLayer *) eagl->priv->eagl_layer);
 }

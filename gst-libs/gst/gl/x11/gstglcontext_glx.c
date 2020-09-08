@@ -55,6 +55,9 @@ static GstGLPlatform gst_gl_context_glx_get_gl_platform (GstGLContext *
     context);
 static void gst_gl_context_glx_get_gl_platform_version (GstGLContext * context,
     gint * major, gint * minor);
+static GstStructure *gst_gl_context_glx_get_config (GstGLContext * context);
+static gboolean gst_gl_context_glx_request_config (GstGLContext * context,
+    GstStructure * config);
 
 struct _GstGLContextGLXPrivate
 {
@@ -66,6 +69,8 @@ struct _GstGLContextGLXPrivate
   GLXFBConfig *fbconfigs;
     GLXContext (*glXCreateContextAttribsARB) (Display *, GLXFBConfig,
       GLXContext, Bool, const int *);
+
+  GstStructure *requested_config;
 };
 
 #define gst_gl_context_glx_parent_class parent_class
@@ -98,6 +103,9 @@ gst_gl_context_glx_class_init (GstGLContextGLXClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_current_context);
   context_class->get_gl_platform_version =
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_gl_platform_version);
+  context_class->get_config = GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_config);
+  context_class->request_config =
+      GST_DEBUG_FUNCPTR (gst_gl_context_glx_request_config);
 }
 
 static void
@@ -119,6 +127,140 @@ gst_gl_context_glx_new (GstGLDisplay * display)
   gst_object_ref_sink (context);
 
   return context;
+}
+
+static GstGLConfigSurfaceType
+glx_drawable_type_to_gst (int drawable_type)
+{
+  GstGLConfigSurfaceType ret = GST_GL_CONFIG_SURFACE_TYPE_NONE;
+
+  if (drawable_type & GLX_WINDOW_BIT)
+    ret |= GST_GL_CONFIG_SURFACE_TYPE_WINDOW;
+  if (drawable_type & GLX_PIXMAP_BIT)
+    ret |= GST_GL_CONFIG_SURFACE_TYPE_PIXMAP;
+  if (drawable_type & GLX_PBUFFER_BIT)
+    ret |= GST_GL_CONFIG_SURFACE_TYPE_PBUFFER;
+
+  return ret;
+}
+
+static GstGLConfigCaveat
+glx_caveat_to_gst (int caveat)
+{
+  switch (caveat) {
+    case GLX_NONE:
+      return GST_GL_CONFIG_CAVEAT_NONE;
+    case GLX_SLOW_CONFIG:
+      return GST_GL_CONFIG_CAVEAT_SLOW;
+    case GLX_NON_CONFORMANT_CONFIG:
+      return GST_GL_CONFIG_CAVEAT_NON_CONFORMANT;
+    default:
+      GST_WARNING ("unknown GLX caveat value %u (0x%x)", caveat, caveat);
+      return GST_GL_CONFIG_CAVEAT_NON_CONFORMANT;
+  }
+}
+
+static GstStructure *
+fb_config_to_structure (GstGLContext * context,
+    Display * dpy, GLXFBConfig fbconfig)
+{
+  GstStructure *ret;
+  int val, render_type;
+
+  ret = gst_structure_new (GST_GL_CONFIG_STRUCTURE_NAME,
+      GST_GL_CONFIG_STRUCTURE_SET_ARGS (PLATFORM, GstGLPlatform,
+          GST_GL_PLATFORM_GLX), "platform-sub-type", G_TYPE_STRING, "fbconfig",
+      NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_FBCONFIG_ID, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (CONFIG_ID, int,
+          val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_VISUAL_ID, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (NATIVE_VISUAL_ID,
+          guint, val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_CONFIG_CAVEAT, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (CAVEAT,
+          GstGLConfigCaveat, glx_caveat_to_gst (val)), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_DRAWABLE_TYPE, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (SURFACE_TYPE,
+          GstGLConfigSurfaceType, glx_drawable_type_to_gst (val)), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_X_RENDERABLE, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (NATIVE_RENDERABLE,
+          gboolean, val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_LEVEL, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (LEVEL, int, val),
+      NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_RENDER_TYPE,
+          &render_type))
+    goto failure;
+
+  if (render_type & GLX_RGBA_BIT) {
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_RED_SIZE, &val))
+      goto failure;
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (RED_SIZE, int,
+            val), NULL);
+
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_GREEN_SIZE, &val))
+      goto failure;
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (GREEN_SIZE, int,
+            val), NULL);
+
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_BLUE_SIZE, &val))
+      goto failure;
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (BLUE_SIZE, int,
+            val), NULL);
+
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_ALPHA_SIZE, &val))
+      goto failure;
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (ALPHA_SIZE, int,
+            val), NULL);
+  }
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_DEPTH_SIZE, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (DEPTH_SIZE, int,
+          val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_STENCIL_SIZE, &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (STENCIL_SIZE, int,
+          val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_MAX_PBUFFER_WIDTH,
+          &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (MAX_PBUFFER_WIDTH,
+          int, val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_MAX_PBUFFER_HEIGHT,
+          &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (MAX_PBUFFER_HEIGHT,
+          int, val), NULL);
+
+  if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_MAX_PBUFFER_PIXELS,
+          &val))
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS (MAX_PBUFFER_PIXELS,
+          int, val), NULL);
+
+  return ret;
+
+failure:
+  gst_structure_free (ret);
+  return NULL;
 }
 
 static void
@@ -353,6 +495,60 @@ gst_gl_context_glx_dump_all_fb_configs (GstGLContextGLX * glx,
   XFree (configs);
 }
 
+static int *
+fb_config_attributes_from_structure (GstStructure * config)
+{
+  guint i = 0, n;
+  int *ret;
+
+  if (!config) {
+    gint attribs[] = {
+      GLX_RENDER_TYPE, GLX_RGBA_BIT,
+      GLX_RED_SIZE, 1,
+      GLX_GREEN_SIZE, 1,
+      GLX_BLUE_SIZE, 1,
+      GLX_DEPTH_SIZE, 16,
+      GLX_DOUBLEBUFFER, True,
+      None
+    };
+
+    return g_memdup (attribs, sizeof (attribs));
+  }
+
+  n = gst_structure_n_fields (config) * 2 + 1;
+  ret = g_new0 (gint, n);
+
+#define TRANSFORM_VALUE(GL_CONF_NAME,GLX_ATTR_NAME) \
+  G_STMT_START { \
+    if (gst_structure_has_field_typed (config, \
+          GST_GL_CONFIG_ATTRIB_NAME(GL_CONF_NAME), \
+          GST_GL_CONFIG_ATTRIB_GTYPE(GL_CONF_NAME))) { \
+      int val; \
+      if (gst_structure_get (config, \
+          GST_GL_CONFIG_ATTRIB_NAME(GL_CONF_NAME), \
+          GST_GL_CONFIG_ATTRIB_GTYPE(GL_CONF_NAME), &val, NULL)) { \
+        ret[i++] = GLX_ATTR_NAME; \
+        ret[i++] = (int) val; \
+      } \
+    } \
+  } G_STMT_END
+
+  TRANSFORM_VALUE (CONFIG_ID, GLX_FBCONFIG_ID);
+  TRANSFORM_VALUE (RED_SIZE, GLX_RED_SIZE);
+  TRANSFORM_VALUE (GREEN_SIZE, GLX_GREEN_SIZE);
+  TRANSFORM_VALUE (BLUE_SIZE, GLX_BLUE_SIZE);
+  TRANSFORM_VALUE (ALPHA_SIZE, GLX_ALPHA_SIZE);
+  TRANSFORM_VALUE (DEPTH_SIZE, GLX_DEPTH_SIZE);
+  TRANSFORM_VALUE (STENCIL_SIZE, GLX_STENCIL_SIZE);
+  /* TODO: more values */
+
+#undef TRANSFORM_VALUE
+
+  ret[i++] = None;
+  g_assert (i <= n);
+  return ret;
+}
+
 static GLXContext
 _create_context_with_flags (GstGLContextGLX * context_glx, Display * dpy,
     GLXFBConfig fbconfig, GLXContext share_context, gint major, gint minor,
@@ -487,9 +683,6 @@ gst_gl_context_glx_create_context (GstGLContext * context,
     context_glx->priv->context_api = GST_GL_API_OPENGL;
   }
 
-  if (context_glx->priv->fbconfigs)
-    XFree (context_glx->priv->fbconfigs);
-
   if (!context_glx->glx_context) {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "Failed to create opengl context");
@@ -523,9 +716,17 @@ gst_gl_context_glx_destroy_context (GstGLContext * context)
   window = gst_gl_context_get_window (context);
   device = (Display *) gst_gl_display_get_handle (window->display);
 
+  if (context_glx->priv->fbconfigs)
+    XFree (context_glx->priv->fbconfigs);
+  context_glx->priv->fbconfigs = NULL;
+
   glXDestroyContext (device, context_glx->glx_context);
 
   context_glx->glx_context = 0;
+
+  if (context_glx->priv->requested_config)
+    gst_structure_free (context_glx->priv->requested_config);
+  context_glx->priv->requested_config = NULL;
 
   gst_object_unref (window);
 }
@@ -598,22 +799,20 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
       goto failure;
     }
   } else {
-    gint attribs[] = {
-      GLX_RENDER_TYPE, GLX_RGBA_BIT,
-      GLX_RED_SIZE, 1,
-      GLX_GREEN_SIZE, 1,
-      GLX_BLUE_SIZE, 1,
-      GLX_DEPTH_SIZE, 16,
-      GLX_DOUBLEBUFFER, True,
-      None
-    };
     int fbcount;
+    int *attribs;
+
+    attribs =
+        fb_config_attributes_from_structure (context_glx->
+        priv->requested_config);
 
     gst_gl_context_glx_dump_all_fb_configs (context_glx, device,
         DefaultScreen (device));
 
     context_glx->priv->fbconfigs = glXChooseFBConfig (device,
         DefaultScreen (device), attribs, &fbcount);
+
+    g_free (attribs);
 
     if (!context_glx->priv->fbconfigs) {
       g_set_error (error, GST_GL_CONTEXT_ERROR,
@@ -729,4 +928,110 @@ gst_gl_context_glx_get_gl_platform_version (GstGLContext * context,
 
   *major = context_glx->priv->glx_major;
   *minor = context_glx->priv->glx_minor;
+}
+
+static GstStructure *
+gst_gl_context_glx_get_config (GstGLContext * context)
+{
+  GstGLContextGLX *glx = GST_GL_CONTEXT_GLX (context);
+  GstGLWindow *window;
+  GstGLWindowX11 *window_x11;
+  Display *device;
+  GstStructure *ret;
+
+  window = gst_gl_context_get_window (context);
+  device = (Display *) gst_gl_display_get_handle (window->display);
+  window_x11 = GST_GL_WINDOW_X11 (window);
+
+  g_return_val_if_fail (glx->priv->fbconfigs || window_x11->visual_info, NULL);
+
+  if (glx->priv->fbconfigs) {
+    ret = fb_config_to_structure (context, device, glx->priv->fbconfigs[0]);
+  } else {
+    /*TODO: XVisualInfo for really old GLX/X11 versions, */
+    ret = NULL;
+  }
+  gst_object_unref (window);
+  return ret;
+}
+
+static gboolean
+gst_gl_context_glx_request_config (GstGLContext * context,
+    GstStructure * config)
+{
+  GstGLContextGLX *glx = GST_GL_CONTEXT_GLX (context);
+
+  if (glx->priv->requested_config)
+    gst_structure_free (glx->priv->requested_config);
+  glx->priv->requested_config = config;
+
+  return TRUE;
+}
+
+gboolean
+gst_gl_context_glx_fill_info (GstGLContext * context)
+{
+  GLXContext glx_context = (GLXContext) gst_gl_context_get_gl_context (context);
+  GstStructure *config;
+  Display *device;
+  GLXFBConfig *fbconfigs;
+  int fbconfig_id, n_fbconfigs;
+  int glx_major, glx_minor;
+  int attrs[3];
+
+  if (!glx_context) {
+    GST_ERROR_OBJECT (context, "no GLX context");
+    return FALSE;
+  }
+
+  device = (Display *) gst_gl_display_get_handle (context->display);
+
+  if (!glXQueryVersion (device, &glx_major, &glx_minor)) {
+    GST_WARNING_OBJECT (context, "could not retrieve GLX version");
+    return FALSE;
+  }
+
+  if (!GST_GL_CHECK_GL_VERSION (glx_major, glx_minor, 1, 4)) {
+    GST_FIXME_OBJECT (context, "No support for retrieving the "
+        "GstGLContextConfig from GLX < 1.4, have %u.%u", glx_major, glx_minor);
+    return TRUE;
+  }
+
+  if (Success != glXQueryContext (device, glx_context, GLX_FBCONFIG_ID,
+          &fbconfig_id)) {
+    GST_WARNING_OBJECT (context,
+        "could not retrieve fbconfig id from glx context");
+    goto failure;
+  }
+
+  attrs[0] = GLX_FBCONFIG_ID;
+  attrs[1] = fbconfig_id;
+  attrs[2] = None;
+
+  fbconfigs = glXChooseFBConfig (device, DefaultScreen (device), attrs,
+      &n_fbconfigs);
+  if (!fbconfigs || n_fbconfigs <= 0) {
+    GST_WARNING_OBJECT (context,
+        "could not retrieve fbconfig from its ID 0x%x. "
+        "Wrong Display or Screen?", fbconfig_id);
+    goto failure;
+  }
+
+  config = fb_config_to_structure (context, device, fbconfigs[0]);
+  if (!config) {
+    GST_WARNING_OBJECT (context, "could not transform fbconfig id 0x%x into "
+        "GstStructure.", fbconfig_id);
+    goto failure;
+  }
+
+  GST_INFO_OBJECT (context, "found config %" GST_PTR_FORMAT, config);
+
+  g_object_set_data_full (G_OBJECT (context),
+      GST_GL_CONTEXT_WRAPPED_GL_CONFIG_NAME, config,
+      (GDestroyNotify) gst_structure_free);
+
+  return TRUE;
+
+failure:
+  return FALSE;
 }

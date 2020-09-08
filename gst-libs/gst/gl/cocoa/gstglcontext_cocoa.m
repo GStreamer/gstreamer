@@ -39,6 +39,7 @@ static gboolean gst_gl_context_cocoa_activate (GstGLContext * context, gboolean 
 static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * context);
 static void gst_gl_context_cocoa_swap_buffers (GstGLContext * context);
+static GstStructure * gst_gl_context_cocoa_get_config (GstGLContext * context);
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_context_cocoa_debug);
 #define GST_CAT_DEFAULT gst_gl_context_cocoa_debug
@@ -66,6 +67,8 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_api);
   context_class->get_gl_platform =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_gl_platform);
+  context_class->get_config =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_config);
 }
 
 static void
@@ -168,6 +171,57 @@ CGLPixelFormatObj
 gst_gl_context_cocoa_get_pixel_format (GstGLContextCocoa *context)
 {
   return context->priv->pixel_format;
+}
+
+static GstStructure *
+cgl_pixel_format_to_structure (CGLPixelFormatObj fmt)
+{
+  GstStructure *ret;
+  int val, alpha;
+
+  ret = gst_structure_new (GST_GL_CONFIG_STRUCTURE_NAME,
+      GST_GL_CONFIG_STRUCTURE_SET_ARGS(PLATFORM, GstGLPlatform, GST_GL_PLATFORM_CGL),
+      NULL);
+
+  if (CGLDescribePixelFormat (fmt, 0, kCGLPFAAlphaSize, &alpha) != kCGLNoError)
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(ALPHA_SIZE, int, alpha), NULL);
+
+  if (CGLDescribePixelFormat (fmt, 0, kCGLPFADepthSize, &val) != kCGLNoError)
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(DEPTH_SIZE, int, val), NULL);
+
+  if (CGLDescribePixelFormat (fmt, 0, kCGLPFAStencilSize, &val) != kCGLNoError)
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(STENCIL_SIZE, int, val), NULL);
+
+  if (CGLDescribePixelFormat (fmt, 0, kCGLPFAColorSize, &val) != kCGLNoError)
+    goto failure;
+  val -= alpha;
+  if (val % 3 == 0) {
+    /* XXX: assumes that bits are evenly distributed */
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(RED_SIZE, int, val / 3), NULL);
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(GREEN_SIZE, int, val / 3), NULL);
+    gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(BLUE_SIZE, int, val / 3), NULL);
+  } else {
+    GST_WARNING ("Don't know how to split a color size of %u into R,G,B values",
+        val);
+    goto failure;
+  }
+
+  if (CGLDescribePixelFormat (fmt, 0, kCGLPFASamples, &val) != kCGLNoError)
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(SAMPLES, int, val), NULL);
+
+  if (CGLDescribePixelFormat (fmt, 0, kCGLPFASampleBuffers, &val) != kCGLNoError)
+    goto failure;
+  gst_structure_set (ret, GST_GL_CONFIG_STRUCTURE_SET_ARGS(SAMPLE_BUFFERS, int, val), NULL);
+
+  return ret;
+
+failure:
+  gst_structure_free (ret);
+  return NULL;
 }
 
 static gboolean
@@ -337,4 +391,14 @@ guintptr
 gst_gl_context_cocoa_get_current_context (void)
 {
   return (guintptr) CGLGetCurrentContext ();
+}
+
+static GstStructure *
+gst_gl_context_cocoa_get_config (GstGLContext * context)
+{
+  GstGLContextCocoa *cocoa = GST_GL_CONTEXT_COCOA (context);
+
+  g_return_val_if_fail (cocoa->priv->pixel_format, NULL);
+
+  return cgl_pixel_format_to_structure (cocoa->priv->pixel_format);
 }

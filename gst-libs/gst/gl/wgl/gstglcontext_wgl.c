@@ -63,6 +63,7 @@ static GstGLPlatform gst_gl_context_wgl_get_gl_platform (GstGLContext *
     context);
 static gboolean gst_gl_context_wgl_check_feature (GstGLContext * context,
     const gchar * feature);
+GstStructure *gst_gl_context_wgl_get_config (GstGLContext * context);
 
 static void
 gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
@@ -88,6 +89,7 @@ gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_platform);
   context_class->check_feature =
       GST_DEBUG_FUNCPTR (gst_gl_context_wgl_check_feature);
+  context_class->get_config = GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_config);
 }
 
 static void
@@ -302,6 +304,47 @@ gst_gl_context_wgl_destroy_context (GstGLContext * context)
   context_wgl->wgl_context = NULL;
 }
 
+static GstGLConfigSurfaceType
+pfd_flags_to_surface_type (int flags)
+{
+  GstGLConfigSurfaceType ret = GST_GL_CONFIG_SURFACE_TYPE_NONE;
+
+  if (flags & PFD_DRAW_TO_WINDOW)
+    ret |= GST_GL_CONFIG_SURFACE_TYPE_WINDOW;
+  if (flags & PFD_DRAW_TO_BITMAP)
+    ret |= GST_GL_CONFIG_SURFACE_TYPE_PIXMAP;
+
+  return ret;
+}
+
+static GstStructure *
+pixel_format_to_structure (HDC hdc, int pixfmt)
+{
+  GstStructure *ret;
+  PIXELFORMATDESCRIPTOR pfd;
+
+  if (pixfmt == 0)
+    return NULL;
+
+  if (DescribePixelFormat (hdc, pixfmt, sizeof (pfd), &pfd) == 0)
+    return NULL;
+
+  ret = gst_structure_new (GST_GL_CONFIG_STRUCTURE_NAME,
+      GST_GL_CONFIG_STRUCTURE_SET_ARGS (PLATFORM, GstGLPlatform,
+          GST_GL_PLATFORM_WGL), GST_GL_CONFIG_STRUCTURE_SET_ARGS (RED_SIZE, int,
+          pfd.cRedBits), GST_GL_CONFIG_STRUCTURE_SET_ARGS (BLUE_SIZE, int,
+          pfd.cBlueBits), GST_GL_CONFIG_STRUCTURE_SET_ARGS (GREEN_SIZE, int,
+          pfd.cGreenBits), GST_GL_CONFIG_STRUCTURE_SET_ARGS (ALPHA_SIZE, int,
+          pfd.cAlphaBits), GST_GL_CONFIG_STRUCTURE_SET_ARGS (DEPTH_SIZE, int,
+          pfd.cDepthBits), GST_GL_CONFIG_STRUCTURE_SET_ARGS (STENCIL_SIZE, int,
+          pfd.cStencilBits), GST_GL_CONFIG_STRUCTURE_SET_ARGS (NATIVE_VISUAL_ID,
+          guint, pixfmt), GST_GL_CONFIG_STRUCTURE_SET_ARGS (SURFACE_TYPE,
+          GstGLConfigSurfaceType, pfd_flags_to_surface_type (pfd.dwFlags)),
+      NULL);
+
+  return ret;
+}
+
 static gboolean
 gst_gl_context_wgl_choose_format (GstGLContext * context, GError ** error)
 {
@@ -310,6 +353,7 @@ gst_gl_context_wgl_choose_format (GstGLContext * context, GError ** error)
   gint pixelformat = 0;
   gboolean res = FALSE;
   HDC device;
+  GstStructure *config;
 
   window = gst_gl_context_get_window (context);
   gst_gl_window_win32_create_window (GST_GL_WINDOW_WIN32 (window), error);
@@ -352,6 +396,10 @@ gst_gl_context_wgl_choose_format (GstGLContext * context, GError ** error)
         "Failed to choose a pixel format");
     return FALSE;
   }
+
+  config = pixel_format_to_structure (device, pixelformat);
+  GST_INFO_OBJECT (context, "chosen config %" GST_PTR_FORMAT, config);
+  gst_structure_free (config);
 
   res = SetPixelFormat (device, pixelformat, &pfd);
 
@@ -436,4 +484,19 @@ guintptr
 gst_gl_context_wgl_get_current_context (void)
 {
   return (guintptr) wglGetCurrentContext ();
+}
+
+GstStructure *
+gst_gl_context_wgl_get_config (GstGLContext * context)
+{
+  GstGLWindow *window;
+  int pixfmt;
+  HDC hdc;
+
+  window = gst_gl_context_get_window (context);
+  hdc = (HDC) gst_gl_window_get_display (window);
+
+  pixfmt = GetPixelFormat (hdc);
+
+  return pixel_format_to_structure (hdc, pixfmt);
 }

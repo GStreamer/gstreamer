@@ -68,6 +68,9 @@ guintptr            gst_gl_context_glx_get_current_context  (void);
 G_GNUC_INTERNAL
 gpointer            gst_gl_context_glx_get_proc_address     (GstGLAPI gl_api, const gchar * name);
 
+G_GNUC_INTERNAL
+gboolean            gst_gl_context_glx_fill_info            (GstGLContext * context);
+
 G_END_DECLS
 
 #endif /* __GST_GL_CONTEXT_H__ */
