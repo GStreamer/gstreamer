@@ -1002,7 +1002,7 @@ if build_gstgl
     dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
     # don't confuse EGL/egl.h with gst-libs/gl/egl/egl.h on case-insensitive file systems
-    implicit_include_directories : true)
+    implicit_include_directories : false)
 
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
