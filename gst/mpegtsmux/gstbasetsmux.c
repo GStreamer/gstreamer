@@ -1268,6 +1268,10 @@ gst_base_ts_mux_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (name != NULL && sscanf (name, "sink_%d", &pid) == 1) {
     if (tsmux_find_stream (mux->tsmux, pid))
       goto stream_exists;
+    /* Make sure we don't use reserved PID.
+     * FIXME : This should be extended to other variants (ex: ATSC) reserved PID */
+    if (pid < TSMUX_START_ES_PID)
+      goto invalid_stream_pid;
   } else {
     pid = tsmux_get_new_pid (mux->tsmux);
   }
@@ -1286,6 +1290,13 @@ stream_exists:
   {
     GST_ELEMENT_ERROR (element, STREAM, MUX, ("Duplicate PID requested"),
         (NULL));
+    return NULL;
+  }
+
+invalid_stream_pid:
+  {
+    GST_ELEMENT_ERROR (element, STREAM, MUX,
+        ("Invalid Elementary stream PID (< 0x40)"), (NULL));
     return NULL;
   }
 }
