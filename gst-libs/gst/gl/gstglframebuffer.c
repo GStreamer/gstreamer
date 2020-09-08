@@ -171,6 +171,9 @@ gst_gl_framebuffer_finalize (GObject * object)
  * gst_gl_framebuffer_new:
  * @context: a #GstGLContext
  *
+ * This function will internally create an OpenGL framebuffer object and must
+ * be called on @context's OpenGL thread.
+ *
  * Returns: (transfer full): a new #GstGLFramebuffer
  *
  * Since: 1.10
@@ -204,6 +207,9 @@ gst_gl_framebuffer_new (GstGLContext * context)
  * @context: a #GstGLContext
  * @width: width for the depth buffer
  * @height: for the depth buffer
+ *
+ * This function will internally create an OpenGL framebuffer object and must
+ * be called on @context's OpenGL thread.
  *
  * Returns: a new #GstGLFramebuffer with a depth buffer of @width and @height
  *
@@ -262,6 +268,13 @@ gst_gl_framebuffer_new_with_default_depth (GstGLContext * context, guint width,
  * Perform the steps necessary to have the output of a glDraw* command in
  * @func update the contents of @mem.
  *
+ * Note: this function does not map @mem for writing with OpenGL and that must
+ * be done manually by the caller using any of the mapping functions such as
+ * gst_memory_map() with the map flags %GST_MAP_WRITE | %GST_MAP_GL.
+ *
+ * Must be called with the same OpenGL context current that @fb was created
+ * with.
+ *
  * Returns: the result of executing @func
  *
  * Since: 1.10
@@ -275,6 +288,7 @@ gst_gl_framebuffer_draw_to_texture (GstGLFramebuffer * fb, GstGLMemory * mem,
 
   g_return_val_if_fail (GST_IS_GL_FRAMEBUFFER (fb), FALSE);
   g_return_val_if_fail (gst_is_gl_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (gst_gl_context_get_current () == fb->context, FALSE);
 
   gl = fb->context->gl_vtable;
 
@@ -305,6 +319,9 @@ gst_gl_framebuffer_draw_to_texture (GstGLFramebuffer * fb, GstGLMemory * mem,
  * @fb: a #GstGLFramebuffer
  *
  * Bind @fb into the current thread
+ *
+ * Must be called with the same OpenGL context current that @fb was created
+ * with.
  *
  * Since: 1.10
  */
@@ -443,6 +460,9 @@ _attach_renderbuffer (GstGLFramebuffer * fb, guint attachment_point,
  *
  * attach @mem to @attachment_point
  *
+ * Must be called with the same OpenGL context current that @fb was created
+ * with.
+ *
  * Since: 1.10
  */
 void
@@ -508,6 +528,8 @@ gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
  * @fbo_target: the GL value of the framebuffer target, GL_FRAMEBUFFER,
  *              GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER
  *
+ * Must be called with @context current.
+ *
  * Returns: whether whether the current framebuffer is complete
  *
  * Since: 1.10
@@ -516,7 +538,10 @@ gboolean
 gst_gl_context_check_framebuffer_status (GstGLContext * context,
     guint fbo_target)
 {
+  GLenum ret;
+
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+  g_return_val_if_fail (gst_gl_context_get_current () == context, FALSE);
 
   if (fbo_target != GL_FRAMEBUFFER && fbo_target != GL_READ_FRAMEBUFFER
       && fbo_target != GL_DRAW_FRAMEBUFFER) {
@@ -528,7 +553,8 @@ gst_gl_context_check_framebuffer_status (GstGLContext * context,
   if (!_gst_gl_context_debug_is_enabled (context))
     return TRUE;
 
-  switch (context->gl_vtable->CheckFramebufferStatus (fbo_target)) {
+  ret = context->gl_vtable->CheckFramebufferStatus (fbo_target);
+  switch (ret) {
     case GL_FRAMEBUFFER_COMPLETE:
       return TRUE;
       break;
@@ -551,7 +577,7 @@ gst_gl_context_check_framebuffer_status (GstGLContext * context,
       break;
 #endif
     default:
-      GST_WARNING_OBJECT (context, "Unknown FBO error");
+      GST_WARNING_OBJECT (context, "Unknown FBO error: %d (0x%x)", ret, ret);
       break;
   }
 
