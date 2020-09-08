@@ -107,8 +107,10 @@ gst_gl_api_from_string (const gchar * apis_s)
   GstGLAPI ret = GST_GL_API_NONE;
   gchar *apis = (gchar *) apis_s;
 
-  if (!apis || apis[0] == '\0') {
+  if (!apis || apis[0] == '\0' || g_strcmp0 (apis_s, "any") == 0) {
     ret = GST_GL_API_ANY;
+  } else if (g_strcmp0 (apis_s, "none") == 0) {
+    ret = GST_GL_API_NONE;
   } else {
     while (apis) {
       if (apis[0] == '\0') {
@@ -147,6 +149,7 @@ gchar *
 gst_gl_platform_to_string (GstGLPlatform platform)
 {
   GString *str = NULL;
+  gboolean first_set = FALSE;
   gchar *ret;
 
   if (platform == GST_GL_PLATFORM_NONE) {
@@ -159,22 +162,24 @@ gst_gl_platform_to_string (GstGLPlatform platform)
 
   str = g_string_new ("");
 
-  if (platform & GST_GL_PLATFORM_GLX) {
-    str = g_string_append (str, "glx ");
+#define ADD_PLATFORM(flag,str__) \
+  if (platform & flag) { \
+    if (first_set) \
+      g_string_append_c (str, ' '); \
+    str = g_string_append (str, str__); \
+    first_set = TRUE; \
   }
-  if (platform & GST_GL_PLATFORM_EGL) {
-    str = g_string_append (str, "egl ");
-  }
-  if (platform & GST_GL_PLATFORM_WGL) {
-    str = g_string_append (str, "wgl ");
-  }
-  if (platform & GST_GL_PLATFORM_CGL) {
-    str = g_string_append (str, "cgl ");
-  }
+  ADD_PLATFORM (GST_GL_PLATFORM_GLX, "glx");
+  ADD_PLATFORM (GST_GL_PLATFORM_EGL, "egl");
+  ADD_PLATFORM (GST_GL_PLATFORM_WGL, "wgl");
+  ADD_PLATFORM (GST_GL_PLATFORM_CGL, "cgl");
+  ADD_PLATFORM (GST_GL_PLATFORM_EAGL, "eagl");
+
+#undef ADD_PLATFORM
 
 out:
-  if (!str)
-    str = g_string_new ("unknown");
+  if (g_strcmp0 (str->str, "") == 0)
+    str = g_string_append (str, "unknown");
 
   ret = g_string_free (str, FALSE);
   return ret;
@@ -192,8 +197,10 @@ gst_gl_platform_from_string (const gchar * platform_s)
   GstGLPlatform ret = GST_GL_PLATFORM_NONE;
   gchar *platform = (gchar *) platform_s;
 
-  if (!platform || platform[0] == '\0') {
+  if (!platform || platform[0] == '\0' || g_strcmp0 (platform_s, "any") == 0) {
     ret = GST_GL_PLATFORM_ANY;
+  } else if (g_strcmp0 (platform_s, "none") == 0) {
+    ret = GST_GL_PLATFORM_NONE;
   } else {
     while (platform) {
       if (platform[0] == '\0') {
@@ -212,6 +219,9 @@ gst_gl_platform_from_string (const gchar * platform_s)
       } else if (g_strstr_len (platform, 3, "cgl")) {
         ret |= GST_GL_PLATFORM_CGL;
         platform = &platform[3];
+      } else if (g_strstr_len (platform, 4, "eagl")) {
+        ret |= GST_GL_PLATFORM_EAGL;
+        platform = &platform[4];
       } else {
         GST_ERROR ("Error parsing \'%s\'", platform);
         break;

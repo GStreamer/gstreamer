@@ -87,6 +87,7 @@ endif
 # FIXME: Unstable on Windows
 if build_gstgl and host_machine.system() != 'windows'
   base_tests += [
+    [ 'libs/gstglapi.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglcolorconvert.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
     [ 'libs/gstglcontext.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
     [ 'libs/gstglfeature.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
