@@ -20,6 +20,9 @@ case "$with_ptp_helper_permissions" in
     echo "Calling $setcap cap_net_bind_service,cap_net_admin+ep $ptp_helper"
     $setcap cap_net_bind_service,cap_net_admin+ep "$ptp_helper" || true
     ;;
+  none)
+    echo "No perms/caps to set for $ptp_helper"
+    ;;
   *)
     echo "$0 ERROR: unexpected permissions value '$with_ptp_helper_permissions'";
     exit 2;
