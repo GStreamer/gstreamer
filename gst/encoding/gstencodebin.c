@@ -2008,7 +2008,8 @@ _get_muxer (GstEncodeBin * ebin)
   GST_DEBUG ("Getting list of muxers for format %" GST_PTR_FORMAT, format);
 
   muxers =
-      gst_element_factory_list_filter (ebin->muxers, format, GST_PAD_SRC, TRUE);
+      gst_element_factory_list_filter (ebin->muxers, format, GST_PAD_SRC,
+      !preset_name);
 
   formatters =
       gst_element_factory_list_filter (ebin->formatters, format, GST_PAD_SRC,
