@@ -720,7 +720,10 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     }
   } while (got_frame);
 
-  if (is_header || got_any_frames) {
+  /* Only override the flow return value if previously did have a GST_FLOW_OK.
+   * Failure to do this would result in skipping downstream issues caught in
+   * earlier steps. */
+  if (ret == GST_FLOW_OK && (is_header || got_any_frames)) {
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
   }
