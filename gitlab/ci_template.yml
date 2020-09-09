@@ -196,7 +196,7 @@ default:
 #
 # All the documentation from citemplates should be applicable here, so please refer there
 .base:
-  image: "$CI_REGISTRY/freedesktop/ci-templates/buildah:2020-03-24"
+  image: "$CI_REGISTRY/freedesktop/ci-templates/buildah:2020-07-20.1"
   variables:
     STORAGE_DRIVER: 'vfs'
     BUILDAH_FORMAT: 'docker'
