@@ -31,6 +31,7 @@
 #include "gstjpeg2000parse.h"
 #include "gstvc1parse.h"
 #include "gsth265parse.h"
+#include "gstvp9parse.h"
 
 GST_DEBUG_CATEGORY (videoparseutils_debug);
 
@@ -60,6 +61,14 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_SECONDARY, GST_TYPE_H265_PARSE);
   ret |= gst_element_register (plugin, "vc1parse",
       GST_RANK_NONE, GST_TYPE_VC1_PARSE);
+
+  /**
+   * element-vp9parse:
+   *
+   * Since: 1.20
+   */
+  ret |= gst_element_register (plugin, "vp9parse",
+      GST_RANK_SECONDARY, GST_TYPE_VP9_PARSE);
 
   return ret;
 }
