@@ -134,6 +134,8 @@ static gboolean gst_flv_mux_are_all_pads_eos (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_update_src_caps (GstAggregator * aggregator,
     GstCaps * caps, GstCaps ** ret);
 static guint64 gst_flv_mux_query_upstream_duration (GstFlvMux * mux);
+static GstClockTime gst_flv_mux_segment_to_running_time (const GstSegment *
+    segment, GstClockTime t);
 
 static GstFlowReturn
 gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
@@ -147,6 +149,47 @@ gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_flv_mux_skip_buffer (GstAggregatorPad * apad, GstAggregator * aggregator,
+    GstBuffer * buffer)
+{
+  GstFlvMuxPad *fpad = GST_FLV_MUX_PAD_CAST (apad);
+  GstFlvMux *mux = GST_FLV_MUX_CAST (aggregator);
+  GstClockTime t;
+
+  if (!mux->skip_backwards_streams)
+    return FALSE;
+
+  if (fpad->drop_deltas) {
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      GST_INFO_OBJECT (fpad, "Waiting for keyframe, dropping %" GST_PTR_FORMAT,
+          buffer);
+      return TRUE;
+    } else {
+      /* drop-deltas is set and the buffer isn't delta, drop flag */
+      fpad->drop_deltas = FALSE;
+    }
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS_OR_PTS (buffer))) {
+    t = gst_flv_mux_segment_to_running_time (&apad->segment,
+        GST_BUFFER_DTS_OR_PTS (buffer));
+
+    if (t < (GST_MSECOND * mux->last_dts)) {
+      GST_WARNING_OBJECT (fpad,
+          "Timestamp %" GST_TIME_FORMAT " going backwards from last used %"
+          GST_TIME_FORMAT ", dropping %" GST_PTR_FORMAT,
+          GST_TIME_ARGS (t), GST_TIME_ARGS (GST_MSECOND * mux->last_dts),
+          buffer);
+      /* Look for non-delta buffer */
+      fpad->drop_deltas = TRUE;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 static void
 gst_flv_mux_pad_class_init (GstFlvMuxPadClass * klass)
 {
@@ -156,6 +199,8 @@ gst_flv_mux_pad_class_init (GstFlvMuxPadClass * klass)
   gobject_class->finalize = gst_flv_mux_pad_finalize;
 
   aggregatorpad_class->flush = GST_DEBUG_FUNCPTR (gst_flv_mux_pad_flush);
+  aggregatorpad_class->skip_buffer =
+      GST_DEBUG_FUNCPTR (gst_flv_mux_skip_buffer);
 }
 
 static void
@@ -1853,7 +1898,6 @@ static GstFlvMuxPad *
 gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
     gboolean timeout)
 {
-  GstFlvMux *mux = GST_FLV_MUX (aggregator);
   GstFlvMuxPad *best = NULL;
   GstClockTime best_ts = GST_CLOCK_TIME_NONE;
   GstIterator *pads;
@@ -1866,7 +1910,6 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
     switch (gst_iterator_next (pads, &padptr)) {
       case GST_ITERATOR_OK:{
         GstAggregatorPad *apad = g_value_get_object (&padptr);
-        GstFlvMuxPad *fpad = GST_FLV_MUX_PAD (apad);
         GstClockTime t = GST_CLOCK_TIME_NONE;
         GstBuffer *buffer;
 
@@ -1880,46 +1923,9 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
           break;
         }
 
-        if (fpad->drop_deltas) {
-          if (mux->skip_backwards_streams
-              && GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-            GST_INFO_OBJECT (apad,
-                "Dropped buffer %" GST_PTR_FORMAT " until keyframe", buffer);
-            gst_buffer_unref (buffer);
-            gst_aggregator_pad_drop_buffer (apad);
-            if (!timeout) {
-              gst_object_replace ((GstObject **) & best, NULL);
-              best_ts = GST_CLOCK_TIME_NONE;
-              done = TRUE;
-            }
-            break;
-          } else {
-            /* drop-deltas is set and the buffer isn't delta, drop flag */
-            fpad->drop_deltas = FALSE;
-          }
-        }
-
         if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS_OR_PTS (buffer))) {
           t = gst_flv_mux_segment_to_running_time (&apad->segment,
               GST_BUFFER_DTS_OR_PTS (buffer));
-
-          if (mux->skip_backwards_streams
-              && (t < (GST_MSECOND * mux->last_dts))) {
-            GST_WARNING_OBJECT (mux,
-                "Timestamp %" GST_TIME_FORMAT " going "
-                "backwards from last known %" GST_TIME_FORMAT ", dropping",
-                GST_TIME_ARGS (t), GST_TIME_ARGS (GST_MSECOND * mux->last_dts));
-            gst_buffer_unref (buffer);
-            gst_aggregator_pad_drop_buffer (apad);
-            /* Look for non-delta buffer */
-            fpad->drop_deltas = TRUE;
-            if (!timeout) {
-              gst_object_replace ((GstObject **) & best, NULL);
-              best_ts = GST_CLOCK_TIME_NONE;
-              done = TRUE;
-            }
-            break;
-          }
         }
 
         if (!GST_CLOCK_TIME_IS_VALID (best_ts) ||
