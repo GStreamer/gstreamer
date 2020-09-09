@@ -328,14 +328,14 @@ manifest:
 
     # If the user that triggered the Pipeline is the Merge bot and the branch doesn't match
     # the upstream branch set, run the pipeline
-    - if: '$GITLAB_USER_LOGIN == "gstreamer-merge-bot" && $CI_COMMIT_BRANCH != "$GST_UPS_BRANCH"'
+    - if: '$GITLAB_USER_LOGIN == "gstreamer-merge-bot" && $CI_COMMIT_BRANCH != "$GST_UPSTREAM_BRANCH"'
     # When the user isn't the merge bot, require an explicit action to trigger the pipeline
     # to avoid wasting CI resources
     - if: '$GITLAB_USER_LOGIN != "gstreamer-merge-bot"'
       when: 'manual'
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
-    - if: '$CI_COMMIT_BRANCH == "$GST_UPS_BRANCH"'
+    - if: '$CI_COMMIT_BRANCH == "$GST_UPSTREAM_BRANCH"'
       when: 'manual'
 
   stage: 'preparation'
