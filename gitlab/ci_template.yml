@@ -22,8 +22,8 @@ variables:
   # to change any part of the string of the image you want.
   ###
   FEDORA_TAG:  '2020-07-03.1'
-  CERBERO_TAG: '2020-06-25.0'
-  ANDROID_TAG: '2020-06-25.0'
+  CERBERO_TAG: '2020-09-09.2'
+  ANDROID_TAG: '2020-09-09.2'
   MANIFEST_TAG: '2020-06-25.0'
   TEST_MANIFEST_TAG: '2020-06-25.0'
   INDENT_TAG: '2020-06-29.0'
