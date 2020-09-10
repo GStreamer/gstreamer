@@ -39,6 +39,8 @@ replace_display (GstHarness * h)
   /* replaces the GstGLDisplay used by @h with verification */
 
   fail_unless_equals_int (GST_FLOW_OK, gst_harness_push_from_src (h));
+  /* need a second buffer to pull one, videoaggregator has one frame latency */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push_from_src (h));
   buf = gst_harness_pull (h);
   fail_unless (buf != NULL);
   gst_clear_buffer (&buf);
@@ -82,15 +84,17 @@ GST_START_TEST (test_glvideomixer_negotiate)
   GstBuffer *buf;
 
   mix = gst_harness_new_with_padnames ("glvideomixer", "sink_0", "src");
-  gst_harness_use_systemclock (mix);
+  gst_harness_set_live (mix, FALSE);
   gst_harness_set_blocking_push_mode (mix);
   gst_harness_set_caps_str (mix,
       "video/x-raw(memory:GLMemory),format=RGBA,width=1,height=1,framerate=25/1,texture-target=2D",
       "video/x-raw(memory:GLMemory),format=RGBA,width=1,height=1,framerate=25/1,texture-target=2D");
   gst_harness_add_src (mix, "gltestsrc", FALSE);
+  gst_harness_set_live (mix->src_harness, FALSE);
   gst_harness_set_blocking_push_mode (mix->src_harness);
 
   fail_unless_equals_int (GST_FLOW_OK, gst_harness_push_from_src (mix));
+  fail_unless (gst_harness_push_event (mix, gst_event_new_eos ()));
 
   buf = gst_harness_pull (mix);
   fail_unless (buf != NULL);
@@ -106,12 +110,13 @@ GST_START_TEST (test_glvideomixer_display_replace)
   GstHarness *mix;
 
   mix = gst_harness_new_with_padnames ("glvideomixer", "sink_0", "src");
-  gst_harness_use_systemclock (mix);
+  gst_harness_set_live (mix, FALSE);
   gst_harness_set_blocking_push_mode (mix);
   gst_harness_set_caps_str (mix,
       "video/x-raw(memory:GLMemory),format=RGBA,width=1,height=1,framerate=25/1,texture-target=2D",
       "video/x-raw(memory:GLMemory),format=RGBA,width=1,height=1,framerate=25/1,texture-target=2D");
   gst_harness_add_src (mix, "gltestsrc", FALSE);
+  gst_harness_set_live (mix->src_harness, FALSE);
   gst_harness_set_blocking_push_mode (mix->src_harness);
 
   replace_display (mix);
