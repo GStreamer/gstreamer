@@ -1,4 +1,5 @@
 if get_option('opencv').disabled()
+  opencv_dep = disabler()
   subdir_done()
 endif
 
