@@ -282,6 +282,8 @@ gst_valve_event_needs_dropping (GstValve * valve, GstEvent * event)
       g_assert_not_reached ();
       break;
   }
+
+  return FALSE;
 }
 
 static gboolean
