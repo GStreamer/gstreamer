@@ -276,16 +276,11 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
   GstVp9DecoderPrivate *priv = self->priv;
   GstBuffer *in_buf = frame->input_buffer;
-  GstVp9FrameHdr frame_hdr[GST_VP9_MAX_FRAMES_IN_SUPERFRAME];
+  GstVp9FrameHdr frame_hdr;
   GstVp9Picture *picture = NULL;
-  GstVp9FrameHdr *cur_hdr;
   GstVp9ParserResult pres;
-  GstVp9SuperframeInfo superframe_info;
   GstMapInfo map;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint i;
-  gsize offset = 0;
-  gint frame_idx_to_consume = 0;
 
   GST_LOG_OBJECT (self, "handle frame %" GST_PTR_FORMAT, in_buf);
 
@@ -294,61 +289,25 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     goto error;
   }
 
-  pres = gst_vp9_parser_parse_superframe_info (priv->parser,
-      &superframe_info, map.data, map.size);
+  pres = gst_vp9_parser_parse_frame_header (priv->parser, &frame_hdr,
+      map.data, map.size);
+
   if (pres != GST_VP9_PARSER_OK) {
-    GST_ERROR_OBJECT (self, "Failed to parse superframe header");
+    GST_ERROR_OBJECT (self, "Failed to parsing frame header");
     goto unmap_and_error;
   }
 
-  if (superframe_info.frames_in_superframe > 1) {
-    GST_LOG_OBJECT (self,
-        "Have %d frames in superframe", superframe_info.frames_in_superframe);
-  }
-
-  for (i = 0; i < superframe_info.frames_in_superframe; i++) {
-    pres = gst_vp9_parser_parse_frame_header (priv->parser, &frame_hdr[i],
-        map.data + offset, superframe_info.frame_sizes[i]);
-
-    if (pres != GST_VP9_PARSER_OK) {
-      GST_ERROR_OBJECT (self, "Failed to parsing frame header %d", i);
-      goto unmap_and_error;
-    }
-
-    offset += superframe_info.frame_sizes[i];
-  }
-
-  /* if we have multiple frames in superframe here,
-   * decide which frame should consume given GstVideoCodecFrame.
-   * In practice, superframe consists of two frame, one is decode-only frame
-   * and the other is normal frame. If it's not the case, existing vp9 decoder
-   * implementations (nvdec, vp9dec, d3d11 and so on) would
-   * show mismatched number of input and output buffers.
-   * To handle it in generic manner, we need vp9parse element to
-   * split frames from superframe. */
-  if (superframe_info.frames_in_superframe > 1) {
-    for (i = 0; i < superframe_info.frames_in_superframe; i++) {
-      if (frame_hdr[i].show_frame) {
-        frame_idx_to_consume = i;
-        break;
-      }
-    }
-
-    /* if all frames are decode-only, choose the first one
-     * (seems to be no possibility) */
-    if (i == superframe_info.frames_in_superframe)
-      frame_idx_to_consume = 0;
-  }
-
-  if (priv->wait_keyframe && frame_hdr[0].frame_type != GST_VP9_KEY_FRAME) {
+  if (priv->wait_keyframe && frame_hdr.frame_type != GST_VP9_KEY_FRAME) {
     GST_DEBUG_OBJECT (self, "Drop frame before initial keyframe");
     gst_buffer_unmap (in_buf, &map);
 
-    return gst_video_decoder_drop_frame (decoder, frame);;
+    gst_video_decoder_release_frame (decoder, frame);;
+
+    return GST_FLOW_OK;
   }
 
-  if (frame_hdr[0].frame_type == GST_VP9_KEY_FRAME &&
-      !gst_vp9_decoder_check_codec_change (self, &frame_hdr[0])) {
+  if (frame_hdr.frame_type == GST_VP9_KEY_FRAME &&
+      !gst_vp9_decoder_check_codec_change (self, &frame_hdr)) {
     GST_ERROR_OBJECT (self, "codec change error");
     goto unmap_and_error;
   }
@@ -360,105 +319,76 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
   priv->wait_keyframe = FALSE;
 
-  offset = 0;
-  for (i = 0; i < superframe_info.frames_in_superframe; i++) {
-    GstVideoCodecFrame *cur_frame = NULL;
-    cur_hdr = &frame_hdr[i];
+  if (frame_hdr.show_existing_frame) {
+    GstVp9Picture *pic_to_dup;
 
-    if (cur_hdr->show_existing_frame) {
-      GstVp9Picture *pic_to_dup;
-
-      if (cur_hdr->frame_to_show >= GST_VP9_REF_FRAMES ||
-          !priv->dpb->pic_list[cur_hdr->frame_to_show]) {
-        GST_ERROR_OBJECT (self, "Invalid frame_to_show %d",
-            cur_hdr->frame_to_show);
-        goto unmap_and_error;
-      }
-
-      g_assert (klass->duplicate_picture);
-      pic_to_dup = priv->dpb->pic_list[cur_hdr->frame_to_show];
-      picture = klass->duplicate_picture (self, pic_to_dup);
-
-      if (!picture) {
-        GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
-        goto unmap_and_error;
-      }
-
-      picture->size = 0;
-
-      if (i == frame_idx_to_consume)
-        cur_frame = gst_video_codec_frame_ref (frame);
-
-      g_assert (klass->output_picture);
-
-      /* transfer ownership of picture */
-      ret = klass->output_picture (self, cur_frame, picture);
-      picture = NULL;
-    } else {
-      picture = gst_vp9_picture_new ();
-      picture->frame_hdr = *cur_hdr;
-
-      picture->data = map.data + offset;
-      picture->size = superframe_info.frame_sizes[i];
-
-      picture->subsampling_x = priv->parser->subsampling_x;
-      picture->subsampling_y = priv->parser->subsampling_y;
-      picture->bit_depth = priv->parser->bit_depth;
-
-      if (i == frame_idx_to_consume)
-        cur_frame = gst_video_codec_frame_ref (frame);
-
-      if (klass->new_picture) {
-        if (!klass->new_picture (self, cur_frame, picture)) {
-          GST_ERROR_OBJECT (self, "new picture error");
-          goto unmap_and_error;
-        }
-      }
-
-      if (klass->start_picture) {
-        if (!klass->start_picture (self, picture)) {
-          GST_ERROR_OBJECT (self, "start picture error");
-          goto unmap_and_error;
-        }
-      }
-
-      if (klass->decode_picture) {
-        if (!klass->decode_picture (self, picture, priv->dpb)) {
-          GST_ERROR_OBJECT (self, "decode picture error");
-          goto unmap_and_error;
-        }
-      }
-
-      if (klass->end_picture) {
-        if (!klass->end_picture (self, picture)) {
-          GST_ERROR_OBJECT (self, "end picture error");
-          goto unmap_and_error;
-        }
-      }
-
-      /* Just pass our picture to dpb object.
-       * Even if this picture does not need to be added to dpb
-       * (i.e., not a reference frame), gst_vp9_dpb_add() will take care of
-       * the case as well */
-      gst_vp9_dpb_add (priv->dpb, gst_vp9_picture_ref (picture));
-
-      g_assert (klass->output_picture);
-
-      /* transfer ownership of picture */
-      ret = klass->output_picture (self, cur_frame, picture);
-      picture = NULL;
+    if (frame_hdr.frame_to_show >= GST_VP9_REF_FRAMES ||
+        !priv->dpb->pic_list[frame_hdr.frame_to_show]) {
+      GST_ERROR_OBJECT (self, "Invalid frame_to_show %d",
+          frame_hdr.frame_to_show);
+      goto unmap_and_error;
     }
 
-    if (ret != GST_FLOW_OK)
-      break;
+    g_assert (klass->duplicate_picture);
+    pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show];
+    picture = klass->duplicate_picture (self, pic_to_dup);
 
-    offset += superframe_info.frame_sizes[i];
+    if (!picture) {
+      GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
+      goto unmap_and_error;
+    }
+  } else {
+    picture = gst_vp9_picture_new ();
+    picture->frame_hdr = frame_hdr;
+
+    picture->data = map.data;
+    picture->size = map.size;
+
+    picture->subsampling_x = priv->parser->subsampling_x;
+    picture->subsampling_y = priv->parser->subsampling_y;
+    picture->bit_depth = priv->parser->bit_depth;
+
+    if (klass->new_picture) {
+      if (!klass->new_picture (self, frame, picture)) {
+        GST_ERROR_OBJECT (self, "new picture error");
+        goto unmap_and_error;
+      }
+    }
+
+    if (klass->start_picture) {
+      if (!klass->start_picture (self, picture)) {
+        GST_ERROR_OBJECT (self, "start picture error");
+        goto unmap_and_error;
+      }
+    }
+
+    if (klass->decode_picture) {
+      if (!klass->decode_picture (self, picture, priv->dpb)) {
+        GST_ERROR_OBJECT (self, "decode picture error");
+        goto unmap_and_error;
+      }
+    }
+
+    if (klass->end_picture) {
+      if (!klass->end_picture (self, picture)) {
+        GST_ERROR_OBJECT (self, "end picture error");
+        goto unmap_and_error;
+      }
+    }
+
+    /* Just pass our picture to dpb object.
+     * Even if this picture does not need to be added to dpb
+     * (i.e., not a reference frame), gst_vp9_dpb_add() will take care of
+     * the case as well */
+    gst_vp9_dpb_add (priv->dpb, gst_vp9_picture_ref (picture));
   }
 
   gst_buffer_unmap (in_buf, &map);
-  gst_video_codec_frame_unref (frame);
 
-  return ret;
+  g_assert (klass->output_picture);
+
+  /* transfer ownership of frame and picture */
+  return klass->output_picture (self, frame, picture);
 
 unmap_and_error:
   {
