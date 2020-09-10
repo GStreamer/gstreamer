@@ -1,6 +1,6 @@
 ### This file contains either validate specific suppressions or bugs that we
 ### can't easily address because they are lower in the stack.
-### All the other suppressions should be added ton common/gst.supp
+### All the other suppressions should be added ton gstreamer/tests/check/gstreamer.supp
 
 ### Each set of suppression rules should be prefixed by either:
 ###   - FIXED: if the bug/leak has been fixed upstream but we keep the rule
