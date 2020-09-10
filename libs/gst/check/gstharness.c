@@ -182,6 +182,8 @@ struct _GstHarnessPrivate
 
   GstClockTime latency_min;
   GstClockTime latency_max;
+  gboolean is_live;
+
   gboolean has_clock_wait;
   gboolean drop_buffers;
   GstClockTime last_push_ts;
@@ -375,7 +377,8 @@ gst_harness_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
-      gst_query_set_latency (query, TRUE, priv->latency_min, priv->latency_max);
+      gst_query_set_latency (query, priv->is_live, priv->latency_min,
+          priv->latency_max);
       break;
     case GST_QUERY_CAPS:
     {
@@ -465,7 +468,8 @@ gst_harness_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
-      gst_query_set_latency (query, TRUE, priv->latency_min, priv->latency_max);
+      gst_query_set_latency (query, priv->is_live, priv->latency_min,
+          priv->latency_max);
       break;
     case GST_QUERY_CAPS:
     {
@@ -683,6 +687,7 @@ gst_harness_new_empty (void)
   priv->last_push_ts = GST_CLOCK_TIME_NONE;
   priv->latency_min = 0;
   priv->latency_max = GST_CLOCK_TIME_NONE;
+  priv->is_live = TRUE;
   priv->drop_buffers = FALSE;
   priv->testclock = GST_TEST_CLOCK_CAST (gst_test_clock_new ());
 
@@ -2221,6 +2226,23 @@ gst_harness_set_upstream_latency (GstHarness * h, GstClockTime latency)
 {
   GstHarnessPrivate *priv = h->priv;
   priv->latency_min = latency;
+}
+
+/**
+ * gst_harness_set_live:
+ * @h: a #GstHarness
+ * @is_live: %TRUE for live, %FALSE for non-live
+ *
+ * Sets the liveness reported by #GstHarness when receiving a latency-query.
+ * The default is %TRUE.
+ *
+ * Since: 1.20
+ */
+void
+gst_harness_set_live (GstHarness * h, gboolean is_live)
+{
+  GstHarnessPrivate *priv = h->priv;
+  priv->is_live = is_live;
 }
 
 /**

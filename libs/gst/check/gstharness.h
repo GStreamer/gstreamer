@@ -260,6 +260,9 @@ GstClockTime gst_harness_query_latency (GstHarness * h);
 GST_CHECK_API
 void         gst_harness_set_upstream_latency (GstHarness * h, GstClockTime latency);
 
+GST_CHECK_API
+void         gst_harness_set_live (GstHarness * h, gboolean is_live);
+
 /* allocation query parameters */
 
 GST_CHECK_API
