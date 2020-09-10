@@ -1210,6 +1210,8 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
 
   data = dec->current_frame_map.data;
   nbytes = dec->current_frame_map.size;
+  if (nbytes < 2)
+    goto need_more_data;
   has_eoi = ((data[nbytes - 2] == 0xff) && (data[nbytes - 1] == 0xd9));
 
   /* some cameras fail to send an end-of-image marker (EOI),
