@@ -46,6 +46,12 @@ dnf install -y \
     graphene-devel \
     gsl \
     gsl-devel \
+    gupnp \
+    gupnp-devel \
+    gupnp-igd \
+    gupnp-igd-devel \
+    gssdp \
+    gssdp-devel \
     faac-devel \
     ffmpeg \
     ffmpeg-libs \
@@ -120,6 +126,9 @@ dnf install -y \
 dnf debuginfo-install -y gtk3 \
     glib2 \
     glibc \
+    gupnp \
+    gupnp-igd \
+    gssdp \
     freetype \
     openjpeg \
     gobject-introspection \
