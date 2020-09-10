@@ -298,9 +298,9 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     if (ret != dsErrorFree) {
       /* Request a key unit from upstream */
       GST_DEBUG_OBJECT (openh264dec, "Requesting a key unit");
-      gst_pad_push_event (GST_VIDEO_DECODER_SINK_PAD (decoder),
-          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
-              FALSE, 0));
+
+      gst_video_decoder_request_sync_point (decoder, frame,
+          (GstVideoDecoderRequestSyncPointFlags) 0);
 
       GST_LOG_OBJECT (openh264dec, "error decoding nal, return code: %d", ret);
       gst_video_codec_frame_unref (frame);
