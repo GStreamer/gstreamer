@@ -384,7 +384,6 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
         goto unmap_and_error;
       }
 
-      picture->pts = GST_BUFFER_PTS (in_buf);
       picture->size = 0;
 
       if (i == frame_idx_to_consume)
@@ -398,7 +397,6 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     } else {
       picture = gst_vp9_picture_new ();
       picture->frame_hdr = *cur_hdr;
-      picture->pts = GST_BUFFER_PTS (in_buf);
 
       picture->data = map.data + offset;
       picture->size = superframe_info.frame_sizes[i];

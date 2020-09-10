@@ -52,7 +52,6 @@ gst_vp9_picture_new (void)
   GstVp9Picture *pic;
 
   pic = g_new0 (GstVp9Picture, 1);
-  pic->pts = GST_CLOCK_TIME_NONE;
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (pic), 0,
       GST_TYPE_VP9_PICTURE, NULL, NULL,
