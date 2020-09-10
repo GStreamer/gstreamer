@@ -59,6 +59,7 @@ public:
     /*  Used by WPEContextThread */
     bool hasUri() const { return webkit.uri; }
     void disconnectLoadFailedSignal();
+    void waitLoadCompletion();
 
 protected:
     void handleExportedImage(gpointer);
@@ -70,6 +71,7 @@ private:
     struct wpe_view_backend* backend() const;
     void frameComplete();
     void loadUriUnlocked(const gchar*);
+    void notifyLoadFinished();
 
     void releaseImage(gpointer);
 #if ENABLE_SHM_BUFFER_SUPPORT
@@ -101,6 +103,12 @@ private:
 
     bool m_isValid { false };
 
+    struct {
+        GMutex ready_mutex;
+        GCond ready_cond;
+        gboolean ready;
+    } threading;
+
     // This mutex guards access to either egl or shm resources declared below,
     // depending on the runtime behavior.
     GMutex images_mutex;
@@ -129,16 +137,11 @@ public:
     template<typename Function>
     void dispatch(Function);
 
-    void notifyLoadFinished();
-
 private:
     static gpointer s_viewThread(gpointer);
     struct {
         GMutex mutex;
         GCond cond;
-        GMutex ready_mutex;
-        GCond ready_cond;
-        gboolean ready;
         GThread* thread { nullptr };
     } threading;
 
