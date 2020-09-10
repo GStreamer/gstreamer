@@ -215,6 +215,12 @@ static gboolean s_loadFailed(WebKitWebView*, WebKitLoadEvent, gchar* failing_uri
     return FALSE;
 }
 
+static gboolean s_loadFailedWithTLSErrors(WebKitWebView*,  gchar* failing_uri, GTlsCertificate*, GTlsCertificateFlags, gpointer data)
+{
+    // Defer to load-failed.
+    return FALSE;
+}
+
 WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     g_mutex_init(&images_mutex);
@@ -262,7 +268,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
     webkit.view = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW, "web-context", web_context, "backend", viewBackend, nullptr));
 
     g_signal_connect(webkit.view, "load-failed", G_CALLBACK(s_loadFailed), src);
-    g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailed), src);
+    g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
 
     gst_wpe_src_configure_web_view(src, webkit.view);
 
