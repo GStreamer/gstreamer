@@ -533,10 +533,6 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
     GST_BUFFER_DURATION (output_buffer) = GST_CLOCK_TIME_NONE;
   } else {
     frame->output_buffer = output_buffer;
-    GST_BUFFER_PTS (output_buffer) = GST_BUFFER_PTS (frame->input_buffer);
-    GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (output_buffer) =
-        GST_BUFFER_DURATION (frame->input_buffer);
   }
 
   if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
@@ -546,9 +542,6 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
   }
-
-  GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_PTS (output_buffer)));
 
   gst_vp9_picture_unref (picture);
 

@@ -650,7 +650,6 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
   GstVideoCodecFrame *frame = NULL;
   GstBuffer *output_buffer = NULL;
-  GstFlowReturn ret;
   GstBuffer *view_buffer;
 
   GST_LOG_OBJECT (self,
@@ -665,6 +664,12 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
+
+  /* FIXME: Sync with other codec implementation */
+  if (!frame) {
+    GST_ERROR_OBJECT (self, "Couldn't get codec frame");
+    return GST_FLOW_ERROR;
+  }
 
   /* if downstream is d3d11 element and forward playback case,
    * expose our decoder view without copy. In case of reverse playback, however,
@@ -685,23 +690,12 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
 
   if (!output_buffer) {
     GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+
     return GST_FLOW_ERROR;
   }
 
-  if (!frame) {
-    GST_WARNING_OBJECT (self,
-        "Failed to find codec frame for picture %p", picture);
-
-    GST_BUFFER_PTS (output_buffer) = picture->pts;
-    GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (output_buffer) = GST_CLOCK_TIME_NONE;
-  } else {
-    frame->output_buffer = output_buffer;
-    GST_BUFFER_PTS (output_buffer) = GST_BUFFER_PTS (frame->input_buffer);
-    GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (output_buffer) =
-        GST_BUFFER_DURATION (frame->input_buffer);
-  }
+  frame->output_buffer = output_buffer;
 
   if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
           &self->output_state->info,
@@ -709,24 +703,12 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
           GST_VIDEO_INFO_HEIGHT (&self->output_state->info),
           view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
-    if (frame)
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-    else
-      gst_buffer_unref (output_buffer);
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
 
     return GST_FLOW_ERROR;
   }
 
-  GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_PTS (output_buffer)));
-
-  if (frame) {
-    ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
-  } else {
-    ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), output_buffer);
-  }
-
-  return ret;
+  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }
 
 static gboolean

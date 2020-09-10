@@ -419,9 +419,6 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
     goto error;
   }
 
-  GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_PTS (output_buffer)));
-
   gst_vp8_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (vdec, frame);
