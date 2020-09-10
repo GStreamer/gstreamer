@@ -1217,10 +1217,25 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   if (GST_CLOCK_STIME_IS_VALID (pad->dts)) {
     pts = pad->pts / GST_MSECOND;
     dts = pad->dts / GST_MSECOND;
+    GST_LOG_OBJECT (mux,
+        "Pad %s: Created dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT
+        " from rounding %" GST_TIME_FORMAT ", %" GST_TIME_FORMAT,
+        GST_PAD_NAME (pad), GST_TIME_ARGS (dts * GST_MSECOND),
+        GST_TIME_ARGS (pts * GST_MSECOND), GST_TIME_ARGS (pad->dts),
+        GST_TIME_ARGS (pad->pts));
   } else if (GST_CLOCK_TIME_IS_VALID (pad->last_timestamp)) {
     pts = dts = pad->last_timestamp / GST_MSECOND;
+    GST_DEBUG_OBJECT (mux,
+        "Pad %s: Created dts and pts %" GST_TIME_FORMAT
+        " from rounding last pad timestamp %" GST_TIME_FORMAT,
+        GST_PAD_NAME (pad), GST_TIME_ARGS (pts * GST_MSECOND),
+        GST_TIME_ARGS (pad->last_timestamp));
   } else {
     pts = dts = mux->last_dts;
+    GST_DEBUG_OBJECT (mux,
+        "Pad %s: Created dts and pts %" GST_TIME_FORMAT
+        " from last mux timestamp",
+        GST_PAD_NAME (pad), GST_TIME_ARGS (pts * GST_MSECOND));
   }
 
   /* We prevent backwards timestamps because they confuse librtmp,
@@ -1324,7 +1339,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     data[11] |= (pad->width << 1) & 0x02;
     data[11] |= (pad->channels << 0) & 0x01;
 
-    GST_DEBUG_OBJECT (mux, "Creating byte %02x with "
+    GST_LOG_OBJECT (mux, "Creating byte %02x with "
         "codec:%d, rate:%d, width:%d, channels:%d",
         data[11], pad->codec, pad->rate, pad->width, pad->channels);
 
