@@ -1136,6 +1136,7 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gboolean have_profile2 = FALSE;
   gboolean have_profile0 = FALSE;
   DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
+  GValue vp9_profiles = G_VALUE_INIT;
 
   have_profile2 = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
       &profile2_guid, 1, &profile);
@@ -1198,15 +1199,26 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   sink_caps = gst_caps_from_string ("video/x-vp9, "
-      "framerate = " GST_VIDEO_FPS_RANGE);
+      "alignment = (string) frame, framerate = " GST_VIDEO_FPS_RANGE);
   src_caps = gst_caps_from_string ("video/x-raw("
       GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), "
       "framerate = " GST_VIDEO_FPS_RANGE ";"
       "video/x-raw, " "framerate = " GST_VIDEO_FPS_RANGE);
 
+  g_value_init (&vp9_profiles, GST_TYPE_LIST);
+
+  if (have_profile0) {
+    GValue vp9_profile_val = G_VALUE_INIT;
+
+    g_value_init (&vp9_profile_val, G_TYPE_STRING);
+    g_value_set_string (&vp9_profile_val, "0");
+    gst_value_list_append_and_take_value (&vp9_profiles, &vp9_profile_val);
+  }
+
   if (have_profile2) {
     GValue format_list = G_VALUE_INIT;
     GValue format_value = G_VALUE_INIT;
+    GValue vp9_profile_val = G_VALUE_INIT;
 
     g_value_init (&format_list, GST_TYPE_LIST);
 
@@ -1220,9 +1232,16 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
     gst_caps_set_value (src_caps, "format", &format_list);
     g_value_unset (&format_list);
+
+    g_value_init (&vp9_profile_val, G_TYPE_STRING);
+    g_value_set_string (&vp9_profile_val, "2");
+    gst_value_list_append_and_take_value (&vp9_profiles, &vp9_profile_val);
   } else {
     gst_caps_set_simple (src_caps, "format", G_TYPE_STRING, "NV12", NULL);
   }
+
+  gst_caps_set_value (sink_caps, "profile", &vp9_profiles);
+  g_value_unset (&vp9_profiles);
 
   /* To cover both landscape and portrait, select max value */
   resolution = MAX (max_width, max_height);
