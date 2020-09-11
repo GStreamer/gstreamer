@@ -2709,7 +2709,8 @@ gst_rtsp_media_get_rates (GstRTSPMedia * media, gdouble * rate,
   g_assert (priv->streams->len > 0);
   for (i = 0; i < priv->streams->len; i++) {
     stream = g_ptr_array_index (priv->streams, i);
-    if (gst_rtsp_stream_is_complete (stream)) {
+    if (gst_rtsp_stream_is_complete (stream)
+        && gst_rtsp_stream_is_sender (stream)) {
       if (gst_rtsp_stream_get_rates (stream, rate, applied_rate)) {
         if (first_stream) {
           save_rate = *rate;
