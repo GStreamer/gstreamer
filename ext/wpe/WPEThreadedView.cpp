@@ -284,6 +284,14 @@ WPEView::~WPEView()
             gst_egl_image_unref(egl.committed);
             egl.committed = nullptr;
         }
+        if (shm.pending) {
+            gst_buffer_unref(shm.pending);
+            shm.pending = nullptr;
+        }
+        if (shm.committed) {
+            gst_buffer_unref(shm.committed);
+            shm.committed = nullptr;
+        }
     }
 
     WPEContextThread::singleton().dispatch([&]() {
