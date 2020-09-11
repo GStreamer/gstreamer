@@ -470,7 +470,6 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstBuffer *output_buffer = NULL;
-  GstFlowReturn ret;
   GstBuffer *view_buffer;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
@@ -484,17 +483,11 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
 
   if (!picture->frame_hdr.show_frame) {
     GST_LOG_OBJECT (self, "Decode only picture %p", picture);
-    if (frame) {
-      GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
-      gst_vp9_picture_unref (picture);
+    GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
 
-      return gst_video_decoder_finish_frame (vdec, frame);
-    } else {
-      /* expected case if we are decoding super frame */
-      gst_vp9_picture_unref (picture);
+    gst_vp9_picture_unref (picture);
 
-      return GST_FLOW_OK;
-    }
+    return gst_video_decoder_finish_frame (vdec, frame);
   }
 
   /* if downstream is d3d11 element and forward playback case,
@@ -522,18 +515,7 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
     goto error;
   }
 
-  if (!frame) {
-    /* this is the case where super frame has multiple displayable
-     * (non-decode-only) subframes. Should be rare case but it's possible
-     * in theory */
-    GST_WARNING_OBJECT (self, "No codec frame for picture %p", picture);
-
-    GST_BUFFER_PTS (output_buffer) = picture->pts;
-    GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (output_buffer) = GST_CLOCK_TIME_NONE;
-  } else {
-    frame->output_buffer = output_buffer;
-  }
+  frame->output_buffer = output_buffer;
 
   if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
           &self->output_state->info,
@@ -545,23 +527,11 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
 
   gst_vp9_picture_unref (picture);
 
-  if (frame) {
-    ret = gst_video_decoder_finish_frame (vdec, frame);
-  } else {
-    ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), output_buffer);
-  }
-
-  return ret;
+  return gst_video_decoder_finish_frame (vdec, frame);
 
 error:
-  if (frame) {
-    /* normal case */
-    gst_video_decoder_drop_frame (vdec, frame);
-  } else if (output_buffer) {
-    /* in case of super frame with multiple displayable subframes */
-    gst_buffer_unref (output_buffer);
-  }
   gst_vp9_picture_unref (picture);
+  gst_video_decoder_drop_frame (vdec, frame);
 
   return GST_FLOW_ERROR;
 }
