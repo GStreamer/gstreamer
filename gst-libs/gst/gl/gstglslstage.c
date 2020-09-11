@@ -261,7 +261,7 @@ gst_glsl_stage_new (GstGLContext * context, guint type)
 }
 
 /**
- * gst_glsl_stage_new_with_default_vertex:
+ * gst_glsl_stage_new_default_vertex:
  * @context: a #GstGLContext
  *
  * Returns: (transfer floating): a new #GstGLSLStage with the default vertex shader
@@ -278,7 +278,7 @@ gst_glsl_stage_new_default_vertex (GstGLContext * context)
 }
 
 /**
- * gst_glsl_stage_new_with_default_fragment:
+ * gst_glsl_stage_new_default_fragment:
  * @context: a #GstGLContext
  *
  * Returns: (transfer floating): a new #GstGLSLStage with the default fragment shader
