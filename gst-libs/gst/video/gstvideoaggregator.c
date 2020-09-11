@@ -68,6 +68,7 @@ enum
 struct _GstVideoAggregatorPadPrivate
 {
   GstBuffer *buffer;
+  GstCaps *caps;
   GstVideoFrame prepared_frame;
 
   /* properties */
@@ -83,6 +84,7 @@ struct _GstVideoAggregatorPadPrivate
   GstClockTime end_time;
 
   GstVideoInfo pending_vinfo;
+  GstCaps *pending_caps;
 };
 
 
@@ -161,6 +163,7 @@ _flush_pad (GstAggregatorPad * aggpad, GstAggregator * aggregator)
 
   gst_video_aggregator_reset_qos (vagg);
   gst_buffer_replace (&pad->priv->buffer, NULL);
+  gst_caps_replace (&pad->priv->caps, NULL);
   pad->priv->start_time = -1;
   pad->priv->end_time = -1;
 
@@ -221,9 +224,8 @@ gst_video_aggregator_peek_next_sample (GstAggregator * agg,
   GstSample *res = NULL;
 
   if (vaggpad->priv->buffer) {
-    GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
-    res = gst_sample_new (vaggpad->priv->buffer, caps, &aggpad->segment, NULL);
-    gst_caps_unref (caps);
+    res = gst_sample_new (vaggpad->priv->buffer, vaggpad->priv->caps,
+        &aggpad->segment, NULL);
   }
 
   return res;
@@ -1147,12 +1149,14 @@ gst_video_aggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
      * that this pad is getting configured; configure immediately to avoid
      * problems with the initial negotiation */
     vaggpad->info = info;
+    gst_caps_replace (&vaggpad->priv->caps, caps);
     gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
   } else {
     /* this pad already had caps but received new ones; keep the new caps
      * pending until we pick the next buffer from the queue, otherwise we
      * might use an old buffer with the new caps and crash */
     vaggpad->priv->pending_vinfo = info;
+    gst_caps_replace (&vaggpad->priv->pending_caps, caps);
     GST_DEBUG_OBJECT (pad, "delaying caps change");
   }
   ret = TRUE;
@@ -1414,6 +1418,7 @@ gst_video_aggregator_reset (GstVideoAggregator * vagg)
     GstVideoAggregatorPad *p = l->data;
 
     gst_buffer_replace (&p->priv->buffer, NULL);
+    gst_caps_replace (&p->priv->caps, NULL);
     p->priv->start_time = -1;
     p->priv->end_time = -1;
 
@@ -1490,6 +1495,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
               "output_start_running_time.  Discarding old buffer");
           gst_buffer_replace (&pad->priv->buffer, buf);
           if (pad->priv->pending_vinfo.finfo) {
+            gst_caps_replace (&pad->priv->caps, pad->priv->pending_caps);
+            gst_caps_replace (&pad->priv->pending_caps, NULL);
             pad->info = pad->priv->pending_vinfo;
             need_reconfigure = TRUE;
             pad->priv->pending_vinfo.finfo = NULL;
@@ -1504,6 +1511,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         buf = gst_aggregator_pad_pop_buffer (bpad);
         gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
+          gst_caps_replace (&pad->priv->caps, pad->priv->pending_caps);
+          gst_caps_replace (&pad->priv->pending_caps, NULL);
           pad->info = pad->priv->pending_vinfo;
           need_reconfigure = TRUE;
           pad->priv->pending_vinfo.finfo = NULL;
@@ -1564,6 +1573,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
             GST_TIME_ARGS (start_time));
         gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
+          gst_caps_replace (&pad->priv->caps, pad->priv->pending_caps);
+          gst_caps_replace (&pad->priv->pending_caps, NULL);
           pad->info = pad->priv->pending_vinfo;
           need_reconfigure = TRUE;
           pad->priv->pending_vinfo.finfo = NULL;
@@ -1582,6 +1593,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
       } else {
         gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
+          gst_caps_replace (&pad->priv->caps, pad->priv->pending_caps);
+          gst_caps_replace (&pad->priv->pending_caps, NULL);
           pad->info = pad->priv->pending_vinfo;
           need_reconfigure = TRUE;
           pad->priv->pending_vinfo.finfo = NULL;
@@ -1614,6 +1627,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
                   pad->priv->max_last_buffer_repeat) {
                 pad->priv->start_time = pad->priv->end_time = -1;
                 gst_buffer_replace (&pad->priv->buffer, NULL);
+                gst_caps_replace (&pad->priv->caps, NULL);
               }
             } else {
               pad->priv->start_time = pad->priv->end_time = -1;
@@ -1621,6 +1635,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
             need_more_data = TRUE;
           } else {
             gst_buffer_replace (&pad->priv->buffer, NULL);
+            gst_caps_replace (&pad->priv->caps, NULL);
             pad->priv->start_time = pad->priv->end_time = -1;
           }
         } else if (is_eos) {
@@ -1628,6 +1643,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         }
       } else if (is_eos) {
         gst_buffer_replace (&pad->priv->buffer, NULL);
+        gst_caps_replace (&pad->priv->caps, NULL);
       } else if (pad->priv->start_time != -1) {
         /* When the current buffer didn't have a duration, but
          * max-last-buffer-repeat was set, we use start_time as
@@ -1639,6 +1655,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
                 pad->priv->max_last_buffer_repeat) {
               pad->priv->start_time = pad->priv->end_time = -1;
               gst_buffer_replace (&pad->priv->buffer, NULL);
+              gst_caps_replace (&pad->priv->caps, NULL);
             }
           }
         }
@@ -2290,6 +2307,8 @@ gst_video_aggregator_release_pad (GstElement * element, GstPad * pad)
     gst_video_aggregator_reset (vagg);
 
   gst_buffer_replace (&vaggpad->priv->buffer, NULL);
+  gst_caps_replace (&vaggpad->priv->caps, NULL);
+  gst_caps_replace (&vaggpad->priv->pending_caps, NULL);
 
   GST_ELEMENT_CLASS (gst_video_aggregator_parent_class)->release_pad
       (GST_ELEMENT (vagg), pad);
