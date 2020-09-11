@@ -2728,10 +2728,10 @@ GST_START_TEST (test_video_transfer)
     for (i = 0; i < 256; i++) {
       gdouble val1, val2;
 
-      val1 = gst_video_color_transfer_encode (j, i / 255.0);
+      val1 = gst_video_transfer_function_encode (j, i / 255.0);
       fail_if (val1 < 0.0 || val1 > 1.0);
 
-      val2 = gst_video_color_transfer_decode (j, val1);
+      val2 = gst_video_transfer_function_decode (j, val1);
       fail_if (val2 < 0.0 || val2 > 1.0);
 
       GST_DEBUG ("%d: %d %f->%f->%f %d", j, i, i / 255.0, val1, val2,

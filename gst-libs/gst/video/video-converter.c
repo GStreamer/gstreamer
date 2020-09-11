@@ -1523,7 +1523,8 @@ setup_gamma_decode (GstVideoConverter * convert)
     t = convert->gamma_dec.gamma_table = g_malloc (sizeof (guint16) * 256);
 
     for (i = 0; i < 256; i++)
-      t[i] = rint (gst_video_color_transfer_decode (func, i / 255.0) * 65535.0);
+      t[i] =
+          rint (gst_video_transfer_function_decode (func, i / 255.0) * 65535.0);
   } else {
     GST_DEBUG ("gamma decode 16->16: %d", func);
     convert->gamma_dec.gamma_func = gamma_convert_u16_u16;
@@ -1531,7 +1532,8 @@ setup_gamma_decode (GstVideoConverter * convert)
 
     for (i = 0; i < 65536; i++)
       t[i] =
-          rint (gst_video_color_transfer_decode (func, i / 65535.0) * 65535.0);
+          rint (gst_video_transfer_function_decode (func,
+              i / 65535.0) * 65535.0);
   }
   convert->current_bits = 16;
   convert->current_pstride = 8;
@@ -1555,7 +1557,8 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
     t = convert->gamma_enc.gamma_table = g_malloc (sizeof (guint8) * 65536);
 
     for (i = 0; i < 65536; i++)
-      t[i] = rint (gst_video_color_transfer_encode (func, i / 65535.0) * 255.0);
+      t[i] =
+          rint (gst_video_transfer_function_encode (func, i / 65535.0) * 255.0);
   } else {
     guint16 *t;
 
@@ -1565,7 +1568,8 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
 
     for (i = 0; i < 65536; i++)
       t[i] =
-          rint (gst_video_color_transfer_encode (func, i / 65535.0) * 65535.0);
+          rint (gst_video_transfer_function_encode (func,
+              i / 65535.0) * 65535.0);
   }
 }
 
