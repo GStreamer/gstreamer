@@ -66,8 +66,8 @@ struct _GstFlvMuxPad
   guint bitrate;
 
   GstClockTime last_timestamp;
-  gint64 pts;
-  gint64 dts;
+  GstClockTime pts;
+  GstClockTime dts;
 
   gboolean info_changed;
   gboolean drop_deltas;
@@ -101,9 +101,9 @@ struct _GstFlvMux {
   gboolean new_tags;
   GList *index;
   guint64 byte_count;
-  guint64 duration;
-  gint64 first_timestamp;
-  GstClockTime last_dts;
+  GstClockTime duration;
+  GstClockTime first_timestamp;
+  guint64 last_dts;
 
   gboolean sent_header;
 };

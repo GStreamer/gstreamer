@@ -133,7 +133,7 @@ static GstFlowReturn gst_flv_mux_rewrite_header (GstFlvMux * mux);
 static gboolean gst_flv_mux_are_all_pads_eos (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_update_src_caps (GstAggregator * aggregator,
     GstCaps * caps, GstCaps ** ret);
-static guint64 gst_flv_mux_query_upstream_duration (GstFlvMux * mux);
+static GstClockTime gst_flv_mux_query_upstream_duration (GstFlvMux * mux);
 static GstClockTime gst_flv_mux_segment_to_running_time (const GstSegment *
     segment, GstClockTime t);
 
@@ -143,8 +143,8 @@ gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
   GstFlvMuxPad *flvpad = GST_FLV_MUX_PAD (pad);
 
   flvpad->last_timestamp = GST_CLOCK_TIME_NONE;
-  flvpad->pts = GST_CLOCK_STIME_NONE;
-  flvpad->dts = GST_CLOCK_STIME_NONE;
+  flvpad->pts = GST_CLOCK_TIME_NONE;
+  flvpad->dts = GST_CLOCK_TIME_NONE;
 
   return GST_FLOW_OK;
 }
@@ -385,7 +385,7 @@ gst_flv_mux_reset (GstElement * element)
 
   mux->duration = GST_CLOCK_TIME_NONE;
   mux->new_tags = FALSE;
-  mux->first_timestamp = GST_CLOCK_STIME_NONE;
+  mux->first_timestamp = GST_CLOCK_TIME_NONE;
   mux->last_dts = 0;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
@@ -901,7 +901,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   dts = mux->last_dts;
 
   /* Timestamp must start at zero */
-  if (GST_CLOCK_STIME_IS_VALID (mux->first_timestamp)) {
+  if (GST_CLOCK_TIME_IS_VALID (mux->first_timestamp)) {
     dts -= mux->first_timestamp / GST_MSECOND;
   }
 
@@ -970,7 +970,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   for (i = 0; tags && i < n_tags; i++) {
     const gchar *tag_name = gst_tag_list_nth_tag_name (tags, i);
     if (!strcmp (tag_name, GST_TAG_DURATION)) {
-      guint64 dur;
+      GstClockTime dur;
 
       if (!gst_tag_list_get_uint64 (tags, GST_TAG_DURATION, &dur))
         continue;
@@ -1214,7 +1214,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   guint8 *data, *bdata = NULL;
   gsize bsize = 0;
 
-  if (GST_CLOCK_STIME_IS_VALID (pad->dts)) {
+  if (GST_CLOCK_TIME_IS_VALID (pad->dts)) {
     pts = pad->pts / GST_MSECOND;
     dts = pad->dts / GST_MSECOND;
     GST_LOG_OBJECT (mux,
@@ -1257,7 +1257,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     cts = 0;
 
   /* Timestamp must start at zero */
-  if (GST_CLOCK_STIME_IS_VALID (mux->first_timestamp)) {
+  if (GST_CLOCK_TIME_IS_VALID (mux->first_timestamp)) {
     dts -= mux->first_timestamp / GST_MSECOND;
     pts = dts + cts;
   }
@@ -1714,7 +1714,7 @@ static gboolean
 duration_query_cb (GstElement * element, GstPad * pad,
     struct DurationData *data)
 {
-  guint64 dur;
+  GstClockTime dur;
 
   if (gst_pad_peer_query_duration (GST_PAD (pad), GST_FORMAT_TIME,
           (gint64 *) & dur) && dur != GST_CLOCK_TIME_NONE) {
@@ -1727,7 +1727,7 @@ duration_query_cb (GstElement * element, GstPad * pad,
   return TRUE;
 }
 
-static guint64
+static GstClockTime
 gst_flv_mux_query_upstream_duration (GstFlvMux * mux)
 {
   struct DurationData cb_data = { GST_CLOCK_TIME_NONE };
@@ -1988,7 +1988,7 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
 {
   GstFlvMux *mux = GST_FLV_MUX (aggregator);
   GstFlvMuxPad *best;
-  gint64 best_time = GST_CLOCK_STIME_NONE;
+  GstClockTime best_time = GST_CLOCK_TIME_NONE;
   GstFlowReturn ret;
   GstClockTime ts;
   GstBuffer *buffer = NULL;
@@ -2016,8 +2016,8 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
 
     mux->state = GST_FLV_MUX_STATE_DATA;
 
-    if (!mux->streamable || mux->first_timestamp == GST_CLOCK_STIME_NONE) {
-      if (best && GST_CLOCK_STIME_IS_VALID (ts))
+    if (!mux->streamable || mux->first_timestamp == GST_CLOCK_TIME_NONE) {
+      if (best && GST_CLOCK_TIME_IS_VALID (ts))
         mux->first_timestamp = ts;
       else
         mux->first_timestamp = 0;
@@ -2047,7 +2047,7 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
         gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD
         (best)->segment, GST_BUFFER_DTS_OR_PTS (buffer));
 
-    if (GST_CLOCK_STIME_IS_VALID (best->dts))
+    if (GST_CLOCK_TIME_IS_VALID (best->dts))
       best_time = best->dts - mux->first_timestamp;
 
     if (GST_BUFFER_PTS_IS_VALID (buffer))
@@ -2057,9 +2057,9 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     else
       best->pts = best->dts;
 
-    GST_LOG_OBJECT (best, "got buffer PTS %" GST_TIME_FORMAT " DTS %"
-        GST_STIME_FORMAT, GST_TIME_ARGS (best->pts),
-        GST_STIME_ARGS (best->dts));
+    GST_LOG_OBJECT (best,
+        "got buffer PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (best->pts), GST_TIME_ARGS (best->dts));
   } else {
     if (!gst_flv_mux_are_all_pads_eos (mux))
       return GST_AGGREGATOR_FLOW_NEED_DATA;
@@ -2069,7 +2069,7 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   /* The FLV timestamp is an int32 field. For non-live streams error out if a
      bigger timestamp is seen, for live the timestamp will get wrapped in
      gst_flv_mux_buffer_to_tag */
-  if (!mux->streamable && (GST_CLOCK_STIME_IS_VALID (best_time))
+  if (!mux->streamable && (GST_CLOCK_TIME_IS_VALID (best_time))
       && best_time / GST_MSECOND > G_MAXINT32) {
     GST_WARNING_OBJECT (mux, "Timestamp larger than FLV supports - EOS");
     if (buffer) {
