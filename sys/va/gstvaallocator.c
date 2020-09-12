@@ -885,7 +885,7 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 {
   GstVaAllocator *self;
   GstVaMemory *mem;
-  GstVideoFormat format;
+  GstVideoFormat format, img_format;
   VAImage image = { 0, };
   VASurfaceID surface;
   guint32 fourcc, rt_format;
@@ -894,20 +894,22 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  format =
-      gst_va_video_surface_format_from_image_format (GST_VIDEO_INFO_FORMAT
-      (&params->info), self->surface_formats);
+  img_format = GST_VIDEO_INFO_FORMAT (&params->info);
+
+  format = gst_va_video_surface_format_from_image_format (img_format,
+      self->surface_formats);
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-    GST_ERROR_OBJECT (allocator, "Unsupported format: %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&params->info)));
-    return NULL;
+    /* try a surface without fourcc but rt_format only */
+    fourcc = 0;
+    rt_format = gst_va_chroma_from_video_format (img_format);
+  } else {
+    fourcc = gst_va_fourcc_from_video_format (format);
+    rt_format = gst_va_chroma_from_video_format (format);
   }
 
-  fourcc = gst_va_fourcc_from_video_format (format);
-  rt_format = gst_va_chroma_from_video_format (format);
-  if (fourcc == 0 || rt_format == 0) {
-    GST_ERROR_OBJECT (allocator, "Unsupported format: %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&params->info)));
+  if (rt_format == 0) {
+    GST_ERROR_OBJECT (allocator, "Unsupported image format: %s",
+        gst_video_format_to_string (img_format));
     return NULL;
   }
 
