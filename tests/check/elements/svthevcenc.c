@@ -29,7 +29,7 @@ GST_START_TEST (test_encode_simple)
   h = gst_harness_new_parse ("svthevcenc speed=9 bitrate=1000 ! h265parse");
 
   gst_harness_add_src_parse (h, "videotestsrc is-live=true ! "
-      "capsfilter caps=\"video/x-raw,width=320,height=240,framerate=25/1\"",
+      "capsfilter caps=\"video/x-raw,format=I420,width=320,height=240,framerate=25/1\"",
       TRUE);
 
   /* Push 25 buffers into the encoder */
