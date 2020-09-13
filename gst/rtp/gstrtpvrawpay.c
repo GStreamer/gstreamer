@@ -353,7 +353,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
       /* get the max allowed payload length size, we try to fill the complete MTU */
       left = gst_rtp_buffer_calc_payload_len (mtu, 0, 0);
-      out = gst_rtp_buffer_new_allocate (left, 0, 0);
+      out = gst_rtp_base_payload_allocate_output_buffer (payload, left, 0, 0);
 
       if (discont) {
         GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
