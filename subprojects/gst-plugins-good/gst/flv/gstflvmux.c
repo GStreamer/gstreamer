@@ -1991,7 +1991,7 @@ static GstFlowReturn
 gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
 {
   GstFlvMux *mux = GST_FLV_MUX (aggregator);
-  GstFlvMuxPad *best;
+  GstFlvMuxPad *best = NULL;
   GstClockTime best_time = GST_CLOCK_TIME_NONE;
   GstFlowReturn ret;
   GstClockTime ts;
@@ -2001,21 +2001,19 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     if (GST_ELEMENT_CAST (mux)->sinkpads == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("No input streams configured"));
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto out;
     }
 
     best = gst_flv_mux_find_best_pad (aggregator, &ts, timeout);
     if (!best) {
-      if (!gst_flv_mux_are_all_pads_eos (mux))
-        return GST_AGGREGATOR_FLOW_NEED_DATA;
-      else
-        return GST_FLOW_OK;
+      ret = GST_AGGREGATOR_FLOW_NEED_DATA;
+      goto out;
     }
 
     ret = gst_flv_mux_write_header (mux);
     if (ret != GST_FLOW_OK) {
-      gst_object_unref (best);
-      return ret;
+      goto out;
     }
 
     mux->state = GST_FLV_MUX_STATE_DATA;
@@ -2034,8 +2032,8 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best));
     if (!buffer) {
       /* We might have gotten a flush event after we picked the pad */
-      gst_object_unref (best);
-      return GST_AGGREGATOR_FLOW_NEED_DATA;
+      ret = GST_AGGREGATOR_FLOW_NEED_DATA;
+      goto out;
     }
   }
 
@@ -2064,10 +2062,6 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     GST_LOG_OBJECT (best,
         "got buffer PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
         GST_TIME_ARGS (best->pts), GST_TIME_ARGS (best->dts));
-  } else {
-    if (!gst_flv_mux_are_all_pads_eos (mux))
-      return GST_AGGREGATOR_FLOW_NEED_DATA;
-    best_time = GST_CLOCK_STIME_NONE;
   }
 
   /* The FLV timestamp is an int32 field. For non-live streams error out if a
@@ -2076,28 +2070,27 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   if (!mux->streamable && (GST_CLOCK_TIME_IS_VALID (best_time))
       && best_time / GST_MSECOND > G_MAXINT32) {
     GST_WARNING_OBJECT (mux, "Timestamp larger than FLV supports - EOS");
-    if (buffer) {
-      gst_buffer_unref (buffer);
-      buffer = NULL;
-    }
-    if (best) {
-      gst_object_unref (best);
-      best = NULL;
-    }
+    ret = GST_FLOW_EOS;
+    goto out;
   }
 
   if (best) {
-    GstFlowReturn ret = gst_flv_mux_write_buffer (mux, best, buffer);
-    gst_object_unref (best);
-    return ret;
+    ret = gst_flv_mux_write_buffer (mux, best, g_steal_pointer (&buffer));
+  } else if (gst_flv_mux_are_all_pads_eos (mux)) {
+    ret = GST_FLOW_EOS;
   } else {
-    if (gst_flv_mux_are_all_pads_eos (mux)) {
-      gst_flv_mux_write_eos (mux);
-      gst_flv_mux_rewrite_header (mux);
-      return GST_FLOW_EOS;
-    }
-    return GST_FLOW_OK;
+    ret = GST_AGGREGATOR_FLOW_NEED_DATA;
   }
+
+out:
+  if (ret == GST_FLOW_EOS) {
+    gst_flv_mux_write_eos (mux);
+    gst_flv_mux_rewrite_header (mux);
+  }
+
+  g_clear_pointer (&buffer, gst_buffer_unref);
+  g_clear_pointer (&best, gst_object_unref);
+  return ret;
 }
 
 static void
