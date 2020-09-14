@@ -585,6 +585,8 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   if (!ret) {
     ret = gst_pad_event_default (pad, parent, event);
+  } else {
+    gst_event_unref (event);
   }
   return ret;
 }
