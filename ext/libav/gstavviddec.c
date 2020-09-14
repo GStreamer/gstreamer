@@ -1810,7 +1810,7 @@ static GstFlowReturn
 gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean got_frame = FALSE;
 
   if (!ffmpegdec->opened)
@@ -1825,7 +1825,7 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
   avcodec_flush_buffers (ffmpegdec->context);
 
 done:
-  return GST_FLOW_OK;
+  return ret;
 
 send_packet_failed:
   GST_WARNING_OBJECT (ffmpegdec, "send packet failed, could not drain decoder");
@@ -2003,12 +2003,15 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
 static GstFlowReturn
 gst_ffmpegviddec_finish (GstVideoDecoder * decoder)
 {
-  gst_ffmpegviddec_drain (decoder);
+  GstFlowReturn flow_ret;
+
+  flow_ret = gst_ffmpegviddec_drain (decoder);
+
   /* note that finish can and should clean up more drastically,
    * but drain is also invoked on e.g. packet loss in GAP handling */
   gst_ffmpegviddec_flush (decoder);
 
-  return GST_FLOW_OK;
+  return flow_ret;
 }
 
 static gboolean
