@@ -53,7 +53,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         /* "streamtype = (string) { \"4\", \"5\" }, "  Not set by Wowza    4 = video, 5 = audio */
         /* "profile-level-id = (string) [1,MAX], " */
         /* "config = (string) [1,MAX]" */
-        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" } "
+        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\", \"aac-hbr\" } "
         /* Optional general parameters */
         /* "objecttype = (string) [1,MAX], " */
         /* "constantsize = (string) [1,MAX], " *//* constant size of each AU */
