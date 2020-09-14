@@ -611,9 +611,13 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
   } while (got_frame);
   avcodec_flush_buffers (ffmpegdec->context);
 
-  if (got_any_frames && ret == GST_FLOW_OK)
-    ret =
+  if (got_any_frames) {
+    GstFlowReturn new_ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
+
+    if (ret == GST_FLOW_OK)
+      ret = new_ret;
+  }
 
 done:
   return ret;
@@ -723,12 +727,19 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     }
   } while (got_frame);
 
-  /* Only override the flow return value if previously did have a GST_FLOW_OK.
-   * Failure to do this would result in skipping downstream issues caught in
-   * earlier steps. */
-  if (ret == GST_FLOW_OK && (is_header || got_any_frames)) {
-    ret =
+  if (is_header || got_any_frames) {
+    /* Even if previous return wasn't GST_FLOW_OK, we need to call
+     * _finish_frame() since baseclass is expecting that _finish_frame()
+     * is followed by _finish_subframe()
+     */
+    GstFlowReturn new_ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
+
+    /* Only override the flow return value if previously did have a GST_FLOW_OK.
+     * Failure to do this would result in skipping downstream issues caught in
+     * earlier steps. */
+    if (ret == GST_FLOW_OK)
+      ret = new_ret;
   }
 
 unmap:
