@@ -113,6 +113,30 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
 
+# These are only needed/used by the ABI tests from core
+host_defines = [
+  [ 'x86', 'HAVE_CPU_I386' ],
+  [ 'x86_64', 'HAVE_CPU_X86_64' ],
+  [ 'arm', 'HAVE_CPU_ARM' ],
+  [ 'aarch64', 'HAVE_CPU_AARCH64' ],
+  [ 'mips', 'HAVE_CPU_MIPS' ],
+  [ 'powerpc', 'HAVE_CPU_PPC' ],
+  [ 'powerpc64', 'HAVE_CPU_PPC64' ],
+  [ 'alpha', 'HAVE_CPU_ALPHA' ],
+  [ 'sparc', 'HAVE_CPU_SPARC' ],
+  [ 'ia64', 'HAVE_CPU_IA64' ],
+  [ 'hppa', 'HAVE_CPU_HPPA' ],
+  [ 'm68k', 'HAVE_CPU_M68K' ],
+  [ 's390', 'HAVE_CPU_S390' ],
+]
+foreach h : host_defines
+  if h.get(0) == host_machine.cpu()
+    core_conf.set(h.get(1), 1)
+  endif
+endforeach
+# FIXME: should really be called HOST_CPU or such
+core_conf.set_quoted('TARGET_CPU', host_machine.cpu())
+
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
   ['HAVE_EMMINTRIN_H', 'emmintrin.h'],
