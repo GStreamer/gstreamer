@@ -57,7 +57,7 @@ static GstFlowReturn gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder,
 static gboolean gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
     AVCodecContext * context, AVFrame * frame, gboolean force);
 
-static void gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec);
+static GstFlowReturn gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec);
 
 #define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("avdec-params")
 
@@ -594,9 +594,10 @@ no_codec:
   }
 }
 
-static void
+static GstFlowReturn
 gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean got_any_frames = FALSE;
   gboolean got_frame;
 
@@ -604,21 +605,22 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
     goto send_packet_failed;
 
   do {
-    GstFlowReturn ret;
-
     got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
     if (got_frame)
       got_any_frames = TRUE;
   } while (got_frame);
   avcodec_flush_buffers (ffmpegdec->context);
 
-  if (got_any_frames)
-    gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
+  if (got_any_frames && ret == GST_FLOW_OK)
+    ret =
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
 
-  return;
+done:
+  return ret;
 
 send_packet_failed:
   GST_WARNING_OBJECT (ffmpegdec, "send packet failed, could not drain decoder");
+  goto done;
 }
 
 static void
@@ -651,8 +653,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     goto not_negotiated;
 
   if (inbuf == NULL) {
-    gst_ffmpegauddec_drain (ffmpegdec);
-    return GST_FLOW_OK;
+    return gst_ffmpegauddec_drain (ffmpegdec);
   }
 
   inbuf = gst_buffer_ref (inbuf);
