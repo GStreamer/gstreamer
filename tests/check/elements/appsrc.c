@@ -712,6 +712,29 @@ appsrc_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   return GST_PAD_PROBE_OK;
 }
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+
+  GstClockTime expected_last_pts;
+  guint last_buf_count;
+} SegmentTestData;
+
+static void
+custom_segment_handoff_cb (GstElement * sink, GstBuffer * buf, GstPad * pad,
+    gpointer * user_data)
+{
+  SegmentTestData *data = (SegmentTestData *) user_data;
+
+  if (GST_BUFFER_PTS (buf) == data->expected_last_pts) {
+    g_mutex_lock (&data->lock);
+    data->last_buf_count++;
+    g_cond_signal (&data->cond);
+    g_mutex_unlock (&data->lock);
+  }
+}
+
 /* Assuming application driven streaming with multiple period.
  * application provides custom segment per each period */
 GST_START_TEST (test_appsrc_period_with_custom_segment)
@@ -731,6 +754,12 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
   gulong probe_id;
   GstPad *pad;
   GList *expected = NULL;
+  SegmentTestData test_data;
+
+  g_mutex_init (&test_data.lock);
+  g_cond_init (&test_data.cond);
+  test_data.last_buf_count = 0;
+  test_data.expected_last_pts = 5 * GST_SECOND;
 
   for (i = 0; i < G_N_ELEMENTS (modes); i++) {
     /* mode 0: stream-type == GST_APP_STREAM_TYPE_STREAM
@@ -755,6 +784,12 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
     if (modes[i] != GST_APP_STREAM_TYPE_STREAM) {
       cb.seek_data = seek_cb;
       gst_app_src_set_callbacks (GST_APP_SRC (src), &cb, NULL, NULL);
+
+      test_data.last_buf_count = 0;
+
+      g_object_set (sink, "signal-handoffs", TRUE, NULL);
+      g_signal_connect (sink, "handoff",
+          G_CALLBACK (custom_segment_handoff_cb), &test_data);
     }
 
     ASSERT_SET_STATE (pipe, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
@@ -809,10 +844,12 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
        * new custom segment */
 
       GstClockTime requested_pos = 7 * GST_SECOND;
-      /* In this test case, we are checking the serialized order of
-       * events and buffers, so, give some time to the appsrc loop to
-       * push all to sink */
-      g_usleep (G_USEC_PER_SEC * 1);
+
+      /* Wait all buffers of two periods to be consumed */
+      g_mutex_lock (&test_data.lock);
+      while (test_data.last_buf_count != 2)
+        g_cond_wait (&test_data.cond, &test_data.lock);
+      g_mutex_unlock (&test_data.lock);
 
       GST_DEBUG ("Seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (requested_pos));
       event = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
@@ -870,6 +907,9 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
     gst_object_unref (pipe);
     fail_if (expected != NULL);
   }
+
+  g_mutex_clear (&test_data.lock);
+  g_cond_clear (&test_data.cond);
 }
 
 GST_END_TEST;
