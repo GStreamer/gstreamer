@@ -870,7 +870,7 @@ GST_START_TEST (test_foreach_pad)
   MAIN_START_THREAD_FUNCTION (0, thread_add_remove_pads, e);
   MAIN_SYNCHRONIZE ();
 
-  for (i = 0; i < 10000; ++i) {
+  for (i = 0; i < 1000; ++i) {
     gchar num[32];
 
     g_snprintf (num, 32, "foreach-test-%u", i);
