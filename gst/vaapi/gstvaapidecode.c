@@ -273,7 +273,7 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
       && gst_vaapi_mem_type_supports (mem_types,
           GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)) {
     dma_caps = gst_caps_copy (base_caps);
-    gst_caps_set_features_simple (va_caps,
+    gst_caps_set_features_simple (dma_caps,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
   }
 #if (USE_GLX || USE_EGL)
