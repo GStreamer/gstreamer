@@ -1108,6 +1108,9 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened,
           "location") != NULL)
     g_object_get (sink, "location", &location, NULL);
 
+  GST_DEBUG_OBJECT (splitmux,
+      "Sending %s message. Running time %" GST_TIME_FORMAT " location %s",
+      msg_name, GST_TIME_ARGS (running_time), GST_STR_NULL (location));
 
   /* If it's in the middle of a teardown, the reference_ctc might have become
    * NULL */
