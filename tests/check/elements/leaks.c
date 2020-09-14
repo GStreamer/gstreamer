@@ -224,6 +224,13 @@ GST_START_TEST (test_get_live_objects_filtered_detailed)
   GstPad *srcpad;
   GstMessage *m;
   struct RetBufferCtx *ctx = g_new0 (struct RetBufferCtx, 1);
+  gboolean check_trace = FALSE;
+
+#if defined (HAVE_BACKTRACE) || defined (HAVE_UNWIND) || defined (HAVE_DBGHELP)
+  /* Otherwise, trace string (returned from gst_debug_get_stack_trace())
+   * will be null */
+  check_trace = TRUE;
+#endif
 
   pipe = gst_pipeline_new ("pipeline");
   fail_unless (pipe);
@@ -286,7 +293,8 @@ GST_START_TEST (test_get_live_objects_filtered_detailed)
       fail_unless_equals_int (ref_count, 1);
 
       fail_unless (gst_structure_has_field_typed (s, "trace", G_TYPE_STRING));
-      fail_unless (gst_structure_get_string (s, "trace"));
+      if (check_trace)
+        fail_unless (gst_structure_get_string (s, "trace"));
 
       fail_unless (gst_structure_has_field_typed (s, "ref-infos",
               GST_TYPE_LIST));
@@ -312,7 +320,8 @@ GST_START_TEST (test_get_live_objects_filtered_detailed)
         fail_unless (ref_count > 0);
 
         fail_unless (gst_structure_has_field_typed (r, "trace", G_TYPE_STRING));
-        fail_unless (gst_structure_get_string (r, "trace"));
+        if (check_trace)
+          fail_unless (gst_structure_get_string (r, "trace"));
 
         fail_unless_equals_int (gst_structure_n_fields (r), 4);
       }
