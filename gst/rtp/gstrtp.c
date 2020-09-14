@@ -84,6 +84,7 @@
 #include "gstrtpL16pay.h"
 #include "gstrtpL24depay.h"
 #include "gstrtpL24pay.h"
+#include "gstrtpldacpay.h"
 #include "gstasteriskh263.h"
 #include "gstrtpmp1sdepay.h"
 #include "gstrtpmp2tdepay.h"
@@ -300,6 +301,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_L24_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_ldac_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_asteriskh263_plugin_init (plugin))

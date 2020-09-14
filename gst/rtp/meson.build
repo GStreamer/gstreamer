@@ -61,6 +61,7 @@ rtp_sources = [
   'gstrtpL16pay.c',
   'gstrtpL24depay.c',
   'gstrtpL24pay.c',
+  'gstrtpldacpay.c',
   'gstasteriskh263.c',
   'gstrtpmp1sdepay.c',
   'gstrtpmp2tdepay.c',
