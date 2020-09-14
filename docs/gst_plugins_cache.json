@@ -15369,7 +15369,7 @@
                 "long-name": "RTP MPEG4 ES depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: { (string)video, (string)audio, (string)application }\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MPEG4-GENERIC\n           mode: { (string)generic, (string)CELP-cbr, (string)CELP-vbr, (string)AAC-lbr, (string)AAC-hbr }\n",
+                        "caps": "application/x-rtp:\n          media: { (string)video, (string)audio, (string)application }\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MPEG4-GENERIC\n           mode: { (string)generic, (string)CELP-cbr, (string)CELP-vbr, (string)AAC-lbr, (string)AAC-hbr, (string)aac-hbr }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
