@@ -147,7 +147,7 @@ avtp_to_gst_rate (int rate)
 
 static gboolean
 gst_avtp_aaf_depay_push_caps_event (GstAvtpAafDepay * avtpaafdepay,
-    guint64 rate, guint64 depth, guint64 format, guint64 channels)
+    gint rate, gint depth, gint format, gint channels)
 {
   GstCaps *caps;
   GstEvent *event;
