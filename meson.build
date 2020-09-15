@@ -301,7 +301,7 @@ else
       get_option('libdir'), 'gio/modules'))
     core_conf.set_quoted('GIO_LIBDIR', join_paths(get_option('prefix'),
       get_option('libdir')))
-    core_conf.set_quoted('GIO_PREFIX', get_option('prefix'))
+    core_conf.set_quoted('GIO_PREFIX', join_paths(get_option('prefix')))
 endif
 
 configinc = include_directories('.')
