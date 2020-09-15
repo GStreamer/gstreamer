@@ -1099,6 +1099,10 @@ documentation:
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
   - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc@28ad9aa59daa49d6b3fd1bc6b144df52af39475b
+
+  # FIXME: remove this once the docs image is updated
+  - rm -rf /gst-build/subprojects/pygobject/
+
   - *gst_build
   - ./gst-uninstalled.py ninja -C build/ plugins_doc_caches
   - |
