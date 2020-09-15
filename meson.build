@@ -370,12 +370,13 @@ endif
 backtrace_deps = []
 unwind_dep = dependency('libunwind', required : get_option('libunwind'))
 dw_dep = dependency('libdw', required: get_option('libdw'))
-dbghelp_dep = dependency('DbgHelp', required : get_option('dbghelp'))
-backtrace_deps = [unwind_dep, dw_dep, dbghelp_dep]
+dbghelp_option = get_option('dbghelp')
+have_dbghelp = cc.has_header('dbghelp.h', required: dbghelp_option) and cc.has_header('tlhelp32.h', required: dbghelp_option)
+backtrace_deps = [unwind_dep, dw_dep]
 backtrace_source_info = false
 backtrace_minimal = false
 # MSVC debug stack trace support
-if host_system == 'windows' and dbghelp_dep.found()
+if host_system == 'windows' and have_dbghelp
   cdata.set('HAVE_DBGHELP', 1)
   backtrace_source_info = true
 # DWARF stack trace support with libunwind and elf-utils
