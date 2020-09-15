@@ -158,6 +158,7 @@ check_functions = [
   ['HAVE_DCGETTEXT', 'dcgettext'],
   ['HAVE_GETPAGESIZE', 'getpagesize'],
   ['HAVE_GMTIME_R', 'gmtime_r'],
+  ['HAVE_MEMFD_CREATE', 'memfd_create'],
   ['HAVE_MMAP', 'mmap'],
   ['HAVE_PIPE2', 'pipe2'],
   ['HAVE_GETRUSAGE', 'getrusage', '#include<sys/resource.h>'],

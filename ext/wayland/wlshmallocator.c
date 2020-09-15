@@ -49,16 +49,33 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
 
   /* TODO: make use of the allocation params, if necessary */
 
-  /* allocate shm pool */
-  snprintf (filename, 1024, "%s/%s-%d-%s", g_get_user_runtime_dir (),
-      "wayland-shm", init++, "XXXXXX");
+#ifdef HAVE_MEMFD_CREATE
+  fd = memfd_create ("gst-wayland-shm", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+  if (fd >= 0) {
+    /* We can add this seal before calling posix_fallocate(), as
+     * the file is currently zero-sized anyway.
+     *
+     * There is also no need to check for the return value, we
+     * couldn't do anything with it anyway.
+     */
+    fcntl (fd, F_ADD_SEALS, F_SEAL_SHRINK);
+  } else
+#endif
+  {
+    /* allocate shm pool */
+    snprintf (filename, 1024, "%s/%s-%d-%s", g_get_user_runtime_dir (),
+        "wayland-shm", init++, "XXXXXX");
 
-  fd = g_mkstemp (filename);
-  if (fd < 0) {
-    GST_ERROR_OBJECT (self, "opening temp file %s failed: %s", filename,
-        strerror (errno));
-    return NULL;
+    fd = g_mkstemp (filename);
+    if (fd < 0) {
+      GST_ERROR_OBJECT (self, "opening temp file %s failed: %s", filename,
+          strerror (errno));
+      return NULL;
+    }
+
+    unlink (filename);
   }
+
   if (ftruncate (fd, size) < 0) {
     GST_ERROR_OBJECT (self, "ftruncate failed: %s", strerror (errno));
     close (fd);
@@ -83,8 +100,6 @@ gst_wl_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   /* unmap will not really munmap(), we just
    * need it to release the miniobject lock */
   gst_memory_unmap (mem, &info);
-
-  unlink (filename);
 
   return mem;
 }
