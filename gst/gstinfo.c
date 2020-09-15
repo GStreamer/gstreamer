@@ -156,9 +156,10 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #endif /* HAVE_BACKTRACE */
 
 #ifdef HAVE_DBGHELP
-#include <Windows.h>
+#include <windows.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
+#include <gmodule.h>
 #endif /* HAVE_DBGHELP */
 
 #ifdef G_OS_WIN32
@@ -2958,19 +2959,91 @@ generate_backtrace_trace (void)
 #endif /* HAVE_BACKTRACE */
 
 #ifdef HAVE_DBGHELP
-static void
+/* *INDENT-OFF* */
+static struct
+{
+  DWORD (WINAPI * pSymSetOptions) (DWORD SymOptions);
+  BOOL  (WINAPI * pSymInitialize) (HANDLE hProcess,
+                                   PCSTR UserSearchPath,
+                                   BOOL fInvadeProcess);
+  BOOL  (WINAPI * pStackWalk64)   (DWORD MachineType,
+                                   HANDLE hProcess,
+                                   HANDLE hThread,
+                                   LPSTACKFRAME64 StackFrame,
+                                   PVOID ContextRecord,
+                                   PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine,
+                                   PFUNCTION_TABLE_ACCESS_ROUTINE64 FunctionTableAccessRoutine,
+                                   PGET_MODULE_BASE_ROUTINE64 GetModuleBaseRoutine,
+                                   PTRANSLATE_ADDRESS_ROUTINE64 TranslateAddress);
+  PVOID (WINAPI * pSymFunctionTableAccess64) (HANDLE hProcess,
+                                              DWORD64 AddrBase);
+  DWORD64 (WINAPI * pSymGetModuleBase64) (HANDLE hProcess,
+                                          DWORD64 qwAddr);
+  BOOL (WINAPI * pSymFromAddr) (HANDLE hProcess,
+                                DWORD64 Address,
+                                PDWORD64 Displacement,
+                                PSYMBOL_INFO Symbol);
+  BOOL (WINAPI * pSymGetModuleInfo64) (HANDLE hProcess,
+                                       DWORD64 qwAddr,
+                                       PIMAGEHLP_MODULE64 ModuleInfo);
+  BOOL (WINAPI * pSymGetLineFromAddr64) (HANDLE hProcess,
+                                         DWORD64 qwAddr,
+                                         PDWORD pdwDisplacement,
+                                         PIMAGEHLP_LINE64 Line64);
+} dbg_help_vtable = { NULL,};
+/* *INDENT-ON* */
+
+static GModule *dbg_help_module = NULL;
+
+static gboolean
+dbghelp_load_symbol (const gchar * symbol_name, gpointer * symbol)
+{
+  if (dbg_help_module &&
+      !g_module_symbol (dbg_help_module, symbol_name, symbol)) {
+    GST_WARNING ("Cannot load %s symbol", symbol_name);
+    g_module_close (dbg_help_module);
+    dbg_help_module = NULL;
+  }
+
+  return ! !dbg_help_module;
+}
+
+static gboolean
 dbghelp_initialize_symbols (HANDLE process)
 {
   static gsize initialization_value = 0;
 
   if (g_once_init_enter (&initialization_value)) {
     GST_INFO ("Initializing Windows symbol handler");
-    SymSetOptions (SYMOPT_LOAD_LINES);
-    SymInitialize (process, NULL, TRUE);
-    GST_INFO ("Initialized Windows symbol handler");
+
+    dbg_help_module = g_module_open ("dbghelp.dll", G_MODULE_BIND_LAZY);
+    dbghelp_load_symbol ("SymSetOptions",
+        (gpointer *) & dbg_help_vtable.pSymSetOptions);
+    dbghelp_load_symbol ("SymInitialize",
+        (gpointer *) & dbg_help_vtable.pSymInitialize);
+    dbghelp_load_symbol ("StackWalk64",
+        (gpointer *) & dbg_help_vtable.pStackWalk64);
+    dbghelp_load_symbol ("SymFunctionTableAccess64",
+        (gpointer *) & dbg_help_vtable.pSymFunctionTableAccess64);
+    dbghelp_load_symbol ("SymGetModuleBase64",
+        (gpointer *) & dbg_help_vtable.pSymGetModuleBase64);
+    dbghelp_load_symbol ("SymFromAddr",
+        (gpointer *) & dbg_help_vtable.pSymFromAddr);
+    dbghelp_load_symbol ("SymGetModuleInfo64",
+        (gpointer *) & dbg_help_vtable.pSymGetModuleInfo64);
+    dbghelp_load_symbol ("SymGetLineFromAddr64",
+        (gpointer *) & dbg_help_vtable.pSymGetLineFromAddr64);
+
+    if (dbg_help_module) {
+      dbg_help_vtable.pSymSetOptions (SYMOPT_LOAD_LINES);
+      dbg_help_vtable.pSymInitialize (process, NULL, TRUE);
+      GST_INFO ("Initialized Windows symbol handler");
+    }
 
     g_once_init_leave (&initialization_value, 1);
   }
+
+  return ! !dbg_help_module;
 }
 
 static gchar *
@@ -2983,9 +3056,12 @@ generate_dbghelp_trace (void)
   CONTEXT context;
   STACKFRAME64 frame = { 0 };
   PVOID save_context;
-  GString *trace = g_string_new (NULL);
+  GString *trace = NULL;
 
-  dbghelp_initialize_symbols (process);
+  if (!dbghelp_initialize_symbols (process))
+    return NULL;
+
+  trace = g_string_new (NULL);
 
   memset (&context, 0, sizeof (CONTEXT));
   context.ContextFlags = CONTEXT_FULL;
@@ -3024,19 +3100,23 @@ generate_dbghelp_trace (void)
 
     line.SizeOfStruct = sizeof (line);
 
-    if (!StackWalk64 (machine, process, thread, &frame, save_context, 0,
-            SymFunctionTableAccess64, SymGetModuleBase64, 0))
+    if (!dbg_help_vtable.pStackWalk64 (machine, process, thread, &frame,
+            save_context, 0, dbg_help_vtable.pSymFunctionTableAccess64,
+            dbg_help_vtable.pSymGetModuleBase64, 0)) {
       break;
+    }
 
-    if (SymFromAddr (process, frame.AddrPC.Offset, 0, symbol))
+    if (dbg_help_vtable.pSymFromAddr (process, frame.AddrPC.Offset, 0, symbol))
       g_string_append_printf (trace, "%s ", symbol->Name);
     else
       g_string_append (trace, "?? ");
 
-    if (SymGetLineFromAddr64 (process, frame.AddrPC.Offset, &displacement,
-            &line))
-      g_string_append_printf (trace, "(%s:%u)", line.FileName, line.LineNumber);
-    else if (SymGetModuleInfo64 (process, frame.AddrPC.Offset, &module_info))
+    if (dbg_help_vtable.pSymGetLineFromAddr64 (process, frame.AddrPC.Offset,
+            &displacement, &line))
+      g_string_append_printf (trace, "(%s:%lu)", line.FileName,
+          line.LineNumber);
+    else if (dbg_help_vtable.pSymGetModuleInfo64 (process, frame.AddrPC.Offset,
+            &module_info))
       g_string_append_printf (trace, "(%s)", module_info.ImageName);
     else
       g_string_append_printf (trace, "(%s)", "??");
@@ -3044,7 +3124,6 @@ generate_dbghelp_trace (void)
     g_string_append (trace, "\n");
   }
 
-done:
   return g_string_free (trace, FALSE);
 }
 #endif /* HAVE_DBGHELP */
