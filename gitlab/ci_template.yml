@@ -510,6 +510,9 @@ build clang fedora x86_64:
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
     TIMEOUT_FACTOR: "2"
     CARGO_HOME: "/cache/gstreamer/cargo"
+    # Enable the fault handler so we get backtraces on segfaults.
+    # any non-empty string will do
+    PYTHONFAULTHANDLER: "enabled"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-examples|gst-docs)$/'
   script:
