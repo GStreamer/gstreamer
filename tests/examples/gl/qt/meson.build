@@ -1,3 +1,7 @@
+if get_option('qt5').disabled()
+  subdir_done()
+endif
+
 qt5_mod = import('qt5')
 
 qt5gui_dep = dependency('qt5', modules : ['Core', 'Gui', 'Widgets'], required : false)

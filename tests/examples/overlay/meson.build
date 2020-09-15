@@ -1,3 +1,7 @@
+if get_option('qt5').disabled()
+  subdir_done()
+endif
+
 if x11_dep.found()
   if gtk_x11_dep.found()
     executable('gtk-videooverlay', 'gtk-videooverlay.c',
