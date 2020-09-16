@@ -47,9 +47,7 @@ variables:
 
   WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v12-master'
 
-  # FIXME: after merging the script
-  # CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
-  CERBERO_SCRIPT_URL: 'https://gitlab.freedesktop.org/alatiera/gst-ci/-/raw/alatiera/cerbero-windows-attempt-6/gitlab/cerbero_setup.sh'
+  CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
