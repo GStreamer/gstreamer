@@ -198,7 +198,8 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
       g_type_name (api), size);
 
   g_rw_lock_writer_lock (&lock);
-  g_hash_table_insert (metainfo, (gpointer) impl, (gpointer) info);
+  g_hash_table_insert (metainfo, (gpointer) g_intern_string (impl),
+      (gpointer) info);
   g_rw_lock_writer_unlock (&lock);
 
   return info;
