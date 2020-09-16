@@ -451,7 +451,8 @@ calculate_average_period (GstAvtpCrfBase * avtpcrfbase,
     }
 
     data->past_periods[past_periods_iter] =
-        first_pkt_tstamp - data->last_received_tstamp;
+        (first_pkt_tstamp - data->last_received_tstamp) /
+        data->timestamp_interval;
     data->last_received_tstamp = first_pkt_tstamp;
     data->last_seqnum = seqnum;
   } else {
