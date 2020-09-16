@@ -35,8 +35,7 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstVaDevice, gst_va_device);
 static void
 gst_va_device_free (GstVaDevice * device)
 {
-  if (device->display)
-    gst_object_unref (device->display);
+  gst_clear_object (&device->display);
   g_free (device->render_device_path);
   g_free (device);
 }
