@@ -46,76 +46,9 @@
 
 
 /**
- * SECTION:element-qtmux
- * @title: qtmux
- * @short_description: Muxer for quicktime(.mov) files
- *
- * This element merges streams (audio and video) into QuickTime(.mov) files.
- *
- * The following background intends to explain why various similar muxers
- * are present in this plugin.
- *
- * The [QuickTime file format specification](http://www.apple.com/quicktime/resources/qtfileformat.pdf)
- * served as basis for the MP4 file format specification (mp4mux), and as such
- * the QuickTime file structure is nearly identical to the so-called ISO Base
- * Media file format defined in ISO 14496-12 (except for some media specific
- * parts).
- *
- * In turn, the latter ISO Base Media format was further specialized as a
- * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
- * and in various 3GPP(2) specs (gppmux).
- * The fragmented file features defined (only) in ISO Base Media are used by
- * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
- *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale,
- * #GstQTMuxPad:trak-timescale) allow adjusting some technical parameters,
- * which might be useful in (rare) cases to resolve compatibility issues in
- * some situations.
- *
- * Some other properties influence the result more fundamentally.
- * A typical mov/mp4 file's metadata (aka moov) is located at the end of the
- * file, somewhat contrary to this usually being called "the header".
- * However, a #GstQTMux:faststart file will (with some effort) arrange this to
- * be located near start of the file, which then allows it e.g. to be played
- * while downloading. Alternatively, rather than having one chunk of metadata at
- * start (or end), there can be some metadata at start and most of the other
- * data can be spread out into fragments of #GstQTMux:fragment-duration.
- * If such fragmented layout is intended for streaming purposes, then
- * #GstQTMux:streamable allows foregoing to add index metadata (at the end of
- * file).
- *
- * When the maximum duration to be recorded can be known in advance, #GstQTMux
- * also supports a 'Robust Muxing' mode. In robust muxing mode,  space for the
- * headers are reserved at the start of muxing, and rewritten at a configurable
- * interval, so that the output file is always playable, even if the recording
- * is interrupted uncleanly by a crash. Robust muxing mode requires a seekable
- * output, such as filesink, because it needs to rewrite the start of the file.
- *
- * To enable robust muxing mode, set the #GstQTMux:reserved-moov-update-period
- * and #GstQTMux:reserved-max-duration property. Also present is the
- * #GstQTMux:reserved-bytes-per-sec property, which can be increased if
- * for some reason the default is not large enough and the initial reserved
- * space for headers is too small. Applications can monitor the
- * #GstQTMux:reserved-duration-remaining property to see how close to full
- * the reserved space is becoming.
- *
- * Applications that wish to be able to use/edit a file while it is being
- * written to by live content, can use the "Robust Prefill Muxing" mode. That
- * mode is a variant of the "Robust Muxing" mode in that it will pre-allocate a
- * completely valid header from the start for all tracks (i.e. it appears as
- * though the file is "reserved-max-duration" long with all samples
- * present). This mode can be enabled by setting the
- * #GstQTMux:reserved-moov-update-period and #GstQTMux:reserved-prefill
- * properties. Note that this mode is only possible with input streams that have
- * a fixed sample size (such as raw audio and Prores Video) and that don't
- * have reordered samples.
- *
- * ## Example pipelines
- * |[
- * gst-launch-1.0 v4l2src num-buffers=500 ! video/x-raw,width=320,height=240 ! videoconvert ! qtmux ! filesink location=video.mov
- * ]|
- * Records a video stream captured from a v4l2 device and muxes it into a qt file.
- *
+ * SECTION:GstQTMux
+ * @title: GstQTMux
+ * @short_description: Muxer for ISO MP4-based files
  */
 
 /*
@@ -381,7 +314,6 @@ enum
   PROP_FAST_START_TEMP_FILE,
   PROP_MOOV_RECOV_FILE,
   PROP_FRAGMENT_DURATION,
-  PROP_STREAMABLE,
   PROP_RESERVED_MAX_DURATION,
   PROP_RESERVED_DURATION_REMAINING,
   PROP_RESERVED_MOOV_UPDATE_PERIOD,
@@ -469,7 +401,7 @@ static void gst_qt_mux_update_edit_lists (GstQTMux * qtmux);
 static GstElementClass *parent_class = NULL;
 
 static void
-gst_qt_mux_subclass_base_init (gpointer g_class)
+gst_qt_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstQTMuxClass *klass = (GstQTMuxClass *) g_class;
@@ -482,7 +414,8 @@ gst_qt_mux_subclass_base_init (gpointer g_class)
   params =
       (GstQTMuxClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (g_class),
       GST_QT_MUX_PARAMS_QDATA);
-  g_assert (params != NULL);
+  if (!params)
+    return;
 
   /* construct the element details struct */
   longname = g_strdup_printf ("%s Muxer", params->prop->long_name);
@@ -531,16 +464,11 @@ gst_qt_mux_subclass_base_init (gpointer g_class)
 }
 
 static void
-gst_qt_mux_subclass_class_init (GstQTMuxClass * klass)
+gst_qt_mux_class_init (GstQTMuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAggregatorClass *gstagg_class = GST_AGGREGATOR_CLASS (klass);
-  GParamFlags streamable_flags;
-  const gchar *streamable_desc;
-  gboolean streamable;
-#define STREAMABLE_DESC "If set to true, the output should be as if it is to "\
-  "be streamed and hence no indexes written or duration written."
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -550,17 +478,6 @@ gst_qt_mux_subclass_class_init (GstQTMuxClass * klass)
   gobject_class->finalize = gst_qt_mux_finalize;
   gobject_class->get_property = gst_qt_mux_get_property;
   gobject_class->set_property = gst_qt_mux_set_property;
-
-  streamable_flags = G_PARAM_READWRITE | G_PARAM_CONSTRUCT;
-  if (klass->format == GST_QT_MUX_FORMAT_ISML) {
-    streamable_desc = STREAMABLE_DESC;
-    streamable = DEFAULT_STREAMABLE;
-  } else {
-    streamable_desc =
-        STREAMABLE_DESC " (DEPRECATED, only valid for fragmented MP4)";
-    streamable_flags |= G_PARAM_DEPRECATED;
-    streamable = FALSE;
-  }
 
   g_object_class_install_property (gobject_class, PROP_MOVIE_TIMESCALE,
       g_param_spec_uint ("movie-timescale", "Movie timescale",
@@ -611,9 +528,6 @@ gst_qt_mux_subclass_class_init (GstQTMuxClass * klass)
           0, G_MAXUINT32, klass->format == GST_QT_MUX_FORMAT_ISML ?
           2000 : DEFAULT_FRAGMENT_DURATION,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_STREAMABLE,
-      g_param_spec_boolean ("streamable", "Streamable", streamable_desc,
-          streamable, streamable_flags | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RESERVED_MAX_DURATION,
       g_param_spec_uint64 ("reserved-max-duration",
           "Reserved maximum file duration (ns)",
@@ -914,7 +828,7 @@ gst_qt_mux_clip_running_time (GstAggregator * agg,
 }
 
 static void
-gst_qt_mux_subclass_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
+gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
 {
   /* properties set to default upon construction */
 
@@ -7013,9 +6927,6 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_FRAGMENT_DURATION:
       g_value_set_uint (value, qtmux->fragment_duration);
       break;
-    case PROP_STREAMABLE:
-      g_value_set_boolean (value, qtmux->streamable);
-      break;
     case PROP_RESERVED_MAX_DURATION:
       g_value_set_uint64 (value, qtmux->reserved_max_duration);
       break;
@@ -7132,14 +7043,6 @@ gst_qt_mux_set_property (GObject * object,
     case PROP_FRAGMENT_DURATION:
       qtmux->fragment_duration = g_value_get_uint (value);
       break;
-    case PROP_STREAMABLE:{
-      GstQTMuxClass *qtmux_klass =
-          (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
-      if (qtmux_klass->format == GST_QT_MUX_FORMAT_ISML) {
-        qtmux->streamable = g_value_get_boolean (value);
-      }
-      break;
-    }
     case PROP_RESERVED_MAX_DURATION:
       qtmux->reserved_max_duration = g_value_get_uint64 (value);
       break;
@@ -7212,31 +7115,99 @@ gst_qt_mux_stop (GstAggregator * agg)
   return TRUE;
 }
 
-G_DEFINE_TYPE (GstQTMux, gst_qt_mux, GST_TYPE_AGGREGATOR);
+enum
+{
+  PROP_SUBCLASS_STREAMABLE = 1,
+};
 
 static void
-gst_qt_mux_class_init (GstQTMuxClass * klass)
+gst_qt_mux_subclass_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
 {
+  GstQTMux *qtmux = GST_QT_MUX_CAST (object);
+
+  GST_OBJECT_LOCK (qtmux);
+  switch (prop_id) {
+    case PROP_SUBCLASS_STREAMABLE:{
+      GstQTMuxClass *qtmux_klass =
+          (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+      if (qtmux_klass->format == GST_QT_MUX_FORMAT_ISML) {
+        qtmux->streamable = g_value_get_boolean (value);
+      }
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (qtmux);
 }
 
 static void
-gst_qt_mux_init (GstQTMux * qtmux)
+gst_qt_mux_subclass_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstQTMux *qtmux = GST_QT_MUX_CAST (object);
+
+  GST_OBJECT_LOCK (qtmux);
+  switch (prop_id) {
+    case PROP_SUBCLASS_STREAMABLE:
+      g_value_set_boolean (value, qtmux->streamable);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (qtmux);
+}
+
+static void
+gst_qt_mux_subclass_class_init (GstQTMuxClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GParamFlags streamable_flags;
+  const gchar *streamable_desc;
+  gboolean streamable;
+#define STREAMABLE_DESC "If set to true, the output should be as if it is to "\
+  "be streamed and hence no indexes written or duration written."
+
+  gobject_class->set_property = gst_qt_mux_subclass_set_property;
+  gobject_class->get_property = gst_qt_mux_subclass_get_property;
+
+  streamable_flags = G_PARAM_READWRITE | G_PARAM_CONSTRUCT;
+  if (klass->format == GST_QT_MUX_FORMAT_ISML) {
+    streamable_desc = STREAMABLE_DESC;
+    streamable = DEFAULT_STREAMABLE;
+  } else {
+    streamable_desc =
+        STREAMABLE_DESC " (DEPRECATED, only valid for fragmented MP4)";
+    streamable_flags |= G_PARAM_DEPRECATED;
+    streamable = FALSE;
+  }
+
+  g_object_class_install_property (gobject_class, PROP_SUBCLASS_STREAMABLE,
+      g_param_spec_boolean ("streamable", "Streamable", streamable_desc,
+          streamable, streamable_flags | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_qt_mux_subclass_init (GstQTMux * qtmux)
 {
 }
 
 gboolean
 gst_qt_mux_register (GstPlugin * plugin)
 {
-  GTypeInfo typeinfo = {
+  GTypeInfo parent_typeinfo = {
     sizeof (GstQTMuxClass),
-    (GBaseInitFunc) gst_qt_mux_subclass_base_init,
+    (GBaseInitFunc) gst_qt_mux_base_init,
     NULL,
-    (GClassInitFunc) gst_qt_mux_subclass_class_init,
+    (GClassInitFunc) gst_qt_mux_class_init,
     NULL,
     NULL,
     sizeof (GstQTMux),
     0,
-    (GInstanceInitFunc) gst_qt_mux_subclass_init,
+    (GInstanceInitFunc) gst_qt_mux_init,
   };
   static const GInterfaceInfo tag_setter_info = {
     NULL, NULL, NULL
@@ -7247,7 +7218,7 @@ gst_qt_mux_register (GstPlugin * plugin)
   static const GInterfaceInfo preset_info = {
     NULL, NULL, NULL
   };
-  GType type;
+  GType parent_type;
   GstQTMuxFormat format;
   GstQTMuxClassParams *params;
   guint i = 0;
@@ -7256,7 +7227,30 @@ gst_qt_mux_register (GstPlugin * plugin)
 
   GST_LOG ("Registering muxers");
 
+  parent_type =
+      g_type_register_static (GST_TYPE_AGGREGATOR, "GstQTMux",
+      &parent_typeinfo, 0);
+  g_type_add_interface_static (parent_type, GST_TYPE_TAG_SETTER,
+      &tag_setter_info);
+  g_type_add_interface_static (parent_type, GST_TYPE_TAG_XMP_WRITER,
+      &tag_xmp_writer_info);
+  g_type_add_interface_static (parent_type, GST_TYPE_PRESET, &preset_info);
+
+  gst_type_mark_as_plugin_api (parent_type, 0);
+
   while (TRUE) {
+    GType type;
+    GTypeInfo subclass_typeinfo = {
+      sizeof (GstQTMuxClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_qt_mux_subclass_class_init,
+      NULL,
+      NULL,
+      sizeof (GstQTMux),
+      0,
+      (GInstanceInitFunc) gst_qt_mux_subclass_init,
+    };
     GstQTMuxFormatProp *prop;
     GstCaps *subtitle_caps, *caption_caps;
 
@@ -7286,13 +7280,9 @@ gst_qt_mux_register (GstPlugin * plugin)
 
     /* create the type now */
     type =
-        g_type_register_static (gst_qt_mux_get_type (), prop->type_name,
-        &typeinfo, 0);
+        g_type_register_static (parent_type, prop->type_name,
+        &subclass_typeinfo, 0);
     g_type_set_qdata (type, GST_QT_MUX_PARAMS_QDATA, (gpointer) params);
-    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
-    g_type_add_interface_static (type, GST_TYPE_TAG_XMP_WRITER,
-        &tag_xmp_writer_info);
-    g_type_add_interface_static (type, GST_TYPE_PRESET, &preset_info);
 
     if (!gst_element_register (plugin, prop->name, prop->rank, type))
       return FALSE;

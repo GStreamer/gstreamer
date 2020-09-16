@@ -204,9 +204,9 @@ typedef enum _GstQtMuxMode {
 
 /**
  * GstQTMuxFragmentMode:
- * GST_QT_MUX_FRAGMENT_DASH_OR_MSS: dash-or-mss
- * GST_QT_MUX_FRAGMENT_FIRST_MOOV_THEN_FINALISE: first-moov-then-finalise
- * GST_QT_MUX_FRAGMENT_STREAMABLE: streamable (private value)
+ * @GST_QT_MUX_FRAGMENT_DASH_OR_MSS: dash-or-mss
+ * @GST_QT_MUX_FRAGMENT_FIRST_MOOV_THEN_FINALISE: first-moov-then-finalise
+ * @GST_QT_MUX_FRAGMENT_STREAMABLE: streamable (private value)
  *
  * Since: 1.20
  */
