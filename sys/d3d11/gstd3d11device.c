@@ -361,15 +361,16 @@ gst_d3d11_device_init (GstD3D11Device * self)
 }
 
 static gboolean
-can_support_format (GstD3D11Device * self, DXGI_FORMAT format)
+can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
+    D3D11_FORMAT_SUPPORT extra_flags)
 {
   GstD3D11DevicePrivate *priv = self->priv;
   ID3D11Device *handle = priv->device;
   HRESULT hr;
   UINT supported;
-  D3D11_FORMAT_SUPPORT flags =
-      (D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_RENDER_TARGET |
-      D3D11_FORMAT_SUPPORT_SHADER_SAMPLE);
+  D3D11_FORMAT_SUPPORT flags = D3D11_FORMAT_SUPPORT_TEXTURE2D;
+
+  flags |= extra_flags;
 
   if (!gst_d3d11_is_windows_8_or_greater ()) {
     GST_WARNING_OBJECT (self, "DXGI format %d needs Windows 8 or greater",
@@ -422,17 +423,50 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
   /* YUV packed */
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_VUYA;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-  if (can_support_format (self, DXGI_FORMAT_AYUV))
+  if (can_support_format (self, DXGI_FORMAT_AYUV,
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET |
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_AYUV;
   else
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
+  /* NOTE: packted yuv 4:2:2 YUY2, UYVY, and VYUY formats are not natively
+   * supported render target view formats
+   * (i.e., cannot be output format of shader pipeline) */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_YUY2;
+  if (can_support_format (self, DXGI_FORMAT_YUY2,
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE)) {
+    priv->format_table[n_formats].resource_format[0] =
+        DXGI_FORMAT_R8G8B8A8_UNORM;
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_YUY2;
+  } else {
+    /* If DXGI_FORMAT_YUY2 format is not supported, use this format,
+     * it's analogous to YUY2 */
+    priv->format_table[n_formats].resource_format[0] =
+        DXGI_FORMAT_G8R8_G8B8_UNORM;
+  }
+  n_formats++;
+
+  /* No native DXGI format available for UYVY */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_UYVY;
+  priv->format_table[n_formats].resource_format[0] =
+      DXGI_FORMAT_R8G8_B8G8_UNORM;
+  n_formats++;
+
+  /* No native DXGI format available for VYUY */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_VYUY;
+  priv->format_table[n_formats].resource_format[0] =
+      DXGI_FORMAT_R8G8_B8G8_UNORM;
   n_formats++;
 
   /* YUV semi-planar */
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_NV12;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8G8_UNORM;
-  if (can_support_format (self, DXGI_FORMAT_NV12))
+  if (can_support_format (self, DXGI_FORMAT_NV12,
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET |
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_NV12;
   else
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
@@ -441,7 +475,9 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P010_10LE;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
-  if (can_support_format (self, DXGI_FORMAT_P010))
+  if (can_support_format (self, DXGI_FORMAT_P010,
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET |
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_P010;
   else
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
@@ -450,13 +486,15 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P016_LE;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
-  if (can_support_format (self, DXGI_FORMAT_P016))
+  if (can_support_format (self, DXGI_FORMAT_P016,
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET |
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_P016;
   else
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
   n_formats++;
 
-  /* YUV plannar */
+  /* YUV planar */
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I420;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8_UNORM;

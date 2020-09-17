@@ -114,6 +114,8 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
 
   g_assert (GstD3DCompileFunc);
 
+  GST_TRACE ("Compile code \n%s", shader_source);
+
   hr = GstD3DCompileFunc (shader_source, strlen (shader_source), NULL, NULL,
       NULL, "main", shader_target, 0, 0, &ret, &error);
 

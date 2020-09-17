@@ -114,6 +114,15 @@ static const gchar templ_RGB_to_VUYA_BODY[] =
     "  vuya.a = sample.a;\n"
     "  output.Plane_0 = vuya;\n";
 
+static const gchar templ_PACKED_YUV_to_RGB_BODY[] =
+    "  float4 sample, rgba;\n"
+    "  sample.x  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.y  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.z  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  rgba.rgb = yuv_to_rgb (sample.xyz);\n"
+    "  rgba.a = 1;\n"
+    "  output.Plane_0 = rgba;\n";
+
 /* YUV to RGB conversion */
 static const gchar templ_PLANAR_YUV_to_RGB_BODY[] =
     "  float4 sample, rgba;\n"
@@ -220,6 +229,32 @@ static const gchar templ_SEMI_PLANAR_to_VUYA_BODY[] =
     "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
     "  sample.xy = shaderTexture[1].Sample(samplerState, input.Texture).yx;\n"
     "  output.Plane_0 = float4(sample.xyz, 1.0f);\n";
+
+static const gchar templ_PACKED_YUV_to_VUYA_BODY[] =
+    "  float4 sample;\n"
+    "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.y = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  output.Plane_0 = float4(sample.xyz, 1.0f);\n";
+
+/* packed YUV to (semi) planar YUV */
+static const gchar templ_PACKED_YUV_to_LUMA_BODY[] =
+    "  float4 sample;\n"
+    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  output.Plane_0 = float4(sample.x / %d, 0.0, 0.0, 0.0);\n";
+
+static const gchar templ_PACKED_YUV_TO_PLANAR_CHROMA_BODY[] =
+    "  float4 sample;\n"
+    "  sample.y = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  output.Plane_0 = float4(sample.y / %d, 0.0, 0.0, 0.0);\n"
+    "  output.Plane_1 = float4(sample.z / %d, 0.0, 0.0, 0.0);\n";
+
+static const gchar templ_PACKED_YUV_TO_SEMI_PLANAR_CHROMA_BODY[] =
+    "  float4 sample;\n"
+    "  sample.y = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  output.Plane_0 = float4(sample.yz, 0.0, 0.0);\n";
 
 static const gchar templ_pixel_shader[] =
     /* constant buffer */
@@ -545,6 +580,52 @@ setup_convert_info_rgb_to_rgb (GstD3D11ColorConverter * self,
 }
 
 static gboolean
+get_packed_yuv_components (GstD3D11ColorConverter * self, GstVideoFormat
+    format, gchar * y, gchar * u, gchar * v)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_YUY2:
+    {
+      const GstD3D11Format *d3d11_format =
+          gst_d3d11_device_format_from_gst (self->device,
+          GST_VIDEO_FORMAT_YUY2);
+
+      g_assert (d3d11_format != NULL);
+
+      if (d3d11_format->resource_format[0] == DXGI_FORMAT_R8G8B8A8_UNORM) {
+        *y = 'x';
+        *u = 'y';
+        *v = 'a';
+      } else if (d3d11_format->resource_format[0] ==
+          DXGI_FORMAT_G8R8_G8B8_UNORM) {
+        *y = 'y';
+        *u = 'x';
+        *v = 'z';
+      } else {
+        g_assert_not_reached ();
+        return FALSE;
+      }
+      break;
+    }
+    case GST_VIDEO_FORMAT_UYVY:
+      *y = 'y';
+      *u = 'x';
+      *v = 'z';
+      break;
+    case GST_VIDEO_FORMAT_VYUY:
+      *y = 'y';
+      *u = 'z';
+      *v = 'x';
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 setup_convert_info_yuv_to_rgb (GstD3D11ColorConverter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
@@ -556,6 +637,20 @@ setup_convert_info_yuv_to_rgb (GstD3D11ColorConverter * self,
     case GST_VIDEO_FORMAT_VUYA:
       info->ps_body[0] = g_strdup_printf (templ_VUYA_to_RGB_BODY);
       break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VYUY:
+    {
+      gchar y, u, v;
+      if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
+              &y, &u, &v)) {
+        return FALSE;
+      }
+
+      info->ps_body[0] =
+          g_strdup_printf (templ_PACKED_YUV_to_RGB_BODY, y, u, v);
+      break;
+    }
     case GST_VIDEO_FORMAT_I420:
       info->ps_body[0] =
           g_strdup_printf (templ_PLANAR_YUV_to_RGB_BODY, 1, 1, 1);
@@ -762,6 +857,25 @@ setup_convert_info_planar_to_vuya (GstD3D11ColorConverter * self,
 }
 
 static gboolean
+setup_convert_info_packed_yuv_to_vuya (GstD3D11ColorConverter * self,
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
+{
+  ConvertInfo *info = &self->convert_info;
+  gchar y, u, v;
+
+  info->templ = &templ_REORDER;
+
+  if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
+          &y, &u, &v)) {
+    return FALSE;
+  }
+
+  info->ps_body[0] = g_strdup_printf (templ_PACKED_YUV_to_VUYA_BODY, y, u, v);
+
+  return TRUE;
+}
+
+static gboolean
 setup_convert_info_semi_planar_to_vuya (GstD3D11ColorConverter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
@@ -775,19 +889,71 @@ setup_convert_info_semi_planar_to_vuya (GstD3D11ColorConverter * self,
 }
 
 static gboolean
+setup_convert_info_packed_yuv_to_planar (GstD3D11ColorConverter * self,
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
+{
+  ConvertInfo *info = &self->convert_info;
+  gint div = 1;
+  gchar y, u, v;
+
+  info->templ = &templ_REORDER;
+
+  if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420_10LE)
+    div = 64;
+
+  if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
+          &y, &u, &v)) {
+    return FALSE;
+  }
+
+  info->ps_body[0] = g_strdup_printf (templ_PACKED_YUV_to_LUMA_BODY, y, div);
+  info->ps_body[1] =
+      g_strdup_printf (templ_PACKED_YUV_TO_PLANAR_CHROMA_BODY, u, v, div, div);
+
+  return TRUE;
+}
+
+static gboolean
+setup_convert_info_packed_yuv_to_semi_planar (GstD3D11ColorConverter * self,
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
+{
+  ConvertInfo *info = &self->convert_info;
+  gint div = 1;
+  gchar y, u, v;
+
+  info->templ = &templ_REORDER;
+
+  if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
+          &y, &u, &v)) {
+    return FALSE;
+  }
+
+  info->ps_body[0] = g_strdup_printf (templ_PACKED_YUV_to_LUMA_BODY, y, div);
+  info->ps_body[1] =
+      g_strdup_printf (templ_PACKED_YUV_TO_SEMI_PLANAR_CHROMA_BODY, u, v);
+
+  return TRUE;
+}
+
+static gboolean
 setup_convert_info_yuv_to_yuv (GstD3D11ColorConverter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
   gboolean in_planar, out_planar;
   gboolean in_vuya, out_vuya;
+  gboolean in_packed;
 
   in_vuya = GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_VUYA;
   out_vuya = GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_VUYA;
   in_planar = (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_I420 ||
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_I420_10LE);
+  in_packed = (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2 ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_UYVY ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_VYUY);
   out_planar = (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420 ||
       GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420_10LE);
 
+  /* From/to VUYA */
   if (in_vuya && out_vuya) {
     return setup_convert_info_vuya_to_vuya (self, in_info, out_info);
   } else if (in_vuya) {
@@ -798,6 +964,8 @@ setup_convert_info_yuv_to_yuv (GstD3D11ColorConverter * self,
   } else if (out_vuya) {
     if (in_planar)
       return setup_convert_info_planar_to_vuya (self, in_info, out_info);
+    else if (in_packed)
+      return setup_convert_info_packed_yuv_to_vuya (self, in_info, out_info);
     else
       return setup_convert_info_semi_planar_to_vuya (self, in_info, out_info);
   }
@@ -807,6 +975,12 @@ setup_convert_info_yuv_to_yuv (GstD3D11ColorConverter * self,
       return setup_convert_info_planar_to_planar (self, in_info, out_info);
     else
       return setup_convert_info_planar_to_semi_planar (self, in_info, out_info);
+  } else if (in_packed) {
+    if (out_planar)
+      return setup_convert_info_packed_yuv_to_planar (self, in_info, out_info);
+    else
+      return setup_convert_info_packed_yuv_to_semi_planar (self, in_info,
+          out_info);
   } else {
     if (out_planar)
       return setup_convert_info_semi_planar_to_planar (self, in_info, out_info);

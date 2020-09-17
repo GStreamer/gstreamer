@@ -53,7 +53,7 @@ static TestFrame test_rgba_reorder[] = {
 GST_START_TEST (test_d3d11_color_convert_rgba_reorder)
 {
   GstHarness *h =
-      gst_harness_new_parse ("d3d11upload ! d3d11colorconvert ! d3d11download");
+      gst_harness_new_parse ("d3d11upload ! d3d11convert ! d3d11download");
   gint i, j, k;
 
   for (i = 0; i < G_N_ELEMENTS (test_rgba_reorder); i++) {
@@ -139,7 +139,7 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
   gchar *pipeline_str =
       g_strdup_printf ("videotestsrc num-buffers=1 is-live=true ! "
       "video/x-raw,format=%s,framerate=3/1 ! d3d11upload ! "
-      "d3d11colorconvert ! d3d11download ! video/x-raw,format=%s ! "
+      "d3d11convert ! d3d11download ! video/x-raw,format=%s ! "
       "videoconvert ! d3d11videosink", in_format, out_format);
   GstElement *pipeline;
 
@@ -249,6 +249,50 @@ GST_START_TEST (test_d3d11_color_convert_rgb_rgb)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_d3d11_color_convert_packed_yuv_yuv)
+{
+  const gchar *in_format_list[] = {
+    "YUY2", "UYVY", "VYUY",
+  };
+  const gchar *out_format_list[] = {
+    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
+  };
+
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
+    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
+      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
+          out_format_list[j]);
+      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+    }
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_d3d11_color_convert_packed_yuv_rgb)
+{
+  const gchar *in_format_list[] = {
+    "YUY2", "UYVY", "VYUY",
+  };
+  const gchar *out_format_list[] = {
+    "BGRA", "RGBA", "RGB10A2_LE",
+  };
+
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
+    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
+      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
+          out_format_list[j]);
+      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+    }
+  }
+}
+
+GST_END_TEST;
 #endif /* RUN_VISUAL_TEST */
 
 static Suite *
@@ -264,6 +308,8 @@ d3d11colorconvert_suite (void)
   tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_rgb);
   tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_yuv);
   tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_rgb);
+  tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_yuv);
+  tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_rgb);
 #endif
 
   return s;

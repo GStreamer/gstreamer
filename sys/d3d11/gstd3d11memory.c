@@ -547,10 +547,13 @@ create_shader_resource_views (GstD3D11Memory * mem)
     case DXGI_FORMAT_R8G8_UNORM:
     case DXGI_FORMAT_R16_UNORM:
     case DXGI_FORMAT_R16G16_UNORM:
+    case DXGI_FORMAT_G8R8_G8B8_UNORM:
+    case DXGI_FORMAT_R8G8_B8G8_UNORM:
       num_views = 1;
       formats[0] = mem->desc.Format;
       break;
     case DXGI_FORMAT_AYUV:
+    case DXGI_FORMAT_YUY2:
       num_views = 1;
       formats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
       break;
