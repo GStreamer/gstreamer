@@ -107,7 +107,10 @@ cerbero_deps_script() {
         rsync -aH "${CERBERO_OVERRIDDEN_DIST_DIR}/" "${CERBERO_HOME}/dist/${ARCH}"
     fi
 
-    if [[ -n ${CERBERO_PRIVATE_SSH_KEY} ]]; then
+    # Check that the env var is set. Don't expand this protected variable by
+    # doing something silly like [[ -n ${CERBERO_...} ]] because it will get
+    # printed in the CI logs due to set -x
+    if env | grep -q -e CERBERO_PRIVATE_SSH_KEY; then
         $CERBERO $CERBERO_ARGS gen-cache --branch "${GST_UPSTREAM_BRANCH}"
         $CERBERO $CERBERO_ARGS upload-cache --branch "${GST_UPSTREAM_BRANCH}"
     fi
