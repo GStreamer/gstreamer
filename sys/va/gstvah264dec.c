@@ -834,9 +834,13 @@ gst_va_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
     }
     case GST_QUERY_CAPS:{
       GstCaps *caps = NULL, *tmp, *filter = NULL;
+      gboolean fixed_caps;
 
       gst_query_parse_caps (query, &filter);
-      if (self->decoder)
+
+      fixed_caps = GST_PAD_IS_FIXED_CAPS (GST_VIDEO_DECODER_SRC_PAD (decoder));
+
+      if (!fixed_caps && self->decoder)
         caps = gst_va_decoder_get_srcpad_caps (self->decoder);
       if (caps) {
         if (filter) {
