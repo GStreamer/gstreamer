@@ -213,7 +213,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
     goto done;
   }
 
-  if (!gst_value_deserialize (&v, value))
+  if (!gst_value_deserialize_with_pspec (&v, value, pspec))
     return;
 
 done:

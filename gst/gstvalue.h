@@ -472,6 +472,22 @@ typedef gchar *  (* GstValueSerializeFunc)   (const GValue *value1);
 typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
                                               const gchar  *s);
 
+/**
+ * GstValueDeserializeWithPSpecFunc:
+ * @dest: a #GValue
+ * @s: a string
+ * @pspec: a #GParamSpec describing the expected value
+ *
+ * Used by gst_value_deserialize_with_pspec() to parse a non-binary form into the #GValue.
+ *
+ * Returns: %TRUE for success
+ * Since: 1.20
+ */
+typedef gboolean (* GstValueDeserializeWithPSpecFunc) (GValue       *dest,
+                                                       const gchar  *s,
+                                                       GParamSpec   *pspec);
+
+
 typedef struct _GstValueTable GstValueTable;
 /**
  * GstValueTable:
@@ -479,6 +495,7 @@ typedef struct _GstValueTable GstValueTable;
  * @compare: a #GstValueCompareFunc
  * @serialize: a #GstValueSerializeFunc
  * @deserialize: a #GstValueDeserializeFunc
+ * @deserialize_with_pspec: a #GstValueDeserializeWithPSpecFunc
  *
  * VTable for the #GValue @type.
  */
@@ -488,8 +505,17 @@ struct _GstValueTable {
   GstValueSerializeFunc serialize;
   GstValueDeserializeFunc deserialize;
 
+  /**
+   * GstValueTable.deserialize_with_pspec:
+   *
+   * a #GstValueDeserializeWithPSpecFunc
+   *
+   * Since: 1.20
+   */
+  GstValueDeserializeWithPSpecFunc deserialize_with_pspec;
+
   /*< private >*/
-  gpointer _gst_reserved [GST_PADDING];
+  gpointer _gst_reserved [GST_PADDING - 1];
 };
 
 GST_API
@@ -537,6 +563,11 @@ gchar *         gst_value_serialize             (const GValue          *value) G
 GST_API
 gboolean        gst_value_deserialize           (GValue                *dest,
                                                  const gchar           *src);
+
+GST_API
+gboolean        gst_value_deserialize_with_pspec (GValue               *dest,
+                                                 const gchar           *src,
+                                                 GParamSpec            *pspec);
 
 /* list */
 

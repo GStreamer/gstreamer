@@ -3508,6 +3508,81 @@ GST_START_TEST (test_deserialize_array)
 
 GST_END_TEST;
 
+#define TEST_FLAGS_TYPE (test_flags_get_type())
+static GType
+test_flags_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {1, "One", "one"},
+    {1 << 1, "Two", "two"},
+    {1 << 3, "Eight", "eight"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("TestFlags", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+#define _RESULT(i) result_##i
+#define RESULT(i) _RESULT(i)
+
+GST_START_TEST (test_deserialize_with_pspec)
+{
+  GValue value = { 0 };
+  GParamSpec *pspec;
+  const gchar *strings[] = {
+    "< one, 0>",
+    "< one+eight, two >",
+    "< 9, 0>",
+  };
+  int i;
+
+  gint results[3][2] = {
+    {1, 0},
+    {9, 2},
+    {9, 0}
+  };
+
+  pspec = gst_param_spec_array ("flags-array",
+      "Flags Array", "An array of flags",
+      g_param_spec_flags ("flags", "Flags", "Flags", TEST_FLAGS_TYPE, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    int j;
+    gchar *str = g_strdup (strings[i]);
+    g_value_init (&value, GST_TYPE_ARRAY);
+
+    fail_unless (gst_value_deserialize_with_pspec (&value, str, pspec),
+        "could not deserialize %s (%d)", str, i);
+
+    fail_unless (gst_value_array_get_size (&value) ==
+        G_N_ELEMENTS (results[i]));
+
+    for (j = 0; j < G_N_ELEMENTS (results[i]); j++) {
+      const GValue *elem_value = gst_value_array_get_value (&value, j);
+      fail_unless (G_VALUE_TYPE (elem_value) == TEST_FLAGS_TYPE);
+      fail_unless_equals_int (g_value_get_flags (elem_value), results[i][j]);
+    }
+
+    g_value_unset (&value);
+    g_free (str);
+  }
+
+  g_param_spec_unref (pspec);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -3562,6 +3637,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_transform_array);
   tcase_add_test (tc_chain, test_transform_list);
   tcase_add_test (tc_chain, test_serialize_null_aray);
+  tcase_add_test (tc_chain, test_deserialize_with_pspec);
 
   return s;
 }

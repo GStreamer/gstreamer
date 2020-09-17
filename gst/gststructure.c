@@ -2204,7 +2204,7 @@ gst_structure_parse_field (gchar * str,
   *name_end = c;
 
   if (G_UNLIKELY (!_priv_gst_value_parse_value (s, &s, &field->value,
-              G_TYPE_INVALID))) {
+              G_TYPE_INVALID, NULL))) {
     GST_WARNING ("failed to parse value %s", str);
     return FALSE;
   }

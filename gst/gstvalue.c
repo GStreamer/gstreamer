@@ -98,9 +98,9 @@ static void gst_value_register_subtract_func (GType minuend_type,
     GType subtrahend_type, GstValueSubtractFunc func);
 
 static gboolean _priv_gst_value_parse_list (gchar * s, gchar ** after,
-    GValue * value, GType type);
+    GValue * value, GType type, GParamSpec * pspec);
 static gboolean _priv_gst_value_parse_array (gchar * s, gchar ** after,
-    GValue * value, GType type);
+    GValue * value, GType type, GParamSpec * pspec);
 
 typedef struct _GstValueUnionInfo GstValueUnionInfo;
 struct _GstValueUnionInfo
@@ -1244,10 +1244,11 @@ gst_value_serialize_value_list (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_value_list (GValue * dest, const gchar * s)
+gst_value_deserialize_value_list (GValue * dest, const gchar * s,
+    GParamSpec * pspec)
 {
   gchar *s2 = (gchar *) s;
-  return _priv_gst_value_parse_list (s2, &s2, dest, G_TYPE_INVALID);
+  return _priv_gst_value_parse_list (s2, &s2, dest, G_TYPE_INVALID, pspec);
 }
 
 static gchar *
@@ -1257,10 +1258,11 @@ gst_value_serialize_value_array (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_value_array (GValue * dest, const gchar * s)
+gst_value_deserialize_value_array (GValue * dest, const gchar * s,
+    GParamSpec * pspec)
 {
   gchar *s2 = (gchar *) s;
-  return _priv_gst_value_parse_array (s2, &s2, dest, G_TYPE_INVALID);
+  return _priv_gst_value_parse_array (s2, &s2, dest, G_TYPE_INVALID, pspec);
 }
 
 static gchar *
@@ -2469,7 +2471,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
     return FALSE;
   s++;
 
-  ret = _priv_gst_value_parse_value (s, &s, &value1, type);
+  ret = _priv_gst_value_parse_value (s, &s, &value1, type, NULL);
   if (!ret)
     return FALSE;
 
@@ -2483,7 +2485,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
   while (g_ascii_isspace (*s))
     s++;
 
-  ret = _priv_gst_value_parse_value (s, &s, &value2, type);
+  ret = _priv_gst_value_parse_value (s, &s, &value2, type, NULL);
   if (!ret)
     return FALSE;
 
@@ -2499,7 +2501,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
       while (g_ascii_isspace (*s))
         s++;
 
-      ret = _priv_gst_value_parse_value (s, &s, &value3, type);
+      ret = _priv_gst_value_parse_value (s, &s, &value3, type, NULL);
       if (!ret)
         return FALSE;
 
@@ -2562,11 +2564,15 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
 
 static gboolean
 _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
-    GType type, char begin, char end)
+    GType type, char begin, char end, GParamSpec * pspec)
 {
   GValue list_value = { 0 };
   gboolean ret;
   GstValueList *vlist = VALUE_LIST_ARRAY (value);
+  GParamSpec *element_spec = NULL;
+
+  if (pspec)
+    element_spec = GST_PARAM_SPEC_ARRAY_LIST (pspec)->element_spec;
 
   if (*s != begin)
     return FALSE;
@@ -2588,7 +2594,8 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
     }
 
     memset (&list_value, 0, sizeof (list_value));
-    ret = _priv_gst_value_parse_value (s, &s, &list_value, type);
+
+    ret = _priv_gst_value_parse_value (s, &s, &list_value, type, element_spec);
     if (!ret)
       return FALSE;
 
@@ -2609,16 +2616,18 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
 
 static gboolean
 _priv_gst_value_parse_list (gchar * s, gchar ** after, GValue * value,
-    GType type)
+    GType type, GParamSpec * pspec)
 {
-  return _priv_gst_value_parse_any_list (s, after, value, type, '{', '}');
+  return _priv_gst_value_parse_any_list (s, after, value, type, '{', '}',
+      pspec);
 }
 
 static gboolean
 _priv_gst_value_parse_array (gchar * s, gchar ** after, GValue * value,
-    GType type)
+    GType type, GParamSpec * pspec)
 {
-  return _priv_gst_value_parse_any_list (s, after, value, type, '<', '>');
+  return _priv_gst_value_parse_any_list (s, after, value, type, '<', '>',
+      pspec);
 }
 
 gboolean
@@ -2637,7 +2646,7 @@ _priv_gst_value_parse_simple_string (gchar * str, gchar ** end)
 
 gboolean
 _priv_gst_value_parse_value (gchar * str,
-    gchar ** after, GValue * value, GType default_type)
+    gchar ** after, GValue * value, GType default_type, GParamSpec * pspec)
 {
   gchar *type_name;
   gchar *type_end;
@@ -2654,7 +2663,10 @@ _priv_gst_value_parse_value (gchar * str,
 
   /* check if there's a (type_name) 'cast' */
   type_name = NULL;
-  if (*s == '(') {
+
+  if (pspec) {
+    type = G_PARAM_SPEC_VALUE_TYPE (pspec);
+  } else if (*s == '(') {
     s++;
     while (g_ascii_isspace (*s))
       s++;
@@ -2688,10 +2700,10 @@ _priv_gst_value_parse_value (gchar * str,
     ret = _priv_gst_value_parse_range (s, &s, value, type);
   } else if (*s == '{') {
     g_value_init (value, GST_TYPE_LIST);
-    ret = _priv_gst_value_parse_list (s, &s, value, type);
+    ret = _priv_gst_value_parse_list (s, &s, value, type, pspec);
   } else if (*s == '<') {
     g_value_init (value, GST_TYPE_ARRAY);
-    ret = _priv_gst_value_parse_array (s, &s, value, type);
+    ret = _priv_gst_value_parse_array (s, &s, value, type, pspec);
   } else {
     value_s = s;
 
@@ -2725,7 +2737,7 @@ _priv_gst_value_parse_value (gchar * str,
       c = *value_end;
       *value_end = '\0';
 
-      ret = gst_value_deserialize (value, value_s);
+      ret = gst_value_deserialize_with_pspec (value, value_s, pspec);
       if (G_UNLIKELY (!ret))
         g_value_unset (value);
     }
@@ -6439,19 +6451,80 @@ gst_value_deserialize (GValue * dest, const gchar * src)
   type = G_VALUE_TYPE (dest);
 
   best = gst_value_hash_lookup_type (type);
-  if (G_UNLIKELY (!best || !best->deserialize)) {
+  if (G_UNLIKELY (!best || (!best->deserialize
+              && !best->deserialize_with_pspec))) {
     len = gst_value_table->len;
     best = NULL;
     for (i = 0; i < len; i++) {
       table = &g_array_index (gst_value_table, GstValueTable, i);
-      if (table->deserialize && g_type_is_a (type, table->type)) {
+      if ((table->deserialize || table->deserialize_with_pspec) &&
+          g_type_is_a (type, table->type)) {
         if (!best || g_type_is_a (table->type, best->type))
           best = table;
       }
     }
   }
-  if (G_LIKELY (best))
-    return best->deserialize (dest, src);
+  if (G_LIKELY (best)) {
+    if (best->deserialize_with_pspec)
+      return best->deserialize_with_pspec (dest, src, NULL);
+    else
+      return best->deserialize (dest, src);
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_value_deserialize_with_pspec:
+ * @dest: (out caller-allocates): #GValue to fill with contents of
+ *     deserialization
+ * @src: string to deserialize
+ * @pspec: (nullable): the #GParamSpec describing the expected value
+ *
+ * Tries to deserialize a string into the type specified by the given GValue.
+ * @pspec may be used to guide the deserializing of nested members.
+ * If the operation succeeds, %TRUE is returned, %FALSE otherwise.
+ *
+ * Returns: %TRUE on success
+ * Since: 1.20
+ */
+gboolean
+gst_value_deserialize_with_pspec (GValue * dest, const gchar * src,
+    GParamSpec * pspec)
+{
+  GstValueTable *table, *best;
+  guint i, len;
+  GType type;
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (G_IS_VALUE (dest), FALSE);
+
+  if (pspec)
+    g_return_val_if_fail (G_VALUE_TYPE (dest) ==
+        G_PARAM_SPEC_VALUE_TYPE (pspec), FALSE);
+
+  type = G_VALUE_TYPE (dest);
+
+  best = gst_value_hash_lookup_type (type);
+  if (G_UNLIKELY (!best || (!best->deserialize
+              && !best->deserialize_with_pspec))) {
+    len = gst_value_table->len;
+    best = NULL;
+    for (i = 0; i < len; i++) {
+      table = &g_array_index (gst_value_table, GstValueTable, i);
+      if ((table->deserialize || table->deserialize_with_pspec) &&
+          g_type_is_a (type, table->type)) {
+        if (!best || g_type_is_a (table->type, best->type))
+          best = table;
+      }
+    }
+  }
+  if (G_LIKELY (best)) {
+    if (best->deserialize_with_pspec)
+      return best->deserialize_with_pspec (dest, src, pspec);
+    else
+      return best->deserialize (dest, src);
+  }
 
   return FALSE;
 }
@@ -7750,7 +7823,8 @@ gst_g_thread_get_type (void)
   return G_TYPE_THREAD;
 }
 
-#define SERIAL_VTABLE(t,c,s,d) { t, c, s, d }
+#define SERIAL_VTABLE(t,c,s,d) { t, c, s, d, NULL }
+#define SERIAL_VTABLE_PSPEC(t,c,s,d) { t, c, s, NULL, d }
 
 #define REGISTER_SERIALIZATION_CONST(_gtype, _type)                     \
 G_STMT_START {                                                          \
@@ -7764,6 +7838,15 @@ G_STMT_START {                                                          \
 G_STMT_START {                                                          \
   static GstValueTable gst_value =                                      \
     SERIAL_VTABLE (0, gst_value_compare_ ## _type,                      \
+    gst_value_serialize_ ## _type, gst_value_deserialize_ ## _type);    \
+  gst_value.type = _gtype;                                              \
+  gst_value_register (&gst_value);                                      \
+} G_STMT_END
+
+#define REGISTER_SERIALIZATION_WITH_PSPEC(_gtype, _type)                \
+G_STMT_START {                                                          \
+  static GstValueTable gst_value =                                      \
+    SERIAL_VTABLE_PSPEC (0, gst_value_compare_ ## _type,                \
     gst_value_serialize_ ## _type, gst_value_deserialize_ ## _type);    \
   gst_value.type = _gtype;                                              \
   gst_value_register (&gst_value);                                      \
@@ -7813,8 +7896,6 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION (gst_int64_range_get_type (), int64_range);
   REGISTER_SERIALIZATION (gst_double_range_get_type (), double_range);
   REGISTER_SERIALIZATION (gst_fraction_range_get_type (), fraction_range);
-  REGISTER_SERIALIZATION (gst_value_list_get_type (), value_list);
-  REGISTER_SERIALIZATION (gst_value_array_get_type (), value_array);
   REGISTER_SERIALIZATION (g_value_array_get_type (), g_value_array);
   REGISTER_SERIALIZATION (gst_buffer_get_type (), buffer);
   REGISTER_SERIALIZATION (gst_sample_get_type (), sample);
@@ -7856,6 +7937,9 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION_CONST (G_TYPE_UCHAR, uchar);
 
   REGISTER_SERIALIZATION (G_TYPE_GTYPE, gtype);
+
+  REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_list_get_type (), value_list);
+  REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_array_get_type (), value_array);
 
   g_value_register_transform_func (GST_TYPE_INT_RANGE, G_TYPE_STRING,
       gst_value_transform_int_range_string);

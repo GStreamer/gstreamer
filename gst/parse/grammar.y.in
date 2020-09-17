@@ -328,7 +328,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "parsing delayed property %s as a %s from %s",
       pspec->name, g_type_name (value_type), set->value_str);
     g_value_init (&v, value_type);
-    if (gst_value_deserialize (&v, set->value_str))
+    if (gst_value_deserialize_with_pspec (&v, set->value_str, pspec))
       got_value = TRUE;
     else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
        GstElement *bin;
@@ -424,7 +424,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
         pspec->name, g_type_name (value_type));
 
     g_value_init (&v, value_type);
-    if (gst_value_deserialize (&v, pos))
+    if (gst_value_deserialize_with_pspec (&v, pos, pspec))
       got_value = TRUE;
     else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
        GstElement *bin;
