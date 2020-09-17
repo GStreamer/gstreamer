@@ -2186,8 +2186,10 @@ need_new_fragment (GstSplitMuxSink * splitmux,
       && splitmux->muxer_has_reserved_props;
   GST_OBJECT_UNLOCK (splitmux);
 
-  /* Have we muxed anything into the new file at all? */
-  if (splitmux->fragment_total_bytes <= 0)
+  /* Have we muxed at least one thing from the reference
+   * stream into the file? If not, no other streams can have
+   * either */
+  if (splitmux->fragment_reference_bytes <= 0)
     return FALSE;
 
   /* User told us to split now */
@@ -2361,6 +2363,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
     new_out_ts = splitmux->reference_ctx->in_running_time;
     splitmux->fragment_start_time = splitmux->gop_start_time;
     splitmux->fragment_total_bytes = 0;
+    splitmux->fragment_reference_bytes = 0;
 
     if (splitmux->tc_interval) {
       video_time_code_replace (&splitmux->fragment_start_tc,
@@ -2800,6 +2803,9 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   /* Update total input byte counter for overflow detect */
   splitmux->gop_total_bytes += buf_info->buf_size;
+  if (ctx->is_reference) {
+    splitmux->fragment_reference_bytes += buf_info->buf_size;
+  }
 
   /* Now add this buffer to the queue just before returning */
   g_queue_push_head (&ctx->queued_bufs, buf_info);
@@ -3494,6 +3500,7 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
       GST_CLOCK_STIME_NONE;
   splitmux->max_out_running_time = 0;
   splitmux->fragment_total_bytes = 0;
+  splitmux->fragment_reference_bytes = 0;
   splitmux->gop_total_bytes = 0;
   splitmux->muxed_out_bytes = 0;
   splitmux->ready_for_output = FALSE;
