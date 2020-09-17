@@ -1569,6 +1569,7 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstVideoInfo *vinfo;
   GstVideoCropMeta *crop;
   GstVideoRectangle src = { 0, };
+  gint video_width, video_height;
   GstVideoRectangle dst = { 0, };
   GstVideoRectangle result;
   GstFlowReturn res;
@@ -1580,13 +1581,13 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (buf) {
     buffer = gst_kms_sink_get_input_buffer (self, buf);
     vinfo = &self->vinfo;
-    src.w = GST_VIDEO_SINK_WIDTH (self);
-    src.h = GST_VIDEO_SINK_HEIGHT (self);
+    video_width = src.w = GST_VIDEO_SINK_WIDTH (self);
+    video_height = src.h = GST_VIDEO_SINK_HEIGHT (self);
   } else if (self->last_buffer) {
     buffer = gst_buffer_ref (self->last_buffer);
     vinfo = &self->last_vinfo;
-    src.w = self->last_width;
-    src.h = self->last_height;
+    video_width = src.w = self->last_width;
+    video_height = src.h = self->last_height;
   }
 
   /* Make sure buf is not used accidentally */
@@ -1633,8 +1634,8 @@ retry_set_plane:
     src.w = crop->width;
     src.h = crop->height;
   } else {
-    src.w = GST_VIDEO_INFO_WIDTH (vinfo);
-    src.h = GST_VIDEO_INFO_HEIGHT (vinfo);
+    src.w = video_width;
+    src.h = video_height;
   }
 
   /* handle out of screen case */
