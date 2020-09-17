@@ -28,7 +28,7 @@ GST_START_TEST (test_uri_to_properties)
 
   /* Sets properties to non-default values (make sure this stays in sync) */
   g_object_set (rtpsrc, "uri", "rtp://1.230.1.2:1234?"
-      "latency=300" "&ttl=8" "&ttl-mc=9", NULL);
+      "latency=300" "&ttl=8" "&ttl-mc=9" "&multicast-iface=dummy", NULL);
 
   g_object_get (rtpsrc,
       "latency", &latency, "ttl-mc", &ttl_mc, "ttl", &ttl, NULL);

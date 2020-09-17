@@ -703,7 +703,6 @@ gst_rtp_src_start (GstRtpSrc * self)
 
     /* set multicast-iface on the udpsrc and udpsink elements */
     g_object_set (self->rtcp_src, "multicast-iface", self->multi_iface, NULL);
-    g_object_set (self->rtcp_sink, "multicast-iface", self->multi_iface, NULL);
     g_object_set (self->rtp_src, "multicast-iface", self->multi_iface, NULL);
   } else {
     /* In unicast, send RTCP to the detected sender address */
