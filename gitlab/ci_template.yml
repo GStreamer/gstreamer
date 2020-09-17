@@ -1219,3 +1219,5 @@ build cerbero msvc x86_64:
     - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_script"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+      when: 'manual'
+      allow_failure: true
