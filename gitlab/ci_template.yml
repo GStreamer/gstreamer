@@ -47,8 +47,8 @@ variables:
 
   WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v12-master'
 
-  # FIXME: reset back to gstreamer/master after merging
-  CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/nirbheek/gst-ci/raw/fix-msvc-deps-job/gitlab/cerbero_setup.sh"
+  # Can't use $CI_* variables since we use this template in all repos, not just gst-ci
+  CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
