@@ -1214,6 +1214,10 @@ cerbero deps msvc x86_64:
   extends: ['.cerbero deps', '.cerbero windows native']
   script:
     - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_deps_script"
+  rules:
+    - if: '$CI_PROJECT_NAME == "cerbero"'
+      when: 'manual'
+      allow_failure: true
 
 build cerbero msvc x86_64:
   extends: ['.cerbero', '.cerbero windows native']
