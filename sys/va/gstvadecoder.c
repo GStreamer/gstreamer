@@ -582,7 +582,7 @@ gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
   status = vaBeginPicture (dpy, self->context, pic->surface);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
+    GST_WARNING_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
     goto fail_end_pic;
   }
 
@@ -591,7 +591,7 @@ gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
       (VABufferID *) pic->buffers->data, pic->buffers->len);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+    GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
     goto fail_end_pic;
   }
 
@@ -600,7 +600,7 @@ gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
       (VABufferID *) pic->slices->data, pic->slices->len);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+    GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
     goto fail_end_pic;
   }
 
@@ -608,7 +608,7 @@ gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
   status = vaEndPicture (dpy, self->context);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
+    GST_WARNING_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
     goto bail;
   }
 
@@ -624,8 +624,6 @@ fail_end_pic:
     gst_va_display_lock (self->display);
     status = vaEndPicture (dpy, self->context);
     gst_va_display_unlock (self->display);
-    if (status != VA_STATUS_SUCCESS)
-      GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
     goto bail;
   }
 }
