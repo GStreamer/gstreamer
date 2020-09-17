@@ -47,7 +47,8 @@ variables:
 
   WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v12-master'
 
-  CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
+  # FIXME: reset back to gstreamer/master after merging
+  CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/nirbheek/gst-ci/raw/fix-msvc-deps-job/gitlab/cerbero_setup.sh"
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
@@ -682,6 +683,7 @@ valgrind ges:
     # location where cerbero is cached on the host
     CERBERO_HOST_DIR: "/cerbero/"
   before_script:
+    - echo "Fetching ${CERBERO_SCRIPT_URL}"
     - curl -L -o cerbero_script.sh "${CERBERO_SCRIPT_URL}"
     - chmod +x cerbero_script.sh
     - ./cerbero_script.sh cerbero_before_script
@@ -1204,7 +1206,7 @@ build gst-omx tizonia fedora x86_64:
   before_script:
     - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\', '/')
     - $env:CERBERO_SCRIPTS_PATH = "$env:CI_PROJECT_DIR/cerbero_setup.sh"
-
+    - echo "Fetching $env:CERBERO_SCRIPT_URL"
     - Invoke-WebRequest -Uri $env:CERBERO_SCRIPT_URL -OutFile $env:CERBERO_SCRIPTS_PATH
     - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_before_script"
 

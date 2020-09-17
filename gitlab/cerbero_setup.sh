@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -ex
 
 show_ccache_sum() {
@@ -32,8 +34,12 @@ cerbero_before_script() {
     pwd
     mkdir -p "../../gstreamer"
     ln -sf "$(pwd)" "../../gstreamer/cerbero"
-    mkdir -p "../../${CI_PROJECT_NAMESPACE}"
-    ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
+    # Don't try to symlink twice because on MSYS `ln` does a `cp` since it
+    # doesn't support the new NTFS symlink feature.
+    if [[ ${CI_PROJECT_NAMESPACE} != gstreamer ]]; then
+        mkdir -p "../../${CI_PROJECT_NAMESPACE}"
+        ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
+    fi
 
     # Make sure there isn't a pre-existing config hanging around
     rm -v -f localconf.cbc
