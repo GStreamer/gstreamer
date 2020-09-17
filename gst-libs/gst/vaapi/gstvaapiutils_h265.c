@@ -146,7 +146,7 @@ gst_vaapi_utils_h265_get_profile (GstH265SPS * sps)
 
   g_return_val_if_fail (sps != NULL, GST_VAAPI_PROFILE_UNKNOWN);
 
-  profile = gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
+  profile = gst_h265_get_profile_from_sps (sps);
   switch (profile) {
     case GST_H265_PROFILE_MAIN:
       /* Main Intra, recognize it as MAIN */
