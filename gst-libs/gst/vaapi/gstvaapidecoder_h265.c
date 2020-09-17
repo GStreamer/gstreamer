@@ -2121,11 +2121,15 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
     num_comps = sps->chroma_format_idc ? 3 : 1;
 
     if (pps_scc->pps_palette_predictor_initializers_present_flag) {
+      pic_scc_param->predictor_palette_size =
+          pps_scc->pps_num_palette_predictor_initializer;
       for (n = 0; n < num_comps; n++)
         for (i = 0; i < pps_scc->pps_num_palette_predictor_initializer; i++)
           pic_scc_param->predictor_palette_entries[n][i] =
               (uint16_t) pps_scc->pps_palette_predictor_initializer[n][i];
     } else if (sps_scc->sps_palette_predictor_initializers_present_flag) {
+      pic_scc_param->predictor_palette_size =
+          sps_scc->sps_num_palette_predictor_initializer_minus1 + 1;
       for (n = 0; n < num_comps; n++)
         for (i = 0;
             i < sps_scc->sps_num_palette_predictor_initializer_minus1 + 1; i++)
