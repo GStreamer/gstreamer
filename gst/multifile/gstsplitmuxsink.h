@@ -144,6 +144,10 @@ struct _GstSplitMuxSink
   /* Number of bytes sent to the
    * current fragment */
   guint64 fragment_total_bytes;
+  /* Number of bytes for the reference
+   * stream in this fragment */
+  guint64 fragment_reference_bytes;
+
   /* Number of bytes we've collected into
    * the GOP that's being collected */
   guint64 gop_total_bytes;
