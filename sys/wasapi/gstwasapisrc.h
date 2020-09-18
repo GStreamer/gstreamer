@@ -61,6 +61,13 @@ struct _GstWasapiSrc
    * translate it to the native GStreamer channel layout. */
   GstAudioChannelPosition *positions;
 
+  /* Used for loopback use case in order to keep feeding silence into client */
+  IAudioClient *loopback_client;
+  IAudioRenderClient *loopback_render_client;
+  GThread *loopback_thread;
+  HANDLE loopback_event_handle;
+  HANDLE loopback_cancellable;
+
   /* properties */
   gint role;
   gint sharemode;
