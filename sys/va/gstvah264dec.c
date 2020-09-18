@@ -186,14 +186,6 @@ gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
   if (self->copy_frames)
     _copy_output_buffer (self, frame);
 
-  GST_BUFFER_PTS (frame->output_buffer) = GST_BUFFER_PTS (frame->input_buffer);
-  GST_BUFFER_DTS (frame->output_buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (frame->output_buffer) =
-      GST_BUFFER_DURATION (frame->input_buffer);
-
-  GST_LOG_OBJECT (self, "Finish frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_PTS (frame->output_buffer)));
-
   gst_h264_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
