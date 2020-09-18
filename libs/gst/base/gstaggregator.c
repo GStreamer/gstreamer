@@ -1837,7 +1837,9 @@ gst_aggregator_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* Wake up any waiting as now we have a clock and can do
        * proper waiting on the clock if necessary */
+      SRC_LOCK (self);
       SRC_BROADCAST (self);
+      SRC_UNLOCK (self);
       break;
     default:
       break;
@@ -1859,7 +1861,9 @@ gst_aggregator_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* Wake up any waiting as now clock might be gone and we might
        * need to wait on the condition variable again */
+      SRC_LOCK (self);
       SRC_BROADCAST (self);
+      SRC_UNLOCK (self);
       break;
     default:
       break;
