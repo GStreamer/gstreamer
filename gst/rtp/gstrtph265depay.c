@@ -1259,6 +1259,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     gst_adapter_clear (rtph265depay->adapter);
     rtph265depay->wait_start = TRUE;
     rtph265depay->current_fu_type = 0;
+    rtph265depay->last_fu_seqnum = 0;
   }
 
   {
@@ -1456,6 +1457,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
           rtph265depay->current_fu_type = nal_unit_type;
           rtph265depay->fu_timestamp = timestamp;
+          rtph265depay->last_fu_seqnum = gst_rtp_buffer_get_seq (rtp);
 
           rtph265depay->wait_start = FALSE;
 
@@ -1493,6 +1495,24 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           /* and assemble in the adapter */
           gst_adapter_push (rtph265depay->adapter, outbuf);
         } else {
+          if (rtph265depay->current_fu_type == 0) {
+            /* previous FU packet missing start bit? */
+            GST_WARNING_OBJECT (rtph265depay, "missing FU start bit on an "
+                "earlier packet. Dropping.");
+            gst_adapter_clear (rtph265depay->adapter);
+            return NULL;
+          }
+          if (gst_rtp_buffer_compare_seqnum (rtph265depay->last_fu_seqnum,
+                  gst_rtp_buffer_get_seq (rtp)) != 1) {
+            /* jump in sequence numbers within an FU is cause for discarding */
+            GST_WARNING_OBJECT (rtph265depay, "Jump in sequence numbers from "
+                "%u to %u within Fragmentation Unit. Data was lost, dropping "
+                "stored.", rtph265depay->last_fu_seqnum,
+                gst_rtp_buffer_get_seq (rtp));
+            gst_adapter_clear (rtph265depay->adapter);
+            return NULL;
+          }
+          rtph265depay->last_fu_seqnum = gst_rtp_buffer_get_seq (rtp);
 
           GST_DEBUG_OBJECT (rtph265depay,
               "Following part of Fragmentation Unit");
