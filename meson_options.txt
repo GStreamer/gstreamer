@@ -113,6 +113,7 @@ option('iqa', type : 'feature', value : 'auto', description : 'Image quality ass
 option('kate', type : 'feature', value : 'auto', description : 'Kate subtitle parser, tagger, and codec plugin')
 option('kms', type : 'feature', value : 'auto', description : 'KMS video sink plugin')
 option('ladspa', type : 'feature', value : 'auto', description : 'LADSPA plugin bridge')
+option('ldac', type : 'feature', value : 'auto', description : 'LDAC bluetooth audio codec plugin')
 option('libde265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video decoder plugin')
 option('libmms', type : 'feature', value : 'auto', description : 'Microsoft multimedia server network source plugin')
 option('lv2', type : 'feature', value : 'auto', description : 'LV2 audio plugin bridge')
