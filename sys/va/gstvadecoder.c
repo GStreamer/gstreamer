@@ -586,22 +586,26 @@ gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
     goto fail_end_pic;
   }
 
-  gst_va_display_lock (self->display);
-  status = vaRenderPicture (dpy, self->context,
-      (VABufferID *) pic->buffers->data, pic->buffers->len);
-  gst_va_display_unlock (self->display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
-    goto fail_end_pic;
+  if (pic->buffers->len > 0) {
+    gst_va_display_lock (self->display);
+    status = vaRenderPicture (dpy, self->context,
+        (VABufferID *) pic->buffers->data, pic->buffers->len);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS) {
+      GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+      goto fail_end_pic;
+    }
   }
 
-  gst_va_display_lock (self->display);
-  status = vaRenderPicture (dpy, self->context,
-      (VABufferID *) pic->slices->data, pic->slices->len);
-  gst_va_display_unlock (self->display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
-    goto fail_end_pic;
+  if (pic->slices->len > 0) {
+    gst_va_display_lock (self->display);
+    status = vaRenderPicture (dpy, self->context,
+        (VABufferID *) pic->slices->data, pic->slices->len);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS) {
+      GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+      goto fail_end_pic;
+    }
   }
 
   gst_va_display_lock (self->display);
