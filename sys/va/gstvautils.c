@@ -292,7 +292,7 @@ gst_context_get_va_display (GstContext * context, const gchar * type_name,
   is_devnode = (g_strstr_len (type_name, -1, "renderD") != NULL);
 
   s = gst_context_get_structure (context);
-  if (gst_structure_get (s, "gst-display", GST_TYPE_VA_DISPLAY, &display, NULL)) {
+  if (gst_structure_get (s, "gst-display", GST_TYPE_OBJECT, &display, NULL)) {
     gchar *device_path = NULL;
     gboolean ret;
 
@@ -302,7 +302,7 @@ gst_context_get_va_display (GstContext * context, const gchar * type_name,
       g_free (device_path);
       if (ret)
         goto accept;
-    } else if (!is_devnode) {
+    } else if (GST_IS_VA_DISPLAY (display) && !is_devnode) {
       goto accept;
     }
 
@@ -346,5 +346,5 @@ gst_context_set_va_display (GstContext * context, GstVaDisplay * display)
   }
 
   s = gst_context_writable_structure (context);
-  gst_structure_set (s, "gst-display", GST_TYPE_VA_DISPLAY, display, NULL);
+  gst_structure_set (s, "gst-display", GST_TYPE_OBJECT, display, NULL);
 }
