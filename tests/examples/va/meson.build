@@ -16,3 +16,11 @@ if have_va and gtk_dep.found() and gtk_x11_dep.found() and x11_dep.found() and l
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   )
 endif
+
+executable('multiple-vpp',
+  'multiple-vpp.c',
+  install: false,
+  include_directories : [configinc],
+  dependencies : [gst_dep],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+)
