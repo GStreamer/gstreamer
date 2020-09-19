@@ -158,7 +158,7 @@ gst_va_element_propagate_display_context (GstElement * element,
   GstMessage *msg;
 
   if (!display) {
-    GST_ERROR_OBJECT (element, "Could not get GL display connection");
+    GST_ERROR_OBJECT (element, "Could not get VA display connection");
     return;
   }
 
@@ -339,10 +339,11 @@ gst_context_set_va_display (GstContext * context, GstVaDisplay * display)
 
   g_return_if_fail (context != NULL);
 
-  if (display)
+  if (display) {
     GST_CAT_LOG (GST_CAT_CONTEXT,
         "setting GstVaDisplay (%" GST_PTR_FORMAT ") on context (%"
         GST_PTR_FORMAT ")", display, context);
+  }
 
   s = gst_context_writable_structure (context);
   gst_structure_set (s, "gst-display", GST_TYPE_VA_DISPLAY, display, NULL);
