@@ -290,9 +290,6 @@ GST_PLUGIN_STATIC_DECLARE(rtspclientsink);
 #if defined(GST_IOS_PLUGIN_PLAYBACK) || defined(GST_IOS_PLUGINS_PLAYBACK)
 GST_PLUGIN_STATIC_DECLARE(playback);
 #endif
-#if defined(GST_IOS_PLUGIN_LIBVISUAL) || defined(GST_IOS_PLUGINS_VIS)
-GST_PLUGIN_STATIC_DECLARE(libvisual);
-#endif
 #if defined(GST_IOS_PLUGIN_GOOM) || defined(GST_IOS_PLUGINS_VIS)
 GST_PLUGIN_STATIC_DECLARE(goom);
 #endif
@@ -867,9 +864,6 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_PLAYBACK) || defined(GST_IOS_PLUGINS_PLAYBACK)
     GST_PLUGIN_STATIC_REGISTER(playback);
-#endif
-#if defined(GST_IOS_PLUGIN_LIBVISUAL) || defined(GST_IOS_PLUGINS_VIS)
-    GST_PLUGIN_STATIC_REGISTER(libvisual);
 #endif
 #if defined(GST_IOS_PLUGIN_GOOM) || defined(GST_IOS_PLUGINS_VIS)
     GST_PLUGIN_STATIC_REGISTER(goom);
