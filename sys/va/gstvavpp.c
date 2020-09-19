@@ -139,6 +139,8 @@ enum
   VPP_CONVERT_FEATURE = 1 << 4,
 };
 
+extern GRecMutex GST_VA_SHARED_LOCK;
+
 /* *INDENT-OFF* */
 static const gchar *caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
             "{ NV12, I420, YV12, YUY2, RGBA, BGRA, P010_10LE, ARGB, ABGR }") " ;"
@@ -1004,6 +1006,18 @@ _get_sinkpad_pool (GstVaVpp * self)
   return self->sinkpad_pool;
 }
 
+static gboolean
+_try_import_buffer_unlocked (GstVaVpp * self, GstBuffer * inbuf)
+{
+  VASurfaceID surface;
+
+  surface = gst_va_buffer_get_surface (inbuf, NULL);
+  if (surface != VA_INVALID_ID)
+    return TRUE;
+
+  return _try_import_dmabuf (self, inbuf);
+}
+
 static GstFlowReturn
 gst_va_vpp_import_input_buffer (GstVaVpp * self, GstBuffer * inbuf,
     GstBuffer ** buf)
@@ -1012,16 +1026,12 @@ gst_va_vpp_import_input_buffer (GstVaVpp * self, GstBuffer * inbuf,
   GstBufferPool *pool;
   GstFlowReturn ret;
   GstVideoFrame in_frame, out_frame;
-  VASurfaceID surface;
-  gboolean copied;
+  gboolean imported, copied;
 
-  surface = gst_va_buffer_get_surface (inbuf, NULL);
-  if (surface != VA_INVALID_ID) {
-    *buf = gst_buffer_ref (inbuf);
-    return GST_FLOW_OK;
-  }
-
-  if (_try_import_dmabuf (self, inbuf)) {
+  g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
+  imported = _try_import_buffer_unlocked (self, inbuf);
+  g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
+  if (imported) {
     *buf = gst_buffer_ref (inbuf);
     return GST_FLOW_OK;
   }

@@ -397,6 +397,7 @@ gst_va_filter_close (GstVaFilter * self)
 
   GST_OBJECT_LOCK (self);
   g_clear_pointer (&self->available_filters, g_array_unref);
+  g_clear_pointer (&self->filters, g_array_unref);
   gst_va_filter_init (self);
   GST_OBJECT_UNLOCK (self);
 
