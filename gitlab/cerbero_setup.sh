@@ -33,12 +33,12 @@ cerbero_before_script() {
     # Workaround build-tools having hardcoded internal path
     pwd
     mkdir -p "../../gstreamer"
-    ln -sf "$(pwd)" "../../gstreamer/cerbero"
+    time ln -sf "$(pwd)" "../../gstreamer/cerbero"
     # Don't try to symlink twice because on MSYS `ln` does a `cp` since it
     # doesn't support the new NTFS symlink feature.
     if [[ ${CI_PROJECT_NAMESPACE} != gstreamer ]]; then
         mkdir -p "../../${CI_PROJECT_NAMESPACE}"
-        ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
+        time ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
     fi
 
     # Make sure there isn't a pre-existing config hanging around
@@ -62,7 +62,7 @@ cerbero_before_script() {
 
     cat localconf.cbc
 
-    rsync -aH "${CERBERO_HOST_DIR}" .
+    time rsync -aH "${CERBERO_HOST_DIR}" .
 
     cat localconf.cbc
 
@@ -75,7 +75,7 @@ cerbero_before_script() {
     # ERROR: Failed to proceed with self update Command Error: Running ['git', 'reset', '--hard', 'd6923e4216c8a17759527a3db070d15cf7ff10a0'] returned 128
     git status
 
-    ./cerbero-uninstalled --self-update manifest.xml
+    time ./cerbero-uninstalled --self-update manifest.xml
 }
 
 cerbero_script() {
@@ -89,7 +89,7 @@ cerbero_script() {
     if [[ -n ${CERBERO_OVERRIDDEN_DIST_DIR} ]]; then
         test -d "${CERBERO_HOME}/dist/${ARCH}"
         mkdir -p "${CERBERO_OVERRIDDEN_DIST_DIR}"
-        rsync -aH "${CERBERO_HOME}/dist/${ARCH}/" "${CERBERO_OVERRIDDEN_DIST_DIR}"
+        time rsync -aH "${CERBERO_HOME}/dist/${ARCH}/" "${CERBERO_OVERRIDDEN_DIST_DIR}"
     fi
 
     $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
@@ -110,15 +110,15 @@ cerbero_deps_script() {
 
     if [[ -n ${CERBERO_OVERRIDDEN_DIST_DIR} ]]; then
         mkdir -p "${CERBERO_HOME}/dist/${ARCH}"
-        rsync -aH "${CERBERO_OVERRIDDEN_DIST_DIR}/" "${CERBERO_HOME}/dist/${ARCH}"
+        time rsync -aH "${CERBERO_OVERRIDDEN_DIST_DIR}/" "${CERBERO_HOME}/dist/${ARCH}"
     fi
 
     # Check that the env var is set. Don't expand this protected variable by
     # doing something silly like [[ -n ${CERBERO_...} ]] because it will get
     # printed in the CI logs due to set -x
     if env | grep -q -e CERBERO_PRIVATE_SSH_KEY; then
-        $CERBERO $CERBERO_ARGS gen-cache --branch "${GST_UPSTREAM_BRANCH}"
-        $CERBERO $CERBERO_ARGS upload-cache --branch "${GST_UPSTREAM_BRANCH}"
+        time $CERBERO $CERBERO_ARGS gen-cache --branch "${GST_UPSTREAM_BRANCH}"
+        time $CERBERO $CERBERO_ARGS upload-cache --branch "${GST_UPSTREAM_BRANCH}"
     fi
 
     cerbero_package_and_check
