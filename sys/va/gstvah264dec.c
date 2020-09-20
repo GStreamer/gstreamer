@@ -559,6 +559,7 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
     goto error;
 
   pic = gst_va_decode_picture_new (frame->output_buffer);
+
   gst_h264_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
 

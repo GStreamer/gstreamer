@@ -30,6 +30,7 @@
 #include "gstvacaps.h"
 #include "gstvadevice.h"
 #include "gstvah264dec.h"
+#include "gstvavp8dec.h"
 #include "gstvaprofile.h"
 #include "gstvavpp.h"
 
@@ -91,6 +92,13 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
     switch (codec) {
       case H264:
         if (!gst_va_h264_dec_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE)) {
+          GST_WARNING ("Failed to register H264 decoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case VP8:
+        if (!gst_va_vp8_dec_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE)) {
           GST_WARNING ("Failed to register H264 decoder: %s",
               device->render_device_path);

@@ -9,6 +9,7 @@ va_sources = [
   'gstvadevice.c',
   'gstvafilter.c',
   'gstvah264dec.c',
+  'gstvavp8dec.c',
   'gstvapool.c',
   'gstvaprofile.c',
   'gstvautils.c',
