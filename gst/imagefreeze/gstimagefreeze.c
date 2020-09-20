@@ -76,8 +76,8 @@ static gboolean gst_image_freeze_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_image_freeze_sink_setcaps (GstImageFreeze * self,
     GstCaps * caps);
-static GstCaps *gst_image_freeze_sink_getcaps (GstImageFreeze * self,
-    GstCaps * filter);
+static GstCaps *gst_image_freeze_query_caps (GstImageFreeze * self,
+    GstPad * pad, GstCaps * filter);
 static gboolean gst_image_freeze_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static void gst_image_freeze_src_loop (GstPad * pad);
@@ -333,25 +333,26 @@ gst_image_freeze_remove_fps (GstImageFreeze * self, GstCaps * caps)
 }
 
 static GstCaps *
-gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
+gst_image_freeze_query_caps (GstImageFreeze * self, GstPad * pad,
+    GstCaps * filter)
 {
   GstCaps *ret, *tmp, *templ;
-  GstPad *pad;
+  GstPad *otherpad;
 
-  pad = self->sinkpad;
+  otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
 
   if (filter) {
     filter = gst_caps_copy (filter);
     gst_image_freeze_remove_fps (self, filter);
   }
   templ = gst_pad_get_pad_template_caps (pad);
-  tmp = gst_pad_peer_query_caps (self->srcpad, filter);
+  tmp = gst_pad_peer_query_caps (otherpad, filter);
   if (tmp) {
-    GST_LOG_OBJECT (self, "peer caps %" GST_PTR_FORMAT, tmp);
+    GST_LOG_OBJECT (otherpad, "peer caps %" GST_PTR_FORMAT, tmp);
     ret = gst_caps_intersect (tmp, templ);
     gst_caps_unref (tmp);
   } else {
-    GST_LOG_OBJECT (self, "going to copy");
+    GST_LOG_OBJECT (otherpad, "going to copy");
     ret = gst_caps_copy (templ);
   }
   if (templ)
@@ -382,7 +383,7 @@ gst_image_freeze_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *caps;
 
       gst_query_parse_caps (query, &caps);
-      caps = gst_image_freeze_sink_getcaps (self, caps);
+      caps = gst_image_freeze_query_caps (self, pad, caps);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
@@ -580,8 +581,18 @@ gst_image_freeze_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
       ret = TRUE;
       break;
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *caps;
+      gst_query_parse_caps (query, &caps);
+      caps = gst_image_freeze_query_caps (self, pad, caps);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
     default:
-      ret = FALSE;
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
