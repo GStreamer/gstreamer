@@ -495,8 +495,9 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   if (space->convert == NULL)
     goto no_convert;
 
-  GST_DEBUG ("reconfigured %d %d", GST_VIDEO_INFO_FORMAT (in_info),
-      GST_VIDEO_INFO_FORMAT (out_info));
+  GST_DEBUG_OBJECT (filter, "converting format %s -> %s",
+      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
+      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
 
   return TRUE;
 
