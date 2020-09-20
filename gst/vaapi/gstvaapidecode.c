@@ -1437,25 +1437,31 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
   GstElement *const element = GST_ELEMENT (vdec);
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:{
-      GstCaps *caps, *filter = NULL;
-
-      gst_query_parse_caps (query, &filter);
-      caps = gst_vaapidecode_get_allowed_srcpad_caps (GST_VAAPIDECODE (vdec));
-
-      if (filter) {
-        GstCaps *tmp = caps;
-        caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (tmp);
-      }
-
-      gst_query_set_caps_result (query, caps);
-      gst_caps_unref (caps);
-      break;
-    }
     case GST_QUERY_CONTEXT:{
       ret = gst_vaapi_handle_context_query (element, query);
       break;
+    }
+    case GST_QUERY_CAPS:{
+      GstCaps *caps, *filter = NULL;
+      gboolean fixed_caps;
+
+      fixed_caps = GST_PAD_IS_FIXED_CAPS (GST_VIDEO_DECODER_SRC_PAD (vdec));
+      if (!fixed_caps) {
+        gst_query_parse_caps (query, &filter);
+        caps = gst_vaapidecode_get_allowed_srcpad_caps (GST_VAAPIDECODE (vdec));
+
+        if (filter) {
+          GstCaps *tmp = caps;
+          caps =
+              gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+          gst_caps_unref (tmp);
+        }
+
+        gst_query_set_caps_result (query, caps);
+        gst_caps_unref (caps);
+        break;
+      }
+      /* else jump to default */
     }
     default:{
       ret = GST_VIDEO_DECODER_CLASS (parent_class)->src_query (vdec, query);
