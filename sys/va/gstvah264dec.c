@@ -18,6 +18,31 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-vah264dec
+ * @title: vah264dec
+ * @short_description: A VA-API based H264 video decoder
+ *
+ * vah264dec decodes H264 bitstreams to VA surfaces using the
+ * installed and chosen [VA-API](https://01.org/linuxmedia/vaapi)
+ * driver.
+ *
+ * The decoding surfaces can be mapped onto main memory as video
+ * frames.
+ *
+ * ## Example launch line
+ * |[
+ * gst-launch-1.0 filesrc location=big_buck_bunny.mov ! parsebin ! vah264dec ! autovideosink
+ * ]|
+ *
+ */
+
+/* ToDo:
+ *
+ * + interlaced streams
+ * + mutiview and stereo profiles
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
