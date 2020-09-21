@@ -680,23 +680,6 @@ _get_profile (GstVaH264Dec * self, const GstH264SPS * sps, gint max_dpb_size)
 }
 
 static gboolean
-_format_changed (GstVaH264Dec * self, VAProfile new_profile, guint new_rtformat,
-    gint new_width, gint new_height)
-{
-  VAProfile profile = VAProfileNone;
-  guint rt_format = VA_RT_FORMAT_YUV420;
-  gint width = 0, height = 0;
-
-  g_object_get (self->decoder, "va-profile", &profile, "va-rt-format",
-      &rt_format, "coded-width", &width, "coded-height", &height, NULL);
-
-  /* @TODO: Check if current buffers are large enough, and reuse
-   * them */
-  return !(profile == new_profile && rt_format == new_rtformat
-      && width == new_width && height == new_height);
-}
-
-static gboolean
 gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gint max_dpb_size)
 {
@@ -727,7 +710,8 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
   if (rt_format == 0)
     return FALSE;
 
-  if (_format_changed (self, profile, rt_format, sps->width, sps->height)) {
+  if (gst_va_decoder_format_changed (self->decoder, profile,
+          rt_format, sps->width, sps->height)) {
     self->profile = profile;
     self->rt_format = rt_format;
     self->coded_width = sps->width;

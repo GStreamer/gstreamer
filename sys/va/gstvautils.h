@@ -44,5 +44,4 @@ gboolean              gst_context_get_va_display          (GstContext * context,
 void                  gst_context_set_va_display          (GstContext * context,
 							   GstVaDisplay * display);
 
-
 G_END_DECLS

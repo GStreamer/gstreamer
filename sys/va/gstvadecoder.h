@@ -73,4 +73,10 @@ GstVaDecodePicture *  gst_va_decode_picture_new           (GstBuffer * buffer);
 VASurfaceID           gst_va_decode_picture_get_surface   (GstVaDecodePicture * pic);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
 
+gboolean              gst_va_decoder_format_changed       (GstVaDecoder * decoder,
+                                                           VAProfile new_profile,
+                                                           guint new_rtformat,
+                                                           gint new_width,
+                                                           gint new_height);
+
 G_END_DECLS

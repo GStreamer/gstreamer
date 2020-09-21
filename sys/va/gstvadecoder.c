@@ -731,3 +731,14 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
 
   g_slice_free (GstVaDecodePicture, pic);
 }
+
+gboolean
+gst_va_decoder_format_changed (GstVaDecoder * decoder, VAProfile new_profile,
+    guint new_rtformat, gint new_width, gint new_height)
+{
+  /* @TODO: Check if current buffers are large enough, and reuse
+   * them */
+  return !(decoder->profile == new_profile &&
+      decoder->rt_format == new_rtformat &&
+      decoder->coded_width == new_width && decoder->coded_height == new_height);
+}
