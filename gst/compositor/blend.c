@@ -969,8 +969,8 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     xpos = 0; \
   } \
   if (ypos < dst_y_start) { \
-    src += -ypos * src_stride; \
-    src_height -= -ypos; \
+    src += (dst_y_start - ypos) * src_stride; \
+    src_height -= dst_y_start - ypos; \
     ypos = dst_y_start; \
   } \
   \
