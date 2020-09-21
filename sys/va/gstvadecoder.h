@@ -49,21 +49,21 @@ gboolean              gst_va_decoder_set_format           (GstVaDecoder * self,
 GstCaps *             gst_va_decoder_get_srcpad_caps      (GstVaDecoder * self);
 GstCaps *             gst_va_decoder_get_sinkpad_caps     (GstVaDecoder * self);
 gboolean              gst_va_decoder_has_profile          (GstVaDecoder * self,
-							   VAProfile profile);
+                                                           VAProfile profile);
 gint                  gst_va_decoder_get_mem_types        (GstVaDecoder * self);
 GArray *              gst_va_decoder_get_surface_formats  (GstVaDecoder * self);
 
 gboolean              gst_va_decoder_add_param_buffer     (GstVaDecoder * self,
-							   GstVaDecodePicture * pic,
-							   gint type,
-							   gpointer data,
-							   gsize size);
+                                                           GstVaDecodePicture * pic,
+                                                           gint type,
+                                                           gpointer data,
+                                                           gsize size);
 gboolean              gst_va_decoder_add_slice_buffer     (GstVaDecoder * self,
-							   GstVaDecodePicture * pic,
-							   gpointer params_data,
-							   gsize params_size,
-							   gpointer slice_data,
-							   gsize slice_size);
+                                                           GstVaDecodePicture * pic,
+                                                           gpointer params_data,
+                                                           gsize params_size,
+                                                           gpointer slice_data,
+                                                           gsize slice_size);
 gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
 gboolean              gst_va_decoder_destroy_buffers      (GstVaDecoder * self,

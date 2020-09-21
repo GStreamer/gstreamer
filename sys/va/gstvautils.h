@@ -25,23 +25,23 @@
 G_BEGIN_DECLS
 
 gboolean              gst_va_ensure_element_data          (gpointer element,
-							   const gchar *render_device_path,
-							   GstVaDisplay ** display_ptr);
+                                                           const gchar *render_device_path,
+                                                           GstVaDisplay ** display_ptr);
 gboolean              gst_va_handle_set_context           (GstElement * element,
-							   GstContext * context,
-							   const gchar *render_device_path,
-							   GstVaDisplay ** display_ptr);
+                                                           GstContext * context,
+                                                           const gchar *render_device_path,
+                                                           GstVaDisplay ** display_ptr);
 gboolean              gst_va_handle_context_query         (GstElement * element,
-							   GstQuery * query,
-							   GstVaDisplay * display);
+                                                           GstQuery * query,
+                                                           GstVaDisplay * display);
 void                  gst_va_element_propagate_display_context (GstElement * element,
-								GstVaDisplay * display);
+                                                           GstVaDisplay * display);
 
 gboolean              gst_context_get_va_display          (GstContext * context,
-							   const gchar * type_name,
-							   const gchar * render_device_path,
-							   GstVaDisplay ** display_ptr);
+                                                           const gchar * type_name,
+                                                           const gchar * render_device_path,
+                                                           GstVaDisplay ** display_ptr);
 void                  gst_context_set_va_display          (GstContext * context,
-							   GstVaDisplay * display);
+                                                           GstVaDisplay * display);
 
 G_END_DECLS

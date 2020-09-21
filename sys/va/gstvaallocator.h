@@ -68,7 +68,7 @@ gboolean              gst_va_allocator_try                (GstAllocator * alloca
                                                            GstVaAllocationParams * params);
 
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem,
-							   GstVideoInfo * info);
+                                                           GstVideoInfo * info);
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer,
                                                            GstVideoInfo * info);
 
