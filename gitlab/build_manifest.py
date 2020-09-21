@@ -12,6 +12,9 @@ import json
 from typing import Dict, Tuple, List
 # from pprint import pprint
 
+if sys.version_info < (3, 6):
+    raise SystemExit('Need Python 3.6 or newer')
+
 GSTREAMER_MODULES: List[str] = [
     'orc',
     'cerbero',
@@ -42,28 +45,64 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
+CERBERO_DEPS_LOGS_TARGETS = (
+    ('cross-ios', 'universal'),
+    ('cross-windows-mingw', 'x86'),
+    ('cross-windows-mingw', 'x86_64'),
+    ('cross-android', 'universal'),
+    ('fedora', 'x86_64'),
+    ('macos', 'x86_64'),
+    ('windows-msvc', 'x86_64'),
+)
+
 # Disallow git prompting for a username/password
 os.environ['GIT_TERMINAL_PROMPT'] = '0'
 def git(*args, repository_path='.'):
     return subprocess.check_output(["git"] + list(args), cwd=repository_path).decode()
 
 def get_cerbero_last_build_info (branch : str):
-    # Take the log from slowest build to reduce cache misses, the logs are
-    # uploaded as soon as they are ready.
-    url = f'https://artifacts.gstreamer-foundation.net/cerbero-deps/{branch}/cross-ios/universal/cerbero-deps.log'
-    deps = [{'commit': None}]
+    # Fetch the deps log for all (distro, arch) targets
+    all_commits = {}
+    for distro, arch in CERBERO_DEPS_LOGS_TARGETS:
+        url = f'https://artifacts.gstreamer-foundation.net/cerbero-deps/{branch}/{distro}/{arch}/cerbero-deps.log'
+        print(f'Fetching {url}')
+        try:
+            req = urllib.request.Request(url)
+            resp = urllib.request.urlopen(req);
+            deps = json.loads(resp.read())
+        except urllib.error.URLError as e:
+            print(f'WARNING: Failed to GET {url}: {e!s}')
+            continue
 
-    try:
-        req = urllib.request.Request(url)
-        resp = urllib.request.urlopen(req);
-        deps = json.loads(resp.read())
-    except urllib.error.URLError as e:
-        print(f'Failed to get from URL {url}')
-        print('WARNING: Could not find a revision with build cache ready: ' + str(e))
-        print('Checking cerbero:', end=' ')
-        return None
+        for dep in deps:
+            commit = dep['commit']
+            if commit not in all_commits:
+                all_commits[commit] = []
+            all_commits[commit].append((distro, arch))
 
-    return deps[0]['commit']
+    # Fetch the cerbero commit that has the most number of caches
+    best_commit = None
+    newest_commit = None
+    max_caches = 0
+    total_caches = len(CERBERO_DEPS_LOGS_TARGETS)
+    for commit, targets in all_commits.items():
+        if newest_commit is None:
+            newest_commit = commit
+        have_caches = len(targets)
+        # If this commit has caches for all targets, just use it
+        if have_caches == total_caches:
+            best_commit = commit
+            break
+        # Else, try to find the commit with the most caches
+        if have_caches > max_caches:
+            max_caches = have_caches
+            best_commit = commit
+    if newest_commit is None:
+        print('WARNING: No deps logs were found, will build from scratch')
+    if best_commit != newest_commit:
+        print(f'WARNING: Cache is not up-to-date for commit {newest_commit}, using commit {best_commit} instead')
+    return best_commit
+
 
 def get_branch_info(module: str, namespace: str, branch: str) -> Tuple[str, str]:
     try:
