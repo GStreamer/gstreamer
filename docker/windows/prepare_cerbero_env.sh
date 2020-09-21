@@ -18,8 +18,8 @@ echo 'vs_install_version = "vs15"' >> localconf.cbc
 # Fetch all package requirements for a visualstudio gstreamer build
 ./cerbero-uninstalled -t -v visualstudio -c localconf.cbc -c config/win64.cbc fetch-package gstreamer-1.0
 
-# Extract the toolchain and fixup the MSYS installation
-./cerbero-uninstalled -t -c localconf.cbc -c config/win64.cbc bootstrap -y --system-only --offline
+# Fixup the MSYS installation
+./cerbero-uninstalled -t -c localconf.cbc -c config/win64.cbc bootstrap -y --build-tools=no --toolchains=no --offline
 
 # Delete mingw toolchain binary tarball
 rm /c/cerbero/cerbero-sources/mingw-*.tar.xz

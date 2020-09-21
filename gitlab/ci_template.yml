@@ -683,7 +683,7 @@ valgrind ges:
     HAVE_CCACHE: "yes"
     # used by macos packages as we only ever install to a fixed directory
     CERBERO_OVERRIDDEN_DIST_DIR: ""
-    # location where cerbero is cached on the host
+    # location where the cerbero git repo is stored on the image
     CERBERO_HOST_DIR: "/cerbero/"
   before_script:
     - echo "Fetching ${CERBERO_SCRIPT_URL}"
@@ -1196,10 +1196,7 @@ build gst-omx tizonia fedora x86_64:
   variables:
     CONFIG: 'win64.cbc'
     ARCH: 'msvc_x86_64'
-    # rsync doesn't like windows paths like `C:/cerbero`
-    CERBERO_HOST_DIR: "/c/cerbero/"
-    CERBERO_HOME: "C:/cerbero-build"
-    CERBERO_SOURCES: "C:/cerbero-sources"
+    CERBERO_HOST_DIR: "C:/cerbero"
     CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v visualstudio -v nowerror"
     CERBERO_RUN_SUFFIX: ".exe"
     HAVE_CCACHE: ""

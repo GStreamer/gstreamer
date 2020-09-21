@@ -8,16 +8,60 @@ show_ccache_sum() {
     fi
 }
 
+# XXX: This is copied and modified from the cerbero-uninstalled script
+# Use `mount` to get a list of MSYS mount points that the MSYS shell uses.
+# That's our reference point for translating from MSYS paths to Win32 paths.
+# We assume that the MSYS mount point directories are only in the filesystem
+# root. This will break if people add their own custom mount points beyond what
+# MSYS automatically creates, which is highly unlikely.
+#
+# /d -> d:/
+# /c -> c:/
+# /d/projects/cerbero -> d:/projects/cerbero/
+# /home/USERNAME/cerbero -> C:\\MinGW\\msys\\1.0/home/USERNAME/
+# /mingw -> C:\\MinGW/
+# /mingw/bin/foobar -> C:\\MinGW\\bin/foobar/
+# /tmp/baz -> C:\\Users\\USERNAME\\AppData\\Local\\Temp/baz/
+msys_dir_to_win32() {
+    set -e
+    local msys_path stripped_path mount_point path mounted_path
+    # If the path is already a native path, just return that
+    if [[ $1 == ?:/* ]] || [[ $1 == ?:\\* ]]; then
+      echo $1
+      return
+    fi
+    # Convert /c or /mingw etc to /c/ or /mingw/ etc; gives us a necessary
+    # anchor to split the path into components
+    msys_path="$1/"
+    # Strip leading slash
+    stripped_path="${msys_path#/}"
+    # Get the first path component, which may be a mount point
+    mount_point="/${stripped_path%%/*}"
+    # Get the path inside the mountp oint
+    path="/${stripped_path#*/}"
+    mounted_path="$(mount | sed -n "s|\(.*\) on $mount_point type.*|\1|p")"
+    # If it's not a mounted path (like /c or /tmp or /mingw), then it's in the
+    # general MSYS root mount
+    if [[ -z $mounted_path ]]; then
+        mounted_path="$(mount | sed -n "s|\(.*\) on / type.*|\1|p")"
+        path="$1"
+    fi
+    echo ${mounted_path}${path%/}
+}
+
+# Print the working directory in the native OS path format, but with forward
+# slashes
+pwd_native() {
+    if [[ -n "$MSYSTEM" ]]; then
+        msys_dir_to_win32 "$(pwd)"
+    else
+        pwd
+    fi
+}
+
 # Produces runtime and devel tarball packages for linux/android or .pkg for macos
 cerbero_package_and_check() {
-    # FIXME: mingw translates $(pwd) in a broken way
-    if [[ $CONFIG == win??.cbc ]]; then
-        PACKAGE_PATH="$CI_PROJECT_DIR"
-    else
-        PACKAGE_PATH=$(pwd)
-    fi
-
-    $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o "$PACKAGE_PATH" gstreamer-1.0
+    $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o "$(pwd_native)" gstreamer-1.0
 
     # Run gst-inspect-1.0 for some basic checks. Can't do this for cross-(android|ios)-universal, of course.
     if [[ $CONFIG != *universal* ]]; then
@@ -29,51 +73,29 @@ cerbero_package_and_check() {
 }
 
 cerbero_before_script() {
-    # FIXME Wrong namespace
-    # Workaround build-tools having hardcoded internal path
     pwd
-    mkdir -p "../../gstreamer"
-    time ln -sf "$(pwd)" "../../gstreamer/cerbero"
-    # Don't try to symlink twice because on MSYS `ln` does a `cp` since it
-    # doesn't support the new NTFS symlink feature.
-    if [[ ${CI_PROJECT_NAMESPACE} != gstreamer ]]; then
-        mkdir -p "../../${CI_PROJECT_NAMESPACE}"
-        time ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
+    ls -lh
+
+    # Copy cerbero git repo stored on the image
+    cp -a "${CERBERO_HOST_DIR}/.git" .
+    git checkout .
+    git status
+
+    # If there's no cerbero-sources directory in the runner cache, copy it from
+    # the image cache
+    if ! [[ -d ${CERBERO_SOURCES} ]]; then
+        time cp -a "${CERBERO_HOST_DIR}/${CERBERO_SOURCES}" .
     fi
+    du -sch "${CERBERO_SOURCES}"
 
-    # Make sure there isn't a pre-existing config hanging around
-    rm -v -f localconf.cbc
-    rm -v -f ${CERBERO_HOST_DIR}/localconf.cbc
-
+    echo "home_dir = \"$(pwd_native)/${CERBERO_HOME}\"" > localconf.cbc
+    echo "local_sources = \"$(pwd_native)/${CERBERO_SOURCES}\"" >> localconf.cbc
     if [[ $CONFIG == win??.cbc ]]; then
-        # For windows hardcode the path so it doesn't get
-        # mangled by msys path handling
-        # FIXME: make the sources point to pwd/$CI_PROJECT_DIR like the rest
-        echo 'local_sources="C:/cerbero/cerbero-sources"' > localconf.cbc
-        echo 'home_dir="C:/cerbero/cerbero-build"' >> localconf.cbc
-
         # Visual Studio 2017 build tools install path
         echo 'vs_install_path = "C:/BuildTools"' >> localconf.cbc
         echo 'vs_install_version = "vs15"' >> localconf.cbc
-    else
-        echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" > localconf.cbc
-        echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
     fi
-
     cat localconf.cbc
-
-    time rsync -aH "${CERBERO_HOST_DIR}" .
-
-    cat localconf.cbc
-
-    # FIXME: if you comment out this line it fails like so, no clue why. Its not windows defender either.
-    # From https://gitlab.freedesktop.org/gstreamer/cerbero
-    #    b02080cb..d6923e42  master     -> origin/master
-    # Fetching origin
-    # error: unable to create file cerbero-uninstalled: Permission denied
-    # fatal: Could not reset index file to revision 'd6923e4216c8a17759527a3db070d15cf7ff10a0'.
-    # ERROR: Failed to proceed with self update Command Error: Running ['git', 'reset', '--hard', 'd6923e4216c8a17759527a3db070d15cf7ff10a0'] returned 128
-    git status
 
     time ./cerbero-uninstalled --self-update manifest.xml
 }
@@ -82,8 +104,10 @@ cerbero_script() {
     show_ccache_sum
 
     $CERBERO $CERBERO_ARGS show-config
-    $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
+    $CERBERO $CERBERO_ARGS fetch-bootstrap
     $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
+    du -sch "${CERBERO_SOURCES}"
+
     $CERBERO $CERBERO_ARGS fetch-cache --branch "${GST_UPSTREAM_BRANCH}"
 
     if [[ -n ${CERBERO_OVERRIDDEN_DIST_DIR} ]]; then
@@ -92,7 +116,7 @@ cerbero_script() {
         time rsync -aH "${CERBERO_HOME}/dist/${ARCH}/" "${CERBERO_OVERRIDDEN_DIST_DIR}"
     fi
 
-    $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
+    $CERBERO $CERBERO_ARGS bootstrap --offline --system=no
     cerbero_package_and_check
 }
 
@@ -100,9 +124,9 @@ cerbero_deps_script() {
     show_ccache_sum
 
     $CERBERO $CERBERO_ARGS show-config
-    $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
+    $CERBERO $CERBERO_ARGS fetch-bootstrap
     $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
-    $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
+    $CERBERO $CERBERO_ARGS bootstrap --offline --system=no
     $CERBERO $CERBERO_ARGS build-deps --offline \
         gstreamer-1.0 gst-plugins-base-1.0 gst-plugins-good-1.0 \
         gst-plugins-bad-1.0 gst-plugins-ugly-1.0 gst-rtsp-server-1.0 \

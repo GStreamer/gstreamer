@@ -20,18 +20,18 @@ RUN git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerb
     cd cerbero && \
       echo "local_sources=\"/cerbero/cerbero-sources\"" >> localconf.cbc && \
       echo "home_dir=\"/cerbero/cerbero-build\"" >> localconf.cbc && \
-      ./cerbero-uninstalled -t -c localconf.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc bootstrap -y --build-tools=no --toolchains=no && \
       ./cerbero-uninstalled -t -c localconf.cbc fetch-bootstrap && \
       ./cerbero-uninstalled -t -c localconf.cbc fetch-package gstreamer-1.0 && \
       ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-bootstrap && \
       ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc bootstrap -y --build-tools=no --toolchains=no && \
       ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-bootstrap && \
       ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc bootstrap -y --build-tools=no --toolchains=no && \
       ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-bootstrap && \
       ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc bootstrap -y --build-tools=no --toolchains=no && \
       cd .. && \
     rm /cerbero/cerbero-sources/android-ndk-*.zip && \
     rm /cerbero/cerbero-sources/mingw-*.tar.xz && \
