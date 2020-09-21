@@ -57,7 +57,10 @@ def get_cerbero_last_build_info (branch : str):
         req = urllib.request.Request(url)
         resp = urllib.request.urlopen(req);
         deps = json.loads(resp.read())
-    except urllib.error.URLError:
+    except urllib.error.URLError as e:
+        print(f'Failed to get from URL {url}')
+        print('WARNING: Could not find a revision with build cache ready: ' + str(e))
+        print('Checking cerbero:', end=' ')
         return None
 
     return deps[0]['commit']
