@@ -1994,12 +1994,16 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts,
           break;
         }
 
-        if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS_OR_PTS (buffer))) {
-          t = gst_flv_mux_segment_to_running_time (&apad->segment,
-              GST_BUFFER_DTS_OR_PTS (buffer));
-        }
+        t = gst_flv_mux_segment_to_running_time (&apad->segment,
+            GST_BUFFER_DTS_OR_PTS (buffer));
 
-        if (!GST_CLOCK_TIME_IS_VALID (best_ts) ||
+        if (!GST_CLOCK_TIME_IS_VALID (t)) {
+          GST_WARNING_OBJECT (apad, "Buffer has no timestamp: %" GST_PTR_FORMAT,
+              buffer);
+          gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
+          best_ts = GST_CLOCK_TIME_NONE;
+          done = TRUE;
+        } else if (!GST_CLOCK_TIME_IS_VALID (best_ts) ||
             (GST_CLOCK_TIME_IS_VALID (t) && t < best_ts)) {
           gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
           best_ts = t;
