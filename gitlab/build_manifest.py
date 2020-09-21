@@ -50,7 +50,7 @@ def git(*args, repository_path='.'):
 def get_cerbero_last_build_info (branch : str):
     # Take the log from slowest build to reduce cache misses, the logs are
     # uploaded as soon as they are ready.
-    url = "https://artifacts.gstreamer-foundation.net/cerbero-deps/{branch}/cross-ios/universal/cerbero-deps.log"
+    url = f'https://artifacts.gstreamer-foundation.net/cerbero-deps/{branch}/cross-ios/universal/cerbero-deps.log'
     deps = [{'commit': None}]
 
     try:
