@@ -142,13 +142,22 @@ typedef enum {
  * @GST_AV1_PROFILE_0: 8-bit and 10-bit 4:2:0 and 4:0:0 only.
  * @GST_AV1_PROFILE_1: 8-bit and 10-bit 4:4:4.
  * @GST_AV1_PROFILE_2: 8-bit and 10-bit 4:2:2, 12-bit 4:0:0 4:2:2 and 4:4:4
+ * @GST_AV1_PROFILE_UNDEFINED: unknow AV1 profile (Since: 1.20)
  *
  * Defines the AV1 profiles
+ */
+/**
+ * GST_AV1_PROFILE_UNDEFINED:
+ *
+ * unknow AV1 profile
+ *
+ * Since: 1.20
  */
 typedef enum {
   GST_AV1_PROFILE_0 = 0,
   GST_AV1_PROFILE_1 = 1,
   GST_AV1_PROFILE_2 = 2,
+  GST_AV1_PROFILE_UNDEFINED,
 } GstAV1Profile;
 
 /**
