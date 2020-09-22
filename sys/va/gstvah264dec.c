@@ -31,9 +31,11 @@
  * frames.
  *
  * ## Example launch line
- * |[
+ * ```
  * gst-launch-1.0 filesrc location=big_buck_bunny.mov ! parsebin ! vah264dec ! autovideosink
- * ]|
+ * ```
+ *
+ * Since: 1.18
  *
  */
 
