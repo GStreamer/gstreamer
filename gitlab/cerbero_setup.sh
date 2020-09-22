@@ -59,6 +59,16 @@ pwd_native() {
     fi
 }
 
+fix_build_tools() {
+    if [[ $(uname) == Darwin ]]; then
+        # Bison needs these env vars set for the build-tools prefix to be
+        # relocatable, and we only build it on macOS. On Linux we install it
+        # using the package manager, and on Windows we use the MSYS Bison.
+        export M4="$(pwd)/${CERBERO_HOME}/build-tools/bin/m4"
+        export BISON_PKGDATADIR="$(pwd)/${CERBERO_HOME}/build-tools/share/bison"
+    fi
+}
+
 # Produces runtime and devel tarball packages for linux/android or .pkg for macos
 cerbero_package_and_check() {
     $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o "$(pwd_native)" gstreamer-1.0
@@ -117,6 +127,8 @@ cerbero_script() {
     fi
 
     $CERBERO $CERBERO_ARGS bootstrap --offline --system=no
+    fix_build_tools
+
     cerbero_package_and_check
 }
 
