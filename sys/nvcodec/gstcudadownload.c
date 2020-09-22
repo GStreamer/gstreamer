@@ -58,7 +58,7 @@ gst_cuda_download_class_init (GstCudaDownloadClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "CUDA downloader", "Filter/Video",
-      "Uploads data into NVIDA GPU via CUDA APIs",
+      "Downloads data from NVIDA GPU via CUDA APIs",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
   trans_class->passthrough_on_same_caps = TRUE;
