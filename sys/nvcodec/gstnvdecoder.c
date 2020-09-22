@@ -842,6 +842,12 @@ gst_nv_decoder_get_supported_codec_profiles (GValue * profiles,
 
         g_value_set_static_string (&val, "high");
         gst_value_list_append_value (profiles, &val);
+
+        g_value_set_static_string (&val, "constrained-high");
+        gst_value_list_append_value (profiles, &val);
+
+        g_value_set_static_string (&val, "progressive-high");
+        gst_value_list_append_value (profiles, &val);
       }
 
       /* NVDEC supports only 4:2:0 8bits h264 decoding.
@@ -849,6 +855,9 @@ gst_nv_decoder_get_supported_codec_profiles (GValue * profiles,
       if ((flags & GST_NV_DECODER_FORMAT_FLAG_420_10BITS) ==
           GST_NV_DECODER_FORMAT_FLAG_420_10BITS) {
         g_value_set_static_string (&val, "high-10");
+        gst_value_list_append_value (profiles, &val);
+
+        g_value_set_static_string (&val, "progressive-high-10");
         gst_value_list_append_value (profiles, &val);
       }
 
@@ -953,7 +962,7 @@ const GstNvdecoderCodecMap codec_map_list[] = {
   {cudaVideoCodec_H264, "h264",
       "video/x-h264, stream-format = (string) byte-stream"
         ", alignment = (string) au"
-        ", profile = (string) { constrained-baseline, baseline, main, high }"},
+        ", profile = (string) { constrained-baseline, baseline, main, high, constrained-high, progressive-high }"},
   {cudaVideoCodec_JPEG, "jpeg", "image/jpeg"},
 #if 0
   /* FIXME: need verification */
