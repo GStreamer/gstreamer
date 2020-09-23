@@ -266,7 +266,6 @@ if get_option('default_library') == 'static'
                '@OUTPUT@',
                all_plugins_paths]
   )
-  install_headers('gstinitstaticplugins.h', subdir : 'gstreamer-1.0/gst')
 
   # Avoid a x264 link issue described here: https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/108
   # Similar issue has been found with VLC: https://mailman.videolan.org/pipermail/vlc-devel/2009-March/057640.html

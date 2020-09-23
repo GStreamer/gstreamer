@@ -1,5 +1,4 @@
 #include <gst/gst.h>
-#include <gst/gstinitstaticplugins.h>
 
 int
 main (int argc, char *argv[])
@@ -7,7 +6,6 @@ main (int argc, char *argv[])
   GstElement *e;
 
   gst_init (&argc, &argv);
-  gst_init_static_plugins ();
 
   e = gst_element_factory_make ("identity", NULL);
   g_assert_nonnull (e);
