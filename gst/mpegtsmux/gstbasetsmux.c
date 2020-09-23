@@ -1900,7 +1900,10 @@ gst_base_ts_mux_default_create_ts_mux (GstBaseTsMux * mux)
   TsMux *tsmux = tsmux_new ();
   tsmux_set_write_func (tsmux, new_packet_cb, mux);
   tsmux_set_alloc_func (tsmux, alloc_packet_cb, mux);
+  tsmux_set_pat_interval (tsmux, mux->pat_interval);
+  tsmux_set_si_interval (tsmux, mux->si_interval);
   tsmux_set_bitrate (tsmux, mux->bitrate);
+  tsmux_set_pcr_interval (tsmux, mux->pcr_interval);
 
   return tsmux;
 }
