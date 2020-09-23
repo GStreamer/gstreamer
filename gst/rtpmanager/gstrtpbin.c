@@ -1790,18 +1790,11 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
     g_object_set (buffer, "max-ts-offset-adjustment",
         rtpbin->max_ts_offset_adjustment, NULL);
 
-  /* need to sink the jitterbufer or otherwise signal handlers from bindings will
-   * take ownership of it and we don't own it anymore */
-  gst_object_ref_sink (buffer);
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
       buffer, session->id, ssrc);
 
   if (!rtpbin->ignore_pt)
     gst_bin_add (GST_BIN_CAST (rtpbin), demux);
-
-  /* unref the jitterbuffer again, the bin has a reference now and
-   * we don't need it anymore */
-  gst_object_unref (buffer);
 
   /* link stuff */
   if (demux)
