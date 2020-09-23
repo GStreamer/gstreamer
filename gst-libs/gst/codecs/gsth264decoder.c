@@ -1906,6 +1906,7 @@ gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
       gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
     }
   }
+  gst_caps_unref (caps);
 
   /* if no fps or variable, then 25/1 */
   if (fps_n == 0) {
