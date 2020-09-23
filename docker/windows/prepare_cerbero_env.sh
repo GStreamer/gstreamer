@@ -21,8 +21,6 @@ echo 'vs_install_version = "vs15"' >> localconf.cbc
 # Fixup the MSYS installation
 ./cerbero-uninstalled -t -c localconf.cbc -c config/win64.cbc bootstrap -y --build-tools=no --toolchains=no --offline
 
-# Delete mingw toolchain binary tarball
-rm /c/cerbero/cerbero-sources/mingw-*.tar.xz
 # Wipe visualstudio package dist, sources, logs, and the build tools recipes
 ./cerbero-uninstalled -t -v visualstudio -c localconf.cbc -c config/win64.cbc wipe --force --build-tools
 # clean the localconf
