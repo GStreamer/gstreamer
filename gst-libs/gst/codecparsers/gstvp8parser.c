@@ -535,6 +535,8 @@ gst_vp8_parser_parse_frame_header (GstVp8Parser * parser,
   g_return_val_if_fail (frame_hdr != NULL, GST_VP8_PARSER_ERROR);
   g_return_val_if_fail (parser != NULL, GST_VP8_PARSER_ERROR);
 
+  memset (frame_hdr, 0, sizeof (GstVp8FrameHdr));
+
   /* Uncompressed Data Chunk */
   gst_byte_reader_init (&br, data, size);
 
