@@ -45,6 +45,8 @@
 #include <config.h>
 #endif
 
+#include <stdio.h>
+
 #include <gst/net/net.h>
 #include <gst/rtp/gstrtppayloads.h>
 
@@ -421,6 +423,26 @@ gst_rtp_src_class_init (GstRtpSrcClass * klass)
 }
 
 static void
+clear_ssrc (GstElement * rtpbin, GstPad * gpad)
+{
+  GstPad *pad;
+  gint pt;
+  guint ssrc;
+
+  pad = gst_ghost_pad_get_target (GST_GHOST_PAD (gpad));
+  if (!pad)
+    return;
+
+  if (sscanf (GST_PAD_NAME (pad), "recv_rtp_src_0_%u_%d", &ssrc, &pt) != 2) {
+    gst_object_unref (pad);
+    return;
+  }
+  gst_object_unref (pad);
+
+  g_signal_emit_by_name (rtpbin, "clear-ssrc", 0, ssrc);
+}
+
+static void
 gst_rtp_src_rtpbin_pad_added_cb (GstElement * element, GstPad * pad,
     gpointer data)
 {
@@ -477,6 +499,7 @@ gst_rtp_src_rtpbin_pad_added_cb (GstElement * element, GstPad * pad,
     gst_element_add_pad (GST_ELEMENT (self), upad);
   } else {
     GST_DEBUG_OBJECT (self, "Re-using existing pad: %s", GST_PAD_NAME (upad));
+    clear_ssrc (element, upad);
     gst_ghost_pad_set_target (GST_GHOST_PAD (upad), pad);
     gst_object_unref (upad);
   }
@@ -752,6 +775,7 @@ gst_rtp_src_init (GstRtpSrc * self)
     missing_plugin = "rtpmanager";
     goto missing_plugin;
   }
+  g_object_set (self->rtpbin, "autoremove", TRUE, NULL);
 
   gst_bin_add (GST_BIN (self), self->rtpbin);
 
