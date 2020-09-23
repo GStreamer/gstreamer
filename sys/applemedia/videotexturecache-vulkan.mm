@@ -251,7 +251,7 @@ gst_new_mtl_tex_descripter_from_memory (GstIOSurfaceVulkanMemory * memory)
   tex_desc.sampleCount = mvkSampleCountFromVkSampleCountFlagBits(vk_mem->create_info.samples);
   tex_desc.arrayLength = vk_mem->create_info.arrayLayers;
   tex_desc.usage = MTLTextureUsageShaderRead | MTLTextureUsagePixelFormatView;//mvkMTLTextureUsageFromVkImageUsageFlags(vk_mem->create_info.usage);
-  tex_desc.storageMode = MTLStorageModePrivate;//MTLStorageModeManaged; /* IOSurface == shared/managed */
+  tex_desc.storageMode = MTLStorageModeShared;
   tex_desc.cpuCacheMode = MTLCPUCacheModeDefaultCache;//mvkMTLCPUCacheModeFromVkMemoryPropertyFlags(vk_mem->vk_mem->properties);
 
   return tex_desc;
