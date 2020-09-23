@@ -70,7 +70,8 @@ enum
 
 #define DOCUMENTATION_SINK_CAPS \
     "video/x-raw, " DOCUMENTATION_SINK_CAPS_COMM "; " \
-    "video/x-raw(memory:GLMemory), " DOCUMENTATION_SINK_CAPS_COMM
+    "video/x-raw(memory:GLMemory), " DOCUMENTATION_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:CUDAMemory), " DOCUMENTATION_SINK_CAPS_COMM
 
 #define DOCUMENTATION_SRC_CAPS \
     "video/x-h265, "  \
