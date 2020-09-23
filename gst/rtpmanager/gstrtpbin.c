@@ -859,6 +859,7 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
 
   g_slist_foreach (sess->elements, (GFunc) remove_bin_element, bin);
   g_slist_free (sess->elements);
+  sess->elements = NULL;
 
   g_slist_foreach (sess->streams, (GFunc) free_stream, bin);
   g_slist_free (sess->streams);
@@ -1849,6 +1850,7 @@ no_demux:
 static void
 free_stream (GstRtpBinStream * stream, GstRtpBin * bin)
 {
+  GstRtpBinSession *sess = stream->session;
   GSList *clients, *next_client;
 
   GST_DEBUG_OBJECT (bin, "freeing stream %p", stream);
@@ -1875,7 +1877,10 @@ free_stream (GstRtpBinStream * stream, GstRtpBin * bin)
   if (stream->buffer_ntpstop_sig)
     g_signal_handler_disconnect (stream->buffer, stream->buffer_ntpstop_sig);
 
+  sess->elements = g_slist_remove (sess->elements, stream->buffer);
+  remove_bin_element (stream->buffer, bin);
   gst_object_unref (stream->buffer);
+
   if (stream->demux)
     gst_bin_remove (GST_BIN_CAST (bin), stream->demux);
 
