@@ -117,6 +117,7 @@ struct _GstRtpBinClass {
   RTPSession* (*get_internal_session) (GstRtpBin *rtpbin, guint session);
   GstElement* (*get_storage)          (GstRtpBin *rtpbin, guint session);
   GObject*    (*get_internal_storage) (GstRtpBin *rtpbin, guint session);
+  void        (*clear_ssrc)           (GstRtpBin *rtpbin, guint session, guint32 ssrc);
 
   /* session manager signals */
   void     (*on_new_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);

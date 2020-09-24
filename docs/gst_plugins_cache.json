@@ -16448,6 +16448,21 @@
                         "return-type": "void",
                         "when": "last"
                     },
+                    "clear-ssrc": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
                     "get-internal-session": {
                         "action": true,
                         "args": [

@@ -292,6 +292,7 @@ enum
   SIGNAL_GET_INTERNAL_SESSION,
   SIGNAL_GET_STORAGE,
   SIGNAL_GET_INTERNAL_STORAGE,
+  SIGNAL_CLEAR_SSRC,
 
   SIGNAL_ON_NEW_SSRC,
   SIGNAL_ON_SSRC_COLLISION,
@@ -1136,6 +1137,25 @@ gst_rtp_bin_get_internal_storage (GstRtpBin * bin, guint session_id)
   GST_RTP_BIN_UNLOCK (bin);
 
   return internal_storage;
+}
+
+static void
+gst_rtp_bin_clear_ssrc (GstRtpBin * bin, guint session_id, guint32 ssrc)
+{
+  GstRtpBinSession *session;
+  GstElement *demux = NULL;
+
+  GST_RTP_BIN_LOCK (bin);
+  GST_DEBUG_OBJECT (bin, "clearing ssrc %u for session %u", ssrc, session_id);
+  session = find_session_by_id (bin, (gint) session_id);
+  if (session)
+    demux = gst_object_ref (session->demux);
+  GST_RTP_BIN_UNLOCK (bin);
+
+  if (demux) {
+    g_signal_emit_by_name (demux, "clear-ssrc", ssrc, NULL);
+    gst_object_unref (demux);
+  }
 }
 
 static GstElement *
@@ -2152,6 +2172,24 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           get_storage), NULL, NULL, NULL, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
 
   /**
+   * GstRtpBin::clear-ssrc:
+   * @rtpbin: the object which received the signal
+   * @id: the session id
+   * @ssrc: the ssrc
+   *
+   * Remove all pads from rtpssrcdemux element associated with the specified
+   * ssrc. This delegate the action signal to the rtpssrcdemux element
+   * associated with the specified session.
+   *
+   * Since: 1.20
+   */
+  gst_rtp_bin_signals[SIGNAL_CLEAR_SSRC] =
+      g_signal_new ("clear-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
+          clear_ssrc), NULL, NULL, NULL, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
    * GstRtpBin::on-new-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
@@ -2768,6 +2806,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   klass->get_storage = GST_DEBUG_FUNCPTR (gst_rtp_bin_get_storage);
   klass->get_internal_storage =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_storage);
+  klass->clear_ssrc = GST_DEBUG_FUNCPTR (gst_rtp_bin_clear_ssrc);
   klass->request_rtp_encoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_encoder);
   klass->request_rtp_decoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_decoder);
   klass->request_rtcp_encoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_encoder);
