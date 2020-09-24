@@ -548,12 +548,14 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
     gst_clear_caps (&caps);
   }
 
+#ifdef HAVE_NVCODEC_GST_GL
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL &&
       !gst_nvdec_ensure_gl_context (nvdec)) {
     GST_WARNING_OBJECT (nvdec,
         "OpenGL context is not CUDA-compatible, fallback to system memory");
     nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
   }
+#endif
 
   switch (nvdec->mem_type) {
     case GST_NVDEC_MEM_TYPE_CUDA:
