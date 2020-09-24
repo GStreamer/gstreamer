@@ -1233,7 +1233,7 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       }
     }
 
-    min = MAX (16 + 4, min);    /* max num pic references + scratch surfaces */
+    min += self->dpb_size + 4;  /* min + dbp size + scratch surfaces */
     size = MAX (size, GST_VIDEO_INFO_SIZE (&info));
 
     update_pool = TRUE;
@@ -1255,7 +1255,7 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       gst_clear_object (&other_allocator);
     }
 
-    min = 16 + 4;               /* max num pic references + scratch surfaces */
+    min = self->dpb_size + 4;   /* dpb size + scratch surfaces */
     max = 0;
   }
 
