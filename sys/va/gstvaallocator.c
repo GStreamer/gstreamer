@@ -948,14 +948,6 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
   return NULL;
 }
 
-static gboolean
-_va_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
-{
-  /* VA surfaces are opaque structures, which might live in other
-   * memory. It is impossible to know, so far, if they can mergable. */
-  return FALSE;
-}
-
 static void
 gst_va_allocator_init (GstVaAllocator * self)
 {
@@ -966,7 +958,6 @@ gst_va_allocator_init (GstVaAllocator * self)
   allocator->mem_unmap = (GstMemoryUnmapFunction) _va_unmap;
   allocator->mem_copy = (GstMemoryCopyFunction) _va_copy;
   allocator->mem_share = _va_share;
-  allocator->mem_is_span = _va_is_span;
 
   self->use_derived = TRUE;
 
