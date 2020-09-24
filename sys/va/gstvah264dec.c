@@ -240,7 +240,7 @@ _fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture)
     return;
   }
 
-  va_picture->picture_id = va_pic->surface;
+  va_picture->picture_id = gst_va_decode_picture_get_surface (va_pic);
   va_picture->flags = 0;
 
   if (picture->ref && picture->long_term) {
@@ -553,19 +553,17 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  VASurfaceID surface;
 
   self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (self->last_ret != GST_FLOW_OK)
     goto error;
 
-  surface = gst_va_buffer_get_surface (frame->output_buffer, NULL);
-
-  pic = gst_va_decode_picture_new (surface);
+  pic = gst_va_decode_picture_new (frame->output_buffer);
   gst_h264_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
 
-  GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic, pic->surface);
+  GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic,
+      gst_va_decode_picture_get_surface (pic));
 
   return TRUE;
 

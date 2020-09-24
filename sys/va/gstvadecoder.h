@@ -29,7 +29,7 @@ struct _GstVaDecodePicture
 {
   GArray *buffers;
   GArray *slices;
-  VASurfaceID surface;
+  GstBuffer *gstbuffer;
 };
 
 #define GST_TYPE_VA_DECODER (gst_va_decoder_get_type())
@@ -69,7 +69,8 @@ gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
 gboolean              gst_va_decoder_destroy_buffers      (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
 
-GstVaDecodePicture *  gst_va_decode_picture_new           (VASurfaceID surface);
+GstVaDecodePicture *  gst_va_decode_picture_new           (GstBuffer * buffer);
+VASurfaceID           gst_va_decode_picture_get_surface   (GstVaDecodePicture * pic);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
 
 G_END_DECLS
