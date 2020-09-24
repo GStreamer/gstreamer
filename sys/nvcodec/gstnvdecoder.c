@@ -50,6 +50,7 @@
 #include <gst/gl/gstglfuncs.h>
 #endif
 
+#include "gstcudamemory.h"
 #include "gstnvdecoder.h"
 #include <string.h>
 
@@ -915,14 +916,22 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
 
     src_templ = gst_caps_from_string (GST_VIDEO_CAPS_MAKE ("NV12"));
 
-#if HAVE_NVCODEC_GST_GL
     {
-      GstCaps *gl_caps = gst_caps_copy (src_templ);
-      gst_caps_set_features_simple (gl_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-      gst_caps_append (src_templ, gl_caps);
-    }
+      GstCaps *cuda_caps = gst_caps_copy (src_templ);
+      gst_caps_set_features_simple (cuda_caps,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+
+#if HAVE_NVCODEC_GST_GL
+      {
+        GstCaps *gl_caps = gst_caps_copy (src_templ);
+        gst_caps_set_features_simple (gl_caps,
+            gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+        gst_caps_append (src_templ, gl_caps);
+      }
 #endif
+
+      gst_caps_append (src_templ, cuda_caps);
+    }
 
     sink_templ = gst_caps_from_string (codec_map->sink_caps_string);
 
@@ -1042,15 +1051,23 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
 
   gst_caps_set_value (src_templ, "format", &format_list);
 
-  /* OpenGL specific */
-#if HAVE_NVCODEC_GST_GL
   {
-    GstCaps *gl_caps = gst_caps_copy (src_templ);
-    gst_caps_set_features_simple (gl_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-    gst_caps_append (src_templ, gl_caps);
-  }
+    GstCaps *cuda_caps = gst_caps_copy (src_templ);
+    gst_caps_set_features_simple (cuda_caps,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+
+    /* OpenGL specific */
+#if HAVE_NVCODEC_GST_GL
+    {
+      GstCaps *gl_caps = gst_caps_copy (src_templ);
+      gst_caps_set_features_simple (gl_caps,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+      gst_caps_append (src_templ, gl_caps);
+    }
 #endif
+
+    gst_caps_append (src_templ, cuda_caps);
+  }
 
   sink_templ = gst_caps_from_string (codec_map->sink_caps_string);
   gst_caps_set_simple (sink_templ,
