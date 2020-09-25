@@ -961,9 +961,9 @@ if build_gstgl
     glconf.set('GST_GL_HAVE_EGLUINT64KHR', 1)
   endif
 
-  message('Building libgstgl with GL api:      ' + ' '.join(enabled_gl_apis))
-  message('Building libgstgl with GL platform: ' + ' '.join(enabled_gl_platforms))
-  message('Building libgstgl with GL winsys:   ' + ' '.join(enabled_gl_winsys))
+  summary('GL api', enabled_gl_apis, list_sep: ', ')
+  summary('GL platform', enabled_gl_platforms, list_sep: ', ')
+  summary('GL winsys', enabled_gl_winsys, list_sep: ', ')
 
   install_headers(gl_headers, subdir : 'gstreamer-1.0/gst/gl')
   install_headers(gl_prototype_headers, subdir : 'gstreamer-1.0/gst/gl/glprototypes')
