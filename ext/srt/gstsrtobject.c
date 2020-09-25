@@ -1159,12 +1159,13 @@ void
 gst_srt_object_close (GstSRTObject * srtobject)
 {
   g_mutex_lock (&srtobject->sock_lock);
-  if (srtobject->poll_id != SRT_ERROR) {
-    srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
-  }
 
   if (srtobject->sock != SRT_INVALID_SOCK) {
     GstStructure *stats;
+
+    if (srtobject->poll_id != SRT_ERROR) {
+      srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
+    }
 
     stats = gst_srt_object_accumulate_stats (srtobject, srtobject->sock);
 
@@ -1180,11 +1181,14 @@ gst_srt_object_close (GstSRTObject * srtobject)
   }
 
   if (srtobject->listener_poll_id != SRT_ERROR) {
-    srt_epoll_remove_usock (srtobject->listener_poll_id,
-        srtobject->listener_sock);
+    if (srtobject->listener_sock != SRT_INVALID_SOCK) {
+      srt_epoll_remove_usock (srtobject->listener_poll_id,
+          srtobject->listener_sock);
+    }
     srt_epoll_release (srtobject->listener_poll_id);
     srtobject->listener_poll_id = SRT_ERROR;
   }
+
   if (srtobject->thread) {
     GThread *thread = g_steal_pointer (&srtobject->thread);
     g_mutex_unlock (&srtobject->sock_lock);
@@ -1362,7 +1366,9 @@ gst_srt_object_wakeup (GstSRTObject * srtobject, GCancellable * cancellable)
 
   /* Removing all socket descriptors from the monitoring list
    * wakes up SRT's threads. We only have one to remove. */
-  srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
+  if (srtobject->sock != SRT_INVALID_SOCK && srtobject->poll_id != SRT_ERROR) {
+    srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
+  }
 
   /* connection is only waited for in listener mode,
    * but there is no harm in raising signal in any case */
