@@ -31,52 +31,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_VIDEO_SINK                     (gst_d3d11_video_sink_get_type())
-#define GST_D3D11_VIDEO_SINK(obj)                     (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_VIDEO_SINK,GstD3D11VideoSink))
-#define GST_D3D11_VIDEO_SINK_CLASS(klass)             (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_VIDEO_SINK,GstD3D11VideoSinkClass))
-#define GST_D3D11_VIDEO_SINK_GET_CLASS(obj)           (GST_D3D11_VIDEO_SINK_CLASS(G_OBJECT_GET_CLASS(obj)))
-#define GST_IS_D3D11_VIDEO_SINK(obj)                  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_VIDEO_SINK))
-#define GST_IS_D3D11_VIDEO_SINK_CLASS(klass)          (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_VIDEO_SINK))
-
-typedef struct _GstD3D11VideoSink GstD3D11VideoSink;
-typedef struct _GstD3D11VideoSinkClass GstD3D11VideoSinkClass;
-
-struct _GstD3D11VideoSink
-{
-  GstVideoSink sink;
-  GstD3D11Device *device;
-  GstD3D11Window *window;
-  gint video_width;
-  gint video_height;
-
-  GstVideoInfo info;
-
-  guintptr window_id;
-
-  /* properties */
-  gint adapter;
-  gboolean force_aspect_ratio;
-  gboolean enable_navigation_events;
-  GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
-  gboolean fullscreen;
-
-  /* saved render rectangle until we have a window */
-  GstVideoRectangle render_rect;
-  gboolean pending_render_rect;
-
-  GstBufferPool *fallback_pool;
-  gboolean can_convert;
-  gboolean have_video_processor;
-};
-
-struct _GstD3D11VideoSinkClass
-{
-  GstVideoSinkClass parent_class;
-};
-
-GType    gst_d3d11_video_sink_get_type (void);
+#define GST_TYPE_D3D11_VIDEO_SINK (gst_d3d11_video_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11VideoSink,
+    gst_d3d11_video_sink, GST, D3D11_VIDEO_SINK, GstVideoSink);
 
 G_END_DECLS
-
 
 #endif /* __GST_D3D11_VIDEO_SINK_H__ */

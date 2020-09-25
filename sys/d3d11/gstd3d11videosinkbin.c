@@ -21,6 +21,11 @@
 #include "config.h"
 #endif
 
+#include <gst/video/video.h>
+#include <gst/video/gstvideosink.h>
+#include <gst/video/videooverlay.h>
+#include <gst/video/navigation.h>
+
 #include "gstd3d11videosinkbin.h"
 #include "gstd3d11videosink.h"
 #include "gstd3d11upload.h"
@@ -99,6 +104,16 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_DEBUG_CATEGORY (d3d11_video_sink_bin_debug);
 #define GST_CAT_DEFAULT d3d11_video_sink_bin_debug
+
+struct _GstD3D11VideoSinkBin
+{
+  GstBin parent;
+
+  GstPad *sinkpad;
+
+  GstElement *upload;
+  GstElement *sink;
+};
 
 static void gst_d3d11_video_sink_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);

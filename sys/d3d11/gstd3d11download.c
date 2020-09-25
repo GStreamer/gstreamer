@@ -62,6 +62,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             GST_D3D11_ALL_FORMATS)
     ));
 
+struct _GstD3D11Download
+{
+  GstD3D11BaseFilter parent;
+};
+
 #define gst_d3d11_download_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Download, gst_d3d11_download,
     GST_TYPE_D3D11_BASE_FILTER);

@@ -48,6 +48,7 @@
 #endif
 
 #include "gstd3d11colorconvert.h"
+#include "gstd3d11colorconverter.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11device.h"
@@ -77,6 +78,28 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
             GST_D3D11_SRC_FORMATS))
     );
+
+struct _GstD3D11ColorConvert
+{
+  GstD3D11BaseFilter parent;
+
+  const GstD3D11Format *in_d3d11_format;
+  const GstD3D11Format *out_d3d11_format;
+
+  ID3D11Texture2D *in_texture[GST_VIDEO_MAX_PLANES];
+  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
+  guint num_input_view;
+
+  ID3D11Texture2D *out_texture[GST_VIDEO_MAX_PLANES];
+  ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
+  guint num_output_view;
+
+  GstD3D11ColorConverter *converter;
+
+  /* used for fallback texture copy */
+  D3D11_BOX in_src_box;
+  D3D11_BOX out_src_box;
+};
 
 #define gst_d3d11_color_convert_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11ColorConvert,

@@ -21,43 +21,13 @@
 #define __GST_D3D11_VIDEO_SINK_BIN_H__
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideosink.h>
-#include <gst/video/videooverlay.h>
-#include <gst/video/navigation.h>
-
-#include "gstd3d11_fwd.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_VIDEO_SINK_BIN             (gst_d3d11_video_sink_bin_get_type())
-#define GST_D3D11_VIDEO_SINK_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_VIDEO_SINK_BIN,GstD3D11VideoSinkBin))
-#define GST_D3D11_VIDEO_SINK_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_VIDEO_SINK_BIN,GstD3D11VideoSinkBinClass))
-#define GST_D3D11_VIDEO_SINK_BIN_GET_CLASS(obj)   (GST_D3D11_VIDEO_SINK_BIN_CLASS(G_OBJECT_GET_CLASS(obj)))
-#define GST_IS_D3D11_VIDEO_SINK_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_VIDEO_SINK_BIN))
-#define GST_IS_D3D11_VIDEO_SINK_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_VIDEO_SINK_BIN))
-
-typedef struct _GstD3D11VideoSinkBin GstD3D11VideoSinkBin;
-typedef struct _GstD3D11VideoSinkBinClass GstD3D11VideoSinkBinClass;
-
-struct _GstD3D11VideoSinkBin
-{
-  GstBin parent;
-
-  GstPad *sinkpad;
-
-  GstElement *upload;
-  GstElement *sink;
-};
-
-struct _GstD3D11VideoSinkBinClass
-{
-  GstBinClass parent_class;
-};
-
-GType    gst_d3d11_video_sink_bin_get_type (void);
+#define GST_TYPE_D3D11_VIDEO_SINK_BIN (gst_d3d11_video_sink_bin_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11VideoSinkBin,
+    gst_d3d11_video_sink_bin, GST, D3D11_VIDEO_SINK_BIN, GstBin);
 
 G_END_DECLS
-
 
 #endif /* __GST_D3D11_VIDEO_SINK_BIN_H__ */

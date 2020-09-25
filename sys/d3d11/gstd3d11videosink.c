@@ -66,6 +66,34 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY (d3d11_video_sink_debug);
 #define GST_CAT_DEFAULT d3d11_video_sink_debug
 
+struct _GstD3D11VideoSink
+{
+  GstVideoSink parent;
+  GstD3D11Device *device;
+  GstD3D11Window *window;
+  gint video_width;
+  gint video_height;
+
+  GstVideoInfo info;
+
+  guintptr window_id;
+
+  /* properties */
+  gint adapter;
+  gboolean force_aspect_ratio;
+  gboolean enable_navigation_events;
+  GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
+  gboolean fullscreen;
+
+  /* saved render rectangle until we have a window */
+  GstVideoRectangle render_rect;
+  gboolean pending_render_rect;
+
+  GstBufferPool *fallback_pool;
+  gboolean can_convert;
+  gboolean have_video_processor;
+};
+
 static void gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_videosink_get_property (GObject * object, guint prop_id,

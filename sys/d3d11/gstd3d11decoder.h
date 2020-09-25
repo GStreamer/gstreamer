@@ -28,19 +28,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_DECODER \
-  (gst_d3d11_decoder_get_type())
-#define GST_D3D11_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_DECODER,GstD3D11Decoder))
-#define GST_D3D11_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_DECODER,GstD3D11DecoderClass))
-#define GST_D3D11_DECODER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_D3D11_DECODER,GstD3D11DecoderClass))
-#define GST_IS_D3D11_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_DECODER))
-#define GST_IS_D3D11_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_DECODER))
+#define GST_TYPE_D3D11_DECODER (gst_d3d11_decoder_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11Decoder,
+    gst_d3d11_decoder, GST, D3D11_DECODER, GstObject);
 
+typedef struct _GstD3D11DecoderPrivate GstD3D11DecoderPrivate;
 typedef struct _GstD3D11DecoderOutputView GstD3D11DecoderOutputView;
 
 struct _GstD3D11DecoderOutputView
@@ -83,13 +75,6 @@ struct _GstD3D11Decoder
   GstD3D11DecoderPrivate *priv;
   gpointer padding[GST_PADDING_LARGE];
 };
-
-struct _GstD3D11DecoderClass
-{
-  GstObjectClass parent_class;
-};
-
-GType gst_d3d11_decoder_get_type (void);
 
 GstD3D11Decoder * gst_d3d11_decoder_new (GstD3D11Device * device);
 

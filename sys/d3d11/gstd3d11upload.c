@@ -57,6 +57,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
             GST_D3D11_ALL_FORMATS)));
 
+struct _GstD3D11Upload
+{
+  GstD3D11BaseFilter parent;
+};
+
 #define gst_d3d11_upload_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Upload, gst_d3d11_upload, GST_TYPE_D3D11_BASE_FILTER);
 

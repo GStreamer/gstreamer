@@ -36,6 +36,9 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_BASE_FILTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_BASE_FILTER))
 #define GST_D3D11_BASE_FILTER_CAST(obj)        ((GstD3D11BaseFilter*)(obj))
 
+typedef struct _GstD3D11BaseFilter GstD3D11BaseFilter;
+typedef struct _GstD3D11BaseFilterClass GstD3D11BaseFilterClass;
+
 struct _GstD3D11BaseFilter
 {
   GstBaseTransform parent;
@@ -59,6 +62,8 @@ struct _GstD3D11BaseFilterClass
 };
 
 GType gst_d3d11_base_filter_get_type (void);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstD3D11BaseFilter, gst_object_unref)
 
 G_END_DECLS
 

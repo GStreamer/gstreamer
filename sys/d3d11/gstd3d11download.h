@@ -24,24 +24,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_DOWNLOAD             (gst_d3d11_download_get_type())
-#define GST_D3D11_DOWNLOAD(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_DOWNLOAD,GstD3D11Download))
-#define GST_D3D11_DOWNLOAD_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_D3D11_DOWNLOAD,GstD3D11DownloadClass))
-#define GST_D3D11_DOWNLOAD_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_DOWNLOAD,GstD3D11DownloadClass))
-#define GST_IS_D3D11_DOWNLOAD(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_DOWNLOAD))
-#define GST_IS_D3D11_DOWNLOAD_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_DOWNLOAD))
-
-struct _GstD3D11Download
-{
-  GstD3D11BaseFilter parent;
-};
-
-struct _GstD3D11DownloadClass
-{
-  GstD3D11BaseFilterClass parent_class;
-};
-
-GType gst_d3d11_download_get_type (void);
+#define GST_TYPE_D3D11_DOWNLOAD (gst_d3d11_download_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11Download,
+    gst_d3d11_download, GST, D3D11_DOWNLOAD, GstD3D11BaseFilter);
 
 G_END_DECLS
 
