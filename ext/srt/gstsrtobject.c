@@ -118,7 +118,6 @@ struct srt_constant_params
 static struct srt_constant_params srt_params[] = {
   {"SRTO_SNDSYN", SRTO_SNDSYN, 0},      /* 0: non-blocking */
   {"SRTO_RCVSYN", SRTO_RCVSYN, 0},      /* 0: non-blocking */
-  {"SRTO_LINGER", SRTO_LINGER, 0},
   {"SRTO_TSBPMODE", SRTO_TSBPDMODE, 1}, /* Timestamp-based Packet Delivery mode must be enabled */
   {NULL, -1, -1},
 };
@@ -181,6 +180,7 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
 {
   struct srt_constant_params *params = srt_params;
   const gchar *passphrase;
+  struct linger linger = { 0 };
 
   GST_OBJECT_LOCK (srtobject->element);
 
@@ -191,6 +191,14 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
           srt_getlasterror_str ());
       goto err;
     }
+  }
+
+  linger.l_onoff = 0;           /* 0: non-blocking */
+  if (srt_setsockopt (sock, 0, SRTO_LINGER, (const char *) &linger,
+          sizeof (linger))) {
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+        "failed to set SRTO_LINGER (reason: %s)", srt_getlasterror_str ());
+    goto err;
   }
 
   passphrase = gst_structure_get_string (srtobject->parameters, "passphrase");
