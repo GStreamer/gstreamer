@@ -8776,7 +8776,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * GstWebRTCBin:http-proxy:
    *
    * A HTTP proxy for use with TURN/TCP of the form
-   * http://[username:password@]hostname[:port]
+   * http://[username:password@]hostname[:port][?alpn=<alpn>]
    *
    * Since: 1.22
    */
@@ -8784,7 +8784,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       PROP_HTTP_PROXY,
       g_param_spec_string ("http-proxy", "HTTP Proxy",
           "A HTTP proxy for use with TURN/TCP of the form "
-          "http://[username:password@]hostname[:port]",
+          "http://[username:password@]hostname[:port][?alpn=<alpn>]",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**

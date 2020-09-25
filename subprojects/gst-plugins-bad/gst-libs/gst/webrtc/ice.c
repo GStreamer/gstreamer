@@ -458,7 +458,7 @@ gst_webrtc_ice_get_turn_server (GstWebRTCICE * ice)
  * gst_webrtc_ice_set_http_proxy:
  * @ice: The #GstWebRTCICE
  * @uri: (transfer none): URI of the HTTP proxy of the form
- *   http://[username:password@]hostname[:port]
+ *   http://[username:password@]hostname[:port][?alpn=<alpn>]
  *
  * Set HTTP Proxy to be used when connecting to TURN server.
  *
@@ -478,7 +478,7 @@ gst_webrtc_ice_set_http_proxy (GstWebRTCICE * ice, const gchar * uri_s)
  * @ice: The #GstWebRTCICE
  *
  * Returns: (transfer full): URI of the HTTP proxy of the form
- *   http://[username:password@]hostname[:port]
+ *   http://[username:password@]hostname[:port][?alpn=<alpn>]
  *
  * Get HTTP Proxy to be used when connecting to TURN server.
  *

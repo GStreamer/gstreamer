@@ -1351,8 +1351,10 @@ on_http_proxy_resolved (GstWebRTCICE * ice, GAsyncResult * res,
   const gchar *userinfo;
   gchar *user = NULL;
   gchar *pass = NULL;
+  const gchar *alpn = NULL;
   gchar *ip = NULL;
   guint port = GST_URI_NO_PORT;
+  GHashTable *extra_headers;
 
   if (!(addresses = resolve_host_finish (nice, res, &error))) {
     GST_WARNING_OBJECT (ice, "Failed to resolve http proxy: %s",
@@ -1382,13 +1384,23 @@ on_http_proxy_resolved (GstWebRTCICE * ice, GAsyncResult * res,
   userinfo = gst_uri_get_userinfo (uri);
   _parse_userinfo (userinfo, &user, &pass);
 
+  alpn = gst_uri_get_query_value (uri, "alpn");
+  if (!alpn) {
+    alpn = "webrtc";
+  }
+  extra_headers = g_hash_table_new_full (g_str_hash,
+      g_str_equal, g_free, g_free);
+  g_hash_table_insert (extra_headers, g_strdup ("ALPN"), g_strdup (alpn));
+
   g_object_set (nice->priv->nice_agent,
       "proxy-ip", ip, "proxy-port", port, "proxy-type", NICE_PROXY_TYPE_HTTP,
-      "proxy-username", user, "proxy-password", pass, NULL);
+      "proxy-username", user, "proxy-password", pass, "proxy-extra-headers",
+      extra_headers, NULL);
 
   g_free (ip);
   g_free (user);
   g_free (pass);
+  g_hash_table_unref (extra_headers);
 }
 
 static GstUri *

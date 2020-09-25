@@ -764,7 +764,7 @@ for more information.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
-  http://[username:password@]hostname[:port]
+  http://[username:password@]hostname[:port][?alpn=&lt;alpn&gt;]
 
 Get HTTP Proxy to be used when connecting to TURN server.</doc>
           <type name="utf8" c:type="gchar*"/>
@@ -897,7 +897,7 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
           </instance-parameter>
           <parameter name="uri" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
-  http://[username:password@]hostname[:port]</doc>
+  http://[username:password@]hostname[:port][?alpn=&lt;alpn&gt;]</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -1144,7 +1144,7 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
-  http://[username:password@]hostname[:port]
+  http://[username:password@]hostname[:port][?alpn=&lt;alpn&gt;]
 
 Get HTTP Proxy to be used when connecting to TURN server.</doc>
           <type name="utf8" c:type="gchar*"/>
@@ -1287,7 +1287,7 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
           </instance-parameter>
           <parameter name="uri" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
-  http://[username:password@]hostname[:port]</doc>
+  http://[username:password@]hostname[:port][?alpn=&lt;alpn&gt;]</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -1833,7 +1833,7 @@ stops automatic ICE gathering.</doc>
             </parameter>
             <parameter name="uri" transfer-ownership="none">
               <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
-  http://[username:password@]hostname[:port]</doc>
+  http://[username:password@]hostname[:port][?alpn=&lt;alpn&gt;]</doc>
               <type name="utf8" c:type="const gchar*"/>
             </parameter>
           </parameters>
@@ -1844,7 +1844,7 @@ stops automatic ICE gathering.</doc>
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
           <return-value transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
-  http://[username:password@]hostname[:port]
+  http://[username:password@]hostname[:port][?alpn=&lt;alpn&gt;]
 
 Get HTTP Proxy to be used when connecting to TURN server.</doc>
             <type name="utf8" c:type="gchar*"/>
