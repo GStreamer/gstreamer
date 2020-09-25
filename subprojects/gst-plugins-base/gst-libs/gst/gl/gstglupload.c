@@ -3585,7 +3585,7 @@ restart:
           last_method != NULL ? last_method->name : "None",
           upload->priv->method->name, caps, upload->priv->out_caps);
 
-      if (caps == NULL || !gst_caps_is_subset (caps, upload->priv->out_caps)) {
+      if (caps == NULL || !gst_caps_is_subset (upload->priv->out_caps, caps)) {
         gst_buffer_replace (&outbuf, NULL);
         ret = GST_GL_UPLOAD_RECONFIGURE;
       }
