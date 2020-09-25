@@ -283,7 +283,7 @@ GST_START_TEST (test_upload_data)
   in_caps = gst_caps_from_string ("video/x-raw,format=RGBA,"
       "width=10,height=10");
   out_caps = gst_caps_from_string ("video/x-raw(memory:GLMemory),"
-      "format=RGBA,width=10,height=10");
+      "format=RGBA,width=10,height=10,texture-target=2D");
 
   gst_gl_upload_set_caps (upload, in_caps, out_caps);
 
