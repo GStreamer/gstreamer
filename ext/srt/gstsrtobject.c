@@ -262,15 +262,13 @@ gst_srt_object_new (GstElement * element)
 {
   GstSRTObject *srtobject;
 
-  if (g_atomic_int_get (&srt_init_refcount) == 0) {
+  if (g_atomic_int_add (&srt_init_refcount, 1) == 0) {
     GST_DEBUG_OBJECT (element, "Starting up SRT");
-    if (srt_startup () != 0) {
+    if (srt_startup () < 0) {
       g_warning ("Failed to initialize SRT (reason: %s)",
           srt_getlasterror_str ());
     }
   }
-
-  g_atomic_int_inc (&srt_init_refcount);
 
   srtobject = g_new0 (GstSRTObject, 1);
   srtobject->element = element;
