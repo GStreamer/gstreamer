@@ -483,7 +483,7 @@ gst_pad_template_get_caps (GstPadTemplate * templ)
 /**
  * gst_pad_template_set_documentation_caps:
  * @templ: the pad template to set documented capabilities on
- * @caps: the documented capabilities
+ * @caps: (transfer full): the documented capabilities
  *
  * Certain elements will dynamically construct the caps of their
  * pad templates. In order not to let environment-specific information
