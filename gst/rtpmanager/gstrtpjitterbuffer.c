@@ -1153,6 +1153,8 @@ gst_rtp_jitter_buffer_finalize (GObject * object)
   g_cond_clear (&priv->jbuf_event);
   g_cond_clear (&priv->jbuf_query);
 
+  rtp_jitter_buffer_set_item_free_func (priv->jbuf, (GFunc) free_item);
+
   rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
   g_queue_foreach (&priv->gap_packets, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (&priv->gap_packets);

@@ -74,6 +74,7 @@ struct _RTPJitterBuffer {
   GObject        object;
 
   GQueue         packets;
+  GFunc          item_free_func; /* 1.16 only */
 
   RTPJitterBufferMode mode;
 
@@ -148,6 +149,10 @@ GType rtp_jitter_buffer_get_type (void);
 
 /* managing lifetime */
 RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
+
+/* Temporary, 1.16 branch only */
+G_GNUC_INTERNAL
+void                  rtp_jitter_buffer_set_item_free_func (RTPJitterBuffer *jbuf, GFunc free_func);
 
 RTPJitterBufferMode   rtp_jitter_buffer_get_mode         (RTPJitterBuffer *jbuf);
 void                  rtp_jitter_buffer_set_mode         (RTPJitterBuffer *jbuf, RTPJitterBufferMode mode);

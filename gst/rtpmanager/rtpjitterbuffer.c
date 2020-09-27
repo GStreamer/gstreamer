@@ -115,7 +115,10 @@ rtp_jitter_buffer_finalize (GObject * object)
   /* We cannot use g_queue_clear() as it would pass the wrong size to
    * g_slice_free() which may lead to data corruption in the slice allocator.
    */
-  rtp_jitter_buffer_flush (jbuf, NULL, NULL);
+  if (jbuf->item_free_func != NULL)
+    rtp_jitter_buffer_flush (jbuf, jbuf->item_free_func, NULL);
+  else if (jbuf->packets.head != NULL)
+    g_warning ("Leaking RTP jitterbuffer items!");
 
   g_mutex_clear (&jbuf->clock_lock);
 
@@ -137,6 +140,15 @@ rtp_jitter_buffer_new (void)
   jbuf = g_object_new (RTP_TYPE_JITTER_BUFFER, NULL);
 
   return jbuf;
+}
+
+void
+rtp_jitter_buffer_set_item_free_func (RTPJitterBuffer * jbuf, GFunc free_func)
+{
+  g_return_if_fail (jbuf != NULL);
+  g_return_if_fail (free_func != NULL);
+
+  jbuf->item_free_func = free_func;
 }
 
 /**
