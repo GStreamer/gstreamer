@@ -15,6 +15,7 @@ examples = [
   'test-readme',
   'test-record-auth',
   'test-record',
+  'test-replay-server',
   'test-sdp',
   'test-uri',
   'test-video',
