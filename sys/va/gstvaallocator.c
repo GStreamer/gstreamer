@@ -910,37 +910,6 @@ _va_unmap (GstVaMemory * mem)
   return ret;
 }
 
-/* XXX(victor): shallow copy -- only the surface */
-static GstMemory *
-_va_copy_unlocked (GstVaMemory * mem)
-{
-  GstVaMemory *ret;
-  gsize size;
-
-  ret = g_slice_new (GstVaMemory);
-
-  size = GST_VIDEO_INFO_SIZE (&mem->info);
-
-  ret->info = mem->info;
-  ret->surface = mem->surface;
-
-  _reset_mem (ret, GST_MEMORY_CAST (mem)->allocator, size);
-
-  return GST_MEMORY_CAST (ret);
-}
-
-static GstMemory *
-_va_copy (GstVaMemory * mem, gssize offset, gssize size)
-{
-  GstMemory *ret;
-
-  g_mutex_lock (&mem->lock);
-  ret = _va_copy_unlocked (mem);
-  g_mutex_unlock (&mem->lock);
-
-  return ret;
-}
-
 static GstMemory *
 _va_share (GstMemory * mem, gssize offset, gssize size)
 {
@@ -956,7 +925,6 @@ gst_va_allocator_init (GstVaAllocator * self)
   allocator->mem_type = GST_ALLOCATOR_VASURFACE;
   allocator->mem_map = (GstMemoryMapFunction) _va_map;
   allocator->mem_unmap = (GstMemoryUnmapFunction) _va_unmap;
-  allocator->mem_copy = (GstMemoryCopyFunction) _va_copy;
   allocator->mem_share = _va_share;
 
   self->use_derived = TRUE;
