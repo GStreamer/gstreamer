@@ -677,7 +677,7 @@ struct _GstVaAllocator
 typedef struct _GstVaMemory GstVaMemory;
 struct _GstVaMemory
 {
-  GstMemory parent;
+  GstMemory mem;
 
   GstVideoInfo info;
   VASurfaceID surface;
@@ -696,6 +696,8 @@ struct _GstVaMemory
 G_DEFINE_TYPE_WITH_CODE (GstVaAllocator, gst_va_allocator, GST_TYPE_ALLOCATOR,
     _init_debug_category ());
 
+static gboolean _va_unmap (GstVaMemory * mem);
+
 static void
 gst_va_allocator_dispose (GObject * object)
 {
@@ -713,11 +715,20 @@ _va_free (GstAllocator * allocator, GstMemory * mem)
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
   GstVaMemory *va_mem = (GstVaMemory *) mem;
 
-  GST_LOG_OBJECT (self, "Destroying surface %#x", va_mem->surface);
+  if (va_mem->mapped_data) {
+    g_warning (G_STRLOC ":%s: Freeing memory %p still mapped", G_STRFUNC,
+        va_mem);
+    _va_unmap (va_mem);
+  }
 
-  _destroy_surfaces (self->display, &va_mem->surface, 1);
+  if (va_mem->surface != VA_INVALID_ID && mem->parent == NULL) {
+    GST_LOG_OBJECT (self, "Destroying surface %#x", va_mem->surface);
+    _destroy_surfaces (self->display, &va_mem->surface, 1);
+  }
+
   g_mutex_clear (&va_mem->lock);
 
+  GST_DEBUG ("%p: freed", va_mem);
   g_slice_free (GstVaMemory, va_mem);
 }
 
@@ -751,8 +762,8 @@ _reset_mem (GstVaMemory * mem, GstAllocator * allocator, gsize size)
   g_atomic_int_set (&mem->map_count, 0);
   g_mutex_init (&mem->lock);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE, allocator,
-      NULL, size, 0 /* align */ , 0 /* offset */ , size);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size,
+      0 /* align */ , 0 /* offset */ , size);
 }
 
 static inline gboolean
@@ -913,8 +924,35 @@ _va_unmap (GstVaMemory * mem)
 static GstMemory *
 _va_share (GstMemory * mem, gssize offset, gssize size)
 {
-  /* VA surfaces are opaque structures, which cannot be shared */
-  return NULL;
+  GstVaMemory *vamem = (GstVaMemory *) mem;
+  GstVaMemory *sub;
+  GstMemory *parent;
+  GST_DEBUG ("%p: share %" G_GSSIZE_FORMAT ", %" G_GSIZE_FORMAT, mem, offset,
+      size);
+
+  /* find real parent */
+  if ((parent = vamem->mem.parent) == NULL)
+    parent = (GstMemory *) vamem;
+
+  if (size == -1)
+    size = mem->maxsize - offset;
+
+  sub = g_slice_new (GstVaMemory);
+  /* the shared memory is alwyas readonly */
+  gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
+      GST_MINI_OBJECT_FLAG_LOCK_READONLY, vamem->mem.allocator, parent,
+      vamem->mem.maxsize, vamem->mem.align, vamem->mem.offset + offset, size);
+
+  sub->surface = vamem->surface;
+  sub->surface_format = vamem->surface_format;
+  sub->info = vamem->info;
+
+  _clean_mem (sub);
+
+  g_atomic_int_set (&sub->map_count, 0);
+  g_mutex_init (&sub->lock);
+
+  return GST_MEMORY_CAST (sub);
 }
 
 static void
