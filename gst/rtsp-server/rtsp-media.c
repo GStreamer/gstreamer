@@ -1662,6 +1662,8 @@ update_stream_storage_size (GstRTSPMedia * media, GstRTSPStream * stream,
       size_time = (media->priv->latency + 50) * GST_MSECOND;
 
     g_object_set (storage, "size-time", size_time, NULL);
+
+    g_object_unref (storage);
   }
 }
 
