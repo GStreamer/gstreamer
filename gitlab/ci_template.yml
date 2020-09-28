@@ -45,7 +45,7 @@ variables:
   TEST_MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$TEST_MANIFEST_AMD64_SUFFIX:$TEST_MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
   INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG-$GST_UPSTREAM_BRANCH"
 
-  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v12-master'
+  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v13-master'
 
   # Can't use $CI_* variables since we use this template in all repos, not just gst-ci
   CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
@@ -1221,4 +1221,3 @@ build cerbero msvc x86_64:
     - C:\MinGW\msys\1.0\bin\bash.exe --login -c "cd $env:CI_PROJECT_DIR && $env:CERBERO_SCRIPTS_PATH cerbero_script"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
-      allow_failure: true
