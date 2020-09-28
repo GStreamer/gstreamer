@@ -2357,7 +2357,7 @@ too_small_reserved:
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
         ("Not enough free reserved header space"),
         ("Needed %" G_GUINT64_FORMAT " bytes, reserved %" G_GUINT64_FORMAT,
-            offset, padded_moov_size));
+            offset + 8, padded_moov_size));
     return GST_FLOW_ERROR;
   }
 serialize_error:
