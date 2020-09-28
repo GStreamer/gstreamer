@@ -1831,6 +1831,11 @@ gst_av1_parser_reference_frame_update (GstAV1Parser * parser,
     GstAV1FrameHeaderOBU * frame_header);
 
 GST_CODEC_PARSERS_API
+GstAV1ParserResult
+gst_av1_parser_set_operating_point (GstAV1Parser * parser,
+    gint32 operating_point);
+
+GST_CODEC_PARSERS_API
 GstAV1Parser * gst_av1_parser_new (void);
 
 GST_CODEC_PARSERS_API

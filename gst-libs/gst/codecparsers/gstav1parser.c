@@ -1289,7 +1289,8 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
     }
   }
 
-  /* Let user decide the operatingPoint, move it later
+  /* Let user decide the operatingPoint,
+     implemented by calling gst_av1_parser_set_operating_point()
      operatingPoint = choose_operating_point( )
      operating_point_idc = operating_point_idc[ operatingPoint ] */
 
@@ -1451,7 +1452,7 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
   if (parser->state.operating_point < 0 ||
       parser->state.operating_point >
       seq_header->operating_points_cnt_minus_1) {
-    GST_INFO ("Invalid operating_point %d set by user, just use 0",
+    GST_WARNING ("Invalid operating_point %d set by user, just use 0",
         parser->state.operating_point);
     parser->state.operating_point_idc = seq_header->operating_points[0].idc;
   } else {
@@ -4645,6 +4646,33 @@ gst_av1_parser_parse_frame_obu (GstAV1Parser * parser, GstAV1OBU * obu,
 
   retval = gst_av1_parse_tile_group (parser, &bit_reader, &(frame->tile_group));
   return retval;
+}
+
+/**
+ * gst_av1_parser_set_operating_point:
+ * @parser: the #GstAV1Parser
+ * @operating_point: the operating point to set
+ *
+ * Set the operating point to filter OBUs.
+ *
+ * Returns: The #GstAV1ParserResult.
+ *
+ * Since: 1.20
+ */
+GstAV1ParserResult
+gst_av1_parser_set_operating_point (GstAV1Parser * parser,
+    gint32 operating_point)
+{
+  g_return_val_if_fail (parser != NULL, GST_AV1_PARSER_INVALID_OPERATION);
+  g_return_val_if_fail (operating_point >= 0, GST_AV1_PARSER_INVALID_OPERATION);
+
+  if (parser->seq_header &&
+      operating_point > parser->seq_header->operating_points_cnt_minus_1)
+    return GST_AV1_PARSER_INVALID_OPERATION;
+
+  /* Decide whether it is valid when sequence comes. */
+  parser->state.operating_point = operating_point;
+  return GST_AV1_PARSER_OK;
 }
 
 /**
