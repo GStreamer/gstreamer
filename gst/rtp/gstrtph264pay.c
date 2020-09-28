@@ -1060,7 +1060,7 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     /* use buffer lists
      * create buffer without payload containing only the RTP header
      * (memory block at index 0) */
-    outbuf = gst_rtp_buffer_new_allocate (2, 0, 0);
+    outbuf = gst_rtp_base_payload_allocate_output_buffer (basepayload, 2, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
@@ -1122,7 +1122,7 @@ gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
 
   /* create buffer without payload containing only the RTP header
    * (memory block at index 0) */
-  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  outbuf = gst_rtp_base_payload_allocate_output_buffer (basepayload, 0, 0, 0);
 
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 

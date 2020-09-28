@@ -732,7 +732,9 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     if (next_gop > 0)
       towrite = MIN (next_gop, towrite);
 
-    outbuf = gst_rtp_buffer_new_allocate (header_len, 0, 0);
+    outbuf =
+        gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+        (rtph263ppay), header_len, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     /* last fragment gets the marker bit set */

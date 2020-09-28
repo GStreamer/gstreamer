@@ -1355,7 +1355,9 @@ gst_rtp_h263_pay_A_fragment_push (GstRtpH263Pay * rtph263pay,
 
   pack->gobn = context->gobs[first]->gobn;
   pack->mode = GST_RTP_H263_PAYLOAD_HEADER_MODE_A;
-  pack->outbuf = gst_rtp_buffer_new_allocate (pack->mode, 0, 0);
+  pack->outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtph263pay), pack->mode, 0, 0);
 
   GST_DEBUG_OBJECT (rtph263pay, "Sending len:%d data to push function",
       pack->payload_len);
@@ -1412,7 +1414,9 @@ gst_rtp_h263_pay_B_fragment_push (GstRtpH263Pay * rtph263pay,
   }
 
   pack->payload_len = pack->payload_end - pack->payload_start + 1;
-  pack->outbuf = gst_rtp_buffer_new_allocate (pack->mode, 0, 0);
+  pack->outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtph263pay), pack->mode, 0, 0);
 
   return gst_rtp_h263_pay_push (rtph263pay, context, pack);
 }
@@ -1637,7 +1641,8 @@ gst_rtp_h263_send_entire_frame (GstRtpH263Pay * rtph263pay,
       rtph263pay->available_data);
 
   pack->outbuf =
-      gst_rtp_buffer_new_allocate (GST_RTP_H263_PAYLOAD_HEADER_MODE_A, 0, 0);
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtph263pay), GST_RTP_H263_PAYLOAD_HEADER_MODE_A, 0, 0);
 
   return gst_rtp_h263_pay_push (rtph263pay, context, pack);
 }

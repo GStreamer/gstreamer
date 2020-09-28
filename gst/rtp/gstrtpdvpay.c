@@ -332,7 +332,9 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
   while (size >= 80) {
     /* Allocate a new buffer, set the timestamp */
     if (outbuf == NULL) {
-      outbuf = gst_rtp_buffer_new_allocate (max_payload_size, 0, 0);
+      outbuf =
+          gst_rtp_base_payload_allocate_output_buffer (basepayload,
+          max_payload_size, 0, 0);
       GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (buffer);
 
       if (!gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp)) {

@@ -440,7 +440,9 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       data_size = payload_size - GST_RTP_J2K_HEADER_SIZE;
 
       /* make buffer for header */
-      outbuf = gst_rtp_buffer_new_allocate (GST_RTP_J2K_HEADER_SIZE, 0, 0);
+      outbuf =
+          gst_rtp_base_payload_allocate_output_buffer (basepayload,
+          GST_RTP_J2K_HEADER_SIZE, 0, 0);
 
       GST_BUFFER_PTS (outbuf) = timestamp;
 

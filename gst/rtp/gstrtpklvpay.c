@@ -147,7 +147,7 @@ gst_rtp_klv_pay_handle_buffer (GstRTPBasePayload * basepayload, GstBuffer * buf)
     bytes_left = map.size - offset;
     payload_size = MIN (bytes_left, max_payload_size);
 
-    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+    outbuf = gst_rtp_base_payload_allocate_output_buffer (basepayload, 0, 0, 0);
 
     if (payload_size == bytes_left) {
       GST_LOG_OBJECT (pay, "last packet of KLV unit");

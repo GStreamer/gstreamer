@@ -385,9 +385,9 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
   guint8 *p;
   GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
-  out = gst_rtp_base_payload_allocate_output_buffer (
-      GST_RTP_BASE_PAYLOAD_CAST (self), gst_rtp_vp8_calc_header_len (self),
-      0, 0);
+  out =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD_CAST
+      (self), gst_rtp_vp8_calc_header_len (self), 0, 0);
   gst_rtp_buffer_map (out, GST_MAP_READWRITE, &rtpbuffer);
   p = gst_rtp_buffer_get_payload (&rtpbuffer);
   /* X=0,R=0,N=0,S=start,PartID=partid */

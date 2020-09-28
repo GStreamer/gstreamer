@@ -386,7 +386,9 @@ gst_rtp_vp9_create_header_buffer (GstRtpVP9Pay * self,
   guint off = 1;
   guint hdrlen = gst_rtp_vp9_calc_header_len (self, start);
 
-  out = gst_rtp_buffer_new_allocate (hdrlen, 0, 0);
+  out =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD (self),
+      hdrlen, 0, 0);
   gst_rtp_buffer_map (out, GST_MAP_READWRITE, &rtpbuffer);
   p = gst_rtp_buffer_get_payload (&rtpbuffer);
   p[0] = 0x0;

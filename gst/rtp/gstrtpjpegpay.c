@@ -885,7 +885,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     if (dri_found)
       header_size += sizeof (restart_marker_header);
 
-    outbuf = gst_rtp_buffer_new_allocate (header_size, 0, 0);
+    outbuf =
+        gst_rtp_base_payload_allocate_output_buffer (basepayload, header_size,
+        0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 

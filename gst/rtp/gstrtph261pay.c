@@ -813,8 +813,9 @@ gst_rtp_h261_pay_fragment_push (GstRtpH261Pay * pay, GstBuffer * buffer,
 
   nbytes = bitrange_to_bytes (start, end);
 
-  outbuf = gst_rtp_buffer_new_allocate (nbytes +
-      GST_RTP_H261_PAYLOAD_HEADER_LEN, 0, 0);
+  outbuf =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD (pay),
+      nbytes + GST_RTP_H261_PAYLOAD_HEADER_LEN, 0, 0);
   gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
   payload = gst_rtp_buffer_get_payload (&rtp);
   header = (GstRtpH261PayHeader *) payload;

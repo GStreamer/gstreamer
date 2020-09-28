@@ -281,8 +281,8 @@ gst_rtp_theora_pay_init_packet (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
 
   /* new packet allocate max packet size */
   rtptheorapay->packet =
-      gst_rtp_buffer_new_allocate_len (GST_RTP_BASE_PAYLOAD_MTU
-      (rtptheorapay), 0, 0);
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+      (rtptheorapay), GST_RTP_BASE_PAYLOAD_MTU (rtptheorapay), 0, 0);
   gst_rtp_theora_pay_reset_packet (rtptheorapay, TDT);
 
   GST_BUFFER_PTS (rtptheorapay->packet) = timestamp;

@@ -204,7 +204,9 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
 
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
-    outbuf = gst_rtp_buffer_new_allocate (4, 0, 0);
+    outbuf =
+        gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
+        (rtpmpvpay), 4, 0, 0);
 
     payload_len -= 4;
 
