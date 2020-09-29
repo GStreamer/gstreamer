@@ -532,6 +532,7 @@ gst_va_dmabuf_setup_buffer (GstAllocator * allocator, GstBuffer * buffer,
   }
 
   buf = _create_buffer_surface (surface, format, desc.width, desc.height);
+  GST_VIDEO_INFO_SIZE (&buf->info) = 0;
 
   for (i = 0; i < desc.num_objects; i++) {
     gint fd = desc.objects[i].fd;
@@ -551,6 +552,8 @@ gst_va_dmabuf_setup_buffer (GstAllocator * allocator, GstBuffer * buffer,
     *drm_mod = desc.objects[i].drm_format_modifier;
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), gst_va_drm_mod_quark (),
         drm_mod, g_free);
+
+    GST_VIDEO_INFO_SIZE (&buf->info) += size;
   }
 
   for (i = 0; i < desc.num_layers; i++) {
@@ -559,7 +562,6 @@ gst_va_dmabuf_setup_buffer (GstAllocator * allocator, GstBuffer * buffer,
     GST_VIDEO_INFO_PLANE_STRIDE (&buf->info, i) = desc.layers[i].pitch[0];
   }
 
-  GST_VIDEO_INFO_SIZE (&buf->info) = gst_buffer_get_size (buffer);
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d] size %" G_GSIZE_FORMAT,
       buf->surface, GST_VIDEO_INFO_WIDTH (&buf->info),
       GST_VIDEO_INFO_HEIGHT (&buf->info), GST_VIDEO_INFO_SIZE (&buf->info));
