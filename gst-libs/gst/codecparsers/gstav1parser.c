@@ -1600,7 +1600,7 @@ gst_av1_parse_metadata_scalability (GstAV1Parser * parser,
 
   if (scalability->spatial_layer_description_present_flag) {
     for (i = 0; i <= scalability->spatial_layers_cnt_minus_1; i++) {
-      scalability->spatial_layer_ref_id[i] = AV1_READ_BIT_CHECKED (br, &ret);
+      scalability->spatial_layer_ref_id[i] = AV1_READ_UINT8_CHECKED (br, &ret);
       if (ret != GST_AV1_PARSER_OK)
         goto error;
     }
