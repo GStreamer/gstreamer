@@ -597,7 +597,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstQTMux:fragment-mode:
+   * GstBaseQTMux:fragment-mode:
    *
    * Influence how fragmented files are produces.  Only has any affect when the
    * the 'fragment-duration' property is set to a value greater than '0'
@@ -7352,7 +7352,7 @@ gst_qt_mux_register (GstPlugin * plugin)
   GST_LOG ("Registering muxers");
 
   parent_type =
-      g_type_register_static (GST_TYPE_AGGREGATOR, "GstQTMux",
+      g_type_register_static (GST_TYPE_AGGREGATOR, "GstBaseQTMux",
       &parent_typeinfo, 0);
   g_type_add_interface_static (parent_type, GST_TYPE_TAG_SETTER,
       &tag_setter_info);

@@ -179,7 +179,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_RANK_PRIMARY,
         "qtmux",
         "QuickTime",
-        "GstQTMuxElement",
+        "GstQTMux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) apple; "
             "video/quicktime"),
         GST_STATIC_CAPS ("video/x-raw, "

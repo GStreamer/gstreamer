@@ -67,7 +67,7 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale,
+ * A few properties (#GstBaseQTMux:movie-timescale, #GstBaseQTMux:trak-timescale,
  * #GstQTMuxPad:trak-timescale) allow adjusting some technical parameters,
  * which might be useful in (rare) cases to resolve compatibility issues in
  * some situations.
@@ -75,28 +75,28 @@
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the
  * file, somewhat contrary to this usually being called "the header".
- * However, a #GstQTMux:faststart file will (with some effort) arrange this to
+ * However, a #GstBaseQTMux:faststart file will (with some effort) arrange this to
  * be located near start of the file, which then allows it e.g. to be played
  * while downloading. Alternatively, rather than having one chunk of metadata at
  * start (or end), there can be some metadata at start and most of the other
- * data can be spread out into fragments of #GstQTMux:fragment-duration.
+ * data can be spread out into fragments of #GstBaseQTMux:fragment-duration.
  * If such fragmented layout is intended for streaming purposes, then
- * #GstQTMuxElement:streamable allows foregoing to add index metadata (at the end of
+ * #GstQTMux:streamable allows foregoing to add index metadata (at the end of
  * file).
  *
- * When the maximum duration to be recorded can be known in advance, #GstQTMuxElement
+ * When the maximum duration to be recorded can be known in advance, #GstQTMux
  * also supports a 'Robust Muxing' mode. In robust muxing mode,  space for the
  * headers are reserved at the start of muxing, and rewritten at a configurable
  * interval, so that the output file is always playable, even if the recording
  * is interrupted uncleanly by a crash. Robust muxing mode requires a seekable
  * output, such as filesink, because it needs to rewrite the start of the file.
  *
- * To enable robust muxing mode, set the #GstQTMux:reserved-moov-update-period
- * and #GstQTMux:reserved-max-duration property. Also present is the
- * #GstQTMux:reserved-bytes-per-sec property, which can be increased if
+ * To enable robust muxing mode, set the #GstBaseQTMux:reserved-moov-update-period
+ * and #GstBaseQTMux:reserved-max-duration property. Also present is the
+ * #GstBaseQTMux:reserved-bytes-per-sec property, which can be increased if
  * for some reason the default is not large enough and the initial reserved
  * space for headers is too small. Applications can monitor the
- * #GstQTMux:reserved-duration-remaining property to see how close to full
+ * #GstBaseQTMux:reserved-duration-remaining property to see how close to full
  * the reserved space is becoming.
  *
  * Applications that wish to be able to use/edit a file while it is being
@@ -105,7 +105,7 @@
  * completely valid header from the start for all tracks (i.e. it appears as
  * though the file is "reserved-max-duration" long with all samples
  * present). This mode can be enabled by setting the
- * #GstQTMux:reserved-moov-update-period and #GstQTMux:reserved-prefill
+ * #GstBaseQTMux:reserved-moov-update-period and #GstBaseQTMux:reserved-prefill
  * properties. Note that this mode is only possible with input streams that have
  * a fixed sample size (such as raw audio and Prores Video) and that don't
  * have reordered samples.
@@ -142,18 +142,18 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale)
+ * A few properties (#GstBaseQTMux:movie-timescale, #GstBaseQTMux:trak-timescale)
  * allow adjusting some technical parameters, which might be useful in (rare)
  * cases to resolve compatibility issues in some situations.
  *
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the
  * file, somewhat contrary to this usually being called "the header".
- * However, a #GstQTMux:faststart file will (with some effort) arrange this to
+ * However, a #GstBaseQTMux:faststart file will (with some effort) arrange this to
  * be located near start of the file, which then allows it e.g. to be played
  * while downloading. Alternatively, rather than having one chunk of metadata at
  * start (or end), there can be some metadata at start and most of the other
- * data can be spread out into fragments of #GstQTMux:fragment-duration.
+ * data can be spread out into fragments of #GstBaseQTMux:fragment-duration.
  * If such fragmented layout is intended for streaming purposes, then
  * #GstMP4Mux:streamable allows foregoing to add index metadata (at the end of
  * file).
@@ -191,18 +191,18 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale)
+ * A few properties (#GstBaseQTMux:movie-timescale, #GstBaseQTMux:trak-timescale)
  * allow adjusting some technical parameters, which might be useful in (rare)
  * cases to resolve compatibility issues in some situations.
  *
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the file,
  * somewhat contrary to this usually being called "the header". However, a
- * #GstQTMux:faststart file will (with some effort) arrange this to be located
+ * #GstBaseQTMux:faststart file will (with some effort) arrange this to be located
  * near start of the file, which then allows it e.g. to be played while
  * downloading. Alternatively, rather than having one chunk of metadata at start
  * (or end), there can be some metadata at start and most of the other data can
- * be spread out into fragments of #GstQTMux:fragment-duration. If such
+ * be spread out into fragments of #GstBaseQTMux:fragment-duration. If such
  * fragmented layout is intended for streaming purposes, then
  * #Gst3GPPMux:streamable allows foregoing to add index metadata (at the end of
  * file).
@@ -241,18 +241,18 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale)
+ * A few properties (#GstBaseQTMux:movie-timescale, #GstBaseQTMux:trak-timescale)
  * allow adjusting some technical parameters, which might be useful in (rare)
  * cases to resolve compatibility issues in some situations.
  *
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the file,
  * somewhat contrary to this usually being called "the header". However, a
- * #GstQTMux:faststart file will (with some effort) arrange this to be located
+ * #GstBaseQTMux:faststart file will (with some effort) arrange this to be located
  * near start of the file, which then allows it e.g. to be played while
  * downloading. Alternatively, rather than having one chunk of metadata at start
  * (or end), there can be some metadata at start and most of the other data can
- * be spread out into fragments of #GstQTMux:fragment-duration. If such
+ * be spread out into fragments of #GstBaseQTMux:fragment-duration. If such
  * fragmented layout is intended for streaming purposes, then
  * #GstMJ2Mux:streamable allows foregoing to add index metadata (at the end of
  * file).
@@ -291,18 +291,18 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale)
+ * A few properties (#GstBaseQTMux:movie-timescale, #GstBaseQTMux:trak-timescale)
  * allow adjusting some technical parameters, which might be useful in (rare)
  * cases to resolve compatibility issues in some situations.
  *
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the file,
  * somewhat contrary to this usually being called "the header". However, a
- * #GstQTMux:faststart file will (with some effort) arrange this to be located
+ * #GstBaseQTMux:faststart file will (with some effort) arrange this to be located
  * near start of the file, which then allows it e.g. to be played while
  * downloading. Alternatively, rather than having one chunk of metadata at start
  * (or end), there can be some metadata at start and most of the other data can
- * be spread out into fragments of #GstQTMux:fragment-duration. If such
+ * be spread out into fragments of #GstBaseQTMux:fragment-duration. If such
  * fragmented layout is intended for streaming purposes, then
  * #GstISMLMux:streamable allows foregoing to add index metadata (at the end of
  * file).
