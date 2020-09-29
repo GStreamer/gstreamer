@@ -111,6 +111,29 @@ the build files to find `libmfx`.
 The plugin will be automatically enabled if possible, but you can ensure it by
 passing `-Dbad=enabled -Dgst-plugins-bad:msdk=enabled` to `meson`.
 
+### Static build
+
+Since *1.18.0* when doing a static build using `--default-library=static`, a
+shared library `gstreamer-full-1.0` will be produced and includes all enabled
+GStreamer plugins and libraries. A list of libraries that needs to be exposed in
+`gstreamer-full-1.0` ABI can be set using `gst-full-libraries` option. glib-2.0,
+gobject-2.0 and gstreamer-1.0 are always included.
+
+```
+meson --default-library=static -Dgst-full-libraries=app,video builddir
+```
+
+GStreamer *1.18* requires applications using gstreamer-full-1.0 to initialize
+static plugins by calling `gst_init_static_plugins()` after `gst_init()`. That
+function is defined in `gst/gstinitstaticplugins.h` header file.
+
+Since *1.20.0* `gst_init_static_plugins()` is called automatically by
+`gst_init()` and applications must not call it manually any more. The header
+file has been removed from public API.
+
+This is an experimental feature, backward uncompatible changes could still be
+made in the future.
+
 # Development environment
 
 ## Development environment target
