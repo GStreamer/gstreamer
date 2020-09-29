@@ -283,12 +283,6 @@ static const GstDecklinkMode modes[] = {
   {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC},
   {bmdModePALp, 720, 576, 25, 1, false, PAL},
 
-  {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC_WS},
-  {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC_WS},
-  {bmdModePAL, 720, 576, 25, 1, true, PAL_WS},
-  {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC_WS},
-  {bmdModePALp, 720, 576, 25, 1, false, PAL_WS},
-
   {bmdModeHD1080p2398, 1920, 1080, 24000, 1001, false, HD},
   {bmdModeHD1080p24, 1920, 1080, 24, 1, false, HD},
   {bmdModeHD1080p25, 1920, 1080, 25, 1, false, HD},
@@ -327,7 +321,13 @@ static const GstDecklinkMode modes[] = {
   {bmdMode4K2160p30, 3840, 2160, 30, 1, false, UHD},
   {bmdMode4K2160p50, 3840, 2160, 50, 1, false, UHD},
   {bmdMode4K2160p5994, 3840, 2160, 60000, 1001, false, UHD},
-  {bmdMode4K2160p60, 3840, 2160, 60, 1, false, UHD}
+  {bmdMode4K2160p60, 3840, 2160, 60, 1, false, UHD},
+
+  {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC_WS},
+  {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC_WS},
+  {bmdModePAL, 720, 576, 25, 1, true, PAL_WS},
+  {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC_WS},
+  {bmdModePALp, 720, 576, 25, 1, false, PAL_WS}
 };
 
 static const struct
