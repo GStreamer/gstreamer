@@ -250,7 +250,7 @@ commitlint:
   - date -R
   - ci/scripts/handle-subprojects-cache.py subprojects/
   - date -R
-  - export ARGS="--default-library=${BUILD_TYPE:-both} $MESON_ARGS"
+  - export ARGS="--default-library=${BUILD_TYPE:-both} -Dgstreamer:gst_debug=${BUILD_GST_DEBUG:-true} $MESON_ARGS"
   - |-
     if [ $GST_WERROR == "true" ]; then
       export ARGS="$ARGS $MESON_GST_WERROR"
@@ -313,6 +313,7 @@ commitlint:
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
   variables:
+    BUILD_GST_DEBUG: "true"
     GST_WERROR: "true"
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_EXTRA_ARGS}"
   script:
@@ -370,7 +371,8 @@ build nodebug fedora x86_64:
     - "trigger"
     - "fedora amd64 docker"
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_EXTRA_ARGS}"
+    BUILD_GST_DEBUG: 'false'
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic ${MESON_EXTRA_ARGS}"
 
 build clang fedora x86_64:
   extends: '.build fedora x86_64'
@@ -610,11 +612,11 @@ gstreamer-full-minimal static build:
   extends: 'gstreamer-full static build'
   stage: 'build'
   variables:
+    BUILD_GST_DEBUG: 'false'
     GST_WERROR: "true"
     BUILD_TYPE: "static"
     MESON_ARGS: >
       -Ddoc=disabled
-      -Dgstreamer:gst_debug=false
       -Dauto_features=disabled
       -Dgstreamer:check=enabled
       -Dtests=enabled
