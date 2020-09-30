@@ -438,7 +438,7 @@ _buffer_surface_unref (gpointer data)
   if (g_atomic_int_dec_and_test (&buf->ref_count)) {
     GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
     _destroy_surfaces (buf->display, &buf->surface, 1);
-    gst_object_unref (buf->display);
+    gst_clear_object (&buf->display);
     g_slice_free (GstVaBufferSurface, buf);
   }
 }
@@ -451,6 +451,7 @@ _create_buffer_surface (VASurfaceID surface, GstVideoFormat format,
 
   g_atomic_int_set (&buf->ref_count, 0);
   buf->surface = surface;
+  buf->display = NULL;
   gst_video_info_set_format (&buf->info, format, width, height);
 
   return buf;
