@@ -65,12 +65,18 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 struct _GstD3D11Download
 {
   GstD3D11BaseFilter parent;
+
+  GstBuffer *staging_buffer;
 };
 
 #define gst_d3d11_download_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Download, gst_d3d11_download,
     GST_TYPE_D3D11_BASE_FILTER);
 
+static void gst_d3d11_download_dispose (GObject * object);
+static gboolean gst_d3d11_download_stop (GstBaseTransform * trans);
+static gboolean gst_d3d11_download_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstCaps *gst_d3d11_download_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_d3d11_download_propose_allocation (GstBaseTransform * trans,
@@ -79,12 +85,19 @@ static gboolean gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
 static GstFlowReturn gst_d3d11_download_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_d3d11_download_set_info (GstD3D11BaseFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
 
 static void
 gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstD3D11BaseFilterClass *bfilter_class = GST_D3D11_BASE_FILTER_CLASS (klass);
+
+  gobject_class->dispose = gst_d3d11_download_dispose;
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -96,6 +109,8 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
 
   trans_class->passthrough_on_same_caps = TRUE;
 
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_download_stop);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d11_download_sink_event);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d11_download_transform_caps);
   trans_class->propose_allocation =
@@ -104,6 +119,8 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_download_decide_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_download_transform);
 
+  bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_download_set_info);
+
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_download_debug,
       "d3d11download", 0, "d3d11download Element");
 }
@@ -111,6 +128,43 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
 static void
 gst_d3d11_download_init (GstD3D11Download * download)
 {
+}
+
+static void
+gst_d3d11_download_dispose (GObject * object)
+{
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (object);
+
+  gst_clear_buffer (&self->staging_buffer);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static gboolean
+gst_d3d11_download_stop (GstBaseTransform * trans)
+{
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (trans);
+
+  gst_clear_buffer (&self->staging_buffer);
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
+}
+
+static gboolean
+gst_d3d11_download_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* We don't need to hold this staging buffer after eos */
+      gst_clear_buffer (&self->staging_buffer);
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static GstCaps *
@@ -289,15 +343,63 @@ gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
       query);
 }
 
+static gboolean
+gst_d3d11_download_can_use_staging_buffer (GstD3D11Download * self,
+    GstBuffer * inbuf)
+{
+  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
+  gint i;
+
+  /* staging buffer doesn't need to be used for non-d3d11 memory */
+  for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
+
+    if (!gst_is_d3d11_memory (mem))
+      return FALSE;
+  }
+
+  if (self->staging_buffer)
+    return TRUE;
+
+  self->staging_buffer = gst_d3d11_allocate_staging_buffer_for (inbuf,
+      &filter->in_info, TRUE);
+
+  if (!self->staging_buffer) {
+    GST_WARNING_OBJECT (self, "Couldn't allocate staging buffer");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_d3d11_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (trans);
   GstVideoFrame in_frame, out_frame;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean use_staging_buf;
+  GstBuffer *target_inbuf = inbuf;
   gint i;
 
-  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
+  use_staging_buf = gst_d3d11_download_can_use_staging_buffer (self, inbuf);
+
+  if (use_staging_buf) {
+    GST_TRACE_OBJECT (self, "Copy input buffer to staging buffer");
+
+    /* Copy d3d11 texture to staging texture */
+    if (!gst_d3d11_buffer_copy_into (self->staging_buffer, inbuf)) {
+      GST_ERROR_OBJECT (self,
+          "Failed to copy input buffer into staging texture");
+      return GST_FLOW_ERROR;
+    }
+
+    target_inbuf = self->staging_buffer;
+  }
+
+  if (!gst_video_frame_map (&in_frame, &filter->in_info, target_inbuf,
           GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
     goto invalid_buffer;
 
@@ -310,14 +412,15 @@ gst_d3d11_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
     if (!gst_video_frame_copy_plane (&out_frame, &in_frame, i)) {
       GST_ERROR_OBJECT (filter, "Couldn't copy %dth plane", i);
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      break;
     }
   }
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
 
-  return GST_FLOW_OK;
+  return ret;
 
   /* ERRORS */
 invalid_buffer:
@@ -326,4 +429,16 @@ invalid_buffer:
         ("invalid video buffer received"));
     return GST_FLOW_ERROR;
   }
+}
+
+static gboolean
+gst_d3d11_download_set_info (GstD3D11BaseFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info)
+{
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (filter);
+
+  gst_clear_buffer (&self->staging_buffer);
+
+  return TRUE;
 }

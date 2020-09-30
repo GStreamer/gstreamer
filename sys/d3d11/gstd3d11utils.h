@@ -60,6 +60,13 @@ GstBuffer *     gst_d3d11_allocate_staging_buffer   (GstD3D11Allocator * allocat
                                                      const D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES],
                                                      gboolean add_videometa);
 
+GstBuffer *     gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
+                                                       const GstVideoInfo * info,
+                                                       gboolean add_videometa);
+
+gboolean        gst_d3d11_buffer_copy_into          (GstBuffer * dst,
+                                                     GstBuffer * src);
+
 gboolean       _gst_d3d11_result                    (HRESULT hr,
                                                      GstD3D11Device * device,
                                                      GstDebugCategory * cat,

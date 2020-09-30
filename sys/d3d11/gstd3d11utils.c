@@ -471,6 +471,80 @@ error:
   return NULL;
 }
 
+GstBuffer *
+gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
+    const GstVideoInfo * info, gboolean add_videometa)
+{
+  GstD3D11Memory *dmem;
+  GstD3D11Device *device;
+  GstD3D11AllocationParams *params = NULL;
+  GstD3D11Allocator *alloc = NULL;
+  GstBuffer *staging_buffer = NULL;
+  D3D11_TEXTURE2D_DESC *desc;
+  gint i;
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    if (!gst_is_d3d11_memory (mem)) {
+      GST_DEBUG ("Not a d3d11 memory");
+
+      return NULL;
+    }
+  }
+
+  dmem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
+  device = dmem->device;
+
+  params = gst_d3d11_allocation_params_new (device, (GstVideoInfo *) info,
+      0, 0);
+
+  if (!params) {
+    GST_WARNING ("Couldn't create alloc params");
+    goto done;
+  }
+
+  desc = &params->desc[0];
+  /* resolution of semi-planar formats must be multiple of 2 */
+  if (desc[0].Format == DXGI_FORMAT_NV12 || desc[0].Format == DXGI_FORMAT_P010
+      || desc[0].Format == DXGI_FORMAT_P016) {
+    if (desc[0].Width % 2 || desc[0].Height % 2) {
+      gint width, height;
+      GstVideoAlignment align;
+
+      width = GST_ROUND_UP_2 (desc[0].Width);
+      height = GST_ROUND_UP_2 (desc[0].Height);
+
+      gst_video_alignment_reset (&align);
+      align.padding_right = width - desc[0].Width;
+      align.padding_bottom = height - desc[0].Height;
+
+      gst_d3d11_allocation_params_alignment (params, &align);
+    }
+  }
+
+  alloc = gst_d3d11_allocator_new (device);
+  if (!alloc) {
+    GST_WARNING ("Couldn't create allocator");
+    goto done;
+  }
+
+  staging_buffer = gst_d3d11_allocate_staging_buffer (alloc,
+      info, params->d3d11_format, params->desc, add_videometa);
+
+  if (!staging_buffer)
+    GST_WARNING ("Couldn't allocate staging buffer");
+
+done:
+  if (params)
+    gst_d3d11_allocation_params_free (params);
+
+  if (alloc)
+    gst_object_unref (alloc);
+
+  return staging_buffer;
+}
+
 gboolean
 _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line)
@@ -503,4 +577,94 @@ _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
 #else
   return SUCCEEDED (hr);
 #endif
+}
+
+gboolean
+gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src)
+{
+  guint i;
+  guint num_mem;
+
+  g_return_val_if_fail (GST_IS_BUFFER (dst), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+
+  num_mem = gst_buffer_n_memory (dst);
+  if (num_mem != gst_buffer_n_memory (src)) {
+    GST_WARNING ("different num memory");
+    return FALSE;
+  }
+
+  for (i = 0; i < num_mem; i++) {
+    GstMemory *dst_mem, *src_mem;
+    GstD3D11Memory *dst_dmem, *src_dmem;
+    GstMapInfo dst_info;
+    GstMapInfo src_info;
+    ID3D11Resource *dst_texture, *src_texture;
+    ID3D11DeviceContext *device_context;
+    GstD3D11Device *device;
+    D3D11_BOX src_box = { 0, };
+
+    dst_mem = gst_buffer_peek_memory (dst, i);
+    src_mem = gst_buffer_peek_memory (src, i);
+
+    if (!gst_is_d3d11_memory (dst_mem)) {
+      GST_WARNING ("dst memory is not d3d11");
+      return FALSE;
+    }
+
+    if (!gst_is_d3d11_memory (src_mem)) {
+      GST_WARNING ("src memory is not d3d11");
+      return FALSE;
+    }
+
+    dst_dmem = (GstD3D11Memory *) dst_mem;
+    src_dmem = (GstD3D11Memory *) src_mem;
+
+    device = dst_dmem->device;
+    if (device != src_dmem->device) {
+      GST_WARNING ("different device");
+      return FALSE;
+    }
+
+    if (dst_dmem->desc.Format != src_dmem->desc.Format) {
+      GST_WARNING ("different dxgi format");
+      return FALSE;
+    }
+
+    device_context = gst_d3d11_device_get_device_context_handle (device);
+
+    if (!gst_memory_map (dst_mem, &dst_info, GST_MAP_WRITE | GST_MAP_D3D11)) {
+      GST_ERROR ("Cannot map dst d3d11 memory");
+      return FALSE;
+    }
+
+    if (!gst_memory_map (src_mem, &src_info, GST_MAP_READ | GST_MAP_D3D11)) {
+      GST_ERROR ("Cannot map src d3d11 memory");
+      gst_memory_unmap (dst_mem, &dst_info);
+      return FALSE;
+    }
+
+    dst_texture = (ID3D11Resource *) dst_info.data;
+    src_texture = (ID3D11Resource *) src_info.data;
+
+    /* src/dst texture size might be different if padding was used.
+     * select smaller size */
+    src_box.left = 0;
+    src_box.top = 0;
+    src_box.front = 0;
+    src_box.back = 1;
+    src_box.right = MIN (src_dmem->desc.Width, dst_dmem->desc.Width);
+    src_box.bottom = MIN (src_dmem->desc.Height, dst_dmem->desc.Height);
+
+    gst_d3d11_device_lock (device);
+    ID3D11DeviceContext_CopySubresourceRegion (device_context,
+        dst_texture, dst_dmem->subresource_index, 0, 0, 0,
+        src_texture, src_dmem->subresource_index, &src_box);
+    gst_d3d11_device_unlock (device);
+
+    gst_memory_unmap (src_mem, &src_info);
+    gst_memory_unmap (dst_mem, &dst_info);
+  }
+
+  return TRUE;
 }
