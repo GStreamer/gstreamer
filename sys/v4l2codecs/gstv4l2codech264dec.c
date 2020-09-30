@@ -126,22 +126,22 @@ gst_v4l2_decoder_h264_api_check (GstV4l2CodecH264Dec * self)
     unsigned int size;
   } controls[] = {
     {
-      .id = V4L2_CID_MPEG_VIDEO_H264_SPS,
+      .id = V4L2_CID_STATELESS_H264_SPS,
       .size = sizeof(struct v4l2_ctrl_h264_sps),
     }, {
-      .id = V4L2_CID_MPEG_VIDEO_H264_PPS,
+      .id = V4L2_CID_STATELESS_H264_PPS,
       .size = sizeof(struct v4l2_ctrl_h264_pps),
     }, {
-      .id = V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX,
+      .id = V4L2_CID_STATELESS_H264_SCALING_MATRIX,
       .size = sizeof(struct v4l2_ctrl_h264_scaling_matrix),
     }, {
-      .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS,
+      .id = V4L2_CID_STATELESS_H264_DECODE_PARAMS,
       .size = sizeof(struct v4l2_ctrl_h264_decode_params),
     }, {
-      .id = V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS,
+      .id = V4L2_CID_STATELESS_H264_SLICE_PARAMS,
       .size = sizeof(struct v4l2_ctrl_h264_slice_params),
     }, {
-      .id = V4L2_CID_MPEG_VIDEO_H264_PRED_WEIGHTS,
+      .id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS,
       .size = sizeof(struct v4l2_ctrl_h264_pred_weights),
     }
   };
@@ -1012,6 +1012,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   GstV4l2Request *prev_request, *request = NULL;
   gsize bytesused;
   gboolean ret = FALSE;
+  guint count;
 
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
@@ -1031,21 +1032,12 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
       .size = sizeof (self->scaling_matrix),
     },
     {
-      .id = V4L2_CID_STATELESS_H264_SLICE_PARAMS,
-      .ptr = self->slice_params->data,
-      .size = g_array_get_element_size (self->slice_params)
-              * self->num_slices,
-    },
-    {
-      .id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS,
-      .ptr = &self->pred_weight,
-      .size = sizeof (self->pred_weight),
-    },
-    {
       .id = V4L2_CID_STATELESS_H264_DECODE_PARAMS,
       .ptr = &self->decode_params,
       .size = sizeof (self->decode_params),
     },
+    { },
+    { },
   };
   /* *INDENT-ON* */
 
@@ -1081,8 +1073,24 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
-  if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
-          G_N_ELEMENTS (control))) {
+  /* Always set SPS, PPS, SCALING_MATRIX and DECODE_PARAMS */
+  count = 4;
+
+  /* If it's not slice-based then it doesn't support per-slice controls. */
+  if (is_slice_based (self)) {
+    control[count].id = V4L2_CID_STATELESS_H264_SLICE_PARAMS;
+    control[count].ptr = self->slice_params->data;
+    control[count].size = g_array_get_element_size (self->slice_params)
+        * self->num_slices;
+    count++;
+
+    control[count].id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS;
+    control[count].ptr = &self->pred_weight;
+    control[count].size = sizeof (self->pred_weight);
+    count++;
+  }
+
+  if (!gst_v4l2_decoder_set_controls (self->decoder, request, control, count)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream parameters."), (NULL));
     goto done;
