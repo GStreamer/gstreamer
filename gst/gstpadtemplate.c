@@ -498,6 +498,8 @@ gst_pad_template_set_documentation_caps (GstPadTemplate * templ, GstCaps * caps)
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
   g_return_if_fail (GST_IS_CAPS (caps));
 
+  if (caps)
+    GST_MINI_OBJECT_FLAG_SET (caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   gst_caps_replace (&(((GstPadTemplate *) (templ))->ABI.abi.documentation_caps),
       caps);
 }
