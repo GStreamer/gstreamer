@@ -26,6 +26,12 @@
 #include "gstv4l2codecpool.h"
 #include "linux/v4l2-controls.h"
 
+#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+
+#define V4L2_MIN_KERNEL_VER_MAJOR 5
+#define V4L2_MIN_KERNEL_VER_MINOR 11
+#define V4L2_MIN_KERNEL_VERSION KERNEL_VERSION(V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR, 0)
+
 GST_DEBUG_CATEGORY_STATIC (v4l2_h264dec_debug);
 #define GST_CAT_DEFAULT v4l2_h264dec_debug
 
@@ -110,9 +116,61 @@ needs_start_codes (GstV4l2CodecH264Dec * self)
 
 
 static gboolean
+gst_v4l2_decoder_h264_api_check (GstV4l2CodecH264Dec * self)
+{
+  guint i, ret_size;
+  /* *INDENT-OFF* */
+  struct
+  {
+    unsigned int id;
+    unsigned int size;
+  } controls[] = {
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SPS,
+      .size = sizeof(struct v4l2_ctrl_h264_sps),
+    }, {
+      .id = V4L2_CID_MPEG_VIDEO_H264_PPS,
+      .size = sizeof(struct v4l2_ctrl_h264_pps),
+    }, {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX,
+      .size = sizeof(struct v4l2_ctrl_h264_scaling_matrix),
+    }, {
+      .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS,
+      .size = sizeof(struct v4l2_ctrl_h264_decode_params),
+    }, {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS,
+      .size = sizeof(struct v4l2_ctrl_h264_slice_params),
+    }, {
+      .id = V4L2_CID_MPEG_VIDEO_H264_PRED_WEIGHTS,
+      .size = sizeof(struct v4l2_ctrl_h264_pred_weights),
+    }
+  };
+  /* *INDENT-ON* */
+
+  /*
+   * Compatibility check: make sure the pointer controls are
+   * the right size.
+   */
+  for (i = 0; i < G_N_ELEMENTS (controls); i++) {
+    if (gst_v4l2_decoder_query_control_size (self->decoder, controls[i].id,
+            &ret_size) && ret_size != controls[i].size) {
+      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
+          ("H264 API mismatch!"),
+          ("%d control size mismatch: got %d bytes but %d expected.",
+              controls[i].id, ret_size, controls[i].size));
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  guint version;
+
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
     {
@@ -128,6 +186,20 @@ gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
         ("Failed to open H264 decoder"),
         ("gst_v4l2_decoder_open() failed: %s", g_strerror (errno)));
+    return FALSE;
+  }
+
+  version = gst_v4l2_decoder_get_version (self->decoder);
+  if (version < V4L2_MIN_KERNEL_VERSION)
+    GST_WARNING_OBJECT (self,
+        "V4L2 API v%u.%u too old, at least v%u.%u required",
+        (version >> 16) & 0xff, (version >> 8) & 0xff,
+        V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR);
+
+  if (!gst_v4l2_decoder_h264_api_check (self)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
+        ("Failed to open H264 decoder"),
+        ("gst_v4l2_decoder_h264_api_check() failed"));
     return FALSE;
   }
 

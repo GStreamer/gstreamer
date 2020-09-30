@@ -74,6 +74,7 @@ struct _GstV4l2Decoder
   gint video_fd;
   GstQueueArray *request_pool;
   GstQueueArray *pending_requests;
+  guint version;
 
   enum v4l2_buf_type src_buf_type;
   enum v4l2_buf_type sink_buf_type;
@@ -148,6 +149,12 @@ gst_v4l2_decoder_new (GstV4l2CodecDevice * device)
   return gst_object_ref_sink (decoder);
 }
 
+guint
+gst_v4l2_decoder_get_version (GstV4l2Decoder * self)
+{
+  return self->version;
+}
+
 gboolean
 gst_v4l2_decoder_open (GstV4l2Decoder * self)
 {
@@ -175,6 +182,8 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
     gst_v4l2_decoder_close (self);
     return FALSE;
   }
+
+  self->version = querycap.version;
 
   if (querycap.capabilities & V4L2_CAP_DEVICE_CAPS)
     capabilities = querycap.device_caps;
@@ -714,6 +723,29 @@ gst_v4l2_decoder_get_controls (GstV4l2Decoder * self,
     return FALSE;
   }
 
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_query_control_size (GstV4l2Decoder * self,
+    unsigned int control_id, unsigned int *control_size)
+{
+  gint ret;
+  struct v4l2_query_ext_ctrl control = {
+    .id = control_id,
+  };
+
+  *control_size = 0;
+
+  ret = ioctl (self->video_fd, VIDIOC_QUERY_EXT_CTRL, &control);
+  if (ret < 0)
+    /*
+     * It's not an error if a control is not supported by this driver.
+     * Return false but don't print any error.
+     */
+    return FALSE;
+
+  *control_size = control.elem_size;
   return TRUE;
 }
 

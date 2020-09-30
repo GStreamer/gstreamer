@@ -35,6 +35,8 @@ typedef struct _GstV4l2Request GstV4l2Request;
 
 GstV4l2Decoder *  gst_v4l2_decoder_new (GstV4l2CodecDevice * device);
 
+guint             gst_v4l2_decoder_get_version (GstV4l2Decoder * self);
+
 gboolean          gst_v4l2_decoder_open (GstV4l2Decoder * decoder);
 
 gboolean          gst_v4l2_decoder_close (GstV4l2Decoder * decoder);
@@ -80,6 +82,10 @@ gboolean          gst_v4l2_decoder_set_controls (GstV4l2Decoder * self,
 gboolean          gst_v4l2_decoder_get_controls (GstV4l2Decoder * self,
                                                  struct v4l2_ext_control * control,
                                                  guint count);
+
+gboolean          gst_v4l2_decoder_query_control_size (GstV4l2Decoder * self,
+                                                 unsigned int control_id,
+						 unsigned int *control_size);
 
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
                                                        gint prop_offset,
