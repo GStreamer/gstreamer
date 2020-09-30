@@ -193,7 +193,8 @@ gst_va_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   buf = gst_buffer_new ();
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (vpool->allocator)) {
-    if (!gst_va_dmabuf_setup_buffer (vpool->allocator, buf, &alloc_params))
+    if (!gst_va_dmabuf_allocator_setup_buffer (vpool->allocator, buf,
+            &alloc_params))
       goto no_memory;
   } else if (GST_IS_VA_ALLOCATOR (vpool->allocator)) {
     GstMemory *mem = gst_va_allocator_alloc (vpool->allocator, &alloc_params);

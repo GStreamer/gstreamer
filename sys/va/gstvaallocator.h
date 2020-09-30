@@ -39,9 +39,9 @@ G_DECLARE_FINAL_TYPE (GstVaDmabufAllocator, gst_va_dmabuf_allocator, GST,
     VA_DMABUF_ALLOCATOR, GstDmaBufAllocator);
 
 GstAllocator *        gst_va_dmabuf_allocator_new         (GstVaDisplay * display);
-gboolean              gst_va_dmabuf_setup_buffer          (GstAllocator * allocator,
-                                                           GstBuffer * buffer,
-                                                           GstVaAllocationParams * params);
+gboolean              gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
+                                                            GstBuffer * buffer,
+                                                            GstVaAllocationParams * params);
 gboolean              gst_va_dmabuf_try                   (GstAllocator * allocator,
                                                            GstVaAllocationParams * params);
 

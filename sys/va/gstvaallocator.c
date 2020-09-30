@@ -479,8 +479,8 @@ gst_va_memory_dispose (GstMiniObject * mini_object)
 /* creates an exported VASurface and adds it as @buffer's memories
  * qdata */
 gboolean
-gst_va_dmabuf_setup_buffer (GstAllocator * allocator, GstBuffer * buffer,
-    GstVaAllocationParams * params)
+gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
+    GstBuffer * buffer, GstVaAllocationParams * params)
 {
   GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
@@ -584,7 +584,7 @@ gst_va_dmabuf_try (GstAllocator * allocator, GstVaAllocationParams * params)
   GstMapInfo map_info;
   gboolean ret;
 
-  ret = gst_va_dmabuf_setup_buffer (allocator, buffer, params);
+  ret = gst_va_dmabuf_allocator_setup_buffer (allocator, buffer, params);
   if (ret) {
     /* XXX: radeonsi for kadaveri cannot map dmabufs to user space */
     if (!gst_buffer_map (buffer, &map_info, GST_MAP_READWRITE)) {
