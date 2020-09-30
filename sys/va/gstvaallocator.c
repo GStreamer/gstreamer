@@ -463,7 +463,7 @@ _get_fd_size (gint fd)
 }
 
 static gboolean
-gst_va_memory_dispose (GstMiniObject * mini_object)
+gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
 {
   GstMemory *mem = GST_MEMORY_CAST (mini_object);
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
@@ -543,7 +543,7 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
 
     gst_buffer_append_memory (buffer, mem);
 
-    GST_MINI_OBJECT (mem)->dispose = gst_va_memory_dispose;
+    GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
 
     g_atomic_int_add (&buf->ref_count, 1);
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
