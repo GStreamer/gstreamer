@@ -1826,9 +1826,9 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
 
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
    * then we are translating it to GST_FLOW_EOS. However, because this behavior
-   * is fullly internal stuff of this implementation and gstvideodecoer
+   * is fully internal stuff of this implementation and gstvideodecoder
    * baseclass doesn't convert this GST_FLOW_EOS to GST_FLOW_OK,
-   * convert this flow retturn by ourselves */
+   * convert this flow returned here */
   if (ret == GST_FLOW_EOS)
     ret = GST_FLOW_OK;
 
