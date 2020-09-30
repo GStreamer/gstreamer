@@ -690,6 +690,112 @@ gst_avdtp_util_parse_aac_raw (void *config)
   return structure;
 }
 
+static GstStructure *
+gst_avdtp_util_parse_ldac_raw (void *config)
+{
+  /* We assume the vendor/codec ID have been verified already */
+  a2dp_ldac_t *ldac = (a2dp_ldac_t *) config;
+  GstStructure *structure;
+  GValue value = G_VALUE_INIT;
+  GValue list = G_VALUE_INIT;
+  gboolean mono, stereo;
+
+  structure = gst_structure_new_empty ("audio/x-ldac");
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
+
+  /* rate */
+  if (ldac->frequency & LDAC_SAMPLING_FREQ_44100) {
+    g_value_set_int (&value, 44100);
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (ldac->frequency & LDAC_SAMPLING_FREQ_48000) {
+    g_value_set_int (&value, 48000);
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (ldac->frequency & LDAC_SAMPLING_FREQ_88200) {
+    g_value_set_int (&value, 88200);
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (ldac->frequency & LDAC_SAMPLING_FREQ_96000) {
+    g_value_set_int (&value, 96000);
+    gst_value_list_prepend_value (&list, &value);
+  }
+
+  if (gst_value_list_get_size (&list) == 1)
+    gst_structure_set_value (structure, "rate", &value);
+  else
+    gst_structure_set_value (structure, "rate", &list);
+
+  g_value_unset (&value);
+  g_value_reset (&list);
+
+  /* channels */
+  mono = FALSE;
+  stereo = FALSE;
+  if (ldac->channel_mode & LDAC_CHANNEL_MODE_MONO)
+    mono = TRUE;
+  if ((ldac->channel_mode & LDAC_CHANNEL_MODE_STEREO) ||
+      (ldac->channel_mode & LDAC_CHANNEL_MODE_DUAL))
+    stereo = TRUE;
+
+  if (mono && stereo) {
+    g_value_init (&value, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&value, 1, 2);
+  } else {
+    g_value_init (&value, G_TYPE_INT);
+    if (mono)
+      g_value_set_int (&value, 1);
+    else if (stereo)
+      g_value_set_int (&value, 2);
+    else {
+      GST_ERROR ("Unexpected number of channels");
+      g_value_set_int (&value, 0);
+    }
+  }
+  gst_structure_set_value (structure, "channels", &value);
+
+  g_value_unset (&value);
+  g_value_init (&value, G_TYPE_STRING);
+
+  /* channel mode */
+  if (ldac->channel_mode & LDAC_CHANNEL_MODE_MONO) {
+    g_value_set_static_string (&value, "mono");
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (ldac->channel_mode & LDAC_CHANNEL_MODE_STEREO) {
+    g_value_set_static_string (&value, "stereo");
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (ldac->channel_mode & LDAC_CHANNEL_MODE_DUAL) {
+    g_value_set_static_string (&value, "dual");
+    gst_value_list_prepend_value (&list, &value);
+  }
+
+  if (gst_value_list_get_size (&list) == 1)
+    gst_structure_set_value (structure, "channel-mode", &value);
+  else
+    gst_structure_take_value (structure, "channel-mode", &list);
+
+  g_value_unset (&value);
+  g_value_unset (&list);
+
+  return structure;
+}
+
+static GstStructure *
+gst_avdtp_util_parse_vendor_raw (void *config)
+{
+  a2dp_vendor_codec_t *vendor = (a2dp_vendor_codec_t *) config;
+
+  if (A2DP_GET_VENDOR_ID (*vendor) == SONY_VENDOR_ID &&
+      A2DP_GET_CODEC_ID (*vendor) == LDAC_CODEC_ID)
+    return gst_avdtp_util_parse_ldac_raw (config);
+  else
+    return NULL;
+}
+
 GstCaps *
 gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
 {
@@ -708,6 +814,9 @@ gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
       break;
     case A2DP_CODEC_MPEG24:
       structure = gst_avdtp_util_parse_aac_raw (conn->data.config);
+      break;
+    case A2DP_CODEC_VENDOR:
+      structure = gst_avdtp_util_parse_vendor_raw (conn->data.config);
       break;
     default:
       GST_ERROR ("Unsupported configuration");

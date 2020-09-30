@@ -74,21 +74,22 @@ static GstStaticPadTemplate avdtp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\","
-        "payload = (int) "
-        GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) { 16000, 32000, "
-        "44100, 48000 }, "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) { 16000, 32000, 44100, 48000 }, "
         "encoding-name = (string) \"SBC\"; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) "
-        GST_RTP_PAYLOAD_MPA_STRING ", "
+        "payload = (int) " GST_RTP_PAYLOAD_MPA_STRING ", "
         "clock-rate = (int) 90000; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) "
-        GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"MPA\""));
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"MPA\"; "
+        "application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) { 44100, 48000, 88200, 96000 }, "
+        "encoding-name = (string) \"X-GST-LDAC\""));
 
 static gboolean
 gst_avdtp_sink_stop (GstBaseSink * basesink)

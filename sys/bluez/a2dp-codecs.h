@@ -111,6 +111,26 @@
 #define AAC_CHANNELS_1		0x02
 #define AAC_CHANNELS_2		0x01
 
+#define SONY_VENDOR_ID                  0x0000012d
+#define LDAC_CODEC_ID                   0x00aa
+
+#define LDAC_SAMPLING_FREQ_44100        0x20
+#define LDAC_SAMPLING_FREQ_48000        0x10
+#define LDAC_SAMPLING_FREQ_88200        0x08
+#define LDAC_SAMPLING_FREQ_96000        0x04
+
+#define LDAC_CHANNEL_MODE_MONO          0x04
+#define LDAC_CHANNEL_MODE_DUAL          0x02
+#define LDAC_CHANNEL_MODE_STEREO        0x01
+
+#define A2DP_GET_VENDOR_ID(a) ( \
+		(((uint32_t)(a).vendor_id[0]) <<  0) | \
+		(((uint32_t)(a).vendor_id[1]) <<  8) | \
+		(((uint32_t)(a).vendor_id[2]) << 16) | \
+		(((uint32_t)(a).vendor_id[3]) << 24) \
+	)
+#define A2DP_GET_CODEC_ID(a) ((a).codec_id[0] | (((uint16_t)(a).codec_id[1]) << 8))
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 
 typedef struct {
@@ -181,5 +201,11 @@ typedef struct {
 	uint8_t vendor_id[4];
 	uint8_t codec_id[2];
 } __attribute__ ((packed)) a2dp_vendor_codec_t;
+
+typedef struct {
+	a2dp_vendor_codec_t info;
+	uint8_t frequency;
+	uint8_t channel_mode;
+} __attribute__ ((packed)) a2dp_ldac_t;
 
 #endif /* #define __GST_BLUEZ_A2DP_CODECS_H_INCLUDED__ */
