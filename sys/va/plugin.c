@@ -221,19 +221,9 @@ plugin_register_elements (GstPlugin * plugin, GstVaDevice * device)
         _insert_profile_in_table (encoderslp, profiles[i]);
       else if (entrypoints[j] == VAEntrypointEncPicture)
         _insert_profile_in_table (encodersimg, profiles[i]);
+      else if (entrypoints[j] == VAEntrypointVideoProc)
+        has_vpp = TRUE;
     }
-  }
-
-  status = vaQueryConfigEntrypoints (dpy, VAProfileNone, entrypoints,
-      &num_entrypoints);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaQueryConfigEntrypoints: %s", vaErrorStr (status));
-    goto bail;
-  }
-
-  for (j = 0; j < num_entrypoints; j++) {
-    if ((has_vpp = (entrypoints[j] == VAEntrypointVideoProc)))
-      break;
   }
 
   plugin_register_decoders (plugin, device, decoders);
