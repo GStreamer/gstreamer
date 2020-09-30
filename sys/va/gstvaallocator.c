@@ -38,8 +38,8 @@ struct _GstVaDmabufAllocator
 {
   GstDmaBufAllocator parent;
 
-  /* queue for disposable surfaces */
-  GstAtomicQueue *queue;
+  /* queue for disposed surfaces */
+  GstAtomicQueue *available_mems;
   GstVaDisplay *display;
 
   GstMemoryMapFunction parent_map;
@@ -374,7 +374,7 @@ gst_va_dmabuf_allocator_dispose (GObject * object)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
   gst_clear_object (&self->display);
-  gst_atomic_queue_unref (self->queue);
+  gst_atomic_queue_unref (self->available_mems);
 
   G_OBJECT_CLASS (dmabuf_parent_class)->dispose (object);
 }
@@ -388,7 +388,7 @@ gst_va_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * mem)
   /* first close the dmabuf fd */
   GST_ALLOCATOR_CLASS (dmabuf_parent_class)->free (allocator, mem);
 
-  while ((buf = gst_atomic_queue_pop (self->queue))) {
+  while ((buf = gst_atomic_queue_pop (self->available_mems))) {
     GST_LOG_OBJECT (self, "Destroying surface %#x", buf->surface);
     _destroy_surfaces (self->display, &buf->surface, 1);
     g_slice_free (GstVaBufferSurface, buf);
@@ -408,7 +408,7 @@ gst_va_dmabuf_allocator_class_init (GstVaDmabufAllocatorClass * klass)
 static void
 gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
 {
-  self->queue = gst_atomic_queue_new (2);
+  self->available_mems = gst_atomic_queue_new (2);
 
   self->parent_map = GST_ALLOCATOR (self)->mem_map;
   GST_ALLOCATOR (self)->mem_map = gst_va_dmabuf_mem_map;
@@ -471,7 +471,7 @@ gst_va_memory_dispose (GstMiniObject * mini_object)
 
   buf = gst_mini_object_get_qdata (mini_object, gst_va_buffer_surface_quark ());
   if (buf && g_atomic_int_dec_and_test (&buf->ref_count))
-    gst_atomic_queue_push (self->queue, buf);
+    gst_atomic_queue_push (self->available_mems, buf);
 
   return TRUE;
 }
