@@ -40,7 +40,7 @@ variables:
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$FDO_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
-  MESON_BUILDTYPE_ARGS: --default-library=both
+  MESON_EXTRA_ARGS: ""
   DEFAULT_MESON_ARGS: >
     -Dlibnice:tests=disabled
     -Dlibnice:examples=disabled
@@ -250,7 +250,7 @@ commitlint:
   - date -R
   - ci/scripts/handle-subprojects-cache.py subprojects/
   - date -R
-  - export ARGS="$MESON_ARGS"
+  - export ARGS="--default-library=${BUILD_TYPE:-both} $MESON_ARGS"
   - |-
     if [ $GST_WERROR == "true" ]; then
       export ARGS="$ARGS $MESON_GST_WERROR"
@@ -314,7 +314,7 @@ commitlint:
   timeout: '45min'
   variables:
     GST_WERROR: "true"
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS}"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_EXTRA_ARGS}"
   script:
     - *build
     - ./gst-env.py gst-inspect-1.0 --version
@@ -370,7 +370,7 @@ build nodebug fedora x86_64:
     - "trigger"
     - "fedora amd64 docker"
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS}"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_EXTRA_ARGS}"
 
 build clang fedora x86_64:
   extends: '.build fedora x86_64'
@@ -563,7 +563,7 @@ integration testsuites fedora:
   extends: '.test fedora x86_64'
   parallel: 8
   variables:
-    MESON_BUILDTYPE_ARGS: >
+    MESON_EXTRA_ARGS: >
       -Domx=disabled
       -Dsharp=disabled
       -Dvaapi=disabled
@@ -593,8 +593,8 @@ gstreamer-full static build:
   extends: '.build fedora x86_64'
   stage: 'build'
   variables:
+    BUILD_TYPE: "static"
     MESON_ARGS: >
-      --default-library=static
       -Ddoc=disabled
 
   script:
@@ -611,8 +611,8 @@ gstreamer-full-minimal static build:
   stage: 'build'
   variables:
     GST_WERROR: "true"
+    BUILD_TYPE: "static"
     MESON_ARGS: >
-      --default-library=static
       -Ddoc=disabled
       -Dgstreamer:gst_debug=false
       -Dauto_features=disabled
@@ -743,7 +743,7 @@ valgrind ges:
   extends: '.build fedora x86_64'
   variables:
     MESON_ARGS: *simple_build
-    MESON_BUILDTYPE_ARGS: "-Ddoc=enabled -Drs=enabled -Dgst-docs:fatal_warnings=true"
+    MESON_EXTRA_ARGS: "-Ddoc=enabled -Drs=enabled -Dgst-docs:fatal_warnings=true"
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
