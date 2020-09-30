@@ -58,7 +58,8 @@ static GstStaticPadTemplate gst_a2dp_sink_factory =
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
         "allocation-method = (string) { snr, loudness }, "
-        "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]; " "audio/mpeg"));
+        "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]; "
+        "audio/mpeg; " "audio/x-ldac"));
 
 static gboolean gst_a2dp_sink_handle_event (GstPad * pad,
     GstObject * pad_parent, GstEvent * event);
@@ -316,8 +317,8 @@ gst_a2dp_sink_get_caps (GstA2dpSink * self)
   GstCaps *caps = NULL;
 
   if (self->sink != NULL) {
-    GST_LOG_OBJECT (self, "Getting device caps");
     caps = gst_a2dp_sink_get_device_caps (self);
+    GST_LOG_OBJECT (self, "Got device caps %" GST_PTR_FORMAT, caps);
   }
 
   if (!caps)
@@ -405,12 +406,35 @@ gst_a2dp_sink_init_rtp_mpeg_element (GstA2dpSink * self)
 }
 
 static gboolean
+gst_a2dp_sink_init_rtp_ldac_element (GstA2dpSink * self)
+{
+  GstElement *rtppay;
+
+  /* check if we don't need a new rtp */
+  if (self->rtp)
+    return TRUE;
+
+  GST_LOG_OBJECT (self, "Initializing rtp ldac element");
+
+  rtppay = gst_a2dp_sink_init_element (self, "rtpldacpay", "rtp");
+  if (rtppay == NULL)
+    return FALSE;
+
+  self->rtp = rtppay;
+
+  gst_element_set_state (rtppay, GST_STATE_PAUSED);
+
+  return TRUE;
+}
+
+static gboolean
 gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
 {
   GstStructure *structure;
   GstEvent *event;
   gboolean crc;
   gchar *mode = NULL;
+  guint mtu;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -423,13 +447,17 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
     GST_LOG_OBJECT (self, "mp3 media received");
     if (!gst_a2dp_sink_init_rtp_mpeg_element (self))
       return FALSE;
+  } else if (gst_structure_has_name (structure, "audio/x-ldac")) {
+    GST_LOG_OBJECT (self, "ldac media received");
+    if (!gst_a2dp_sink_init_rtp_ldac_element (self))
+      return FALSE;
   } else {
     GST_ERROR_OBJECT (self, "Unexpected media type");
     return FALSE;
   }
 
   if (!gst_element_link (GST_ELEMENT (self->rtp), GST_ELEMENT (self->sink))) {
-    GST_ERROR_OBJECT (self, "couldn't link rtpsbcpay " "to avdtpsink");
+    GST_ERROR_OBJECT (self, "couldn't link rtp payloader to avdtpsink");
     return FALSE;
   }
 
@@ -452,8 +480,9 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
     g_free (mode);
   }
 
-  g_object_set (self->rtp, "mtu",
-      gst_avdtp_sink_get_link_mtu (self->sink), NULL);
+  mtu = gst_avdtp_sink_get_link_mtu (self->sink);
+  GST_INFO_OBJECT (self, "Setting MTU to %u", mtu);
+  g_object_set (self->rtp, "mtu", mtu, NULL);
 
   return TRUE;
 }
