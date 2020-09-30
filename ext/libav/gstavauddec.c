@@ -611,6 +611,14 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
   } while (got_frame);
   avcodec_flush_buffers (ffmpegdec->context);
 
+  /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
+   * then we are translating it to GST_FLOW_EOS. However, because this behavior
+   * is fully internal stuff of this implementation and gstaudiodecoder
+   * baseclass doesn't convert this GST_FLOW_EOS to GST_FLOW_OK,
+   * convert this flow returned here */
+  if (ret == GST_FLOW_EOS)
+    ret = GST_FLOW_OK;
+
   if (got_any_frames) {
     GstFlowReturn new_ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
