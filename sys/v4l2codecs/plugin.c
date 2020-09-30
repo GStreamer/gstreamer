@@ -26,7 +26,7 @@
 #include "gstv4l2codech264dec.h"
 #include "gstv4l2codecvp8dec.h"
 #include "gstv4l2decoder.h"
-#include "linux/h264-ctrls.h"
+#include "linux/v4l2-controls.h"
 #include "linux/vp8-ctrls.h"
 #include "linux/media.h"
 

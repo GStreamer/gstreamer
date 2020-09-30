@@ -24,7 +24,7 @@
 #ifndef __TYPES_COMPAT_H__
 #define __TYPES_COMPAT_H__
 
-#define __user
+#define __inline__ inline
 
 #ifdef   __linux__
 #include <linux/types.h>
