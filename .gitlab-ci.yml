@@ -243,6 +243,16 @@ commitlint:
 #
 # build setup templates
 #
+# Expects:
+# BUILD_TYPE: Dynamic or shared library
+#   must be 'shared' or 'static' or 'both'
+#   corresponds to --default-library meson arg
+# BUILD_GST_DEBUG: Build with gst debug symbols or not
+#   must be a string of a boolean, "true" or "false". Not yaml bool.
+#   corresponds to -Dgstreamer:gst_debug meson arg
+# GST_WERROR: make warning fatal or not
+#   must be a string of a boolean, "true" or "false". Not yaml bool.
+#
 .build_template: &build
   - export RUSTUP_HOME="/usr/local/rustup"
   - export CARGO_HOME="/usr/local/cargo"
@@ -347,14 +357,6 @@ commitlint:
     GST_WERROR: "true"
     MESON_ARGS: *simple_build
 
-build fedora x86_64:
-  extends:
-    - '.fedora image'
-    - '.fdo.suffixed-image@fedora'
-    - '.build fedora x86_64'
-  needs:
-    - "trigger"
-    - "fedora amd64 docker"
   script:
     - *build
     - ./gst-env.py gst-inspect-1.0 --version
@@ -362,23 +364,63 @@ build fedora x86_64:
     - meson install --destdir $CI_PROJECT_DIR/destdir -C build
     - rm -rf $CI_PROJECT_DIR/destdir
 
-build nodebug fedora x86_64:
-  extends:
-    - '.fedora image'
-    - '.fdo.suffixed-image@fedora'
-    - '.build'
-  needs:
-    - "trigger"
-    - "fedora amd64 docker"
+build fedora gcc:
+  extends: '.build fedora x86_64'
   variables:
-    BUILD_GST_DEBUG: 'false'
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic ${MESON_EXTRA_ARGS}"
+    CC: 'ccache gcc'
+    CXX: 'ccache g++'
+  parallel:
+    matrix:
+      - BUILD_TYPE: ['shared', 'both']
+        BUILD_GST_DEBUG: ["true", "false", ]
 
-build clang fedora x86_64:
+      - BUILD_TYPE: ['static']
+        BUILD_GST_DEBUG: ["true", "false"]
+        # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
+        # currently need to statically build ges.
+        #
+        # subprojects/gst-editing-services/meson.build:153:4: ERROR: Problem encountered: Want to build python based modules but it is not supported while static building
+        # https://github.com/mesonbuild/meson/issues/5214
+        # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
+        #
+        # VAAPI can't be build statically yet
+        # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
+        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled"
+
+build fedora clang:
   extends: '.build fedora x86_64'
   variables:
     CC: 'ccache clang'
     CXX: 'ccache clang++'
+  parallel:
+    matrix:
+      - BUILD_TYPE: ['shared', 'both']
+        BUILD_GST_DEBUG: ["true"]
+
+      - BUILD_TYPE: ['shared', 'both']
+        BUILD_GST_DEBUG: ["false"]
+        # FIXME:
+        # clang complains about the gir files when gst_debug is false:
+        # We can merge the two parallel: matrix after
+        #
+        # [1352/5496] Generating subprojects/gstreamer/gst/Gst-1.0.gir with a custom command
+        # ../subprojects/gstreamer/gst/gstchildproxy.h:57: Error: Gst: identifier not found on the first line:
+        #   * GstChildProxyInterface.get_child_by_name:
+        #     ^
+        MESON_ARGS: "${SIMPLE_BUILD} -Dintrospection=disabled"
+
+      - BUILD_TYPE: ['static']
+        BUILD_GST_DEBUG: ["true", "false"]
+        # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
+        # currently need to statically build ges.
+        #
+        # subprojects/gst-editing-services/meson.build:153:4: ERROR: Problem encountered: Want to build python based modules but it is not supported while static building
+        # https://github.com/mesonbuild/meson/issues/5214
+        # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
+        #
+        # VAAPI can't be build statically yet
+        # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
+        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled"
 
 .build windows:
   image: $WINDOWS_IMAGE
@@ -602,11 +644,6 @@ gstreamer-full static build:
   script:
   - *build
   - meson test -C build -v test-gst-full
-  artifacts:
-    expire_in: "7 days"
-    when: "always"
-    paths:
-      - 'meson-logs/'
 
 gstreamer-full-minimal static build:
   extends: 'gstreamer-full static build'
@@ -634,11 +671,6 @@ gstreamer-full-minimal static build:
   - meson test -C build test-gst-full-features --test-args "-e filesrc,identity,fakesink -E filesink,capsfilter -t audio/x-wav -T video/vivo -d alsadeviceprovider -D v4l2deviceprovider -l GstVideoMultiviewFlagsSet"
   - strip build/libgstreamer-full-1.0.so
   - ls -l build/libgstreamer-full-1.0.so
-  artifacts:
-    expire_in: "7 days"
-    when: "always"
-    paths:
-      - 'meson-logs/'
 
 # Valgrind
 .valgrind fedora x86_64:
