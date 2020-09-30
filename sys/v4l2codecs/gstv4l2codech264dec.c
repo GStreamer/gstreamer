@@ -74,6 +74,7 @@ struct _GstV4l2CodecH264Dec
   gint min_pool_size;
   gboolean has_videometa;
   gboolean need_negotiation;
+  gboolean need_sequence;
   gboolean copy_frames;
 
   struct v4l2_ctrl_h264_sps sps;
@@ -789,6 +790,7 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
   }
 
   gst_v4l2_codec_h264_dec_fill_sequence (self, sps);
+  self->need_sequence = TRUE;
 
   if (negotiation_needed) {
     self->need_negotiation = TRUE;
@@ -1017,11 +1019,6 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
     {
-      .id = V4L2_CID_STATELESS_H264_SPS,
-      .ptr = &self->sps,
-      .size = sizeof (self->sps),
-    },
-    {
       .id = V4L2_CID_STATELESS_H264_PPS,
       .ptr = &self->pps,
       .size = sizeof (self->pps),
@@ -1036,6 +1033,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
       .ptr = &self->decode_params,
       .size = sizeof (self->decode_params),
     },
+    { },
     { },
     { },
   };
@@ -1073,8 +1071,16 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
-  /* Always set SPS, PPS, SCALING_MATRIX and DECODE_PARAMS */
-  count = 4;
+  /* Always set PPS, SCALING_MATRIX and DECODE_PARAMS */
+  count = 3;
+
+  if (self->need_sequence) {
+    control[count].id = V4L2_CID_STATELESS_H264_SPS;
+    control[count].ptr = &self->sps;
+    control[count].size = sizeof (self->sps);
+    count++;
+    self->need_sequence = FALSE;
+  }
 
   /* If it's not slice-based then it doesn't support per-slice controls. */
   if (is_slice_based (self)) {
