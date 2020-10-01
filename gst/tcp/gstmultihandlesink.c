@@ -966,7 +966,7 @@ gst_multi_handle_sink_client_queue_buffer (GstMultiHandleSink * mhsink,
     }
   } else {
     /* there were previous caps recorded, so compare */
-    if (!gst_caps_is_equal (caps, mhclient->caps)) {
+    if (caps && !gst_caps_is_equal (caps, mhclient->caps)) {
       const GValue *sh1, *sh2;
 
       /* caps are not equal, but could still have the same streamheader */
