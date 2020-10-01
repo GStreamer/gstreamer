@@ -24,6 +24,21 @@ if cmdres.returncode() != 0
   error('Do not run `ninja` or `meson` for gst-build inside the uninstalled environment, you will run into problems')
 endif
 
+# Ensure that the user does not have Strawberry Perl in PATH, since it ships
+# with a pkg-config.bat and broken pkgconfig files for libffi and zlib. Will
+# cause a build error, such as in
+# https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/41
+ensure_no_strawberry_perl = '''
+import os
+assert(r'Strawberry\perl\bin' not in os.environ['PATH'])
+'''
+if build_system == 'windows'
+  cmdres = run_command(python3, '-c', ensure_no_strawberry_perl)
+  if cmdres.returncode() != 0
+    error('You have Strawberry Perl in PATH which is known to cause build issues with gst-build. Please remove it from PATH or uninstall it.')
+  endif
+endif
+
 documented_projects = ''
 # Make it possible to use msys2 built zlib which fails
 # when not using the mingw toolchain as it uses unistd.h
