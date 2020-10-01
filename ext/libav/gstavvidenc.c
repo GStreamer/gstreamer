@@ -763,6 +763,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
     if (ret != GST_FLOW_OK)
       break;
   } while (got_packet);
+  avcodec_flush_buffers (ffmpegenc->context);
 
 done:
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
