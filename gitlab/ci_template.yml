@@ -722,6 +722,7 @@ valgrind ges:
       -Dlibav=disabled
       -Dvaapi=disabled
       -Ddevtools=disabled
+      -Dgst-plugins-base:pango=enabled
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs|gstreamer-vaapi)$/'
   script:
