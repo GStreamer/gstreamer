@@ -6,7 +6,9 @@ pango_sources = [
   'gsttimeoverlay.c',
 ]
 
-pango_dep = dependency('pangocairo', version : '>=1.22.0', required : get_option('pango'))
+pango_dep = dependency('pangocairo', version : '>=1.22.0', required : get_option('pango'),
+  fallback: ['pango', 'libpangocairo_dep'],
+  default_options: ['cairo=enabled'])
 
 if pango_dep.found()
   gstpango = library('gstpango',
