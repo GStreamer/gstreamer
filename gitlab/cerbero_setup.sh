@@ -108,6 +108,10 @@ cerbero_before_script() {
     cat localconf.cbc
 
     time ./cerbero-uninstalled --self-update manifest.xml
+
+    # GitLab runner does not always wipe the image after each job, so do that
+    # to ensure we always have a clean builddir
+    time $CERBERO $CERBERO_ARGS wipe --keep-sources --build-tools --force
 }
 
 cerbero_script() {
