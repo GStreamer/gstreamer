@@ -12,7 +12,11 @@ $plugins_declaration
 void
 gst_init_static_plugins (void)
 {
-  $plugins_registration
+  static gsize initialization_value = 0;
+  if (g_once_init_enter (&initialization_value)) {
+    $plugins_registration
+    g_once_init_leave (&initialization_value, 1);
+  }
 }
 ''')
 
