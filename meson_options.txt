@@ -5,3 +5,4 @@ option('package-origin', type : 'string',
        description : 'package origin URL to use in plugins')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
+option('tests', type : 'feature', value : 'auto', yield : true)
