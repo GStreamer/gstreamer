@@ -25,6 +25,7 @@
 #include "gstsrtsrc.h"
 #include "gstsrtsink.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_debug_srtlib);
 GST_DEBUG_CATEGORY (gst_debug_srtobject);
 #define GST_CAT_DEFAULT gst_debug_srtobject
 
@@ -100,10 +101,58 @@ gst_srt_server_sink_class_init (GstSRTServerSinkClass * klass)
 
 #endif
 
+#ifndef GST_DISABLE_GST_DEBUG
+static void
+gst_srt_log_handler (void *opaque, int level, const char *file, int line,
+    const char *area, const char *message)
+{
+  GstDebugLevel gst_level;
+
+  switch (level) {
+    case LOG_CRIT:
+      gst_level = GST_LEVEL_ERROR;
+      break;
+
+    case LOG_ERR:
+      gst_level = GST_LEVEL_WARNING;
+      break;
+
+    case LOG_WARNING:
+      gst_level = GST_LEVEL_INFO;
+      break;
+
+    case LOG_NOTICE:
+      gst_level = GST_LEVEL_DEBUG;
+      break;
+
+    case LOG_DEBUG:
+      gst_level = GST_LEVEL_LOG;
+      break;
+
+    default:
+      gst_level = GST_LEVEL_FIXME;
+      break;
+  }
+
+  if (G_UNLIKELY (gst_level <= _gst_debug_min)) {
+    gst_debug_log (gst_debug_srtlib, gst_level, file, area, line, NULL, "%s",
+        message);
+  }
+}
+#endif
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_debug_srtobject, "srtobject", 0, "SRT Object");
+  GST_DEBUG_CATEGORY_INIT (gst_debug_srtlib, "srtlib", 0, "SRT Library");
+
+#ifndef GST_DISABLE_GST_DEBUG
+  srt_setloghandler (NULL, gst_srt_log_handler);
+  srt_setlogflags (SRT_LOGF_DISABLE_TIME | SRT_LOGF_DISABLE_THREADNAME |
+      SRT_LOGF_DISABLE_SEVERITY | SRT_LOGF_DISABLE_EOL);
+  srt_setloglevel (LOG_DEBUG);
+#endif
 
   if (!gst_element_register (plugin, "srtsrc", GST_RANK_PRIMARY,
           GST_TYPE_SRT_SRC))
