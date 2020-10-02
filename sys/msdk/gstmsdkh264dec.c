@@ -44,7 +44,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-h264, "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) { high, main, baseline, constrained-baseline }")
+        "profile = (string) { high, progressive-high, constrained-high, main, baseline, constrained-baseline }")
     );
 
 #define gst_msdkh264dec_parent_class parent_class
