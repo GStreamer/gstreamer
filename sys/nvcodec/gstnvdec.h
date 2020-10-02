@@ -75,6 +75,9 @@ struct _GstNvDec
   GstGLContext *other_gl_context;
 #endif
 
+  gint max_display_delay;
+  gboolean is_live;
+
   CUvideoparser parser;
   CUvideodecoder decoder;
   GstCudaContext *cuda_ctx;

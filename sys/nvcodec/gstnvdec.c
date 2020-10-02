@@ -38,6 +38,14 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_nvdec_debug);
 #define GST_CAT_DEFAULT gst_nvdec_debug
 
+#define DEFAULT_MAX_DISPLAY_DELAY -1
+
+enum
+{
+  PROP_0,
+  PROP_MAX_DISPLAY_DELAY,
+};
+
 #ifdef HAVE_NVCODEC_GST_GL
 #define SUPPORTED_GL_APIS (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2)
 
@@ -167,10 +175,46 @@ static gboolean gst_nvdec_ensure_gl_context (GstNvDec * nvdec);
 G_DEFINE_ABSTRACT_TYPE (GstNvDec, gst_nvdec, GST_TYPE_VIDEO_DECODER);
 
 static void
+gst_nv_dec_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstNvDec *nvdec = GST_NVDEC (object);
+
+  switch (prop_id) {
+    case PROP_MAX_DISPLAY_DELAY:
+      nvdec->max_display_delay = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_nv_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstNvDec *nvdec = GST_NVDEC (object);
+
+  switch (prop_id) {
+    case PROP_MAX_DISPLAY_DELAY:
+      g_value_set_int (value, nvdec->max_display_delay);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_nvdec_class_init (GstNvDecClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_nv_dec_set_property;
+  gobject_class->get_property = gst_nv_dec_get_property;
 
   video_decoder_class->open = GST_DEBUG_FUNCPTR (gst_nvdec_open);
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_nvdec_start);
@@ -189,11 +233,19 @@ gst_nvdec_class_init (GstNvDecClass * klass)
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nvdec_set_context);
   gst_type_mark_as_plugin_api (GST_TYPE_NVDEC, 0);
+
+  g_object_class_install_property (gobject_class, PROP_MAX_DISPLAY_DELAY,
+      g_param_spec_int ("max-display-delay", "Max Display Delay",
+          "Improves pipelining of decode with display, 0 means no delay "
+          "(auto = -1)",
+          -1, G_MAXINT, DEFAULT_MAX_DISPLAY_DELAY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_nvdec_init (GstNvDec * nvdec)
 {
+  nvdec->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (nvdec), TRUE);
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (nvdec), TRUE);
 }
@@ -259,6 +311,13 @@ calculate_num_decode_surface (cudaVideoCodec codec, guint width, guint height)
   }
 
   return 8;
+}
+
+static guint
+gst_nvdec_get_max_display_delay (GstNvDec * nvdec)
+{
+  return nvdec->max_display_delay >= 0 ? nvdec->max_display_delay :
+      (nvdec->is_live ? 0 : 4);
 }
 
 /* 0: fail, 1: succeeded, > 1: override dpb size of parser
@@ -931,6 +990,7 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   GstNvDec *nvdec = GST_NVDEC (decoder);
   GstNvDecClass *klass = GST_NVDEC_GET_CLASS (decoder);
   CUVIDPARSERPARAMS parser_params = { 0, };
+  GstQuery *query;
   gboolean ret = TRUE;
 
   GST_DEBUG_OBJECT (nvdec, "set format");
@@ -943,12 +1003,19 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   if (!maybe_destroy_decoder_and_parser (nvdec))
     return FALSE;
 
+  /* Check if pipeline is live */
+  nvdec->is_live = FALSE;
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (decoder), query))
+    gst_query_parse_latency (query, &nvdec->is_live, NULL, NULL);
+  gst_query_unref (query);
+
   parser_params.CodecType = klass->codec_type;
   /* ulMaxNumDecodeSurfaces will be updated by the return value of
    * SequenceCallback */
   parser_params.ulMaxNumDecodeSurfaces = 1;
   parser_params.ulErrorThreshold = 100;
-  parser_params.ulMaxDisplayDelay = 0;
+  parser_params.ulMaxDisplayDelay = gst_nvdec_get_max_display_delay (nvdec);
   parser_params.ulClockRate = GST_SECOND;
   parser_params.pUserData = nvdec;
   parser_params.pfnSequenceCallback =
