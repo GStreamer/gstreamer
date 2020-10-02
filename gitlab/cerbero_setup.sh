@@ -84,7 +84,7 @@ cerbero_package_and_check() {
 
 cerbero_before_script() {
     pwd
-    ls -lh
+    ls -lha
 
     # Copy cerbero git repo stored on the image
     cp -a "${CERBERO_HOST_DIR}/.git" .
@@ -110,8 +110,10 @@ cerbero_before_script() {
     time ./cerbero-uninstalled --self-update manifest.xml
 
     # GitLab runner does not always wipe the image after each job, so do that
-    # to ensure we always have a clean builddir
-    time $CERBERO $CERBERO_ARGS wipe --keep-sources --build-tools --force
+    # to ensure we don't have any leftover data from a previous job such as
+    # a dirty builddir, or tarballs/pkg files, leftover files from an old
+    # cerbero commit, etc. Skip the things we actually need to keep.
+    time git clean -xdff -e cerbero_setup.sh -e manifest.xml -e localconf.cbc -e "${CERBERO_SOURCES}"
 }
 
 cerbero_script() {
