@@ -9,7 +9,7 @@ if srt_option.disabled()
   subdir_done()
 endif
 
-srt_dep = dependency('srt', required : false)
+srt_dep = dependency('srt', version : '>=1.3.0', required : false)
 if not srt_dep.found() and cc.has_header_symbol('srt/srt.h', 'srt_startup')
   srt_dep = cc.find_library('srt', required : false)
 endif
