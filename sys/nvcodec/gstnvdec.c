@@ -320,6 +320,18 @@ gst_nvdec_get_max_display_delay (GstNvDec * nvdec)
       (nvdec->is_live ? 0 : 4);
 }
 
+static gint64
+gst_nvdec_get_latency (GstNvDec * nvdec)
+{
+  if (!nvdec->input_state)
+    return 0;
+
+  return gst_util_uint64_scale_int ((nvdec->num_decode_surface +
+          gst_nvdec_get_max_display_delay (nvdec)) * GST_SECOND,
+      GST_VIDEO_INFO_FPS_D (&nvdec->input_state->info),
+      GST_VIDEO_INFO_FPS_N (&nvdec->input_state->info));
+}
+
 /* 0: fail, 1: succeeded, > 1: override dpb size of parser
  * (set by CUVIDPARSERPARAMS::ulMaxNumDecodeSurfaces while creating parser) */
 static gint CUDAAPI
@@ -334,9 +346,10 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
   GstCudaContext *ctx = nvdec->cuda_ctx;
   GstStructure *in_s = NULL;
   gboolean updata = FALSE;
-  gint num_decode_surface = 0;
   guint major_api_ver = 0;
+  guint64 curr_latency, old_latency;
 
+  old_latency = gst_nvdec_get_latency (nvdec);
   width = format->display_area.right - format->display_area.left;
   height = format->display_area.bottom - format->display_area.top;
 
@@ -465,16 +478,23 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 
   if (gst_cuvid_get_api_version (&major_api_ver, NULL) && major_api_ver >= 9) {
     /* min_num_decode_surfaces was introduced in nvcodec sdk 9.0 header */
-    num_decode_surface = format->min_num_decode_surfaces;
+    nvdec->num_decode_surface = format->min_num_decode_surfaces;
 
-    GST_DEBUG_OBJECT (nvdec, "Num decode surface: %d", num_decode_surface);
+    GST_DEBUG_OBJECT (nvdec,
+        "Num decode surface: %d", nvdec->num_decode_surface);
   } else {
-    num_decode_surface =
+    nvdec->num_decode_surface =
         calculate_num_decode_surface (format->codec, width, height);
 
     GST_DEBUG_OBJECT (nvdec,
-        "Calculated num decode surface: %d", num_decode_surface);
+        "Calculated num decode surface: %d", nvdec->num_decode_surface);
   }
+
+  /* Update the latency if it has changed */
+  curr_latency = gst_nvdec_get_latency (nvdec);
+  if (old_latency != curr_latency)
+    gst_video_decoder_set_latency (GST_VIDEO_DECODER (nvdec), curr_latency,
+        curr_latency);
 
   if (!nvdec->decoder || !gst_video_info_is_equal (out_info, &prev_out_info)) {
     updata = TRUE;
@@ -496,7 +516,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     GST_DEBUG_OBJECT (nvdec, "creating decoder");
     create_info.ulWidth = width;
     create_info.ulHeight = height;
-    create_info.ulNumDecodeSurfaces = num_decode_surface;
+    create_info.ulNumDecodeSurfaces = nvdec->num_decode_surface;
     create_info.CodecType = format->codec;
     create_info.ChromaFormat = format->chroma_format;
     create_info.ulCreationFlags = cudaVideoCreate_Default;
@@ -535,7 +555,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     }
   }
 
-  return num_decode_surface;
+  return nvdec->num_decode_surface;
 
 error:
   nvdec->last_ret = GST_FLOW_ERROR;

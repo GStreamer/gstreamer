@@ -75,6 +75,7 @@ struct _GstNvDec
   GstGLContext *other_gl_context;
 #endif
 
+  guint num_decode_surface;
   gint max_display_delay;
   gboolean is_live;
 
