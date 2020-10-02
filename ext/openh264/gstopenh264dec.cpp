@@ -61,7 +61,7 @@ static gboolean gst_openh264dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 
 #if HAVE_OPENH264_MAIN_PROFILE
-#define SUPPORTED_PROFILE_STR "profile=(string){ constrained-baseline, baseline, main, high }"
+#define SUPPORTED_PROFILE_STR "profile=(string){ constrained-baseline, baseline, main, high, constrained-high, progressive-high }"
 #else
 #define SUPPORTED_PROFILE_STR "profile=(string){ constrained-baseline, baseline }"
 #endif
