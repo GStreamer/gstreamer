@@ -687,11 +687,11 @@ valgrind ges:
     CERBERO_HOST_DIR: "/cerbero/"
   before_script:
     - echo "Fetching ${CERBERO_SCRIPT_URL}"
-    - curl -L -o cerbero_script.sh "${CERBERO_SCRIPT_URL}"
-    - chmod +x cerbero_script.sh
-    - ./cerbero_script.sh cerbero_before_script
+    - curl -L -o cerbero_setup.sh "${CERBERO_SCRIPT_URL}"
+    - chmod +x cerbero_setup.sh
+    - ./cerbero_setup.sh cerbero_before_script
   script:
-    - ./cerbero_script.sh cerbero_script
+    - ./cerbero_setup.sh cerbero_script
   cache:
     key: "${CI_JOB_NAME}"
     paths:
@@ -835,7 +835,7 @@ build msys2 :
   rules:
     - if: '$CI_PROJECT_NAME == "cerbero"'
   script:
-    - ./cerbero_script.sh cerbero_deps_script
+    - ./cerbero_setup.sh cerbero_deps_script
 
 #
 # Cerbero Linux X86_64 build
