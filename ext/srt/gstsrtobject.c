@@ -866,7 +866,7 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
 
   g_clear_object (&bind_addr);
 
-  sock = srt_socket (bind_sa_family, SOCK_DGRAM, 0);
+  sock = srt_create_socket ();
   if (sock == SRT_INVALID_SOCK) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, "%s",
         srt_getlasterror_str ());
@@ -943,7 +943,7 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
   bool sender;
   bool rendezvous;
 
-  sock = srt_socket (sa_family, SOCK_DGRAM, 0);
+  sock = srt_create_socket ();
   if (sock == SRT_INVALID_SOCK) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, "%s",
         srt_getlasterror_str ());
