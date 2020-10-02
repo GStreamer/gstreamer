@@ -494,6 +494,7 @@ void WPEView::handleExportedImage(gpointer image)
       GMutexHolder lock(images_mutex);
 
       GST_TRACE("EGLImage %p wrapped in GstEGLImage %" GST_PTR_FORMAT, eglImage, gstImage);
+      gst_clear_mini_object ((GstMiniObject **) &egl.pending);
       egl.pending = gstImage;
 
       notifyLoadFinished();
@@ -552,6 +553,7 @@ void WPEView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* buffer)
     {
         GMutexHolder lock(images_mutex);
         GST_TRACE("SHM buffer %p wrapped in buffer %" GST_PTR_FORMAT, buffer, gstBuffer);
+        gst_clear_buffer (&shm.pending);
         shm.pending = gstBuffer;
         notifyLoadFinished();
     }
