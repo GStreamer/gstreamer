@@ -41,6 +41,12 @@ GType gst_webrtc_rtp_sender_get_type(void);
  * @rtcp_transport: The transport for RTCP packets without rtcp-mux
  * @send_encodings: Unused
  * @priority: The priority of the stream (Since: 1.20)
+ *
+ * An object to track the sending aspect of the stream
+ *
+ * Mostly matches the WebRTC RTCRtpSender interface.
+ *
+ * Since: 1.16
  */
 struct _GstWebRTCRTPSender
 {
