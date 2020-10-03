@@ -34,25 +34,6 @@
 #define GST_CAT_DEFAULT gst_va_memory_debug
 GST_DEBUG_CATEGORY_STATIC (gst_va_memory_debug);
 
-struct _GstVaDmabufAllocator
-{
-  GstDmaBufAllocator parent;
-
-  /* queue for disposed surfaces */
-  GstAtomicQueue *available_mems;
-  GstVaDisplay *display;
-
-  GstMemoryMapFunction parent_map;
-
-  GCond buffer_cond;
-};
-
-static void _init_debug_category (void);
-
-#define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVaDmabufAllocator, gst_va_dmabuf_allocator,
-    GST_TYPE_DMABUF_ALLOCATOR, _init_debug_category ());
-
 static void
 _init_debug_category (void)
 {
@@ -380,6 +361,23 @@ gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
 }
 
 /*=========================== GstVaDmabufAllocator ===========================*/
+
+struct _GstVaDmabufAllocator
+{
+  GstDmaBufAllocator parent;
+
+  /* queue for disposed surfaces */
+  GstAtomicQueue *available_mems;
+  GstVaDisplay *display;
+
+  GstMemoryMapFunction parent_map;
+
+  GCond buffer_cond;
+};
+
+#define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVaDmabufAllocator, gst_va_dmabuf_allocator,
+    GST_TYPE_DMABUF_ALLOCATOR, _init_debug_category ());
 
 static gpointer
 gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
