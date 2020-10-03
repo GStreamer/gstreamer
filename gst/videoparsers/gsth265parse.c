@@ -2978,7 +2978,13 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   if (format == h265parse->format && align == h265parse->align) {
     /* do not set CAPS and passthrough mode if SPS/PPS have not been parsed */
     if (h265parse->have_sps && h265parse->have_pps) {
+      /* Don't enable passthrough here. This element will parse various
+       * SEI messages which would be very important/useful for downstream
+       * (HDR, timecode for example)
+       */
+#if 0
       gst_base_parse_set_passthrough (parse, TRUE);
+#endif
 
       /* we did parse codec-data and might supplement src caps */
       gst_h265_parse_update_src_caps (h265parse, caps);
