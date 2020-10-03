@@ -53,15 +53,6 @@ static void _init_debug_category (void);
 G_DEFINE_TYPE_WITH_CODE (GstVaDmabufAllocator, gst_va_dmabuf_allocator,
     GST_TYPE_DMABUF_ALLOCATOR, _init_debug_category ());
 
-typedef struct _GstVaBufferSurface GstVaBufferSurface;
-struct _GstVaBufferSurface
-{
-  GstVaDisplay *display;
-  GstVideoInfo info;
-  VASurfaceID surface;
-  volatile gint ref_count;
-};
-
 static void
 _init_debug_category (void)
 {
@@ -320,6 +311,8 @@ _put_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
   return TRUE;
 }
 
+/*=========================== Quarks for GstMemory ===========================*/
+
 static GQuark
 gst_va_buffer_surface_quark (void)
 {
@@ -345,6 +338,48 @@ gst_va_drm_mod_quark (void)
 
   return drm_mod_quark;
 }
+
+/*========================= GstVaBufferSurface ===============================*/
+
+typedef struct _GstVaBufferSurface GstVaBufferSurface;
+struct _GstVaBufferSurface
+{
+  GstVaDisplay *display;
+  GstVideoInfo info;
+  VASurfaceID surface;
+  volatile gint ref_count;
+};
+
+static void
+gst_va_buffer_surface_unref (gpointer data)
+{
+  GstVaBufferSurface *buf = data;
+
+  g_return_if_fail (buf && GST_IS_VA_DISPLAY (buf->display));
+
+  if (g_atomic_int_dec_and_test (&buf->ref_count)) {
+    GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
+    _destroy_surfaces (buf->display, &buf->surface, 1);
+    gst_clear_object (&buf->display);
+    g_slice_free (GstVaBufferSurface, buf);
+  }
+}
+
+static GstVaBufferSurface *
+gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
+    gint width, gint height)
+{
+  GstVaBufferSurface *buf = g_slice_new (GstVaBufferSurface);
+
+  g_atomic_int_set (&buf->ref_count, 0);
+  buf->surface = surface;
+  buf->display = NULL;
+  gst_video_info_set_format (&buf->info, format, width, height);
+
+  return buf;
+}
+
+/*=========================== GstVaDmabufAllocator ===========================*/
 
 static gpointer
 gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
@@ -423,35 +458,6 @@ gst_va_dmabuf_allocator_new (GstVaDisplay * display)
   gst_object_ref_sink (self);
 
   return GST_ALLOCATOR (self);
-}
-
-static void
-_buffer_surface_unref (gpointer data)
-{
-  GstVaBufferSurface *buf = data;
-
-  g_return_if_fail (buf && GST_IS_VA_DISPLAY (buf->display));
-
-  if (g_atomic_int_dec_and_test (&buf->ref_count)) {
-    GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
-    _destroy_surfaces (buf->display, &buf->surface, 1);
-    gst_clear_object (&buf->display);
-    g_slice_free (GstVaBufferSurface, buf);
-  }
-}
-
-static GstVaBufferSurface *
-_create_buffer_surface (VASurfaceID surface, GstVideoFormat format,
-    gint width, gint height)
-{
-  GstVaBufferSurface *buf = g_slice_new (GstVaBufferSurface);
-
-  g_atomic_int_set (&buf->ref_count, 0);
-  buf->surface = surface;
-  buf->display = NULL;
-  gst_video_info_set_format (&buf->info, format, width, height);
-
-  return buf;
 }
 
 static inline goffset
@@ -534,7 +540,7 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
     goto failed;
   }
 
-  buf = _create_buffer_surface (surface, format, desc.width, desc.height);
+  buf = gst_va_buffer_surface_new (surface, format, desc.width, desc.height);
   GST_VIDEO_INFO_SIZE (&buf->info) = 0;
 
   for (i = 0; i < desc.num_objects; i++) {
@@ -715,7 +721,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   GST_LOG_OBJECT (display, "Created surface %#x [%dx%d]", surface,
       ext_buf.width, ext_buf.height);
 
-  buf = _create_buffer_surface (surface, rt_format, ext_buf.width,
+  buf = gst_va_buffer_surface_new (surface, rt_format, ext_buf.width,
       ext_buf.height);
   buf->info = *info;
   buf->display = gst_object_ref (display);
@@ -723,7 +729,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   for (i = 0; i < n_planes; i++) {
     g_atomic_int_add (&buf->ref_count, 1);
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem[i]),
-        gst_va_buffer_surface_quark (), buf, _buffer_surface_unref);
+        gst_va_buffer_surface_quark (), buf, gst_va_buffer_surface_unref);
     GST_INFO_OBJECT (display, "setting surface %#x to dmabuf fd %d",
         buf->surface, gst_dmabuf_memory_get_fd (mem[i]));
   }
