@@ -24,6 +24,9 @@
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11device.h"
+#include "gstd3d11utils.h"
+
+#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_d3d11_buffer_pool_debug
@@ -33,11 +36,12 @@ struct _GstD3D11BufferPoolPrivate
   GstD3D11Device *device;
   GstD3D11Allocator *allocator;
 
-  /* initial buffer used for calculating buffer size */
-  GstBuffer *initial_buffer;
-
   gboolean add_videometa;
   GstD3D11AllocationParams *d3d11_params;
+
+  gint stride[GST_VIDEO_MAX_PLANES];
+  gsize size[GST_VIDEO_MAX_PLANES];
+  gsize offset[GST_VIDEO_MAX_PLANES];
 };
 
 #define gst_d3d11_buffer_pool_parent_class parent_class
@@ -87,7 +91,6 @@ gst_d3d11_buffer_pool_dispose (GObject * object)
     gst_d3d11_allocation_params_free (priv->d3d11_params);
   priv->d3d11_params = NULL;
 
-  gst_clear_buffer (&priv->initial_buffer);
   gst_clear_object (&priv->device);
   gst_clear_object (&priv->allocator);
 
@@ -114,6 +117,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstAllocator *allocator = NULL;
   gboolean ret = TRUE;
   D3D11_TEXTURE2D_DESC *desc;
+  GstBuffer *staging_buffer;
   gint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -133,7 +137,6 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
     goto wrong_config;
 
-  gst_clear_buffer (&priv->initial_buffer);
   gst_clear_object (&priv->allocator);
 
   if (allocator) {
@@ -227,14 +230,33 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     }
   }
 
-  gst_d3d11_buffer_pool_alloc (pool, &priv->initial_buffer, NULL);
+  staging_buffer = gst_d3d11_allocate_staging_buffer (priv->allocator,
+      &info, priv->d3d11_params->d3d11_format, priv->d3d11_params->desc, TRUE);
 
-  if (!priv->initial_buffer) {
-    GST_ERROR_OBJECT (pool, "Could not create initial buffer");
+  if (!staging_buffer) {
+    GST_ERROR_OBJECT (pool, "Couldn't allocated staging buffer");
     return FALSE;
+  } else {
+    GstVideoMeta *meta = gst_buffer_get_video_meta (staging_buffer);
+
+    if (!meta) {
+      GST_ERROR_OBJECT (pool, "Buffer doesn't have video meta");
+      gst_buffer_unref (staging_buffer);
+      return FALSE;
+    }
+
+    for (i = 0; i < gst_buffer_n_memory (staging_buffer); i++) {
+      GstMemory *mem = gst_buffer_peek_memory (staging_buffer, i);
+
+      priv->size[i] = gst_memory_get_sizes (mem, NULL, NULL);
+    }
+
+    memcpy (priv->offset, meta->offset, sizeof (priv->offset));
+    memcpy (priv->stride, meta->stride, sizeof (priv->stride));
   }
 
-  self->buffer_size = gst_buffer_get_size (priv->initial_buffer);
+  self->buffer_size = gst_buffer_get_size (staging_buffer);
+  gst_buffer_unref (staging_buffer);
 
   gst_buffer_pool_config_set_params (config,
       caps, self->buffer_size, min_buffers, max_buffers);
@@ -275,34 +297,22 @@ gst_d3d11_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstBuffer *buf;
   GstD3D11AllocationParams *d3d11_params = priv->d3d11_params;
   GstVideoInfo *info = &d3d11_params->info;
-  GstVideoInfo *aligned_info = &d3d11_params->aligned_info;
-  gint n_texture = 0;
   gint i;
-  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
-
-  /* consume pre-allocated buffer if any */
-  if (G_UNLIKELY (priv->initial_buffer)) {
-    *buffer = priv->initial_buffer;
-    priv->initial_buffer = NULL;
-
-    return GST_FLOW_OK;
-  }
 
   buf = gst_buffer_new ();
 
   if (d3d11_params->d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    for (n_texture = 0; n_texture < GST_VIDEO_INFO_N_PLANES (info); n_texture++) {
-      d3d11_params->plane = n_texture;
-      mem = gst_d3d11_allocator_alloc (priv->allocator, d3d11_params);
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      mem = gst_d3d11_allocator_alloc (priv->allocator, &d3d11_params->desc[i],
+          d3d11_params->flags, priv->size[i]);
       if (!mem)
         goto error;
 
       gst_buffer_append_memory (buf, mem);
     }
   } else {
-    d3d11_params->plane = 0;
-    mem = gst_d3d11_allocator_alloc (priv->allocator, priv->d3d11_params);
-    n_texture++;
+    mem = gst_d3d11_allocator_alloc (priv->allocator, &d3d11_params->desc[0],
+        d3d11_params->flags, priv->size[0]);
 
     if (!mem)
       goto error;
@@ -310,18 +320,12 @@ gst_d3d11_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     gst_buffer_append_memory (buf, mem);
   }
 
-  /* calculate offset */
-  for (i = 0; i < n_texture && i < GST_VIDEO_MAX_PLANES - 1; i++) {
-    offset[i + 1] = offset[i] +
-        d3d11_params->stride[i] * GST_VIDEO_INFO_COMP_HEIGHT (aligned_info, i);
-  }
-
   if (priv->add_videometa) {
     GST_DEBUG_OBJECT (self, "adding GstVideoMeta");
     gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
-        offset, d3d11_params->stride);
+        priv->offset, priv->stride);
   }
 
   *buffer = buf;

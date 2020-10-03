@@ -23,6 +23,7 @@
 
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
+#include "gstd3d11memory.h"
 
 #include <windows.h>
 #include <versionhelpers.h>
@@ -395,6 +396,79 @@ gst_d3d11_get_device_vendor (GstD3D11Device * device)
   g_free (desc);
 
   return vendor;
+}
+
+GstBuffer *
+gst_d3d11_allocate_staging_buffer (GstD3D11Allocator * allocator,
+    const GstVideoInfo * info, const GstD3D11Format * format,
+    const D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES],
+    gboolean add_videometa)
+{
+  GstBuffer *buffer;
+  gint i;
+  gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
+  GstMemory *mem;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (format != NULL, NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  buffer = gst_buffer_new ();
+
+  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    gsize size[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[i], 0,
+          &stride[i]);
+
+      if (!mem) {
+        GST_ERROR_OBJECT (allocator, "Couldn't allocate memory for plane %d",
+            i);
+        goto error;
+      }
+
+      size[i] = gst_memory_get_sizes (mem, NULL, NULL);
+      if (i > 0)
+        offset[i] = offset[i - 1] + size[i - 1];
+      gst_buffer_append_memory (buffer, mem);
+    }
+  } else {
+    /* must be YUV semi-planar or single plane */
+    g_assert (GST_VIDEO_INFO_N_PLANES (info) <= 2);
+
+    mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[0], 0,
+        &stride[0]);
+
+    if (!mem) {
+      GST_ERROR_OBJECT (allocator, "Couldn't allocate memory");
+      goto error;
+    }
+
+    gst_memory_get_sizes (mem, NULL, NULL);
+    gst_buffer_append_memory (buffer, mem);
+
+    if (GST_VIDEO_INFO_N_PLANES (info) == 2) {
+      stride[1] = stride[0];
+      offset[1] = stride[0] * desc[0].Height;
+    }
+  }
+
+  if (add_videometa) {
+    gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        offset, stride);
+  }
+
+  return buffer;
+
+error:
+  gst_buffer_unref (buffer);
+
+  return NULL;
 }
 
 gboolean

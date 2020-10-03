@@ -84,13 +84,6 @@ struct _GstD3D11AllocationParams
   GstVideoInfo aligned_info;
   const GstD3D11Format *d3d11_format;
 
-  /* size and stride of staging texture, set by allocator */
-  gint stride[GST_VIDEO_MAX_PLANES];
-  gsize size[GST_VIDEO_MAX_PLANES];
-
-  /* Current target plane for allocation */
-  guint plane;
-
   GstD3D11AllocationFlags flags;
 
   /*< private >*/
@@ -101,6 +94,7 @@ typedef enum
 {
   GST_D3D11_MEMORY_TYPE_TEXTURE = 0,
   GST_D3D11_MEMORY_TYPE_ARRAY = 1,
+  GST_D3D11_MEMORY_TYPE_STAGING = 2,
 } GstD3D11MemoryType;
 
 struct _GstD3D11Memory
@@ -119,9 +113,6 @@ struct _GstD3D11Memory
   ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
   guint num_render_target_views;
 
-  GstVideoInfo info;
-
-  guint plane;
   GstD3D11MemoryType type;
 
   /* > 0 if this is Array typed memory */
@@ -173,7 +164,15 @@ GType               gst_d3d11_allocator_get_type  (void);
 GstD3D11Allocator * gst_d3d11_allocator_new       (GstD3D11Device *device);
 
 GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator,
-                                                   GstD3D11AllocationParams * params);
+                                                   const D3D11_TEXTURE2D_DESC * desc,
+                                                   GstD3D11AllocationFlags flags,
+                                                   gsize size);
+
+GstMemory *         gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
+                                                       const D3D11_TEXTURE2D_DESC * desc,
+                                                       GstD3D11AllocationFlags flags,
+                                                       gint * stride);
+
 
 void                gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
                                                       gboolean flushing);

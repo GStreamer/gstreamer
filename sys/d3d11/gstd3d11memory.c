@@ -262,9 +262,53 @@ map_cpu_access_data (GstD3D11Memory * dmem, D3D11_MAP map_type)
 }
 
 static gpointer
+gst_d3d11_memory_map_staging (GstMemory * mem, GstMapFlags flags)
+{
+  GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+
+  g_mutex_lock (&dmem->lock);
+  if (dmem->cpu_map_count == 0) {
+    ID3D11DeviceContext *device_context =
+        gst_d3d11_device_get_device_context_handle (dmem->device);
+    D3D11_MAP map_type;
+    HRESULT hr;
+    gboolean ret = TRUE;
+
+    map_type = gst_map_flags_to_d3d11 (flags);
+
+    gst_d3d11_device_lock (dmem->device);
+    hr = ID3D11DeviceContext_Map (device_context,
+        (ID3D11Resource *) dmem->texture, 0, map_type, 0, &dmem->map);
+    if (!gst_d3d11_result (hr, dmem->device)) {
+      GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
+          "Failed to map staging texture (0x%x)", (guint) hr);
+      ret = FALSE;
+    }
+    gst_d3d11_device_unlock (dmem->device);
+
+    if (!ret) {
+      g_mutex_unlock (&dmem->lock);
+      return NULL;
+    }
+  }
+
+  dmem->cpu_map_count++;
+  g_mutex_unlock (&dmem->lock);
+
+  return dmem->map.pData;
+}
+
+static gpointer
 gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+
+  if (dmem->type == GST_D3D11_MEMORY_TYPE_STAGING) {
+    if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11)
+      return dmem->texture;
+
+    return gst_d3d11_memory_map_staging (mem, flags);
+  }
 
   g_mutex_lock (&dmem->lock);
   if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
@@ -336,6 +380,9 @@ unmap_cpu_access_data (GstD3D11Memory * dmem)
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
+  if (dmem->type == GST_D3D11_MEMORY_TYPE_STAGING)
+    staging = (ID3D11Resource *) dmem->texture;
+
   gst_d3d11_device_lock (dmem->device);
   ID3D11DeviceContext_Unmap (device_context, staging, 0);
   gst_d3d11_device_unlock (dmem->device);
@@ -348,14 +395,16 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 
   g_mutex_lock (&dmem->lock);
   if ((info->flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
-    if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+    if (dmem->type != GST_D3D11_MEMORY_TYPE_STAGING &&
+        (info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
     g_mutex_unlock (&dmem->lock);
     return;
   }
 
-  if ((info->flags & GST_MAP_WRITE))
+  if (dmem->type != GST_D3D11_MEMORY_TYPE_STAGING &&
+      (info->flags & GST_MAP_WRITE))
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
   dmem->cpu_map_count--;
@@ -498,7 +547,7 @@ gst_d3d11_allocator_new (GstD3D11Device * device)
 
 static gboolean
 calculate_mem_size (GstD3D11Device * device, ID3D11Texture2D * texture,
-    D3D11_TEXTURE2D_DESC * desc, D3D11_MAP map_type,
+    const D3D11_TEXTURE2D_DESC * desc, D3D11_MAP map_type,
     gint stride[GST_VIDEO_MAX_PLANES], gsize * size)
 {
   HRESULT hr;
@@ -684,31 +733,24 @@ error:
 
 GstMemory *
 gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
-    GstD3D11AllocationParams * params)
+    const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
+    gsize size)
 {
   GstD3D11Memory *mem;
   GstD3D11Device *device;
   ID3D11Texture2D *texture = NULL;
-  ID3D11Texture2D *staging = NULL;
-  D3D11_TEXTURE2D_DESC *desc;
-  gsize *size;
-  gboolean is_first = FALSE;
   guint index_to_use = 0;
   GstD3D11AllocatorPrivate *priv;
   GstD3D11MemoryType type = GST_D3D11_MEMORY_TYPE_TEXTURE;
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
-  g_return_val_if_fail (params != NULL, NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+  g_return_val_if_fail (size > 0, NULL);
 
   priv = allocator->priv;
   device = allocator->device;
-  desc = &params->desc[params->plane];
-  size = &params->size[params->plane];
 
-  if (*size == 0)
-    is_first = TRUE;
-
-  if ((params->flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
+  if ((flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
     gint i;
 
   do_again:
@@ -758,50 +800,17 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     }
   }
 
-  /* per plane, allocated staging texture to calculate actual size,
-   * stride, and offset */
-  if (is_first) {
-    gint num_plane;
-    gint stride[GST_VIDEO_MAX_PLANES];
-    gsize mem_size;
-    gint i;
-
-    staging = create_staging_texture (device, desc);
-    if (!staging) {
-      GST_ERROR_OBJECT (allocator, "Couldn't create staging texture");
-      goto error;
-    }
-
-    if (!calculate_mem_size (device,
-            staging, desc, D3D11_MAP_READ, stride, &mem_size))
-      goto error;
-
-    num_plane = gst_d3d11_dxgi_format_n_planes (desc->Format);
-
-    for (i = 0; i < num_plane; i++) {
-      params->stride[params->plane + i] = stride[i];
-    }
-
-    *size = mem_size;
-  }
-
   mem = g_new0 (GstD3D11Memory, 1);
 
   gst_memory_init (GST_MEMORY_CAST (mem),
-      0, GST_ALLOCATOR_CAST (allocator), NULL, *size, 0, 0, *size);
+      0, GST_ALLOCATOR_CAST (allocator), NULL, size, 0, 0, size);
 
   g_mutex_init (&mem->lock);
-  mem->info = params->info;
-  mem->plane = params->plane;
   mem->desc = *desc;
   mem->texture = texture;
-  mem->staging = staging;
   mem->device = gst_object_ref (device);
   mem->type = type;
   mem->subresource_index = index_to_use;
-
-  if (staging)
-    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
   return GST_MEMORY_CAST (mem);
 
@@ -809,7 +818,56 @@ error:
   if (texture)
     gst_d3d11_device_release_texture (device, texture);
 
-  if (staging)
+  return NULL;
+}
+
+GstMemory *
+gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
+    const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
+    gint * stride)
+{
+  GstD3D11Memory *mem;
+  GstD3D11Device *device;
+  ID3D11Texture2D *texture = NULL;
+  gsize mem_size = 0;
+  gint mem_stride[GST_VIDEO_MAX_PLANES];
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  device = allocator->device;
+
+  texture = create_staging_texture (device, desc);
+  if (!texture) {
+    GST_ERROR_OBJECT (allocator, "Couldn't create staging texture");
+    goto error;
+  }
+
+  if (!calculate_mem_size (device,
+          texture, desc, D3D11_MAP_READ, mem_stride, &mem_size)) {
+    GST_ERROR_OBJECT (allocator, "Couldn't calculate staging texture size");
+    goto error;
+  }
+
+  mem = g_new0 (GstD3D11Memory, 1);
+
+  gst_memory_init (GST_MEMORY_CAST (mem),
+      0, GST_ALLOCATOR_CAST (allocator), NULL, mem_size, 0, 0, mem_size);
+
+  g_mutex_init (&mem->lock);
+  mem->desc = *desc;
+  mem->texture = texture;
+  mem->device = gst_object_ref (device);
+  mem->type = GST_D3D11_MEMORY_TYPE_STAGING;
+
+  /* every plan will have identical size */
+  if (stride)
+    *stride = mem_stride[0];
+
+  return GST_MEMORY_CAST (mem);
+
+error:
+  if (texture)
     gst_d3d11_device_release_texture (device, texture);
 
   return NULL;

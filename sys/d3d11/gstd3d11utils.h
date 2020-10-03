@@ -54,6 +54,12 @@ gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
 GstD3D11DeviceVendor gst_d3d11_get_device_vendor    (GstD3D11Device * device);
 
+GstBuffer *     gst_d3d11_allocate_staging_buffer   (GstD3D11Allocator * allocator,
+                                                     const GstVideoInfo * info,
+                                                     const GstD3D11Format * format,
+                                                     const D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES],
+                                                     gboolean add_videometa);
+
 gboolean       _gst_d3d11_result                    (HRESULT hr,
                                                      GstD3D11Device * device,
                                                      GstDebugCategory * cat,
