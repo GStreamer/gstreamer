@@ -526,6 +526,36 @@ bail:
   return ret;
 }
 
+/* *INDENT-OFF* */
+static const struct _CBDesc {
+  const char *name;
+  const char *nick;
+  const char *blurb;
+  guint prop_id;
+} cb_desc[VAProcColorBalanceCount] = {
+  [VAProcColorBalanceHue] =
+      { "hue", "Hue", "Color hue value", GST_VA_FILTER_PROP_HUE },
+  [VAProcColorBalanceSaturation] =
+      { "saturation", "Saturation", "Color saturation value",
+        GST_VA_FILTER_PROP_SATURATION },
+  [VAProcColorBalanceBrightness] =
+      { "brightness", "Brightness", "Color brightness value",
+        GST_VA_FILTER_PROP_BRIGHTNESS },
+  [VAProcColorBalanceContrast] =
+      { "contrast", "Contrast", "Color contrast value",
+        GST_VA_FILTER_PROP_CONTRAST },
+  [VAProcColorBalanceAutoSaturation] =
+      { "auto-saturation",   "Auto-Saturation", "Enable auto saturation",
+        GST_VA_FILTER_PROP_AUTO_SATURATION },
+  [VAProcColorBalanceAutoBrightness] =
+      { "auto-brightness", "Auto-Brightness", "Enable auto brightness",
+        GST_VA_FILTER_PROP_AUTO_BRIGHTNESS    },
+  [VAProcColorBalanceAutoContrast] =
+      { "auto-contrast", "Auto-Contrast", "Enable auto contrast",
+        GST_VA_FILTER_PROP_AUTO_CONTRAST },
+};
+/* *INDENT-ON* */
+
 gboolean
 gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
 {
@@ -593,67 +623,23 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             | GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS
             | GST_PARAM_DOC_SHOW_DEFAULT;
         GParamSpec *pspec;
-        const char *name, *nick, *blurb;
-        guint prop_id;
+        guint j, k;
 
-        for (i = 0; i < filter->num_caps; i++) {
-          switch (caps[i].type) {
-            case VAProcColorBalanceHue:
-              name = "hue";
-              nick = "Hue";
-              blurb = "Color hue value";
-              prop_id = GST_VA_FILTER_PROP_HUE;
-              break;
-            case VAProcColorBalanceSaturation:
-              name = "saturation";
-              nick = "Saturation";
-              blurb = "Color saturation value";
-              prop_id = GST_VA_FILTER_PROP_SATURATION;
-              break;
-            case VAProcColorBalanceBrightness:
-              name = "brightness";
-              nick = "Brightness";
-              blurb = "Color brightness value";
-              prop_id = GST_VA_FILTER_PROP_BRIGHTNESS;
-              break;
-            case VAProcColorBalanceContrast:
-              name = "contrast";
-              nick = "Contrast";
-              blurb = "Color contrast value";
-              prop_id = GST_VA_FILTER_PROP_CONTRAST;
-              break;
-            case VAProcColorBalanceAutoSaturation:
-              name = "auto-saturation";
-              nick = "Auto-Saturation";
-              blurb = "Enable auto saturation";
-              prop_id = GST_VA_FILTER_PROP_AUTO_SATURATION;
-              break;
-            case VAProcColorBalanceAutoBrightness:
-              name = "auto-brightness";
-              nick = "Auto-Brightness";
-              blurb = "Enable auto brightness";
-              prop_id = GST_VA_FILTER_PROP_AUTO_BRIGHTNESS;
-              break;
-            case VAProcColorBalanceAutoContrast:
-              name = "auto-contrast";
-              nick = "Auto-Contrast";
-              blurb = "Enable auto contrast";
-              prop_id = GST_VA_FILTER_PROP_AUTO_CONTRAST;
-              break;
-            default:
-              continue;
-          }
-
-          if (caps[i].range.min_value < caps[i].range.max_value) {
-            pspec = g_param_spec_float (name, nick, blurb,
-                caps[i].range.min_value, caps[i].range.max_value,
-                caps[i].range.default_value, flags);
+        for (j = 0; j < filter->num_caps; j++) {
+          k = caps[j].type;
+          if (caps[j].range.min_value < caps[j].range.max_value) {
+            pspec = g_param_spec_float (cb_desc[k].name, cb_desc[k].nick,
+                cb_desc[k].blurb, caps[j].range.min_value,
+                caps[j].range.max_value, caps[j].range.default_value, flags);
           } else {
-            pspec = g_param_spec_boolean (name, nick, blurb, FALSE, flags);
+            pspec = g_param_spec_boolean (cb_desc[k].name, cb_desc[k].nick,
+                cb_desc[k].blurb, FALSE, flags);
           }
 
-          g_object_class_install_property (klass, prop_id, pspec);
+          g_object_class_install_property (klass, cb_desc[k].prop_id, pspec);
         }
+
+        break;
       }
       default:
         break;
