@@ -392,15 +392,6 @@ _shall_copy_frames (GstVaVp8Dec * self, GstVideoInfo * info)
   }
 }
 
-static inline gboolean
-_caps_is_va_memory (GstCaps * caps)
-{
-  GstCapsFeatures *features;
-
-  features = gst_caps_get_features (caps, 0);
-  return gst_caps_features_contains (features, "memory:VAMemory");
-}
-
 static gboolean
 _try_allocator (GstVaVp8Dec * self, GstAllocator * allocator, GstCaps * caps,
     guint * size)
@@ -418,7 +409,7 @@ _try_allocator (GstVaVp8Dec * self, GstAllocator * allocator, GstCaps * caps,
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     if (!gst_va_allocator_try (allocator, &params))
       return FALSE;
-    if (!_caps_is_va_memory (caps))
+    if (!gst_caps_is_vamemory (caps))
       _shall_copy_frames (self, &params.info);
   } else {
     return FALSE;
@@ -430,17 +421,6 @@ _try_allocator (GstVaVp8Dec * self, GstAllocator * allocator, GstCaps * caps,
   return TRUE;
 }
 
-static inline gboolean
-_caps_is_dmabuf (GstVaVp8Dec * self, GstCaps * caps)
-{
-  GstCapsFeatures *features;
-
-  features = gst_caps_get_features (caps, 0);
-  return gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)
-      && (gst_va_decoder_get_mem_types (self->decoder)
-      & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME);
-}
-
 static GstAllocator *
 _create_allocator (GstVaVp8Dec * self, GstCaps * caps, guint * size)
 {
@@ -449,7 +429,7 @@ _create_allocator (GstVaVp8Dec * self, GstCaps * caps, guint * size)
 
   g_object_get (self->decoder, "display", &display, NULL);
 
-  if (_caps_is_dmabuf (self, caps))
+  if (gst_caps_is_dmabuf (caps))
     allocator = gst_va_dmabuf_allocator_new (display);
   else {
     GArray *surface_formats =
@@ -537,7 +517,7 @@ gst_va_vp8_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   } else {
     size = GST_VIDEO_INFO_SIZE (&info);
 
-    if (!self->has_videometa && !_caps_is_va_memory (caps)) {
+    if (!self->has_videometa && !gst_caps_is_vamemory (caps)) {
       GST_DEBUG_OBJECT (self, "making new other pool for copy");
       self->other_pool = gst_video_buffer_pool_new ();
       config = gst_buffer_pool_get_config (self->other_pool);

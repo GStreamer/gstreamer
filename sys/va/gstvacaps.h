@@ -40,5 +40,8 @@ GstCaps *             gst_va_create_raw_caps_from_config  (GstVaDisplay * displa
 gboolean              gst_caps_set_format_array           (GstCaps * caps,
 							   GArray * formats);
 
+gboolean              gst_caps_is_dmabuf                  (GstCaps * caps);
+gboolean              gst_caps_is_vamemory                (GstCaps * caps);
+
 G_END_DECLS
 

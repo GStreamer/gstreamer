@@ -24,6 +24,8 @@
 
 #include "gstvacaps.h"
 
+#include <gst/allocators/allocators.h>
+
 #include <va/va_drmcommon.h>
 
 #include "gstvadisplay.h"
@@ -477,4 +479,28 @@ gst_va_caps_from_profiles (GstVaDisplay * display, GArray * profiles,
     gst_caps_unref (rawcaps);
 
   return ret;
+}
+
+static inline gboolean
+_caps_is (GstCaps * caps, const gchar * feature)
+{
+  GstCapsFeatures *features;
+
+  if (!gst_caps_is_fixed (caps))
+    return FALSE;
+
+  features = gst_caps_get_features (caps, 0);
+  return gst_caps_features_contains (features, feature);
+}
+
+gboolean
+gst_caps_is_dmabuf (GstCaps * caps)
+{
+  return _caps_is (caps, GST_CAPS_FEATURE_MEMORY_DMABUF);
+}
+
+gboolean
+gst_caps_is_vamemory (GstCaps * caps)
+{
+  return _caps_is (caps, "memory:VAMemory");
 }

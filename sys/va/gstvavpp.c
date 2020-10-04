@@ -63,6 +63,7 @@
 #include <va/va_drmcommon.h>
 
 #include "gstvaallocator.h"
+#include "gstvacaps.h"
 #include "gstvadisplay_drm.h"
 #include "gstvafilter.h"
 #include "gstvapool.h"
@@ -420,24 +421,13 @@ _try_allocator (GstVaVpp * self, GstAllocator * allocator, GstCaps * caps,
   return TRUE;
 }
 
-static inline gboolean
-_caps_is_dmabuf (GstVaVpp * self, GstCaps * caps)
-{
-  GstCapsFeatures *features;
-
-  features = gst_caps_get_features (caps, 0);
-  return gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)
-      && (gst_va_filter_get_mem_types (self->filter)
-      & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME);
-}
-
 static GstAllocator *
 _create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint,
     guint * size)
 {
   GstAllocator *allocator = NULL;
 
-  if (_caps_is_dmabuf (self, caps)) {
+  if (gst_caps_is_dmabuf (caps)) {
     allocator = gst_va_dmabuf_allocator_new (self->display);
   } else {
     GArray *surface_formats = gst_va_filter_get_surface_formats (self->filter);
