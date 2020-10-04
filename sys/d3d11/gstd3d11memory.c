@@ -184,9 +184,9 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
 
 struct _GstD3D11AllocatorPrivate
 {
-  /* parent textrure when array typed memory is used */
+  /* parent texture when array typed memory is used */
   ID3D11Texture2D *texture;
-  guint8 array_in_use[D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION];
+  GArray *array_in_use;
 
   GMutex lock;
   GCond cond;
@@ -440,10 +440,12 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
   gint i;
 
-  g_mutex_lock (&priv->lock);
-  priv->array_in_use[dmem->subresource_index] = 0;
-  g_cond_broadcast (&priv->cond);
-  g_mutex_unlock (&priv->lock);
+  if (priv->array_in_use) {
+    g_mutex_lock (&priv->lock);
+    g_array_index (priv->array_in_use, guint8, dmem->subresource_index) = 0;
+    g_cond_broadcast (&priv->cond);
+    g_mutex_unlock (&priv->lock);
+  }
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (dmem->render_target_view[i])
@@ -491,6 +493,8 @@ gst_d3d11_allocator_finalize (GObject * object)
 
   g_mutex_clear (&priv->lock);
   g_cond_clear (&priv->cond);
+
+  g_clear_pointer (&priv->array_in_use, g_array_unref);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -762,8 +766,14 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
       return NULL;
     }
 
+    if (!priv->array_in_use) {
+      priv->array_in_use = g_array_sized_new (FALSE,
+          TRUE, sizeof (guint8), desc->ArraySize);
+      g_array_set_size (priv->array_in_use, desc->ArraySize);
+    }
+
     for (i = 0; i < desc->ArraySize; i++) {
-      if (priv->array_in_use[i] == 0) {
+      if (!g_array_index (priv->array_in_use, guint8, i)) {
         index_to_use = i;
         break;
       }
@@ -776,7 +786,7 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
       goto do_again;
     }
 
-    priv->array_in_use[index_to_use] = 1;
+    g_array_index (priv->array_in_use, guint8, index_to_use) = 1;
 
     g_mutex_unlock (&priv->lock);
 
