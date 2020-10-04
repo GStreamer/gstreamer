@@ -360,6 +360,27 @@ gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
   return buf;
 }
 
+static void
+_available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems)
+{
+  GstMemory *mem;
+  GstVaBufferSurface *buf;
+
+  while ((mem = gst_atomic_queue_pop (available_mems))) {
+    /* destroy the surface */
+    buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+        gst_va_buffer_surface_quark ());
+    if (buf && g_atomic_int_dec_and_test (&buf->ref_count)) {
+      GST_LOG ("Destroying surface %#x", buf->surface);
+      _destroy_surfaces (display, &buf->surface, 1);
+      g_slice_free (GstVaBufferSurface, buf);
+    }
+
+    GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+    gst_memory_unref (mem);
+  }
+}
+
 /*=========================== GstVaDmabufAllocator ===========================*/
 
 struct _GstVaDmabufAllocator
@@ -418,7 +439,7 @@ gst_va_dmabuf_allocator_dispose (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
-  gst_va_dmabuf_allocator_flush (GST_ALLOCATOR (object));
+  _available_mems_flush (self->display, self->available_mems);
   gst_atomic_queue_unref (self->available_mems);
 
   gst_clear_object (&self->display);
@@ -628,23 +649,12 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
 void
 gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
 {
-  GstMemory *mem;
-  GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  while ((mem = gst_atomic_queue_pop (self->available_mems))) {
-    /* destroy the surface */
-    buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-        gst_va_buffer_surface_quark ());
-    if (buf && g_atomic_int_dec_and_test (&buf->ref_count)) {
-      GST_LOG_OBJECT (self, "Destroying surface %#x", buf->surface);
-      _destroy_surfaces (self->display, &buf->surface, 1);
-      g_slice_free (GstVaBufferSurface, buf);
-    }
-
-    GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
-    gst_memory_unref (mem);
-  }
+  GST_OBJECT_LOCK (self);
+  _available_mems_flush (self->display, self->available_mems);
+  g_cond_signal (&self->buffer_cond);
+  GST_OBJECT_UNLOCK (self);
 }
 
 gboolean
@@ -790,7 +800,7 @@ gst_va_allocator_dispose (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
-  gst_va_allocator_flush (GST_ALLOCATOR (object));
+  _available_mems_flush (self->display, self->available_mems);
   gst_atomic_queue_unref (self->available_mems);
 
   gst_clear_object (&self->display);
@@ -1185,23 +1195,12 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
 void
 gst_va_allocator_flush (GstAllocator * allocator)
 {
-  GstMemory *mem;
-  GstVaBufferSurface *buf;
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
 
-  while ((mem = gst_atomic_queue_pop (self->available_mems))) {
-    /* destroy the surface */
-    buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-        gst_va_buffer_surface_quark ());
-    if (buf && g_atomic_int_dec_and_test (&buf->ref_count)) {
-      GST_LOG_OBJECT (self, "Destroying surface %#x", buf->surface);
-      _destroy_surfaces (self->display, &buf->surface, 1);
-      g_slice_free (GstVaBufferSurface, buf);
-    }
-
-    GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
-    gst_memory_unref (mem);
-  }
+  GST_OBJECT_LOCK (self);
+  _available_mems_flush (self->display, self->available_mems);
+  g_cond_signal (&self->buffer_cond);
+  GST_OBJECT_UNLOCK (self);
 }
 
 gboolean
