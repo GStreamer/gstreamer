@@ -74,10 +74,10 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstVideoAlignment video_align = { 0, };
   GstVideoInfo caps_info, alloc_info;
   gint width, height;
-  guint size, min_buffers, max_buffers;
+  guint min_buffers, max_buffers;
   guint32 usage_hint;
 
-  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
           &max_buffers))
     goto wrong_config;
 
@@ -86,9 +86,6 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (!gst_video_info_from_caps (&caps_info, caps))
     goto wrong_caps;
-
-  if (size < GST_VIDEO_INFO_SIZE (&caps_info))
-    goto wrong_size;
 
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
     goto wrong_config;
@@ -103,8 +100,7 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
   width = GST_VIDEO_INFO_WIDTH (&caps_info);
   height = GST_VIDEO_INFO_HEIGHT (&caps_info);
 
-  GST_LOG_OBJECT (vpool, "%dx%d - %u | caps %" GST_PTR_FORMAT, width, height,
-      size, caps);
+  GST_LOG_OBJECT (vpool, "%dx%d | %" GST_PTR_FORMAT, width, height, caps);
 
   gst_object_replace ((GstObject **) & vpool->allocator,
       GST_OBJECT (allocator));
@@ -129,9 +125,6 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     gst_buffer_pool_config_set_video_alignment (config, &video_align);
   }
-
-  GST_VIDEO_INFO_SIZE (&caps_info) =
-      MAX (size, GST_VIDEO_INFO_SIZE (&caps_info));
 
   alloc_info = caps_info;
   GST_VIDEO_INFO_WIDTH (&alloc_info) = width;
@@ -165,13 +158,6 @@ wrong_caps:
   {
     GST_WARNING_OBJECT (vpool,
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-wrong_size:
-  {
-    GST_WARNING_OBJECT (vpool,
-        "Provided size is to small for the caps: %u < %" G_GSIZE_FORMAT, size,
-        GST_VIDEO_INFO_SIZE (&caps_info));
     return FALSE;
   }
 failed_to_align:
