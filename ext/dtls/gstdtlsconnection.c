@@ -1001,35 +1001,13 @@ handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
     case SSL_ERROR_WANT_WRITE:
       GST_LOG_OBJECT (self, "SSL wants write");
       return GST_FLOW_OK;
-    case SSL_ERROR_SYSCALL:{
-      gchar message[1024] = "<unknown>";
-      gint syserror;
-#ifdef G_OS_WIN32
-      syserror = WSAGetLastError ();
-      FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM, NULL, syserror, 0, message,
-          sizeof message, NULL);
-#else
-      syserror = errno;
-      strerror_r (syserror, message, sizeof message);
-#endif
-
-      if (syserror == 0) {
-        GST_TRACE_OBJECT (self, "No error");
-        return GST_FLOW_OK;
-      } else {
-        GST_ERROR_OBJECT (self, "Fatal SSL syscall error: errno %d: %s",
-            syserror, message);
-        if (err)
-          *err =
-              g_error_new (GST_RESOURCE_ERROR, error_type,
-              "Fatal SSL syscall error: errno %d: %s", syserror, message);
-        if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
-          self->priv->connection_state = GST_DTLS_CONNECTION_STATE_FAILED;
-          *notify_state = TRUE;
-        }
-        return GST_FLOW_ERROR;
-      }
-    }
+    case SSL_ERROR_SYSCALL:
+      /* OpenSSL shouldn't be making real system calls, so we can safely
+       * ignore syscall errors. System interactions should happen through
+       * our BIO.
+       */
+      GST_DEBUG_OBJECT (self, "OpenSSL reported a syscall error, ignoring.");
+      return GST_FLOW_OK;
     default:
       if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
         self->priv->connection_state = GST_DTLS_CONNECTION_STATE_FAILED;
