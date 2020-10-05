@@ -3651,8 +3651,9 @@ gst_video_decoder_set_interlaced_output_state (GstVideoDecoder * decoder,
   GstVideoDecoderPrivate *priv = decoder->priv;
   GstVideoCodecState *state;
 
-  GST_DEBUG_OBJECT (decoder, "fmt:%d, width:%d, height:%d, reference:%p",
-      fmt, width, height, reference);
+  GST_DEBUG_OBJECT (decoder,
+      "fmt:%d, width:%d, height:%d, interlace-mode: %s, reference:%p", fmt,
+      width, height, gst_video_interlace_mode_to_string (mode), reference);
 
   /* Create the new output state */
   state = _new_output_state (fmt, mode, width, height, reference);
