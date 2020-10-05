@@ -190,6 +190,9 @@ gst_ffmpegaudenc_start (GstAudioEncoder * encoder)
   GstFFMpegAudEncClass *oclass =
       (GstFFMpegAudEncClass *) G_OBJECT_GET_CLASS (ffmpegaudenc);
 
+  ffmpegaudenc->opened = FALSE;
+  ffmpegaudenc->need_reopen = FALSE;
+
   gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
   if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
           oclass->in_plugin) < 0) {
@@ -208,6 +211,7 @@ gst_ffmpegaudenc_stop (GstAudioEncoder * encoder)
   /* close old session */
   gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
   ffmpegaudenc->opened = FALSE;
+  ffmpegaudenc->need_reopen = FALSE;
 
   return TRUE;
 }
@@ -232,6 +236,8 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   gsize frame_size;
   GstFFMpegAudEncClass *oclass =
       (GstFFMpegAudEncClass *) G_OBJECT_GET_CLASS (ffmpegaudenc);
+
+  ffmpegaudenc->need_reopen = FALSE;
 
   /* close old session */
   if (ffmpegaudenc->opened) {
@@ -368,6 +374,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
   /* success! */
   ffmpegaudenc->opened = TRUE;
+  ffmpegaudenc->need_reopen = FALSE;
 
   return TRUE;
 }
@@ -530,9 +537,21 @@ gst_ffmpegaudenc_send_frame (GstFFMpegAudEnc * ffmpegaudenc, GstBuffer * buffer)
 
     av_frame_unref (frame);
   } else {
+    GstFFMpegAudEncClass *oclass =
+        (GstFFMpegAudEncClass *) G_OBJECT_GET_CLASS (ffmpegaudenc);
+
     GST_LOG_OBJECT (ffmpegaudenc, "draining");
     /* flushing the encoder */
     res = avcodec_send_frame (ctx, NULL);
+
+    /* If AV_CODEC_CAP_ENCODER_FLUSH wasn't set, we need to re-open
+     * encoder */
+    if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_ENCODER_FLUSH)) {
+      GST_DEBUG_OBJECT (ffmpegaudenc, "Encoder needs reopen later");
+
+      /* we will reopen later handle_frame() */
+      ffmpegaudenc->need_reopen = TRUE;
+    }
   }
 
   if (res == 0) {
@@ -604,6 +623,7 @@ gst_ffmpegaudenc_drain (GstFFMpegAudEnc * ffmpegaudenc)
     } while (got_packet);
   }
 
+  /* NOTE: this may or may not work depending on capability */
   avcodec_flush_buffers (ffmpegaudenc->context);
 
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
@@ -631,6 +651,18 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
 
   if (!inbuf)
     return gst_ffmpegaudenc_drain (ffmpegaudenc);
+
+  /* endoder was drained or flushed, and ffmpeg encoder doesn't support
+   * flushing. We need to re-open encoder then */
+  if (ffmpegaudenc->need_reopen) {
+    GST_DEBUG_OBJECT (ffmpegaudenc, "Open encoder again");
+
+    if (!gst_ffmpegaudenc_set_format (encoder,
+            gst_audio_encoder_get_audio_info (encoder))) {
+      GST_ERROR_OBJECT (ffmpegaudenc, "Couldn't re-open encoder");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   inbuf = gst_buffer_ref (inbuf);
 
