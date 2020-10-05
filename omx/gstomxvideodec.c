@@ -1348,8 +1348,12 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
       frame_height = port_def.format.video.nFrameHeight;
       /* OMX's frame height is actually the field height in alternate mode
        * while it's always the full frame height in gst. */
-      if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+      if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE ||
+          interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
         frame_height *= 2;
+        /* Decoder outputs interlaced content using the alternate mode */
+        interlace_mode = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+      }
 
       state =
           gst_video_decoder_set_interlaced_output_state (GST_VIDEO_DECODER
@@ -1550,8 +1554,12 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
   frame_height = port_def.format.video.nFrameHeight;
   /* OMX's frame height is actually the field height in alternate mode
    * while it's always the full frame height in gst. */
-  if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+  if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE ||
+      interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
     frame_height *= 2;
+    /* Decoder outputs interlaced content using the alternate mode */
+    interlace_mode = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+  }
 
   GST_DEBUG_OBJECT (self,
       "Setting output state: format %s (%d), width %u, height %u",
@@ -2685,7 +2693,8 @@ gst_omx_video_dec_set_interlacing_parameters (GstOMXVideoDec * self,
     return FALSE;
   }
 
-  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE ||
+      info->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED)
     seq_pic_mode.eMode = OMX_ALG_SEQUENCE_PICTURE_FIELD;
   else if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
     seq_pic_mode.eMode = OMX_ALG_SEQUENCE_PICTURE_FRAME;
@@ -2789,7 +2798,13 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   port_def.format.video.nFrameWidth = info->width;
-  port_def.format.video.nFrameHeight = GST_VIDEO_INFO_FIELD_HEIGHT (info);
+  port_def.format.video.nFrameHeight = GST_VIDEO_INFO_HEIGHT (info);
+  /*We cannot use GST_VIDEO_INFO_FIELD_HEIGHT() as encoded content may use either
+   * interlace-mode=interleaved or alternate. In both case we'll output alternate
+   * so the OMX frame height needs to be halfed. */
+  if (GST_VIDEO_INFO_IS_INTERLACED (info))
+    port_def.format.video.nFrameHeight =
+        GST_ROUND_UP_2 (port_def.format.video.nFrameHeight / 2);
   port_def.format.video.xFramerate = framerate_q16;
 
   if (klass->cdata.hacks & GST_OMX_HACK_PASS_COLOR_FORMAT_TO_DECODER) {
