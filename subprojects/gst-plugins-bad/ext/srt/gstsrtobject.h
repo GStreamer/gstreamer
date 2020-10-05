@@ -72,7 +72,7 @@ struct _GstSRTObject
 
   gboolean                     authentication;
 
-  guint64                      previous_bytes;
+  guint64                      bytes;
 };
 
 GstSRTObject   *gst_srt_object_new              (GstElement *element);
