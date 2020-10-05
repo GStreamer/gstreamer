@@ -39,6 +39,7 @@ struct _GstFFMpegAudEnc
   AVCodecContext *context;
   AVCodecContext *refcontext;
   gboolean opened;
+  gboolean need_reopen;
 
   AVFrame *frame;
 

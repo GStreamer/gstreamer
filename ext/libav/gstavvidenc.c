@@ -240,6 +240,8 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   GstFFMpegVidEncClass *oclass =
       (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
+  ffmpegenc->need_reopen = FALSE;
+
   /* close old session */
   if (ffmpegenc->opened) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
@@ -616,6 +618,20 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
       ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
 
 send_frame:
+  if (!picture) {
+    GstFFMpegVidEncClass *oclass =
+        (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
+
+    /* If AV_CODEC_CAP_ENCODER_FLUSH wasn't set, we need to re-open
+     * encoder */
+    if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_ENCODER_FLUSH)) {
+      GST_DEBUG_OBJECT (ffmpegenc, "Encoder needs reopen later");
+
+      /* we will reopen later handle_frame() */
+      ffmpegenc->need_reopen = TRUE;
+    }
+  }
+
   res = avcodec_send_frame (ffmpegenc->context, picture);
 
   if (picture)
@@ -694,6 +710,30 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
   GstFlowReturn ret;
   gboolean got_packet;
+
+  /* endoder was drained or flushed, and ffmpeg encoder doesn't support
+   * flushing. We need to re-open encoder then */
+  if (ffmpegenc->need_reopen) {
+    gboolean reopen_ret;
+    GstVideoCodecState *input_state;
+
+    GST_DEBUG_OBJECT (ffmpegenc, "Open encoder again");
+
+    if (!ffmpegenc->input_state) {
+      GST_ERROR_OBJECT (ffmpegenc,
+          "Cannot re-open encoder without input state");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+
+    input_state = gst_video_codec_state_ref (ffmpegenc->input_state);
+    reopen_ret = gst_ffmpegvidenc_set_format (encoder, input_state);
+    gst_video_codec_state_unref (input_state);
+
+    if (!reopen_ret) {
+      GST_ERROR_OBJECT (ffmpegenc, "Couldn't re-open encoder");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   ret = gst_ffmpegvidenc_send_frame (ffmpegenc, frame);
 
@@ -837,6 +877,9 @@ gst_ffmpegvidenc_start (GstVideoEncoder * encoder)
   GstFFMpegVidEncClass *oclass =
       (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
+  ffmpegenc->opened = FALSE;
+  ffmpegenc->need_reopen = FALSE;
+
   /* close old session */
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
   if (avcodec_get_context_defaults3 (ffmpegenc->context, oclass->in_plugin) < 0) {
@@ -855,6 +898,7 @@ gst_ffmpegvidenc_stop (GstVideoEncoder * encoder)
   gst_ffmpegvidenc_flush_buffers (ffmpegenc, FALSE);
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
   ffmpegenc->opened = FALSE;
+  ffmpegenc->need_reopen = FALSE;
 
   if (ffmpegenc->input_state) {
     gst_video_codec_state_unref (ffmpegenc->input_state);
