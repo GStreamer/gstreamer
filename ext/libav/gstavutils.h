@@ -29,6 +29,26 @@
 
 #include <gst/gst.h>
 
+/* Introduced since ffmpeg version 4.3
+ *
+ * Note: Not all ffmpeg encoders seem to be reusable after flushing/draining.
+ * So if ffmpeg encoder doesn't support it, we should reopen encoding session.
+ *
+ * Before ffmpeg 4.3, avcodec_flush_buffers() was implemented in
+ * libavcodec/decodec.c but it was moved to libavcodec/utils.c and it would be
+ * accepted if encoder supports AV_CODEC_CAP_ENCODER_FLUSH flag.
+ * That implies that avcodec_flush_buffers() wasn't intended to be working
+ * properly for encoders.
+ */
+#ifndef AV_CODEC_CAP_ENCODER_FLUSH
+/*
+ * This encoder can be flushed using avcodec_flush_buffers(). If this flag is
+ * not set, the encoder must be closed and reopened to ensure that no frames
+ * remain pending.
+ */
+#define AV_CODEC_CAP_ENCODER_FLUSH   (1 << 21)
+#endif
+
 /*
  *Get the size of an picture
  */
@@ -79,7 +99,7 @@ gst_ffmpeg_time_gst_to_ff (guint64 time, AVRational base)
   return out;
 }
 
-void 
+void
 gst_ffmpeg_init_pix_fmt_info(void);
 
 int
