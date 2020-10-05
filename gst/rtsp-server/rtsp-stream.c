@@ -214,7 +214,12 @@ struct _GstRTSPStreamPrivate
 
   GstRTSPPublishClockMode publish_clock_mode;
   GThreadPool *send_pool;
-  guint32 last_seqnum;
+
+  /* Used to provide accurate rtpinfo when the stream is blocking */
+  gboolean blocked_buffer;
+  guint32 blocked_seqnum;
+  guint32 blocked_rtptime;
+  GstClockTime blocked_running_time;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -4285,6 +4290,25 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
       } else {
         gst_sample_unref (last_sample);
       }
+    } else if (priv->blocking) {
+      if (seq) {
+        if (!priv->blocked_buffer)
+          goto stats;
+        *seq = priv->blocked_seqnum;
+      }
+
+      if (rtptime) {
+        if (!priv->blocked_buffer)
+          goto stats;
+        *rtptime = priv->blocked_rtptime;
+      }
+
+      if (running_time) {
+        if (!GST_CLOCK_TIME_IS_VALID (priv->blocked_running_time))
+          goto stats;
+        *running_time = priv->blocked_running_time;
+      }
+      goto done;
     }
   }
 
@@ -5194,6 +5218,7 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstRTSPStream *stream;
   GstBuffer *buffer = NULL;
   GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+  GstEvent *event;
 
   stream = user_data;
   priv = stream->priv;
@@ -5201,11 +5226,27 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   g_mutex_lock (&priv->lock);
 
   if ((info->type & GST_PAD_PROBE_TYPE_BUFFER)) {
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
     buffer = gst_pad_probe_info_get_buffer (info);
+    if (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp)) {
+      priv->blocked_buffer = TRUE;
+      priv->blocked_seqnum = gst_rtp_buffer_get_seq (&rtp);
+      priv->blocked_rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+      gst_rtp_buffer_unmap (&rtp);
+    }
     priv->position = GST_BUFFER_TIMESTAMP (buffer);
   } else if ((info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST)) {
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
     GstBufferList *list = gst_pad_probe_info_get_buffer_list (info);
     buffer = gst_buffer_list_get (list, 0);
+    if (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp)) {
+      priv->blocked_buffer = TRUE;
+      priv->blocked_seqnum = gst_rtp_buffer_get_seq (&rtp);
+      priv->blocked_rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+      gst_rtp_buffer_unmap (&rtp);
+    }
     priv->position = GST_BUFFER_TIMESTAMP (buffer);
   } else if ((info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)) {
     if (GST_EVENT_TYPE (info->data) == GST_EVENT_GAP) {
@@ -5217,6 +5258,16 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     }
   } else {
     g_assert_not_reached ();
+  }
+
+  event = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+  if (event) {
+    const GstSegment *segment;
+
+    gst_event_parse_segment (event, &segment);
+    priv->blocked_running_time =
+        gst_segment_to_stream_time (segment, GST_FORMAT_TIME, priv->position);
+    gst_event_unref (event);
   }
 
   priv->blocking = TRUE;
@@ -5257,6 +5308,8 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
         continue;
       if (priv->send_src[i]) {
         priv->blocking = FALSE;
+        priv->blocked_buffer = FALSE;
+        priv->blocked_running_time = GST_CLOCK_TIME_NONE;
         priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
             GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
             GST_PAD_PROBE_TYPE_BUFFER_LIST |
@@ -6146,8 +6199,8 @@ gst_rtsp_stream_set_rate_control (GstRTSPStream * stream, gboolean enabled)
   if (stream->priv->appsink[0])
     g_object_set (stream->priv->appsink[0], "sync", enabled, NULL);
   if (stream->priv->payloader
-      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->priv->
-              payloader), "onvif-no-rate-control"))
+      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->
+              priv->payloader), "onvif-no-rate-control"))
     g_object_set (stream->priv->payloader, "onvif-no-rate-control", !enabled,
         NULL);
   if (stream->priv->session) {
