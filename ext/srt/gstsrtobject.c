@@ -825,15 +825,13 @@ thread_func (gpointer data)
 
 static gboolean
 gst_srt_object_wait_connect (GstSRTObject * srtobject,
-    GCancellable * cancellable, GSocketFamily sa_family, gpointer sa,
-    size_t sa_len, GError ** error)
+    GCancellable * cancellable, gpointer sa, size_t sa_len, GError ** error)
 {
   SRTSOCKET sock = SRT_INVALID_SOCK;
   const gchar *local_address = NULL;
   guint local_port = 0;
   gint sock_flags = SRT_EPOLL_ERR | SRT_EPOLL_IN;
 
-  GSocketFamily bind_sa_family;
   gpointer bind_sa;
   gsize bind_sa_len;
   GSocketAddress *bind_addr = NULL;
@@ -858,7 +856,6 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
 
   bind_sa_len = g_socket_address_get_native_size (bind_addr);
   bind_sa = g_alloca (bind_sa_len);
-  bind_sa_family = g_socket_address_get_family (bind_addr);
 
   if (!g_socket_address_to_native (bind_addr, bind_sa, bind_sa_len, error)) {
     goto failed;
@@ -933,8 +930,8 @@ failed:
 
 static gboolean
 gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
-    GstSRTConnectionMode connection_mode, GSocketFamily sa_family, gpointer sa,
-    size_t sa_len, GError ** error)
+    GstSRTConnectionMode connection_mode, gpointer sa, size_t sa_len,
+    GError ** error)
 {
   SRTSOCKET sock;
   gint sock_flags = SRT_EPOLL_ERR;
@@ -1057,18 +1054,17 @@ failed:
 static gboolean
 gst_srt_object_open_connection (GstSRTObject * srtobject,
     GCancellable * cancellable, GstSRTConnectionMode connection_mode,
-    GSocketFamily sa_family, gpointer sa, size_t sa_len, GError ** error)
+    gpointer sa, size_t sa_len, GError ** error)
 {
   gboolean ret = FALSE;
 
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
     ret =
-        gst_srt_object_wait_connect (srtobject, cancellable, sa_family, sa,
-        sa_len, error);
+        gst_srt_object_wait_connect (srtobject, cancellable, sa, sa_len, error);
   } else {
     ret =
-        gst_srt_object_connect (srtobject, cancellable, connection_mode,
-        sa_family, sa, sa_len, error);
+        gst_srt_object_connect (srtobject, cancellable, connection_mode, sa,
+        sa_len, error);
   }
 
   return ret;
@@ -1081,7 +1077,6 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
   GSocketAddress *socket_address = NULL;
   GstSRTConnectionMode connection_mode;
 
-  GSocketFamily sa_family;
   gpointer sa;
   size_t sa_len;
   const gchar *addr_str;
@@ -1122,7 +1117,6 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
     goto out;
   }
 
-  sa_family = g_socket_address_get_family (socket_address);
   sa_len = g_socket_address_get_native_size (socket_address);
   sa = g_alloca (sa_len);
 
@@ -1134,7 +1128,7 @@ gst_srt_object_open_internal (GstSRTObject * srtobject,
 
   ret =
       gst_srt_object_open_connection
-      (srtobject, cancellable, connection_mode, sa_family, sa, sa_len, error);
+      (srtobject, cancellable, connection_mode, sa, sa_len, error);
 
   GST_OBJECT_LOCK (srtobject->element);
   srtobject->opened = ret;
