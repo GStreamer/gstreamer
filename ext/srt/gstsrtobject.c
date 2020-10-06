@@ -31,6 +31,8 @@
 #include <gst/base/gstbasesink.h>
 #include <gio/gnetworking.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_srtobject);
 #define GST_CAT_DEFAULT gst_debug_srtobject
@@ -111,16 +113,24 @@ srt_caller_signal_removed (SRTCaller * caller, GstSRTObject * srtobject)
 struct srt_constant_params
 {
   const gchar *name;
-  gint param;
-  gint val;
+  SRT_SOCKOPT param;
+  const void *val;
+  int val_len;
 };
 
-static struct srt_constant_params srt_params[] = {
-  {"SRTO_SNDSYN", SRTO_SNDSYN, 0},      /* 0: non-blocking */
-  {"SRTO_RCVSYN", SRTO_RCVSYN, 0},      /* 0: non-blocking */
-  {"SRTO_TSBPMODE", SRTO_TSBPDMODE, 1}, /* Timestamp-based Packet Delivery mode must be enabled */
-  {NULL, -1, -1},
+static const bool bool_false = false;
+static const bool bool_true = true;
+static const struct linger no_linger = { 0, 0 };
+
+/* *INDENT-OFF* */
+static const struct srt_constant_params srt_params[] = {
+  {"SRTO_SNDSYN",    SRTO_SNDSYN,    &bool_false, sizeof bool_false}, /* non-blocking */
+  {"SRTO_RCVSYN",    SRTO_RCVSYN,    &bool_false, sizeof bool_false}, /* non-blocking */
+  {"SRTO_LINGER",    SRTO_LINGER,    &no_linger,  sizeof no_linger},  /* no linger time */
+  {"SRTO_TSBPDMODE", SRTO_TSBPDMODE, &bool_true,  sizeof bool_true},  /* Timestamp-based Packet Delivery mode must be enabled */
+  {NULL, -1, NULL, 0},
 };
+/* *INDENT-ON* */
 
 static gint srt_init_refcount = 0;
 
@@ -178,14 +188,13 @@ static gboolean
 gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     GError ** error)
 {
-  struct srt_constant_params *params = srt_params;
+  const struct srt_constant_params *params = srt_params;
   const gchar *passphrase;
-  struct linger linger = { 0 };
 
   GST_OBJECT_LOCK (srtobject->element);
 
   for (; params->name != NULL; params++) {
-    if (srt_setsockopt (sock, 0, params->param, &params->val, sizeof (gint))) {
+    if (srt_setsockopt (sock, 0, params->param, params->val, params->val_len)) {
       g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
           "failed to set %s (reason: %s)", params->name,
           srt_getlasterror_str ());
@@ -193,17 +202,9 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     }
   }
 
-  linger.l_onoff = 0;           /* 0: non-blocking */
-  if (srt_setsockopt (sock, 0, SRTO_LINGER, (const char *) &linger,
-          sizeof (linger))) {
-    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
-        "failed to set SRTO_LINGER (reason: %s)", srt_getlasterror_str ());
-    goto err;
-  }
-
   passphrase = gst_structure_get_string (srtobject->parameters, "passphrase");
   if (passphrase != NULL && passphrase[0] != '\0') {
-    gint pbkeylen;
+    int32_t pbkeylen;
 
     if (srt_setsockopt (sock, 0, SRTO_PASSPHRASE, passphrase,
             strlen (passphrase))) {
@@ -217,7 +218,7 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
       pbkeylen = GST_SRT_DEFAULT_PBKEYLEN;
     }
 
-    if (srt_setsockopt (sock, 0, SRTO_PBKEYLEN, &pbkeylen, sizeof (int))) {
+    if (srt_setsockopt (sock, 0, SRTO_PBKEYLEN, &pbkeylen, sizeof pbkeylen)) {
       g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
           "failed to set pbkeylen (reason: %s)", srt_getlasterror_str ());
       goto err;
@@ -225,11 +226,11 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
   }
 
   {
-    int latency;
+    int32_t latency;
 
     if (!gst_structure_get_int (srtobject->parameters, "latency", &latency))
       latency = GST_SRT_DEFAULT_LATENCY;
-    if (srt_setsockopt (sock, 0, SRTO_LATENCY, &latency, sizeof (int))) {
+    if (srt_setsockopt (sock, 0, SRTO_LATENCY, &latency, sizeof latency)) {
       g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
           "failed to set latency (reason: %s)", srt_getlasterror_str ());
       goto err;
@@ -938,10 +939,11 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
     size_t sa_len, GError ** error)
 {
   SRTSOCKET sock;
-  gint option_val = -1;
   gint sock_flags = SRT_EPOLL_ERR;
   guint local_port = 0;
   const gchar *local_address = NULL;
+  bool sender;
+  bool rendezvous;
 
   sock = srt_socket (sa_family, SOCK_DGRAM, 0);
   if (sock == SRT_INVALID_SOCK) {
@@ -956,11 +958,11 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
 
   switch (gst_uri_handler_get_uri_type (GST_URI_HANDLER (srtobject->element))) {
     case GST_URI_SRC:
-      option_val = 0;
+      sender = false;
       sock_flags |= SRT_EPOLL_IN;
       break;
     case GST_URI_SINK:
-      option_val = 1;
+      sender = true;
       sock_flags |= SRT_EPOLL_OUT;
       break;
     default:
@@ -969,14 +971,14 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
       goto failed;
   }
 
-  if (srt_setsockopt (sock, 0, SRTO_SENDER, &option_val, sizeof (gint))) {
+  if (srt_setsockopt (sock, 0, SRTO_SENDER, &sender, sizeof sender)) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS, "%s",
         srt_getlasterror_str ());
     goto failed;
   }
 
-  option_val = (connection_mode == GST_SRT_CONNECTION_MODE_RENDEZVOUS);
-  if (srt_setsockopt (sock, 0, SRTO_RENDEZVOUS, &option_val, sizeof (gint))) {
+  rendezvous = (connection_mode == GST_SRT_CONNECTION_MODE_RENDEZVOUS);
+  if (srt_setsockopt (sock, 0, SRTO_RENDEZVOUS, &rendezvous, sizeof rendezvous)) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS, "%s",
         srt_getlasterror_str ());
     goto failed;
