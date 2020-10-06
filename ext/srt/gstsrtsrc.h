@@ -49,6 +49,8 @@ struct _GstSRTSrc {
 
   GstSRTObject *srtobject;
   GCancellable *cancellable;
+
+  guint32       next_pktseq;
 };
 
 struct _GstSRTSrcClass {

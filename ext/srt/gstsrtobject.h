@@ -98,7 +98,8 @@ gboolean        gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar *u
 gssize          gst_srt_object_read     (GstSRTObject * srtobject,
                                          guint8 *data, gsize size,
                                          GCancellable *cancellable,
-                                         GError **err);
+                                         GError **err,
+					 SRT_MSGCTRL *mctrl);
 
 gssize          gst_srt_object_write    (GstSRTObject * srtobject,
                                          GstBufferList * headers,
