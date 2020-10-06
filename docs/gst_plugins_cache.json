@@ -16088,6 +16088,11 @@
                         "direction": "src",
                         "presence": "sometimes"
                     },
+                    "send_fec_src_%%u_%%u": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
                     "send_rtcp_src_%%u": {
                         "caps": "application/x-rtcp:\napplication/x-srtcp:\n",
                         "direction": "src",
@@ -16184,6 +16189,18 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "application/x-rtp-fec-decoders;",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
+                        "writable": true
+                    },
+                    "fec-encoders": {
+                        "blurb": "GstStructure mapping from session index to FEC encoder factory, eg fec-encoders='fec,0=\"rtpst2022-1-fecenc\\ rows\\=5\\ columns\\=5\";'",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "application/x-rtp-fec-encoders;",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstStructure",
@@ -18287,6 +18304,105 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "guint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "rtpst2022-1-fecenc": {
+                "author": "Mathieu Duponchelle <mathieu@centricular.com>",
+                "description": "performs FEC as described by SMPTE 2022-1",
+                "hierarchy": [
+                    "GstRTPST_2022_1_FecEnc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "SMPTE 2022-1 FEC encoding",
+                "long-name": "SMPTE 2022-1 FEC encoder",
+                "pad-templates": {
+                    "fec_%%u": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "columns": {
+                        "blurb": "Number of columns to apply row FEC on, 0=disabled",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "255",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "enable-column-fec": {
+                        "blurb": "Whether the encoder should compute and send column FEC",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "enable-row-fec": {
+                        "blurb": "Whether the encoder should compute and send row FEC",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "pt": {
+                        "blurb": "The payload type of FEC packets",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "96",
+                        "max": "255",
+                        "min": "96",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "rows": {
+                        "blurb": "Number of rows to apply column FEC on, 0=disabled",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "255",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     }
                 },

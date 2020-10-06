@@ -91,6 +91,9 @@ struct _GstRtpBin {
   /* the default FEC decoder factories for sessions */
   GstStructure   *fec_decoders;
 
+  /* the default FEC encoder factories for sessions */
+  GstStructure   *fec_encoders;
+
   /*< private >*/
   GstRtpBinPrivate *priv;
 };
