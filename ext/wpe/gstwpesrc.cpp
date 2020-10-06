@@ -242,6 +242,7 @@ gst_wpe_src_start (GstWpeSrc * src)
   GstGLContext *context = NULL;
   GstGLDisplay *display = NULL;
   GstGLBaseSrc *base_src = GST_GL_BASE_SRC (src);
+  gboolean created_view = FALSE;
 
   GST_INFO_OBJECT (src, "Starting up");
   GST_OBJECT_LOCK (src);
@@ -254,9 +255,13 @@ gst_wpe_src_start (GstWpeSrc * src)
   GST_DEBUG_OBJECT (src, "Will fill GLMemories: %d\n", src->gl_enabled);
 
   auto & thread = WPEContextThread::singleton ();
-  src->view = thread.createWPEView (src, context, display,
-      GST_VIDEO_INFO_WIDTH (&base_src->out_info),
-      GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
+
+  if (!src->view) {
+    src->view = thread.createWPEView (src, context, display,
+        GST_VIDEO_INFO_WIDTH (&base_src->out_info),
+        GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
+    created_view = TRUE;
+  }
 
   if (!src->view) {
     GST_OBJECT_UNLOCK (src);
@@ -271,7 +276,9 @@ gst_wpe_src_start (GstWpeSrc * src)
     src->bytes = NULL;
   }
 
-  src->n_frames = 0;
+  if (created_view) {
+    src->n_frames = 0;
+  }
   GST_OBJECT_UNLOCK (src);
   return TRUE;
 }
