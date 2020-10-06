@@ -32,6 +32,7 @@
 #include "gstrtpdtmfmux.h"
 #include "gstrtpmux.h"
 #include "gstrtpfunnel.h"
+#include "gstrtpst2022-1-fecdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -72,6 +73,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "rtpfunnel", GST_RANK_NONE,
           GST_TYPE_RTP_FUNNEL))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpst2022-1-fecdec", GST_RANK_NONE,
+          GST_TYPE_RTPST_2022_1_FECDEC))
     return FALSE;
 
   return TRUE;

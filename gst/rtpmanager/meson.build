@@ -17,6 +17,7 @@ rtpmanager_sources = [
   'rtptwcc.c',
   'gstrtpsession.c',
   'gstrtpfunnel.c',
+  'gstrtpst2022-1-fecdec.c'
 ]
 
 gstrtpmanager = library('gstrtpmanager',

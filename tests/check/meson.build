@@ -88,6 +88,7 @@ good_tests = [
   [ 'elements/rtpulpfec' ],
   [ 'elements/rtpssrcdemux' ],
   [ 'elements/rtp-payloading' ],
+  [ 'elements/rtpst2022-1-fecdec' ],
   [ 'elements/spectrum', false, [gstfft_dep] ],
   [ 'elements/shapewipe' ],
   [ 'elements/udpsink' ],

@@ -88,6 +88,9 @@ struct _GstRtpBin {
   /* the default SDES items for sessions */
   GstStructure   *sdes;
 
+  /* the default FEC decoder factories for sessions */
+  GstStructure   *fec_decoders;
+
   /*< private >*/
   GstRtpBinPrivate *priv;
 };

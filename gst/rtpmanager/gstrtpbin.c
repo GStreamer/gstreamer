@@ -165,6 +165,23 @@ static GstStaticPadTemplate rtpbin_recv_rtp_sink_template =
     GST_STATIC_CAPS ("application/x-rtp;application/x-srtp")
     );
 
+/**
+ * GstRtpBin!recv_fec_sink_%u_%u:
+ *
+ * Sink template for receiving Forward Error Correction packets,
+ * in the form recv_fec_sink_<session_idx>_<fec_stream_idx>
+ *
+ * See #GstRTPST_2022_1_FecDec for example usage
+ *
+ * Since: 1.20
+ */
+static GstStaticPadTemplate rtpbin_recv_fec_sink_template =
+GST_STATIC_PAD_TEMPLATE ("recv_fec_sink_%u_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("application/x-rtp")
+    );
+
 static GstStaticPadTemplate rtpbin_recv_rtcp_sink_template =
     GST_STATIC_PAD_TEMPLATE ("recv_rtcp_sink_%u",
     GST_PAD_SINK,
@@ -344,6 +361,7 @@ enum
   PROP_MAX_STREAMS,
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_MAX_TS_OFFSET,
+  PROP_FEC_DECODERS,
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -377,6 +395,7 @@ static void payload_type_change (GstElement * element, guint pt,
     GstRtpBinSession * session);
 static void remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session);
+static void remove_recv_fec (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void free_client (GstRtpBinClient * client, GstRtpBin * bin);
@@ -486,6 +505,10 @@ struct _GstRtpBinSession
   GstPad *send_rtp_src_ghost;
   GstPad *send_rtcp_src;
   GstPad *send_rtcp_src_ghost;
+
+  GSList *recv_fec_sinks;
+  GSList *recv_fec_sink_ghosts;
+  GstElement *fec_decoder;
 };
 
 /* Manages the RTP streams that come from one client and should therefore be
@@ -517,6 +540,12 @@ find_session_by_id (GstRtpBin * rtpbin, gint id)
   return NULL;
 }
 
+static gboolean
+pad_is_recv_fec (GstRtpBinSession * session, GstPad * pad)
+{
+  return g_slist_find (session->recv_fec_sink_ghosts, pad) != NULL;
+}
+
 /* find a session with the given request pad. Must be called with RTP_BIN_LOCK */
 static GstRtpBinSession *
 find_session_by_pad (GstRtpBin * rtpbin, GstPad * pad)
@@ -528,8 +557,8 @@ find_session_by_pad (GstRtpBin * rtpbin, GstPad * pad)
 
     if ((sess->recv_rtp_sink_ghost == pad) ||
         (sess->recv_rtcp_sink_ghost == pad) ||
-        (sess->send_rtp_sink_ghost == pad)
-        || (sess->send_rtcp_src_ghost == pad))
+        (sess->send_rtp_sink_ghost == pad) ||
+        (sess->send_rtcp_src_ghost == pad) || pad_is_recv_fec (sess, pad))
       return sess;
   }
   return NULL;
@@ -850,6 +879,7 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
 
   remove_recv_rtp (bin, sess);
   remove_recv_rtcp (bin, sess);
+  remove_recv_fec (bin, sess);
   remove_send_rtp (bin, sess);
   remove_rtcp (bin, sess);
 
@@ -2640,6 +2670,24 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "changed to 0 (no limit)", 0, G_MAXINT64, DEFAULT_MAX_TS_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:fec-decoders:
+   *
+   * Used to provide a factory used to build the FEC decoder for a
+   * given session, as a command line alternative to
+   * #GstRtpBin::request-fec-decoder.
+   *
+   * Expects a GstStructure in the form session_id (gint) -> factory (string)
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_FEC_DECODERS,
+      g_param_spec_boxed ("fec-decoders", "Fec Decoders",
+          "GstStructure mapping from session index to FEC decoder "
+          "factory, eg "
+          "fec-decoders='fec,0=\"rtpst2022-1-fecdec\\ size-time\\=1000000000\";'",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2648,6 +2696,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   /* sink pads */
   gst_element_class_add_static_pad_template (gstelement_class,
       &rtpbin_recv_rtp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &rtpbin_recv_fec_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,
       &rtpbin_recv_rtcp_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -2726,6 +2776,8 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
   rtpbin->sdes = gst_structure_new ("application/x-rtp-source-sdes",
       "cname", G_TYPE_STRING, cname, "tool", G_TYPE_STRING, "GStreamer", NULL);
+  rtpbin->fec_decoders =
+      gst_structure_new_empty ("application/x-rtp-fec-decoders");
   g_free (cname);
 }
 
@@ -2755,6 +2807,9 @@ gst_rtp_bin_finalize (GObject * object)
 
   if (rtpbin->sdes)
     gst_structure_free (rtpbin->sdes);
+
+  if (rtpbin->fec_decoders)
+    gst_structure_free (rtpbin->fec_decoders);
 
   g_mutex_clear (&rtpbin->priv->bin_lock);
   g_mutex_clear (&rtpbin->priv->dyn_lock);
@@ -2788,6 +2843,25 @@ gst_rtp_bin_set_sdes_struct (GstRtpBin * bin, const GstStructure * sdes)
   GST_RTP_BIN_UNLOCK (bin);
 }
 
+static void
+gst_rtp_bin_set_fec_decoders_struct (GstRtpBin * bin,
+    const GstStructure * decoders)
+{
+  if (decoders == NULL)
+    return;
+
+  GST_RTP_BIN_LOCK (bin);
+
+  GST_OBJECT_LOCK (bin);
+  if (bin->fec_decoders)
+    gst_structure_free (bin->fec_decoders);
+  bin->fec_decoders = gst_structure_copy (decoders);
+
+  GST_OBJECT_UNLOCK (bin);
+
+  GST_RTP_BIN_UNLOCK (bin);
+}
+
 static GstStructure *
 gst_rtp_bin_get_sdes_struct (GstRtpBin * bin)
 {
@@ -2795,6 +2869,18 @@ gst_rtp_bin_get_sdes_struct (GstRtpBin * bin)
 
   GST_OBJECT_LOCK (bin);
   result = gst_structure_copy (bin->sdes);
+  GST_OBJECT_UNLOCK (bin);
+
+  return result;
+}
+
+static GstStructure *
+gst_rtp_bin_get_fec_decoders_struct (GstRtpBin * bin)
+{
+  GstStructure *result;
+
+  GST_OBJECT_LOCK (bin);
+  result = gst_structure_copy (bin->fec_decoders);
   GST_OBJECT_UNLOCK (bin);
 
   return result;
@@ -2963,6 +3049,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       rtpbin->max_ts_offset = g_value_get_int64 (value);
       rtpbin->max_ts_offset_is_set = TRUE;
       break;
+    case PROP_FEC_DECODERS:
+      gst_rtp_bin_set_fec_decoders_struct (rtpbin, g_value_get_boxed (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3056,6 +3145,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_TS_OFFSET:
       g_value_set_int64 (value, rtpbin->max_ts_offset);
+      break;
+    case PROP_FEC_DECODERS:
+      g_value_take_boxed (value, gst_rtp_bin_get_fec_decoders_struct (rtpbin));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3343,6 +3435,48 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+ensure_fec_decoder (GstRtpBin * rtpbin, GstRtpBinSession * session)
+{
+  const gchar *factory;
+  gchar *sess_id_str;
+
+  if (session->fec_decoder)
+    goto done;
+
+  sess_id_str = g_strdup_printf ("%u", session->id);
+  factory = gst_structure_get_string (rtpbin->fec_decoders, sess_id_str);
+  g_free (sess_id_str);
+
+  /* First try the property */
+  if (factory) {
+    GError *err = NULL;
+
+    session->fec_decoder =
+        gst_parse_bin_from_description_full (factory, TRUE, NULL,
+        GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_FATAL_ERRORS,
+        &err);
+    if (!session->fec_decoder) {
+      GST_ERROR_OBJECT (rtpbin, "Failed to build decoder from factory: %s",
+          err->message);
+    }
+
+    bin_manage_element (session->bin, session->fec_decoder);
+    session->elements =
+        g_slist_prepend (session->elements, session->fec_decoder);
+    GST_INFO_OBJECT (rtpbin, "Built FEC decoder: %" GST_PTR_FORMAT
+        " for session %u", session->fec_decoder, session->id);
+  }
+
+  /* Fallback to the signal */
+  if (!session->fec_decoder)
+    session->fec_decoder =
+        session_request_element (session, SIGNAL_REQUEST_FEC_DECODER);
+
+done:
+  return session->fec_decoder != NULL;
+}
+
 static void
 expose_recv_src_pad (GstRtpBin * rtpbin, GstPad * pad, GstRtpBinStream * stream,
     guint8 pt)
@@ -3354,11 +3488,9 @@ expose_recv_src_pad (GstRtpBin * rtpbin, GstPad * pad, GstRtpBinStream * stream,
 
   gst_object_ref (pad);
 
-  if (stream->session->storage) {
-    GstElement *fec_decoder =
-        session_request_element (stream->session, SIGNAL_REQUEST_FEC_DECODER);
-
-    if (fec_decoder) {
+  if (stream->session->storage && !stream->session->fec_decoder) {
+    if (ensure_fec_decoder (rtpbin, stream->session)) {
+      GstElement *fec_decoder = stream->session->fec_decoder;
       GstPad *sinkpad, *srcpad;
       GstPadLinkReturn ret;
 
@@ -3594,6 +3726,15 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   padname = g_strdup_printf ("src_%u", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
+
+  if (session->fec_decoder) {
+    sinkpad = gst_element_get_static_pad (session->fec_decoder, "sink");
+    gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+    gst_object_unref (sinkpad);
+    gst_object_unref (srcpad);
+    srcpad = gst_element_get_static_pad (session->fec_decoder, "src");
+  }
+
   sinkpad = gst_element_get_static_pad (stream->buffer, "sink");
   gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (sinkpad);
@@ -3934,6 +4075,41 @@ remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 }
 
 static GstPad *
+complete_session_fec (GstRtpBin * rtpbin, GstRtpBinSession * session,
+    guint fec_idx)
+{
+  gchar *padname;
+  GstPad *ret;
+
+  if (!ensure_fec_decoder (rtpbin, session))
+    goto no_decoder;
+
+  GST_DEBUG_OBJECT (rtpbin, "getting FEC sink pad");
+  padname = g_strdup_printf ("fec_%u", fec_idx);
+  ret = gst_element_get_request_pad (session->fec_decoder, padname);
+  g_free (padname);
+
+  if (ret == NULL)
+    goto pad_failed;
+
+  session->recv_fec_sinks = g_slist_prepend (session->recv_fec_sinks, ret);
+
+  return ret;
+
+pad_failed:
+  {
+    g_warning ("rtpbin: failed to get decoder fec pad");
+    return NULL;
+  }
+no_decoder:
+  {
+    g_warning ("rtpbin: failed to build FEC decoder for session %u",
+        session->id);
+    return NULL;
+  }
+}
+
+static GstPad *
 complete_session_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session,
     guint sessid)
 {
@@ -4076,6 +4252,66 @@ create_error:
   }
 }
 
+static GstPad *
+create_recv_fec (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
+{
+  guint sessid, fec_idx;
+  GstRtpBinSession *session;
+  GstPad *decsink = NULL;
+  GstPad *ghost;
+
+  /* first get the session number */
+  if (name == NULL
+      || sscanf (name, "recv_fec_sink_%u_%u", &sessid, &fec_idx) != 2)
+    goto no_name;
+
+  if (fec_idx > 1)
+    goto invalid_idx;
+
+  GST_DEBUG_OBJECT (rtpbin, "finding session %u", sessid);
+
+  /* get or create the session */
+  session = find_session_by_id (rtpbin, sessid);
+  if (!session) {
+    GST_DEBUG_OBJECT (rtpbin, "creating session %u", sessid);
+    /* create session now */
+    session = create_session (rtpbin, sessid);
+    if (session == NULL)
+      goto create_error;
+  }
+
+  decsink = complete_session_fec (rtpbin, session, fec_idx);
+  if (!decsink)
+    goto create_error;
+
+  ghost = gst_ghost_pad_new_from_template (name, decsink, templ);
+  session->recv_fec_sink_ghosts =
+      g_slist_prepend (session->recv_fec_sink_ghosts, ghost);
+  gst_object_unref (decsink);
+  gst_pad_set_active (ghost, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), ghost);
+
+  return ghost;
+
+  /* ERRORS */
+no_name:
+  {
+    g_warning ("rtpbin: cannot find session id for pad: %s",
+        GST_STR_NULL (name));
+    return NULL;
+  }
+invalid_idx:
+  {
+    g_warning ("rtpbin: invalid FEC index: %s", GST_STR_NULL (name));
+    return NULL;
+  }
+create_error:
+  {
+    /* create_session already warned */
+    return NULL;
+  }
+}
+
 static void
 remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 {
@@ -4095,6 +4331,49 @@ remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session)
     gst_object_unref (session->recv_rtcp_sink);
     session->recv_rtcp_sink = NULL;
   }
+}
+
+static void
+remove_recv_fec_for_pad (GstRtpBin * rtpbin, GstRtpBinSession * session,
+    GstPad * ghost)
+{
+  GSList *item;
+  GstPad *target;
+
+  target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost));
+
+  if (target) {
+    item = g_slist_find (session->recv_fec_sinks, target);
+    if (item) {
+      gst_element_release_request_pad (session->fec_decoder, item->data);
+      session->recv_fec_sinks =
+          g_slist_delete_link (session->recv_fec_sinks, item);
+    }
+    gst_object_unref (target);
+  }
+
+  item = g_slist_find (session->recv_fec_sink_ghosts, ghost);
+  if (item)
+    session->recv_fec_sink_ghosts =
+        g_slist_delete_link (session->recv_fec_sink_ghosts, item);
+
+  gst_pad_set_active (ghost, FALSE);
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), ghost);
+}
+
+static void
+remove_recv_fec (GstRtpBin * rtpbin, GstRtpBinSession * session)
+{
+  GSList *copy;
+  GSList *tmp;
+
+  copy = g_slist_copy (session->recv_fec_sink_ghosts);
+
+  for (tmp = copy; tmp; tmp = tmp->next) {
+    remove_recv_fec_for_pad (rtpbin, session, (GstPad *) tmp->data);
+  }
+
+  g_slist_free (copy);
 }
 
 static gboolean
@@ -4699,6 +4978,9 @@ gst_rtp_bin_request_new_pad (GstElement * element,
   } else if (templ == gst_element_class_get_pad_template (klass,
           "send_rtcp_src_%u")) {
     result = create_send_rtcp (rtpbin, templ, pad_name);
+  } else if (templ == gst_element_class_get_pad_template (klass,
+          "recv_fec_sink_%u_%u")) {
+    result = create_recv_fec (rtpbin, templ, pad_name);
   } else
     goto wrong_template;
 
@@ -4743,13 +5025,16 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
     remove_send_rtp (rtpbin, session);
   } else if (session->send_rtcp_src_ghost == pad) {
     remove_rtcp (rtpbin, session);
+  } else if (pad_is_recv_fec (session, pad)) {
+    remove_recv_fec_for_pad (rtpbin, session, pad);
   }
 
   /* no more request pads, free the complete session */
   if (session->recv_rtp_sink_ghost == NULL
       && session->recv_rtcp_sink_ghost == NULL
       && session->send_rtp_sink_ghost == NULL
-      && session->send_rtcp_src_ghost == NULL) {
+      && session->send_rtcp_src_ghost == NULL
+      && session->recv_fec_sink_ghosts == NULL) {
     GST_DEBUG_OBJECT (rtpbin, "no more pads for session %p", session);
     rtpbin->sessions = g_slist_remove (rtpbin->sessions, session);
     free_session (session, rtpbin);

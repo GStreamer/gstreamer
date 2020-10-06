@@ -16068,6 +16068,11 @@
                 "klass": "Filter/Network/RTP",
                 "long-name": "RTP Bin",
                 "pad-templates": {
+                    "recv_fec_sink_%%u_%%u": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
                     "recv_rtcp_sink_%%u": {
                         "caps": "application/x-rtcp:\napplication/x-srtcp:\n",
                         "direction": "sink",
@@ -16170,6 +16175,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
+                        "writable": true
+                    },
+                    "fec-decoders": {
+                        "blurb": "GstStructure mapping from session index to FEC decoder factory, eg fec-decoders='fec,0=\"rtpst2022-1-fecdec\\ size-time\\=1000000000\";'",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "application/x-rtp-fec-decoders;",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": true
                     },
                     "ignore-pt": {
@@ -18227,6 +18244,53 @@
                         "when": "last"
                     }
                 }
+            },
+            "rtpst2022-1-fecdec": {
+                "author": "Mathieu Duponchelle <mathieu@centricular.com>",
+                "description": "performs FEC as described by SMPTE 2022-1",
+                "hierarchy": [
+                    "GstRTPST_2022_1_FecDec",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "SMPTE 2022-1 FEC decoding",
+                "long-name": "SMPTE 2022-1 FEC decoder",
+                "pad-templates": {
+                    "fec_%%u": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "size-time": {
+                        "blurb": "The amount of data to store (in ns, 0-disable)",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
             }
         },
         "filename": "gstrtpmanager",
