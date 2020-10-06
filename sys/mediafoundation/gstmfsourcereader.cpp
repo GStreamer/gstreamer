@@ -180,7 +180,14 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
   g_return_val_if_fail (source_reader != NULL, FALSE);
   g_return_val_if_fail (media_types != NULL, FALSE);
 
-  for (i = 0;; i++) {
+  {
+    /* Retrive only the first video stream. non-first video stream might be
+     * photo stream which doesn't seem to be working propertly in this implementation.
+     *
+     * Note: Chromium seems to be using the first video stream
+     * https://github.com/chromium/chromium/blob/ccd149af47315e4c6f2fc45d55be1b271f39062c/media/capture/video/win/video_capture_device_factory_win.cc
+     */
+    i = MF_SOURCE_READER_FIRST_VIDEO_STREAM;
     for (j = 0;; j++) {
       ComPtr<IMFMediaType> media_type;
 
