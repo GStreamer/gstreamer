@@ -48,6 +48,14 @@ GType gst_webrtc_rtp_sender_get_type(void);
  *
  * Since: 1.16
  */
+/**
+ * GstWebRTCRTPSender.priority:
+ *
+ * The priority of the stream.
+ *
+ * Since: 1.20
+ */
+
 struct _GstWebRTCRTPSender
 {
   GstObject                          parent;
