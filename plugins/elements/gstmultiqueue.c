@@ -95,9 +95,11 @@
 #endif
 
 #include <gst/gst.h>
-#include <stdio.h>
-#include "gstmultiqueue.h"
 #include <gst/glib-compat-private.h>
+#include <stdio.h>
+
+#include "gstmultiqueue.h"
+#include "gstcoreelementselements.h"
 
 /* GstSingleQueue:
  * @sinkpad: associated sink #GstPad
@@ -629,6 +631,8 @@ static void gst_multi_queue_loop (GstPad * pad);
 #define gst_multi_queue_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstMultiQueue, gst_multi_queue, GST_TYPE_ELEMENT,
     _do_init);
+GST_ELEMENT_REGISTER_DEFINE (multiqueue, "multiqueue", GST_RANK_NONE,
+    GST_TYPE_MULTI_QUEUE);
 
 static guint gst_multi_queue_signals[LAST_SIGNAL] = { 0 };
 

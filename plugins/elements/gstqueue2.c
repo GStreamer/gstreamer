@@ -62,6 +62,7 @@
 #endif
 
 #include "gstqueue2.h"
+#include "gstcoreelementselements.h"
 
 #include <glib/gstdio.h>
 
@@ -270,6 +271,7 @@ static GParamSpec *obj_props[PROP_LAST] = { NULL, };
         "dataflow inside the queue element");
 #define gst_queue2_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstQueue2, gst_queue2, GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (queue2, "queue2", GST_RANK_NONE, GST_TYPE_QUEUE2);
 
 static void gst_queue2_finalize (GObject * object);
 

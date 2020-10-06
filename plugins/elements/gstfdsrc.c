@@ -79,6 +79,7 @@
 #include <errno.h>
 
 #include "gstfdsrc.h"
+#include "gstcoreelementselements.h"
 
 #define struct_stat struct stat
 
@@ -119,6 +120,9 @@ static void gst_fd_src_uri_handler_init (gpointer g_iface, gpointer iface_data);
   GST_DEBUG_CATEGORY_INIT (gst_fd_src_debug, "fdsrc", 0, "fdsrc element");
 #define gst_fd_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFdSrc, gst_fd_src, GST_TYPE_PUSH_SRC, _do_init);
+#if defined(HAVE_SYS_SOCKET_H) || defined(_MSC_VER)
+GST_ELEMENT_REGISTER_DEFINE (fdsrc, "fdsrc", GST_RANK_NONE, GST_TYPE_FD_SRC);
+#endif
 
 static void gst_fd_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -48,6 +48,7 @@
 #include <gst/gst.h>
 
 #include "gstclocksync.h"
+#include "gstcoreelementselements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_clock_sync_debug);
 #define GST_CAT_DEFAULT gst_clock_sync_debug
@@ -80,6 +81,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_clock_sync_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstClockSync, gst_clock_sync, GST_TYPE_ELEMENT,
     _do_init);
+GST_ELEMENT_REGISTER_DEFINE (clocksync, "clocksync", GST_RANK_NONE,
+    GST_TYPE_CLOCKSYNC);
 
 static void gst_clock_sync_finalize (GObject * object);
 

@@ -73,6 +73,7 @@
 
 #include "gstelements_private.h"
 #include "gstfilesink.h"
+#include "gstcoreelementselements.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -214,6 +215,8 @@ static GstFlowReturn gst_file_sink_flush_buffer (GstFileSink * filesink);
 #define gst_file_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFileSink, gst_file_sink, GST_TYPE_BASE_SINK,
     _do_init);
+GST_ELEMENT_REGISTER_DEFINE (filesink, "filesink", GST_RANK_PRIMARY,
+    GST_TYPE_FILE_SINK);
 
 static void
 gst_file_sink_class_init (GstFileSinkClass * klass)

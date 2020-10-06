@@ -37,9 +37,11 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstelements_private.h"
 #include "gstfakesink.h"
-#include <string.h>
+#include "gstcoreelementselements.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -116,6 +118,8 @@ gst_fake_sink_state_error_get_type (void)
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_fake_sink_debug, "fakesink", 0, "fakesink element");
 #define gst_fake_sink_parent_class parent_class
+GST_ELEMENT_REGISTER_DEFINE (fakesink, "fakesink", GST_RANK_NONE,
+    GST_TYPE_FAKE_SINK);
 G_DEFINE_TYPE_WITH_CODE (GstFakeSink, gst_fake_sink, GST_TYPE_BASE_SINK,
     _do_init);
 

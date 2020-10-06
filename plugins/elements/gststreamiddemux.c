@@ -47,6 +47,7 @@
 #include <string.h>
 
 #include "gststreamiddemux.h"
+#include "gstcoreelementselements.h"
 
 GST_DEBUG_CATEGORY_STATIC (streamid_demux_debug);
 #define GST_CAT_DEFAULT streamid_demux_debug
@@ -76,6 +77,8 @@ GST_DEBUG_CATEGORY_INIT (streamid_demux_debug, \
 #define gst_streamid_demux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstStreamidDemux, gst_streamid_demux,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (streamiddemux, "streamiddemux", GST_RANK_PRIMARY,
+    GST_TYPE_STREAMID_DEMUX);
 
 static void gst_streamid_demux_dispose (GObject * object);
 static void gst_streamid_demux_get_property (GObject * object, guint prop_id,

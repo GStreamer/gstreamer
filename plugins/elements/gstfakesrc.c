@@ -51,6 +51,7 @@
 
 #include "gstelements_private.h"
 #include "gstfakesrc.h"
+#include "gstcoreelementselements.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -203,6 +204,8 @@ gst_fake_src_filltype_get_type (void)
     GST_DEBUG_CATEGORY_INIT (gst_fake_src_debug, "fakesrc", 0, "fakesrc element");
 #define gst_fake_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFakeSrc, gst_fake_src, GST_TYPE_BASE_SRC, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (fakesrc, "fakesrc", GST_RANK_NONE,
+    GST_TYPE_FAKE_SRC);
 
 static void gst_fake_src_finalize (GObject * object);
 static void gst_fake_src_set_property (GObject * object, guint prop_id,

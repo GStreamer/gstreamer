@@ -37,6 +37,7 @@
 #endif
 
 #include "gstvalve.h"
+#include "gstcoreelementselements.h"
 
 #include <string.h>
 
@@ -100,6 +101,7 @@ static gboolean gst_valve_query (GstPad * pad, GstObject * parent,
   GST_DEBUG_CATEGORY_INIT (valve_debug, "valve", 0, "Valve");
 #define gst_valve_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstValve, gst_valve, GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (valve, "valve", GST_RANK_NONE, GST_TYPE_VALVE);
 
 static void
 gst_valve_class_init (GstValveClass * klass)

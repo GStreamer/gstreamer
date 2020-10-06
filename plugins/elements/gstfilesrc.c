@@ -39,6 +39,7 @@
 
 #include <gst/gst.h>
 #include "gstfilesrc.h"
+#include "gstcoreelementselements.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -168,6 +169,8 @@ static void gst_file_src_uri_handler_init (gpointer g_iface,
   GST_DEBUG_CATEGORY_INIT (gst_file_src_debug, "filesrc", 0, "filesrc element");
 #define gst_file_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFileSrc, gst_file_src, GST_TYPE_BASE_SRC, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (filesrc, "filesrc", GST_RANK_PRIMARY,
+    GST_TYPE_FILE_SRC);
 
 static void
 gst_file_src_class_init (GstFileSrcClass * klass)

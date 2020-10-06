@@ -48,6 +48,7 @@
 #include <string.h>
 
 #include "gstinputselector.h"
+#include "gstcoreelementselements.h"
 
 #define DEBUG_CACHED_BUFFERS 0
 
@@ -1213,6 +1214,8 @@ static gboolean gst_input_selector_query (GstPad * pad, GstObject * parent,
 #define gst_input_selector_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstInputSelector, gst_input_selector, GST_TYPE_ELEMENT,
     _do_init);
+GST_ELEMENT_REGISTER_DEFINE (input_selector, "input-selector", GST_RANK_NONE,
+    GST_TYPE_INPUT_SELECTOR);
 
 static void
 gst_input_selector_class_init (GstInputSelectorClass * klass)

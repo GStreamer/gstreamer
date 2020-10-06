@@ -73,6 +73,7 @@
 #include "gst/gst_private.h"
 
 #include "gsttypefindelement.h"
+#include "gstcoreelementselements.h"
 #include "gst/gst-i18n-lib.h"
 #include "gst/base/gsttypefindhelper.h"
 
@@ -129,6 +130,8 @@ enum
 #define gst_type_find_element_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstTypeFindElement, gst_type_find_element,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (typefind, "typefind", GST_RANK_NONE,
+    GST_TYPE_TYPE_FIND_ELEMENT);
 
 static void gst_type_find_element_dispose (GObject * object);
 static void gst_type_find_element_set_property (GObject * object,

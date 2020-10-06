@@ -50,6 +50,7 @@
 #endif
 
 #include "gstconcat.h"
+#include "gstcoreelementselements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_concat_debug);
 #define GST_CAT_DEFAULT gst_concat_debug
@@ -118,6 +119,7 @@ enum
   GST_DEBUG_CATEGORY_INIT (gst_concat_debug, "concat", 0, "concat element");
 #define gst_concat_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstConcat, gst_concat, GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (concat, "concat", GST_RANK_NONE, GST_TYPE_CONCAT);
 
 static void gst_concat_dispose (GObject * object);
 static void gst_concat_finalize (GObject * object);

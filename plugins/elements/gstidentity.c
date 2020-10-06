@@ -38,6 +38,7 @@
 #include "gstelements_private.h"
 #include "../../gst/gst-i18n-lib.h"
 #include "gstidentity.h"
+#include "gstcoreelementselements.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -105,6 +106,8 @@ enum
 #define gst_identity_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIdentity, gst_identity, GST_TYPE_BASE_TRANSFORM,
     _do_init);
+GST_ELEMENT_REGISTER_DEFINE (identity, "identity", GST_RANK_NONE,
+    GST_TYPE_IDENTITY);
 
 static void gst_identity_finalize (GObject * object);
 static void gst_identity_set_property (GObject * object, guint prop_id,

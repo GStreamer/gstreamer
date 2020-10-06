@@ -38,6 +38,7 @@
 #endif
 
 #include "gstdataurisrc.h"
+#include "gstcoreelementselements.h"
 
 #include <string.h>
 #include <gst/base/gsttypefindhelper.h>
@@ -82,6 +83,8 @@ static gboolean gst_data_uri_src_set_uri (GstURIHandler * handler,
 G_DEFINE_TYPE_WITH_CODE (GstDataURISrc, gst_data_uri_src, GST_TYPE_BASE_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_data_uri_src_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (dataurisrc, "dataurisrc", GST_RANK_PRIMARY,
+    GST_TYPE_DATA_URI_SRC);
 
 static void
 gst_data_uri_src_class_init (GstDataURISrcClass * klass)

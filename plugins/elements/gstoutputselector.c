@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "gstoutputselector.h"
+#include "gstcoreelementselements.h"
 
 GST_DEBUG_CATEGORY_STATIC (output_selector_debug);
 #define GST_CAT_DEFAULT output_selector_debug
@@ -85,6 +86,8 @@ GST_DEBUG_CATEGORY_INIT (output_selector_debug, \
 #define gst_output_selector_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOutputSelector, gst_output_selector,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (output_selector, "output-selector", GST_RANK_NONE,
+    GST_TYPE_OUTPUT_SELECTOR);
 
 static void gst_output_selector_dispose (GObject * object);
 static void gst_output_selector_set_property (GObject * object,

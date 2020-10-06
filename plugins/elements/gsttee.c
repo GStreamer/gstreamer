@@ -50,6 +50,7 @@
 #endif
 
 #include "gsttee.h"
+#include "gstcoreelementselements.h"
 #include "gst/glib-compat-private.h"
 
 #include <string.h>
@@ -109,6 +110,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
 #define gst_tee_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstTee, gst_tee, GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (tee, "tee", GST_RANK_NONE, GST_TYPE_TEE);
 
 static GParamSpec *pspec_last_message = NULL;
 static GParamSpec *pspec_alloc_pad = NULL;

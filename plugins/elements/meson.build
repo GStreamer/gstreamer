@@ -4,7 +4,7 @@ gst_elements_sources = [
   'gstconcat.c',
   'gstdataurisrc.c',
   'gstdownloadbuffer.c',
-  'gstelements.c',
+  'gstcoreelementsplugin.c',
   'gstelements_private.c',
   'gstfakesink.c',
   'gstfakesrc.c',

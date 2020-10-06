@@ -53,6 +53,7 @@
 #endif
 
 #include "gstdownloadbuffer.h"
+#include "gstcoreelementselements.h"
 
 #include <glib/gstdio.h>
 
@@ -170,6 +171,8 @@ enum
 #define gst_download_buffer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDownloadBuffer, gst_download_buffer,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (downloadbuffer, "downloadbuffer", GST_RANK_NONE,
+    GST_TYPE_DOWNLOAD_BUFFER);
 
 static GstMessage *update_buffering (GstDownloadBuffer * dlbuf);
 
