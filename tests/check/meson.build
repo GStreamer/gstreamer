@@ -1,7 +1,9 @@
 # name, condition when to skip the test and extra dependencies
 libav_tests = [
+  [ 'elements/avaudenc' ],
   [ 'elements/avdec_adpcm' ],
   [ 'elements/avdemux_ape' ],
+  [ 'elements/avvidenc' ],
   [ 'generic/libavcodec-locking' ],
   [ 'generic/plugin-test' ]
 ]
