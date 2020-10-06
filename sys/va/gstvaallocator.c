@@ -326,7 +326,6 @@ typedef struct _GstVaBufferSurface GstVaBufferSurface;
 struct _GstVaBufferSurface
 {
   GstVaDisplay *display;
-  GstVideoInfo info;
   VASurfaceID surface;
   volatile gint ref_count;
 };
@@ -355,7 +354,6 @@ gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
   g_atomic_int_set (&buf->ref_count, 0);
   buf->surface = surface;
   buf->display = NULL;
-  gst_video_info_set_format (&buf->info, format, width, height);
 
   return buf;
 }
@@ -560,7 +558,7 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
   }
 
   buf = gst_va_buffer_surface_new (surface, format, desc.width, desc.height);
-  GST_VIDEO_INFO_SIZE (&buf->info) = 0;
+  GST_VIDEO_INFO_SIZE (&params->info) = 0;
 
   for (i = 0; i < desc.num_objects; i++) {
     gint fd = desc.objects[i].fd;
@@ -581,20 +579,19 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), gst_va_drm_mod_quark (),
         drm_mod, g_free);
 
-    GST_VIDEO_INFO_SIZE (&buf->info) += size;
+    GST_VIDEO_INFO_SIZE (&params->info) += size;
   }
 
   for (i = 0; i < desc.num_layers; i++) {
     g_assert (desc.layers[i].num_planes == 1);
-    GST_VIDEO_INFO_PLANE_OFFSET (&buf->info, i) = desc.layers[i].offset[0];
-    GST_VIDEO_INFO_PLANE_STRIDE (&buf->info, i) = desc.layers[i].pitch[0];
+    GST_VIDEO_INFO_PLANE_OFFSET (&params->info, i) = desc.layers[i].offset[0];
+    GST_VIDEO_INFO_PLANE_STRIDE (&params->info, i) = desc.layers[i].pitch[0];
   }
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d] size %" G_GSIZE_FORMAT,
-      buf->surface, GST_VIDEO_INFO_WIDTH (&buf->info),
-      GST_VIDEO_INFO_HEIGHT (&buf->info), GST_VIDEO_INFO_SIZE (&buf->info));
-
-  params->info = buf->info;
+      buf->surface, GST_VIDEO_INFO_WIDTH (&params->info),
+      GST_VIDEO_INFO_HEIGHT (&params->info),
+      GST_VIDEO_INFO_SIZE (&params->info));
 
   return TRUE;
 
@@ -731,7 +728,6 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
 
   buf = gst_va_buffer_surface_new (surface, rt_format, ext_buf.width,
       ext_buf.height);
-  buf->info = *info;
   buf->display = gst_object_ref (display);
 
   for (i = 0; i < n_planes; i++) {
@@ -1149,7 +1145,8 @@ gst_va_allocator_alloc (GstAllocator * allocator,
   GST_MINI_OBJECT (mem)->dispose = gst_va_memory_release;
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d]", mem->surface,
-      GST_VIDEO_INFO_WIDTH (&mem->info), GST_VIDEO_INFO_HEIGHT (&mem->info));
+      GST_VIDEO_INFO_WIDTH (&params->info),
+      GST_VIDEO_INFO_HEIGHT (&params->info));
 
   return GST_MEMORY_CAST (mem);
 }
