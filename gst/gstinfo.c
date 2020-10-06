@@ -3061,8 +3061,6 @@ generate_dbghelp_trace (void)
   if (!dbghelp_initialize_symbols (process))
     return NULL;
 
-  trace = g_string_new (NULL);
-
   memset (&context, 0, sizeof (CONTEXT));
   context.ContextFlags = CONTEXT_FULL;
 
@@ -3083,8 +3081,10 @@ generate_dbghelp_trace (void)
   frame.AddrPC.Offset = context.Rip;
   frame.AddrStack.Offset = context.Rsp;
 #else
-  goto done;
+  return NULL;
 #endif
+
+  trace = g_string_new (NULL);
 
   module_info.SizeOfStruct = sizeof (module_info);
   save_context = (machine == IMAGE_FILE_MACHINE_I386) ? NULL : &context;
