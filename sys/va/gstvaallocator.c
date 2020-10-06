@@ -404,7 +404,7 @@ static gpointer
 gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (gmem->allocator);
-  VASurfaceID surface = gst_va_memory_get_surface (gmem, NULL);
+  VASurfaceID surface = gst_va_memory_get_surface (gmem);
 
   _sync_surface (self->display, surface);
 
@@ -621,14 +621,14 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
     g_cond_wait (&self->buffer_cond, GST_OBJECT_GET_LOCK (self));
 
   mem[0] = gst_atomic_queue_pop (self->available_mems);
-  surface = gst_va_memory_get_surface (mem[0], NULL);
+  surface = gst_va_memory_get_surface (mem[0]);
 
   do {
     pmem = gst_atomic_queue_peek (self->available_mems);
     if (!pmem)
       break;
 
-    psurface = gst_va_memory_get_surface (pmem, NULL);
+    psurface = gst_va_memory_get_surface (pmem);
     if (psurface != surface)
       break;
 
@@ -1184,7 +1184,7 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   mem = gst_atomic_queue_pop (self->available_mems);
   GST_OBJECT_UNLOCK (self);
 
-  surface = gst_va_memory_get_surface (mem, NULL);
+  surface = gst_va_memory_get_surface (mem);
   gst_buffer_append_memory (buffer, mem);
 
   GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface, buffer);
@@ -1218,7 +1218,7 @@ gst_va_allocator_try (GstAllocator * allocator, GstVaAllocationParams * params)
 /*============ Utilities =====================================================*/
 
 VASurfaceID
-gst_va_memory_get_surface (GstMemory * mem, GstVideoInfo * info)
+gst_va_memory_get_surface (GstMemory * mem)
 {
   VASurfaceID surface = VA_INVALID_ID;
 
@@ -1230,23 +1230,18 @@ gst_va_memory_get_surface (GstMemory * mem, GstVideoInfo * info)
 
     buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
         gst_va_buffer_surface_quark ());
-    if (buf) {
-      if (info)
-        *info = buf->info;
+    if (buf)
       surface = buf->surface;
-    }
   } else if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
     GstVaMemory *va_mem = (GstVaMemory *) mem;
     surface = va_mem->surface;
-    if (info)
-      *info = va_mem->info;
   }
 
   return surface;
 }
 
 VASurfaceID
-gst_va_buffer_get_surface (GstBuffer * buffer, GstVideoInfo * info)
+gst_va_buffer_get_surface (GstBuffer * buffer)
 {
   GstMemory *mem;
 
@@ -1254,5 +1249,5 @@ gst_va_buffer_get_surface (GstBuffer * buffer, GstVideoInfo * info)
   if (!mem)
     return VA_INVALID_ID;
 
-  return gst_va_memory_get_surface (mem, info);
+  return gst_va_memory_get_surface (mem);
 }

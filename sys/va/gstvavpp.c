@@ -997,7 +997,7 @@ _try_import_buffer_unlocked (GstVaVpp * self, GstBuffer * inbuf)
 {
   VASurfaceID surface;
 
-  surface = gst_va_buffer_get_surface (inbuf, NULL);
+  surface = gst_va_buffer_get_surface (inbuf);
   if (surface != VA_INVALID_ID)
     return TRUE;
 
@@ -1080,8 +1080,8 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (res != GST_FLOW_OK)
     return res;
 
-  in_surface = gst_va_buffer_get_surface (buf, NULL);
-  out_surface = gst_va_buffer_get_surface (outbuf, NULL);
+  in_surface = gst_va_buffer_get_surface (buf);
+  out_surface = gst_va_buffer_get_surface (outbuf);
 
   if (!gst_va_filter_convert_surface (self->filter, in_surface, &self->in_info,
           out_surface, &self->out_info)) {

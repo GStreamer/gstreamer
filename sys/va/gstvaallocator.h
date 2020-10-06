@@ -73,9 +73,7 @@ void                  gst_va_allocator_flush              (GstAllocator * alloca
 gboolean              gst_va_allocator_try                (GstAllocator * allocator,
                                                            GstVaAllocationParams * params);
 
-VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem,
-                                                           GstVideoInfo * info);
-VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer,
-                                                           GstVideoInfo * info);
+VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
+VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);
 
 G_END_DECLS
