@@ -690,6 +690,7 @@ gst_va_dmabuf_try (GstAllocator * allocator, GstVaAllocationParams * params)
   return ret;
 }
 
+/* XXX: use a surface pool to control the created surfaces */
 gboolean
 gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
     guint n_planes, GstMemory * mem[GST_VIDEO_MAX_PLANES],
