@@ -162,7 +162,7 @@ wrong_caps:
   }
 failed_to_align:
   {
-    GST_WARNING_OBJECT (pool, "Failed to align");
+    GST_WARNING_OBJECT (vpool, "Failed to align");
     return FALSE;
   }
 }
