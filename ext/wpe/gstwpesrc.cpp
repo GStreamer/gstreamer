@@ -405,10 +405,13 @@ gst_wpe_src_configure_web_view (GstWpeSrc * src, WebKitWebView * webview)
 static void
 gst_wpe_src_load_bytes (GstWpeSrc * src, GBytes * bytes)
 {
-  if (src->view && GST_STATE (GST_ELEMENT_CAST (src)) > GST_STATE_NULL)
+  if (src->view && GST_STATE (GST_ELEMENT_CAST (src)) > GST_STATE_NULL) {
     src->view->loadData (bytes);
-  else
+  } else {
+    if (src->bytes)
+      g_bytes_unref (src->bytes);
     src->bytes = g_bytes_ref (bytes);
+  }
 }
 
 static gboolean
