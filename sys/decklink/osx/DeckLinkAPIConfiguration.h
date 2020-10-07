@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2018 Blackmagic Design
+** Copyright (c) 2019 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -46,7 +46,7 @@
 
 // Interface ID Declarations
 
-BMD_CONST REFIID IID_IDeckLinkConfiguration                       = /* EF90380B-4AE5-4346-9077-E288E149F129 */ {0xEF,0x90,0x38,0x0B,0x4A,0xE5,0x43,0x46,0x90,0x77,0xE2,0x88,0xE1,0x49,0xF1,0x29};
+BMD_CONST REFIID IID_IDeckLinkConfiguration                       = /* 912F634B-2D4E-40A4-8AAB-8D80B73F1289 */ {0x91,0x2F,0x63,0x4B,0x2D,0x4E,0x40,0xA4,0x8A,0xAB,0x8D,0x80,0xB7,0x3F,0x12,0x89};
 BMD_CONST REFIID IID_IDeckLinkEncoderConfiguration                = /* 138050E5-C60A-4552-BF3F-0F358049327E */ {0x13,0x80,0x50,0xE5,0xC6,0x0A,0x45,0x52,0xBF,0x3F,0x0F,0x35,0x80,0x49,0x32,0x7E};
 
 /* Enum BMDDeckLinkConfigurationID - DeckLink Configuration ID */
@@ -63,7 +63,6 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigHDMI3DPackingFormat                         = '3dpf',
     bmdDeckLinkConfigBypass                                      = 'byps',
     bmdDeckLinkConfigClockTimingAdjustment                       = 'ctad',
-    bmdDeckLinkConfigDuplexMode                                  = 'dupx',
 
     /* Audio Input/Output Flags */
 
@@ -95,6 +94,8 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigDefaultVideoOutputMode                      = 'dvom',
     bmdDeckLinkConfigDefaultVideoOutputModeFlags                 = 'dvof',
     bmdDeckLinkConfigSDIOutputLinkConfiguration                  = 'solc',
+    bmdDeckLinkConfigHDMITimecodePacking                         = 'htpk',
+    bmdDeckLinkConfigPlaybackGroup                               = 'plgr',
 
     /* Video Output Floats */
 
@@ -126,6 +127,7 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigVANCSourceLine2Mapping                      = 'vsl2',
     bmdDeckLinkConfigVANCSourceLine3Mapping                      = 'vsl3',
     bmdDeckLinkConfigCapturePassThroughMode                      = 'cptm',
+    bmdDeckLinkConfigCaptureGroup                                = 'cpgr',
 
     /* Video Input Floats */
 
