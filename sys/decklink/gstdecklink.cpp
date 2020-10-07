@@ -156,6 +156,18 @@ gst_decklink_video_format_get_type (void)
   return (GType) id;
 }
 
+/**
+ * GstDecklinkProfileId:
+ * @GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX: Equivalent to bmdProfileOneSubDeviceFullDuplex
+ * @GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX: Equivalent to bmdProfileOneSubDeviceHalfDuplex
+ * @GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX: Equivalent to bmdProfileTwoSubDevicesFullDuplex
+ * @GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX: Equivalent to bmdProfileTwoSubDevicesHalfDuplex
+ * @GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX: Equivalent to bmdProfileFourSubDevicesHalfDuplex
+ *
+ * Decklink Profile ID
+ *
+ * Since: 1.20
+ */
 GType
 gst_decklink_profile_id_get_type (void)
 {

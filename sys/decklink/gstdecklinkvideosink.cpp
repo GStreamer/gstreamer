@@ -341,6 +341,13 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstDecklinkVideoSink:profile
+   *
+   * Specifies decklink profile to use.
+   *
+   * Since: 1.20
+   */
   g_object_class_install_property (gobject_class, PROP_PROFILE_ID,
       g_param_spec_enum ("profile", "Profile",
           "Certain DeckLink devices such as the DeckLink 8K Pro, the DeckLink "
