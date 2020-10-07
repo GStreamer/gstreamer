@@ -359,7 +359,8 @@ gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
 }
 
 static void
-_available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems)
+_available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems,
+    gint * surface_count)
 {
   GstMemory *mem;
   GstVaBufferSurface *buf;
@@ -368,10 +369,15 @@ _available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems)
     /* destroy the surface */
     buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
         gst_va_buffer_surface_quark ());
-    if (buf && g_atomic_int_dec_and_test (&buf->ref_count)) {
-      GST_LOG ("Destroying surface %#x", buf->surface);
-      _destroy_surfaces (display, &buf->surface, 1);
-      g_slice_free (GstVaBufferSurface, buf);
+    if (buf) {
+      if (g_atomic_int_dec_and_test (&buf->ref_count)) {
+        GST_LOG ("Destroying surface %#x", buf->surface);
+        _destroy_surfaces (display, &buf->surface, 1);
+        *surface_count -= 1;    /* GstVaDmabufAllocator */
+        g_slice_free (GstVaBufferSurface, buf);
+      }
+    } else {
+      *surface_count -= 1;      /* GstVaAllocator */
     }
 
     GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
@@ -387,6 +393,8 @@ struct _GstVaDmabufAllocator
 
   /* queue for disposed surfaces */
   GstAtomicQueue *available_mems;
+  gint surface_count;
+
   GstVaDisplay *display;
 
   GstMemoryMapFunction parent_map;
@@ -437,7 +445,11 @@ gst_va_dmabuf_allocator_dispose (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
-  _available_mems_flush (self->display, self->available_mems);
+  _available_mems_flush (self->display, self->available_mems,
+      &self->surface_count);
+  if (self->surface_count != 0)
+    GST_WARNING_OBJECT (self, "Surfaces leaked: %d", self->surface_count);
+
   gst_atomic_queue_unref (self->available_mems);
 
   gst_clear_object (&self->display);
@@ -588,6 +600,8 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
     GST_VIDEO_INFO_PLANE_STRIDE (&params->info, i) = desc.layers[i].pitch[0];
   }
 
+  g_atomic_int_inc (&self->surface_count);
+
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d] size %" G_GSIZE_FORMAT,
       buf->surface, GST_VIDEO_INFO_WIDTH (&params->info),
       GST_VIDEO_INFO_HEIGHT (&params->info),
@@ -649,7 +663,8 @@ gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
   GST_OBJECT_LOCK (self);
-  _available_mems_flush (self->display, self->available_mems);
+  _available_mems_flush (self->display, self->available_mems,
+      &self->surface_count);
   g_cond_signal (&self->buffer_cond);
   GST_OBJECT_UNLOCK (self);
 }
@@ -749,6 +764,8 @@ struct _GstVaAllocator
 
   /* queue for disposed surfaces */
   GstAtomicQueue *available_mems;
+  gint surface_count;
+
   GstVaDisplay *display;
 
   gboolean use_derived;
@@ -796,7 +813,11 @@ gst_va_allocator_dispose (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
-  _available_mems_flush (self->display, self->available_mems);
+  _available_mems_flush (self->display, self->available_mems,
+      &self->surface_count);
+  if (self->surface_count != 0)
+    GST_WARNING_OBJECT (self, "Surfaces leaked: %d", self->surface_count);
+
   gst_atomic_queue_unref (self->available_mems);
 
   gst_clear_object (&self->display);
@@ -1144,6 +1165,8 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 
   GST_MINI_OBJECT (mem)->dispose = gst_va_memory_release;
 
+  g_atomic_int_inc (&self->surface_count);
+
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d]", mem->surface,
       GST_VIDEO_INFO_WIDTH (&params->info),
       GST_VIDEO_INFO_HEIGHT (&params->info));
@@ -1195,7 +1218,8 @@ gst_va_allocator_flush (GstAllocator * allocator)
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
 
   GST_OBJECT_LOCK (self);
-  _available_mems_flush (self->display, self->available_mems);
+  _available_mems_flush (self->display, self->available_mems,
+      &self->surface_count);
   g_cond_signal (&self->buffer_cond);
   GST_OBJECT_UNLOCK (self);
 }
