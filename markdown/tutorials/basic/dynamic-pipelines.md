@@ -304,14 +304,14 @@ previous tutorial, for audio. It will render the audio stream to the
 audio card.
 
 ``` c
-if (!gst_element_link (data.convert, data.sink)) {
+if (!gst_element_link_many (data.convert, data.resample, data.sink, NULL)) {
   g_printerr ("Elements could not be linked.\n");
   gst_object_unref (data.pipeline);
   return -1;
 }
 ```
 
-Here we link the converter element to the sink, but we **DO NOT** link
+Here we link the elements converter, resample and sink, but we **DO NOT** link
 them with the source, since at this point it contains no source pads. We
 just leave this branch (converter + sink) unlinked, until later on.
 
