@@ -29,7 +29,9 @@ def parse_wrapfile(wrapf):
     if 'wrap-git' not in cgp:
         return None
     section = cgp['wrap-git']
-    return section['directory'], section['revision']
+    # Default to the wrapper filename if 'directory' field is missing
+    directory = section.get('directory', os.path.splitext(os.path.basename(wrapf))[0])
+    return directory, section['revision']
 
 def get_wrap_subprojects(srcdir, gst_branch):
     '''
