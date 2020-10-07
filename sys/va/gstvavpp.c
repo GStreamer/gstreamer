@@ -397,7 +397,7 @@ gst_va_vpp_set_context (GstElement * element, GstContext * context)
 
 static gboolean
 _try_allocator (GstVaVpp * self, GstAllocator * allocator, GstCaps * caps,
-    guint usage_hint, guint * size)
+    guint usage_hint)
 {
   GstVaAllocationParams params = {
     .usage_hint = usage_hint,
@@ -415,15 +415,11 @@ _try_allocator (GstVaVpp * self, GstAllocator * allocator, GstCaps * caps,
     return FALSE;
   }
 
-  if (size)
-    *size = GST_VIDEO_INFO_SIZE (&params.info);
-
   return TRUE;
 }
 
 static GstAllocator *
-_create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint,
-    guint * size)
+_create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint)
 {
   GstAllocator *allocator = NULL;
 
@@ -434,7 +430,7 @@ _create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint,
     allocator = gst_va_allocator_new (self->display, surface_formats);
   }
 
-  if (!_try_allocator (self, allocator, caps, usage_hint, size))
+  if (!_try_allocator (self, allocator, caps, usage_hint))
     gst_clear_object (&allocator);
 
   return allocator;
@@ -508,7 +504,7 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
     }
 
     if (!allocator) {
-      if (!(allocator = _create_allocator (self, caps, usage_hint, &size)))
+      if (!(allocator = _create_allocator (self, caps, usage_hint)))
         return FALSE;
     }
 
@@ -558,7 +554,7 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstBufferPool *pool = NULL;
   GstCaps *outcaps = NULL;
   GstStructure *config;
-  guint min, max, size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+  guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
   gboolean update_pool, update_allocator;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
@@ -593,7 +589,7 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   }
 
   if (!allocator) {
-    if (!(allocator = _create_allocator (self, outcaps, usage_hint, &size)))
+    if (!(allocator = _create_allocator (self, outcaps, usage_hint)))
       return FALSE;
   }
 
@@ -983,7 +979,7 @@ _get_sinkpad_pool (GstVaVpp * self)
 
   size = GST_VIDEO_INFO_SIZE (&self->in_info);
 
-  allocator = _create_allocator (self, self->incaps, usage_hint, &size);
+  allocator = _create_allocator (self, self->incaps, usage_hint);
 
   self->sinkpad_pool = _create_sinkpad_bufferpool (self->incaps, size, 0, 0,
       usage_hint, allocator, &params);

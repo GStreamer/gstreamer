@@ -1074,8 +1074,7 @@ _shall_copy_frames (GstVaH264Dec * self, GstVideoInfo * info)
 }
 
 static gboolean
-_try_allocator (GstVaH264Dec * self, GstAllocator * allocator, GstCaps * caps,
-    guint * size)
+_try_allocator (GstVaH264Dec * self, GstAllocator * allocator, GstCaps * caps)
 {
   GstVaAllocationParams params = {
     .usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_DECODER,
@@ -1100,14 +1099,11 @@ _try_allocator (GstVaH264Dec * self, GstAllocator * allocator, GstCaps * caps,
     return FALSE;
   }
 
-  if (size)
-    *size = GST_VIDEO_INFO_SIZE (&params.info);
-
   return TRUE;
 }
 
 static GstAllocator *
-_create_allocator (GstVaH264Dec * self, GstCaps * caps, guint * size)
+_create_allocator (GstVaH264Dec * self, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
   GstVaDisplay *display = NULL;
@@ -1124,7 +1120,7 @@ _create_allocator (GstVaH264Dec * self, GstCaps * caps, guint * size)
 
   gst_object_unref (display);
 
-  if (!_try_allocator (self, allocator, caps, size))
+  if (!_try_allocator (self, allocator, caps))
     gst_clear_object (&allocator);
 
   return allocator;
@@ -1154,7 +1150,7 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstStructure *config;
   GstVideoInfo info;
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
-  guint size, min, max;
+  guint size = 0, min, max;
   gboolean update_pool = FALSE, update_allocator = FALSE, has_videoalignment;
 
   gst_query_parse_allocation (query, &caps, NULL);
@@ -1225,7 +1221,7 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   if (!allocator) {
-    if (!(allocator = _create_allocator (self, caps, &size)))
+    if (!(allocator = _create_allocator (self, caps)))
       return FALSE;
   }
 
