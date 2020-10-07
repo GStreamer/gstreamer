@@ -621,10 +621,10 @@ gst_mf_source_reader_create (GstMFSourceObject * object, GstBuffer ** buffer)
 
   media_buffer->Unlock ();
 
-  GST_BUFFER_PTS (buffer) = timestamp;
+  GST_BUFFER_PTS (buf) = timestamp;
   /* Set DTS since this is compressed format */
-  GST_BUFFER_DTS (buffer) = timestamp;
-  GST_BUFFER_DURATION (buffer) = duration;
+  GST_BUFFER_DTS (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
 
   *buffer = buf;
 
