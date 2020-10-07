@@ -745,6 +745,17 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     }
   }
 
+  if (!self->has_videometa) {
+    GstBufferPool *pool;
+
+    pool = gst_video_decoder_get_buffer_pool (GST_VIDEO_DECODER (self));
+    self->copy_frames = gst_va_pool_requires_video_meta (pool);
+    gst_object_unref (pool);
+
+    if (self->copy_frames)
+      GST_INFO_OBJECT (self, "Raw frame copy enabled.");
+  }
+
   return TRUE;
 }
 
@@ -1048,80 +1059,18 @@ gst_va_h264_dec_negotiate (GstVideoDecoder * decoder)
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
-static inline void
-_shall_copy_frames (GstVaH264Dec * self, GstVideoInfo * info)
-{
-  GstVideoInfo ref_info;
-  guint i;
-
-  self->copy_frames = FALSE;
-
-  if (self->has_videometa)
-    return;
-
-  gst_video_info_set_format (&ref_info, GST_VIDEO_INFO_FORMAT (info),
-      self->display_width, self->display_height);
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    if (info->stride[i] != ref_info.stride[i] ||
-        info->offset[i] != ref_info.offset[i]) {
-      GST_WARNING_OBJECT (self,
-          "GstVideoMeta support required, copying frames.");
-      self->copy_frames = TRUE;
-      break;
-    }
-  }
-}
-
-static gboolean
-_try_allocator (GstVaH264Dec * self, GstAllocator * allocator, GstCaps * caps)
-{
-  GstVaAllocationParams params = {
-    .usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_DECODER,
-  };
-
-  if (!gst_video_info_from_caps (&params.info, caps))
-    return FALSE;
-  if (self->need_cropping) {
-    GST_VIDEO_INFO_WIDTH (&params.info) = self->coded_width;
-    GST_VIDEO_INFO_HEIGHT (&params.info) = self->coded_height;
-  }
-
-  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    if (!gst_va_dmabuf_try (allocator, &params))
-      return FALSE;
-  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    if (!gst_va_allocator_try (allocator, &params))
-      return FALSE;
-    if (!gst_caps_is_vamemory (caps))
-      _shall_copy_frames (self, &params.info);
-  } else {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 static GstAllocator *
 _create_allocator (GstVaH264Dec * self, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
-  GstVaDisplay *display = NULL;
-
-  g_object_get (self->decoder, "display", &display, NULL);
 
   if (gst_caps_is_dmabuf (caps))
-    allocator = gst_va_dmabuf_allocator_new (display);
+    allocator = gst_va_dmabuf_allocator_new (self->display);
   else {
     GArray *surface_formats =
         gst_va_decoder_get_surface_formats (self->decoder);
-    allocator = gst_va_allocator_new (display, surface_formats);
+    allocator = gst_va_allocator_new (self->display, surface_formats);
   }
-
-  gst_object_unref (display);
-
-  if (!_try_allocator (self, allocator, caps))
-    gst_clear_object (&allocator);
 
   return allocator;
 }

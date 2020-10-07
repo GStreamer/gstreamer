@@ -27,26 +27,22 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaAllocationParams GstVaAllocationParams;
-struct _GstVaAllocationParams
-{
-  GstVideoInfo info;
-  guint32 usage_hint;
-};
-
 #define GST_TYPE_VA_DMABUF_ALLOCATOR (gst_va_dmabuf_allocator_get_type())
 G_DECLARE_FINAL_TYPE (GstVaDmabufAllocator, gst_va_dmabuf_allocator, GST,
     VA_DMABUF_ALLOCATOR, GstDmaBufAllocator);
 
 GstAllocator *        gst_va_dmabuf_allocator_new         (GstVaDisplay * display);
 gboolean              gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
-                                                            GstBuffer * buffer,
-                                                            GstVaAllocationParams * params);
+                                                            GstBuffer * buffer);
 gboolean              gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
                                                               GstBuffer * buffer);
 void                  gst_va_dmabuf_allocator_flush       (GstAllocator * allocator);
-gboolean              gst_va_dmabuf_try                   (GstAllocator * allocator,
-                                                           GstVaAllocationParams * params);
+gboolean              gst_va_dmabuf_allocator_set_format  (GstAllocator * allocator,
+                                                           GstVideoInfo * info,
+                                                           guint usage_hint);
+gboolean              gst_va_dmabuf_allocator_get_format  (GstAllocator * allocator,
+                                                           GstVideoInfo * info,
+                                                           guint * usage_hint);
 
 gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * display,
                                                            GstVideoInfo * info,
@@ -65,13 +61,16 @@ G_DECLARE_FINAL_TYPE (GstVaAllocator, gst_va_allocator, GST, VA_ALLOCATOR, GstAl
 
 GstAllocator *        gst_va_allocator_new                (GstVaDisplay * display,
                                                            GArray * surface_formats);
-GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator,
-                                                           GstVaAllocationParams * params);
+GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator);
 gboolean              gst_va_allocator_prepare_buffer     (GstAllocator * allocator,
                                                            GstBuffer * buffer);
 void                  gst_va_allocator_flush              (GstAllocator * allocator);
-gboolean              gst_va_allocator_try                (GstAllocator * allocator,
-                                                           GstVaAllocationParams * params);
+gboolean              gst_va_allocator_set_format         (GstAllocator * allocator,
+                                                           GstVideoInfo * info,
+                                                           guint usage_hint);
+gboolean              gst_va_allocator_get_format         (GstAllocator * allocator,
+                                                           GstVideoInfo * info,
+                                                           guint * usage_hint);
 
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);

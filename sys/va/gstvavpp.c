@@ -395,29 +395,6 @@ gst_va_vpp_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
-static gboolean
-_try_allocator (GstVaVpp * self, GstAllocator * allocator, GstCaps * caps,
-    guint usage_hint)
-{
-  GstVaAllocationParams params = {
-    .usage_hint = usage_hint,
-  };
-
-  if (!gst_video_info_from_caps (&params.info, caps))
-    return FALSE;
-  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    if (!gst_va_dmabuf_try (allocator, &params))
-      return FALSE;
-  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    if (!gst_va_allocator_try (allocator, &params))
-      return FALSE;
-  } else {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 static GstAllocator *
 _create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint)
 {
@@ -429,9 +406,6 @@ _create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint)
     GArray *surface_formats = gst_va_filter_get_surface_formats (self->filter);
     allocator = gst_va_allocator_new (self->display, surface_formats);
   }
-
-  if (!_try_allocator (self, allocator, caps, usage_hint))
-    gst_clear_object (&allocator);
 
   return allocator;
 }

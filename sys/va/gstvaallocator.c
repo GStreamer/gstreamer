@@ -400,6 +400,9 @@ struct _GstVaDmabufAllocator
   GstMemoryMapFunction parent_map;
 
   GCond buffer_cond;
+
+  GstVideoInfo info;
+  guint usage_hint;
 };
 
 #define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
@@ -514,11 +517,15 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   return FALSE;
 }
 
-/* creates an exported VASurface and adds it as @buffer's memories
- * qdata */
-gboolean
-gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
-    GstBuffer * buffer, GstVaAllocationParams * params)
+/* Creates an exported VASurface and adds it as @buffer's memories
+ * qdata
+ *
+ * If @info is not NULL, a dummy (non-pooled) buffer is created to
+ * update offsets and strides, and it has to be unrefed immediately.
+ */
+static gboolean
+gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
+    GstBuffer * buffer, GstVideoInfo * info)
 {
   GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
@@ -528,20 +535,19 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
   guint32 i, fourcc, rt_format, export_flags;
 
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
-  g_return_val_if_fail (params, FALSE);
 
-  format = GST_VIDEO_INFO_FORMAT (&params->info);
+  format = GST_VIDEO_INFO_FORMAT (&self->info);
   fourcc = gst_va_fourcc_from_video_format (format);
   rt_format = gst_va_chroma_from_video_format (format);
   if (fourcc == 0 || rt_format == 0) {
     GST_ERROR_OBJECT (allocator, "Unsupported format: %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&params->info)));
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&self->info)));
     return FALSE;
   }
 
   if (!_create_surfaces (self->display, rt_format, fourcc,
-          GST_VIDEO_INFO_WIDTH (&params->info),
-          GST_VIDEO_INFO_HEIGHT (&params->info), params->usage_hint, NULL,
+          GST_VIDEO_INFO_WIDTH (&self->info),
+          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
           &surface, 1))
     return FALSE;
 
@@ -561,7 +567,7 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
   if (!_export_surface_to_dmabuf (self->display, surface, export_flags, &desc))
     goto failed;
 
-  g_assert (GST_VIDEO_INFO_N_PLANES (&params->info) == desc.num_layers);
+  g_assert (GST_VIDEO_INFO_N_PLANES (&self->info) == desc.num_layers);
 
   if (fourcc != desc.fourcc) {
     GST_ERROR ("Unsupported fourcc: %" GST_FOURCC_FORMAT,
@@ -570,7 +576,10 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
   }
 
   buf = gst_va_buffer_surface_new (surface, format, desc.width, desc.height);
-  GST_VIDEO_INFO_SIZE (&params->info) = 0;
+  if (G_UNLIKELY (info)) {
+    *info = self->info;
+    GST_VIDEO_INFO_SIZE (info) = 0;
+  }
 
   for (i = 0; i < desc.num_objects; i++) {
     gint fd = desc.objects[i].fd;
@@ -581,7 +590,8 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
 
     gst_buffer_append_memory (buffer, mem);
 
-    GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
+    if (G_LIKELY (!info))
+      GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
 
     g_atomic_int_add (&buf->ref_count, 1);
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
@@ -591,21 +601,23 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), gst_va_drm_mod_quark (),
         drm_mod, g_free);
 
-    GST_VIDEO_INFO_SIZE (&params->info) += size;
+    if (G_UNLIKELY (info))
+      GST_VIDEO_INFO_SIZE (info) += size;
   }
 
-  for (i = 0; i < desc.num_layers; i++) {
-    g_assert (desc.layers[i].num_planes == 1);
-    GST_VIDEO_INFO_PLANE_OFFSET (&params->info, i) = desc.layers[i].offset[0];
-    GST_VIDEO_INFO_PLANE_STRIDE (&params->info, i) = desc.layers[i].pitch[0];
+  if (G_UNLIKELY (info)) {
+    for (i = 0; i < desc.num_layers; i++) {
+      g_assert (desc.layers[i].num_planes == 1);
+      GST_VIDEO_INFO_PLANE_OFFSET (info, i) = desc.layers[i].offset[0];
+      GST_VIDEO_INFO_PLANE_STRIDE (info, i) = desc.layers[i].pitch[0];
+    }
+  } else {
+    g_atomic_int_inc (&self->surface_count);
   }
-
-  g_atomic_int_inc (&self->surface_count);
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d] size %" G_GSIZE_FORMAT,
-      buf->surface, GST_VIDEO_INFO_WIDTH (&params->info),
-      GST_VIDEO_INFO_HEIGHT (&params->info),
-      GST_VIDEO_INFO_SIZE (&params->info));
+      buf->surface, GST_VIDEO_INFO_WIDTH (&self->info),
+      GST_VIDEO_INFO_HEIGHT (&self->info), GST_VIDEO_INFO_SIZE (&self->info));
 
   return TRUE;
 
@@ -614,6 +626,13 @@ failed:
     _destroy_surfaces (self->display, &surface, 1);
     return FALSE;
   }
+}
+
+gboolean
+gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
+    GstBuffer * buffer)
+{
+  return gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, NULL);
 }
 
 gboolean
@@ -669,25 +688,73 @@ gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
   GST_OBJECT_UNLOCK (self);
 }
 
-gboolean
-gst_va_dmabuf_try (GstAllocator * allocator, GstVaAllocationParams * params)
+static gboolean
+gst_va_dmabuf_allocator_try (GstAllocator * allocator)
 {
-  GstBuffer *buffer = gst_buffer_new ();
-  GstMapInfo map_info;
+  GstBuffer *buffer;
+  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
+  GstVideoInfo info = self->info;
   gboolean ret;
 
-  ret = gst_va_dmabuf_allocator_setup_buffer (allocator, buffer, params);
-  if (ret) {
-    /* XXX: radeonsi for kadaveri cannot map dmabufs to user space */
-    if (!gst_buffer_map (buffer, &map_info, GST_MAP_READWRITE)) {
-      GST_WARNING_OBJECT (allocator,
-          "DMABuf backend cannot map frames to user space.");
-    }
-    gst_buffer_unmap (buffer, &map_info);
-  }
+  buffer = gst_buffer_new ();
+  ret = gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, &info);
   gst_buffer_unref (buffer);
 
+  if (ret)
+    self->info = info;
+
   return ret;
+}
+
+gboolean
+gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
+    GstVideoInfo * info, guint usage_hint)
+{
+  GstVaDmabufAllocator *self;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  self = GST_VA_DMABUF_ALLOCATOR (allocator);
+
+  if (self->surface_count != 0) {
+    if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_INFO_FORMAT (&self->info)
+        && GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&self->info)
+        && GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&self->info)
+        && usage_hint == self->usage_hint) {
+      *info = self->info;       /* update callee info (offset & stride) */
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  self->usage_hint = usage_hint;
+  self->info = *info;
+
+  ret = gst_va_dmabuf_allocator_try (allocator);
+
+  if (ret)
+    *info = self->info;
+
+  return ret;
+}
+
+gboolean
+gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
+    GstVideoInfo * info, guint * usage_hint)
+{
+  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
+
+  if (GST_VIDEO_INFO_FORMAT (&self->info) == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  if (info)
+    *info = self->info;
+  if (usage_hint)
+    *usage_hint = self->usage_hint;
+
+  return TRUE;
 }
 
 /* XXX: use a surface pool to control the created surfaces */
@@ -773,6 +840,9 @@ struct _GstVaAllocator
   GArray *surface_formats;
 
   GCond buffer_cond;
+
+  GstVideoInfo info;
+  guint usage_hint;
 };
 
 typedef struct _GstVaMemory GstVaMemory;
@@ -780,7 +850,6 @@ struct _GstVaMemory
 {
   GstMemory mem;
 
-  GstVideoInfo info;
   VASurfaceID surface;
   GstVideoFormat surface_format;
   VAImage image;
@@ -886,7 +955,7 @@ _reset_mem (GstVaMemory * mem, GstAllocator * allocator, gsize size)
 
 static inline gboolean
 _ensure_image (GstVaDisplay * display, VASurfaceID surface, GstVideoInfo * info,
-    VAImage * image, gboolean * derived)
+    VAImage * image, gboolean * derived, gboolean update_info)
 {
   gint i;
   gboolean try_derived;
@@ -909,12 +978,14 @@ _ensure_image (GstVaDisplay * display, VASurfaceID surface, GstVideoInfo * info,
     *derived = FALSE;
 
 bail:
-  for (i = 0; i < image->num_planes; i++) {
-    GST_VIDEO_INFO_PLANE_OFFSET (info, i) = image->offsets[i];
-    GST_VIDEO_INFO_PLANE_STRIDE (info, i) = image->pitches[i];
-  }
+  if (G_UNLIKELY (update_info)) {
+    for (i = 0; i < image->num_planes; i++) {
+      GST_VIDEO_INFO_PLANE_OFFSET (info, i) = image->offsets[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (info, i) = image->pitches[i];
+    }
 
-  GST_VIDEO_INFO_SIZE (info) = image->data_size;
+    GST_VIDEO_INFO_SIZE (info) = image->data_size;
+  }
 
   return TRUE;
 }
@@ -945,7 +1016,7 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
   } else {                      /* GST_MAP_READ only */
     mem->is_dirty = FALSE;
     mem->is_derived = va_allocator->use_derived &&
-        (GST_VIDEO_INFO_FORMAT (&mem->info) == mem->surface_format);
+        (GST_VIDEO_INFO_FORMAT (&va_allocator->info) == mem->surface_format);
   }
 
   if (flags & GST_MAP_VA) {
@@ -953,8 +1024,8 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
     goto success;
   }
 
-  if (!_ensure_image (display, mem->surface, &mem->info, &mem->image,
-          &mem->is_derived))
+  if (!_ensure_image (display, mem->surface, &va_allocator->info, &mem->image,
+          &mem->is_derived, FALSE))
     return NULL;
 
   va_allocator->use_derived = mem->is_derived;
@@ -1063,7 +1134,6 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
 
   sub->surface = vamem->surface;
   sub->surface_format = vamem->surface_format;
-  sub->info = vamem->info;
 
   _clean_mem (sub);
 
@@ -1110,14 +1180,16 @@ gst_va_memory_release (GstMiniObject * mini_object)
   return FALSE;
 }
 
-GstMemory *
-gst_va_allocator_alloc (GstAllocator * allocator,
-    GstVaAllocationParams * params)
+/* If @info is not NULL, a dummy (non-pooled) memory and its VAImage
+ * are created, to update offsets and strides. The memory has to be
+ * unrefed immediately.
+ */
+static GstMemory *
+gst_va_allocator_alloc_full (GstAllocator * allocator, GstVideoInfo * info)
 {
   GstVaAllocator *self;
   GstVaMemory *mem;
   GstVideoFormat format, img_format;
-  VAImage image = { 0, };
   VASurfaceID surface;
   guint32 fourcc, rt_format;
 
@@ -1125,7 +1197,7 @@ gst_va_allocator_alloc (GstAllocator * allocator,
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  img_format = GST_VIDEO_INFO_FORMAT (&params->info);
+  img_format = GST_VIDEO_INFO_FORMAT (&self->info);
 
   format = gst_va_video_surface_format_from_image_format (img_format,
       self->surface_formats);
@@ -1145,33 +1217,41 @@ gst_va_allocator_alloc (GstAllocator * allocator,
   }
 
   if (!_create_surfaces (self->display, rt_format, fourcc,
-          GST_VIDEO_INFO_WIDTH (&params->info),
-          GST_VIDEO_INFO_HEIGHT (&params->info), params->usage_hint, NULL,
+          GST_VIDEO_INFO_WIDTH (&self->info),
+          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
           &surface, 1))
     return NULL;
 
-  image.image_id = VA_INVALID_ID;
-  if (!_ensure_image (self->display, surface, &params->info, &image, NULL))
-    return NULL;
-  _destroy_image (self->display, image.image_id);
+  if (G_UNLIKELY (info)) {
+    VAImage image = {.image_id = VA_INVALID_ID, };
+
+    if (!_ensure_image (self->display, surface, info, &image, NULL, TRUE))
+      return NULL;
+    _destroy_image (self->display, image.image_id);
+  }
 
   mem = g_slice_new (GstVaMemory);
 
   mem->surface = surface;
   mem->surface_format = format;
-  mem->info = params->info;
 
-  _reset_mem (mem, allocator, GST_VIDEO_INFO_SIZE (&params->info));
+  _reset_mem (mem, allocator, GST_VIDEO_INFO_SIZE (&self->info));
 
-  GST_MINI_OBJECT (mem)->dispose = gst_va_memory_release;
-
-  g_atomic_int_inc (&self->surface_count);
+  if (G_LIKELY (!info)) {
+    GST_MINI_OBJECT (mem)->dispose = gst_va_memory_release;
+    g_atomic_int_inc (&self->surface_count);
+  }
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d]", mem->surface,
-      GST_VIDEO_INFO_WIDTH (&params->info),
-      GST_VIDEO_INFO_HEIGHT (&params->info));
+      GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info));
 
   return GST_MEMORY_CAST (mem);
+}
+
+GstMemory *
+gst_va_allocator_alloc (GstAllocator * allocator)
+{
+  return gst_va_allocator_alloc_full (allocator, NULL);
 }
 
 GstAllocator *
@@ -1224,15 +1304,69 @@ gst_va_allocator_flush (GstAllocator * allocator)
   GST_OBJECT_UNLOCK (self);
 }
 
-gboolean
-gst_va_allocator_try (GstAllocator * allocator, GstVaAllocationParams * params)
+static gboolean
+gst_va_allocator_try (GstAllocator * allocator)
 {
   GstMemory *mem;
+  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
+  GstVideoInfo info = self->info;
 
-  mem = gst_va_allocator_alloc (allocator, params);
+  mem = gst_va_allocator_alloc_full (allocator, &info);
   if (!mem)
     return FALSE;
   gst_memory_unref (mem);
+
+  self->info = info;
+  return TRUE;
+}
+
+gboolean
+gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
+    guint usage_hint)
+{
+  GstVaAllocator *self;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  self = GST_VA_ALLOCATOR (allocator);
+
+  if (self->surface_count != 0) {
+    if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_INFO_FORMAT (&self->info)
+        && GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&self->info)
+        && GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&self->info)
+        && usage_hint == self->usage_hint) {
+      *info = self->info;       /* update callee info (offset & stride) */
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  self->usage_hint = usage_hint;
+  self->info = *info;
+
+  ret = gst_va_allocator_try (allocator);
+  if (ret)
+    *info = self->info;
+
+  return ret;
+}
+
+gboolean
+gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
+    guint * usage_hint)
+{
+  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
+
+  if (GST_VIDEO_INFO_FORMAT (&self->info) == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  if (info)
+    *info = self->info;
+  if (usage_hint)
+    *usage_hint = self->usage_hint;
+
   return TRUE;
 }
 
