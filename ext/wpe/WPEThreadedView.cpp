@@ -270,6 +270,8 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
 
 WPEView::~WPEView()
 {
+    GST_TRACE ("%p destroying", this);
+
     g_mutex_clear(&threading.ready_mutex);
     g_cond_clear(&threading.ready_cond);
 
@@ -285,10 +287,12 @@ WPEView::~WPEView()
             egl.committed = nullptr;
         }
         if (shm.pending) {
+            GST_TRACE ("%p freeing shm pending %" GST_PTR_FORMAT, this, shm.pending);
             gst_buffer_unref(shm.pending);
             shm.pending = nullptr;
         }
         if (shm.committed) {
+            GST_TRACE ("%p freeing shm commited %" GST_PTR_FORMAT, this, shm.committed);
             gst_buffer_unref(shm.committed);
             shm.committed = nullptr;
         }
@@ -316,6 +320,7 @@ WPEView::~WPEView()
     }
 
     g_mutex_clear(&images_mutex);
+    GST_TRACE ("%p destroyed", this);
 }
 
 void WPEView::notifyLoadFinished()

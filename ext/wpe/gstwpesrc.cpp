@@ -252,7 +252,7 @@ gst_wpe_src_start (GstWpeSrc * src)
     display = base_src->display;
   }
 
-  GST_DEBUG_OBJECT (src, "Will fill GLMemories: %d\n", src->gl_enabled);
+  GST_DEBUG_OBJECT (src, "Will %sfill GLMemories", src->gl_enabled ? "" : "NOT ");
 
   auto & thread = WPEContextThread::singleton ();
 
@@ -261,6 +261,7 @@ gst_wpe_src_start (GstWpeSrc * src)
         GST_VIDEO_INFO_WIDTH (&base_src->out_info),
         GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
     created_view = TRUE;
+    GST_DEBUG_OBJECT (src, "created view %p", src->view);
   }
 
   if (!src->view) {
@@ -317,6 +318,7 @@ static void
 gst_wpe_src_stop_unlocked (GstWpeSrc * src)
 {
   if (src->view) {
+    GST_DEBUG_OBJECT (src, "deleting view %p", src->view);
     delete src->view;
     src->view = NULL;
   }
