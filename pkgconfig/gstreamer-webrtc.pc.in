@@ -5,7 +5,7 @@ includedir=@includedir@/gstreamer-@GST_API_VERSION@
 
 Name: GStreamer WebRTC
 Description: GStreamer WebRTC support
-Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@ gstreamer-sdp-@GST_API_VERSION@
 Version: @VERSION@
 Libs: -L${libdir} -lgstwebrtc-@GST_API_VERSION@
 Cflags: -I${includedir}
