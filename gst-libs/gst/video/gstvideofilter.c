@@ -348,8 +348,8 @@ invalid_buffer:
 }
 
 static gboolean
-gst_video_filter_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstMeta * meta, GstBuffer * outbuf)
+gst_video_filter_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
 {
   const GstMetaInfo *info = meta->info;
   const gchar *const *tags;
@@ -360,8 +360,8 @@ gst_video_filter_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
           && gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO)))
     return TRUE;
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, inbuf,
-      meta, outbuf);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
+      meta, inbuf);
 }
 
 static void

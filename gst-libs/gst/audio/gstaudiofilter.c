@@ -71,8 +71,8 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstAudioFilter, gst_audio_filter,
     GST_TYPE_BASE_TRANSFORM, do_init);
 
 static gboolean
-gst_audio_filter_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstMeta * meta, GstBuffer * outbuf)
+gst_audio_filter_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
 {
   const GstMetaInfo *info = meta->info;
   const gchar *const *tags;
@@ -85,7 +85,7 @@ gst_audio_filter_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
 
   return
       GST_BASE_TRANSFORM_CLASS (gst_audio_filter_parent_class)->transform_meta
-      (trans, inbuf, meta, outbuf);
+      (trans, outbuf, meta, inbuf);
 }
 
 static void
