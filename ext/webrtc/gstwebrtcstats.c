@@ -442,8 +442,6 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
 
   transport = stream->transport;
   if (!transport)
-    transport = stream->transport;
-  if (!transport)
     return;
 
   g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
