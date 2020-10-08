@@ -846,7 +846,6 @@ _va_free (GstAllocator * allocator, GstMemory * mem)
 
   g_mutex_clear (&va_mem->lock);
 
-  GST_DEBUG ("%p: freed", va_mem);
   g_slice_free (GstVaMemory, va_mem);
 }
 
