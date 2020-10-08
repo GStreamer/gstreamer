@@ -785,15 +785,8 @@ gst_x265_enc_parse_options (GstX265Enc * encoder, const gchar * str)
   return !ret;
 }
 
-/*
- * gst_x265_enc_init_encoder
- * @encoder:  Encoder which should be initialized.
- *
- * Initialize x265 encoder.
- *
- */
 static gboolean
-gst_x265_enc_init_encoder (GstX265Enc * encoder)
+gst_x265_enc_init_encoder_locked (GstX265Enc * encoder)
 {
   GstVideoInfo *info;
   guint bitdepth;
@@ -809,7 +802,6 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   /* make sure that the encoder is closed */
   gst_x265_enc_close_encoder (encoder);
 
-  GST_OBJECT_LOCK (encoder);
   bitdepth = GST_VIDEO_INFO_COMP_DEPTH (info, 0);
   encoder->api = NULL;
 
@@ -837,7 +829,6 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
 
   if (!encoder->api) {
     GST_ERROR_OBJECT (encoder, "no %d bitdepth vtable available", bitdepth);
-    GST_OBJECT_UNLOCK (encoder);
     return FALSE;
   }
 
@@ -845,7 +836,6 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
           x265_preset_names[encoder->speed_preset - 1],
           x265_tune_names[encoder->tune - 1]) < 0) {
     GST_DEBUG_OBJECT (encoder, "preset or tune unrecognized");
-    GST_OBJECT_UNLOCK (encoder);
     return FALSE;
   }
 
@@ -929,7 +919,6 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
 
     if (i == encoder->peer_profiles->len) {
       GST_ERROR_OBJECT (encoder, "Couldn't apply peer profile");
-      GST_OBJECT_UNLOCK (encoder);
 
       return FALSE;
     }
@@ -980,7 +969,6 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     if (gst_x265_enc_parse_options (encoder,
             encoder->option_string_prop->str) == FALSE) {
       GST_DEBUG_OBJECT (encoder, "Your option-string contains errors.");
-      GST_OBJECT_UNLOCK (encoder);
       return FALSE;
     }
   }
@@ -989,8 +977,6 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
 
   /* good start, will be corrected if needed */
   encoder->dts_offset = 0;
-
-  GST_OBJECT_UNLOCK (encoder);
 
   encoder->x265enc = encoder->api->encoder_open (&encoder->x265param);
   if (!encoder->x265enc) {
@@ -1002,6 +988,25 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   encoder->push_header = TRUE;
 
   return TRUE;
+}
+
+/*
+ * gst_x265_enc_init_encoder
+ * @encoder:  Encoder which should be initialized.
+ *
+ * Initialize x265 encoder.
+ *
+ */
+static gboolean
+gst_x265_enc_init_encoder (GstX265Enc * encoder)
+{
+  gboolean result;
+
+  GST_OBJECT_LOCK (encoder);
+  result = gst_x265_enc_init_encoder_locked (encoder);
+  GST_OBJECT_UNLOCK (encoder);
+
+  return result;
 }
 
 /* gst_x265_enc_close_encoder
@@ -1520,7 +1525,7 @@ gst_x265_enc_encode_frame (GstX265Enc * encoder, x265_picture * pic_in,
   GST_OBJECT_LOCK (encoder);
   if (encoder->reconfig) {
     /* x265_encoder_reconfig is not yet implemented thus we shut down and re-create encoder */
-    gst_x265_enc_init_encoder (encoder);
+    gst_x265_enc_init_encoder_locked (encoder);
     update_latency = TRUE;
   }
 
