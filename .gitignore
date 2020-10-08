@@ -66,6 +66,7 @@ subprojects/avtp
 subprojects/graphene
 subprojects/libmicrodns
 subprojects/libpsl
+subprojects/libwpe
 prefix/
 pygobject
 .gdbinit
