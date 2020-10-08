@@ -40,6 +40,8 @@ struct _GstVaPool
   gboolean add_videometa;
   gboolean need_alignment;
   GstVideoAlignment video_align;
+
+  gboolean starting;
 };
 
 #define gst_va_pool_parent_class parent_class
@@ -223,10 +225,16 @@ no_memory:
 static void
 gst_va_pool_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
+  GstVaPool *vpool = GST_VA_POOL (pool);
+
   /* Clears all the memories and only pool the GstBuffer objects */
-  gst_buffer_remove_all_memory (buffer);
+  if (G_LIKELY (!vpool->starting))
+    gst_buffer_remove_all_memory (buffer);
+
   GST_BUFFER_POOL_CLASS (parent_class)->reset_buffer (pool, buffer);
-  GST_BUFFER_FLAGS (buffer) = 0;
+
+  if (G_LIKELY (!vpool->starting))
+    GST_BUFFER_FLAGS (buffer) = 0;
 }
 
 static GstFlowReturn
@@ -268,6 +276,19 @@ gst_va_pool_flush_start (GstBufferPool * pool)
     gst_va_allocator_flush (vpool->allocator);
 }
 
+static gboolean
+gst_va_pool_start (GstBufferPool * pool)
+{
+  GstVaPool *vpool = GST_VA_POOL (pool);
+  gboolean ret;
+
+  vpool->starting = TRUE;
+  ret = GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+  vpool->starting = FALSE;
+
+  return ret;
+}
+
 static void
 gst_va_pool_dispose (GObject * object)
 {
@@ -294,7 +315,7 @@ gst_va_pool_class_init (GstVaPoolClass * klass)
   gstbufferpool_class->reset_buffer = gst_va_pool_reset_buffer;
   gstbufferpool_class->acquire_buffer = gst_va_pool_acquire_buffer;
   gstbufferpool_class->flush_start = gst_va_pool_flush_start;
-  gstbufferpool_class->start = NULL;
+  gstbufferpool_class->start = gst_va_pool_start;
 }
 
 static void
