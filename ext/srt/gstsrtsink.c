@@ -178,6 +178,10 @@ gst_srt_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   if (gst_srt_object_write (self->srtobject, self->headers, &info,
           self->cancellable, &error) < 0) {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+        ("Failed to write to SRT socket: %s",
+            error ? error->message : "Unknown error"), (NULL));
+    g_clear_error (&error);
     ret = GST_FLOW_ERROR;
   }
 
