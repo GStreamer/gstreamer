@@ -5428,6 +5428,13 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
+
+  if (priv->blocking && GST_CLOCK_TIME_IS_VALID (priv->blocked_running_time)) {
+    *position = priv->blocked_running_time;
+    g_mutex_unlock (&priv->lock);
+    return TRUE;
+  }
+
   /* depending on the transport type, it should query corresponding sink */
   if (priv->configured_protocols & GST_RTSP_LOWER_TRANS_UDP)
     sink = priv->udpsink[0];
