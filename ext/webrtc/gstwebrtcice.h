@@ -101,9 +101,6 @@ void                        gst_webrtc_ice_set_on_ice_candidate     (GstWebRTCIC
                                                                      gpointer user_data,
                                                                      GDestroyNotify notify);
 
-void                        gst_webrtc_ice_set_tos                  (GstWebRTCICE * ice,
-                                                                     GstWebRTCICEStream * stream,
-                                                                     guint tos);
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_ICE_H__ */

@@ -40,7 +40,6 @@ struct _WebRTCTransceiver
   TransportStream          *stream;
   GstStructure             *local_rtx_ssrc_map;
   guint                     current_ssrc;
-  GstEvent                 *ssrc_event;
 
   /* Properties */
   GstWebRTCFECType         fec_type;
