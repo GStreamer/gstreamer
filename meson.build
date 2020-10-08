@@ -29,12 +29,7 @@ if pythonver.version_compare('<3.0')
   error('Python2 is not supported anymore, please port your code to python3 (@0@ specified)'.format(python.language_version()))
 endif
 
-# Workaround for https://github.com/mesonbuild/meson/issues/5629
-# https://gitlab.freedesktop.org/gstreamer/gst-python/issues/28
-python_dep = dependency('python-@0@-embed'.format(pythonver), version: '>=3', required: false)
-if not python_dep.found()
-  python_dep = python.dependency(required : true)
-endif
+python_dep = python.dependency(embed:true, required : true)
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')
 pylib_loc = get_option('libpython-dir')
