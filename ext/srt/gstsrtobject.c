@@ -1532,13 +1532,6 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
       continue;
     }
 
-    if (srt_getsockflag (wsock, SRTO_PAYLOADSIZE, &payload_size, &optlen)) {
-      GST_WARNING_OBJECT (srtobject->element, "%s", srt_getlasterror_str ());
-      break;
-    }
-
-    rest = MIN (mapinfo->size - len, payload_size);
-
     switch (srt_getsockstate (wsock)) {
       case SRTS_BROKEN:
       case SRTS_NONEXIST:
@@ -1559,6 +1552,14 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
         /* not-ready */
         continue;
     }
+
+    if (srt_getsockflag (wsock, SRTO_PAYLOADSIZE, &payload_size, &optlen)) {
+      GST_ELEMENT_ERROR (srtobject->element, RESOURCE, WRITE, NULL,
+          ("%s", srt_getlasterror_str ()));
+      break;
+    }
+
+    rest = MIN (mapinfo->size - len, payload_size);
 
     sent = srt_sendmsg2 (wsock, (char *) (msg + len), rest, 0);
     if (sent < 0) {
