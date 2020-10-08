@@ -46,6 +46,7 @@ typedef enum {
   GST_TIME_OVERLAY_TIME_LINE_STREAM_TIME,
   GST_TIME_OVERLAY_TIME_LINE_RUNNING_TIME,
   GST_TIME_OVERLAY_TIME_LINE_TIME_CODE,
+  GST_TIME_OVERLAY_TIME_LINE_ELAPSED_RUNNING_TIME,
 } GstTimeOverlayTimeLine;
 
 /**
@@ -63,6 +64,10 @@ struct _GstTimeOverlay {
   gboolean show_times_as_dates;
   gchar *datetime_format;
   GDateTime *datetime_epoch;
+
+  /* For GST_TIME_OVERLAY_TIME_LINE_ELAPSED_RUNNING_TIME mode */
+  GstClockTime first_running_time;
+  GstPadEventFunction orig_video_event;
 };
 
 struct _GstTimeOverlayClass {
