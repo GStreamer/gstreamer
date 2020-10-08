@@ -195,7 +195,7 @@ static GstCaps *gst_video_scale_transform_caps (GstBaseTransform * trans,
 static GstCaps *gst_video_scale_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_video_scale_transform_meta (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstMeta * meta, GstBuffer * outbuf);
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
 static gboolean gst_video_scale_set_info (GstVideoFilter * filter,
     GstCaps * in, GstVideoInfo * in_info, GstCaps * out,
@@ -500,8 +500,8 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_video_scale_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstMeta * meta, GstBuffer * outbuf)
+gst_video_scale_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
 {
   GstVideoFilter *videofilter = GST_VIDEO_FILTER (trans);
   const GstMetaInfo *info = meta->info;
@@ -535,7 +535,7 @@ gst_video_scale_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
   /* Cant handle the tags in this meta, let the parent class handle it */
   if (!should_copy) {
     return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
-        inbuf, meta, outbuf);
+        outbuf, meta, inbuf);
   }
 
   /* This meta is size sensitive, try to transform it accordingly */
