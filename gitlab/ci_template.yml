@@ -1,5 +1,5 @@
 include:
-  - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
 
 stages:
   - 'build docker'
@@ -329,12 +329,11 @@ manifest:
     - if: '$CI_PROJECT_PATH == "gstreamer/cerbero"'
     - if: '$CI_PROJECT_PATH == "gstreamer/gst-docs"'
 
-    # If the user that triggered the Pipeline is the Merge bot and the branch doesn't match
-    # the upstream branch set, run the pipeline
-    - if: '$GITLAB_USER_LOGIN == "gstreamer-merge-bot" && $CI_COMMIT_BRANCH != $GST_UPSTREAM_BRANCH'
-    # When the user isn't the merge bot, require an explicit action to trigger the pipeline
+    # If the MR is assigned to the Merge bot, trigger the pipeline automatically
+    - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
+    # When the assignee isn't the merge bot, require an explicit action to trigger the pipeline
     # to avoid wasting CI resources
-    - if: '$GITLAB_USER_LOGIN != "gstreamer-merge-bot"'
+    - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
       when: 'manual'
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
@@ -880,7 +879,7 @@ build cerbero cross-android universal:
     - '.cerbero'
     - '.cerbero cross-android universal'
   rules:
-    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
+    - if: '$CI_MERGE_REQUEST_IID && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
@@ -967,7 +966,7 @@ build cerbero cross win64:
 cross-android universal examples:
   extends: ".cross-android universal examples"
   rules:
-    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
+    - if: '$CI_MERGE_REQUEST_IID && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-android universal"
@@ -1046,7 +1045,7 @@ build cerbero cross-ios universal:
     - '.cerbero'
     - '.cerbero cross-ios universal'
   rules:
-    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
+    - if: '$CI_MERGE_REQUEST_IID && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 documentation:
@@ -1147,7 +1146,7 @@ documentation:
 cross-ios universal examples:
   extends: ".cross-ios universal examples"
   rules:
-    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
+    - if: '$CI_MERGE_REQUEST_IID && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-ios universal"
