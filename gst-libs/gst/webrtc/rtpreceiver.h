@@ -37,14 +37,6 @@ GType gst_webrtc_rtp_receiver_get_type(void);
 
 /**
  * GstWebRTCRTPReceiver:
- * @transport: The transport for RTP packets
- * @rtcp_transport: The transport for RTCP packets without rtcp-mux
- *
- * An object to track the receiving aspect of the stream
- *
- * Mostly matches the WebRTC RTCRtpReceiver interface.
- *
- * Since: 1.16
  */
 struct _GstWebRTCRTPReceiver
 {
