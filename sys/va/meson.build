@@ -1,6 +1,7 @@
 va_sources = [
   'plugin.c',
   'gstvaallocator.c',
+  'gstvabasedec.c',
   'gstvacaps.c',
   'gstvadecoder.c',
   'gstvadisplay.c',
