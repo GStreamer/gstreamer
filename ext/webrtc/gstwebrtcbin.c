@@ -200,6 +200,17 @@ _have_dtls_elements (GstWebRTCBin * webrtc)
 G_DEFINE_TYPE (GstWebRTCBinPad, gst_webrtc_bin_pad, GST_TYPE_GHOST_PAD);
 
 static void
+gst_webrtc_bin_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_webrtc_bin_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
@@ -237,6 +248,7 @@ gst_webrtc_bin_pad_class_init (GstWebRTCBinPadClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->get_property = gst_webrtc_bin_pad_get_property;
+  gobject_class->set_property = gst_webrtc_bin_pad_set_property;
   gobject_class->finalize = gst_webrtc_bin_pad_finalize;
 
   g_object_class_install_property (gobject_class,
