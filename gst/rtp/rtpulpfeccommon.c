@@ -123,7 +123,13 @@ _xor_mem (guint8 * restrict dst, const guint8 * restrict src, gsize length)
   guint i;
 
   for (i = 0; i < (length / sizeof (guint64)); ++i) {
-    *((guint64 *) dst) ^= *((const guint64 *) src);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_WRITE_UINT64_LE (dst,
+        GST_READ_UINT64_LE (dst) ^ GST_READ_UINT64_LE (src));
+#else
+    GST_WRITE_UINT64_BE (dst,
+        GST_READ_UINT64_BE (dst) ^ GST_READ_UINT64_BE (src));
+#endif
     dst += sizeof (guint64);
     src += sizeof (guint64);
   }
