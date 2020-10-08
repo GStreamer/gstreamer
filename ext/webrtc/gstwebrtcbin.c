@@ -2870,47 +2870,6 @@ _media_add_rtx (GstSDPMedia * media, WebRTCTransceiver * trans,
   }
 }
 
-static GstWebRTCKind
-_kind_from_caps (const GstCaps * caps)
-{
-  GstStructure *s;
-  const gchar *media;
-
-  if (gst_caps_get_size (caps) == 0)
-    return GST_WEBRTC_KIND_UNKNOWN;
-
-  s = gst_caps_get_structure (caps, 0);
-
-  media = gst_structure_get_string (s, "media");
-  if (media == NULL)
-    return GST_WEBRTC_KIND_UNKNOWN;
-
-  if (!g_strcmp0 (media, "audio"))
-    return GST_WEBRTC_KIND_AUDIO;
-
-  if (!g_strcmp0 (media, "video"))
-    return GST_WEBRTC_KIND_VIDEO;
-
-  return GST_WEBRTC_KIND_UNKNOWN;
-}
-
-static gboolean
-_update_transceiver_kind_from_caps (GstWebRTCRTPTransceiver * trans,
-    const GstCaps * caps)
-{
-  GstWebRTCKind kind = _kind_from_caps (caps);
-
-  if (trans->kind == kind)
-    return TRUE;
-
-  if (trans->kind == GST_WEBRTC_KIND_UNKNOWN) {
-    trans->kind = kind;
-    return TRUE;
-  } else {
-    return FALSE;
-  }
-}
-
 static void
 _get_rtx_target_pt_and_ssrc_from_caps (GstCaps * answer_caps, gint * target_pt,
     guint * target_ssrc)
@@ -3221,10 +3180,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       } else {
         trans = WEBRTC_TRANSCEIVER (rtp_trans);
       }
-      if (!_update_transceiver_kind_from_caps (rtp_trans, answer_caps))
-        GST_WARNING_OBJECT (webrtc,
-            "Trying to change transceiver %d kind from %d to %d",
-            rtp_trans->mline, rtp_trans->kind, _kind_from_caps (answer_caps));
 
       if (!trans->do_nack) {
         answer_caps = gst_caps_make_writable (answer_caps);
@@ -3843,20 +3798,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   int i;
 
   rtp_trans->mline = media_idx;
-
-  if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio")) {
-    if (rtp_trans->kind == GST_WEBRTC_KIND_VIDEO)
-      GST_FIXME_OBJECT (webrtc,
-          "Updating video transceiver to audio, which isn't fully supported.");
-    rtp_trans->kind = GST_WEBRTC_KIND_AUDIO;
-  }
-
-  if (!g_strcmp0 (gst_sdp_media_get_media (media), "video")) {
-    if (rtp_trans->kind == GST_WEBRTC_KIND_AUDIO)
-      GST_FIXME_OBJECT (webrtc,
-          "Updating audio transceiver to video, which isn't fully supported.");
-    rtp_trans->kind = GST_WEBRTC_KIND_VIDEO;
-  }
 
   for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
     const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
@@ -5119,10 +5060,8 @@ gst_webrtc_bin_add_transceiver (GstWebRTCBin * webrtc,
       "Created new unassociated transceiver %" GST_PTR_FORMAT, trans);
 
   rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
-  if (caps) {
+  if (caps)
     rtp_trans->codec_preferences = gst_caps_ref (caps);
-    _update_transceiver_kind_from_caps (rtp_trans, caps);
-  }
 
   return gst_object_ref (trans);
 }
@@ -5972,12 +5911,6 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
           " for mline %u", trans, serial);
     }
     pad->trans = gst_object_ref (trans);
-
-    if (caps && name && !_update_transceiver_kind_from_caps (trans, caps))
-      GST_WARNING_OBJECT (webrtc,
-          "Trying to create pad %s with caps %" GST_PTR_FORMAT
-          " but transceiver %d already exists with a different"
-          " media type", name, caps, serial);
 
     pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
         GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
