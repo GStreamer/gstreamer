@@ -42,6 +42,7 @@ gboolean              gst_caps_set_format_array           (GstCaps * caps,
 
 gboolean              gst_caps_is_dmabuf                  (GstCaps * caps);
 gboolean              gst_caps_is_vamemory                (GstCaps * caps);
+gboolean              gst_caps_is_raw                     (GstCaps * caps);
 
 G_END_DECLS
 
