@@ -306,7 +306,7 @@ static gboolean default_copy_metadata (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean
 gst_base_transform_default_transform_meta (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstMeta * meta, GstBuffer * outbuf);
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -502,7 +502,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_base_transform_default_transform_meta (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstMeta * meta, GstBuffer * outbuf)
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
 {
   const GstMetaInfo *info = meta->info;
   const gchar *const *tags;
