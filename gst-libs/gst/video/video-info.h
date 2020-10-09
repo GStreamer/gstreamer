@@ -68,7 +68,7 @@ typedef struct _GstVideoInfo GstVideoInfo;
  * @GST_VIDEO_INTERLACE_MODE_ALTERNATE: 1 field is stored in one buffer,
  *     @GST_VIDEO_BUFFER_FLAG_TF or @GST_VIDEO_BUFFER_FLAG_BF indicates if
  *     the buffer is carrying the top or bottom field, respectively. The top and
- *     bottom buffers are expected to alternate in the pipeline, with this mode
+ *     bottom buffers must alternate in the pipeline, with this mode
  *     (Since: 1.16).
  *
  * The possible values of the #GstVideoInterlaceMode describing the interlace
