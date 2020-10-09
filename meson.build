@@ -84,6 +84,14 @@ cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
 configure_file(output : 'config.h', configuration : cdata)
 configinc = include_directories('.')
 
+pkgconfig = import('pkgconfig')
+plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+if get_option('default_library') == 'shared'
+  # If we don't build static plugins there is no need to generate pc files
+  plugins_pkgconfig_install_dir = disabler()
+endif
+
 subdir('gi')
 subdir('plugin')
 subdir('testsuite')
