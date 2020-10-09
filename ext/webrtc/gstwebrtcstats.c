@@ -110,18 +110,19 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     out_id = g_strdup_printf ("rtp-outbound-stream-stats_%u", ssrc);
     r_in_id = g_strdup_printf ("rtp-remote-inbound-stream-stats_%u", ssrc);
 
-    gst_structure_get (source_stats, "have-rb", G_TYPE_BOOLEAN, &have_rb,
-        NULL);
+    gst_structure_get (source_stats, "have-rb", G_TYPE_BOOLEAN, &have_rb, NULL);
 
     r_in = gst_structure_new_empty (r_in_id);
     _set_base_stats (r_in, GST_WEBRTC_STATS_REMOTE_INBOUND_RTP, ts, r_in_id);
 
-    /* RTCStreamStats */
+    /* RTCRtpStreamStats */
     gst_structure_set (r_in, "local-id", G_TYPE_STRING, out_id, NULL);
     gst_structure_set (r_in, "ssrc", G_TYPE_UINT, ssrc, NULL);
     gst_structure_set (r_in, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (r_in, "transport-id", G_TYPE_STRING, transport_id, NULL);
-    /* XXX: mediaType, trackId, sliCount, qpSum */
+    /* To be added: kind */
+
+    /* RTCReceivedRtpStreamStats */
 
     if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
       gst_structure_set (r_in, "packets-received", G_TYPE_UINT64, packets,
@@ -132,20 +133,32 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
       gst_structure_set (r_in, "jitter", G_TYPE_DOUBLE,
           CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
 
-/* XXX: RTCReceivedRTPStreamStats
-    double             fractionLost;
-    unsigned long      packetsDiscarded;
-    unsigned long      packetsFailedDecryption;
-    unsigned long      packetsRepaired;
-    unsigned long      burstPacketsLost;
-    unsigned long      burstPacketsDiscarded;
-    unsigned long      burstLossCount;
-    unsigned long      burstDiscardCount;
-    double             burstLossRate;
-    double             burstDiscardRate;
-    double             gapLossRate;
-    double             gapDiscardRate;
-*/
+    /* RTCReceivedRtpStreamStats:
+
+       To be added:
+
+       double             fractionLost;
+       unsigned long      packetsDiscarded;
+       unsigned long      packetsRepaired;
+       unsigned long      burstPacketsLost;
+       unsigned long      burstPacketsDiscarded;
+       unsigned long      burstLossCount;
+       unsigned long      burstDiscardCount;
+       double             burstLossRate;
+       double             burstDiscardRate;
+       double             gapLossRate;
+       double             gapDiscardRate;
+
+       Can't be implemented frame re-assembly happens after rtpbin:
+
+       unsigned long        framesDropped;
+       unsigned long        partialFramesLost;
+       unsigned long        fullFramesLost;
+     */
+
+
+    /* RTCRemoteInboundRTPStreamStats */
+
     if (have_rb) {
       guint32 rtt;
       if (gst_structure_get_uint (source_stats, "rb-round-trip", &rtt)) {
@@ -155,8 +168,15 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
       }
     }
 
-    /* RTCRemoteInboundRTPStreamStats */
-    /* XXX: framesDecoded, lastPacketReceivedTimestamp */
+    /* RTCRemoteInboundRTPStreamStats:
+
+       To be added:
+
+       DOMString            localId;
+       double               totalRoundTripTime;
+       unsigned long long   reportsReceived;
+       unsigned long long   roundTripTimeMeasurements;
+     */
 
     out = gst_structure_new_empty (out_id);
     _set_base_stats (out, GST_WEBRTC_STATS_OUTBOUND_RTP, ts, out_id);
@@ -165,6 +185,17 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (out, "ssrc", G_TYPE_UINT, ssrc, NULL);
     gst_structure_set (out, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (out, "transport-id", G_TYPE_STRING, transport_id, NULL);
+    /* To be added: kind */
+
+
+    /* RTCSentRtpStreamStats  */
+    if (gst_structure_get_uint64 (source_stats, "octets-sent", &bytes))
+      gst_structure_set (out, "bytes-sent", G_TYPE_UINT64, bytes, NULL);
+    if (gst_structure_get_uint64 (source_stats, "packets-sent", &packets))
+      gst_structure_set (out, "packets-sent", G_TYPE_UINT64, packets, NULL);
+
+    /* RTCOutboundRTPStreamStats */
+
     if (gst_structure_get_uint (source_stats, "sent-fir-count", &fir))
       gst_structure_set (out, "fir-count", G_TYPE_UINT, fir, NULL);
     if (gst_structure_get_uint (source_stats, "sent-pli-count", &pli))
@@ -173,25 +204,55 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
       gst_structure_set (out, "nack-count", G_TYPE_UINT, nack, NULL);
     /* XXX: mediaType, trackId, sliCount, qpSum */
 
-/* RTCSentRTPStreamStats */
-    if (gst_structure_get_uint64 (source_stats, "octets-sent", &bytes))
-      gst_structure_set (out, "bytes-sent", G_TYPE_UINT64, bytes, NULL);
-    if (gst_structure_get_uint64 (source_stats, "packets-sent", &packets))
-      gst_structure_set (out, "packets-sent", G_TYPE_UINT64, packets, NULL);
-/* XXX:
-    unsigned long      packetsDiscardedOnSend;
-    unsigned long long bytesDiscardedOnSend;
-*/
-
-    /* RTCOutboundRTPStreamStats */
     gst_structure_set (out, "remote-id", G_TYPE_STRING, r_in_id, NULL);
-/* XXX:
-    DOMHighResTimeStamp lastPacketSentTimestamp;
-    double              targetBitrate;
-    unsigned long       framesEncoded;
-    double              totalEncodeTime;
-    double              averageRTCPInterval;
-*/
+
+
+    /*  RTCOutboundRTPStreamStats:
+
+       To be added:
+
+       unsigned long        sliCount;
+       unsigned long        rtxSsrc;
+       DOMString            mediaSourceId;
+       DOMString            senderId;
+       DOMString            remoteId;
+       DOMString            rid;
+       DOMHighResTimeStamp  lastPacketSentTimestamp;
+       unsigned long long   headerBytesSent;
+       unsigned long        packetsDiscardedOnSend;
+       unsigned long long   bytesDiscardedOnSend;
+       unsigned long        fecPacketsSent;
+       unsigned long long   retransmittedPacketsSent;
+       unsigned long long   retransmittedBytesSent;
+       double               averageRtcpInterval;
+       record<USVString, unsigned long long> perDscpPacketsSent;
+
+       Not relevant because webrtcbin doesn't encode:
+
+       double               targetBitrate;
+       unsigned long long   totalEncodedBytesTarget;
+       unsigned long        frameWidth;
+       unsigned long        frameHeight;
+       unsigned long        frameBitDepth;
+       double               framesPerSecond;
+       unsigned long        framesSent;
+       unsigned long        hugeFramesSent;
+       unsigned long        framesEncoded;
+       unsigned long        keyFramesEncoded;
+       unsigned long        framesDiscardedOnSend;
+       unsigned long long   qpSum;
+       unsigned long long   totalSamplesSent;
+       unsigned long long   samplesEncodedWithSilk;
+       unsigned long long   samplesEncodedWithCelt;
+       boolean              voiceActivityFlag;
+       double               totalEncodeTime;
+       double               totalPacketSendDelay;
+       RTCQualityLimitationReason                 qualityLimitationReason;
+       record<DOMString, double> qualityLimitationDurations;
+       unsigned long        qualityLimitationResolutionChanges;
+       DOMString            encoderImplementation;
+     */
+
     gst_structure_set (s, out_id, GST_TYPE_STRUCTURE, out, NULL);
     gst_structure_set (s, r_in_id, GST_TYPE_STRUCTURE, r_in, NULL);
 
@@ -213,10 +274,51 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     in = gst_structure_new_empty (in_id);
     _set_base_stats (in, GST_WEBRTC_STATS_INBOUND_RTP, ts, in_id);
 
-    /* RTCStreamStats */
+    /* RTCRtpStreamStats */
     gst_structure_set (in, "ssrc", G_TYPE_UINT, ssrc, NULL);
     gst_structure_set (in, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (in, "transport-id", G_TYPE_STRING, transport_id, NULL);
+    /* To be added: kind */
+
+
+    /* RTCReceivedRtpStreamStats */
+
+    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
+      gst_structure_set (in, "packets-received", G_TYPE_UINT64, packets, NULL);
+    if (gst_structure_get_int (source_stats, "packets-lost", &lost))
+      gst_structure_set (in, "packets-lost", G_TYPE_INT, lost, NULL);
+    if (gst_structure_get_uint (source_stats, "jitter", &jitter))
+      gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
+          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
+
+    /*
+       RTCReceivedRtpStreamStats
+
+       To be added:
+
+       unsigned long long   packetsRepaired;
+       unsigned long long   burstPacketsLost;
+       unsigned long long   burstPacketsDiscarded;
+       unsigned long        burstLossCount;
+       unsigned long        burstDiscardCount;
+       double               burstLossRate;
+       double               burstDiscardRate;
+       double               gapLossRate;
+       double               gapDiscardRate;
+
+       Not relevant because webrtcbin doesn't decode:
+
+       unsigned long        framesDropped;
+       unsigned long        partialFramesLost;
+       unsigned long        fullFramesLost;
+     */
+
+    /* RTCInboundRtpStreamStats */
+    gst_structure_set (in, "remote-id", G_TYPE_STRING, r_out_id, NULL);
+
+    if (gst_structure_get_uint64 (source_stats, "octets-received", &bytes))
+      gst_structure_set (in, "bytes-received", G_TYPE_UINT64, bytes, NULL);
+
     if (gst_structure_get_uint (source_stats, "recv-fir-count", &fir))
       gst_structure_set (in, "fir-count", G_TYPE_UINT, fir, NULL);
     if (gst_structure_get_uint (source_stats, "recv-pli-count", &pli))
@@ -225,35 +327,55 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
       gst_structure_set (in, "nack-count", G_TYPE_UINT, nack, NULL);
     /* XXX: mediaType, trackId, sliCount, qpSum */
 
-    /* RTCReceivedRTPStreamStats */
-    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
-      gst_structure_set (in, "packets-received", G_TYPE_UINT64, packets, NULL);
-    if (gst_structure_get_uint64 (source_stats, "octets-received", &bytes))
-      gst_structure_set (in, "bytes-received", G_TYPE_UINT64, bytes, NULL);
-    if (gst_structure_get_int (source_stats, "packets-lost", &lost))
-      gst_structure_set (in, "packets-lost", G_TYPE_INT, lost, NULL);
-    if (gst_structure_get_uint (source_stats, "jitter", &jitter))
-      gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
-          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
-/*
-    RTCReceivedRTPStreamStats
-    double             fractionLost;
-    unsigned long      packetsDiscarded;
-    unsigned long      packetsFailedDecryption;
-    unsigned long      packetsRepaired;
-    unsigned long      burstPacketsLost;
-    unsigned long      burstPacketsDiscarded;
-    unsigned long      burstLossCount;
-    unsigned long      burstDiscardCount;
-    double             burstLossRate;
-    double             burstDiscardRate;
-    double             gapLossRate;
-    double             gapDiscardRate;
-*/
+    /* RTCInboundRtpStreamStats:
 
-    /* RTCInboundRTPStreamStats */
-    gst_structure_set (in, "remote-id", G_TYPE_STRING, r_out_id, NULL);
-    /* XXX: framesDecoded, lastPacketReceivedTimestamp */
+       To be added:
+
+       required DOMString   receiverId;
+       double               averageRtcpInterval;
+       unsigned long long   headerBytesReceived;
+       unsigned long long   fecPacketsReceived;
+       unsigned long long   fecPacketsDiscarded;
+       unsigned long long   bytesReceived;
+       unsigned long long   packetsFailedDecryption;
+       record<USVString, unsigned long long> perDscpPacketsReceived;
+       unsigned long        nackCount;
+       unsigned long        firCount;
+       unsigned long        pliCount;
+       unsigned long        sliCount;
+       double               jitterBufferDelay;
+
+       Not relevant because webrtcbin doesn't decode or depayload:
+       unsigned long        framesDecoded;
+       unsigned long        keyFramesDecoded;
+       unsigned long        frameWidth;
+       unsigned long        frameHeight;
+       unsigned long        frameBitDepth;
+       double               framesPerSecond;
+       unsigned long long   qpSum;
+       double               totalDecodeTime;
+       double               totalInterFrameDelay;
+       double               totalSquaredInterFrameDelay;
+       boolean              voiceActivityFlag;
+       DOMHighResTimeStamp  lastPacketReceivedTimestamp;
+       double               totalProcessingDelay;
+       DOMHighResTimeStamp  estimatedPlayoutTimestamp;
+       unsigned long long   jitterBufferEmittedCount;
+       unsigned long long   totalSamplesReceived;
+       unsigned long long   totalSamplesDecoded;
+       unsigned long long   samplesDecodedWithSilk;
+       unsigned long long   samplesDecodedWithCelt;
+       unsigned long long   concealedSamples;
+       unsigned long long   silentConcealedSamples;
+       unsigned long long   concealmentEvents;
+       unsigned long long   insertedSamplesForDeceleration;
+       unsigned long long   removedSamplesForAcceleration;
+       double               audioLevel;
+       double               totalAudioEnergy;
+       double               totalSamplesDuration;
+       unsigned long        framesReceived;
+       DOMString            decoderImplementation;
+     */
 
     r_out = gst_structure_new_empty (r_out_id);
     _set_base_stats (r_out, GST_WEBRTC_STATS_REMOTE_OUTBOUND_RTP, ts, r_out_id);
@@ -262,19 +384,64 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (r_out, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (r_out, "transport-id", G_TYPE_STRING, transport_id,
         NULL);
-    /* XXX: mediaType, trackId, sliCount, qpSum */
+    /* XXX: mediaType, trackId */
 
-/* RTCSentRTPStreamStats */
+    /* RTCSentRtpStreamStats */
+
     if (have_sr) {
       if (gst_structure_get_uint64 (source_stats, "sr-octet-count", &bytes))
         gst_structure_set (r_out, "bytes-sent", G_TYPE_UINT64, bytes, NULL);
       if (gst_structure_get_uint64 (source_stats, "sr-packet-count", &packets))
         gst_structure_set (r_out, "packets-sent", G_TYPE_UINT64, packets, NULL);
     }
-/* XXX:
-    unsigned long      packetsDiscardedOnSend;
-    unsigned long long bytesDiscardedOnSend;
-*/
+
+    /* RTCSentRtpStreamStats:
+
+       To be added:
+
+       unsigned long        rtxSsrc;
+       DOMString            mediaSourceId;
+       DOMString            senderId;
+       DOMString            remoteId;
+       DOMString            rid;
+       DOMHighResTimeStamp  lastPacketSentTimestamp;
+       unsigned long long   headerBytesSent;
+       unsigned long        packetsDiscardedOnSend;
+       unsigned long long   bytesDiscardedOnSend;
+       unsigned long        fecPacketsSent;
+       unsigned long long   retransmittedPacketsSent;
+       unsigned long long   retransmittedBytesSent;
+       double               averageRtcpInterval;
+       unsigned long        sliCount;
+
+       Can't be implemented because we don't decode:
+
+       double               targetBitrate;
+       unsigned long long   totalEncodedBytesTarget;
+       unsigned long        frameWidth;
+       unsigned long        frameHeight;
+       unsigned long        frameBitDepth;
+       double               framesPerSecond;
+       unsigned long        framesSent;
+       unsigned long        hugeFramesSent;
+       unsigned long        framesEncoded;
+       unsigned long        keyFramesEncoded;
+       unsigned long        framesDiscardedOnSend;
+       unsigned long long   qpSum;
+       unsigned long long   totalSamplesSent;
+       unsigned long long   samplesEncodedWithSilk;
+       unsigned long long   samplesEncodedWithCelt;
+       boolean              voiceActivityFlag;
+       double               totalEncodeTime;
+       double               totalPacketSendDelay;
+       RTCQualityLimitationReason                 qualityLimitationReason;
+       record<DOMString, double> qualityLimitationDurations;
+       unsigned long        qualityLimitationResolutionChanges;
+       record<USVString, unsigned long long> perDscpPacketsSent;
+       DOMString            encoderImplementation;
+     */
+
+    /* RTCRemoteOutboundRtpStreamStats */
 
     if (have_sr) {
       guint64 ntptime;
@@ -289,6 +456,10 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     }
 
     gst_structure_set (r_out, "local-id", G_TYPE_STRING, in_id, NULL);
+
+    /* To be added:
+       reportsSent
+     */
 
     gst_structure_set (s, in_id, GST_TYPE_STRUCTURE, in, NULL);
     gst_structure_set (s, r_out_id, GST_TYPE_STRUCTURE, r_out, NULL);
