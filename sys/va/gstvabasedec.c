@@ -323,6 +323,15 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  if (!base->has_videometa) {
+    if ((base->copy_frames = gst_va_pool_requires_video_meta (pool))) {
+      GST_INFO_OBJECT (base, "Raw frame copy enabled.");
+      _create_other_pool (base, other_allocator, &other_params, caps, size);
+    }
+  }
+  if (!base->copy_frames)
+    gst_clear_object (&base->other_pool);
+
   gst_object_unref (allocator);
   gst_object_unref (pool);
 

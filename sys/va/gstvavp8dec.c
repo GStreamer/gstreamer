@@ -46,7 +46,6 @@
 #include "gstvavp8dec.h"
 
 #include "gstvabasedec.h"
-#include "gstvapool.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_vp8dec_debug);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -74,7 +73,6 @@ struct _GstVaVp8Dec
   GstFlowReturn last_ret;
 
   gboolean need_negotiation;
-  gboolean copy_frames;
 };
 
 #define parent_class gst_va_base_dec_parent_class
@@ -187,14 +185,6 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
     }
-  }
-
-  if (!base->has_videometa) {
-    GstBufferPool *pool;
-
-    pool = gst_video_decoder_get_buffer_pool (GST_VIDEO_DECODER (self));
-    self->copy_frames = gst_va_pool_requires_video_meta (pool);
-    gst_object_unref (pool);
   }
 
   return TRUE;
@@ -460,6 +450,7 @@ static GstFlowReturn
 gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp8Dec *self = GST_VA_VP8_DEC (decoder);
 
   GST_LOG_OBJECT (self,
@@ -472,8 +463,8 @@ gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
     return self->last_ret;
   }
 
-  if (self->copy_frames)
-    gst_va_base_dec_copy_output_buffer (GST_VA_BASE_DEC (self), frame);
+  if (base->copy_frames)
+    gst_va_base_dec_copy_output_buffer (base, frame);
 
   gst_vp8_picture_unref (picture);
 

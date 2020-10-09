@@ -52,7 +52,6 @@
 #include "gstvah264dec.h"
 
 #include "gstvabasedec.h"
-#include "gstvapool.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264dec_debug);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -84,7 +83,6 @@ struct _GstVaH264Dec
   gint dpb_size;
 
   gboolean need_negotiation;
-  gboolean copy_frames;
 };
 
 #define parent_class gst_va_base_dec_parent_class
@@ -115,6 +113,7 @@ static GstFlowReturn
 gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
 
   GST_LOG_OBJECT (self,
@@ -126,8 +125,8 @@ gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
     return self->last_ret;
   }
 
-  if (self->copy_frames)
-    gst_va_base_dec_copy_output_buffer (GST_VA_BASE_DEC (self), frame);
+  if (base->copy_frames)
+    gst_va_base_dec_copy_output_buffer (base, frame);
 
   gst_h264_picture_unref (picture);
 
@@ -666,17 +665,6 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
     }
-  }
-
-  if (!base->has_videometa) {
-    GstBufferPool *pool;
-
-    pool = gst_video_decoder_get_buffer_pool (GST_VIDEO_DECODER (self));
-    self->copy_frames = gst_va_pool_requires_video_meta (pool);
-    gst_object_unref (pool);
-
-    if (self->copy_frames)
-      GST_INFO_OBJECT (self, "Raw frame copy enabled.");
   }
 
   return TRUE;
