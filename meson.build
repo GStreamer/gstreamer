@@ -130,7 +130,7 @@ host_defines = [
   [ 's390', 'HAVE_CPU_S390' ],
 ]
 foreach h : host_defines
-  if h.get(0) == host_machine.cpu()
+  if h.get(0) == host_machine.cpu_family()
     core_conf.set(h.get(1), 1)
   endif
 endforeach
