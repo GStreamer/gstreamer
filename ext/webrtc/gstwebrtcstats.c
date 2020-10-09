@@ -105,9 +105,13 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
   if (internal) {
     GstStructure *r_in, *out;
     gchar *out_id, *r_in_id;
+    gboolean have_rb = FALSE;
 
     out_id = g_strdup_printf ("rtp-outbound-stream-stats_%u", ssrc);
     r_in_id = g_strdup_printf ("rtp-remote-inbound-stream-stats_%u", ssrc);
+
+    gst_structure_get (source_stats, "have-rb", G_TYPE_BOOLEAN, &have_rb,
+        NULL);
 
     r_in = gst_structure_new_empty (r_in_id);
     _set_base_stats (r_in, GST_WEBRTC_STATS_REMOTE_INBOUND_RTP, ts, r_in_id);
@@ -142,6 +146,14 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     double             gapLossRate;
     double             gapDiscardRate;
 */
+    if (have_rb) {
+      guint32 rtt;
+      if (gst_structure_get_uint (source_stats, "rb-round-trip", &rtt)) {
+        /* 16.16 fixed point to double */
+        double val = FIXED_16_16_TO_DOUBLE (rtt);
+        gst_structure_set (r_in, "round-trip-time", G_TYPE_DOUBLE, val, NULL);
+      }
+    }
 
     /* RTCRemoteInboundRTPStreamStats */
     /* XXX: framesDecoded, lastPacketReceivedTimestamp */
@@ -191,10 +203,9 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
   } else {
     GstStructure *in, *r_out;
     gchar *r_out_id, *in_id;
-    gboolean have_rb = FALSE, have_sr = FALSE;
+    gboolean have_sr = FALSE;
 
-    gst_structure_get (source_stats, "have-rb", G_TYPE_BOOLEAN, &have_rb,
-        "have-sr", G_TYPE_BOOLEAN, &have_sr, NULL);
+    gst_structure_get (source_stats, "have-sr", G_TYPE_BOOLEAN, &have_sr, NULL);
 
     in_id = g_strdup_printf ("rtp-inbound-stream-stats_%u", ssrc);
     r_out_id = g_strdup_printf ("rtp-remote-outbound-stream-stats_%u", ssrc);
@@ -251,17 +262,6 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (r_out, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (r_out, "transport-id", G_TYPE_STRING, transport_id,
         NULL);
-    if (have_rb) {
-      guint32 rtt;
-      if (gst_structure_get_uint (source_stats, "rb-round-trip", &rtt)) {
-        /* 16.16 fixed point to double */
-        double val = FIXED_16_16_TO_DOUBLE (rtt);
-        gst_structure_set (r_out, "round-trip-time", G_TYPE_DOUBLE, val, NULL);
-      }
-    } else {
-      /* default values */
-      gst_structure_set (r_out, "round-trip-time", G_TYPE_DOUBLE, 0.0, NULL);
-    }
     /* XXX: mediaType, trackId, sliCount, qpSum */
 
 /* RTCSentRTPStreamStats */
