@@ -366,16 +366,32 @@ if host_system == 'windows'
   platform_deps = [cc.find_library('ws2_32')]
 endif
 
+building_for_uwp = false
+if host_system == 'windows'
+  # Check whether we're building for UWP apps
+  code = '''
+  #include <windows.h>
+  #if !(WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP))
+  #error "Not building for UWP"
+  #endif'''
+  if cc.compiles(code, name : 'building for UWP')
+    building_for_uwp = true
+  endif
+endif
+
 backtrace_deps = []
 unwind_dep = dependency('libunwind', required : get_option('libunwind'))
 dw_dep = dependency('libdw', required: get_option('libdw'))
 dbghelp_option = get_option('dbghelp')
+if dbghelp_option.enabled() and building_for_uwp
+  error('DbgHelp is not supported for UWP')
+endif
 have_dbghelp = cc.has_header('dbghelp.h', required: dbghelp_option) and cc.has_header('tlhelp32.h', required: dbghelp_option)
 backtrace_deps = [unwind_dep, dw_dep]
 backtrace_source_info = false
 backtrace_minimal = false
 # MSVC debug stack trace support
-if host_system == 'windows' and have_dbghelp
+if host_system == 'windows' and have_dbghelp and not building_for_uwp
   cdata.set('HAVE_DBGHELP', 1)
   backtrace_source_info = true
 # DWARF stack trace support with libunwind and elf-utils
