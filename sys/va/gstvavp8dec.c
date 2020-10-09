@@ -18,6 +18,27 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-vavp8dec
+ * @title: vavp8dec
+ * @short_description: A VA-API based VP8 video decoder
+ *
+ * vavp8dec decodes VP8 bitstreams to VA surfaces using the
+ * installed and chosen [VA-API](https://01.org/linuxmedia/vaapi)
+ * driver.
+ *
+ * The decoding surfaces can be mapped onto main memory as video
+ * frames.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.webm ! parsebin ! vavp8dec ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
