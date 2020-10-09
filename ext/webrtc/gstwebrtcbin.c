@@ -4888,6 +4888,11 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
             ssrc_item.media_idx = i;
             ssrc_item.ssrc = ssrc;
             g_array_append_val (item->remote_ssrcmap, ssrc_item);
+
+            /* Must be done aftrer the value has been appended because
+             * a weak ref cannot be moved. */
+            g_weak_ref_init (&g_array_index (item->remote_ssrcmap, SsrcMapItem,
+                    item->remote_ssrcmap->len - 1).rtpjitterbuffer, NULL);
           }
           g_strfreev (split);
         }
@@ -5981,15 +5986,26 @@ static void
 on_rtpbin_new_jitterbuffer (GstElement * rtpbin, GstElement * jitterbuffer,
     guint session_id, guint ssrc, GstWebRTCBin * webrtc)
 {
-  GstWebRTCRTPTransceiver *trans;
+  WebRTCTransceiver *trans;
+  guint i;
 
-  trans = _find_transceiver (webrtc, &session_id,
+  trans = (WebRTCTransceiver *) _find_transceiver (webrtc, &session_id,
       (FindTransceiverFunc) transceiver_match_for_mline);
 
   if (trans) {
     /* We don't set do-retransmission on rtpbin as we want per-session control */
     g_object_set (jitterbuffer, "do-retransmission",
         WEBRTC_TRANSCEIVER (trans)->do_nack, NULL);
+
+    for (i = 0; i < trans->stream->remote_ssrcmap->len; i++) {
+      SsrcMapItem *item =
+          &g_array_index (trans->stream->remote_ssrcmap, SsrcMapItem, i);
+
+      if (item->ssrc == ssrc) {
+        g_weak_ref_set (&item->rtpjitterbuffer, jitterbuffer);
+        break;
+      }
+    }
   } else {
     g_assert_not_reached ();
   }

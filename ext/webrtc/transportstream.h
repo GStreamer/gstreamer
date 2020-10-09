@@ -41,6 +41,7 @@ typedef struct
 {
   guint32 ssrc;
   guint media_idx;
+  GWeakRef rtpjitterbuffer; /* for stats */
 } SsrcMapItem;
 
 struct _TransportStream

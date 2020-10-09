@@ -289,6 +289,11 @@ clear_ptmap_item (PtMapItem * item)
   if (item->caps)
     gst_caps_unref (item->caps);
 }
+static void
+clear_ssrcmap_item (SsrcMapItem * item)
+{
+  g_weak_ref_clear (&item->rtpjitterbuffer);
+}
 
 static void
 transport_stream_init (TransportStream * stream)
@@ -296,6 +301,8 @@ transport_stream_init (TransportStream * stream)
   stream->ptmap = g_array_new (FALSE, TRUE, sizeof (PtMapItem));
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
   stream->remote_ssrcmap = g_array_new (FALSE, TRUE, sizeof (SsrcMapItem));
+  g_array_set_clear_func (stream->remote_ssrcmap,
+      (GDestroyNotify) clear_ssrcmap_item);
 }
 
 TransportStream *
