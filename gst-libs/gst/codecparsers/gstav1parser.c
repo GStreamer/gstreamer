@@ -520,7 +520,6 @@ av1_parser_init_sequence_header (GstAV1SequenceHeaderOBU * seq_header)
 static void
 gst_av1_parse_reset_state (GstAV1Parser * parser, gboolean free_sps)
 {
-  parser->state.seen_frame_header = 0;
   parser->state.begin_first_frame = FALSE;
 
   parser->state.prev_frame_id = 0;
@@ -4460,14 +4459,15 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
     }
   }
 
-  /* Not implement here, the real decoder process
-     if (tile_group->tg_end == tile_group->num_tiles - 1) {
-     if ( !disable_frame_end_update_cdf ) {
-     frame_end_update_cdf( )
-     }
-     decode_frame_wrapup( )
-     }
-   */
+  if (tile_group->tg_end == tile_group->num_tiles - 1) {
+    /* Not implement here, the real decoder process
+       if ( !disable_frame_end_update_cdf ) {
+       frame_end_update_cdf( )
+       }
+       decode_frame_wrapup( )
+     */
+    parser->state.seen_frame_header = 0;
+  }
 
   return GST_AV1_PARSER_OK;
 
@@ -4629,7 +4629,6 @@ gst_av1_parser_parse_frame_obu (GstAV1Parser * parser, GstAV1OBU * obu,
     return GST_AV1_PARSER_NO_MORE_DATA;
 
   retval = gst_av1_parse_tile_group (parser, &bit_reader, &(frame->tile_group));
-  parser->state.seen_frame_header = 0;
   return retval;
 }
 
