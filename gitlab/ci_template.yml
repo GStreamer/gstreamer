@@ -575,26 +575,20 @@ gstreamer-full:
     MESON_ARGS: >
       --default-library=static
       -Dauto_features=disabled
-      -Dgst-plugins-good:alpha=enabled
+      -Dgstreamer:check=enabled
+      -Dtests=enabled
       $MESON_GST_WERROR
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gst-build|gst-ci)$/'
 
-  after_script:
-  - cd gst-build/
-  - ninja -C build install
-  - export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib64/gstreamer-1.0/pkgconfig
-  - export LD_LIBRARY_PATH=/usr/local/lib64
-  - cd examples/static-plugins
-  - meson _build
-  - ninja -C _build
-  - meson test -C _build -v
+  script:
+  - *gst_build
+  - meson test -C build -v test-gst-full
   artifacts:
     expire_in: "7 days"
     when: "always"
     paths:
-      - 'gst-build/build/meson-logs/'
-      - 'gst-build/build/gstinitstaticplugins.c'
+      - 'meson-logs/'
 
 # Valgrind
 .valgrind fedora x86_64:
