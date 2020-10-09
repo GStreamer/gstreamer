@@ -586,6 +586,7 @@ integration testsuites fedora:
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-examples|gst-omx|gstreamer-sharp|gst-plugins-rs)$/'
 
+# gstreamer-full
 gstreamer-full:
   extends: 'build static fedora x86_64'
   stage: integrate
@@ -602,6 +603,38 @@ gstreamer-full:
   script:
   - *gst_build
   - meson test -C build -v test-gst-full
+  artifacts:
+    expire_in: "7 days"
+    when: "always"
+    paths:
+      - 'meson-logs/'
+
+gstreamer-full-minimal:
+  extends: 'build static fedora x86_64'
+  stage: integrate
+  variables:
+    MESON_ARGS: >
+      --default-library=static
+      -Dauto_features=disabled
+      -Dgstreamer:check=enabled
+      -Dtests=enabled
+      -Dgst-plugins-base:alsa=enabled
+      -Dgst-plugins-base:typefind=enabled
+      -Dgst-plugins-base:pbtypes=enabled
+      -Dgst-full-elements=coreelements:filesrc,fakesink,identity,input-selector
+      -Dgst-full-typefind-functions=typefindfunctions:wav,flv
+      -Dgst-full-device-providers=alsa:alsadeviceprovider
+      -Dgst-full-dynamic-types=pbtypes:video_multiview_flagset
+      $MESON_GST_WERROR
+  rules:
+    - if: '$CI_PROJECT_NAME =~ /^(gst-build|gst-ci)$/'
+
+  script:
+  - *gst_build
+  - meson test -C build -v test-gst-full
+  - meson test -C build test-gst-full-features --test-args "-e filesrc,identity,fakesink -E filesink,capsfilter -t audio/x-wav -T video/vivo -d alsadeviceprovider -D v4l2deviceprovider -l GstVideoMultiviewFlagsSet"
+  - strip build/libgstreamer-full-1.0.so
+  - ls -l build/libgstreamer-full-1.0.so
   artifacts:
     expire_in: "7 days"
     when: "always"
