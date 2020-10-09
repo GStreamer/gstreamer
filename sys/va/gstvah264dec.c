@@ -102,8 +102,10 @@ struct _GstVaH264Dec
   guint rt_format;
   gint dpb_size;
 
+  gboolean need_videoalign;
+  GstVideoAlignment valign;
+
   gboolean need_negotiation;
-  gboolean need_cropping;
   gboolean has_videometa;
   gboolean copy_frames;
 };
@@ -734,8 +736,16 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
         self->display_height);
   }
 
-  self->need_cropping = self->display_width < self->coded_width
+  self->need_videoalign = self->display_width < self->coded_width
       || self->display_height < self->coded_height;
+  if (self->need_videoalign) {
+    /* *INDENT-OFF* */
+    self->valign = (GstVideoAlignment) {
+      .padding_bottom = self->coded_height - self->display_height,
+      .padding_left = self->coded_width - self->display_width,
+    };
+    /* *INDENT-ON* */
+  }
 
   if (negotiation_needed) {
     self->need_negotiation = TRUE;
@@ -1132,7 +1142,7 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         has_videoalignment = gst_buffer_pool_has_option (pool,
             GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
         if (!self->has_videometa || (!has_videoalignment
-                && self->need_cropping)) {
+                && self->need_videoalign)) {
           GST_DEBUG_OBJECT (self,
               "keeping other pool for copy %" GST_PTR_FORMAT, pool);
           gst_object_replace ((GstObject **) & self->other_pool,
@@ -1185,14 +1195,10 @@ gst_va_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    if (self->need_cropping) {
-      GstVideoAlignment video_align = {
-        .padding_bottom = self->coded_height - self->display_height,
-        .padding_left = self->coded_width - self->display_width,
-      };
+    if (self->need_videoalign) {
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-      gst_buffer_pool_config_set_video_alignment (config, &video_align);
+      gst_buffer_pool_config_set_video_alignment (config, &self->valign);
     }
 
     gst_buffer_pool_config_set_va_allocation_params (config,
