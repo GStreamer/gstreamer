@@ -1777,6 +1777,10 @@ void
 gst_av1_parser_reset (GstAV1Parser * parser, gboolean annex_b);
 
 GST_CODEC_PARSERS_API
+void
+gst_av1_parser_reset_annex_b (GstAV1Parser * parser);
+
+GST_CODEC_PARSERS_API
 GstAV1ParserResult
 gst_av1_parser_identify_one_obu (GstAV1Parser * parser, const guint8 * data,
     guint32 size, GstAV1OBU * obu, guint32 * consumed);

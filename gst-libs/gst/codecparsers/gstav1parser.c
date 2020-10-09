@@ -568,29 +568,44 @@ gst_av1_parser_reset (GstAV1Parser * parser, gboolean annex_b)
 {
   g_return_if_fail (parser != NULL);
 
-  if (parser->annex_b) {
-    g_assert (parser->temporal_unit_consumed <= parser->temporal_unit_size);
-    if (parser->temporal_unit_consumed < parser->temporal_unit_size)
-      GST_DEBUG ("temporal_unit_consumed: %d, temporal_unit_size:%d, "
-          "discard the left %d bytes for a temporal_unit.",
-          parser->temporal_unit_consumed, parser->temporal_unit_size,
-          parser->temporal_unit_size - parser->temporal_unit_consumed);
+  parser->annex_b = annex_b;
+  if (parser->annex_b)
+    gst_av1_parser_reset_annex_b (parser);
 
-    g_assert (parser->frame_unit_consumed <= parser->frame_unit_size);
-    if (parser->frame_unit_consumed < parser->frame_unit_size)
-      GST_DEBUG (" frame_unit_consumed %d, frame_unit_size: %d "
-          "discard the left %d bytes for a frame_unit.",
-          parser->frame_unit_consumed, parser->frame_unit_size,
-          parser->frame_unit_size - parser->frame_unit_consumed);
-  }
+  gst_av1_parse_reset_state (parser, TRUE);
+}
+
+/**
+ * gst_av1_parser_reset_annex_b:
+ * @parser: the #GstAV1Parser
+ *
+ * Only reset the current #GstAV1Parser's annex b context.
+ * The other part of the state is kept.
+ *
+ * Since: 1.20
+ */
+void
+gst_av1_parser_reset_annex_b (GstAV1Parser * parser)
+{
+  g_return_if_fail (parser != NULL);
+  g_return_if_fail (parser->annex_b);
+
+  if (parser->temporal_unit_consumed < parser->temporal_unit_size)
+    GST_DEBUG ("temporal_unit_consumed: %d, temporal_unit_size:%d, "
+        "discard the left %d bytes for a temporal_unit.",
+        parser->temporal_unit_consumed, parser->temporal_unit_size,
+        parser->temporal_unit_size - parser->temporal_unit_consumed);
+
+  if (parser->frame_unit_consumed < parser->frame_unit_size)
+    GST_DEBUG (" frame_unit_consumed %d, frame_unit_size: %d "
+        "discard the left %d bytes for a frame_unit.",
+        parser->frame_unit_consumed, parser->frame_unit_size,
+        parser->frame_unit_size - parser->frame_unit_consumed);
 
   parser->temporal_unit_consumed = 0;
   parser->temporal_unit_size = 0;
   parser->frame_unit_consumed = 0;
   parser->frame_unit_size = 0;
-  parser->annex_b = annex_b;
-
-  gst_av1_parse_reset_state (parser, TRUE);
 }
 
 /* 5.3.2 */
