@@ -259,14 +259,7 @@ if get_option('default_library') == 'static'
                all_plugins_paths]
   )
 
-  # Avoid a x264 link issue described here: https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/108
-  # Similar issue has been found with VLC: https://mailman.videolan.org/pipermail/vlc-devel/2009-March/057640.html
   gstfull_link_args = []
-  if cc.has_link_argument('-Wl,-Bsymbolic')
-    gstfull_link_args += ['-Wl,-Bsymbolic']
-  endif
-
-
   # Get a list of libraries that needs to be exposed in the ABI.
   exposed_libs = []
   incdir_deps = []
