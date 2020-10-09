@@ -174,6 +174,31 @@ _create_allocator (GstVaBaseDec * base, GstCaps * caps)
   return allocator;
 }
 
+static void
+_create_other_pool (GstVaBaseDec * base, GstAllocator * allocator,
+    GstAllocationParams * params, GstCaps * caps, guint size)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  if (base->other_pool)
+    return;
+
+  GST_DEBUG_OBJECT (base, "making new other pool for copy");
+
+  pool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+  gst_buffer_pool_config_set_allocator (config, allocator, params);
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_ERROR_OBJECT (base, "Couldn't configure other pool for copy.");
+    gst_clear_object (&pool);
+  }
+
+  base->other_pool = pool;
+}
+
 /* 1. get allocator in query
  *    1.1 if allocator is not ours and downstream doesn't handle
  *        videometa, keep it for other_pool
@@ -195,7 +220,6 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstAllocationParams other_params, params;
   GstBufferPool *pool = NULL;
   GstCaps *caps = NULL;
-  GstStructure *config;
   GstVideoInfo info;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   guint size = 0, min, max;
@@ -251,16 +275,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     size = GST_VIDEO_INFO_SIZE (&info);
 
     if (!base->has_videometa && !gst_caps_is_vamemory (caps)) {
-      GST_DEBUG_OBJECT (base, "making new other pool for copy");
-      base->other_pool = gst_video_buffer_pool_new ();
-      config = gst_buffer_pool_get_config (base->other_pool);
-      gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-      gst_buffer_pool_config_set_allocator (config, other_allocator,
-          &other_params);
-      if (!gst_buffer_pool_set_config (base->other_pool, config)) {
-        GST_ERROR_OBJECT (base, "couldn't configure other pool for copy");
-        gst_clear_object (&base->other_pool);
-      }
+      _create_other_pool (base, other_allocator, &other_params, caps, size);
     } else {
       gst_clear_object (&other_allocator);
     }
