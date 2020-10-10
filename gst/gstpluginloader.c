@@ -464,20 +464,19 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
   if (loader->child_running)
     return TRUE;
 
-  /* Find the gst-plugin-scanner: first try the env-var if it is set,
-   * otherwise use the installed version */
+  /* Find the gst-plugin-scanner */
   env = g_getenv ("GST_PLUGIN_SCANNER_1_0");
   if (env == NULL)
     env = g_getenv ("GST_PLUGIN_SCANNER");
 
   if (env != NULL && *env != '\0') {
+    /* use the env-var if it is set */
     GST_LOG ("Trying GST_PLUGIN_SCANNER env var: %s", env);
     helper_bin = g_strdup (env);
     res = gst_plugin_loader_try_helper (loader, helper_bin);
     g_free (helper_bin);
-  }
-
-  if (!res) {
+  } else {
+    /* use the installed version */
     GST_LOG ("Trying installed plugin scanner");
 
 #ifdef G_OS_WIN32
@@ -497,10 +496,10 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
 #endif
     res = gst_plugin_loader_try_helper (loader, helper_bin);
     g_free (helper_bin);
+  }
 
-    if (!res) {
-      GST_INFO ("No gst-plugin-scanner available, or not working");
-    }
+  if (!res) {
+    GST_INFO ("No gst-plugin-scanner available, or not working");
   }
 
   return loader->child_running;
