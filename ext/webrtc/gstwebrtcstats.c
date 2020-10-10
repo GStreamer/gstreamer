@@ -81,6 +81,20 @@ _get_peer_connection_stats (GstWebRTCBin * webrtc)
   return s;
 }
 
+static void
+_gst_structure_take_structure (GstStructure * s, const char *fieldname,
+    GstStructure ** value_s)
+{
+  GValue v = G_VALUE_INIT;
+
+  g_value_init (&v, GST_TYPE_STRUCTURE);
+  g_value_take_boxed (&v, *value_s);
+
+  gst_structure_take_value (s, fieldname, &v);
+
+  *value_s = NULL;
+}
+
 #define CLOCK_RATE_VALUE_TO_SECONDS(v,r) ((double) v / (double) clock_rate)
 #define FIXED_16_16_TO_DOUBLE(v) ((double) ((v & 0xffff0000) >> 16) + ((v & 0xffff) / 65536.0))
 #define FIXED_32_32_TO_DOUBLE(v) ((double) ((v & G_GUINT64_CONSTANT (0xffffffff00000000)) >> 32) + ((v & G_GUINT64_CONSTANT (0xffffffff)) / 4294967296.0))
@@ -244,11 +258,8 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
        DOMString            encoderImplementation;
      */
 
-    gst_structure_set (s, out_id, GST_TYPE_STRUCTURE, out, NULL);
-    gst_structure_set (s, r_in_id, GST_TYPE_STRUCTURE, r_in, NULL);
-
-    gst_structure_free (out);
-    gst_structure_free (r_in);
+    _gst_structure_take_structure (s, out_id, &out);
+    _gst_structure_take_structure (s, r_in_id, &r_in);
 
     g_free (out_id);
     g_free (r_in_id);
@@ -483,11 +494,8 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 
     gst_structure_free (jb_stats);
 
-    gst_structure_set (s, in_id, GST_TYPE_STRUCTURE, in, NULL);
-    gst_structure_set (s, r_out_id, GST_TYPE_STRUCTURE, r_out, NULL);
-
-    gst_structure_free (in);
-    gst_structure_free (r_out);
+    _gst_structure_take_structure (s, in_id, &in);
+    _gst_structure_take_structure (s, r_out_id, &r_out);
 
     g_free (in_id);
     g_free (r_out_id);
