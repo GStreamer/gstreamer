@@ -258,6 +258,13 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
        DOMString            encoderImplementation;
      */
 
+    /* Store the raw stats from GStreamer into the structure for advanced
+     * information.
+     */
+    gst_structure_set (out, "gst-rtpsource-stats", GST_TYPE_STRUCTURE,
+        source_stats, NULL);
+
+
     _gst_structure_take_structure (s, out_id, &out);
     _gst_structure_take_structure (s, r_in_id, &r_in);
 
@@ -492,7 +499,13 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
        reportsSent
      */
 
-    gst_structure_free (jb_stats);
+    /* Store the raw stats from GStreamer into the structure for advanced
+     * information.
+     */
+    _gst_structure_take_structure (in, "gst-rtpjitterbuffer-stats", &jb_stats);
+
+    gst_structure_set (in, "gst-rtpsource-stats", GST_TYPE_STRUCTURE,
+        source_stats, NULL);
 
     _gst_structure_take_structure (s, in_id, &in);
     _gst_structure_take_structure (s, r_out_id, &r_out);
