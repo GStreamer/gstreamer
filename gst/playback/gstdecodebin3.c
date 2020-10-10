@@ -1625,7 +1625,9 @@ is_selection_done (GstDecodebin3 * dbin)
 
   /* We are completely active */
   msg = gst_message_new_streams_selected ((GstObject *) dbin, dbin->collection);
-  GST_MESSAGE_SEQNUM (msg) = dbin->select_streams_seqnum;
+  if (dbin->select_streams_seqnum != GST_SEQNUM_INVALID) {
+    gst_message_set_seqnum (msg, dbin->select_streams_seqnum);
+  }
   for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
     DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
     if (output->slot) {
