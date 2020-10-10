@@ -89,8 +89,8 @@ _get_peer_connection_stats (GstWebRTCBin * webrtc)
    https://www.w3.org/TR/webrtc-stats/#outboundrtpstats-dict* */
 static void
 _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
-    const GstStructure * source_stats, const gchar * codec_id,
-    const gchar * transport_id, GstStructure * s)
+    TransportStream * stream, const GstStructure * source_stats,
+    const gchar * codec_id, const gchar * transport_id, GstStructure * s)
 {
   guint ssrc, fir, pli, nack, jitter;
   int lost, clock_rate;
@@ -265,8 +265,32 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     GstStructure *in, *r_out;
     gchar *r_out_id, *in_id;
     gboolean have_sr = FALSE;
+    GstStructure *jb_stats = NULL;
+    guint i;
+    guint64 jb_lost, duplicates, late, rtx_success;
 
     gst_structure_get (source_stats, "have-sr", G_TYPE_BOOLEAN, &have_sr, NULL);
+
+    for (i = 0; i < stream->remote_ssrcmap->len; i++) {
+      SsrcMapItem *item =
+          &g_array_index (stream->remote_ssrcmap, SsrcMapItem, i);
+
+      if (item->ssrc == ssrc) {
+        GObject *jb = g_weak_ref_get (&item->rtpjitterbuffer);
+
+        if (jb) {
+          g_object_get (jb, "stats", &jb_stats, NULL);
+          g_object_unref (jb);
+        }
+        break;
+      }
+    }
+
+    if (jb_stats)
+      gst_structure_get (jb_stats, "num-lost", G_TYPE_UINT64, &jb_lost,
+          "num-duplicates", G_TYPE_UINT64, &duplicates, "num-late",
+          G_TYPE_UINT64, &late, "rtx-success-count", G_TYPE_UINT64,
+          &rtx_success, NULL);
 
     in_id = g_strdup_printf ("rtp-inbound-stream-stats_%u", ssrc);
     r_out_id = g_strdup_printf ("rtp-remote-outbound-stream-stats_%u", ssrc);
@@ -285,18 +309,21 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 
     if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
       gst_structure_set (in, "packets-received", G_TYPE_UINT64, packets, NULL);
-    if (gst_structure_get_int (source_stats, "packets-lost", &lost))
-      gst_structure_set (in, "packets-lost", G_TYPE_INT, lost, NULL);
+    if (jb_stats)
+      gst_structure_set (in, "packets-lost", G_TYPE_UINT64, jb_lost, NULL);
     if (gst_structure_get_uint (source_stats, "jitter", &jitter))
       gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
           CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
+
+    if (jb_stats)
+      gst_structure_set (in, "packets-discarded", G_TYPE_UINT64, late,
+          "packets-repaired", G_TYPE_UINT64, rtx_success, NULL);
 
     /*
        RTCReceivedRtpStreamStats
 
        To be added:
 
-       unsigned long long   packetsRepaired;
        unsigned long long   burstPacketsLost;
        unsigned long long   burstPacketsDiscarded;
        unsigned long        burstLossCount;
@@ -325,7 +352,9 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
       gst_structure_set (in, "pli-count", G_TYPE_UINT, pli, NULL);
     if (gst_structure_get_uint (source_stats, "recv-nack-count", &nack))
       gst_structure_set (in, "nack-count", G_TYPE_UINT, nack, NULL);
-    /* XXX: mediaType, trackId, sliCount, qpSum */
+    if (jb_stats)
+      gst_structure_set (in, "packets-duplicated", G_TYPE_UINT64, duplicates,
+          NULL);
 
     /* RTCInboundRtpStreamStats:
 
@@ -460,6 +489,8 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     /* To be added:
        reportsSent
      */
+
+    gst_structure_free (jb_stats);
 
     gst_structure_set (s, in_id, GST_TYPE_STRUCTURE, in, NULL);
     gst_structure_set (s, r_out_id, GST_TYPE_STRUCTURE, r_out, NULL);
@@ -642,7 +673,8 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
     if (ssrc && stats_ssrc && ssrc != stats_ssrc)
       continue;
 
-    _get_stats_from_rtp_source_stats (webrtc, stats, codec_id, transport_id, s);
+    _get_stats_from_rtp_source_stats (webrtc, stream, stats, codec_id,
+        transport_id, s);
   }
 
   g_object_unref (rtp_session);
