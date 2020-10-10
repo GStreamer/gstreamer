@@ -122,22 +122,13 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (r_in, "transport-id", G_TYPE_STRING, transport_id, NULL);
     /* To be added: kind */
 
-    /* RTCReceivedRtpStreamStats */
-
-    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
-      gst_structure_set (r_in, "packets-received", G_TYPE_UINT64, packets,
-          NULL);
-    if (gst_structure_get_int (source_stats, "packets-lost", &lost))
-      gst_structure_set (r_in, "packets-lost", G_TYPE_INT, lost, NULL);
-    if (gst_structure_get_uint (source_stats, "jitter", &jitter))
-      gst_structure_set (r_in, "jitter", G_TYPE_DOUBLE,
-          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
-
     /* RTCReceivedRtpStreamStats:
 
        To be added:
 
-       double             fractionLost;
+       unsigned long long   packetsReceived;
+       long long            packetsLost;
+       double               jitter;
        unsigned long      packetsDiscarded;
        unsigned long      packetsRepaired;
        unsigned long      burstPacketsLost;
