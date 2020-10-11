@@ -370,6 +370,8 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
 
+  g_assert (picture->frame_hdr.show_frame);
+
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
   view_buffer = (GstBuffer *) gst_vp8_picture_get_user_data (picture);
@@ -377,15 +379,6 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "Could not get output view");
     goto error;
-  }
-
-  if (!picture->frame_hdr.show_frame) {
-    GST_LOG_OBJECT (self, "Decode only picture %p", picture);
-    GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
-
-    gst_vp8_picture_unref (picture);
-
-    return gst_video_decoder_finish_frame (vdec, frame);
   }
 
   /* if downstream is d3d11 element and forward playback case,
