@@ -283,6 +283,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
   GstVp8FrameHdr frame_hdr;
   GstVp8ParserResult pres;
   GstVp8Picture *picture = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (self,
       "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
@@ -363,8 +364,19 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_vp8_decoder_update_reference (self, gst_vp8_picture_ref (picture));
 
-  g_assert (klass->output_picture);
-  return klass->output_picture (self, frame, picture);
+  if (!picture->frame_hdr.show_frame) {
+    GST_LOG_OBJECT (self, "Decode only picture %p", picture);
+    GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
+
+    gst_vp8_picture_unref (picture);
+
+    ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  } else {
+    g_assert (klass->output_picture);
+    ret = klass->output_picture (self, frame, picture);
+  }
+
+  return ret;
 
 unmap_and_error:
   {
@@ -374,8 +386,6 @@ unmap_and_error:
 
 error:
   {
-    GstFlowReturn ret;
-
     if (picture)
       gst_vp8_picture_unref (picture);
 
