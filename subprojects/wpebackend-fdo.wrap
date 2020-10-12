@@ -1,4 +1,4 @@
 [wrap-git]
 directory=wpebackend-fdo
 url=https://github.com/Igalia/WPEBackend-FDO.git
-revision=409af4493562c49196da5c9eace914ae10cfe9a3
+revision=3a76a810c0787ad5d515e49de50ffb956f3a04cd

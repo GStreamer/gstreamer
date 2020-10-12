@@ -1,4 +1,4 @@
 [wrap-git]
 directory=libwpe
 url=https://github.com/WebPlatformForEmbedded/libwpe
-revision=e87c99f78fa0df4a05dc75185e6115351e42debb
+revision=8cce32deb48b91f18c5e920fb3666dc409a11219
