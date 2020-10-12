@@ -13,7 +13,7 @@ if use_wayland
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
-  darwin_versions : osxversion,
+    darwin_versions : osxversion,
     install : true,
     dependencies : [gst_dep, gstvideo_dep, wl_client_dep]
   )
@@ -31,4 +31,5 @@ if use_wayland
     dependencies : [gst_dep, gstvideo_dep])
 
   meson.override_dependency('gstreamer-wayland-1.0', gstwayland_dep)
+  install_headers('wayland.h', subdir: 'gstreamer-1.0/gst/wayland')
 endif
