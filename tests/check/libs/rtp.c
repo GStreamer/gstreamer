@@ -2152,6 +2152,29 @@ GST_START_TEST (test_rtcp_compound_padding)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_buffer_extlen_wraparound)
+{
+  GstBuffer *buf;
+  guint8 rtp_test_buffer[] = {
+    0x90, 0x7c, 0x18, 0xa6,     /* |V=2|P|X|CC|M|PT|sequence number| */
+    0x7a, 0x62, 0x17, 0x0f,     /* |timestamp| */
+    0x70, 0x23, 0x91, 0x38,     /* |synchronization source (SSRC) identifier| */
+    0xbe, 0xde, 0x40, 0x01,     /* |0xBE|0xDE|length=16385| */
+    0x00, 0x00, 0x00, 0x00,     /* |0 (pad)|0 (pad)|0 (pad)|0 (pad)| */
+    0x00, 0x00, 0x00, 0x00,     /* |0 (pad)|0 (pad)|0 (pad)|0 (pad)| */
+    0xff, 0xff, 0xff, 0xff      /* |dummy payload| */
+  };
+
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  buf = gst_buffer_new_and_alloc (sizeof (rtp_test_buffer));
+  gst_buffer_fill (buf, 0, rtp_test_buffer, sizeof (rtp_test_buffer));
+  fail_if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -2205,6 +2228,7 @@ rtp_suite (void)
       test_ext_timestamp_wraparound_disordered_cannot_unwrap);
 
   tcase_add_test (tc_chain, test_rtcp_compound_padding);
+  tcase_add_test (tc_chain, test_rtp_buffer_extlen_wraparound);
 
   return s;
 }
