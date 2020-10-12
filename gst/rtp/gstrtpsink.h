@@ -43,8 +43,6 @@ struct _GstRtpSink
 {
   GstBin parent;
 
-  GstBin parent_instance;
-
   /* Properties */
   GstUri *uri;
   gint ttl;
