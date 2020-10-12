@@ -85,6 +85,7 @@ struct _GstVp9DecoderClass
   GstVideoDecoderClass parent_class;
 
   gboolean        (*new_sequence)      (GstVp9Decoder * decoder,
+                                        const GstVp9Parser * parser,
                                         const GstVp9FrameHdr * frame_hdr);
 
   /**

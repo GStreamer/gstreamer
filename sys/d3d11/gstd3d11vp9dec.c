@@ -133,7 +133,7 @@ static gboolean gst_d3d11_vp9_dec_src_query (GstVideoDecoder * decoder,
 
 /* GstVp9Decoder */
 static gboolean gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9FrameHdr * frame_hdr);
+    const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr);
 static gboolean gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder *
@@ -342,7 +342,7 @@ gst_d3d11_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
 static gboolean
 gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9FrameHdr * frame_hdr)
+    const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   gboolean modified = FALSE;

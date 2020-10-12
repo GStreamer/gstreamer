@@ -187,7 +187,7 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
 
     priv->had_sequence = TRUE;
     if (klass->new_sequence)
-      priv->had_sequence = klass->new_sequence (self, frame_hdr);
+      priv->had_sequence = klass->new_sequence (self, priv->parser, frame_hdr);
 
     ret = priv->had_sequence;
   }
