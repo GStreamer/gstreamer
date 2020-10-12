@@ -2577,8 +2577,7 @@ _priv_gst_value_parse_value (gchar * str,
       if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, TRUE)))
         return FALSE;
       /* Set NULL terminator for deserialization */
-      c = *value_end;
-      *value_end = '\0';
+      value_s = g_strndup (value_s, value_end - value_s);
 
       for (i = 0; i < G_N_ELEMENTS (try_types); i++) {
         g_value_init (value, try_types[i]);
@@ -2594,14 +2593,13 @@ _priv_gst_value_parse_value (gchar * str,
                   (type != G_TYPE_STRING))))
         return FALSE;
       /* Set NULL terminator for deserialization */
-      c = *value_end;
-      *value_end = '\0';
+      value_s = g_strndup (value_s, value_end - value_s);
 
       ret = gst_value_deserialize (value, value_s);
       if (G_UNLIKELY (!ret))
         g_value_unset (value);
     }
-    *value_end = c;
+    g_free (value_s);
   }
 
   *after = s;
