@@ -125,6 +125,7 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   GstClockTime base_time;
   GstClockTime capture_time;
   GstClockTime delay;
+  int64_t srt_time;
   SRT_MSGCTRL mctrl;
 
   if (g_cancellable_is_cancelled (self->cancellable)) {
@@ -154,10 +155,10 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   capture_time = gst_clock_get_time (clock);
 #if SRT_VERSION_VALUE >= 0x10402
   /* Use SRT clock value if available (SRT > 1.4.2) */
-  delay = (srt_time_now () - mctrl.srctime) * GST_USECOND;
+  srt_time = srt_time_now ();
 #else
   /* Else use the unix epoch monotonic clock */
-  delay = (g_get_real_time () - mctrl.srctime) * GST_USECOND;
+  srt_time = g_get_real_time ();
 #endif
   gst_object_unref (clock);
 
@@ -190,6 +191,12 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   }
   /* pktseq is a 31bit field */
   self->next_pktseq = (mctrl.pktseq + 1) % G_MAXINT32;
+
+  /* 0 means we do not have a srctime */
+  if (mctrl.srctime != 0)
+    delay = (srt_time - mctrl.srctime) * GST_USECOND;
+  else
+    delay = 0;
 
   /* Subtract the base_time (since the pipeline started) ... */
   if (capture_time > base_time)
