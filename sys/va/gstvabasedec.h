@@ -23,6 +23,7 @@
 
 #include <gst/codecs/gsth264decoder.h>
 #include <gst/codecs/gstvp8decoder.h>
+#include <gst/codecs/gstvp9decoder.h>
 
 #include "gstvadevice.h"
 #include "gstvadecoder.h"
@@ -44,6 +45,7 @@ struct _GstVaBaseDec
   {
     GstH264Decoder h264;
     GstVp8Decoder vp8;
+    GstVp9Decoder vp9;
   } parent;
 
   GstDebugCategory *debug_category;
@@ -76,6 +78,7 @@ struct _GstVaBaseDecClass
   {
     GstH264DecoderClass h264;
     GstVp8DecoderClass vp8;
+    GstVp9DecoderClass vp9;
   } parent_class;
 
   GstVaCodecs codec;

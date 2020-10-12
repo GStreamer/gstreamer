@@ -72,6 +72,7 @@ gboolean              gst_va_decoder_destroy_buffers      (GstVaDecoder * self,
 GstVaDecodePicture *  gst_va_decode_picture_new           (GstBuffer * buffer);
 VASurfaceID           gst_va_decode_picture_get_surface   (GstVaDecodePicture * pic);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
+GstVaDecodePicture *  gst_va_decode_picture_dup           (GstVaDecodePicture * pic);
 
 gboolean              gst_va_decoder_format_changed       (GstVaDecoder * decoder,
                                                            VAProfile new_profile,

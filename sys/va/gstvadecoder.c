@@ -732,6 +732,21 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
   g_slice_free (GstVaDecodePicture, pic);
 }
 
+GstVaDecodePicture *
+gst_va_decode_picture_dup (GstVaDecodePicture * pic)
+{
+  GstVaDecodePicture *dup;
+
+  g_return_val_if_fail (pic, NULL);
+
+  dup = g_slice_new (GstVaDecodePicture);
+  dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
+  dup->buffers = g_array_ref (pic->buffers);
+  dup->slices = g_array_ref (pic->slices);
+
+  return dup;
+}
+
 gboolean
 gst_va_decoder_format_changed (GstVaDecoder * decoder, VAProfile new_profile,
     guint new_rtformat, gint new_width, gint new_height)
