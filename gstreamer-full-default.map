@@ -1,0 +1,10 @@
+{
+  global:
+    gst_*;
+    GST_*;
+    _gst_*;
+    g_*;
+    glib_*;
+  local:
+    *;
+};

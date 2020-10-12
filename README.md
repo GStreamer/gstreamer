@@ -135,7 +135,8 @@ One can use the `gst-full-version-script` option to pass a
 [version script](https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html)
 to the linker. This can be used to control the exact symbols that are exported by
 the gstreamer-full library, allowing the linker to garbage collect unused code
-and so reduce the total library size.
+and so reduce the total library size. A default script `gstreamer-full-default.map`
+declares only glib/gstreamer symbols as public.
 
 This is an experimental feature, backward uncompatible changes could still be
 made in the future.
