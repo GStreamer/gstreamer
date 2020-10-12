@@ -124,7 +124,7 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   GstClock *clock;
   GstClockTime base_time;
   GstClockTime capture_time;
-  GstClockTime delay;
+  GstClockTimeDiff delay;
   int64_t srt_time;
   SRT_MSGCTRL mctrl;
 
@@ -166,7 +166,7 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
 
   GST_LOG_OBJECT (src,
       "recv_len:%" G_GSIZE_FORMAT " pktseq:%d msgno:%d srctime:%"
-      G_GUINT64_FORMAT, recv_len, mctrl.pktseq, mctrl.msgno, mctrl.srctime);
+      G_GINT64_FORMAT, recv_len, mctrl.pktseq, mctrl.msgno, mctrl.srctime);
 
   if (g_cancellable_is_cancelled (self->cancellable)) {
     ret = GST_FLOW_FLUSHING;
@@ -198,6 +198,15 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   else
     delay = 0;
 
+  GST_LOG_OBJECT (src, "delay: %" GST_STIME_FORMAT, GST_STIME_ARGS (delay));
+
+  if (delay < 0) {
+    GST_WARNING_OBJECT (src,
+        "Calculated SRT delay %" GST_STIME_FORMAT " is negative, clamping to 0",
+        GST_STIME_ARGS (delay));
+    delay = 0;
+  }
+
   /* Subtract the base_time (since the pipeline started) ... */
   if (capture_time > base_time)
     capture_time -= base_time;
@@ -209,8 +218,6 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   else
     capture_time = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = capture_time;
-
-  GST_DEBUG_OBJECT (src, "delay:%" GST_TIME_FORMAT, GST_TIME_ARGS (delay));
 
   gst_buffer_resize (outbuf, 0, recv_len);
 
