@@ -140,6 +140,11 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
 
   /* Get clock and values */
   clock = gst_element_get_clock (GST_ELEMENT (src));
+  if (!clock) {
+    GST_DEBUG_OBJECT (src, "Clock missing, flushing");
+    return GST_FLOW_FLUSHING;
+  }
+
   base_time = gst_element_get_base_time (GST_ELEMENT (src));
 
   recv_len = gst_srt_object_read (self->srtobject, info.data,
