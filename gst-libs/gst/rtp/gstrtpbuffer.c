@@ -369,7 +369,7 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   /* calc extension length when present. */
   if (data[0] & 0x10) {
     guint8 *extdata;
-    guint16 extlen;
+    gsize extlen;
 
     /* find memory for the extension bits, we find the block for the first 4
      * bytes, all other extension bytes should also be in this block */
