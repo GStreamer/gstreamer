@@ -259,7 +259,8 @@ if get_option('default_library') == 'static'
                all_plugins_paths]
   )
 
-  gstfull_link_args = []
+  gstfull_link_args = cc.get_supported_link_arguments(['-Wl,-Bsymbolic-functions'])
+
   # Get a list of libraries that needs to be exposed in the ABI.
   exposed_libs = []
   incdir_deps = []
