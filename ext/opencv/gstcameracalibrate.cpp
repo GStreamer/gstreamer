@@ -204,13 +204,13 @@ gst_camera_calibrate_class_init (GstCameraCalibrateClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BOARD_WIDTH,
       g_param_spec_int ("board-width", "Board Width",
-          "The board width in number of items",
+          "The board width in number of items (e.g. number of squares for chessboard)",
           1, G_MAXINT, DEFAULT_BOARD_WIDTH,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_BOARD_HEIGHT,
       g_param_spec_int ("board-height", "Board Height",
-          "The board height in number of items",
+          "The board height in number of items (e.g. number of squares for chessboard)",
           1, G_MAXINT, DEFAULT_BOARD_WIDTH,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -276,7 +276,8 @@ gst_camera_calibrate_class_init (GstCameraCalibrateClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "cameracalibrate",
       "Filter/Effect/Video",
-      "Performs camera calibration",
+      "Performs camera calibration by having it point at a chessboard pattern "
+      "using upstream/downstream cameraundistort",
       "Philippe Renon <philippe_renon@yahoo.fr>");
 
   /* add sink and source pad templates */
