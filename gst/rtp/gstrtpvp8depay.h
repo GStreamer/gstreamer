@@ -54,10 +54,20 @@ struct _GstRtpVP8Depay
   GstAdapter *adapter;
   gboolean started;
 
+  gboolean caps_sent;
+  /* In between pictures, we might store GstRTPPacketLost events instead
+   * of forwarding them immediately, we check upon reception of a new
+   * picture id whether a gap was introduced, in which case we do forward
+   * the event. This is to avoid forwarding spurious lost events for FEC
+   * packets.
+   */
+  gboolean stop_lost_events;
+  GstEvent *last_lost_event;
   gboolean waiting_for_keyframe;
   gint last_profile;
   gint last_width;
   gint last_height;
+  guint last_picture_id;
 
   gboolean wait_for_keyframe;
 };
