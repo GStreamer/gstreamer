@@ -476,9 +476,10 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
         return FALSE;
       }
 
-      GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
-          GST_VIDEO_INFO_FORMAT (&vpad->info),
-          GST_VIDEO_INFO_FORMAT (&pad->priv->conversion_info));
+      GST_DEBUG_OBJECT (pad, "This pad will be converted from %s to %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&vpad->info)),
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&pad->
+                  priv->conversion_info)));
     } else {
       GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
     }
@@ -955,8 +956,8 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   color_name = gst_video_colorimetry_to_string (&best_info.colorimetry);
 
   GST_DEBUG_OBJECT (vagg,
-      "The output format will now be : %d with chroma : %s and colorimetry %s",
-      best_format,
+      "The output format will now be : %s with chroma : %s and colorimetry %s",
+      gst_video_format_to_string (best_format),
       GST_STR_NULL (gst_video_chroma_to_string (best_info.chroma_site)),
       GST_STR_NULL (color_name));
 
