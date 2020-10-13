@@ -345,6 +345,8 @@ static GstSourceHandler *new_source_handler (GstURIDecodeBin3 * uridecodebin,
 
 static GstStateChangeReturn gst_uri_decode_bin3_change_state (GstElement *
     element, GstStateChange transition);
+static gboolean gst_uri_decodebin3_send_event (GstElement * element,
+    GstEvent * event);
 
 static gboolean
 _gst_int_accumulator (GSignalInvocationHint * ihint,
@@ -515,6 +517,8 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
       "Edward Hervey <edward@centricular.com>, Jan Schmidt <jan@centricular.com>");
 
   gstelement_class->change_state = gst_uri_decode_bin3_change_state;
+  gstelement_class->send_event =
+      GST_DEBUG_FUNCPTR (gst_uri_decodebin3_send_event);
 
   klass->select_stream = gst_uridecodebin3_select_stream;
 }
@@ -1118,6 +1122,16 @@ failure:
   }
 }
 
+static gboolean
+gst_uri_decodebin3_send_event (GstElement * element, GstEvent * event)
+{
+  GstURIDecodeBin3 *self = GST_URI_DECODE_BIN3 (element);
+
+  if (GST_EVENT_IS_UPSTREAM (event) && self->decodebin)
+    return gst_element_send_event (self->decodebin, event);
+
+  return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+}
 
 gboolean
 gst_uri_decode_bin3_plugin_init (GstPlugin * plugin)
