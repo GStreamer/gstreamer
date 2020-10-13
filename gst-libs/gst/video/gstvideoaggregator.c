@@ -2519,7 +2519,7 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
 
   modified_caps = gst_caps_intersect (accepted_caps, template_caps);
 
-  ret = gst_caps_can_intersect (caps, accepted_caps);
+  ret = gst_caps_can_intersect (caps, modified_caps);
   GST_DEBUG_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT,
       (ret ? "" : "not "), caps);
   gst_caps_unref (accepted_caps);
