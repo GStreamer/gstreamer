@@ -249,16 +249,26 @@ no_memory:
 static void
 gst_va_pool_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
-  GstVaPool *vpool = GST_VA_POOL (pool);
-
   /* Clears all the memories and only pool the GstBuffer objects */
-  if (G_LIKELY (!vpool->starting))
-    gst_buffer_remove_all_memory (buffer);
+  gst_buffer_remove_all_memory (buffer);
 
   GST_BUFFER_POOL_CLASS (parent_class)->reset_buffer (pool, buffer);
 
-  if (G_LIKELY (!vpool->starting))
+  GST_BUFFER_FLAGS (buffer) = 0;
+}
+
+static void
+gst_va_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
+{
+  GstVaPool *vpool = GST_VA_POOL (pool);
+
+  /* Clears all the memories and only pool the GstBuffer objects */
+  if (G_UNLIKELY (vpool->starting)) {
+    gst_buffer_remove_all_memory (buffer);
     GST_BUFFER_FLAGS (buffer) = 0;
+  }
+
+  GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
 }
 
 static GstFlowReturn
@@ -337,6 +347,7 @@ gst_va_pool_class_init (GstVaPoolClass * klass)
   gstbufferpool_class->set_config = gst_va_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_va_pool_alloc;
   gstbufferpool_class->reset_buffer = gst_va_pool_reset_buffer;
+  gstbufferpool_class->release_buffer = gst_va_pool_release_buffer;
   gstbufferpool_class->acquire_buffer = gst_va_pool_acquire_buffer;
   gstbufferpool_class->flush_start = gst_va_pool_flush_start;
   gstbufferpool_class->start = gst_va_pool_start;
