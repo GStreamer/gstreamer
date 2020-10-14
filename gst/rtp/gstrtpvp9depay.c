@@ -313,6 +313,15 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   if (G_UNLIKELY (hdrsize >= size))
     goto too_small;
 
+  /* If this is a start frame AND we are already processing a frame, we need to flush and wait for next start frame */
+  if (b_bit) {
+    if (G_UNLIKELY (self->started)) {
+      GST_DEBUG_OBJECT (depay, "Incomplete frame, flushing adapter");
+      gst_adapter_clear (self->adapter);
+      self->started = FALSE;
+    }
+  }
+
   if (G_UNLIKELY (!self->started)) {
     /* Check if this is the start of a VP9 layer frame, otherwise bail */
     if (!b_bit) {
