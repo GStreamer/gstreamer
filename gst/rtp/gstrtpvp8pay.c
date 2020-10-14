@@ -402,6 +402,10 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
   self->partition_offset[i + 1] = size;
 
   gst_buffer_unmap (buffer, &map);
+
+  if (keyframe)
+    GST_DEBUG_OBJECT (self, "Parsed keyframe");
+
   return TRUE;
 
 error:
