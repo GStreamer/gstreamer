@@ -389,7 +389,8 @@ gst_rtpst_2022_1_fecenc_sink_chain (GstPad * pad, GstObject * parent,
   }
 
   if (enc->last_media_seqnum_set
-      && enc->last_media_seqnum + 1 != gst_rtp_buffer_get_seq (&rtp)) {
+      && (guint16) (enc->last_media_seqnum + 1) !=
+      gst_rtp_buffer_get_seq (&rtp)) {
     GST_ERROR_OBJECT (enc, "consecutive sequence numbers are required");
     goto error;
   }
