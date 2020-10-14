@@ -4842,7 +4842,8 @@ atom_trun_can_append_samples_to_entry (AtomTRUN * trun,
   if (nentry->sample_duration != delta)
     return FALSE;
 
-  return TRUE;
+  /* FIXME: this should be TRUE but currently fails on demuxing */
+  return FALSE;
 }
 
 static void

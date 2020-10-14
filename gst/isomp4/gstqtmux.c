@@ -4266,7 +4266,7 @@ flush:
         GstSegment segment;
         guint64 orig_offset;
         guint64 offset = orig_offset = qtmux->mdat_pos + 16 + qtmux->mdat_size;
-        guint64 chunk_increase;
+        guint64 chunk_increase, buf_size;
         AtomMOOF *moof;
 
         GST_LOG_OBJECT (qtmux, "current file offset calculated to be %"
@@ -4306,18 +4306,22 @@ flush:
         qtmux->header_size = offset;
         qtmux->moof_mdat_pos = 0;
 
+        buf_size = (buf ? gst_buffer_get_size (buf) : 0);
+
         chunk_increase = offset - orig_offset + 16;
+        /* we need to undo the addition to qtmux->current_chunk_size of this
+         * buffer performed in gst_qt_mux_register_buffer_in_chunk() */
+        chunk_increase += qtmux->current_chunk_size - buf_size;
         GST_LOG_OBJECT (qtmux, "We think we have written %" G_GUINT64_FORMAT
             " including a moov and mdat header of %" G_GUINT64_FORMAT
             ". mangling this buffer's chunk offset from %" G_GUINT64_FORMAT
             " to %" G_GUINT64_FORMAT, qtmux->header_size,
             offset - orig_offset + 16, chunk_offset,
             chunk_offset + chunk_increase);
+        /* this is the offset for the current chunk that is applied to all subsequent chunks */
         chunk_offset += chunk_increase;
-        /* this is the offset for the next chunk */
-        qtmux->current_chunk_offset +=
-            qtmux->current_chunk_size + chunk_increase;
-        qtmux->current_chunk_size = 0;
+        qtmux->current_chunk_offset += chunk_increase;
+        qtmux->current_chunk_size = buf_size;
         GST_LOG_OBJECT (qtmux, "change next chunk offset to %" G_GUINT64_FORMAT
             " and size to %" G_GUINT64_FORMAT, qtmux->current_chunk_offset,
             qtmux->current_chunk_size);
@@ -4329,7 +4333,7 @@ flush:
         guint64 size = 0, offset = 0;
         guint8 *data = NULL;
         GstBuffer *moof_buffer;
-        guint64 moof_size = 0;
+        guint64 moof_size = 0, buf_size;
         GstSegment segment;
         guint64 chunk_increase;
 
@@ -4370,7 +4374,11 @@ flush:
          * offsets to include the moof/mdat headers that were just written so
          * so that they are correctly skipped over.
          */
+        buf_size = (buf ? gst_buffer_get_size (buf) : 0);
         chunk_increase = moof_size + 16;
+        /* we need to undo the addition to qtmux->current_chunk_size of this
+         * buffer performed in gst_qt_mux_register_buffer_in_chunk() */
+        chunk_increase += qtmux->current_chunk_size - buf_size;
         GST_LOG_OBJECT (qtmux, "We think we have currently written %"
             G_GUINT64_FORMAT " including a moof of %" G_GUINT64_FORMAT
             " mangling this buffer's chunk offset from %" G_GUINT64_FORMAT
@@ -4378,9 +4386,8 @@ flush:
             chunk_offset, chunk_offset + chunk_increase);
         chunk_offset += chunk_increase;
         /* this is the offset for the next chunk */
-        qtmux->current_chunk_offset +=
-            qtmux->current_chunk_size + chunk_increase;
-        qtmux->current_chunk_size = 0;
+        qtmux->current_chunk_offset += chunk_increase;
+        qtmux->current_chunk_size = buf_size;
         GST_LOG_OBJECT (qtmux, "change next chunk offset to %" G_GUINT64_FORMAT
             " and size to %" G_GUINT64_FORMAT, qtmux->current_chunk_offset,
             qtmux->current_chunk_size);
