@@ -551,7 +551,7 @@ gst_va_base_dec_copy_output_buffer (GstVaBaseDec * base,
     goto fail;
 
   if (!gst_video_frame_map (&dest_frame, &dest_vinfo, buffer, GST_MAP_WRITE)) {
-    gst_video_frame_unmap (&dest_frame);
+    gst_video_frame_unmap (&src_frame);
     goto fail;
   }
 
