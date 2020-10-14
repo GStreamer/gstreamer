@@ -1,6 +1,3 @@
-include:
-  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
-
 stages:
   - 'build docker'
   - 'preparation'
@@ -88,6 +85,11 @@ variables:
     --variants werror
     --timestamps
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH
 #
 # Global CI policy
 #
