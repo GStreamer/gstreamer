@@ -181,8 +181,7 @@ _create_other_pool (GstVaBaseDec * base, GstAllocator * allocator,
   GstBufferPool *pool;
   GstStructure *config;
 
-  if (base->other_pool)
-    return;
+  gst_clear_object (&base->other_pool);
 
   GST_DEBUG_OBJECT (base, "making new other pool for copy");
 
