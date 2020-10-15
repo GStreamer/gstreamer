@@ -18,12 +18,12 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2020-10-09.0'
-  CERBERO_TAG: '2020-09-09.2'
-  ANDROID_TAG: '2020-09-09.2'
-  MANIFEST_TAG: '2020-06-25.0'
-  TEST_MANIFEST_TAG: '2020-06-25.0'
-  INDENT_TAG: '2020-06-29.0'
+  FEDORA_TAG:  '2020-10-22.0'
+  CERBERO_TAG: '2020-10-22.0'
+  ANDROID_TAG: '2020-10-22.0'
+  MANIFEST_TAG: '2020-10-22.0'
+  TEST_MANIFEST_TAG: '2020-10-22.0'
+  INDENT_TAG: '2020-10-22.0'
 
   GST_UPSTREAM_REPO: 'gstreamer/gst-ci'
 
@@ -250,7 +250,6 @@ default:
       --label gitlab.project_path=$CI_PROJECT_PATH
       --label gitlab.project_url=$CI_PROJECT_URL
       --label fdo.upstream-repo=$GST_UPSTREAM_REPO
-      --label fdo.expires-after="3w"
       -f $DOCKERFILE
       -t $LOCAL_IMAGE
       $CONTEXT_DIR
