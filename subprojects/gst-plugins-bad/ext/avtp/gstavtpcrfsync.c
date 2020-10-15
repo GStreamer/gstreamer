@@ -149,8 +149,10 @@ gst_avtp_crf_sync_transform_ip (GstBaseTransform * parent, GstBuffer * buffer)
   GstMapInfo info;
   gboolean res;
 
-  if (!avg_period || !current_ts)
+  if (!avg_period || !current_ts) {
+    GST_WARNING_OBJECT (avtpcrfsync, "No CRF packet yet received!");
     return GST_FLOW_OK;
+  }
 
   res = gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
   if (!res) {
