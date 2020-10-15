@@ -31,12 +31,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* not using GLIB_CHECK_VERSION on purpose, run-time version matters */
-  if (glib_check_version (2, 36, 0) != NULL) {
-    GST_WARNING ("Your GLib version is < 2.36, UDP multicasting support may "
-        "be broken, see https://bugzilla.gnome.org/show_bug.cgi?id=688378");
-  }
-
   /* register info of the netaddress metadata so that we can use it from
    * multiple threads right away. Note that the plugin loading is always
    * serialized */

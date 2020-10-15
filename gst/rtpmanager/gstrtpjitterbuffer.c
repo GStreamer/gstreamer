@@ -1368,24 +1368,6 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter)
   return caps;
 }
 
-/* g_ascii_string_to_unsigned is available since 2.54. Get rid of this wrapper
- * when we bump the version in 1.18 */
-#if !GLIB_CHECK_VERSION(2,54,0)
-#define g_ascii_string_to_unsigned _gst_jitter_buffer_ascii_string_to_unsigned
-static gboolean
-_gst_jitter_buffer_ascii_string_to_unsigned (const gchar * str, guint base,
-    guint64 min, guint64 max, guint64 * out_num, GError ** error)
-{
-  gchar *endptr = NULL;
-  *out_num = g_ascii_strtoull (str, &endptr, base);
-  if (errno)
-    return FALSE;
-  if (endptr == str)
-    return FALSE;
-  return TRUE;
-}
-#endif
-
 /*
  * Must be called with JBUF_LOCK held
  */
