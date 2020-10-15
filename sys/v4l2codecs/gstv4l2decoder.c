@@ -854,7 +854,7 @@ gst_v4l2_request_free (GstV4l2Request * request)
 
     GST_DEBUG_OBJECT (decoder, "Freeing pending request %p.", request);
 
-    idx = gst_queue_array_find (decoder->pending_requests, NULL, NULL);
+    idx = gst_queue_array_find (decoder->pending_requests, NULL, request);
     if (idx >= 0)
       gst_queue_array_drop_element (decoder->pending_requests, idx);
 
