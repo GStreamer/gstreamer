@@ -385,10 +385,19 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_buffer_unmap (in_buf, &map);
 
-  g_assert (klass->output_picture);
+  if (!picture->frame_hdr.show_frame) {
+    GST_LOG_OBJECT (self, "Decode only picture %p", picture);
+    GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
 
-  /* transfer ownership of frame and picture */
-  return klass->output_picture (self, frame, picture);
+    gst_vp9_picture_unref (picture);
+
+    ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  } else {
+    g_assert (klass->output_picture);
+    ret = klass->output_picture (self, frame, picture);
+  }
+
+  return ret;
 
 unmap_and_error:
   {
