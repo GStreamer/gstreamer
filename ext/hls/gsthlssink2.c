@@ -19,14 +19,24 @@
  */
 
 /**
- * SECTION:element-hlssink
- * @title: hlssink
+ * SECTION:element-hlssink2
+ * @title: hlssink2
  *
- * HTTP Live Streaming sink/server
+ * HTTP Live Streaming sink/server. Unlike the old hlssink which took a muxed
+ * MPEG-TS stream as input, this element takes elementary audio and video
+ * streams as input and handles the muxing internally. This allows hlssink2
+ * to make better decisions as to when to start a new fragment and also works
+ * better with input streams where there isn't an encoder element upstream
+ * that can generate keyframes on demand as needed.
+ *
+ * This element only writes fragments and a playlist file into a specified
+ * directory, it does not contain an actual HTTP server to serve these files.
+ * Just point an external webserver to the directory with the playlist and
+ * fragment files.
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 videotestsrc is-live=true ! x264enc ! hlssink max-files=5
+ * gst-launch-1.0 videotestsrc is-live=true ! x264enc ! h264parse ! hlssink2 max-files=5
  * ]|
  *
  */
