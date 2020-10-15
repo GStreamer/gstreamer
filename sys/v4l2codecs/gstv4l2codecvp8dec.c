@@ -682,17 +682,13 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
     goto error;
   }
 
-  if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoder did not produce a frame"), (NULL));
-    goto error;
-  }
-
-  if (frame_num != picture->system_frame_number) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoder produced out of order frame"), (NULL));
-    goto error;
-  }
+  do {
+    if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
+      GST_ELEMENT_ERROR (self, STREAM, DECODE,
+          ("Decoder did not produce a frame"), (NULL));
+      goto error;
+    }
+  } while (frame_num != picture->system_frame_number);
 
 finish_frame:
   gst_v4l2_request_set_done (request);
