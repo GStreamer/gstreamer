@@ -5219,16 +5219,6 @@ _on_local_ice_candidate_cb (GstWebRTCICE * ice, guint session_id,
   }
 }
 
-/* https://www.w3.org/TR/webrtc/#dfn-stats-selection-algorithm */
-static GstStructure *
-_get_stats_from_selector (GstWebRTCBin * webrtc, gpointer selector)
-{
-  if (selector)
-    GST_FIXME_OBJECT (webrtc, "Implement stats selection");
-
-  return gst_structure_copy (webrtc->priv->stats);
-}
-
 struct get_stats
 {
   GstPad *pad;
@@ -5249,25 +5239,11 @@ _free_get_stats (struct get_stats *stats)
 static void
 _get_stats_task (GstWebRTCBin * webrtc, struct get_stats *stats)
 {
-  GstStructure *s;
-  gpointer selector = NULL;
-
-  gst_webrtc_bin_update_stats (webrtc);
-
-  if (stats->pad) {
-    GstWebRTCBinPad *wpad = GST_WEBRTC_BIN_PAD (stats->pad);
-
-    if (wpad->trans) {
-      if (GST_PAD_DIRECTION (wpad) == GST_PAD_SRC) {
-        selector = wpad->trans->receiver;
-      } else {
-        selector = wpad->trans->sender;
-      }
-    }
-  }
-
-  s = _get_stats_from_selector (webrtc, selector);
-  gst_promise_reply (stats->promise, s);
+  /* Our selector is the pad,
+   * https://www.w3.org/TR/webrtc/#dfn-stats-selection-algorithm
+   */
+  gst_promise_reply (stats->promise, gst_webrtc_bin_create_stats (webrtc,
+          stats->pad));
 }
 
 static void
@@ -6460,10 +6436,6 @@ gst_webrtc_bin_finalize (GObject * object)
   if (webrtc->priv->last_generated_offer)
     gst_webrtc_session_description_free (webrtc->priv->last_generated_offer);
   webrtc->priv->last_generated_offer = NULL;
-
-  if (webrtc->priv->stats)
-    gst_structure_free (webrtc->priv->stats);
-  webrtc->priv->stats = NULL;
 
   g_mutex_clear (ICE_GET_LOCK (webrtc));
   g_mutex_clear (PC_GET_LOCK (webrtc));

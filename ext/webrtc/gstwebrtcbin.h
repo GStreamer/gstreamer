@@ -140,8 +140,6 @@ struct _GstWebRTCBinPrivate
   GstWebRTCSessionDescription *last_generated_offer;
   GstWebRTCSessionDescription *last_generated_answer;
 
-  GstStructure *stats;
-
   gboolean tos_attached;
 };
 

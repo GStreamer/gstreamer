@@ -768,8 +768,8 @@ out:
   return TRUE;
 }
 
-void
-gst_webrtc_bin_update_stats (GstWebRTCBin * webrtc)
+GstStructure *
+gst_webrtc_bin_create_stats (GstWebRTCBin * webrtc, GstPad * pad)
 {
   GstStructure *s = gst_structure_new_empty ("application/x-webrtc-stats");
   double ts = monotonic_time_as_double_milliseconds ();
@@ -792,12 +792,13 @@ gst_webrtc_bin_update_stats (GstWebRTCBin * webrtc)
     gst_structure_free (pc_stats);
   }
 
-  gst_element_foreach_pad (GST_ELEMENT (webrtc),
-      (GstElementForeachPadFunc) _get_stats_from_pad, s);
+  if (pad)
+    _get_stats_from_pad (webrtc, pad, s);
+  else
+    gst_element_foreach_pad (GST_ELEMENT (webrtc),
+        (GstElementForeachPadFunc) _get_stats_from_pad, s);
 
   gst_structure_remove_field (s, "timestamp");
 
-  if (webrtc->priv->stats)
-    gst_structure_free (webrtc->priv->stats);
-  webrtc->priv->stats = s;
+  return s;
 }

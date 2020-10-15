@@ -28,7 +28,8 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL
-void        gst_webrtc_bin_update_stats         (GstWebRTCBin * webrtc);
+GstStructure *     gst_webrtc_bin_create_stats         (GstWebRTCBin * webrtc,
+                                                        GstPad * pad);
 
 G_END_DECLS
 
