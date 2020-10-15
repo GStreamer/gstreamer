@@ -26,17 +26,6 @@
 #include <gst/base/gstbytereader.h>
 #include "video-anc.h"
 
-#if !GLIB_CHECK_VERSION(2, 47, 4)
-#ifdef __GNUC__
-#define G_GNUC_CHECK_VERSION(major, minor) \
-    ((__GNUC__ > (major)) || \
-     ((__GNUC__ == (major)) && \
-      (__GNUC_MINOR__ >= (minor))))
-#else
-#define G_GNUC_CHECK_VERSION(major, minor) 0
-#endif
-#endif
-
 /**
  * SECTION:gstvideoanc
  * @title: GstVideo Ancillary

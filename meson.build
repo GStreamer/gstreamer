@@ -26,7 +26,7 @@ else
   have_objc = false
 endif
 
-glib_req = '>= 2.44.0'
+glib_req = '>= 2.56.0'
 orc_req = '>= 0.4.24'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
