@@ -460,32 +460,6 @@ gst_xml_helper_get_prop_unsigned_integer (xmlNode * a_node,
   return exists;
 }
 
-/* g_ascii_string_to_unsigned is available since 2.54. Get rid of this wrapper
- * when we bump the version in 1.18 */
-#if !GLIB_CHECK_VERSION(2,54,0)
-#define g_ascii_string_to_unsigned gst_xml_helper_ascii_string_to_unsigned
-static gboolean
-gst_xml_helper_ascii_string_to_unsigned (const gchar * str, guint base,
-    guint64 min, guint64 max, guint64 * out_num, GError ** error)
-{
-  guint64 number;
-  gchar *endptr = NULL;
-
-  number = g_ascii_strtoull (str, &endptr, base);
-
-  /* Be as strict as the implementation of g_ascii_string_to_unsigned in glib */
-  if (errno)
-    return FALSE;
-  if (g_ascii_isspace (str[0]) || str[0] == '-' || str[0] == '+')
-    return FALSE;
-  if (*endptr != '\0' || endptr == NULL)
-    return FALSE;
-
-  *out_num = number;
-  return TRUE;
-}
-#endif
-
 gboolean
 gst_xml_helper_get_prop_unsigned_integer_64 (xmlNode * a_node,
     const gchar * property_name, guint64 default_val, guint64 * property_value)
