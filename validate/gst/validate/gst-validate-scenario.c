@@ -278,35 +278,6 @@ typedef struct KeyFileGroupName
 
 #define NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE 1
 
-#if !GLIB_CHECK_VERSION(2,54,0)
-#define g_enum_to_string gst_validate_g_enum_to_string
-static gchar *
-gst_validate_g_enum_to_string (GType g_enum_type, gint value)
-{
-  gchar *result;
-  GEnumClass *enum_class;
-  GEnumValue *enum_value;
-
-  g_return_val_if_fail (G_TYPE_IS_ENUM (g_enum_type), NULL);
-
-  enum_class = g_type_class_ref (g_enum_type);
-
-  /* Already warned */
-  if (enum_class == NULL)
-    return g_strdup_printf ("%d", value);
-
-  enum_value = g_enum_get_value (enum_class, value);
-
-  if (enum_value == NULL)
-    result = g_strdup_printf ("%d", value);
-  else
-    result = g_strdup (enum_value->value_name);
-
-  g_type_class_unref (enum_class);
-  return result;
-}
-#endif
-
 static void
 gst_validate_sink_information_free (GstValidateSinkInformation * info)
 {

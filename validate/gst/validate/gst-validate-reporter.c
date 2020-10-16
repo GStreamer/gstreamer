@@ -378,12 +378,10 @@ done:
     gchar *message, **lines, *color = NULL;
     const gchar *endcolor = "";
 
-#if GLIB_CHECK_VERSION(2,50,0)
     if (g_log_writer_supports_color (fileno (stderr))) {
       color = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
       endcolor = "\033[0m";
     }
-#endif
     gst_validate_printf (NULL, "%*s%s> Error%s:\n", indent, "",
         color ? color : "", endcolor);
 

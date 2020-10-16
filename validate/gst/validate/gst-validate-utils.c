@@ -577,15 +577,7 @@ setup_quarks (void)
 gboolean
 gst_validate_has_colored_output (void)
 {
-#if GLIB_CHECK_VERSION(2,50,0)
   return g_log_writer_supports_color (fileno (stdout));
-#endif
-
-#ifdef G_OS_UNIX
-  return isatty (STDOUT_FILENO);
-#elif defined(G_OS_WIN32)
-  return FALSE;
-#endif
 }
 
 /* Parse file that contains a list of GStructures */

@@ -26,7 +26,7 @@ osxversion = curversion + 1
 
 prefix = get_option('prefix')
 
-glib_req = '>= 2.44.0'
+glib_req = '>= 2.56.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')

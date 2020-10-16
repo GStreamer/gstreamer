@@ -1411,12 +1411,10 @@ gst_validate_error_structure (gpointer structure, const gchar * format, ...)
 
   const gchar *endcolor = "";
 
-#if GLIB_CHECK_VERSION(2,50,0)
   if (g_log_writer_supports_color (fileno (stderr))) {
     color = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
     endcolor = "\033[0m";
   }
-#endif
 
   if (structure) {
     if (GST_IS_STRUCTURE (structure)) {
