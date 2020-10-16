@@ -50,6 +50,10 @@ gst_check = library('gstcheck-@0@'.format(apiversion),
 
 pkgconfig.generate(gst_check,
   libraries : [libgst],
+  # FIXME: Add manually libcheck's dependencies because it's an uninstalled static
+  # library and Meson <0.56.0 does not handle them correctly.
+  # See https://github.com/mesonbuild/meson/pull/7488.
+  libraries_private: [rt_lib, mathlib],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : 'gstreamer-check-1.0',
