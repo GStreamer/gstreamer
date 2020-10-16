@@ -30,34 +30,38 @@
  * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
  * wpesrc element.
  *
- * Since: 1.16
- *
  * ## Example launch lines
  *
- * |[
+ * ```shell
  * gst-launch-1.0 -v wpesrc location="https://gstreamer.freedesktop.org" ! queue ! glimagesink
- * ]|
+ * ```
  * Shows the GStreamer website homepage
  *
- * |[
- * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
- * ]|
+ * ```shell
+ * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" \
+ *   videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
+ * ```
  * Saves the first 50 video frames generated for the GStreamer website as PNG files in /tmp.
  *
- * |[
+ * ```shell
  * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
- * ]|
+ * ```
  * Shows the GStreamer website homepage as played with GstPlayer in a GTK+ window.
  *
- * |[
- * gst-launch-1.0  glvideomixer name=m sink_1::zorder=0 ! glimagesink wpesrc location="file:///home/phil/Downloads/plunk/index.html" draw-background=0 ! m. videotestsrc ! queue ! glupload ! glcolorconvert ! m.
- * ]|
+ * ```shell
+ * gst-launch-1.0  glvideomixer name=m sink_1::zorder=0 ! glimagesink wpesrc location="file:///tmp/asset.html" draw-background=0 \
+ *   ! m. videotestsrc ! queue ! glupload ! glcolorconvert ! m.
+ * ```
  * Composite WPE with a video stream in a single OpenGL scene.
  *
- * |[
- * gst-launch-1.0 glvideomixer name=m sink_1::zorder=0 sink_0::height=818 sink_0::width=1920 ! gtkglsink wpesrc location="file:///home/phil/Downloads/plunk/index.html" draw-background=0 ! m. uridecodebin uri="http://192.168.1.44/Sintel.2010.1080p.mkv" name=d d. ! queue ! glupload ! glcolorconvert ! m.
- * ]|
+ * ```shell
+ * gst-launch-1.0 glvideomixer name=m sink_1::zorder=0 sink_0::height=818 sink_0::width=1920 ! gtkglsink \
+ *    wpesrc location="file:///tmp/asset.html" draw-background=0 ! m.
+ *    uridecodebin uri="http://example.com/Sintel.2010.1080p.mkv" name=d d. ! queue ! glupload ! glcolorconvert ! m.
+ * ```
  * Composite WPE with a video stream, sink_0 pad properties have to match the video dimensions.
+ *
+ * Since: 1.16
  */
 
 /*
