@@ -2393,7 +2393,7 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
        * the sender of the RTCP message. We could also compare our stats against
        * the other sender to see if we are better or worse. */
       /* FIXME, need to keep track who the RB block is from */
-      rtp_source_process_rb (source, pinfo->ntpnstime, fractionlost,
+      rtp_source_process_rb (source, ssrc, pinfo->ntpnstime, fractionlost,
           packetslost, exthighestseq, jitter, lsr, dlsr);
     }
   }
@@ -2726,7 +2726,8 @@ rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
 {
   guint32 round_trip = 0;
 
-  rtp_source_get_last_rb (src, NULL, NULL, NULL, NULL, NULL, NULL, &round_trip);
+  rtp_source_get_last_rb (src, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+      &round_trip);
 
   if (src->last_keyframe_request != GST_CLOCK_TIME_NONE && round_trip) {
     GstClockTime round_trip_in_ns = gst_util_uint64_scale (round_trip,
@@ -3694,6 +3695,7 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
 
   /* store last generated RR packet */
   source->last_rr.is_valid = TRUE;
+  source->last_rr.ssrc = data->source->ssrc;
   source->last_rr.fractionlost = fractionlost;
   source->last_rr.packetslost = packetslost;
   source->last_rr.exthighestseq = exthighestseq;

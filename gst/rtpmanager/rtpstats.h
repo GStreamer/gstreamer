@@ -51,7 +51,7 @@ typedef struct {
  */
 typedef struct {
   gboolean is_valid;
-  guint32 ssrc; /* who the report is from */
+  guint32 ssrc; /* which source is the report about */
   guint8  fractionlost;
   guint32 packetslost;
   guint32 exthighestseq;

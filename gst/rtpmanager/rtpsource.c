@@ -373,6 +373,7 @@ rtp_source_create_stats (RTPSource * src)
   gboolean internal = src->internal;
   gchar *address_str;
   gboolean have_rb;
+  guint32 ssrc = 0;
   guint8 fractionlost = 0;
   gint32 packetslost = 0;
   guint32 exthighestseq = 0;
@@ -453,11 +454,12 @@ rtp_source_create_stats (RTPSource * src)
         (guint) src->last_rr.dlsr, NULL);
 
     /* get the last RB */
-    have_rb = rtp_source_get_last_rb (src, &fractionlost, &packetslost,
-        &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
+    have_rb = rtp_source_get_last_rb (src, &ssrc, &fractionlost,
+        &packetslost, &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
 
     gst_structure_set (s,
         "have-rb", G_TYPE_BOOLEAN, have_rb,
+        "rb-ssrc", G_TYPE_UINT, ssrc,
         "rb-fractionlost", G_TYPE_UINT, (guint) fractionlost,
         "rb-packetslost", G_TYPE_INT, (gint) packetslost,
         "rb-exthighestseq", G_TYPE_UINT, (guint) exthighestseq,
@@ -1445,6 +1447,7 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
 /**
  * rtp_source_process_rb:
  * @src: an #RTPSource
+ * @ssrc: SSRC of the local source for this this RB was sent
  * @ntpnstime: the current time in nanoseconds since 1970
  * @fractionlost: fraction lost since last SR/RR
  * @packetslost: the cumulative number of packets lost
@@ -1458,7 +1461,7 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
  * Update the report block in @src.
  */
 void
-rtp_source_process_rb (RTPSource * src, guint64 ntpnstime,
+rtp_source_process_rb (RTPSource * src, guint32 ssrc, guint64 ntpnstime,
     guint8 fractionlost, gint32 packetslost, guint32 exthighestseq,
     guint32 jitter, guint32 lsr, guint32 dlsr)
 {
@@ -1479,6 +1482,7 @@ rtp_source_process_rb (RTPSource * src, guint64 ntpnstime,
 
   /* update current */
   curr->is_valid = TRUE;
+  curr->ssrc = ssrc;
   curr->fractionlost = fractionlost;
   curr->packetslost = packetslost;
   curr->exthighestseq = exthighestseq;
@@ -1732,6 +1736,7 @@ rtp_source_get_last_sr (RTPSource * src, GstClockTime * time, guint64 * ntptime,
 /**
  * rtp_source_get_last_rb:
  * @src: an #RTPSource
+ * @ssrc: SSRC of the local source for this this RB was sent
  * @fractionlost: fraction lost since last SR/RR
  * @packetslost: the cumulative number of packets lost
  * @exthighestseq: the extended last sequence number received
@@ -1748,9 +1753,9 @@ rtp_source_get_last_sr (RTPSource * src, GstClockTime * time, guint64 * ntptime,
  * Returns: %TRUE if there was a valid SB report.
  */
 gboolean
-rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
-    gint32 * packetslost, guint32 * exthighestseq, guint32 * jitter,
-    guint32 * lsr, guint32 * dlsr, guint32 * round_trip)
+rtp_source_get_last_rb (RTPSource * src, guint32 * ssrc,
+    guint8 * fractionlost, gint32 * packetslost, guint32 * exthighestseq,
+    guint32 * jitter, guint32 * lsr, guint32 * dlsr, guint32 * round_trip)
 {
   RTPReceiverReport *curr;
 
@@ -1760,6 +1765,8 @@ rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
   if (!curr->is_valid)
     return FALSE;
 
+  if (ssrc)
+    *ssrc = curr->ssrc;
   if (fractionlost)
     *fractionlost = curr->fractionlost;
   if (packetslost)
