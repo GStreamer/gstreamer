@@ -237,6 +237,36 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_meta_register_custom(IntPtr name, IntPtr[] tags, GstSharp.CustomMetaTransformFunctionNative transform_func, IntPtr user_data, GLib.DestroyNotify destroy_data);
+
+		public static Gst.MetaInfo MetaRegisterCustom(string name, string[] tags, Gst.CustomMetaTransformFunction transform_func) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			int cnt_tags = tags == null ? 0 : tags.Length;
+			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
+			for (int i = 0; i < cnt_tags; i++)
+				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup(tags[i]);
+			native_tags [cnt_tags] = IntPtr.Zero;
+			GstSharp.CustomMetaTransformFunctionWrapper transform_func_wrapper = new GstSharp.CustomMetaTransformFunctionWrapper (transform_func);
+			IntPtr user_data;
+			GLib.DestroyNotify destroy_data;
+			if (transform_func == null) {
+				user_data = IntPtr.Zero;
+				destroy_data = null;
+			} else {
+				user_data = (IntPtr) GCHandle.Alloc (transform_func_wrapper);
+				destroy_data = GLib.DestroyHelper.NotifyHandler;
+			}
+			IntPtr raw_ret = gst_meta_register_custom(native_name, native_tags, transform_func_wrapper.NativeDelegate, user_data, destroy_data);
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			GLib.Marshaller.Free (native_name);
+			return ret;
+		}
+
+		public static Gst.MetaInfo MetaRegisterCustom(string name, string[] tags) {
+			return MetaRegisterCustom (name, tags, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_parent_buffer_meta_api_get_type();
 
 		public static GLib.GType ParentBufferMetaApiGetType() {

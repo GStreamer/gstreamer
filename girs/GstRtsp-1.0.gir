@@ -5336,20 +5336,20 @@ is invalid.</doc>
       <method name="free" c:identifier="gst_rtsp_transport_free">
         <doc xml:space="preserve"
              filename="gst-libs/gst/rtsp/gstrtsptransport.c"
-             line="751">Free the memory used by @transport.</doc>
+             line="759">Free the memory used by @transport.</doc>
         <source-position filename="gst-libs/gst/rtsp/gstrtsptransport.h"
                          line="197"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/rtsp/gstrtsptransport.c"
-               line="757">#GST_RTSP_OK.</doc>
+               line="765">#GST_RTSP_OK.</doc>
           <type name="RTSPResult" c:type="GstRTSPResult"/>
         </return-value>
         <parameters>
           <instance-parameter name="transport" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/rtsp/gstrtsptransport.c"
-                 line="753">a #GstRTSPTransport</doc>
+                 line="761">a #GstRTSPTransport</doc>
             <type name="RTSPTransport" c:type="GstRTSPTransport*"/>
           </instance-parameter>
         </parameters>

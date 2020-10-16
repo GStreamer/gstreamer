@@ -163,6 +163,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_parse_gap_flags(IntPtr raw, out int flags);
+
+		public Gst.GapFlags ParseGapFlags() {
+			Gst.GapFlags flags;
+			int native_flags;
+			gst_event_parse_gap_flags(Handle, out native_flags);
+			flags = (Gst.GapFlags) native_flags;
+			return flags;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_event_parse_group_id(IntPtr raw, out uint group_id);
 
 		public bool ParseGroupId(out uint group_id) {
@@ -377,6 +388,15 @@ namespace Gst {
 			gst_event_parse_toc_select(Handle, out native_uid);
 			uid = GLib.Marshaller.PtrToStringGFree(native_uid);
 			return uid;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_set_gap_flags(IntPtr raw, int flags);
+
+		public Gst.GapFlags GapFlags { 
+			set {
+				gst_event_set_gap_flags(Handle, (int) value);
+			}
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

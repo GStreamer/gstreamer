@@ -4178,7 +4178,7 @@ in debugging.</doc>
       <type name="gint" c:type="gint"/>
     </constant>
     <constant name="PLUGINS_BASE_VERSION_MINOR"
-              value="18"
+              value="19"
               c:type="GST_PLUGINS_BASE_VERSION_MINOR">
       <doc xml:space="preserve"
            filename="gst-libs/gst/pbutils/gstpluginsbaseversion.h"

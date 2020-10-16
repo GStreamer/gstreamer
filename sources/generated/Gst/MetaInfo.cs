@@ -50,6 +50,26 @@ namespace Gst {
 			return (Gst.MetaInfo) Marshal.PtrToStructure (raw, typeof (Gst.MetaInfo));
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_meta_info_is_custom(IntPtr raw);
+
+		public bool IsCustom { 
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				bool raw_ret = gst_meta_info_is_custom(this_as_native);
+				bool ret = raw_ret;
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+		}
+
+		static void ReadNative (IntPtr native, ref Gst.MetaInfo target)
+		{
+			target = New (native);
+		}
+
 		public bool Equals (MetaInfo other)
 		{
 			return true && Api.Equals (other.Api) && Type.Equals (other.Type) && Size.Equals (other.Size) && InitFunc.Equals (other.InitFunc) && FreeFunc.Equals (other.FreeFunc) && TransformFunc.Equals (other.TransformFunc);

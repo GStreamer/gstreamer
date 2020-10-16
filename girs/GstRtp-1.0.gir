@@ -3763,20 +3763,20 @@ audio codec</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/rtp/gstrtpbasedepayload.c"
-             line="1152">Queries whether #GstRTPSourceMeta will be added to depayloaded buffers.</doc>
+             line="1153">Queries whether #GstRTPSourceMeta will be added to depayloaded buffers.</doc>
         <source-position filename="gst-libs/gst/rtp/gstrtpbasedepayload.h"
                          line="124"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/rtp/gstrtpbasedepayload.c"
-               line="1158">%TRUE if source-info is enabled.</doc>
+               line="1159">%TRUE if source-info is enabled.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="depayload" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/rtp/gstrtpbasedepayload.c"
-                 line="1154">a #GstRTPBaseDepayload</doc>
+                 line="1155">a #GstRTPBaseDepayload</doc>
             <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
           </instance-parameter>
         </parameters>
@@ -3845,7 +3845,7 @@ the outgoing buffer when it didn't have a timestamp already.</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/rtp/gstrtpbasedepayload.c"
-             line="1136">Enable or disable adding #GstRTPSourceMeta to depayloaded buffers.</doc>
+             line="1137">Enable or disable adding #GstRTPSourceMeta to depayloaded buffers.</doc>
         <source-position filename="gst-libs/gst/rtp/gstrtpbasedepayload.h"
                          line="127"/>
         <return-value transfer-ownership="none">
@@ -3855,13 +3855,13 @@ the outgoing buffer when it didn't have a timestamp already.</doc>
           <instance-parameter name="depayload" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/rtp/gstrtpbasedepayload.c"
-                 line="1138">a #GstRTPBaseDepayload</doc>
+                 line="1139">a #GstRTPBaseDepayload</doc>
             <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
           </instance-parameter>
           <parameter name="enable" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/rtp/gstrtpbasedepayload.c"
-                 line="1139">whether to add meta about RTP sources to buffer</doc>
+                 line="1140">whether to add meta about RTP sources to buffer</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>

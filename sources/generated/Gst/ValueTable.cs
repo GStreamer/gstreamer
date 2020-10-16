@@ -31,7 +31,13 @@ namespace Gst {
 				return GstSharp.ValueDeserializeFuncWrapper.GetManagedDelegate (_deserialize);
 			}
 		}
-		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
+		private GstSharp.ValueDeserializeWithPSpecFuncNative _deserialize_with_pspec;
+		public Gst.ValueDeserializeWithPSpecFunc DeserializeWithPspec {
+			get {
+				return GstSharp.ValueDeserializeWithPSpecFuncWrapper.GetManagedDelegate (_deserialize_with_pspec);
+			}
+		}
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=3)]
 		private IntPtr[] _gstGstReserved;
 
 		public static Gst.ValueTable Zero = new Gst.ValueTable ();
@@ -44,7 +50,7 @@ namespace Gst {
 
 		public bool Equals (ValueTable other)
 		{
-			return true && Type.Equals (other.Type) && Compare.Equals (other.Compare) && Serialize.Equals (other.Serialize) && Deserialize.Equals (other.Deserialize);
+			return true && Type.Equals (other.Type) && Compare.Equals (other.Compare) && Serialize.Equals (other.Serialize) && Deserialize.Equals (other.Deserialize) && DeserializeWithPspec.Equals (other.DeserializeWithPspec);
 		}
 
 		public override bool Equals (object other)
@@ -54,7 +60,7 @@ namespace Gst {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Type.GetHashCode () ^ Compare.GetHashCode () ^ Serialize.GetHashCode () ^ Deserialize.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Type.GetHashCode () ^ Compare.GetHashCode () ^ Serialize.GetHashCode () ^ Deserialize.GetHashCode () ^ DeserializeWithPspec.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

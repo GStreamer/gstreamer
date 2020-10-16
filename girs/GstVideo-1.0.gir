@@ -2656,14 +2656,14 @@ by any element in the pipeline (Since: 1.6)</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="96">The entire set of flags for the @frame</doc>
+           line="105">The entire set of flags for the @frame</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="100"/>
+                       line="109"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="98">a #GstVideoCodecFrame</doc>
+               line="107">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2672,28 +2672,7 @@ by any element in the pipeline (Since: 1.6)</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="104">Checks whether the given @flag is set</doc>
-      <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="109"/>
-      <parameters>
-        <parameter name="frame">
-          <doc xml:space="preserve"
-               filename="gst-libs/gst/video/gstvideoutils.h"
-               line="106">a #GstVideoCodecFrame</doc>
-        </parameter>
-        <parameter name="flag">
-          <doc xml:space="preserve"
-               filename="gst-libs/gst/video/gstvideoutils.h"
-               line="107">a flag to check for</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
-    <function-macro name="VIDEO_CODEC_FRAME_FLAG_SET"
-                    c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_SET"
-                    introspectable="0">
-      <doc xml:space="preserve"
-           filename="gst-libs/gst/video/gstvideoutils.h"
-           line="113">This macro sets the given bits</doc>
+           line="113">Checks whether the given @flag is set</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
                        line="118"/>
       <parameters>
@@ -2705,16 +2684,16 @@ by any element in the pipeline (Since: 1.6)</doc>
         <parameter name="flag">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="116">Flag to set, can be any number of bits in guint32.</doc>
+               line="116">a flag to check for</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <function-macro name="VIDEO_CODEC_FRAME_FLAG_UNSET"
-                    c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_UNSET"
+    <function-macro name="VIDEO_CODEC_FRAME_FLAG_SET"
+                    c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_SET"
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="122">This macro usets the given bits.</doc>
+           line="122">This macro sets the given bits</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
                        line="127"/>
       <parameters>
@@ -2726,7 +2705,28 @@ by any element in the pipeline (Since: 1.6)</doc>
         <parameter name="flag">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="125">Flag to unset</doc>
+               line="125">Flag to set, can be any number of bits in guint32.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VIDEO_CODEC_FRAME_FLAG_UNSET"
+                    c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_UNSET"
+                    introspectable="0">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/video/gstvideoutils.h"
+           line="131">This macro usets the given bits.</doc>
+      <source-position filename="gst-libs/gst/video/gstvideoutils.h"
+                       line="136"/>
+      <parameters>
+        <parameter name="frame">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/gstvideoutils.h"
+               line="133">a #GstVideoCodecFrame</doc>
+        </parameter>
+        <parameter name="flag">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/gstvideoutils.h"
+               line="134">Flag to unset</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2735,14 +2735,14 @@ by any element in the pipeline (Since: 1.6)</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="131">Tests if the buffer should only be decoded but not sent downstream.</doc>
+           line="140">Tests if the buffer should only be decoded but not sent downstream.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="135"/>
+                       line="144"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="133">a #GstVideoCodecFrame</doc>
+               line="142">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2751,15 +2751,15 @@ by any element in the pipeline (Since: 1.6)</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="177">Tests if the frame must be encoded as a keyframe. Applies only to
+           line="186">Tests if the frame must be encoded as a keyframe. Applies only to
 frames provided to encoders. Decoders can safely ignore this field.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="182"/>
+                       line="191"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="179">a #GstVideoCodecFrame</doc>
+               line="188">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2768,18 +2768,18 @@ frames provided to encoders. Decoders can safely ignore this field.</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="188">Tests if encoder should output stream headers before outputting the
+           line="197">Tests if encoder should output stream headers before outputting the
 resulting encoded buffer for the given frame.
 
 Applies only to frames provided to encoders. Decoders can safely
 ignore this field.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="196"/>
+                       line="205"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="190">a #GstVideoCodecFrame</doc>
+               line="199">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2788,16 +2788,16 @@ ignore this field.</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="152">Tests if the frame is a synchronization point (like a keyframe).
+           line="161">Tests if the frame is a synchronization point (like a keyframe).
 
 Decoder implementations can use this to detect keyframes.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="158"/>
+                       line="167"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="154">a #GstVideoCodecFrame</doc>
+               line="163">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2806,19 +2806,19 @@ Decoder implementations can use this to detect keyframes.</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="139">Sets the buffer to not be sent downstream.
+           line="148">Sets the buffer to not be sent downstream.
 
 Decoder implementation can use this if they have frames that
 are not meant to be displayed.
 
 Encoder implementation can safely ignore this field.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="148"/>
+                       line="157"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="141">a #GstVideoCodecFrame</doc>
+               line="150">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2826,7 +2826,7 @@ Encoder implementation can safely ignore this field.</doc>
                     c:identifier="GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME"
                     introspectable="0">
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="183"/>
+                       line="192"/>
       <parameters>
         <parameter name="frame">
         </parameter>
@@ -2836,7 +2836,7 @@ Encoder implementation can safely ignore this field.</doc>
                     c:identifier="GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME_HEADERS"
                     introspectable="0">
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="197"/>
+                       line="206"/>
       <parameters>
         <parameter name="frame">
         </parameter>
@@ -2847,19 +2847,19 @@ Encoder implementation can safely ignore this field.</doc>
                     introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="162">Sets the frame to be a synchronization point (like a keyframe).
+           line="171">Sets the frame to be a synchronization point (like a keyframe).
 
 Encoder implementations should set this accordingly.
 
 Decoder implementing parsing features should set this when they
 detect such a synchronization point.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="171"/>
+                       line="180"/>
       <parameters>
         <parameter name="frame">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.h"
-               line="164">a #GstVideoCodecFrame</doc>
+               line="173">a #GstVideoCodecFrame</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -2867,7 +2867,7 @@ detect such a synchronization point.</doc>
                     c:identifier="GST_VIDEO_CODEC_FRAME_UNSET_FORCE_KEYFRAME"
                     introspectable="0">
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="184"/>
+                       line="193"/>
       <parameters>
         <parameter name="frame">
         </parameter>
@@ -2877,7 +2877,7 @@ detect such a synchronization point.</doc>
                     c:identifier="GST_VIDEO_CODEC_FRAME_UNSET_FORCE_KEYFRAME_HEADERS"
                     introspectable="0">
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="198"/>
+                       line="207"/>
       <parameters>
         <parameter name="frame">
         </parameter>
@@ -2887,7 +2887,7 @@ detect such a synchronization point.</doc>
                     c:identifier="GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT"
                     introspectable="0">
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="172"/>
+                       line="181"/>
       <parameters>
         <parameter name="frame">
         </parameter>
@@ -2896,49 +2896,49 @@ detect such a synchronization point.</doc>
     <constant name="VIDEO_COLORIMETRY_BT2020"
               value="bt2020"
               c:type="GST_VIDEO_COLORIMETRY_BT2020">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="244"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="248"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_BT2020_10"
               value="bt2020-10"
               c:type="GST_VIDEO_COLORIMETRY_BT2020_10">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="245"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="249"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_BT2100_HLG"
               value="bt2100-hlg"
               c:type="GST_VIDEO_COLORIMETRY_BT2100_HLG">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="247"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="251"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_BT2100_PQ"
               value="bt2100-pq"
               c:type="GST_VIDEO_COLORIMETRY_BT2100_PQ">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="246"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="250"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_BT601"
               value="bt601"
               c:type="GST_VIDEO_COLORIMETRY_BT601">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="240"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="244"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_BT709"
               value="bt709"
               c:type="GST_VIDEO_COLORIMETRY_BT709">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="241"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="245"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_SMPTE240M"
               value="smpte240m"
               c:type="GST_VIDEO_COLORIMETRY_SMPTE240M">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="242"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="246"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COLORIMETRY_SRGB"
               value="sRGB"
               c:type="GST_VIDEO_COLORIMETRY_SRGB">
-      <source-position filename="gst-libs/gst/video/video-color.h" line="243"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="247"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_COMP_A" value="3" c:type="GST_VIDEO_COMP_A">
@@ -6685,20 +6685,20 @@ supports all the video bufferpool options.</doc>
                 version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1051">Parses fixed Closed Caption #GstCaps and returns the corresponding caption
+             line="1040">Parses fixed Closed Caption #GstCaps and returns the corresponding caption
 type, or %GST_VIDEO_CAPTION_TYPE_UNKNOWN.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="369"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1058">#GstVideoCaptionType.</doc>
+               line="1047">#GstVideoCaptionType.</doc>
           <type name="VideoCaptionType" c:type="GstVideoCaptionType"/>
         </return-value>
         <parameters>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="1053">Fixed #GstCaps to parse</doc>
+                 line="1042">Fixed #GstCaps to parse</doc>
             <type name="Gst.Caps" c:type="const GstCaps*"/>
           </parameter>
         </parameters>
@@ -6708,19 +6708,19 @@ type, or %GST_VIDEO_CAPTION_TYPE_UNKNOWN.</doc>
                 version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1091">Creates new caps corresponding to @type.</doc>
+             line="1080">Creates new caps corresponding to @type.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="373"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1097">new #GstCaps</doc>
+               line="1086">new #GstCaps</doc>
           <type name="Gst.Caps" c:type="GstCaps*"/>
         </return-value>
         <parameters>
           <parameter name="type" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="1093">#GstVideoCaptionType</doc>
+                 line="1082">#GstVideoCaptionType</doc>
             <type name="VideoCaptionType" c:type="GstVideoCaptionType"/>
           </parameter>
         </parameters>
@@ -7050,10 +7050,10 @@ performed.</doc>
             c:symbol-prefix="video_codec_frame">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/gstvideoutils.h"
-           line="202">A #GstVideoCodecFrame represents a video frame both in raw and
+           line="211">A #GstVideoCodecFrame represents a video frame both in raw and
 encoded form.</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="269"/>
+                       line="278"/>
       <field name="ref_count" readable="0" private="1">
         <type name="gint" c:type="gint"/>
       </field>
@@ -7063,7 +7063,7 @@ encoded form.</doc>
       <field name="system_frame_number" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="207">Unique identifier for the frame. Use this if you need
+             line="216">Unique identifier for the frame. Use this if you need
       to get hold of the frame later (like when data is being decoded).
       Typical usage in decoders is to set this on the opaque value provided
       to the library and get back the frame using gst_video_decoder_get_frame()</doc>
@@ -7078,31 +7078,31 @@ encoded form.</doc>
       <field name="dts" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="205">Decoding timestamp</doc>
+             line="214">Decoding timestamp</doc>
         <type name="Gst.ClockTime" c:type="GstClockTime"/>
       </field>
       <field name="pts" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="204">Presentation timestamp</doc>
+             line="213">Presentation timestamp</doc>
         <type name="Gst.ClockTime" c:type="GstClockTime"/>
       </field>
       <field name="duration" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="206">Duration of the frame</doc>
+             line="215">Duration of the frame</doc>
         <type name="Gst.ClockTime" c:type="GstClockTime"/>
       </field>
       <field name="distance_from_sync" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="211">Distance in frames from the last synchronization point.</doc>
+             line="220">Distance in frames from the last synchronization point.</doc>
         <type name="gint" c:type="int"/>
       </field>
       <field name="input_buffer" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="212">the input #GstBuffer that created this frame. The buffer is owned
+             line="221">the input #GstBuffer that created this frame. The buffer is owned
           by the frame and references to the frame instead of the buffer should
           be kept.</doc>
         <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -7110,7 +7110,7 @@ encoded form.</doc>
       <field name="output_buffer" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="215">the output #GstBuffer. Implementations should set this either
+             line="224">the output #GstBuffer. Implementations should set this either
           directly, or by using the
           @gst_video_decoder_allocate_output_frame() or
           @gst_video_decoder_allocate_output_buffer() methods. The buffer is
@@ -7121,7 +7121,7 @@ encoded form.</doc>
       <field name="deadline" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
-             line="221">Running time when the frame will be used.</doc>
+             line="230">Running time when the frame will be used.</doc>
         <type name="Gst.ClockTime" c:type="GstClockTime"/>
       </field>
       <field name="events" readable="0" private="1">
@@ -7137,10 +7137,10 @@ encoded form.</doc>
       </field>
       <union name="abidata" c:type="abidata">
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="268"/>
+                         line="277"/>
         <record name="ABI" c:type="ABI">
           <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                           line="266"/>
+                           line="275"/>
           <field name="ts" writable="1">
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </field>
@@ -7164,7 +7164,7 @@ encoded form.</doc>
              line="87">Gets private data set on the frame by the subclass via
 gst_video_codec_frame_set_user_data() previously.</doc>
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="300"/>
+                         line="309"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.c"
@@ -7185,7 +7185,7 @@ gst_video_codec_frame_set_user_data() previously.</doc>
              filename="gst-libs/gst/video/gstvideoutils.c"
              line="102">Increases the refcount of the given frame by one.</doc>
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="289"/>
+                         line="298"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.c"
@@ -7211,7 +7211,7 @@ the frame is freed. Allows to attach private data by the subclass to frames.
 If a @user_data was previously set, then the previous set @notify will be called
 before the @user_data is replaced.</doc>
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="295"/>
+                         line="304"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -7248,7 +7248,7 @@ before the @user_data is replaced.</doc>
              line="122">Decreases the refcount of the frame. If the refcount reaches 0, the frame
 will be freed.</doc>
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="292"/>
+                         line="301"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -7267,7 +7267,7 @@ will be freed.</doc>
            filename="gst-libs/gst/video/gstvideoutils.h"
            line="79">Flags for #GstVideoCodecFrame</doc>
       <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                       line="94"/>
+                       line="103"/>
       <member name="decode_only"
               value="1"
               c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY">
@@ -7295,6 +7295,13 @@ will be freed.</doc>
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideoutils.h"
              line="84">should the encoder output stream headers</doc>
+      </member>
+      <member name="corrupted"
+              value="16"
+              c:identifier="GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideoutils.h"
+             line="85">the buffer data is corrupted (Since: 1.20)</doc>
       </member>
     </bitfield>
     <record name="VideoCodecState"
@@ -7354,7 +7361,7 @@ Decoders and encoders can set the downstream state, by using the
              filename="gst-libs/gst/video/gstvideoutils.c"
              line="143">Increases the refcount of the given state by one.</doc>
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="277"/>
+                         line="286"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideoutils.c"
@@ -7376,7 +7383,7 @@ Decoders and encoders can set the downstream state, by using the
              line="177">Decreases the refcount of the state. If the refcount reaches 0, the state
 will be freed.</doc>
         <source-position filename="gst-libs/gst/video/gstvideoutils.h"
-                         line="280"/>
+                         line="289"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -7461,24 +7468,24 @@ actually GBR, also IEC 61966-2-1 (sRGB)</doc>
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="769">Converts the @value to the #GstVideoColorMatrix
+             line="799">Converts the @value to the #GstVideoColorMatrix
 The matrix coefficients (MatrixCoefficients) value is
 defined by "ISO/IEC 23001-8 Section 7.3 Table 4"
 and "ITU-T H.273 Table 4".
 "H.264 Table E-5" and "H.265 Table E.5" share the identical values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="284"/>
+                         line="288"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="779">the matched #GstVideoColorMatrix</doc>
+               line="809">the matched #GstVideoColorMatrix</doc>
           <type name="VideoColorMatrix" c:type="GstVideoColorMatrix"/>
         </return-value>
         <parameters>
           <parameter name="value" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="771">a ITU-T H.273 matrix coefficients value</doc>
+                 line="801">a ITU-T H.273 matrix coefficients value</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
@@ -7553,23 +7560,23 @@ and the other way around:
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="636">Converts #GstVideoColorMatrix to the "matrix coefficients"
+             line="666">Converts #GstVideoColorMatrix to the "matrix coefficients"
 (MatrixCoefficients) value defined by "ISO/IEC 23001-8 Section 7.3 Table 4"
 and "ITU-T H.273 Table 4".
 "H.264 Table E-5" and "H.265 Table E.5" share the identical values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="275"/>
+                         line="279"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="645">The value of ISO/IEC 23001-8 matrix coefficients.</doc>
+               line="675">The value of ISO/IEC 23001-8 matrix coefficients.</doc>
           <type name="guint" c:type="guint"/>
         </return-value>
         <parameters>
           <parameter name="matrix" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="638">a #GstVideoColorMatrix</doc>
+                 line="668">a #GstVideoColorMatrix</doc>
             <type name="VideoColorMatrix" c:type="GstVideoColorMatrix"/>
           </parameter>
         </parameters>
@@ -7581,7 +7588,7 @@ and "ITU-T H.273 Table 4".
                  c:type="GstVideoColorPrimaries">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.h"
-           line="147">The color primaries define the how to transform linear RGB values to and from
+           line="151">The color primaries define the how to transform linear RGB values to and from
 the CIE XYZ colorspace.</doc>
       <member name="unknown"
               value="0"
@@ -7589,7 +7596,7 @@ the CIE XYZ colorspace.</doc>
               glib:nick="unknown">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="149">unknown color primaries</doc>
+             line="153">unknown color primaries</doc>
       </member>
       <member name="bt709"
               value="1"
@@ -7597,7 +7604,7 @@ the CIE XYZ colorspace.</doc>
               glib:nick="bt709">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="150">BT709 primaries, also ITU-R BT1361 / IEC
+             line="154">BT709 primaries, also ITU-R BT1361 / IEC
 61966-2-4 / SMPTE RP177 Annex B</doc>
       </member>
       <member name="bt470m"
@@ -7606,7 +7613,7 @@ the CIE XYZ colorspace.</doc>
               glib:nick="bt470m">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="152">BT470M primaries, also FCC Title 47 Code
+             line="156">BT470M primaries, also FCC Title 47 Code
 of Federal Regulations 73.682 (a)(20)</doc>
       </member>
       <member name="bt470bg"
@@ -7615,7 +7622,7 @@ of Federal Regulations 73.682 (a)(20)</doc>
               glib:nick="bt470bg">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="154">BT470BG primaries, also ITU-R BT601-6
+             line="158">BT470BG primaries, also ITU-R BT601-6
 625 / ITU-R BT1358 625 / ITU-R BT1700 625 PAL &amp; SECAM</doc>
       </member>
       <member name="smpte170m"
@@ -7624,7 +7631,7 @@ of Federal Regulations 73.682 (a)(20)</doc>
               glib:nick="smpte170m">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="156">SMPTE170M primaries, also ITU-R
+             line="160">SMPTE170M primaries, also ITU-R
 BT601-6 525 / ITU-R BT1358 525 / ITU-R BT1700 NTSC</doc>
       </member>
       <member name="smpte240m"
@@ -7633,7 +7640,7 @@ BT601-6 525 / ITU-R BT1358 525 / ITU-R BT1700 NTSC</doc>
               glib:nick="smpte240m">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="158">SMPTE240M primaries</doc>
+             line="162">SMPTE240M primaries</doc>
       </member>
       <member name="film"
               value="6"
@@ -7641,7 +7648,7 @@ BT601-6 525 / ITU-R BT1358 525 / ITU-R BT1700 NTSC</doc>
               glib:nick="film">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="159">Generic film (colour filters using
+             line="163">Generic film (colour filters using
 Illuminant C)</doc>
       </member>
       <member name="bt2020"
@@ -7650,7 +7657,7 @@ Illuminant C)</doc>
               glib:nick="bt2020">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="161">ITU-R BT2020 primaries. Since: 1.6</doc>
+             line="165">ITU-R BT2020 primaries. Since: 1.6</doc>
       </member>
       <member name="adobergb"
               value="8"
@@ -7658,7 +7665,7 @@ Illuminant C)</doc>
               glib:nick="adobergb">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="162">Adobe RGB primaries. Since: 1.8</doc>
+             line="166">Adobe RGB primaries. Since: 1.8</doc>
       </member>
       <member name="smptest428"
               value="9"
@@ -7666,7 +7673,7 @@ Illuminant C)</doc>
               glib:nick="smptest428">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="163">SMPTE ST 428 primaries (CIE 1931
+             line="167">SMPTE ST 428 primaries (CIE 1931
 XYZ). Since: 1.16</doc>
       </member>
       <member name="smpterp431"
@@ -7675,7 +7682,7 @@ XYZ). Since: 1.16</doc>
               glib:nick="smpterp431">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="165">SMPTE RP 431 primaries (ST 431-2
+             line="169">SMPTE RP 431 primaries (ST 431-2
 (2011) / DCI P3). Since: 1.16</doc>
       </member>
       <member name="smpteeg432"
@@ -7684,7 +7691,7 @@ XYZ). Since: 1.16</doc>
               glib:nick="smpteeg432">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="167">SMPTE EG 432 primaries (ST 432-1
+             line="171">SMPTE EG 432 primaries (ST 432-1
 (2010) / P3 D65). Since: 1.16</doc>
       </member>
       <member name="ebu3213"
@@ -7693,7 +7700,7 @@ XYZ). Since: 1.16</doc>
               glib:nick="ebu3213">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="169">EBU 3213 primaries (JEDEC P22
+             line="173">EBU 3213 primaries (JEDEC P22
 phosphors). Since: 1.16</doc>
       </member>
       <function name="from_iso"
@@ -7701,23 +7708,23 @@ phosphors). Since: 1.16</doc>
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="856">Converts the @value to the #GstVideoColorPrimaries
+             line="886">Converts the @value to the #GstVideoColorPrimaries
 The colour primaries (ColourPrimaries) value is
 defined by "ISO/IEC 23001-8 Section 7.1 Table 2" and "ITU-T H.273 Table 2".
 "H.264 Table E-3" and "H.265 Table E.3" share the identical values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="290"/>
+                         line="294"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="865">the matched #GstVideoColorPrimaries</doc>
+               line="895">the matched #GstVideoColorPrimaries</doc>
           <type name="VideoColorPrimaries" c:type="GstVideoColorPrimaries"/>
         </return-value>
         <parameters>
           <parameter name="value" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="858">a ITU-T H.273 colour primaries value</doc>
+                 line="888">a ITU-T H.273 colour primaries value</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
@@ -7729,7 +7736,7 @@ defined by "ISO/IEC 23001-8 Section 7.1 Table 2" and "ITU-T H.273 Table 2".
              filename="gst-libs/gst/video/video-color.c"
              line="303">Get information about the chromaticity coordinates of @primaries.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="219"/>
+                         line="223"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
@@ -7751,23 +7758,23 @@ defined by "ISO/IEC 23001-8 Section 7.1 Table 2" and "ITU-T H.273 Table 2".
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="723">Converts #GstVideoColorPrimaries to the "colour primaries" (ColourPrimaries)
+             line="753">Converts #GstVideoColorPrimaries to the "colour primaries" (ColourPrimaries)
 value defined by "ISO/IEC 23001-8 Section 7.1 Table 2"
 and "ITU-T H.273 Table 2".
 "H.264 Table E-3" and "H.265 Table E.3" share the identical values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="281"/>
+                         line="285"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="732">The value of ISO/IEC 23001-8 colour primaries.</doc>
+               line="762">The value of ISO/IEC 23001-8 colour primaries.</doc>
           <type name="guint" c:type="guint"/>
         </return-value>
         <parameters>
           <parameter name="primaries" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="725">a #GstVideoColorPrimaries</doc>
+                 line="755">a #GstVideoColorPrimaries</doc>
             <type name="VideoColorPrimaries" c:type="GstVideoColorPrimaries"/>
           </parameter>
         </parameters>
@@ -7778,62 +7785,62 @@ and "ITU-T H.273 Table 2".
             version="1.6">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.h"
-           line="191">Structure describing the chromaticity coordinates of an RGB system. These
+           line="195">Structure describing the chromaticity coordinates of an RGB system. These
 values can be used to construct a matrix to transform RGB to and from the
 XYZ colorspace.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="215"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="219"/>
       <field name="primaries" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="193">a #GstVideoColorPrimaries</doc>
+             line="197">a #GstVideoColorPrimaries</doc>
         <type name="VideoColorPrimaries" c:type="GstVideoColorPrimaries"/>
       </field>
       <field name="Wx" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="194">reference white x coordinate</doc>
+             line="198">reference white x coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="Wy" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="195">reference white y coordinate</doc>
+             line="199">reference white y coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="Rx" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="196">red x coordinate</doc>
+             line="200">red x coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="Ry" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="197">red y coordinate</doc>
+             line="201">red y coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="Gx" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="198">green x coordinate</doc>
+             line="202">green x coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="Gy" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="199">green y coordinate</doc>
+             line="203">green y coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="Bx" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="200">blue x coordinate</doc>
+             line="204">blue x coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="By" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="201">blue y coordinate</doc>
+             line="205">blue y coordinate</doc>
         <type name="gdouble" c:type="gdouble"/>
       </field>
     </record>
@@ -7881,7 +7888,7 @@ The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
 the component values in range [0.0 .. 1.0] back to their representation in
 @info and @range.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="264"/>
+                         line="268"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -7926,32 +7933,32 @@ the component values in range [0.0 .. 1.0] back to their representation in
     <record name="VideoColorimetry" c:type="GstVideoColorimetry">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.h"
-           line="221">Structure describing the color info.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="237"/>
+           line="225">Structure describing the color info.</doc>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="241"/>
       <field name="range" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="223">the color range. This is the valid range for the samples.
+             line="227">the color range. This is the valid range for the samples.
         It is used to convert the samples to Y'PbPr values.</doc>
         <type name="VideoColorRange" c:type="GstVideoColorRange"/>
       </field>
       <field name="matrix" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="225">the color matrix. Used to convert between Y'PbPr and
+             line="229">the color matrix. Used to convert between Y'PbPr and
          non-linear RGB (R'G'B')</doc>
         <type name="VideoColorMatrix" c:type="GstVideoColorMatrix"/>
       </field>
       <field name="transfer" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="227">the transfer function. used to convert between R'G'B' and RGB</doc>
+             line="231">the transfer function. used to convert between R'G'B' and RGB</doc>
         <type name="VideoTransferFunction" c:type="GstVideoTransferFunction"/>
       </field>
       <field name="primaries" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.h"
-             line="228">color primaries. used to convert between R'G'B' and CIE XYZ</doc>
+             line="232">color primaries. used to convert between R'G'B' and CIE XYZ</doc>
         <type name="VideoColorPrimaries" c:type="GstVideoColorPrimaries"/>
       </field>
       <method name="from_string"
@@ -7961,7 +7968,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
              line="102">Parse the colorimetry string and update @cinfo with the parsed
 values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="253"/>
+                         line="257"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
@@ -7990,7 +7997,7 @@ values.</doc>
              filename="gst-libs/gst/video/video-color.c"
              line="251">Compare the 2 colorimetry sets for equality</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="259"/>
+                         line="263"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
@@ -8018,7 +8025,7 @@ values.</doc>
              line="165">Check if the colorimetry information in @info matches that of the
 string @color.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="250"/>
+                         line="254"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
@@ -8046,7 +8053,7 @@ information in @info.</doc>
              filename="gst-libs/gst/video/video-color.c"
              line="139">Make a string representation of @cinfo.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="256"/>
+                         line="260"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
@@ -8095,26 +8102,26 @@ or %NULL if all the entries of @cinfo are unknown values.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="384">Parse @caps and update @linfo</doc>
+             line="366">Parse @caps and update @linfo</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="133"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="391">%TRUE if @linfo was successfully set to @caps</doc>
+               line="373">%TRUE if @linfo was successfully set to @caps</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="linfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="386">a #GstVideoContentLightLevel</doc>
+                 line="368">a #GstVideoContentLightLevel</doc>
             <type name="VideoContentLightLevel"
                   c:type="const GstVideoContentLightLevel*"/>
           </instance-parameter>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="387">a #GstCaps</doc>
+                 line="369">a #GstCaps</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
         </parameters>
@@ -8124,26 +8131,26 @@ or %NULL if all the entries of @cinfo are unknown values.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="355">Parse @caps and update @linfo</doc>
+             line="337">Parse @caps and update @linfo</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="129"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="362">if @caps has #GstVideoContentLightLevel and could be parsed</doc>
+               line="344">if @caps has #GstVideoContentLightLevel and could be parsed</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="linfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="357">a #GstVideoContentLightLevel</doc>
+                 line="339">a #GstVideoContentLightLevel</doc>
             <type name="VideoContentLightLevel"
                   c:type="GstVideoContentLightLevel*"/>
           </instance-parameter>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="358">a #GstCaps</doc>
+                 line="340">a #GstCaps</doc>
             <type name="Gst.Caps" c:type="const GstCaps*"/>
           </parameter>
         </parameters>
@@ -8153,27 +8160,27 @@ or %NULL if all the entries of @cinfo are unknown values.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="287">Parse the value of content-light-level caps field and update @minfo
+             line="269">Parse the value of content-light-level caps field and update @minfo
 with the parsed values.</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="122"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="295">%TRUE if @linfo points to valid #GstVideoContentLightLevel.</doc>
+               line="277">%TRUE if @linfo points to valid #GstVideoContentLightLevel.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="linfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="289">a #GstVideoContentLightLevel</doc>
+                 line="271">a #GstVideoContentLightLevel</doc>
             <type name="VideoContentLightLevel"
                   c:type="GstVideoContentLightLevel*"/>
           </instance-parameter>
           <parameter name="level" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="290">a content-light-level string from caps</doc>
+                 line="272">a content-light-level string from caps</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -8183,7 +8190,7 @@ with the parsed values.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="271">Initialize @linfo</doc>
+             line="253">Initialize @linfo</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="119"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -8192,7 +8199,7 @@ with the parsed values.</doc>
           <instance-parameter name="linfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="273">a #GstVideoContentLightLevel</doc>
+                 line="255">a #GstVideoContentLightLevel</doc>
             <type name="VideoContentLightLevel"
                   c:type="GstVideoContentLightLevel*"/>
           </instance-parameter>
@@ -8203,19 +8210,19 @@ with the parsed values.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="335">Convert @linfo to its string representation.</doc>
+             line="317">Convert @linfo to its string representation.</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="126"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="341">a string representation of @linfo.</doc>
+               line="323">a string representation of @linfo.</doc>
           <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>
           <instance-parameter name="linfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="337">a #GstVideoContentLightLevel</doc>
+                 line="319">a #GstVideoContentLightLevel</doc>
             <type name="VideoContentLightLevel"
                   c:type="const GstVideoContentLightLevel*"/>
           </instance-parameter>
@@ -8252,7 +8259,7 @@ with the parsed values.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-converter.c"
-             line="2689">Convert the pixels of @src into @dest using @convert.</doc>
+             line="2693">Convert the pixels of @src into @dest using @convert.</doc>
         <source-position filename="gst-libs/gst/video/video-converter.h"
                          line="293"/>
         <return-value transfer-ownership="none">
@@ -8262,19 +8269,19 @@ with the parsed values.</doc>
           <instance-parameter name="convert" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2691">a #GstVideoConverter</doc>
+                 line="2695">a #GstVideoConverter</doc>
             <type name="VideoConverter" c:type="GstVideoConverter*"/>
           </instance-parameter>
           <parameter name="src" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2693">a #GstVideoFrame</doc>
+                 line="2697">a #GstVideoFrame</doc>
             <type name="VideoFrame" c:type="const GstVideoFrame*"/>
           </parameter>
           <parameter name="dest" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2692">a #GstVideoFrame</doc>
+                 line="2696">a #GstVideoFrame</doc>
             <type name="VideoFrame" c:type="GstVideoFrame*"/>
           </parameter>
         </parameters>
@@ -8284,7 +8291,7 @@ with the parsed values.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-converter.c"
-             line="2523">Free @convert</doc>
+             line="2527">Free @convert</doc>
         <source-position filename="gst-libs/gst/video/video-converter.h"
                          line="284"/>
         <return-value transfer-ownership="none">
@@ -8294,7 +8301,7 @@ with the parsed values.</doc>
           <instance-parameter name="convert" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2525">a #GstVideoConverter</doc>
+                 line="2529">a #GstVideoConverter</doc>
             <type name="VideoConverter" c:type="GstVideoConverter*"/>
           </instance-parameter>
         </parameters>
@@ -8302,13 +8309,13 @@ with the parsed values.</doc>
       <method name="get_config" c:identifier="gst_video_converter_get_config">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-converter.c"
-             line="2672">Get the current configuration of @convert.</doc>
+             line="2676">Get the current configuration of @convert.</doc>
         <source-position filename="gst-libs/gst/video/video-converter.h"
                          line="290"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-converter.c"
-               line="2678">a #GstStructure that remains valid for as long as @convert is valid
+               line="2682">a #GstStructure that remains valid for as long as @convert is valid
   or until gst_video_converter_set_config() is called.</doc>
           <type name="Gst.Structure" c:type="const GstStructure*"/>
         </return-value>
@@ -8316,7 +8323,7 @@ with the parsed values.</doc>
           <instance-parameter name="convert" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2674">a #GstVideoConverter</doc>
+                 line="2678">a #GstVideoConverter</doc>
             <type name="VideoConverter" c:type="GstVideoConverter*"/>
           </instance-parameter>
         </parameters>
@@ -8326,7 +8333,7 @@ with the parsed values.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-converter.c"
-             line="2641">Set @config as extra configuration for @convert.
+             line="2645">Set @config as extra configuration for @convert.
 
 If the parameters in @config can not be set exactly, this function returns
 %FALSE and will try to update as much state as possible. The new state can
@@ -8339,20 +8346,20 @@ option and values.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-converter.c"
-               line="2655">%TRUE when @config could be set.</doc>
+               line="2659">%TRUE when @config could be set.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="convert" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2643">a #GstVideoConverter</doc>
+                 line="2647">a #GstVideoConverter</doc>
             <type name="VideoConverter" c:type="GstVideoConverter*"/>
           </instance-parameter>
           <parameter name="config" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2644">a #GstStructure</doc>
+                 line="2648">a #GstStructure</doc>
             <type name="Gst.Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
@@ -8363,33 +8370,33 @@ option and values.</doc>
                 introspectable="0">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-converter.c"
-             line="2275">Create a new converter object to convert between @in_info and @out_info
+             line="2279">Create a new converter object to convert between @in_info and @out_info
 with @config.</doc>
         <source-position filename="gst-libs/gst/video/video-converter.h"
                          line="279"/>
         <return-value>
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-converter.c"
-               line="2284">a #GstVideoConverter or %NULL if conversion is not possible.</doc>
+               line="2288">a #GstVideoConverter or %NULL if conversion is not possible.</doc>
           <type name="VideoConverter" c:type="GstVideoConverter*"/>
         </return-value>
         <parameters>
           <parameter name="in_info" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2277">a #GstVideoInfo</doc>
+                 line="2281">a #GstVideoInfo</doc>
             <type name="VideoInfo" c:type="GstVideoInfo*"/>
           </parameter>
           <parameter name="out_info" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2278">a #GstVideoInfo</doc>
+                 line="2282">a #GstVideoInfo</doc>
             <type name="VideoInfo" c:type="GstVideoInfo*"/>
           </parameter>
           <parameter name="config" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-converter.c"
-                 line="2279">a #GstStructure with configuration options</doc>
+                 line="2283">a #GstStructure with configuration options</doc>
             <type name="Gst.Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
@@ -8650,7 +8657,7 @@ The bare minimum that a functional subclass needs to implement is:
       <virtual-method name="negotiate" invoker="negotiate">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4100">Negotiate with downstream elements to currently configured #GstVideoCodecState.
+             line="4240">Negotiate with downstream elements to currently configured #GstVideoCodecState.
 Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
 negotiate fails.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
@@ -8658,14 +8665,14 @@ negotiate fails.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4108">%TRUE if the negotiation succeeded, else %FALSE.</doc>
+               line="4248">%TRUE if the negotiation succeeded, else %FALSE.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4102">a #GstVideoDecoder</doc>
+                 line="4242">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -8854,9 +8861,9 @@ negotiate fails.</doc>
               c:identifier="gst_video_decoder_add_to_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3364">Removes next @n_bytes of input data and adds it to currently parsed frame.</doc>
+             line="3474">Removes next @n_bytes of input data and adds it to currently parsed frame.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="410"/>
+                         line="434"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -8864,13 +8871,13 @@ negotiate fails.</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3366">a #GstVideoDecoder</doc>
+                 line="3476">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="n_bytes" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3367">the number of bytes to add</doc>
+                 line="3477">the number of bytes to add</doc>
             <type name="gint" c:type="int"/>
           </parameter>
         </parameters>
@@ -8879,17 +8886,17 @@ negotiate fails.</doc>
               c:identifier="gst_video_decoder_allocate_output_buffer">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4132">Helper function that allocates a buffer to hold a video frame for @decoder's
+             line="4272">Helper function that allocates a buffer to hold a video frame for @decoder's
 current #GstVideoCodecState.
 
 You should use gst_video_decoder_allocate_output_frame() instead of this
 function, if possible at all.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="420"/>
+                         line="444"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4142">allocated buffer, or NULL if no buffer could be
+               line="4282">allocated buffer, or NULL if no buffer could be
     allocated (e.g. when downstream is flushing or shutting down)</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </return-value>
@@ -8897,7 +8904,7 @@ function, if possible at all.</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4134">a #GstVideoDecoder</doc>
+                 line="4274">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -8906,31 +8913,31 @@ function, if possible at all.</doc>
               c:identifier="gst_video_decoder_allocate_output_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4198">Helper function that allocates a buffer to hold a video frame for @decoder's
+             line="4338">Helper function that allocates a buffer to hold a video frame for @decoder's
 current #GstVideoCodecState.  Subclass should already have configured video
 state and set src pad caps.
 
 The buffer allocated here is owned by the frame and you should only
 keep references to the frame, not the buffer.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="428"/>
+                         line="452"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4210">%GST_FLOW_OK if an output buffer could be allocated</doc>
+               line="4350">%GST_FLOW_OK if an output buffer could be allocated</doc>
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4200">a #GstVideoDecoder</doc>
+                 line="4340">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4201">a #GstVideoCodecFrame</doc>
+                 line="4341">a #GstVideoCodecFrame</doc>
             <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
           </parameter>
         </parameters>
@@ -8940,33 +8947,33 @@ keep references to the frame, not the buffer.</doc>
               version="1.12">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4220">Same as #gst_video_decoder_allocate_output_frame except it allows passing
+             line="4360">Same as #gst_video_decoder_allocate_output_frame except it allows passing
 #GstBufferPoolAcquireParams to the sub call gst_buffer_pool_acquire_buffer.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="423"/>
+                         line="447"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4229">%GST_FLOW_OK if an output buffer could be allocated</doc>
+               line="4369">%GST_FLOW_OK if an output buffer could be allocated</doc>
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4222">a #GstVideoDecoder</doc>
+                 line="4362">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4223">a #GstVideoCodecFrame</doc>
+                 line="4363">a #GstVideoCodecFrame</doc>
             <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
           </parameter>
           <parameter name="params" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4224">a #GstBufferPoolAcquireParams</doc>
+                 line="4364">a #GstBufferPoolAcquireParams</doc>
             <type name="Gst.BufferPoolAcquireParams"
                   c:type="GstBufferPoolAcquireParams*"/>
           </parameter>
@@ -8975,28 +8982,28 @@ keep references to the frame, not the buffer.</doc>
       <method name="drop_frame" c:identifier="gst_video_decoder_drop_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="2998">Similar to gst_video_decoder_finish_frame(), but drops @frame in any
+             line="3067">Similar to gst_video_decoder_finish_frame(), but drops @frame in any
 case and posts a QoS message with the frame's details on the bus.
 In any case, the frame is considered finished and released.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="459"/>
+                         line="483"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3007">a #GstFlowReturn, usually GST_FLOW_OK.</doc>
+               line="3076">a #GstFlowReturn, usually GST_FLOW_OK.</doc>
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
         </return-value>
         <parameters>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3000">a #GstVideoDecoder</doc>
+                 line="3069">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3001">the #GstVideoCodecFrame to drop</doc>
+                 line="3070">the #GstVideoCodecFrame to drop</doc>
             <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
           </parameter>
         </parameters>
@@ -9005,7 +9012,7 @@ In any case, the frame is considered finished and released.</doc>
               c:identifier="gst_video_decoder_finish_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3097">@frame should have a valid decoded data buffer, whose metadata fields
+             line="3166">@frame should have a valid decoded data buffer, whose metadata fields
 are then appropriately set according to frame data and pushed downstream.
 If no output data is provided, @frame is considered skipped.
 In any case, the frame is considered finished and released.
@@ -9014,24 +9021,24 @@ After calling this function the output buffer of the frame is to be
 considered read-only. This function will also change the metadata
 of the buffer.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="455"/>
+                         line="479"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3111">a #GstFlowReturn resulting from sending data downstream</doc>
+               line="3180">a #GstFlowReturn resulting from sending data downstream</doc>
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3099">a #GstVideoDecoder</doc>
+                 line="3168">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3100">a decoded #GstVideoCodecFrame</doc>
+                 line="3169">a decoded #GstVideoCodecFrame</doc>
             <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
           </parameter>
         </parameters>
@@ -9040,12 +9047,12 @@ of the buffer.</doc>
               c:identifier="gst_video_decoder_get_allocator">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4609">Lets #GstVideoDecoder sub-classes to know the memory @allocator
+             line="4749">Lets #GstVideoDecoder sub-classes to know the memory @allocator
 used by the base class and its @params.
 
 Unref the @allocator after use it.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="388"/>
+                         line="412"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9053,7 +9060,7 @@ Unref the @allocator after use it.</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4611">a #GstVideoDecoder</doc>
+                 line="4751">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="allocator"
@@ -9064,7 +9071,7 @@ Unref the @allocator after use it.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4612">the #GstAllocator
+                 line="4752">the #GstAllocator
 used</doc>
             <type name="Gst.Allocator" c:type="GstAllocator**"/>
           </parameter>
@@ -9076,7 +9083,7 @@ used</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4614">the
+                 line="4754">the
 #GstAllocationParams of @allocator</doc>
             <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>
           </parameter>
@@ -9085,11 +9092,11 @@ used</doc>
       <method name="get_buffer_pool"
               c:identifier="gst_video_decoder_get_buffer_pool">
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="393"/>
+                         line="417"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4595">the instance of the #GstBufferPool used
+               line="4735">the instance of the #GstBufferPool used
 by the decoder; free it after use it</doc>
           <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
         </return-value>
@@ -9097,7 +9104,7 @@ by the decoder; free it after use it</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4593">a #GstVideoDecoder</doc>
+                 line="4733">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9105,18 +9112,18 @@ by the decoder; free it after use it</doc>
       <method name="get_estimate_rate"
               c:identifier="gst_video_decoder_get_estimate_rate">
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="361"/>
+                         line="378"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4490">currently configured byte to time conversion setting</doc>
+               line="4630">currently configured byte to time conversion setting</doc>
           <type name="gint" c:type="gint"/>
         </return-value>
         <parameters>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4488">a #GstVideoDecoder</doc>
+                 line="4628">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9124,26 +9131,26 @@ by the decoder; free it after use it</doc>
       <method name="get_frame" c:identifier="gst_video_decoder_get_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3726">Get a pending unfinished #GstVideoCodecFrame</doc>
+             line="3866">Get a pending unfinished #GstVideoCodecFrame</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="398"/>
+                         line="422"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3733">pending unfinished #GstVideoCodecFrame identified by @frame_number.</doc>
+               line="3873">pending unfinished #GstVideoCodecFrame identified by @frame_number.</doc>
           <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3728">a #GstVideoDecoder</doc>
+                 line="3868">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame_number" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3729">system_frame_number of a frame</doc>
+                 line="3869">system_frame_number of a frame</doc>
             <type name="gint" c:type="int"/>
           </parameter>
         </parameters>
@@ -9151,13 +9158,13 @@ by the decoder; free it after use it</doc>
       <method name="get_frames" c:identifier="gst_video_decoder_get_frames">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3757">Get all pending unfinished #GstVideoCodecFrame</doc>
+             line="3897">Get all pending unfinished #GstVideoCodecFrame</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="405"/>
+                         line="429"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3763">pending unfinished #GstVideoCodecFrame.</doc>
+               line="3903">pending unfinished #GstVideoCodecFrame.</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="VideoCodecFrame"/>
           </type>
@@ -9166,7 +9173,7 @@ by the decoder; free it after use it</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3759">a #GstVideoDecoder</doc>
+                 line="3899">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9174,10 +9181,10 @@ by the decoder; free it after use it</doc>
       <method name="get_latency" c:identifier="gst_video_decoder_get_latency">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4526">Query the configured decoder latency. Results will be returned via
+             line="4666">Query the configured decoder latency. Results will be returned via
 @min_latency and @max_latency.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="383"/>
+                         line="407"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9185,7 +9192,7 @@ by the decoder; free it after use it</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4528">a #GstVideoDecoder</doc>
+                 line="4668">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="min_latency"
@@ -9196,7 +9203,7 @@ by the decoder; free it after use it</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4529">address of variable in which to store the
+                 line="4669">address of variable in which to store the
     configured minimum latency, or %NULL</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime*"/>
           </parameter>
@@ -9208,7 +9215,7 @@ by the decoder; free it after use it</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4531">address of variable in which to store the
+                 line="4671">address of variable in which to store the
     configured mximum latency, or %NULL</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime*"/>
           </parameter>
@@ -9218,29 +9225,29 @@ by the decoder; free it after use it</doc>
               c:identifier="gst_video_decoder_get_max_decode_time">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4280">Determines maximum possible decoding time for @frame that will
+             line="4420">Determines maximum possible decoding time for @frame that will
 allow it to decode and arrive in time (as determined by QoS events).
 In particular, a negative result means decoding in time is no longer possible
 and should therefore occur as soon/skippy as possible.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="448"/>
+                         line="472"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4290">max decoding time.</doc>
+               line="4430">max decoding time.</doc>
           <type name="Gst.ClockTimeDiff" c:type="GstClockTimeDiff"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4282">a #GstVideoDecoder</doc>
+                 line="4422">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4283">a #GstVideoCodecFrame</doc>
+                 line="4423">a #GstVideoCodecFrame</doc>
             <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
           </parameter>
         </parameters>
@@ -9248,18 +9255,18 @@ and should therefore occur as soon/skippy as possible.</doc>
       <method name="get_max_errors"
               c:identifier="gst_video_decoder_get_max_errors">
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="368"/>
+                         line="385"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4387">currently configured decoder tolerated error count.</doc>
+               line="4527">currently configured decoder tolerated error count.</doc>
           <type name="gint" c:type="gint"/>
         </return-value>
         <parameters>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4385">a #GstVideoDecoder</doc>
+                 line="4525">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9269,20 +9276,44 @@ and should therefore occur as soon/skippy as possible.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4419">Queries decoder required format handling.</doc>
+             line="4559">Queries decoder required format handling.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="375"/>
+                         line="392"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4425">%TRUE if required format handling is enabled.</doc>
+               line="4565">%TRUE if required format handling is enabled.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4421">a #GstVideoDecoder</doc>
+                 line="4561">a #GstVideoDecoder</doc>
+            <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_needs_sync_point"
+              c:identifier="gst_video_decoder_get_needs_sync_point"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.c"
+             line="4896">Queries if the decoder requires a sync point before it starts outputting
+data in the beginning.</doc>
+        <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
+                         line="399"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/gstvideodecoder.c"
+               line="4903">%TRUE if a sync point is required in the beginning.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/gstvideodecoder.c"
+                 line="4898">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9291,20 +9322,20 @@ and should therefore occur as soon/skippy as possible.</doc>
               c:identifier="gst_video_decoder_get_oldest_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3705">Get the oldest pending unfinished #GstVideoCodecFrame</doc>
+             line="3845">Get the oldest pending unfinished #GstVideoCodecFrame</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="402"/>
+                         line="426"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3711">oldest pending unfinished #GstVideoCodecFrame.</doc>
+               line="3851">oldest pending unfinished #GstVideoCodecFrame.</doc>
           <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3707">a #GstVideoDecoder</doc>
+                 line="3847">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9313,20 +9344,20 @@ and should therefore occur as soon/skippy as possible.</doc>
               c:identifier="gst_video_decoder_get_output_state">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3577">Get the #GstVideoCodecState currently describing the output stream.</doc>
+             line="3717">Get the #GstVideoCodecState currently describing the output stream.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="442"/>
+                         line="466"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3583">#GstVideoCodecState describing format of video data.</doc>
+               line="3723">#GstVideoCodecState describing format of video data.</doc>
           <type name="VideoCodecState" c:type="GstVideoCodecState*"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3579">a #GstVideoDecoder</doc>
+                 line="3719">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9335,21 +9366,21 @@ and should therefore occur as soon/skippy as possible.</doc>
               c:identifier="gst_video_decoder_get_packetized">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4456">Queries whether input data is considered packetized or not by the
+             line="4596">Queries whether input data is considered packetized or not by the
 base class.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="354"/>
+                         line="371"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4463">TRUE if input data is considered packetized.</doc>
+               line="4603">TRUE if input data is considered packetized.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4458">a #GstVideoDecoder</doc>
+                 line="4598">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9359,21 +9390,21 @@ base class.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3393">Returns the number of bytes previously added to the current frame
+             line="3503">Returns the number of bytes previously added to the current frame
 by calling gst_video_decoder_add_to_frame().</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="417"/>
+                         line="441"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3400">The number of bytes pending for the current frame</doc>
+               line="3510">The number of bytes pending for the current frame</doc>
           <type name="gsize" c:type="gsize"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3395">a #GstVideoDecoder</doc>
+                 line="3505">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9382,18 +9413,18 @@ by calling gst_video_decoder_add_to_frame().</doc>
               c:identifier="gst_video_decoder_get_qos_proportion"
               version="1.0.3">
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="452"/>
+                         line="476"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4322">The current QoS proportion.</doc>
+               line="4462">The current QoS proportion.</doc>
           <type name="gdouble" c:type="gdouble"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4319">a #GstVideoDecoder
+                 line="4459">a #GstVideoDecoder
     current QoS proportion, or %NULL</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
@@ -9402,21 +9433,21 @@ by calling gst_video_decoder_add_to_frame().</doc>
       <method name="have_frame" c:identifier="gst_video_decoder_have_frame">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3443">Gathers all data collected for currently parsed frame, gathers corresponding
+             line="3553">Gathers all data collected for currently parsed frame, gathers corresponding
 metadata and passes it along for further processing, i.e. @handle_frame.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="414"/>
+                         line="438"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3450">a #GstFlowReturn</doc>
+               line="3560">a #GstFlowReturn</doc>
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3445">a #GstVideoDecoder</doc>
+                 line="3555">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9424,7 +9455,7 @@ metadata and passes it along for further processing, i.e. @handle_frame.</doc>
       <method name="merge_tags" c:identifier="gst_video_decoder_merge_tags">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4549">Sets the audio decoder tags and how they should be merged with any
+             line="4689">Sets the audio decoder tags and how they should be merged with any
 upstream stream tags. This will override any tags previously-set
 with gst_audio_decoder_merge_tags().
 
@@ -9433,7 +9464,7 @@ not required to use this and can still do tag handling on its own.
 
 MT safe.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="467"/>
+                         line="496"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9441,7 +9472,7 @@ MT safe.</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4551">a #GstVideoDecoder</doc>
+                 line="4691">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="tags"
@@ -9450,14 +9481,14 @@ MT safe.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4552">a #GstTagList to merge, or NULL to unset
+                 line="4692">a #GstTagList to merge, or NULL to unset
     previously-set tags</doc>
             <type name="Gst.TagList" c:type="const GstTagList*"/>
           </parameter>
           <parameter name="mode" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4554">the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE</doc>
+                 line="4694">the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE</doc>
             <type name="Gst.TagMergeMode" c:type="GstTagMergeMode"/>
           </parameter>
         </parameters>
@@ -9465,22 +9496,22 @@ MT safe.</doc>
       <method name="negotiate" c:identifier="gst_video_decoder_negotiate">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4100">Negotiate with downstream elements to currently configured #GstVideoCodecState.
+             line="4240">Negotiate with downstream elements to currently configured #GstVideoCodecState.
 Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
 negotiate fails.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="445"/>
+                         line="469"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="4108">%TRUE if the negotiation succeeded, else %FALSE.</doc>
+               line="4248">%TRUE if the negotiation succeeded, else %FALSE.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4102">a #GstVideoDecoder</doc>
+                 line="4242">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
         </parameters>
@@ -9490,22 +9521,22 @@ negotiate fails.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="1849">Returns caps that express @caps (or sink template caps if @caps == NULL)
+             line="1913">Returns caps that express @caps (or sink template caps if @caps == NULL)
 restricted to resolution/format/... combinations supported by downstream
 elements.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="472"/>
+                         line="501"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="1859">a #GstCaps owned by caller</doc>
+               line="1923">a #GstCaps owned by caller</doc>
           <type name="Gst.Caps" c:type="GstCaps*"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="1851">a #GstVideoDecoder</doc>
+                 line="1915">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="caps"
@@ -9514,7 +9545,7 @@ elements.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="1852">initial caps</doc>
+                 line="1916">initial caps</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
           <parameter name="filter"
@@ -9523,7 +9554,7 @@ elements.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="1853">filter caps</doc>
+                 line="1917">filter caps</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
         </parameters>
@@ -9533,11 +9564,11 @@ elements.</doc>
               version="1.2.2">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="2931">Similar to gst_video_decoder_drop_frame(), but simply releases @frame
+             line="3000">Similar to gst_video_decoder_drop_frame(), but simply releases @frame
 without any processing other than removing it from list of pending frames,
 after which it is considered finished and released.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="463"/>
+                         line="492"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9545,14 +9576,69 @@ after which it is considered finished and released.</doc>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="2933">a #GstVideoDecoder</doc>
+                 line="3002">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="2934">the #GstVideoCodecFrame to release</doc>
+                 line="3003">the #GstVideoCodecFrame to release</doc>
             <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="request_sync_point"
+              c:identifier="gst_video_decoder_request_sync_point"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.c"
+             line="4797">Allows the #GstVideoDecoder subclass to request from the base class that
+a new sync should be requested from upstream, and that @frame was the frame
+when the subclass noticed that a new sync point is required. A reason for
+the subclass to do this could be missing reference frames, for example.
+
+The base class will then request a new sync point from upstream as long as
+the time that passed since the last one is exceeding
+#GstVideoDecoder:min-force-key-unit-interval.
+
+The subclass can signal via @flags how the frames until the next sync point
+should be handled:
+
+  * If %GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT is selected then
+    all following input frames until the next sync point are discarded.
+    This can be useful if the lack of a sync point will prevent all further
+    decoding and the decoder implementation is not very robust in handling
+    missing references frames.
+  * If %GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT is selected
+    then all output frames following @frame are marked as corrupted via
+    %GST_BUFFER_FLAG_CORRUPTED. Corrupted frames can be automatically
+    dropped by the base class, see #GstVideoDecoder:discard-corrupted-frames.
+    Subclasses can manually mark frames as corrupted via %GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED
+    before calling gst_video_decoder_finish_frame().</doc>
+        <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
+                         line="487"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/gstvideodecoder.c"
+                 line="4799">a #GstVideoDecoder</doc>
+            <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/gstvideodecoder.c"
+                 line="4800">a #GstVideoCodecFrame</doc>
+            <type name="VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/gstvideodecoder.c"
+                 line="4801">#GstVideoDecoderRequestSyncPointFlags</doc>
+            <type name="VideoDecoderRequestSyncPointFlags"
+                  c:type="GstVideoDecoderRequestSyncPointFlags"/>
           </parameter>
         </parameters>
       </method>
@@ -9560,9 +9646,9 @@ after which it is considered finished and released.</doc>
               c:identifier="gst_video_decoder_set_estimate_rate">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4471">Allows baseclass to perform byte to time estimated conversion.</doc>
+             line="4611">Allows baseclass to perform byte to time estimated conversion.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="357"/>
+                         line="374"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9570,13 +9656,13 @@ after which it is considered finished and released.</doc>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4473">a #GstVideoDecoder</doc>
+                 line="4613">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="enabled" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4474">whether to enable byte to time conversion</doc>
+                 line="4614">whether to enable byte to time conversion</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
@@ -9586,27 +9672,27 @@ after which it is considered finished and released.</doc>
               version="1.16.">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3679">Same as #gst_video_decoder_set_output_state() but also allows you to also set
+             line="3819">Same as #gst_video_decoder_set_output_state() but also allows you to also set
 the interlacing mode.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="437"/>
+                         line="461"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3691">the newly configured output state.</doc>
+               line="3831">the newly configured output state.</doc>
           <type name="VideoCodecState" c:type="GstVideoCodecState*"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3681">a #GstVideoDecoder</doc>
+                 line="3821">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="fmt" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3682">a #GstVideoFormat</doc>
+                 line="3822">a #GstVideoFormat</doc>
             <type name="VideoFormat" c:type="GstVideoFormat"/>
           </parameter>
           <parameter name="mode" transfer-ownership="none">
@@ -9615,13 +9701,13 @@ the interlacing mode.</doc>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3683">The width in pixels</doc>
+                 line="3823">The width in pixels</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="height" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3684">The height in pixels</doc>
+                 line="3824">The height in pixels</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="reference"
@@ -9630,7 +9716,7 @@ the interlacing mode.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3686">An optional reference #GstVideoCodecState</doc>
+                 line="3826">An optional reference #GstVideoCodecState</doc>
             <type name="VideoCodecState" c:type="GstVideoCodecState*"/>
           </parameter>
         </parameters>
@@ -9638,11 +9724,11 @@ the interlacing mode.</doc>
       <method name="set_latency" c:identifier="gst_video_decoder_set_latency">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4500">Lets #GstVideoDecoder sub-classes tell the baseclass what the decoder
+             line="4640">Lets #GstVideoDecoder sub-classes tell the baseclass what the decoder
 latency is. Will also post a LATENCY message on the bus so the pipeline
 can reconfigure its global latency.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="378"/>
+                         line="402"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9650,19 +9736,19 @@ can reconfigure its global latency.</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4502">a #GstVideoDecoder</doc>
+                 line="4642">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="min_latency" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4503">minimum latency</doc>
+                 line="4643">minimum latency</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
           <parameter name="max_latency" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4504">maximum latency</doc>
+                 line="4644">maximum latency</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
         </parameters>
@@ -9671,14 +9757,14 @@ can reconfigure its global latency.</doc>
               c:identifier="gst_video_decoder_set_max_errors">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4363">Sets numbers of tolerated decoder errors, where a tolerated one is then only
+             line="4503">Sets numbers of tolerated decoder errors, where a tolerated one is then only
 warned about, but more than tolerated will lead to fatal error.  You can set
 -1 for never returning fatal errors. Default is set to
 GST_VIDEO_DECODER_MAX_ERRORS.
 
 The '-1' option was added in 1.4</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="364"/>
+                         line="381"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9686,13 +9772,13 @@ The '-1' option was added in 1.4</doc>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4365">a #GstVideoDecoder</doc>
+                 line="4505">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="num" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4366">max tolerated errors</doc>
+                 line="4506">max tolerated errors</doc>
             <type name="gint" c:type="gint"/>
           </parameter>
         </parameters>
@@ -9702,14 +9788,14 @@ The '-1' option was added in 1.4</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4397">Configures decoder format needs.  If enabled, subclass needs to be
+             line="4537">Configures decoder format needs.  If enabled, subclass needs to be
 negotiated with format caps before it can process any data.  It will then
 never be handed any data before it has been configured.
 Otherwise, it might be handed data without having been configured and
 is then expected being able to do so either by default
 or based on the input data.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="371"/>
+                         line="388"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9717,13 +9803,45 @@ or based on the input data.</doc>
           <instance-parameter name="dec" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4399">a #GstVideoDecoder</doc>
+                 line="4539">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="enabled" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4400">new state</doc>
+                 line="4540">new state</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_needs_sync_point"
+              c:identifier="gst_video_decoder_set_needs_sync_point"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.c"
+             line="4873">Configures whether the decoder requires a sync point before it starts
+outputting data in the beginning. If enabled, the base class will discard
+all non-sync point frames in the beginning and after a flush and does not
+pass it to the subclass.
+
+If the first frame is not a sync point, the base class will request a sync
+point via the force-key-unit event.</doc>
+        <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
+                         line="395"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/gstvideodecoder.c"
+                 line="4875">a #GstVideoDecoder</doc>
+            <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
+          </instance-parameter>
+          <parameter name="enabled" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/gstvideodecoder.c"
+                 line="4876">new state</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
@@ -9732,7 +9850,7 @@ or based on the input data.</doc>
               c:identifier="gst_video_decoder_set_output_state">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="3645">Creates a new #GstVideoCodecState with the specified @fmt, @width and @height
+             line="3785">Creates a new #GstVideoCodecState with the specified @fmt, @width and @height
 as the output state for the decoder.
 Any previously set output state on @decoder will be replaced by the newly
 created one.
@@ -9747,36 +9865,36 @@ pixel-aspect-ratio or framerate) it can do so on the returned #GstVideoCodecStat
 The new output state will only take effect (set on pads and buffers) starting
 from the next call to #gst_video_decoder_finish_frame().</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="432"/>
+                         line="456"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/gstvideodecoder.c"
-               line="3668">the newly configured output state.</doc>
+               line="3808">the newly configured output state.</doc>
           <type name="VideoCodecState" c:type="GstVideoCodecState*"/>
         </return-value>
         <parameters>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3647">a #GstVideoDecoder</doc>
+                 line="3787">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="fmt" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3648">a #GstVideoFormat</doc>
+                 line="3788">a #GstVideoFormat</doc>
             <type name="VideoFormat" c:type="GstVideoFormat"/>
           </parameter>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3649">The width in pixels</doc>
+                 line="3789">The width in pixels</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="height" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3650">The height in pixels</doc>
+                 line="3790">The height in pixels</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="reference"
@@ -9785,7 +9903,7 @@ from the next call to #gst_video_decoder_finish_frame().</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="3651">An optional reference #GstVideoCodecState</doc>
+                 line="3791">An optional reference #GstVideoCodecState</doc>
             <type name="VideoCodecState" c:type="GstVideoCodecState*"/>
           </parameter>
         </parameters>
@@ -9794,10 +9912,10 @@ from the next call to #gst_video_decoder_finish_frame().</doc>
               c:identifier="gst_video_decoder_set_packetized">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4441">Allows baseclass to consider input data as packetized or not. If the
+             line="4581">Allows baseclass to consider input data as packetized or not. If the
 input is packetized, then the @parse method will not be called.</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="350"/>
+                         line="367"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9805,13 +9923,13 @@ input is packetized, then the @parse method will not be called.</doc>
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4443">a #GstVideoDecoder</doc>
+                 line="4583">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="packetized" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4444">whether the input data should be considered as packetized.</doc>
+                 line="4584">whether the input data should be considered as packetized.</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
@@ -9821,14 +9939,14 @@ input is packetized, then the @parse method will not be called.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="4636">Lets #GstVideoDecoder sub-classes decide if they want the sink pad
+             line="4776">Lets #GstVideoDecoder sub-classes decide if they want the sink pad
 to use the default pad query handler to reply to accept-caps queries.
 
 By setting this to true it is possible to further customize the default
 handler with %GST_PAD_SET_ACCEPT_INTERSECT and
 %GST_PAD_SET_ACCEPT_TEMPLATE</doc>
         <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
-                         line="477"/>
+                         line="506"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -9836,26 +9954,50 @@ handler with %GST_PAD_SET_ACCEPT_INTERSECT and
           <instance-parameter name="decoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4638">a #GstVideoDecoder</doc>
+                 line="4778">a #GstVideoDecoder</doc>
             <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
           </instance-parameter>
           <parameter name="use" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4639">if the default pad accept-caps query handling should be used</doc>
+                 line="4779">if the default pad accept-caps query handling should be used</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
       </method>
+      <property name="discard-corrupted-frames"
+                version="1.20"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.c"
+             line="634">If set to %TRUE the decoder will discard frames that are marked as
+corrupted instead of outputting them.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="max-errors"
                 version="1.18"
                 writable="1"
                 transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="583">Maximum number of tolerated consecutive decode errors. See
+             line="600">Maximum number of tolerated consecutive decode errors. See
 gst_video_decoder_set_max_errors() for more details.</doc>
         <type name="gint" c:type="gint"/>
+      </property>
+      <property name="min-force-key-unit-interval"
+                version="1.20"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.c"
+             line="614">Minimum interval between force-key-unit events sent upstream by the
+decoder. Setting this to 0 will cause every event to be handled, setting
+this to %GST_CLOCK_TIME_NONE will cause every event to be ignored.
+
+See gst_video_event_new_upstream_force_key_unit() for more details about
+force-key-unit events.</doc>
+        <type name="guint64" c:type="guint64"/>
       </property>
       <property name="qos"
                 version="1.18"
@@ -9863,7 +10005,7 @@ gst_video_decoder_set_max_errors() for more details.</doc>
                 transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/gstvideodecoder.c"
-             line="568">If set to %TRUE the decoder will handle QoS events received
+             line="585">If set to %TRUE the decoder will handle QoS events received
 from downstream elements.
 This includes dropping output frames which are detected as late
 using the metrics reported by those events.</doc>
@@ -10095,14 +10237,14 @@ and likely as well.  If non-packetized input is supported or expected,
           <return-value transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/gstvideodecoder.c"
-                 line="4108">%TRUE if the negotiation succeeded, else %FALSE.</doc>
+                 line="4248">%TRUE if the negotiation succeeded, else %FALSE.</doc>
             <type name="gboolean" c:type="gboolean"/>
           </return-value>
           <parameters>
             <parameter name="decoder" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst-libs/gst/video/gstvideodecoder.c"
-                   line="4102">a #GstVideoDecoder</doc>
+                   line="4242">a #GstVideoDecoder</doc>
               <type name="VideoDecoder" c:type="GstVideoDecoder*"/>
             </parameter>
           </parameters>
@@ -10253,6 +10395,32 @@ and likely as well.  If non-packetized input is supported or expected,
       <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
                        line="116"/>
     </record>
+    <bitfield name="VideoDecoderRequestSyncPointFlags"
+              version="1.20"
+              c:type="GstVideoDecoderRequestSyncPointFlags">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/video/gstvideodecoder.h"
+           line="344">Flags to be used in combination with gst_video_decoder_request_sync_point().
+See the function documentation for more details.</doc>
+      <source-position filename="gst-libs/gst/video/gstvideodecoder.h"
+                       line="359"/>
+      <member name="discard_input"
+              value="1"
+              c:identifier="GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.h"
+             line="346">discard all following
+    input until the next sync point.</doc>
+      </member>
+      <member name="corrupt_output"
+              value="2"
+              c:identifier="GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/gstvideodecoder.h"
+             line="348">discard all following
+    output until the next sync point.</doc>
+      </member>
+    </bitfield>
     <interface name="VideoDirection"
                c:symbol-prefix="video_direction"
                c:type="GstVideoDirection"
@@ -14958,26 +15126,26 @@ mode of the stream.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="240">Set string representation of @minfo to @caps</doc>
+             line="222">Set string representation of @minfo to @caps</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="95"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="247">%TRUE if @minfo was successfully set to @caps</doc>
+               line="229">%TRUE if @minfo was successfully set to @caps</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="minfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="242">a #GstVideoMasteringDisplayInfo</doc>
+                 line="224">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="const GstVideoMasteringDisplayInfo*"/>
           </instance-parameter>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="243">a #GstCaps</doc>
+                 line="225">a #GstCaps</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
         </parameters>
@@ -14987,26 +15155,26 @@ mode of the stream.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="210">Parse @caps and update @minfo</doc>
+             line="192">Parse @caps and update @minfo</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="91"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="217">%TRUE if @caps has #GstVideoMasteringDisplayInfo and could be parsed</doc>
+               line="199">%TRUE if @caps has #GstVideoMasteringDisplayInfo and could be parsed</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="minfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="212">a #GstVideoMasteringDisplayInfo</doc>
+                 line="194">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="GstVideoMasteringDisplayInfo*"/>
           </instance-parameter>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="213">a #GstCaps</doc>
+                 line="195">a #GstCaps</doc>
             <type name="Gst.Caps" c:type="const GstCaps*"/>
           </parameter>
         </parameters>
@@ -15016,7 +15184,7 @@ mode of the stream.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="62">Initialize @minfo</doc>
+             line="44">Initialize @minfo</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="77"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -15025,7 +15193,7 @@ mode of the stream.</doc>
           <instance-parameter name="minfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="64">a #GstVideoMasteringDisplayInfo</doc>
+                 line="46">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="GstVideoMasteringDisplayInfo*"/>
           </instance-parameter>
@@ -15036,26 +15204,26 @@ mode of the stream.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="173">Checks equality between @minfo and @other.</doc>
+             line="155">Checks equality between @minfo and @other.</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="87"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="180">%TRUE if @minfo and @other are equal.</doc>
+               line="162">%TRUE if @minfo and @other are equal.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="minfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="175">a #GstVideoMasteringDisplayInfo</doc>
+                 line="157">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="const GstVideoMasteringDisplayInfo*"/>
           </instance-parameter>
           <parameter name="other" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="176">a #GstVideoMasteringDisplayInfo</doc>
+                 line="158">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="const GstVideoMasteringDisplayInfo*"/>
           </parameter>
@@ -15066,19 +15234,19 @@ mode of the stream.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="154">Convert @minfo to its string representation</doc>
+             line="136">Convert @minfo to its string representation</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="84"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="160">a string representation of @minfo</doc>
+               line="142">a string representation of @minfo</doc>
           <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>
           <instance-parameter name="minfo" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="156">a #GstVideoMasteringDisplayInfo</doc>
+                 line="138">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="const GstVideoMasteringDisplayInfo*"/>
           </instance-parameter>
@@ -15089,12 +15257,12 @@ mode of the stream.</doc>
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="78">Extract #GstVideoMasteringDisplayInfo from @mastering</doc>
+             line="60">Extract #GstVideoMasteringDisplayInfo from @mastering</doc>
         <source-position filename="gst-libs/gst/video/video-hdr.h" line="80"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="85">%TRUE if @minfo was filled with @mastering</doc>
+               line="67">%TRUE if @minfo was filled with @mastering</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -15104,14 +15272,14 @@ mode of the stream.</doc>
                      transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="80">a #GstVideoMasteringDisplayInfo</doc>
+                 line="62">a #GstVideoMasteringDisplayInfo</doc>
             <type name="VideoMasteringDisplayInfo"
                   c:type="GstVideoMasteringDisplayInfo*"/>
           </parameter>
           <parameter name="mastering" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-hdr.c"
-                 line="81">a #GstStructure representing #GstVideoMasteringDisplayInfo</doc>
+                 line="63">a #GstStructure representing #GstVideoMasteringDisplayInfo</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -20648,22 +20816,103 @@ non-linear RGB (R'G'B') and linear RGB</doc>
                            GST_VIDEO_TRANSFER_BT709, and GST_VIDEO_TRANSFER_BT2020_10.
                            Since: 1.18</doc>
       </member>
+      <function name="decode"
+                c:identifier="gst_video_transfer_function_decode"
+                version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/video-color.c"
+             line="544">Convert @val to its gamma decoded value. This is the inverse operation of
+@gst_video_color_transfer_encode().
+
+For a non-linear value L' in the range [0..1], conversion to the linear
+L is in general performed with a power function like:
+
+|[
+   L = L' ^ gamma
+]|
+
+Depending on @func, different formulas might be applied. Some formulas
+encode a linear segment in the lower range.</doc>
+        <source-position filename="gst-libs/gst/video/video-color.h"
+                         line="149"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/video-color.c"
+               line="562">the gamma decoded value of @val</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </return-value>
+        <parameters>
+          <parameter name="func" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/video-color.c"
+                 line="546">a #GstVideoTransferFunction</doc>
+            <type name="VideoTransferFunction"
+                  c:type="GstVideoTransferFunction"/>
+          </parameter>
+          <parameter name="val" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/video-color.c"
+                 line="547">a value</doc>
+            <type name="gdouble" c:type="gdouble"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="encode"
+                c:identifier="gst_video_transfer_function_encode"
+                version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/video-color.c"
+             line="412">Convert @val to its gamma encoded value.
+
+For a linear value L in the range [0..1], conversion to the non-linear
+(gamma encoded) L' is in general performed with a power function like:
+
+|[
+   L' = L ^ (1 / gamma)
+]|
+
+Depending on @func, different formulas might be applied. Some formulas
+encode a linear segment in the lower range.</doc>
+        <source-position filename="gst-libs/gst/video/video-color.h"
+                         line="144"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/video-color.c"
+               line="429">the gamma encoded value of @val</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </return-value>
+        <parameters>
+          <parameter name="func" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/video-color.c"
+                 line="414">a #GstVideoTransferFunction</doc>
+            <type name="VideoTransferFunction"
+                  c:type="GstVideoTransferFunction"/>
+          </parameter>
+          <parameter name="val" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/video/video-color.c"
+                 line="415">a value</doc>
+            <type name="gdouble" c:type="gdouble"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="from_iso"
                 c:identifier="gst_video_transfer_function_from_iso"
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="806">Converts the @value to the #GstVideoTransferFunction
+             line="836">Converts the @value to the #GstVideoTransferFunction
 The transfer characteristics (TransferCharacteristics) value is
 defined by "ISO/IEC 23001-8 Section 7.2 Table 3"
 and "ITU-T H.273 Table 3".
 "H.264 Table E-4" and "H.265 Table E.4" share the identical values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="287"/>
+                         line="291"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="816">the matched #GstVideoTransferFunction</doc>
+               line="846">the matched #GstVideoTransferFunction</doc>
           <type name="VideoTransferFunction"
                 c:type="GstVideoTransferFunction"/>
         </return-value>
@@ -20671,7 +20920,7 @@ and "ITU-T H.273 Table 3".
           <parameter name="value" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="808">a ITU-T H.273 transfer characteristics value</doc>
+                 line="838">a ITU-T H.273 transfer characteristics value</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
@@ -20681,44 +20930,44 @@ and "ITU-T H.273 Table 3".
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="920">Returns whether @from_func and @to_func are equivalent. There are cases
+             line="950">Returns whether @from_func and @to_func are equivalent. There are cases
 (e.g. BT601, BT709, and BT2020_10) where several functions are functionally
 identical. In these cases, when doing conversion, we should consider them
 as equivalent. Also, BT2020_12 is the same as the aforementioned three for
 less than 12 bits per pixel.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="293"/>
+                         line="297"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="933">TRUE if @from_func and @to_func can be considered equivalent.</doc>
+               line="963">TRUE if @from_func and @to_func can be considered equivalent.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <parameter name="from_func" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="922">#GstVideoTransferFunction to convert from</doc>
+                 line="952">#GstVideoTransferFunction to convert from</doc>
             <type name="VideoTransferFunction"
                   c:type="GstVideoTransferFunction"/>
           </parameter>
           <parameter name="from_bpp" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="923">bits per pixel to convert from</doc>
+                 line="953">bits per pixel to convert from</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="to_func" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="924">#GstVideoTransferFunction to convert into</doc>
+                 line="954">#GstVideoTransferFunction to convert into</doc>
             <type name="VideoTransferFunction"
                   c:type="GstVideoTransferFunction"/>
           </parameter>
           <parameter name="to_bpp" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="925">bits per pixel to convert into</doc>
+                 line="955">bits per pixel to convert into</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
@@ -20728,23 +20977,23 @@ less than 12 bits per pixel.</doc>
                 version="1.18">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="671">Converts #GstVideoTransferFunction to the "transfer characteristics"
+             line="701">Converts #GstVideoTransferFunction to the "transfer characteristics"
 (TransferCharacteristics) value defined by "ISO/IEC 23001-8 Section 7.2 Table 3"
 and "ITU-T H.273 Table 3".
 "H.264 Table E-4" and "H.265 Table E.4" share the identical values.</doc>
         <source-position filename="gst-libs/gst/video/video-color.h"
-                         line="278"/>
+                         line="282"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="680">The value of ISO/IEC 23001-8 transfer characteristics.</doc>
+               line="710">The value of ISO/IEC 23001-8 transfer characteristics.</doc>
           <type name="guint" c:type="guint"/>
         </return-value>
         <parameters>
           <parameter name="func" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-color.c"
-                 line="673">a #GstVideoTransferFunction</doc>
+                 line="703">a #GstVideoTransferFunction</doc>
             <type name="VideoTransferFunction"
                   c:type="GstVideoTransferFunction"/>
           </parameter>
@@ -20767,12 +21016,12 @@ Vertical Blanking Interval lines of component signals.</doc>
                    version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="612">Create a new #GstVideoVBIEncoder for the specified @format and @pixel_width.</doc>
+             line="601">Create a new #GstVideoVBIEncoder for the specified @format and @pixel_width.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="483"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="621">The new #GstVideoVBIEncoder or %NULL if the @format and/or @pixel_width
+               line="610">The new #GstVideoVBIEncoder or %NULL if the @format and/or @pixel_width
 is not supported.</doc>
           <type name="VideoVBIEncoder" c:type="GstVideoVBIEncoder*"/>
         </return-value>
@@ -20780,13 +21029,13 @@ is not supported.</doc>
           <parameter name="format" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="614">a #GstVideoFormat</doc>
+                 line="603">a #GstVideoFormat</doc>
             <type name="VideoFormat" c:type="GstVideoFormat"/>
           </parameter>
           <parameter name="pixel_width" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="615">The width in pixel to use</doc>
+                 line="604">The width in pixel to use</doc>
             <type name="guint32" c:type="guint32"/>
           </parameter>
         </parameters>
@@ -20796,7 +21045,7 @@ is not supported.</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="696">Stores Video Ancillary data, according to SMPTE-291M specification.
+             line="685">Stores Video Ancillary data, according to SMPTE-291M specification.
 
 Note that the contents of the data are always read as 8bit data (i.e. do not contain
 the parity check bits).</doc>
@@ -20804,7 +21053,7 @@ the parity check bits).</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="714">%TRUE if enough space was left in the current line, %FALSE
+               line="703">%TRUE if enough space was left in the current line, %FALSE
          otherwise.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
@@ -20812,32 +21061,32 @@ the parity check bits).</doc>
           <instance-parameter name="encoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="698">a #GstVideoVBIEncoder</doc>
+                 line="687">a #GstVideoVBIEncoder</doc>
             <type name="VideoVBIEncoder" c:type="GstVideoVBIEncoder*"/>
           </instance-parameter>
           <parameter name="composite" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="699">%TRUE if composite ADF should be created, component otherwise</doc>
+                 line="688">%TRUE if composite ADF should be created, component otherwise</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
           <parameter name="DID" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="700">The Data Identifier</doc>
+                 line="689">The Data Identifier</doc>
             <type name="guint8" c:type="guint8"/>
           </parameter>
           <parameter name="SDID_block_number" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="701">The Secondary Data Identifier (if type 2) or the Data
+                 line="690">The Secondary Data Identifier (if type 2) or the Data
                     Block Number (if type 1)</doc>
             <type name="guint8" c:type="guint8"/>
           </parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="704">The user data content of the Ancillary packet.
+                 line="693">The user data content of the Ancillary packet.
    Does not contain the ADF, DID, SDID nor CS.</doc>
             <array length="4" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
@@ -20846,7 +21095,7 @@ the parity check bits).</doc>
           <parameter name="data_count" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="703">The amount of data (in bytes) in @data (max 255 bytes)</doc>
+                 line="692">The amount of data (in bytes) in @data (max 255 bytes)</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
@@ -20867,7 +21116,7 @@ the parity check bits).</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="595">Frees the @encoder.</doc>
+             line="584">Frees the @encoder.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="489"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -20876,7 +21125,7 @@ the parity check bits).</doc>
           <instance-parameter name="encoder" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="597">a #GstVideoVBIEncoder</doc>
+                 line="586">a #GstVideoVBIEncoder</doc>
             <type name="VideoVBIEncoder" c:type="GstVideoVBIEncoder*"/>
           </instance-parameter>
         </parameters>
@@ -20913,12 +21162,12 @@ Vertical Blanking Interval lines of component signals.</doc>
                    version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="331">Create a new #GstVideoVBIParser for the specified @format and @pixel_width.</doc>
+             line="320">Create a new #GstVideoVBIParser for the specified @format and @pixel_width.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="457"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="340">The new #GstVideoVBIParser or %NULL if the @format and/or @pixel_width
+               line="329">The new #GstVideoVBIParser or %NULL if the @format and/or @pixel_width
 is not supported.</doc>
           <type name="VideoVBIParser" c:type="GstVideoVBIParser*"/>
         </return-value>
@@ -20926,13 +21175,13 @@ is not supported.</doc>
           <parameter name="format" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="333">a #GstVideoFormat</doc>
+                 line="322">a #GstVideoFormat</doc>
             <type name="VideoFormat" c:type="GstVideoFormat"/>
           </parameter>
           <parameter name="pixel_width" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="334">The width in pixel to use</doc>
+                 line="323">The width in pixel to use</doc>
             <type name="guint32" c:type="guint32"/>
           </parameter>
         </parameters>
@@ -20942,7 +21191,7 @@ is not supported.</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="534">Provide a new line of data to the @parser. Call gst_video_vbi_parser_get_ancillary()
+             line="523">Provide a new line of data to the @parser. Call gst_video_vbi_parser_get_ancillary()
 to get the Ancillary data that might be present on that line.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="466"/>
         <return-value transfer-ownership="none">
@@ -20952,13 +21201,13 @@ to get the Ancillary data that might be present on that line.</doc>
           <instance-parameter name="parser" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="536">a #GstVideoVBIParser</doc>
+                 line="525">a #GstVideoVBIParser</doc>
             <type name="VideoVBIParser" c:type="GstVideoVBIParser*"/>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="537">The line of data to parse</doc>
+                 line="526">The line of data to parse</doc>
             <array zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
@@ -20981,7 +21230,7 @@ to get the Ancillary data that might be present on that line.</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="385">Frees the @parser.</doc>
+             line="374">Frees the @parser.</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="463"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -20990,7 +21239,7 @@ to get the Ancillary data that might be present on that line.</doc>
           <instance-parameter name="parser" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="387">a #GstVideoVBIParser</doc>
+                 line="376">a #GstVideoVBIParser</doc>
             <type name="VideoVBIParser" c:type="GstVideoVBIParser*"/>
           </instance-parameter>
         </parameters>
@@ -21000,12 +21249,12 @@ to get the Ancillary data that might be present on that line.</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="305">Parse the line provided previously by gst_video_vbi_parser_add_line().</doc>
+             line="294">Parse the line provided previously by gst_video_vbi_parser_add_line().</doc>
         <source-position filename="gst-libs/gst/video/video-anc.h" line="453"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="314">%GST_VIDEO_VBI_PARSER_RESULT_OK if ancillary data was found and
+               line="303">%GST_VIDEO_VBI_PARSER_RESULT_OK if ancillary data was found and
 @anc was filled. %GST_VIDEO_VBI_PARSER_RESULT_DONE if there wasn't any
 data.</doc>
           <type name="VideoVBIParserResult" c:type="GstVideoVBIParserResult"/>
@@ -21014,7 +21263,7 @@ data.</doc>
           <instance-parameter name="parser" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="307">a #GstVideoVBIParser</doc>
+                 line="296">a #GstVideoVBIParser</doc>
             <type name="VideoVBIParser" c:type="GstVideoVBIParser*"/>
           </instance-parameter>
           <parameter name="anc"
@@ -21023,7 +21272,7 @@ data.</doc>
                      transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/video/video-anc.c"
-                 line="308">a #GstVideoAncillary to start the eventual ancillary data</doc>
+                 line="297">a #GstVideoAncillary to start the eventual ancillary data</doc>
             <type name="VideoAncillary" c:type="GstVideoAncillary*"/>
           </parameter>
         </parameters>
@@ -21067,38 +21316,38 @@ data.</doc>
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-anc.c"
-           line="1229">Attaches #GstVideoAFDMeta metadata to @buffer with the given
+           line="1218">Attaches #GstVideoAFDMeta metadata to @buffer with the given
 parameters.</doc>
       <source-position filename="gst-libs/gst/video/video-anc.h" line="265"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1239">the #GstVideoAFDMeta on @buffer.</doc>
+             line="1228">the #GstVideoAFDMeta on @buffer.</doc>
         <type name="VideoAFDMeta" c:type="GstVideoAFDMeta*"/>
       </return-value>
       <parameters>
         <parameter name="buffer" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1231">a #GstBuffer</doc>
+               line="1220">a #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
         <parameter name="field" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1232">0 for progressive or field 1 and 1 for field 2</doc>
+               line="1221">0 for progressive or field 1 and 1 for field 2</doc>
           <type name="guint8" c:type="guint8"/>
         </parameter>
         <parameter name="spec" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1233">#GstVideoAFDSpec that applies to AFD value</doc>
+               line="1222">#GstVideoAFDSpec that applies to AFD value</doc>
           <type name="VideoAFDSpec" c:type="GstVideoAFDSpec"/>
         </parameter>
         <parameter name="afd" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1234">#GstVideoAFDValue AFD enumeration</doc>
+               line="1223">#GstVideoAFDValue AFD enumeration</doc>
           <type name="VideoAFDValue" c:type="GstVideoAFDValue"/>
         </parameter>
       </parameters>
@@ -21133,13 +21382,13 @@ the given parameters.</doc>
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-anc.c"
-           line="1339">Attaches #GstVideoBarMeta metadata to @buffer with the given
+           line="1328">Attaches #GstVideoBarMeta metadata to @buffer with the given
 parameters.</doc>
       <source-position filename="gst-libs/gst/video/video-anc.h" line="326"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1356">the #GstVideoBarMeta on @buffer.
+             line="1345">the #GstVideoBarMeta on @buffer.
 
 See Table 6.11 Bar Data Syntax
 
@@ -21150,25 +21399,25 @@ https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf</doc>
         <parameter name="buffer" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1341">a #GstBuffer</doc>
+               line="1330">a #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
         <parameter name="field" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1342">0 for progressive or field 1 and 1 for field 2</doc>
+               line="1331">0 for progressive or field 1 and 1 for field 2</doc>
           <type name="guint8" c:type="guint8"/>
         </parameter>
         <parameter name="is_letterbox" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1343">if true then bar data specifies letterbox, otherwise pillarbox</doc>
+               line="1332">if true then bar data specifies letterbox, otherwise pillarbox</doc>
           <type name="gboolean" c:type="gboolean"/>
         </parameter>
         <parameter name="bar_data1" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1344">If @is_letterbox is true, then the value specifies the
+               line="1333">If @is_letterbox is true, then the value specifies the
      last line of a horizontal letterbox bar area at top of reconstructed frame.
      Otherwise, it specifies the last horizontal luminance sample of a vertical pillarbox
      bar area at the left side of the reconstructed frame</doc>
@@ -21177,7 +21426,7 @@ https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf</doc>
         <parameter name="bar_data2" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1348">If @is_letterbox is true, then the value specifies the
+               line="1337">If @is_letterbox is true, then the value specifies the
      first line of a horizontal letterbox bar area at bottom of reconstructed frame.
      Otherwise, it specifies the first horizontal
      luminance sample of a vertical pillarbox bar area at the right side of the reconstructed frame.</doc>
@@ -21190,32 +21439,32 @@ https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf</doc>
               version="1.16">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-anc.c"
-           line="1004">Attaches #GstVideoCaptionMeta metadata to @buffer with the given
+           line="993">Attaches #GstVideoCaptionMeta metadata to @buffer with the given
 parameters.</doc>
       <source-position filename="gst-libs/gst/video/video-anc.h" line="417"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1014">the #GstVideoCaptionMeta on @buffer.</doc>
+             line="1003">the #GstVideoCaptionMeta on @buffer.</doc>
         <type name="VideoCaptionMeta" c:type="GstVideoCaptionMeta*"/>
       </return-value>
       <parameters>
         <parameter name="buffer" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1006">a #GstBuffer</doc>
+               line="995">a #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
         <parameter name="caption_type" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1007">The type of Closed Caption to add</doc>
+               line="996">The type of Closed Caption to add</doc>
           <type name="VideoCaptionType" c:type="GstVideoCaptionType"/>
         </parameter>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1008">The Closed Caption data</doc>
+               line="997">The Closed Caption data</doc>
           <array length="3" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
@@ -21223,7 +21472,7 @@ parameters.</doc>
         <parameter name="size" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1009">The size of @data in bytes</doc>
+               line="998">The size of @data in bytes</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
       </parameters>
@@ -22999,20 +23248,20 @@ The return value is FALSE in the case of integer overflow or other error.</doc>
               version="1.16">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-anc.c"
-           line="1051">Parses fixed Closed Caption #GstCaps and returns the corresponding caption
+           line="1040">Parses fixed Closed Caption #GstCaps and returns the corresponding caption
 type, or %GST_VIDEO_CAPTION_TYPE_UNKNOWN.</doc>
       <source-position filename="gst-libs/gst/video/video-anc.h" line="369"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1058">#GstVideoCaptionType.</doc>
+             line="1047">#GstVideoCaptionType.</doc>
         <type name="VideoCaptionType" c:type="GstVideoCaptionType"/>
       </return-value>
       <parameters>
         <parameter name="caps" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1053">Fixed #GstCaps to parse</doc>
+               line="1042">Fixed #GstCaps to parse</doc>
           <type name="Gst.Caps" c:type="const GstCaps*"/>
         </parameter>
       </parameters>
@@ -23023,19 +23272,19 @@ type, or %GST_VIDEO_CAPTION_TYPE_UNKNOWN.</doc>
               version="1.16">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-anc.c"
-           line="1091">Creates new caps corresponding to @type.</doc>
+           line="1080">Creates new caps corresponding to @type.</doc>
       <source-position filename="gst-libs/gst/video/video-anc.h" line="373"/>
       <return-value transfer-ownership="full">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-anc.c"
-             line="1097">new #GstCaps</doc>
+             line="1086">new #GstCaps</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
       </return-value>
       <parameters>
         <parameter name="type" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-anc.c"
-               line="1093">#GstVideoCaptionType</doc>
+               line="1082">#GstVideoCaptionType</doc>
           <type name="VideoCaptionType" c:type="GstVideoCaptionType"/>
         </parameter>
       </parameters>
@@ -23179,23 +23428,23 @@ performed.</doc>
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="769">Converts the @value to the #GstVideoColorMatrix
+           line="799">Converts the @value to the #GstVideoColorMatrix
 The matrix coefficients (MatrixCoefficients) value is
 defined by "ISO/IEC 23001-8 Section 7.3 Table 4"
 and "ITU-T H.273 Table 4".
 "H.264 Table E-5" and "H.265 Table E.5" share the identical values.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="284"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="288"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="779">the matched #GstVideoColorMatrix</doc>
+             line="809">the matched #GstVideoColorMatrix</doc>
         <type name="VideoColorMatrix" c:type="GstVideoColorMatrix"/>
       </return-value>
       <parameters>
         <parameter name="value" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="771">a ITU-T H.273 matrix coefficients value</doc>
+               line="801">a ITU-T H.273 matrix coefficients value</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
@@ -23271,22 +23520,22 @@ and the other way around:
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="636">Converts #GstVideoColorMatrix to the "matrix coefficients"
+           line="666">Converts #GstVideoColorMatrix to the "matrix coefficients"
 (MatrixCoefficients) value defined by "ISO/IEC 23001-8 Section 7.3 Table 4"
 and "ITU-T H.273 Table 4".
 "H.264 Table E-5" and "H.265 Table E.5" share the identical values.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="275"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="279"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="645">The value of ISO/IEC 23001-8 matrix coefficients.</doc>
+             line="675">The value of ISO/IEC 23001-8 matrix coefficients.</doc>
         <type name="guint" c:type="guint"/>
       </return-value>
       <parameters>
         <parameter name="matrix" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="638">a #GstVideoColorMatrix</doc>
+               line="668">a #GstVideoColorMatrix</doc>
           <type name="VideoColorMatrix" c:type="GstVideoColorMatrix"/>
         </parameter>
       </parameters>
@@ -23297,22 +23546,22 @@ and "ITU-T H.273 Table 4".
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="856">Converts the @value to the #GstVideoColorPrimaries
+           line="886">Converts the @value to the #GstVideoColorPrimaries
 The colour primaries (ColourPrimaries) value is
 defined by "ISO/IEC 23001-8 Section 7.1 Table 2" and "ITU-T H.273 Table 2".
 "H.264 Table E-3" and "H.265 Table E.3" share the identical values.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="290"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="294"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="865">the matched #GstVideoColorPrimaries</doc>
+             line="895">the matched #GstVideoColorPrimaries</doc>
         <type name="VideoColorPrimaries" c:type="GstVideoColorPrimaries"/>
       </return-value>
       <parameters>
         <parameter name="value" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="858">a ITU-T H.273 colour primaries value</doc>
+               line="888">a ITU-T H.273 colour primaries value</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
@@ -23324,7 +23573,7 @@ defined by "ISO/IEC 23001-8 Section 7.1 Table 2" and "ITU-T H.273 Table 2".
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
            line="303">Get information about the chromaticity coordinates of @primaries.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="219"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="223"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
@@ -23347,22 +23596,22 @@ defined by "ISO/IEC 23001-8 Section 7.1 Table 2" and "ITU-T H.273 Table 2".
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="723">Converts #GstVideoColorPrimaries to the "colour primaries" (ColourPrimaries)
+           line="753">Converts #GstVideoColorPrimaries to the "colour primaries" (ColourPrimaries)
 value defined by "ISO/IEC 23001-8 Section 7.1 Table 2"
 and "ITU-T H.273 Table 2".
 "H.264 Table E-3" and "H.265 Table E.3" share the identical values.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="281"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="285"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="732">The value of ISO/IEC 23001-8 colour primaries.</doc>
+             line="762">The value of ISO/IEC 23001-8 colour primaries.</doc>
         <type name="guint" c:type="guint"/>
       </return-value>
       <parameters>
         <parameter name="primaries" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="725">a #GstVideoColorPrimaries</doc>
+               line="755">a #GstVideoColorPrimaries</doc>
           <type name="VideoColorPrimaries" c:type="GstVideoColorPrimaries"/>
         </parameter>
       </parameters>
@@ -23379,7 +23628,7 @@ range [0.0 .. 1.0].
 The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
 the component values in range [0.0 .. 1.0] back to their representation in
 @info and @range.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="264"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="268"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>
@@ -23422,65 +23671,36 @@ the component values in range [0.0 .. 1.0] back to their representation in
     </function>
     <function name="video_color_transfer_decode"
               c:identifier="gst_video_color_transfer_decode"
-              version="1.6">
-      <doc xml:space="preserve"
-           filename="gst-libs/gst/video/video-color.c"
-           line="514">Convert @val to its gamma decoded value. This is the inverse operation of
-@gst_video_color_transfer_encode().
-
-For a non-linear value L' in the range [0..1], conversion to the linear
-L is in general performed with a power function like:
-
-|[
-   L = L' ^ gamma
-]|
-
-Depending on @func, different formulas might be applied. Some formulas
-encode a linear segment in the lower range.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="145"/>
+              version="1.6"
+              deprecated="1">
+      <doc-deprecated xml:space="preserve">Use gst_video_transfer_function_decode() instead.</doc-deprecated>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="147"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve"
-             filename="gst-libs/gst/video/video-color.c"
-             line="532">the gamma decoded value of @val</doc>
         <type name="gdouble" c:type="gdouble"/>
       </return-value>
       <parameters>
         <parameter name="func" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="516">a #GstVideoTransferFunction</doc>
+               line="531">a #GstVideoTransferFunction</doc>
           <type name="VideoTransferFunction"
                 c:type="GstVideoTransferFunction"/>
         </parameter>
         <parameter name="val" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="517">a value</doc>
+               line="532">a value</doc>
           <type name="gdouble" c:type="gdouble"/>
         </parameter>
       </parameters>
     </function>
     <function name="video_color_transfer_encode"
               c:identifier="gst_video_color_transfer_encode"
-              version="1.6">
-      <doc xml:space="preserve"
-           filename="gst-libs/gst/video/video-color.c"
-           line="397">Convert @val to its gamma encoded value.
-
-For a linear value L in the range [0..1], conversion to the non-linear
-(gamma encoded) L' is in general performed with a power function like:
-
-|[
-   L' = L ^ (1 / gamma)
-]|
-
-Depending on @func, different formulas might be applied. Some formulas
-encode a linear segment in the lower range.</doc>
+              version="1.6"
+              deprecated="1">
+      <doc-deprecated xml:space="preserve">Use gst_video_transfer_function_encode() instead.</doc-deprecated>
       <source-position filename="gst-libs/gst/video/video-color.h" line="142"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve"
-             filename="gst-libs/gst/video/video-color.c"
-             line="414">the gamma encoded value of @val</doc>
         <type name="gdouble" c:type="gdouble"/>
       </return-value>
       <parameters>
@@ -23615,33 +23835,33 @@ anymore.</doc>
               introspectable="0">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-converter.c"
-           line="2275">Create a new converter object to convert between @in_info and @out_info
+           line="2279">Create a new converter object to convert between @in_info and @out_info
 with @config.</doc>
       <source-position filename="gst-libs/gst/video/video-converter.h"
                        line="279"/>
       <return-value>
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-converter.c"
-             line="2284">a #GstVideoConverter or %NULL if conversion is not possible.</doc>
+             line="2288">a #GstVideoConverter or %NULL if conversion is not possible.</doc>
         <type name="VideoConverter" c:type="GstVideoConverter*"/>
       </return-value>
       <parameters>
         <parameter name="in_info" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-converter.c"
-               line="2277">a #GstVideoInfo</doc>
+               line="2281">a #GstVideoInfo</doc>
           <type name="VideoInfo" c:type="GstVideoInfo*"/>
         </parameter>
         <parameter name="out_info" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-converter.c"
-               line="2278">a #GstVideoInfo</doc>
+               line="2282">a #GstVideoInfo</doc>
           <type name="VideoInfo" c:type="GstVideoInfo*"/>
         </parameter>
         <parameter name="config" transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-converter.c"
-               line="2279">a #GstStructure with configuration options</doc>
+               line="2283">a #GstStructure with configuration options</doc>
           <type name="Gst.Structure" c:type="GstStructure*"/>
         </parameter>
       </parameters>
@@ -24517,12 +24737,12 @@ see gst_video_formats_raw().</doc>
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-hdr.c"
-           line="78">Extract #GstVideoMasteringDisplayInfo from @mastering</doc>
+           line="60">Extract #GstVideoMasteringDisplayInfo from @mastering</doc>
       <source-position filename="gst-libs/gst/video/video-hdr.h" line="80"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-hdr.c"
-             line="85">%TRUE if @minfo was filled with @mastering</doc>
+             line="67">%TRUE if @minfo was filled with @mastering</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
       <parameters>
@@ -24532,14 +24752,14 @@ see gst_video_formats_raw().</doc>
                    transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="80">a #GstVideoMasteringDisplayInfo</doc>
+               line="62">a #GstVideoMasteringDisplayInfo</doc>
           <type name="VideoMasteringDisplayInfo"
                 c:type="GstVideoMasteringDisplayInfo*"/>
         </parameter>
         <parameter name="mastering" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-hdr.c"
-               line="81">a #GstStructure representing #GstVideoMasteringDisplayInfo</doc>
+               line="63">a #GstStructure representing #GstVideoMasteringDisplayInfo</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
@@ -25027,29 +25247,110 @@ Use this method when @mode is of type %GST_VIDEO_TILE_TYPE_INDEXED.</doc>
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
       </return-value>
     </function>
+    <function name="video_transfer_function_decode"
+              c:identifier="gst_video_transfer_function_decode"
+              moved-to="VideoTransferFunction.decode"
+              version="1.20">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/video/video-color.c"
+           line="544">Convert @val to its gamma decoded value. This is the inverse operation of
+@gst_video_color_transfer_encode().
+
+For a non-linear value L' in the range [0..1], conversion to the linear
+L is in general performed with a power function like:
+
+|[
+   L = L' ^ gamma
+]|
+
+Depending on @func, different formulas might be applied. Some formulas
+encode a linear segment in the lower range.</doc>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="149"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/video-color.c"
+             line="562">the gamma decoded value of @val</doc>
+        <type name="gdouble" c:type="gdouble"/>
+      </return-value>
+      <parameters>
+        <parameter name="func" transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/video-color.c"
+               line="546">a #GstVideoTransferFunction</doc>
+          <type name="VideoTransferFunction"
+                c:type="GstVideoTransferFunction"/>
+        </parameter>
+        <parameter name="val" transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/video-color.c"
+               line="547">a value</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_transfer_function_encode"
+              c:identifier="gst_video_transfer_function_encode"
+              moved-to="VideoTransferFunction.encode"
+              version="1.20">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/video/video-color.c"
+           line="412">Convert @val to its gamma encoded value.
+
+For a linear value L in the range [0..1], conversion to the non-linear
+(gamma encoded) L' is in general performed with a power function like:
+
+|[
+   L' = L ^ (1 / gamma)
+]|
+
+Depending on @func, different formulas might be applied. Some formulas
+encode a linear segment in the lower range.</doc>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="144"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/video/video-color.c"
+             line="429">the gamma encoded value of @val</doc>
+        <type name="gdouble" c:type="gdouble"/>
+      </return-value>
+      <parameters>
+        <parameter name="func" transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/video-color.c"
+               line="414">a #GstVideoTransferFunction</doc>
+          <type name="VideoTransferFunction"
+                c:type="GstVideoTransferFunction"/>
+        </parameter>
+        <parameter name="val" transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/video/video-color.c"
+               line="415">a value</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="video_transfer_function_from_iso"
               c:identifier="gst_video_transfer_function_from_iso"
               moved-to="VideoTransferFunction.from_iso"
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="806">Converts the @value to the #GstVideoTransferFunction
+           line="836">Converts the @value to the #GstVideoTransferFunction
 The transfer characteristics (TransferCharacteristics) value is
 defined by "ISO/IEC 23001-8 Section 7.2 Table 3"
 and "ITU-T H.273 Table 3".
 "H.264 Table E-4" and "H.265 Table E.4" share the identical values.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="287"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="291"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="816">the matched #GstVideoTransferFunction</doc>
+             line="846">the matched #GstVideoTransferFunction</doc>
         <type name="VideoTransferFunction" c:type="GstVideoTransferFunction"/>
       </return-value>
       <parameters>
         <parameter name="value" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="808">a ITU-T H.273 transfer characteristics value</doc>
+               line="838">a ITU-T H.273 transfer characteristics value</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
@@ -25060,43 +25361,43 @@ and "ITU-T H.273 Table 3".
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="920">Returns whether @from_func and @to_func are equivalent. There are cases
+           line="950">Returns whether @from_func and @to_func are equivalent. There are cases
 (e.g. BT601, BT709, and BT2020_10) where several functions are functionally
 identical. In these cases, when doing conversion, we should consider them
 as equivalent. Also, BT2020_12 is the same as the aforementioned three for
 less than 12 bits per pixel.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="293"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="297"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="933">TRUE if @from_func and @to_func can be considered equivalent.</doc>
+             line="963">TRUE if @from_func and @to_func can be considered equivalent.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
       <parameters>
         <parameter name="from_func" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="922">#GstVideoTransferFunction to convert from</doc>
+               line="952">#GstVideoTransferFunction to convert from</doc>
           <type name="VideoTransferFunction"
                 c:type="GstVideoTransferFunction"/>
         </parameter>
         <parameter name="from_bpp" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="923">bits per pixel to convert from</doc>
+               line="953">bits per pixel to convert from</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
         <parameter name="to_func" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="924">#GstVideoTransferFunction to convert into</doc>
+               line="954">#GstVideoTransferFunction to convert into</doc>
           <type name="VideoTransferFunction"
                 c:type="GstVideoTransferFunction"/>
         </parameter>
         <parameter name="to_bpp" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="925">bits per pixel to convert into</doc>
+               line="955">bits per pixel to convert into</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
@@ -25107,22 +25408,22 @@ less than 12 bits per pixel.</doc>
               version="1.18">
       <doc xml:space="preserve"
            filename="gst-libs/gst/video/video-color.c"
-           line="671">Converts #GstVideoTransferFunction to the "transfer characteristics"
+           line="701">Converts #GstVideoTransferFunction to the "transfer characteristics"
 (TransferCharacteristics) value defined by "ISO/IEC 23001-8 Section 7.2 Table 3"
 and "ITU-T H.273 Table 3".
 "H.264 Table E-4" and "H.265 Table E.4" share the identical values.</doc>
-      <source-position filename="gst-libs/gst/video/video-color.h" line="278"/>
+      <source-position filename="gst-libs/gst/video/video-color.h" line="282"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/video/video-color.c"
-             line="680">The value of ISO/IEC 23001-8 transfer characteristics.</doc>
+             line="710">The value of ISO/IEC 23001-8 transfer characteristics.</doc>
         <type name="guint" c:type="guint"/>
       </return-value>
       <parameters>
         <parameter name="func" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/video/video-color.c"
-               line="673">a #GstVideoTransferFunction</doc>
+               line="703">a #GstVideoTransferFunction</doc>
           <type name="VideoTransferFunction"
                 c:type="GstVideoTransferFunction"/>
         </parameter>

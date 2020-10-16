@@ -545,7 +545,7 @@
           <parameter name="value" type="guint64" />
         </parameters>
       </method>
-      <method name="RegisterStaticMeta" cname="ges_meta_container_register_static_meta">
+      <method name="RegisterStaticMeta" cname="ges_meta_container_register_static_meta" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="flags" type="GESMetaFlag" />
@@ -912,7 +912,7 @@
       <property name="Uri" cname="uri" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true" />
       <field cname="parent" access="private" writeable="false" readable="false" is_callback="false" name="Parent" type="GESAudioSource*" />
       <field cname="uri" access="private" writeable="false" readable="false" is_callback="false" name="UriField" type="gchar*" />
-      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAudioUriSourcePrivate*">
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESUriSource*">
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
@@ -1063,7 +1063,7 @@
           <parameter name="asset" type="GESAsset*" />
         </parameters>
       </method>
-      <method name="AddChildToTrack" cname="ges_clip_add_child_to_track">
+      <method name="AddChildToTrack" cname="ges_clip_add_child_to_track" version="1.18">
         <return-type type="GESTrackElement*" />
         <parameters throws="1">
           <parameter name="child" type="GESTrackElement*" />
@@ -1114,7 +1114,7 @@
         <return-type type="GESTrackType" />
         <parameters />
       </method>
-      <method name="GetTimelineTimeFromInternalTime" cname="ges_clip_get_timeline_time_from_internal_time">
+      <method name="GetTimelineTimeFromInternalTime" cname="ges_clip_get_timeline_time_from_internal_time" version="1.18">
         <return-type type="guint64" />
         <parameters throws="1">
           <parameter name="child" type="GESTrackElement*" />
@@ -1206,7 +1206,7 @@
           <parameter name="error" type="GError**" />
         </parameters>
       </method>
-      <property name="DurationLimit" cname="duration-limit" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" />
+      <property name="DurationLimit" cname="duration-limit" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.18" />
       <property name="Layer" cname="layer" type="GESLayer*" readable="true" writeable="false" construct="false" construct-only="false" />
       <property name="SupportedFormats" cname="supported-formats" type="GESTrackType" readable="true" writeable="true" construct="true" construct-only="false" />
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GESContainer*" />
@@ -1231,20 +1231,20 @@
       <method name="GetType" cname="ges_clip_asset_get_type" shared="true">
         <return-type type="GType" />
       </method>
-      <virtual_method name="GetNaturalFramerate" cname="get_natural_framerate">
+      <virtual_method name="GetNaturalFramerate" cname="get_natural_framerate" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="framerate_n" type="gint" />
           <parameter name="framerate_d" type="gint" />
         </parameters>
       </virtual_method>
-      <method name="GetFrameTime" cname="ges_clip_asset_get_frame_time">
+      <method name="GetFrameTime" cname="ges_clip_asset_get_frame_time" version="1.18">
         <return-type type="guint64" />
         <parameters>
           <parameter name="frame_number" type="gint64" />
         </parameters>
       </method>
-      <method name="GetNaturalFramerate" cname="ges_clip_asset_get_natural_framerate">
+      <method name="GetNaturalFramerate" cname="ges_clip_asset_get_natural_framerate" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="framerate_n" type="gint" />
@@ -1709,7 +1709,7 @@
           <parameter name="error" type="GError**" />
         </parameters>
       </method>
-      <method name="GetActiveForTrack" cname="ges_layer_get_active_for_track">
+      <method name="GetActiveForTrack" cname="ges_layer_get_active_for_track" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="track" type="GESTrack*" />
@@ -1752,7 +1752,7 @@
           <parameter name="clip" type="GESClip*" />
         </parameters>
       </method>
-      <method name="SetActiveForTracks" cname="ges_layer_set_active_for_tracks">
+      <method name="SetActiveForTracks" cname="ges_layer_set_active_for_tracks" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="active" type="gboolean" />
@@ -1787,7 +1787,7 @@
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
-      <signal name="ActiveChanged" cname="active-changed" when="first">
+      <signal name="ActiveChanged" cname="active-changed" when="first" version="1.18">
         <return-type type="void" />
         <parameters>
           <parameter name="active" type="gboolean" />
@@ -1807,7 +1807,7 @@
         </parameters>
       </signal>
     </object>
-    <object name="Marker" cname="GESMarker" opaque="false" hidden="false" parent="GObject">
+    <object name="Marker" cname="GESMarker" opaque="false" hidden="false" parent="GObject" version="1.18">
       <implements>
         <interface cname="GESMetaContainer" />
       </implements>
@@ -1819,7 +1819,7 @@
       <method name="GetType" cname="ges_marker_get_type" shared="true">
         <return-type type="GType" />
       </method>
-      <property name="Position" cname="position" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" />
+      <property name="Position" cname="position" type="guint64" readable="true" writeable="false" construct="false" construct-only="false" version="1.18" />
     </object>
     <object name="MarkerList" cname="GESMarkerList" opaque="false" hidden="false" parent="GObject" version="1.18">
       <class_struct cname="GESMarkerListClass">
@@ -2282,7 +2282,7 @@
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
-    <object name="SourceClipAsset" cname="GESSourceClipAsset" opaque="false" hidden="false" parent="GESClipAsset">
+    <object name="SourceClipAsset" cname="GESSourceClipAsset" opaque="false" hidden="false" parent="GESClipAsset" version="1.18">
       <implements>
         <interface cname="GESMetaContainer" />
         <interface cname="GAsyncInitable" />
@@ -2623,13 +2623,13 @@
           <parameter name="name" type="const-gchar*" />
         </parameters>
       </method>
-      <method name="GetFrameAt" cname="ges_timeline_get_frame_at">
+      <method name="GetFrameAt" cname="ges_timeline_get_frame_at" version="1.18">
         <return-type type="gint64" />
         <parameters>
           <parameter name="timestamp" type="guint64" />
         </parameters>
       </method>
-      <method name="GetFrameTime" cname="ges_timeline_get_frame_time">
+      <method name="GetFrameTime" cname="ges_timeline_get_frame_time" version="1.18">
         <return-type type="guint64" />
         <parameters>
           <parameter name="frame_number" type="gint64" />
@@ -2767,6 +2767,13 @@
           <parameter name="layer" type="GESLayer*" />
         </parameters>
       </signal>
+      <signal name="SelectElementTrack" cname="select-element-track" when="last" version="1.18">
+        <return-type type="GESTrack*" owned="true" />
+        <parameters>
+          <parameter name="clip" type="GESClip*" />
+          <parameter name="track_element" type="GESTrackElement*" />
+        </parameters>
+      </signal>
       <signal name="SelectTracksForObject" cname="select-tracks-for-object" when="last">
         <return-type type="*" owned="true" array="true" null_term_array="true" />
         <parameters>
@@ -2832,7 +2839,7 @@
         <method vm="get_layer_priority" />
         <method vm="get_natural_framerate" />
         <method vm="set_child_property_full" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="14" padding="true" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="14" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_timeline_element_get_type" shared="true">
         <return-type type="GType" />
@@ -2903,7 +2910,7 @@
           <parameter name="start" type="guint64" />
         </parameters>
       </virtual_method>
-      <virtual_method name="SetChildProperty" cname="set_child_property">
+      <virtual_method name="SetChildProperty" cname="set_child_property" version="1.16">
         <return-type type="void" />
         <parameters>
           <parameter name="child" type="GObject*" />
@@ -2913,7 +2920,7 @@
           </parameter>
         </parameters>
       </virtual_method>
-      <virtual_method name="SetChildPropertyFull" cname="set_child_property_full">
+      <virtual_method name="SetChildPropertyFull" cname="set_child_property_full" version="1.18">
         <return-type type="gboolean" />
         <parameters throws="1">
           <parameter name="child" type="GObject*" />
@@ -3223,14 +3230,14 @@
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
-      <signal name="ChildPropertyAdded" cname="child-property-added" when="first">
+      <signal name="ChildPropertyAdded" cname="child-property-added" when="first" version="1.18">
         <return-type type="void" />
         <parameters>
           <parameter name="prop_object" type="GObject*" />
           <parameter name="prop" type="GParamSpec*" />
         </parameters>
       </signal>
-      <signal name="ChildPropertyRemoved" cname="child-property-removed" when="first">
+      <signal name="ChildPropertyRemoved" cname="child-property-removed" when="first" version="1.18">
         <return-type type="void" />
         <parameters>
           <parameter name="prop_object" type="GObject*" />
@@ -3706,7 +3713,7 @@
         <return-type type="GESTrackType" />
         <parameters />
       </method>
-      <method name="HasInternalSource" cname="ges_track_element_has_internal_source">
+      <method name="HasInternalSource" cname="ges_track_element_has_internal_source" version="1.18">
         <return-type type="gboolean" />
         <parameters />
       </method>
@@ -3758,7 +3765,7 @@
           <parameter name="binding_type" type="const-gchar*" />
         </parameters>
       </method>
-      <method name="SetHasInternalSource" cname="ges_track_element_set_has_internal_source">
+      <method name="SetHasInternalSource" cname="ges_track_element_set_has_internal_source" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="has_internal_source" type="gboolean" />
@@ -3771,8 +3778,8 @@
         </parameters>
       </method>
       <property name="Active" cname="active" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
-      <property name="AutoClampControlSources" cname="auto-clamp-control-sources" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
-      <property name="HasInternalSourceProp&#xA;						" cname="has-internal-source" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
+      <property name="AutoClampControlSources" cname="auto-clamp-control-sources" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.18" />
+      <property name="HasInternalSourceProp&#xA;						" cname="has-internal-source" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.18" />
       <property name="Track" cname="track" type="GESTrack*" readable="true" writeable="false" construct="false" construct-only="false" />
       <property name="TrackType" cname="track-type" type="GESTrackType" readable="true" writeable="true" construct="true" construct-only="false" />
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GESTimelineElement*" />
@@ -3811,14 +3818,14 @@
       <method name="GetType" cname="ges_track_element_asset_get_type" shared="true">
         <return-type type="GType" />
       </method>
-      <virtual_method name="GetNaturalFramerate" cname="get_natural_framerate">
+      <virtual_method name="GetNaturalFramerate" cname="get_natural_framerate" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="framerate_n" type="gint" />
           <parameter name="framerate_d" type="gint" />
         </parameters>
       </virtual_method>
-      <method name="GetNaturalFramerate" cname="ges_track_element_asset_get_natural_framerate">
+      <method name="GetNaturalFramerate" cname="ges_track_element_asset_get_natural_framerate" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="framerate_n" type="gint" />
@@ -4009,7 +4016,7 @@
         <return-type type="const GList*" element_type="GESUriSourceAsset*" />
         <parameters />
       </method>
-      <method name="IsImage" cname="ges_uri_clip_asset_is_image">
+      <method name="IsImage" cname="ges_uri_clip_asset_is_image" version="1.18">
         <return-type type="gboolean" />
         <parameters />
       </method>
@@ -4048,7 +4055,7 @@
         <return-type type="const-gchar*" />
         <parameters />
       </method>
-      <method name="IsImage" cname="ges_uri_source_asset_is_image">
+      <method name="IsImage" cname="ges_uri_source_asset_is_image" version="1.18">
         <return-type type="gboolean" />
         <parameters />
       </method>
@@ -4084,7 +4091,7 @@
       <method name="GetType" cname="ges_video_source_get_type" shared="true">
         <return-type type="GType" />
       </method>
-      <method name="GetNaturalSize" cname="ges_video_source_get_natural_size">
+      <method name="GetNaturalSize" cname="ges_video_source_get_natural_size" version="1.18">
         <return-type type="gboolean" />
         <parameters>
           <parameter name="width" type="gint*" owned="true" pass_as="out" />
@@ -4163,7 +4170,7 @@
         <return-type type="GType" />
       </method>
       <constructor cname="ges_video_transition_new" disable_void_ctor="" />
-      <method name="GetBorder" cname="ges_video_transition_get_border">
+      <method name="GetBorder" cname="ges_video_transition_get_border" deprecated="true" deprecated-version="1.20">
         <return-type type="gint" />
         <parameters />
       </method>
@@ -4171,17 +4178,17 @@
         <return-type type="GESVideoStandardTransitionType" />
         <parameters />
       </method>
-      <method name="IsInverted" cname="ges_video_transition_is_inverted">
+      <method name="IsInverted" cname="ges_video_transition_is_inverted" deprecated="true" deprecated-version="1.20">
         <return-type type="gboolean" />
         <parameters />
       </method>
-      <method name="SetBorder" cname="ges_video_transition_set_border">
+      <method name="SetBorder" cname="ges_video_transition_set_border" deprecated="true" deprecated-version="1.20">
         <return-type type="void" />
         <parameters>
           <parameter name="value" type="guint" />
         </parameters>
       </method>
-      <method name="SetInverted" cname="ges_video_transition_set_inverted">
+      <method name="SetInverted" cname="ges_video_transition_set_inverted" deprecated="true" deprecated-version="1.20">
         <return-type type="void" />
         <parameters>
           <parameter name="inverted" type="gboolean" />
@@ -4194,7 +4201,7 @@
         </parameters>
       </method>
       <property name="Border" cname="border" type="guint" readable="true" writeable="true" construct="false" construct-only="false" />
-      <property name="Invert" cname="invert" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
+      <property name="Invert" cname="invert" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" deprecated="true" deprecated-version="1.20" />
       <property name="TransitionType" cname="transition-type" type="GESVideoStandardTransitionType" readable="true" writeable="true" construct="false" construct-only="false" />
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GESTransition*" />
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoTransitionPrivate*">
@@ -4219,7 +4226,7 @@
       <property name="Uri" cname="uri" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true" />
       <field cname="parent" access="private" writeable="false" readable="false" is_callback="false" name="Parent" type="GESVideoSource*" />
       <field cname="uri" access="private" writeable="false" readable="false" is_callback="false" name="UriField" type="gchar*" />
-      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoUriSourcePrivate*">
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESUriSource*">
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
@@ -4287,6 +4294,7 @@
     <struct name="TransitionPrivate" cname="GESTransitionPrivate" opaque="true" hidden="true" />
     <struct name="UriClipAssetPrivate" cname="GESUriClipAssetPrivate" opaque="true" hidden="true" />
     <struct name="UriClipPrivate" cname="GESUriClipPrivate" opaque="true" hidden="true" />
+    <struct name="UriSource" cname="GESUriSource" opaque="true" hidden="false" />
     <struct name="UriSourceAssetPrivate" cname="GESUriSourceAssetPrivate" opaque="true" hidden="true" />
     <struct name="VideoSourcePrivate" cname="GESVideoSourcePrivate" opaque="true" hidden="true" />
     <struct name="VideoTestSourcePrivate" cname="GESVideoTestSourcePrivate" opaque="true" hidden="true" />
@@ -4305,7 +4313,7 @@
       <method name="Deinit" cname="ges_deinit" shared="true">
         <return-type type="void" />
       </method>
-      <method name="EdgeName" cname="ges_edge_name" shared="true">
+      <method name="EdgeName" cname="ges_edge_name" shared="true" version="1.16">
         <return-type type="const-gchar*" />
         <parameters>
           <parameter name="edge" type="GESEdge" />
@@ -4402,6 +4410,10 @@
       <constant value="4" ctype="gint" gtype="gint" name="PADDING" />
       <constant value="20" ctype="gint" gtype="gint" name="PADDING_LARGE" />
       <constant value="4294967295" ctype="guint32" gtype="guint32" name="TIMELINE_ELEMENT_NO_LAYER_PRIORITY" />
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR" />
+      <constant value="0" ctype="gint" gtype="gint" name="VERSION_MICRO" />
+      <constant value="19" ctype="gint" gtype="gint" name="VERSION_MINOR" />
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO" />
     </object>
   </namespace>
 </api>

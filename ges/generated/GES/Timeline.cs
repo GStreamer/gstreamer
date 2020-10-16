@@ -120,6 +120,16 @@ namespace GES {
 			}
 		}
 
+		[GLib.Signal("track-added")]
+		public event GES.TrackAddedHandler TrackAdded {
+			add {
+				this.AddSignalHandler ("track-added", value, typeof (GES.TrackAddedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("track-added", value);
+			}
+		}
+
 		[GLib.Signal("commited")]
 		public event System.EventHandler Commited {
 			add {
@@ -170,13 +180,13 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("track-added")]
-		public event GES.TrackAddedHandler TrackAdded {
+		[GLib.Signal("select-element-track")]
+		public event GES.SelectElementTrackHandler SelectElementTrack {
 			add {
-				this.AddSignalHandler ("track-added", value, typeof (GES.TrackAddedArgs));
+				this.AddSignalHandler ("select-element-track", value, typeof (GES.SelectElementTrackArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("track-added", value);
+				this.RemoveSignalHandler ("select-element-track", value);
 			}
 		}
 
@@ -247,6 +257,66 @@ namespace GES {
 			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
 			foreach (GLib.Value v in vals)
 				v.Dispose ();
+		}
+
+		static SelectElementTrackNativeDelegate SelectElementTrack_cb_delegate;
+		static SelectElementTrackNativeDelegate SelectElementTrackVMCallback {
+			get {
+				if (SelectElementTrack_cb_delegate == null)
+					SelectElementTrack_cb_delegate = new SelectElementTrackNativeDelegate (SelectElementTrack_cb);
+				return SelectElementTrack_cb_delegate;
+			}
+		}
+
+		static void OverrideSelectElementTrack (GLib.GType gtype)
+		{
+			OverrideSelectElementTrack (gtype, SelectElementTrackVMCallback);
+		}
+
+		static void OverrideSelectElementTrack (GLib.GType gtype, SelectElementTrackNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "select-element-track", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr SelectElementTrackNativeDelegate (IntPtr inst, IntPtr clip, IntPtr track_element);
+
+		static IntPtr SelectElementTrack_cb (IntPtr inst, IntPtr clip, IntPtr track_element)
+		{
+			try {
+				Timeline __obj = GLib.Object.GetObject (inst, false) as Timeline;
+				GES.Track __result;
+				__result = __obj.OnSelectElementTrack (GLib.Object.GetObject(clip) as GES.Clip, GLib.Object.GetObject(track_element) as GES.TrackElement);
+				return __result == null ? IntPtr.Zero : __result.OwnedHandle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Timeline), ConnectionMethod="OverrideSelectElementTrack")]
+		protected virtual GES.Track OnSelectElementTrack (GES.Clip clip, GES.TrackElement track_element)
+		{
+			return InternalSelectElementTrack (clip, track_element);
+		}
+
+		private GES.Track InternalSelectElementTrack (GES.Clip clip, GES.TrackElement track_element)
+		{
+			GLib.Value ret = new GLib.Value (GLib.GType.Object);
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (3);
+			GLib.Value[] vals = new GLib.Value [3];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (clip);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (track_element);
+			inst_and_params.Append (vals [2]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+			GES.Track result = (GES.Track) ret;
+			ret.Dispose ();
+			return result;
 		}
 
 		static SnappingEndedNativeDelegate SnappingEnded_cb_delegate;

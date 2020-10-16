@@ -18,6 +18,21 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("discard-corrupted-frames")]
+		public bool DiscardCorruptedFrames {
+			get {
+				GLib.Value val = GetProperty ("discard-corrupted-frames");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("discard-corrupted-frames", val);
+				val.Dispose ();
+			}
+		}
+
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_decoder_get_max_errors(IntPtr raw);
 
@@ -33,6 +48,21 @@ namespace Gst.Video {
 			}
 			set  {
 				gst_video_decoder_set_max_errors(Handle, value);
+			}
+		}
+
+		[GLib.Property ("min-force-key-unit-interval")]
+		public ulong MinForceKeyUnitInterval {
+			get {
+				GLib.Value val = GetProperty ("min-force-key-unit-interval");
+				ulong ret = (ulong) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("min-force-key-unit-interval", val);
+				val.Dispose ();
 			}
 		}
 
@@ -1568,6 +1598,23 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_decoder_get_needs_sync_point(IntPtr raw);
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_decoder_set_needs_sync_point(IntPtr raw, bool enabled);
+
+		public bool NeedsSyncPoint { 
+			get {
+				bool raw_ret = gst_video_decoder_get_needs_sync_point(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_video_decoder_set_needs_sync_point(Handle, value);
+			}
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_decoder_get_oldest_frame(IntPtr raw);
 
 		public Gst.Video.VideoCodecFrame OldestFrame { 
@@ -1676,6 +1723,15 @@ namespace Gst.Video {
 		public void ReleaseFrame(Gst.Video.VideoCodecFrame frame) {
 			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
 			gst_video_decoder_release_frame(Handle, native_frame);
+			Marshal.FreeHGlobal (native_frame);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_decoder_request_sync_point(IntPtr raw, IntPtr frame, int flags);
+
+		public void RequestSyncPoint(Gst.Video.VideoCodecFrame frame, Gst.Video.VideoDecoderRequestSyncPointFlags flags) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			gst_video_decoder_request_sync_point(Handle, native_frame, (int) flags);
 			Marshal.FreeHGlobal (native_frame);
 		}
 

@@ -603,6 +603,7 @@ namespace Gst.Video {
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern double gst_video_color_transfer_decode(int func, double val);
 
+		[Obsolete]
 		public static double VideoColorTransferDecode(Gst.Video.VideoTransferFunction func, double val) {
 			double raw_ret = gst_video_color_transfer_decode((int) func, val);
 			double ret = raw_ret;
@@ -612,6 +613,7 @@ namespace Gst.Video {
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern double gst_video_color_transfer_encode(int func, double val);
 
+		[Obsolete]
 		public static double VideoColorTransferEncode(Gst.Video.VideoTransferFunction func, double val) {
 			double raw_ret = gst_video_color_transfer_encode((int) func, val);
 			double ret = raw_ret;
@@ -1090,6 +1092,24 @@ namespace Gst.Video {
 		public static Gst.MetaInfo VideoTimeCodeMetaGetInfo() {
 			IntPtr raw_ret = gst_video_time_code_meta_get_info();
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern double gst_video_transfer_function_decode(int func, double val);
+
+		public static double VideoTransferFunctionDecode(Gst.Video.VideoTransferFunction func, double val) {
+			double raw_ret = gst_video_transfer_function_decode((int) func, val);
+			double ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern double gst_video_transfer_function_encode(int func, double val);
+
+		public static double VideoTransferFunctionEncode(Gst.Video.VideoTransferFunction func, double val) {
+			double raw_ret = gst_video_transfer_function_encode((int) func, val);
+			double ret = raw_ret;
 			return ret;
 		}
 

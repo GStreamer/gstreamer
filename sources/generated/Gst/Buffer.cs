@@ -113,6 +113,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_custom_meta(IntPtr raw, IntPtr name);
+
+		public Gst.CustomMeta AddCustomMeta(string name) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_ret = gst_buffer_add_custom_meta(Handle, native_name);
+			Gst.CustomMeta ret = Gst.CustomMeta.New (raw_ret);
+			GLib.Marshaller.Free (native_name);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_meta(IntPtr raw, IntPtr info, IntPtr parms);
 
 		public Gst.Meta AddMeta(Gst.MetaInfo info, IntPtr parms) {
@@ -239,6 +250,17 @@ namespace Gst {
 				Gst.Memory ret = raw_ret == IntPtr.Zero ? null : (Gst.Memory) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Memory), true);
 				return ret;
 			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_get_custom_meta(IntPtr raw, IntPtr name);
+
+		public Gst.CustomMeta GetCustomMeta(string name) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_ret = gst_buffer_get_custom_meta(Handle, native_name);
+			Gst.CustomMeta ret = Gst.CustomMeta.New (raw_ret);
+			GLib.Marshaller.Free (native_name);
+			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -28,6 +28,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern int ges_video_transition_get_border(IntPtr raw);
 
+		[Obsolete]
 		[GLib.Property ("border")]
 		public int Border {
 			get  {
@@ -42,6 +43,7 @@ namespace GES {
 			}
 		}
 
+		[Obsolete]
 		[GLib.Property ("invert")]
 		public bool Invert {
 			get {
@@ -112,6 +114,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_video_transition_is_inverted(IntPtr raw);
 
+		[Obsolete]
 		public bool IsInverted { 
 			get {
 				bool raw_ret = ges_video_transition_is_inverted(Handle);
@@ -123,6 +126,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_video_transition_set_inverted(IntPtr raw, bool inverted);
 
+		[Obsolete]
 		public bool Inverted { 
 			set {
 				ges_video_transition_set_inverted(Handle, value);

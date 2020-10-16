@@ -89,6 +89,24 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_value_deserialize_with_pspec(IntPtr dest, IntPtr src, IntPtr pspec);
+
+		public static bool DeserializeWithPspec(out GLib.Value dest, string src, IntPtr pspec) {
+			IntPtr native_dest = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (GLib.Value)));
+			IntPtr native_src = GLib.Marshaller.StringToPtrGStrdup (src);
+			bool raw_ret = gst_value_deserialize_with_pspec(native_dest, native_src, pspec);
+			bool ret = raw_ret;
+			dest = (GLib.Value) Marshal.PtrToStructure (native_dest, typeof (GLib.Value));
+			Marshal.FreeHGlobal (native_dest);
+			GLib.Marshaller.Free (native_src);
+			return ret;
+		}
+
+		public static bool DeserializeWithPspec(out GLib.Value dest, string src) {
+			return DeserializeWithPspec (out dest, src, IntPtr.Zero);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_value_fixate(IntPtr dest, IntPtr src);
 
 		public static bool Fixate(GLib.Value dest, GLib.Value src) {
