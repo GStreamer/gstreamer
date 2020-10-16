@@ -1495,12 +1495,6 @@ main (int argc, char **argv)
   state->current_buffer = NULL;
   state->caps = NULL;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  /* must initialise the threading system before using any other GLib funtion */
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-#endif
-
   ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
