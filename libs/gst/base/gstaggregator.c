@@ -2908,6 +2908,8 @@ gst_aggregator_get_type (void)
 static gboolean
 gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
 {
+  guint64 max_time_level;
+
   /* Empty queue always has space */
   if (aggpad->priv->num_buffers == 0 && aggpad->priv->clipped_buffer == NULL)
     return TRUE;
@@ -2921,8 +2923,13 @@ gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
   if (self->priv->latency == 0)
     return FALSE;
 
+  /* On top of our latency, we also want to allow buffering up to the
+   * minimum upstream latency to allow queue free sources with lower then
+   * upstream latency. */
+  max_time_level = self->priv->latency + self->priv->upstream_latency_min;
+
   /* Allow no more buffers than the latency */
-  return (aggpad->priv->time_level <= self->priv->latency);
+  return (aggpad->priv->time_level <= max_time_level);
 }
 
 /* Must be called with the PAD_LOCK held */
