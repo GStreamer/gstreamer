@@ -723,12 +723,16 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264SliceHdr * slice,
 
       dec_ref_pic_m->n_ref_pic_marking = 0;
       while (1) {
-        refpicmarking =
-            &dec_ref_pic_m->ref_pic_marking[dec_ref_pic_m->n_ref_pic_marking];
-
         READ_UE (nr, mem_mgmt_ctrl_op);
         if (mem_mgmt_ctrl_op == 0)
           break;
+
+        if (dec_ref_pic_m->n_ref_pic_marking >=
+            G_N_ELEMENTS (dec_ref_pic_m->ref_pic_marking))
+          goto error;
+
+        refpicmarking =
+            &dec_ref_pic_m->ref_pic_marking[dec_ref_pic_m->n_ref_pic_marking];
 
         refpicmarking->memory_management_control_operation = mem_mgmt_ctrl_op;
 
