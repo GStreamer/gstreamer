@@ -34,6 +34,7 @@ typedef struct _GstVp9Picture GstVp9Picture;
 
 struct _GstVp9Picture
 {
+  /*< private >*/
   GstMiniObject parent;
 
   /* From GstVideoCodecFrame */
@@ -52,6 +53,8 @@ struct _GstVp9Picture
 
   gpointer user_data;
   GDestroyNotify notify;
+
+  GstVp9Segmentation segmentation[GST_VP9_MAX_SEGMENTS];
 };
 
 GST_CODECS_API

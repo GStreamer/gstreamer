@@ -348,6 +348,9 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     picture->subsampling_y = priv->parser->subsampling_y;
     picture->bit_depth = priv->parser->bit_depth;
 
+    memcpy (picture->segmentation, priv->parser->segmentation,
+        sizeof (priv->parser->segmentation));
+
     if (klass->new_picture) {
       if (!klass->new_picture (self, frame, picture)) {
         GST_ERROR_OBJECT (self, "new picture error");
