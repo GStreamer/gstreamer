@@ -37,6 +37,18 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_srtobject);
 #define GST_CAT_DEFAULT gst_debug_srtobject
 
+#if SRT_VERSION_VALUE > 0x10402
+#define SRTSOCK_ERROR_DEBUG ("libsrt reported: %s", srt_rejectreason_str (reason))
+#else
+/* srt_rejectreason_str() is unavailable in libsrt 1.4.2 and prior due to
+ * unexported symbol. See https://github.com/Haivision/srt/pull/1728. */
+#define SRTSOCK_ERROR_DEBUG ("libsrt reported reject reason code %d", reason)
+#endif
+
+#define ELEMENT_WARNING_SRTSOCK_ERROR(code, reason) \
+  GST_ELEMENT_WARNING (srtobject->element, RESOURCE, code, \
+  ("Error on SRT socket. Trying to reconnect."), SRTSOCK_ERROR_DEBUG)
+
 enum
 {
   PROP_URI = 1,
@@ -1510,11 +1522,11 @@ gst_srt_object_read (GstSRTObject * srtobject,
 
     SRTSOCKET rsock;
     gint rsocklen = 1;
-    int pollret;
+    SRTSOCKET wsock;
+    gint wsocklen = 1;
 
-    pollret = srt_epoll_wait (poll_id, &rsock,
-        &rsocklen, 0, 0, poll_timeout, NULL, 0, NULL, 0);
-    if (pollret < 0) {
+    if (srt_epoll_wait (poll_id, &rsock, &rsocklen, &wsock, &wsocklen,
+            poll_timeout, NULL, 0, NULL, 0) < 0) {
       gint srt_errno = srt_getlasterror (NULL);
 
       if (srt_errno != SRT_ETIMEOUT) {
@@ -1523,34 +1535,22 @@ gst_srt_object_read (GstSRTObject * srtobject,
       continue;
     }
 
-    if (rsocklen < 0) {
-      GST_WARNING_OBJECT (srtobject->element,
-          "abnormal SRT socket is detected");
-      srt_close (rsock);
-    }
+    if (wsocklen == 1 && rsocklen == 1) {
+      /* Socket reported in wsock AND rsock signifies an error. */
+      gint reason = srt_getrejectreason (wsock);
 
-    switch (srt_getsockstate (rsock)) {
-      case SRTS_BROKEN:
-      case SRTS_NONEXIST:
-      case SRTS_CLOSED:
-        if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
-          /* Caller has been disappeared. */
-          return 0;
-        } else {
-          GST_WARNING_OBJECT (srtobject->element,
-              "Invalid SRT socket. Trying to reconnect");
-          gst_srt_object_close (srtobject);
-          if (!gst_srt_object_open_internal (srtobject, cancellable, error)) {
-            return -1;
-          }
-          continue;
+      if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
+        /* Caller has disappeared. */
+        return 0;
+      } else {
+        ELEMENT_WARNING_SRTSOCK_ERROR (READ, reason);
+
+        gst_srt_object_close (srtobject);
+        if (!gst_srt_object_open_internal (srtobject, cancellable, error)) {
+          return -1;
         }
-      case SRTS_CONNECTED:
-        /* good to go */
-        break;
-      default:
-        /* not-ready */
-        continue;
+      }
+      continue;
     }
 
 
@@ -1739,6 +1739,8 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
   }
 
   while (len < mapinfo->size) {
+    SRTSOCKET rsock;
+    gint rsocklen = 1;
     SRTSOCKET wsock;
     gint wsocklen = 1;
 
@@ -1756,31 +1758,22 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
       break;
     }
 
-    if (srt_epoll_wait (srtobject->poll_id, 0, 0, &wsock,
+    if (srt_epoll_wait (srtobject->poll_id, &rsock, &rsocklen, &wsock,
             &wsocklen, poll_timeout, NULL, 0, NULL, 0) < 0) {
       continue;
     }
 
-    switch (srt_getsockstate (wsock)) {
-      case SRTS_BROKEN:
-      case SRTS_NONEXIST:
-      case SRTS_CLOSED:
-        GST_ELEMENT_WARNING (srtobject->element, RESOURCE, WRITE, NULL,
-            ("Invalid SRT socket. Trying to reconnect. (%s)",
-                srt_getlasterror_str ()));
-        gst_srt_object_close (srtobject);
-        if (!gst_srt_object_open_internal (srtobject, cancellable, error)) {
-          return -1;
-        }
-        continue;
-      case SRTS_CONNECTED:
-        /* good to go */
-        GST_LOG_OBJECT (srtobject->element, "good to go");
-        break;
-      default:
-        GST_WARNING_OBJECT (srtobject->element, "not ready");
-        /* not-ready */
-        continue;
+    if (wsocklen == 1 && rsocklen == 1) {
+      /* Socket reported in wsock AND rsock signifies an error. */
+      gint reason = srt_getrejectreason (wsock);
+
+      ELEMENT_WARNING_SRTSOCK_ERROR (WRITE, reason);
+
+      gst_srt_object_close (srtobject);
+      if (!gst_srt_object_open_internal (srtobject, cancellable, error)) {
+        return -1;
+      }
+      continue;
     }
 
     if (srt_getsockflag (wsock, SRTO_PAYLOADSIZE, &payload_size, &optlen)) {
