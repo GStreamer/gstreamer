@@ -351,34 +351,27 @@ ges_asset_extract_default (GESAsset * asset, GError ** error)
   GParameter *params;
   GESAssetPrivate *priv = asset->priv;
   GESExtractable *n_extractable;
-
+  gint i;
+  GValue *values;
+  const gchar **names;
 
   params = ges_extractable_type_get_parameters_from_id (priv->extractable_type,
       priv->id, &n_params);
 
-#if GLIB_CHECK_VERSION(2, 53, 1)
-  {
-    gint i;
-    GValue *values;
-    const gchar **names;
 
-    values = g_malloc0 (sizeof (GValue) * n_params);
-    names = g_malloc0 (sizeof (gchar *) * n_params);
+  values = g_malloc0 (sizeof (GValue) * n_params);
+  names = g_malloc0 (sizeof (gchar *) * n_params);
 
-    for (i = 0; i < n_params; i++) {
-      values[i] = params[i].value;
-      names[i] = params[i].name;
-    }
-
-    n_extractable =
-        GES_EXTRACTABLE (g_object_new_with_properties (priv->extractable_type,
-            n_params, names, values));
-    g_free (names);
-    g_free (values);
+  for (i = 0; i < n_params; i++) {
+    values[i] = params[i].value;
+    names[i] = params[i].name;
   }
-#else
-  n_extractable = g_object_newv (priv->extractable_type, n_params, params);
-#endif
+
+  n_extractable =
+      GES_EXTRACTABLE (g_object_new_with_properties (priv->extractable_type,
+          n_params, names, values));
+  g_free (names);
+  g_free (values);
 
   while (n_params--)
     g_value_unset (&params[n_params].value);
