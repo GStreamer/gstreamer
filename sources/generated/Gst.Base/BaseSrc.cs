@@ -1579,9 +1579,21 @@ namespace Gst.Base {
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_src_new_seamless_segment(IntPtr raw, long start, long stop, long time);
 
+		[Obsolete]
 		public bool NewSeamlessSegment(long start, long stop, long time) {
 			bool raw_ret = gst_base_src_new_seamless_segment(Handle, start, stop, time);
 			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_base_src_new_segment(IntPtr raw, IntPtr segment);
+
+		public bool NewSegment(Gst.Segment segment) {
+			IntPtr native_segment = GLib.Marshaller.StructureToPtrAlloc (segment);
+			bool raw_ret = gst_base_src_new_segment(Handle, native_segment);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_segment);
 			return ret;
 		}
 

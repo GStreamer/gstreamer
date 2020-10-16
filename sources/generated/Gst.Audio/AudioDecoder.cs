@@ -19,6 +19,24 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_audio_decoder_get_max_errors(IntPtr raw);
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_audio_decoder_set_max_errors(IntPtr raw, int num);
+
+		[GLib.Property ("max-errors")]
+		public int MaxErrors {
+			get  {
+				int raw_ret = gst_audio_decoder_get_max_errors(Handle);
+				int ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_audio_decoder_set_max_errors(Handle, value);
+			}
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_decoder_get_min_latency(IntPtr raw);
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1441,23 +1459,6 @@ namespace Gst.Audio {
 
 		public void GetLatency(out ulong min, out ulong max) {
 			gst_audio_decoder_get_latency(Handle, out min, out max);
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_audio_decoder_get_max_errors(IntPtr raw);
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_decoder_set_max_errors(IntPtr raw, int num);
-
-		public int MaxErrors { 
-			get {
-				int raw_ret = gst_audio_decoder_get_max_errors(Handle);
-				int ret = raw_ret;
-				return ret;
-			}
-			set {
-				gst_audio_decoder_set_max_errors(Handle, value);
-			}
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

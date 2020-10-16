@@ -149,6 +149,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_ghost_pad_construct(IntPtr raw);
 
+		[Obsolete]
 		public bool Construct() {
 			bool raw_ret = gst_ghost_pad_construct(Handle);
 			bool ret = raw_ret;

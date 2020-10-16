@@ -545,6 +545,8 @@ namespace AbiTester {
 			Console.WriteLine("\"GstAggregatorClass.negotiate\": \"" + Gst.Base.Aggregator.class_abi.GetFieldOffset("negotiate") + "\"");
 			Console.WriteLine("\"GstAggregatorClass.sink_event_pre_queue\": \"" + Gst.Base.Aggregator.class_abi.GetFieldOffset("sink_event_pre_queue") + "\"");
 			Console.WriteLine("\"GstAggregatorClass.sink_query_pre_queue\": \"" + Gst.Base.Aggregator.class_abi.GetFieldOffset("sink_query_pre_queue") + "\"");
+			Console.WriteLine("\"GstAggregatorClass.finish_buffer_list\": \"" + Gst.Base.Aggregator.class_abi.GetFieldOffset("finish_buffer_list") + "\"");
+			Console.WriteLine("\"GstAggregatorClass.peek_next_sample\": \"" + Gst.Base.Aggregator.class_abi.GetFieldOffset("peek_next_sample") + "\"");
 			Console.WriteLine("\"sizeof(GstAggregator)\": \"" + Gst.Base.Aggregator.abi_info.Size + "\"");
 			Console.WriteLine("\"GstAggregator.srcpad\": \"" + Gst.Base.Aggregator.abi_info.GetFieldOffset("srcpad") + "\"");
 			Console.WriteLine("\"GstAggregator.priv\": \"" + Gst.Base.Aggregator.abi_info.GetFieldOffset("priv") + "\"");

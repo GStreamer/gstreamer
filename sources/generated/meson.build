@@ -126,6 +126,7 @@ generated_sources = [
     'Gst.Base/Gst.BaseSharp.TypeFindHelperGetRangeFunctionNative.cs',
     'Gst.Base/PushSrc.cs',
     'Gst.Base/QueueArray.cs',
+    'Gst.Base/SamplesSelectedHandler.cs',
     'Gst.Base/TypeFindHelperGetRangeFunction.cs',
     'Gst.Controller/ARGBControlBinding.cs',
     'Gst.Controller/Constants.cs',

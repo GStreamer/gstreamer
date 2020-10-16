@@ -12,6 +12,7 @@ namespace Gst.Video {
 
 		Unknown = 0,
 		Zflipz2x2 = 65536,
+		Linear = 131072,
 	}
 
 	internal class VideoTileModeGType {

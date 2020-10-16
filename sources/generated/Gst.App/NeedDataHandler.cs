@@ -8,7 +8,7 @@ namespace Gst.App {
 	public delegate void NeedDataHandler(object o, NeedDataArgs args);
 
 	public class NeedDataArgs : GLib.SignalArgs {
-		public uint Length{
+		public uint Object{
 			get {
 				return (uint) Args [0];
 			}

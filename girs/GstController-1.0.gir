@@ -330,7 +330,7 @@ transformations.</doc>
       <constructor name="new" c:identifier="gst_direct_control_binding_new">
         <doc xml:space="preserve"
              filename="libs/gst/controller/gstdirectcontrolbinding.c"
-             line="511">Create a new control-binding that attaches the #GstControlSource to the
+             line="512">Create a new control-binding that attaches the #GstControlSource to the
 #GObject property. It will map the control source range [0.0 ... 1.0] to
 the full target property range, and clip all values outside this range.</doc>
         <source-position filename="libs/gst/controller/gstdirectcontrolbinding.h"
@@ -338,26 +338,26 @@ the full target property range, and clip all values outside this range.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="libs/gst/controller/gstdirectcontrolbinding.c"
-               line="521">the new #GstDirectControlBinding</doc>
+               line="522">the new #GstDirectControlBinding</doc>
           <type name="Gst.ControlBinding" c:type="GstControlBinding*"/>
         </return-value>
         <parameters>
           <parameter name="object" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="libs/gst/controller/gstdirectcontrolbinding.c"
-                 line="513">the object of the property</doc>
+                 line="514">the object of the property</doc>
             <type name="Gst.Object" c:type="GstObject*"/>
           </parameter>
           <parameter name="property_name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="libs/gst/controller/gstdirectcontrolbinding.c"
-                 line="514">the property-name to attach the control source</doc>
+                 line="515">the property-name to attach the control source</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="cs" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="libs/gst/controller/gstdirectcontrolbinding.c"
-                 line="515">the control source</doc>
+                 line="516">the control source</doc>
             <type name="Gst.ControlSource" c:type="GstControlSource*"/>
           </parameter>
         </parameters>
@@ -367,7 +367,7 @@ the full target property range, and clip all values outside this range.</doc>
                    version="1.6">
         <doc xml:space="preserve"
              filename="libs/gst/controller/gstdirectcontrolbinding.c"
-             line="531">Create a new control-binding that attaches the #GstControlSource to the
+             line="532">Create a new control-binding that attaches the #GstControlSource to the
 #GObject property. It will directly map the control source values to the
 target property range without any transformations.</doc>
         <source-position filename="libs/gst/controller/gstdirectcontrolbinding.h"
@@ -375,26 +375,26 @@ target property range without any transformations.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="libs/gst/controller/gstdirectcontrolbinding.c"
-               line="541">the new #GstDirectControlBinding</doc>
+               line="542">the new #GstDirectControlBinding</doc>
           <type name="Gst.ControlBinding" c:type="GstControlBinding*"/>
         </return-value>
         <parameters>
           <parameter name="object" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="libs/gst/controller/gstdirectcontrolbinding.c"
-                 line="533">the object of the property</doc>
+                 line="534">the object of the property</doc>
             <type name="Gst.Object" c:type="GstObject*"/>
           </parameter>
           <parameter name="property_name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="libs/gst/controller/gstdirectcontrolbinding.c"
-                 line="534">the property-name to attach the control source</doc>
+                 line="535">the property-name to attach the control source</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="cs" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="libs/gst/controller/gstdirectcontrolbinding.c"
-                 line="535">the control source</doc>
+                 line="536">the control source</doc>
             <type name="Gst.ControlSource" c:type="GstControlSource*"/>
           </parameter>
         </parameters>

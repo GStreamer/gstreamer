@@ -658,6 +658,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_uri_from_string_escaped(IntPtr uri);
+
+		public static Gst.Uri FromStringEscaped(string uri) {
+			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
+			IntPtr raw_ret = gst_uri_from_string_escaped(native_uri);
+			Gst.Uri ret = Gst.Uri.New (raw_ret);
+			GLib.Marshaller.Free (native_uri);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_location(IntPtr uri);
 
 		public static string GetLocation(string uri) {

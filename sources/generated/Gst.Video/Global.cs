@@ -619,24 +619,6 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_video_color_transfer_from_iso(uint value);
-
-		public static Gst.Video.VideoTransferFunction VideoColorTransferFromIso(uint value) {
-			int raw_ret = gst_video_color_transfer_from_iso(value);
-			Gst.Video.VideoTransferFunction ret = (Gst.Video.VideoTransferFunction) raw_ret;
-			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_video_color_transfer_to_iso(int func);
-
-		public static uint VideoColorTransferToIso(Gst.Video.VideoTransferFunction func) {
-			uint raw_ret = gst_video_color_transfer_to_iso((int) func);
-			uint ret = raw_ret;
-			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_video_convert_sample(IntPtr sample, IntPtr to_caps, ulong timeout, out IntPtr error);
 
 		public static unsafe Gst.Sample VideoConvertSample(Gst.Sample sample, Gst.Caps to_caps, ulong timeout) {
@@ -1108,6 +1090,33 @@ namespace Gst.Video {
 		public static Gst.MetaInfo VideoTimeCodeMetaGetInfo() {
 			IntPtr raw_ret = gst_video_time_code_meta_get_info();
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_transfer_function_from_iso(uint value);
+
+		public static Gst.Video.VideoTransferFunction VideoTransferFunctionFromIso(uint value) {
+			int raw_ret = gst_video_transfer_function_from_iso(value);
+			Gst.Video.VideoTransferFunction ret = (Gst.Video.VideoTransferFunction) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_transfer_function_is_equivalent(int from_func, uint from_bpp, int to_func, uint to_bpp);
+
+		public static bool VideoTransferFunctionIsEquivalent(Gst.Video.VideoTransferFunction from_func, uint from_bpp, Gst.Video.VideoTransferFunction to_func, uint to_bpp) {
+			bool raw_ret = gst_video_transfer_function_is_equivalent((int) from_func, from_bpp, (int) to_func, to_bpp);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_video_transfer_function_to_iso(int func);
+
+		public static uint VideoTransferFunctionToIso(Gst.Video.VideoTransferFunction func) {
+			uint raw_ret = gst_video_transfer_function_to_iso((int) func);
+			uint ret = raw_ret;
 			return ret;
 		}
 

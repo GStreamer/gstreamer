@@ -8,7 +8,7 @@ namespace Gst.App {
 	public delegate void SeekDataHandler(object o, SeekDataArgs args);
 
 	public class SeekDataArgs : GLib.SignalArgs {
-		public ulong Offset{
+		public ulong Object{
 			get {
 				return (ulong) Args [0];
 			}

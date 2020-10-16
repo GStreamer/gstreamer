@@ -29,6 +29,7 @@ and/or use gtk-doc annotations.  -->
     </function-macro>
     <record name="RTSPAuthCredential"
             c:type="GstRTSPAuthCredential"
+            version="1.12"
             glib:type-name="GstRTSPAuthCredential"
             glib:get-type="gst_rtsp_auth_credential_get_type"
             c:symbol-prefix="rtsp_auth_credential">
@@ -36,7 +37,7 @@ and/or use gtk-doc annotations.  -->
            filename="gst-libs/gst/rtsp/gstrtspmessage.h"
            line="284">RTSP Authentication credentials</doc>
       <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                       line="301"/>
+                       line="303"/>
       <field name="scheme" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/rtsp/gstrtspmessage.h"
@@ -90,29 +91,30 @@ and/or use gtk-doc annotations.  -->
     </enumeration>
     <record name="RTSPAuthParam"
             c:type="GstRTSPAuthParam"
+            version="1.12"
             glib:type-name="GstRTSPAuthParam"
             glib:get-type="gst_rtsp_auth_param_get_type"
             c:symbol-prefix="rtsp_auth_param">
       <doc xml:space="preserve"
            filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-           line="303">RTSP Authentication parameter</doc>
+           line="305">RTSP Authentication parameter</doc>
       <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                       line="313"/>
+                       line="317"/>
       <field name="name" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-             line="305">The name of the parameter</doc>
+             line="307">The name of the parameter</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <field name="value" writable="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-             line="306">The value of the parameter</doc>
+             line="308">The value of the parameter</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <method name="copy" c:identifier="gst_rtsp_auth_param_copy">
         <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                         line="316"/>
+                         line="320"/>
         <return-value transfer-ownership="full">
           <type name="RTSPAuthParam" c:type="GstRTSPAuthParam*"/>
         </return-value>
@@ -124,7 +126,7 @@ and/or use gtk-doc annotations.  -->
       </method>
       <method name="free" c:identifier="gst_rtsp_auth_param_free">
         <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                         line="318"/>
+                         line="322"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -3190,7 +3192,7 @@ for transmission.</doc>
              filename="gst-libs/gst/rtsp/gstrtspmessage.c"
              line="1193">Dump the contents of @msg to stdout.</doc>
         <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                         line="339"/>
+                         line="343"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/rtsp/gstrtspmessage.c"
@@ -3586,7 +3588,7 @@ response message.</doc>
              filename="gst-libs/gst/rtsp/gstrtspmessage.c"
              line="1441">Parses the credentials given in a WWW-Authenticate or Authorization header.</doc>
         <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                         line="321"/>
+                         line="325"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/rtsp/gstrtspmessage.c"
@@ -6641,7 +6643,7 @@ not equal #GST_RTSP_OK.</doc>
            line="1543">Free a %NULL-terminated array of credentials returned from
 gst_rtsp_message_parse_auth_credentials().</doc>
       <source-position filename="gst-libs/gst/rtsp/gstrtspmessage.h"
-                       line="324"/>
+                       line="328"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>

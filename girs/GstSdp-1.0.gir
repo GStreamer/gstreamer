@@ -5943,7 +5943,7 @@ stack and initialized with gst_sdp_message_init().</doc>
           <parameter name="text" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/sdp/gstsdpmessage.c"
-                 line="242">A dynamically allocated string representing the SDP description</doc>
+                 line="241">A dynamically allocated string representing the SDP description</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="msg"
@@ -5952,7 +5952,7 @@ stack and initialized with gst_sdp_message_init().</doc>
                      transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/sdp/gstsdpmessage.c"
-                 line="241">pointer to new #GstSDPMessage</doc>
+                 line="242">pointer to new #GstSDPMessage</doc>
             <type name="SDPMessage" c:type="GstSDPMessage**"/>
           </parameter>
         </parameters>
@@ -6522,7 +6522,7 @@ a=extmap:(id)[/direction] (extensionname) (extensionattributes)</doc>
         <parameter name="text" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/sdp/gstsdpmessage.c"
-               line="242">A dynamically allocated string representing the SDP description</doc>
+               line="241">A dynamically allocated string representing the SDP description</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
         <parameter name="msg"
@@ -6531,7 +6531,7 @@ a=extmap:(id)[/direction] (extensionname) (extensionattributes)</doc>
                    transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst-libs/gst/sdp/gstsdpmessage.c"
-               line="241">pointer to new #GstSDPMessage</doc>
+               line="242">pointer to new #GstSDPMessage</doc>
           <type name="SDPMessage" c:type="GstSDPMessage**"/>
         </parameter>
       </parameters>

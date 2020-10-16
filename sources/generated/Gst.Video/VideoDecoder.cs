@@ -18,6 +18,24 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_decoder_get_max_errors(IntPtr raw);
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_decoder_set_max_errors(IntPtr raw, int num);
+
+		[GLib.Property ("max-errors")]
+		public int MaxErrors {
+			get  {
+				int raw_ret = gst_video_decoder_get_max_errors(Handle);
+				int ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_video_decoder_set_max_errors(Handle, value);
+			}
+		}
+
 		[GLib.Property ("qos")]
 		public bool Qos {
 			get {
@@ -1530,23 +1548,6 @@ namespace Gst.Video {
 			long ret = raw_ret;
 			Marshal.FreeHGlobal (native_frame);
 			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_video_decoder_get_max_errors(IntPtr raw);
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_decoder_set_max_errors(IntPtr raw, int num);
-
-		public int MaxErrors { 
-			get {
-				int raw_ret = gst_video_decoder_get_max_errors(Handle);
-				int ret = raw_ret;
-				return ret;
-			}
-			set {
-				gst_video_decoder_set_max_errors(Handle, value);
-			}
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
