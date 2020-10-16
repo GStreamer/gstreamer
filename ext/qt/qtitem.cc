@@ -31,6 +31,7 @@
 
 #include <QtCore/QRunnable>
 #include <QtCore/QMutexLocker>
+#include <QtCore/QPointer>
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QSGSimpleTextureNode>
@@ -87,7 +88,7 @@ public:
   void run();
 
 private:
-  QtGLVideoItem *item_;
+  QPointer<QtGLVideoItem> item_;
 };
 
 InitializeSceneGraph::InitializeSceneGraph(QtGLVideoItem *item) :
@@ -97,7 +98,8 @@ InitializeSceneGraph::InitializeSceneGraph(QtGLVideoItem *item) :
 
 void InitializeSceneGraph::run()
 {
-  item_->onSceneGraphInitialized();
+  if(item_)
+    item_->onSceneGraphInitialized();
 }
 
 QtGLVideoItem::QtGLVideoItem()
@@ -285,6 +287,9 @@ QtGLVideoItemInterface::setBuffer (GstBuffer * buffer)
 void
 QtGLVideoItem::onSceneGraphInitialized ()
 {
+  if (this->window() == NULL)
+    return;
+
   GST_DEBUG ("%p scene graph initialization with Qt GL context %p", this,
       this->window()->openglContext ());
 
