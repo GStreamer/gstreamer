@@ -47,6 +47,7 @@
 #include <getopt.h>
 #include <alsa/asoundlib.h>
 
+#include "gstalsaelements.h"
 #include "gstalsa.h"
 #include "gstalsasink.h"
 
@@ -72,10 +73,12 @@ enum
   PROP_LAST
 };
 
-static void gst_alsasink_init_interfaces (GType type);
+#define _do_init \
+    ret |= alsa_element_init (plugin);
 #define gst_alsasink_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstAlsaSink, gst_alsasink,
-    GST_TYPE_AUDIO_SINK, gst_alsasink_init_interfaces (g_define_type_id));
+G_DEFINE_TYPE (GstAlsaSink, gst_alsasink, GST_TYPE_AUDIO_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsasink, "alsasink", GST_RANK_PRIMARY,
+    GST_TYPE_ALSA_SINK, _do_init);
 
 static void gst_alsasink_finalise (GObject * object);
 static void gst_alsasink_set_property (GObject * object,
@@ -134,14 +137,6 @@ gst_alsasink_finalise (GObject * object)
   g_mutex_unlock (&output_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_alsasink_init_interfaces (GType type)
-{
-#if 0
-  gst_alsa_type_add_device_property_probe_interface (type);
-#endif
 }
 
 static void

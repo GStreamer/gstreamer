@@ -23,70 +23,21 @@
 #include "config.h"
 #endif
 
-#include "gstalsasink.h"
-#include "gstalsasrc.h"
-#include "gstalsamidisrc.h"
+#include "gstalsaelements.h"
 #include "gstalsadeviceprovider.h"
 
 #include <gst/gst-i18n-plugin.h>
 
-GST_DEBUG_CATEGORY (alsa_debug);
-
-/* ALSA debugging wrapper */
-/* *INDENT-OFF* */
-G_GNUC_PRINTF (5, 6)
-/* *INDENT-ON* */
-static void
-gst_alsa_error_wrapper (const char *file, int line, const char *function,
-    int err, const char *fmt, ...)
-{
-#ifndef GST_DISABLE_GST_DEBUG
-  va_list args;
-  gchar *str;
-
-  va_start (args, fmt);
-  str = g_strdup_vprintf (fmt, args);
-  va_end (args);
-  /* FIXME: use GST_LEVEL_ERROR here? Currently warning is used because we're
-   * able to catch enough of the errors that would be printed otherwise
-   */
-  gst_debug_log (alsa_debug, GST_LEVEL_WARNING, file, function, line, NULL,
-      "alsalib error: %s%s%s", str, err ? ": " : "",
-      err ? snd_strerror (err) : "");
-  g_free (str);
-#endif
-}
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  int err;
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "alsasrc", GST_RANK_PRIMARY,
-          GST_TYPE_ALSA_SRC))
-    return FALSE;
-  if (!gst_element_register (plugin, "alsasink", GST_RANK_PRIMARY,
-          GST_TYPE_ALSA_SINK))
-    return FALSE;
-  if (!gst_element_register (plugin, "alsamidisrc", GST_RANK_PRIMARY,
-          GST_TYPE_ALSA_MIDI_SRC))
-    return FALSE;
-  if (!gst_device_provider_register (plugin, "alsadeviceprovider",
-          GST_RANK_SECONDARY, GST_TYPE_ALSA_DEVICE_PROVIDER))
-    return FALSE;
+  ret |= GST_DEVICE_PROVIDER_REGISTER (alsadeviceprovider, plugin);
 
-  GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
-
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif
-
-  err = snd_lib_error_set_handler (gst_alsa_error_wrapper);
-  if (err != 0)
-    GST_WARNING ("failed to set alsa error handler");
+  ret |= GST_ELEMENT_REGISTER (alsasrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (alsasink, plugin);
+  ret |= GST_ELEMENT_REGISTER (alsamidisrc, plugin);
 
   return TRUE;
 }
