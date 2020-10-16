@@ -50,7 +50,11 @@ Updating to new GStreamer version
 Make sure you are in an environement where latest `.gir` files are available (either installed
 or through the `$GI_TYPELIB_PATH` env var), those files are automatically copied to `girs/`.
 
-    ninja -C update-all
+    ninja -C build update-all
+
+or if using gst-build, start gst-env and then run
+
+    ninja -C build gstreamer-sharp@@update-all
 
 * Verify newly copied gir files in `girs/` and `git add` them
 * Verify newly generated code and `git add` files in `sources/generated/` and `ges/generated`
