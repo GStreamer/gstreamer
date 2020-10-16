@@ -1407,7 +1407,7 @@ the schema wasn't in the list</doc>
               c:identifier="gst_tag_check_language_code">
       <doc xml:space="preserve"
            filename="gst-libs/gst/tag/lang.c"
-           line="482">Check if a given string contains a known ISO 639 language code.
+           line="486">Check if a given string contains a known ISO 639 language code.
 
 This is useful in situations where it's not clear whether a given
 string is a language code (which should be put into a #GST_TAG_LANGUAGE_CODE
@@ -1417,7 +1417,7 @@ tag) or a free-form language name descriptor (which should be put into a
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/tag/lang.c"
-             line="493">TRUE if the two- or three-letter language code in @lang_code
+             line="497">TRUE if the two- or three-letter language code in @lang_code
     is a valid ISO-639 language code.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
@@ -1425,7 +1425,7 @@ tag) or a free-form language name descriptor (which should be put into a
         <parameter name="lang_code" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/tag/lang.c"
-               line="484">ISO-639 language code (e.g. "deu" or "ger" or "de")</doc>
+               line="488">ISO-639 language code (e.g. "deu" or "ger" or "de")</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
@@ -1612,7 +1612,7 @@ Language codes are case-sensitive and expected to be lower case.</doc>
               c:identifier="gst_tag_get_language_code_iso_639_2B">
       <doc xml:space="preserve"
            filename="gst-libs/gst/tag/lang.c"
-           line="448">Returns three-letter ISO-639-2 "bibliographic" language code given a
+           line="452">Returns three-letter ISO-639-2 "bibliographic" language code given a
 two-letter ISO-639-1 language code or a three-letter ISO-639-2 language
 code (both are accepted for convenience).
 
@@ -1625,7 +1625,7 @@ Language codes are case-sensitive and expected to be lower case.</doc>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/tag/lang.c"
-             line="462">three-letter ISO-639-2 language code string that maps to @lang_code,
+             line="466">three-letter ISO-639-2 language code string that maps to @lang_code,
     or NULL if no mapping is known. The returned string must not be
     modified or freed.</doc>
         <type name="utf8" c:type="const gchar*"/>
@@ -1634,7 +1634,7 @@ Language codes are case-sensitive and expected to be lower case.</doc>
         <parameter name="lang_code" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/tag/lang.c"
-               line="450">ISO-639 language code (e.g. "deu" or "ger" or "de")</doc>
+               line="454">ISO-639 language code (e.g. "deu" or "ger" or "de")</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
@@ -1643,7 +1643,7 @@ Language codes are case-sensitive and expected to be lower case.</doc>
               c:identifier="gst_tag_get_language_code_iso_639_2T">
       <doc xml:space="preserve"
            filename="gst-libs/gst/tag/lang.c"
-           line="414">Returns three-letter ISO-639-2 "terminological" language code given a
+           line="418">Returns three-letter ISO-639-2 "terminological" language code given a
 two-letter ISO-639-1 language code or a three-letter ISO-639-2 language
 code (both are accepted for convenience).
 
@@ -1656,7 +1656,7 @@ Language codes are case-sensitive and expected to be lower case.</doc>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/tag/lang.c"
-             line="428">three-letter ISO-639-2 language code string that maps to @lang_code,
+             line="432">three-letter ISO-639-2 language code string that maps to @lang_code,
     or NULL if no mapping is known. The returned string must not be
     modified or freed.</doc>
         <type name="utf8" c:type="const gchar*"/>
@@ -1665,7 +1665,7 @@ Language codes are case-sensitive and expected to be lower case.</doc>
         <parameter name="lang_code" transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst-libs/gst/tag/lang.c"
-               line="416">ISO-639 language code (e.g. "deu" or "ger" or "de")</doc>
+               line="420">ISO-639 language code (e.g. "deu" or "ger" or "de")</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>

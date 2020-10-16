@@ -288,6 +288,7 @@ namespace Gst {
 				return ret;
 			}
 			set {
+				value.Owned = false;
 				gst_pad_template_set_documentation_caps(Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}

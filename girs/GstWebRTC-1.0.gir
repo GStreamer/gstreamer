@@ -559,7 +559,7 @@ for more information.</doc>
       <virtual-method name="close" invoker="close">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="542">Close the @channel.</doc>
+             line="544">Close the @channel.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="79"/>
         <return-value transfer-ownership="none">
@@ -569,7 +569,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="544">a #GstWebRTCDataChannel</doc>
+                 line="546">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
         </parameters>
@@ -577,7 +577,7 @@ for more information.</doc>
       <virtual-method name="send_data" invoker="send_data">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="504">Send @data as a data message over @channel.</doc>
+             line="506">Send @data as a data message over @channel.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="77"/>
         <return-value transfer-ownership="none">
@@ -587,7 +587,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="506">a #GstWebRTCDataChannel</doc>
+                 line="508">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="data"
@@ -596,7 +596,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="507">a #GBytes or %NULL</doc>
+                 line="509">a #GBytes or %NULL</doc>
             <type name="GLib.Bytes" c:type="GBytes*"/>
           </parameter>
         </parameters>
@@ -604,7 +604,7 @@ for more information.</doc>
       <virtual-method name="send_string" invoker="send_string">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="523">Send @str as a string message over @channel.</doc>
+             line="525">Send @str as a string message over @channel.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="78"/>
         <return-value transfer-ownership="none">
@@ -614,7 +614,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="525">a #GstWebRTCDataChannel</doc>
+                 line="527">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="str"
@@ -623,7 +623,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="526">a string or %NULL</doc>
+                 line="528">a string or %NULL</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -631,7 +631,7 @@ for more information.</doc>
       <method name="close" c:identifier="gst_webrtc_data_channel_close">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="542">Close the @channel.</doc>
+             line="544">Close the @channel.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="109"/>
         <return-value transfer-ownership="none">
@@ -641,7 +641,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="544">a #GstWebRTCDataChannel</doc>
+                 line="546">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
         </parameters>
@@ -650,7 +650,7 @@ for more information.</doc>
               c:identifier="gst_webrtc_data_channel_on_buffered_amount_low">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="488">Signal that the data channel reached a low buffered amount. Should only be used by subclasses.</doc>
+             line="490">Signal that the data channel reached a low buffered amount. Should only be used by subclasses.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="100"/>
         <return-value transfer-ownership="none">
@@ -660,7 +660,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="490">a #GstWebRTCDataChannel</doc>
+                 line="492">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
         </parameters>
@@ -668,7 +668,7 @@ for more information.</doc>
       <method name="on_close" c:identifier="gst_webrtc_data_channel_on_close">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="403">Signal that the data channel was closed. Should only be used by subclasses.</doc>
+             line="405">Signal that the data channel was closed. Should only be used by subclasses.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="88"/>
         <return-value transfer-ownership="none">
@@ -678,7 +678,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="405">a #GstWebRTCDataChannel</doc>
+                 line="407">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
         </parameters>
@@ -686,7 +686,7 @@ for more information.</doc>
       <method name="on_error" c:identifier="gst_webrtc_data_channel_on_error">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="432">Signal that the data channel had an error. Should only be used by subclasses.</doc>
+             line="434">Signal that the data channel had an error. Should only be used by subclasses.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="91"/>
         <return-value transfer-ownership="none">
@@ -696,13 +696,13 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="434">a #GstWebRTCDataChannel</doc>
+                 line="436">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="error" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="435">a #GError</doc>
+                 line="437">a #GError</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
         </parameters>
@@ -711,7 +711,7 @@ for more information.</doc>
               c:identifier="gst_webrtc_data_channel_on_message_data">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="452">Signal that the data channel received a data message. Should only be used by subclasses.</doc>
+             line="454">Signal that the data channel received a data message. Should only be used by subclasses.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="94"/>
         <return-value transfer-ownership="none">
@@ -721,7 +721,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="454">a #GstWebRTCDataChannel</doc>
+                 line="456">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="data"
@@ -730,7 +730,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="455">a #GBytes or %NULL</doc>
+                 line="457">a #GBytes or %NULL</doc>
             <type name="GLib.Bytes" c:type="GBytes*"/>
           </parameter>
         </parameters>
@@ -739,7 +739,7 @@ for more information.</doc>
               c:identifier="gst_webrtc_data_channel_on_message_string">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="470">Signal that the data channel received a string message. Should only be used by subclasses.</doc>
+             line="472">Signal that the data channel received a string message. Should only be used by subclasses.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="97"/>
         <return-value transfer-ownership="none">
@@ -749,7 +749,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="472">a #GstWebRTCDataChannel</doc>
+                 line="474">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="str"
@@ -758,7 +758,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="473">a string or %NULL</doc>
+                 line="475">a string or %NULL</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -766,7 +766,7 @@ for more information.</doc>
       <method name="on_open" c:identifier="gst_webrtc_data_channel_on_open">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="369">Signal that the data channel was opened. Should only be used by subclasses.</doc>
+             line="371">Signal that the data channel was opened. Should only be used by subclasses.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="85"/>
         <return-value transfer-ownership="none">
@@ -776,7 +776,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="371">a #GstWebRTCDataChannel</doc>
+                 line="373">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
         </parameters>
@@ -785,7 +785,7 @@ for more information.</doc>
               c:identifier="gst_webrtc_data_channel_send_data">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="504">Send @data as a data message over @channel.</doc>
+             line="506">Send @data as a data message over @channel.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="103"/>
         <return-value transfer-ownership="none">
@@ -795,7 +795,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="506">a #GstWebRTCDataChannel</doc>
+                 line="508">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="data"
@@ -804,7 +804,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="507">a #GBytes or %NULL</doc>
+                 line="509">a #GBytes or %NULL</doc>
             <type name="GLib.Bytes" c:type="GBytes*"/>
           </parameter>
         </parameters>
@@ -813,7 +813,7 @@ for more information.</doc>
               c:identifier="gst_webrtc_data_channel_send_string">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="523">Send @str as a string message over @channel.</doc>
+             line="525">Send @str as a string message over @channel.</doc>
         <source-position filename="gst-libs/gst/webrtc/datachannel.h"
                          line="106"/>
         <return-value transfer-ownership="none">
@@ -823,7 +823,7 @@ for more information.</doc>
           <instance-parameter name="channel" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="525">a #GstWebRTCDataChannel</doc>
+                 line="527">a #GstWebRTCDataChannel</doc>
             <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
           </instance-parameter>
           <parameter name="str"
@@ -832,7 +832,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="526">a string or %NULL</doc>
+                 line="528">a string or %NULL</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -944,7 +944,7 @@ for more information.</doc>
       <glib:signal name="close" when="last" action="1">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/datachannel.c"
-             line="350">Close the data channel</doc>
+             line="352">Close the data channel</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -967,7 +967,7 @@ for more information.</doc>
           <parameter name="error" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="296">the #GError thrown</doc>
+                 line="298">the #GError thrown</doc>
             <type name="GLib.Error"/>
           </parameter>
         </parameters>
@@ -983,7 +983,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="305">a #GBytes of the data received</doc>
+                 line="307">a #GBytes of the data received</doc>
             <type name="GLib.Bytes"/>
           </parameter>
         </parameters>
@@ -999,7 +999,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="314">the data received as a string</doc>
+                 line="316">the data received as a string</doc>
             <type name="utf8" c:type="gchar*"/>
           </parameter>
         </parameters>
@@ -1020,7 +1020,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="331">a #GBytes with the data</doc>
+                 line="333">a #GBytes with the data</doc>
             <type name="GLib.Bytes"/>
           </parameter>
         </parameters>
@@ -1036,7 +1036,7 @@ for more information.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/datachannel.c"
-                 line="342">the data to send as a string</doc>
+                 line="344">the data to send as a string</doc>
             <type name="utf8" c:type="gchar*"/>
           </parameter>
         </parameters>
@@ -1061,7 +1061,7 @@ for more information.</doc>
             <parameter name="channel" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst-libs/gst/webrtc/datachannel.c"
-                   line="506">a #GstWebRTCDataChannel</doc>
+                   line="508">a #GstWebRTCDataChannel</doc>
               <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
             </parameter>
             <parameter name="data"
@@ -1070,7 +1070,7 @@ for more information.</doc>
                        allow-none="1">
               <doc xml:space="preserve"
                    filename="gst-libs/gst/webrtc/datachannel.c"
-                   line="507">a #GBytes or %NULL</doc>
+                   line="509">a #GBytes or %NULL</doc>
               <type name="GLib.Bytes" c:type="GBytes*"/>
             </parameter>
           </parameters>
@@ -1087,7 +1087,7 @@ for more information.</doc>
             <parameter name="channel" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst-libs/gst/webrtc/datachannel.c"
-                   line="525">a #GstWebRTCDataChannel</doc>
+                   line="527">a #GstWebRTCDataChannel</doc>
               <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
             </parameter>
             <parameter name="str"
@@ -1096,7 +1096,7 @@ for more information.</doc>
                        allow-none="1">
               <doc xml:space="preserve"
                    filename="gst-libs/gst/webrtc/datachannel.c"
-                   line="526">a string or %NULL</doc>
+                   line="528">a string or %NULL</doc>
               <type name="utf8" c:type="const gchar*"/>
             </parameter>
           </parameters>
@@ -1113,7 +1113,7 @@ for more information.</doc>
             <parameter name="channel" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst-libs/gst/webrtc/datachannel.c"
-                   line="544">a #GstWebRTCDataChannel</doc>
+                   line="546">a #GstWebRTCDataChannel</doc>
               <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
             </parameter>
           </parameters>

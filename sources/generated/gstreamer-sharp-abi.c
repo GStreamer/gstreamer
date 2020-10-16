@@ -551,6 +551,8 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstAggregatorClass.negotiate\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, negotiate));
 	g_print("\"GstAggregatorClass.sink_event_pre_queue\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, sink_event_pre_queue));
 	g_print("\"GstAggregatorClass.sink_query_pre_queue\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, sink_query_pre_queue));
+	g_print("\"GstAggregatorClass.finish_buffer_list\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, finish_buffer_list));
+	g_print("\"GstAggregatorClass.peek_next_sample\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, peek_next_sample));
 	g_print("\"sizeof(GstAggregator)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAggregator));
 	g_print("\"GstAggregator.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, srcpad));
 	g_print("\"GstAggregator.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, priv));

@@ -18,6 +18,21 @@ namespace Gst.Base {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("emit-signals")]
+		public bool EmitSignals {
+			get {
+				GLib.Value val = GetProperty ("emit-signals");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("emit-signals", val);
+				val.Dispose ();
+			}
+		}
+
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_aggregator_get_latency(IntPtr raw);
 
@@ -87,6 +102,75 @@ namespace Gst.Base {
 					return GLib.Object.GetObject((*raw_ptr)) as Gst.Pad;
 				}
 			}
+		}
+
+		[GLib.Signal("samples-selected")]
+		public event Gst.Base.SamplesSelectedHandler SamplesSelected {
+			add {
+				this.AddSignalHandler ("samples-selected", value, typeof (Gst.Base.SamplesSelectedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("samples-selected", value);
+			}
+		}
+
+		static SamplesSelectedNativeDelegate SamplesSelected_cb_delegate;
+		static SamplesSelectedNativeDelegate SamplesSelectedVMCallback {
+			get {
+				if (SamplesSelected_cb_delegate == null)
+					SamplesSelected_cb_delegate = new SamplesSelectedNativeDelegate (SamplesSelected_cb);
+				return SamplesSelected_cb_delegate;
+			}
+		}
+
+		static void OverrideSamplesSelected (GLib.GType gtype)
+		{
+			OverrideSamplesSelected (gtype, SamplesSelectedVMCallback);
+		}
+
+		static void OverrideSamplesSelected (GLib.GType gtype, SamplesSelectedNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "samples-selected", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void SamplesSelectedNativeDelegate (IntPtr inst, IntPtr segment, ulong pts, ulong dts, ulong duration, IntPtr info);
+
+		static void SamplesSelected_cb (IntPtr inst, IntPtr segment, ulong pts, ulong dts, ulong duration, IntPtr info)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				__obj.OnSamplesSelected (Gst.Segment.New (segment), pts, dts, duration, info == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (info, typeof (Gst.Structure), false));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideSamplesSelected")]
+		protected virtual void OnSamplesSelected (Gst.Segment segment, ulong pts, ulong dts, ulong duration, Gst.Structure info)
+		{
+			InternalSamplesSelected (segment, pts, dts, duration, info);
+		}
+
+		private void InternalSamplesSelected (Gst.Segment segment, ulong pts, ulong dts, ulong duration, Gst.Structure info)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (6);
+			GLib.Value[] vals = new GLib.Value [6];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (segment);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (pts);
+			inst_and_params.Append (vals [2]);
+			vals [3] = new GLib.Value (dts);
+			inst_and_params.Append (vals [3]);
+			vals [4] = new GLib.Value (duration);
+			inst_and_params.Append (vals [4]);
+			vals [5] = new GLib.Value (info);
+			inst_and_params.Append (vals [5]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 		static FlushNativeDelegate Flush_cb_delegate;
@@ -1254,6 +1338,123 @@ namespace Gst.Base {
 			return __result;
 		}
 
+		static FinishBufferListNativeDelegate FinishBufferList_cb_delegate;
+		static FinishBufferListNativeDelegate FinishBufferListVMCallback {
+			get {
+				if (FinishBufferList_cb_delegate == null)
+					FinishBufferList_cb_delegate = new FinishBufferListNativeDelegate (FinishBufferList_cb);
+				return FinishBufferList_cb_delegate;
+			}
+		}
+
+		static void OverrideFinishBufferList (GLib.GType gtype)
+		{
+			OverrideFinishBufferList (gtype, FinishBufferListVMCallback);
+		}
+
+		static void OverrideFinishBufferList (GLib.GType gtype, FinishBufferListNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("finish_buffer_list"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate int FinishBufferListNativeDelegate (IntPtr inst, IntPtr bufferlist);
+
+		static int FinishBufferList_cb (IntPtr inst, IntPtr bufferlist)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				Gst.FlowReturn __result;
+				__result = __obj.OnFinishBufferList (bufferlist == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (bufferlist, typeof (Gst.BufferList), true));
+				return (int) __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideFinishBufferList")]
+		protected virtual Gst.FlowReturn OnFinishBufferList (Gst.BufferList bufferlist)
+		{
+			return InternalFinishBufferList (bufferlist);
+		}
+
+		private Gst.FlowReturn InternalFinishBufferList (Gst.BufferList bufferlist)
+		{
+			FinishBufferListNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("finish_buffer_list"));
+				unmanaged = (FinishBufferListNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(FinishBufferListNativeDelegate));
+			}
+			if (unmanaged == null) return (Gst.FlowReturn) 0;
+
+			bufferlist.Owned = false;
+			int __result = unmanaged (this.Handle, bufferlist == null ? IntPtr.Zero : bufferlist.Handle);
+			return (Gst.FlowReturn) __result;
+		}
+
+		static PeekNextSampleNativeDelegate PeekNextSample_cb_delegate;
+		static PeekNextSampleNativeDelegate PeekNextSampleVMCallback {
+			get {
+				if (PeekNextSample_cb_delegate == null)
+					PeekNextSample_cb_delegate = new PeekNextSampleNativeDelegate (PeekNextSample_cb);
+				return PeekNextSample_cb_delegate;
+			}
+		}
+
+		static void OverridePeekNextSample (GLib.GType gtype)
+		{
+			OverridePeekNextSample (gtype, PeekNextSampleVMCallback);
+		}
+
+		static void OverridePeekNextSample (GLib.GType gtype, PeekNextSampleNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("peek_next_sample"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr PeekNextSampleNativeDelegate (IntPtr inst, IntPtr aggregator_pad);
+
+		static IntPtr PeekNextSample_cb (IntPtr inst, IntPtr aggregator_pad)
+		{
+			try {
+				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
+				Gst.Sample __result;
+				__result = __obj.OnPeekNextSample (GLib.Object.GetObject(aggregator_pad) as Gst.Base.AggregatorPad);
+				return __result == null ? IntPtr.Zero : __result.OwnedCopy;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverridePeekNextSample")]
+		protected virtual Gst.Sample OnPeekNextSample (Gst.Base.AggregatorPad aggregator_pad)
+		{
+			return InternalPeekNextSample (aggregator_pad);
+		}
+
+		private Gst.Sample InternalPeekNextSample (Gst.Base.AggregatorPad aggregator_pad)
+		{
+			PeekNextSampleNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("peek_next_sample"));
+				unmanaged = (PeekNextSampleNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(PeekNextSampleNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle, aggregator_pad == null ? IntPtr.Zero : aggregator_pad.Handle);
+			return __result == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (__result, typeof (Gst.Sample), true);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1425,14 +1626,30 @@ namespace Gst.Base {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // sink_query_pre_queue
 							, "sink_event_pre_queue"
+							, "finish_buffer_list"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("finish_buffer_list"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // finish_buffer_list
+							, "sink_query_pre_queue"
+							, "peek_next_sample"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("peek_next_sample"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // peek_next_sample
+							, "finish_buffer_list"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 17 // _gst_reserved
-							, "sink_query_pre_queue"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 15 // _gst_reserved
+							, "peek_next_sample"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1468,6 +1685,16 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_aggregator_finish_buffer_list(IntPtr raw, IntPtr bufferlist);
+
+		public Gst.FlowReturn FinishBufferList(Gst.BufferList bufferlist) {
+			bufferlist.Owned = false;
+			int raw_ret = gst_aggregator_finish_buffer_list(Handle, bufferlist == null ? IntPtr.Zero : bufferlist.Handle);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_aggregator_get_allocator(IntPtr raw, out IntPtr allocator, IntPtr parms);
 
 		public void GetAllocator(out Gst.Allocator allocator, out Gst.AllocationParams parms) {
@@ -1497,6 +1724,26 @@ namespace Gst.Base {
 			bool raw_ret = gst_aggregator_negotiate(Handle);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_aggregator_peek_next_sample(IntPtr raw, IntPtr pad);
+
+		public Gst.Sample PeekNextSample(Gst.Base.AggregatorPad pad) {
+			IntPtr raw_ret = gst_aggregator_peek_next_sample(Handle, pad == null ? IntPtr.Zero : pad.Handle);
+			Gst.Sample ret = raw_ret == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Sample), true);
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_aggregator_selected_samples(IntPtr raw, ulong pts, ulong dts, ulong duration, IntPtr info);
+
+		public void SelectedSamples(ulong pts, ulong dts, ulong duration, Gst.Structure info) {
+			gst_aggregator_selected_samples(Handle, pts, dts, duration, info == null ? IntPtr.Zero : info.Handle);
+		}
+
+		public void SelectedSamples(ulong pts, ulong dts, ulong duration) {
+			SelectedSamples (pts, dts, duration, null);
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

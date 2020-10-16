@@ -8,7 +8,7 @@ namespace Gst.App {
 	public delegate void PushSampleEventHandler(object o, PushSampleEventArgs args);
 
 	public class PushSampleEventArgs : GLib.SignalArgs {
-		public Gst.Sample Sample{
+		public Gst.Sample Object{
 			get {
 				return (Gst.Sample) Args [0];
 			}

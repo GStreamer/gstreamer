@@ -34,6 +34,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_tag_list_copy(IntPtr raw);
+
+		public Gst.TagList Copy() {
+			IntPtr raw_ret = gst_tag_list_copy(Handle);
+			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_list_foreach(IntPtr raw, GstSharp.TagForeachFuncNative func, IntPtr user_data);
 
 		public void Foreach(Gst.TagForeachFunc func) {

@@ -228,21 +228,6 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[GLib.Property ("twcc-ext-id")]
-		public uint TwccExtId {
-			get {
-				GLib.Value val = GetProperty ("twcc-ext-id");
-				uint ret = (uint) val;
-				val.Dispose ();
-				return ret;
-			}
-			set {
-				GLib.Value val = new GLib.Value(value);
-				SetProperty("twcc-ext-id", val);
-				val.Dispose ();
-			}
-		}
-
 		static GetCapsNativeDelegate GetCaps_cb_delegate;
 		static GetCapsNativeDelegate GetCapsVMCallback {
 			get {

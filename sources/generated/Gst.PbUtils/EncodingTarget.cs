@@ -119,6 +119,17 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_encoding_target_get_path(IntPtr raw);
+
+		public string Path { 
+			get {
+				IntPtr raw_ret = gst_encoding_target_get_path(Handle);
+				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_profile(IntPtr raw, IntPtr name);
 
 		public Gst.PbUtils.EncodingProfile GetProfile(string name) {

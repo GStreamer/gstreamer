@@ -74,6 +74,7 @@ namespace Gst {
 		public const string SEGMENT_FORMAT = @"paB";
 		public const int SEGMENT_INSTANT_FLAGS = 912;
 		public const int SEQNUM_INVALID = 0;
+		public const string STIMEP_FORMAT = @"paS";
 		public const string STIME_FORMAT = @"c%";
 		public const string TAG_ALBUM = @"album";
 		public const string TAG_ALBUM_ARTIST = @"album-artist";
@@ -160,6 +161,7 @@ namespace Gst {
 		public const string TAG_USER_RATING = @"user-rating";
 		public const string TAG_VERSION = @"version";
 		public const string TAG_VIDEO_CODEC = @"video-codec";
+		public const string TIMEP_FORMAT = @"paT";
 		public const string TIME_FORMAT = @"u:%02u:%02u.%09u";
 		public const int TOC_REPEAT_COUNT_INFINITE = -1;
 		public const int URI_NO_PORT = 0;
