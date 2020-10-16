@@ -351,7 +351,7 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
     guint8 *data;
     guint len;
     guint new_size;
-    guint i;
+    guint i, first_sps, num_sps, first_pps, num_pps;
     guchar level = 0;
     guchar profile_compat = G_MAXUINT8;
 
@@ -392,11 +392,22 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
 
     /* 6 bits reserved | 2 bits lengthSizeMinusOn */
     *data++ = 0xff;
+
+    if (rtph264depay->sps->len > 31) {
+      GST_WARNING_OBJECT (rtph264depay,
+          "Too many SPS to put in codec_data. Sending the most recent 31");
+      num_sps = 31;
+      first_sps = rtph264depay->sps->len - 31;
+    } else {
+      num_sps = rtph264depay->sps->len;
+      first_sps = 0;
+    }
+
     /* 3 bits reserved | 5 bits numOfSequenceParameterSets */
-    *data++ = 0xe0 | (rtph264depay->sps->len & 0x1f);
+    *data++ = 0xe0 | (num_sps & 0x1f);
 
     /* copy all SPS */
-    for (i = 0; i < rtph264depay->sps->len; i++) {
+    for (i = first_sps; i < rtph264depay->sps->len; i++) {
       gst_buffer_map (g_ptr_array_index (rtph264depay->sps, i), &nalmap,
           GST_MAP_READ);
 
@@ -409,10 +420,21 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
       gst_buffer_unmap (g_ptr_array_index (rtph264depay->sps, i), &nalmap);
     }
 
+    if (rtph264depay->pps->len > 255) {
+      GST_WARNING_OBJECT (rtph264depay,
+          "Too many PPS to put in codec_data. Sending the most recent 255");
+      num_pps = 255;
+      first_pps = rtph264depay->pps->len - 255;
+    } else {
+      num_pps = rtph264depay->pps->len;
+      first_pps = 0;
+    }
+
     /* 8 bits numOfPictureParameterSets */
-    *data++ = rtph264depay->pps->len;
+    *data++ = num_pps;
+
     /* copy all PPS */
-    for (i = 0; i < rtph264depay->pps->len; i++) {
+    for (i = first_pps; i < rtph264depay->pps->len; i++) {
       gst_buffer_map (g_ptr_array_index (rtph264depay->pps, i), &nalmap,
           GST_MAP_READ);
 
