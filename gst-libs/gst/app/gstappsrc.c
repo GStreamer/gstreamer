@@ -1420,7 +1420,7 @@ invalid_segment:
 /**
  * gst_app_src_set_caps:
  * @appsrc: a #GstAppSrc
- * @caps: caps to set
+ * @caps: (nullable): caps to set
  *
  * Set the capabilities on the appsrc element.  This function takes
  * a copy of the caps structure. After calling this method, the source will

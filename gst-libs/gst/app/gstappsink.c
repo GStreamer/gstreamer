@@ -1111,7 +1111,7 @@ gst_app_sink_query (GstBaseSink * bsink, GstQuery * query)
 /**
  * gst_app_sink_set_caps:
  * @appsink: a #GstAppSink
- * @caps: caps to set
+ * @caps: (nullable): caps to set
  *
  * Set the capabilities on the appsink element.  This function takes
  * a copy of the caps structure. After calling this method, the sink will only
