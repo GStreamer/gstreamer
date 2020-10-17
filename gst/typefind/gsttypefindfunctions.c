@@ -5404,6 +5404,26 @@ vivo_type_find (GstTypeFind * tf, gpointer unused)
 /*** XDG MIME typefinder (to avoid false positives mostly) ***/
 
 #ifdef USE_GIO
+static gboolean
+xdgmime_validate_name (const gchar * name)
+{
+  const gchar *s;
+
+  if (G_UNLIKELY (!g_ascii_isalpha (*name))) {
+    return FALSE;
+  }
+
+  /* FIXME: test name string more */
+  s = &name[1];
+  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+", *s) != NULL))
+    s++;
+  if (G_UNLIKELY (*s != '\0')) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 xdgmime_typefind (GstTypeFind * find, gpointer user_data)
 {
@@ -5444,6 +5464,12 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
   if (g_str_has_prefix (mimetype, "audio/") ||
       g_str_has_prefix (mimetype, "video/")) {
     GST_LOG ("Ignoring audio/video mime type");
+    g_free (mimetype);
+    return;
+  }
+
+  if (!xdgmime_validate_name (mimetype)) {
+    GST_LOG ("Ignoring mimetype with invalid structure name");
     g_free (mimetype);
     return;
   }
