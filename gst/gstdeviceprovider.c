@@ -546,7 +546,7 @@ gst_device_provider_stop (GstDeviceProvider * provider)
  *
  * Retrieves the factory that was used to create this device provider.
  *
- * Returns: (transfer none): the #GstDeviceProviderFactory used for
+ * Returns: (transfer none) (nullable): the #GstDeviceProviderFactory used for
  *     creating this device provider. no refcounting is needed.
  *
  * Since: 1.4

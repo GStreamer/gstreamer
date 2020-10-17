@@ -2847,7 +2847,7 @@ gst_base_transform_reconfigure_src (GstBaseTransform * trans)
  * gst_base_transform_get_buffer_pool:
  * @trans: a #GstBaseTransform
  *
- * Returns: (transfer full): the instance of the #GstBufferPool used
+ * Returns: (nullable) (transfer full): the instance of the #GstBufferPool used
  * by @trans; free it after use
  */
 GstBufferPool *
@@ -2864,10 +2864,9 @@ gst_base_transform_get_buffer_pool (GstBaseTransform * trans)
 /**
  * gst_base_transform_get_allocator:
  * @trans: a #GstBaseTransform
- * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * @allocator: (out) (optional) (nullable) (transfer full): the #GstAllocator
  * used
- * @params: (out) (allow-none) (transfer full): the
- * #GstAllocationParams of @allocator
+ * @params: (out caller-allocates) (optional): the #GstAllocationParams of @allocator
  *
  * Lets #GstBaseTransform sub-classes know the memory @allocator
  * used by the base class and its @params.

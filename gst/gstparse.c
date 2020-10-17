@@ -218,7 +218,7 @@ _gst_parse_escape (const gchar * str)
  * @error will contain an error message if an erroneous pipeline is specified.
  * An error does not mean that the pipeline could not be constructed.
  *
- * Returns: (transfer floating) (nullable): a new element on success and %NULL
+ * Returns: (transfer floating): a new element on success and %NULL
  * on failure.
  */
 GstElement *
@@ -239,7 +239,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
  * @error will contain an error message if an erroneous pipeline is specified.
  * An error does not mean that the pipeline could not be constructed.
  *
- * Returns: (transfer floating) (nullable): a new element on success; on
+ * Returns: (transfer floating): a new element on success; on
  *   failure, either %NULL or a partially-constructed bin or element will be
  *   returned and @error will be set (unless you passed
  *   #GST_PARSE_FLAG_FATAL_ERRORS in @flags, then %NULL will always be returned
@@ -296,7 +296,7 @@ gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
  * To create a sub-pipeline (bin) for embedding into an existing pipeline
  * use gst_parse_bin_from_description().
  *
- * Returns: (transfer floating) (nullable): a new element on success, %NULL on
+ * Returns: (transfer floating): a new element on success, %NULL on
  *   failure. If more than one toplevel element is specified by the
  *   @pipeline_description, all elements are put into a #GstPipeline, which
  *   than is returned.
@@ -324,7 +324,7 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
  * To create a sub-pipeline (bin) for embedding into an existing pipeline
  * use gst_parse_bin_from_description_full().
  *
- * Returns: (transfer floating) (nullable): a new element on success, %NULL on
+ * Returns: (transfer floating): a new element on success, %NULL on
  *    failure. If more than one toplevel element is specified by the
  *    @pipeline_description, all elements are put into a #GstPipeline, which
  *    then is returned (unless the GST_PARSE_FLAG_PLACE_IN_BIN flag is set, in

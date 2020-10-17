@@ -204,7 +204,7 @@ gst_stream_collection_set_upstream_id (GstStreamCollection * collection,
  *
  * Returns the upstream id of the @collection.
  *
- * Returns: (transfer none): The upstream id
+ * Returns: (transfer none) (nullable): The upstream id
  *
  * Since: 1.10
  */

@@ -351,7 +351,7 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_y (gint year)
@@ -374,7 +374,7 @@ gst_date_time_new_y (gint year)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_ym (gint year, gint month)
@@ -401,7 +401,7 @@ gst_date_time_new_ym (gint year, gint month)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_ymd (gint year, gint month, gint day)
@@ -418,7 +418,7 @@ gst_date_time_new_ymd (gint year, gint month, gint day)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
@@ -438,7 +438,7 @@ gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_from_unix_epoch_utc (gint64 secs)
@@ -456,7 +456,7 @@ gst_date_time_new_from_unix_epoch_utc (gint64 secs)
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @usecs. The #GstDateTime is in the local timezone.
  *
- * Returns: (transfer full): a newly created #GstDateTime
+ * Returns: (transfer full) (nullable): a newly created #GstDateTime
  *
  * Since: 1.18
  */
@@ -480,7 +480,7 @@ gst_date_time_new_from_unix_epoch_local_time_usecs (gint64 usecs)
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @usecs. The #GstDateTime is in UTC.
  *
- * Returns: (transfer full): a newly created #GstDateTime
+ * Returns: (transfer full) (nullable): a newly created #GstDateTime
  *
  * Since: 1.18
  */
@@ -546,7 +546,7 @@ gst_date_time_check_fields (gint * year, gint * month, gint * day,
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
@@ -658,7 +658,7 @@ __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,

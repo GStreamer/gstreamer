@@ -1018,7 +1018,7 @@ gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
  *
  * Find a #GstPluginFeature with @name in @registry.
  *
- * Returns: (transfer full): a #GstPluginFeature with its refcount incremented,
+ * Returns: (transfer full) (nullable): a #GstPluginFeature with its refcount incremented,
  *     use gst_object_unref() after usage.
  *
  * MT safe.

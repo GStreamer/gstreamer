@@ -985,7 +985,7 @@ gst_plugin_get_description (GstPlugin * plugin)
  *
  * get the filename of the plugin
  *
- * Returns: (type filename): the filename of the plugin
+ * Returns: (type filename) (nullable): the filename of the plugin
  */
 const gchar *
 gst_plugin_get_filename (GstPlugin * plugin)
