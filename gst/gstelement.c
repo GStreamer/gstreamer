@@ -3631,7 +3631,7 @@ gst_element_get_context_unlocked (GstElement * element,
  *
  * MT safe.
  *
- * Returns: (transfer full): A #GstContext or NULL
+ * Returns: (transfer full) (nullable): A #GstContext or NULL
  *
  * Since: 1.8
  */

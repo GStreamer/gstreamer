@@ -618,7 +618,7 @@ gst_uri_protocol_is_supported (const GstURIType type, const gchar * protocol)
  *
  * Creates an element for handling the given URI.
  *
- * Returns: (transfer floating) (nullable): a new element or %NULL if none
+ * Returns: (transfer floating): a new element or %NULL if none
  * could be created
  */
 GstElement *
