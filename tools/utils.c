@@ -172,7 +172,7 @@ print_enum (GType enum_type)
 }
 
 void
-print (GstDebugColorFlags c, gboolean err, gboolean nline,
+ges_print (GstDebugColorFlags c, gboolean err, gboolean nline,
     const gchar * format, va_list var_args)
 {
   GString *str = g_string_new (NULL);
@@ -212,32 +212,32 @@ print (GstDebugColorFlags c, gboolean err, gboolean nline,
 }
 
 void
-ok (const gchar * format, ...)
+ges_ok (const gchar * format, ...)
 {
   va_list var_args;
 
   va_start (var_args, format);
-  print (GST_DEBUG_FG_GREEN, FALSE, TRUE, format, var_args);
+  ges_print (GST_DEBUG_FG_GREEN, FALSE, TRUE, format, var_args);
   va_end (var_args);
 }
 
 void
-warn (const gchar * format, ...)
+ges_warn (const gchar * format, ...)
 {
   va_list var_args;
 
   va_start (var_args, format);
-  print (GST_DEBUG_FG_YELLOW, TRUE, TRUE, format, var_args);
+  ges_print (GST_DEBUG_FG_YELLOW, TRUE, TRUE, format, var_args);
   va_end (var_args);
 }
 
 void
-printerr (const gchar * format, ...)
+ges_printerr (const gchar * format, ...)
 {
   va_list var_args;
 
   va_start (var_args, format);
-  print (GST_DEBUG_FG_RED, TRUE, TRUE, format, var_args);
+  ges_print (GST_DEBUG_FG_RED, TRUE, TRUE, format, var_args);
   va_end (var_args);
 }
 
