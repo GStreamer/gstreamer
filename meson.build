@@ -101,7 +101,7 @@ gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : get_option('validate'),
   fallback : ['gst-devtools', 'validate_dep'])
 
-gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
+gio_dep = dependency('gio-2.0', version: glib_req, fallback: ['glib', 'libgio_dep'])
 libxml_dep = dependency('libxml-2.0', required: get_option('xptv'))
 cdata.set('DISABLE_XPTV', not libxml_dep.found())
 
