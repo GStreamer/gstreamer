@@ -230,8 +230,8 @@ _set_rendering_details (GESLauncher * self)
     GstEncodingProfile *prof = NULL;
     if (!opts->format) {
       GESProject *proj =
-          GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
-                  priv->timeline)));
+          GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->priv->
+                  timeline)));
       const GList *profiles = ges_project_list_encoding_profiles (proj);
 
       if (profiles) {
@@ -261,7 +261,9 @@ _set_rendering_details (GESLauncher * self)
       }
 
       if (!prof) {
-        warn ("No format specified and couldn't find one from output file extension, " "falling back to theora+vorbis in ogg.");
+        ges_warn
+            ("No format specified and couldn't find one from output file extension, "
+            "falling back to theora+vorbis in ogg.");
         g_free (opts->format);
 
         opts->format =
@@ -270,7 +272,8 @@ _set_rendering_details (GESLauncher * self)
       }
 
       if (!prof) {
-        printerr ("Could not find any encoding format for %s\n", opts->format);
+        ges_printerr ("Could not find any encoding format for %s\n",
+            opts->format);
         return FALSE;
       }
 
@@ -379,7 +382,7 @@ static void
 _project_loading_error_cb (GESProject * project, GESTimeline * timeline,
     GError * error, GESLauncher * self)
 {
-  printerr ("Error loading timeline: '%s'\n", error->message);
+  ges_printerr ("Error loading timeline: '%s'\n", error->message);
   self->priv->seenerrors = TRUE;
 
   g_application_quit (G_APPLICATION (self));
@@ -449,7 +452,7 @@ static void
 _error_loading_asset_cb (GESProject * project, GError * error,
     const gchar * failed_id, GType extractable_type, GESLauncher * self)
 {
-  printerr ("Error loading asset %s: %s\n", failed_id, error->message);
+  ges_printerr ("Error loading asset %s: %s\n", failed_id, error->message);
   self->priv->seenerrors = TRUE;
 
   g_application_quit (G_APPLICATION (self));
@@ -483,7 +486,7 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
   gst_object_unref (project);
 
   if (error) {
-    printerr ("\nERROR: Could not create timeline because: %s\n\n",
+    ges_printerr ("\nERROR: Could not create timeline because: %s\n\n",
         error->message);
     g_error_free (error);
     return FALSE;
@@ -543,9 +546,9 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
       gst_message_parse_error (message, &err, &dbg_info);
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->priv->pipeline),
           GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch-error");
-      printerr ("ERROR from element %s: %s\n", GST_OBJECT_NAME (message->src),
-          err->message);
-      printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+      ges_printerr ("ERROR from element %s: %s\n",
+          GST_OBJECT_NAME (message->src), err->message);
+      ges_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
       g_clear_error (&err);
       g_free (dbg_info);
       self->priv->seenerrors = TRUE;
@@ -554,7 +557,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
     }
     case GST_MESSAGE_EOS:
       if (!self->priv->parsed_options.ignore_eos) {
-        ok ("\nDone\n");
+        ges_ok ("\nDone\n");
         g_application_quit (G_APPLICATION (self));
       }
       break;
@@ -610,8 +613,8 @@ _save_timeline (GESLauncher * self)
   if (opts->embed_nesteds) {
     GList *tmp, *assets;
     GESProject *proj =
-        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
-                priv->timeline)));
+        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->priv->
+                timeline)));
 
     assets = ges_project_list_assets (proj, GES_TYPE_URI_CLIP);
     for (tmp = assets; tmp; tmp = tmp->next) {
@@ -669,7 +672,7 @@ _run_pipeline (GESLauncher * self)
     }
 
     if (!_timeline_set_user_options (self, self->priv->timeline, NULL)) {
-      printerr ("Could not properly set tracks\n");
+      ges_printerr ("Could not properly set tracks\n");
       return FALSE;
     }
 
@@ -1048,7 +1051,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   gst_init (&argc, arguments);
   if (!ges_launcher_parse_options (self, arguments, &argc, ctx, &error)) {
     gst_init (NULL, NULL);
-    printerr ("Error initializing: %s\n", error->message);
+    ges_printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
     g_error_free (error);
     *exit_status = 1;
@@ -1096,7 +1099,7 @@ _startup (GApplication * application)
 
   /* Initialize the GStreamer Editing Services */
   if (!ges_init ()) {
-    printerr ("Error initializing GES\n");
+    ges_printerr ("Error initializing GES\n");
     goto done;
   }
 

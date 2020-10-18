@@ -27,10 +27,10 @@ gchar * ensure_uri (const gchar * location);
 GstEncodingProfile * parse_encoding_profile (const gchar * format);
 void print_enum (GType enum_type);
 
-void print (GstDebugColorFlags c, gboolean err, gboolean nline, const gchar * format, va_list var_args);
-void ok (const gchar * format, ...);
-void warn (const gchar * format, ...);
-void printerr (const gchar * format, ...);
+void ges_print (GstDebugColorFlags c, gboolean err, gboolean nline, const gchar * format, va_list var_args);
+void ges_ok (const gchar * format, ...);
+void ges_warn (const gchar * format, ...);
+void ges_printerr (const gchar * format, ...);
 
 gchar * get_file_extension (gchar * uri);
 void describe_encoding_profile (GstEncodingProfile *profile);
