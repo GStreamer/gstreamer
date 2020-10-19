@@ -22,8 +22,12 @@
 #endif
 
 #include <string.h>
+#include <gst/base/gstbitreader.h>
 
 #include "video-hdr.h"
+
+#define HDR10_PLUS_MAX_BEZIER_CURVE_ANCHORS 9
+#define HDR10_PLUS_MAX_DIST_MAXRGB_PERCENTILES 9
 
 #define N_ELEMENT_MASTERING_DISPLAY_INFO 10
 #define MASTERING_FORMAT \
@@ -495,4 +499,199 @@ gst_buffer_add_video_hdr_meta (GstBuffer * buffer,
   meta->size = size;
 
   return meta;
+}
+
+#define CHECK_HDR10PLUS_REMAINING(br, needed) \
+if (gst_bit_reader_get_remaining (&br) < needed) { \
+  GST_DEBUG ("Not enough bits remaining %d, needed %d", gst_bit_reader_get_remaining (&br), needed); \
+  return FALSE; \
+}
+
+/**
+ * gst_video_hdr_parse_hdr10_plus:
+ * @data: HDR10+ data
+ * @size: size of data
+ * @hdr10_plus: (out): #GstVideoHDR10Plus structure to fill in.
+ *
+ * Parse HDR10+ (SMPTE2094-40) user data and store in @hdr10_plus
+ * For more details, see:
+ * https://www.atsc.org/wp-content/uploads/2018/02/S34-301r2-A341-Amendment-2094-40-1.pdf
+ * and SMPTE ST2094-40
+ *
+ * Returns: %TRUE if @data was successfully parsed to @hdr10_plus
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_video_hdr_parse_hdr10_plus (const guint8 * data, gsize size,
+    GstVideoHDR10Plus * hdr10_plus)
+{
+  guint16 provider_oriented_code;
+  int w, i, j;
+  GstBitReader br;
+
+  /* there must be at least one byte, and not more than GST_VIDEO_HDR10_PLUS_MAX_BYTES bytes */
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  memset (hdr10_plus, 0, sizeof (GstVideoHDR10Plus));
+  gst_bit_reader_init (&br, data, size);
+  GST_MEMDUMP ("HDR10+", data, size);
+  CHECK_HDR10PLUS_REMAINING (br, 2 + 8 + 8 + 2);
+  provider_oriented_code = gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+  if (provider_oriented_code != 0x0001)
+    return FALSE;
+
+
+  hdr10_plus->application_identifier =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
+  hdr10_plus->application_version =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
+  hdr10_plus->num_windows = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
+  if (hdr10_plus->num_windows != GST_VIDEO_HDR10_PLUS_NUM_WINDOWS)
+    return FALSE;
+  for (w = 0; w < hdr10_plus->num_windows; w++) {
+    CHECK_HDR10PLUS_REMAINING (br,
+        16 + 16 + 16 + 16 + 16 + 16 + 8 + 16 + 16 + 16 + 1);
+    hdr10_plus->processing_window[w].window_upper_left_corner_x =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].window_upper_left_corner_y =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].window_lower_right_corner_x =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].window_lower_right_corner_y =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].center_of_ellipse_x =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].center_of_ellipse_y =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].rotation_angle =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
+    hdr10_plus->processing_window[w].semimajor_axis_internal_ellipse =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].semimajor_axis_external_ellipse =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].semiminor_axis_external_ellipse =
+        gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
+    hdr10_plus->processing_window[w].overlap_process_option =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  }
+  CHECK_HDR10PLUS_REMAINING (br, 27 + 1);
+  hdr10_plus->targeted_system_display_maximum_luminance =
+      gst_bit_reader_get_bits_uint32_unchecked (&br, 27);
+  hdr10_plus->targeted_system_display_actual_peak_luminance_flag =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  if (hdr10_plus->targeted_system_display_actual_peak_luminance_flag) {
+    CHECK_HDR10PLUS_REMAINING (br, 5 + 5);
+    hdr10_plus->num_rows_targeted_system_display_actual_peak_luminance =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
+    hdr10_plus->num_cols_targeted_system_display_actual_peak_luminance =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
+    if (hdr10_plus->num_rows_targeted_system_display_actual_peak_luminance >
+        GST_VIDEO_HDR10_PLUS_MAX_TSD_APL)
+      return FALSE;
+    if (hdr10_plus->num_cols_targeted_system_display_actual_peak_luminance >
+        GST_VIDEO_HDR10_PLUS_MAX_TSD_APL)
+      return FALSE;
+    CHECK_HDR10PLUS_REMAINING (br,
+        hdr10_plus->num_rows_targeted_system_display_actual_peak_luminance *
+        hdr10_plus->num_cols_targeted_system_display_actual_peak_luminance * 4);
+    for (i = 0;
+        i < hdr10_plus->num_rows_targeted_system_display_actual_peak_luminance;
+        i++) {
+      for (j = 0;
+          j <
+          hdr10_plus->num_cols_targeted_system_display_actual_peak_luminance;
+          j++)
+        hdr10_plus->targeted_system_display_actual_peak_luminance[i][j] =
+            gst_bit_reader_get_bits_uint8_unchecked (&br, 4);
+    }
+    for (w = 0; w < hdr10_plus->num_windows; w++) {
+      CHECK_HDR10PLUS_REMAINING (br, (17 * 3));
+      for (i = 0; i < 3; i++)
+        hdr10_plus->processing_window[w].maxscl[i] =
+            gst_bit_reader_get_bits_uint32_unchecked (&br, 17);
+      CHECK_HDR10PLUS_REMAINING (br, 17 + 4);
+      hdr10_plus->processing_window[w].average_maxrgb =
+          gst_bit_reader_get_bits_uint32_unchecked (&br, 17);
+      hdr10_plus->processing_window[w].num_distribution_maxrgb_percentiles =
+          gst_bit_reader_get_bits_uint8_unchecked (&br, 4);
+      if (hdr10_plus->
+          processing_window[w].num_distribution_maxrgb_percentiles !=
+          HDR10_PLUS_MAX_DIST_MAXRGB_PERCENTILES)
+        return FALSE;
+      CHECK_HDR10PLUS_REMAINING (br,
+          hdr10_plus->processing_window[w].num_distribution_maxrgb_percentiles *
+          (17 + 7));
+      for (i = 0;
+          i <
+          hdr10_plus->processing_window[w].num_distribution_maxrgb_percentiles;
+          i++) {
+        hdr10_plus->processing_window[w].distribution_maxrgb_percentages[i] =
+            gst_bit_reader_get_bits_uint8_unchecked (&br, 7);
+        hdr10_plus->processing_window[w].distribution_maxrgb_percentiles[i] =
+            gst_bit_reader_get_bits_uint32_unchecked (&br, 17);
+      }
+      CHECK_HDR10PLUS_REMAINING (br, 10)
+          hdr10_plus->processing_window[w].fraction_bright_pixels =
+          gst_bit_reader_get_bits_uint16_unchecked (&br, 10);
+    }
+  }
+  CHECK_HDR10PLUS_REMAINING (br, 1)
+      hdr10_plus->mastering_display_actual_peak_luminance_flag =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  if (hdr10_plus->targeted_system_display_actual_peak_luminance_flag) {
+    CHECK_HDR10PLUS_REMAINING (br, 5 + 5)
+        hdr10_plus->num_rows_mastering_display_actual_peak_luminance =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
+    hdr10_plus->num_cols_mastering_display_actual_peak_luminance =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
+    if (hdr10_plus->num_rows_mastering_display_actual_peak_luminance >
+        GST_VIDEO_HDR10_PLUS_MAX_MD_APL)
+      return FALSE;
+    if (hdr10_plus->num_cols_mastering_display_actual_peak_luminance >
+        GST_VIDEO_HDR10_PLUS_MAX_MD_APL)
+      return FALSE;
+    CHECK_HDR10PLUS_REMAINING (br,
+        hdr10_plus->num_rows_mastering_display_actual_peak_luminance *
+        hdr10_plus->num_cols_mastering_display_actual_peak_luminance * 4)
+        for (i = 0;
+        i < hdr10_plus->num_rows_mastering_display_actual_peak_luminance; i++) {
+      for (j = 0;
+          j < hdr10_plus->num_cols_mastering_display_actual_peak_luminance; j++)
+        hdr10_plus->mastering_display_actual_peak_luminance[i][j] =
+            gst_bit_reader_get_bits_uint8_unchecked (&br, 4);
+    }
+    for (w = 0; w < hdr10_plus->num_windows; w++) {
+      CHECK_HDR10PLUS_REMAINING (br, 1)
+          hdr10_plus->processing_window[w].tone_mapping_flag =
+          gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+      if (hdr10_plus->processing_window[w].tone_mapping_flag) {
+        CHECK_HDR10PLUS_REMAINING (br, 12 + 12 + 4)
+            hdr10_plus->processing_window[w].knee_point_x =
+            gst_bit_reader_get_bits_uint16_unchecked (&br, 12);
+        hdr10_plus->processing_window[w].knee_point_y =
+            gst_bit_reader_get_bits_uint16_unchecked (&br, 12);
+        hdr10_plus->processing_window[w].num_bezier_curve_anchors =
+            gst_bit_reader_get_bits_uint8_unchecked (&br, 4);
+        if (hdr10_plus->processing_window[w].num_bezier_curve_anchors >
+            HDR10_PLUS_MAX_BEZIER_CURVE_ANCHORS)
+          return FALSE;
+        CHECK_HDR10PLUS_REMAINING (br,
+            10 * hdr10_plus->processing_window[w].num_bezier_curve_anchors);
+        for (i = 0;
+            i < hdr10_plus->processing_window[w].num_bezier_curve_anchors; i++)
+          hdr10_plus->processing_window[w].bezier_curve_anchors[i] =
+              gst_bit_reader_get_bits_uint16_unchecked (&br, 10);
+      }
+      CHECK_HDR10PLUS_REMAINING (br, 1);
+      hdr10_plus->processing_window[w].color_saturation_mapping_flag =
+          gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+      if (hdr10_plus->processing_window[w].color_saturation_mapping_flag) {
+        CHECK_HDR10PLUS_REMAINING (br, 6);
+        hdr10_plus->processing_window[w].color_saturation_weight =
+            gst_bit_reader_get_bits_uint8_unchecked (&br, 6);
+      }
+    }
+  }
+  return TRUE;
 }

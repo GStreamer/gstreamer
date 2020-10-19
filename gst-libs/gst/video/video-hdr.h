@@ -44,6 +44,7 @@ typedef enum {
   GST_VIDEO_HDR_FORMAT_DOLBY_VISION,
 } GstVideoHDRFormat;
 
+#define GST_VIDEO_HDR10_PLUS_MAX_BYTES 1024
 /* defined in CTA-861-G */
 #define GST_VIDEO_HDR10_PLUS_NUM_WINDOWS 1 /* number of windows, shall be 1. */
 #define GST_VIDEO_HDR10_PLUS_MAX_TSD_APL 25 /* targeted_system_display_actual_peak_luminance max value */
@@ -334,6 +335,10 @@ struct _GstVideoHDR10Plus
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
+
+GST_VIDEO_API gboolean
+gst_video_hdr_parse_hdr10_plus (const guint8 * data, gsize size,
+                                GstVideoHDR10Plus * hdr10_plus);
 
 G_END_DECLS
 
