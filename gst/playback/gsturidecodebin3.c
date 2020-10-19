@@ -541,6 +541,7 @@ add_output_pad (GstURIDecodeBin3 * dec, GstPad * target_pad)
 {
   OutputPad *output;
   gchar *pad_name;
+  GstEvent *stream_start;
 
   output = g_slice_new0 (OutputPad);
 
@@ -554,6 +555,17 @@ add_output_pad (GstURIDecodeBin3 * dec, GstPad * target_pad)
   g_free (pad_name);
 
   gst_pad_set_active (output->ghost_pad, TRUE);
+
+  stream_start = gst_pad_get_sticky_event (target_pad,
+      GST_EVENT_STREAM_START, 0);
+  if (stream_start) {
+    gst_pad_store_sticky_event (output->ghost_pad, stream_start);
+    gst_event_unref (stream_start);
+  } else {
+    GST_WARNING_OBJECT (target_pad,
+        "Exposing pad without stored stream-start event");
+  }
+
   gst_element_add_pad (GST_ELEMENT (dec), output->ghost_pad);
 
   output->probe_id =
