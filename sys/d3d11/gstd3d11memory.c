@@ -187,6 +187,7 @@ struct _GstD3D11AllocatorPrivate
   /* parent texture when array typed memory is used */
   ID3D11Texture2D *texture;
   GArray *array_in_use;
+  GArray *decoder_output_view_array;
 
   GMutex lock;
   GCond cond;
@@ -457,6 +458,9 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
     dmem->shader_resource_view[i] = NULL;
   }
 
+  if (dmem->decoder_output_view)
+    ID3D11VideoDecoderOutputView_Release (dmem->decoder_output_view);
+
   if (dmem->texture)
     ID3D11Texture2D_Release (dmem->texture);
 
@@ -474,6 +478,8 @@ gst_d3d11_allocator_dispose (GObject * object)
 {
   GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (object);
   GstD3D11AllocatorPrivate *priv = alloc->priv;
+
+  g_clear_pointer (&priv->decoder_output_view_array, g_array_unref);
 
   if (alloc->device && priv->texture) {
     gst_d3d11_device_release_texture (alloc->device, priv->texture);
@@ -735,6 +741,15 @@ error:
   mem->num_render_target_views = 0;
 }
 
+static void
+gst_d3d11_decoder_output_view_clear (ID3D11VideoDecoderOutputView ** view)
+{
+  if (view && *view) {
+    ID3D11VideoDecoderOutputView_Release (*view);
+    *view = NULL;
+  }
+}
+
 GstMemory *
 gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
@@ -770,6 +785,15 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
       priv->array_in_use = g_array_sized_new (FALSE,
           TRUE, sizeof (guint8), desc->ArraySize);
       g_array_set_size (priv->array_in_use, desc->ArraySize);
+
+      if ((desc->BindFlags & D3D11_BIND_DECODER) == D3D11_BIND_DECODER &&
+          !priv->decoder_output_view_array) {
+        priv->decoder_output_view_array = g_array_sized_new (FALSE,
+            TRUE, sizeof (ID3D11VideoDecoderOutputView *), desc->ArraySize);
+        g_array_set_clear_func (priv->decoder_output_view_array,
+            (GDestroyNotify) gst_d3d11_decoder_output_view_clear);
+        g_array_set_size (priv->decoder_output_view_array, desc->ArraySize);
+      }
     }
 
     for (i = 0; i < desc->ArraySize; i++) {
@@ -944,4 +968,97 @@ gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem)
   create_render_target_views (mem);
 
   return ! !mem->num_render_target_views;
+}
+
+gboolean
+gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
+    ID3D11VideoDevice * video_device, GUID * decoder_profile)
+{
+  GstD3D11Allocator *allocator;
+  GstD3D11AllocatorPrivate *priv;
+  D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC desc;
+  ID3D11VideoDecoderOutputView *view = NULL;
+  HRESULT hr;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (video_device != NULL, FALSE);
+  g_return_val_if_fail (decoder_profile != NULL, FALSE);
+
+  allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
+  priv = allocator->priv;
+
+  if (mem->decoder_output_view) {
+    ID3D11VideoDecoderOutputView_GetDesc (mem->decoder_output_view, &desc);
+    if (IsEqualGUID (&desc.DecodeProfile, decoder_profile)) {
+      return TRUE;
+    } else {
+      /* Shouldn't happen, but try again anyway */
+      GST_WARNING_OBJECT (allocator,
+          "Existing view has different decoder profile");
+      ID3D11VideoDecoderOutputView_Release (mem->decoder_output_view);
+      mem->decoder_output_view = NULL;
+    }
+  }
+
+  if (!(mem->desc.BindFlags & D3D11_BIND_DECODER)) {
+    GST_WARNING_OBJECT (allocator,
+        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+
+    return FALSE;
+  }
+
+  if (priv->decoder_output_view_array) {
+    view = g_array_index (priv->decoder_output_view_array,
+        ID3D11VideoDecoderOutputView *, mem->subresource_index);
+
+    if (view) {
+      ID3D11VideoDecoderOutputView_GetDesc (view, &desc);
+      /* Shouldn't happen because decoder will not reuse this allocator
+       * over different codec/profiles */
+      if (!IsEqualGUID (&desc.DecodeProfile, decoder_profile)) {
+        GST_WARNING_OBJECT (allocator,
+            "Existing view has different decoder profile");
+        ID3D11VideoDecoderOutputView_Release (view);
+        view = NULL;
+        g_array_index (priv->decoder_output_view_array,
+            ID3D11VideoDecoderOutputView *, mem->subresource_index) = NULL;
+      }
+    }
+  }
+
+  /* Increase refcount and reuse existing view */
+  if (view) {
+    mem->decoder_output_view = view;
+    ID3D11VideoDecoderOutputView_AddRef (view);
+
+    return TRUE;
+  }
+
+  desc.DecodeProfile = *decoder_profile;
+  desc.ViewDimension = D3D11_VDOV_DIMENSION_TEXTURE2D;
+  desc.Texture2D.ArraySlice = mem->subresource_index;
+
+  hr = ID3D11VideoDevice_CreateVideoDecoderOutputView (video_device,
+      (ID3D11Resource *) mem->texture, &desc, &mem->decoder_output_view);
+  if (!gst_d3d11_result (hr, mem->device)) {
+    GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Could not create decoder output view, hr: 0x%x", (guint) hr);
+    return FALSE;
+  }
+
+  /* Store view array for later reuse */
+  if (priv->decoder_output_view_array) {
+    view = g_array_index (priv->decoder_output_view_array,
+        ID3D11VideoDecoderOutputView *, mem->subresource_index);
+
+    if (view)
+      ID3D11VideoDecoderOutputView_Release (view);
+
+    g_array_index (priv->decoder_output_view_array,
+        ID3D11VideoDecoderOutputView *, mem->subresource_index) =
+        mem->decoder_output_view;
+    ID3D11VideoDecoderOutputView_AddRef (mem->decoder_output_view);
+  }
+
+  return TRUE;
 }

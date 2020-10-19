@@ -113,6 +113,8 @@ struct _GstD3D11Memory
   ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
   guint num_render_target_views;
 
+  ID3D11VideoDecoderOutputView *decoder_output_view;
+
   GstD3D11MemoryType type;
 
   /* > 0 if this is Array typed memory */
@@ -182,6 +184,10 @@ gboolean            gst_is_d3d11_memory           (GstMemory * mem);
 gboolean            gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem);
 
 gboolean            gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem);
+
+gboolean            gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
+                                                                 ID3D11VideoDevice * video_device,
+                                                                 GUID * decoder_profile);
 
 G_END_DECLS
 
