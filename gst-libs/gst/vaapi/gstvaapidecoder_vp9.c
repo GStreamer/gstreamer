@@ -383,8 +383,14 @@ fill_picture (GstVaapiDecoderVp9 * decoder, GstVaapiPicture * picture)
 
   memcpy (pic_param->mb_segment_tree_probs, parser->mb_segment_tree_probs,
       sizeof (parser->mb_segment_tree_probs));
-  memcpy (pic_param->segment_pred_probs, parser->segment_pred_probs,
-      sizeof (parser->segment_pred_probs));
+
+  if (frame_hdr->segmentation.temporal_update) {
+    memcpy (pic_param->segment_pred_probs, parser->segment_pred_probs,
+        sizeof (parser->segment_pred_probs));
+  } else {
+    memset (pic_param->segment_pred_probs, 255,
+        sizeof (pic_param->segment_pred_probs));
+  }
 
   return TRUE;
 }
