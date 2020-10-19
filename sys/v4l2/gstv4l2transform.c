@@ -927,7 +927,8 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
 
   GST_DEBUG_OBJECT (self, "Queue input buffer");
-  ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), &inbuf);
+  ret =
+      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), &inbuf, NULL);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
@@ -945,7 +946,9 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
       goto alloc_failed;
 
     pool = self->v4l2capture->pool;
-    ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), outbuf);
+    ret =
+        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (pool), outbuf,
+        NULL);
 
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 

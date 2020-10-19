@@ -612,37 +612,6 @@ not_negotiated:
   return FALSE;
 }
 
-static GstVideoCodecFrame *
-gst_v4l2_video_enc_get_oldest_frame (GstVideoEncoder * encoder)
-{
-  GstVideoCodecFrame *frame = NULL;
-  GList *frames, *l;
-  gint count = 0;
-
-  frames = gst_video_encoder_get_frames (encoder);
-
-  for (l = frames; l != NULL; l = l->next) {
-    GstVideoCodecFrame *f = l->data;
-
-    if (!frame || frame->pts > f->pts)
-      frame = f;
-
-    count++;
-  }
-
-  if (frame) {
-    GST_LOG_OBJECT (encoder,
-        "Oldest frame is %d %" GST_TIME_FORMAT
-        " and %d frames left",
-        frame->system_frame_number, GST_TIME_ARGS (frame->pts), count - 1);
-    gst_video_codec_frame_ref (frame);
-  }
-
-  g_list_free_full (frames, (GDestroyNotify) gst_video_codec_frame_unref);
-
-  return frame;
-}
-
 static void
 gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
 {
@@ -661,18 +630,24 @@ gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
     goto beach;
   }
 
-
   /* FIXME Check if buffer isn't the last one here */
 
   GST_LOG_OBJECT (encoder, "Process output buffer");
   ret =
       gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL
-      (self->v4l2capture->pool), &buffer);
+      (self->v4l2capture->pool), &buffer, NULL);
 
   if (ret != GST_FLOW_OK)
     goto beach;
 
-  frame = gst_v4l2_video_enc_get_oldest_frame (encoder);
+  if (GST_BUFFER_TIMESTAMP (buffer) % GST_SECOND != 0)
+    GST_ERROR_OBJECT (encoder,
+        "Driver bug detected - check driver with v4l2-compliance from http://git.linuxtv.org/v4l-utils.git");
+  GST_LOG_OBJECT (encoder, "Got buffer for frame number %u",
+      (guint32) (GST_BUFFER_PTS (buffer) / GST_SECOND));
+  frame =
+      gst_video_encoder_get_frame (encoder,
+      GST_BUFFER_TIMESTAMP (buffer) / GST_SECOND);
 
   if (frame) {
     /* At this point, the delta unit buffer flag is already correctly set by
@@ -781,9 +756,12 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
 
   if (frame->input_buffer) {
     GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+    GST_LOG_OBJECT (encoder, "Passing buffer with frame number %u",
+        frame->system_frame_number);
     ret =
-        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL
-        (self->v4l2output->pool), &frame->input_buffer);
+        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
+            v4l2output->pool), &frame->input_buffer,
+        &frame->system_frame_number);
     GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
     if (ret == GST_FLOW_FLUSHING) {

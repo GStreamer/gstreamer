@@ -844,7 +844,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
 
-    ret = gst_v4l2_buffer_pool_process (pool, buf);
+    ret = gst_v4l2_buffer_pool_process (pool, buf, NULL);
 
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 

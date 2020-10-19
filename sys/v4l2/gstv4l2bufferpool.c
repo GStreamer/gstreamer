@@ -1139,10 +1139,9 @@ no_buffers:
 
 static GstFlowReturn
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
-    GstV4l2MemoryGroup * group)
+    GstV4l2MemoryGroup * group, guint32 * frame_number)
 {
   const GstV4l2Object *obj = pool->obj;
-  GstClockTime timestamp;
   gint index;
 
   index = group->buffer.index;
@@ -1164,9 +1163,17 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
     group->buffer.field = field;
   }
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    timestamp = GST_BUFFER_TIMESTAMP (buf);
-    GST_TIME_TO_TIMEVAL (timestamp, group->buffer.timestamp);
+  if (frame_number) {
+    group->buffer.timestamp.tv_sec = *frame_number;
+    group->buffer.timestamp.tv_usec = 0;
+  } else {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buf);
+      GST_TIME_TO_TIMEVAL (timestamp, group->buffer.timestamp);
+    } else {
+      group->buffer.timestamp.tv_sec = -1;
+      group->buffer.timestamp.tv_usec = -1;
+    }
   }
 
   GST_OBJECT_LOCK (pool);
@@ -1506,7 +1513,8 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             if (pool->other_pool)
               ret = gst_v4l2_buffer_pool_prepare_buffer (pool, buffer, NULL);
             if (ret != GST_FLOW_OK ||
-                gst_v4l2_buffer_pool_qbuf (pool, buffer, group) != GST_FLOW_OK)
+                gst_v4l2_buffer_pool_qbuf (pool, buffer, group,
+                    NULL) != GST_FLOW_OK)
               pclass->release_buffer (bpool, buffer);
           } else {
             /* Simply release invalid/modified buffer, the allocator will
@@ -1795,15 +1803,20 @@ cleanup:
  * gst_v4l2_buffer_pool_process:
  * @bpool: a #GstBufferPool
  * @buf: a #GstBuffer, maybe be replaced
+ * @frame_number: 32 bit frame number or %NULL
  *
  * Process @buf in @bpool. For capture devices, this functions fills @buf with
  * data from the device. For output devices, this functions send the contents of
  * @buf to the device for playback.
  *
+ * If non-%NULL and an output device, @frame_number is stored inside the timestamp for output devices and read
+ * back from the timestamp for capture devices.
+ *
  * Returns: %GST_FLOW_OK on success.
  */
 GstFlowReturn
-gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
+gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
+    guint32 * frame_number)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBufferPool *bpool = GST_BUFFER_POOL_CAST (pool);
@@ -2006,7 +2019,9 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             gst_v4l2_is_buffer_valid (to_queue, &group);
           }
 
-          if ((ret = gst_v4l2_buffer_pool_qbuf (pool, to_queue, group))
+          if ((ret =
+                  gst_v4l2_buffer_pool_qbuf (pool, to_queue, group,
+                      frame_number))
               != GST_FLOW_OK)
             goto queue_failed;
 

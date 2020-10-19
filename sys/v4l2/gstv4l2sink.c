@@ -610,7 +610,7 @@ gst_v4l2sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   gst_buffer_ref (buf);
 again:
   ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool),
-      &buf);
+      &buf, NULL);
   if (ret == GST_FLOW_FLUSHING) {
     ret = gst_base_sink_wait_preroll (GST_BASE_SINK (vsink));
     if (ret == GST_FLOW_OK)

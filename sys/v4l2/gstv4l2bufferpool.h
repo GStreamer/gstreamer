@@ -103,7 +103,7 @@ GType gst_v4l2_buffer_pool_get_type (void);
 
 GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *caps);
 
-GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer ** buf);
+GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer ** buf, guint32 * frame_number);
 
 void                gst_v4l2_buffer_pool_set_other_pool (GstV4l2BufferPool * pool,
                                                          GstBufferPool * other_pool);
