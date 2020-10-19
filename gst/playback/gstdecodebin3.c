@@ -2262,6 +2262,20 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     goto cleanup;
   }
   if (output->src_exposed == FALSE) {
+    GstEvent *stream_start;
+
+    stream_start = gst_pad_get_sticky_event (slot->src_pad,
+        GST_EVENT_STREAM_START, 0);
+
+    /* Ensure GstStream is accesiable from pad-added callback */
+    if (stream_start) {
+      gst_pad_store_sticky_event (output->src_pad, stream_start);
+      gst_event_unref (stream_start);
+    } else {
+      GST_WARNING_OBJECT (slot->src_pad,
+          "Pad has no stored stream-start event");
+    }
+
     output->src_exposed = TRUE;
     gst_element_add_pad (GST_ELEMENT_CAST (dbin), output->src_pad);
   }
