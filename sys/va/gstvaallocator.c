@@ -839,6 +839,11 @@ struct _GstVaAllocator
   gboolean use_derived;
   GArray *surface_formats;
 
+  GstVideoFormat surface_format;
+  GstVideoFormat img_format;
+  guint32 fourcc;
+  guint32 rt_format;
+
   GCond buffer_cond;
 
   GstVideoInfo info;
@@ -1189,34 +1194,13 @@ gst_va_allocator_alloc_full (GstAllocator * allocator, GstVideoInfo * info)
 {
   GstVaAllocator *self;
   GstVaMemory *mem;
-  GstVideoFormat format, img_format;
   VASurfaceID surface;
-  guint32 fourcc, rt_format;
 
   g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), NULL);
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  img_format = GST_VIDEO_INFO_FORMAT (&self->info);
-
-  format = gst_va_video_surface_format_from_image_format (img_format,
-      self->surface_formats);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-    /* try a surface without fourcc but rt_format only */
-    fourcc = 0;
-    rt_format = gst_va_chroma_from_video_format (img_format);
-  } else {
-    fourcc = gst_va_fourcc_from_video_format (format);
-    rt_format = gst_va_chroma_from_video_format (format);
-  }
-
-  if (rt_format == 0) {
-    GST_ERROR_OBJECT (allocator, "Unsupported image format: %s",
-        gst_video_format_to_string (img_format));
-    return NULL;
-  }
-
-  if (!_create_surfaces (self->display, rt_format, fourcc,
+  if (!_create_surfaces (self->display, self->rt_format, self->fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
           GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
           &surface, 1))
@@ -1233,7 +1217,7 @@ gst_va_allocator_alloc_full (GstAllocator * allocator, GstVideoInfo * info)
   mem = g_slice_new (GstVaMemory);
 
   mem->surface = surface;
-  mem->surface_format = format;
+  mem->surface_format = self->surface_format;
 
   _reset_mem (mem, allocator, GST_VIDEO_INFO_SIZE (&self->info));
 
@@ -1311,12 +1295,43 @@ gst_va_allocator_try (GstAllocator * allocator)
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
   GstVideoInfo info = self->info;
 
+  self->fourcc = 0;
+  self->rt_format = 0;
+  self->use_derived = FALSE;
+  self->img_format = GST_VIDEO_INFO_FORMAT (&self->info);
+
+  self->surface_format =
+      gst_va_video_surface_format_from_image_format (self->img_format,
+      self->surface_formats);
+  if (self->surface_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    /* try a surface without fourcc but rt_format only */
+    self->fourcc = 0;
+    self->rt_format = gst_va_chroma_from_video_format (self->img_format);
+  } else {
+    self->fourcc = gst_va_fourcc_from_video_format (self->surface_format);
+    self->rt_format = gst_va_chroma_from_video_format (self->surface_format);
+  }
+
+  if (self->rt_format == 0) {
+    GST_ERROR_OBJECT (allocator, "Unsupported image format: %s",
+        gst_video_format_to_string (self->img_format));
+    return FALSE;
+  }
+
   mem = gst_va_allocator_alloc_full (allocator, &info);
   if (!mem)
     return FALSE;
   gst_memory_unref (mem);
 
   self->info = info;
+
+  GST_INFO_OBJECT (self,
+      "va allocator info, surface format: %s, image format: %s, "
+      "use derived: %s, rt format: 0x%x, fourcc: %" GST_FOURCC_FORMAT,
+      gst_video_format_to_string (self->surface_format),
+      gst_video_format_to_string (self->img_format),
+      self->use_derived ? "true" : "false", self->rt_format,
+      GST_FOURCC_ARGS (self->fourcc));
   return TRUE;
 }
 
