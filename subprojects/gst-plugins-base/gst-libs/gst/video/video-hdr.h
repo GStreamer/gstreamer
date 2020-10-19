@@ -42,6 +42,15 @@ typedef enum {
 } GstVideoHDRFormat;
 
 /**
+ * GST_VIDEO_HDR10_PLUS_MAX_BYTES:
+ *
+ * Specify the max size for a HDR10+ content
+ *
+ * Since: 1.30
+ */
+#define GST_VIDEO_HDR10_PLUS_MAX_BYTES 1024
+
+/**
  * GST_VIDEO_HDR10_PLUS_NUM_WINDOWS:
  *
  * Number of windows in HDR10+ dynamic metadata.
@@ -280,10 +289,18 @@ gboolean  gst_video_content_light_level_add_to_caps  (const GstVideoContentLight
  * w-th processing window in the scene
  * @average_maxrgb: the average of linearized maxRGB values in the w-th processing
  * window in the scene
- * @num_distribution_maxrgb_percentiles: the number of linearized maxRGB values at
- * given percentiles in the w-th processing window in the scene. Maximum value should be 9.
- * @distribution_maxrgb_percentages: an integer percentage value corresponding to the
- * i-th percentile linearized RGB value in the w-th processing window in the scene
+ * @num_distribution: the number of linearized maxRGB values at given percentiles
+ * in the w-th processing window in the scene.
+ * @distribution_index: the interpretation of the corresponding
+ * distribution_values[w][i] value. Values of 0 through 98 indicate that
+ * distribution_values[w][i] contains the value below which distribution_index[w][i]
+ * percent of the linearized maxRGB values in the scene for the w-th processing
+ * window fall. A value of 99 indicates that distribution_values[w][i] contains
+ * the value below which 99.98% of the linearized maxRGB values in the scene for
+ * the w-th processing window fall.The value shall be in the range of 0 to 99, inclusive
+ * @distribution_values: the linearized maxRGB value at the percentile specified by
+ * distribution_index[w][i] in the w-th processing window in the scene. The value
+ * shall be in the range of 0 to 100,000, inclusive, representing 0 to 10,000 cd/m2.
  * @fraction_bright_pixels: the fraction of selected pixels in the image that contains the
  * brightest pixel in the scene
  * @tone_mapping_flag: true if the tone mapping function in the w-th
@@ -320,9 +337,9 @@ struct _GstVideoColorVolumeTransformation
   guint8 overlap_process_option;
   guint32 maxscl[3];
   guint32 average_maxrgb;
-  guint8 num_distribution_maxrgb_percentiles;
-  guint8 distribution_maxrgb_percentages[16];
-  guint32 distribution_maxrgb_percentiles[16];
+  guint8 num_distributions;
+  guint8 distribution_index[16];
+  guint32 distribution_values[16];
   guint16 fraction_bright_pixels;
   guint8 tone_mapping_flag;
   guint16 knee_point_x;
@@ -379,6 +396,10 @@ struct _GstVideoHDR10Plus
   guint8 num_cols_mastering_display_actual_peak_luminance;
   guint8 mastering_display_actual_peak_luminance[GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL][GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL];
 };
+
+GST_VIDEO_API gboolean
+gst_video_hdr_parse_hdr10_plus (const guint8 * data, gsize size,
+                                GstVideoHDR10Plus * hdr10_plus);
 
 G_END_DECLS
 
