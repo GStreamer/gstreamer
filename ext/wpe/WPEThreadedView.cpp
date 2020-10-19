@@ -205,6 +205,20 @@ static gboolean s_loadFailedWithTLSErrors(WebKitWebView*,  gchar* failing_uri, G
     return FALSE;
 }
 
+static void s_loadProgressChaned(GObject* object, GParamSpec*, gpointer data)
+{
+    GstElement* src = GST_ELEMENT_CAST (data);
+    // The src element is locked already so we can't call
+    // gst_element_post_message(). Instead retrieve the bus manually and use it
+    // directly.
+    GstBus* bus = GST_ELEMENT_BUS (src);
+    double estimatedProgress;
+    g_object_get(object, "estimated-load-progress", &estimatedProgress, nullptr);
+    gst_object_ref (bus);
+    gst_bus_post (bus, gst_message_new_element(GST_OBJECT_CAST(src), gst_structure_new("wpe-stats", "estimated-load-progress", G_TYPE_DOUBLE, estimatedProgress * 100, nullptr)));
+    gst_object_unref (bus);
+}
+
 WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     g_mutex_init(&threading.ready_mutex);
@@ -264,6 +278,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
 
     g_signal_connect(webkit.view, "load-failed", G_CALLBACK(s_loadFailed), src);
     g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
+    g_signal_connect(webkit.view, "notify::estimated-load-progress", G_CALLBACK(s_loadProgressChaned), src);
 
     gst_wpe_src_configure_web_view(src, webkit.view);
 

@@ -30,6 +30,15 @@
  * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
  * wpesrc element.
  *
+ * As the webview loading is usually not instantaneous, the wpesrc element emits
+ * messages indicating the load progress, in percent. The value is an estimate
+ * based on the total number of bytes expected to be received for a document,
+ * including all its possible subresources and child documents. The application
+ * can handle these `element` messages synchronously for instance, in order to
+ * display a progress bar or other visual load indicator. The load percent value
+ * is stored in the message structure as a double value named
+ * `estimated-load-progress` and the structure name is `wpe-stats`.
+ *
  * ## Example launch lines
  *
  * ```shell
