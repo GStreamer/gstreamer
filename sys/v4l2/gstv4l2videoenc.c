@@ -612,6 +612,22 @@ not_negotiated:
   return FALSE;
 }
 
+static gboolean
+check_system_frame_number_too_old (guint32 current, guint32 old)
+{
+  guint32 absdiff = current > old ? current - old : old - current;
+
+  /* More than 100 frames in the past, or current wrapped around */
+  if (absdiff > 100) {
+    /* Wraparound and difference is actually smaller than 100 */
+    if (absdiff > G_MAXUINT32 - 100)
+      return FALSE;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
 {
@@ -650,6 +666,25 @@ gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
       GST_BUFFER_TIMESTAMP (buffer) / GST_SECOND);
 
   if (frame) {
+    GstVideoCodecFrame *oldest_frame;
+    gboolean warned = FALSE;
+
+    /* Garbage collect old frames in case of codec bugs */
+    while ((oldest_frame = gst_video_encoder_get_oldest_frame (encoder)) &&
+        check_system_frame_number_too_old (frame->system_frame_number,
+            oldest_frame->system_frame_number)) {
+      gst_video_encoder_finish_frame (encoder, oldest_frame);
+      oldest_frame = NULL;
+
+      if (!warned) {
+        g_warning ("%s: Too old frames, bug in encoder -- please file a bug",
+            GST_ELEMENT_NAME (encoder));
+        warned = TRUE;
+      }
+    }
+    if (oldest_frame)
+      gst_video_codec_frame_unref (oldest_frame);
+
     /* At this point, the delta unit buffer flag is already correctly set by
      * gst_v4l2_buffer_pool_process. Since gst_video_encoder_finish_frame
      * will overwrite it from GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame),

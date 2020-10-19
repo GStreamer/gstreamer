@@ -472,6 +472,22 @@ gst_v4l2_video_dec_drain (GstVideoDecoder * decoder)
   return GST_FLOW_OK;
 }
 
+static gboolean
+check_system_frame_number_too_old (guint32 current, guint32 old)
+{
+  guint32 absdiff = current > old ? current - old : old - current;
+
+  /* More than 100 frames in the past, or current wrapped around */
+  if (absdiff > 100) {
+    /* Wraparound and difference is actually smaller than 100 */
+    if (absdiff > G_MAXUINT32 - 100)
+      return FALSE;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 {
@@ -517,11 +533,29 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   GST_LOG_OBJECT (decoder, "Got buffer for frame number %u",
       (guint32) (GST_BUFFER_TIMESTAMP (buffer) / GST_SECOND));
 
-  /* FIXME: Add garbage collection for the frames */
   frame =
       gst_video_decoder_get_frame (decoder,
       GST_BUFFER_TIMESTAMP (buffer) / GST_SECOND);
   if (frame) {
+    GstVideoCodecFrame *oldest_frame;
+    gboolean warned = FALSE;
+
+    /* Garbage collect old frames in case of codec bugs */
+    while ((oldest_frame = gst_video_decoder_get_oldest_frame (decoder)) &&
+        check_system_frame_number_too_old (frame->system_frame_number,
+            oldest_frame->system_frame_number)) {
+      gst_video_decoder_drop_frame (decoder, oldest_frame);
+      oldest_frame = NULL;
+
+      if (!warned) {
+        g_warning ("%s: Too old frames, bug in decoder -- please file a bug",
+            GST_ELEMENT_NAME (decoder));
+        warned = TRUE;
+      }
+    }
+    if (oldest_frame)
+      gst_video_codec_frame_unref (oldest_frame);
+
     frame->output_buffer = buffer;
     buffer = NULL;
     ret = gst_video_decoder_finish_frame (decoder, frame);
