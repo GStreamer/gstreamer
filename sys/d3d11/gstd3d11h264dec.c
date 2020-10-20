@@ -490,12 +490,12 @@ gst_d3d11_h264_dec_get_bitstream_buffer (GstD3D11H264Dec * self)
   return TRUE;
 }
 
-static GstD3D11DecoderOutputView *
+static ID3D11VideoDecoderOutputView *
 gst_d3d11_h264_dec_get_output_view_from_picture (GstD3D11H264Dec * self,
     GstH264Picture * picture)
 {
   GstBuffer *view_buffer;
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view_buffer = (GstBuffer *) gst_h264_picture_get_user_data (picture);
   if (!view_buffer) {
@@ -518,7 +518,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
   gint i;
   GArray *dpb_array;
 
@@ -549,7 +549,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
   for (i = 0; i < dpb_array->len; i++) {
     guint ref = 3;
     GstH264Picture *other = g_array_index (dpb_array, GstH264Picture *, i);
-    GstD3D11DecoderOutputView *other_view;
+    ID3D11VideoDecoderOutputView *other_view;
     gint id = 0xff;
 
     if (!other->ref)
@@ -558,7 +558,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     other_view = gst_d3d11_h264_dec_get_output_view_from_picture (self, other);
 
     if (other_view)
-      id = other_view->view_id;
+      id = gst_d3d11_decoder_get_output_view_index (other_view);
 
     self->ref_frame_list[i].Index7Bits = id;
     self->ref_frame_list[i].AssociatedFlag = other->long_term;
@@ -901,7 +901,7 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
   guint d3d11_buffer_size = 0;
   gpointer d3d11_buffer = NULL;
   gint i, j;
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   pps = slice->header.pps;
   sps = pps->sequence;
@@ -915,7 +915,8 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
 
   gst_d3d11_h264_dec_fill_picture_params (self, &slice->header, &pic_params);
 
-  pic_params.CurrPic.Index7Bits = view->view_id;
+  pic_params.CurrPic.Index7Bits =
+      gst_d3d11_decoder_get_output_view_index (view);
   pic_params.RefPicFlag = picture->ref;
   pic_params.frame_num = picture->frame_num;
 

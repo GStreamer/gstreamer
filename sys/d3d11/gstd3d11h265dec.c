@@ -458,12 +458,12 @@ gst_d3d11_h265_dec_get_bitstream_buffer (GstD3D11H265Dec * self)
   return TRUE;
 }
 
-static GstD3D11DecoderOutputView *
+static ID3D11VideoDecoderOutputView *
 gst_d3d11_h265_dec_get_output_view_from_picture (GstD3D11H265Dec * self,
     GstH265Picture * picture)
 {
   GstBuffer *view_buffer;
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view_buffer = (GstBuffer *) gst_h265_picture_get_user_data (picture);
   if (!view_buffer) {
@@ -498,7 +498,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice, GstH265Dpb * dpb)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
   gint i, j;
   GArray *dpb_array;
 
@@ -532,7 +532,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
 
   for (i = 0; i < dpb_array->len && i < G_N_ELEMENTS (self->ref_pic_list); i++) {
     GstH265Picture *other = g_array_index (dpb_array, GstH265Picture *, i);
-    GstD3D11DecoderOutputView *other_view;
+    ID3D11VideoDecoderOutputView *other_view;
     gint id = 0xff;
 
     if (!other->ref) {
@@ -543,7 +543,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
     other_view = gst_d3d11_h265_dec_get_output_view_from_picture (self, other);
 
     if (other_view)
-      id = other_view->view_id;
+      id = gst_d3d11_decoder_get_output_view_index (other_view);
 
     self->ref_pic_list[i].Index7Bits = id;
     self->ref_pic_list[i].AssociatedFlag = other->long_term;
@@ -558,13 +558,15 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
       other = decoder->RefPicSetStCurrBefore[j++];
 
     if (other) {
-      GstD3D11DecoderOutputView *other_view;
+      ID3D11VideoDecoderOutputView *other_view;
 
       other_view =
           gst_d3d11_h265_dec_get_output_view_from_picture (self, other);
 
-      if (other_view)
-        id = gst_d3d11_h265_dec_get_ref_index (self, other_view->view_id);
+      if (other_view) {
+        id = gst_d3d11_h265_dec_get_ref_index (self,
+            gst_d3d11_decoder_get_output_view_index (other_view));
+      }
     }
 
     self->ref_pic_set_st_curr_before[i] = id;
@@ -578,13 +580,15 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
       other = decoder->RefPicSetStCurrAfter[j++];
 
     if (other) {
-      GstD3D11DecoderOutputView *other_view;
+      ID3D11VideoDecoderOutputView *other_view;
 
       other_view =
           gst_d3d11_h265_dec_get_output_view_from_picture (self, other);
 
-      if (other_view)
-        id = gst_d3d11_h265_dec_get_ref_index (self, other_view->view_id);
+      if (other_view) {
+        id = gst_d3d11_h265_dec_get_ref_index (self,
+            gst_d3d11_decoder_get_output_view_index (other_view));
+      }
     }
 
     self->ref_pic_set_st_curr_after[i] = id;
@@ -598,13 +602,15 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
       other = decoder->RefPicSetLtCurr[j++];
 
     if (other) {
-      GstD3D11DecoderOutputView *other_view;
+      ID3D11VideoDecoderOutputView *other_view;
 
       other_view =
           gst_d3d11_h265_dec_get_output_view_from_picture (self, other);
 
-      if (other_view)
-        id = gst_d3d11_h265_dec_get_ref_index (self, other_view->view_id);
+      if (other_view) {
+        id = gst_d3d11_h265_dec_get_ref_index (self,
+            gst_d3d11_decoder_get_output_view_index (other_view));
+      }
     }
 
     self->ref_pic_set_lt_curr[i] = id;
@@ -1120,7 +1126,7 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
   guint d3d11_buffer_size = 0;
   gpointer d3d11_buffer = NULL;
   gint i;
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
   GstH265ScalingList *scaling_list = NULL;
 
   pps = slice->header.pps;
@@ -1135,7 +1141,8 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
 
   gst_d3d11_h265_dec_fill_picture_params (self, &slice->header, &pic_params);
 
-  pic_params.CurrPic.Index7Bits = view->view_id;
+  pic_params.CurrPic.Index7Bits =
+      gst_d3d11_decoder_get_output_view_index (view);
   pic_params.IrapPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
   pic_params.IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type);
   pic_params.IntraPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);

@@ -529,12 +529,12 @@ error:
   return GST_FLOW_ERROR;
 }
 
-static GstD3D11DecoderOutputView *
+static ID3D11VideoDecoderOutputView *
 gst_d3d11_vp9_dec_get_output_view_from_picture (GstD3D11Vp9Dec * self,
     GstVp9Picture * picture)
 {
   GstBuffer *view_buffer;
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view_buffer = (GstBuffer *) gst_vp9_picture_get_user_data (picture);
   if (!view_buffer) {
@@ -558,7 +558,7 @@ gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, picture);
   if (!view) {
@@ -657,7 +657,7 @@ gst_d3d11_vp9_dec_copy_reference_frames (GstD3D11Vp9Dec * self,
   for (i = 0; i < GST_VP9_REF_FRAMES; i++) {
     if (dpb->pic_list[i]) {
       GstVp9Picture *other_pic = dpb->pic_list[i];
-      GstD3D11DecoderOutputView *view;
+      ID3D11VideoDecoderOutputView *view;
 
       view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, other_pic);
       if (!view) {
@@ -665,7 +665,8 @@ gst_d3d11_vp9_dec_copy_reference_frames (GstD3D11Vp9Dec * self,
         return;
       }
 
-      params->ref_frame_map[i].Index7Bits = view->view_id;
+      params->ref_frame_map[i].Index7Bits =
+          gst_d3d11_decoder_get_output_view_index (view);
       params->ref_frame_coded_width[i] = picture->frame_hdr.width;
       params->ref_frame_coded_height[i] = picture->frame_hdr.height;
     } else {
@@ -1019,7 +1020,7 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   DXVA_PicParams_VP9 pic_params = { 0, };
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, picture);
   if (!view) {
@@ -1027,7 +1028,8 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     return FALSE;
   }
 
-  pic_params.CurrPic.Index7Bits = view->view_id;
+  pic_params.CurrPic.Index7Bits =
+      gst_d3d11_decoder_get_output_view_index (view);
   pic_params.uncompressed_header_size_byte_aligned =
       picture->frame_hdr.frame_header_length_in_bytes;
   pic_params.first_partition_size = picture->frame_hdr.first_partition_size;

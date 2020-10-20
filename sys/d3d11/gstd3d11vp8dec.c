@@ -423,12 +423,12 @@ error:
   return GST_FLOW_ERROR;
 }
 
-static GstD3D11DecoderOutputView *
+static ID3D11VideoDecoderOutputView *
 gst_d3d11_vp8_dec_get_output_view_from_picture (GstD3D11Vp8Dec * self,
     GstVp8Picture * picture)
 {
   GstBuffer *view_buffer;
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view_buffer = (GstBuffer *) gst_vp8_picture_get_user_data (picture);
   if (!view_buffer) {
@@ -452,7 +452,7 @@ gst_d3d11_vp8_dec_start_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture)
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   view = gst_d3d11_vp8_dec_get_output_view_from_picture (self, picture);
   if (!view) {
@@ -529,7 +529,7 @@ gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
     DXVA_PicParams_VP8 * params)
 {
   GstVp8Decoder *decoder = GST_VP8_DECODER (self);
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
 
   if (decoder->alt_ref_picture) {
     view = gst_d3d11_vp8_dec_get_output_view_from_picture (self,
@@ -539,7 +539,8 @@ gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
       return;
     }
 
-    params->alt_fb_idx.Index7Bits = view->view_id;
+    params->alt_fb_idx.Index7Bits =
+        gst_d3d11_decoder_get_output_view_index (view);
   } else {
     params->alt_fb_idx.bPicEntry = 0xff;
   }
@@ -552,7 +553,8 @@ gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
       return;
     }
 
-    params->gld_fb_idx.Index7Bits = view->view_id;
+    params->gld_fb_idx.Index7Bits =
+        gst_d3d11_decoder_get_output_view_index (view);
   } else {
     params->gld_fb_idx.bPicEntry = 0xff;
   }
@@ -565,7 +567,8 @@ gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
       return;
     }
 
-    params->lst_fb_idx.Index7Bits = view->view_id;
+    params->lst_fb_idx.Index7Bits =
+        gst_d3d11_decoder_get_output_view_index (view);
   } else {
     params->lst_fb_idx.bPicEntry = 0xff;
   }
@@ -779,7 +782,7 @@ gst_d3d11_vp8_dec_decode_picture (GstVp8Decoder * decoder,
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   DXVA_PicParams_VP8 pic_params = { 0, };
-  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view;
   const GstVp8FrameHdr *frame_hdr = &picture->frame_hdr;
 
   view = gst_d3d11_vp8_dec_get_output_view_from_picture (self, picture);
@@ -791,7 +794,8 @@ gst_d3d11_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   pic_params.first_part_size = frame_hdr->first_part_size;
   pic_params.width = self->width;
   pic_params.height = self->height;
-  pic_params.CurrPic.Index7Bits = view->view_id;
+  pic_params.CurrPic.Index7Bits =
+      gst_d3d11_decoder_get_output_view_index (view);
   pic_params.StatusReportFeedbackNumber = 1;
 
   gst_d3d11_vp8_dec_copy_frame_params (self, picture, parser, &pic_params);

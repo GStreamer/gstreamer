@@ -105,20 +105,6 @@ struct _GstD3D11DecoderPrivate
   guint num_resource_views;
 };
 
-#define OUTPUT_VIEW_QUARK _decoder_output_view_get()
-static GQuark
-_decoder_output_view_get (void)
-{
-  static volatile gsize g_quark = 0;
-
-  if (g_once_init_enter (&g_quark)) {
-    gsize quark =
-        (gsize) g_quark_from_static_string ("GstD3D11DecoderOutputView");
-    g_once_init_leave (&g_quark, quark);
-  }
-  return (GQuark) g_quark;
-}
-
 static void gst_d3d11_decoder_constructed (GObject * object);
 static void gst_d3d11_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -363,75 +349,20 @@ gst_d3d11_decoder_new (GstD3D11Device * device)
   return decoder;
 }
 
-static void
-gst_d3d11_decoder_output_view_free (GstD3D11DecoderOutputView * view)
-{
-  GST_LOG_OBJECT (view->device, "Free view %p, view id: %d", view,
-      view->view_id);
-
-  if (view->handle) {
-    gst_d3d11_device_lock (view->device);
-    ID3D11VideoDecoderOutputView_Release (view->handle);
-    gst_d3d11_device_unlock (view->device);
-  }
-
-  gst_object_unref (view->device);
-  g_free (view);
-}
-
 static gboolean
 gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
     GstBuffer * buffer)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
-  D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC view_desc = { 0, };
   GstD3D11Memory *mem;
-  GstD3D11DecoderOutputView *view;
-  ID3D11VideoDecoderOutputView *view_handle;
-  HRESULT hr;
-  guint view_id = 0;
 
   mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
+  if (!gst_d3d11_memory_ensure_decoder_output_view (mem, priv->video_device,
+          &priv->decoder_profile)) {
 
-  view = (GstD3D11DecoderOutputView *)
-      gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem), OUTPUT_VIEW_QUARK);
-
-  if (view) {
-    GST_TRACE_OBJECT (self, "Reuse view id %d", view->view_id);
-    return TRUE;
-  }
-
-  view_desc.DecodeProfile = priv->decoder_profile;
-  view_desc.ViewDimension = D3D11_VDOV_DIMENSION_TEXTURE2D;
-  view_desc.Texture2D.ArraySlice = mem->subresource_index;
-  if (priv->use_array_of_texture) {
-    view_id = priv->next_view_id;
-
-    priv->next_view_id++;
-    /* valid view range is [0, 126] */
-    priv->next_view_id %= 127;
-  } else {
-    view_id = mem->subresource_index;
-  }
-
-  GST_LOG_OBJECT (self, "Create decoder output view with index %d", view_id);
-
-  hr = ID3D11VideoDevice_CreateVideoDecoderOutputView (priv->video_device,
-      (ID3D11Resource *) mem->texture, &view_desc, &view_handle);
-  if (!gst_d3d11_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self,
-        "Could not create decoder output view index %d, hr: 0x%x",
-        view_id, (guint) hr);
+    GST_ERROR_OBJECT (self, "Decoder output view is unavailable");
     return FALSE;
   }
-
-  view = g_new0 (GstD3D11DecoderOutputView, 1);
-  view->device = gst_object_ref (priv->device);
-  view->handle = view_handle;
-  view->view_id = view_id;
-
-  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem), OUTPUT_VIEW_QUARK,
-      view, (GDestroyNotify) gst_d3d11_decoder_output_view_free);
 
   return TRUE;
 }
@@ -964,7 +895,7 @@ error:
 
 gboolean
 gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
-    GstD3D11DecoderOutputView * output_view, guint content_key_size,
+    ID3D11VideoDecoderOutputView * output_view, guint content_key_size,
     gconstpointer content_key)
 {
   GstD3D11DecoderPrivate *priv;
@@ -973,7 +904,6 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (output_view != NULL, FALSE);
-  g_return_val_if_fail (output_view->handle != NULL, FALSE);
 
   priv = decoder->priv;
 
@@ -981,7 +911,7 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
     GST_LOG_OBJECT (decoder, "Try begin frame, retry count %d", retry_count);
     gst_d3d11_device_lock (priv->device);
     hr = ID3D11VideoContext_DecoderBeginFrame (priv->video_context,
-        priv->decoder, output_view->handle, content_key_size, content_key);
+        priv->decoder, output_view, content_key_size, content_key);
     gst_d3d11_device_unlock (priv->device);
 
     if (hr == E_PENDING && retry_count < 50) {
@@ -1139,39 +1069,38 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder)
   return buf;
 }
 
-GstD3D11DecoderOutputView *
+ID3D11VideoDecoderOutputView *
 gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
     GstBuffer * buffer)
 {
   GstMemory *mem;
-  GstD3D11DecoderOutputView *view;
+  GstD3D11Memory *dmem;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_d3d11_memory (mem)) {
-    GST_WARNING_OBJECT (decoder, "nemory is not d3d11 memory");
+    GST_WARNING_OBJECT (decoder, "Not a d3d11 memory");
     return NULL;
   }
 
-  view = (GstD3D11DecoderOutputView *)
-      gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem), OUTPUT_VIEW_QUARK);
+  dmem = (GstD3D11Memory *) mem;
 
-  if (!view) {
+  if (!dmem->decoder_output_view) {
     GST_WARNING_OBJECT (decoder, "memory does not have output view");
+    return NULL;
   }
 
-  return view;
+  return dmem->decoder_output_view;
 }
 
-guint
-gst_d3d11_decoder_get_output_view_index (GstD3D11Decoder * decoder,
-    ID3D11VideoDecoderOutputView * view_handle)
+guint8
+gst_d3d11_decoder_get_output_view_index (ID3D11VideoDecoderOutputView *
+    view_handle)
 {
   D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC view_desc;
 
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), 0xff);
   g_return_val_if_fail (view_handle != NULL, 0xff);
 
   ID3D11VideoDecoderOutputView_GetDesc (view_handle, &view_desc);

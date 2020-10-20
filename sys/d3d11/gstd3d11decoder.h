@@ -33,14 +33,6 @@ G_DECLARE_FINAL_TYPE (GstD3D11Decoder,
     gst_d3d11_decoder, GST, D3D11_DECODER, GstObject);
 
 typedef struct _GstD3D11DecoderPrivate GstD3D11DecoderPrivate;
-typedef struct _GstD3D11DecoderOutputView GstD3D11DecoderOutputView;
-
-struct _GstD3D11DecoderOutputView
-{
-  GstD3D11Device *device;
-  ID3D11VideoDecoderOutputView *handle;
-  guint view_id;
-};
 
 typedef enum
 {
@@ -90,7 +82,7 @@ gboolean          gst_d3d11_decoder_open (GstD3D11Decoder * decoder,
 void              gst_d3d11_decoder_reset (GstD3D11Decoder * decoder);
 
 gboolean          gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
-                                                 GstD3D11DecoderOutputView * output_view,
+                                                 ID3D11VideoDecoderOutputView * output_view,
                                                  guint content_key_size,
                                                  gconstpointer content_key);
 
@@ -110,11 +102,10 @@ gboolean          gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * de
 
 GstBuffer *       gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder);
 
-GstD3D11DecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
-                                                                           GstBuffer * buffer);
+ID3D11VideoDecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
+                                                                              GstBuffer * buffer);
 
-guint             gst_d3d11_decoder_get_output_view_index (GstD3D11Decoder * decoder,
-                                                           ID3D11VideoDecoderOutputView * view_handle);
+guint8            gst_d3d11_decoder_get_output_view_index (ID3D11VideoDecoderOutputView * view_handle);
 
 gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decoder,
                                                          GstVideoInfo * info,
