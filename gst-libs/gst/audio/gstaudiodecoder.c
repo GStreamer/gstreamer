@@ -497,6 +497,7 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
   dec->priv->plc = DEFAULT_PLC;
   dec->priv->drainable = DEFAULT_DRAINABLE;
   dec->priv->needs_format = DEFAULT_NEEDS_FORMAT;
+  dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
 
   /* init state */
   dec->priv->ctx.min_latency = 0;

@@ -647,6 +647,7 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
 
   /* properties */
   decoder->priv->do_qos = DEFAULT_QOS;
+  decoder->priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
 
   decoder->priv->min_latency = 0;
   decoder->priv->max_latency = 0;
