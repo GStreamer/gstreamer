@@ -995,6 +995,59 @@ bail:
   return TRUE;
 }
 
+static inline gboolean
+_update_image_info (GstVaAllocator * va_allocator)
+{
+  VASurfaceID surface;
+  VAImage image = {.image_id = VA_INVALID_ID, };
+  gboolean derived;
+  guint i;
+
+  /* Create a test surface first */
+  if (!_create_surfaces (va_allocator->display, va_allocator->rt_format,
+          va_allocator->fourcc, GST_VIDEO_INFO_WIDTH (&va_allocator->info),
+          GST_VIDEO_INFO_HEIGHT (&va_allocator->info), va_allocator->usage_hint,
+          NULL, &surface, 1)) {
+    GST_ERROR_OBJECT (va_allocator, "Failed to create a test surface");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (va_allocator, "Created surface %#x [%dx%d]", surface,
+      GST_VIDEO_INFO_WIDTH (&va_allocator->info),
+      GST_VIDEO_INFO_HEIGHT (&va_allocator->info));
+
+  /* Try derived first, but different formats can never derive */
+  if (va_allocator->surface_format == va_allocator->img_format) {
+    derived = TRUE;
+    if (_get_derive_image (va_allocator->display, surface, &image))
+      goto update;
+  }
+
+  /* Then we try to create a image. */
+  derived = FALSE;
+  if (!_create_image (va_allocator->display, va_allocator->img_format,
+          GST_VIDEO_INFO_WIDTH (&va_allocator->info),
+          GST_VIDEO_INFO_HEIGHT (&va_allocator->info), &image)) {
+    _destroy_surfaces (va_allocator->display, &surface, 1);
+    return FALSE;
+  }
+
+update:
+  va_allocator->use_derived = derived;
+
+  for (i = 0; i < image.num_planes; i++) {
+    GST_VIDEO_INFO_PLANE_OFFSET (&va_allocator->info, i) = image.offsets[i];
+    GST_VIDEO_INFO_PLANE_STRIDE (&va_allocator->info, i) = image.pitches[i];
+  }
+
+  GST_VIDEO_INFO_SIZE (&va_allocator->info) = image.data_size;
+
+  _destroy_image (va_allocator->display, image.image_id);
+  _destroy_surfaces (va_allocator->display, &surface, 1);
+
+  return TRUE;
+}
+
 static gpointer
 _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
 {
