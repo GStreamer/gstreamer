@@ -554,7 +554,6 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
 
     gst_audio_info_init (&dec->priv->ctx.info);
     GST_OBJECT_UNLOCK (dec);
-    dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
     dec->priv->ctx.had_output_data = FALSE;
     dec->priv->ctx.had_input_data = FALSE;
   }

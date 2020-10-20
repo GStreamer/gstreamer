@@ -2150,7 +2150,6 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     priv->pending_events = NULL;
 
     priv->error_count = 0;
-    priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
     priv->had_output_data = FALSE;
     priv->had_input_data = FALSE;
 
