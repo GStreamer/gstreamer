@@ -9,17 +9,24 @@ WHERE TO START
 --------------
 
 We have a website at
-http://gstreamer.freedesktop.org/
 
-You should start by going through our FAQ at
-http://gstreamer.freedesktop.org/data/doc/gstreamer/head/faq/html/
+  https://gstreamer.freedesktop.org
 
-There is more documentation; go to
-http://gstreamer.freedesktop.org/documentation
+Our documentation, including tutorials, API reference and FAQ can be found at
 
-You can subscribe to our mailing lists; see the website for details.
+  https://gstreamer.freedesktop.org/documentation/
 
-We track bugs in GNOME's bugzilla; see the website for details.
+You can subscribe to our mailing lists:
+
+  https://lists.freedesktop.org/mailman/listinfo/gstreamer-announce
+
+  https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel
+
+Follow us on Twitter: https://twitter.com/GStreamer
+
+We track bugs, feature requests and merge requests (patches) in GitLab at
+
+  https://gitlab.freedesktop.org/gstreamer/
 
 You can join us on IRC - #gstreamer on irc.freenode.org
 
@@ -137,12 +144,11 @@ PLATFORMS
 ---------
 
 - Linux is of course fully supported
-- FreeBSD is reported to work; other BSDs should work too
-- Solaris is reported to work; a specific sunaudiosink plugin has been written
-- MacOSX works, binary 1.x packages can be built using the cerbero build tool
+- FreeBSD is reported to work; other BSDs should work too; same for Solaris
+- MacOS works, binary 1.x packages can be built using the cerbero build tool
 - Windows works; binary 1.x packages can be built using the cerbero build tool
   - MSys/MinGW builds
-  - Microsoft Visual Studio builds are not yet available or supported
+  - Microsoft Visual Studio builds are also available and supported
 - Android works, binary 1.x packages can be built using the cerbero build tool
 - iOS works
 
@@ -151,36 +157,49 @@ INSTALLING FROM PACKAGES
 
 You should always prefer installing from packages first.  GStreamer is
 well-maintained for a number of distributions, including Fedora, Debian,
-Ubuntu, Mandrake, Gentoo, ...
+Ubuntu, Mandrake, Arch Linux, Gentoo, ...
 
 Only in cases where you:
-- want to hack on GStreamer
-- want to verify that a bug has been fixed
-- do not have a sane distribution
+
+ - want to hack on GStreamer
+ - want to verify that a bug has been fixed
+ - do not have a sane distribution
+
 should you choose to build from source tarballs or git.
 
 Find more information about the various packages at
-http://gstreamer.freedesktop.org/download/
+
+  https://gstreamer.freedesktop.org/download/
 
 COMPILING FROM SOURCE TARBALLS
 ------------------------------
 
-- again, make sure that you really need to install from source !
+- again, make sure that you really need to install from source!
   If GStreamer is one of your first projects ever that you build from source,
   consider taking on an easier project.
 
-- check output of ./configure --help to see if any options apply to you
+- you need a recent version of Meson installed, see
+
+    http://mesonbuild.com/Getting-meson.html
+
+  and
+
+    https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md
+
 - run
-  ./configure
-  make
+
+    meson build
+    ninja -C build
 
   to build GStreamer.
+
 - if you want to install it (not required, but what you usually want to do), run
-  make install
+
+    ninja -C build install
 
 - try out a simple test:
-  gst-launch -v fakesrc num_buffers=5 ! fakesink
-  (If you didn't install GStreamer, prefix gst-launch with tools/)
+  gst-launch-1.0 -v fakesrc num_buffers=5 ! fakesink
+  (If you didn't install GStreamer, run `./build/tools/gst-launch-1.0`)
 
   If it outputs a bunch of messages from fakesrc and fakesink, everything is
   ok.
@@ -196,39 +215,19 @@ COMPILING FROM SOURCE TARBALLS
 COMPILING FROM GIT
 ------------------
 
-When building from git sources, you will need to run autogen.sh to generate
-the build system files.
+You can build an uninstalled GStreamer from git for development or testing
+purposes without affecting your system installation.
 
-You will need a set of additional tools typical for building from git,
-including:
-- autoconf
-- automake
-- libtool
+Get started with:
 
-autogen.sh will check for recent enough versions and complain if you don't have
-them.  You can also specify specific versions of automake and autoconf with
---with-automake and --with-autoconf
+    git clone https://gitlab.freedesktop.org/gstreamer/gst-build
+    meson build
+    ninja -C build
+    ninja -C build uninstalled
 
-Check autogen.sh options by running autogen.sh --help
+For more information, see the `gst-build` module and its documentation:
 
-autogen.sh can pass on arguments to configure
-
-When you have done this once, you can use autoregen.sh to re-autogen with
-the last passed options as a handy shortcut.  Use it.
-
-After the autogen.sh stage, you can follow the directions listed in
-"COMPILING FROM SOURCE"
-
-You can also run your whole git stack uninstalled in your home directory,
-so that you can quickly test changes without affecting your system setup or
-interfering with GStreamer installed from packages.  Many GStreamer developers
-use an uninstalled setup for their work.
-
-There is a 'create-uninstalled-setup.sh' script in
-
-  http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/
-
-to easily create an uninstalled setup from scratch.
+  https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md
 
 
 PLUG-IN DEPENDENCIES AND LICENSES
