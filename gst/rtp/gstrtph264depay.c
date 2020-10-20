@@ -581,14 +581,16 @@ gst_rtp_h264_add_sps_pps (GstElement * rtph264, GPtrArray * sps_array,
       parse_sps (&spsmap, &tmp_sps_id);
 
       if (sps_id == tmp_sps_id) {
-        if (map.size == spsmap.size &&
+        /* If this is already the most recent SPS and unchanged, nothing to do */
+        if (i == (sps_array->len - 1) && map.size == spsmap.size &&
             memcmp (map.data, spsmap.data, spsmap.size) == 0) {
-          GST_LOG_OBJECT (rtph264, "Unchanged SPS %u, not updating", sps_id);
+          GST_LOG_OBJECT (rtph264,
+              "Unchanged SPS %u already most recent, not updating", sps_id);
           gst_buffer_unmap (sps, &spsmap);
           goto drop;
         } else {
           gst_buffer_unmap (sps, &spsmap);
-          g_ptr_array_remove_index_fast (sps_array, i);
+          g_ptr_array_remove_index (sps_array, i);
           g_ptr_array_add (sps_array, nal);
           GST_LOG_OBJECT (rtph264, "Modified SPS %u, replacing", sps_id);
           goto done;
@@ -619,15 +621,17 @@ gst_rtp_h264_add_sps_pps (GstElement * rtph264, GPtrArray * sps_array,
       parse_pps (&ppsmap, &tmp_sps_id, &tmp_pps_id);
 
       if (pps_id == tmp_pps_id) {
-        if (map.size == ppsmap.size &&
+        /* If this is already the most recent PPS and unchanged, nothing to do */
+        if (i == (pps_array->len - 1) && map.size == ppsmap.size &&
             memcmp (map.data, ppsmap.data, ppsmap.size) == 0) {
-          GST_LOG_OBJECT (rtph264, "Unchanged PPS %u:%u, not updating", sps_id,
+          GST_LOG_OBJECT (rtph264,
+              "Unchanged PPS %u:%u already most recent, not updating", sps_id,
               pps_id);
           gst_buffer_unmap (pps, &ppsmap);
           goto drop;
         } else {
           gst_buffer_unmap (pps, &ppsmap);
-          g_ptr_array_remove_index_fast (pps_array, i);
+          g_ptr_array_remove_index (pps_array, i);
           g_ptr_array_add (pps_array, nal);
           GST_LOG_OBJECT (rtph264, "Modified PPS %u:%u, replacing",
               sps_id, pps_id);
