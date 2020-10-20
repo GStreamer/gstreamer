@@ -93,7 +93,7 @@ extra_files =
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -I$(top_srcdir) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
-GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_PLUGINS_BASE_LIBS) \
+GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_PLUGINS_BASE_LIBS) -lgstapp-1.0 -lgstrtsp-1.0 -lgstsdp-1.0 \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GCOV_LIBS)
 
 # If you need to override some of the declarations, place them in this file

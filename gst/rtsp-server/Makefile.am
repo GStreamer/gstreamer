@@ -65,10 +65,11 @@ libgstrtspserver_@GST_API_VERSION@_la_CFLAGS = \
     $(GST_BASE_CFLAGS) $(GST_CFLAGS) -DBUILDING_GST_RTSP_SERVER
 libgstrtspserver_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 libgstrtspserver_@GST_API_VERSION@_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) $(GST_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
     -lgstrtp-@GST_API_VERSION@ -lgstrtsp-@GST_API_VERSION@ \
             -lgstsdp-@GST_API_VERSION@ \
             -lgstapp-@GST_API_VERSION@ \
+	    $(GST_NET_LIBS) $(GST_BASE_LIBS) \
 	    $(GST_LIBS) $(GIO_LIBS) $(LIBM)
 
 libgstrtspserver_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtsp-server
@@ -106,6 +107,7 @@ GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-rtsp-@GST_API_VERSION@ \
 		--pkg gstreamer-net-@GST_API_VERSION@ \
+		--pkg gstreamer-app-@GST_API_VERSION@ \
 		--pkg-export gstreamer-rtsp-server-@GST_API_VERSION@ \
 		--output $@ \
 		$(gir_headers) \
