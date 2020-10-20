@@ -318,6 +318,7 @@ if get_option('default_library') == 'static'
   )
   pkgconfig.generate(gstfull,
     requires: glib_deps,
+    libraries_private: cc.get_supported_link_arguments(['-Wl,--undefined=gst_init_static_plugins']),
     subdirs : 'gstreamer-1.0')
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 endif
