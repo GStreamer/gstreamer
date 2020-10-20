@@ -79,7 +79,14 @@ AC_MSG_CHECKING(for libraries required to embed python)
 
 dnl deduce PYTHON_LIBS
 if $PYTHON-config --help 1>/dev/null 2>/dev/null; then
-  PYTHON_LIBS=`$PYTHON-config --ldflags 2>/dev/null`
+  dnl Need to pass --embed in python 3.8 or newer:
+  dnl https://docs.python.org/dev/whatsnew/3.8.html#debug-build-uses-the-same-abi-as-release-build
+  if $PYTHON-config --embed 1>/dev/null 2>/dev/null; then
+    python_config_embed_flag="--embed"
+  else
+    python_config_embed_flag=""
+  fi
+  PYTHON_LIBS=`$PYTHON-config --ldflags $python_config_embed_flag 2>/dev/null`
   PYTHON_LIB=`$PYTHON -c "import distutils.sysconfig as s; print(s.get_python_lib(standard_lib=1))"`
   if echo "$host_os" | grep darwin >/dev/null 2>&1; then
     dnl OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
