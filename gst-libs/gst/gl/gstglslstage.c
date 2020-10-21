@@ -75,10 +75,22 @@ G_DEFINE_TYPE_WITH_CODE (GstGLSLStage, gst_glsl_stage, GST_TYPE_OBJECT,
         "GLSL Stage"););
 
 static void
+_delete_shader (GstGLContext * context, GstGLSLStage * stage)
+{
+  GstGLSLStagePrivate *priv = stage->priv;
+
+  if (priv->handle)
+    priv->vtable.DeleteShader (priv->handle);
+}
+
+static void
 gst_glsl_stage_finalize (GObject * object)
 {
   GstGLSLStage *stage = GST_GLSL_STAGE (object);
   gint i;
+
+  gst_gl_context_thread_add (stage->context,
+      (GstGLContextThreadFunc) _delete_shader, stage);
 
   if (stage->context) {
     gst_object_unref (stage->context);
