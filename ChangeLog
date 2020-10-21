@@ -1,3 +1,98 @@
+=== release 1.16.3 ===
+
+2020-10-21 14:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.16.3
+
+2020-10-20 19:22:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/Makefile.am:
+	* examples/Makefile.am:
+	* gst/rtsp-server/Makefile.am:
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	  autotools: fix linking issues
+	  For some reason libtool would pull in the wrong libgstapp version
+	  from the system if we don't specify this rtsp-server internal
+	  dep explicitly. Unclear why this happens, but should be fine to
+	  brute force it. Also fix some ordering issues.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/165>
+
+2020-10-20 15:10:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 59cb678 to a825d27
+
+2020-07-02 23:52:47 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: explicitly set caps on udpsrc elements
+	  This causes them to send caps events before data flow, which is
+	  usually a pretty correct thing to do!
+	  Not doing so manifested in a bug where ssrcdemux wouldn't forward
+	  the caps it had received with an extra ssrc field, as it hadn't
+	  received any caps event.
+	  Fixes #85
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/153>
+
+2020-03-23 14:51:28 +0100  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: use mcast_udpsink[0] last-sample if available for rtpinfo
+	  Otherwise no sink is found for multicast sreams and the less accurate
+	  fallback is used to determine the current sequence number and timestamp.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/152>
+
+2019-04-15 20:54:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Set async-handling=false for the internal bins
+	  Without this we can easily run into a race condition with async state changes:
+	  - the pipeline is doing an async state change
+	  - we set the internal bins to PLAYING but that's ignored because an
+	  async state change is currently pending
+	  - the async state change finishes but does not change the state of the
+	  internal bins because of locked_state==TRUE
+	  - the internal bins stay in PAUSED forever
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/151>
+
+2020-03-23 16:06:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  rtsp-auth: Fix NULL pointer dereference when handling an invalid basic Authorization header
+	  When using the basic authentication scheme, we wouldn't validate that
+	  the authorization field of the credentials is not NULL and pass it on
+	  to g_hash_table_lookup(). g_str_hash() however is not NULL-safe and will
+	  dereference the NULL pointer and crash.
+	  A specially crafted (read: invalid) RTSP header can cause this to
+	  happen.
+	  As a solution, check for the authorization to be not NULL before
+	  continuing processing it and if it is simply fail authentication.
+	  This fixes CVE-2020-6095 and TALOS-2020-1018.
+	  Discovered by Peter Wang of Cisco ASIG.
+
+2020-01-23 16:41:26 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* gst/rtsp-server/rtsp-latency-bin.c:
+	  rtsp-latency-bin: replace G_TYPE_INSTANCE_GET_PRIVATE as it's been deprecated
+	  from glib
+	  ```
+	  Deprecated: 2.58: Use %G_ADD_PRIVATE and the generated
+	  `your_type_get_instance_private()` function instead
+	  ```
+
+2019-12-12 17:56:18 +0100  Nicola Murino <nicola.murino@gmail.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  rtsp-auth: fix default token leak
+
 === release 1.16.2 ===
 
 2019-12-03 11:16:06 +0000  Tim-Philipp Müller <tim@centricular.com>
