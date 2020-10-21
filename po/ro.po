@@ -1,132 +1,154 @@
 # Romanian translation for gst-plugins-bad
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+# Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2010-08-16 03:11+0300\n"
-"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"PO-Revision-Date: 2020-06-21 12:16+0300\n"
+"Last-Translator: Florentina Mușat <florentina.musat.28@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
-"20)) ? 1 : 2);;\n"
-"X-Generator: Virtaal 0.6.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);;\n"
+"X-Generator: Poedit 2.3.1\n"
 
+#: ext/curl/gstcurlhttpsrc.c:1265
 msgid "No URL set."
-msgstr ""
+msgstr "Niciun URL stabilit."
 
+#: ext/opencv/gsttemplatematch.cpp:202
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "OpenCV a eșuat să încarce imaginea șablon"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nu s-au putut citi informațiile despre titlu pentru DVD."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nu s-a putut deschide dispozitivul DVD „%s”."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Nu s-a putut stabili derularea bazată pe PGC."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nu s-a putut citi DVD-ul. Aceasta poate fi pentru că DVD-ul este criptat și o bibliotecă de decriptare a DVD-urilor nu este instalată."
 
-#, fuzzy
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
-msgstr "Nu s-au putut citi informațiile despre titlu pentru DVD."
+msgstr "Nu s-a putut citi DVD-ul."
 
+#: ext/smoothstreaming/gstmssdemux.c:421
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:731
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Fișierul nu conține fluxuri de redat."
 
-#, fuzzy
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
-msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
+msgstr "Nu s-a putut deschide fluxul sndfile pentru citire."
 
+#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
+msgstr "Fișierul generat are un timp de pre-rulare mai mare decât durata fluxurilor acestuia"
 
+#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
+#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Lipsește elementul „%s” - verificați instalarea GStreamer."
 
+#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
+msgstr "Locația fișierului este stabilită la NULL, stabiliți-o la un nume de fișier valid"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "Elementul digitalzoom nu a putut fi creat"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Formatul de subpictură nu a fost configurat înainte de fluxul de date"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3564
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Nu s-a putut obține URL-ul fragment."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3951
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Nu s-au putut descărca fragmentele"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:4040
+#: gst/mpegtsdemux/mpegtsbase.c:1640
 msgid "Internal data stream error."
 msgstr "Eroare internă a fluxului de date."
 
+#: sys/dvb/gstdvbsrc.c:1580 sys/dvb/gstdvbsrc.c:1794
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Dispozitivul „%s” nu există."
 
+#: sys/dvb/gstdvbsrc.c:1584
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nu s-a putut deschide dispozitivul frontend „%s”."
 
+#: sys/dvb/gstdvbsrc.c:1603
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nu s-au putut obține configurările de la dispozitivul frontend „%s”."
 
-#, fuzzy, c-format
+#: sys/dvb/gstdvbsrc.c:1620
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Nu s-au putut obține configurările de la dispozitivul frontend „%s”."
+msgstr "Nu s-au putut enumera sistemele de livrare de la dispozitivul de interfață „%s”."
 
+#: sys/dvb/gstdvbsrc.c:1798
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
 
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr ""
+msgstr "Nu s-a putut găsi fișierul de configurare a canalului"
 
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr ""
+msgstr "Nu s-a putut încărca fișierul de configurare a canalului: „%s”"
 
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr ""
+msgstr "Nu s-au putut găsi detalii pentru canalul „%s”"
 
+#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
-msgstr ""
+msgstr "Nu sunt proprietăți pentru canalul „%s”"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:439
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nu s-a putut deschide dispozitivul DVD „%s”."
+msgstr "Nu s-au putut stabili proprietățile pentru canalul „%s”"
 
+#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr ""
+msgstr "Nu s-a putut găsi fișierul de configurare a canalului: „%s”"
 
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr ""
-
-#, fuzzy
-#~ msgid "Could not configure sndio"
-#~ msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
-
-#, fuzzy
-#~ msgid "Could not start sndio"
-#~ msgstr "Nu s-au putut citi informațiile despre titlu pentru DVD."
+msgstr "Fișierul de configurare a canalului nu conține niciun canal"
 
 #~ msgid "No file name specified for writing."
 #~ msgstr "Niciun nume de fișier specificat pentru scriere."
@@ -134,8 +156,8 @@ msgstr ""
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Nu s-a putut deschide fișierul „%s” pentru scriere."
 
-#~ msgid "Internal data flow error."
-#~ msgstr "Eroare internă de flux al datelor."
-
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Nu s-a putut scrie în fișierul „%s”."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Eroare internă de flux al datelor."

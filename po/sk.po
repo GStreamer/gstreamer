@@ -2,131 +2,154 @@
 # Czech translations of gst-plugins.
 # Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
 # This file is put in the public domain.
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016, 2020.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.7.2\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2016-05-20 12:33+0100\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"PO-Revision-Date: 2020-06-11 09:09+0200\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 1.6.10\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 2.2.1\n"
 
+#: ext/curl/gstcurlhttpsrc.c:1265
 msgid "No URL set."
-msgstr ""
+msgstr "Nebola nastavená URL adresa."
 
+#: ext/opencv/gsttemplatematch.cpp:202
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV nedokázalo načítať obrazovú šablónu"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nepodarilo sa prečítať titulok DVD."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Nepodarilo sa nastaviť PGC posun pozície."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Nepodarilo sa čítať DVD. Možno je DVD šifrované a dešifrovacia knižnica nie "
-"je nainštalovaná."
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nepodarilo sa čítať DVD. Možno je DVD šifrované a dešifrovacia knižnica nie je nainštalovaná."
 
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nepodarilo sa prečítať DVD."
 
+#: ext/smoothstreaming/gstmssdemux.c:421
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:731
 msgid "This file contains no playable streams."
 msgstr "Tento súbor neobsahuje prehrateľné prúdy údajov."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Nepodarilo sa otvoriť prúd údajov na čítanie."
 
+#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"Vytvorený súbor má väčší prerolovací čas než je trvanie jeho prúdu údajov"
+msgstr "Vytvorený súbor má väčší prerolovací čas než je trvanie jeho prúdu údajov"
 
+#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
+#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Chýba prvok '%s' - skontrolujte si svoju inštaláciu GStreamer."
 
+#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
-"Umiestnenie súboru je nastavené na NULOVÉ, prosím nastavte platný názov "
-"súboru"
+msgstr "Umiestnenie súboru je nastavené na NULOVÉ, prosím nastavte platný názov súboru"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr "Prvok digitálneho priblíženia sa nepodarilo vytvoriť"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podobrázku nebol nastavený pred prúdom údajov."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3564
 msgid "Failed to get fragment URL."
 msgstr "Nepodarilo sa získať URL fragmentu."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3951
 msgid "Couldn't download fragments"
 msgstr "Nepodarilo sa získať fragmenty"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:4040
+#: gst/mpegtsdemux/mpegtsbase.c:1640
 msgid "Internal data stream error."
 msgstr "Vnútorná chyba prúdu údajov."
 
+#: sys/dvb/gstdvbsrc.c:1580 sys/dvb/gstdvbsrc.c:1794
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zariadenie \"%s\" neexistuje."
 
+#: sys/dvb/gstdvbsrc.c:1584
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nepodarilo sa otvoriť ovládacie zariadenie \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1603
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1620
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1798
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
+msgstr "Nepodarilo sa nájsť konfiguračný súbor kanálu"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nepodarilo sa načítať konfiguračný súbor DVB kanálu: %s"
+msgstr "Nepodarilo sa načítať konfiguračný súbor kanálu: %s"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+msgstr "Nepodarilo sa nájsť podrobnosti o kanáli %s"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:430
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+msgstr "Nepodarilo sa nájsť podrobnosti o kanáli %s"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:439
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+msgstr "Nepodarilo sa nastaviť vlastnosti pre kanál '%s'"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:560
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
+msgstr "Nepodarilo sa nájsť konfiguračný súbor kanálu: '%s'"
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
+msgstr "Konfiguračný súbor kanálov neobsahuje žiadne kanály"
 
 #~ msgid "format wasn't negotiated before get function"
 #~ msgstr "formát nebol dohodnutý pred funkciou stiahnutia"
@@ -143,20 +166,17 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 #~ msgid "Could not start sndio"
 #~ msgstr "Nepodarilo sa spustiť sndio"
 
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
+
 #~ msgid "No file name specified for writing."
 #~ msgstr "Nebolo zadané žiadne meno súboru pre zápis."
 
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "Zadaný názov súboru \"%s\" sa nedá previesť na miestne kódovanie názvu "
-#~ "súboru."
+#~ msgid "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr "Zadaný názov súboru \"%s\" sa nedá previesť na miestne kódovanie názvu súboru."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Nepodarilo sa otvoriť súbor \"%s\" pre zápis."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Vnútorná chyba prúdu údajov."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Nepodarilo sa získať URI Manifestu"
@@ -165,15 +185,10 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 #~ msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
 
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr ""
-#~ "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra."
+#~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra."
 
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra. "
-#~ "Táto verzia Open Sound System nie je podporovaná týmto prvkom."
+#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra. Táto verzia Open Sound System nie je podporovaná týmto prvkom."
 
 #~ msgid "Volume"
 #~ msgstr "Hlasitosť"
@@ -472,29 +487,17 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Zariadenie "
-#~ "už používa iná aplikácia."
+#~ msgid "Could not open audio device for playback. Device is being used by another application."
+#~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Zariadenie už používa iná aplikácia."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
-#~ msgstr ""
-#~ "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Nemáte "
-#~ "oprávnenie na otvorenie tohto zariadenia."
+#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
+#~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Nemáte oprávnenie na otvorenie tohto zariadenia."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Túto "
-#~ "verziu Open Sound System nepodporuje tento prvok."
+#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Túto verziu Open Sound System nepodporuje tento prvok."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Toto zvukové zariadenie nepodporuje prehrávanie."
@@ -512,16 +515,10 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 #~ msgstr "Vnútorná chyba časovača."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Nepodarilo sa nakonfigurovať TwoLAME enkodér. Skontrolujte parametre "
-#~ "kódovania."
+#~ msgstr "Nepodarilo sa nakonfigurovať TwoLAME enkodér. Skontrolujte parametre kódovania."
 
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je povolená. "
-#~ "Rýchlosť bola zmenená na %d kbit/s."
+#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+#~ msgstr "Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je povolená. Rýchlosť bola zmenená na %d kbit/s."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"
