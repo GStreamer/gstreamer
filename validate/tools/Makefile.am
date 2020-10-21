@@ -12,7 +12,7 @@ bin_SCRIPTS = \
 	gst-validate-launcher
 
 AM_CFLAGS = $(GST_ALL_CFLAGS) $(GST_PBUTILS_CFLAGS)  $(GST_VIDEO_CFLAGS)
-LDADD = $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS) $(GST_VIDEO_LIBS)
+LDADD = $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la $(GST_PLUGINS_BASE_LIBS) -lgstapp-1.0 $(GST_PBUTILS_LIBS) $(GST_VIDEO_LIBS) $(GST_LIBS)
 
 # The -debug versions are used when running from sources to not confuse
 # valgrind with libtool's wrappers. Those are built with the '-no-install' and

@@ -292,7 +292,7 @@ AC_SUBST([GST_ALL_CFLAGS])
 
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
-GST_ALL_LIBS="$GST_LIBS $LTLIBINTL \$(GCOV_LIBS)"
+GST_ALL_LIBS="$GST_PLUGINS_BASE_LIBS $GST_LIBS $LTLIBINTL \$(GCOV_LIBS)"
 AC_SUBST([GST_ALL_LIBS])
 
 dnl LDFLAGS really should only contain flags, not libs - they get added before
