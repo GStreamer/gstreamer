@@ -10,6 +10,7 @@ libgstgl_egl_la_SOURCES = \
 	gstegl.c
 
 noinst_HEADERS = \
+	gsteglimage_private.h \
 	gstglcontext_egl.h
 
 libgstgl_eglincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/egl
