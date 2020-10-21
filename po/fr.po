@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: gstreamer 1.16.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2019-04-19 00:15+0100\n"
-"PO-Revision-Date: 2019-09-10 20:22+0200\n"
+"PO-Revision-Date: 2020-06-13 01:47+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -143,7 +143,7 @@ msgstr "Erreur interne de Gstreamer : problème de recherche."
 
 #: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
-msgstr "Erreur interne de Gstreamer : problème de caps."
+msgstr "Erreur interne de Gstreamer : problème de capacités."
 
 #: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
@@ -1038,17 +1038,17 @@ msgstr "Échec du chargement dynamique différé."
 #: gst/parse/grammar.y:719 gst/parse/grammar.y:724
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "impossible de connecter %s à %s, %s n’accepte pas les majuscules %s"
+msgstr "impossible de connecter %s à %s, %s n’accepte pas les capacités %s"
 
 #: gst/parse/grammar.y:729
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "impossible de connecter %s à %s, aucun élément n’accepte les majuscules %s"
+msgstr "impossible de connecter %s à %s, aucun élément n’accepte les capacités %s"
 
 #: gst/parse/grammar.y:733
 #, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "impossible de connecter %s à %s avec les majuscules %s"
+msgstr "impossible de connecter %s à %s avec les capacités %s"
 
 #: gst/parse/grammar.y:739
 #, c-format
@@ -1073,7 +1073,7 @@ msgstr "pad-référence « %s » inattendue - ignoré"
 #: gst/parse/grammar.y:915 gst/parse/grammar.y:924
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "impossible d’analyser le caps « %s »"
+msgstr "impossible d’analyser les capacités « %s »"
 
 #: gst/parse/grammar.y:952
 #, c-format
@@ -1130,19 +1130,19 @@ msgstr "Impossible de mapper les buffers."
 
 #: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
-msgstr "Capacités de filtrage"
+msgstr "Filtre de capacités"
 
 #: plugins/elements/gstcapsfilter.c:129
 msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
-msgstr "Restreint les capacités possibles autorisées (NULL signifie ANY). La définition de cette propriété nécessite une référence à l’objet GSTCaps fourni."
+msgstr "Restreint les capacités possibles autorisées (NULL signifie ANY). La définition de cette propriété nécessite une référence à l’objet GstCaps fourni."
 
 #: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
-msgstr "Mode majuscule activé"
+msgstr "Mode de changement des capacités"
 
 #: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
-msgstr "Filtre de comportement de modification des majuscules"
+msgstr "Comportement du changement du filtre de capacités"
 
 #: plugins/elements/gstdownloadbuffer.c:927 plugins/elements/gstqueue2.c:1792
 msgid "No Temp directory specified."
