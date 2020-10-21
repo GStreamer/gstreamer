@@ -1,3 +1,307 @@
+=== release 1.16.3 ===
+
+2020-10-21 15:00:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.16.3
+
+2020-10-21 15:00:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2020-10-20 15:10:38 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 59cb678 to a825d27
+
+2020-04-21 18:00:26 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	  libs: display: drm: use g_strcmp0 to be null safe
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/321>
+
+2020-04-26 13:30:16 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  vaapipluginutil: Use GST_VAAPI_DISPLAY_TYPE_DRM for Mesa3D GBM
+	  We may build this plugin with window system support but run it without
+	  window system. Without this patch, the following pipeline will trigger a
+	  segfault when running it without window system.
+	  gst-launch-1.0 filesrc location=input.264 ! h264parse ! vaapih264dec ! fakesink
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/319>
+
+2020-03-05 13:22:23 -0800  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: force video meta if sizes are different
+	  The strides and offsets could be the same, but the allocation
+	  size might be different (e.g. alignment).  Thus, ensure we also
+	  set the flag to copy from VA memory to system memory when alloc
+	  size differs.
+	  Fixes #243
+
+2020-03-05 14:18:32 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: don't set base sink caps twice
+	  Base class's sink pad caps are already set when calling set_format().
+	  There's no need to call it again in gst_vaapidecode_negotiate().
+
+2020-03-05 13:26:38 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: unlock stream if caps update fails
+	  If caps update fail a dead lock occurs since the stream mutex is not
+	  unlocked.
+
+2020-03-03 15:24:32 +0800  Xu Guangxin <guangxin.xu@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: parser state after update dependent slice
+	  If the dependent_slice_segment_flag is true, most slice info derived from last slice.
+	  So we need check the slice type after we call populate_dependent_slice_hdr
+
+2020-02-14 16:17:04 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: h265enc: Set VA_PICTURE_HEVC_INVALID flag for invalid picture
+
+2020-01-27 18:05:14 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: Log messages in proper category.
+	  The log messages where logged in the GstBufferPool category because
+	  the instance was not properly casted. This fix that situation.
+
+2020-01-17 14:22:48 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapih264enc: fix log message
+	  Before the log wasn't processed because wrong instance pointer.
+
+2020-01-06 17:41:53 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  doc: fix pipeline typo in vaapipostproc
+
+2019-09-16 23:28:31 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: h264decoder: do not return error for unhandled NAL unit.
+	  Some streams have error data introducing unknown NAL type. There are
+	  also kinds of NAL types we do not want to handle. The old manner will
+	  set a decoder error when encounter this, which cause a latent crash bug.
+	  The decoder may successfully decode the picture and insert it into DPB.
+	  But there are error NAL units after the AU which cause the post unit error
+	  and make that frame dropped. The later output of the picture still want
+	  to ref that frame and crash.
+	  No need to set decoder error when can not recognize or handle the NAL
+	  unit, just skip it and continue.
+	  Fix: #191
+
+2019-07-26 22:05:29 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: update filter before fixate caps
+	  It is requiered to know if postproc is capable to change the video
+	  direction before fixating the source caps.
+	  In order to do it, it'ss required to know if there's a functional VPP,
+	  but that's checked at create() vmethod, which occurs after caps
+	  fixating.
+	  This patch checks for a functional VPP at fixate caps and, if so,
+	  checks for the enabled filtes and later do the caps fixations.
+
+2019-08-05 10:51:24 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapitypes.h:
+	  libs: Let GST_VAAPI_RATECONTROL_MASK return unsigned int
+	  The value return from GST_VAAPI_RATECONTROL_MASK will be used by
+	  GST_VAAPI_POPCOUNT32 as its inpput. GST_VAAPI_POPCOUNT32 can only
+	  deal with unsigned int. Otherwise there may be an error of out of
+	  range of integer if we define few more rate-control mode.
+
+2019-06-07 09:54:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: set queue's max size buffers to 1
+	  Otherwise the queue will swallow all the available decoder's surfaces
+	  reaching a dead-lock.
+	  This setting might impact the bin's peformance, but it's a trade-off.
+
+2019-06-07 09:53:08 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: set properties default values
+
+2019-05-31 13:12:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: don't error if can't push buffers downtream
+	  When the code path goes to push buffers downstream when no surface
+	  available in decoder context, and it fails the code bails out with a
+	  fatal error.
+	  That behavior is wrong, since it shouldn't be fatal. The use case is
+	  when the video stream is disabled.
+	  This patch just ignores the errors in this situation and demotes the
+	  level of a log message.
+
+2019-07-01 17:02:33 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: encoder: Add MB ratecontrol mode to get its string
+
+2019-07-01 16:52:00 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: encoder: refine guard of bitrate control mode
+	  Remove useless guard of all bitrate control mode's guard except MB
+	  which is define in VA-API version 0.39.1.
+
+2019-06-24 16:26:56 -0400  Wang Zhanjun <zhanjunx.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	  libs: dec: vp9: do not use display size as decoded size
+	  If display size is smaller than current frame size, then the crop size
+	  will be set as display size, which either crashes the pipeline or the
+	  output MD5 does not match. Rather it should use the actual decoded size.
+	  This patch removes the cropping set. For rendering we can use aspect
+	  ratio to set display size.
+	  Fixes #175
+	  Signed-off-by: Wang Zhanjun <zhanjunx.wang@intel.com>
+	  Signed-off-by: Xu Guangxin <guangxin.xu@intel.com>
+
+2019-06-25 19:11:12 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265_priv.h:
+	  libs: dec: h265: Consider chroma_bit_depth to choose chrome type
+	  For some main-10 stream, sometime the luma is 8 bits while chrome is more
+	  than 8 bits, which cause using the wrong NV12 surface as the render target
+	  and decoding error.
+	  Fix #176
+
+2019-06-25 10:31:20 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: set initial decode format according surface chroma type
+	  For surfaces with different chroma type, it is prefer to initialize
+	  a format which chroma type should be same with surface chroma type
+	  instead of using fixed NV12.
+
+2019-06-22 00:05:24 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	  libs: dec: h265: Fix profile_idc mapping.
+	  The old mapping values return by gst_vaapi_utils_h265_get_profile_idc is
+	  wrong, though GST_H265_PROFILE_IDC_MAIN and GST_H265_PROFILE_IDC_MAIN_10
+	  happened to be the correct value.
+	  We only support Annex A profile_idc (1-4).
+
+2019-05-16 16:46:43 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface.h:
+	  libs: surface: fix documentation format
+
+2019-05-09 00:09:21 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	  libs: encoder: Add a missing comment for DEFAULT_ROI_VALUE property.
+
+2019-04-29 20:10:39 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: h264encoder: fix a typo of GstVaapiEncoderH264PredictionType
+
+2019-09-07 13:23:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: guard the VAEntrypointFEI symbol
+	  VAEntrypointFEI appeared in libva 2.0.0 (API version 1.0.0)
+
+2019-07-17 11:56:45 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: Add missing entries for string_of_VAEntrypoint.
+
+2020-01-01 19:54:13 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.c:
+	  libs: display: fix a resource leak in X11 pixmap format.
+
+2019-09-21 13:39:42 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h264, h266: fix g_return_val_if_fail() missuse
+	  g_return_val_fail() documentations says:
+	  If expr evaluates to FALSE, the current function should be
+	  considered to have undefined behaviour (a programmer error).
+	  The only correct solution to such an error is to change the
+	  module that is calling the current function, so that it avoids
+	  this incorrect call.
+	  So it was missused in a couple parts of the H264 and H265 internal
+	  decoders. This patch changes that to plain conditionals.
+	  Also, it was included a couple code-style fixes.
+
+2019-08-16 11:02:08 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: h265dec: remove limitation of get iq matrix
+	  According hevc spec, scaling_list_data is not related
+	  to chroma_format_idc.
+
+2019-05-30 23:52:51 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapivideopool.c:
+	  libs: videopool: fix undocumented behavior and counting
+	  gst_vaapi_video_pool_reserve_unlocked() hit an undocumented behavoir
+	  because it locks twice the same mutex.
+	  Also, n had different meanings in the current code: as an increase
+	  value and as a new total of allocated surfaces.
+	  This patche removes the undocumented behavoir (usually a deadlock) and
+	  fixes the meaning of n as the new total of allocated surfaces.
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2019-06-28 16:32:51 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* README:
+	  Update README
+
+2019-06-10 20:46:30 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: remove last negotiated video info if caps are same
+	  If the allocation caps and negotiated caps are the same,
+	  then ensure any previously negotiated video info is also
+	  removed.  This can occur when multi-resolution video
+	  decoding returns to it's original resolution.
+	  Fixes #170
+
+2019-06-10 20:39:28 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: allow negotiated info to be removed
+	  Allow NULL negotiated_vinfo to be passed into
+	  gst_allocator_set_vaapi_negotiated_video_info to allow
+	  any previously set info to be removed.
+
+2019-05-31 12:30:03 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: increase bitrate prop max value
+	  There are many profile levels that can support
+	  more than 102400 kbps.  Thus, increase the max
+	  allowed bitrate property value from 102400 kbps
+	  to 2048000 kbps (same as msdk encoder plugins).
+
 === release 1.16.2 ===
 
 2019-12-03 11:19:22 +0000  Tim-Philipp Müller <tim@centricular.com>
