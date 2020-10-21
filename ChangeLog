@@ -1,3 +1,143 @@
+=== release 1.16.3 ===
+
+2020-10-21 14:55:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.16.3
+
+2020-10-21 14:55:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2020-10-20 15:10:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 59cb678 to a825d27
+
+2020-10-06 03:47:42 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avaudenc/avvidenc: Reopen encoding session if it's required
+	  Since the commit https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/22b25b3ea5c,
+	  ffmpeg will not clear draning flag for encoder by avcodec_flush_buffers() API
+	  by default. Allowed case is only if encoder has AV_CODEC_CAP_ENCODER_FLUSH
+	  capability flag. If it's not supported, we should re-open encoding
+	  session, otherwise ffmpeg encoder will keep returning AVERROR_EOF
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/104>
+
+2020-10-01 11:18:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Call avcodec_flush_buffers() after draining to allow accepting new input again
+	  This is already done in all other codec elements.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/103>
+
+2020-09-30 16:13:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  avauddec/audenc/videnc: Don't return GST_FLOW_EOS when draining
+	  Same behaviour as for avviddec now. FFmpeg will return AVERROR_EOF when it's
+	  completely drained but we should not return that here or otherwise
+	  upstream will receive EOS and not forward us more data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/103>
+
+2020-09-16 03:13:09 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't return GST_FLOW_EOS from drain()/finish()
+	  AVERROR_EOF means that it's fully drained, but it doesn't
+	  mean that that end of stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/94>
+
+2020-09-15 02:12:23 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Ensure finish_subframe() and finish_frame() are paired
+	  audiodecoder baseclass implementation is expecting that
+	  finish_subframe() is followed by finish_frame() in order clear
+	  its internal state related to subframe.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/94>
+
+2020-09-14 14:30:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Forward flow returns from draining instead of assuming OK
+	  It might be useful for upstream to know that draining/finishing didn't
+	  succeed, and why.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/94>
+
+2020-09-14 14:24:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Forward flow returns from draining instead of assuming OK
+	  It might be useful for upstream to know that draining/finishing didn't
+	  succeed, and why.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/94>
+
+2020-09-09 08:55:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Avoid dropping non-OK flow return
+	  When sucessfully finishing out frames (or finishing configuration), we must make
+	  sure we don't override any failing GstFlowReturn that might have been detected
+	  previously.
+	  Failure to do this would result in not propagating not-linked, flushing,
+	  etc...
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/94>
+
+2019-12-19 17:58:56 +0100  Alicia Boya García <ntrrgc@gmail.com>
+
+	* ext/libav/gstavviddec.c:
+	  gstavviddec: Limit default number of decoder threads
+	  When the `max-threads` property is not specified, GStreamer defaults to
+	  the amount of CPU threads in the system.
+	  The number of threads used in avdec has a direct impact on the latency
+	  of the decoder, which is of as many frames as threads. Therefore, big
+	  numbers of threads can make latency levels that can be problematic in
+	  some applications.
+	  For this reason, ffmpeg emits a warning when more than 16 threads are
+	  requested.
+	  This patch limits the default number of threads to 16. This affects only
+	  computers with more than 16 CPU threads when using avviddec without
+	  setting `max-threads`.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/93>
+
+2020-06-30 18:33:56 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: fix buffer leak when send packet failed
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/92>
+
+2019-04-29 15:22:52 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Ensure drain even if codec has not delay capabilities
+	  There are decoders that need to be drained if they work on multi-threads,
+	  even if AV_CODEC_CAP_DELAY is not set.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/91>
+
+2019-04-29 15:02:06 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Ensure drain even if codec has not delay capabilities
+	  There are decoders that need to be drained if they work on multi-threads,
+	  even if AV_CODEC_CAP_DELAY is not set.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/91>
+
 === release 1.16.2 ===
 
 2019-12-03 11:14:31 +0000  Tim-Philipp Müller <tim@centricular.com>
