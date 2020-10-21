@@ -188,6 +188,7 @@ struct _GstD3D11AllocatorPrivate
   ID3D11Texture2D *texture;
   GArray *array_in_use;
   GArray *decoder_output_view_array;
+  GArray *processor_input_view_array;
 
   GMutex lock;
   GCond cond;
@@ -461,6 +462,9 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   if (dmem->decoder_output_view)
     ID3D11VideoDecoderOutputView_Release (dmem->decoder_output_view);
 
+  if (dmem->processor_input_view)
+    ID3D11VideoProcessorInputView_Release (dmem->processor_input_view);
+
   if (dmem->texture)
     ID3D11Texture2D_Release (dmem->texture);
 
@@ -480,6 +484,7 @@ gst_d3d11_allocator_dispose (GObject * object)
   GstD3D11AllocatorPrivate *priv = alloc->priv;
 
   g_clear_pointer (&priv->decoder_output_view_array, g_array_unref);
+  g_clear_pointer (&priv->processor_input_view_array, g_array_unref);
 
   if (alloc->device && priv->texture) {
     gst_d3d11_device_release_texture (alloc->device, priv->texture);
@@ -750,6 +755,31 @@ gst_d3d11_decoder_output_view_clear (ID3D11VideoDecoderOutputView ** view)
   }
 }
 
+static void
+gst_d3d11_processor_input_view_clear (ID3D11VideoProcessorInputView ** view)
+{
+  if (view && *view) {
+    ID3D11VideoProcessorInputView_Release (*view);
+    *view = NULL;
+  }
+}
+
+static gboolean
+check_bind_flags_for_processor_input_view (guint bind_flags)
+{
+  static const guint compatible_flags = (D3D11_BIND_DECODER |
+      D3D11_BIND_VIDEO_ENCODER | D3D11_BIND_RENDER_TARGET |
+      D3D11_BIND_UNORDERED_ACCESS);
+
+  if (bind_flags == 0)
+    return TRUE;
+
+  if ((bind_flags & compatible_flags) != 0)
+    return TRUE;
+
+  return FALSE;
+}
+
 GstMemory *
 gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
@@ -793,6 +823,14 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
         g_array_set_clear_func (priv->decoder_output_view_array,
             (GDestroyNotify) gst_d3d11_decoder_output_view_clear);
         g_array_set_size (priv->decoder_output_view_array, desc->ArraySize);
+      }
+
+      if (check_bind_flags_for_processor_input_view (desc->BindFlags)) {
+        priv->processor_input_view_array = g_array_sized_new (FALSE,
+            TRUE, sizeof (ID3D11VideoProcessorInputView *), desc->ArraySize);
+        g_array_set_clear_func (priv->processor_input_view_array,
+            (GDestroyNotify) gst_d3d11_processor_input_view_clear);
+        g_array_set_size (priv->processor_input_view_array, desc->ArraySize);
       }
     }
 
@@ -1058,6 +1096,77 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
         ID3D11VideoDecoderOutputView *, mem->subresource_index) =
         mem->decoder_output_view;
     ID3D11VideoDecoderOutputView_AddRef (mem->decoder_output_view);
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
+    ID3D11VideoDevice * video_device,
+    ID3D11VideoProcessorEnumerator * enumerator)
+{
+  GstD3D11Allocator *allocator;
+  GstD3D11AllocatorPrivate *priv;
+  D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC desc;
+  ID3D11VideoProcessorInputView *view = NULL;
+  HRESULT hr;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (video_device != NULL, FALSE);
+  g_return_val_if_fail (enumerator != NULL, FALSE);
+
+  allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
+  priv = allocator->priv;
+
+  if (mem->processor_input_view)
+    return TRUE;
+
+  if (!check_bind_flags_for_processor_input_view (mem->desc.BindFlags)) {
+    GST_WARNING_OBJECT (allocator,
+        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+    return FALSE;
+  }
+
+  if (priv->processor_input_view_array) {
+    view = g_array_index (priv->processor_input_view_array,
+        ID3D11VideoProcessorInputView *, mem->subresource_index);
+  }
+
+  /* Increase refcount and reuse existing view */
+  if (view) {
+    mem->processor_input_view = view;
+    ID3D11VideoProcessorInputView_AddRef (view);
+
+    return TRUE;
+  }
+
+  desc.FourCC = 0;
+  desc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
+  desc.Texture2D.MipSlice = 0;
+  desc.Texture2D.ArraySlice = mem->subresource_index;
+
+  hr = ID3D11VideoDevice_CreateVideoProcessorInputView (video_device,
+      (ID3D11Resource *) mem->texture, enumerator, &desc,
+      &mem->processor_input_view);
+  if (!gst_d3d11_result (hr, mem->device)) {
+    GST_ERROR_OBJECT (allocator,
+        "Could not create processor input view, hr: 0x%x", (guint) hr);
+    return FALSE;
+  }
+
+  /* Store view array for later reuse */
+  if (priv->processor_input_view_array) {
+    view = g_array_index (priv->processor_input_view_array,
+        ID3D11VideoProcessorInputView *, mem->subresource_index);
+
+    if (view)
+      ID3D11VideoProcessorInputView_Release (view);
+
+    g_array_index (priv->processor_input_view_array,
+        ID3D11VideoProcessorInputView *, mem->subresource_index) =
+        mem->processor_input_view;
+    ID3D11VideoProcessorInputView_AddRef (mem->processor_input_view);
   }
 
   return TRUE;
