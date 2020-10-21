@@ -32,6 +32,16 @@ GStreamer Python Bindings is a set of overrides and Gst fundamental types handli
 
  <release>
   <Version>
+   <revision>1.16.3</revision>
+   <branch>1.16</branch>
+   <name></name>
+   <created>2020-10-21</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-python/gst-python-1.16.3.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.16.2</revision>
    <branch>1.16</branch>
    <name></name>

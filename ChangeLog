@@ -1,3 +1,49 @@
+=== release 1.16.3 ===
+
+2020-10-21 14:59:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.16.3
+
+2020-10-20 21:24:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* acinclude.m4:
+	  autotools: fix configure with python >= 3.8
+	  Would fail like this with python >= 3.8:
+	  configure: checking for libraries required to embed python
+	  configure: error: Python libs not found. Windows requires Python modules to be explicitly linked to libpython.
+	  Reason being that we must pass --embed now to python3-config to get the -lpython3.8 linker argument.
+	  https://docs.python.org/dev/whatsnew/3.8.html#debug-build-uses-the-same-abi-as-release-build
+	  Also see commit 22f28155d86e27c4134de4ed2861264003fcfd23 for Meson.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/44>
+
+2020-08-13 18:39:37 +0000  Levente Révész <levente.revesz@gmail.com>
+
+	* examples/plugins/python/exampleTransform.py:
+	  examples: improve exampleTransform.py
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/38>
+
+2020-08-13 16:33:00 +0000  Levente Révész <levente.revesz@gmail.com>
+
+	* examples/plugins/python/exampleTransform.py:
+	  examples: backport exampleTransform.py
+	  Example from the master branch, modified to work on 1.16
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/38>
+
+2019-12-13 10:46:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  Fix build with Python 3.8 by also checking for python-3.X-embed.pc
+	  Since Python 3.8 the normal checks don't include the Python libraries
+	  anymore and linking of the gst-python module would fail.
+	  See also https://github.com/mesonbuild/meson/issues/5629
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-python/issues/28
+
 === release 1.16.2 ===
 
 2019-12-03 11:18:27 +0000  Tim-Philipp Müller <tim@centricular.com>
