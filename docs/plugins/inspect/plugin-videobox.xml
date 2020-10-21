@@ -3,7 +3,7 @@
   <description>resizes a video by adding borders or cropping</description>
   <filename>../../gst/videobox/.libs/libgstvideobox.so</filename>
   <basename>libgstvideobox.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

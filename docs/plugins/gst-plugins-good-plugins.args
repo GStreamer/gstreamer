@@ -1025,7 +1025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.16.2"</DEFAULT>
+<DEFAULT>"GStreamer/1.16.3"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3555,7 +3555,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.16.2 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.16.3 "</DEFAULT>
 </ARG>
 
 <ARG>

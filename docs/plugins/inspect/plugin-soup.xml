@@ -3,7 +3,7 @@
   <description>libsoup HTTP client src/sink</description>
   <filename>../../ext/soup/.libs/libgstsoup.so</filename>
   <basename>libgstsoup.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

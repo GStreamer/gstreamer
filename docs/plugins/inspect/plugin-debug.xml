@@ -3,7 +3,7 @@
   <description>elements for testing and debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebug.so</filename>
   <basename>libgstdebug.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

@@ -3,7 +3,7 @@
   <description>GdkPixbuf-based image decoder, overlay and sink</description>
   <filename>../../ext/gdk_pixbuf/.libs/libgstgdkpixbuf.so</filename>
   <basename>libgstgdkpixbuf.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

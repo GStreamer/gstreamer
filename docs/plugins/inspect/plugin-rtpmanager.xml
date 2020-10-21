@@ -3,7 +3,7 @@
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

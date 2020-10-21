@@ -3,7 +3,7 @@
   <description>Sends data to an icecast server using libshout2</description>
   <filename>../../ext/shout2/.libs/libgstshout2.so</filename>
   <basename>libgstshout2.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
