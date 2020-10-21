@@ -443,14 +443,17 @@ gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
   }
 #ifdef G_OS_WIN32
   {
-    HANDLE h = _get_osfhandle (src->fd);
-    DWORD size_low, size_high;
+    HANDLE h = (HANDLE) _get_osfhandle (src->fd);
+    LARGE_INTEGER file_size;
 
-    size_low = GetFileSize (h, &size_high);
-    if (size_low == INVALID_FILE_SIZE)
+    if (h == INVALID_HANDLE_VALUE)
       goto could_not_stat;
 
-    *size = (((guint64) size_high) << 32) | size_low;
+    if (!GetFileSizeEx (h, &file_size)) {
+      goto could_not_stat;
+    }
+
+    *size = file_size.QuadPart;
   }
 #else
   {
@@ -491,13 +494,17 @@ gst_file_src_start (GstBaseSrc * basesrc)
 
 #ifdef G_OS_WIN32
   {
-    HANDLE h = _get_osfhandle (src->fd);
-    BY_HANDLE_FILE_INFORMATION file_info;
+    HANDLE h = (HANDLE) _get_osfhandle (src->fd);
+    FILE_STANDARD_INFO file_info;
 
-    if (!GetFileInformationByHandle (h, &file_info))
+    if (h == INVALID_HANDLE_VALUE)
       goto no_stat;
 
-    if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (!GetFileInformationByHandleEx (h, FileStandardInfo, &file_info,
+            sizeof (FILE_STANDARD_INFO)))
+      goto no_stat;
+
+    if (file_info.Directory)
       goto was_directory;
 
     /* everything's a regular file on Windows */
