@@ -3,7 +3,7 @@
   <description>OpenGL plugin</description>
   <filename>../../ext/gl/.libs/libgstopengl.so</filename>
   <basename>libgstopengl.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -891,6 +891,28 @@ Matthew Waters &lt;matthew@centricular.com&gt;</author>
       </pads>
     </element>
     <element>
+      <name>gltransformation</name>
+      <longname>OpenGL transformation filter</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Transform video on the GPU</description>
+      <author>Lubosz Sarnecki &lt;lubosz@gmail.com&gt;
+Matthew Waters &lt;matthew@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw(ANY), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D; video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D; video/x-raw(ANY), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>glupload</name>
       <longname>OpenGL uploader</longname>
       <class>Filter/Video</class>
@@ -908,6 +930,27 @@ Matthew Waters &lt;matthew@centricular.com&gt;</author>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw(ANY)</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>glvideoflip</name>
+      <longname>OpenGL video flip filter</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Flip video on the GPU</description>
+      <author>Matthew Waters &lt;matthew@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D</details>
         </caps>
       </pads>
     </element>

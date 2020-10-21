@@ -24,6 +24,7 @@ GstGLMosaic GstChildProxy
 GstGLSinkBin GstChildProxy GstVideoOverlay GstNavigation GstColorBalance
 GstGLSrcBin GstChildProxy
 GstGLStereoMix GstChildProxy
+GstGLVideoFlip GstChildProxy GstVideoDirection
 GstGLVideoMixer GstChildProxy
 GstGLVideoMixerBin GstChildProxy
 GstGioSink GstURIHandler

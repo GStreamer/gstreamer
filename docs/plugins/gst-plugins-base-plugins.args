@@ -5018,3 +5018,153 @@
 <DEFAULT>100</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstGLVideoFlip::method</NAME>
+<TYPE>GstGLVideoFlipMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>method</NICK>
+<BLURB>method (deprecated, use video-direction instead).</BLURB>
+<DEFAULT>Identity (no rotation)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::fov</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fov</NICK>
+<BLURB>Field of view angle in degrees.</BLURB>
+<DEFAULT>90</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::mvp-matrix</NAME>
+<TYPE>GrapheneMatrix*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Modelview Projection Matrix</NICK>
+<BLURB>The final Graphene 4x4 Matrix for transformation.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::ortho</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Orthographic</NICK>
+<BLURB>Use orthographic projection.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::pivot-x</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Pivot</NICK>
+<BLURB>Rotation pivot point X coordinate, where 0 is the center, -1 the left border, +1 the right border and <-1, >1 outside.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::pivot-y</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Pivot</NICK>
+<BLURB>Rotation pivot point X coordinate, where 0 is the center, -1 the left border, +1 the right border and <-1, >1 outside.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::pivot-z</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Z Pivot</NICK>
+<BLURB>Relevant for rotation in 3D space. You look into the negative Z axis direction.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::rotation-x</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Rotation</NICK>
+<BLURB>Rotates the video around the X-Axis in degrees.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::rotation-y</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Rotation</NICK>
+<BLURB>Rotates the video around the Y-Axis in degrees.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::rotation-z</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Z Rotation</NICK>
+<BLURB>Rotates the video around the Z-Axis in degrees.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::scale-x</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Scale</NICK>
+<BLURB>Scale multiplier for the X-Axis.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::scale-y</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Scale</NICK>
+<BLURB>Scale multiplier for the Y-Axis.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::translation-x</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Translation</NICK>
+<BLURB>Translates the video at the X-Axis, in universal [0-1] coordinate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::translation-y</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Translation</NICK>
+<BLURB>Translates the video at the Y-Axis, in universal [0-1] coordinate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLTransformation::translation-z</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Z Translation</NICK>
+<BLURB>Translates the video at the Z-Axis, in universal [0-1] coordinate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

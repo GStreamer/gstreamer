@@ -127,6 +127,7 @@ GObject
               GstGLFilterShader
               GstGLOverlay
               GstGLOverlayCompositorElement
+              GstGLTransformation
               GstGLViewConvertElement
             GstGLUploadElement
           GstVideoFilter
@@ -143,6 +144,7 @@ GObject
           GstGLSinkBin
             GstGLImageSinkBin
           GstGLSrcBin
+          GstGLVideoFlip
           GstParseBin
           GstPipeline
             GstPlayBin
@@ -226,4 +228,5 @@ GInterface
   GstStreamVolume
   GstTagSetter
   GstURIHandler
+  GstVideoDirection
   GstVideoOverlay
