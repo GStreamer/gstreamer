@@ -3586,7 +3586,8 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
   GstRTSPStreamContext *context;
   GList *walk;
   const gchar *base;
-  gboolean has_slash;
+  gchar *stream_path;
+  GstUri *base_uri, *uri;
 
   GST_DEBUG_OBJECT (sink, "Collecting stream information");
 
@@ -3594,8 +3595,13 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
     return FALSE;
 
   base = get_aggregate_control (sink);
-  /* check if the base ends with / */
-  has_slash = g_str_has_suffix (base, "/");
+
+  base_uri = gst_uri_from_string (base);
+  if (!base_uri) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
+        ("Could not parse uri %s", base));
+    return FALSE;
+  }
 
   g_mutex_lock (&sink->preroll_lock);
   while (sink->contexts == NULL && !sink->conninfo.flushing) {
@@ -3634,11 +3640,16 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
         gst_rtsp_client_sink_create_stream (sink, context, context->payloader,
         srcpad);
 
-    /* concatenate the two strings, insert / when not present */
+    /* append stream index to uri path */
     g_free (context->conninfo.location);
-    context->conninfo.location =
-        g_strdup_printf ("%s%sstream=%d", base, has_slash ? "" : "/",
-        context->index);
+
+    stream_path = g_strdup_printf ("stream=%d", context->index);
+    uri = gst_uri_copy (base_uri);
+    gst_uri_append_path (uri, stream_path);
+
+    context->conninfo.location = gst_uri_to_string (uri);
+    gst_uri_unref (uri);
+    g_free (stream_path);
 
     if (sink->rtx_time > 0) {
       /* enable retransmission by setting rtprtxsend as the "aux" element of rtpbin */
@@ -3675,10 +3686,12 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
   sink->streams_collected = TRUE;
   g_mutex_unlock (&sink->preroll_lock);
 
+  gst_uri_unref (base_uri);
   return TRUE;
 
 join_bin_failed:
 
+  gst_uri_unref (base_uri);
   GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
       ("Could not start stream %d", context->index));
   return FALSE;
