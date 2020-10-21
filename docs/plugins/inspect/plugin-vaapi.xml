@@ -3,7 +3,7 @@
   <description>VA-API based elements</description>
   <filename>../../gst/vaapi/.libs/libgstvaapi.so</filename>
   <basename>libgstvaapi.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gstreamer-vaapi</source>
   <package>gstreamer-vaapi</package>
