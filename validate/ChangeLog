@@ -1,3 +1,30 @@
+=== release 1.16.3 ===
+
+2020-10-21 14:59:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/RELEASE:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	* validate/meson.build:
+	  Release 1.16.3
+
+2020-10-21 11:51:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/configure.ac:
+	* validate/tools/Makefile.am:
+	  autotools: fix some linking issues
+	  Pulls in wrong libgstapp etc. from system in some cases.
+	  Unclear why exactly these happen, in an uninstalled env,
+	  just hack around it for now and move on.
+
+2020-10-21 11:50:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/common:
+	  validate: update common submodule
+
 === release 1.16.2 ===
 
 2019-12-03 11:18:05 +0000  Tim-Philipp Müller <tim@centricular.com>
