@@ -1,4 +1,4 @@
-This is GStreamer gst-plugins-good 1.16.2.
+This is GStreamer gst-plugins-good 1.16.3.
 
 The GStreamer team is pleased to announce another bug-fix release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -7,7 +7,7 @@ The 1.16 release series adds new features on top of the 1.14 series and is
 part of the API and ABI-stable 1.x release series of the GStreamer multimedia
 framework.
 
-Full release notes will one day be found at:
+Full release notes can be found at:
 
   https://gstreamer.freedesktop.org/releases/1.16/
 
