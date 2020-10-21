@@ -3,7 +3,7 @@
   <description>ONVIF Streaming features</description>
   <filename>../../gst/onvif/.libs/libgstrtponvif.so</filename>
   <basename>libgstrtponvif.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

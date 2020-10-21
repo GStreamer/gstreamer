@@ -3,7 +3,7 @@
   <description>OpenH264 encoder/decoder plugin</description>
   <filename>../../ext/openh264/.libs/libgstopenh264.so</filename>
   <basename>libgstopenh264.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>BSD</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

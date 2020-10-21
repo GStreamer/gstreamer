@@ -3,7 +3,7 @@
   <description>Fraunhofer FDK AAC Codec plugin</description>
   <filename>../../ext/fdkaac/.libs/libgstfdkaac.so</filename>
   <basename>libgstfdkaac.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)4, stream-format=(string){ adts, adif, raw }, channels=(int)[ 1, 8 ]</details>
+          <details>audio/mpeg, mpegversion=(int){ 2, 4 }, stream-format=(string){ adts, adif, raw }, channels=(int)[ 1, 8 ]</details>
         </caps>
         <caps>
           <name>src</name>

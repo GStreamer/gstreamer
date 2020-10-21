@@ -66253,6 +66253,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstSrtpEnc::mki</NAME>
+<TYPE>GstBuffer*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>MKI</NICK>
+<BLURB>Master key Identifier (NULL means no MKI).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSegmentation::learning-rate</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>

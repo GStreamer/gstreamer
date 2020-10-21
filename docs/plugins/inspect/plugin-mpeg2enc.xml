@@ -3,7 +3,7 @@
   <description>High-quality MPEG-1/2 video encoder</description>
   <filename>../../ext/mpeg2enc/.libs/libgstmpeg2enc.so</filename>
   <basename>libgstmpeg2enc.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

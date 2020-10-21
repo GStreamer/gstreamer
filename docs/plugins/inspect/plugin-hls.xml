@@ -3,7 +3,7 @@
   <description>HTTP Live Streaming (HLS)</description>
   <filename>../../ext/hls/.libs/libgsthls.so</filename>
   <basename>libgsthls.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>

@@ -1,3 +1,4 @@
+GListModel GObject
 GSocketConnectable GObject
 GstChildProxy GObject
 GstTagSetter GstElement

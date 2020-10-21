@@ -109,7 +109,6 @@ GObject
             GstDecklinkVideoSrc
             GstDvbSrc
             GstMMS
-            GstNeonhttpSrc
             GstOpenni2Src
             GstRTMPSrc
             GstRfbSrc
@@ -174,28 +173,6 @@ GObject
             GstLcms
             GstLine21Decoder
             GstLine21Encoder
-            GstOpencvVideoFilter
-              GstCameraCalibrate
-              GstCameraUndistort
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstDewarp
-              GstEdgeDetect
-              GstFaceBlur
-              GstFaceDetect
-              GstGrabcut
-              GstHanddetect
-              GstMotioncells
-              GstOpencvTextOverlay
-              GstRetinex
-              GstSegmentation
-              GstSkinDetect
-              GstTemplateMatch
             GstRsvgOverlay
             GstSceneChange
             GstSimpleVideoMark
@@ -250,7 +227,6 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstDisparity
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
@@ -297,6 +273,8 @@ GObject
         GstSpanPlc
         GstSpeed
         GstSrtEnc
+        GstSrtpDec
+        GstSrtpEnc
         GstTagMux
           GstId3Mux
         GstTeletextDec
@@ -307,7 +285,6 @@ GObject
           GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
-          GstOpenh264Dec
           GstPnmdec
           GstRsvgDec
           GstVMncDec
@@ -316,7 +293,6 @@ GObject
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
-          GstOpenh264Enc
           GstPnmenc
           GstWebpEnc
           GstX265Enc
@@ -390,6 +366,7 @@ GObject
     PangoFcFontMap
       PangoCairoFcFontMap
 GInterface
+  GListModel
   GSocketConnectable
   GTypePlugin
   GstChildProxy

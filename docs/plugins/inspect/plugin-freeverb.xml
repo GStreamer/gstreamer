@@ -3,7 +3,7 @@
   <description>Reverberation/room effect</description>
   <filename>../../gst/freeverb/.libs/libgstfreeverb.so</filename>
   <basename>libgstfreeverb.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

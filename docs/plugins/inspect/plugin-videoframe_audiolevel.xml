@@ -3,7 +3,7 @@
   <description>Video frame-synchronized audio level</description>
   <filename>../../gst/videoframe_audiolevel/.libs/libgstvideoframe_audiolevel.so</filename>
   <basename>libgstvideoframe_audiolevel.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

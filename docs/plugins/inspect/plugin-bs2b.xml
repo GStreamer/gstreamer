@@ -3,7 +3,7 @@
   <description>Improve headphone listening of stereo audio recordsusing the bs2b library.</description>
   <filename>../../ext/bs2b/.libs/libgstbs2b.so</filename>
   <basename>libgstbs2b.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>

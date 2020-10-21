@@ -3,7 +3,7 @@
   <description>Bluez-based bluetooth support</description>
   <filename>../../sys/bluez/.libs/libgstbluez.so</filename>
   <basename>libgstbluez.so</basename>
-  <version>1.16.2</version>
+  <version>1.16.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
