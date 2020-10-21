@@ -30,6 +30,7 @@
 #include "gstvacaps.h"
 #include "gstvadevice.h"
 #include "gstvah264dec.h"
+#include "gstvah265dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp9dec.h"
@@ -95,6 +96,13 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
         if (!gst_va_h264_dec_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE)) {
           GST_WARNING ("Failed to register H264 decoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case HEVC:
+        if (!gst_va_h265_dec_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE)) {
+          GST_WARNING ("Failed to register H265 decoder: %s",
               device->render_device_path);
         }
         break;

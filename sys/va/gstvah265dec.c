@@ -1,0 +1,1076 @@
+/* GStreamer
+ * Copyright (C) 2020 Igalia, S.L.
+ *     Author: Víctor Jáquez <vjaquez@igalia.com>
+ * Copyright (C) 2020 Collabora
+ *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the0
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+/**
+ * SECTION:element-vah265dec
+ * @title: vah265dec
+ * @short_description: A VA-API based H265 video decoder
+ *
+ * vah265dec decodes H265 bitstreams to VA surfaces using the
+ * installed and chosen [VA-API](https://01.org/linuxmedia/vaapi)
+ * driver.
+ *
+ * The decoding surfaces can be mapped onto main memory as video
+ * frames.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=big_buck_bunny.mov ! parsebin ! vah265dec ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
+/* ToDo:
+ *
+ * + interlaced streams
+ * + mutiview and stereo profiles
+ * + SCC extension buffer
+ * + Add 10bit support
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "gstvah265dec.h"
+
+#include "gstvabasedec.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_va_h265dec_debug);
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_va_h265dec_debug
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
+
+#define GST_VA_H265_DEC(obj)           ((GstVaH265Dec *) obj)
+#define GST_VA_H265_DEC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaH265DecClass))
+#define GST_VA_H265_DEC_CLASS(klass)   ((GstVaH265DecClass *) klass)
+
+typedef struct _GstVaH265Dec GstVaH265Dec;
+typedef struct _GstVaH265DecClass GstVaH265DecClass;
+
+struct _GstVaH265DecClass
+{
+  GstVaBaseDecClass parent_class;
+};
+
+struct _GstVaH265Dec
+{
+  GstVaBaseDec parent;
+
+  GstFlowReturn last_ret;
+
+  gint coded_width;
+  gint coded_height;
+  gint dpb_size;
+
+  VAPictureParameterBufferHEVC pic_param;
+  gint32 WpOffsetHalfRangeC;
+
+  gboolean need_negotiation;
+};
+
+#define parent_class gst_va_base_dec_parent_class
+extern gpointer gst_va_base_dec_parent_class;
+
+/* *INDENT-OFF* */
+static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
+            "{ NV12, P010_10LE }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }");
+/* *INDENT-ON* */
+
+static const gchar *sink_caps_str = "video/x-h265";
+
+static gboolean
+gst_va_h265_dec_end_picture (GstH265Decoder * decoder, GstH265Picture * picture)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaDecodePicture *va_pic;
+
+  GST_LOG_OBJECT (base, "end picture %p, (poc %d)",
+      picture, picture->pic_order_cnt);
+
+  va_pic = gst_h265_picture_get_user_data (picture);
+
+  return gst_va_decoder_decode (base->decoder, va_pic);
+}
+
+static GstFlowReturn
+gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
+    GstVideoCodecFrame * frame, GstH265Picture * picture)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+
+  GST_LOG_OBJECT (self,
+      "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
+
+  if (self->last_ret != GST_FLOW_OK) {
+    gst_h265_picture_unref (picture);
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    return self->last_ret;
+  }
+
+  if (base->copy_frames)
+    gst_va_base_dec_copy_output_buffer (base, frame);
+
+  gst_h265_picture_unref (picture);
+
+  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+}
+
+static void
+_init_vaapi_pic (VAPictureHEVC * va_picture)
+{
+  va_picture->picture_id = VA_INVALID_ID;
+  va_picture->flags = VA_PICTURE_HEVC_INVALID;
+  va_picture->pic_order_cnt = 0;
+}
+
+static gint
+_find_frame_rps_type (GstH265Decoder * decoder, GstH265Picture * ref_pic)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (decoder->RefPicSetStCurrBefore); i++) {
+    if (ref_pic == decoder->RefPicSetStCurrBefore[i])
+      return VA_PICTURE_HEVC_RPS_ST_CURR_BEFORE;
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (decoder->RefPicSetStCurrAfter); i++) {
+    if (ref_pic == decoder->RefPicSetStCurrAfter[i])
+      return VA_PICTURE_HEVC_RPS_ST_CURR_AFTER;
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (decoder->RefPicSetLtCurr); i++) {
+    if (ref_pic == decoder->RefPicSetLtCurr[i])
+      return VA_PICTURE_HEVC_RPS_LT_CURR;
+  }
+
+  return 0;
+}
+
+
+static void
+_fill_vaapi_pic (GstH265Decoder * decoder, VAPictureHEVC * va_picture,
+    GstH265Picture * picture)
+{
+  GstVaDecodePicture *va_pic;
+
+  va_pic = gst_h265_picture_get_user_data (picture);
+
+  if (!va_pic) {
+    _init_vaapi_pic (va_picture);
+    return;
+  }
+
+  va_picture->picture_id = gst_va_decode_picture_get_surface (va_pic);
+  va_picture->pic_order_cnt = picture->pic_order_cnt;
+  va_picture->flags = 0;
+
+  if (picture->ref && picture->long_term)
+    va_picture->flags |= VA_PICTURE_HEVC_LONG_TERM_REFERENCE;
+
+  va_picture->flags |= _find_frame_rps_type (decoder, picture);
+
+  switch (picture->field) {
+    case GST_H265_PICTURE_FIELD_FRAME:
+      break;
+    case GST_H265_PICTURE_FILED_TOP_FIELD:
+      va_picture->flags |= VA_PICTURE_HEVC_FIELD_PIC;
+      break;
+    case GST_H265_PICTURE_FIELD_BOTTOM_FIELD:
+      va_picture->flags |= VA_PICTURE_HEVC_FIELD_PIC;
+      va_picture->flags |= VA_PICTURE_HEVC_BOTTOM_FIELD;
+      break;
+    default:
+      break;
+  }
+}
+
+static guint8
+_get_reference_index (GstH265Decoder * decoder, GstH265Picture * picture)
+{
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  guint8 i;
+
+  for (i = 0; i < 15; i++) {
+    VAPictureHEVC *ref_va_pic = &self->pic_param.ReferenceFrames[i];
+
+    if (ref_va_pic->picture_id == VA_INVALID_ID)
+      break;
+
+    if (ref_va_pic->pic_order_cnt == picture->pic_order_cnt)
+      return i;
+  }
+
+  return 0xFF;
+}
+
+/* fill the VA API reference picture lists from the GstCodec reference
+ * picture list */
+static void
+_fill_ref_pic_list (GstH265Decoder * decoder, GstH265Picture * cur_pic,
+    guint8 va_reflist[15], GArray * reflist)
+{
+  guint i;
+
+  for (i = 0; i < reflist->len && i < 15; i++) {
+    GstH265Picture *picture = g_array_index (reflist, GstH265Picture *, i);
+    va_reflist[i] = _get_reference_index (decoder, picture);
+  }
+
+  for (; i < 15; i++)
+    va_reflist[i] = 0xFF;
+}
+
+static void
+_fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
+    VASliceParameterBufferHEVC * slice_param)
+{
+  gint chroma_weight, chroma_log2_weight_denom;
+  gint i, j;
+  GstH265PPS *pps = header->pps;
+
+  if (GST_H265_IS_I_SLICE (header) ||
+      (!pps->weighted_pred_flag && GST_H265_IS_P_SLICE (header)) ||
+      (!pps->weighted_bipred_flag && GST_H265_IS_B_SLICE (header)))
+    return;
+
+  slice_param->luma_log2_weight_denom =
+      header->pred_weight_table.luma_log2_weight_denom;
+
+  if (pps->sps->chroma_array_type != 0)
+    slice_param->delta_chroma_log2_weight_denom =
+        header->pred_weight_table.delta_chroma_log2_weight_denom;
+
+  for (i = 0; i <= header->num_ref_idx_l0_active_minus1; i++) {
+    if (!header->pred_weight_table.luma_weight_l0_flag[i])
+      continue;
+
+    slice_param->delta_luma_weight_l0[i] =
+        header->pred_weight_table.delta_luma_weight_l0[i];
+    slice_param->luma_offset_l0[i] =
+        header->pred_weight_table.luma_offset_l0[i];
+  }
+
+  chroma_log2_weight_denom = slice_param->luma_log2_weight_denom +
+      slice_param->delta_chroma_log2_weight_denom;
+
+  for (i = 0; i <= header->num_ref_idx_l0_active_minus1; i++) {
+    if (!header->pred_weight_table.chroma_weight_l0_flag[i])
+      continue;
+
+    for (j = 0; j < 2; j++) {
+      gint8 delta_chroma_offset_l0 =
+          header->pred_weight_table.delta_chroma_offset_l0[i][j];
+
+      slice_param->delta_chroma_weight_l0[i][j] =
+          header->pred_weight_table.delta_chroma_weight_l0[i][j];
+
+      /* Find  ChromaWeightL0 */
+      chroma_weight = (1 << chroma_log2_weight_denom) +
+          header->pred_weight_table.delta_chroma_weight_l0[i][j];
+
+      /* 7-56 */
+      slice_param->ChromaOffsetL0[i][j] = CLAMP (
+          (self->WpOffsetHalfRangeC + delta_chroma_offset_l0 -
+              ((self->WpOffsetHalfRangeC *
+                      chroma_weight) >> chroma_log2_weight_denom)),
+          -self->WpOffsetHalfRangeC, self->WpOffsetHalfRangeC - 1);
+    }
+  }
+
+  /* Skip l1 if this is not a B-Frame. */
+  if (!GST_H265_IS_B_SLICE (header))
+    return;
+
+  for (i = 0; i <= header->num_ref_idx_l1_active_minus1; i++) {
+    if (!header->pred_weight_table.luma_weight_l1_flag[i])
+      continue;
+
+    slice_param->delta_luma_weight_l1[i] =
+        header->pred_weight_table.delta_luma_weight_l1[i];
+    slice_param->luma_offset_l1[i] =
+        header->pred_weight_table.luma_offset_l1[i];
+  }
+
+  for (i = 0; i <= header->num_ref_idx_l1_active_minus1; i++) {
+    if (!header->pred_weight_table.chroma_weight_l1_flag[i])
+      continue;
+
+    for (j = 0; j < 2; j++) {
+      gint8 delta_chroma_offset_l1 =
+          header->pred_weight_table.delta_chroma_offset_l1[i][j];
+
+      slice_param->delta_chroma_weight_l1[i][j] =
+          header->pred_weight_table.delta_chroma_weight_l1[i][j];
+
+      /* Find  ChromaWeightL1 */
+      chroma_weight = (1 << chroma_log2_weight_denom) +
+          header->pred_weight_table.delta_chroma_weight_l1[i][j];
+
+      /* 7-56 */
+      slice_param->ChromaOffsetL1[i][j] = CLAMP (
+          (self->WpOffsetHalfRangeC + delta_chroma_offset_l1 -
+              ((self->WpOffsetHalfRangeC *
+                      chroma_weight) >> chroma_log2_weight_denom)),
+          -self->WpOffsetHalfRangeC, self->WpOffsetHalfRangeC - 1);
+    }
+  }
+}
+
+static inline guint
+_get_slice_data_byte_offset (GstH265SliceHdr * slice_hdr,
+    guint nal_header_bytes)
+{
+  guint epb_count;
+
+  epb_count = slice_hdr->n_emulation_prevention_bytes;
+  return nal_header_bytes + (slice_hdr->header_size + 7) / 8 - epb_count;
+}
+
+static gboolean
+gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
+    GstH265Picture * picture, GstH265Slice * slice, GArray * ref_pic_list0,
+    GArray * ref_pic_list1)
+{
+  GstH265SliceHdr *header = &slice->header;
+  GstH265NalUnit *nalu = &slice->nalu;
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaDecodePicture *va_pic;
+  VASliceParameterBufferHEVC slice_param;
+  gboolean ret;
+
+  /* *INDENT-OFF* */
+  slice_param = (VASliceParameterBufferHEVC) {
+    .slice_data_size = nalu->size,
+    .slice_data_offset = 0,
+    .slice_data_flag = VA_SLICE_DATA_FLAG_ALL,
+    .slice_data_byte_offset = _get_slice_data_byte_offset (header, nalu->header_bytes),
+    .slice_segment_address = header->segment_address,
+    .collocated_ref_idx = header->temporal_mvp_enabled_flag ? header->collocated_ref_idx : 0xFF,
+    .num_ref_idx_l0_active_minus1 = header->num_ref_idx_l0_active_minus1,
+    .num_ref_idx_l1_active_minus1 = header->num_ref_idx_l1_active_minus1,
+    .slice_qp_delta = header->qp_delta,
+    .slice_cb_qp_offset = header->cb_qp_offset,
+    .slice_cr_qp_offset = header->cr_qp_offset,
+    .slice_beta_offset_div2 = header->beta_offset_div2,
+    .slice_tc_offset_div2 = header->tc_offset_div2,
+    .five_minus_max_num_merge_cand = header->five_minus_max_num_merge_cand,
+    .num_entry_point_offsets = header->num_entry_point_offsets,
+    .entry_offset_to_subset_array = 0, /* does not exist in spec */
+    .slice_data_num_emu_prevn_bytes = header->n_emulation_prevention_bytes,
+  };
+  /* *INDENT-ON* */
+
+  /* FIXME to set this right, we'd need to delay writing this until we get
+   * called on end_picture(), which is all silly */
+  slice_param.LongSliceFlags.fields.LastSliceOfPic = 0;
+  slice_param.LongSliceFlags.fields.dependent_slice_segment_flag =
+      header->dependent_slice_segment_flag;
+  slice_param.LongSliceFlags.fields.slice_type = header->type;
+  slice_param.LongSliceFlags.fields.color_plane_id = header->colour_plane_id;
+  slice_param.LongSliceFlags.fields.slice_sao_luma_flag = header->sao_luma_flag;
+  slice_param.LongSliceFlags.fields.slice_sao_chroma_flag =
+      header->sao_chroma_flag;
+  slice_param.LongSliceFlags.fields.mvd_l1_zero_flag = header->mvd_l1_zero_flag;
+  slice_param.LongSliceFlags.fields.cabac_init_flag = header->cabac_init_flag;
+  slice_param.LongSliceFlags.fields.slice_temporal_mvp_enabled_flag =
+      header->temporal_mvp_enabled_flag;
+  slice_param.LongSliceFlags.fields.slice_deblocking_filter_disabled_flag =
+      header->deblocking_filter_disabled_flag;
+  slice_param.LongSliceFlags.fields.collocated_from_l0_flag =
+      header->collocated_from_l0_flag;
+  slice_param.LongSliceFlags.
+      fields.slice_loop_filter_across_slices_enabled_flag =
+      header->loop_filter_across_slices_enabled_flag;
+
+  _fill_ref_pic_list (decoder, picture, slice_param.RefPicList[0],
+      ref_pic_list0);
+  _fill_ref_pic_list (decoder, picture, slice_param.RefPicList[1],
+      ref_pic_list1);
+
+  _fill_pred_weight_table (GST_VA_H265_DEC (decoder), header, &slice_param);
+
+  va_pic = gst_h265_picture_get_user_data (picture);
+
+  ret = gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
+      sizeof (slice_param), slice->nalu.data + slice->nalu.offset,
+      slice->nalu.size);
+  if (!ret) {
+    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
+    GstH265Picture * picture, GstH265Slice * slice, GstH265Dpb * dpb)
+{
+  GstH265PPS *pps;
+  GstH265SPS *sps;
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  GstVaBaseDec *base = &self->parent;
+  GstVaDecodePicture *va_pic;
+  GstH265ScalingList *scaling_list = NULL;
+  VAIQMatrixBufferHEVC iq_matrix = { 0, };
+  VAPictureParameterBufferHEVC *pic_param = &self->pic_param;
+  guint i;
+
+  va_pic = gst_h265_picture_get_user_data (picture);
+
+  pps = slice->header.pps;
+  sps = pps->sps;
+
+  /* *INDENT-OFF* */
+  *pic_param = (VAPictureParameterBufferHEVC) {
+    .pic_width_in_luma_samples = sps->pic_width_in_luma_samples,
+    .pic_height_in_luma_samples = sps->pic_height_in_luma_samples,
+    .sps_max_dec_pic_buffering_minus1 = sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1],
+    .bit_depth_luma_minus8 = sps->bit_depth_luma_minus8,
+    .bit_depth_chroma_minus8 = sps->bit_depth_chroma_minus8,
+    .pcm_sample_bit_depth_luma_minus1 = sps->pcm_sample_bit_depth_luma_minus1,
+    .pcm_sample_bit_depth_chroma_minus1 = sps->pcm_sample_bit_depth_chroma_minus1,
+    .log2_min_luma_coding_block_size_minus3 = sps->log2_min_luma_coding_block_size_minus3,
+    .log2_diff_max_min_luma_coding_block_size = sps->log2_diff_max_min_luma_coding_block_size,
+    .log2_min_transform_block_size_minus2 = sps->log2_min_transform_block_size_minus2,
+    .log2_diff_max_min_transform_block_size = sps->log2_diff_max_min_transform_block_size,
+    .log2_min_pcm_luma_coding_block_size_minus3 = sps->log2_min_pcm_luma_coding_block_size_minus3,
+    .log2_diff_max_min_pcm_luma_coding_block_size = sps->log2_diff_max_min_pcm_luma_coding_block_size,
+    .max_transform_hierarchy_depth_intra = sps->max_transform_hierarchy_depth_intra,
+    .max_transform_hierarchy_depth_inter = sps->max_transform_hierarchy_depth_inter,
+    .init_qp_minus26 = pps->init_qp_minus26,
+    .diff_cu_qp_delta_depth = pps->diff_cu_qp_delta_depth,
+    .pps_cb_qp_offset = pps->cb_qp_offset,
+    .pps_cr_qp_offset = pps->cr_qp_offset,
+    .log2_parallel_merge_level_minus2 = pps->log2_parallel_merge_level_minus2,
+    .num_tile_columns_minus1 = pps->num_tile_columns_minus1,
+    .num_tile_rows_minus1 = pps->num_tile_rows_minus1,
+    .log2_max_pic_order_cnt_lsb_minus4 = sps->log2_max_pic_order_cnt_lsb_minus4,
+    .num_short_term_ref_pic_sets = sps->num_short_term_ref_pic_sets,
+    .num_long_term_ref_pic_sps = sps->num_long_term_ref_pics_sps,
+    .num_ref_idx_l0_default_active_minus1 = pps->num_ref_idx_l0_default_active_minus1,
+    .num_ref_idx_l1_default_active_minus1 = pps->num_ref_idx_l1_default_active_minus1,
+    .pps_beta_offset_div2 = pps->beta_offset_div2,
+    .pps_tc_offset_div2 = pps->tc_offset_div2,
+    .num_extra_slice_header_bits = pps->num_extra_slice_header_bits,
+    .st_rps_bits = slice->header.short_term_ref_pic_set_size, /* FIXME missing emulation bits removal */
+    .pic_fields.bits = {
+      .chroma_format_idc = sps->chroma_format_idc,
+      .separate_colour_plane_flag = sps->separate_colour_plane_flag,
+      .pcm_enabled_flag = sps->pcm_enabled_flag,
+      .scaling_list_enabled_flag = sps->scaling_list_enabled_flag,
+      .transform_skip_enabled_flag = pps->transform_skip_enabled_flag,
+      .amp_enabled_flag = sps->amp_enabled_flag,
+      .strong_intra_smoothing_enabled_flag = sps->strong_intra_smoothing_enabled_flag,
+      .sign_data_hiding_enabled_flag = pps->sign_data_hiding_enabled_flag,
+      .constrained_intra_pred_flag = pps->constrained_intra_pred_flag,
+      .cu_qp_delta_enabled_flag = pps->cu_qp_delta_enabled_flag,
+      .weighted_pred_flag = pps->weighted_pred_flag,
+      .weighted_bipred_flag = pps->weighted_bipred_flag,
+      .transquant_bypass_enabled_flag = pps->transquant_bypass_enabled_flag,
+      .tiles_enabled_flag = pps->tiles_enabled_flag,
+      .entropy_coding_sync_enabled_flag = pps->entropy_coding_sync_enabled_flag,
+      .pps_loop_filter_across_slices_enabled_flag = pps->loop_filter_across_slices_enabled_flag,
+      .loop_filter_across_tiles_enabled_flag = pps->loop_filter_across_tiles_enabled_flag,
+      .pcm_loop_filter_disabled_flag = sps->pcm_loop_filter_disabled_flag,
+      /* Not set by FFMPEG either */
+      .NoPicReorderingFlag = 0,
+      .NoBiPredFlag = 0,
+    },
+    .slice_parsing_fields.bits = {
+      .lists_modification_present_flag = pps->lists_modification_present_flag,
+      .long_term_ref_pics_present_flag = sps->long_term_ref_pics_present_flag,
+      .sps_temporal_mvp_enabled_flag = sps->temporal_mvp_enabled_flag,
+      .cabac_init_present_flag = pps->cabac_init_present_flag,
+      .output_flag_present_flag = pps->output_flag_present_flag,
+      .dependent_slice_segments_enabled_flag = pps->dependent_slice_segments_enabled_flag,
+      .pps_slice_chroma_qp_offsets_present_flag = pps->slice_chroma_qp_offsets_present_flag,
+      .sample_adaptive_offset_enabled_flag = sps->sample_adaptive_offset_enabled_flag,
+      .deblocking_filter_override_enabled_flag = pps->deblocking_filter_override_enabled_flag,
+      .pps_disable_deblocking_filter_flag = pps->deblocking_filter_disabled_flag,
+      .slice_segment_header_extension_present_flag = pps->slice_segment_header_extension_present_flag,
+      .RapPicFlag = picture->RapPicFlag,
+      .IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type),
+      .IntraPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type),
+    },
+  };
+  /* *INDENT-ON* */
+
+  for (i = 0; i <= pps->num_tile_columns_minus1; i++)
+    pic_param->column_width_minus1[i] = pps->column_width_minus1[i];
+
+  for (i = 0; i <= pps->num_tile_rows_minus1; i++)
+    pic_param->row_height_minus1[i] = pps->row_height_minus1[i];
+
+  _fill_vaapi_pic (decoder, &pic_param->CurrPic, picture);
+
+  /* reference frames */
+  {
+    GArray *ref_list = gst_h265_dpb_get_pictures_all (dpb);
+    for (i = 0; i < 15 && i < ref_list->len; i++) {
+      GstH265Picture *pic = g_array_index (ref_list, GstH265Picture *, i);
+      _fill_vaapi_pic (decoder, &pic_param->ReferenceFrames[i], pic);
+    }
+    g_array_unref (ref_list);
+
+    for (; i < 15; i++)
+      _init_vaapi_pic (&pic_param->ReferenceFrames[i]);
+  }
+
+  if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
+          VAPictureParameterBufferType, pic_param, sizeof (*pic_param)))
+    goto fail;
+
+  if (pps->scaling_list_data_present_flag ||
+      (sps->scaling_list_enabled_flag
+          && !sps->scaling_list_data_present_flag)) {
+    scaling_list = &pps->scaling_list;
+    GST_DEBUG_OBJECT (decoder, "Passing scaling list from PPS");
+  } else if (sps->scaling_list_enabled_flag &&
+      sps->scaling_list_data_present_flag) {
+    scaling_list = &sps->scaling_list;
+    GST_DEBUG_OBJECT (decoder, "Passing scaling list from SPS");
+  }
+
+  if (scaling_list) {
+    for (i = 0; i < G_N_ELEMENTS (iq_matrix.ScalingList4x4); i++)
+      gst_h265_quant_matrix_4x4_get_raster_from_uprightdiagonal
+          (iq_matrix.ScalingList4x4[i], scaling_list->scaling_lists_4x4[i]);
+
+    for (i = 0; i < G_N_ELEMENTS (iq_matrix.ScalingList8x8); i++)
+      gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal
+          (iq_matrix.ScalingList8x8[i], scaling_list->scaling_lists_8x8[i]);
+
+    for (i = 0; i < G_N_ELEMENTS (iq_matrix.ScalingList16x16); i++)
+      gst_h265_quant_matrix_16x16_get_raster_from_uprightdiagonal
+          (iq_matrix.ScalingList16x16[i], scaling_list->scaling_lists_16x16[i]);
+
+    for (i = 0; i < G_N_ELEMENTS (iq_matrix.ScalingList32x32); i++)
+      gst_h265_quant_matrix_32x32_get_raster_from_uprightdiagonal
+          (iq_matrix.ScalingList32x32[i], scaling_list->scaling_lists_32x32[i]);
+
+    for (i = 0; i < 6; i++)
+      iq_matrix.ScalingListDC16x16[i] =
+          scaling_list->scaling_list_dc_coef_minus8_16x16[i] + 8;
+
+    for (i = 0; i < 2; i++)
+      iq_matrix.ScalingListDC32x32[i] =
+          scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
+
+    if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
+            VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix)))
+      goto fail;
+  }
+
+  return TRUE;
+
+fail:
+  {
+    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
+    GstVideoCodecFrame * frame, GstH265Picture * picture)
+{
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  GstVaDecodePicture *pic;
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+
+  self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+  if (self->last_ret != GST_FLOW_OK)
+    goto error;
+
+  pic = gst_va_decode_picture_new (frame->output_buffer);
+
+  gst_h265_picture_set_user_data (picture, pic,
+      (GDestroyNotify) gst_va_decode_picture_free);
+
+  GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic,
+      gst_va_decode_picture_get_surface (pic));
+
+  return TRUE;
+
+error:
+  {
+    GST_WARNING_OBJECT (self,
+        "Failed to allocated output buffer, return %s",
+        gst_flow_get_name (self->last_ret));
+    return FALSE;
+  }
+}
+
+static guint
+_get_rtformat (GstVaH265Dec * self, guint8 bit_depth_luma,
+    guint8 chroma_format_idc)
+{
+  switch (bit_depth_luma) {
+    case 10:
+      if (chroma_format_idc == 3)
+        return VA_RT_FORMAT_YUV444_10;
+      if (chroma_format_idc == 2)
+        return VA_RT_FORMAT_YUV422_10;
+      else
+        return VA_RT_FORMAT_YUV420_10;
+      break;
+    case 8:
+      if (chroma_format_idc == 3)
+        return VA_RT_FORMAT_YUV444;
+      if (chroma_format_idc == 2)
+        return VA_RT_FORMAT_YUV422;
+      else
+        return VA_RT_FORMAT_YUV420;
+      break;
+    default:
+      GST_ERROR_OBJECT (self, "Unsupported chroma format: %d "
+          "(with depth luma: %d)", chroma_format_idc, bit_depth_luma);
+      return 0;
+  }
+}
+
+/* *INDENT-OFF* */
+static const struct
+{
+  GstH265Profile profile;
+  VAProfile va_profile;
+} profile_map[] = {
+#define P(idc, va) { G_PASTE (GST_H265_PROFILE_, idc), G_PASTE (VAProfileHEVC, va) }
+  P (MAIN, Main),
+  P (MAIN_10, Main10),
+  /*P (MAIN_STILL_PICTURE, ),
+  P (MONOCHROME, ),
+  P (MONOCHROME_12, ),
+  P (MONOCHROME_16, ),*/
+  P (MAIN_12, Main12),
+  P (MAIN_422_10, Main422_10),
+  P (MAIN_422_12, Main422_12),
+  P (MAIN_444, Main444),
+  P (MAIN_444_10, Main444_10),
+  P (MAIN_444_12, Main444_12),
+  /*P (MAIN_INTRA, ),
+  P (MAIN_10_INTRA, ),
+  P (MAIN_12_INTRA, ),
+  P (MAIN_422_10_INTRA, ),
+  P (MAIN_422_12_INTRA, ),
+  P (MAIN_444_INTRA, ),
+  P (MAIN_444_10_INTRA, ),
+  P (MAIN_444_12_INTRA, ),
+  P (MAIN_444_16_INTRA, ),
+  P (MAIN_444_STILL_PICTURE, ),
+  P (MAIN_444_16_STILL_PICTURE, ),
+  P (MONOCHROME_10, ),
+  P (HIGH_THROUGHPUT_444, ),
+  P (HIGH_THROUGHPUT_444_10, ),
+  P (HIGH_THROUGHPUT_444_14, ),
+  P (HIGH_THROUGHPUT_444_16_INTRA, ),*/
+  P (SCREEN_EXTENDED_MAIN, SccMain),
+  P (SCREEN_EXTENDED_MAIN_10, SccMain10),
+  P (SCREEN_EXTENDED_MAIN_444, SccMain444),
+  /*P (SCREEN_EXTENDED_MAIN_444_10, ),
+  P (SCREEN_EXTENDED_HIGH_THROUGHPUT_444, ),
+  P (SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10, ),
+  P (SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14, ),
+  P (MULTIVIEW_MAIN, ),
+  P (SCALABLE_MAIN, ),
+  P (SCALABLE_MAIN_10, ),
+  P (SCALABLE_MONOCHROME, ),
+  P (SCALABLE_MONOCHROME_12, ),
+  P (SCALABLE_MONOCHROME_16, ),
+  P (SCALABLE_MAIN_444, ),
+  P (3D_MAIN, ),*/
+#undef P
+};
+/* *INDENT-ON* */
+
+static VAProfile
+_get_profile (GstVaH265Dec * self, const GstH265SPS * sps, gint max_dpb_size)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (self);
+  GstH265Profile profile =
+      gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
+  VAProfile profiles[4];
+  gint i = 0, j;
+
+  for (j = 0; j < G_N_ELEMENTS (profile_map); j++) {
+    if (profile_map[j].profile == profile) {
+      profiles[i++] = profile_map[j].va_profile;
+      break;
+    }
+  }
+
+  /* TODO Special cases here */
+
+  for (j = 0; j < i && j < G_N_ELEMENTS (profiles); j++) {
+    if (gst_va_decoder_has_profile (base->decoder, profiles[j]))
+      return profiles[j];
+  }
+
+  GST_ERROR_OBJECT (self, "Unsupported profile: %d", profile);
+
+  return VAProfileNone;
+}
+
+static gboolean
+gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
+    gint max_dpb_size)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  VAProfile profile;
+  gint display_width;
+  gint display_height;
+  guint rt_format;
+  gboolean negotiation_needed = FALSE;
+
+  if (self->dpb_size < max_dpb_size)
+    self->dpb_size = max_dpb_size;
+
+  if (sps->conformance_window_flag) {
+    display_width = sps->crop_rect_width;
+    display_height = sps->crop_rect_height;
+  } else {
+    display_width = sps->width;
+    display_height = sps->height;
+  }
+
+  profile = _get_profile (self, sps, max_dpb_size);
+  if (profile == VAProfileNone)
+    return FALSE;
+
+  rt_format = _get_rtformat (self, sps->bit_depth_luma_minus8 + 8,
+      sps->chroma_format_idc);
+  if (rt_format == 0)
+    return FALSE;
+
+  if (gst_va_decoder_format_changed (base->decoder, profile,
+          rt_format, sps->width, sps->height)) {
+    base->profile = profile;
+    base->rt_format = rt_format;
+    self->coded_width = sps->width;
+    self->coded_height = sps->height;
+
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Format changed to %s [%x] (%dx%d)",
+        gst_va_profile_name (profile), rt_format, self->coded_width,
+        self->coded_height);
+  }
+
+  if (base->width != display_width || base->height != display_height) {
+    base->width = display_width;
+    base->height = display_height;
+
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Resolution changed to %dx%d", base->width,
+        base->height);
+  }
+
+  base->need_valign = base->width < self->coded_width
+      || base->height < self->coded_height;
+  if (base->need_valign) {
+    /* *INDENT-OFF* */
+    base->valign = (GstVideoAlignment) {
+      .padding_bottom = self->coded_height - base->height,
+      .padding_left = self->coded_width - base->width,
+    };
+    /* *INDENT-ON* */
+  }
+
+  base->min_buffers = self->dpb_size + 4;       /* dpb size + scratch surfaces */
+
+  if (negotiation_needed) {
+    self->need_negotiation = TRUE;
+    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      return FALSE;
+    }
+  }
+
+  {
+    /* FIXME: We don't have parser API for sps_range_extension, so
+     * assuming high_precision_offsets_enabled_flag as zero */
+    guint high_precision_offsets_enabled_flag = 0, bitdepthC = 0;
+
+    /* Calculate WpOffsetHalfRangeC: (7-34) */
+    bitdepthC = sps->bit_depth_chroma_minus8 + 8;
+    self->WpOffsetHalfRangeC =
+        1 << (high_precision_offsets_enabled_flag ? (bitdepthC - 1) : 7);
+  }
+
+  return TRUE;
+}
+
+static GstCaps *
+_complete_sink_caps (GstCaps * sinkcaps)
+{
+  GstCaps *caps = gst_caps_copy (sinkcaps);
+  GValue val = G_VALUE_INIT;
+  const gchar *streamformat[] = { "hvc", "hev1", "byte-stream" };
+  gint i;
+
+  g_value_init (&val, G_TYPE_STRING);
+  g_value_set_string (&val, "au");
+  gst_caps_set_value (caps, "alignment", &val);
+  g_value_unset (&val);
+
+  gst_value_list_init (&val, G_N_ELEMENTS (streamformat));
+  for (i = 0; i < G_N_ELEMENTS (streamformat); i++) {
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&v, G_TYPE_STRING);
+    g_value_set_string (&v, streamformat[i]);
+    gst_value_list_append_value (&val, &v);
+    g_value_unset (&v);
+  }
+  gst_caps_set_value (caps, "stream-format", &val);
+  g_value_unset (&val);
+
+  return caps;
+}
+
+static GstCaps *
+gst_va_h265_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
+{
+  GstCaps *sinkcaps, *caps = NULL, *tmp;
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+
+  if (base->decoder)
+    caps = gst_va_decoder_get_sinkpad_caps (base->decoder);
+
+  if (caps) {
+    sinkcaps = _complete_sink_caps (caps);
+    gst_caps_unref (caps);
+    if (filter) {
+      tmp = gst_caps_intersect_full (filter, sinkcaps,
+          GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (sinkcaps);
+      caps = tmp;
+    } else {
+      caps = sinkcaps;
+    }
+    GST_LOG_OBJECT (base, "Returning caps %" GST_PTR_FORMAT, caps);
+  } else if (!caps) {
+    caps = gst_video_decoder_proxy_getcaps (decoder, NULL, filter);
+  }
+
+  return caps;
+}
+
+static gboolean
+gst_va_h265_dec_negotiate (GstVideoDecoder * decoder)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  GstCapsFeatures *capsfeatures = NULL;
+  GstH265Decoder *h265dec = GST_H265_DECODER (decoder);
+
+  /* Ignore downstream renegotiation request. */
+  if (!self->need_negotiation)
+    return TRUE;
+
+  self->need_negotiation = FALSE;
+
+  if (gst_va_decoder_is_open (base->decoder)
+      && !gst_va_decoder_close (base->decoder))
+    return FALSE;
+
+  if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
+    return FALSE;
+
+  if (!gst_va_decoder_set_format (base->decoder, self->coded_width,
+          self->coded_height, NULL))
+    return FALSE;
+
+  if (base->output_state)
+    gst_video_codec_state_unref (base->output_state);
+
+  gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
+      &capsfeatures);
+
+  base->output_state =
+      gst_video_decoder_set_output_state (decoder, format,
+      base->width, base->height, h265dec->input_state);
+
+  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
+  if (capsfeatures)
+    gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
+
+  GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
+      base->output_state->caps);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
+}
+
+static void
+gst_va_h265_dec_dispose (GObject * object)
+{
+  gst_va_base_dec_close (GST_VIDEO_DECODER (object));
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_va_h265_dec_class_init (gpointer g_class, gpointer class_data)
+{
+  GstCaps *src_doc_caps, *sink_doc_caps;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstH265DecoderClass *h265decoder_class = GST_H265_DECODER_CLASS (g_class);
+  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (g_class);
+  struct CData *cdata = class_data;
+  gchar *long_name;
+
+  if (cdata->description) {
+    long_name = g_strdup_printf ("VA-API H.265 Decoder in %s",
+        cdata->description);
+  } else {
+    long_name = g_strdup ("VA-API H.265 Decoder");
+  }
+
+  gst_element_class_set_metadata (element_class, long_name,
+      "Codec/Decoder/Video/Hardware",
+      "VA-API based H.265 video decoder",
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+
+  sink_doc_caps = gst_caps_from_string (sink_caps_str);
+  src_doc_caps = gst_caps_from_string (src_caps_str);
+
+  gst_va_base_dec_class_init (GST_VA_BASE_DEC_CLASS (g_class), HEVC,
+      cdata->render_device_path, cdata->sink_caps, cdata->src_caps,
+      src_doc_caps, sink_doc_caps);
+
+  gobject_class->dispose = gst_va_h265_dec_dispose;
+
+  decoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_va_h265_dec_getcaps);
+  decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_va_h265_dec_negotiate);
+
+  h265decoder_class->new_sequence =
+      GST_DEBUG_FUNCPTR (gst_va_h265_dec_new_sequence);
+  h265decoder_class->decode_slice =
+      GST_DEBUG_FUNCPTR (gst_va_h265_dec_decode_slice);
+
+  h265decoder_class->new_picture =
+      GST_DEBUG_FUNCPTR (gst_va_h265_dec_new_picture);
+  h265decoder_class->output_picture =
+      GST_DEBUG_FUNCPTR (gst_va_h265_dec_output_picture);
+  h265decoder_class->start_picture =
+      GST_DEBUG_FUNCPTR (gst_va_h265_dec_start_picture);
+  h265decoder_class->end_picture =
+      GST_DEBUG_FUNCPTR (gst_va_h265_dec_end_picture);
+
+  g_free (long_name);
+  g_free (cdata->description);
+  g_free (cdata->render_device_path);
+  gst_caps_unref (cdata->src_caps);
+  gst_caps_unref (cdata->sink_caps);
+  g_free (cdata);
+}
+
+static void
+gst_va_h265_dec_init (GTypeInstance * instance, gpointer g_class)
+{
+  gst_va_base_dec_init (GST_VA_BASE_DEC (instance), GST_CAT_DEFAULT);
+  gst_h265_decoder_set_process_ref_pic_lists (GST_H265_DECODER (instance),
+      TRUE);
+}
+
+static gpointer
+_register_debug_category (gpointer data)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_va_h265dec_debug, "vah265dec", 0,
+      "VA H265 decoder");
+
+  return NULL;
+}
+
+gboolean
+gst_va_h265_dec_register (GstPlugin * plugin, GstVaDevice * device,
+    GstCaps * sink_caps, GstCaps * src_caps, guint rank)
+{
+  static GOnce debug_once = G_ONCE_INIT;
+  GType type;
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstVaH265DecClass),
+    .class_init = gst_va_h265_dec_class_init,
+    .instance_size = sizeof (GstVaH265Dec),
+    .instance_init = gst_va_h265_dec_init,
+  };
+  struct CData *cdata;
+  gboolean ret;
+  gchar *type_name, *feature_name;
+
+  g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
+  g_return_val_if_fail (GST_IS_VA_DEVICE (device), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (sink_caps), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (src_caps), FALSE);
+
+  cdata = g_new (struct CData, 1);
+  cdata->description = NULL;
+  cdata->render_device_path = g_strdup (device->render_device_path);
+  cdata->sink_caps = _complete_sink_caps (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+
+  /* class data will be leaked if the element never gets instantiated */
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstVaH265Dec");
+  feature_name = g_strdup ("vah265dec");
+
+  /* The first decoder to be registered should use a constant name,
+   * like vah265dec, for any additional decoders, we create unique
+   * names, using inserting the render device name. */
+  if (g_type_from_name (type_name)) {
+    gchar *basename = g_path_get_basename (device->render_device_path);
+    g_free (type_name);
+    g_free (feature_name);
+    type_name = g_strdup_printf ("GstVa%sH265Dec", basename);
+    feature_name = g_strdup_printf ("va%sh265dec", basename);
+    cdata->description = basename;
+
+    /* lower rank for non-first device */
+    if (rank > 0)
+      rank--;
+  }
+
+  g_once (&debug_once, _register_debug_category, NULL);
+
+  type = g_type_register_static (GST_TYPE_H265_DECODER,
+      type_name, &type_info, 0);
+
+  ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
+}

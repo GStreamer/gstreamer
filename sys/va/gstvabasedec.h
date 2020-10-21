@@ -22,6 +22,7 @@
 #pragma once
 
 #include <gst/codecs/gsth264decoder.h>
+#include <gst/codecs/gsth265decoder.h>
 #include <gst/codecs/gstvp8decoder.h>
 #include <gst/codecs/gstvp9decoder.h>
 
@@ -44,6 +45,7 @@ struct _GstVaBaseDec
   union
   {
     GstH264Decoder h264;
+    GstH265Decoder h265;
     GstVp8Decoder vp8;
     GstVp9Decoder vp9;
   } parent;
@@ -77,6 +79,7 @@ struct _GstVaBaseDecClass
   union
   {
     GstH264DecoderClass h264;
+    GstH265DecoderClass h265;
     GstVp8DecoderClass vp8;
     GstVp9DecoderClass vp9;
   } parent_class;
