@@ -244,12 +244,14 @@ GST_START_TEST (test_device_provider)
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   fail_if (gst_device_provider_can_monitor (dp));
+  fail_if (gst_device_provider_is_started (dp));
   fail_unless (gst_device_provider_start (dp));
 
   bus = gst_device_provider_get_bus (dp);
   fail_unless (GST_IS_BUS (bus));
   gst_object_unref (bus);
 
+  fail_unless (gst_device_provider_is_started (dp));
   gst_device_provider_stop (dp);
 
   gst_object_unref (dp);

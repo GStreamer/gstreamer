@@ -571,7 +571,8 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
     GstDeviceProvider *provider =
         g_ptr_array_index (monitor->priv->providers, i);
 
-    started = g_list_prepend (started, gst_object_ref (provider));
+    if (gst_device_provider_is_started (provider))
+      started = g_list_prepend (started, gst_object_ref (provider));
   }
   GST_OBJECT_UNLOCK (monitor);
 

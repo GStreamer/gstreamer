@@ -55,7 +55,7 @@ struct _GstDeviceProviderPrivate
 
   GMutex start_lock;
 
-  gboolean started_count;
+  gint started_count;
 
   GList *hidden_providers;
 };
@@ -164,6 +164,8 @@ gst_device_provider_init (GstDeviceProvider * provider)
   provider->priv = gst_device_provider_get_instance_private (provider);
 
   g_mutex_init (&provider->priv->start_lock);
+
+  provider->priv->started_count = 0;
 
   provider->priv->bus = gst_bus_new ();
   gst_bus_set_flushing (provider->priv->bus, TRUE);
@@ -853,4 +855,25 @@ gst_device_provider_device_changed (GstDeviceProvider * provider,
       changed_device);
   gst_bus_post (provider->priv->bus, message);
   gst_object_unparent (GST_OBJECT (changed_device));
+}
+
+/**
+ * gst_device_provider_is_started:
+ * @provider: a #GstDeviceProvider
+ *
+ * This function can be used to know if the @provider was successfully started.
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_device_provider_is_started (GstDeviceProvider * provider)
+{
+  gboolean started = FALSE;
+
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER (provider), FALSE);
+
+  g_mutex_lock (&provider->priv->start_lock);
+  started = provider->priv->started_count > 0;
+  g_mutex_unlock (&provider->priv->start_lock);
+  return started;
 }

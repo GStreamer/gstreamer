@@ -139,6 +139,9 @@ GST_API
 const gchar * gst_device_provider_get_metadata       (GstDeviceProvider * provider,
                                                       const gchar * key);
 
+GST_API
+gboolean    gst_device_provider_is_started     (GstDeviceProvider * provider);
+
 /* device provider class meta data */
 
 GST_API
