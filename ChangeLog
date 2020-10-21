@@ -1,3 +1,59 @@
+=== release 1.16.3 ===
+
+2020-10-21 14:50:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.16.3
+
+2020-10-21 14:50:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2020-10-21 14:50:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/pt_BR.po:
+	* po/ro.po:
+	  Update translations
+
+2020-10-20 15:10:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 59cb678 to a825d27
+
+2019-12-14 18:49:54 +0700  Dmitry Shusharin <pmdvsh@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fixed codestyle
+
+2019-12-14 17:15:21 +0700  Dmitry Shusharin <pmdvsh@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: corrected em_data value in CEA-708 CC SEI message (fixes #28)
+	  Section 4.4 of CEA-708-D specification (table 2) requires all bits to be
+	  set inside em_data field. h264parse element (and possible third-party
+	  decoders such as libav) also follows this requirement.
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/issues/28
+
 === release 1.16.2 ===
 
 2019-12-03 11:07:52 +0000  Tim-Philipp Müller <tim@centricular.com>
