@@ -1,3 +1,31 @@
+=== release 1.16.3 ===
+
+2020-10-21 14:58:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.16.3
+
+2020-10-20 15:10:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 59cb678 to a825d27
+
+2019-07-30 18:24:07 -0700  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured: Enhance error message when no clip duration set
+
+2019-07-30 18:22:18 -0700  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Avoid setting invalid clip duration
+
 === release 1.16.2 ===
 
 2019-12-03 11:17:11 +0000  Tim-Philipp Müller <tim@centricular.com>
