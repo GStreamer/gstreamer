@@ -2008,11 +2008,10 @@ free_output_slot (OutputSlotInfo * slot, GstURISourceBin * urisrc)
 
   gst_element_set_locked_state (slot->queue, TRUE);
   gst_element_set_state (slot->queue, GST_STATE_NULL);
+  remove_buffering_msgs (urisrc, GST_OBJECT_CAST (slot->queue));
   gst_bin_remove (GST_BIN_CAST (urisrc), slot->queue);
 
   gst_object_unref (slot->sinkpad);
-
-  remove_buffering_msgs (urisrc, GST_OBJECT_CAST (slot->queue));
 
   /* deactivate and remove the srcpad */
   gst_pad_set_active (slot->srcpad, FALSE);
