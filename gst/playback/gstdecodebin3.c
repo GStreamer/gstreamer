@@ -30,7 +30,7 @@
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
 
@@ -425,6 +425,11 @@ static guint gst_decodebin3_signals[LAST_SIGNAL] = { 0 };
 GType gst_decodebin3_get_type (void);
 #define gst_decodebin3_parent_class parent_class
 G_DEFINE_TYPE (GstDecodebin3, gst_decodebin3, GST_TYPE_BIN);
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (decodebin3_debug, "decodebin3", 0, "decoder bin");\
+    ret |= playback_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decodebin3, "decodebin3", GST_RANK_NONE,
+    GST_TYPE_DECODEBIN3, _do_init);
 
 static GstStaticCaps default_raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
 
@@ -3010,13 +3015,4 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
   }
 beach:
   return ret;
-}
-
-gboolean
-gst_decodebin3_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (decodebin3_debug, "decodebin3", 0, "decoder bin");
-
-  return gst_element_register (plugin, "decodebin3", GST_RANK_NONE,
-      GST_TYPE_DECODEBIN3);
 }

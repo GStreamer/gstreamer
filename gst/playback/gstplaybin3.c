@@ -228,7 +228,7 @@
 #include <gst/video/navigation.h>
 #include <gst/video/colorbalance.h>
 #include "gstplay-enum.h"
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstplaysink.h"
 #include "gstsubtitleoverlay.h"
 #include "gstplaybackutils.h"
@@ -601,8 +601,6 @@ static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw(ANY)");
 static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw(ANY)");
 #endif
 
-static void gst_play_bin3_class_init (GstPlayBin3Class * klass);
-static void gst_play_bin3_init (GstPlayBin3 * playbin);
 static void gst_play_bin3_finalize (GObject * object);
 
 static void gst_play_bin3_set_property (GObject * object, guint prop_id,
@@ -653,55 +651,37 @@ static void gst_play_bin3_navigation_init (gpointer g_iface,
 static void gst_play_bin3_colorbalance_init (gpointer g_iface,
     gpointer g_iface_data);
 
-static GType
-gst_play_bin3_get_type (void)
+static void
+_do_init_type (GType type)
 {
-  static GType gst_play_bin3_type = 0;
+  static const GInterfaceInfo svol_info = {
+    NULL, NULL, NULL
+  };
+  static const GInterfaceInfo ov_info = {
+    gst_play_bin3_overlay_init,
+    NULL, NULL
+  };
+  static const GInterfaceInfo nav_info = {
+    gst_play_bin3_navigation_init,
+    NULL, NULL
+  };
+  static const GInterfaceInfo col_info = {
+    gst_play_bin3_colorbalance_init,
+    NULL, NULL
+  };
 
-  if (!gst_play_bin3_type) {
-    static const GTypeInfo gst_play_bin3_info = {
-      sizeof (GstPlayBin3Class),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_play_bin3_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPlayBin3),
-      0,
-      (GInstanceInitFunc) gst_play_bin3_init,
-      NULL
-    };
-    static const GInterfaceInfo svol_info = {
-      NULL, NULL, NULL
-    };
-    static const GInterfaceInfo ov_info = {
-      gst_play_bin3_overlay_init,
-      NULL, NULL
-    };
-    static const GInterfaceInfo nav_info = {
-      gst_play_bin3_navigation_init,
-      NULL, NULL
-    };
-    static const GInterfaceInfo col_info = {
-      gst_play_bin3_colorbalance_init,
-      NULL, NULL
-    };
-
-    gst_play_bin3_type = g_type_register_static (GST_TYPE_PIPELINE,
-        "GstPlayBin3", &gst_play_bin3_info, 0);
-
-    g_type_add_interface_static (gst_play_bin3_type, GST_TYPE_STREAM_VOLUME,
-        &svol_info);
-    g_type_add_interface_static (gst_play_bin3_type, GST_TYPE_VIDEO_OVERLAY,
-        &ov_info);
-    g_type_add_interface_static (gst_play_bin3_type, GST_TYPE_NAVIGATION,
-        &nav_info);
-    g_type_add_interface_static (gst_play_bin3_type, GST_TYPE_COLOR_BALANCE,
-        &col_info);
-  }
-
-  return gst_play_bin3_type;
+  g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info);
+  g_type_add_interface_static (type, GST_TYPE_VIDEO_OVERLAY, &ov_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &nav_info);
+  g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE, &col_info);
 }
+
+static GType gst_play_bin3_get_type (void);
+G_DEFINE_TYPE_WITH_CODE (GstPlayBin3, gst_play_bin3, GST_TYPE_PIPELINE,
+    _do_init_type (g_define_type_id));
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (playbin3,
+    gst_play_bin3_custom_element_init);
 
 static void
 gst_play_bin3_class_init (GstPlayBin3Class * klass)
@@ -5168,14 +5148,20 @@ gst_play_bin3_colorbalance_init (gpointer g_iface, gpointer g_iface_data)
 }
 
 gboolean
-gst_play_bin3_plugin_init (GstPlugin * plugin, gboolean as_playbin)
+gst_play_bin3_custom_element_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_play_bin3_debug, "playbin3", 0, "play bin");
+  gboolean ret = TRUE;
 
-  if (as_playbin)
-    return gst_element_register (plugin, "playbin", GST_RANK_NONE,
+  GST_DEBUG_CATEGORY_INIT (gst_play_bin3_debug, "playbin3", 0, "play bin3");
+
+  ret &= playback_element_init (plugin);
+
+  if (g_getenv ("USE_PLAYBIN3"))
+    ret &= gst_element_register (plugin, "playbin", GST_RANK_NONE,
+        GST_TYPE_PLAY_BIN);
+  else
+    ret &= gst_element_register (plugin, "playbin3", GST_RANK_NONE,
         GST_TYPE_PLAY_BIN);
 
-  return gst_element_register (plugin, "playbin3", GST_RANK_NONE,
-      GST_TYPE_PLAY_BIN);
+  return ret;
 }

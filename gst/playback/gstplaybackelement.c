@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,23 +18,38 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:plugin-playback:
+ * @short_description: Set of elements to create dynamic pipelines (or part of it) to play
+ * media files.
+ */
 
-#ifndef __GST_PLAY_BACK_H__
-#define __GST_PLAY_BACK_H__
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
 
-gboolean gst_decode_bin_plugin_init (GstPlugin * plugin);
-gboolean gst_decodebin3_plugin_init (GstPlugin * plugin);
-gboolean gst_uri_decode_bin_plugin_init (GstPlugin * plugin);
-gboolean gst_uri_decode_bin3_plugin_init (GstPlugin * plugin);
-gboolean gst_uri_source_bin_plugin_init (GstPlugin * plugin);
-gboolean gst_parse_bin_plugin_init (GstPlugin * plugin);
+#include <gst/gst-i18n-plugin.h>
+#include <gst/pbutils/pbutils.h>
 
-gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
-gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
-gboolean gst_play_bin3_plugin_init (GstPlugin * plugin, gboolean as_playbin);
+#include "gstplaybackelements.h"
 
 
-#endif /* __GST_PLAY_BACK_H__ */
+gboolean
+playback_element_init (GstPlugin * plugin)
+{
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    gst_pb_utils_init ();
+
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    g_once_init_leave (&res, TRUE);
+  }
+  return res;
+}

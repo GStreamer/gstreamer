@@ -99,7 +99,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplay-enum.h"
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstrawcaps.h"
 #include "gstplaybackutils.h"
 
@@ -584,37 +584,29 @@ static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeInfo * info,
  * Standard GObject boilerplate *
  ********************************/
 
-static void gst_decode_bin_class_init (GstDecodeBinClass * klass);
-static void gst_decode_bin_init (GstDecodeBin * decode_bin);
 static void gst_decode_bin_dispose (GObject * object);
 static void gst_decode_bin_finalize (GObject * object);
 
-static GType
-gst_decode_bin_get_type (void)
-{
-  static GType gst_decode_bin_type = 0;
+/* Register some quarks here for the stream topology message */
+static GQuark topology_structure_name = 0;
+static GQuark topology_caps = 0;
+static GQuark topology_next = 0;
+static GQuark topology_pad = 0;
+static GQuark topology_element_srcpad = 0;
 
-  if (!gst_decode_bin_type) {
-    static const GTypeInfo gst_decode_bin_info = {
-      sizeof (GstDecodeBinClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_decode_bin_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDecodeBin),
-      0,
-      (GInstanceInitFunc) gst_decode_bin_init,
-      NULL
-    };
+GType gst_decode_bin_get_type (void);
+G_DEFINE_TYPE (GstDecodeBin, gst_decode_bin, GST_TYPE_BIN);
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin", 0, "decoder bin");\
+    topology_structure_name = g_quark_from_static_string ("stream-topology"); \
+    topology_caps = g_quark_from_static_string ("caps");\
+    topology_next = g_quark_from_static_string ("next");\
+    topology_pad = g_quark_from_static_string ("pad");\
+    topology_element_srcpad = g_quark_from_static_string ("element-srcpad");\
+    ret |= playback_element_init (plugin);\
 
-    gst_decode_bin_type =
-        g_type_register_static (GST_TYPE_BIN, "GstDecodeBin",
-        &gst_decode_bin_info, 0);
-  }
-
-  return gst_decode_bin_type;
-}
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decodebin, "decodebin", GST_RANK_NONE,
+    GST_TYPE_DECODE_BIN, _do_init);
 
 static gboolean
 _gst_boolean_accumulator (GSignalInvocationHint * ihint,
@@ -4527,12 +4519,6 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink,
   return caps;
 }
 
-static GQuark topology_structure_name = 0;
-static GQuark topology_caps = 0;
-static GQuark topology_next = 0;
-static GQuark topology_pad = 0;
-static GQuark topology_element_srcpad = 0;
-
 /* FIXME: Invent gst_structure_take_structure() to prevent all the
  * structure copying for nothing
  */
@@ -5703,20 +5689,4 @@ gst_decode_bin_remove_element (GstBin * bin, GstElement * element)
   g_mutex_unlock (&dbin->buffering_post_lock);
 
   return GST_BIN_CLASS (parent_class)->remove_element (bin, element);
-}
-
-gboolean
-gst_decode_bin_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin", 0, "decoder bin");
-
-  /* Register some quarks here for the stream topology message */
-  topology_structure_name = g_quark_from_static_string ("stream-topology");
-  topology_caps = g_quark_from_static_string ("caps");
-  topology_next = g_quark_from_static_string ("next");
-  topology_pad = g_quark_from_static_string ("pad");
-  topology_element_srcpad = g_quark_from_static_string ("element-srcpad");
-
-  return gst_element_register (plugin, "decodebin", GST_RANK_NONE,
-      GST_TYPE_DECODE_BIN);
 }

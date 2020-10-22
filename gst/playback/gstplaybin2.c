@@ -216,7 +216,7 @@
 #include <gst/video/navigation.h>
 #include <gst/video/colorbalance.h>
 #include "gstplay-enum.h"
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstplaysink.h"
 #include "gstsubtitleoverlay.h"
 #include "gstplaybackutils.h"
@@ -591,8 +591,6 @@ enum
 static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw(ANY)");
 static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw(ANY)");
 
-static void gst_play_bin_class_init (GstPlayBinClass * klass);
-static void gst_play_bin_init (GstPlayBin * playbin);
 static void gst_play_bin_finalize (GObject * object);
 
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
@@ -655,57 +653,43 @@ static void gst_play_bin_navigation_init (gpointer g_iface,
 static void gst_play_bin_colorbalance_init (gpointer g_iface,
     gpointer g_iface_data);
 
-static GType
-gst_play_bin_get_type (void)
-{
-  static GType gst_play_bin_type = 0;
-
-  if (!gst_play_bin_type) {
-    static const GTypeInfo gst_play_bin_info = {
-      sizeof (GstPlayBinClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_play_bin_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPlayBin),
-      0,
-      (GInstanceInitFunc) gst_play_bin_init,
-      NULL
-    };
-    static const GInterfaceInfo svol_info = {
-      NULL, NULL, NULL
-    };
-    static const GInterfaceInfo ov_info = {
-      gst_play_bin_overlay_init,
-      NULL, NULL
-    };
-    static const GInterfaceInfo nav_info = {
-      gst_play_bin_navigation_init,
-      NULL, NULL
-    };
-    static const GInterfaceInfo col_info = {
-      gst_play_bin_colorbalance_init,
-      NULL, NULL
-    };
-
-    gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
-        "GstPlayBin", &gst_play_bin_info, 0);
-
-    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_STREAM_VOLUME,
-        &svol_info);
-    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_VIDEO_OVERLAY,
-        &ov_info);
-    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_NAVIGATION,
-        &nav_info);
-    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_COLOR_BALANCE,
-        &col_info);
-  }
-
-  return gst_play_bin_type;
-}
+static GType gst_play_bin_get_type (void);
 
 static void
+_do_init_type (GType type)
+{
+
+  static const GInterfaceInfo svol_info = {
+    NULL, NULL, NULL
+  };
+  static const GInterfaceInfo ov_info = {
+    gst_play_bin_overlay_init,
+    NULL, NULL
+  };
+  static const GInterfaceInfo nav_info = {
+    gst_play_bin_navigation_init,
+    NULL, NULL
+  };
+  static const GInterfaceInfo col_info = {
+    gst_play_bin_colorbalance_init,
+    NULL, NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info);
+  g_type_add_interface_static (type, GST_TYPE_VIDEO_OVERLAY, &ov_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &nav_info);
+  g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE, &col_info);
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstPlayBin, gst_play_bin, GST_TYPE_PIPELINE,
+    _do_init_type (g_define_type_id));
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");\
+    ret |= playback_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (playbin, "playbin", GST_RANK_NONE,
+    GST_TYPE_PLAY_BIN, _do_init);
+
+void
 gst_play_bin_class_init (GstPlayBinClass * klass)
 {
   GObjectClass *gobject_klass;
@@ -6090,13 +6074,4 @@ gst_play_bin_colorbalance_init (gpointer g_iface, gpointer g_iface_data)
   iface->set_value = gst_play_bin_colorbalance_set_value;
   iface->get_value = gst_play_bin_colorbalance_get_value;
   iface->get_balance_type = gst_play_bin_colorbalance_get_balance_type;
-}
-
-gboolean
-gst_play_bin2_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");
-
-  return gst_element_register (plugin, "playbin", GST_RANK_NONE,
-      GST_TYPE_PLAY_BIN);
 }

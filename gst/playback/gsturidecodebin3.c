@@ -55,7 +55,7 @@
 
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstplaybackutils.h"
 
 #define GST_TYPE_URI_DECODE_BIN3 \
@@ -328,6 +328,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
 GType gst_uri_decode_bin3_get_type (void);
 #define gst_uri_decode_bin3_parent_class parent_class
 G_DEFINE_TYPE (GstURIDecodeBin3, gst_uri_decode_bin3, GST_TYPE_BIN);
+
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin3_debug, "uridecodebin3", 0, "URI decoder element 3"); \
+    ret |= playback_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (uridecodebin3, "uridecodebin3",
+    GST_RANK_NONE, GST_TYPE_URI_DECODE_BIN3, _do_init);
 
 #define REMOVE_SIGNAL(obj,id)            \
 if (id) {                                \
@@ -1143,14 +1149,4 @@ gst_uri_decodebin3_send_event (GstElement * element, GstEvent * event)
     return gst_element_send_event (self->decodebin, event);
 
   return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-}
-
-gboolean
-gst_uri_decode_bin3_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin3_debug, "uridecodebin3", 0,
-      "URI decoder element 3");
-
-  return gst_element_register (plugin, "uridecodebin3", GST_RANK_NONE,
-      GST_TYPE_URI_DECODE_BIN3);
 }

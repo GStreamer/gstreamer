@@ -104,7 +104,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplay-enum.h"
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstplaybackutils.h"
 #include "gstrawcaps.h"
 
@@ -495,37 +495,16 @@ static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeInfo * info,
  * Standard GObject boilerplate *
  ********************************/
 
-static void gst_parse_bin_class_init (GstParseBinClass * klass);
-static void gst_parse_bin_init (GstParseBin * parse_bin);
 static void gst_parse_bin_dispose (GObject * object);
 static void gst_parse_bin_finalize (GObject * object);
+static GType gst_parse_bin_get_type (void);
 
-static GType
-gst_parse_bin_get_type (void)
-{
-  static GType gst_parse_bin_type = 0;
-
-  if (!gst_parse_bin_type) {
-    static const GTypeInfo gst_parse_bin_info = {
-      sizeof (GstParseBinClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_parse_bin_class_init,
-      NULL,
-      NULL,
-      sizeof (GstParseBin),
-      0,
-      (GInstanceInitFunc) gst_parse_bin_init,
-      NULL
-    };
-
-    gst_parse_bin_type =
-        g_type_register_static (GST_TYPE_BIN, "GstParseBin",
-        &gst_parse_bin_info, 0);
-  }
-
-  return gst_parse_bin_type;
-}
+G_DEFINE_TYPE (GstParseBin, gst_parse_bin, GST_TYPE_BIN);
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_parse_bin_debug, "parsebin", 0, "parser bin");\
+    ret |= playback_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (parsebin, "parsebin", GST_RANK_NONE,
+    GST_TYPE_PARSE_BIN, _do_init);
 
 static gboolean
 _gst_boolean_accumulator (GSignalInvocationHint * ihint,
@@ -4398,13 +4377,4 @@ gst_parse_bin_handle_message (GstBin * bin, GstMessage * msg)
     gst_message_unref (msg);
   else
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
-}
-
-gboolean
-gst_parse_bin_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_parse_bin_debug, "parsebin", 0, "parser bin");
-
-  return gst_element_register (plugin, "parsebin", GST_RANK_NONE,
-      GST_TYPE_PARSE_BIN);
 }

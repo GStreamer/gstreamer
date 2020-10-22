@@ -50,7 +50,7 @@
 
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
-#include "gstplayback.h"
+#include "gstplaybackelements.h"
 #include "gstplaybackutils.h"
 
 #define GST_TYPE_URI_SOURCE_BIN \
@@ -255,6 +255,12 @@ static guint gst_uri_source_bin_signals[LAST_SIGNAL] = { 0 };
 GType gst_uri_source_bin_get_type (void);
 #define gst_uri_source_bin_parent_class parent_class
 G_DEFINE_TYPE (GstURISourceBin, gst_uri_source_bin, GST_TYPE_BIN);
+
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_uri_source_bin_debug, "urisourcebin", 0, "URI source element"); \
+    ret |= playback_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (urisourcebin, "urisourcebin",
+    GST_RANK_NONE, GST_TYPE_URI_SOURCE_BIN, _do_init);
 
 static void gst_uri_source_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -2852,14 +2858,4 @@ setup_failed:
     /* clean up leftover groups */
     return GST_STATE_CHANGE_FAILURE;
   }
-}
-
-gboolean
-gst_uri_source_bin_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_uri_source_bin_debug, "urisourcebin", 0,
-      "URI source element");
-
-  return gst_element_register (plugin, "urisourcebin", GST_RANK_NONE,
-      GST_TYPE_URI_SOURCE_BIN);
 }

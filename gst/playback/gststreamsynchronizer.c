@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstplaybackelements.h"
 #include "gststreamsynchronizer.h"
 
 GST_DEBUG_CATEGORY_STATIC (stream_synchronizer_debug);
@@ -55,6 +56,10 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 #define gst_stream_synchronizer_parent_class parent_class
 G_DEFINE_TYPE (GstStreamSynchronizer, gst_stream_synchronizer,
     GST_TYPE_ELEMENT);
+#define _do_init \
+    ret |= playback_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (streamsynchronizer, "streamsynchronizer",
+    GST_RANK_NONE, GST_TYPE_STREAM_SYNCHRONIZER, _do_init);
 
 typedef struct
 {
@@ -1193,14 +1198,7 @@ gst_stream_synchronizer_class_init (GstStreamSynchronizerClass * klass)
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_request_new_pad);
   element_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_release_pad);
-}
 
-gboolean
-gst_stream_synchronizer_plugin_init (GstPlugin * plugin)
-{
   GST_DEBUG_CATEGORY_INIT (stream_synchronizer_debug,
       "streamsynchronizer", 0, "Stream Synchronizer");
-
-  return gst_element_register (plugin, "streamsynchronizer", GST_RANK_NONE,
-      GST_TYPE_STREAM_SYNCHRONIZER);
 }

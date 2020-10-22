@@ -32,45 +32,25 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
-#include "gstplayback.h"
-#include "gstplaysink.h"
-#include "gstsubtitleoverlay.h"
-#include "gststreamsynchronizer.h"
+#include "gstplaybackelements.h"
+
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean res;
-
-  gst_pb_utils_init ();
-
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
-
-  /* Swap in playbin3 as 'playbin' if USE_PLAYBIN3=1 */
-  {
-    const gchar *env = g_getenv ("USE_PLAYBIN3");
-    if (env && g_str_has_prefix (env, "1"))
-      res = gst_play_bin3_plugin_init (plugin, TRUE);
-    else
-      res = gst_play_bin2_plugin_init (plugin);
-  }
-
-  res &= gst_play_bin3_plugin_init (plugin, FALSE);
-  res &= gst_play_sink_plugin_init (plugin);
-  res &= gst_subtitle_overlay_plugin_init (plugin);
-  res &= gst_stream_synchronizer_plugin_init (plugin);
-
-  res &= gst_decode_bin_plugin_init (plugin);
-  res &= gst_decodebin3_plugin_init (plugin);
-  res &= gst_uri_decode_bin_plugin_init (plugin);
-  res &= gst_uri_decode_bin3_plugin_init (plugin);
-  res &= gst_uri_source_bin_plugin_init (plugin);
-  res &= gst_parse_bin_plugin_init (plugin);
+  gboolean res = FALSE;
+  if (!g_getenv ("USE_PLAYBIN3"))
+    res |= GST_ELEMENT_REGISTER (playbin, plugin);
+  res |= GST_ELEMENT_REGISTER (playbin3, plugin);
+  res |= GST_ELEMENT_REGISTER (playsink, plugin);
+  res |= GST_ELEMENT_REGISTER (subtitleoverlay, plugin);
+  res |= GST_ELEMENT_REGISTER (streamsynchronizer, plugin);
+  res |= GST_ELEMENT_REGISTER (decodebin, plugin);
+  res |= GST_ELEMENT_REGISTER (decodebin3, plugin);
+  res |= GST_ELEMENT_REGISTER (uridecodebin, plugin);
+  res |= GST_ELEMENT_REGISTER (uridecodebin3, plugin);
+  res |= GST_ELEMENT_REGISTER (urisourcebin, plugin);
+  res |= GST_ELEMENT_REGISTER (parsebin, plugin);
 
   return res;
 }
