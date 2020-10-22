@@ -37,13 +37,15 @@ enum
   PROP_LOSSLESS,
   PROP_QUALITY,
   PROP_SPEED,
-  PROP_PRESET
+  PROP_PRESET,
+  PROP_ANIMATED,
 };
 
 #define DEFAULT_LOSSLESS FALSE
 #define DEFAULT_QUALITY 90
 #define DEFAULT_SPEED 4
 #define DEFAULT_PRESET WEBP_PRESET_PHOTO
+#define DEFAULT_ANIMATED FALSE
 
 static void gst_webp_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -57,6 +59,7 @@ static GstFlowReturn gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_webp_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
+static GstFlowReturn gst_webp_enc_finish (GstVideoEncoder * benc);
 
 static GstStaticPadTemplate webp_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -134,6 +137,7 @@ gst_webp_enc_class_init (GstWebpEncClass * klass)
       "Sreerenj Balachandran <sreerenjb@gnome.org>");
 
   venc_class->start = gst_webp_enc_start;
+  venc_class->finish = gst_webp_enc_finish;
   venc_class->stop = gst_webp_enc_stop;
   venc_class->set_format = gst_webp_enc_set_format;
   venc_class->handle_frame = gst_webp_enc_handle_frame;
@@ -156,6 +160,10 @@ gst_webp_enc_class_init (GstWebpEncClass * klass)
           "Preset name for visual tuning",
           GST_WEBP_ENC_PRESET_TYPE, DEFAULT_PRESET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ANIMATED,
+      g_param_spec_boolean ("animated", "Animated",
+          "Encode an animated webp, instead of several pictures",
+          DEFAULT_ANIMATED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (webpenc_debug, "webpenc", 0,
       "WEBP encoding element");
@@ -172,6 +180,7 @@ gst_webp_enc_init (GstWebpEnc * webpenc)
   webpenc->quality = DEFAULT_QUALITY;
   webpenc->speed = DEFAULT_SPEED;
   webpenc->preset = DEFAULT_PRESET;
+  webpenc->animated = DEFAULT_ANIMATED;
 
   webpenc->use_argb = FALSE;
   webpenc->rgb_format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -207,6 +216,19 @@ gst_webp_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   if (enc->input_state)
     gst_video_codec_state_unref (enc->input_state);
   enc->input_state = gst_video_codec_state_ref (state);
+
+  if (enc->anim_enc) {
+    WebPAnimEncoderDelete (enc->anim_enc);
+    enc->anim_enc = NULL;
+  }
+
+  if (enc->animated) {
+    WebPAnimEncoderOptions enc_options = { {0}
+    };
+    WebPAnimEncoderOptionsInit (&enc_options);
+    enc->anim_enc =
+        WebPAnimEncoderNew (info->width, info->height, &enc_options);
+  }
 
   output_state =
       gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (enc),
@@ -254,7 +276,6 @@ gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
 {
   GstWebpEnc *enc = GST_WEBP_ENC (encoder);
-  GstBuffer *out_buffer = NULL;
   GstVideoFrame vframe;
 
   GST_LOG_OBJECT (enc, "got new frame");
@@ -290,7 +311,24 @@ gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
     }
   }
 
-  if (WebPEncode (&enc->webp_config, &enc->webp_picture)) {
+  if (enc->animated) {
+    /* in milliseconds */
+    int timestamp = frame->pts / 1000000;
+
+    enc->next_timestamp = (frame->pts + frame->duration) / 1000000;
+
+    if (!WebPAnimEncoderAdd (enc->anim_enc, &enc->webp_picture,
+            timestamp, &enc->webp_config)) {
+      GST_ERROR_OBJECT (enc, "Failed to add WebPPicture: %d (%s)",
+          enc->webp_picture.error_code,
+          WebPAnimEncoderGetError (enc->anim_enc));
+      gst_video_frame_unmap (&vframe);
+      return GST_FLOW_ERROR;
+    }
+    WebPPictureFree (&enc->webp_picture);
+  } else if (WebPEncode (&enc->webp_config, &enc->webp_picture)) {
+    GstBuffer *out_buffer;
+
     WebPPictureFree (&enc->webp_picture);
 
     out_buffer = gst_buffer_new_allocate (NULL, enc->webp_writer.size, NULL);
@@ -302,6 +340,7 @@ gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
     gst_buffer_fill (out_buffer, 0, enc->webp_writer.mem,
         enc->webp_writer.size);
     free (enc->webp_writer.mem);
+    frame->output_buffer = out_buffer;
   } else {
     GST_ERROR_OBJECT (enc, "Failed to encode WebPPicture");
     gst_video_frame_unmap (&vframe);
@@ -309,7 +348,7 @@ gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
   }
 
   gst_video_frame_unmap (&vframe);
-  frame->output_buffer = out_buffer;
+
   return gst_video_encoder_finish_frame (encoder, frame);
 }
 
@@ -341,6 +380,9 @@ gst_webp_enc_set_property (GObject * object, guint prop_id,
     case PROP_PRESET:
       webpenc->preset = g_value_get_enum (value);
       break;
+    case PROP_ANIMATED:
+      webpenc->animated = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -367,6 +409,9 @@ gst_webp_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_PRESET:
       g_value_set_enum (value, webpenc->preset);
       break;
+    case PROP_ANIMATED:
+      g_value_set_boolean (value, webpenc->animated);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -389,7 +434,42 @@ gst_webp_enc_start (GstVideoEncoder * benc)
     GST_ERROR_OBJECT (enc, "Failed to Validate the WebPConfig");
     return FALSE;
   }
+
   return TRUE;
+}
+
+static GstFlowReturn
+gst_webp_enc_finish (GstVideoEncoder * benc)
+{
+  GstWebpEnc *enc = (GstWebpEnc *) benc;
+  WebPData data = { 0 };
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (enc->animated) {
+    if (!WebPAnimEncoderAdd (enc->anim_enc, NULL, enc->next_timestamp,
+            &enc->webp_config)) {
+      GST_ERROR_OBJECT (enc, "Failed to flush animation encoder");
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
+    if (WebPAnimEncoderAssemble (enc->anim_enc, &data)) {
+      GstBuffer *out = gst_buffer_new_allocate (NULL, data.size, NULL);
+
+      gst_buffer_fill (out, 0, data.bytes, data.size);
+
+      WebPDataClear (&data);
+
+      ret = gst_pad_push (benc->srcpad, out);
+    } else {
+      GST_ERROR_OBJECT (enc, "Failed to assemble output animation");
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+  }
+
+done:
+  return ret;
 }
 
 static gboolean
@@ -398,5 +478,9 @@ gst_webp_enc_stop (GstVideoEncoder * benc)
   GstWebpEnc *enc = GST_WEBP_ENC (benc);
   if (enc->input_state)
     gst_video_codec_state_unref (enc->input_state);
+
+  if (enc->anim_enc)
+    WebPAnimEncoderDelete (enc->anim_enc);
+
   return TRUE;
 }

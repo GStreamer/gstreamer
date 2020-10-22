@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <webp/encode.h>
+#include <webp/mux.h>
 
 G_BEGIN_DECLS
 
@@ -54,9 +55,13 @@ struct _GstWebpEnc
   gfloat quality;
   guint speed;
   gint preset;
+  gboolean animated;
 
   gboolean use_argb;
   GstVideoFormat rgb_format;
+
+  WebPAnimEncoder *anim_enc;
+  int next_timestamp;
 
   WebPEncCSP webp_color_space;
   struct WebPConfig webp_config;
