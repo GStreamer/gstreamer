@@ -39,7 +39,7 @@ foreach_metadata_copy (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   const GstMetaInfo *info = (*meta)->info;
   const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
 
-  if (info->transform_func && (!tags || (copy_tag != 0
+  if (info->transform_func && (!tags || !tags[0] || (copy_tag != 0
               && g_strv_length ((gchar **) tags) == 1
               && gst_meta_api_type_has_tag (info->api, copy_tag)))) {
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
@@ -94,7 +94,8 @@ foreach_metadata_drop (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   const GstMetaInfo *info = (*meta)->info;
   const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
 
-  if (!tags || (keep_tag != 0 && g_strv_length ((gchar **) tags) == 1
+  if (!tags || !tags[0] || (keep_tag != 0
+          && g_strv_length ((gchar **) tags) == 1
           && gst_meta_api_type_has_tag (info->api, keep_tag))) {
     GST_DEBUG_OBJECT (element, "keeping metadata %s", g_type_name (info->api));
   } else {
