@@ -316,9 +316,13 @@ if get_option('default_library') == 'static'
     dependencies : incdir_deps + glib_deps,
     include_directories: include_directories('.')
   )
+  gst_full_libs_private = cc.get_supported_link_arguments(['-Wl,--undefined=gst_init_static_plugins'])
+  if gst_full_libs_private == []
+    warning('The compiler does not support `-Wl,--undefined` linker flag. The method `gst_init_static_plugins` might be dropped during the link stage of an application using libgstreamer-full-1.0.a, preventing plugins registration.')
+  endif
   pkgconfig.generate(gstfull,
     requires: glib_deps,
-    libraries_private: cc.get_supported_link_arguments(['-Wl,--undefined=gst_init_static_plugins']),
+    libraries_private: gst_full_libs_private,
     subdirs : 'gstreamer-1.0')
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 endif
