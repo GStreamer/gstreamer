@@ -3362,7 +3362,7 @@ sort_fre_profile_matches (H265ExtensionProfileMatch * a,
 
 static GstH265Profile
 get_extension_profile (H265ExtensionProfile * profiles, guint num,
-    GstH265ProfileTierLevel * ptl)
+    const GstH265ProfileTierLevel * ptl)
 {
   GstH265Profile result = GST_H265_PROFILE_INVALID;
   guint i;
@@ -3465,7 +3465,7 @@ get_extension_profile (H265ExtensionProfile * profiles, guint num,
 }
 
 static GstH265Profile
-get_format_range_extension_profile (GstH265ProfileTierLevel * ptl)
+get_format_range_extension_profile (const GstH265ProfileTierLevel * ptl)
 {
   /* Profile idc: GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION
      See Table A.2 for the definition of those formats */
@@ -3518,7 +3518,7 @@ get_format_range_extension_profile (GstH265ProfileTierLevel * ptl)
 }
 
 static GstH265Profile
-get_3d_profile (GstH265ProfileTierLevel * ptl)
+get_3d_profile (const GstH265ProfileTierLevel * ptl)
 {
   /* profile idc: GST_H265_PROFILE_IDC_3D_MAIN */
   static H265ExtensionProfile profiles[] = {
@@ -3530,7 +3530,7 @@ get_3d_profile (GstH265ProfileTierLevel * ptl)
 }
 
 static GstH265Profile
-get_multiview_profile (GstH265ProfileTierLevel * ptl)
+get_multiview_profile (const GstH265ProfileTierLevel * ptl)
 {
   static H265ExtensionProfile profiles[] = {
     {GST_H265_PROFILE_MULTIVIEW_MAIN,
@@ -3541,7 +3541,7 @@ get_multiview_profile (GstH265ProfileTierLevel * ptl)
 }
 
 static GstH265Profile
-get_scalable_profile (GstH265ProfileTierLevel * ptl)
+get_scalable_profile (const GstH265ProfileTierLevel * ptl)
 {
   static H265ExtensionProfile profiles[] = {
     {GST_H265_PROFILE_SCALABLE_MAIN,
@@ -3554,7 +3554,7 @@ get_scalable_profile (GstH265ProfileTierLevel * ptl)
 }
 
 static GstH265Profile
-get_high_throughput_profile (GstH265ProfileTierLevel * ptl)
+get_high_throughput_profile (const GstH265ProfileTierLevel * ptl)
 {
   static H265ExtensionProfile profiles[] = {
     {GST_H265_PROFILE_HIGH_THROUGHPUT_444,
@@ -3571,7 +3571,8 @@ get_high_throughput_profile (GstH265ProfileTierLevel * ptl)
 }
 
 static GstH265Profile
-get_screen_content_coding_extensions_profile (GstH265ProfileTierLevel * ptl)
+get_screen_content_coding_extensions_profile (const GstH265ProfileTierLevel *
+    ptl)
 {
   static H265ExtensionProfile profiles[] = {
     {GST_H265_PROFILE_SCREEN_EXTENDED_MAIN,
@@ -3588,7 +3589,8 @@ get_screen_content_coding_extensions_profile (GstH265ProfileTierLevel * ptl)
 }
 
 static GstH265Profile
-get_scalable_format_range_extensions_profile (GstH265ProfileTierLevel * ptl)
+get_scalable_format_range_extensions_profile (const GstH265ProfileTierLevel *
+    ptl)
 {
   static H265ExtensionProfile profiles[] = {
     {GST_H265_PROFILE_SCALABLE_MONOCHROME,
@@ -3606,7 +3608,7 @@ get_scalable_format_range_extensions_profile (GstH265ProfileTierLevel * ptl)
 
 static GstH265Profile
     get_screen_content_coding_extensions_high_throughput_profile
-    (GstH265ProfileTierLevel * ptl)
+    (const GstH265ProfileTierLevel * ptl)
 {
   static H265ExtensionProfile profiles[] = {
     {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444,
@@ -3630,7 +3632,7 @@ static GstH265Profile
  * Since: 1.14
  */
 GstH265Profile
-gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
+gst_h265_profile_tier_level_get_profile (const GstH265ProfileTierLevel * ptl)
 {
   if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN
       || ptl->profile_compatibility_flag[1])
