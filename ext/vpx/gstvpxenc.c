@@ -803,7 +803,7 @@ gst_vpx_enc_set_auto_bitrate (GstVPXEnc * encoder)
     guint target_bitrate;
     guint fps_n, fps_d;
 
-    if (GST_VIDEO_INFO_FPS_D (&encoder->input_state->info) != 0) {
+    if (GST_VIDEO_INFO_FPS_N (&encoder->input_state->info) != 0) {
       fps_n = GST_VIDEO_INFO_FPS_N (&encoder->input_state->info);
       fps_d = GST_VIDEO_INFO_FPS_D (&encoder->input_state->info);
     } else {
