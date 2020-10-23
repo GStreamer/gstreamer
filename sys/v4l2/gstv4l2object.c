@@ -4980,7 +4980,7 @@ no_downstream_pool:
 gboolean
 gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
 {
-  GstBufferPool *pool = NULL;
+  GstBufferPool *pool;
   /* we need at least 2 buffers to operate */
   guint size, min, max;
   GstCaps *caps;
@@ -4999,12 +4999,11 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   switch (obj->mode) {
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_DMABUF:
-      if (need_pool && obj->pool) {
-        if (!gst_buffer_pool_is_active (obj->pool))
-          pool = gst_object_ref (obj->pool);
-      }
+      if ((pool = obj->pool))
+        gst_object_ref (pool);
       break;
     default:
+      pool = NULL;
       break;
   }
 
