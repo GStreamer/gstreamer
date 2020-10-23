@@ -53,6 +53,8 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11device.h"
 #include "gstd3d11bufferpool.h"
+#include "gstd3d11videoprocessor.h"
+#include "gstd3d11format.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_convert_debug);
 #define GST_CAT_DEFAULT gst_d3d11_convert_debug
@@ -95,6 +97,7 @@ struct _GstD3D11Convert
   guint num_output_view;
 
   GstD3D11ColorConverter *converter;
+  GstD3D11VideoProcessor *processor;
 
   /* used for fallback texture copy */
   D3D11_BOX in_src_box;
@@ -334,9 +337,8 @@ gst_d3d11_convert_clear_shader_resource (GstD3D11Convert * self)
     }
   }
 
-  if (self->converter)
-    gst_d3d11_color_converter_free (self->converter);
-  self->converter = NULL;
+  g_clear_pointer (&self->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
 }
 
 static void
@@ -1515,6 +1517,79 @@ gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
     return FALSE;
   }
 
+  /* If both input and output formats are native DXGI format */
+  if (self->in_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
+      self->out_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    gboolean hardware = FALSE;
+    GstD3D11VideoProcessor *processor = NULL;
+
+    g_object_get (filter->device, "hardware", &hardware, NULL);
+    if (hardware) {
+      processor = gst_d3d11_video_processor_new (filter->device,
+          in_info->width, in_info->height, out_info->width, out_info->height);
+    }
+
+    /* check input and output formats are supported by processor */
+    if (processor
+        && !gst_d3d11_video_processor_supports_input_format (processor,
+            self->in_d3d11_format->dxgi_format)) {
+      GST_DEBUG_OBJECT (self,
+          "Input DXGI format %d is not supported by video processor",
+          self->in_d3d11_format->dxgi_format);
+      gst_d3d11_video_processor_free (processor);
+      processor = NULL;
+    }
+
+    if (processor &&
+        !gst_d3d11_video_processor_supports_output_format (processor,
+            self->out_d3d11_format->dxgi_format)) {
+      GST_DEBUG_OBJECT (self,
+          "Output DXGI format %d is not supported by video processor",
+          self->out_d3d11_format->dxgi_format);
+      gst_d3d11_video_processor_free (processor);
+      processor = NULL;
+    }
+
+    if (processor) {
+      gboolean set_color_space = TRUE;
+#if (DXGI_HEADER_VERSION >= 4)
+      const GstDxgiColorSpace *in_color_space;
+      const GstDxgiColorSpace *out_color_space;
+
+      in_color_space = gst_d3d11_video_info_to_dxgi_color_space (in_info);
+      out_color_space = gst_d3d11_video_info_to_dxgi_color_space (out_info);
+
+      if (in_color_space && out_color_space) {
+        DXGI_COLOR_SPACE_TYPE in_type =
+            (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
+        DXGI_COLOR_SPACE_TYPE out_type =
+            (DXGI_COLOR_SPACE_TYPE) out_color_space->dxgi_color_space_type;
+
+        if (!gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
+                in_type) ||
+            !gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
+                out_type)) {
+          GST_DEBUG_OBJECT (self, "DXGI colorspace is not supported");
+        } else {
+          GST_DEBUG_OBJECT (self,
+              "IN DXGI colorspace %d, OUT DXGI colorspace %d",
+              (guint) in_type, (guint) out_type);
+          set_color_space = FALSE;
+        }
+      }
+#endif
+
+      if (set_color_space) {
+        gst_d3d11_video_processor_set_input_color_space (processor,
+            &in_info->colorimetry);
+        gst_d3d11_video_processor_set_output_color_space (processor,
+            &out_info->colorimetry);
+      }
+
+      self->processor = processor;
+    }
+  }
+
   /* setup D3D11_BOX struct for fallback copy */
   self->in_src_box.left = 0;
   self->in_src_box.top = 0;
@@ -1547,6 +1622,99 @@ format_unknown:
   }
 }
 
+static gboolean
+gst_d3d11_convert_prefer_video_processor (GstD3D11Convert * self,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+
+  if (!self->processor)
+    return FALSE;
+
+  if (gst_buffer_n_memory (inbuf) != 1 || gst_buffer_n_memory (outbuf) != 1)
+    return FALSE;
+
+  mem = gst_buffer_peek_memory (inbuf, 0);
+  g_assert (gst_is_d3d11_memory (mem));
+
+  dmem = (GstD3D11Memory *) mem;
+  if (dmem->device != filter->device)
+    return FALSE;
+
+  /* If we can use shader, we prefer to use shader instead of video processor
+   * because video processor implementation is vendor dependent
+   * and not flexible */
+  if (gst_d3d11_memory_ensure_shader_resource_view (dmem))
+    return FALSE;
+
+  if (!gst_d3d11_video_processor_ensure_input_view (self->processor, dmem))
+    return FALSE;
+
+  mem = gst_buffer_peek_memory (outbuf, 0);
+  g_assert (gst_is_d3d11_memory (mem));
+
+  dmem = (GstD3D11Memory *) mem;
+  if (dmem->device != filter->device)
+    return FALSE;
+
+  if (!gst_d3d11_video_processor_ensure_output_view (self->processor, dmem))
+    return FALSE;
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_d3d11_convert_transform_using_processor (GstD3D11Convert * self,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstMemory *in_mem, *out_mem;
+  GstD3D11Memory *in_dmem, *out_dmem;
+  GstMapInfo in_map, out_map;
+  RECT in_rect, out_rect;
+  gboolean ret;
+
+  in_mem = gst_buffer_peek_memory (inbuf, 0);
+  in_dmem = (GstD3D11Memory *) in_mem;
+  if (!gst_memory_map (in_mem, &in_map, GST_MAP_D3D11 | GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Failed to map input d3d11 memory");
+    return GST_FLOW_ERROR;
+  }
+
+  out_mem = gst_buffer_peek_memory (outbuf, 0);
+  out_dmem = (GstD3D11Memory *) out_mem;
+  if (!gst_memory_map (out_mem, &out_map, GST_MAP_D3D11 | GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Failed to map output d3d11 memory");
+    gst_memory_unmap (in_mem, &in_map);
+    return GST_FLOW_ERROR;
+  }
+
+  in_rect.left = 0;
+  in_rect.top = 0;
+  in_rect.right = self->in_src_box.right;
+  in_rect.bottom = self->in_src_box.bottom;
+
+  out_rect.left = 0;
+  out_rect.top = 0;
+  out_rect.right = self->out_src_box.right;
+  out_rect.bottom = self->out_src_box.bottom;
+
+  ret = gst_d3d11_video_processor_render (self->processor,
+      &in_rect, in_dmem->processor_input_view, &out_rect,
+      out_dmem->processor_output_view);
+
+  gst_memory_unmap (in_mem, &in_map);
+  gst_memory_unmap (out_mem, &out_map);
+
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Couldn't convert using video processor");
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
+}
+
 static GstFlowReturn
 gst_d3d11_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
@@ -1560,6 +1728,9 @@ gst_d3d11_convert_transform (GstBaseTransform * trans,
   gboolean copy_input = FALSE;
   gboolean copy_output = FALSE;
   GstD3D11Device *device = filter->device;
+
+  if (gst_d3d11_convert_prefer_video_processor (self, inbuf, outbuf))
+    return gst_d3d11_convert_transform_using_processor (self, inbuf, outbuf);
 
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 

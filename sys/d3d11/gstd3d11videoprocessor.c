@@ -427,6 +427,14 @@ gst_d3d11_video_processor_create_output_view (GstD3D11VideoProcessor *
   return TRUE;
 }
 
+gboolean
+gst_d3d11_video_processor_ensure_output_view (GstD3D11VideoProcessor *
+    processor, GstD3D11Memory * mem)
+{
+  return gst_d3d11_memory_ensure_processor_output_view (mem,
+      processor->video_device, processor->enumerator);
+}
+
 void
 gst_d3d11_video_processor_input_view_release (ID3D11VideoProcessorInputView *
     view)
