@@ -837,8 +837,6 @@ gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
     GstBuffer * buffer, ID3D11VideoProcessorInputView ** in_view)
 {
   GstD3D11Memory *mem;
-  ID3D11VideoProcessorInputView *view;
-  GQuark quark;
 
   if (!self->processor)
     return FALSE;
@@ -853,33 +851,12 @@ gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
     return FALSE;
   }
 
-  quark = gst_d3d11_video_processor_input_view_quark ();
-  view = (ID3D11VideoProcessorInputView *)
-      gst_mini_object_get_qdata (GST_MINI_OBJECT (mem), quark);
-
-  if (!view) {
-    D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC in_desc;
-
-    in_desc.FourCC = 0;
-    in_desc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
-    in_desc.Texture2D.MipSlice = 0;
-    in_desc.Texture2D.ArraySlice = mem->subresource_index;
-
-    GST_TRACE_OBJECT (self, "Create new processor input view");
-
-    if (!gst_d3d11_video_processor_create_input_view (self->processor,
-         &in_desc, mem->texture, &view)) {
-      GST_LOG_OBJECT (self, "Failed to create processor input view");
-      return FALSE;
-    }
-
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), quark, view,
-        (GDestroyNotify) gst_d3d11_video_processor_input_view_release);
-  } else {
-    GST_TRACE_OBJECT (self, "Reuse existing processor input view %p", view);
+  if (!gst_d3d11_video_processor_ensure_input_view (self->processor, mem)) {
+    GST_LOG_OBJECT (self, "Failed to create processor input view");
+    return FALSE;
   }
 
-  *in_view = view;
+  *in_view = mem->processor_input_view;
 
   return TRUE;
 }

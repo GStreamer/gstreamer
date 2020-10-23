@@ -40,32 +40,6 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_video_processor_debug);
 #define HAVE_VIDEO_CONTEXT_TWO
 #endif
 
-GQuark
-gst_d3d11_video_processor_input_view_quark (void)
-{
-  static volatile gsize quark = 0;
-
-  if (g_once_init_enter (&quark)) {
-    GQuark q = g_quark_from_static_string ("GstD3D11VideoProcessorInputView");
-    g_once_init_leave (&quark, (gsize) q);
-  }
-
-  return (GQuark) quark;
-}
-
-GQuark
-gst_d3d11_video_processor_output_view_quark (void)
-{
-  static volatile gsize quark = 0;
-
-  if (g_once_init_enter (&quark)) {
-    GQuark q = g_quark_from_static_string ("GstD3D11VideoProcessorOutputView");
-    g_once_init_leave (&quark, (gsize) q);
-  }
-
-  return (GQuark) quark;
-}
-
 struct _GstD3D11VideoProcessor
 {
   GstD3D11Device *device;
@@ -423,6 +397,14 @@ gst_d3d11_video_processor_create_input_view (GstD3D11VideoProcessor * processor,
     return FALSE;
 
   return TRUE;
+}
+
+gboolean
+gst_d3d11_video_processor_ensure_input_view (GstD3D11VideoProcessor * processor,
+    GstD3D11Memory * mem)
+{
+  return gst_d3d11_memory_ensure_processor_input_view (mem,
+      processor->video_device, processor->enumerator);
 }
 
 gboolean

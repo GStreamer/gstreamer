@@ -28,9 +28,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstD3D11VideoProcessor GstD3D11VideoProcessor;
 
-GQuark gst_d3d11_video_processor_input_view_quark (void);
-GQuark gst_d3d11_video_processor_output_view_quark (void);
-
 GstD3D11VideoProcessor * gst_d3d11_video_processor_new  (GstD3D11Device * device,
                                                          guint in_width,
                                                          guint in_height,
@@ -74,6 +71,9 @@ gboolean  gst_d3d11_video_processor_create_input_view  (GstD3D11VideoProcessor *
                                                         D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC * desc,
                                                         ID3D11Resource *resource,
                                                         ID3D11VideoProcessorInputView ** view);
+
+gboolean  gst_d3d11_video_processor_ensure_input_view  (GstD3D11VideoProcessor * processor,
+                                                        GstD3D11Memory *mem);
 
 gboolean  gst_d3d11_video_processor_create_output_view (GstD3D11VideoProcessor * processor,
                                                         D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC * desc,
