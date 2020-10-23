@@ -132,6 +132,7 @@ static GstFlowReturn gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
 static gboolean gst_h265_decoder_finish_current_picture (GstH265Decoder * self);
+static void gst_h265_decoder_clear_ref_pic_sets (GstH265Decoder * self);
 static void gst_h265_decoder_clear_dpb (GstH265Decoder * self);
 static gboolean gst_h265_decoder_drain_internal (GstH265Decoder * self);
 static gboolean gst_h265_decoder_start_current_picture (GstH265Decoder * self);
@@ -226,6 +227,8 @@ gst_h265_decoder_stop (GstVideoDecoder * decoder)
     gst_h265_dpb_free (priv->dpb);
     priv->dpb = NULL;
   }
+
+  gst_h265_decoder_clear_ref_pic_sets (self);
 
   return TRUE;
 }
@@ -1055,13 +1058,9 @@ has_entry_in_rps (GstH265Picture * dpb_pic,
 }
 
 static void
-gst_h265_decoder_derive_and_mark_rps (GstH265Decoder * self,
-    GstH265Picture * picture, gint32 * CurrDeltaPocMsbPresentFlag,
-    gint32 * FollDeltaPocMsbPresentFlag)
+gst_h265_decoder_clear_ref_pic_sets (GstH265Decoder * self)
 {
-  GstH265DecoderPrivate *priv = self->priv;
   guint i;
-  GArray *dpb_array;
 
   for (i = 0; i < 16; i++) {
     gst_h265_picture_replace (&self->RefPicSetLtCurr[i], NULL);
@@ -1070,6 +1069,18 @@ gst_h265_decoder_derive_and_mark_rps (GstH265Decoder * self,
     gst_h265_picture_replace (&self->RefPicSetStCurrAfter[i], NULL);
     gst_h265_picture_replace (&self->RefPicSetStFoll[i], NULL);
   }
+}
+
+static void
+gst_h265_decoder_derive_and_mark_rps (GstH265Decoder * self,
+    GstH265Picture * picture, gint32 * CurrDeltaPocMsbPresentFlag,
+    gint32 * FollDeltaPocMsbPresentFlag)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  guint i;
+  GArray *dpb_array;
+
+  gst_h265_decoder_clear_ref_pic_sets (self);
 
   /* (8-6) */
   for (i = 0; i < self->NumPocLtCurr; i++) {
