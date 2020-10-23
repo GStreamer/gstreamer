@@ -1,5 +1,0 @@
-[wrap-git]
-directory=gst-plugins-base
-url=https://gitlab.freedesktop.org/gstreamer/gst-plugins-base.git
-push-url=git@gitlab.freedesktop.org:gstreamer/gst-plugins-base.git
-revision=master

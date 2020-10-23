@@ -1,5 +1,0 @@
-[wrap-git]
-directory=gst-integration-testsuites
-url=https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git
-push-url=git@gitlab.freedesktop.org:gstreamer/gst-integration-testsuites.git
-revision=master

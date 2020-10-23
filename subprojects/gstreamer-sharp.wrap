@@ -1,5 +1,0 @@
-[wrap-git]
-directory=gstreamer-sharp
-url=https://gitlab.freedesktop.org/gstreamer/gstreamer-sharp.git
-push-url=git@gitlab.freedesktop.org:gstreamer/gstreamer-sharp.git
-revision=master
