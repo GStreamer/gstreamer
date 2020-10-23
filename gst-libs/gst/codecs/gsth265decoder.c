@@ -183,6 +183,9 @@ gst_h265_decoder_finalize (GObject * object)
   GstH265DecoderPrivate *priv = self->priv;
 
   g_array_unref (priv->to_output);
+  g_array_unref (priv->ref_pic_list_tmp);
+  g_array_unref (priv->ref_pic_list0);
+  g_array_unref (priv->ref_pic_list1);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
