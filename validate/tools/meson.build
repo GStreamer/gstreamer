@@ -44,14 +44,13 @@ if rtsp_server_dep.found()
     )
 endif
 
-if cairo_dep.found()
+if validate_video_dep.found()
     executable('gst-validate-images-check-' + apiversion,
                'gst-validate-images-check.c',
                 install: true,
                 include_directories : inc_dirs,
-                dependencies : validate_dep,
-                c_args : [gst_c_args],
-                link_with: [video],
+                dependencies : [validate_dep, validate_video_dep],
+                c_args : [gst_c_args]
             )
 endif
 
