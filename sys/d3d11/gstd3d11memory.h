@@ -114,8 +114,8 @@ struct _GstD3D11Memory
   guint num_render_target_views;
 
   ID3D11VideoDecoderOutputView *decoder_output_view;
-
   ID3D11VideoProcessorInputView *processor_input_view;
+  ID3D11VideoProcessorOutputView *processor_output_view;
 
   GstD3D11MemoryType type;
 
@@ -194,6 +194,10 @@ gboolean            gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory 
 gboolean            gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
                                                                   ID3D11VideoDevice * video_device,
                                                                   ID3D11VideoProcessorEnumerator * enumerator);
+
+gboolean            gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
+                                                                   ID3D11VideoDevice * video_device,
+                                                                   ID3D11VideoProcessorEnumerator * enumerator);
 
 G_END_DECLS
 

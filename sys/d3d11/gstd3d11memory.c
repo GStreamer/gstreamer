@@ -465,6 +465,9 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   if (dmem->processor_input_view)
     ID3D11VideoProcessorInputView_Release (dmem->processor_input_view);
 
+  if (dmem->processor_output_view)
+    ID3D11VideoProcessorOutputView_Release (dmem->processor_output_view);
+
   if (dmem->texture)
     ID3D11Texture2D_Release (dmem->texture);
 
@@ -1167,6 +1170,52 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
         ID3D11VideoProcessorInputView *, mem->subresource_index) =
         mem->processor_input_view;
     ID3D11VideoProcessorInputView_AddRef (mem->processor_input_view);
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
+    ID3D11VideoDevice * video_device,
+    ID3D11VideoProcessorEnumerator * enumerator)
+{
+  GstD3D11Allocator *allocator;
+  D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC desc = { 0, };
+  HRESULT hr;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (video_device != NULL, FALSE);
+  g_return_val_if_fail (enumerator != NULL, FALSE);
+
+  allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
+
+  if (mem->processor_output_view)
+    return TRUE;
+
+  if (!(mem->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
+    GST_WARNING_OBJECT (allocator,
+        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+    return FALSE;
+  }
+
+  /* FIXME: texture array should be supported at some point */
+  if (mem->subresource_index != 0) {
+    GST_FIXME_OBJECT (allocator,
+        "Texture array is not suppoted for processor output view");
+    return FALSE;
+  }
+
+  desc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
+  desc.Texture2D.MipSlice = 0;
+
+  hr = ID3D11VideoDevice_CreateVideoProcessorOutputView (video_device,
+      (ID3D11Resource *) mem->texture, enumerator, &desc,
+      &mem->processor_output_view);
+  if (!gst_d3d11_result (hr, mem->device)) {
+    GST_ERROR_OBJECT (allocator,
+        "Could not create processor input view, hr: 0x%x", (guint) hr);
+    return FALSE;
   }
 
   return TRUE;
