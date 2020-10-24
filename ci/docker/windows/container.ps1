@@ -1,5 +1,5 @@
 # Copied from mesa, big kudos
-# 
+#
 # https://gitlab.freedesktop.org/mesa/mesa/-/blob/master/.gitlab-ci/windows/mesa_container.ps1
 # https://gitlab.freedesktop.org/mesa/mesa/-/blob/34e3e164936d1d3cef267da7780e87f062fedf39/.gitlab-ci/windows/mesa_container.ps1
 
@@ -43,7 +43,7 @@ if ($?) {
 }
 
 Write-Host "No image found at $registry_user_image or $registry_central_image; rebuilding"
-docker --config "windows-docker.conf" build $DOCKER_BUILD_ARGS --no-cache -t "$registry_user_image" -f "$dockerfile" "./docker/windows"
+docker --config "windows-docker.conf" build $DOCKER_BUILD_ARGS --no-cache -t "$registry_user_image" -f "$dockerfile" "./ci/docker/windows"
 if (!$?) {
   Write-Host "Container build failed"
   docker --config "windows-docker.conf" logout "$registry_uri"

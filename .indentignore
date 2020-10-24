@@ -1,0 +1,5 @@
+subprojects/gst-plugins-bad/ext/sctp/usrsctp/usrsctplib/
+subprojects/gstreamer-rs/
+subprojects/gstreamer-rs-sys/
+subprojects/gst-plugins-rs/
+subprojects/gstreamer-sharp/

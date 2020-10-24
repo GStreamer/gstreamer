@@ -14,7 +14,7 @@ RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git co
 COPY install_toolchain.ps1 C:\
 RUN C:\install_toolchain.ps1
 
-ARG DEFAULT_BRANCH="master"
+ARG DEFAULT_BRANCH="main"
 
 COPY prepare_gst_env.ps1 C:\
 RUN C:\prepare_gst_env.ps1

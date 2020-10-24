@@ -7,7 +7,7 @@ sed -i "s/tsflags=nodocs//g" /etc/dnf/dnf.conf
 dnf install -y git-core ninja-build dnf-plugins-core python3-pip
 
 # Configure git for various usage
-git config --global user.email "gst-build@gstreamer.net"
+git config --global user.email "gstreamer@gstreamer.net"
 git config --global user.name "Gstbuild Runner"
 
 # Add rpm fusion repositories in order to access all of the gst plugins
@@ -232,10 +232,10 @@ rustup --version
 cargo --version
 rustc --version
 
-# get gst-build and make all subprojects available
-git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-build.git /gst-build/
-cd /gst-build
-meson subprojects download
+# get gstreamer and make all subprojects available
+git clone -b  ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gstreamer.git /gstreamer
+meson subprojects download --sourcedir /gstreamer
+/gstreamer/ci/scripts/handle-subprojects-cache.py --build /gstreamer/subprojects/
 
 # Run git gc to prune unwanted refs and reduce the size of the image
 for i in $(find subprojects/ -mindepth 1 -maxdepth 1 -type d);

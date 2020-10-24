@@ -4,7 +4,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
 
-ARG DEFAULT_BRANCH="master"
+ARG DEFAULT_BRANCH="main"
 
 COPY prepare.sh cleanup.sh /root/
 

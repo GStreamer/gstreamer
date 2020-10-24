@@ -1,6 +1,6 @@
 $env:ErrorActionPreference='Stop'
 
-$env:DEFAULT_BRANCH='master'
+$env:DEFAULT_BRANCH='main'
 $env:VERSION='test'
 $env:tag ="registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:$env:VERSION-$env:DEFAULT_BRANCH"
 $env:rust_tag ="registry.freedesktop.org/gstreamer/gst-ci/amd64/windows-rust:$env:VERSION-$env:DEFAULT_BRANCH"
