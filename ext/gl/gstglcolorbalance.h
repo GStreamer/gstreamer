@@ -54,6 +54,10 @@ struct _GstGLColorBalance {
   /* channels for interface */
   GList *channels;
 
+  /* cached matrix for speeding up the operations within the shader */
+  gfloat yuva_balance_matrix[4*4];
+  gfloat yuva_balance_constant[4];
+
   /* properties */
   gdouble contrast;
   gdouble brightness;

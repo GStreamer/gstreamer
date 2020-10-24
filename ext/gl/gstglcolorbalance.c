@@ -93,59 +93,19 @@ static const gchar glsl_2D_image_sampler[] =
   "uniform sampler2D tex;\n";
 
 static const gchar color_balance_frag_templ[] =
-  "uniform float brightness;\n"
-  "uniform float contrast;\n"
-  "uniform float saturation;\n"
-  "uniform float hue;\n"
+  "uniform mat4 yuva_balance_matrix;\n"
+  "uniform vec4 yuva_balance_constant;\n"
   "varying vec2 v_texcoord;\n"
-  "#define from_yuv_bt601_offset vec3(-0.0625, -0.5, -0.5)\n"
-  "#define from_yuv_bt601_rcoeff vec3(1.164, 0.000, 1.596)\n"
-  "#define from_yuv_bt601_gcoeff vec3(1.164,-0.391,-0.813)\n"
-  "#define from_yuv_bt601_bcoeff vec3(1.164, 2.018, 0.000)\n"
-  "#define from_rgb_bt601_offset vec3(0.0625, 0.5, 0.5)\n"
-  "#define from_rgb_bt601_ycoeff vec3(0.256816, 0.504154, 0.0979137)\n"
-  "#define from_rgb_bt601_ucoeff vec3(-0.148246, -0.29102, 0.439266)\n"
-  "#define from_rgb_bt601_vcoeff vec3(0.439271, -0.367833, -0.071438)\n"
-  "#define PI 3.14159265\n"
-  "\n"
-  "vec3 yuv_to_rgb (vec3 val) {\n"
-  "  vec3 rgb;\n"
-  "  val += from_yuv_bt601_offset;\n"
-  "  rgb.r = dot(val, from_yuv_bt601_rcoeff);\n"
-  "  rgb.g = dot(val, from_yuv_bt601_gcoeff);\n"
-  "  rgb.b = dot(val, from_yuv_bt601_bcoeff);\n"
-  "  return rgb;\n"
-  "}\n"
-  "vec3 rgb_to_yuv (vec3 val) {\n"
-  "  vec3 yuv;\n"
-  "  yuv.r = dot(val.rgb, from_rgb_bt601_ycoeff);\n"
-  "  yuv.g = dot(val.rgb, from_rgb_bt601_ucoeff);\n"
-  "  yuv.b = dot(val.rgb, from_rgb_bt601_vcoeff);\n"
-  "  yuv += from_rgb_bt601_offset;\n"
-  "  return yuv;\n"
-  "}\n"
-  /* 224 = 256 - (256 - 240) - 16*/
-  "float luma_to_narrow (float luma) {\n"
-  "  return (luma + 16.0 / 256.0) * 219.0 / 256.0;"
-  "}\n"
-  "float luma_to_full (float luma) {\n"
-  "  return (luma * 256.0 / 219.0) - 16.0 / 256.0;"
-  "}\n"
+  "#define from_yuv_bt601_offset vec4(-0.0625, -0.5, -0.5, 0.0)\n"
+  "#define from_yuv_coeff_mat mat4(1.164, 0.000, 1.596, 0.0,  1.164,-0.391,-0.813, 0.0,  1.164, 2.018, 0.000, 0.0, 0.0,   0.0,   0.0,   1.0)\n"
   "void main () {\n"
-  "  vec3 yuv;\n"
   /* operations translated from videobalanceand tested with glvideomixer
    * with one pad's parameters blend-equation-rgb={subtract,reverse-subtract},
    * blend-function-src-rgb=src-color and blend-function-dst-rgb=dst-color */
-  "  float hue_cos = cos (PI * hue);\n"
-  "  float hue_sin = sin (PI * hue);\n"
   "  vec4 rgba = %s (tex, v_texcoord);\n" /* texture2D / texture2DOES */
-  "  yuv = rgb_to_yuv (rgba.rgb);\n"
-  "  yuv.x = clamp (luma_to_narrow (luma_to_full(yuv.x) * contrast) + brightness, 0.0, 1.0);\n"
-  "  vec2 uv = yuv.yz;\n"
-  "  yuv.y = clamp (0.5 + (((uv.x - 0.5) * hue_cos + (uv.y - 0.5) * hue_sin) * saturation), 0.0, 1.0);\n"
-  "  yuv.z = clamp (0.5 + (((0.5 - uv.x) * hue_sin + (uv.y - 0.5) * hue_cos) * saturation), 0.0, 1.0);\n"
-  "  rgba.rgb = yuv_to_rgb (yuv);\n"
-  "  gl_FragColor = rgba;\n"
+  "  vec4 yuva = rgba * yuva_balance_matrix + yuva_balance_constant;\n"
+  "  yuva = clamp(yuva, 0.0, 1.0);\n"
+  "  gl_FragColor = yuva * from_yuv_coeff_mat + from_yuv_bt601_offset * from_yuv_coeff_mat;\n"
   "}\n";
 /* *INDENT-ON* */
 
@@ -203,6 +163,95 @@ gst_gl_color_balance_is_passthrough (GstGLColorBalance * glcolorbalance)
 }
 
 static void
+_update_yua_uniforms (GstGLColorBalance * glcolorbalance)
+{
+  gdouble brightness = glcolorbalance->brightness;
+  gdouble contrast = glcolorbalance->contrast;
+  gdouble hue = glcolorbalance->hue;
+  gdouble saturation = glcolorbalance->saturation;
+  gdouble s_hue_cos = saturation * cos (hue * G_PI);
+  gdouble s_hue_sin = saturation * sin (hue * G_PI);
+
+  // We reduce the color balance adjustment of each pixel to:
+  // yuva_to_rgb(clamp(rgba * yuva_balance_matrix + yuva_balance_constant))
+  // Where yuva_balance_matrix and yuva_balance_constant are obtained by
+  // combining following steps:
+  //
+  // yuva = rgba * from_rgb_coeff_mat + from_rgb_bt601_offset
+  // yuva = yuva * contrast_matrix + contrast_brightness_constant
+  // yuva = (yuva - vec4(0, 0.5, 0.5, 0.0)) * hue_saturation_matrix + vec4(0, 0.5, 0.5, 0)
+  //
+  // Where,
+  // from_rgb_coeff_mat = mat4(0.256816, 0.504154, 0.0979137, 0,
+  //                          -0.148246,-0.29102,  0.439266,  0,
+  //                           0.439271,-0.367833,-0.071438,  0
+  //                           0,        0,        0,         1)
+  // from_rgb_bt601_offset = vec4(0.0625, 0.5, 0.5, 0)
+  //
+  // contrast_matrix and contrast_brightness_constant represent the operation:
+  // yuva.x = luma_to_narrow(luma_to_full(yuva.x)*contrast) + brightness
+  //
+  // If luma_to_full(x) = x * 256.0 / 219.0 - 16.0 / 256.0
+  // and luma_to_narrow(x) = luma * 219.0/256.0 + 16.0 * 219.0 / 256.0 / 256.0
+  // then luma_to_narrow(luma_to_full(x)*contrast) + brightness
+  // = x * contrast + contrast * ((16.0 * 219.0 / 256.0 / 256.0) / (219.0 / 256.0)) + brightness - (16.0 / 256.0)
+  //
+  // Then contrast_matrix = mat4(contrast, 0, 0, 0,
+  //                             0,        1, 0, 0
+  //                             0,        0, 1, 0
+  //                             0,        0, 0, 1)
+  //
+  // contrast_constant = vec4(contrast * ((16.0 * 219.0 / 256.0 / 256.0) / (219.0 / 256.0))
+  //    + brightness - (16.0 / 256.0), 0, 0, 0)
+  //
+  // hue_saturation_matrix is obtained by reducing the following steps:
+  // yuv.y = 0.5 + (((uv.x - 0.5) * hue_cos + (uv.y - 0.5) * hue_sin) * saturation);
+  // yuv.z = 0.5 + (((0.5 - uv.x) * hue_sin + (uv.y - 0.5) * hue_cos) * saturation);
+  //
+  // as yuv.yz = vec2(0.5) +
+  //        (yuv.yz - vec2(0.5)) * mat2(hue_cos * saturation, hue_sin * saturation,
+  //                                   -hue_sin * saturation, hue_cos * saturation)
+  // =>
+  // (1, 0,                                  0,                                  0,
+  //  0, saturation * Math.cos(Math.PI*hue),-saturation * Math.sin(Math.PI*hue), 0,
+  //  0, saturation * Math.sin(Math.PI*hue), saturation * Math.cos(Math.PI*hue), 0,
+  //  0, 0,                                  0,                                  1)
+  gfloat *m = glcolorbalance->yuva_balance_matrix;
+
+  // Column 0
+  *m++ = 0.256816 * contrast;
+  *m++ = 0.504154 * contrast;
+  *m++ = 0.0979137 * contrast;
+  *m++ = 0;
+
+  // Column 1
+  *m++ = -0.148246 * s_hue_cos + 0.439271 * s_hue_sin;
+  *m++ = -0.29102 * s_hue_cos - 0.367833 * s_hue_sin;
+  *m++ = 0.439266 * s_hue_cos - 0.071438 * s_hue_sin;
+  *m++ = 0;
+
+  // Column 2
+  *m++ = 0.148246 * s_hue_sin + 0.439271 * s_hue_cos;
+  *m++ = 0.29102 * s_hue_sin - 0.367833 * s_hue_cos;
+  *m++ = -0.439266 * s_hue_sin - 0.071438 * s_hue_cos;
+  *m++ = 0;
+
+  // Column 3
+  *m++ = 0;
+  *m++ = 0;
+  *m++ = 0;
+  *m++ = 1;
+
+  glcolorbalance->yuva_balance_constant[0] =
+      0.0625 * contrast +
+      contrast * ((16.0 * 219.0 / 256.0 / 256.0) / (219.0 / 256.0))
+      + brightness - (16.0 / 256.0);
+  glcolorbalance->yuva_balance_constant[1] = 0.5;
+  glcolorbalance->yuva_balance_constant[2] = 0.5;
+  glcolorbalance->yuva_balance_constant[3] = 0;
+}
+
+static void
 gst_gl_color_balance_update_properties (GstGLColorBalance * glcolorbalance)
 {
   gboolean current_passthrough, passthrough;
@@ -210,6 +259,7 @@ gst_gl_color_balance_update_properties (GstGLColorBalance * glcolorbalance)
 
   GST_OBJECT_LOCK (glcolorbalance);
   passthrough = gst_gl_color_balance_is_passthrough (glcolorbalance);
+  _update_yua_uniforms (glcolorbalance);
   GST_OBJECT_UNLOCK (glcolorbalance);
   current_passthrough = gst_base_transform_is_passthrough (base);
 
@@ -326,12 +376,12 @@ gst_gl_color_balance_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
 
   gst_gl_shader_use (balance->shader);
   GST_OBJECT_LOCK (balance);
-  gst_gl_shader_set_uniform_1f (balance->shader, "brightness",
-      balance->brightness);
-  gst_gl_shader_set_uniform_1f (balance->shader, "contrast", balance->contrast);
-  gst_gl_shader_set_uniform_1f (balance->shader, "saturation",
-      balance->saturation);
-  gst_gl_shader_set_uniform_1f (balance->shader, "hue", balance->hue);
+
+  gst_gl_shader_set_uniform_matrix_4fv (balance->shader, "yuva_balance_matrix",
+      1, GL_FALSE, balance->yuva_balance_matrix);
+  gst_gl_shader_set_uniform_4fv (balance->shader, "yuva_balance_constant", 1,
+      balance->yuva_balance_constant);
+
   GST_OBJECT_UNLOCK (balance);
 
   gst_gl_filter_render_to_target_with_shader (filter, in_tex, out_tex,
