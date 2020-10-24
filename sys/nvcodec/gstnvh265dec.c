@@ -294,7 +294,7 @@ gst_nv_h265_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstNvH265Dec *self = GST_NV_H265_DEC (decoder);
 
-  gst_nv_decoder_decide_allocation (decoder, query,
+  gst_nv_decoder_decide_allocation (self->decoder, decoder, query,
       self->gl_context, self->output_type);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
@@ -475,8 +475,7 @@ gst_nv_h265_dec_output_picture (GstH265Decoder * decoder,
 
   if (!ret) {
     if (!gst_nv_decoder_finish_frame (self->decoder,
-            GST_NV_DECOCER_OUTPUT_TYPE_SYSTEM, NULL, decoder_frame,
-            frame->output_buffer)) {
+            self->output_type, NULL, decoder_frame, frame->output_buffer)) {
       GST_ERROR_OBJECT (self, "Failed to finish frame");
       goto error;
     }
