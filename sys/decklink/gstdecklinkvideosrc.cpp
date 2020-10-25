@@ -661,6 +661,10 @@ gst_decklink_video_src_start (GstDecklinkVideoSrc * self)
     self->input->start_streams (self->input->videosrc);
   g_mutex_unlock (&self->input->lock);
 
+  self->skipped_last = 0;
+  self->skip_from_timestamp = GST_CLOCK_TIME_NONE;
+  self->skip_to_timestamp = GST_CLOCK_TIME_NONE;
+
   return TRUE;
 }
 

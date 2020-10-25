@@ -470,6 +470,10 @@ gst_decklink_audio_src_start (GstDecklinkAudioSrc * self)
   }
   gst_caps_unref (caps);
 
+  self->skipped_last = 0;
+  self->skip_from_timestamp = GST_CLOCK_TIME_NONE;
+  self->skip_to_timestamp = GST_CLOCK_TIME_NONE;
+
   return TRUE;
 }
 
