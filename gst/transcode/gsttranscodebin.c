@@ -524,16 +524,18 @@ select_stream_cb (GstElement * decodebin,
 {
   gint i;
   gboolean transcode_stream = FALSE;
+  guint len = 0;
 
   GST_OBJECT_LOCK (self);
-  if (self->transcoding_streams->len) {
-    GST_OBJECT_UNLOCK (self);
+  len = self->transcoding_streams->len;
+  GST_OBJECT_UNLOCK (self);
 
+  if (len) {
     transcode_stream =
         find_stream (self, gst_stream_get_stream_id (stream), NULL) != NULL;
-    goto done;
+    if (transcode_stream)
+      goto done;
   }
-  GST_OBJECT_UNLOCK (self);
 
   for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
     GstStream *tmpstream = gst_stream_collection_get_stream (collection, i);
@@ -553,6 +555,15 @@ select_stream_cb (GstElement * decodebin,
           transcoding_stream_new (tmpstream, encodebin_pad));
       GST_OBJECT_UNLOCK (self);
     }
+  }
+
+  GST_OBJECT_LOCK (self);
+  len = self->transcoding_streams->len;
+  GST_OBJECT_UNLOCK (self);
+
+  if (len) {
+    transcode_stream =
+        find_stream (self, gst_stream_get_stream_id (stream), NULL) != NULL;
   }
 
 done:
