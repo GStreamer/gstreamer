@@ -859,6 +859,10 @@ gst_player_get_volume (GstPlayer * self)
  * @val: the new volume level, as a percentage between 0 and 1
  *
  * Sets the volume level of the stream as a percentage between 0 and 1.
+ *
+ * This volume is a linear factor. For showing the volume in a GUI it 
+ * might make sense to first convert from a different format. Volume sliders 
+ * should usually use a cubic volume. See gst_stream_volume_convert_volume().
  */
 void
 gst_player_set_volume (GstPlayer * self, gdouble val)
