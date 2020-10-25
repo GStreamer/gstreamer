@@ -317,7 +317,7 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           "same profile group."
           "DeckLink Duo 2 support configuration of the duplex mode of "
           "individual sub-devices.",
-          GST_TYPE_DECKLINK_PROFILE_ID, GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX,
+          GST_TYPE_DECKLINK_PROFILE_ID, GST_DECKLINK_PROFILE_ID_DEFAULT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
@@ -393,7 +393,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
-  self->profile_id = bmdProfileOneSubDeviceFullDuplex;
+  self->profile_id = GST_DECKLINK_PROFILE_ID_DEFAULT;
   self->timecode_format = bmdTimecodeRP188Any;
   self->signal_state = SIGNAL_STATE_UNKNOWN;
   self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
@@ -469,9 +469,7 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
       }
       break;
     case PROP_PROFILE_ID:
-      self->profile_id =
-          gst_decklink_profile_id_from_enum ((GstDecklinkProfileId)
-          g_value_get_enum (value));
+      self->profile_id = (GstDecklinkProfileId) g_value_get_enum (value);
       break;
     case PROP_TIMECODE_FORMAT:
       self->timecode_format =
@@ -522,8 +520,7 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       g_value_set_enum (value, self->video_format);
       break;
     case PROP_PROFILE_ID:
-      g_value_set_enum (value,
-          gst_decklink_profile_id_to_enum (self->profile_id));
+      g_value_set_enum (value, self->profile_id);
       break;
     case PROP_TIMECODE_FORMAT:
       g_value_set_enum (value,

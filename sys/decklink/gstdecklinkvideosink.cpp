@@ -360,7 +360,7 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           "same profile group."
           "DeckLink Duo 2 support configuration of the duplex mode of "
           "individual sub-devices.",
-          GST_TYPE_DECKLINK_PROFILE_ID, GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX,
+          GST_TYPE_DECKLINK_PROFILE_ID, GST_DECKLINK_PROFILE_ID_DEFAULT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
@@ -428,7 +428,7 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV;
-  self->profile_id = bmdProfileOneSubDeviceFullDuplex;
+  self->profile_id = GST_DECKLINK_PROFILE_ID_DEFAULT;
   /* VITC is legacy, we should expect RP188 in modern use cases */
   self->timecode_format = bmdTimecodeRP188Any;
   self->caption_line = 0;
@@ -467,9 +467,7 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
       }
       break;
     case PROP_PROFILE_ID:
-      self->profile_id =
-          gst_decklink_profile_id_from_enum ((GstDecklinkProfileId)
-          g_value_get_enum (value));
+      self->profile_id = (GstDecklinkProfileId) g_value_get_enum (value);
       break;
     case PROP_TIMECODE_FORMAT:
       self->timecode_format =
@@ -513,8 +511,7 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
       g_value_set_enum (value, self->video_format);
       break;
     case PROP_PROFILE_ID:
-      g_value_set_enum (value,
-          gst_decklink_profile_id_to_enum (self->profile_id));
+      g_value_set_enum (value, self->profile_id);
       break;
     case PROP_TIMECODE_FORMAT:
       g_value_set_enum (value,

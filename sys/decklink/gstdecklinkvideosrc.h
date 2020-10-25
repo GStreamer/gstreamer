@@ -71,7 +71,7 @@ struct _GstDecklinkVideoSrc
 
   GstVideoInfo info;
   GstDecklinkVideoFormat video_format;
-  BMDProfileID profile_id;
+  GstDecklinkProfileId profile_id;
   BMDTimecodeFormat timecode_format;
 
   GstDecklinkInput *input;

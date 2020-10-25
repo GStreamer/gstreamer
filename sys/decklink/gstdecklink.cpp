@@ -158,6 +158,7 @@ gst_decklink_video_format_get_type (void)
 
 /**
  * GstDecklinkProfileId:
+ * @GST_DECKLINK_PROFILE_ID_DEFAULT: Don't change the profile
  * @GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX: Equivalent to bmdProfileOneSubDeviceFullDuplex
  * @GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX: Equivalent to bmdProfileOneSubDeviceHalfDuplex
  * @GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX: Equivalent to bmdProfileTwoSubDevicesFullDuplex
@@ -173,6 +174,7 @@ gst_decklink_profile_id_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue types[] = {
+    {GST_DECKLINK_PROFILE_ID_DEFAULT, "Default, don't change profile", "default"},
     {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX, "One sub-device, Full-Duplex", "one-sub-device-full"},
     {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX, "One sub-device, Half-Duplex", "one-sub-device-half"},
     {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX, "Two sub-devices, Full-Duplex", "two-sub-devices-full"},
@@ -363,20 +365,6 @@ static const struct
   {bmdFormat12BitRGBLE, FIXME, FIXME},
   {bmdFormat10BitRGBXLE, FIXME, FIXME},
   {bmdFormat10BitRGBX, FIXME, FIXME} */
-  /* *INDENT-ON* */
-};
-
-static const struct
-{
-  BMDProfileID profile;
-  GstDecklinkProfileId gstprofile;
-} profiles[] = {
-  /* *INDENT-OFF* */
-  {bmdProfileOneSubDeviceFullDuplex, GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX},
-  {bmdProfileOneSubDeviceHalfDuplex, GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX},
-  {bmdProfileTwoSubDevicesFullDuplex, GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX},
-  {bmdProfileTwoSubDevicesHalfDuplex, GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX},
-  {bmdProfileFourSubDevicesHalfDuplex, GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX},
   /* *INDENT-ON* */
 };
 
@@ -612,25 +600,6 @@ gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f)
   }
   g_assert_not_reached ();
   return GST_DECKLINK_TIMECODE_FORMAT_RP188ANY;
-}
-
-const BMDProfileID
-gst_decklink_profile_id_from_enum (GstDecklinkProfileId p)
-{
-  return profiles[p].profile;
-}
-
-const GstDecklinkProfileId
-gst_decklink_profile_id_to_enum (BMDProfileID p)
-{
-  guint i;
-
-  for (i = 0; i < G_N_ELEMENTS (profiles); i++) {
-    if (profiles[i].profile == p)
-      return profiles[i].gstprofile;
-  }
-  g_assert_not_reached ();
-  return GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX;
 }
 
 const BMDKeyerMode
@@ -885,7 +854,7 @@ struct _Device
 };
 
 static ProfileSetOperationResult gst_decklink_configure_profile (Device * device,
-    BMDProfileID profile_id);
+    GstDecklinkProfileId profile_id);
 
 class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
 {
@@ -1826,20 +1795,46 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
 }
 
 static ProfileSetOperationResult
-gst_decklink_configure_profile (Device * device, BMDProfileID profile_id)
+gst_decklink_configure_profile (Device * device, GstDecklinkProfileId profile_id)
 {
   HRESULT res;
+
+  if (profile_id == GST_DECKLINK_PROFILE_ID_DEFAULT)
+    return PROFILE_SET_SUCCESS;
 
   GstDecklinkInput *input = &device->input;
   IDeckLink *decklink = input->device;
 
   IDeckLinkProfileManager *manager = NULL;
   if (decklink->QueryInterface(IID_IDeckLinkProfileManager, (void **)&manager) == S_OK) {
+    BMDProfileID bmd_profile_id;
+
+    switch (profile_id) {
+      case GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX:
+        bmd_profile_id = bmdProfileOneSubDeviceFullDuplex;
+        break;
+      case GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX:
+        bmd_profile_id = bmdProfileOneSubDeviceHalfDuplex;
+        break;
+      case GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX:
+        bmd_profile_id = bmdProfileTwoSubDevicesFullDuplex;
+        break;
+      case GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX:
+        bmd_profile_id = bmdProfileTwoSubDevicesHalfDuplex;
+        break;
+      case GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX:
+        bmd_profile_id = bmdProfileFourSubDevicesHalfDuplex;
+        break;
+      default:
+      case GST_DECKLINK_PROFILE_ID_DEFAULT:
+        g_assert_not_reached ();
+        break;
+    }
 
     IDeckLinkProfile *profile = NULL;
-    res = manager->GetProfile(profile_id, &profile);
+    res = manager->GetProfile(bmd_profile_id, &profile);
 
-    if (res == S_OK) {
+    if (res == S_OK && profile) {
       res = profile->SetActive();
       profile->Release();
     }
@@ -1854,9 +1849,7 @@ gst_decklink_configure_profile (Device * device, BMDProfileID profile_id)
       GST_ERROR("Failed to set profile.\n");
       return PROFILE_SET_FAILURE;
     }
-  }
-  else {
-
+  } else {
     GST_DEBUG("Device has only one profile.\n");
     return PROFILE_SET_UNSUPPORTED;
   }

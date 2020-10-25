@@ -161,6 +161,7 @@ typedef enum {
 GType gst_decklink_video_format_get_type (void);
 
 typedef enum {
+  GST_DECKLINK_PROFILE_ID_DEFAULT,
   GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX, /* bmdProfileOneSubDeviceFullDuplex */
   GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX, /* bmdProfileOneSubDeviceHalfDuplex */
   GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX, /* bmdProfileTwoSubDevicesFullDuplex */
