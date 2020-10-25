@@ -996,7 +996,7 @@ gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
   g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
 
   if (!(mem->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
-    GST_WARNING_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+    GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
         "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
     return FALSE;
   }
@@ -1061,7 +1061,7 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   priv = allocator->priv;
 
   if (!(mem->desc.BindFlags & D3D11_BIND_DECODER)) {
-    GST_WARNING_OBJECT (allocator,
+    GST_LOG_OBJECT (allocator,
         "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
     return FALSE;
   }
@@ -1165,7 +1165,7 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   priv = allocator->priv;
 
   if (!check_bind_flags_for_processor_input_view (mem->desc.BindFlags)) {
-    GST_WARNING_OBJECT (allocator,
+    GST_LOG_OBJECT (allocator,
         "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
     return FALSE;
   }
@@ -1246,7 +1246,7 @@ gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
 
   if (!(mem->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
-    GST_WARNING_OBJECT (allocator,
+    GST_LOG_OBJECT (allocator,
         "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
     return FALSE;
   }
