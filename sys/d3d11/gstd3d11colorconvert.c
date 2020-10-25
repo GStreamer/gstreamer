@@ -1516,7 +1516,7 @@ gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
     GST_ERROR_OBJECT (self, "couldn't set converter");
     return FALSE;
   }
-
+#if (DXGI_HEADER_VERSION >= 4)
   /* If both input and output formats are native DXGI format */
   if (self->in_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
       self->out_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
@@ -1529,30 +1529,7 @@ gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
           in_info->width, in_info->height, out_info->width, out_info->height);
     }
 
-    /* check input and output formats are supported by processor */
-    if (processor
-        && !gst_d3d11_video_processor_supports_input_format (processor,
-            self->in_d3d11_format->dxgi_format)) {
-      GST_DEBUG_OBJECT (self,
-          "Input DXGI format %d is not supported by video processor",
-          self->in_d3d11_format->dxgi_format);
-      gst_d3d11_video_processor_free (processor);
-      processor = NULL;
-    }
-
-    if (processor &&
-        !gst_d3d11_video_processor_supports_output_format (processor,
-            self->out_d3d11_format->dxgi_format)) {
-      GST_DEBUG_OBJECT (self,
-          "Output DXGI format %d is not supported by video processor",
-          self->out_d3d11_format->dxgi_format);
-      gst_d3d11_video_processor_free (processor);
-      processor = NULL;
-    }
-
     if (processor) {
-      gboolean set_color_space = TRUE;
-#if (DXGI_HEADER_VERSION >= 4)
       const GstDxgiColorSpace *in_color_space;
       const GstDxgiColorSpace *out_color_space;
 
@@ -1560,35 +1537,37 @@ gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
       out_color_space = gst_d3d11_video_info_to_dxgi_color_space (out_info);
 
       if (in_color_space && out_color_space) {
-        DXGI_COLOR_SPACE_TYPE in_type =
+        DXGI_FORMAT in_dxgi_format = self->in_d3d11_format->dxgi_format;
+        DXGI_FORMAT out_dxgi_format = self->out_d3d11_format->dxgi_format;
+        DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
             (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
-        DXGI_COLOR_SPACE_TYPE out_type =
+        DXGI_COLOR_SPACE_TYPE out_dxgi_color_space =
             (DXGI_COLOR_SPACE_TYPE) out_color_space->dxgi_color_space_type;
 
-        if (!gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
-                in_type) ||
-            !gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
-                out_type)) {
-          GST_DEBUG_OBJECT (self, "DXGI colorspace is not supported");
+        if (!gst_d3d11_video_processor_check_format_conversion (processor,
+                in_dxgi_format, in_dxgi_color_space, out_dxgi_format,
+                out_dxgi_color_space)) {
+          GST_DEBUG_OBJECT (self, "Conversion is not supported by device");
+          gst_d3d11_video_processor_free (processor);
+          processor = NULL;
         } else {
-          GST_DEBUG_OBJECT (self,
-              "IN DXGI colorspace %d, OUT DXGI colorspace %d",
-              (guint) in_type, (guint) out_type);
-          set_color_space = FALSE;
+          GST_DEBUG_OBJECT (self, "video processor supports conversion");
+          gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
+              in_dxgi_color_space);
+          gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
+              out_dxgi_color_space);
         }
+      } else {
+        GST_WARNING_OBJECT (self,
+            "Couldn't determine input and/or output dxgi colorspace");
+        gst_d3d11_video_processor_free (processor);
+        processor = NULL;
       }
-#endif
-
-      if (set_color_space) {
-        gst_d3d11_video_processor_set_input_color_space (processor,
-            &in_info->colorimetry);
-        gst_d3d11_video_processor_set_output_color_space (processor,
-            &out_info->colorimetry);
-      }
-
-      self->processor = processor;
     }
+
+    self->processor = processor;
   }
+#endif
 
   /* setup D3D11_BOX struct for fallback copy */
   self->in_src_box.left = 0;
