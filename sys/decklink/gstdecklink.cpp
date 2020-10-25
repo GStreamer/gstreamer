@@ -884,7 +884,7 @@ struct _Device
   GstDecklinkDevice *devices[4];
 };
 
-ProfileSetOperationResult gst_decklink_configure_profile (Device * device,
+static ProfileSetOperationResult gst_decklink_configure_profile (Device * device,
     BMDProfileID profile_id);
 
 class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
@@ -1825,7 +1825,7 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
   g_mutex_unlock (&input->lock);
 }
 
-ProfileSetOperationResult
+static ProfileSetOperationResult
 gst_decklink_configure_profile (Device * device, BMDProfileID profile_id)
 {
   HRESULT res;
