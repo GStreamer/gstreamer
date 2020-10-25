@@ -547,20 +547,20 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     }
 
     if (self->skipped_last == 0 && skipped_packets > 0) {
-        GST_WARNING_OBJECT (self, "Starting to drop audio packets");
+      GST_WARNING_OBJECT (self, "Starting to drop audio packets");
     }
 
     if (skipped_packets == 0 && self->skipped_last > 0) {
       GST_ELEMENT_WARNING_WITH_DETAILS (self,
           STREAM, FAILED,
           ("Dropped %u old packets from %" GST_TIME_FORMAT " to %"
-          GST_TIME_FORMAT, self->skipped_last,
-          GST_TIME_ARGS (self->skip_from_timestamp),
-          GST_TIME_ARGS (self->skip_to_timestamp)),
+              GST_TIME_FORMAT, self->skipped_last,
+              GST_TIME_ARGS (self->skip_from_timestamp),
+              GST_TIME_ARGS (self->skip_to_timestamp)),
           (NULL),
           ("dropped", G_TYPE_UINT, self->skipped_last,
-           "from", G_TYPE_UINT64, self->skip_from_timestamp,
-           "to", G_TYPE_UINT64, self->skip_to_timestamp, NULL));
+              "from", G_TYPE_UINT64, self->skip_from_timestamp,
+              "to", G_TYPE_UINT64, self->skip_to_timestamp, NULL));
       self->skipped_last = 0;
     }
     self->skipped_last += skipped_packets;

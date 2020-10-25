@@ -1623,7 +1623,8 @@ gst_decklink_video_sink_change_state (GstElement * element,
           self->internal_time_offset = self->internal_base_time;
         } else if (GST_CLOCK_TIME_IS_VALID (self->internal_pause_time)) {
           self->internal_time_offset +=
-                  gst_clock_get_internal_time (self->output->clock) - self->internal_pause_time;
+              gst_clock_get_internal_time (self->output->clock) -
+              self->internal_pause_time;
         }
 
         GST_INFO_OBJECT (self, "clock has been set to %" GST_PTR_FORMAT
@@ -1687,7 +1688,8 @@ gst_decklink_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      self->internal_pause_time = gst_clock_get_internal_time (self->output->clock);
+      self->internal_pause_time =
+          gst_clock_get_internal_time (self->output->clock);
       break;
     default:
       break;

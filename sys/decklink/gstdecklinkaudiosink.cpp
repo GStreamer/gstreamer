@@ -684,7 +684,8 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         GST_TIME_ARGS (buffered_time), buffered_samples);
 
     {
-      GstClockTimeDiff buffered_ahead_of_clock_ahead = GST_CLOCK_DIFF (clock_ahead, buffered_time);
+      GstClockTimeDiff buffered_ahead_of_clock_ahead =
+          GST_CLOCK_DIFF (clock_ahead, buffered_time);
 
       GST_DEBUG_OBJECT (self, "driver is %" GST_STIME_FORMAT " ahead of the "
           "expected clock", GST_STIME_ARGS (buffered_ahead_of_clock_ahead));
@@ -693,9 +694,11 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
        * own synchronisation. It seems to count samples instead. */
       /* FIXME: do we need to split buffers? */
       if (buffered_ahead_of_clock_ahead > 0 &&
-            buffered_ahead_of_clock_ahead > gst_base_sink_get_max_lateness (bsink)) {
-        GST_DEBUG_OBJECT (self, "Dropping buffer that is %" GST_STIME_FORMAT
-            " too late", GST_STIME_ARGS (buffered_ahead_of_clock_ahead));
+          buffered_ahead_of_clock_ahead >
+          gst_base_sink_get_max_lateness (bsink)) {
+        GST_DEBUG_OBJECT (self,
+            "Dropping buffer that is %" GST_STIME_FORMAT " too late",
+            GST_STIME_ARGS (buffered_ahead_of_clock_ahead));
         if (self->resampler)
           gst_audio_resampler_reset (self->resampler);
         flow_ret = GST_FLOW_OK;
@@ -710,7 +713,8 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
       GST_DEBUG_OBJECT (self,
           "Buffered enough, wait for preroll or the clock or flushing. "
-          "Configured buffer time: %" GST_TIME_FORMAT, GST_TIME_ARGS (self->buffer_time));
+          "Configured buffer time: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->buffer_time));
 
       if (wait_time < self->buffer_time)
         wait_time = 0;

@@ -88,11 +88,16 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_2160p5994, "4k 59.94p", "2160p5994"},
     {GST_DECKLINK_MODE_2160p60, "4k 60p", "2160p60"},
 
-    {GST_DECKLINK_MODE_NTSC_WIDESCREEN, "NTSC SD 60i Widescreen", "ntsc-widescreen"},
-    {GST_DECKLINK_MODE_NTSC2398_WIDESCREEN, "NTSC SD 60i Widescreen (24 fps)", "ntsc2398-widescreen"},
-    {GST_DECKLINK_MODE_PAL_WIDESCREEN, "PAL SD 50i Widescreen", "pal-widescreen"},
-    {GST_DECKLINK_MODE_NTSC_P_WIDESCREEN, "NTSC SD 60p Widescreen", "ntsc-p-widescreen"},
-    {GST_DECKLINK_MODE_PAL_P_WIDESCREEN, "PAL SD 50p Widescreen", "pal-p-widescreen"},
+    {GST_DECKLINK_MODE_NTSC_WIDESCREEN, "NTSC SD 60i Widescreen",
+        "ntsc-widescreen"},
+    {GST_DECKLINK_MODE_NTSC2398_WIDESCREEN, "NTSC SD 60i Widescreen (24 fps)",
+        "ntsc2398-widescreen"},
+    {GST_DECKLINK_MODE_PAL_WIDESCREEN, "PAL SD 50i Widescreen",
+        "pal-widescreen"},
+    {GST_DECKLINK_MODE_NTSC_P_WIDESCREEN, "NTSC SD 60p Widescreen",
+        "ntsc-p-widescreen"},
+    {GST_DECKLINK_MODE_PAL_P_WIDESCREEN, "PAL SD 50p Widescreen",
+        "pal-p-widescreen"},
 
     {0, NULL, NULL}
   };
@@ -174,12 +179,18 @@ gst_decklink_profile_id_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue types[] = {
-    {GST_DECKLINK_PROFILE_ID_DEFAULT, "Default, don't change profile", "default"},
-    {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX, "One sub-device, Full-Duplex", "one-sub-device-full"},
-    {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX, "One sub-device, Half-Duplex", "one-sub-device-half"},
-    {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX, "Two sub-devices, Full-Duplex", "two-sub-devices-full"},
-    {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX, "Two sub-devices, Half-Duplex", "two-sub-devices-half"},
-    {GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX, "Four sub-devices, Half-Duplex", "four-sub-devices-half"},
+    {GST_DECKLINK_PROFILE_ID_DEFAULT, "Default, don't change profile",
+        "default"},
+    {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX,
+        "One sub-device, Full-Duplex", "one-sub-device-full"},
+    {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX,
+        "One sub-device, Half-Duplex", "one-sub-device-half"},
+    {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX,
+        "Two sub-devices, Full-Duplex", "two-sub-devices-full"},
+    {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX,
+        "Two sub-devices, Half-Duplex", "two-sub-devices-half"},
+    {GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX,
+        "Four sub-devices, Half-Duplex", "four-sub-devices-half"},
     {0, NULL, NULL}
   };
 
@@ -853,8 +864,8 @@ struct _Device
   GstDecklinkDevice *devices[4];
 };
 
-static ProfileSetOperationResult gst_decklink_configure_profile (Device * device,
-    GstDecklinkProfileId profile_id);
+static ProfileSetOperationResult gst_decklink_configure_profile (Device *
+    device, GstDecklinkProfileId profile_id);
 
 class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
 {
@@ -934,7 +945,8 @@ public:
 
     /* Reset any timestamp observations we might've made */
     if (m_input->videosrc) {
-      GstDecklinkVideoSrc *videosrc = GST_DECKLINK_VIDEO_SRC (m_input->videosrc);
+      GstDecklinkVideoSrc *videosrc =
+          GST_DECKLINK_VIDEO_SRC (m_input->videosrc);
 
       g_mutex_lock (&videosrc->lock);
       videosrc->window_fill = 0;
@@ -1104,7 +1116,7 @@ private:
     while ((buf = (uint8_t *) gst_queue_array_pop_head (m_buffers))) {
       uint8_t offset = *(buf - 1);
       void *alloc_buf = buf - 128 + offset;
-      g_free (alloc_buf);
+        g_free (alloc_buf);
     }
   }
 
@@ -1544,8 +1556,7 @@ init_devices (gpointer data)
       bool tmp_bool = false;
       int64_t tmp_int = 2;
 
-      dev->input.attributes->GetInt (BMDDeckLinkMaximumAudioChannels,
-          &tmp_int);
+      dev->input.attributes->GetInt (BMDDeckLinkMaximumAudioChannels, &tmp_int);
       dev->input.attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
           &tmp_bool);
       supports_format_detection = tmp_bool;
@@ -1795,7 +1806,8 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
 }
 
 static ProfileSetOperationResult
-gst_decklink_configure_profile (Device * device, GstDecklinkProfileId profile_id)
+gst_decklink_configure_profile (Device * device,
+    GstDecklinkProfileId profile_id)
 {
   HRESULT res;
 
@@ -1806,7 +1818,8 @@ gst_decklink_configure_profile (Device * device, GstDecklinkProfileId profile_id
   IDeckLink *decklink = input->device;
 
   IDeckLinkProfileManager *manager = NULL;
-  if (decklink->QueryInterface(IID_IDeckLinkProfileManager, (void **)&manager) == S_OK) {
+  if (decklink->QueryInterface (IID_IDeckLinkProfileManager,
+          (void **) &manager) == S_OK) {
     BMDProfileID bmd_profile_id;
 
     switch (profile_id) {
@@ -1832,25 +1845,24 @@ gst_decklink_configure_profile (Device * device, GstDecklinkProfileId profile_id
     }
 
     IDeckLinkProfile *profile = NULL;
-    res = manager->GetProfile(bmd_profile_id, &profile);
+    res = manager->GetProfile (bmd_profile_id, &profile);
 
     if (res == S_OK && profile) {
-      res = profile->SetActive();
-      profile->Release();
+      res = profile->SetActive ();
+      profile->Release ();
     }
 
-    manager->Release();
+    manager->Release ();
 
     if (res == S_OK) {
-      GST_DEBUG("Successfully set profile.\n");
+      GST_DEBUG ("Successfully set profile.\n");
       return PROFILE_SET_SUCCESS;
-    }
-    else {
-      GST_ERROR("Failed to set profile.\n");
+    } else {
+      GST_ERROR ("Failed to set profile.\n");
       return PROFILE_SET_FAILURE;
     }
   } else {
-    GST_DEBUG("Device has only one profile.\n");
+    GST_DEBUG ("Device has only one profile.\n");
     return PROFILE_SET_UNSUPPORTED;
   }
 }
@@ -1962,14 +1974,21 @@ plugin_init (GstPlugin * plugin)
   gst_device_provider_register (plugin, "decklinkdeviceprovider",
       GST_RANK_PRIMARY, GST_TYPE_DECKLINK_DEVICE_PROVIDER);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CHANNELS, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CONNECTION, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_PROFILE_ID, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_KEYER_MODE, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CHANNELS,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CONNECTION,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_PROFILE_ID,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_KEYER_MODE,
+      (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_MODE, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_TIMECODE_FORMAT, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_VIDEO_FORMAT, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_CONNECTION, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_TIMECODE_FORMAT,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_VIDEO_FORMAT,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_CONNECTION,
+      (GstPluginAPIFlags) 0);
 
   return TRUE;
 }
