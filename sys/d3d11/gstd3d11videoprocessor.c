@@ -54,7 +54,9 @@ struct _GstD3D11VideoProcessor
 #endif
   ID3D11VideoProcessor *processor;
   ID3D11VideoProcessorEnumerator *enumerator;
-
+#ifdef HAVE_VIDEO_CONTEXT_ONE
+  ID3D11VideoProcessorEnumerator1 *enumerator1;
+#endif
   D3D11_VIDEO_PROCESSOR_CAPS processor_caps;
 };
 
@@ -99,6 +101,13 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
       &desc, &self->enumerator);
   if (!gst_d3d11_result (hr, device))
     goto fail;
+#ifdef HAVE_VIDEO_CONTEXT_ONE
+  hr = ID3D11VideoContext_QueryInterface (self->enumerator,
+      &IID_ID3D11VideoProcessorEnumerator1, (void **) &self->enumerator1);
+  if (gst_d3d11_result (hr, device)) {
+    GST_DEBUG ("ID3D11VideoProcessorEnumerator1 interface available");
+  }
+#endif
 
   hr = ID3D11VideoProcessorEnumerator_GetVideoProcessorCaps (self->enumerator,
       &self->processor_caps);
@@ -154,6 +163,10 @@ gst_d3d11_video_processor_free (GstD3D11VideoProcessor * processor)
     ID3D11VideoProcessor_Release (processor->processor);
   if (processor->enumerator)
     ID3D11VideoProcessorEnumerator_Release (processor->enumerator);
+#ifdef HAVE_VIDEO_CONTEXT_ONE
+  if (processor->enumerator1)
+    ID3D11VideoProcessorEnumerator1_Release (processor->enumerator1);
+#endif
 
   gst_clear_object (&processor->device);
   g_free (processor);
@@ -284,6 +297,34 @@ gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcessor *
 }
 
 #if (DXGI_HEADER_VERSION >= 4)
+gboolean
+gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor *
+    processor, DXGI_FORMAT in_format, DXGI_COLOR_SPACE_TYPE in_color_space,
+    DXGI_FORMAT out_format, DXGI_COLOR_SPACE_TYPE out_color_space)
+{
+#ifdef HAVE_VIDEO_CONTEXT_ONE
+  HRESULT hr;
+  BOOL supported = TRUE;
+
+  g_return_val_if_fail (processor != NULL, FALSE);
+
+  if (!processor->enumerator1)
+    return FALSE;
+
+  hr = ID3D11VideoProcessorEnumerator1_CheckVideoProcessorFormatConversion
+      (processor->enumerator1, in_format, in_color_space, out_format,
+      out_color_space, &supported);
+  if (!gst_d3d11_result (hr, processor->device)) {
+    GST_WARNING ("Failed to check conversion support");
+    return FALSE;
+  }
+
+  return supported;
+#endif
+
+  return FALSE;
+}
+
 gboolean
 gst_d3d11_video_processor_set_input_dxgi_color_space (GstD3D11VideoProcessor *
     processor, DXGI_COLOR_SPACE_TYPE color_space)

@@ -52,6 +52,12 @@ gboolean  gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcess
                                                             GstVideoColorimetry * color);
 
 #if (DXGI_HEADER_VERSION >= 4)
+gboolean  gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor * processor,
+                                                             DXGI_FORMAT in_format,
+                                                             DXGI_COLOR_SPACE_TYPE in_color_space,
+                                                             DXGI_FORMAT out_format,
+                                                             DXGI_COLOR_SPACE_TYPE out_color_space);
+
 gboolean  gst_d3d11_video_processor_set_input_dxgi_color_space (GstD3D11VideoProcessor * processor,
                                                                 DXGI_COLOR_SPACE_TYPE color_space);
 
