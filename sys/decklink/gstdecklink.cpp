@@ -887,10 +887,6 @@ struct _Device
 ProfileSetOperationResult gst_decklink_configure_profile (Device * device,
     BMDProfileID profile_id);
 
-Device *gst_decklink_find_device_by_persistent_id (int64_t persistent_id);
-gboolean gst_decklink_device_has_persistent_id (Device * device,
-    int64_t persistent_id);
-
 class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
 {
 private:
@@ -1864,38 +1860,6 @@ gst_decklink_configure_profile (Device * device, BMDProfileID profile_id)
     GST_DEBUG("Device has only one profile.\n");
     return PROFILE_SET_UNSUPPORTED;
   }
-}
-
-gboolean
-gst_decklink_device_has_persistent_id (Device * device, int64_t persistent_id)
-{
-  HRESULT result;
-  int64_t this_device_persistent_id;
-
-  GstDecklinkInput *input = &device->input;
-
-  result =
-      input->attributes->GetInt (BMDDeckLinkPersistentID,
-      &this_device_persistent_id);
-  return (result == S_OK) && (this_device_persistent_id == persistent_id);
-}
-
-Device *
-gst_decklink_find_device_by_persistent_id (int64_t persistent_id)
-{
-  GST_DEBUG ("Searching Device by persistent ID %" G_GINT64_FORMAT,
-      (gint64) persistent_id);
-
-  for (guint index = 0; index < devices->len; index++) {
-    Device *device = (Device *) g_ptr_array_index (devices, index);
-
-    if (gst_decklink_device_has_persistent_id (device, persistent_id)) {
-      GST_DEBUG ("Found matching Device %u", index);
-      return device;
-    }
-  }
-
-  return NULL;
 }
 
 G_DEFINE_TYPE (GstDecklinkClock, gst_decklink_clock, GST_TYPE_SYSTEM_CLOCK);
