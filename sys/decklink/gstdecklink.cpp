@@ -1855,14 +1855,14 @@ gst_decklink_configure_profile (Device * device,
     manager->Release ();
 
     if (res == S_OK) {
-      GST_DEBUG ("Successfully set profile.\n");
+      GST_DEBUG ("Successfully set profile");
       return PROFILE_SET_SUCCESS;
     } else {
-      GST_ERROR ("Failed to set profile.\n");
+      GST_ERROR ("Failed to set profile");
       return PROFILE_SET_FAILURE;
     }
   } else {
-    GST_DEBUG ("Device has only one profile.\n");
+    GST_DEBUG ("Device has only one profile");
     return PROFILE_SET_UNSUPPORTED;
   }
 }
