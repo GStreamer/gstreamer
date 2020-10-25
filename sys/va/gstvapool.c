@@ -114,7 +114,7 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
   vpool->need_alignment = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  if (vpool->need_alignment && vpool->add_videometa) {
+  if (vpool->need_alignment) {
     gst_buffer_pool_config_get_video_alignment (config, &video_align);
 
     width += video_align.padding_left + video_align.padding_right;
@@ -123,8 +123,6 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
     /* apply the alignment to the info */
     if (!gst_video_info_align (&caps_info, &video_align))
       goto failed_to_align;
-
-    gst_buffer_pool_config_set_video_alignment (config, &video_align);
   }
 
   /* update allocation info with aligned size */
@@ -146,7 +144,23 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   vpool->caps_info = caps_info;
   vpool->alloc_info = alloc_info;
-  vpool->video_align = video_align;
+
+  /* May adjust the stride alignment based on the real HW alignment */
+  if (vpool->need_alignment) {
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&alloc_info); i++) {
+      gint nth_bit;
+
+      nth_bit = g_bit_nth_lsf (GST_VIDEO_INFO_PLANE_STRIDE (&alloc_info, i), 0);
+      if (nth_bit >= 0)
+        video_align.stride_align[i] = (1U << nth_bit) - 1;
+    }
+
+    vpool->video_align = video_align;
+
+    gst_buffer_pool_config_set_video_alignment (config, &video_align);
+  } else {
+    gst_video_alignment_reset (&vpool->video_align);
+  }
 
   if (gst_caps_is_raw (caps)) {
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&caps_info); i++) {
