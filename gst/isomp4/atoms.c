@@ -2334,11 +2334,15 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
 
   /* Last two entries might be the same size here as we only merge once the
    * next chunk is started */
-  if ((len = atom_array_get_len (&stsc->entries)) > 1 &&
-      ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
-          (atom_array_index (&stsc->entries, len - 2)).samples_per_chunk)) {
-    stsc->entries.len--;
-    last_entries_merged = TRUE;
+  if ((len = atom_array_get_len (&stsc->entries)) > 1) {
+    STSCEntry *prev_entry = &atom_array_index (&stsc->entries, len - 2);
+    STSCEntry *current_entry = &atom_array_index (&stsc->entries, len - 1);
+    if (prev_entry->samples_per_chunk == current_entry->samples_per_chunk &&
+        prev_entry->sample_description_index ==
+        current_entry->sample_description_index) {
+      stsc->entries.len--;
+      last_entries_merged = TRUE;
+    }
   }
 
   prop_copy_uint32 (atom_array_get_len (&stsc->entries), buffer, size, offset);
@@ -3076,7 +3080,8 @@ atom_wave_copy_data (AtomWAVE * wave, guint8 ** buffer,
 /* add samples to tables */
 
 void
-atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
+atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples,
+    guint32 sample_description_index)
 {
   gint len;
 
@@ -3089,13 +3094,13 @@ atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
     nentry = &atom_array_index (&stsc->entries, len - 1);
     nentry->first_chunk = first_chunk;
     nentry->samples_per_chunk = nsamples;
-    nentry->sample_description_index = 1;
+    nentry->sample_description_index = sample_description_index;
   } else {
     STSCEntry nentry;
 
     nentry.first_chunk = first_chunk;
     nentry.samples_per_chunk = nsamples;
-    nentry.sample_description_index = 1;
+    nentry.sample_description_index = sample_description_index;
     atom_array_append (&stsc->entries, nentry, 128);
   }
 }
@@ -3231,7 +3236,8 @@ atom_stbl_add_samples (AtomSTBL * stbl, guint32 nsamples, guint32 delta,
   atom_stsz_add_entry (&stbl->stsz, nsamples, size);
   if (atom_stco64_add_entry (&stbl->stco64, chunk_offset)) {
     atom_stsc_add_new_entry (&stbl->stsc,
-        atom_stco64_get_entry_count (&stbl->stco64), nsamples);
+        atom_stco64_get_entry_count (&stbl->stco64), nsamples,
+        stbl->stsd.n_entries);
   } else {
     atom_stsc_update_entry (&stbl->stsc,
         atom_stco64_get_entry_count (&stbl->stco64), nsamples);
@@ -4001,7 +4007,7 @@ atom_trak_add_video_entry (AtomTRAK * trak, AtomsContext * context,
     mp4v->temporal_quality = 512;
   }
 
-  stsd->entries = g_list_prepend (stsd->entries, mp4v);
+  stsd->entries = g_list_append (stsd->entries, mp4v);
   stsd->n_entries++;
   return mp4v;
 }
@@ -4374,13 +4380,13 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     dheight = entry->height;
   }
 
-  atom_trak_set_video_commons (trak, context, scale, dwidth, dheight);
-  atom_stsd_remove_entries (&trak->mdia.minf.stbl.stsd);
+  if (trak->mdia.minf.stbl.stsd.n_entries < 1) {
+    atom_trak_set_video_commons (trak, context, scale, dwidth, dheight);
+    trak->is_video = TRUE;
+    trak->is_h264 = (entry->fourcc == FOURCC_avc1
+        || entry->fourcc == FOURCC_avc3);
+  }
   ste = atom_trak_add_video_entry (trak, context, entry->fourcc);
-
-  trak->is_video = TRUE;
-  trak->is_h264 = (entry->fourcc == FOURCC_avc1
-      || entry->fourcc == FOURCC_avc3);
 
   ste->version = entry->version;
   ste->width = entry->width;

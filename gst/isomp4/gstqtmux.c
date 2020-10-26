@@ -4004,7 +4004,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
               if (qpad->sample_offset - nsamples > 0) {
                 stbl->stsc.entries.len = i;
                 atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
-                    qpad->sample_offset - nsamples);
+                    qpad->sample_offset - nsamples, stbl->stsd.n_entries);
               } else {
                 stbl->stsc.entries.len = i;
                 stbl->stco64.entries.len--;
@@ -4013,7 +4013,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
               /* Everything in a single chunk */
               stbl->stsc.entries.len = 0;
               atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
-                  qpad->sample_offset);
+                  qpad->sample_offset, stbl->stsd.n_entries);
             }
           } else {
             stbl->stco64.entries.len = 0;
@@ -5718,6 +5718,22 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
 {
   GstStructure *structure = (GstStructure *) user_data;
   const GValue *other = gst_structure_id_get_value (structure, field_id);
+  const gchar *name = gst_structure_get_name (structure);
+
+  if (g_str_has_prefix (name, "video/")) {
+    /* ignore framerate with video caps */
+    if (g_strcmp0 (g_quark_to_string (field_id), "framerate") == 0)
+      return TRUE;
+  }
+
+  if (g_strcmp0 (name, "video/x-h264") == 0 ||
+      g_strcmp0 (name, "video/x-h265") == 0) {
+    /* we support muxing multiple codec_data structures */
+    if (g_strcmp0 (g_quark_to_string (field_id), "codec_data") == 0) {
+      return TRUE;
+    }
+  }
+
   if (other == NULL)
     return FALSE;
   return gst_value_compare (value, other) == GST_VALUE_EQUAL;
@@ -5729,6 +5745,9 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
 {
   GstStructure *sub_s = gst_caps_get_structure (subset, 0);
   GstStructure *sup_s = gst_caps_get_structure (superset, 0);
+
+  if (!gst_structure_has_name (sup_s, gst_structure_get_name (sub_s)))
+    return FALSE;
 
   return gst_structure_foreach (sub_s, check_field, sup_s);
 }

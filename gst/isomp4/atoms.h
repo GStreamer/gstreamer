@@ -952,7 +952,7 @@ void       atom_stbl_add_samples       (AtomSTBL * stbl, guint32 nsamples,
                                         guint64 chunk_offset, gboolean sync,
                                         gint64 pts_offset);
 void       atom_stsc_add_new_entry     (AtomSTSC * stsc,
-                                        guint32 first_chunk, guint32 nsamples);
+                                        guint32 first_chunk, guint32 nsamples, guint32 sample_description_index);
 
 AtomMOOV*  atom_moov_new               (AtomsContext *context);
 void       atom_moov_free              (AtomMOOV *moov);
