@@ -1,7 +1,41 @@
+=== release 1.18.1 ===
+
+2020-10-26 11:17:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.18.1
+
+2020-10-05 12:32:10 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: support interlace-mode=interleaved input
+	  interlace-mode=alternate is a special case of interlace-mode=interleaved
+	  where the fields are split using two different buffers.
+	  The Zynq decoder always produces alternate content and we
+	  used to assume that upstream will set interlace-mode=alternate in its
+	  caps as well.
+	  This is no longer the case as h265parse is now setting
+	  alternate-mode=interleaved on alternate content to not break compat with
+	  elements not supporting alternate.
+	  As a result the decoder now accept both 'interleaved' and 'alternate' on
+	  its input and ensures that its ouput has interlace-mode=alternate.
+	  Needed to fix https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/issues/825
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/73>
+
+2020-09-08 17:44:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
