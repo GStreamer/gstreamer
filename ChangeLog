@@ -1,7 +1,110 @@
+=== release 1.18.1 ===
+
+2020-10-26 11:15:11 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.18.1
+
+2020-10-06 03:47:42 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avaudenc/avvidenc: Reopen encoding session if it's required
+	  Since the commit https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/22b25b3ea5c,
+	  ffmpeg will not clear draning flag for encoder by avcodec_flush_buffers() API
+	  by default. Allowed case is only if encoder has AV_CODEC_CAP_ENCODER_FLUSH
+	  capability flag. If it's not supported, we should re-open encoding
+	  session, otherwise ffmpeg encoder will keep returning AVERROR_EOF
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/102>
+
+2020-10-01 11:18:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Call avcodec_flush_buffers() after draining to allow accepting new input again
+	  This is already done in all other codec elements.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/101>
+
+2020-09-30 16:13:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  avauddec/audenc/videnc: Don't return GST_FLOW_EOS when draining
+	  Same behaviour as for avviddec now. FFmpeg will return AVERROR_EOF when it's
+	  completely drained but we should not return that here or otherwise
+	  upstream will receive EOS and not forward us more data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/101>
+
+2020-09-16 03:13:09 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't return GST_FLOW_EOS from drain()/finish()
+	  AVERROR_EOF means that it's fully drained, but it doesn't
+	  mean that that end of stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/96>
+
+2020-09-15 02:12:23 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Ensure finish_subframe() and finish_frame() are paired
+	  audiodecoder baseclass implementation is expecting that
+	  finish_subframe() is followed by finish_frame() in order clear
+	  its internal state related to subframe.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/96>
+
+2020-09-14 14:30:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Forward flow returns from draining instead of assuming OK
+	  It might be useful for upstream to know that draining/finishing didn't
+	  succeed, and why.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/96>
+
+2020-09-14 14:24:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Forward flow returns from draining instead of assuming OK
+	  It might be useful for upstream to know that draining/finishing didn't
+	  succeed, and why.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/96>
+
+2020-09-09 08:55:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Avoid dropping non-OK flow return
+	  When sucessfully finishing out frames (or finishing configuration), we must make
+	  sure we don't override any failing GstFlowReturn that might have been detected
+	  previously.
+	  Failure to do this would result in not propagating not-linked, flushing,
+	  etc...
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/96>
+
+2016-09-26 20:06:54 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Enable 24 bit WMA Lossless decoding
+	  This now works with not so recent ffmpeg.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/95>
+
+2020-09-08 17:44:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:08:12 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
