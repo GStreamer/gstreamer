@@ -1,10 +1,86 @@
-=== release 1.18.0 ===
+=== release 1.18.1 ===
 
-2020-09-08 00:08:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+2020-10-26 11:15:28 +0000  Tim-Philipp Müller <tim@centricular.com>
 
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.18.1
+
+2020-10-08 22:17:16 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: make use of blocked_running_time in query_position
+	  When blocking, the sink element will not have received a buffer
+	  yet and the position query will fail. Instead, we make use of
+	  the running time of the buffer we blocked on.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/163>
+
+2020-10-06 00:04:17 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: collect rtp info when blocking
+	  We don't unblock the stream anymore before replying to the
+	  play request (883ddc72bb5bc57c95a9e167814d1ac53fe1b443),
+	  so the sinks don't have a last-sample after potentially flush
+	  seeking. seek_trickmode waits for preroll however, which means
+	  the stream will block and wait for a first buffer. Subsequent
+	  calls to get_rtpinfo() can thus make use of the information.
+	  See https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/115
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/163>
+
+2020-09-05 00:30:42 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-media: set a 0 storage size for TCP receivers
+	  ulpfec correction is obviously useless when receiving a stream
+	  over TCP, and in TCP modes the rtp storage receives non
+	  timestamped buffers, causing it to queue buffers indefinitely,
+	  until the queue grows so large that sanity checks kick in and
+	  warnings start to get emitted.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/158>
+
+2020-08-21 03:02:40 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: preroll on gap events
+	  This allows negotiating a SDP with all streams present, but only
+	  start sending packets at some later point in time
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/157>
+
+2020-08-25 16:10:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: do not unblock on unsuspend
+	  rtsp_media_unsuspend() is called from handle_play_request()
+	  before sending the play response. Unblocking the streams here
+	  was causing data to be sent out before the client was ready
+	  to handle it, with obvious side effects such as initial packets
+	  getting discarded, causing decoding errors.
+	  Instead we can simply let the media streams be unblocked when
+	  the state of the media is set to PLAYING, which occurs after
+	  sending the play response.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/156>
+
+2020-09-08 17:44:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
+=== release 1.18.0 ===
+
+2020-09-08 00:08:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.0
