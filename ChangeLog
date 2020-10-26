@@ -1,7 +1,42 @@
+=== release 1.18.1 ===
+
+2020-10-26 11:16:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.18.1
+
+2020-09-20 09:56:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  decoder: don't reply src caps query with allowed if pad is fixed
+	  If the pad is already fixed the caps query have to be reply with the
+	  current fixed caps. Otherwise the query has to be replied with the
+	  autogeneratd src caps.
+	  This path fix this by falling back to the normal caps query processing
+	  if the pad is already fixed. Otherwise it will fetch the allowed src
+	  pad caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/399>
+
+2020-09-15 00:11:30 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  plugins: decode: fix a DMA caps typo in ensure_allowed_srcpad_caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/398>
+
+2020-09-08 17:44:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:09:51 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
