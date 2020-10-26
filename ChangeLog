@@ -1,7 +1,49 @@
+=== release 1.18.1 ===
+
+2020-10-26 11:16:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.18.1
+
+2020-09-03 23:32:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_assets.py:
+	* tests/check/python/test_timeline.py:
+	  ges: Do not recreate auto-transitions when changing clip assets
+	  Otherwise we loose the configuration of the auto transition, and
+	  it is not required at all in any case.
+	  Fixes https://gitlab.gnome.org/GNOME/pitivi/-/issues/2380
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/214>
+
+2020-09-08 11:39:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/meson.build:
+	  ges: Fix a copy/paste mistake in meson file
+	  Passed unnoticed because we built against GstValidate
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/119
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/213>
+
+2020-09-08 17:44:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:09:25 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
