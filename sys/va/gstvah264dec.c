@@ -652,7 +652,7 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     /* *INDENT-OFF* */
     base->valign = (GstVideoAlignment) {
       .padding_bottom = self->coded_height - base->height,
-      .padding_left = self->coded_width - base->width,
+      .padding_right = self->coded_width - base->width,
     };
     /* *INDENT-ON* */
   }
