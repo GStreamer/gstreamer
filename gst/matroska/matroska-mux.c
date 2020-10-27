@@ -2255,8 +2255,6 @@ refuse_caps:
 static gboolean
 gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstCollectData *data = (GstCollectData *) (pad);
-
   /* There is now (at least) one such alement (kateenc), and I'm going
      to handle it here and claim it works when it can be piped back
      through GStreamer and VLC */
@@ -2265,6 +2263,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaTrackSubtitleContext *scontext;
   GstMatroskaMux *mux;
   GstMatroskaPad *collect_pad;
+  GstCollectData *data;
   const gchar *mimetype;
   GstStructure *structure;
   const GValue *value = NULL;
@@ -2293,6 +2292,8 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
   g_assert (collect_pad);
+  data = (GstCollectData *) (collect_pad);
+
   context = collect_pad->track;
   g_assert (context);
   g_assert (context->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE);
@@ -2373,9 +2374,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   GST_COLLECT_PADS_STREAM_LOCK (mux->collect);
   GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_LOCKED);
   gst_collect_pads_set_waiting (mux->collect, data, FALSE);
-  GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_LOCKED);
   GST_COLLECT_PADS_STREAM_UNLOCK (mux->collect);
-
 
 exit:
 
