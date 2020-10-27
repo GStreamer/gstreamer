@@ -70,6 +70,8 @@ struct _GstSRTObject
 
   gboolean                     wait_for_connection;
 
+  gboolean                     authentication;
+
   guint64                      previous_bytes;
 };
 

@@ -56,6 +56,10 @@ struct _GstSRTSinkClass {
 
   void (*caller_added)      (GstSRTSink *self, int sock, GSocketAddress * addr);
   void (*caller_removed)    (GstSRTSink *self, int sock, GSocketAddress * addr);
+  void (*caller_rejected)   (GstSRTSink *self, GSocketAddress * peer_address,
+    const gchar * stream_id, gpointer data);
+  gboolean (*caller_connecting) (GstSRTSink *self, GSocketAddress * peer_address,
+    const gchar * stream_id, gpointer data);
 };
 
 GType gst_srt_sink_get_type (void);

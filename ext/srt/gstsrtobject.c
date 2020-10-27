@@ -51,6 +51,7 @@ enum
   PROP_STATS,
   PROP_WAIT_FOR_CONNECTION,
   PROP_STREAMID,
+  PROP_AUTHENTICATION,
   PROP_LAST
 };
 
@@ -346,6 +347,9 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
     case PROP_STREAMID:
       gst_structure_set_value (srtobject->parameters, "streamid", value);
       break;
+    case PROP_AUTHENTICATION:
+      srtobject->authentication = g_value_get_boolean (value);
+      break;
     default:
       goto err;
   }
@@ -449,6 +453,9 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       g_value_set_string (value,
           gst_structure_get_string (srtobject->parameters, "streamid"));
       GST_OBJECT_UNLOCK (srtobject->element);
+      break;
+    case PROP_AUTHENTICATION:
+      g_value_set_boolean (value, srtobject->authentication);
       break;
     default:
       return FALSE;
@@ -594,6 +601,22 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
           "Stream ID for the SRT access control", "",
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSRTSink:authentication:
+   *
+   * Boolean to authenticate a connection.  If TRUE,
+   * the incoming connection is authenticated. Else,
+   * all the connections are accepted.
+   *
+   * Since: 1.20
+   *
+   */
+  g_object_class_install_property (gobject_class, PROP_AUTHENTICATION,
+      g_param_spec_boolean ("authentication",
+          "Authentication",
+          "Authenticate a connection",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -838,6 +861,62 @@ thread_func (gpointer data)
   }
 }
 
+static GSocketAddress *
+peeraddr_to_g_socket_address (const struct sockaddr *peeraddr)
+{
+  gsize peeraddr_len;
+
+  switch (peeraddr->sa_family) {
+    case AF_INET:
+      peeraddr_len = sizeof (struct sockaddr_in);
+      break;
+    case AF_INET6:
+      peeraddr_len = sizeof (struct sockaddr_in6);
+      break;
+    default:
+      g_warning ("Unsupported address family %d", peeraddr->sa_family);
+      return NULL;
+  }
+  return g_socket_address_new_from_native ((gpointer) peeraddr, peeraddr_len);
+}
+
+static gint
+srt_listen_callback_func (GstSRTObject * self, SRTSOCKET sock, int hs_version,
+    const struct sockaddr *peeraddr, const char *stream_id)
+{
+  GSocketAddress *addr = peeraddr_to_g_socket_address (peeraddr);
+
+  if (!addr) {
+    GST_WARNING_OBJECT (self->element,
+        "Invalid peer address. Rejecting sink %d streamid: %s", sock,
+        stream_id);
+    return -1;
+  }
+
+  if (self->authentication) {
+    gboolean authenticated = FALSE;
+
+    /* notifying caller-connecting */
+    g_signal_emit_by_name (self->element, "caller-connecting", addr,
+        stream_id, &authenticated);
+
+    if (!authenticated)
+      goto reject;
+  }
+
+  GST_DEBUG_OBJECT (self->element,
+      "Accepting sink %d streamid: %s", sock, stream_id);
+  g_object_unref (addr);
+  return 0;
+reject:
+  /* notifying caller-rejected */
+  GST_WARNING_OBJECT (self->element,
+      "Rejecting sink %d streamid: %s", sock, stream_id);
+  g_signal_emit_by_name (self->element, "caller-rejected", addr, stream_id);
+  g_object_unref (addr);
+  return -1;
+}
+
 static gboolean
 gst_srt_object_wait_connect (GstSRTObject * srtobject,
     GCancellable * cancellable, gpointer sa, size_t sa_len, GError ** error)
@@ -916,10 +995,16 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
 
   srtobject->listener_sock = sock;
 
+  /* Register the SRT listen callback */
+  if (srt_listen_callback (srtobject->listener_sock,
+          (srt_listen_callback_fn *) srt_listen_callback_func, srtobject)) {
+    goto failed;
+  }
+
   srtobject->thread =
       g_thread_try_new ("GstSRTObjectListener", thread_func, srtobject, error);
-
-  if (*error != NULL) {
+  if (srtobject->thread == NULL) {
+    GST_ERROR_OBJECT (srtobject->element, "Failed to start thread");
     goto failed;
   }
 
