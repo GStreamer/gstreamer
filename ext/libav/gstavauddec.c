@@ -492,7 +492,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     channels = ffmpegdec->info.channels;
     nsamples = ffmpegdec->frame->nb_samples;
     byte_per_sample = ffmpegdec->info.finfo->width / 8;
-    planar = av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt);
+    planar = av_sample_fmt_is_planar (ffmpegdec->frame->format);
 
     g_return_val_if_fail (ffmpegdec->info.layout == (planar ?
             GST_AUDIO_LAYOUT_NON_INTERLEAVED : GST_AUDIO_LAYOUT_INTERLEAVED),
