@@ -3777,6 +3777,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
   GstClockTime rtx_retry_timeout;
   GstClock *clock;
   GstClockTimeDiff offset = 0;
+  GstClockTime timeout;
 
   GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive, now %"
       GST_TIME_FORMAT, timer->seqnum, GST_TIME_ARGS (now));
@@ -3784,7 +3785,8 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
   rtx_retry_timeout = get_rtx_retry_timeout (priv);
   rtx_retry_period = get_rtx_retry_period (priv, rtx_retry_timeout);
 
-  delay = timer->rtx_delay + timer->rtx_retry;
+  /* delay expresses how late this packet is currently */
+  delay = now - timer->rtx_base;
 
   delay_ms = GST_TIME_AS_MSECONDS (delay);
   rtx_retry_timeout_ms = GST_TIME_AS_MSECONDS (rtx_retry_timeout);
@@ -3819,28 +3821,33 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
   }
   GST_OBJECT_UNLOCK (jitterbuffer);
 
-  /* calculate the timeout for the next retransmission attempt */
-  timer->rtx_retry += rtx_retry_timeout;
-  GST_DEBUG_OBJECT (jitterbuffer, "timer #%i base %" GST_TIME_FORMAT ", delay %"
-      GST_TIME_FORMAT ", retry %" GST_TIME_FORMAT ", num_retry %u",
-      timer->seqnum, GST_TIME_ARGS (timer->rtx_base),
-      GST_TIME_ARGS (timer->rtx_delay), GST_TIME_ARGS (timer->rtx_retry),
-      timer->num_rtx_retry);
+  /*
+     Calculate the timeout for the next retransmission attempt:
+     We have just successfully sent one RTX request, and we need to
+     find out when to schedule the next one.
+
+     The rtx_retry_timeout tells us the logical timeout between RTX
+     requests based on things like round-trip time, jitter and packet spacing,
+     and is how long we are going to wait before attempting another RTX packet
+   */
+  timeout = timer->rtx_last + rtx_retry_timeout;
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "timer #%i new timeout %" GST_TIME_FORMAT ", rtx retry timeout%"
+      GST_TIME_FORMAT ", num_retry %u", timer->seqnum, GST_TIME_ARGS (timeout),
+      GST_TIME_ARGS (rtx_retry_timeout), timer->num_rtx_retry);
   if ((priv->rtx_max_retries != -1
           && timer->num_rtx_retry >= priv->rtx_max_retries)
-      || (timer->rtx_retry + timer->rtx_delay > rtx_retry_period)
-      || (timer->rtx_base + rtx_retry_period < now)) {
+      || (timeout > timer->rtx_base + rtx_retry_period)) {
     GST_DEBUG_OBJECT (jitterbuffer, "reschedule #%i as LOST timer",
         timer->seqnum);
     /* too many retransmission request, we now convert the timer
      * to a lost timer, leave the num_rtx_retry as it is for stats */
     timer->type = RTP_TIMER_LOST;
-    timer->rtx_delay = 0;
-    timer->rtx_retry = 0;
+    timeout = timer->rtx_base;
     offset = timeout_offset (jitterbuffer);
   }
   rtp_timer_queue_update_timer (priv->timers, timer, timer->seqnum,
-      timer->rtx_base + timer->rtx_retry, timer->rtx_delay, offset, FALSE);
+      timeout, 0, offset, FALSE);
 
   return FALSE;
 }

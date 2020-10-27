@@ -37,8 +37,6 @@ GST_START_TEST (test_timer_queue_set_timer)
   fail_unless_equals_uint64 (3 * GST_SECOND, timer10->timeout);
   fail_unless_equals_uint64 (5 * GST_SECOND, timer10->duration);
   fail_unless_equals_uint64 (1 * GST_SECOND, timer10->rtx_base);
-  fail_unless_equals_uint64 (2 * GST_SECOND, timer10->rtx_delay);
-  fail_unless_equals_uint64 (0, timer10->rtx_retry);
   fail_unless_equals_uint64 (GST_CLOCK_TIME_NONE, timer10->rtx_last);
   fail_unless_equals_int (0, timer10->num_rtx_retry);
   fail_unless_equals_int (0, timer10->num_rtx_received);
@@ -52,8 +50,6 @@ GST_START_TEST (test_timer_queue_set_timer)
   fail_unless_equals_uint64 (2 * GST_SECOND, timer0->timeout);
   fail_unless_equals_uint64 (0, timer0->duration);
   fail_unless_equals_uint64 (0, timer0->rtx_base);
-  fail_unless_equals_uint64 (0, timer0->rtx_delay);
-  fail_unless_equals_uint64 (0, timer0->rtx_retry);
   fail_unless_equals_uint64 (GST_CLOCK_TIME_NONE, timer0->rtx_last);
   fail_unless_equals_int (0, timer0->num_rtx_retry);
   fail_unless_equals_int (0, timer0->num_rtx_received);

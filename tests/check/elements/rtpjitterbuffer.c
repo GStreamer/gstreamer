@@ -1318,6 +1318,46 @@ GST_START_TEST (test_rtx_expected_next)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtx_not_bursting_requests)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  gint latency_ms = 200;
+  guint next_seqnum;
+  guint missing_seqnum;
+  GstClockTime now;
+
+  g_object_set (h->element,
+      "do-lost", TRUE,
+      "do-retransmission", TRUE,
+      "rtx-next-seqnum", FALSE, "rtx-max-retries", 3, NULL);
+
+  next_seqnum = construct_deterministic_initial_state (h, latency_ms);
+  now = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
+
+  /* skip a packet and move the time for the next one
+     quite a bit forward */
+  missing_seqnum = next_seqnum;
+  next_seqnum++;
+  now += 150 * GST_MSECOND;
+  gst_harness_set_time (h, now);
+
+  push_test_buffer_now (h, next_seqnum, next_seqnum * TEST_RTP_TS_DURATION,
+      FALSE);
+
+  /* note the delay here is 130. This is because we advanced the clock 150,
+     and 20 of those were the duration of the missing seqnum, so this
+     RTX event is in effect 130ms "late" compared to its ideal time */
+  verify_rtx_event (h, missing_seqnum,
+      missing_seqnum * TEST_BUF_DURATION, 130, TEST_BUF_DURATION);
+
+  /* verify we have not sent any other rtx events */
+  fail_unless_equals_int (0, gst_harness_upstream_events_in_queue (h));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtx_next_seqnum_disabled)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -1623,7 +1663,7 @@ GST_START_TEST (test_rtx_original_buffer_does_not_update_rtx_stats)
      an rtx-request for 7 */
   next_seqnum++;
   verify_rtx_event (h, next_seqnum,
-      next_seqnum * TEST_BUF_DURATION, rtx_delay_ms, TEST_BUF_DURATION);
+      next_seqnum * TEST_BUF_DURATION, 60, TEST_BUF_DURATION);
 
   /* The original buffer does not count in the RTX stats. */
   fail_unless (verify_jb_stats (h->element,
@@ -1950,7 +1990,7 @@ GST_START_TEST (test_rtx_no_request_if_time_past_retry_period)
    * late and unnecessary. However, in order to keep things simple (for now)
    * we just keep the already scehduled EXPECTED timer, but refrain from
    * scheduled another EXPECTED timer */
-  verify_rtx_event (h, 2, 2 * TEST_BUF_DURATION, 10, TEST_BUF_DURATION);
+  verify_rtx_event (h, 2, 2 * TEST_BUF_DURATION, 120, TEST_BUF_DURATION);
 
   /* "crank" to reach the DEADLINE for packet 0 */
   gst_harness_crank_single_clock_wait (h);
@@ -2067,7 +2107,7 @@ GST_START_TEST (test_rtx_with_backwards_rtptime)
   gst_harness_set_time (h, 6 * TEST_BUF_DURATION + 15 * GST_MSECOND);
   gst_harness_crank_single_clock_wait (h);
   verify_rtx_event (h, 6, 5 * TEST_BUF_DURATION + 15 * GST_MSECOND,
-      17, 35 * GST_MSECOND);
+      20, 35 * GST_MSECOND);
 
   fail_unless (verify_jb_stats (h->element,
           gst_structure_new ("application/x-rtp-jitterbuffer-stats",
@@ -3180,6 +3220,8 @@ rtpjitterbuffer_suite (void)
       test_loss_equidistant_spacing_with_parameter_packets);
 
   tcase_add_test (tc_chain, test_rtx_expected_next);
+  tcase_add_test (tc_chain, test_rtx_not_bursting_requests);
+
   tcase_add_test (tc_chain, test_rtx_next_seqnum_disabled);
   tcase_add_test (tc_chain, test_rtx_two_missing);
   tcase_add_test (tc_chain, test_rtx_buffer_arrives_just_in_time);

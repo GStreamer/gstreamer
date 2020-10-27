@@ -65,8 +65,6 @@ typedef struct
   GstClockTimeDiff offset;
   GstClockTime duration;
   GstClockTime rtx_base;
-  GstClockTime rtx_delay;
-  GstClockTime rtx_retry;
   GstClockTime rtx_last;
   guint num_rtx_retry;
   guint num_rtx_received;
