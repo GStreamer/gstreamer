@@ -97,6 +97,12 @@ gst_fd_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
     if ((mem->mmapping_flags & prot) == prot) {
       ret = mem->data;
       mem->mmap_count++;
+    } else if ((mem->flags & GST_FD_MEMORY_FLAG_KEEP_MAPPED)
+        && mem->mmap_count == 0
+        && mprotect (mem->data, gmem->maxsize, prot) == 0) {
+      ret = mem->data;
+      mem->mmapping_flags = prot;
+      mem->mmap_count++;
     }
 
     goto out;
@@ -154,8 +160,12 @@ gst_fd_mem_unmap (GstMemory * gmem)
   if (gmem->parent)
     return gst_fd_mem_unmap (gmem->parent);
 
-  if (mem->flags & GST_FD_MEMORY_FLAG_KEEP_MAPPED)
+  if (mem->flags & GST_FD_MEMORY_FLAG_KEEP_MAPPED) {
+    g_mutex_lock (&mem->lock);
+    mem->mmap_count--;
+    g_mutex_unlock (&mem->lock);
     return;
+  }
 
   g_mutex_lock (&mem->lock);
   if (mem->data && !(--mem->mmap_count)) {

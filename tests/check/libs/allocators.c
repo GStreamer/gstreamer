@@ -25,8 +25,13 @@
 #include <glib/gstdio.h>
 #include <gst/check/gstcheck.h>
 
+#include <fcntl.h>
 #include <gst/allocators/gstdmabuf.h>
+#include <gst/allocators/gstfdmemory.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define FILE_SIZE 4096
 
@@ -60,6 +65,38 @@ GST_START_TEST (test_dmabuf)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fdmem)
+{
+  GstAllocator *alloc;
+  GstMemory *mem;
+  GstMapInfo info;
+  int fd;
+  const char *data = "0123456789";
+
+  fd = open ("test.txt", O_RDWR | O_CREAT);
+  g_assert (write (fd, data, 10) == 10);
+
+  alloc = gst_fd_allocator_new ();
+  g_assert (alloc);
+  mem = gst_fd_allocator_alloc (alloc, fd, 10, GST_FD_MEMORY_FLAG_KEEP_MAPPED);
+
+  g_assert (gst_memory_map (mem, &info, GST_MAP_READ));
+  g_assert (info.data[5] == '5');
+  gst_memory_unmap (mem, &info);
+  g_assert (gst_memory_map (mem, &info, GST_MAP_WRITE));
+  info.data[5] = 'X';
+  gst_memory_unmap (mem, &info);
+  g_assert (gst_memory_map (mem, &info, GST_MAP_READ));
+  g_assert (info.data[5] == 'X');
+  gst_memory_unmap (mem, &info);
+
+  gst_memory_unref (mem);
+  g_assert (remove ("test.txt") == 0);
+  gst_object_unref (alloc);
+}
+
+GST_END_TEST;
+
 static Suite *
 allocators_suite (void)
 {
@@ -68,6 +105,7 @@ allocators_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_dmabuf);
+  tcase_add_test (tc_chain, test_fdmem);
 
   return s;
 }
