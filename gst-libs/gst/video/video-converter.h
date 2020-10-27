@@ -281,6 +281,12 @@ GstVideoConverter *  gst_video_converter_new            (GstVideoInfo *in_info,
                                                          GstStructure *config);
 
 GST_VIDEO_API
+GstVideoConverter * gst_video_converter_new_with_pool   (GstVideoInfo * in_info,
+                                                         GstVideoInfo * out_info,
+                                                         GstStructure * config,
+                                                         GstTaskPool  * pool);
+
+GST_VIDEO_API
 void                 gst_video_converter_free           (GstVideoConverter * convert);
 
 GST_VIDEO_API

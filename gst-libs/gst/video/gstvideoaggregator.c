@@ -415,6 +415,8 @@ struct _GstVideoAggregatorConvertPadPrivate
    * and as such are protected with the object lock */
   GstStructure *converter_config;
   gboolean converter_config_changed;
+
+  GstTaskPool *task_pool;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstVideoAggregatorConvertPad,
@@ -433,6 +435,11 @@ gst_video_aggregator_convert_pad_finalize (GObject * o)
     gst_structure_free (vaggpad->priv->converter_config);
   vaggpad->priv->converter_config = NULL;
 
+  if (vaggpad->priv->task_pool)
+    gst_task_pool_cleanup (vaggpad->priv->task_pool);
+
+  gst_object_replace ((GstObject **) & vaggpad->priv->task_pool, NULL);
+
   G_OBJECT_CLASS (gst_video_aggregator_pad_parent_class)->finalize (o);
 }
 
@@ -445,6 +452,15 @@ static void
   GST_OBJECT_LOCK (pad);
   pad->priv->converter_config_changed = TRUE;
   GST_OBJECT_UNLOCK (pad);
+}
+
+static guint
+get_opt_uint (const GstStructure * config, const gchar * opt, guint def)
+{
+  guint res;
+  if (!gst_structure_get_uint (config, opt, &res))
+    res = def;
+  return res;
 }
 
 static gboolean
@@ -475,10 +491,22 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
     pad->priv->convert = NULL;
 
     if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
+      if (pad->priv->converter_config) {
+        guint n_threads = get_opt_uint (pad->priv->converter_config,
+            GST_VIDEO_CONVERTER_OPT_THREADS, 1);
+
+        if (n_threads == 0 || n_threads > g_get_num_processors ())
+          n_threads = g_get_num_processors ();
+
+        gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (pad->priv->
+                task_pool), n_threads);
+      }
+
       pad->priv->convert =
-          gst_video_converter_new (&vpad->info, &pad->priv->conversion_info,
-          pad->priv->converter_config ? gst_structure_copy (pad->priv->
-              converter_config) : NULL);
+          gst_video_converter_new_with_pool (&vpad->info,
+          &pad->priv->conversion_info,
+          pad->priv->converter_config ? gst_structure_copy (pad->
+              priv->converter_config) : NULL, pad->priv->task_pool);
       if (!pad->priv->convert) {
         GST_WARNING_OBJECT (pad, "No path found for conversion");
         return FALSE;
@@ -486,8 +514,8 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
 
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %s to %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&vpad->info)),
-          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&pad->
-                  priv->conversion_info)));
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&pad->priv->
+                  conversion_info)));
     } else {
       GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
     }
@@ -689,8 +717,10 @@ gst_video_aggregator_convert_pad_init (GstVideoAggregatorConvertPad * vaggpad)
   vaggpad->priv->convert = NULL;
   vaggpad->priv->converter_config = NULL;
   vaggpad->priv->converter_config_changed = FALSE;
-}
+  vaggpad->priv->task_pool = gst_shared_task_pool_new ();
 
+  gst_task_pool_prepare (vaggpad->priv->task_pool, NULL);
+}
 
 /**
  * gst_video_aggregator_convert_pad_update_conversion_info:
