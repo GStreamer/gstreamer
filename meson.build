@@ -1,5 +1,5 @@
 project('gst-omx', 'c',
-  version : '1.18.1',
+  version : '1.18.1.1',
   meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
