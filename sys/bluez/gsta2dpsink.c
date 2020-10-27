@@ -96,6 +96,7 @@ gst_a2dp_sink_init_element (GstA2dpSink * self, const gchar * elementname,
     GST_ERROR_OBJECT (self, "Failed to set target for ghost pad");
     goto remove_element_and_fail;
   }
+  gst_object_unref (sinkpad);
 
   if (!gst_element_sync_state_with_parent (element)) {
     GST_DEBUG_OBJECT (self, "%s failed to go to playing", elementname);
@@ -105,6 +106,7 @@ gst_a2dp_sink_init_element (GstA2dpSink * self, const gchar * elementname,
   return element;
 
 remove_element_and_fail:
+  gst_object_unref (sinkpad);
   gst_element_set_state (element, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (self), element);
   return NULL;
