@@ -177,20 +177,25 @@ gst_d3d11_video_processor_supports_format (GstD3D11VideoProcessor *
     self, DXGI_FORMAT format, gboolean is_input)
 {
   HRESULT hr;
-  UINT flag;
-
-  if (is_input) {
-    /* D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT, missing in mingw header */
-    flag = 1;
-  } else {
-    /* D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT, missing in mingw header */
-    flag = 2;
-  }
+  UINT flag = 0;
 
   hr = ID3D11VideoProcessorEnumerator_CheckVideoProcessorFormat
       (self->enumerator, format, &flag);
 
-  return gst_d3d11_result (hr, self->device);
+  if (!gst_d3d11_result (hr, self->device))
+    return FALSE;
+
+  if (is_input) {
+    /* D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT, missing in mingw header */
+    if ((flag & 0x1) != 0)
+      return TRUE;
+  } else {
+    /* D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT, missing in mingw header */
+    if ((flag & 0x2) != 0)
+      return TRUE;
+  }
+
+  return FALSE;
 }
 
 gboolean
