@@ -1178,16 +1178,15 @@ eos_context_async (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
   helper->pad = sinkpad;        /* Takes the reference */
 
   ctx->out_eos_async_done = TRUE;
-  /* HACK: Here, we explicitly unset the SINK flag on the target sink element
-   * that's about to be asynchronously disposed, so that it no longer
-   * participates in GstBin EOS logic. This fixes a race where if
-   * splitmuxsink really reaches EOS before an asynchronous background
-   * element has finished, then the bin won't actually send EOS to the
-   * pipeline. Even after finishing and removing the old element, the
-   * bin doesn't re-check EOS status on removing a SINK element. This
-   * should be fixed in core, making this hack unnecessary. */
-  GST_OBJECT_FLAG_UNSET (splitmux->active_sink, GST_ELEMENT_FLAG_SINK);
 
+  /* There used to be a bug here, where we had to explicitly remove
+   * the SINK flag so that GstBin would ignore it for EOS purposes.
+   * That fixed a race where if splitmuxsink really reaches EOS
+   * before an asynchronous background element has finished, then
+   * the bin wouldn't actually send EOS to the pipeline. Even after
+   * finishing and removing the old element, the bin didn't re-check
+   * EOS status on removing a SINK element. That bug was fixed
+   * in core. */
   GST_DEBUG_OBJECT (splitmux, "scheduled EOS to pad %" GST_PTR_FORMAT " ctx %p",
       sinkpad, ctx);
 
