@@ -3377,6 +3377,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
         gst_aggregator_update_segment (GST_AGGREGATOR (qtmux), &segment);
       }
 
+      GST_OBJECT_LOCK (qtmux);
       qtmux->current_chunk_size = 0;
       qtmux->current_chunk_duration = 0;
       qtmux->current_chunk_offset = -1;
@@ -3384,7 +3385,6 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       qtmux->current_pad = NULL;
       qtmux->longest_chunk = GST_CLOCK_TIME_NONE;
 
-      GST_OBJECT_LOCK (qtmux);
       for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
         GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
@@ -6486,18 +6486,25 @@ static void
 gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstQTMux *mux = GST_QT_MUX_CAST (element);
+  GstQTMuxPad *muxpad = GST_QT_MUX_PAD_CAST (pad);
 
   GST_DEBUG_OBJECT (element, "Releasing %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gst_element_remove_pad (element, pad);
+  /* Take a ref to the pad so we can clean it up after removing it from the element */
+  pad = gst_object_ref (pad);
 
+  /* Do aggregate level cleanup */
+  GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
+
+  GST_OBJECT_LOCK (mux);
   if (mux->current_pad && GST_PAD (mux->current_pad) == pad) {
     mux->current_pad = NULL;
     mux->current_chunk_size = 0;
     mux->current_chunk_duration = 0;
   }
 
-  GST_OBJECT_LOCK (mux);
+  gst_qt_mux_pad_reset (muxpad);
+
   if (GST_ELEMENT (mux)->sinkpads == NULL) {
     /* No more outstanding request pads, reset our counters */
     mux->video_pads = 0;
@@ -6505,6 +6512,8 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
     mux->subtitle_pads = 0;
   }
   GST_OBJECT_UNLOCK (mux);
+
+  gst_object_unref (pad);
 }
 
 static GstAggregatorPad *
@@ -6572,9 +6581,12 @@ gst_qt_mux_request_new_pad (GstElement * element,
   g_free (name);
 
   /* set up pad */
+  GST_OBJECT_LOCK (qtmux);
   gst_qt_mux_pad_reset (qtpad);
   qtpad->trak = atom_trak_new (qtmux->context);
+
   atom_moov_add_trak (qtmux->moov, qtpad->trak);
+  GST_OBJECT_UNLOCK (qtmux);
 
   /* set up pad functions */
   qtpad->set_caps = setcaps_func;
