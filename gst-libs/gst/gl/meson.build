@@ -371,6 +371,17 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
   endif
 endif
 
+bcm_host_dep = unneeded_dep
+if need_win_dispmanx != 'no'
+
+  # Try pkg-config for bcm_host then fallback to find_library to also
+  # support older distribution
+  bcm_host_dep = dependency('bcm_host', required : false)
+  if not bcm_host_dep.found()
+    bcm_host_dep = cc.find_library('bcm_host', required : false)
+  endif
+endif
+
 # GLES2 checks
 gles2_dep = unneeded_dep
 gles3_h = false
@@ -379,7 +390,12 @@ if need_api_gles2 != 'no'
   if host_system == 'ios'
     gles2_dep = dependency('appleframeworks', modules : ['OpenGLES'], required : false)
   else
-    gles2_dep = dependency('glesv2', required : false)
+    if bcm_host_dep.found()
+      gles2_dep = dependency('brcmglesv2', required : false)
+    endif
+    if not gles2_dep.found()
+      gles2_dep = dependency('glesv2', required : false)
+    endif
   endif
 
   if not gles2_dep.found()
@@ -475,7 +491,12 @@ endif
 # EGL checks
 egl_dep = unneeded_dep
 if need_platform_egl != 'no'
-  egl_dep = dependency('egl', required : false)
+  if bcm_host_dep.found()
+    egl_dep = dependency('brcmegl', required : false)
+  endif
+  if not egl_dep.found()
+    egl_dep = dependency('egl', required : false)
+  endif
   if not egl_dep.found()
     egl_dep = cc.find_library('EGL', required : false)
   endif
@@ -644,16 +665,7 @@ if need_win_x11 != 'no'
   endif
 endif
 
-bcm_host_dep = unneeded_dep
 if need_win_dispmanx != 'no'
-
-  # Try pkg-config for bcm_host then fallback to find_library to also
-  # support older distribution
-  bcm_host_dep = dependency('bcm_host', required : false)
-  if not bcm_host_dep.found()
-    bcm_host_dep = cc.find_library('bcm_host', required : false)
-  endif
-
   if bcm_host_dep.found()
     if not egl_dep.found()
       error('dispmanx requires the use of egl')
