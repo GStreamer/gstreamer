@@ -680,6 +680,8 @@ gst_rtmp2_src_create (GstBaseSrc * src, guint64 offset, guint size,
     self->sent_header = TRUE;
   }
 
+  GST_BUFFER_DTS (buffer) = self->last_ts;
+
   *outbuf = buffer;
 
   gst_buffer_unref (message);
