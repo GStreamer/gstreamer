@@ -140,8 +140,8 @@ GST_START_TEST (test_media_seek)
 
 GST_END_TEST;
 
-/* case: media is complete and contains two streams but only one is active */
-GST_START_TEST (test_media_seek_one_active_stream)
+static void
+media_playback_seek_one_active_stream (const gchar * launch_line)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
@@ -160,9 +160,7 @@ GST_START_TEST (test_media_seek_one_active_stream)
   fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
           &url) == GST_RTSP_OK);
 
-  gst_rtsp_media_factory_set_launch (factory,
-      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 "
-      " audiotestsrc ! audioconvert ! rtpL16pay name=pay1 )");
+  gst_rtsp_media_factory_set_launch (factory, launch_line);
 
   media = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media));
@@ -196,12 +194,12 @@ GST_START_TEST (test_media_seek_one_active_stream)
   fail_unless (gst_rtsp_stream_seekable (stream2));
 
   fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
-  fail_unless (gst_rtsp_range_parse ("npt=3.0-", &range) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_parse ("npt=3.0-5.0", &range) == GST_RTSP_OK);
 
   /* the media is seekable now */
   fail_unless (gst_rtsp_media_seek (media, range));
 
-  /* verify that we got the expected range, 'npt=3.0-' */
+  /* verify that we got the expected range, 'npt=3.0-5.0' */
   range_str = gst_rtsp_media_get_range_string (media, TRUE, GST_RTSP_RANGE_NPT);
   fail_unless (gst_rtsp_range_parse (range_str, &play_range) == GST_RTSP_OK);
   fail_unless (play_range->min.seconds == range->min.seconds);
@@ -220,6 +218,30 @@ GST_START_TEST (test_media_seek_one_active_stream)
   g_object_unref (pool);
 
   gst_rtsp_thread_pool_cleanup ();
+}
+
+/* case: media is complete and contains two streams but only one is active,
+   audio & video sources */
+GST_START_TEST (test_media_playback_seek_one_active_stream)
+{
+  media_playback_seek_one_active_stream
+      ("( videotestsrc ! rtpvrawpay pt=96 name=pay0 "
+      " audiotestsrc ! audioconvert ! rtpL16pay name=pay1 )");
+}
+
+GST_END_TEST;
+
+/* case: media is complete and contains two streams but only one is active,
+   demux */
+GST_START_TEST (test_media_playback_demux_seek_one_active_stream)
+{
+  /* FIXME: this test produces "Failed to push event" error messages in the
+   * GST_DEBUG logs because the incomplete stream has no sinks */
+  media_playback_seek_one_active_stream ("( filesrc location="
+      GST_TEST_FILES_PATH "/test.avi !"
+      " avidemux name=demux demux.audio_0 ! queue ! decodebin ! audioconvert !"
+      " audioresample ! rtpL16pay pt=97 name=pay1"
+      " demux.video_0 ! queue ! decodebin ! rtpvrawpay pt=96 name=pay0 )");
 }
 
 GST_END_TEST;
@@ -847,12 +869,22 @@ rtspmedia_suite (void)
 {
   Suite *s = suite_create ("rtspmedia");
   TCase *tc = tcase_create ("general");
+  gboolean has_avidemux;
 
   suite_add_tcase (s, tc);
   tcase_set_timeout (tc, 20);
+
+  has_avidemux = gst_registry_check_feature_version (gst_registry_get (),
+      "avidemux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+
   tcase_add_test (tc, test_media_seek);
   tcase_add_test (tc, test_media_seek_no_sinks);
-  tcase_add_test (tc, test_media_seek_one_active_stream);
+  tcase_add_test (tc, test_media_playback_seek_one_active_stream);
+  if (has_avidemux) {
+    tcase_add_test (tc, test_media_playback_demux_seek_one_active_stream);
+  } else {
+    GST_INFO ("Skipping test, missing plugins: avidemux");
+  }
   tcase_add_test (tc, test_media);
   tcase_add_test (tc, test_media_prepare);
   tcase_add_test (tc, test_media_shared_race_test_unsuspend_vs_set_state_null);
