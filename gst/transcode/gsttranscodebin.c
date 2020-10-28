@@ -573,6 +573,58 @@ done:
   return transcode_stream;
 }
 
+/* Called with OBJECT_LOCK */
+static void
+_setup_avoid_reencoding (GstTranscodeBin * self)
+{
+  const GList *tmp;
+  GstCaps *decodecaps;
+
+  if (!self->avoid_reencoding)
+    return;
+
+  if (!GST_IS_ENCODING_CONTAINER_PROFILE (self->profile))
+    return;
+
+  g_object_get (self->decodebin, "caps", &decodecaps, NULL);
+  decodecaps = gst_caps_make_writable (decodecaps);
+  tmp =
+      gst_encoding_container_profile_get_profiles
+      (GST_ENCODING_CONTAINER_PROFILE (self->profile));
+  for (; tmp; tmp = tmp->next) {
+    GstEncodingProfile *profile = tmp->data;
+    GstCaps *restrictions, *encodecaps;
+    GstElement *filter = NULL;
+
+    restrictions = gst_encoding_profile_get_restriction (profile);
+
+    if (restrictions && gst_caps_is_any (restrictions)) {
+      gst_caps_unref (restrictions);
+      continue;
+    }
+
+    encodecaps = gst_encoding_profile_get_format (profile);
+    filter = NULL;
+
+    /* Filter operates on raw data so don't allow decodebin to produce
+     * encoded data if one is defined. */
+    if (GST_IS_ENCODING_VIDEO_PROFILE (profile) && self->video_filter)
+      filter = self->video_filter;
+    else if (GST_IS_ENCODING_AUDIO_PROFILE (profile)
+        && self->audio_filter)
+      filter = self->audio_filter;
+
+    if (!filter) {
+      GST_DEBUG_OBJECT (self,
+          "adding %" GST_PTR_FORMAT " as output caps to decodebin", encodecaps);
+      gst_caps_append (decodecaps, encodecaps);
+    }
+  }
+
+  g_object_set (self->decodebin, "caps", decodecaps, NULL);
+  gst_caps_unref (decodecaps);
+}
+
 static gboolean
 make_decodebin (GstTranscodeBin * self)
 {
@@ -580,53 +632,6 @@ make_decodebin (GstTranscodeBin * self)
   GST_INFO_OBJECT (self, "making new decodebin");
 
   self->decodebin = gst_element_factory_make ("decodebin3", NULL);
-
-  if (!self->decodebin)
-    goto no_decodebin;
-
-  if (self->avoid_reencoding) {
-    GstCaps *decodecaps;
-
-    g_object_get (self->decodebin, "caps", &decodecaps, NULL);
-    if (GST_IS_ENCODING_CONTAINER_PROFILE (self->profile)) {
-      GList *tmp;
-
-      decodecaps = gst_caps_make_writable (decodecaps);
-      for (tmp = (GList *)
-          gst_encoding_container_profile_get_profiles
-          (GST_ENCODING_CONTAINER_PROFILE (self->profile)); tmp;
-          tmp = tmp->next) {
-        GstEncodingProfile *profile = tmp->data;
-        GstCaps *restrictions;
-
-        restrictions = gst_encoding_profile_get_restriction (profile);
-
-        if (!restrictions || gst_caps_is_any (restrictions)) {
-          GstCaps *encodecaps = gst_encoding_profile_get_format (profile);
-          GstElement *filter = NULL;
-
-          /* Filter operates on raw data so don't allow decodebin to produce
-           * encoded data if one is defined. */
-          if (GST_IS_ENCODING_VIDEO_PROFILE (profile) && self->video_filter)
-            filter = self->video_filter;
-          else if (GST_IS_ENCODING_AUDIO_PROFILE (profile)
-              && self->audio_filter)
-            filter = self->audio_filter;
-
-          if (!filter) {
-            GST_DEBUG_OBJECT (self,
-                "adding %" GST_PTR_FORMAT " as output caps to decodebin",
-                encodecaps);
-            gst_caps_append (decodecaps, encodecaps);
-          }
-        } else {
-          gst_caps_unref (restrictions);
-        }
-      }
-    }
-    g_object_set (self->decodebin, "caps", decodecaps, NULL);
-    gst_caps_unref (decodecaps);
-  }
 
   g_signal_connect (self->decodebin, "pad-added",
       G_CALLBACK (decodebin_pad_added_cb), self);
@@ -648,14 +653,6 @@ make_decodebin (GstTranscodeBin * self)
   return TRUE;
 
   /* ERRORS */
-no_decodebin:
-  {
-    post_missing_plugin_error (GST_ELEMENT_CAST (self), "decodebin");
-    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
-        ("No decodebin element, check your installation"));
-
-    return FALSE;
-  }
 }
 
 static void
@@ -676,12 +673,6 @@ remove_all_children (GstTranscodeBin * self)
     gst_element_set_state (self->audio_filter, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (self), self->audio_filter);
   }
-
-  if (self->decodebin) {
-    gst_element_set_state (self->decodebin, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (self), self->decodebin);
-    self->decodebin = NULL;
-  }
 }
 
 static GstStateChangeReturn
@@ -693,10 +684,15 @@ gst_transcode_bin_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
 
-      if (!make_encodebin (self))
-        goto setup_failed;
+      if (!self->decodebin) {
+        post_missing_plugin_error (GST_ELEMENT_CAST (self), "decodebin3");
+        GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
+            ("No decodebin element, check your installation"));
 
-      if (!make_decodebin (self))
+        goto setup_failed;
+      }
+
+      if (!make_encodebin (self))
         goto setup_failed;
 
       break;
@@ -828,6 +824,15 @@ bail_out:
 }
 
 static void
+_set_profile (GstTranscodeBin * self, GstEncodingProfile * profile)
+{
+  GST_OBJECT_LOCK (self);
+  self->profile = profile;
+  _setup_avoid_reencoding (self);
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
 gst_transcode_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
@@ -835,13 +840,12 @@ gst_transcode_bin_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_PROFILE:
-      GST_OBJECT_LOCK (self);
-      self->profile = g_value_dup_object (value);
-      GST_OBJECT_UNLOCK (self);
+      _set_profile (self, g_value_dup_object (value));
       break;
     case PROP_AVOID_REENCODING:
       GST_OBJECT_LOCK (self);
       self->avoid_reencoding = g_value_get_boolean (value);
+      _setup_avoid_reencoding (self);
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_AUDIO_FILTER:
@@ -951,6 +955,8 @@ gst_transcode_bin_init (GstTranscodeBin * self)
 
   self->transcoding_streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) transcoding_stream_free);
+
+  make_decodebin (self);
 }
 
 static gboolean
