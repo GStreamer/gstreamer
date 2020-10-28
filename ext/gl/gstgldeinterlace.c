@@ -19,10 +19,10 @@
  */
 
 /**
- * SECTION:element-deinterlace
- * @title: deinterlace
+ * SECTION:element-gldeinterlace
+ * @title: gldeinterlace
  *
- * Deinterlacing using based on fragment shaders.
+ * Deinterlace video using OpenGL fragment shaders.
  *
  * ## Examples
  * |[
