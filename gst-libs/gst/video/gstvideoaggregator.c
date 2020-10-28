@@ -401,6 +401,9 @@ enum
 
 struct _GstVideoAggregatorConvertPadPrivate
 {
+  /* The following fields are only used from the aggregate thread and when
+   * initializing / finalizing */
+
   /* Converter, if NULL no conversion is done */
   GstVideoConverter *convert;
 
@@ -408,6 +411,8 @@ struct _GstVideoAggregatorConvertPadPrivate
   GstVideoInfo conversion_info;
   GstBuffer *converted_buffer;
 
+  /* The following fields are accessed from the property setters / getters,
+   * and as such are protected with the object lock */
   GstStructure *converter_config;
   gboolean converter_config_changed;
 };
@@ -437,7 +442,9 @@ static void
 {
   GstVideoAggregatorConvertPad *pad = GST_VIDEO_AGGREGATOR_CONVERT_PAD (vpad);
 
+  GST_OBJECT_LOCK (pad);
   pad->priv->converter_config_changed = TRUE;
+  GST_OBJECT_UNLOCK (pad);
 }
 
 static gboolean
@@ -449,6 +456,7 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
   GstVideoFrame frame;
 
   /* Update/create converter as needed */
+  GST_OBJECT_LOCK (pad);
   if (pad->priv->converter_config_changed) {
     GstVideoAggregatorConvertPadClass *klass =
         GST_VIDEO_AGGREGATOR_CONVERT_PAD_GET_CLASS (pad);
@@ -484,6 +492,7 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
       GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
     }
   }
+  GST_OBJECT_UNLOCK (pad);
 
   if (!gst_video_frame_map (&frame, &vpad->info, buffer, GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
@@ -696,7 +705,9 @@ void gst_video_aggregator_convert_pad_update_conversion_info
 {
   g_return_if_fail (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
 
+  GST_OBJECT_LOCK (pad);
   pad->priv->converter_config_changed = TRUE;
+  GST_OBJECT_UNLOCK (pad);
 }
 
 /**************************************
