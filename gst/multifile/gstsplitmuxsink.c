@@ -2503,16 +2503,19 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     if (ctx->in_eos)
       return;
 
-    /* Some pad is not yet ready, or GOP is being pushed
-     * either way, sleep and wait to get woken */
-
     if (splitmux->input_state == SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT &&
         !ctx->flushing &&
         (ctx->in_running_time >= splitmux->max_in_running_time) &&
         (splitmux->max_in_running_time != GST_CLOCK_STIME_NONE)) {
+      /* Some pad is not yet ready, or GOP is being pushed
+       * either way, sleep and wait to get woken */
       GST_LOG_OBJECT (splitmux, "Sleeping for GOP collection (ctx %p)", ctx);
       GST_SPLITMUX_WAIT_INPUT (splitmux);
       GST_LOG_OBJECT (splitmux, "Done waiting for complete GOP (ctx %p)", ctx);
+    } else {
+      /* This pad is not ready or the state changed - break out and get another
+       * buffer / event */
+      break;
     }
   } while (splitmux->input_state == SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT);
 }
