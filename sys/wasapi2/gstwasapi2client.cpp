@@ -863,6 +863,11 @@ run_loop:
   gst_wasapi2_client_stop (self);
 
   if (self->audio_volume) {
+    /* this mute state seems to be global setting for this device
+     * Explicitly disable mute for later use of this audio device
+     * by other application. Otherwise users would blame GStreamer
+     * if we close audio device with muted state */
+    self->audio_volume->SetMute(FALSE, nullptr);
     self->audio_volume->Release ();
     self->audio_volume = NULL;
   }
@@ -1342,6 +1347,15 @@ gst_wasapi2_client_open (GstWasapi2Client * client, GstAudioRingBufferSpec * spe
     return FALSE;
 
   client->audio_volume = audio_volume.Detach ();
+
+  /* this mute state seems to be global setting for this device
+   * but below documentation looks unclear why mute state is preserved
+   * even after process is terminated
+   * https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-isimpleaudiovolume-setmute
+   * Explicitly disable mute so that ensure we can produce or play audio
+   * regardless of previous status
+   */
+  client->audio_volume->SetMute(FALSE, nullptr);
 
   gst_audio_ring_buffer_set_channel_positions (buf, client->positions);
 
