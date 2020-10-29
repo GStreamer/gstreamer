@@ -120,6 +120,9 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _init_formatter_assets ();
   if (!_ges_uri_asset_ensure_setup (uriasset_klass)) {
     GST_ERROR ("cannot setup uri asset");
+    if (error)
+      *error = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
+          "Cannot initialize URI asset class.");
     goto failed;
   }
 
