@@ -1197,7 +1197,8 @@ gst_amc_avc_profile_to_string (gint profile, const gchar ** alternative)
 
   for (i = 0; i < G_N_ELEMENTS (avc_profile_mapping_table); i++) {
     if (avc_profile_mapping_table[i].id == profile) {
-      *alternative = avc_profile_mapping_table[i].alt_str;
+      if (alternative != NULL)
+        *alternative = avc_profile_mapping_table[i].alt_str;
       return avc_profile_mapping_table[i].str;
     }
   }
