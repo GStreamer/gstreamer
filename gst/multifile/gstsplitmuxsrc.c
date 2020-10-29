@@ -993,7 +993,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   SPLITMUX_SRC_LOCK (splitmux);
   if (!splitmux->running)
     goto out;
-
+  splitmux->running = FALSE;
   GST_DEBUG_OBJECT (splitmux, "Stopping");
 
   SPLITMUX_SRC_UNLOCK (splitmux);
@@ -1028,7 +1028,6 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   splitmux->num_parts = 0;
   splitmux->num_prepared_parts = 0;
   splitmux->num_created_parts = 0;
-  splitmux->running = FALSE;
   splitmux->total_duration = GST_CLOCK_TIME_NONE;
   /* Reset playback segment */
   gst_segment_init (&splitmux->play_segment, GST_FORMAT_TIME);
