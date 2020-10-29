@@ -1576,7 +1576,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GstClock **provided_clock_p;
   GstElement **clock_provider_p;
   GList *walk, *next;
-  gboolean other_async, this_async, have_no_preroll;
+  gboolean other_async, this_async, have_no_preroll, removed_eos;
   GstStateChangeReturn ret;
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
@@ -1703,6 +1703,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
    * async state. */
   this_async = FALSE;
   other_async = FALSE;
+  /* If we remove an EOSed element, the bin might go EOS */
+  removed_eos = FALSE;
   for (walk = bin->messages; walk; walk = next) {
     GstMessage *message = (GstMessage *) walk->data;
     GstElement *src = GST_ELEMENT_CAST (GST_MESSAGE_SRC (message));
@@ -1736,6 +1738,10 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
           remove = TRUE;
         break;
       }
+      case GST_MESSAGE_EOS:
+        if (src == element)
+          removed_eos = TRUE;
+        break;
       default:
         break;
     }
@@ -1797,6 +1803,15 @@ no_state_recalc:
   /* Clear the clock we provided to the element */
   gst_element_set_clock (element, NULL);
   GST_OBJECT_UNLOCK (bin);
+
+  /* If the element was a sink that had not posted EOS,
+   * it might have been the last one we were waiting for,
+   * so check if it's time to send EOS now */
+  if (is_sink && !removed_eos) {
+    GST_DEBUG_OBJECT (bin,
+        "Removing sink that had not EOSed. Re-checking overall EOS status");
+    bin_do_eos (bin);
+  }
 
   if (clock_message)
     gst_element_post_message (GST_ELEMENT_CAST (bin), clock_message);
