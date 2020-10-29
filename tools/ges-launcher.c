@@ -1051,9 +1051,13 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   gst_init (&argc, arguments);
   if (!ges_launcher_parse_options (self, arguments, &argc, ctx, &error)) {
     gst_init (NULL, NULL);
-    ges_printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
-    g_error_free (error);
+    if (error) {
+      ges_printerr ("Error initializing: %s\n", error->message);
+      g_error_free (error);
+    } else {
+      ges_printerr ("Error parsing command line arguments\n");
+    }
     *exit_status = 1;
     goto done;
   }
