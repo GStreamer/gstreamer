@@ -45,6 +45,8 @@ struct _GstNavSeek
 
   gdouble seek_offset;
   gboolean loop;
+  gboolean hold_eos;
+  GstEvent* eos;
   gboolean grab_seg_start;
   gboolean grab_seg_end;
   GstClockTime segment_start;

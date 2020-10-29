@@ -3947,6 +3947,18 @@
                     }
                 },
                 "properties": {
+                    "hold-eos": {
+                        "blurb": "Hold eos until the next 'Return' keystroke",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "seek-offset": {
                         "blurb": "Time in seconds to seek by",
                         "conditionally-available": false,

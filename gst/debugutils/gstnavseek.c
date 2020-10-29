@@ -34,7 +34,8 @@
 enum
 {
   PROP_0,
-  PROP_SEEKOFFSET
+  PROP_SEEKOFFSET,
+  PROP_HOLD_EOS,
 };
 
 GstStaticPadTemplate navseek_src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -83,6 +84,17 @@ gst_navseek_class_init (GstNavSeekClass * klass)
       PROP_SEEKOFFSET, g_param_spec_double ("seek-offset", "Seek Offset",
           "Time in seconds to seek by", 0.0, G_MAXDOUBLE, 5.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * navseek:hold-eos:
+   *
+   * Hold eos until the next 'Return' keystroke.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_HOLD_EOS, g_param_spec_boolean ("hold-eos", "Hold EOS",
+          "Hold eos until the next 'Return' keystroke", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class,
       &navseek_sink_template);
@@ -109,6 +121,8 @@ gst_navseek_init (GstNavSeek * navseek)
 
   navseek->seek_offset = 5.0;
   navseek->loop = FALSE;
+  navseek->hold_eos = FALSE;
+  navseek->eos = NULL;
   navseek->grab_seg_start = FALSE;
   navseek->grab_seg_end = FALSE;
   navseek->segment_start = GST_CLOCK_TIME_NONE;
@@ -277,6 +291,12 @@ gst_navseek_src_event (GstBaseTransform * trans, GstEvent * event)
           gst_navseek_change_playback_rate (navseek, 1.0);
         } else if (strcmp (key, "space") == 0) {
           gst_navseek_toggle_play_pause (navseek);
+        } else if (strcmp (key, "Return") == 0) {
+          if (navseek->eos) {
+            gst_pad_push_event (GST_BASE_TRANSFORM (navseek)->srcpad,
+                navseek->eos);
+            navseek->eos = NULL;
+          }
         }
       } else {
         break;
@@ -307,6 +327,11 @@ gst_navseek_set_property (GObject * object, guint prop_id,
       navseek->seek_offset = g_value_get_double (value);
       GST_OBJECT_UNLOCK (navseek);
       break;
+    case PROP_HOLD_EOS:
+      GST_OBJECT_LOCK (navseek);
+      navseek->hold_eos = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (navseek);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -325,6 +350,11 @@ gst_navseek_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, navseek->seek_offset);
       GST_OBJECT_UNLOCK (navseek);
       break;
+    case PROP_HOLD_EOS:
+      GST_OBJECT_LOCK (navseek);
+      g_value_set_boolean (value, navseek->hold_eos);
+      GST_OBJECT_UNLOCK (navseek);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -341,7 +371,11 @@ gst_navseek_sink_event (GstBaseTransform * trans, GstEvent * event)
       GST_OBJECT_LOCK (navseek);
       if (navseek->loop)
         gst_navseek_segseek (navseek);
+      if (navseek->hold_eos)
+        navseek->eos = event;
       GST_OBJECT_UNLOCK (navseek);
+      if (navseek->eos)
+        return TRUE;
       break;
     default:
       break;
@@ -385,6 +419,11 @@ gst_navseek_start (GstBaseTransform * trans)
 static gboolean
 gst_navseek_stop (GstBaseTransform * trans)
 {
-  /* anything we should be doing here? */
+  GstNavSeek *navseek = GST_NAVSEEK (trans);
+
+  if (navseek->eos) {
+    gst_event_unref (navseek->eos);
+    navseek->eos = NULL;
+  }
   return TRUE;
 }
