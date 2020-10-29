@@ -637,6 +637,7 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 
   g_mutex_lock (&sink->render_lock);
   sink->redraw_pending = FALSE;
+  sink->window->callback = NULL;
   g_mutex_unlock (&sink->render_lock);
 
   wl_callback_destroy (callback);
@@ -660,6 +661,7 @@ render_last_buffer (GstWaylandSink * sink, gboolean redraw)
 
   sink->redraw_pending = TRUE;
   callback = wl_surface_frame (surface);
+  sink->window->callback = callback;
   wl_callback_add_listener (callback, &frame_callback_listener, sink);
 
   if (G_UNLIKELY (sink->video_info_changed && !redraw)) {

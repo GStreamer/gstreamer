@@ -157,6 +157,9 @@ gst_wl_window_finalize (GObject * gobject)
 {
   GstWlWindow *self = GST_WL_WINDOW (gobject);
 
+  if (self->callback)
+    wl_callback_destroy (self->callback);
+
   if (self->wl_shell_surface)
     wl_shell_surface_destroy (self->wl_shell_surface);
 
@@ -197,6 +200,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   window->render_lock = render_lock;
   g_cond_init (&window->configure_cond);
 
+  window->callback = NULL;
   window->area_surface = wl_compositor_create_surface (display->compositor);
   window->video_surface = wl_compositor_create_surface (display->compositor);
 
