@@ -2491,10 +2491,7 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
     GstVideoAggregator * vagg, GstCaps * caps)
 {
   gboolean ret;
-  GstCaps *modified_caps;
   GstCaps *accepted_caps;
-  GstCaps *template_caps;
-  gboolean had_current_caps = TRUE;
   gint i, n;
   GstStructure *s;
   GstAggregator *agg = GST_AGGREGATOR (vagg);
@@ -2503,12 +2500,8 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
 
   accepted_caps = gst_pad_get_current_caps (GST_PAD (agg->srcpad));
 
-  template_caps = gst_pad_get_pad_template_caps (GST_PAD (agg->srcpad));
-
-  if (accepted_caps == NULL) {
-    accepted_caps = template_caps;
-    had_current_caps = FALSE;
-  }
+  if (accepted_caps == NULL)
+    accepted_caps = gst_pad_get_pad_template_caps (GST_PAD (agg->srcpad));
 
   accepted_caps = gst_caps_make_writable (accepted_caps);
 
@@ -2528,15 +2521,10 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
     }
   }
 
-  modified_caps = gst_caps_intersect (accepted_caps, template_caps);
-
-  ret = gst_caps_can_intersect (caps, modified_caps);
+  ret = gst_caps_can_intersect (caps, accepted_caps);
   GST_DEBUG_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT,
       (ret ? "" : "not "), caps);
   gst_caps_unref (accepted_caps);
-  gst_caps_unref (modified_caps);
-  if (had_current_caps)
-    gst_caps_unref (template_caps);
   return ret;
 }
 
