@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:element-isacpay
- * @title: isacpay
+ * SECTION:element-rtpisacpay
+ * @title: rtpisacpay
  * @short_description: iSAC RTP Payloader
  *
  * Since: 1.20

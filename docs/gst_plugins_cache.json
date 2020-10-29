@@ -14064,6 +14064,60 @@
                 "properties": {},
                 "rank": "secondary"
             },
+            "rtpisacdepay": {
+                "author": "Guillaume Desmottes <guillaume.desmottes@collabora.com>",
+                "description": "Extracts iSAC audio from RTP packets",
+                "hierarchy": [
+                    "GstRtpIsacDepay",
+                    "GstRTPBaseDepayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Depayloader/Network/RTP",
+                "long-name": "RTP iSAC depayloader",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)16000, (int)32000 }\n  encoding-name: ISAC\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/isac:\n           rate: { (int)16000, (int)32000 }\n       channels: 1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "secondary"
+            },
+            "rtpisacpay": {
+                "author": "Guillaume Desmottes <guillaume.desmottes@collabora.com>",
+                "description": "Payload-encodes iSAC audio into a RTP packet",
+                "hierarchy": [
+                    "GstRtpIsacPay",
+                    "GstRTPBasePayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Payloader/Network/RTP",
+                "long-name": "RTP iSAC payloader",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/isac:\n           rate: { (int)16000, (int)32000 }\n       channels: 1\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)16000, (int)32000 }\n  encoding-name: ISAC\nencoding-params: 1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "secondary"
+            },
             "rtpj2kdepay": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
                 "description": "Extracts JPEG 2000 video from RTP packets (RFC 5371)",
