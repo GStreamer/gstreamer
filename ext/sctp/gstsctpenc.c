@@ -346,7 +346,7 @@ gst_sctp_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      sctpenc_cleanup (self);
+      stop_srcpad_task (self->src_pad, self);
       self->src_ret = GST_FLOW_FLUSHING;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -368,6 +368,7 @@ gst_sctp_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      sctpenc_cleanup (self);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
