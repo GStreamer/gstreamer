@@ -51,6 +51,20 @@ GST_END_TEST;
 static GMutex key_lock;
 static GCond key_cond;
 static int key_count;
+static gboolean errored;
+
+static GstBusSyncReply
+bus_msg_handler (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+    g_mutex_lock (&key_lock);
+    errored = TRUE;
+    g_cond_broadcast (&key_cond);
+    g_mutex_unlock (&key_lock);
+  }
+
+  return GST_BUS_PASS;
+}
 
 static void
 _on_key_received (GstElement * element, gpointer user_data)
@@ -65,8 +79,16 @@ static void
 _wait_for_key_count_to_reach (int n)
 {
   g_mutex_lock (&key_lock);
-  while (key_count < n)
+  while (key_count < n) {
     g_cond_wait (&key_cond, &key_lock);
+
+    /* Check if any errors were posted */
+    if (errored) {
+      g_mutex_unlock (&key_lock);
+      fail ("DTLS element posted an error");
+      g_mutex_lock (&key_lock);
+    }
+  }
   g_mutex_unlock (&key_lock);
 }
 
@@ -80,6 +102,7 @@ GST_START_TEST (test_data_transfer)
   GstElement *s_enc, *s_dec, *c_enc, *c_dec, *s_bin, *c_bin;
   GstPad *target, *ghost;
   GstBuffer *buffer, *buf2;
+  GstBus *bus;
 
   /* setup a server and client for dtls negotiation */
   s_bin = gst_bin_new (NULL);
@@ -149,6 +172,14 @@ GST_START_TEST (test_data_transfer)
 
   gst_harness_set_src_caps_str (server, "application/data");
   gst_harness_set_src_caps_str (client, "application/data");
+
+  bus = gst_bus_new ();
+  gst_bus_set_sync_handler (bus, bus_msg_handler, NULL, NULL);
+
+  gst_element_set_bus (s_bin, bus);
+  gst_element_set_bus (c_bin, bus);
+
+  gst_object_unref (bus);
 
   _wait_for_key_count_to_reach (4);
 
