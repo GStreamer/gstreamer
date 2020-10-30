@@ -619,9 +619,8 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
   g_mutex_lock (&priv->mutex);
   GST_TRACE_OBJECT (self, "locked @ process");
 
-  g_warn_if_fail (!priv->bio_buffer);
-
-  if (self->priv->received_close_notify) {
+  if (self->priv->received_close_notify
+      || self->priv->connection_state == GST_DTLS_CONNECTION_STATE_CLOSED) {
     GST_DEBUG_OBJECT (self, "Already received close_notify");
     g_mutex_unlock (&priv->mutex);
     return GST_FLOW_EOS;
@@ -636,6 +635,8 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
           "Had fatal error before");
     return GST_FLOW_ERROR;
   }
+
+  g_warn_if_fail (!priv->bio_buffer);
 
   priv->bio_buffer = data;
   priv->bio_buffer_len = len;
