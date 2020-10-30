@@ -1,13 +1,31 @@
-# gst-build
+# GStreamer
 
-GStreamer [meson](http://mesonbuild.com/) based repositories aggregrator.
+This is GStreamer, a framework for streaming media.
 
-Check out this module and run meson on it, and it will git clone the other
-GStreamer modules as [meson subprojects](http://mesonbuild.com/Subprojects.html)
-and build everything in one go. Once that is done you can switch into an
-development environment which allows you to easily develop and test the latest
-version of GStreamer without the need to install anything or touch an existing
-GStreamer system installation.
+## Where to start
+
+We have a website at
+
+  https://gstreamer.freedesktop.org
+
+Our documentation, including tutorials, API reference and FAQ can be found at
+
+  https://gstreamer.freedesktop.org/documentation/
+
+You can subscribe to our mailing lists:
+
+  https://lists.freedesktop.org/mailman/listinfo/gstreamer-announce
+
+  https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel
+
+We track bugs, feature requests and merge requests (patches) in GitLab at
+
+  https://gitlab.freedesktop.org/gstreamer/
+
+You can join us on IRC - #gstreamer on irc.freenode.org
+
+This repository contains all official modules supported by the GStreamer
+community which can be found in the `subprojects/` directory.
 
 ## Getting started
 
@@ -172,7 +190,7 @@ made in the future.
 
 ## Development environment target
 
-gst-build also contains a special `devenv` target that lets you enter an
+GStreamer also contains a special `devenv` target that lets you enter an
 development environment where you will be able to work on GStreamer
 easily. You can get into that environment running:
 
@@ -181,37 +199,17 @@ ninja -C builddir devenv
 ```
 
 If your operating system handles symlinks, built modules source code will be
-available at the root of `gst-build/` for example GStreamer core will be in
+available at the root for example GStreamer core will be in
 `gstreamer/`. Otherwise they will be present in `subprojects/`. You can simply
 hack in there and to rebuild you just need to rerun `ninja -C builddir`.
 
 NOTE: In the development environment, a fully usable prefix is also configured
-in `gst-build/prefix` where you can install any extra dependency/project.
+in `gstreamer/prefix` where you can install any extra dependency/project.
 
 An external script can be run in development environment with:
 
 ```
 ./gst-env.py external_script.sh
-```
-
-## Update git subprojects
-
-We added a special `update` target to update subprojects (it uses `git pull
---rebase` meaning you should always make sure the branches you work on are
-following the right upstream branch, you can set it with `git branch
---set-upstream-to origin/master` if you are working on `gst-build` master
-branch).
-
-Update all GStreamer modules and rebuild:
-
-```
-ninja -C builddir update
-```
-
-Update all GStreamer modules without rebuilding:
-
-```
-ninja -C builddir git-update
 ```
 
 ## Custom subprojects
@@ -264,8 +262,8 @@ GST_CHECKS=test_subbuffer meson test -C builddir --suite gstreamer gst_gstbuffer
 
 ## Optional Installation
 
-`gst-build` has been created primarily for [development usage](#development-environment-target),
-but you can also install everything that is built into a predetermined prefix like so:
+You can also install everything that is built into a predetermined prefix like
+so:
 
 ```
 meson --prefix=/path/to/install/prefix builddir
@@ -277,23 +275,6 @@ Note that the installed files have `RPATH` stripped, so you will need to set
 `LD_LIBRARY_PATH`, `DYLD_LIBRARY_PATH`, or `PATH` as appropriate for your
 platform for things to work.
 
-## Checkout another branch using worktrees
-
-If you need to have several versions of GStreamer coexisting (eg. `master` and `1.16`),
-you can use the `gst-worktree.py` script provided by `gst-build`. It allows you
-to create a new `gst-build` environment with new checkout of all the GStreamer modules as
-[git worktrees](https://git-scm.com/docs/git-worktree).
-
-For example to get a fresh checkout of `gst-1.16` from a `gst-build` repository
-that is checked out at master, you can run:
-
-```
-./gst-worktree.py add gst-build-1.16 origin/1.16
-```
-
-This will create a new ``gst-build-1.16`` directory pointing to the given branch `1.16`
-for all the subprojects (gstreamer, gst-plugins-base, etc.)
-
 
 ## Add information about GStreamer development environment in your prompt line
 
@@ -301,7 +282,10 @@ for all the subprojects (gstreamer, gst-plugins-base, etc.)
 
 We automatically handle `bash` and set `$PS1` accordingly.
 
-If the automatic `$PS1` override is not desired (maybe you have a fancy custom prompt), set the `$GST_BUILD_DISABLE_PS1_OVERRIDE` environment variable to `TRUE` and use `$GST_ENV` when setting the custom prompt, for example with a snippet like the following:
+If the automatic `$PS1` override is not desired (maybe you have a fancy custom
+prompt), set the `$GST_BUILD_DISABLE_PS1_OVERRIDE` environment variable to
+`TRUE` and use `$GST_ENV` when setting the custom prompt, for example with a
+snippet like the following:
 
 ```bash
 ...
