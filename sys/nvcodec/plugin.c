@@ -158,7 +158,8 @@ plugin_init (GstPlugin * plugin)
               gst_nv_h264_dec_register (plugin,
                   i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
               if (use_h264_sl_dec) {
-                GST_INFO ("Skip register cuvid parser based nvh264dec");
+                GST_INFO
+                    ("Skipping registration of CUVID parser based nvh264dec element");
                 register_cuviddec = FALSE;
 
                 gst_nv_h264_dec_register (plugin,
@@ -169,7 +170,8 @@ plugin_init (GstPlugin * plugin)
               gst_nv_h265_dec_register (plugin,
                   i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
               if (use_h265_sl_dec) {
-                GST_INFO ("Skip register cuvid parser based nvh264dec");
+                GST_INFO
+                    ("Skipping registration of CUVID parser based nvh265dec element");
                 register_cuviddec = FALSE;
 
                 gst_nv_h265_dec_register (plugin,
