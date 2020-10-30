@@ -47,19 +47,37 @@ static GMainLoop *main_loop;
 static GstCaps *
 _compositor_get_all_supported_caps (void)
 {
-  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE
-      (" { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "
-          "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
-          "   RGBx, BGRx } "));
+  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL));
 }
 
 static GstCaps *
 _compositor_get_non_alpha_supported_caps (void)
 {
-  return gst_caps_from_string (GST_VIDEO_CAPS_MAKE
-      (" { Y444, Y42B, YUY2, UYVY, "
-          "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
-          "   RGBx, BGRx } "));
+  gint j;
+  GValue all_formats = G_VALUE_INIT;
+  GValue nonalpha_formats = G_VALUE_INIT;
+  GstCaps *all_caps = _compositor_get_all_supported_caps ();
+
+  g_value_init (&all_formats, GST_TYPE_LIST);
+  g_value_init (&nonalpha_formats, GST_TYPE_LIST);
+  gst_value_deserialize (&all_formats, GST_VIDEO_FORMATS_ALL);
+
+  for (j = 0; j < gst_value_list_get_size (&all_formats); j++) {
+    const GValue *v1 = gst_value_list_get_value (&all_formats, j);
+    GstVideoFormat f = gst_video_format_from_string (g_value_get_string (v1));
+    GstVideoFormatInfo *format_info =
+        (GstVideoFormatInfo *) gst_video_format_get_info (f);
+    if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (format_info))
+      gst_value_list_append_value (&nonalpha_formats, v1);
+  }
+
+  gst_structure_set_value (gst_caps_get_structure (all_caps, 0), "format",
+      &nonalpha_formats);
+
+  g_value_unset (&all_formats);
+  g_value_unset (&nonalpha_formats);
+
+  return all_caps;
 }
 
 /* make sure downstream gets a CAPS event before buffers are sent */
