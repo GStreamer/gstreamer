@@ -370,9 +370,9 @@ release_buffer_cb (guint8 * data, void *user_data)
 }
 
 static GstFlowReturn
-gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
+gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
+    GstBaseTsMuxPad * ts_pad, GstCaps * caps)
 {
-  GstCaps *caps;
   GstStructure *s;
   guint st = TSMUX_ST_RESERVED;
   const gchar *mt;
@@ -386,15 +386,9 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   const gchar *stream_format = NULL;
   const char *interlace_mode = NULL;
 
-  caps = gst_pad_get_current_caps (GST_PAD (ts_pad));
-  if (caps == NULL) {
-    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set before pushing");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
   GST_DEBUG_OBJECT (ts_pad,
-      "Creating stream with PID 0x%04x for caps %" GST_PTR_FORMAT,
-      ts_pad->pid, caps);
+      "%s stream with PID 0x%04x for caps %" GST_PTR_FORMAT,
+      ts_pad->stream ? "Recreating" : "Creating", ts_pad->pid, caps);
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -402,6 +396,9 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   value = gst_structure_get_value (s, "codec_data");
   if (value != NULL)
     codec_data = gst_value_get_buffer (value);
+
+  g_clear_pointer (&ts_pad->codec_data, gst_buffer_unref);
+  ts_pad->prepare_func = NULL;
 
   stream_format = gst_structure_get_string (s, "stream-format");
 
@@ -470,6 +467,10 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
             GST_ERROR_OBJECT (mux, "Need codec_data for raw MPEG-4 AAC");
             goto not_negotiated;
           }
+        } else if (codec_data) {
+          ts_pad->codec_data = gst_buffer_ref (codec_data);
+        } else {
+          ts_pad->codec_data = NULL;
         }
         break;
       }
@@ -675,10 +676,19 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
     goto error;
   }
 
-  ts_pad->stream =
-      tsmux_create_stream (mux->tsmux, st, ts_pad->pid, ts_pad->language);
-  if (ts_pad->stream == NULL)
+  if (ts_pad->stream && st != ts_pad->stream->stream_type) {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX,
+        ("Stream type change from %02x to %02x not supported",
+            ts_pad->stream->stream_type, st), NULL);
     goto error;
+  }
+
+  if (ts_pad->stream == NULL) {
+    ts_pad->stream =
+        tsmux_create_stream (mux->tsmux, st, ts_pad->pid, ts_pad->language);
+    if (ts_pad->stream == NULL)
+      goto error;
+  }
 
   interlace_mode = gst_structure_get_string (s, "interlace-mode");
   gst_structure_get_int (s, "rate", &ts_pad->stream->audio_sampling);
@@ -707,18 +717,14 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   ts_pad->stream->opus_channel_config_code = opus_channel_config_code;
 
   tsmux_stream_set_buffer_release_func (ts_pad->stream, release_buffer_cb);
-  tsmux_program_add_stream (ts_pad->prog, ts_pad->stream);
 
-  gst_caps_unref (caps);
   return GST_FLOW_OK;
 
   /* ERRORS */
 not_negotiated:
-  gst_caps_unref (caps);
   return GST_FLOW_NOT_NEGOTIATED;
 
 error:
-  gst_caps_unref (caps);
   return GST_FLOW_ERROR;
 }
 
@@ -728,6 +734,27 @@ is_valid_pmt_pid (guint16 pmt_pid)
   if (pmt_pid < 0x0010 || pmt_pid > 0x1ffe)
     return FALSE;
   return TRUE;
+}
+
+static GstFlowReturn
+gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
+{
+  GstCaps *caps = gst_pad_get_current_caps (GST_PAD (ts_pad));
+  GstFlowReturn ret;
+
+  if (caps == NULL) {
+    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set before pushing");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  ret = gst_base_ts_mux_create_or_update_stream (mux, ts_pad, caps);
+  gst_caps_unref (caps);
+
+  if (ret == GST_FLOW_OK) {
+    tsmux_program_add_stream (ts_pad->prog, ts_pad->stream);
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1863,6 +1890,41 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
   gboolean forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstFlowReturn ret;
+      GList *cur;
+
+      if (ts_pad->stream == NULL)
+        break;
+
+      forward = FALSE;
+
+      gst_event_parse_caps (event, &caps);
+      if (!caps || !gst_caps_is_fixed (caps))
+        break;
+
+      ret = gst_base_ts_mux_create_or_update_stream (mux, ts_pad, caps);
+      if (ret != GST_FLOW_OK)
+        break;
+
+      mux->tsmux->pat_changed = TRUE;
+      mux->tsmux->si_changed = TRUE;
+      tsmux_resend_pat (mux->tsmux);
+      tsmux_resend_si (mux->tsmux);
+
+      /* output PMT for each program */
+      for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+        TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+        program->pmt_changed = TRUE;
+        tsmux_resend_pmt (program);
+      }
+
+      res = TRUE;
+      break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       GstClockTime timestamp, stream_time, running_time;
