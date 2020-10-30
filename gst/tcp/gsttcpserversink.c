@@ -172,14 +172,20 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
     GInetSocketAddress *addr =
         G_INET_SOCKET_ADDRESS (g_socket_get_remote_address (client_socket,
             NULL));
-    gchar *ip =
-        g_inet_address_to_string (g_inet_socket_address_get_address (addr));
+    if (addr) {
+      gchar *ip =
+          g_inet_address_to_string (g_inet_socket_address_get_address (addr));
 
-    GST_DEBUG_OBJECT (sink, "added new client ip %s:%u with socket %p",
-        ip, g_inet_socket_address_get_port (addr), client_socket);
+      GST_DEBUG_OBJECT (sink, "added new client ip %s:%u with socket %p",
+          ip, g_inet_socket_address_get_port (addr), client_socket);
 
-    g_free (ip);
-    g_object_unref (addr);
+      g_free (ip);
+      g_object_unref (addr);
+    } else {
+      /* This can happen when the client immediately closes the connection */
+      GST_DEBUG_OBJECT (sink, "added new client (no address) with socket %p",
+          client_socket);
+    }
   }
 #endif
 
