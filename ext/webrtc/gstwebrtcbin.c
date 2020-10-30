@@ -713,9 +713,12 @@ _gst_pc_thread (GstWebRTCBin * webrtc)
    * tasks */
   g_main_loop_run (webrtc->priv->loop);
 
-  PC_LOCK (webrtc);
+  GST_OBJECT_LOCK (webrtc);
   g_main_context_unref (webrtc->priv->main_context);
   webrtc->priv->main_context = NULL;
+  GST_OBJECT_UNLOCK (webrtc);
+
+  PC_LOCK (webrtc);
   g_main_loop_unref (webrtc->priv->loop);
   webrtc->priv->loop = NULL;
   PC_COND_BROADCAST (webrtc);
@@ -744,8 +747,11 @@ _start_thread (GstWebRTCBin * webrtc)
 static void
 _stop_thread (GstWebRTCBin * webrtc)
 {
-  PC_LOCK (webrtc);
+  GST_OBJECT_LOCK (webrtc);
   webrtc->priv->is_closed = TRUE;
+  GST_OBJECT_UNLOCK (webrtc);
+
+  PC_LOCK (webrtc);
   g_main_loop_quit (webrtc->priv->loop);
   while (webrtc->priv->loop)
     PC_COND_WAIT (webrtc);
@@ -804,16 +810,22 @@ gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
     gpointer data, GDestroyNotify notify, GstPromise * promise)
 {
   GstWebRTCBinTask *op;
+  GMainContext *ctx;
   GSource *source;
 
   g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), FALSE);
 
+  GST_OBJECT_LOCK (webrtc);
   if (webrtc->priv->is_closed) {
+    GST_OBJECT_UNLOCK (webrtc);
     GST_DEBUG_OBJECT (webrtc, "Peerconnection is closed, aborting execution");
     if (notify)
       notify (data);
     return FALSE;
   }
+  ctx = g_main_context_ref (webrtc->priv->main_context);
+  GST_OBJECT_UNLOCK (webrtc);
+
   op = g_new0 (GstWebRTCBinTask, 1);
   op->webrtc = webrtc;
   op->op = func;
@@ -826,8 +838,9 @@ gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
   g_source_set_priority (source, G_PRIORITY_DEFAULT);
   g_source_set_callback (source, (GSourceFunc) _execute_op, op,
       (GDestroyNotify) _free_op);
-  g_source_attach (source, webrtc->priv->main_context);
+  g_source_attach (source, ctx);
   g_source_unref (source);
+  g_main_context_unref (ctx);
 
   return TRUE;
 }
