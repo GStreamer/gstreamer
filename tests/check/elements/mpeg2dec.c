@@ -1789,7 +1789,7 @@ GST_START_TEST (test_decode_stream1)
   GST_VIDEO_INFO_FPS_D (&info) = 1;
   GST_VIDEO_INFO_CHROMA_SITE (&info) = GST_VIDEO_CHROMA_SITE_MPEG2;
   gst_video_colorimetry_from_string (&GST_VIDEO_INFO_COLORIMETRY (&info),
-      GST_VIDEO_COLORIMETRY_BT601);
+      "2:0:0:0");
   GST_VIDEO_INFO_MULTIVIEW_MODE (&info) = GST_VIDEO_MULTIVIEW_MODE_MONO;
 
   out_caps = gst_video_info_to_caps (&info);
@@ -1872,7 +1872,7 @@ GST_START_TEST (test_decode_stream2)
   GST_VIDEO_INFO_FPS_D (&info) = 1;
   GST_VIDEO_INFO_CHROMA_SITE (&info) = GST_VIDEO_CHROMA_SITE_MPEG2;
   gst_video_colorimetry_from_string (&GST_VIDEO_INFO_COLORIMETRY (&info),
-      GST_VIDEO_COLORIMETRY_BT601);
+      "2:0:0:0");
   GST_VIDEO_INFO_MULTIVIEW_MODE (&info) = GST_VIDEO_MULTIVIEW_MODE_MONO;
 
   out_caps = gst_video_info_to_caps (&info);
