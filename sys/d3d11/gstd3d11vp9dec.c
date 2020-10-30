@@ -1111,11 +1111,8 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   } else {
     have_profile2 &=
         gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_P010);
-    have_profile2 &=
-        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
     if (!have_profile2) {
-      GST_FIXME_OBJECT (device,
-          "device does not support P010 and/or NV12 format");
+      GST_FIXME_OBJECT (device, "device does not support P010 format");
     }
   }
 
