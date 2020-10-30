@@ -80,6 +80,9 @@
 GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 #define GST_CAT_DEFAULT splitmux_debug
 
+#define GST_SPLITMUX_STATE_LOCK(s) g_mutex_lock(&(s)->state_lock)
+#define GST_SPLITMUX_STATE_UNLOCK(s) g_mutex_unlock(&(s)->state_lock)
+
 #define GST_SPLITMUX_LOCK(s) g_mutex_lock(&(s)->lock)
 #define GST_SPLITMUX_UNLOCK(s) g_mutex_unlock(&(s)->lock)
 #define GST_SPLITMUX_WAIT_INPUT(s) g_cond_wait (&(s)->input_cond, &(s)->lock)
@@ -577,6 +580,7 @@ static void
 gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
 {
   g_mutex_init (&splitmux->lock);
+  g_mutex_init (&splitmux->state_lock);
   g_cond_init (&splitmux->input_cond);
   g_cond_init (&splitmux->output_cond);
   g_queue_init (&splitmux->out_cmd_q);
@@ -650,6 +654,7 @@ gst_splitmux_sink_finalize (GObject * object)
   g_cond_clear (&splitmux->input_cond);
   g_cond_clear (&splitmux->output_cond);
   g_mutex_clear (&splitmux->lock);
+  g_mutex_clear (&splitmux->state_lock);
   g_queue_foreach (&splitmux->out_cmd_q, (GFunc) out_cmd_buf_free, NULL);
   g_queue_clear (&splitmux->out_cmd_q);
 
@@ -1899,7 +1904,14 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   sink = gst_object_ref (splitmux->active_sink);
 
   GST_SPLITMUX_UNLOCK (splitmux);
-  GST_STATE_LOCK (splitmux);
+  GST_SPLITMUX_STATE_LOCK (splitmux);
+
+  if (splitmux->shutdown) {
+    GST_DEBUG_OBJECT (splitmux,
+        "Shutdown requested. Aborting fragment switch.");
+    GST_SPLITMUX_STATE_UNLOCK (splitmux);
+    return;
+  }
 
   if (splitmux->async_finalize) {
     if (splitmux->muxed_out_bytes > 0
@@ -2012,7 +2024,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   gst_object_unref (muxer);
 
   GST_SPLITMUX_LOCK (splitmux);
-  GST_STATE_UNLOCK (splitmux);
+  GST_SPLITMUX_STATE_UNLOCK (splitmux);
   splitmux->switching_fragment = FALSE;
   do_async_done (splitmux);
 
@@ -2030,7 +2042,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   return;
 
 fail:
-  GST_STATE_UNLOCK (splitmux);
+  GST_SPLITMUX_STATE_UNLOCK (splitmux);
   GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
       ("Could not create the new muxer/sink"), NULL);
 }
@@ -3549,12 +3561,21 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_START_NEXT_FILE;
 
       GST_SPLITMUX_UNLOCK (splitmux);
+
+      GST_SPLITMUX_STATE_LOCK (splitmux);
+      splitmux->shutdown = FALSE;
+      GST_SPLITMUX_STATE_UNLOCK (splitmux);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_atomic_int_set (&(splitmux->split_requested), FALSE);
       g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
+
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_SPLITMUX_STATE_LOCK (splitmux);
+      splitmux->shutdown = TRUE;
+      GST_SPLITMUX_STATE_UNLOCK (splitmux);
+
       GST_SPLITMUX_LOCK (splitmux);
       gst_splitmux_sink_reset (splitmux);
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_STOPPED;
