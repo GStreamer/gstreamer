@@ -359,12 +359,11 @@ init_cuda_quark_once (void)
   if (g_once_init_enter (&once_init)) {
     gint i;
 
-    for (i = 0; i < GST_CUDA_QUARK_MAX; i++) {
+    for (i = 0; i < GST_CUDA_QUARK_MAX; i++)
       gst_cuda_quark_table[i] =
           g_quark_from_static_string (gst_cuda_quark_strings[i]);
 
-      g_once_init_leave (&once_init, 1);
-    }
+    g_once_init_leave (&once_init, 1);
   }
 }
 
