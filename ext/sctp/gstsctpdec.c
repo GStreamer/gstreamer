@@ -299,8 +299,7 @@ gst_sctp_dec_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      sctpdec_cleanup (self);
-      gst_flow_combiner_reset (self->flow_combiner);
+      stop_all_srcpad_tasks (self);
       break;
     default:
       break;
@@ -308,6 +307,15 @@ gst_sctp_dec_change_state (GstElement * element, GstStateChange transition)
 
   if (ret != GST_STATE_CHANGE_FAILURE)
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      sctpdec_cleanup (self);
+      gst_flow_combiner_reset (self->flow_combiner);
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
@@ -424,7 +432,7 @@ gst_sctp_data_srcpad_loop (GstPad * pad)
     GST_OBJECT_UNLOCK (self);
 
     if (G_UNLIKELY (flow_ret == GST_FLOW_FLUSHING
-            || flow_ret == GST_FLOW_NOT_LINKED)) {
+            || flow_ret == GST_FLOW_NOT_LINKED) || flow_ret == GST_FLOW_EOS) {
       GST_DEBUG_OBJECT (pad, "Push failed on packet source pad. Error: %s",
           gst_flow_get_name (flow_ret));
     } else if (G_UNLIKELY (flow_ret != GST_FLOW_OK)) {
@@ -705,7 +713,6 @@ sctpdec_cleanup (GstSctpDec * self)
         NULL, NULL);
     g_signal_handler_disconnect (self->sctp_association,
         self->signal_handler_stream_reset);
-    stop_all_srcpad_tasks (self);
     gst_sctp_association_force_close (self->sctp_association);
     g_object_unref (self->sctp_association);
     self->sctp_association = NULL;
