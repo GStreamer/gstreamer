@@ -762,18 +762,8 @@ _new_output_state (GstVideoFormat fmt, GstVideoInterlaceMode interlace_mode,
     if (copy_interlace_mode)
       tgt->interlace_mode = ref->interlace_mode;
     tgt->flags = ref->flags;
-    /* only copy values that are not unknown so that we don't override the
-     * defaults. subclasses should really fill these in when they know. */
-    if (ref->chroma_site)
-      tgt->chroma_site = ref->chroma_site;
-    if (ref->colorimetry.range)
-      tgt->colorimetry.range = ref->colorimetry.range;
-    if (ref->colorimetry.matrix)
-      tgt->colorimetry.matrix = ref->colorimetry.matrix;
-    if (ref->colorimetry.transfer)
-      tgt->colorimetry.transfer = ref->colorimetry.transfer;
-    if (ref->colorimetry.primaries)
-      tgt->colorimetry.primaries = ref->colorimetry.primaries;
+    tgt->chroma_site = ref->chroma_site;
+    tgt->colorimetry = ref->colorimetry;
     GST_DEBUG ("reference par %d/%d fps %d/%d",
         ref->par_n, ref->par_d, ref->fps_n, ref->fps_d);
     tgt->par_n = ref->par_n;
