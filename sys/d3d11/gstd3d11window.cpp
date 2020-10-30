@@ -665,115 +665,65 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
   }
 
-  /* FIXME: need to verify video processor on Xbox
-   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1312
-   */
+#if (DXGI_HEADER_VERSION >= 4)
+  if (chosen_colorspace) {
+    const GstDxgiColorSpace *in_color_space =
+        gst_d3d11_video_info_to_dxgi_color_space (&window->info);
+    const GstD3D11Format *in_format =
+        gst_d3d11_device_format_from_gst (window->device,
+        GST_VIDEO_INFO_FORMAT (&window->info));
+    gboolean hardware = FALSE;
+    GstD3D11VideoProcessor *processor = NULL;
 
-  /* XXX: Depending on driver/vendor, d3d11 video processor might not support
-   * HDR10 metadata. Even worse thing here is,
-   * although the d3d11 video processor's capability flag indicated that
-   * HDR10 metadata is supported, it would result to black screen when HDR10
-   * metadata is passed to d3d11 video processor. (without any error message).
-   * Let's disable d3d11 video processor.
-   */
-  if (!have_hdr10 && gst_d3d11_get_device_vendor (window->device) !=
-      GST_D3D11_DEVICE_VENDOR_XBOX) {
-      window->processor =
+    if (in_color_space && in_format &&
+        in_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
+      g_object_get (window->device, "hardware", &hardware, NULL);
+    }
+
+    if (hardware) {
+      processor =
           gst_d3d11_video_processor_new (window->device,
           GST_VIDEO_INFO_WIDTH (&window->info),
           GST_VIDEO_INFO_HEIGHT (&window->info),
           display_width, display_height);
-  }
-
-  if (window->processor) {
-    const GstD3D11Format *in_format;
-    const GstD3D11Format *out_format;
-    gboolean input_support = FALSE;
-    gboolean out_support = FALSE;
-
-    in_format = gst_d3d11_device_format_from_gst (window->device,
-        GST_VIDEO_INFO_FORMAT (&window->info));
-    out_format = gst_d3d11_device_format_from_gst (window->device,
-        GST_VIDEO_INFO_FORMAT (&window->render_info));
-
-    if (gst_d3d11_video_processor_supports_input_format (window->processor,
-            in_format->dxgi_format)) {
-      input_support = TRUE;
-    } else {
-      GST_DEBUG_OBJECT (window,
-          "IVideoProcessor cannot support input dxgi format %d",
-          in_format->dxgi_format);
     }
 
-    if (gst_d3d11_video_processor_supports_output_format (window->processor,
-            out_format->dxgi_format)) {
-      out_support = TRUE;
-    } else {
-      GST_DEBUG_OBJECT (window,
-          "IVideoProcessor cannot support output dxgi format %d",
-          out_format->dxgi_format);
-    }
+    if (processor) {
+      DXGI_FORMAT in_dxgi_format = in_format->dxgi_format;
+      DXGI_FORMAT out_dxgi_format = chosen_format->dxgi_format;
+      DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
+          (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
+      DXGI_COLOR_SPACE_TYPE out_dxgi_color_space = native_colorspace_type;
 
-    if (!input_support || !out_support) {
-      gst_d3d11_video_processor_free (window->processor);
-      window->processor = NULL;
-    } else {
-      gboolean processor_input_configured = FALSE;
-      gboolean processor_output_configured = FALSE;
+      if (!gst_d3d11_video_processor_check_format_conversion (processor,
+              in_dxgi_format, in_dxgi_color_space, out_dxgi_format,
+              out_dxgi_color_space)) {
+        GST_DEBUG_OBJECT (window, "Conversion is not supported by device");
+        gst_d3d11_video_processor_free (processor);
+        processor = NULL;
+      } else {
+        GST_DEBUG_OBJECT (window, "video processor supports conversion");
+        gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
+            in_dxgi_color_space);
+        gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
+            out_dxgi_color_space);
 
-      GST_DEBUG_OBJECT (window, "IVideoProcessor interface available");
-      *video_processor_available = TRUE;
 #if (DXGI_HEADER_VERSION >= 5)
-      if (have_hdr10) {
-        GST_DEBUG_OBJECT (window, "Set HDR metadata on video processor");
-        gst_d3d11_video_processor_set_input_hdr10_metadata (window->processor,
-            &hdr10_metadata);
-        gst_d3d11_video_processor_set_output_hdr10_metadata (window->processor,
-            &hdr10_metadata);
-      }
-#endif
-
-#if (DXGI_HEADER_VERSION >= 4)
-      {
-        DXGI_COLOR_SPACE_TYPE in_native_cs =
-            DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-        const GstDxgiColorSpace *in_cs =
-            gst_d3d11_video_info_to_dxgi_color_space (&window->info);
-
-        if (in_cs) {
-          in_native_cs = (DXGI_COLOR_SPACE_TYPE) in_cs->dxgi_color_space_type;
-        } else {
-          GST_WARNING_OBJECT (window,
-              "Cannot figure out input dxgi color space");
-          if (GST_VIDEO_INFO_IS_RGB (&window->info)) {
-            in_native_cs = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-          } else {
-            in_native_cs = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
-          }
+        if (have_hdr10) {
+          GST_DEBUG_OBJECT (window, "Set HDR metadata on video processor");
+          gst_d3d11_video_processor_set_input_hdr10_metadata (processor,
+              &hdr10_metadata);
+          gst_d3d11_video_processor_set_output_hdr10_metadata (processor,
+              &hdr10_metadata);
         }
-
-        GST_DEBUG_OBJECT (window,
-            "Set color space on video processor, in %d, out %d",
-            in_native_cs, native_colorspace_type);
-        processor_input_configured =
-            gst_d3d11_video_processor_set_input_dxgi_color_space
-            (window->processor, in_native_cs);
-        processor_output_configured =
-            gst_d3d11_video_processor_set_output_dxgi_color_space
-            (window->processor, native_colorspace_type);
-      }
 #endif
-      if (!processor_input_configured) {
-        gst_d3d11_video_processor_set_input_color_space (window->processor,
-            &window->info.colorimetry);
       }
 
-      if (!processor_output_configured) {
-        gst_d3d11_video_processor_set_output_color_space (window->processor,
-            &window->render_info.colorimetry);
-      }
+      window->processor = processor;
     }
   }
+#endif
+  *video_processor_available = !!window->processor;
 
   /* configure shader even if video processor is available for fallback */
   window->converter =
