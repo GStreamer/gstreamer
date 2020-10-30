@@ -70,6 +70,7 @@ struct _GstRtpVP8Depay
   guint last_picture_id;
 
   gboolean wait_for_keyframe;
+  gboolean last_pushed_was_lost_event;
 };
 
 GType gst_rtp_vp8_depay_get_type (void);

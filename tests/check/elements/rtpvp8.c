@@ -48,8 +48,8 @@ static guint8 intra_nopicid_seqnum0[] = {
 };
 
 static GstBuffer *
-create_rtp_vp8_buffer (guint seqnum, guint picid, gint picid_bits,
-    GstClockTime buf_pts)
+create_rtp_vp8_buffer_full (guint seqnum, guint picid, gint picid_bits,
+    GstClockTime buf_pts, gboolean s_bit, gboolean marker_bit)
 {
   GstBuffer *ret;
   guint8 *packet;
@@ -74,9 +74,27 @@ create_rtp_vp8_buffer (guint seqnum, guint picid, gint picid_bits,
   packet[2] = (seqnum >> 8) & 0xff;
   packet[3] = (seqnum >> 0) & 0xff;
 
+  if (marker_bit)
+    packet[1] |= 0x80;
+  else
+    packet[1] &= ~0x80;
+
+  if (s_bit)
+    packet[12] |= 0x10;
+  else
+    packet[12] &= ~0x10;
+
   ret = gst_buffer_new_wrapped (packet, size);
   GST_BUFFER_PTS (ret) = buf_pts;
   return ret;
+}
+
+static GstBuffer *
+create_rtp_vp8_buffer (guint seqnum, guint picid, guint picid_bits,
+    GstClockTime buf_pts)
+{
+  return create_rtp_vp8_buffer_full (seqnum, picid, picid_bits, buf_pts, TRUE,
+      TRUE);
 }
 
 static void
@@ -502,6 +520,15 @@ typedef struct _DepayGapEventTestData
   gint picid_bits;
 } DepayGapEventTestData;
 
+typedef struct
+{
+  gint seq_num;
+  gint picid;
+  guint buffer_type;
+  gboolean s_bit;
+  gboolean marker_bit;
+} DepayGapEventTestDataFull;
+
 static void
 test_depay_gap_event_base (const DepayGapEventTestData * data,
     gboolean send_lost_event, gboolean expect_gap_event)
@@ -571,6 +598,153 @@ GST_START_TEST (test_depay_stop_gap_events)
 
 GST_END_TEST;
 
+GST_START_TEST (test_depay_send_gap_event_when_marker_bit_missing_and_picid_gap)
+{
+  gboolean send_lost_event = __i__ == 0;
+  GstClockTime pts = 0;
+  gint seqnum = 100;
+  gint i;
+  GstEvent *event;
+
+  GstHarness *h = gst_harness_new_parse ("rtpvp8depay");
+  gst_harness_set_src_caps_str (h, RTP_VP8_CAPS_STR);
+
+  /* Push a complete frame to avoid depayloader to suppress gap events */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (seqnum, 23,
+              7, pts, TRUE, TRUE)));
+  pts += 33 * GST_MSECOND;
+  seqnum++;
+
+  for (i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+  fail_unless_equals_int (gst_harness_events_in_queue (h), 0);
+
+  /* Push packet with start bit set, but no marker bit */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (seqnum, 24,
+              7, pts, TRUE, FALSE)));
+  pts += 33 * GST_MSECOND;
+  seqnum++;
+
+  if (send_lost_event) {
+    gst_harness_push_event (h,
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+            gst_structure_new ("GstRTPPacketLost", "timestamp", G_TYPE_UINT64,
+                pts, "duration", G_TYPE_UINT64, 33 * GST_MSECOND, NULL)));
+    pts += 33 * GST_MSECOND;
+    seqnum++;
+  }
+
+  /* Push packet with gap in picid */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (seqnum, 26,
+              7, pts, TRUE, TRUE)));
+
+  /* Expect only 2 output frames since the one frame was incomplete */
+  fail_unless_equals_int (2, gst_harness_buffers_received (h));
+
+  /* There should be a gap event, either triggered by the loss or the picid
+   * gap */
+
+  /* Making sure the GAP event was pushed downstream */
+  event = gst_harness_pull_event (h);
+  fail_unless_equals_string ("gap",
+      gst_event_type_get_name (GST_EVENT_TYPE (event)));
+  gst_event_unref (event);
+
+  fail_unless_equals_int (gst_harness_events_in_queue (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (test_depay_send_gap_event_when_marker_bit_missing_and_no_picid_gap) {
+  GstClockTime pts = 0;
+  gint seqnum = 100;
+  gint i;
+  GstEvent *event;
+
+  GstHarness *h = gst_harness_new_parse ("rtpvp8depay");
+  gst_harness_set_src_caps_str (h, RTP_VP8_CAPS_STR);
+
+  /* Push a complete frame to avoid depayloader to suppress gap events */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (seqnum, 23,
+              7, pts, TRUE, TRUE)));
+  pts += 33 * GST_MSECOND;
+  seqnum++;
+
+  for (i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+  fail_unless_equals_int (gst_harness_events_in_queue (h), 0);
+
+  /* Push packet with start bit set, but no marker bit */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (seqnum, 24,
+              7, pts, TRUE, FALSE)));
+  pts += 33 * GST_MSECOND;
+  seqnum++;
+
+  /* Push packet for next picid, without having sent a packet with marker bit
+   * foor the previous picid */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (seqnum, 25,
+              7, pts, TRUE, TRUE)));
+
+  /* Expect only 2 output frames since one was incomplete */
+  fail_unless_equals_int (2, gst_harness_buffers_received (h));
+
+  /* Making sure the GAP event was pushed downstream */
+  event = gst_harness_pull_event (h);
+  gst_event_unref (event);
+
+  fail_unless_equals_int (gst_harness_events_in_queue (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_depay_no_gap_event_when_partial_frames_with_no_picid_gap)
+{
+  gint i;
+  GstClockTime pts = 0;
+  GstHarness *h = gst_harness_new ("rtpvp8depay");
+  gst_harness_set_src_caps_str (h, RTP_VP8_CAPS_STR);
+
+  /* start with complete frame to make sure depayloader will not drop
+   * potential gap events */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (100, 24,
+              7, pts, TRUE, TRUE)));
+  fail_unless_equals_int (1, gst_harness_buffers_received (h));
+
+  /* drop setup events to more easily check for gap events */
+  for (i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+  fail_unless_equals_int (gst_harness_events_in_queue (h), 0);
+
+  /* Next frame is split in two packets */
+  pts += 33 * GST_MSECOND;
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (101, 25,
+              7, pts, TRUE, FALSE)));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_vp8_buffer_full (102, 25,
+              7, pts, FALSE, TRUE)));
+  fail_unless_equals_int (2, gst_harness_buffers_received (h));
+
+  /* there must be no gap events */
+  fail_unless_equals_int (gst_harness_events_in_queue (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /* Packet loss + lost picture ids */
 static const DepayGapEventTestData resend_gap_event_test_data[][2] = {
   /* 7bit picture ids */
@@ -617,6 +791,12 @@ rtpvp8_suite (void)
       G_N_ELEMENTS (stop_gap_events_test_data));
   tcase_add_loop_test (tc_chain, test_depay_resend_gap_event, 0,
       G_N_ELEMENTS (resend_gap_event_test_data));
+  tcase_add_loop_test (tc_chain,
+      test_depay_send_gap_event_when_marker_bit_missing_and_picid_gap, 0, 2);
+  tcase_add_test (tc_chain,
+      test_depay_send_gap_event_when_marker_bit_missing_and_no_picid_gap);
+  tcase_add_test (tc_chain,
+      test_depay_no_gap_event_when_partial_frames_with_no_picid_gap);
 
   return s;
 }
