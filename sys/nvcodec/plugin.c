@@ -33,6 +33,7 @@
 #include "gstnvenc.h"
 #include "gstnvh264dec.h"
 #include "gstnvh265dec.h"
+#include "gstnvvp8dec.h"
 #include "gstnvdecoder.h"
 #include "gstcudadownload.h"
 #include "gstcudaupload.h"
@@ -59,6 +60,7 @@ plugin_init (GstPlugin * plugin)
   const gchar *env;
   gboolean use_h264_sl_dec = FALSE;
   gboolean use_h265_sl_dec = FALSE;
+  gboolean use_vp8_sl_dec = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
@@ -111,6 +113,9 @@ plugin_init (GstPlugin * plugin)
       } else if (g_ascii_strcasecmp (*iter, "h265") == 0) {
         GST_INFO ("Found %s in GST_USE_NV_STATELESS_CODEC environment", *iter);
         use_h265_sl_dec = TRUE;
+      } else if (g_ascii_strcasecmp (*iter, "vp8") == 0) {
+        GST_INFO ("Found %s in GST_USE_NV_STATELESS_CODEC environment", *iter);
+        use_vp8_sl_dec = TRUE;
       }
     }
 
@@ -175,6 +180,18 @@ plugin_init (GstPlugin * plugin)
                 register_cuviddec = FALSE;
 
                 gst_nv_h265_dec_register (plugin,
+                    i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
+              }
+              break;
+            case cudaVideoCodec_VP8:
+              gst_nv_vp8_dec_register (plugin,
+                  i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
+              if (use_vp8_sl_dec) {
+                GST_INFO
+                    ("Skipping registration of CUVID parser based nvhvp8dec element");
+                register_cuviddec = FALSE;
+
+                gst_nv_vp8_dec_register (plugin,
                     i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
               }
               break;
