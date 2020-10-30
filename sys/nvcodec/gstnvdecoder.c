@@ -905,6 +905,21 @@ gst_nv_decocer_get_supported_codec_profiles (GValue * profiles,
 
       ret = TRUE;
       break;
+    case cudaVideoCodec_VP9:
+      if ((flags & GST_NV_DECODER_FORMAT_FLAG_420_8BITS) ==
+          GST_NV_DECODER_FORMAT_FLAG_420_8BITS) {
+        g_value_set_static_string (&val, "0");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      if ((flags & GST_NV_DECODER_FORMAT_FLAG_420_10BITS) ==
+          GST_NV_DECODER_FORMAT_FLAG_420_10BITS) {
+        g_value_set_static_string (&val, "2");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      ret = TRUE;
+      break;
     default:
       break;
   }
