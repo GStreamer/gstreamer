@@ -105,7 +105,11 @@ struct _GstSplitMuxSink
 {
   GstBin parent;
 
+  GMutex state_lock;
+  gboolean shutdown;
+
   GMutex lock;
+
   GCond input_cond;
   GCond output_cond;
 
