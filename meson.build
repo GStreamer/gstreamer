@@ -236,6 +236,7 @@ check_functions = [
   'pselect',
   'getpagesize',
   'clock_gettime',
+  'clock_nanosleep',
   'strnlen',
   # These are needed by libcheck
   'getline',

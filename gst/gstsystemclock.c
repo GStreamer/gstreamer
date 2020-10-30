@@ -961,11 +961,34 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     while (TRUE) {
       gboolean waitret;
 
-      /* now wait on the entry, it either times out or the cond is signalled.
-       * The status of the entry is BUSY only around the wait. */
-      waitret =
-          GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL ((GstClockEntryImpl *) entry,
-          mono_ts * 1000 + diff);
+#ifdef HAVE_CLOCK_NANOSLEEP
+      if (diff <= 500 * GST_USECOND) {
+        /* In order to provide more accurate wait, we will use BLOCKING
+           clock_nanosleep for any deadlines at or below 500us */
+        struct timespec end;
+        GST_TIME_TO_TIMESPEC (entryt, end);
+        GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
+        waitret =
+            clock_nanosleep (CLOCK_MONOTONIC, TIMER_ABSTIME, &end, NULL) == 0;
+        GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
+      } else {
+
+        if (diff < 2 * GST_MSECOND) {
+          /* For any deadline within 2ms, we first use the regular non-blocking
+             wait by reducing the diff accordingly */
+          diff -= 500 * GST_USECOND;
+        }
+#endif
+
+        /* now wait on the entry, it either times out or the cond is signalled.
+         * The status of the entry is BUSY only around the wait. */
+        waitret =
+            GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL ((GstClockEntryImpl *) entry,
+            mono_ts * 1000 + diff);
+
+#ifdef HAVE_CLOCK_NANOSLEEP
+      }
+#endif
 
       /* get the new status, mark as DONE. We do this so that the unschedule
        * function knows when we left the poll and doesn't need to wakeup the
@@ -1004,6 +1027,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
 
         /* reschedule if gst_cond_wait_until returned early or we have to reschedule after
          * an unlock*/
+        mono_ts = g_get_monotonic_time ();
         now = gst_clock_get_time (clock);
         diff = GST_CLOCK_DIFF (now, entryt);
 
