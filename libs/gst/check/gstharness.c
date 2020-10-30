@@ -1129,7 +1129,7 @@ gst_harness_teardown (GstHarness * h)
   priv->propose_allocation_metas = NULL;
 
   /* if we hold the last ref, set to NULL */
-  if (gst_harness_element_unref (h) == 0) {
+  if (h->element != NULL && gst_harness_element_unref (h) == 0) {
     gboolean state_change;
     GstState state, pending;
     state_change = gst_element_set_state (h->element, GST_STATE_NULL);
@@ -1157,8 +1157,10 @@ gst_harness_teardown (GstHarness * h)
   g_ptr_array_unref (priv->stress);
   priv->stress = NULL;
 
-  gst_object_unref (h->element);
-  h->element = NULL;
+  if (h->element) {
+    gst_object_unref (h->element);
+    h->element = NULL;
+  }
 
   gst_object_replace ((GstObject **) & priv->testclock, NULL);
 

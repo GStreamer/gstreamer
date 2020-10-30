@@ -25,6 +25,14 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
+GST_START_TEST (test_harness_empty)
+{
+  GstHarness *h = gst_harness_new_empty ();
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static void
 create_destroy_element_harness (gpointer data, gpointer user_data)
 {
@@ -293,6 +301,7 @@ gst_harness_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
+  tcase_add_test (tc_chain, test_harness_empty);
   tcase_add_test (tc_chain, test_harness_element_ref);
   tcase_add_test (tc_chain, test_src_harness);
   tcase_add_test (tc_chain, test_src_harness_no_forwarding);
