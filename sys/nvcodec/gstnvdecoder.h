@@ -52,23 +52,18 @@ typedef enum
   /* FIXME: add support D3D11 memory */
 } GstNvDecoderOutputType;
 
-G_GNUC_INTERNAL
 GstNvDecoder * gst_nv_decoder_new (GstCudaContext * context,
                                    cudaVideoCodec codec,
                                    GstVideoInfo * info,
                                    guint pool_size);
 
-G_GNUC_INTERNAL
 GstNvDecoderFrame * gst_nv_decoder_new_frame (GstNvDecoder * decoder);
 
-G_GNUC_INTERNAL
 void gst_nv_decoder_frame_free (GstNvDecoderFrame * frame);
 
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_decode_picture (GstNvDecoder * decoder,
                                         CUVIDPICPARAMS * params);
 
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_finish_frame (GstNvDecoder * decoder,
                                       GstNvDecoderOutputType output_type,
                                       GstObject * graphics_context,
@@ -76,17 +71,14 @@ gboolean gst_nv_decoder_finish_frame (GstNvDecoder * decoder,
                                       GstBuffer *buffer);
 
 /* utils for class registration */
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_check_device_caps (CUcontext cuda_ctx,
                                            cudaVideoCodec codec,
                                            GstCaps **sink_template,
                                            GstCaps **src_template);
 
-G_GNUC_INTERNAL
 const gchar * gst_cuda_video_codec_to_string (cudaVideoCodec codec);
 
 /* helper methods */
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_ensure_element_data  (GstElement * decoder,
                                               guint cuda_device_id,
                                               GstCudaContext ** cuda_context,
@@ -94,7 +86,6 @@ gboolean gst_nv_decoder_ensure_element_data  (GstElement * decoder,
                                               GstObject ** gl_display,
                                               GstObject ** other_gl_context);
 
-G_GNUC_INTERNAL
 void     gst_nv_decoder_set_context          (GstElement * decoder,
                                               GstContext * context,
                                               guint cuda_device_id,
@@ -102,7 +93,6 @@ void     gst_nv_decoder_set_context          (GstElement * decoder,
                                               GstObject ** gl_display,
                                               GstObject ** other_gl_context);
 
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_handle_context_query (GstElement * decoder,
                                               GstQuery * query,
                                               GstCudaContext * cuda_context,
@@ -110,7 +100,6 @@ gboolean gst_nv_decoder_handle_context_query (GstElement * decoder,
                                               GstObject * gl_context,
                                               GstObject * other_gl_context);
 
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_negotiate            (GstVideoDecoder * decoder,
                                               GstVideoCodecState * input_state,
                                               GstVideoFormat format,
@@ -122,7 +111,6 @@ gboolean gst_nv_decoder_negotiate            (GstVideoDecoder * decoder,
                                               GstVideoCodecState ** output_state,
                                               GstNvDecoderOutputType * output_type);
 
-G_GNUC_INTERNAL
 gboolean gst_nv_decoder_decide_allocation (GstNvDecoder * nvdec,
                                            GstVideoDecoder * decocer,
                                            GstQuery * query,
