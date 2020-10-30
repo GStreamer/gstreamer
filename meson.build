@@ -380,11 +380,6 @@ endif
 run_target('uninstalled', command : devenv_cmd)
 run_target('devenv', command : devenv_cmd)
 
-update = find_program('git-update')
-run_target('git-update', command : [update])
-run_target('update', command : [update,
-    '--builddir=@0@'.format(meson.current_build_dir())])
-
 if orc_subproject.found() and orc_update_targets.length() > 0
   alias_target('update-orc-dist', orc_update_targets)
 endif
