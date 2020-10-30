@@ -42,6 +42,8 @@ typedef struct _GstNvDecoderFrame
 
   /*< private >*/
   GstNvDecoder *decoder;
+
+  gint ref_count;
 } GstNvDecoderFrame;
 
 typedef enum
@@ -59,7 +61,9 @@ GstNvDecoder * gst_nv_decoder_new (GstCudaContext * context,
 
 GstNvDecoderFrame * gst_nv_decoder_new_frame (GstNvDecoder * decoder);
 
-void gst_nv_decoder_frame_free (GstNvDecoderFrame * frame);
+GstNvDecoderFrame * gst_nv_decoder_frame_ref (GstNvDecoderFrame * frame);
+
+void gst_nv_decoder_frame_unref (GstNvDecoderFrame * frame);
 
 gboolean gst_nv_decoder_decode_picture (GstNvDecoder * decoder,
                                         CUVIDPICPARAMS * params);

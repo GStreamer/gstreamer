@@ -432,7 +432,7 @@ gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
       "New decoder frame %p (index %d)", nv_frame, nv_frame->index);
 
   gst_h264_picture_set_user_data (picture,
-      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_free);
+      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
 
   return TRUE;
 }

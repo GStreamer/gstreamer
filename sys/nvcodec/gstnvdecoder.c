@@ -306,6 +306,7 @@ gst_nv_decoder_new_frame (GstNvDecoder * decoder)
   frame = g_new0 (GstNvDecoderFrame, 1);
   frame->index = index_to_use;
   frame->decoder = gst_object_ref (decoder);
+  frame->ref_count = 1;
 
   GST_LOG_OBJECT (decoder, "New frame %p (index %d)", frame, frame->index);
 
@@ -369,33 +370,45 @@ gst_nv_decoder_frame_unmap (GstNvDecoderFrame * frame)
   frame->mapped = FALSE;
 }
 
+GstNvDecoderFrame *
+gst_nv_decoder_frame_ref (GstNvDecoderFrame * frame)
+{
+  g_assert (frame != NULL);
+
+  g_atomic_int_add (&frame->ref_count, 1);
+
+  return frame;
+}
+
 void
-gst_nv_decoder_frame_free (GstNvDecoderFrame * frame)
+gst_nv_decoder_frame_unref (GstNvDecoderFrame * frame)
 {
   GstNvDecoder *self;
 
   g_assert (frame != NULL);
 
-  GST_LOG ("Free frame %p (index %d)", frame, frame->index);
+  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
+    GST_LOG ("Free frame %p (index %d)", frame, frame->index);
 
-  if (frame->decoder) {
-    self = frame->decoder;
-    if (frame->mapped && gst_cuda_context_push (self->context)) {
-      gst_nv_decoder_frame_unmap (frame);
-      gst_cuda_context_pop (NULL);
+    if (frame->decoder) {
+      self = frame->decoder;
+      if (frame->mapped && gst_cuda_context_push (self->context)) {
+        gst_nv_decoder_frame_unmap (frame);
+        gst_cuda_context_pop (NULL);
+      }
+
+      if (frame->index < self->pool_size) {
+        self->frame_pool[frame->index].available = TRUE;
+      } else {
+        GST_WARNING_OBJECT (self,
+            "Frame %p has invalid index %d", frame, frame->index);
+      }
+
+      gst_object_unref (self);
     }
 
-    if (frame->index < self->pool_size) {
-      self->frame_pool[frame->index].available = TRUE;
-    } else {
-      GST_WARNING_OBJECT (self,
-          "Frame %p has invalid index %d", frame, frame->index);
-    }
-
-    gst_object_unref (self);
+    g_free (frame);
   }
-
-  g_free (frame);
 }
 
 gboolean

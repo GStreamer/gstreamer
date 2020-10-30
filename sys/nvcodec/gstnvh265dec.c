@@ -430,7 +430,7 @@ gst_nv_h265_dec_new_picture (GstH265Decoder * decoder,
   GST_LOG_OBJECT (self, "New decoder frame %p (index %d)", frame, frame->index);
 
   gst_h265_picture_set_user_data (picture,
-      frame, (GDestroyNotify) gst_nv_decoder_frame_free);
+      frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
 
   return TRUE;
 }

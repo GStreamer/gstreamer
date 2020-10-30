@@ -300,7 +300,7 @@ gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
       "New decoder frame %p (index %d)", nv_frame, nv_frame->index);
 
   gst_vp8_picture_set_user_data (picture,
-      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_free);
+      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
 
   return TRUE;
 }
