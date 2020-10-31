@@ -50,6 +50,7 @@ typedef enum _SplitMuxOutputState
   SPLITMUX_OUTPUT_STATE_AWAITING_COMMAND,       /* Waiting first command packet from input */
   SPLITMUX_OUTPUT_STATE_OUTPUT_GOP,     /* Outputting a collected GOP */
   SPLITMUX_OUTPUT_STATE_ENDING_FILE,    /* Finishing the current fragment */
+  SPLITMUX_OUTPUT_STATE_ENDING_STREAM,  /* Finishing up the entire stream due to input EOS */
   SPLITMUX_OUTPUT_STATE_START_NEXT_FILE /* Restarting after ENDING_FILE */
 } SplitMuxOutputState;
 

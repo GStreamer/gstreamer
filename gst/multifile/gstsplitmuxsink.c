@@ -1267,6 +1267,7 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
           continue;
 
         case SPLITMUX_OUTPUT_STATE_ENDING_FILE:
+        case SPLITMUX_OUTPUT_STATE_ENDING_STREAM:
           /* We've reached the max out running_time to get here, so end this file now */
           if (ctx->out_eos == FALSE) {
             if (splitmux->async_finalize) {
@@ -1590,6 +1591,12 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         if (splitmux->output_state == SPLITMUX_OUTPUT_STATE_STOPPED)
           goto beach;
         ctx->out_eos = TRUE;
+
+        if (ctx == splitmux->reference_ctx) {
+          splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_STREAM;
+          GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
+        }
+
         GST_INFO_OBJECT (splitmux,
             "Have EOS event at pad %" GST_PTR_FORMAT " ctx %p", pad, ctx);
         break;
@@ -2095,7 +2102,12 @@ bus_handler (GstBin * bin, GstMessage * message)
           GST_SPLITMUX_UNLOCK (splitmux);
           return;
         }
-      } else if (splitmux->output_state == SPLITMUX_OUTPUT_STATE_ENDING_FILE) {
+      } else if (splitmux->output_state == SPLITMUX_OUTPUT_STATE_ENDING_STREAM) {
+        GST_DEBUG_OBJECT (splitmux,
+            "Passing EOS message. Output state %d max_out_running_time %"
+            GST_STIME_FORMAT, splitmux->output_state,
+            GST_STIME_ARGS (splitmux->max_out_running_time));
+      } else {
         GST_DEBUG_OBJECT (splitmux, "Caught EOS at end of fragment, dropping");
         splitmux->output_state = SPLITMUX_OUTPUT_STATE_START_NEXT_FILE;
         GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
@@ -2103,11 +2115,6 @@ bus_handler (GstBin * bin, GstMessage * message)
         gst_message_unref (message);
         GST_SPLITMUX_UNLOCK (splitmux);
         return;
-      } else {
-        GST_DEBUG_OBJECT (splitmux,
-            "Passing EOS message. Output state %d max_out_running_time %"
-            GST_STIME_FORMAT, splitmux->output_state,
-            GST_STIME_ARGS (splitmux->max_out_running_time));
       }
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
