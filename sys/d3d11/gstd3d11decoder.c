@@ -56,6 +56,7 @@
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11device.h"
 #include "gstd3d11colorconverter.h"
+#include "gstd3d11format.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY (d3d11_decoder_debug);
@@ -1408,6 +1409,7 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
 {
   GstCaps *peer_caps;
   GstVideoCodecState *state;
+  GstVideoInfo out_info;
 
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
   g_return_val_if_fail (input_state != NULL, FALSE);
@@ -1419,7 +1421,43 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
 
   state = gst_video_decoder_set_output_state (decoder,
       format, width, height, input_state);
-  state->caps = gst_video_info_to_caps (&state->info);
+  out_info = state->info;
+#if (DXGI_HEADER_VERSION >= 4)
+  {
+    /* Supported DXGI colorspace by driver might be limited and
+     * decision criteria of default colorimetry doesn't look well fit
+     * with D3D11/DXGI colorspace preference. Apply our rule here */
+    const GstDxgiColorSpace *colorspace;
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar *colorimetry;
+#endif
+
+    out_info.colorimetry = input_state->info.colorimetry;
+    colorspace = gst_d3d11_video_info_to_dxgi_color_space (&out_info);
+
+#ifndef GST_DISABLE_GST_DEBUG
+    colorimetry = gst_video_colorimetry_to_string (&out_info.colorimetry);
+    if (colorspace) {
+      GST_DEBUG_OBJECT (decoder,
+          "Use DXGI colorspace %d (input colorimetry %s)",
+          colorspace->dxgi_color_space_type, GST_STR_NULL (colorimetry));
+    } else {
+      GST_WARNING_OBJECT (decoder,
+          "Cannot determin DXGI color space from input colorimetry %s",
+          GST_STR_NULL (colorimetry));
+    }
+    g_free (colorimetry);
+#endif
+
+    if (colorspace) {
+      out_info.colorimetry.matrix = colorspace->matrix;
+      out_info.colorimetry.primaries = colorspace->primaries;
+      out_info.colorimetry.range = colorspace->range;
+      out_info.colorimetry.transfer = colorspace->transfer;
+    }
+  }
+#endif
+  state->caps = gst_video_info_to_caps (&out_info);
 
   if (*output_state)
     gst_video_codec_state_unref (*output_state);
