@@ -1199,13 +1199,10 @@ gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   sink_caps = gst_caps_from_string ("video/x-h264, "
       "stream-format= (string) { avc, avc3, byte-stream }, "
       "alignment= (string) au, "
-      "profile = (string) { high, main, constrained-baseline, baseline }, "
-      "framerate = " GST_VIDEO_FPS_RANGE);
+      "profile = (string) { high, main, constrained-baseline, baseline }");
   src_caps = gst_caps_from_string ("video/x-raw("
-      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), format = (string) NV12, "
-      "framerate = " GST_VIDEO_FPS_RANGE ";"
-      "video/x-raw, format = (string) NV12, "
-      "framerate = " GST_VIDEO_FPS_RANGE);
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), format = (string) NV12; "
+      "video/x-raw, format = (string) NV12");
 
   /* To cover both landscape and portrait, select max value */
   resolution = MAX (max_width, max_height);

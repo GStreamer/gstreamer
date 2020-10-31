@@ -1160,12 +1160,9 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     return;
   }
 
-  sink_caps = gst_caps_from_string ("video/x-vp9, "
-      "alignment = (string) frame, framerate = " GST_VIDEO_FPS_RANGE);
+  sink_caps = gst_caps_from_string ("video/x-vp9, alignment = (string) frame");
   src_caps = gst_caps_from_string ("video/x-raw("
-      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), "
-      "framerate = " GST_VIDEO_FPS_RANGE ";"
-      "video/x-raw, " "framerate = " GST_VIDEO_FPS_RANGE);
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "); video/x-raw");
 
   g_value_init (&vp9_profiles, GST_TYPE_LIST);
 

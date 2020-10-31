@@ -882,12 +882,9 @@ gst_d3d11_vp8_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     return;
   }
 
-  sink_caps = gst_caps_from_string ("video/x-vp8, "
-      "framerate = " GST_VIDEO_FPS_RANGE);
+  sink_caps = gst_caps_from_string ("video/x-vp8");
   src_caps = gst_caps_from_string ("video/x-raw("
-      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), "
-      "framerate = " GST_VIDEO_FPS_RANGE ";"
-      "video/x-raw, " "framerate = " GST_VIDEO_FPS_RANGE);
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "); video/x-raw");
 
   gst_caps_set_simple (src_caps, "format", G_TYPE_STRING, "NV12", NULL);
 
