@@ -1278,7 +1278,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       color = gst_debug_construct_term_color (gst_debug_category_get_color
           (category));
       clear = "\033[00m";
-      g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
+      g_sprintf (pidcolor, "\033[%02dm", pid % 6 + 31);
       levelcolor = levelcolormap[level];
 
 #define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
