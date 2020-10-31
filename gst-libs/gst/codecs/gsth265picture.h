@@ -59,6 +59,7 @@ typedef enum
 
 struct _GstH265Picture
 {
+  /*< private >*/
   GstMiniObject parent;
 
   GstH265SliceType type;
@@ -81,7 +82,7 @@ struct _GstH265Picture
 
   gboolean ref;
   gboolean long_term;
-  gboolean outputted;
+  gboolean needed_for_output;
 
   GstH265PictureField field;
 
@@ -161,13 +162,6 @@ GST_CODECS_API
 void  gst_h265_dpb_delete_unused    (GstH265Dpb * dpb);
 
 GST_CODECS_API
-void gst_h265_dpb_delete_outputted   (GstH265Dpb * dpb);
-
-GST_CODECS_API
-void  gst_h265_dpb_delete_by_poc    (GstH265Dpb * dpb,
-                                     gint poc);
-
-GST_CODECS_API
 gint  gst_h265_dpb_num_ref_pictures (GstH265Dpb * dpb);
 
 GST_CODECS_API
@@ -190,10 +184,6 @@ GstH265Picture * gst_h265_dpb_get_long_ref_by_poc  (GstH265Dpb * dpb,
                                                     gint poc);
 
 GST_CODECS_API
-void  gst_h265_dpb_get_pictures_not_outputted  (GstH265Dpb * dpb,
-                                                GArray * out);
-
-GST_CODECS_API
 GArray * gst_h265_dpb_get_pictures_all         (GstH265Dpb * dpb);
 
 GST_CODECS_API
@@ -205,6 +195,15 @@ gint  gst_h265_dpb_get_size   (GstH265Dpb * dpb);
 
 GST_CODECS_API
 gboolean gst_h265_dpb_is_full (GstH265Dpb * dpb);
+
+GST_CODECS_API
+gboolean gst_h265_dpb_needs_bump (GstH265Dpb * dpb,
+                                  guint max_num_reorder_pics,
+                                  guint max_latency_increase,
+                                  guint max_dec_pic_buffering);
+
+GST_CODECS_API
+GstH265Picture * gst_h265_dpb_bump (GstH265Dpb * dpb);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265Picture, gst_h265_picture_unref)
 

@@ -107,9 +107,6 @@ struct _GstH265DecoderPrivate
   GArray *ref_pic_list_tmp;
   GArray *ref_pic_list0;
   GArray *ref_pic_list1;
-
-  /* Cached array to handle pictures to be outputted */
-  GArray *to_output;
 };
 
 #define parent_class gst_h265_decoder_parent_class
@@ -170,11 +167,6 @@ gst_h265_decoder_init (GstH265Decoder * self)
       sizeof (GstH265Picture *), 32);
   priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH265Picture *), 32);
-
-  priv->to_output = g_array_sized_new (FALSE, TRUE,
-      sizeof (GstH265Picture *), 16);
-  g_array_set_clear_func (priv->to_output,
-      (GDestroyNotify) gst_h265_picture_clear);
 }
 
 static void
@@ -183,7 +175,6 @@ gst_h265_decoder_finalize (GObject * object)
   GstH265Decoder *self = GST_H265_DECODER (object);
   GstH265DecoderPrivate *priv = self->priv;
 
-  g_array_unref (priv->to_output);
   g_array_unref (priv->ref_pic_list_tmp);
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
@@ -527,7 +518,7 @@ gst_h265_decoder_preprocess_slice (GstH265Decoder * self, GstH265Slice * slice)
 
   if (GST_H265_IS_NAL_TYPE_IDR (nalu->type)) {
     GST_DEBUG_OBJECT (self, "IDR nalu, clear dpb");
-    gst_h265_decoder_drain (GST_VIDEO_DECODER (self));
+    gst_h265_decoder_drain_internal (self);
   }
 
   return TRUE;
@@ -1290,26 +1281,15 @@ gst_h265_decoder_prepare_rps (GstH265Decoder * self, const GstH265Slice * slice,
 }
 
 static void
-gst_h265_decoder_clear_dpb (GstH265Decoder * self)
-{
-  GstH265DecoderPrivate *priv = self->priv;
-
-  gst_h265_dpb_clear (priv->dpb);
-  priv->last_output_poc = -1;
-}
-
-static void
 gst_h265_decoder_do_output_picture (GstH265Decoder * self,
-    GstH265Picture * picture, gboolean clear_dpb)
+    GstH265Picture * picture)
 {
   GstH265DecoderPrivate *priv = self->priv;
   GstH265DecoderClass *klass;
   GstVideoCodecFrame *frame = NULL;
 
-  picture->outputted = TRUE;
-
-  if (clear_dpb && !picture->ref)
-    gst_h265_dpb_delete_by_poc (priv->dpb, picture->pic_order_cnt);
+  GST_LOG_OBJECT (self, "Output picture %p (poc %d)", picture,
+      picture->pic_order_cnt);
 
   if (picture->pic_order_cnt < priv->last_output_poc) {
     GST_WARNING_OBJECT (self,
@@ -1327,8 +1307,8 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
         "No available codec frame with frame number %d",
         picture->system_frame_number);
     priv->last_ret = GST_FLOW_ERROR;
-    gst_h265_picture_unref (picture);
 
+    gst_h265_picture_unref (picture);
     return;
   }
 
@@ -1338,55 +1318,28 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
   priv->last_ret = klass->output_picture (self, frame, picture);
 }
 
-static gint
-poc_asc_compare (const GstH265Picture ** a, const GstH265Picture ** b)
+static void
+gst_h265_decoder_clear_dpb (GstH265Decoder * self)
 {
-  return (*a)->pic_order_cnt > (*b)->pic_order_cnt;
+  GstH265DecoderPrivate *priv = self->priv;
+
+  gst_h265_dpb_clear (priv->dpb);
+  priv->last_output_poc = 0;
 }
 
 static gboolean
 gst_h265_decoder_drain_internal (GstH265Decoder * self)
 {
   GstH265DecoderPrivate *priv = self->priv;
-  GArray *to_output = priv->to_output;
+  GstH265Picture *picture;
 
-  gst_h265_dpb_delete_outputted (priv->dpb);
-  gst_h265_dpb_get_pictures_not_outputted (priv->dpb, to_output);
-  g_array_sort (to_output, (GCompareFunc) poc_asc_compare);
+  while ((picture = gst_h265_dpb_bump (priv->dpb)) != NULL)
+    gst_h265_decoder_do_output_picture (self, picture);
 
-  while (to_output->len) {
-    GstH265Picture *picture = g_array_index (to_output, GstH265Picture *, 0);
-
-    /* We want the last reference when outputing so take a ref and then remove
-     * from both arrays. */
-    gst_h265_picture_ref (picture);
-    g_array_remove_index (to_output, 0);
-    gst_h265_dpb_delete_by_poc (priv->dpb, picture->pic_order_cnt);
-
-    GST_LOG_OBJECT (self, "Output picture %p (poc %d)", picture,
-        picture->pic_order_cnt);
-    gst_h265_decoder_do_output_picture (self, picture, FALSE);
-    picture = NULL;
-  }
-
-  g_array_set_size (to_output, 0);
   gst_h265_dpb_clear (priv->dpb);
   priv->last_output_poc = 0;
+
   return TRUE;
-}
-
-static gboolean
-gst_h265_decoder_check_latency_count (GArray * array, guint32 max_latency)
-{
-  gint i;
-
-  for (i = 0; i < array->len; i++) {
-    GstH265Picture *pic = g_array_index (array, GstH265Picture *, i);
-    if (!pic->outputted && pic->pic_latency_cnt >= max_latency)
-      return TRUE;
-  }
-
-  return FALSE;
 }
 
 /* C.5.2.2 */
@@ -1397,7 +1350,10 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
   GstH265DecoderPrivate *priv = self->priv;
   const GstH265SliceHdr *slice_hdr = &slice->header;
   const GstH265NalUnit *nalu = &slice->nalu;
+  const GstH265SPS *sps = priv->active_sps;
+  GstH265Picture *to_output;
 
+  /* C 3.2 */
   if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type) && picture->NoRaslOutputFlag
       && !priv->new_bitstream) {
     if (nalu->type == GST_H265_NAL_SLICE_CRA_NUT)
@@ -1408,11 +1364,29 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
 
     if (picture->NoOutputOfPriorPicsFlag) {
       GST_DEBUG_OBJECT (self, "Clear dpb");
-      gst_h265_decoder_drain (GST_VIDEO_DECODER (self));
+      gst_h265_decoder_clear_dpb (self);
+    } else {
+      gst_h265_dpb_delete_unused (priv->dpb);
+      while ((to_output = gst_h265_dpb_bump (priv->dpb)) != NULL)
+        gst_h265_decoder_do_output_picture (self, to_output);
     }
   } else {
-    /* C 3.2 */
     gst_h265_dpb_delete_unused (priv->dpb);
+    while (gst_h265_dpb_needs_bump (priv->dpb,
+            sps->max_num_reorder_pics[sps->max_sub_layers_minus1],
+            priv->SpsMaxLatencyPictures,
+            sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1] +
+            1)) {
+      to_output = gst_h265_dpb_bump (priv->dpb);
+
+      /* Something wrong... */
+      if (!to_output) {
+        GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
+        break;
+      }
+
+      gst_h265_decoder_do_output_picture (self, to_output);
+    }
   }
 
   return TRUE;
@@ -1463,126 +1437,51 @@ static gboolean
 gst_h265_decoder_finish_picture (GstH265Decoder * self,
     GstH265Picture * picture)
 {
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH265DecoderPrivate *priv = self->priv;
   const GstH265SPS *sps = priv->active_sps;
-  GArray *not_outputted = priv->to_output;
-  guint num_remaining;
-  gint i;
 
   GST_LOG_OBJECT (self,
       "Finishing picture %p (poc %d), entries in DPB %d",
       picture, picture->pic_order_cnt, gst_h265_dpb_get_size (priv->dpb));
 
-  /* Get all pictures that haven't been outputted yet */
-  gst_h265_dpb_get_pictures_not_outputted (priv->dpb, not_outputted);
+  gst_h265_dpb_delete_unused (priv->dpb);
 
-  /* C.5.2.3 */
-  if (picture->output_flag) {
-    for (i = 0; i < not_outputted->len; i++) {
-      GstH265Picture *other =
-          g_array_index (not_outputted, GstH265Picture *, i);
+  /* This picture is decode only, drop corresponding frame */
+  if (!picture->output_flag) {
+    GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
+        picture->system_frame_number);
 
-      if (!other->outputted)
-        other->pic_latency_cnt++;
+    gst_video_decoder_release_frame (decoder, frame);
+  }
+
+  /* gst_h265_dpb_add() will take care of pic_latency_cnt increment and
+   * reference picture marking for this picture */
+  gst_h265_dpb_add (priv->dpb, picture);
+
+  /* NOTE: As per C.5.2.2, bumping by sps_max_dec_pic_buffering_minus1 is
+   * applied only for the output and removal of pictures from the DPB before
+   * the decoding of the current picture. So pass zero here */
+  while (gst_h265_dpb_needs_bump (priv->dpb,
+          sps->max_num_reorder_pics[sps->max_sub_layers_minus1],
+          priv->SpsMaxLatencyPictures, 0)) {
+    GstH265Picture *to_output = gst_h265_dpb_bump (priv->dpb);
+
+    /* Something wrong... */
+    if (!to_output) {
+      GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
+      break;
     }
 
-    picture->outputted = FALSE;
-    picture->pic_latency_cnt = 0;
-  } else {
-    picture->outputted = TRUE;
+    gst_h265_decoder_do_output_picture (self, to_output);
   }
 
-  /* set pic as short_term_ref */
-  picture->ref = TRUE;
-  picture->long_term = FALSE;
-
-  /* Include the one we've just decoded */
-  if (picture->output_flag)
-    g_array_append_val (not_outputted, picture);
-
-  /* for debugging */
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Before sorting not outputted list");
-  for (i = 0; i < not_outputted->len; i++) {
-    GstH265Picture *tmp = g_array_index (not_outputted, GstH265Picture *, i);
-    GST_TRACE_OBJECT (self,
-        "\t%dth picture %p (poc %d)", i, tmp, tmp->pic_order_cnt);
+  if (gst_h265_dpb_is_full (priv->dpb)) {
+    /* If we haven't managed to output anything to free up space in DPB
+     * to store this picture, it's an error in the stream */
+    GST_WARNING_OBJECT (self, "Could not free up space in DPB");
+    return FALSE;
   }
-#endif
-
-  /* Sort in output order */
-  g_array_sort (not_outputted, (GCompareFunc) poc_asc_compare);
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self,
-      "After sorting not outputted list in poc ascending order");
-  for (i = 0; i < not_outputted->len; i++) {
-    GstH265Picture *tmp = g_array_index (not_outputted, GstH265Picture *, i);
-    GST_TRACE_OBJECT (self,
-        "\t%dth picture %p (poc %d)", i, tmp, tmp->pic_order_cnt);
-  }
-#endif
-
-  /* Try to output as many pictures as we can. A picture can be output,
-   * if the number of decoded and not yet outputted pictures that would remain
-   * in DPB afterwards would at least be equal to max_num_reorder_frames.
-   * If the outputted picture is not a reference picture, it doesn't have
-   * to remain in the DPB and can be removed */
-  num_remaining = not_outputted->len;
-
-  while (num_remaining > sps->max_num_reorder_pics[sps->max_sub_layers_minus1]
-      || (num_remaining &&
-          sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] &&
-          gst_h265_decoder_check_latency_count (not_outputted,
-              priv->SpsMaxLatencyPictures))) {
-    gboolean clear_dpb = TRUE;
-    GstH265Picture *to_output =
-        g_array_index (not_outputted, GstH265Picture *, 0);
-
-    gst_h265_picture_ref (to_output);
-    g_array_remove_index (not_outputted, 0);
-
-    GST_LOG_OBJECT (self,
-        "Output picture %p (poc %d)", to_output, to_output->pic_order_cnt);
-
-    /* Current picture hasn't been inserted into DPB yet, so don't remove it
-     * if we managed to output it immediately */
-    if (picture && to_output == picture) {
-      clear_dpb = FALSE;
-
-      if (picture->ref) {
-        GST_TRACE_OBJECT (self,
-            "Put current picture %p (poc %d) to dpb",
-            picture, picture->pic_order_cnt);
-        gst_h265_dpb_add (priv->dpb, gst_h265_picture_ref (picture));
-      }
-
-      /* and mark current picture as handled */
-      picture = NULL;
-    }
-
-    gst_h265_decoder_do_output_picture (self, to_output, clear_dpb);
-
-    num_remaining--;
-  }
-
-  /* If we haven't managed to output the picture that we just decoded, or if
-   * it's a reference picture, we have to store it in DPB */
-  if (picture && (!picture->outputted || picture->ref)) {
-    if (gst_h265_dpb_is_full (priv->dpb)) {
-      /* If we haven't managed to output anything to free up space in DPB
-       * to store this picture, it's an error in the stream */
-      GST_WARNING_OBJECT (self, "Could not free up space in DPB");
-      return FALSE;
-    }
-
-    GST_TRACE_OBJECT (self,
-        "Put picture %p (outputted %d, ref %d, poc %d) to dpb",
-        picture, picture->outputted, picture->ref, picture->pic_order_cnt);
-    gst_h265_dpb_add (priv->dpb, gst_h265_picture_ref (picture));
-  }
-
-  g_array_set_size (not_outputted, 0);
 
   return TRUE;
 }
