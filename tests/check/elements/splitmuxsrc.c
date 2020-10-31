@@ -635,9 +635,9 @@ GST_START_TEST (test_splitmuxsrc_robust_mux)
   gchar *dest_pattern;
   gchar *in_pattern;
 
-  /* This test creates a new file only by changing the caps, which
-   * qtmux will reject (for now - if qtmux starts supporting caps
-   * changes, this test will break and need fixing/disabling */
+  /* This test checks that splitmuxsink can support the
+   * qtmux robust muxing mode, and switch to a new fragment if the
+   * file index is about to overflow */
   pipeline =
       gst_parse_launch
       ("videotestsrc num-buffers=10 !"
