@@ -117,11 +117,12 @@ GST_START_TEST (test_data_transfer)
   g_object_set (c_enc, "connection-id", "client", "is-client", TRUE, NULL);
   g_signal_connect (c_enc, "on-key-received", G_CALLBACK (_on_key_received),
       NULL);
-  gst_element_set_state (c_enc, GST_STATE_PAUSED);
   gst_bin_add (GST_BIN (s_bin), c_enc);
 
   gst_element_link_pads (s_enc, "src", c_dec, "sink");
   gst_element_link_pads (c_enc, "src", s_dec, "sink");
+
+  gst_element_set_state (c_enc, GST_STATE_PAUSED);
 
   target = gst_element_get_request_pad (c_dec, "src");
   ghost = gst_ghost_pad_new ("src", target);
