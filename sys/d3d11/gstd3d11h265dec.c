@@ -130,6 +130,14 @@ static gboolean gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
     GArray * ref_pic_list0, GArray * ref_pic_list1);
 static gboolean gst_d3d11_h265_dec_end_picture (GstH265Decoder * decoder,
     GstH265Picture * picture);
+static gboolean gst_d3d11_h265_dec_fill_picture_params (GstD3D11H265Dec * self,
+    const GstH265SliceHdr * slice_header, DXVA_PicParams_HEVC * params);
+
+#ifndef GST_DISABLE_GST_DEBUG
+static void
+gst_d3d11_h265_dec_dump_pic_params (GstD3D11H265Dec * self,
+    DXVA_PicParams_HEVC * params);
+#endif
 
 static void
 gst_d3d11_h265_dec_class_init (GstD3D11H265DecClass * klass, gpointer data)
@@ -502,6 +510,19 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
   ID3D11VideoDecoderOutputView *view;
   gint i, j;
   GArray *dpb_array;
+  GstH265SPS *sps;
+  GstH265PPS *pps;
+  DXVA_PicParams_HEVC pic_params = { 0, };
+  DXVA_Qmatrix_HEVC iq_matrix = { 0, };
+  GstH265ScalingList *scaling_list = NULL;
+  guint d3d11_buffer_size = 0;
+  gpointer d3d11_buffer = NULL;
+
+  pps = slice->header.pps;
+  g_assert (pps != NULL);
+
+  sps = pps->sps;
+  g_assert (sps != NULL);
 
   view = gst_d3d11_h265_dec_get_output_view_from_picture (self, picture);
   if (!view) {
@@ -510,7 +531,6 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
   }
 
   GST_TRACE_OBJECT (self, "Begin frame");
-
   if (!gst_d3d11_decoder_begin_frame (self->d3d11_decoder, view, 0, NULL)) {
     GST_ERROR_OBJECT (self, "Failed to begin frame");
     return FALSE;
@@ -615,6 +635,106 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
     }
 
     self->ref_pic_set_lt_curr[i] = id;
+  }
+
+  view = gst_d3d11_h265_dec_get_output_view_from_picture (self, picture);
+
+  if (!view) {
+    GST_ERROR_OBJECT (self, "current picture does not have output view");
+    return FALSE;
+  }
+
+  gst_d3d11_h265_dec_fill_picture_params (self, &slice->header, &pic_params);
+
+  pic_params.CurrPic.Index7Bits =
+      gst_d3d11_decoder_get_output_view_index (view);
+  pic_params.IrapPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
+  pic_params.IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type);
+  pic_params.IntraPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
+  pic_params.CurrPicOrderCntVal = picture->pic_order_cnt;
+
+  memcpy (pic_params.RefPicList, self->ref_pic_list,
+      sizeof (pic_params.RefPicList));
+  memcpy (pic_params.PicOrderCntValList, self->pic_order_cnt_val_list,
+      sizeof (pic_params.PicOrderCntValList));
+  memcpy (pic_params.RefPicSetStCurrBefore, self->ref_pic_set_st_curr_before,
+      sizeof (pic_params.RefPicSetStCurrBefore));
+  memcpy (pic_params.RefPicSetStCurrAfter, self->ref_pic_set_st_curr_after,
+      sizeof (pic_params.RefPicSetStCurrAfter));
+  memcpy (pic_params.RefPicSetLtCurr, self->ref_pic_set_lt_curr,
+      sizeof (pic_params.RefPicSetLtCurr));
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE)
+    gst_d3d11_h265_dec_dump_pic_params (self, &pic_params);
+#endif
+
+  GST_TRACE_OBJECT (self, "Getting picture param decoder buffer");
+  if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
+          D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS, &d3d11_buffer_size,
+          &d3d11_buffer)) {
+    GST_ERROR_OBJECT (self,
+        "Failed to get decoder buffer for picture parameters");
+    return FALSE;
+  }
+
+  memcpy (d3d11_buffer, &pic_params, sizeof (pic_params));
+
+  GST_TRACE_OBJECT (self, "Release picture param decoder buffer");
+  if (!gst_d3d11_decoder_release_decoder_buffer (self->d3d11_decoder,
+          D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS)) {
+    GST_ERROR_OBJECT (self, "Failed to release decoder buffer");
+    return FALSE;
+  }
+
+  if (pps->scaling_list_data_present_flag ||
+      (sps->scaling_list_enabled_flag
+          && !sps->scaling_list_data_present_flag)) {
+    scaling_list = &pps->scaling_list;
+  } else if (sps->scaling_list_enabled_flag &&
+      sps->scaling_list_data_present_flag) {
+    scaling_list = &sps->scaling_list;
+  }
+
+  if (scaling_list) {
+    self->submit_iq_data = TRUE;
+
+    memcpy (iq_matrix.ucScalingLists0, scaling_list->scaling_lists_4x4,
+        sizeof (iq_matrix.ucScalingLists0));
+    memcpy (iq_matrix.ucScalingLists1, scaling_list->scaling_lists_8x8,
+        sizeof (iq_matrix.ucScalingLists1));
+    memcpy (iq_matrix.ucScalingLists2, scaling_list->scaling_lists_16x16,
+        sizeof (iq_matrix.ucScalingLists2));
+    memcpy (iq_matrix.ucScalingLists3, scaling_list->scaling_lists_32x32,
+        sizeof (iq_matrix.ucScalingLists3));
+
+    for (i = 0; i < 6; i++)
+      iq_matrix.ucScalingListDCCoefSizeID2[i] =
+          scaling_list->scaling_list_dc_coef_minus8_16x16[i] + 8;
+
+    for (i = 0; i < 2; i++)
+      iq_matrix.ucScalingListDCCoefSizeID3[i] =
+          scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
+
+    GST_TRACE_OBJECT (self, "Getting inverse quantization matrix buffer");
+    if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
+            D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX,
+            &d3d11_buffer_size, &d3d11_buffer)) {
+      GST_ERROR_OBJECT (self,
+          "Failed to get decoder buffer for inv. quantization matrix");
+      return FALSE;
+    }
+
+    memcpy (d3d11_buffer, &iq_matrix, sizeof (iq_matrix));
+
+    GST_TRACE_OBJECT (self, "Release inverse quantization matrix buffer");
+    if (!gst_d3d11_decoder_release_decoder_buffer (self->d3d11_decoder,
+            D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX)) {
+      GST_ERROR_OBJECT (self, "Failed to release decoder buffer");
+      return FALSE;
+    }
+  } else {
+    self->submit_iq_data = FALSE;
   }
 
   g_array_unref (dpb_array);
@@ -1117,121 +1237,6 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
     GArray * ref_pic_list0, GArray * ref_pic_list1)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
-  GstH265SPS *sps;
-  GstH265PPS *pps;
-  DXVA_PicParams_HEVC pic_params = { 0, };
-  DXVA_Qmatrix_HEVC iq_matrix = { 0, };
-  guint d3d11_buffer_size = 0;
-  gpointer d3d11_buffer = NULL;
-  gint i;
-  ID3D11VideoDecoderOutputView *view;
-  GstH265ScalingList *scaling_list = NULL;
-
-  pps = slice->header.pps;
-  sps = pps->sps;
-
-  view = gst_d3d11_h265_dec_get_output_view_from_picture (self, picture);
-
-  if (!view) {
-    GST_ERROR_OBJECT (self, "current picture does not have output view");
-    return FALSE;
-  }
-
-  gst_d3d11_h265_dec_fill_picture_params (self, &slice->header, &pic_params);
-
-  pic_params.CurrPic.Index7Bits =
-      gst_d3d11_decoder_get_output_view_index (view);
-  pic_params.IrapPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
-  pic_params.IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type);
-  pic_params.IntraPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
-  pic_params.CurrPicOrderCntVal = picture->pic_order_cnt;
-
-  memcpy (pic_params.RefPicList, self->ref_pic_list,
-      sizeof (pic_params.RefPicList));
-  memcpy (pic_params.PicOrderCntValList, self->pic_order_cnt_val_list,
-      sizeof (pic_params.PicOrderCntValList));
-  memcpy (pic_params.RefPicSetStCurrBefore, self->ref_pic_set_st_curr_before,
-      sizeof (pic_params.RefPicSetStCurrBefore));
-  memcpy (pic_params.RefPicSetStCurrAfter, self->ref_pic_set_st_curr_after,
-      sizeof (pic_params.RefPicSetStCurrAfter));
-  memcpy (pic_params.RefPicSetLtCurr, self->ref_pic_set_lt_curr,
-      sizeof (pic_params.RefPicSetLtCurr));
-
-#ifndef GST_DISABLE_GST_DEBUG
-  gst_d3d11_h265_dec_dump_pic_params (self, &pic_params);
-#endif
-
-  GST_TRACE_OBJECT (self, "Getting picture param decoder buffer");
-
-  if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
-          D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS, &d3d11_buffer_size,
-          &d3d11_buffer)) {
-    GST_ERROR_OBJECT (self,
-        "Failed to get decoder buffer for picture parameters");
-    return FALSE;
-  }
-
-  memcpy (d3d11_buffer, &pic_params, sizeof (pic_params));
-
-  GST_TRACE_OBJECT (self, "Release picture param decoder buffer");
-
-  if (!gst_d3d11_decoder_release_decoder_buffer (self->d3d11_decoder,
-          D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS)) {
-    GST_ERROR_OBJECT (self, "Failed to release decoder buffer");
-    return FALSE;
-  }
-
-  if (pps->scaling_list_data_present_flag ||
-      (sps->scaling_list_enabled_flag
-          && !sps->scaling_list_data_present_flag)) {
-    scaling_list = &pps->scaling_list;
-  } else if (sps->scaling_list_enabled_flag &&
-      sps->scaling_list_data_present_flag) {
-    scaling_list = &sps->scaling_list;
-  }
-
-  if (scaling_list) {
-    self->submit_iq_data = TRUE;
-
-    memcpy (iq_matrix.ucScalingLists0, scaling_list->scaling_lists_4x4,
-        sizeof (iq_matrix.ucScalingLists0));
-    memcpy (iq_matrix.ucScalingLists1, scaling_list->scaling_lists_8x8,
-        sizeof (iq_matrix.ucScalingLists1));
-    memcpy (iq_matrix.ucScalingLists2, scaling_list->scaling_lists_16x16,
-        sizeof (iq_matrix.ucScalingLists2));
-    memcpy (iq_matrix.ucScalingLists3, scaling_list->scaling_lists_32x32,
-        sizeof (iq_matrix.ucScalingLists3));
-
-    for (i = 0; i < 6; i++)
-      iq_matrix.ucScalingListDCCoefSizeID2[i] =
-          scaling_list->scaling_list_dc_coef_minus8_16x16[i] + 8;
-
-    for (i = 0; i < 2; i++)
-      iq_matrix.ucScalingListDCCoefSizeID3[i] =
-          scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
-
-    GST_TRACE_OBJECT (self, "Getting inverse quantization maxtirx buffer");
-
-    if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
-            D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX,
-            &d3d11_buffer_size, &d3d11_buffer)) {
-      GST_ERROR_OBJECT (self,
-          "Failed to get decoder buffer for inv. quantization matrix");
-      return FALSE;
-    }
-
-    memcpy (d3d11_buffer, &iq_matrix, sizeof (iq_matrix));
-
-    GST_TRACE_OBJECT (self, "Release inverse quantization maxtirx buffer");
-
-    if (!gst_d3d11_decoder_release_decoder_buffer (self->d3d11_decoder,
-            D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX)) {
-      GST_ERROR_OBJECT (self, "Failed to release decoder buffer");
-      return FALSE;
-    }
-  } else {
-    self->submit_iq_data = FALSE;
-  }
 
   {
     guint to_write = slice->nalu.size + 3;
