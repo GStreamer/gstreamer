@@ -553,6 +553,18 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu,
 
   priv->current_slice.nalu = *nalu;
 
+  if (priv->current_slice.header.dependent_slice_segment_flag) {
+    GstH265SliceHdr *slice_hdr = &priv->current_slice.header;
+    GstH265SliceHdr *indep_slice_hdr = &priv->prev_independent_slice.header;
+
+    memcpy (&slice_hdr->type, &indep_slice_hdr->type,
+        G_STRUCT_OFFSET (GstH265SliceHdr, num_entry_point_offsets) -
+        G_STRUCT_OFFSET (GstH265SliceHdr, type));
+  } else {
+    priv->prev_independent_slice = priv->current_slice;
+    memset (&priv->prev_independent_slice.nalu, 0, sizeof (GstH265NalUnit));
+  }
+
   if (!gst_h265_decoder_preprocess_slice (self, &priv->current_slice))
     return FALSE;
 
