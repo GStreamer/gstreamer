@@ -54,6 +54,7 @@ typedef enum
 
 struct _GstH264Picture
 {
+  /*< private >*/
   GstMiniObject parent;
 
   GstH264SliceType type;
@@ -84,7 +85,7 @@ struct _GstH264Picture
   gint idr_pic_id;
   gboolean ref;
   gboolean long_term;
-  gboolean outputted;
+  gboolean needed_for_output;
   gboolean mem_mgmt_5;
 
   gboolean nonexisting;
@@ -169,13 +170,6 @@ GST_CODECS_API
 void  gst_h264_dpb_delete_unused    (GstH264Dpb * dpb);
 
 GST_CODECS_API
-void gst_h264_dpb_delete_outputted  (GstH264Dpb * dpb);
-
-GST_CODECS_API
-void  gst_h264_dpb_delete_by_poc    (GstH264Dpb * dpb,
-                                     gint poc);
-
-GST_CODECS_API
 gint  gst_h264_dpb_num_ref_pictures (GstH264Dpb * dpb);
 
 GST_CODECS_API
@@ -191,10 +185,6 @@ GstH264Picture * gst_h264_dpb_get_long_ref_by_pic_num  (GstH264Dpb * dpb,
 
 GST_CODECS_API
 GstH264Picture * gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb);
-
-GST_CODECS_API
-void  gst_h264_dpb_get_pictures_not_outputted  (GstH264Dpb * dpb,
-                                                GArray * out);
 
 GST_CODECS_API
 void  gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb,
@@ -215,7 +205,18 @@ GST_CODECS_API
 gint  gst_h264_dpb_get_size   (GstH264Dpb * dpb);
 
 GST_CODECS_API
-gboolean gst_h264_dpb_is_full (GstH264Dpb * dpb);
+gboolean gst_h264_dpb_needs_bump (GstH264Dpb * dpb,
+                                  guint32 max_num_reorder_frames,
+                                  gboolean low_latency);
+
+GST_CODECS_API
+GstH264Picture * gst_h264_dpb_bump (GstH264Dpb * dpb,
+                                    gboolean drain);
+
+GST_CODECS_API
+gboolean         gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
+                                                                           GstH264RefPicMarking *ref_pic_marking,
+                                                                           GstH264Picture * picture);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Picture, gst_h264_picture_unref)
 

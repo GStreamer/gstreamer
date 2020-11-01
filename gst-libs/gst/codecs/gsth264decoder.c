@@ -140,9 +140,6 @@ struct _GstH264DecoderPrivate
   /* Reference picture lists, constructed for each slice */
   GArray *ref_pic_list0;
   GArray *ref_pic_list1;
-
-  /* Cached array to handle pictures to be outputted */
-  GArray *to_output;
 };
 
 #define parent_class gst_h264_decoder_parent_class
@@ -183,6 +180,10 @@ static gboolean gst_h264_decoder_finish_picture (GstH264Decoder * self,
 static void gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self);
 static void gst_h264_decoder_clear_ref_pic_lists (GstH264Decoder * self);
 static gboolean gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self);
+static gboolean
+gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self);
+static void gst_h264_decoder_do_output_picture (GstH264Decoder * self,
+    GstH264Picture * picture);
 
 static void
 gst_h264_decoder_class_init (GstH264DecoderClass * klass)
@@ -230,11 +231,6 @@ gst_h264_decoder_init (GstH264Decoder * self)
       sizeof (GstH264Picture *), 32);
   priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
-
-  priv->to_output = g_array_sized_new (FALSE, TRUE,
-      sizeof (GstH264Picture *), 16);
-  g_array_set_clear_func (priv->to_output,
-      (GDestroyNotify) gst_h264_picture_clear);
 }
 
 static void
@@ -248,7 +244,6 @@ gst_h264_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list_b1);
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
-  g_array_unref (priv->to_output);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -292,13 +287,28 @@ gst_h264_decoder_stop (GstVideoDecoder * decoder)
 }
 
 static void
-gst_h264_decoder_clear_dpb (GstH264Decoder * self)
+gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
 {
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
+  GstH264Picture *picture;
+
+  /* If we are not flushing now, videodecoder baseclass will hold
+   * GstVideoCodecFrame. Release frames manually */
+  if (!flush) {
+    while ((picture = gst_h264_dpb_bump (priv->dpb, TRUE)) != NULL) {
+      GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
+          picture->system_frame_number);
+
+      if (frame)
+        gst_video_decoder_release_frame (decoder, frame);
+      gst_h264_picture_unref (picture);
+    }
+  }
 
   gst_h264_decoder_clear_ref_pic_lists (self);
   gst_h264_dpb_clear (priv->dpb);
-  priv->last_output_poc = -1;
+  priv->last_output_poc = 0;
 }
 
 static gboolean
@@ -306,7 +316,7 @@ gst_h264_decoder_flush (GstVideoDecoder * decoder)
 {
   GstH264Decoder *self = GST_H264_DECODER (decoder);
 
-  gst_h264_decoder_clear_dpb (self);
+  gst_h264_decoder_clear_dpb (self, TRUE);
 
   return TRUE;
 }
@@ -551,16 +561,6 @@ gst_h264_decoder_preprocess_slice (GstH264Decoder * self, GstH264Slice * slice)
           slice->header.first_mb_in_slice);
       return FALSE;
     }
-
-    /* If the new picture is an IDR, flush DPB */
-    if (slice->nalu.idr_pic_flag) {
-      /* Output all remaining pictures, unless we are explicitly instructed
-       * not to do so */
-      if (!slice->header.dec_ref_pic_marking.no_output_of_prior_pics_flag)
-        gst_h264_decoder_drain (GST_VIDEO_DECODER (self));
-
-      gst_h264_dpb_clear (priv->dpb);
-    }
   }
 
   return TRUE;
@@ -632,9 +632,27 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 
     gst_h264_decoder_update_pic_nums (self, unused_short_term_frame_num);
 
-    if (!gst_h264_decoder_finish_picture (self, picture)) {
-      GST_WARNING ("Failed to finish picture %p", picture);
+    /* C.2.1 */
+    if (!gst_h264_decoder_sliding_window_picture_marking (self)) {
+      GST_ERROR_OBJECT (self,
+          "Couldn't perform sliding window picture marking");
       return FALSE;
+    }
+
+    gst_h264_dpb_delete_unused (priv->dpb);
+    gst_h264_dpb_add (priv->dpb, picture);
+    while (gst_h264_dpb_needs_bump (priv->dpb, priv->max_num_reorder_frames,
+            FALSE)) {
+      GstH264Picture *to_output;
+
+      to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
+
+      if (!to_output) {
+        GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
+        break;
+      }
+
+      gst_h264_decoder_do_output_picture (self, to_output);
     }
 
     unused_short_term_frame_num++;
@@ -677,6 +695,7 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
   const GstH264SPS *sps;
   gint frame_num;
   gboolean ret = TRUE;
+  GstH264Picture *current_picture;
 
   g_assert (priv->current_picture != NULL);
   g_assert (priv->active_sps != NULL);
@@ -699,6 +718,25 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
 
   if (!gst_h264_decoder_init_current_picture (self))
     return FALSE;
+
+  current_picture = priv->current_picture;
+
+  /* If the new picture is an IDR, flush DPB */
+  if (current_picture->idr) {
+    if (!current_picture->dec_ref_pic_marking.no_output_of_prior_pics_flag) {
+      gst_h264_decoder_drain_internal (self);
+    } else {
+      /* C.4.4 Removal of pictures from the DPB before possible insertion
+       * of the current picture
+       *
+       * If decoded picture is IDR and no_output_of_prior_pics_flag is equal to 1
+       * or is inferred to be equal to 1, all frame buffers in the DPB
+       * are emptied without output of the pictures they contain,
+       * and DPB fullness is set to 0.
+       */
+      gst_h264_decoder_clear_dpb (self, FALSE);
+    }
+  }
 
   gst_h264_decoder_update_pic_nums (self, frame_num);
 
@@ -1207,23 +1245,11 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
 
 static void
 gst_h264_decoder_do_output_picture (GstH264Decoder * self,
-    GstH264Picture * picture, gboolean clear_dpb)
+    GstH264Picture * picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264DecoderClass *klass;
   GstVideoCodecFrame *frame = NULL;
-
-  picture->outputted = TRUE;
-
-  if (clear_dpb && !picture->ref)
-    gst_h264_dpb_delete_by_poc (priv->dpb, picture->pic_order_cnt);
-
-  if (picture->nonexisting) {
-    GST_DEBUG_OBJECT (self, "Skipping output, non-existing frame_num %d",
-        picture->frame_num);
-    gst_h264_picture_unref (picture);
-    return;
-  }
 
   GST_LOG_OBJECT (self, "Outputting picture %p (frame_num %d, poc %d)",
       picture, picture->frame_num, picture->pic_order_cnt);
@@ -1313,31 +1339,15 @@ static gboolean
 gst_h264_decoder_drain_internal (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  GArray *to_output = priv->to_output;
+  GstH264Picture *picture;
 
-  /* We are about to drain, so we can get rid of everything that has been
-   * outputted already */
-  gst_h264_dpb_delete_outputted (priv->dpb);
-  gst_h264_dpb_get_pictures_not_outputted (priv->dpb, to_output);
-  g_array_sort (to_output, (GCompareFunc) poc_asc_compare);
-
-  while (to_output->len) {
-    GstH264Picture *picture = g_array_index (to_output, GstH264Picture *, 0);
-
-    /* We want the last reference when outputing so take a ref and then remove
-     * from both arrays. */
-    gst_h264_picture_ref (picture);
-    g_array_remove_index (to_output, 0);
-    gst_h264_dpb_delete_by_poc (priv->dpb, picture->pic_order_cnt);
-
-    GST_LOG_OBJECT (self, "Output picture %p (frame num %d, poc %d)", picture,
-        picture->frame_num, picture->pic_order_cnt);
-    gst_h264_decoder_do_output_picture (self, picture, FALSE);
+  while ((picture = gst_h264_dpb_bump (priv->dpb, TRUE)) != NULL) {
+    gst_h264_decoder_do_output_picture (self, picture);
   }
 
-  g_array_set_size (to_output, 0);
   gst_h264_dpb_clear (priv->dpb);
   priv->last_output_poc = 0;
+
   return TRUE;
 }
 
@@ -1346,114 +1356,37 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
     GstH264Picture * picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  gint i, j;
+  gint i;
 
   for (i = 0; i < G_N_ELEMENTS (picture->dec_ref_pic_marking.ref_pic_marking);
       i++) {
     GstH264RefPicMarking *ref_pic_marking =
         &picture->dec_ref_pic_marking.ref_pic_marking[i];
-    GstH264Picture *to_mark;
-    gint pic_num_x;
+    guint8 type = ref_pic_marking->memory_management_control_operation;
 
-    switch (ref_pic_marking->memory_management_control_operation) {
-      case 0:
-        /* Normal end of operations' specification */
-        return TRUE;
-      case 1:
-        /* Mark a short term reference picture as unused so it can be removed
-         * if outputted */
-        pic_num_x =
-            picture->pic_num - (ref_pic_marking->difference_of_pic_nums_minus1 +
-            1);
-        to_mark = gst_h264_dpb_get_short_ref_by_pic_num (priv->dpb, pic_num_x);
-        if (to_mark) {
-          to_mark->ref = FALSE;
-        } else {
-          GST_WARNING_OBJECT (self, "Invalid short term ref pic num to unmark");
-          return FALSE;
-        }
-        break;
+    GST_TRACE_OBJECT (self, "memory management operation %d, type %d", i, type);
 
-      case 2:
-        /* Mark a long term reference picture as unused so it can be removed
-         * if outputted */
-        to_mark = gst_h264_dpb_get_long_ref_by_pic_num (priv->dpb,
-            ref_pic_marking->long_term_pic_num);
-        if (to_mark) {
-          to_mark->ref = FALSE;
-        } else {
-          GST_WARNING_OBJECT (self, "Invalid long term ref pic num to unmark");
-          return FALSE;
-        }
-        break;
+    /* Normal end of operations' specification */
+    if (type == 0)
+      return TRUE;
 
-      case 3:
-        /* Mark a short term reference picture as long term reference */
-        pic_num_x =
-            picture->pic_num - (ref_pic_marking->difference_of_pic_nums_minus1 +
-            1);
-        to_mark = gst_h264_dpb_get_short_ref_by_pic_num (priv->dpb, pic_num_x);
-        if (to_mark) {
-          to_mark->long_term = TRUE;
-          to_mark->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
-        } else {
-          GST_WARNING_OBJECT (self,
-              "Invalid short term ref pic num to mark as long ref");
-          return FALSE;
-        }
-        break;
-
-      case 4:{
-        GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
-
-        /* Unmark all reference pictures with long_term_frame_idx over new max */
+    switch (type) {
+      case 4:
         priv->max_long_term_frame_idx =
             ref_pic_marking->max_long_term_frame_idx_plus1 - 1;
-
-        for (j = 0; j < pictures->len; j++) {
-          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, j);
-          if (pic->long_term &&
-              pic->long_term_frame_idx > priv->max_long_term_frame_idx)
-            pic->ref = FALSE;
-        }
-
-        g_array_unref (pictures);
         break;
-      }
-
       case 5:
-        /* Unmark all reference pictures */
-        gst_h264_dpb_mark_all_non_ref (priv->dpb);
         priv->max_long_term_frame_idx = -1;
-        picture->mem_mgmt_5 = TRUE;
         break;
-
-      case 6:{
-        GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
-
-        /* Replace long term reference pictures with current picture.
-         * First unmark if any existing with this long_term_frame_idx... */
-
-        for (j = 0; j < pictures->len; j++) {
-          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, j);
-
-          if (pic->long_term &&
-              pic->long_term_frame_idx == ref_pic_marking->long_term_frame_idx)
-            pic->ref = FALSE;
-        }
-
-        g_array_unref (pictures);
-
-        /* and mark the current one instead */
-        picture->ref = TRUE;
-        picture->long_term = TRUE;
-        picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
-        break;
-      }
-
       default:
-        g_assert_not_reached ();
         break;
+    }
+
+    if (!gst_h264_dpb_perform_memory_management_control_operation (priv->dpb,
+            ref_pic_marking, picture)) {
+      GST_WARNING_OBJECT (self, "memory management operation type %d failed",
+          type);
+      return FALSE;
     }
   }
 
@@ -1556,11 +1489,6 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture * picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  GArray *not_outputted = priv->to_output;
-  guint num_remaining;
-#ifndef GST_DISABLE_GST_DEBUG
-  gint i;
-#endif
 
   /* Finish processing the picture.
    * Start by storing previous picture data for later use */
@@ -1581,184 +1509,26 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
   /* Remove unused (for reference or later output) pictures from DPB, marking
    * them as such */
   gst_h264_dpb_delete_unused (priv->dpb);
+  gst_h264_dpb_add (priv->dpb, picture);
 
   GST_LOG_OBJECT (self,
       "Finishing picture %p (frame_num %d, poc %d), entries in DPB %d",
       picture, picture->frame_num, picture->pic_order_cnt,
       gst_h264_dpb_get_size (priv->dpb));
 
-  /* The ownership of pic will either be transferred to DPB - if the picture is
-   * still needed (for output and/or reference) - or we will release it
-   * immediately if we manage to output it here and won't have to store it for
-   * future reference */
+  while (gst_h264_dpb_needs_bump (priv->dpb, priv->max_num_reorder_frames,
+          priv->is_live)) {
+    GstH264Picture *to_output;
 
-  /* Get all pictures that haven't been outputted yet */
-  gst_h264_dpb_get_pictures_not_outputted (priv->dpb, not_outputted);
-  /* Include the one we've just decoded */
-  g_array_append_val (not_outputted, picture);
+    to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
 
-  /* for debugging */
-#ifndef GST_DISABLE_GST_DEBUG
-  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
-    GST_TRACE_OBJECT (self, "Before sorting not outputted list");
-    for (i = 0; i < not_outputted->len; i++) {
-      GstH264Picture *tmp = g_array_index (not_outputted, GstH264Picture *, i);
-      GST_TRACE_OBJECT (self,
-          "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
-          tmp->frame_num, tmp->pic_order_cnt);
+    if (!to_output) {
+      GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
+      break;
     }
+
+    gst_h264_decoder_do_output_picture (self, to_output);
   }
-#endif
-
-  /* Sort in output order */
-  g_array_sort (not_outputted, (GCompareFunc) poc_asc_compare);
-
-#ifndef GST_DISABLE_GST_DEBUG
-  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
-    GST_TRACE_OBJECT (self,
-        "After sorting not outputted list in poc ascending order");
-    for (i = 0; i < not_outputted->len; i++) {
-      GstH264Picture *tmp = g_array_index (not_outputted, GstH264Picture *, i);
-      GST_TRACE_OBJECT (self,
-          "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
-          tmp->frame_num, tmp->pic_order_cnt);
-    }
-  }
-#endif
-
-  /* Try to output as many pictures as we can. A picture can be output,
-   * if the number of decoded and not yet outputted pictures that would remain
-   * in DPB afterwards would at least be equal to max_num_reorder_frames.
-   * If the outputted picture is not a reference picture, it doesn't have
-   * to remain in the DPB and can be removed */
-  num_remaining = not_outputted->len;
-
-  while (num_remaining > priv->max_num_reorder_frames ||
-      /* If the condition below is used, this is an invalid stream. We should
-       * not be forced to output beyond max_num_reorder_frames in order to
-       * make room in DPB to store the current picture (if we need to do so).
-       * However, if this happens, ignore max_num_reorder_frames and try
-       * to output more. This may cause out-of-order output, but is not
-       * fatal, and better than failing instead */
-      ((gst_h264_dpb_is_full (priv->dpb) && (picture && (!picture->outputted
-                      || picture->ref)))
-          && num_remaining)) {
-    gboolean clear_dpb = TRUE;
-    GstH264Picture *to_output =
-        g_array_index (not_outputted, GstH264Picture *, 0);
-
-    gst_h264_picture_ref (to_output);
-    g_array_remove_index (not_outputted, 0);
-
-    if (num_remaining <= priv->max_num_reorder_frames) {
-      GST_WARNING_OBJECT (self,
-          "Invalid stream, max_num_reorder_frames not preserved");
-    }
-
-    GST_LOG_OBJECT (self,
-        "Output picture %p (frame num %d)", to_output, to_output->frame_num);
-
-    /* Current picture hasn't been inserted into DPB yet, so don't remove it
-     * if we managed to output it immediately */
-    if (picture && to_output == picture) {
-      clear_dpb = FALSE;
-
-      if (picture->ref) {
-        GST_TRACE_OBJECT (self,
-            "Put current picture %p (frame num %d, poc %d) to dpb",
-            picture, picture->frame_num, picture->pic_order_cnt);
-        gst_h264_dpb_add (priv->dpb, gst_h264_picture_ref (picture));
-      }
-
-      /* and mark current picture as handled */
-      picture = NULL;
-    }
-
-    gst_h264_decoder_do_output_picture (self, to_output, clear_dpb);
-
-    num_remaining--;
-  }
-
-  /* If we haven't managed to output the picture that we just decoded, or if
-   * it's a reference picture, we have to store it in DPB */
-  if (picture && (!picture->outputted || picture->ref)) {
-    if (gst_h264_dpb_is_full (priv->dpb)) {
-      /* If we haven't managed to output anything to free up space in DPB
-       * to store this picture, it's an error in the stream */
-      GST_WARNING_OBJECT (self, "Could not free up space in DPB");
-
-      g_array_set_size (not_outputted, 0);
-      return FALSE;
-    }
-
-    GST_TRACE_OBJECT (self,
-        "Put picture %p (outputted %d, ref %d, frame num %d, poc %d) to dpb",
-        picture, picture->outputted, picture->ref, picture->frame_num,
-        picture->pic_order_cnt);
-    gst_h264_dpb_add (priv->dpb, gst_h264_picture_ref (picture));
-  }
-
-  /* clear possible reference to the current picture.
-   * If *picture* is still non-null, it means that the current picture not
-   * outputted yet, and DPB may or may not hold the reference of the picture */
-  if (picture)
-    gst_h264_picture_ref (picture);
-
-  g_array_set_size (not_outputted, 0);
-
-  /* C.4.5.3 "Bumping" process for non-DPB full case, DPB full cases should be
-   * covered above */
-  /* FIXME: should cover interlaced streams */
-  if (picture && !picture->outputted &&
-      picture->field == GST_H264_PICTURE_FIELD_FRAME) {
-    gboolean do_output = TRUE;
-    if (picture->idr &&
-        !picture->dec_ref_pic_marking.no_output_of_prior_pics_flag) {
-      /* The current picture is an IDR picture and no_output_of_prior_pics_flag
-       * is not equal to 1 and is not inferred to be equal to 1, as specified
-       * in clause C.4.4 */
-      GST_TRACE_OBJECT (self, "Output IDR picture");
-    } else if (picture->mem_mgmt_5) {
-      /* The current picture has memory_management_control_operation equal to 5,
-       * as specified in clause C.4.4 */
-      GST_TRACE_OBJECT (self, "Output mem_mgmt_5 picture");
-    } else if (priv->last_output_poc >= 0 &&
-        picture->pic_order_cnt > priv->last_output_poc &&
-        (picture->pic_order_cnt - priv->last_output_poc) <= 2 &&
-        /* NOTE: this might have a negative effect on throughput performance
-         * depending on hardware implementation.
-         * TODO: Possible solution is threading but it would make decoding flow
-         * very complicated. */
-        priv->is_live) {
-      /* NOTE: this condition is not specified by spec but we can output
-       * this picture based on calculated POC and last outputted POC */
-
-      /* NOTE: The assumption here is, every POC of frame will have step of two.
-       * however, if the assumption is wrong, (i.e., POC step is one, not two),
-       * this would break output order. If this assumption is wrong,
-       * please remove this condition.
-       */
-      GST_LOG_OBJECT (self,
-          "Forcing output picture %p (frame num %d, poc %d, last poc %d)",
-          picture, picture->frame_num, picture->pic_order_cnt,
-          priv->last_output_poc);
-    } else {
-      do_output = FALSE;
-      GST_TRACE_OBJECT (self, "Current picture %p (frame num %d, poc %d) "
-          "is not ready to be output picture",
-          picture, picture->frame_num, picture->pic_order_cnt);
-    }
-
-    if (do_output) {
-      /* pass ownership of the current picture. At this point,
-       * dpb must be holding a reference of the current picture */
-      gst_h264_decoder_do_output_picture (self, picture, TRUE);
-      picture = NULL;
-    }
-  }
-
-  if (picture)
-    gst_h264_picture_unref (picture);
 
   return TRUE;
 }
