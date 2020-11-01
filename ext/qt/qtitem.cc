@@ -421,6 +421,9 @@ _calculate_par (QtGLVideoItem * widget, GstVideoInfo * info)
   if (!ok)
     return FALSE;
 
+  widget->setImplicitWidth (width);
+  widget->setImplicitHeight (height);
+
   GST_LOG ("%p PAR: %u/%u DAR:%u/%u", widget, par_n, par_d, display_par_n,
       display_par_d);
 
