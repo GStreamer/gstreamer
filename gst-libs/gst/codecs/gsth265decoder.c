@@ -376,6 +376,14 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
   if (GST_H265_IS_I_SLICE (&slice->header))
     return;
 
+  /* Inifinit loop prevention */
+  if (self->NumPocStCurrBefore == 0 && self->NumPocStCurrAfter == 0 &&
+      self->NumPocLtCurr == 0 && !scc_ext->pps_curr_pic_ref_enabled_flag) {
+    GST_WARNING_OBJECT (self,
+        "Expected references, got none, preventing infinit loop.");
+    return;
+  }
+
   /* 8.3.4 Deriving l0 */
   tmp_refs = priv->ref_pic_list_tmp;
 
