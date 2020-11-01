@@ -781,9 +781,10 @@ static void
 gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstFlvMux *mux = GST_FLV_MUX (element);
-  GstFlvMuxPad *flvpad = GST_FLV_MUX_PAD (pad);
+  GstFlvMuxPad *flvpad = GST_FLV_MUX_PAD (gst_object_ref (pad));
 
-  gst_pad_set_active (pad, FALSE);
+  GST_ELEMENT_CLASS (gst_flv_mux_parent_class)->release_pad (element, pad);
+
   gst_flv_mux_reset_pad (flvpad);
 
   if (flvpad == mux->video_pad) {
@@ -794,7 +795,7 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
     GST_WARNING_OBJECT (pad, "Pad is not known audio or video pad");
   }
 
-  gst_element_remove_pad (element, pad);
+  gst_object_unref (flvpad);
 }
 
 static GstFlowReturn
