@@ -515,18 +515,12 @@ gst_h265_decoder_preprocess_slice (GstH265Decoder * self, GstH265Slice * slice)
 {
   GstH265DecoderPrivate *priv = self->priv;
   const GstH265SliceHdr *slice_hdr = &slice->header;
-  const GstH265NalUnit *nalu = &slice->nalu;
 
   if (priv->current_picture && slice_hdr->first_slice_segment_in_pic_flag) {
     GST_WARNING_OBJECT (self,
         "Current picture is not finished but slice header has "
         "first_slice_segment_in_pic_flag");
     return FALSE;
-  }
-
-  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type)) {
-    GST_DEBUG_OBJECT (self, "IDR nalu, clear dpb");
-    gst_h265_decoder_drain_internal (self);
   }
 
   return TRUE;
@@ -648,11 +642,9 @@ gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu,
       priv->prev_nal_is_eos = FALSE;
       break;
     case GST_H265_NAL_EOB:
-      gst_h265_decoder_drain (GST_VIDEO_DECODER (self));
       priv->new_bitstream = TRUE;
       break;
     case GST_H265_NAL_EOS:
-      gst_h265_decoder_drain (GST_VIDEO_DECODER (self));
       priv->prev_nal_is_eos = TRUE;
       break;
     default:
