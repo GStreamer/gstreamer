@@ -492,7 +492,7 @@ gst_h265_dpb_get_picture (GstH265Dpb * dpb, guint32 system_frame_number)
 }
 
 static gboolean
-gst_h265_decoder_check_latency_count (GstH265Dpb * dpb, guint32 max_latency)
+gst_h265_dpb_check_latency_count (GstH265Dpb * dpb, guint32 max_latency)
 {
   gint i;
 
@@ -537,7 +537,7 @@ gst_h265_dpb_needs_bump (GstH265Dpb * dpb, guint max_num_reorder_pics,
   }
 
   if (dpb->num_output_needed && max_latency_increase &&
-      gst_h265_decoder_check_latency_count (dpb, max_latency_increase)) {
+      gst_h265_dpb_check_latency_count (dpb, max_latency_increase)) {
     GST_TRACE ("has late picture, max_latency_increase: %d",
         max_latency_increase);
     return TRUE;
