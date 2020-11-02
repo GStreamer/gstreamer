@@ -169,16 +169,14 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_video_alignment_reset (&vpool->video_align);
   }
 
-  if (gst_caps_is_raw (caps)) {
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&caps_info); i++) {
-      if (GST_VIDEO_INFO_PLANE_STRIDE (&orig_info, i) !=
-          GST_VIDEO_INFO_PLANE_STRIDE (&alloc_info, i) ||
-          GST_VIDEO_INFO_PLANE_OFFSET (&orig_info, i) !=
-          GST_VIDEO_INFO_PLANE_OFFSET (&alloc_info, i)) {
-        GST_INFO_OBJECT (vpool, "Video meta is required in buffer.");
-        vpool->force_videometa = TRUE;
-        break;
-      }
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&caps_info); i++) {
+    if (GST_VIDEO_INFO_PLANE_STRIDE (&orig_info, i) !=
+        GST_VIDEO_INFO_PLANE_STRIDE (&alloc_info, i) ||
+        GST_VIDEO_INFO_PLANE_OFFSET (&orig_info, i) !=
+        GST_VIDEO_INFO_PLANE_OFFSET (&alloc_info, i)) {
+      GST_INFO_OBJECT (vpool, "Video meta is required in buffer.");
+      vpool->force_videometa = TRUE;
+      break;
     }
   }
 
