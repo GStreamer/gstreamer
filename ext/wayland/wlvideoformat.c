@@ -112,7 +112,7 @@ gst_wl_dmabuf_format_to_video_format (guint wl_format)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (wl_formats); i++)
-    if (wl_formats[i].wl_shm_format == wl_format)
+    if (wl_formats[i].dma_format == wl_format)
       return wl_formats[i].gst_format;
 
   return GST_VIDEO_FORMAT_UNKNOWN;
