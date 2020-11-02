@@ -347,7 +347,6 @@ gst_identity_init (GstIdentity * identity)
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
 
-  GST_OBJECT_FLAG_SET (identity, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_FLAG_SET (identity, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
 }
 
@@ -860,6 +859,8 @@ gst_identity_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstIdentity *identity;
+  GstMessage *clock_message = NULL;
+  gboolean sync;
 
   identity = GST_IDENTITY (object);
 
@@ -889,7 +890,25 @@ gst_identity_set_property (GObject * object, guint prop_id,
       identity->datarate = g_value_get_int (value);
       break;
     case PROP_SYNC:
-      identity->sync = g_value_get_boolean (value);
+      sync = g_value_get_boolean (value);
+      GST_OBJECT_LOCK (identity);
+      if (sync != identity->sync) {
+        identity->sync = sync;
+        if (sync) {
+          GST_OBJECT_FLAG_SET (identity, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+          clock_message =
+              gst_message_new_clock_provide (GST_OBJECT_CAST (identity),
+              gst_system_clock_obtain (), TRUE);
+        } else {
+          GST_OBJECT_FLAG_UNSET (identity, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+          clock_message =
+              gst_message_new_clock_lost (GST_OBJECT_CAST (identity),
+              gst_system_clock_obtain ());
+        }
+      }
+      GST_OBJECT_UNLOCK (identity);
+      if (clock_message)
+        gst_element_post_message (GST_ELEMENT_CAST (identity), clock_message);
       break;
     case PROP_TS_OFFSET:
       identity->ts_offset = g_value_get_int64 (value);
@@ -1186,5 +1205,10 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
 static GstClock *
 gst_identity_provide_clock (GstElement * element)
 {
+  GstIdentity *identity = GST_IDENTITY (element);
+
+  if (!identity->sync)
+    return NULL;
+
   return gst_system_clock_obtain ();
 }
