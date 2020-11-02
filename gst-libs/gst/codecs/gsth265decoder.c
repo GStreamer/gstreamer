@@ -130,7 +130,7 @@ static GstFlowReturn gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
 
 static gboolean gst_h265_decoder_finish_current_picture (GstH265Decoder * self);
 static void gst_h265_decoder_clear_ref_pic_sets (GstH265Decoder * self);
-static void gst_h265_decoder_clear_dpb (GstH265Decoder * self);
+static void gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush);
 static gboolean gst_h265_decoder_drain_internal (GstH265Decoder * self);
 static gboolean gst_h265_decoder_start_current_picture (GstH265Decoder * self);
 
@@ -862,7 +862,7 @@ gst_h265_decoder_flush (GstVideoDecoder * decoder)
 {
   GstH265Decoder *self = GST_H265_DECODER (decoder);
 
-  gst_h265_decoder_clear_dpb (self);
+  gst_h265_decoder_clear_dpb (self, TRUE);
 
   return TRUE;
 }
@@ -1331,9 +1331,24 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
 }
 
 static void
-gst_h265_decoder_clear_dpb (GstH265Decoder * self)
+gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush)
 {
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH265DecoderPrivate *priv = self->priv;
+  GstH265Picture *picture;
+
+  /* If we are not flushing now, videodecoder baseclass will hold
+   * GstVideoCodecFrame. Release frames manually */
+  if (!flush) {
+    while ((picture = gst_h265_dpb_bump (priv->dpb)) != NULL) {
+      GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
+          picture->system_frame_number);
+
+      if (frame)
+        gst_video_decoder_release_frame (decoder, frame);
+      gst_h265_picture_unref (picture);
+    }
+  }
 
   gst_h265_dpb_clear (priv->dpb);
   priv->last_output_poc = 0;
@@ -1376,7 +1391,7 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
 
     if (picture->NoOutputOfPriorPicsFlag) {
       GST_DEBUG_OBJECT (self, "Clear dpb");
-      gst_h265_decoder_clear_dpb (self);
+      gst_h265_decoder_clear_dpb (self, FALSE);
     } else {
       gst_h265_dpb_delete_unused (priv->dpb);
       while ((to_output = gst_h265_dpb_bump (priv->dpb)) != NULL)
