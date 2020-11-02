@@ -171,7 +171,6 @@ gst_clock_sync_init (GstClockSync * clocksync)
   clocksync->sync = DEFAULT_SYNC;
   g_cond_init (&clocksync->blocked_cond);
 
-  GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
 }
 
@@ -180,10 +179,31 @@ gst_clock_sync_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstClockSync *clocksync = GST_CLOCKSYNC (object);
+  GstMessage *clock_message = NULL;
+  gboolean sync;
 
   switch (prop_id) {
     case PROP_SYNC:
       clocksync->sync = g_value_get_boolean (value);
+      sync = g_value_get_boolean (value);
+      GST_OBJECT_LOCK (clocksync);
+      if (sync != clocksync->sync) {
+        clocksync->sync = sync;
+        if (sync) {
+          GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+          clock_message =
+              gst_message_new_clock_provide (GST_OBJECT_CAST (clocksync),
+              gst_system_clock_obtain (), TRUE);
+        } else {
+          GST_OBJECT_FLAG_UNSET (clocksync, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+          clock_message =
+              gst_message_new_clock_lost (GST_OBJECT_CAST (clocksync),
+              gst_system_clock_obtain ());
+        }
+      }
+      GST_OBJECT_UNLOCK (clocksync);
+      if (clock_message)
+        gst_element_post_message (GST_ELEMENT_CAST (clocksync), clock_message);
       break;
     case PROP_TS_OFFSET:
       clocksync->ts_offset = g_value_get_int64 (value);
@@ -540,5 +560,10 @@ gst_clocksync_change_state (GstElement * element, GstStateChange transition)
 static GstClock *
 gst_clocksync_provide_clock (GstElement * element)
 {
+  GstClockSync *clocksync = GST_CLOCKSYNC (element);
+
+  if (!clocksync->sync)
+    return NULL;
+
   return gst_system_clock_obtain ();
 }
