@@ -591,8 +591,11 @@ gst_h265_dpb_get_lowest_output_needed_picture (GstH265Dpb * dpb,
 /**
  * gst_h265_dpb_bump:
  * @dpb: a #GstH265Dpb
+ * @drain: whether draining or not
  *
  * Perform bumping process as defined in C.5.2.4 "Bumping" process.
+ * If @drain is %TRUE, @dpb will remove a #GstH265Picture from internal array
+ * so that returned #GstH265Picture could hold the last reference of it
  *
  * Returns: (nullable) (transfer full): a #GstH265Picture which is needed to be
  * outputted
@@ -600,7 +603,7 @@ gst_h265_dpb_get_lowest_output_needed_picture (GstH265Dpb * dpb,
  * Since: 1.20
  */
 GstH265Picture *
-gst_h265_dpb_bump (GstH265Dpb * dpb)
+gst_h265_dpb_bump (GstH265Dpb * dpb, gboolean drain)
 {
   GstH265Picture *picture;
   gint index;
@@ -618,7 +621,7 @@ gst_h265_dpb_bump (GstH265Dpb * dpb)
   dpb->num_output_needed--;
   g_assert (dpb->num_output_needed >= 0);
 
-  if (!picture->ref)
+  if (!picture->ref || drain)
     g_array_remove_index_fast (dpb->pic_list, index);
 
   return picture;

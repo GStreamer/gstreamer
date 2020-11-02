@@ -203,7 +203,8 @@ gboolean gst_h265_dpb_needs_bump (GstH265Dpb * dpb,
                                   guint max_dec_pic_buffering);
 
 GST_CODECS_API
-GstH265Picture * gst_h265_dpb_bump (GstH265Dpb * dpb);
+GstH265Picture * gst_h265_dpb_bump (GstH265Dpb * dpb,
+                                    gboolean drain);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH265Picture, gst_h265_picture_unref)
 

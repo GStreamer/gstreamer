@@ -1340,7 +1340,7 @@ gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush)
   /* If we are not flushing now, videodecoder baseclass will hold
    * GstVideoCodecFrame. Release frames manually */
   if (!flush) {
-    while ((picture = gst_h265_dpb_bump (priv->dpb)) != NULL) {
+    while ((picture = gst_h265_dpb_bump (priv->dpb, TRUE)) != NULL) {
       GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
           picture->system_frame_number);
 
@@ -1360,7 +1360,7 @@ gst_h265_decoder_drain_internal (GstH265Decoder * self)
   GstH265DecoderPrivate *priv = self->priv;
   GstH265Picture *picture;
 
-  while ((picture = gst_h265_dpb_bump (priv->dpb)) != NULL)
+  while ((picture = gst_h265_dpb_bump (priv->dpb, TRUE)) != NULL)
     gst_h265_decoder_do_output_picture (self, picture);
 
   gst_h265_dpb_clear (priv->dpb);
@@ -1394,7 +1394,7 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
       gst_h265_decoder_clear_dpb (self, FALSE);
     } else {
       gst_h265_dpb_delete_unused (priv->dpb);
-      while ((to_output = gst_h265_dpb_bump (priv->dpb)) != NULL)
+      while ((to_output = gst_h265_dpb_bump (priv->dpb, FALSE)) != NULL)
         gst_h265_decoder_do_output_picture (self, to_output);
     }
   } else {
@@ -1404,7 +1404,7 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
             priv->SpsMaxLatencyPictures,
             sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1] +
             1)) {
-      to_output = gst_h265_dpb_bump (priv->dpb);
+      to_output = gst_h265_dpb_bump (priv->dpb, FALSE);
 
       /* Something wrong... */
       if (!to_output) {
@@ -1492,7 +1492,7 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
   while (gst_h265_dpb_needs_bump (priv->dpb,
           sps->max_num_reorder_pics[sps->max_sub_layers_minus1],
           priv->SpsMaxLatencyPictures, 0)) {
-    GstH265Picture *to_output = gst_h265_dpb_bump (priv->dpb);
+    GstH265Picture *to_output = gst_h265_dpb_bump (priv->dpb, FALSE);
 
     /* Something wrong... */
     if (!to_output) {
