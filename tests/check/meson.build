@@ -42,7 +42,11 @@ if gst_dep.type_name() == 'pkgconfig'
   pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
                  pbase.get_pkgconfig_variable('pluginsdir'),
                  pbad.get_pkgconfig_variable('pluginsdir')]
+ gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+else
+ gst_plugin_scanner_dir = subproject('gstreamer').get_variable('gst_scanner_dir')
 endif
+gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 foreach t : ges_tests
   fname = '@0@.c'.format(t.get(0))
@@ -95,6 +99,7 @@ if gstvalidate_dep.found()
     env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'scenarios'))
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
     env.set('GST_VALIDATE_LOGSDIR', meson.current_build_dir() / scenario)
+    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
 
     if is_validatetest
       testfile = meson.current_source_dir() / 'scenarios' / scenario + '.validatetest'
