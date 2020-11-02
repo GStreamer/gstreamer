@@ -397,17 +397,20 @@ device_context_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         device = g_object_dup_data (G_OBJECT (physical),
             "vkdeviceprovider.physical.device", (GDuplicateFunc) _ref_if_set,
             NULL);
+        GST_OBJECT_UNLOCK (physical);
         if (!device || !GST_IS_VULKAN_DEVICE (device)) {
           GWeakRef *ref = g_new0 (GWeakRef, 1);
           if (device)
             gst_object_unref (device);
           device = gst_vulkan_device_new (physical);
           g_weak_ref_init (ref, device);
+
+          GST_OBJECT_LOCK (physical);
           g_object_set_data_full (G_OBJECT (physical),
               "vkdeviceprovider.physical.device", ref,
               (GDestroyNotify) _ref_free);
+          GST_OBJECT_UNLOCK (physical);
         }
-        GST_OBJECT_UNLOCK (physical);
 
         if (gst_vulkan_device_handle_context_query (element, query, device)) {
           ret = GST_PAD_PROBE_HANDLED;
