@@ -263,10 +263,11 @@ not_supported:
 /**
  * gst_task_pool_join:
  * @pool: a #GstTaskPool
- * @id: (transfer full): the id
+ * @id: (transfer full) (nullable): the id
  *
  * Join a task and/or return it to the pool. @id is the id obtained from
- * gst_task_pool_push().
+ * gst_task_pool_push(). The default implementation does nothing, as the
+ * default push() implementation always returns %NULL.
  */
 void
 gst_task_pool_join (GstTaskPool * pool, gpointer id)
