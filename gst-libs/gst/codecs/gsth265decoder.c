@@ -71,7 +71,6 @@ struct _GstH265DecoderPrivate
   const GstH265PPS *active_pps;
 
   guint32 SpsMaxLatencyPictures;
-  gint32 WpOffsetHalfRangeC;
 
   /* Picture currently being processed/decoded */
   GstH265Picture *current_picture;
@@ -252,8 +251,6 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
   gint MaxLumaPS;
   const gint MaxDpbPicBuf = 6;
   gint PicSizeInSamplesY;
-  guint high_precision_offsets_enabled_flag = 0;
-  guint bitdepthC = 0;
 
   /* A.4.1 */
   MaxLumaPS = 35651584;
@@ -297,13 +294,6 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
         sps->max_num_reorder_pics[sps->max_sub_layers_minus1] +
         sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] - 1;
   }
-
-  /* Calculate WpOffsetHalfRangeC: (7-34)
-   * FIXME: We don't have parser API for sps_range_extension, so
-   * assuming high_precision_offsets_enabled_flag as zero */
-  bitdepthC = sps->bit_depth_chroma_minus8 + 8;
-  priv->WpOffsetHalfRangeC =
-      1 << (high_precision_offsets_enabled_flag ? (bitdepthC - 1) : 7);
 
   GST_DEBUG_OBJECT (self, "Set DPB max size %d", max_dpb_size);
 
