@@ -67,6 +67,7 @@ struct _GstTaskPool {
  * @cleanup: make sure all threads are stopped
  * @push: start a new thread
  * @join: join a thread
+ * @dispose_handle: free / unref the handle returned in push
  *
  * The #GstTaskPoolClass object.
  */
@@ -80,6 +81,15 @@ struct _GstTaskPoolClass {
   gpointer  (*push)     (GstTaskPool *pool, GstTaskPoolFunction func,
                          gpointer user_data, GError **error);
   void      (*join)     (GstTaskPool *pool, gpointer id);
+
+  /**
+   * GstTaskPoolClass::dispose_handle:
+   *
+   * free / unref the handle returned in push.
+   *
+   * Since: 1.20
+   */
+  void      (*dispose_handle) (GstTaskPool *pool, gpointer id);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -99,6 +109,9 @@ gpointer        gst_task_pool_push        (GstTaskPool *pool, GstTaskPoolFunctio
                                            gpointer user_data, GError **error);
 GST_API
 void            gst_task_pool_join        (GstTaskPool *pool, gpointer id);
+
+GST_API
+void            gst_task_pool_dispose_handle (GstTaskPool *pool, gpointer id);
 
 GST_API
 void		gst_task_pool_cleanup     (GstTaskPool *pool);

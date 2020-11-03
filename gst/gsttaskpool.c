@@ -127,6 +127,12 @@ default_join (GstTaskPool * pool, gpointer id)
 }
 
 static void
+default_dispose_handle (GstTaskPool * pool, gpointer id)
+{
+  /* we do nothing here, the default handle is NULL */
+}
+
+static void
 gst_task_pool_class_init (GstTaskPoolClass * klass)
 {
   GObjectClass *gobject_class;
@@ -143,6 +149,7 @@ gst_task_pool_class_init (GstTaskPoolClass * klass)
   gsttaskpool_class->cleanup = default_cleanup;
   gsttaskpool_class->push = default_push;
   gsttaskpool_class->join = default_join;
+  gsttaskpool_class->dispose_handle = default_dispose_handle;
 }
 
 static void
@@ -235,7 +242,9 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  *
  * Returns: (transfer full) (nullable): a pointer that should be used
  * for the gst_task_pool_join function. This pointer can be %NULL, you
- * must check @error to detect errors.
+ * must check @error to detect errors. If the pointer is not %NULL and
+ * gst_task_pool_join() is not used, call gst_task_pool_dispose_handle()
+ * instead.
  */
 gpointer
 gst_task_pool_push (GstTaskPool * pool, GstTaskPoolFunction func,
@@ -280,4 +289,29 @@ gst_task_pool_join (GstTaskPool * pool, gpointer id)
 
   if (klass->join)
     klass->join (pool, id);
+}
+
+/**
+ * gst_task_pool_dispose_handle:
+ * @pool: a #GstTaskPool
+ * @id: (transfer full) (nullable): the id
+ *
+ * Dispose of the handle returned by gst_task_pool_push(). This does
+ * not need to be called with the default implementation as the default
+ * push() implementation always returns %NULL. This does not need to be
+ * called either when calling gst_task_pool_join().
+ *
+ * Since: 1.20
+ */
+void
+gst_task_pool_dispose_handle (GstTaskPool * pool, gpointer id)
+{
+  GstTaskPoolClass *klass;
+
+  g_return_if_fail (GST_IS_TASK_POOL (pool));
+
+  klass = GST_TASK_POOL_GET_CLASS (pool);
+
+  if (klass->dispose_handle)
+    klass->dispose_handle (pool, id);
 }
