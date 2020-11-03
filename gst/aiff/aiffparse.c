@@ -824,7 +824,7 @@ gst_aiff_parse_create_caps (GstAiffParse * aiff)
 {
   GstCaps *caps = NULL;
   const gchar *format = NULL;
-  guint64 channel_mask;
+  guint64 channel_mask = 0;
 
   if (aiff->floating_point) {
     if (aiff->endianness == G_BIG_ENDIAN) {
@@ -862,42 +862,37 @@ gst_aiff_parse_create_caps (GstAiffParse * aiff)
         "rate", G_TYPE_INT, aiff->rate, NULL);
   }
 
-  if (aiff->channels > 2) {
-    GST_FIXME_OBJECT (aiff, "using fallback channel layout for %d channels",
-        aiff->channels);
+  /* based on AIFF-1.3.pdf */
+  switch (aiff->channels) {
+    case 1:
+      channel_mask = 0;
+      break;
+    case 2:
+      channel_mask = _P (FRONT_LEFT) | _P (FRONT_RIGHT);
+      break;
+    case 3:
+      channel_mask = _P (FRONT_LEFT) | _P (FRONT_RIGHT) | _P (FRONT_CENTER);
+      break;
+    case 4:
+      /* lists both this and 'quad' but doesn't say how to distinguish the two */
+      channel_mask =
+          _P (FRONT_LEFT) | _P (FRONT_RIGHT) | _P (REAR_LEFT) | _P (REAR_RIGHT);
+      break;
+    case 6:
+      channel_mask =
+          _P (FRONT_LEFT) | _P (FRONT_LEFT_OF_CENTER) | _P (FRONT_CENTER) |
+          _P (FRONT_RIGHT) | _P (FRONT_RIGHT_OF_CENTER) | _P (LFE1);
+      break;
+    default:
+      GST_FIXME_OBJECT (aiff, "using fallback channel layout for %d channels",
+          aiff->channels);
+      channel_mask = gst_audio_channel_get_fallback_mask (aiff->channels);
+      break;
+  }
 
-    /* based on AIFF-1.3.pdf */
-    switch (aiff->channels) {
-      case 1:
-        channel_mask = 0;
-        break;
-      case 2:
-        channel_mask = _P (FRONT_LEFT) | _P (FRONT_RIGHT);
-        break;
-      case 3:
-        channel_mask = _P (FRONT_LEFT) | _P (FRONT_RIGHT) | _P (FRONT_CENTER);
-        break;
-      case 4:
-        /* lists both this and 'quad' but doesn't say how to distinguish the two */
-        channel_mask =
-            _P (FRONT_LEFT) | _P (FRONT_RIGHT) | _P (REAR_LEFT) |
-            _P (REAR_RIGHT);
-        break;
-      case 6:
-        channel_mask =
-            _P (FRONT_LEFT) | _P (FRONT_LEFT_OF_CENTER) | _P (FRONT_CENTER) |
-            _P (FRONT_RIGHT) | _P (FRONT_RIGHT_OF_CENTER) | _P (LFE1);
-        break;
-      default:
-        channel_mask = gst_audio_channel_get_fallback_mask (aiff->channels);
-        break;
-    }
-
-
-    if (channel_mask != 0) {
-      gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
-          NULL);
-    }
+  if (channel_mask != 0) {
+    gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
+        NULL);
   }
 
   GST_DEBUG_OBJECT (aiff, "Created caps: %" GST_PTR_FORMAT, caps);
