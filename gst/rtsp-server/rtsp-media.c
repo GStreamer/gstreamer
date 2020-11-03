@@ -3288,12 +3288,30 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
 
       s = gst_message_get_structure (message);
       if (gst_structure_has_name (s, "GstRTSPStreamBlocking")) {
-        GST_DEBUG ("media received blocking message");
-        priv->blocking_msg_received++;
+        gboolean is_complete = FALSE;
+        guint n_active_streams;
+        guint expected_nbr_blocking_msg;
+
+        /* to prevent problems when some streams are complete, some are not,
+         * we will ignore incomplete streams. When there are no complete
+         * streams (during DESCRIBE), we will listen to all streams. */
+
+        gst_structure_get_boolean (s, "is_complete", &is_complete);
+        n_active_streams = nbr_active_streams (media);
+        expected_nbr_blocking_msg = n_active_streams;
+        GST_DEBUG_OBJECT (media, "media received blocking message,"
+            " n_active_streams = %d, is_complete = %d",
+            n_active_streams, is_complete);
+
+        if (n_active_streams == 0 || is_complete)
+          priv->blocking_msg_received++;
+
+        if (n_active_streams == 0)
+          expected_nbr_blocking_msg = priv->streams->len;
+
         if (priv->blocked && media_streams_blocking (media) &&
             priv->no_more_pads_pending == 0 &&
-            (priv->blocking_msg_received == nbr_active_streams (media) ||
-                priv->blocking_msg_received == priv->streams->len)) {
+            priv->blocking_msg_received == expected_nbr_blocking_msg) {
           GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "media is blocking");
           g_mutex_lock (&priv->lock);
           collect_media_stats (media);

@@ -5317,7 +5317,8 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   gst_element_post_message (priv->payloader,
       gst_message_new_element (GST_OBJECT_CAST (priv->payloader),
-          gst_structure_new_empty ("GstRTSPStreamBlocking")));
+          gst_structure_new ("GstRTSPStreamBlocking", "is_complete",
+              G_TYPE_BOOLEAN, priv->is_complete, NULL)));
 
 done:
   return ret;
