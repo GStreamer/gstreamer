@@ -38,6 +38,7 @@ public:
 
     void setCaps (GstCaps * caps);
     gboolean setBuffer (GstBuffer * buffer);
+    GstBuffer * getBuffer (gboolean * was_bound);
 
     /* QSGTexture */
     void bind ();
@@ -48,6 +49,7 @@ public:
 
 private:
     GstBuffer * buffer_;
+    gboolean buffer_was_bound;
     GstBuffer * sync_buffer_;
     GstGLContext * qt_context_;
     GstMemory * mem_;
