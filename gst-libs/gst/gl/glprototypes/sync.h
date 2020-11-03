@@ -41,6 +41,8 @@ GST_GL_EXT_FUNCTION (void, WaitSync,
                       GLuint64 timeout))
 GST_GL_EXT_FUNCTION (void, GetSynciv,
                      (GLsync sync,
-                      GLenum flags,
-                      GLuint64 timeout))
+                      GLenum name,
+                      GLsizei buf_size,
+                      GLsizei *length,
+                      GLint *values))
 GST_GL_EXT_END ()
