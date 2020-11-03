@@ -293,6 +293,176 @@ GST_START_TEST (test_create)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gboolean called;
+  gpointer caller_thread;
+
+  GCond blocked_cond;
+  GMutex blocked_lock;
+  gboolean blocked;
+
+  GCond unblock_cond;
+  GMutex unblock_lock;
+  gboolean unblock;
+} TaskData;
+
+static void
+task_cb (TaskData * tdata)
+{
+  tdata->called = TRUE;
+  tdata->caller_thread = g_thread_self ();
+
+  g_mutex_lock (&tdata->blocked_lock);
+  tdata->blocked = TRUE;
+  g_cond_signal (&tdata->blocked_cond);
+  g_mutex_unlock (&tdata->blocked_lock);
+
+  g_mutex_lock (&tdata->unblock_lock);
+  while (!tdata->unblock)
+    g_cond_wait (&tdata->unblock_cond, &tdata->unblock_lock);
+
+  g_mutex_unlock (&tdata->unblock_lock);
+}
+
+static void
+init_task_data (TaskData * tdata)
+{
+  tdata->called = FALSE;
+  tdata->caller_thread = NULL;
+  tdata->unblock = FALSE;
+  g_cond_init (&tdata->unblock_cond);
+  g_mutex_init (&tdata->unblock_lock);
+
+  tdata->blocked = FALSE;
+  g_cond_init (&tdata->blocked_cond);
+  g_mutex_init (&tdata->blocked_lock);
+}
+
+static void
+cleanup_task_data (TaskData * tdata)
+{
+  g_mutex_clear (&tdata->unblock_lock);
+  g_cond_clear (&tdata->unblock_cond);
+  g_mutex_clear (&tdata->blocked_lock);
+  g_cond_clear (&tdata->blocked_cond);
+}
+
+/* In this test, we use a shared task pool with max-threads=1 and verify
+ * that the caller thread for two tasks is the same */
+GST_START_TEST (test_shared_task_pool_shared_thread)
+{
+  GstTaskPool *pool;
+  gpointer handle, handle2;
+  GError *err = NULL;
+  TaskData tdata, tdata2;
+
+  init_task_data (&tdata);
+  init_task_data (&tdata2);
+
+  pool = gst_shared_task_pool_new ();
+  gst_task_pool_prepare (pool, &err);
+
+  fail_unless (err == NULL);
+
+  /* We request that two tasks be executed, and our task function is blocking.
+   * This means no new thread is available to spawn, and the second task should
+   * be queued up on the first thread */
+  handle =
+      gst_task_pool_push (pool, (GstTaskPoolFunction) task_cb, &tdata, &err);
+  fail_unless (err == NULL);
+  handle2 =
+      gst_task_pool_push (pool, (GstTaskPoolFunction) task_cb, &tdata2, &err);
+  fail_unless (err == NULL);
+
+  g_mutex_lock (&tdata.unblock_lock);
+  tdata.unblock = TRUE;
+  g_cond_signal (&tdata.unblock_cond);
+  g_mutex_unlock (&tdata.unblock_lock);
+
+  g_mutex_lock (&tdata2.unblock_lock);
+  tdata2.unblock = TRUE;
+  g_cond_signal (&tdata2.unblock_cond);
+  g_mutex_unlock (&tdata2.unblock_lock);
+
+  gst_task_pool_join (pool, handle);
+  gst_task_pool_join (pool, handle2);
+
+  fail_unless (tdata.called == TRUE);
+  fail_unless (tdata2.called == TRUE);
+  fail_unless (tdata.caller_thread == tdata2.caller_thread);
+
+  cleanup_task_data (&tdata);
+  cleanup_task_data (&tdata2);
+
+  gst_task_pool_cleanup (pool);
+
+  g_object_unref (pool);
+}
+
+GST_END_TEST;
+
+/* In this test, we use a shared task pool with max-threads=2 and verify
+ * that the caller thread for two tasks is different */
+GST_START_TEST (test_shared_task_pool_two_threads)
+{
+  GstTaskPool *pool;
+  gpointer handle, handle2;
+  GError *err = NULL;
+  TaskData tdata, tdata2;
+
+  init_task_data (&tdata);
+  init_task_data (&tdata2);
+
+  pool = gst_shared_task_pool_new ();
+  gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (pool), 2);
+  gst_task_pool_prepare (pool, &err);
+
+  fail_unless (err == NULL);
+
+  /* We request that two tasks be executed, and our task function is blocking.
+   * This means the pool will have to spawn a new thread to handle the task */
+  handle =
+      gst_task_pool_push (pool, (GstTaskPoolFunction) task_cb, &tdata, &err);
+  fail_unless (err == NULL);
+  handle2 =
+      gst_task_pool_push (pool, (GstTaskPoolFunction) task_cb, &tdata2, &err);
+  fail_unless (err == NULL);
+
+  /* Make sure that the second task has started executing before unblocking */
+  g_mutex_lock (&tdata2.blocked_lock);
+  while (!tdata2.blocked) {
+    g_cond_wait (&tdata2.blocked_cond, &tdata2.blocked_lock);
+  }
+  g_mutex_unlock (&tdata2.blocked_lock);
+
+  g_mutex_lock (&tdata.unblock_lock);
+  tdata.unblock = TRUE;
+  g_cond_signal (&tdata.unblock_cond);
+  g_mutex_unlock (&tdata.unblock_lock);
+
+  g_mutex_lock (&tdata2.unblock_lock);
+  tdata2.unblock = TRUE;
+  g_cond_signal (&tdata2.unblock_cond);
+  g_mutex_unlock (&tdata2.unblock_lock);
+
+  gst_task_pool_join (pool, handle);
+  gst_task_pool_join (pool, handle2);
+
+  fail_unless (tdata.called == TRUE);
+  fail_unless (tdata2.called == TRUE);
+
+  fail_unless (tdata.caller_thread != tdata2.caller_thread);
+
+  cleanup_task_data (&tdata);
+  cleanup_task_data (&tdata2);
+
+  gst_task_pool_cleanup (pool);
+
+  g_object_unref (pool);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_task_suite (void)
@@ -308,6 +478,8 @@ gst_task_suite (void)
   tcase_add_test (tc_chain, test_join);
   tcase_add_test (tc_chain, test_pause_stop_race);
   tcase_add_test (tc_chain, test_resume);
+  tcase_add_test (tc_chain, test_shared_task_pool_shared_thread);
+  tcase_add_test (tc_chain, test_shared_task_pool_two_threads);
 
   return s;
 }
