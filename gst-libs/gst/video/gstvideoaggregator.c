@@ -1091,11 +1091,14 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   gboolean at_least_one_alpha = FALSE;
+  gboolean ret = FALSE;
   const GstVideoFormatInfo *finfo;
   GstVideoInfo info;
   GList *l;
 
   GST_INFO_OBJECT (agg->srcpad, "set src caps: %" GST_PTR_FORMAT, caps);
+
+  GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -1111,7 +1114,7 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
   GST_OBJECT_UNLOCK (vagg);
 
   if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
+    goto unlock_and_return;
 
   if (GST_VIDEO_INFO_FPS_N (&vagg->info) != GST_VIDEO_INFO_FPS_N (&info) ||
       GST_VIDEO_INFO_FPS_D (&vagg->info) != GST_VIDEO_INFO_FPS_D (&info)) {
@@ -1125,15 +1128,17 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
     gst_video_aggregator_reset_qos (vagg);
   }
 
+  GST_OBJECT_LOCK (vagg);
   vagg->info = info;
+  GST_OBJECT_UNLOCK (vagg);
 
-  finfo = vagg->info.finfo;
+  finfo = info.finfo;
 
   if (at_least_one_alpha && !(finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
     GST_ELEMENT_ERROR (vagg, CORE, NEGOTIATION,
         ("At least one of the input pads contains alpha, but configured caps don't support alpha."),
         ("Either convert your inputs to not contain alpha or add a videoconvert after the aggregator"));
-    return FALSE;
+    goto unlock_and_return;
   }
 
   /* Then browse the sinks once more, setting or unsetting conversion if needed */
@@ -1148,11 +1153,15 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
 
     gst_aggregator_set_src_caps (agg, caps);
     latency = gst_util_uint64_scale (GST_SECOND,
-        GST_VIDEO_INFO_FPS_D (&vagg->info), GST_VIDEO_INFO_FPS_N (&vagg->info));
+        GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
     gst_aggregator_set_latency (agg, latency, latency);
   }
 
-  return TRUE;
+  ret = TRUE;
+
+unlock_and_return:
+  GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
+  return ret;
 }
 
 static gboolean
@@ -1484,7 +1493,10 @@ gst_video_aggregator_reset (GstVideoAggregator * vagg)
   GstAggregator *agg = GST_AGGREGATOR (vagg);
   GList *l;
 
+  GST_OBJECT_LOCK (vagg);
   gst_video_info_init (&vagg->info);
+  GST_OBJECT_UNLOCK (vagg);
+
   vagg->priv->ts_offset = 0;
   vagg->priv->nframes = 0;
   vagg->priv->live = FALSE;
