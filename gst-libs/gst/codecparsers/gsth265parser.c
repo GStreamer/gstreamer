@@ -940,7 +940,7 @@ gst_h265_slice_parse_ref_pic_list_modification (GstH265SliceHdr * slice,
   return TRUE;
 
 error:
-  GST_WARNING ("error parsing \"Prediction weight table\"");
+  GST_WARNING ("error parsing \"Reference picture list modifications\"");
   return FALSE;
 }
 
