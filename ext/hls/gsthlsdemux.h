@@ -147,6 +147,10 @@ struct _GstHLSDemux
   GstHLSMasterPlaylist *master;
 
   GstHLSVariantStream  *current_variant;
+  /* The previous variant, used to transition streams over */
+  GstHLSVariantStream  *previous_variant;
+
+  gboolean streams_aware;
 };
 
 struct _GstHLSDemuxClass
