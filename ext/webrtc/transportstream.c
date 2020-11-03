@@ -178,10 +178,6 @@ transport_stream_dispose (GObject * object)
     gst_object_unref (stream->transport);
   stream->transport = NULL;
 
-  if (stream->rtcp_transport)
-    gst_object_unref (stream->rtcp_transport);
-  stream->rtcp_transport = NULL;
-
   if (stream->rtxsend)
     gst_object_unref (stream->rtxsend);
   stream->rtxsend = NULL;
@@ -213,19 +209,12 @@ transport_stream_constructed (GObject * object)
   GstWebRTCBin *webrtc;
   GstWebRTCICETransport *ice_trans;
 
-  stream->transport = gst_webrtc_dtls_transport_new (stream->session_id, FALSE);
-  stream->rtcp_transport =
-      gst_webrtc_dtls_transport_new (stream->session_id, TRUE);
+  stream->transport = gst_webrtc_dtls_transport_new (stream->session_id);
 
   webrtc = GST_WEBRTC_BIN (gst_object_get_parent (GST_OBJECT (object)));
 
   g_object_bind_property (stream->transport, "client", stream, "dtls-client",
       G_BINDING_BIDIRECTIONAL);
-  g_object_bind_property (stream->rtcp_transport, "client", stream,
-      "dtls-client", G_BINDING_BIDIRECTIONAL);
-
-  g_object_bind_property (stream->transport, "certificate",
-      stream->rtcp_transport, "certificate", G_BINDING_BIDIRECTIONAL);
 
   /* Need to go full Java and have a transport manager?
    * Or make the caller set the ICE transport up? */
@@ -240,12 +229,6 @@ transport_stream_constructed (GObject * object)
       gst_webrtc_ice_find_transport (webrtc->priv->ice, stream->stream,
       GST_WEBRTC_ICE_COMPONENT_RTP);
   gst_webrtc_dtls_transport_set_transport (stream->transport, ice_trans);
-  gst_object_unref (ice_trans);
-
-  ice_trans =
-      gst_webrtc_ice_find_transport (webrtc->priv->ice, stream->stream,
-      GST_WEBRTC_ICE_COMPONENT_RTCP);
-  gst_webrtc_dtls_transport_set_transport (stream->rtcp_transport, ice_trans);
   gst_object_unref (ice_trans);
 
   stream->send_bin = g_object_new (transport_send_bin_get_type (), "stream",

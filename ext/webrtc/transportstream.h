@@ -58,7 +58,6 @@ struct _TransportStream
   GstWebRTCICEStream       *stream;
 
   GstWebRTCDTLSTransport   *transport;
-  GstWebRTCDTLSTransport   *rtcp_transport;
 
   GArray                   *ptmap;                  /* array of PtMapItem's */
   GArray                   *remote_ssrcmap;         /* array of SsrcMapItem's */

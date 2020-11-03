@@ -171,7 +171,6 @@ gst_webrtc_nice_transport_finalize (GObject * object)
 void
 gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
 {
-  GstWebRTCICETransport *ice = GST_WEBRTC_ICE_TRANSPORT (nice);
   NiceAgent *agent = NULL;
   GPtrArray *sockets;
   guint i;
@@ -179,8 +178,7 @@ gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
   g_object_get (nice->stream->ice, "agent", &agent, NULL);
   g_assert (agent != NULL);
 
-  sockets = nice_agent_get_sockets (agent, nice->stream->stream_id,
-      ice->component + 1);
+  sockets = nice_agent_get_sockets (agent, nice->stream->stream_id, 1);
   if (sockets == NULL) {
     g_object_unref (agent);
     return;

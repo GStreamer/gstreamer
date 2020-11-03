@@ -65,13 +65,6 @@ webrtc_transceiver_set_transport (WebRTCTransceiver * trans,
   if (rtp_trans->receiver)
     gst_object_replace ((GstObject **) & rtp_trans->receiver->transport,
         (GstObject *) stream->transport);
-
-  if (rtp_trans->sender)
-    gst_object_replace ((GstObject **) & rtp_trans->sender->rtcp_transport,
-        (GstObject *) stream->rtcp_transport);
-  if (rtp_trans->receiver)
-    gst_object_replace ((GstObject **) & rtp_trans->receiver->rtcp_transport,
-        (GstObject *) stream->rtcp_transport);
 }
 
 GstWebRTCDTLSTransport *
@@ -83,20 +76,6 @@ webrtc_transceiver_get_dtls_transport (GstWebRTCRTPTransceiver * trans)
     return trans->sender->transport;
   } else if (trans->receiver) {
     return trans->receiver->transport;
-  }
-
-  return NULL;
-}
-
-GstWebRTCDTLSTransport *
-webrtc_transceiver_get_rtcp_dtls_transport (GstWebRTCRTPTransceiver * trans)
-{
-  g_return_val_if_fail (WEBRTC_IS_TRANSCEIVER (trans), NULL);
-
-  if (trans->sender) {
-    return trans->sender->rtcp_transport;
-  } else if (trans->receiver) {
-    return trans->receiver->rtcp_transport;
   }
 
   return NULL;

@@ -45,7 +45,6 @@ struct _GstWebRTCDTLSTransport
   GstWebRTCICETransport             *transport;
   GstWebRTCDTLSTransportState        state;
 
-  gboolean                           is_rtcp;
   gboolean                           client;
   guint                              session_id;
   GstElement                        *dtlssrtpenc;
@@ -62,7 +61,7 @@ struct _GstWebRTCDTLSTransportClass
 };
 
 GST_WEBRTC_API
-GstWebRTCDTLSTransport *    gst_webrtc_dtls_transport_new               (guint session_id, gboolean rtcp);
+GstWebRTCDTLSTransport *    gst_webrtc_dtls_transport_new               (guint session_id);
 
 GST_WEBRTC_API
 void                        gst_webrtc_dtls_transport_set_transport     (GstWebRTCDTLSTransport * transport,

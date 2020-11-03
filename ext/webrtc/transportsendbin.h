@@ -54,12 +54,8 @@ struct _TransportSendBin
   gboolean                   active; /* Flag that's cleared on shutdown */
 
   TransportStream           *stream;        /* parent transport stream */
-  gboolean                   rtcp_mux;
-
-  GstElement                *outputselector;
 
   TransportSendBinDTLSContext rtp_ctx;
-  TransportSendBinDTLSContext rtcp_ctx;
 
   /*
   struct pad_block          *rtp_block;

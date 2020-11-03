@@ -25,20 +25,16 @@
 #include "utils.h"
 
 /*
- *           ,------------------------transport_send_%u-------------------------,
- *           ;                          ,-----dtlssrtpenc---,                   ;
- * data_sink o--------------------------o data_sink         ;                   ;
- *           ;                          ;                   ;  ,---nicesink---, ;
- *  rtp_sink o--------------------------o rtp_sink_0    src o--o sink         ; ;
- *           ;                          ;                   ;  '--------------' ;
- *           ;   ,--outputselector--, ,-o rtcp_sink_0       ;                   ;
- *           ;   ;            src_0 o-' '-------------------'                   ;
- * rtcp_sink ;---o sink             ;   ,----dtlssrtpenc----,  ,---nicesink---, ;
- *           ;   ;            src_1 o---o rtcp_sink_0   src o--o sink         ; ;
- *           ;   '------------------'   '-------------------'  '--------------' ;
- *           '------------------------------------------------------------------'
+ *           ,--------------transport_send_%u-------- ---,
+ *           ;   ,-----dtlssrtpenc---,                   ;
+ * data_sink o---o data_sink         ;                   ;
+ *           ;   ;                   ;  ,---nicesink---, ;
+ *  rtp_sink o---o rtp_sink_0    src o--o sink         ; ;
+ *           ;   ;                   ;  '--------------' ;
+ * rtcp_sink o---o rtcp_sink_0       ;                   ;
+ *           ;   '-------------------'
+ *           '-------------------------------------------'
  *
- * outputselecter is used to switch between rtcp-mux and no rtcp-mux
  *
  * FIXME: Do we need a valve drop=TRUE for the no RTCP case?
  */
@@ -83,24 +79,6 @@ enum
 static void cleanup_blocks (TransportSendBin * send);
 
 static void
-_set_rtcp_mux (TransportSendBin * send, gboolean rtcp_mux)
-{
-  GstPad *active_pad;
-
-  if (rtcp_mux)
-    active_pad = gst_element_get_static_pad (send->outputselector, "src_0");
-  else
-    active_pad = gst_element_get_static_pad (send->outputselector, "src_1");
-  send->rtcp_mux = rtcp_mux;
-  GST_OBJECT_UNLOCK (send);
-
-  g_object_set (send->outputselector, "active-pad", active_pad, NULL);
-
-  gst_object_unref (active_pad);
-  GST_OBJECT_LOCK (send);
-}
-
-static void
 transport_send_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -111,9 +89,6 @@ transport_send_bin_set_property (GObject * object, guint prop_id,
     case PROP_STREAM:
       /* XXX: weak-ref this? Note, it's construct-only so can't be changed later */
       send->stream = TRANSPORT_STREAM (g_value_get_object (value));
-      break;
-    case PROP_RTCP_MUX:
-      _set_rtcp_mux (send, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -132,9 +107,6 @@ transport_send_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_STREAM:
       g_value_set_object (value, send->stream);
-      break;
-    case PROP_RTCP_MUX:
-      g_value_set_boolean (value, send->rtcp_mux);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -201,7 +173,6 @@ transport_send_bin_change_state (GstElement * element,
        * we should only add it once/if we get the encoding keys */
       TSB_LOCK (send);
       gst_element_set_locked_state (send->rtp_ctx.dtlssrtpenc, TRUE);
-      gst_element_set_locked_state (send->rtcp_ctx.dtlssrtpenc, TRUE);
       send->active = TRUE;
       TSB_UNLOCK (send);
       break;
@@ -220,13 +191,6 @@ transport_send_bin_change_state (GstElement * element,
       elem = send->stream->transport->transport->sink;
       send->rtp_ctx.nice_block = block_peer_pad (elem, "sink");
 
-      /* RTCP */
-      elem = send->stream->rtcp_transport->dtlssrtpenc;
-      /* Block the RTCP DTLS encoder */
-      send->rtcp_ctx.rtcp_block = block_peer_pad (elem, "rtcp_sink_0");
-      /* unblock ice sink once a connection is made, this should also be automatic */
-      elem = send->stream->rtcp_transport->transport->sink;
-      send->rtcp_ctx.nice_block = block_peer_pad (elem, "sink");
       TSB_UNLOCK (send);
       break;
     }
@@ -257,7 +221,6 @@ transport_send_bin_change_state (GstElement * element,
       cleanup_blocks (send);
 
       gst_element_set_locked_state (send->rtp_ctx.dtlssrtpenc, FALSE);
-      gst_element_set_locked_state (send->rtcp_ctx.dtlssrtpenc, FALSE);
       TSB_UNLOCK (send);
 
       break;
@@ -276,8 +239,6 @@ _on_dtls_enc_key_set (GstElement * dtlssrtpenc, TransportSendBin * send)
 
   if (dtlssrtpenc == send->rtp_ctx.dtlssrtpenc)
     ctx = &send->rtp_ctx;
-  else if (dtlssrtpenc == send->rtcp_ctx.dtlssrtpenc)
-    ctx = &send->rtcp_ctx;
   else {
     GST_WARNING_OBJECT (send,
         "Received dtls-enc key info for unknown element %" GST_PTR_FORMAT,
@@ -308,8 +269,6 @@ _on_notify_dtls_client_status (GstElement * dtlssrtpenc,
   TransportSendBinDTLSContext *ctx;
   if (dtlssrtpenc == send->rtp_ctx.dtlssrtpenc)
     ctx = &send->rtp_ctx;
-  else if (dtlssrtpenc == send->rtcp_ctx.dtlssrtpenc)
-    ctx = &send->rtcp_ctx;
   else {
     GST_WARNING_OBJECT (send,
         "Received dtls-enc client mode for unknown element %" GST_PTR_FORMAT,
@@ -350,13 +309,6 @@ _on_notify_ice_connection_state (GstWebRTCICETransport * transport,
             send->rtp_ctx.nice_block->pad);
         _free_pad_block (send->rtp_ctx.nice_block);
         send->rtp_ctx.nice_block = NULL;
-      }
-    } else if (transport == send->stream->rtcp_transport->transport) {
-      if (send->rtcp_ctx.nice_block) {
-        GST_LOG_OBJECT (send, "Unblocking pad %" GST_PTR_FORMAT,
-            send->rtcp_ctx.nice_block->pad);
-        _free_pad_block (send->rtcp_ctx.nice_block);
-        send->rtcp_ctx.nice_block = NULL;
       }
     }
     TSB_UNLOCK (send);
@@ -400,13 +352,6 @@ transport_send_bin_constructed (GObject * object)
 
   g_return_if_fail (send->stream);
 
-  g_object_bind_property (send, "rtcp-mux", send->stream, "rtcp-mux",
-      G_BINDING_BIDIRECTIONAL);
-
-  /* Output selector to direct the RTCP for muxed-mode */
-  send->outputselector = gst_element_factory_make ("output-selector", NULL);
-  gst_bin_add (GST_BIN (send), send->outputselector);
-
   /* RTP */
   transport = send->stream->transport;
   /* Do the common init for the context struct */
@@ -416,10 +361,6 @@ transport_send_bin_constructed (GObject * object)
       GST_PAD_SINK, GST_PAD_REQUEST, "rtp_sink_%d");
   pad = gst_element_request_pad (transport->dtlssrtpenc, templ, "rtp_sink_0",
       NULL);
-
-  if (!gst_element_link_pads (GST_ELEMENT (send->outputselector), "src_0",
-          GST_ELEMENT (transport->dtlssrtpenc), "rtcp_sink_0"))
-    g_warn_if_reached ();
 
   ghost = gst_ghost_pad_new ("rtp_sink", pad);
   gst_element_add_pad (GST_ELEMENT (send), ghost);
@@ -436,17 +377,11 @@ transport_send_bin_constructed (GObject * object)
   gst_object_unref (pad);
 
   /* RTCP */
-  transport = send->stream->rtcp_transport;
   /* Do the common init for the context struct */
-  tsb_setup_ctx (send, &send->rtcp_ctx, transport);
   templ = _find_pad_template (transport->dtlssrtpenc,
       GST_PAD_SINK, GST_PAD_REQUEST, "rtcp_sink_%d");
-
-  if (!gst_element_link_pads (GST_ELEMENT (send->outputselector), "src_1",
-          GST_ELEMENT (transport->dtlssrtpenc), "rtcp_sink_0"))
-    g_warn_if_reached ();
-
-  pad = gst_element_get_static_pad (send->outputselector, "sink");
+  pad = gst_element_request_pad (transport->dtlssrtpenc, templ, "rtcp_sink_0",
+      NULL);
 
   ghost = gst_ghost_pad_new ("rtcp_sink", pad);
   gst_element_add_pad (GST_ELEMENT (send), ghost);
@@ -478,7 +413,6 @@ static void
 cleanup_blocks (TransportSendBin * send)
 {
   cleanup_ctx_blocks (&send->rtp_ctx);
-  cleanup_ctx_blocks (&send->rtcp_ctx);
 }
 
 static void
@@ -490,10 +424,6 @@ transport_send_bin_dispose (GObject * object)
   if (send->rtp_ctx.nicesink) {
     g_signal_handlers_disconnect_by_data (send->rtp_ctx.nicesink, send);
     send->rtp_ctx.nicesink = NULL;
-  }
-  if (send->rtcp_ctx.nicesink) {
-    g_signal_handlers_disconnect_by_data (send->rtcp_ctx.nicesink, send);
-    send->rtcp_ctx.nicesink = NULL;
   }
   cleanup_blocks (send);
 
@@ -623,12 +553,6 @@ transport_send_bin_class_init (TransportSendBinClass * klass)
           "The TransportStream for this sending bin",
           transport_stream_get_type (),
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_RTCP_MUX,
-      g_param_spec_boolean ("rtcp-mux", "RTCP Mux",
-          "Whether RTCP packets are muxed with RTP packets",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

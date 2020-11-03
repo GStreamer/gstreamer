@@ -66,17 +66,6 @@ gst_webrtc_rtp_sender_set_transport (GstWebRTCRTPSender * sender,
   GST_OBJECT_LOCK (sender);
   gst_object_replace ((GstObject **) & sender->transport,
       GST_OBJECT (transport));
-  GST_OBJECT_UNLOCK (sender);
-}
-
-void
-gst_webrtc_rtp_sender_set_rtcp_transport (GstWebRTCRTPSender * sender,
-    GstWebRTCDTLSTransport * transport)
-{
-  g_return_if_fail (GST_IS_WEBRTC_RTP_SENDER (sender));
-  g_return_if_fail (GST_IS_WEBRTC_DTLS_TRANSPORT (transport));
-
-  GST_OBJECT_LOCK (sender);
   gst_object_replace ((GstObject **) & sender->rtcp_transport,
       GST_OBJECT (transport));
   GST_OBJECT_UNLOCK (sender);
