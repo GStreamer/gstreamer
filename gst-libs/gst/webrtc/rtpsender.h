@@ -80,9 +80,6 @@ GST_WEBRTC_API
 GstWebRTCRTPSender *        gst_webrtc_rtp_sender_new                   (void);
 
 GST_WEBRTC_API
-void                        gst_webrtc_rtp_sender_set_transport         (GstWebRTCRTPSender * sender,
-                                                                         GstWebRTCDTLSTransport * transport);
-GST_WEBRTC_API
 void                        gst_webrtc_rtp_sender_set_priority          (GstWebRTCRTPSender *sender,
                                                                          GstWebRTCPriorityType priority);
 

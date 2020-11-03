@@ -66,9 +66,6 @@ struct _GstWebRTCRTPReceiverClass
 
 GST_WEBRTC_API
 GstWebRTCRTPReceiver *      gst_webrtc_rtp_receiver_new                 (void);
-GST_WEBRTC_API
-void                        gst_webrtc_rtp_receiver_set_transport       (GstWebRTCRTPReceiver * receiver,
-                                                                         GstWebRTCDTLSTransport * transport);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPReceiver, gst_object_unref)
 
