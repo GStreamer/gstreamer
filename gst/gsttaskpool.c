@@ -233,7 +233,7 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  *
  * Start the execution of a new thread from @pool.
  *
- * Returns: (transfer none) (nullable): a pointer that should be used
+ * Returns: (transfer full) (nullable): a pointer that should be used
  * for the gst_task_pool_join function. This pointer can be %NULL, you
  * must check @error to detect errors.
  */
@@ -263,7 +263,7 @@ not_supported:
 /**
  * gst_task_pool_join:
  * @pool: a #GstTaskPool
- * @id: the id
+ * @id: (transfer full): the id
  *
  * Join a task and/or return it to the pool. @id is the id obtained from
  * gst_task_pool_push().
