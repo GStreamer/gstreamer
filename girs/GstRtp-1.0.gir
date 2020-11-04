@@ -7473,6 +7473,18 @@ is no such metadata on @buffer.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gstrtpdefs">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/rtp/gstrtpdefs.h"
+           line="30">Provides common defines for the RTP library.</doc>
+    </docsection>
+    <docsection name="gstrtppayloads">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/rtp/gstrtppayloads.c"
+           line="23">The GstRTPPayloads helper functions makes it easy to deal with static and dynamic
+payloads. Its main purpose is to retrieve properties such as the default clock-rate
+and get session bandwidth information.</doc>
+    </docsection>
     <function name="rtcp_buffer_map"
               c:identifier="gst_rtcp_buffer_map"
               moved-to="RTCPBuffer.map">

@@ -67,8 +67,8 @@ namespace Gst {
 			return ret;
 		}
 
-		public static bool Register(string name, uint rank, Gst.TypeFindFunction func, Gst.Caps possible_caps) {
-			return Register (null, name, rank, func, null, possible_caps);
+		public static bool Register(string name, uint rank, Gst.TypeFindFunction func) {
+			return Register (null, name, rank, func, null, null);
 		}
 
 		public TypeFind(IntPtr raw) : base(raw) {}

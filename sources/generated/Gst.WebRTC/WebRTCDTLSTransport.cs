@@ -14,21 +14,19 @@ namespace Gst.WebRTC {
 		public WebRTCDTLSTransport (IntPtr raw) : base(raw) {}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_webrtc_dtls_transport_new(uint session_id, bool rtcp);
+		static extern IntPtr gst_webrtc_dtls_transport_new(uint session_id);
 
-		public WebRTCDTLSTransport (uint session_id, bool rtcp) : base (IntPtr.Zero)
+		public WebRTCDTLSTransport (uint session_id) : base (IntPtr.Zero)
 		{
 			if (GetType () != typeof (WebRTCDTLSTransport)) {
 				var vals = new List<GLib.Value> ();
 				var names = new List<string> ();
 				names.Add ("session_id");
 				vals.Add (new GLib.Value (session_id));
-				names.Add ("rtcp");
-				vals.Add (new GLib.Value (rtcp));
 				CreateNativeObject (names.ToArray (), vals.ToArray ());
 				return;
 			}
-			Raw = gst_webrtc_dtls_transport_new(session_id, rtcp);
+			Raw = gst_webrtc_dtls_transport_new(session_id);
 		}
 
 		[GLib.Property ("certificate")]
@@ -66,16 +64,6 @@ namespace Gst.WebRTC {
 			get {
 				GLib.Value val = GetProperty ("remote-certificate");
 				string ret = (string) val;
-				val.Dispose ();
-				return ret;
-			}
-		}
-
-		[GLib.Property ("rtcp")]
-		public bool Rtcp {
-			get {
-				GLib.Value val = GetProperty ("rtcp");
-				bool ret = (bool) val;
 				val.Dispose ();
 				return ret;
 			}
@@ -131,15 +119,6 @@ namespace Gst.WebRTC {
 				unsafe {
 					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("state"));
 					return (Gst.WebRTC.WebRTCDTLSTransportState) (*raw_ptr);
-				}
-			}
-		}
-
-		public bool IsRtcp {
-			get {
-				unsafe {
-					bool* raw_ptr = (bool*)(((byte*)Handle) + abi_info.GetFieldOffset("is_rtcp"));
-					return (*raw_ptr);
 				}
 			}
 		}
@@ -239,22 +218,14 @@ namespace Gst.WebRTC {
 							, -1
 							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCDTLSTransportState))) // state
 							, "transport"
-							, "is_rtcp"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_stateAlign), "state")
-							, 0
-							),
-						new GLib.AbiField("is_rtcp"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(bool)) // is_rtcp
-							, "state"
 							, "client"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_is_rtcpAlign), "is_rtcp")
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_stateAlign), "state")
 							, 0
 							),
 						new GLib.AbiField("client"
 							, -1
 							, (uint) Marshal.SizeOf(typeof(bool)) // client
-							, "is_rtcp"
+							, "state"
 							, "session_id"
 							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_clientAlign), "client")
 							, 0
@@ -302,13 +273,6 @@ namespace Gst.WebRTC {
 		{
 			sbyte f1;
 			private Gst.WebRTC.WebRTCDTLSTransportState state;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDTLSTransport_is_rtcpAlign
-		{
-			sbyte f1;
-			private bool is_rtcp;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

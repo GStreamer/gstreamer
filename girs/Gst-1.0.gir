@@ -1605,7 +1605,7 @@ direction, %NULL.</doc>
       <method name="get_by_interface" c:identifier="gst_bin_get_by_interface">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="4489">Looks for an element inside the bin that implements the given
+             line="4504">Looks for an element inside the bin that implements the given
 interface. If such an element is found, it returns the element.
 You can cast this element to the given interface afterwards.  If you want
 all elements that implement the interface, use
@@ -1616,7 +1616,7 @@ MT safe.  Caller owns returned reference.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="4502">A #GstElement inside the bin
+               line="4517">A #GstElement inside the bin
 implementing the interface</doc>
           <type name="Element" c:type="GstElement*"/>
         </return-value>
@@ -1624,13 +1624,13 @@ implementing the interface</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4491">a #GstBin</doc>
+                 line="4506">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
           <parameter name="iface" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4492">the #GType of an interface</doc>
+                 line="4507">the #GType of an interface</doc>
             <type name="GType" c:type="GType"/>
           </parameter>
         </parameters>
@@ -1638,7 +1638,7 @@ implementing the interface</doc>
       <method name="get_by_name" c:identifier="gst_bin_get_by_name">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="4390">Gets the element with the given name from a bin. This
+             line="4405">Gets the element with the given name from a bin. This
 function recurses into child bins.
 
 Returns %NULL if no element with the given name is found in the bin.
@@ -1648,7 +1648,7 @@ MT safe.  Caller owns returned reference.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="4402">the #GstElement with the given
+               line="4417">the #GstElement with the given
 name, or %NULL</doc>
           <type name="Element" c:type="GstElement*"/>
         </return-value>
@@ -1656,13 +1656,13 @@ name, or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4392">a #GstBin</doc>
+                 line="4407">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
           <parameter name="name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4393">the element name to search for</doc>
+                 line="4408">the element name to search for</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -1671,7 +1671,7 @@ name, or %NULL</doc>
               c:identifier="gst_bin_get_by_name_recurse_up">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="4433">Gets the element with the given name from this bin. If the
+             line="4448">Gets the element with the given name from this bin. If the
 element is not found, a recursion is performed on the parent bin.
 
 Returns %NULL if:
@@ -1682,7 +1682,7 @@ MT safe.  Caller owns returned reference.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="4446">the #GstElement with the given
+               line="4461">the #GstElement with the given
 name, or %NULL</doc>
           <type name="Element" c:type="GstElement*"/>
         </return-value>
@@ -1690,13 +1690,13 @@ name, or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4435">a #GstBin</doc>
+                 line="4450">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
           <parameter name="name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4436">the element name to search for</doc>
+                 line="4451">the element name to search for</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -1730,7 +1730,7 @@ MT safe.</doc>
               version="1.18">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="4587">Looks for all elements inside the bin with the given element factory name.
+             line="4602">Looks for all elements inside the bin with the given element factory name.
 The function recurses inside child bins. The iterator will yield a series of
 #GstElement that should be unreffed after use.
 
@@ -1739,7 +1739,7 @@ MT safe. Caller owns returned value.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="4598">a #GstIterator of #GstElement
+               line="4613">a #GstIterator of #GstElement
     for all elements in the bin with the given element factory name,
     or %NULL.</doc>
           <type name="Iterator" c:type="GstIterator*"/>
@@ -1748,13 +1748,13 @@ MT safe. Caller owns returned value.</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4589">a #GstBin</doc>
+                 line="4604">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
           <parameter name="factory_name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4590">the name of the #GstElementFactory</doc>
+                 line="4605">the name of the #GstElementFactory</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -1763,7 +1763,7 @@ MT safe. Caller owns returned value.</doc>
               c:identifier="gst_bin_iterate_all_by_interface">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="4536">Looks for all elements inside the bin that implements the given
+             line="4551">Looks for all elements inside the bin that implements the given
 interface. You can safely cast all returned elements to the given interface.
 The function recurses inside child bins. The iterator will yield a series
 of #GstElement that should be unreffed after use.
@@ -1773,7 +1773,7 @@ MT safe.  Caller owns returned value.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="4548">a #GstIterator of #GstElement
+               line="4563">a #GstIterator of #GstElement
     for all elements in the bin implementing the given interface,
     or %NULL</doc>
           <type name="Iterator" c:type="GstIterator*"/>
@@ -1782,13 +1782,13 @@ MT safe.  Caller owns returned value.</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4538">a #GstBin</doc>
+                 line="4553">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
           <parameter name="iface" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="4539">the #GType of an interface</doc>
+                 line="4554">the #GType of an interface</doc>
             <type name="GType" c:type="GType"/>
           </parameter>
         </parameters>
@@ -1796,14 +1796,14 @@ MT safe.  Caller owns returned value.</doc>
       <method name="iterate_elements" c:identifier="gst_bin_iterate_elements">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="1899">Gets an iterator for the elements in this bin.
+             line="1914">Gets an iterator for the elements in this bin.
 
 MT safe.  Caller owns returned value.</doc>
         <source-position filename="gst/gstbin.h" line="223"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="1907">a #GstIterator of #GstElement,
+               line="1922">a #GstIterator of #GstElement,
 or %NULL</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1811,7 +1811,7 @@ or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="1901">a #GstBin</doc>
+                 line="1916">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
         </parameters>
@@ -1819,7 +1819,7 @@ or %NULL</doc>
       <method name="iterate_recurse" c:identifier="gst_bin_iterate_recurse">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="1939">Gets an iterator for the elements in this bin.
+             line="1954">Gets an iterator for the elements in this bin.
 This iterator recurses into GstBin children.
 
 MT safe.  Caller owns returned value.</doc>
@@ -1827,7 +1827,7 @@ MT safe.  Caller owns returned value.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="1948">a #GstIterator of #GstElement,
+               line="1963">a #GstIterator of #GstElement,
 or %NULL</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1835,7 +1835,7 @@ or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="1941">a #GstBin</doc>
+                 line="1956">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
         </parameters>
@@ -1843,7 +1843,7 @@ or %NULL</doc>
       <method name="iterate_sinks" c:identifier="gst_bin_iterate_sinks">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="1997">Gets an iterator for all elements in the bin that have the
+             line="2012">Gets an iterator for all elements in the bin that have the
 #GST_ELEMENT_FLAG_SINK flag set.
 
 MT safe.  Caller owns returned value.</doc>
@@ -1851,7 +1851,7 @@ MT safe.  Caller owns returned value.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="2006">a #GstIterator of #GstElement,
+               line="2021">a #GstIterator of #GstElement,
 or %NULL</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1859,7 +1859,7 @@ or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="1999">a #GstBin</doc>
+                 line="2014">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
         </parameters>
@@ -1867,7 +1867,7 @@ or %NULL</doc>
       <method name="iterate_sorted" c:identifier="gst_bin_iterate_sorted">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="2447">Gets an iterator for the elements in this bin in topologically
+             line="2462">Gets an iterator for the elements in this bin in topologically
 sorted order. This means that the elements are returned from
 the most downstream elements (sinks) to the sources.
 
@@ -1879,7 +1879,7 @@ MT safe.  Caller owns returned value.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="2460">a #GstIterator of #GstElement,
+               line="2475">a #GstIterator of #GstElement,
 or %NULL</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1887,7 +1887,7 @@ or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="2449">a #GstBin</doc>
+                 line="2464">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
         </parameters>
@@ -1895,7 +1895,7 @@ or %NULL</doc>
       <method name="iterate_sources" c:identifier="gst_bin_iterate_sources">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="2058">Gets an iterator for all elements in the bin that have the
+             line="2073">Gets an iterator for all elements in the bin that have the
 #GST_ELEMENT_FLAG_SOURCE flag set.
 
 MT safe.  Caller owns returned value.</doc>
@@ -1903,7 +1903,7 @@ MT safe.  Caller owns returned value.</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="2067">a #GstIterator of #GstElement,
+               line="2082">a #GstIterator of #GstElement,
 or %NULL</doc>
           <type name="Iterator" c:type="GstIterator*"/>
         </return-value>
@@ -1911,7 +1911,7 @@ or %NULL</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="2060">a #GstBin</doc>
+                 line="2075">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
         </parameters>
@@ -1920,7 +1920,7 @@ or %NULL</doc>
               c:identifier="gst_bin_recalculate_latency">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="2730">Query @bin for the current latency using and reconfigures this latency to all the
+             line="2745">Query @bin for the current latency using and reconfigures this latency to all the
 elements with a LATENCY event.
 
 This method is typically called on the pipeline when a #GST_MESSAGE_LATENCY
@@ -1932,14 +1932,14 @@ calculations will be performed.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="2743">%TRUE if the latency could be queried and reconfigured.</doc>
+               line="2758">%TRUE if the latency could be queried and reconfigured.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="2732">a #GstBin</doc>
+                 line="2747">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
         </parameters>
@@ -1947,7 +1947,7 @@ calculations will be performed.</doc>
       <method name="remove" c:identifier="gst_bin_remove">
         <doc xml:space="preserve"
              filename="gst/gstbin.c"
-             line="1846">Removes the element from the bin, unparenting it as well.
+             line="1861">Removes the element from the bin, unparenting it as well.
 Unparenting the element means that the element will be dereferenced,
 so if the bin holds the only reference to the element, the element
 will be freed in the process of removing it from the bin.  If you
@@ -1962,7 +1962,7 @@ MT safe.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstbin.c"
-               line="1863">%TRUE if the element could be removed, %FALSE if
+               line="1878">%TRUE if the element could be removed, %FALSE if
 the bin does not want to remove the element.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
@@ -1970,13 +1970,13 @@ the bin does not want to remove the element.</doc>
           <instance-parameter name="bin" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="1848">a #GstBin</doc>
+                 line="1863">a #GstBin</doc>
             <type name="Bin" c:type="GstBin*"/>
           </instance-parameter>
           <parameter name="element" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstbin.c"
-                 line="1849">the #GstElement to remove</doc>
+                 line="1864">the #GstElement to remove</doc>
             <type name="Element" c:type="GstElement*"/>
           </parameter>
         </parameters>
@@ -5561,6 +5561,7 @@ The supported options by @pool can be retrieved with gst_buffer_pool_get_options
                      direction="out"
                      caller-allocates="0"
                      transfer-ownership="none"
+                     nullable="1"
                      optional="1"
                      allow-none="1">
             <doc xml:space="preserve"
@@ -5588,7 +5589,7 @@ The supported options by @pool can be retrieved with gst_buffer_pool_get_options
              line="937">Parse an available @config and get the option at @index of the options API
 array.</doc>
         <source-position filename="gst/gstbufferpool.h" line="236"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstbufferpool.c"
                line="945">a #gchar of the option at @index.</doc>
@@ -5632,6 +5633,7 @@ array.</doc>
                      direction="out"
                      caller-allocates="0"
                      transfer-ownership="none"
+                     nullable="1"
                      optional="1"
                      allow-none="1">
             <doc xml:space="preserve"
@@ -5786,7 +5788,10 @@ used values.</doc>
                  line="819">a #GstBufferPool configuration</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
-          <parameter name="caps" transfer-ownership="none">
+          <parameter name="caps"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gstbufferpool.c"
                  line="820">caps for the buffers</doc>
@@ -5839,7 +5844,10 @@ padding.</doc>
                  line="1059">a #GstBufferPool configuration</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
-          <parameter name="caps" transfer-ownership="none">
+          <parameter name="caps"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gstbufferpool.c"
                  line="1060">the excepted caps of buffers</doc>
@@ -15253,7 +15261,7 @@ so on.
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="132"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="661">the newly created #GstDateTime</doc>
@@ -15368,7 +15376,7 @@ or %NULL on error</doc>
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="103"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="421">the newly created #GstDateTime</doc>
@@ -15391,7 +15399,7 @@ Free-function: gst_date_time_unref</doc>
              line="452">Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
 @usecs. The #GstDateTime is in the local timezone.</doc>
         <source-position filename="gst/gstdatetime.h" line="109"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="459">a newly created #GstDateTime</doc>
@@ -15415,7 +15423,7 @@ Free-function: gst_date_time_unref</doc>
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="106"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="441">the newly created #GstDateTime</doc>
@@ -15438,7 +15446,7 @@ Free-function: gst_date_time_unref</doc>
              line="476">Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
 @usecs. The #GstDateTime is in UTC.</doc>
         <source-position filename="gst/gstdatetime.h" line="112"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="483">a newly created #GstDateTime</doc>
@@ -15475,7 +15483,7 @@ case @minute and @seconds should also be -1.
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="115"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="549">the newly created #GstDateTime</doc>
@@ -15562,7 +15570,7 @@ in the local timezone.
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="122"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="354">the newly created #GstDateTime</doc>
@@ -15590,7 +15598,7 @@ if @month == -1, then #GstDateTime will created only for @year.
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="125"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="377">the newly created #GstDateTime</doc>
@@ -15627,7 +15635,7 @@ so on.
 
 Free-function: gst_date_time_unref</doc>
         <source-position filename="gst/gstdatetime.h" line="128"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdatetime.c"
                line="404">the newly created #GstDateTime</doc>
@@ -17102,12 +17110,12 @@ The basic use pattern of a device monitor is as follows:
                    version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="791">Create a new #GstDeviceMonitor</doc>
+             line="792">Create a new #GstDeviceMonitor</doc>
         <source-position filename="gst/gstdevicemonitor.h" line="82"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gstdevicemonitor.c"
-               line="796">a new device monitor.</doc>
+               line="797">a new device monitor.</doc>
           <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
         </return-value>
       </constructor>
@@ -17116,7 +17124,7 @@ The basic use pattern of a device monitor is as follows:
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="620">Adds a filter for which #GstDevice will be monitored, any device that matches
+             line="621">Adds a filter for which #GstDevice will be monitored, any device that matches
 all these classes and the #GstCaps will be returned.
 
 If this function is called multiple times to add more filters, each will be
@@ -17131,7 +17139,7 @@ Filters must be added before the #GstDeviceMonitor is started.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstdevicemonitor.c"
-               line="638">The id of the new filter or 0 if no provider matched the filter's
+               line="639">The id of the new filter or 0 if no provider matched the filter's
  classes.</doc>
           <type name="guint" c:type="guint"/>
         </return-value>
@@ -17139,7 +17147,7 @@ Filters must be added before the #GstDeviceMonitor is started.</doc>
           <instance-parameter name="monitor" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="622">a device monitor</doc>
+                 line="623">a device monitor</doc>
             <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
           </instance-parameter>
           <parameter name="classes"
@@ -17148,7 +17156,7 @@ Filters must be added before the #GstDeviceMonitor is started.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="623">device classes to use as filter or %NULL for any class</doc>
+                 line="624">device classes to use as filter or %NULL for any class</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="caps"
@@ -17157,7 +17165,7 @@ Filters must be added before the #GstDeviceMonitor is started.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="624">the #GstCaps to filter or %NULL for ANY</doc>
+                 line="625">the #GstCaps to filter or %NULL for ANY</doc>
             <type name="Caps" c:type="GstCaps*"/>
           </parameter>
         </parameters>
@@ -17167,19 +17175,19 @@ Filters must be added before the #GstDeviceMonitor is started.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="813">Gets the #GstBus of this #GstDeviceMonitor</doc>
+             line="814">Gets the #GstBus of this #GstDeviceMonitor</doc>
         <source-position filename="gst/gstdevicemonitor.h" line="85"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gstdevicemonitor.c"
-               line="819">a #GstBus</doc>
+               line="820">a #GstBus</doc>
           <type name="Bus" c:type="GstBus*"/>
         </return-value>
         <parameters>
           <instance-parameter name="monitor" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="815">a #GstDeviceProvider</doc>
+                 line="816">a #GstDeviceProvider</doc>
             <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
           </instance-parameter>
         </parameters>
@@ -17215,14 +17223,14 @@ probe the hardware if the monitor is not currently started.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="831">Get a list of the currently selected device provider factories.
+             line="832">Get a list of the currently selected device provider factories.
 
 This</doc>
         <source-position filename="gst/gstdevicemonitor.h" line="106"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gstdevicemonitor.c"
-               line="839">
+               line="840">
     A list of device provider factory names that are currently being
     monitored by @monitor or %NULL when nothing is being monitored.</doc>
           <array c:type="gchar**">
@@ -17233,7 +17241,7 @@ This</doc>
           <instance-parameter name="monitor" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="833">a #GstDeviceMonitor</doc>
+                 line="834">a #GstDeviceMonitor</doc>
             <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
           </instance-parameter>
         </parameters>
@@ -17243,20 +17251,20 @@ This</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="897">Get if @monitor is currently showing all devices, even those from hidden
+             line="898">Get if @monitor is currently showing all devices, even those from hidden
 providers.</doc>
         <source-position filename="gst/gstdevicemonitor.h" line="112"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstdevicemonitor.c"
-               line="904">%TRUE when all devices will be shown.</doc>
+               line="905">%TRUE when all devices will be shown.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="monitor" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="899">a #GstDeviceMonitor</doc>
+                 line="900">a #GstDeviceMonitor</doc>
             <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
           </instance-parameter>
         </parameters>
@@ -17266,26 +17274,26 @@ providers.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="724">Removes a filter from the #GstDeviceMonitor using the id that was returned
+             line="725">Removes a filter from the #GstDeviceMonitor using the id that was returned
 by gst_device_monitor_add_filter().</doc>
         <source-position filename="gst/gstdevicemonitor.h" line="103"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstdevicemonitor.c"
-               line="732">%TRUE of the filter id was valid, %FALSE otherwise</doc>
+               line="733">%TRUE of the filter id was valid, %FALSE otherwise</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="monitor" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="726">a device monitor</doc>
+                 line="727">a device monitor</doc>
             <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
           </instance-parameter>
           <parameter name="filter_id" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="727">the id of the filter</doc>
+                 line="728">the id of the filter</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
@@ -17295,7 +17303,7 @@ by gst_device_monitor_add_filter().</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst/gstdevicemonitor.c"
-             line="876">Set if all devices should be visible, even those devices from hidden
+             line="877">Set if all devices should be visible, even those devices from hidden
 providers. Setting @show_all to true might show some devices multiple times.</doc>
         <source-position filename="gst/gstdevicemonitor.h" line="109"/>
         <return-value transfer-ownership="none">
@@ -17305,13 +17313,13 @@ providers. Setting @show_all to true might show some devices multiple times.</do
           <instance-parameter name="monitor" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="878">a #GstDeviceMonitor</doc>
+                 line="879">a #GstDeviceMonitor</doc>
             <type name="DeviceMonitor" c:type="GstDeviceMonitor*"/>
           </instance-parameter>
           <parameter name="show_all" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdevicemonitor.c"
-                 line="879">show all devices</doc>
+                 line="880">show all devices</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
@@ -17485,7 +17493,7 @@ from all relevant providers.</doc>
       <virtual-method name="start" invoker="start" version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="434">Starts providering the devices. This will cause #GST_MESSAGE_DEVICE_ADDED
+             line="436">Starts providering the devices. This will cause #GST_MESSAGE_DEVICE_ADDED
 and #GST_MESSAGE_DEVICE_REMOVED messages to be posted on the provider's bus
 when devices are added or removed from the system.
 
@@ -17501,14 +17509,14 @@ return the same objects that have been received from the
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="451">%TRUE if the device providering could be started</doc>
+               line="453">%TRUE if the device providering could be started</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="436">A #GstDeviceProvider</doc>
+                 line="438">A #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17516,7 +17524,7 @@ return the same objects that have been received from the
       <virtual-method name="stop" invoker="stop" version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="510">Decreases the use-count by one. If the use count reaches zero, this
+             line="512">Decreases the use-count by one. If the use count reaches zero, this
 #GstDeviceProvider will stop providering the devices. This needs to be
 called the same number of times that gst_device_provider_start() was called.</doc>
         <source-position filename="gst/gstdeviceprovider.h" line="94"/>
@@ -17527,7 +17535,7 @@ called the same number of times that gst_device_provider_start() was called.</do
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="512">A #GstDeviceProvider</doc>
+                 line="514">A #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17549,7 +17557,7 @@ called the same number of times that gst_device_provider_start() was called.</do
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="609">Posts a message on the provider's #GstBus to inform applications that
+             line="611">Posts a message on the provider's #GstBus to inform applications that
 a new device has been added.
 
 This is for use by subclasses.
@@ -17564,13 +17572,13 @@ will be removed (see gst_object_ref_sink()).</doc>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="611">a #GstDeviceProvider</doc>
+                 line="613">a #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
           <parameter name="device" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="612">a #GstDevice that has been added</doc>
+                 line="614">a #GstDevice that has been added</doc>
             <type name="Device" c:type="GstDevice*"/>
           </parameter>
         </parameters>
@@ -17580,12 +17588,12 @@ will be removed (see gst_object_ref_sink()).</doc>
               version="1.16">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="808">This function is used when @changed_device was modified into its new form
+             line="810">This function is used when @changed_device was modified into its new form
 @device. This will post a `DEVICE_CHANGED` message on the bus to let
 the application know that the device was modified. #GstDevice is immutable
 for MT. safety purposes so this is an "atomic" way of letting the application
 know when a device was modified.</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="167"/>
+        <source-position filename="gst/gstdeviceprovider.h" line="170"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -17596,13 +17604,13 @@ know when a device was modified.</doc>
           <parameter name="device" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="810">the new version of @changed_device</doc>
+                 line="812">the new version of @changed_device</doc>
             <type name="Device" c:type="GstDevice*"/>
           </parameter>
           <parameter name="changed_device" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="811">the old version of the device that has been updated</doc>
+                 line="813">the old version of the device that has been updated</doc>
             <type name="Device" c:type="GstDevice*"/>
           </parameter>
         </parameters>
@@ -17612,7 +17620,7 @@ know when a device was modified.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="652">Posts a message on the provider's #GstBus to inform applications that
+             line="654">Posts a message on the provider's #GstBus to inform applications that
 a device has been removed.
 
 This is for use by subclasses.</doc>
@@ -17624,13 +17632,13 @@ This is for use by subclasses.</doc>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="654">a #GstDeviceProvider</doc>
+                 line="656">a #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
           <parameter name="device" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="655">a #GstDevice that has been removed</doc>
+                 line="657">a #GstDevice that has been removed</doc>
             <type name="Device" c:type="GstDevice*"/>
           </parameter>
         </parameters>
@@ -17640,19 +17648,19 @@ This is for use by subclasses.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="591">Gets the #GstBus of this #GstDeviceProvider</doc>
+             line="593">Gets the #GstBus of this #GstDeviceProvider</doc>
         <source-position filename="gst/gstdeviceprovider.h" line="120"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="597">a #GstBus</doc>
+               line="599">a #GstBus</doc>
           <type name="Bus" c:type="GstBus*"/>
         </return-value>
         <parameters>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="593">a #GstDeviceProvider</doc>
+                 line="595">a #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17662,7 +17670,7 @@ This is for use by subclasses.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="385">Gets a list of devices that this provider understands. This may actually
+             line="387">Gets a list of devices that this provider understands. This may actually
 probe the hardware if the provider is not currently started.
 
 If the provider has been started, this will returned the same #GstDevice
@@ -17671,7 +17679,7 @@ objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="395">a #GList of
+               line="397">a #GList of
   #GstDevice</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="Device"/>
@@ -17681,7 +17689,7 @@ objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="387">A #GstDeviceProvider</doc>
+                 line="389">A #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17691,12 +17699,12 @@ objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="549">Retrieves the factory that was used to create this device provider.</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="174"/>
-        <return-value transfer-ownership="none">
+             line="551">Retrieves the factory that was used to create this device provider.</doc>
+        <source-position filename="gst/gstdeviceprovider.h" line="177"/>
+        <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="555">the #GstDeviceProviderFactory used for
+               line="557">the #GstDeviceProviderFactory used for
     creating this device provider. no refcounting is needed.</doc>
           <type name="DeviceProviderFactory"
                 c:type="GstDeviceProviderFactory*"/>
@@ -17705,7 +17713,7 @@ objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="551">a #GstDeviceProvider to request the device provider factory of.</doc>
+                 line="553">a #GstDeviceProvider to request the device provider factory of.</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17715,13 +17723,13 @@ objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.</doc
               version="1.6">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="688">Get the provider factory names of the #GstDeviceProvider instances that
+             line="690">Get the provider factory names of the #GstDeviceProvider instances that
 are hidden by @provider.</doc>
         <source-position filename="gst/gstdeviceprovider.h" line="129"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="695">
+               line="697">
   a list of hidden providers factory names or %NULL when
   nothing is hidden by @provider. Free with g_strfreev.</doc>
           <array c:type="gchar**">
@@ -17732,7 +17740,7 @@ are hidden by @provider.</doc>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="690">a #GstDeviceProvider</doc>
+                 line="692">a #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17742,25 +17750,25 @@ are hidden by @provider.</doc>
               version="1.14">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="362">Get metadata with @key in @provider.</doc>
+             line="364">Get metadata with @key in @provider.</doc>
         <source-position filename="gst/gstdeviceprovider.h" line="139"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="369">the metadata for @key.</doc>
+               line="371">the metadata for @key.</doc>
           <type name="utf8" c:type="const gchar*"/>
         </return-value>
         <parameters>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="364">provider to get metadata for</doc>
+                 line="366">provider to get metadata for</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
           <parameter name="key" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="365">the key to get</doc>
+                 line="367">the key to get</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -17770,7 +17778,7 @@ are hidden by @provider.</doc>
               version="1.6">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="727">Make @provider hide the devices from the factory with @name.
+             line="729">Make @provider hide the devices from the factory with @name.
 
 This function is used when @provider will also provide the devices reported
 by provider factory @name. A monitor should stop monitoring the
@@ -17783,15 +17791,34 @@ device provider with @name to avoid duplicate devices.</doc>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="729">a #GstDeviceProvider</doc>
+                 line="731">a #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
           <parameter name="name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="730">a provider factory name</doc>
+                 line="732">a provider factory name</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="is_started"
+              c:identifier="gst_device_provider_is_started"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst/gstdeviceprovider.c"
+             line="860">This function can be used to know if the @provider was successfully started.</doc>
+        <source-position filename="gst/gstdeviceprovider.h" line="143"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="provider" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst/gstdeviceprovider.c"
+                 line="862">a #GstDeviceProvider</doc>
+            <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="start"
@@ -17799,7 +17826,7 @@ device provider with @name to avoid duplicate devices.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="434">Starts providering the devices. This will cause #GST_MESSAGE_DEVICE_ADDED
+             line="436">Starts providering the devices. This will cause #GST_MESSAGE_DEVICE_ADDED
 and #GST_MESSAGE_DEVICE_REMOVED messages to be posted on the provider's bus
 when devices are added or removed from the system.
 
@@ -17815,14 +17842,14 @@ return the same objects that have been received from the
         <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="451">%TRUE if the device providering could be started</doc>
+               line="453">%TRUE if the device providering could be started</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="436">A #GstDeviceProvider</doc>
+                 line="438">A #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17832,7 +17859,7 @@ return the same objects that have been received from the
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="510">Decreases the use-count by one. If the use count reaches zero, this
+             line="512">Decreases the use-count by one. If the use count reaches zero, this
 #GstDeviceProvider will stop providering the devices. This needs to be
 called the same number of times that gst_device_provider_start() was called.</doc>
         <source-position filename="gst/gstdeviceprovider.h" line="114"/>
@@ -17843,7 +17870,7 @@ called the same number of times that gst_device_provider_start() was called.</do
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="512">A #GstDeviceProvider</doc>
+                 line="514">A #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
         </parameters>
@@ -17853,7 +17880,7 @@ called the same number of times that gst_device_provider_start() was called.</do
               version="1.6">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="766">Make @provider unhide the devices from factory @name.
+             line="768">Make @provider unhide the devices from factory @name.
 
 This function is used when @provider will no longer provide the devices
 reported by provider factory @name. A monitor should start
@@ -17867,13 +17894,13 @@ all devices again.</doc>
           <instance-parameter name="provider" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="768">a #GstDeviceProvider</doc>
+                 line="770">a #GstDeviceProvider</doc>
             <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
           </instance-parameter>
           <parameter name="name" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="769">a provider factory name</doc>
+                 line="771">a provider factory name</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -17963,14 +17990,14 @@ all devices again.</doc>
           <return-value transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="451">%TRUE if the device providering could be started</doc>
+                 line="453">%TRUE if the device providering could be started</doc>
             <type name="gboolean" c:type="gboolean"/>
           </return-value>
           <parameters>
             <parameter name="provider" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst/gstdeviceprovider.c"
-                   line="436">A #GstDeviceProvider</doc>
+                   line="438">A #GstDeviceProvider</doc>
               <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
             </parameter>
           </parameters>
@@ -17986,7 +18013,7 @@ all devices again.</doc>
             <parameter name="provider" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst/gstdeviceprovider.c"
-                   line="512">A #GstDeviceProvider</doc>
+                   line="514">A #GstDeviceProvider</doc>
               <type name="DeviceProvider" c:type="GstDeviceProvider*"/>
             </parameter>
           </parameters>
@@ -18005,8 +18032,8 @@ all devices again.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="198">Set @key with @value as metadata in @klass.</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="157"/>
+             line="200">Set @key with @value as metadata in @klass.</doc>
+        <source-position filename="gst/gstdeviceprovider.h" line="160"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -18014,19 +18041,19 @@ all devices again.</doc>
           <instance-parameter name="klass" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="200">class to set metadata for</doc>
+                 line="202">class to set metadata for</doc>
             <type name="DeviceProviderClass" c:type="GstDeviceProviderClass*"/>
           </instance-parameter>
           <parameter name="key" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="201">the key to set</doc>
+                 line="203">the key to set</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="value" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="202">the value to set</doc>
+                 line="204">the value to set</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -18036,13 +18063,13 @@ all devices again.</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="220">Set @key with @value as metadata in @klass.
+             line="222">Set @key with @value as metadata in @klass.
 
 Same as gst_device_provider_class_add_metadata(), but @value must be a static string
 or an inlined string, as it will not be copied. (GStreamer plugins will
 be made resident once loaded, so this function can be used even from
 dynamically loaded plugins.)</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="160"/>
+        <source-position filename="gst/gstdeviceprovider.h" line="163"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -18050,19 +18077,19 @@ dynamically loaded plugins.)</doc>
           <instance-parameter name="klass" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="222">class to set metadata for</doc>
+                 line="224">class to set metadata for</doc>
             <type name="DeviceProviderClass" c:type="GstDeviceProviderClass*"/>
           </instance-parameter>
           <parameter name="key" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="223">the key to set</doc>
+                 line="225">the key to set</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="value" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="224">the value to set</doc>
+                 line="226">the value to set</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -18072,25 +18099,25 @@ dynamically loaded plugins.)</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="341">Get metadata with @key in @klass.</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="163"/>
+             line="343">Get metadata with @key in @klass.</doc>
+        <source-position filename="gst/gstdeviceprovider.h" line="166"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstdeviceprovider.c"
-               line="348">the metadata for @key.</doc>
+               line="350">the metadata for @key.</doc>
           <type name="utf8" c:type="const gchar*"/>
         </return-value>
         <parameters>
           <instance-parameter name="klass" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="343">class to get metadata for</doc>
+                 line="345">class to get metadata for</doc>
             <type name="DeviceProviderClass" c:type="GstDeviceProviderClass*"/>
           </instance-parameter>
           <parameter name="key" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="344">the key to get</doc>
+                 line="346">the key to get</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -18100,10 +18127,10 @@ dynamically loaded plugins.)</doc>
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="250">Sets the detailed information for a #GstDeviceProviderClass.
+             line="252">Sets the detailed information for a #GstDeviceProviderClass.
 
 &gt; This function is for use in _class_init functions only.</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="145"/>
+        <source-position filename="gst/gstdeviceprovider.h" line="148"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -18111,19 +18138,19 @@ dynamically loaded plugins.)</doc>
           <instance-parameter name="klass" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="252">class to set metadata for</doc>
+                 line="254">class to set metadata for</doc>
             <type name="DeviceProviderClass" c:type="GstDeviceProviderClass*"/>
           </instance-parameter>
           <parameter name="longname" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="253">The long English name of the device provider. E.g. "File Sink"</doc>
+                 line="255">The long English name of the device provider. E.g. "File Sink"</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="classification" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="254">String describing the type of device provider, as an
+                 line="256">String describing the type of device provider, as an
  unordered list separated with slashes ('/'). See draft-klass.txt of the
  design docs
 for more details and common types. E.g: "Sink/File"</doc>
@@ -18132,14 +18159,14 @@ for more details and common types. E.g: "Sink/File"</doc>
           <parameter name="description" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="258">Sentence describing the purpose of the device provider.
+                 line="260">Sentence describing the purpose of the device provider.
 E.g: "Write stream to a file"</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="author" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="260">Name and contact details of the author(s). Use \n to separate
+                 line="262">Name and contact details of the author(s). Use \n to separate
 multiple author metadata. E.g: "Joe Bloggs &amp;lt;joe.blogs at foo.com&amp;gt;"</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -18150,7 +18177,7 @@ multiple author metadata. E.g: "Joe Bloggs &amp;lt;joe.blogs at foo.com&amp;gt;"
               version="1.4">
         <doc xml:space="preserve"
              filename="gst/gstdeviceprovider.c"
-             line="287">Sets the detailed information for a #GstDeviceProviderClass.
+             line="289">Sets the detailed information for a #GstDeviceProviderClass.
 
 &gt; This function is for use in _class_init functions only.
 
@@ -18158,7 +18185,7 @@ Same as gst_device_provider_class_set_metadata(), but @longname, @classification
 @description, and @author must be static strings or inlined strings, as
 they will not be copied. (GStreamer plugins will be made resident once
 loaded, so this function can be used even from dynamically loaded plugins.)</doc>
-        <source-position filename="gst/gstdeviceprovider.h" line="151"/>
+        <source-position filename="gst/gstdeviceprovider.h" line="154"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -18166,19 +18193,19 @@ loaded, so this function can be used even from dynamically loaded plugins.)</doc
           <instance-parameter name="klass" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="289">class to set metadata for</doc>
+                 line="291">class to set metadata for</doc>
             <type name="DeviceProviderClass" c:type="GstDeviceProviderClass*"/>
           </instance-parameter>
           <parameter name="longname" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="290">The long English name of the element. E.g. "File Sink"</doc>
+                 line="292">The long English name of the element. E.g. "File Sink"</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="classification" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="291">String describing the type of element, as
+                 line="293">String describing the type of element, as
 an unordered list separated with slashes ('/'). See draft-klass.txt of the
 design docs for more details and common types. E.g: "Sink/File"</doc>
             <type name="utf8" c:type="const gchar*"/>
@@ -18186,14 +18213,14 @@ design docs for more details and common types. E.g: "Sink/File"</doc>
           <parameter name="description" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="294">Sentence describing the purpose of the
+                 line="296">Sentence describing the purpose of the
 element.  E.g: "Write stream to a file"</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
           <parameter name="author" transfer-ownership="full">
             <doc xml:space="preserve"
                  filename="gst/gstdeviceprovider.c"
-                 line="296">Name and contact details of the author(s). Use \n
+                 line="298">Name and contact details of the author(s). Use \n
 to separate multiple author metadata. E.g: "Joe Bloggs &amp;lt;joe.blogs at
 foo.com&amp;gt;"</doc>
             <type name="utf8" c:type="const gchar*"/>
@@ -19610,7 +19637,7 @@ specific situations.</doc>
              filename="gst/gsturi.c"
              line="612">Creates an element for handling the given URI.</doc>
         <source-position filename="gst/gsturi.h" line="161"/>
-        <return-value transfer-ownership="none" nullable="1">
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve"
                filename="gst/gsturi.c"
                line="621">a new element or %NULL if none
@@ -20799,7 +20826,7 @@ Pads from compatible templates can be linked together.</doc>
 
 MT safe.</doc>
         <source-position filename="gst/gstelement.h" line="886"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstelement.c"
                line="3634">A #GstContext or NULL</doc>
@@ -28735,6 +28762,24 @@ is unlinked and links to the new target are established. if @newtarget is
       <source-position filename="gst/gstsample.h" line="37"/>
       <parameters>
         <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_SHARED_TASK_POOL"
+                    c:identifier="GST_IS_SHARED_TASK_POOL"
+                    introspectable="0">
+      <source-position filename="gst/gsttaskpool.h" line="128"/>
+      <parameters>
+        <parameter name="pool">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_SHARED_TASK_POOL_CLASS"
+                    c:identifier="GST_IS_SHARED_TASK_POOL_CLASS"
+                    introspectable="0">
+      <source-position filename="gst/gsttaskpool.h" line="130"/>
+      <parameters>
+        <parameter name="pclass">
         </parameter>
       </parameters>
     </function-macro>
@@ -47144,7 +47189,7 @@ stored. This is the case when the registry is getting rebuilt.</doc>
              filename="gst/gstplugin.c"
              line="982">get the filename of the plugin</doc>
         <source-position filename="gst/gstplugin.h" line="345"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstplugin.c"
                line="988">the filename of the plugin</doc>
@@ -54492,7 +54537,7 @@ If found, plugin is reffed.</doc>
              filename="gst/gstregistry.c"
              line="1014">Find a #GstPluginFeature with @name in @registry.</doc>
         <source-position filename="gst/gstregistry.h" line="118"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gstregistry.c"
                line="1021">a #GstPluginFeature with its refcount incremented,
@@ -54904,6 +54949,33 @@ Can be used as a default value in variables used to store seqnum.</doc>
       <source-position filename="gst/gstutils.h" line="112"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <function-macro name="SHARED_TASK_POOL"
+                    c:identifier="GST_SHARED_TASK_POOL"
+                    introspectable="0">
+      <source-position filename="gst/gsttaskpool.h" line="127"/>
+      <parameters>
+        <parameter name="pool">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="SHARED_TASK_POOL_CLASS"
+                    c:identifier="GST_SHARED_TASK_POOL_CLASS"
+                    introspectable="0">
+      <source-position filename="gst/gsttaskpool.h" line="129"/>
+      <parameters>
+        <parameter name="pclass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="SHARED_TASK_POOL_GET_CLASS"
+                    c:identifier="GST_SHARED_TASK_POOL_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst/gsttaskpool.h" line="131"/>
+      <parameters>
+        <parameter name="pool">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="STATE" c:identifier="GST_STATE" introspectable="0">
       <doc xml:space="preserve"
            filename="gst/gstelement.h"
@@ -57124,6 +57196,119 @@ values of the seek flags.</doc>
                                        possible (Since: 1.6)</doc>
       </member>
     </bitfield>
+    <class name="SharedTaskPool"
+           c:symbol-prefix="shared_task_pool"
+           c:type="GstSharedTaskPool"
+           version="1.20"
+           parent="TaskPool"
+           glib:type-name="GstSharedTaskPool"
+           glib:get-type="gst_shared_task_pool_get_type"
+           glib:type-struct="SharedTaskPoolClass">
+      <doc xml:space="preserve"
+           filename="gst/gsttaskpool.h"
+           line="133">The #GstSharedTaskPool object.</doc>
+      <source-position filename="gst/gsttaskpool.h" line="161"/>
+      <constructor name="new"
+                   c:identifier="gst_shared_task_pool_new"
+                   version="1.20">
+        <doc xml:space="preserve"
+             filename="gst/gsttaskpool.c"
+             line="525">Create a new shared task pool. The shared task pool will queue tasks on
+a maximum number of threads, 1 by default.
+
+Do not use a #GstSharedTaskPool to manage potentially inter-dependent tasks such
+as pad tasks, as having one task waiting on another to return before returning
+would cause obvious deadlocks if they happen to share the same thread.</doc>
+        <source-position filename="gst/gsttaskpool.h" line="173"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve"
+               filename="gst/gsttaskpool.c"
+               line="535">a new #GstSharedTaskPool. gst_object_unref() after usage.</doc>
+          <type name="TaskPool" c:type="GstTaskPool*"/>
+        </return-value>
+      </constructor>
+      <method name="get_max_threads"
+              c:identifier="gst_shared_task_pool_get_max_threads"
+              version="1.20">
+        <source-position filename="gst/gsttaskpool.h" line="170"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst/gsttaskpool.c"
+               line="508">the maximum number of threads @pool is configured to spawn</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="506">a #GstSharedTaskPool</doc>
+            <type name="SharedTaskPool" c:type="GstSharedTaskPool*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_max_threads"
+              c:identifier="gst_shared_task_pool_set_max_threads"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst/gsttaskpool.c"
+             line="474">Update the maximal number of threads the @pool may spawn. When
+the maximal number of threads is reduced, existing threads are not
+immediately shut down, see g_thread_pool_set_max_threads().
+
+Setting @max_threads to 0 effectively freezes the pool.</doc>
+        <source-position filename="gst/gsttaskpool.h" line="167"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="476">a #GstSharedTaskPool</doc>
+            <type name="SharedTaskPool" c:type="GstSharedTaskPool*"/>
+          </instance-parameter>
+          <parameter name="max_threads" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="477">Maximum number of threads to spawn.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="parent">
+        <type name="TaskPool" c:type="GstTaskPool"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="SharedTaskPoolPrivate" c:type="GstSharedTaskPoolPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="SharedTaskPoolClass"
+            c:type="GstSharedTaskPoolClass"
+            glib:is-gtype-struct-for="SharedTaskPool"
+            version="1.20">
+      <doc xml:space="preserve"
+           filename="gst/gsttaskpool.h"
+           line="149">The #GstSharedTaskPoolClass object.</doc>
+      <source-position filename="gst/gsttaskpool.h" line="161"/>
+      <field name="parent_class">
+        <type name="TaskPoolClass" c:type="GstTaskPoolClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="SharedTaskPoolPrivate"
+            c:type="GstSharedTaskPoolPrivate"
+            disguised="1">
+      <source-position filename="gst/gsttaskpool.h" line="124"/>
+    </record>
     <bitfield name="StackTraceFlags"
               version="1.12"
               glib:type-name="GstStackTraceFlags"
@@ -58064,7 +58249,7 @@ The caller should not modify the returned #GstStream</doc>
              filename="gst/gststreamcollection.c"
              line="201">Returns the upstream id of the @collection.</doc>
         <source-position filename="gst/gststreamcollection.h" line="103"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gststreamcollection.c"
                line="207">The upstream id</doc>
@@ -65614,24 +65799,24 @@ a #GstTask.</doc>
 implementation uses a regular GThreadPool to start tasks.
 
 Subclasses can be made to create custom threads.</doc>
-      <source-position filename="gst/gsttaskpool.h" line="86"/>
+      <source-position filename="gst/gsttaskpool.h" line="97"/>
       <constructor name="new" c:identifier="gst_task_pool_new">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="162">Create a new default task pool. The default task pool will use a regular
+             line="169">Create a new default task pool. The default task pool will use a regular
 GThreadPool for threads.</doc>
-        <source-position filename="gst/gsttaskpool.h" line="92"/>
+        <source-position filename="gst/gsttaskpool.h" line="103"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve"
                filename="gst/gsttaskpool.c"
-               line="168">a new #GstTaskPool. gst_object_unref() after usage.</doc>
+               line="175">a new #GstTaskPool. gst_object_unref() after usage.</doc>
           <type name="TaskPool" c:type="GstTaskPool*"/>
         </return-value>
       </constructor>
       <virtual-method name="cleanup" invoker="cleanup">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="205">Wait for all tasks to be stopped. This is mainly used internally
+             line="212">Wait for all tasks to be stopped. This is mainly used internally
 to ensure proper cleanup of internal data structures in test suites.
 
 MT safe.</doc>
@@ -65643,16 +65828,56 @@ MT safe.</doc>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="207">a #GstTaskPool</doc>
+                 line="214">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="dispose_handle"
+                      invoker="dispose_handle"
+                      version="1.20">
+        <doc xml:space="preserve"
+             filename="gst/gsttaskpool.c"
+             line="297">Dispose of the handle returned by gst_task_pool_push(). This does
+not need to be called with the default implementation as the default
+#GstTaskPoolClass::push implementation always returns %NULL. This does not need to be
+called either when calling gst_task_pool_join(), but should be called
+when joining is not necessary, but gst_task_pool_push() returned a
+non-%NULL value.
+
+This method should only be called with the same @pool instance that provided
+@id.</doc>
+        <source-position filename="gst/gsttaskpool.h" line="93"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="299">a #GstTaskPool</doc>
+            <type name="TaskPool" c:type="GstTaskPool*"/>
+          </instance-parameter>
+          <parameter name="id"
+                     transfer-ownership="full"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="300">the id</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
         </parameters>
       </virtual-method>
       <virtual-method name="join" invoker="join">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="263">Join a task and/or return it to the pool. @id is the id obtained from
-gst_task_pool_push().</doc>
+             line="272">Join a task and/or return it to the pool. @id is the id obtained from
+gst_task_pool_push(). The default implementation does nothing, as the
+default #GstTaskPoolClass::push implementation always returns %NULL.
+
+This method should only be called with the same @pool instance that provided
+@id.</doc>
         <source-position filename="gst/gsttaskpool.h" line="82"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -65661,16 +65886,16 @@ gst_task_pool_push().</doc>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="265">a #GstTaskPool</doc>
+                 line="274">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
           <parameter name="id"
-                     transfer-ownership="none"
+                     transfer-ownership="full"
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="266">the id</doc>
+                 line="275">the id</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>
@@ -65678,7 +65903,7 @@ gst_task_pool_push().</doc>
       <virtual-method name="prepare" invoker="prepare" throws="1">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="183">Prepare the taskpool for accepting gst_task_pool_push() operations.
+             line="190">Prepare the taskpool for accepting gst_task_pool_push() operations.
 
 MT safe.</doc>
         <source-position filename="gst/gsttaskpool.h" line="77"/>
@@ -65689,7 +65914,7 @@ MT safe.</doc>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="185">a #GstTaskPool</doc>
+                 line="192">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
         </parameters>
@@ -65697,21 +65922,23 @@ MT safe.</doc>
       <virtual-method name="push" invoker="push" throws="1">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="227">Start the execution of a new thread from @pool.</doc>
+             line="234">Start the execution of a new thread from @pool.</doc>
         <source-position filename="gst/gsttaskpool.h" line="80"/>
-        <return-value transfer-ownership="none" nullable="1">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gsttaskpool.c"
-               line="236">a pointer that should be used
+               line="243">a pointer that should be used
 for the gst_task_pool_join function. This pointer can be %NULL, you
-must check @error to detect errors.</doc>
+must check @error to detect errors. If the pointer is not %NULL and
+gst_task_pool_join() is not used, call gst_task_pool_dispose_handle()
+instead.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </return-value>
         <parameters>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="229">a #GstTaskPool</doc>
+                 line="236">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
           <parameter name="func"
@@ -65720,7 +65947,7 @@ must check @error to detect errors.</doc>
                      closure="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="230">the function to call</doc>
+                 line="237">the function to call</doc>
             <type name="TaskPoolFunction" c:type="GstTaskPoolFunction"/>
           </parameter>
           <parameter name="user_data"
@@ -65730,7 +65957,7 @@ must check @error to detect errors.</doc>
                      closure="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="231">data to pass to @func</doc>
+                 line="238">data to pass to @func</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>
@@ -65738,11 +65965,11 @@ must check @error to detect errors.</doc>
       <method name="cleanup" c:identifier="gst_task_pool_cleanup">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="205">Wait for all tasks to be stopped. This is mainly used internally
+             line="212">Wait for all tasks to be stopped. This is mainly used internally
 to ensure proper cleanup of internal data structures in test suites.
 
 MT safe.</doc>
-        <source-position filename="gst/gsttaskpool.h" line="104"/>
+        <source-position filename="gst/gsttaskpool.h" line="118"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -65750,17 +65977,57 @@ MT safe.</doc>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="207">a #GstTaskPool</doc>
+                 line="214">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="dispose_handle"
+              c:identifier="gst_task_pool_dispose_handle"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst/gsttaskpool.c"
+             line="297">Dispose of the handle returned by gst_task_pool_push(). This does
+not need to be called with the default implementation as the default
+#GstTaskPoolClass::push implementation always returns %NULL. This does not need to be
+called either when calling gst_task_pool_join(), but should be called
+when joining is not necessary, but gst_task_pool_push() returned a
+non-%NULL value.
+
+This method should only be called with the same @pool instance that provided
+@id.</doc>
+        <source-position filename="gst/gsttaskpool.h" line="115"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="299">a #GstTaskPool</doc>
+            <type name="TaskPool" c:type="GstTaskPool*"/>
+          </instance-parameter>
+          <parameter name="id"
+                     transfer-ownership="full"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst/gsttaskpool.c"
+                 line="300">the id</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
         </parameters>
       </method>
       <method name="join" c:identifier="gst_task_pool_join">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="263">Join a task and/or return it to the pool. @id is the id obtained from
-gst_task_pool_push().</doc>
-        <source-position filename="gst/gsttaskpool.h" line="101"/>
+             line="272">Join a task and/or return it to the pool. @id is the id obtained from
+gst_task_pool_push(). The default implementation does nothing, as the
+default #GstTaskPoolClass::push implementation always returns %NULL.
+
+This method should only be called with the same @pool instance that provided
+@id.</doc>
+        <source-position filename="gst/gsttaskpool.h" line="112"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -65768,16 +66035,16 @@ gst_task_pool_push().</doc>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="265">a #GstTaskPool</doc>
+                 line="274">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
           <parameter name="id"
-                     transfer-ownership="none"
+                     transfer-ownership="full"
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="266">the id</doc>
+                 line="275">the id</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>
@@ -65785,10 +66052,10 @@ gst_task_pool_push().</doc>
       <method name="prepare" c:identifier="gst_task_pool_prepare" throws="1">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="183">Prepare the taskpool for accepting gst_task_pool_push() operations.
+             line="190">Prepare the taskpool for accepting gst_task_pool_push() operations.
 
 MT safe.</doc>
-        <source-position filename="gst/gsttaskpool.h" line="95"/>
+        <source-position filename="gst/gsttaskpool.h" line="106"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -65796,7 +66063,7 @@ MT safe.</doc>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="185">a #GstTaskPool</doc>
+                 line="192">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
         </parameters>
@@ -65804,21 +66071,23 @@ MT safe.</doc>
       <method name="push" c:identifier="gst_task_pool_push" throws="1">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.c"
-             line="227">Start the execution of a new thread from @pool.</doc>
-        <source-position filename="gst/gsttaskpool.h" line="98"/>
-        <return-value transfer-ownership="none" nullable="1">
+             line="234">Start the execution of a new thread from @pool.</doc>
+        <source-position filename="gst/gsttaskpool.h" line="109"/>
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gsttaskpool.c"
-               line="236">a pointer that should be used
+               line="243">a pointer that should be used
 for the gst_task_pool_join function. This pointer can be %NULL, you
-must check @error to detect errors.</doc>
+must check @error to detect errors. If the pointer is not %NULL and
+gst_task_pool_join() is not used, call gst_task_pool_dispose_handle()
+instead.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </return-value>
         <parameters>
           <instance-parameter name="pool" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="229">a #GstTaskPool</doc>
+                 line="236">a #GstTaskPool</doc>
             <type name="TaskPool" c:type="GstTaskPool*"/>
           </instance-parameter>
           <parameter name="func"
@@ -65827,7 +66096,7 @@ must check @error to detect errors.</doc>
                      closure="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="230">the function to call</doc>
+                 line="237">the function to call</doc>
             <type name="TaskPoolFunction" c:type="GstTaskPoolFunction"/>
           </parameter>
           <parameter name="user_data"
@@ -65836,7 +66105,7 @@ must check @error to detect errors.</doc>
                      allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="231">data to pass to @func</doc>
+                 line="238">data to pass to @func</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>
@@ -65859,7 +66128,7 @@ must check @error to detect errors.</doc>
       <doc xml:space="preserve"
            filename="gst/gsttaskpool.h"
            line="63">The #GstTaskPoolClass object.</doc>
-      <source-position filename="gst/gsttaskpool.h" line="86"/>
+      <source-position filename="gst/gsttaskpool.h" line="97"/>
       <field name="parent_class">
         <doc xml:space="preserve"
              filename="gst/gsttaskpool.h"
@@ -65876,7 +66145,7 @@ must check @error to detect errors.</doc>
             <parameter name="pool" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="185">a #GstTaskPool</doc>
+                   line="192">a #GstTaskPool</doc>
               <type name="TaskPool" c:type="GstTaskPool*"/>
             </parameter>
           </parameters>
@@ -65892,7 +66161,7 @@ must check @error to detect errors.</doc>
             <parameter name="pool" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="207">a #GstTaskPool</doc>
+                   line="214">a #GstTaskPool</doc>
               <type name="TaskPool" c:type="GstTaskPool*"/>
             </parameter>
           </parameters>
@@ -65901,19 +66170,21 @@ must check @error to detect errors.</doc>
       <field name="push">
         <callback name="push" throws="1">
           <source-position filename="gst/gsttaskpool.h" line="80"/>
-          <return-value transfer-ownership="none" nullable="1">
+          <return-value transfer-ownership="full" nullable="1">
             <doc xml:space="preserve"
                  filename="gst/gsttaskpool.c"
-                 line="236">a pointer that should be used
+                 line="243">a pointer that should be used
 for the gst_task_pool_join function. This pointer can be %NULL, you
-must check @error to detect errors.</doc>
+must check @error to detect errors. If the pointer is not %NULL and
+gst_task_pool_join() is not used, call gst_task_pool_dispose_handle()
+instead.</doc>
             <type name="gpointer" c:type="gpointer"/>
           </return-value>
           <parameters>
             <parameter name="pool" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="229">a #GstTaskPool</doc>
+                   line="236">a #GstTaskPool</doc>
               <type name="TaskPool" c:type="GstTaskPool*"/>
             </parameter>
             <parameter name="func"
@@ -65922,7 +66193,7 @@ must check @error to detect errors.</doc>
                        closure="2">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="230">the function to call</doc>
+                   line="237">the function to call</doc>
               <type name="TaskPoolFunction" c:type="GstTaskPoolFunction"/>
             </parameter>
             <parameter name="user_data"
@@ -65932,7 +66203,7 @@ must check @error to detect errors.</doc>
                        closure="2">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="231">data to pass to @func</doc>
+                   line="238">data to pass to @func</doc>
               <type name="gpointer" c:type="gpointer"/>
             </parameter>
           </parameters>
@@ -65948,23 +66219,48 @@ must check @error to detect errors.</doc>
             <parameter name="pool" transfer-ownership="none">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="265">a #GstTaskPool</doc>
+                   line="274">a #GstTaskPool</doc>
               <type name="TaskPool" c:type="GstTaskPool*"/>
             </parameter>
             <parameter name="id"
-                       transfer-ownership="none"
+                       transfer-ownership="full"
                        nullable="1"
                        allow-none="1">
               <doc xml:space="preserve"
                    filename="gst/gsttaskpool.c"
-                   line="266">the id</doc>
+                   line="275">the id</doc>
+              <type name="gpointer" c:type="gpointer"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="dispose_handle">
+        <callback name="dispose_handle">
+          <source-position filename="gst/gsttaskpool.h" line="93"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="pool" transfer-ownership="none">
+              <doc xml:space="preserve"
+                   filename="gst/gsttaskpool.c"
+                   line="299">a #GstTaskPool</doc>
+              <type name="TaskPool" c:type="GstTaskPool*"/>
+            </parameter>
+            <parameter name="id"
+                       transfer-ownership="full"
+                       nullable="1"
+                       allow-none="1">
+              <doc xml:space="preserve"
+                   filename="gst/gsttaskpool.c"
+                   line="300">the id</doc>
               <type name="gpointer" c:type="gpointer"/>
             </parameter>
           </parameters>
         </callback>
       </field>
       <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="4">
+        <array zero-terminated="0" fixed-size="3">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
@@ -67638,7 +67934,10 @@ This function is typically called during an element's plugin initialization.</do
     that could belong to this type</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
-          <parameter name="possible_caps" transfer-ownership="none">
+          <parameter name="possible_caps"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
             <doc xml:space="preserve"
                  filename="gst/gsttypefind.c"
                  line="50">Optionally the caps that could be returned when typefinding
@@ -67777,7 +68076,7 @@ Free-function: gst_plugin_feature_list_free</doc>
              filename="gst/gsttypefindfactory.c"
              line="156">Gets the #GstCaps associated with a typefind factory.</doc>
         <source-position filename="gst/gsttypefindfactory.h" line="59"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve"
                filename="gst/gsttypefindfactory.c"
                line="162">the #GstCaps associated with this factory</doc>
@@ -70662,10 +70961,10 @@ Free-function: g_free</doc>
              line="497">a #GstValueDeserializeFunc</doc>
         <type name="ValueDeserializeFunc" c:type="GstValueDeserializeFunc"/>
       </field>
-      <field name="deserialize_with_pspec" writable="1">
+      <field name="deserialize_with_pspec" version="1.20" writable="1">
         <doc xml:space="preserve"
              filename="gst/gstvalue.h"
-             line="498">a #GstValueDeserializeWithPSpecFunc</doc>
+             line="508">a #GstValueDeserializeWithPSpecFunc</doc>
         <type name="ValueDeserializeWithPSpecFunc"
               c:type="GstValueDeserializeWithPSpecFunc"/>
       </field>
@@ -72999,6 +73298,287 @@ parent process.</doc>
         <type name="utf8" c:type="const gchar*"/>
       </return-value>
     </function>
+    <docsection name="gst">
+      <doc xml:space="preserve"
+           filename="gst/gst.c"
+           line="23">GStreamer is a framework for constructing graphs of various filters
+(termed elements here) that will handle streaming media.  Any discrete
+(packetizable) media type is supported, with provisions for automatically
+determining source type.  Formatting/framing information is provided with
+a powerful negotiation framework.  Plugins are heavily used to provide for
+all elements, allowing one to construct plugins outside of the GST
+library, even released binary-only if license require (please don't).
+GStreamer covers a wide range of use cases including: playback, recording,
+editing, serving streams, voice over ip and video calls.
+
+The `GStreamer` library should be initialized with
+gst_init() before it can be used. You should pass pointers to the main argc
+and argv variables so that GStreamer can process its own command line
+options, as shown in the following example.
+
+## Initializing the gstreamer library
+
+|[ &lt;!-- language="C" --&gt;
+int
+main (int argc, char *argv[])
+{
+  // initialize the GStreamer library
+  gst_init (&amp;amp;argc, &amp;amp;argv);
+  ...
+}
+]|
+
+It's allowed to pass two %NULL pointers to gst_init() in case you don't want
+to pass the command line args to GStreamer.
+
+You can also use GOption to initialize your own parameters as shown in
+the next code fragment:
+
+## Initializing own parameters when initializing gstreamer
+|[ &lt;!-- language="C" --&gt;
+static gboolean stats = FALSE;
+...
+int
+main (int argc, char *argv[])
+{
+ GOptionEntry options[] = {
+  {"tags", 't', 0, G_OPTION_ARG_NONE, &amp;amp;tags,
+      N_("Output tags (also known as metadata)"), NULL},
+  {NULL}
+ };
+ ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
+ g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+ g_option_context_add_group (ctx, gst_init_get_option_group ());
+ if (!g_option_context_parse (ctx, &amp;amp;argc, &amp;amp;argv, &amp;amp;err)) {
+   g_print ("Error initializing: &amp;percnt;s\n", GST_STR_NULL (err-&gt;message));
+   exit (1);
+ }
+ g_option_context_free (ctx);
+...
+}
+]|
+
+Use gst_version() to query the library version at runtime or use the
+GST_VERSION_* macros to find the version at compile time. Optionally
+gst_version_string() returns a printable string.
+
+The gst_deinit() call is used to clean up all internal resources used
+by GStreamer. It is mostly used in unit tests to check for leaks.</doc>
+    </docsection>
+    <docsection name="gstcompat">
+      <doc xml:space="preserve"
+           filename="gst/gstcompat.h"
+           line="26">Please do not use these in new code.
+These symbols are only available by defining GST_DISABLE_DEPRECATED.
+This can be done in CFLAGS for compiling old code.</doc>
+    </docsection>
+    <docsection name="gsterror">
+      <doc xml:space="preserve"
+           filename="gst/gsterror.c"
+           line="20">GStreamer elements can throw non-fatal warnings and fatal errors.
+Higher-level elements and applications can programmatically filter
+the ones they are interested in or can recover from,
+and have a default handler handle the rest of them.
+
+The rest of this section will use the term "error"
+to mean both (non-fatal) warnings and (fatal) errors; they are treated
+similarly.
+
+Errors from elements are the combination of a #GError and a debug string.
+The #GError contains:
+- a domain type: CORE, LIBRARY, RESOURCE or STREAM
+- a code: an enum value specific to the domain
+- a translated, human-readable message
+- a non-translated additional debug string, which also contains
+- file and line information
+
+Elements do not have the context required to decide what to do with
+errors.  As such, they should only inform about errors, and stop their
+processing.  In short, an element doesn't know what it is being used for.
+
+It is the application or compound element using the given element that
+has more context about the use of the element. Errors can be received by
+listening to the #GstBus of the element/pipeline for #GstMessage objects with
+the type %GST_MESSAGE_ERROR or %GST_MESSAGE_WARNING. The thrown errors should
+be inspected, and filtered if appropriate.
+
+An application is expected to, by default, present the user with a
+dialog box (or an equivalent) showing the error message.  The dialog
+should also allow a way to get at the additional debug information,
+so the user can provide bug reporting information.
+
+A compound element is expected to forward errors by default higher up
+the hierarchy; this is done by default in the same way as for other types
+of #GstMessage.
+
+When applications or compound elements trigger errors that they can
+recover from, they can filter out these errors and take appropriate action.
+For example, an application that gets an error from xvimagesink
+that indicates all XVideo ports are taken, the application can attempt
+to use another sink instead.
+
+Elements throw errors using the #GST_ELEMENT_ERROR convenience macro:
+
+## Throwing an error
+
+  |[
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+      (_("No file name specified for reading.")), (NULL));
+  ]|
+
+Things to keep in mind:
+
+  * Don't go off inventing new error codes.  The ones
+    currently provided should be enough.  If you find your type of error
+    does not fit the current codes, you should use FAILED.
+  * Don't provide a message if the default one suffices.
+    this keeps messages more uniform.  Use (%NULL) - not forgetting the
+    parentheses.
+  * If you do supply a custom message, it should be
+    marked for translation.  The message should start with a capital
+    and end with a period.  The message should describe the error in short,
+    in a human-readable form, and without any complex technical terms.
+    A user interface will present this message as the first thing a user
+    sees.  Details, technical info, ... should go in the debug string.
+
+  * The debug string can be as you like.  Again, use (%NULL)
+    if there's nothing to add - file and line number will still be
+    passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
+    debug information on a system call error.</doc>
+    </docsection>
+    <docsection name="gstformat">
+      <doc xml:space="preserve"
+           filename="gst/gstformat.c"
+           line="24">GstFormats functions are used to register a new format to the gstreamer
+core.  Formats can be used to perform seeking or conversions/query
+operations.</doc>
+    </docsection>
+    <docsection name="gstinfo">
+      <doc xml:space="preserve"
+           filename="gst/gstinfo.c"
+           line="25">GStreamer's debugging subsystem is an easy way to get information about what
+the application is doing.  It is not meant for programming errors. Use GLib
+methods (g_warning and friends) for that.
+
+The debugging subsystem works only after GStreamer has been initialized
+- for example by calling gst_init().
+
+The debugging subsystem is used to log informational messages while the
+application runs.  Each messages has some properties attached to it. Among
+these properties are the debugging category, the severity (called "level"
+here) and an optional #GObject it belongs to. Each of these messages is sent
+to all registered debugging handlers, which then handle the messages.
+GStreamer attaches a default handler on startup, which outputs requested
+messages to stderr.
+
+Messages are output by using shortcut macros like #GST_DEBUG,
+#GST_CAT_ERROR_OBJECT or similar. These all expand to calling gst_debug_log()
+with the right parameters.
+The only thing a developer will probably want to do is define his own
+categories. This is easily done with 3 lines. At the top of your code,
+declare
+the variables and set the default category.
+|[&lt;!-- language="C" --&gt;
+  GST_DEBUG_CATEGORY_STATIC (my_category);  // define category (statically)
+  #define GST_CAT_DEFAULT my_category       // set as default
+]|
+After that you only need to initialize the category.
+|[&lt;!-- language="C" --&gt;
+  GST_DEBUG_CATEGORY_INIT (my_category, "my category",
+                           0, "This is my very own");
+]|
+Initialization must be done before the category is used first.
+Plugins do this
+in their plugin_init function, libraries and applications should do that
+during their initialization.
+
+The whole debugging subsystem can be disabled at build time with passing the
+--disable-gst-debug switch to configure. If this is done, every function,
+macro and even structs described in this file evaluate to default values or
+nothing at all.
+So don't take addresses of these functions or use other tricks.
+If you must do that for some reason, there is still an option.
+If the debugging
+subsystem was compiled out, GST_DISABLE_GST_DEBUG is defined in
+&amp;lt;gst/gst.h&amp;gt;,
+so you can check that before doing your trick.
+Disabling the debugging subsystem will give you a slight (read: unnoticeable)
+speed increase and will reduce the size of your compiled code. The GStreamer
+library itself becomes around 10% smaller.
+
+Please note that there are naming conventions for the names of debugging
+categories. These are explained at GST_DEBUG_CATEGORY_INIT().</doc>
+    </docsection>
+    <docsection name="gstparamspec">
+      <doc xml:space="preserve"
+           filename="gst/gstparamspecs.c"
+           line="19">GParamSpec implementations specific to GStreamer.</doc>
+    </docsection>
+    <docsection name="gstparse">
+      <doc xml:space="preserve"
+           filename="gst/gstparse.c"
+           line="25">These function allow to create a pipeline based on the syntax used in the
+gst-launch-1.0 utility (see man-page for syntax documentation).
+
+Please note that these functions take several measures to create
+somewhat dynamic pipelines. Due to that such pipelines are not always
+reusable (set the state to NULL and back to PLAYING).</doc>
+    </docsection>
+    <docsection name="gstprotection">
+      <doc xml:space="preserve"
+           filename="gst/gstprotection.c"
+           line="20">The GstProtectionMeta class enables the information needed to decrypt a
+#GstBuffer to be attached to that buffer.
+
+Typically, a demuxer element would attach GstProtectionMeta objects
+to the buffers that it pushes downstream. The demuxer would parse the
+protection information for a video/audio frame from its input data and use
+this information to populate the #GstStructure @info field,
+which is then encapsulated in a GstProtectionMeta object and attached to
+the corresponding output buffer using the gst_buffer_add_protection_meta()
+function. The information in this attached GstProtectionMeta would be
+used by a downstream decrypter element to recover the original unencrypted
+frame.</doc>
+    </docsection>
+    <docsection name="gststreams">
+      <doc xml:space="preserve"
+           filename="gst/gststreams.c"
+           line="27">A #GstStream is a high-level object defining a stream of data which is, or
+can be, present in a #GstPipeline.
+
+It is defined by a unique identifier, a "Stream ID". A #GstStream does not
+automatically imply the stream is present within a pipeline or element.
+
+Any element that can introduce new streams in a pipeline should create the
+appropriate #GstStream object, and can convey that object via the
+%GST_EVENT_STREAM_START event and/or the #GstStreamCollection.
+
+Elements that do not modify the nature of the stream can add extra information
+on it (such as enrich the #GstCaps, or #GstTagList). This is typically done
+by parsing elements.</doc>
+    </docsection>
+    <docsection name="gstvalue">
+      <doc xml:space="preserve"
+           filename="gst/gstvalue.c"
+           line="20">GValue implementations specific to GStreamer.
+
+Note that operations on the same #GValue from multiple threads may lead to
+undefined behaviour.</doc>
+    </docsection>
+    <docsection name="gstversion">
+      <doc xml:space="preserve"
+           filename="gst/gstversion.h"
+           line="28">Use the GST_VERSION_* macros e.g. when defining own plugins. The GStreamer
+runtime checks if these plugin and core version match and refuses to use a
+plugin compiled against a different version of GStreamer.
+You can also use the macros to keep the GStreamer version information in
+your application.
+
+Use the gst_version() function if you want to know which version of
+GStreamer you are currently linked against.
+
+The version macros get defined by including "gst/gst.h".</doc>
+    </docsection>
     <function-macro name="guint64_to_gdouble"
                     c:identifier="gst_guint64_to_gdouble"
                     introspectable="0">
@@ -74314,7 +74894,7 @@ multiple unlinked source pads or multiple unlinked sink pads
 and want them all ghosted, you will have to create the ghost pads
 yourself).</doc>
       <source-position filename="gst/gstutils.h" line="1148"/>
-      <return-value transfer-ownership="none" nullable="1">
+      <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst/gstutils.c"
              line="3410">a
@@ -74352,7 +74932,7 @@ multiple unlinked source pads or multiple unlinked sink pads
 and want them all ghosted, you will have to create the ghost pads
 yourself).</doc>
       <source-position filename="gst/gstutils.h" line="1152"/>
-      <return-value transfer-ownership="none" nullable="1">
+      <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst/gstutils.c"
              line="3441">a newly-created
@@ -74417,7 +74997,7 @@ can try to play the pipeline.
 To create a sub-pipeline (bin) for embedding into an existing pipeline
 use gst_parse_bin_from_description().</doc>
       <source-position filename="gst/gstparse.h" line="118"/>
-      <return-value transfer-ownership="none" nullable="1">
+      <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst/gstparse.c"
              line="299">a new element on success, %NULL on
@@ -74448,7 +75028,7 @@ can try to play the pipeline.
 To create a sub-pipeline (bin) for embedding into an existing pipeline
 use gst_parse_bin_from_description_full().</doc>
       <source-position filename="gst/gstparse.h" line="124"/>
-      <return-value transfer-ownership="none" nullable="1">
+      <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst/gstparse.c"
              line="327">a new element on success, %NULL on
@@ -74490,7 +75070,7 @@ use gst_parse_bin_from_description_full().</doc>
 @error will contain an error message if an erroneous pipeline is specified.
 An error does not mean that the pipeline could not be constructed.</doc>
       <source-position filename="gst/gstparse.h" line="121"/>
-      <return-value transfer-ownership="none" nullable="1">
+      <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst/gstparse.c"
              line="221">a new element on success and %NULL
@@ -74517,7 +75097,7 @@ on failure.</doc>
 @error will contain an error message if an erroneous pipeline is specified.
 An error does not mean that the pipeline could not be constructed.</doc>
       <source-position filename="gst/gstparse.h" line="129"/>
-      <return-value transfer-ownership="none" nullable="1">
+      <return-value transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst/gstparse.c"
              line="242">a new element on success; on
@@ -75919,7 +76499,10 @@ This function is typically called during an element's plugin initialization.</do
     that could belong to this type</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
-        <parameter name="possible_caps" transfer-ownership="none">
+        <parameter name="possible_caps"
+                   transfer-ownership="none"
+                   nullable="1"
+                   allow-none="1">
           <doc xml:space="preserve"
                filename="gst/gsttypefind.c"
                line="50">Optionally the caps that could be returned when typefinding

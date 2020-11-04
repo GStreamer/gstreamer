@@ -869,6 +869,10 @@ namespace Gst {
 			gst_buffer_pool_config_set_params(config == null ? IntPtr.Zero : config.Handle, caps == null ? IntPtr.Zero : caps.Handle, size, min_buffers, max_buffers);
 		}
 
+		public static void ConfigSetParams(Gst.Structure config, uint size, uint min_buffers, uint max_buffers) {
+			ConfigSetParams (config, null, size, min_buffers, max_buffers);
+		}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_config_validate_params(IntPtr config, IntPtr caps, uint size, uint min_buffers, uint max_buffers);
 
@@ -876,6 +880,10 @@ namespace Gst {
 			bool raw_ret = gst_buffer_pool_config_validate_params(config == null ? IntPtr.Zero : config.Handle, caps == null ? IntPtr.Zero : caps.Handle, size, min_buffers, max_buffers);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		public static bool ConfigValidateParams(Gst.Structure config, uint size, uint min_buffers, uint max_buffers) {
+			return ConfigValidateParams (config, null, size, min_buffers, max_buffers);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

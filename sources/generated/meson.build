@@ -724,6 +724,7 @@ generated_sources = [
     'Gst/SeekType.cs',
     'Gst/Segment.cs',
     'Gst/SegmentFlags.cs',
+    'Gst/SharedTaskPool.cs',
     'Gst/StackTraceFlags.cs',
     'Gst/State.cs',
     'Gst/StateChange.cs',

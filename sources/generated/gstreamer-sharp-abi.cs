@@ -235,6 +235,9 @@ namespace AbiTester {
 			Console.WriteLine("\"GstProxyPad.priv\": \"" + Gst.ProxyPad.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GstRegistry)\": \"" + Gst.Registry.abi_info.Size + "\"");
 			Console.WriteLine("\"GstRegistry.priv\": \"" + Gst.Registry.abi_info.GetFieldOffset("priv") + "\"");
+			Console.WriteLine("\"sizeof(GstSharedTaskPoolClass)\": \"" + Gst.SharedTaskPool.class_abi.Size + "\"");
+			Console.WriteLine("\"sizeof(GstSharedTaskPool)\": \"" + Gst.SharedTaskPool.abi_info.Size + "\"");
+			Console.WriteLine("\"GstSharedTaskPool.priv\": \"" + Gst.SharedTaskPool.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GstStreamClass)\": \"" + Gst.Stream.class_abi.Size + "\"");
 			Console.WriteLine("\"sizeof(GstStream)\": \"" + Gst.Stream.abi_info.Size + "\"");
 			Console.WriteLine("\"GstStream.stream_id\": \"" + Gst.Stream.abi_info.GetFieldOffset("stream_id") + "\"");
@@ -264,6 +267,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstTaskPoolClass.cleanup\": \"" + Gst.TaskPool.class_abi.GetFieldOffset("cleanup") + "\"");
 			Console.WriteLine("\"GstTaskPoolClass.push\": \"" + Gst.TaskPool.class_abi.GetFieldOffset("push") + "\"");
 			Console.WriteLine("\"GstTaskPoolClass.join\": \"" + Gst.TaskPool.class_abi.GetFieldOffset("join") + "\"");
+			Console.WriteLine("\"GstTaskPoolClass.dispose_handle\": \"" + Gst.TaskPool.class_abi.GetFieldOffset("dispose_handle") + "\"");
 			Console.WriteLine("\"sizeof(GstTaskPool)\": \"" + Gst.TaskPool.abi_info.Size + "\"");
 			Console.WriteLine("\"GstTaskPool.pool\": \"" + Gst.TaskPool.abi_info.GetFieldOffset("pool") + "\"");
 			Console.WriteLine("\"sizeof(GstTracerClass)\": \"" + Gst.Tracer.class_abi.Size + "\"");
@@ -975,7 +979,6 @@ namespace AbiTester {
 			Console.WriteLine("\"sizeof(GstWebRTCDTLSTransport)\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.Size + "\"");
 			Console.WriteLine("\"GstWebRTCDTLSTransport.transport\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.GetFieldOffset("transport") + "\"");
 			Console.WriteLine("\"GstWebRTCDTLSTransport.state\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.GetFieldOffset("state") + "\"");
-			Console.WriteLine("\"GstWebRTCDTLSTransport.is_rtcp\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.GetFieldOffset("is_rtcp") + "\"");
 			Console.WriteLine("\"GstWebRTCDTLSTransport.client\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.GetFieldOffset("client") + "\"");
 			Console.WriteLine("\"GstWebRTCDTLSTransport.session_id\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.GetFieldOffset("session_id") + "\"");
 			Console.WriteLine("\"GstWebRTCDTLSTransport.dtlssrtpenc\": \"" + Gst.WebRTC.WebRTCDTLSTransport.abi_info.GetFieldOffset("dtlssrtpenc") + "\"");
@@ -1009,11 +1012,9 @@ namespace AbiTester {
 			Console.WriteLine("\"sizeof(GstWebRTCRTPReceiverClass)\": \"" + Gst.WebRTC.WebRTCRTPReceiver.class_abi.Size + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCRTPReceiver)\": \"" + Gst.WebRTC.WebRTCRTPReceiver.abi_info.Size + "\"");
 			Console.WriteLine("\"GstWebRTCRTPReceiver.transport\": \"" + Gst.WebRTC.WebRTCRTPReceiver.abi_info.GetFieldOffset("transport") + "\"");
-			Console.WriteLine("\"GstWebRTCRTPReceiver.rtcp_transport\": \"" + Gst.WebRTC.WebRTCRTPReceiver.abi_info.GetFieldOffset("rtcp_transport") + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCRTPSenderClass)\": \"" + Gst.WebRTC.WebRTCRTPSender.class_abi.Size + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCRTPSender)\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.Size + "\"");
 			Console.WriteLine("\"GstWebRTCRTPSender.transport\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("transport") + "\"");
-			Console.WriteLine("\"GstWebRTCRTPSender.rtcp_transport\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("rtcp_transport") + "\"");
 			Console.WriteLine("\"GstWebRTCRTPSender.send_encodings\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("send_encodings") + "\"");
 			Console.WriteLine("\"GstWebRTCRTPSender.priority\": \"" + Gst.WebRTC.WebRTCRTPSender.abi_info.GetFieldOffset("priority") + "\"");
 			Console.WriteLine("\"sizeof(GstWebRTCRTPTransceiverClass)\": \"" + Gst.WebRTC.WebRTCRTPTransceiver.class_abi.Size + "\"");

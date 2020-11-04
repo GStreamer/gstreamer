@@ -2131,7 +2131,7 @@
           <parameter name="config" type="GstStructure*">
             <warning>missing glib:type-name</warning>
           </parameter>
-          <parameter name="caps" type="GstCaps*">
+          <parameter allow-none="1" name="caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="size" type="guint" />
@@ -2145,7 +2145,7 @@
           <parameter name="config" type="GstStructure*">
             <warning>missing glib:type-name</warning>
           </parameter>
-          <parameter name="caps" type="GstCaps*">
+          <parameter allow-none="1" name="caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="size" type="guint" />
@@ -3150,6 +3150,10 @@
         <parameters>
           <parameter name="name" type="const-gchar*" />
         </parameters>
+      </method>
+      <method name="IsStarted" cname="gst_device_provider_is_started" version="1.20">
+        <return-type type="gboolean" />
+        <parameters />
       </method>
       <method name="Start" cname="gst_device_provider_start" version="1.4">
         <return-type type="gboolean" />
@@ -5603,6 +5607,33 @@
         <return-type type="gboolean" />
       </method>
     </object>
+    <object name="SharedTaskPool" cname="GstSharedTaskPool" opaque="false" hidden="false" parent="GstTaskPool" version="1.20">
+      <class_struct cname="GstSharedTaskPoolClass" version="1.20">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstTaskPoolClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" padding="true" />
+      </class_struct>
+      <method name="GetType" cname="gst_shared_task_pool_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_shared_task_pool_new" disable_void_ctor="" version="1.20" />
+      <method name="GetMaxThreads" cname="gst_shared_task_pool_get_max_threads" version="1.20">
+        <return-type type="guint" />
+        <parameters />
+      </method>
+      <method name="SetMaxThreads" cname="gst_shared_task_pool_set_max_threads" version="1.20">
+        <return-type type="void" />
+        <parameters>
+          <parameter name="max_threads" type="guint" />
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstTaskPool*" hidden="true" />
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstSharedTaskPoolPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" padding="true" />
+    </object>
     <object name="Stream" cname="GstStream" opaque="false" hidden="false" parent="GstObject" version="1.10">
       <class_struct cname="GstStreamClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
@@ -5878,7 +5909,8 @@
         <method vm="cleanup" />
         <method vm="push" />
         <method vm="join" />
-        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" padding="true" />
+        <method vm="dispose_handle" />
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="3" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_task_pool_get_type" shared="true">
         <return-type type="GType" />
@@ -5888,10 +5920,16 @@
         <return-type type="void" />
         <parameters />
       </virtual_method>
+      <virtual_method name="DisposeHandle" cname="dispose_handle" version="1.20">
+        <return-type type="void" />
+        <parameters>
+          <parameter allow-none="1" name="id" type="gpointer*" owned="true" />
+        </parameters>
+      </virtual_method>
       <virtual_method name="Join" cname="join">
         <return-type type="void" />
         <parameters>
-          <parameter allow-none="1" name="id" type="gpointer" />
+          <parameter allow-none="1" name="id" type="gpointer*" owned="true" />
         </parameters>
       </virtual_method>
       <virtual_method name="Prepare" cname="prepare">
@@ -5901,7 +5939,7 @@
         </parameters>
       </virtual_method>
       <virtual_method name="Push" cname="push">
-        <return-type type="gpointer" />
+        <return-type type="gpointer*" owned="true" />
         <parameters throws="1">
           <parameter closure="1" scope="async" name="func" type="GstTaskPoolFunction" />
           <parameter closure="1" allow-none="1" name="user_data" type="gpointer" />
@@ -5912,10 +5950,16 @@
         <return-type type="void" />
         <parameters />
       </method>
+      <method name="DisposeHandle" cname="gst_task_pool_dispose_handle" version="1.20">
+        <return-type type="void" />
+        <parameters>
+          <parameter allow-none="1" name="id" type="gpointer*" owned="true" />
+        </parameters>
+      </method>
       <method name="Join" cname="gst_task_pool_join">
         <return-type type="void" />
         <parameters>
-          <parameter allow-none="1" name="id" type="gpointer" />
+          <parameter allow-none="1" name="id" type="gpointer*" owned="true" />
         </parameters>
       </method>
       <method name="Prepare" cname="gst_task_pool_prepare">
@@ -5925,7 +5969,7 @@
         </parameters>
       </method>
       <method name="Push" cname="gst_task_pool_push">
-        <return-type type="gpointer" />
+        <return-type type="gpointer*" owned="true" />
         <parameters throws="1">
           <parameter closure="1" scope="async" name="func" type="GstTaskPoolFunction" />
           <parameter allow-none="1" name="user_data" type="gpointer" />
@@ -10234,6 +10278,7 @@
         </parameters>
       </method>
     </boxed>
+    <struct name="SharedTaskPoolPrivate" cname="GstSharedTaskPoolPrivate" opaque="true" hidden="true" />
     <struct name="StaticCaps" cname="GstStaticCaps" opaque="false" hidden="false">
       <field cname="caps" access="public" writeable="true" readable="true" is_callback="false" name="Caps" type="GstCaps*">
         <warning>missing glib:type-name</warning>
@@ -11232,7 +11277,7 @@
           <parameter name="rank" type="guint" />
           <parameter closure="6" destroy="7" scope="notified" name="func" type="GstTypeFindFunction" />
           <parameter allow-none="1" name="extensions" type="const-gchar*" />
-          <parameter name="possible_caps" type="GstCaps*">
+          <parameter allow-none="1" name="possible_caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter allow-none="1" name="data" type="gpointer" />
@@ -11874,7 +11919,7 @@
           <parameter name="rank" type="guint" />
           <parameter closure="6" destroy="7" scope="notified" name="func" type="GstTypeFindFunction" />
           <parameter allow-none="1" name="extensions" type="const-gchar*" />
-          <parameter name="possible_caps" type="GstCaps*">
+          <parameter allow-none="1" name="possible_caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter allow-none="1" name="data" type="gpointer" />
@@ -13631,7 +13676,7 @@
       <method name="SetCaps" cname="gst_app_sink_set_caps">
         <return-type type="void" />
         <parameters>
-          <parameter name="caps" type="GstCaps*">
+          <parameter allow-none="1" name="caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -13821,7 +13866,7 @@
       <method name="SetCaps" cname="gst_app_src_set_caps">
         <return-type type="void" />
         <parameters>
-          <parameter name="caps" type="GstCaps*">
+          <parameter allow-none="1" name="caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -17260,7 +17305,7 @@
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="allocator" type="GstAllocator*" owned="true" pass_as="out" />
-          <parameter allow-none="1" name="params" type="GstAllocationParams*" owned="true" pass_as="out">
+          <parameter allow-none="1" name="params" type="GstAllocationParams*" pass_as="out">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -18211,7 +18256,7 @@
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="allocator" type="GstAllocator*" owned="true" pass_as="out" />
-          <parameter allow-none="1" name="params" type="GstAllocationParams*" owned="true" pass_as="out">
+          <parameter allow-none="1" name="params" type="GstAllocationParams*" pass_as="out">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -18621,7 +18666,7 @@
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="allocator" type="GstAllocator*" owned="true" pass_as="out" />
-          <parameter allow-none="1" name="params" type="GstAllocationParams*" owned="true" pass_as="out">
+          <parameter allow-none="1" name="params" type="GstAllocationParams*" pass_as="out">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -28250,7 +28295,7 @@
         </return-type>
         <parameters>
           <parameter name="fmt" type="GstVideoFormat" />
-          <parameter name="mode" type="GstVideoInterlaceMode" />
+          <parameter name="interlace_mode" type="GstVideoInterlaceMode" />
           <parameter name="width" type="guint" />
           <parameter name="height" type="guint" />
           <parameter allow-none="1" name="reference" type="GstVideoCodecState*">
@@ -31263,7 +31308,6 @@
       <constructor cname="gst_webrtc_dtls_transport_new">
         <parameters>
           <parameter name="session_id" type="guint" />
-          <parameter name="rtcp" type="gboolean" />
         </parameters>
       </constructor>
       <method name="SetTransport" cname="gst_webrtc_dtls_transport_set_transport">
@@ -31275,14 +31319,12 @@
       <property name="Certificate" cname="certificate" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="Client" cname="client" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="RemoteCertificate" cname="remote-certificate" type="gchar*" readable="true" writeable="false" construct="false" construct-only="false" />
-      <property name="Rtcp" cname="rtcp" type="gboolean" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="SessionId" cname="session-id" type="guint" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="State" cname="state" type="GstWebRTCDTLSTransportState" readable="true" writeable="false" construct="false" construct-only="false" />
       <property name="Transport" cname="transport" type="GstWebRTCICETransport*" readable="true" writeable="false" construct="false" construct-only="false" />
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
       <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="TransportField" type="GstWebRTCICETransport*" />
       <field cname="state" access="public" writeable="false" readable="true" is_callback="false" name="StateField" type="GstWebRTCDTLSTransportState" />
-      <field cname="is_rtcp" access="public" writeable="false" readable="true" is_callback="false" name="IsRtcp" type="gboolean" />
       <field cname="client" access="public" writeable="false" readable="true" is_callback="false" name="ClientField" type="gboolean" />
       <field cname="session_id" access="public" writeable="false" readable="true" is_callback="false" name="SessionIdField" type="guint" />
       <field cname="dtlssrtpenc" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpenc" type="GstElement*" />
@@ -31513,21 +31555,8 @@
         <return-type type="GType" />
       </method>
       <constructor cname="gst_webrtc_rtp_receiver_new" disable_void_ctor="" />
-      <method name="SetRtcpTransport" cname="gst_webrtc_rtp_receiver_set_rtcp_transport">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="transport" type="GstWebRTCDTLSTransport*" />
-        </parameters>
-      </method>
-      <method name="SetTransport" cname="gst_webrtc_rtp_receiver_set_transport">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="transport" type="GstWebRTCDTLSTransport*" />
-        </parameters>
-      </method>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
       <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*" />
-      <field cname="rtcp_transport" access="public" writeable="false" readable="true" is_callback="false" name="RtcpTransport" type="GstWebRTCDTLSTransport*" />
       <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="WebRTCRTPSender" cname="GstWebRTCRTPSender" opaque="false" hidden="false" parent="GstObject" version="1.16">
@@ -31547,22 +31576,9 @@
           <parameter name="priority" type="GstWebRTCPriorityType" />
         </parameters>
       </method>
-      <method name="SetRtcpTransport" cname="gst_webrtc_rtp_sender_set_rtcp_transport">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="transport" type="GstWebRTCDTLSTransport*" />
-        </parameters>
-      </method>
-      <method name="SetTransport" cname="gst_webrtc_rtp_sender_set_transport">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="transport" type="GstWebRTCDTLSTransport*" />
-        </parameters>
-      </method>
       <property name="Priority" cname="priority" type="GstWebRTCPriorityType" readable="true" writeable="true" construct="false" construct-only="false" version="1.20" />
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
       <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*" />
-      <field cname="rtcp_transport" access="public" writeable="false" readable="true" is_callback="false" name="RtcpTransport" type="GstWebRTCDTLSTransport*" />
       <field cname="send_encodings" access="public" writeable="false" readable="true" is_callback="false" name="SendEncodings" type="GArray*" array="true" null_term_array="true" />
       <field cname="priority" access="public" writeable="false" readable="true" is_callback="false" name="PriorityField" type="GstWebRTCPriorityType" />
       <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />

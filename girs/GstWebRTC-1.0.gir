@@ -397,10 +397,10 @@ for more information.</doc>
            glib:get-type="gst_webrtc_dtls_transport_get_type"
            glib:type-struct="WebRTCDTLSTransportClass">
       <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
-                       line="62"/>
+                       line="61"/>
       <constructor name="new" c:identifier="gst_webrtc_dtls_transport_new">
         <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
-                         line="65"/>
+                         line="64"/>
         <return-value transfer-ownership="none">
           <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
         </return-value>
@@ -408,15 +408,12 @@ for more information.</doc>
           <parameter name="session_id" transfer-ownership="none">
             <type name="guint" c:type="guint"/>
           </parameter>
-          <parameter name="rtcp" transfer-ownership="none">
-            <type name="gboolean" c:type="gboolean"/>
-          </parameter>
         </parameters>
       </constructor>
       <method name="set_transport"
               c:identifier="gst_webrtc_dtls_transport_set_transport">
         <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
-                         line="68"/>
+                         line="67"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -437,12 +434,6 @@ for more information.</doc>
       </property>
       <property name="remote-certificate" transfer-ownership="none">
         <type name="utf8" c:type="gchar*"/>
-      </property>
-      <property name="rtcp"
-                writable="1"
-                construct-only="1"
-                transfer-ownership="none">
-        <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="session-id"
                 writable="1"
@@ -466,9 +457,6 @@ for more information.</doc>
         <type name="WebRTCDTLSTransportState"
               c:type="GstWebRTCDTLSTransportState"/>
       </field>
-      <field name="is_rtcp">
-        <type name="gboolean" c:type="gboolean"/>
-      </field>
       <field name="client">
         <type name="gboolean" c:type="gboolean"/>
       </field>
@@ -491,7 +479,7 @@ for more information.</doc>
             c:type="GstWebRTCDTLSTransportClass"
             glib:is-gtype-struct-for="WebRTCDTLSTransport">
       <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
-                       line="62"/>
+                       line="61"/>
       <field name="parent_class">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
@@ -1656,46 +1644,14 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
            line="38">An object to track the receiving aspect of the stream
 
 Mostly matches the WebRTC RTCRtpReceiver interface.</doc>
-      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="65"/>
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="63"/>
       <constructor name="new" c:identifier="gst_webrtc_rtp_receiver_new">
         <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h"
-                         line="68"/>
+                         line="66"/>
         <return-value transfer-ownership="none">
           <type name="WebRTCRTPReceiver" c:type="GstWebRTCRTPReceiver*"/>
         </return-value>
       </constructor>
-      <method name="set_rtcp_transport"
-              c:identifier="gst_webrtc_rtp_receiver_set_rtcp_transport">
-        <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h"
-                         line="73"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="receiver" transfer-ownership="none">
-            <type name="WebRTCRTPReceiver" c:type="GstWebRTCRTPReceiver*"/>
-          </instance-parameter>
-          <parameter name="transport" transfer-ownership="none">
-            <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="set_transport"
-              c:identifier="gst_webrtc_rtp_receiver_set_transport">
-        <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h"
-                         line="70"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="receiver" transfer-ownership="none">
-            <type name="WebRTCRTPReceiver" c:type="GstWebRTCRTPReceiver*"/>
-          </instance-parameter>
-          <parameter name="transport" transfer-ownership="none">
-            <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
-          </parameter>
-        </parameters>
-      </method>
       <field name="parent">
         <type name="Gst.Object" c:type="GstObject"/>
       </field>
@@ -1703,12 +1659,6 @@ Mostly matches the WebRTC RTCRtpReceiver interface.</doc>
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/rtpreceiver.h"
              line="40">The transport for RTP packets</doc>
-        <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
-      </field>
-      <field name="rtcp_transport">
-        <doc xml:space="preserve"
-             filename="gst-libs/gst/webrtc/rtpreceiver.h"
-             line="41">The transport for RTCP packets without rtcp-mux</doc>
         <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
       </field>
       <field name="_padding">
@@ -1720,7 +1670,7 @@ Mostly matches the WebRTC RTCRtpReceiver interface.</doc>
     <record name="WebRTCRTPReceiverClass"
             c:type="GstWebRTCRTPReceiverClass"
             glib:is-gtype-struct-for="WebRTCRTPReceiver">
-      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="65"/>
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="63"/>
       <field name="parent_class">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
@@ -1743,9 +1693,9 @@ Mostly matches the WebRTC RTCRtpReceiver interface.</doc>
            line="38">An object to track the sending aspect of the stream
 
 Mostly matches the WebRTC RTCRtpSender interface.</doc>
-      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="70"/>
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="75"/>
       <constructor name="new" c:identifier="gst_webrtc_rtp_sender_new">
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="73"/>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="78"/>
         <return-value transfer-ownership="none">
           <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
         </return-value>
@@ -1755,10 +1705,10 @@ Mostly matches the WebRTC RTCRtpSender interface.</doc>
               version="1.20">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/rtpsender.c"
-             line="85">Sets the content of the IPv4 Type of Service (ToS), also known as DSCP
+             line="59">Sets the content of the IPv4 Type of Service (ToS), also known as DSCP
 (Differentiated Services Code Point).
 This also sets the Traffic Class field of IPv6.</doc>
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="82"/>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="81"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -1766,44 +1716,14 @@ This also sets the Traffic Class field of IPv6.</doc>
           <instance-parameter name="sender" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/rtpsender.c"
-                 line="87">a #GstWebRTCRTPSender</doc>
+                 line="61">a #GstWebRTCRTPSender</doc>
             <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
           </instance-parameter>
           <parameter name="priority" transfer-ownership="none">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/webrtc/rtpsender.c"
-                 line="88">The priority of this sender</doc>
+                 line="62">The priority of this sender</doc>
             <type name="WebRTCPriorityType" c:type="GstWebRTCPriorityType"/>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="set_rtcp_transport"
-              c:identifier="gst_webrtc_rtp_sender_set_rtcp_transport">
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="79"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="sender" transfer-ownership="none">
-            <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
-          </instance-parameter>
-          <parameter name="transport" transfer-ownership="none">
-            <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="set_transport"
-              c:identifier="gst_webrtc_rtp_sender_set_transport">
-        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="76"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="sender" transfer-ownership="none">
-            <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
-          </instance-parameter>
-          <parameter name="transport" transfer-ownership="none">
-            <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
           </parameter>
         </parameters>
       </method>
@@ -1813,7 +1733,7 @@ This also sets the Traffic Class field of IPv6.</doc>
                 transfer-ownership="none">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/rtpsender.c"
-             line="166">The priority from which to set the DSCP field on packets</doc>
+             line="136">The priority from which to set the DSCP field on packets</doc>
         <type name="WebRTCPriorityType"/>
       </property>
       <field name="parent">
@@ -1825,24 +1745,18 @@ This also sets the Traffic Class field of IPv6.</doc>
              line="40">The transport for RTP packets</doc>
         <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
       </field>
-      <field name="rtcp_transport">
-        <doc xml:space="preserve"
-             filename="gst-libs/gst/webrtc/rtpsender.h"
-             line="41">The transport for RTCP packets without rtcp-mux</doc>
-        <type name="WebRTCDTLSTransport" c:type="GstWebRTCDTLSTransport*"/>
-      </field>
       <field name="send_encodings">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/rtpsender.h"
-             line="42">Unused</doc>
+             line="41">Unused</doc>
         <array name="GLib.Array" c:type="GArray*">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
-      <field name="priority">
+      <field name="priority" version="1.20">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/rtpsender.h"
-             line="43">The priority of the stream (Since: 1.20)</doc>
+             line="50">The priority of the stream</doc>
         <type name="WebRTCPriorityType" c:type="GstWebRTCPriorityType"/>
       </field>
       <field name="_padding">
@@ -1854,7 +1768,7 @@ This also sets the Traffic Class field of IPv6.</doc>
     <record name="WebRTCRTPSenderClass"
             c:type="GstWebRTCRTPSenderClass"
             glib:is-gtype-struct-for="WebRTCRTPSender">
-      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="70"/>
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="75"/>
       <field name="parent_class">
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
@@ -1967,10 +1881,10 @@ the remote peer.</doc>
              line="57">A caps representing the codec preferences (read-only)</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
       </field>
-      <field name="kind">
+      <field name="kind" version="1.20">
         <doc xml:space="preserve"
              filename="gst-libs/gst/webrtc/rtptransceiver.h"
-             line="58">Type of media (Since: 1.20)</doc>
+             line="64">Type of media</doc>
         <type name="WebRTCKind" c:type="GstWebRTCKind"/>
       </field>
       <field name="_padding">
@@ -2392,6 +2306,41 @@ See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate&gt;</doc>
              line="248">certificate</doc>
       </member>
     </enumeration>
+    <docsection name="gstwebrtc-datachannel">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/datachannel.c"
+           line="21">&lt;https://www.w3.org/TR/webrtc/#rtcdatachannel&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-dtlstransport">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/dtlstransport.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcdtlstransport&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-icetransport">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/icetransport.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcicetransport&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-receiver">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtpreceiver.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-sender">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtpsender.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcrtpsender-interface&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-sessiondescription">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcsessiondescription-class&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-transceiver">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtptransceiver.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcrtptransceiver-interface&gt;</doc>
+    </docsection>
     <function name="webrtc_sdp_type_to_string"
               c:identifier="gst_webrtc_sdp_type_to_string"
               moved-to="WebRTCSDPType.to_string">

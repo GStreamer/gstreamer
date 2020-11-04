@@ -436,6 +436,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_device_provider_is_started(IntPtr raw);
+
+		public bool IsStarted { 
+			get {
+				bool raw_ret = gst_device_provider_is_started(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_provider_start(IntPtr raw);
 
 		public bool Start() {

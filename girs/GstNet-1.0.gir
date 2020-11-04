@@ -1042,6 +1042,12 @@ is no such metadata on @buffer.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstnetutils">
+      <doc xml:space="preserve"
+           filename="libs/gst/net/gstnetutils.c"
+           line="20">GstNetUtils gathers network utility functions, enabling use for all
+gstreamer plugins.</doc>
+    </docsection>
     <function name="net_address_meta_api_get_type"
               c:identifier="gst_net_address_meta_api_get_type">
       <source-position filename="libs/gst/net/gstnetaddressmeta.h" line="45"/>

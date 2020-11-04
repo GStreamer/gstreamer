@@ -25,33 +25,12 @@ namespace Gst.WebRTC {
 			Raw = gst_webrtc_rtp_receiver_new();
 		}
 
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_rtp_receiver_set_transport(IntPtr raw, IntPtr transport);
-
 		public Gst.WebRTC.WebRTCDTLSTransport Transport {
 			get {
 				unsafe {
 					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("transport"));
 					return GLib.Object.GetObject((*raw_ptr)) as Gst.WebRTC.WebRTCDTLSTransport;
 				}
-			}
-			set  {
-				gst_webrtc_rtp_receiver_set_transport(Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_rtp_receiver_set_rtcp_transport(IntPtr raw, IntPtr transport);
-
-		public Gst.WebRTC.WebRTCDTLSTransport RtcpTransport {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("rtcp_transport"));
-					return GLib.Object.GetObject((*raw_ptr)) as Gst.WebRTC.WebRTCDTLSTransport;
-				}
-			}
-			set  {
-				gst_webrtc_rtp_receiver_set_rtcp_transport(Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
@@ -106,14 +85,6 @@ namespace Gst.WebRTC {
 							, Gst.Object.abi_info.Fields
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // transport
 							, null
-							, "rtcp_transport"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("rtcp_transport"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // rtcp_transport
-							, "transport"
 							, "_padding"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -121,7 +92,7 @@ namespace Gst.WebRTC {
 						new GLib.AbiField("_padding"
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "rtcp_transport"
+							, "transport"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

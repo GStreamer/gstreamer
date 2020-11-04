@@ -1743,18 +1743,18 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_video_decoder_set_interlaced_output_state(IntPtr raw, int fmt, int mode, uint width, uint height, IntPtr reference);
+		static extern IntPtr gst_video_decoder_set_interlaced_output_state(IntPtr raw, int fmt, int interlace_mode, uint width, uint height, IntPtr reference);
 
-		public Gst.Video.VideoCodecState SetInterlacedOutputState(Gst.Video.VideoFormat fmt, Gst.Video.VideoInterlaceMode mode, uint width, uint height, Gst.Video.VideoCodecState reference) {
+		public Gst.Video.VideoCodecState SetInterlacedOutputState(Gst.Video.VideoFormat fmt, Gst.Video.VideoInterlaceMode interlace_mode, uint width, uint height, Gst.Video.VideoCodecState reference) {
 			IntPtr native_reference = GLib.Marshaller.StructureToPtrAlloc (reference);
-			IntPtr raw_ret = gst_video_decoder_set_interlaced_output_state(Handle, (int) fmt, (int) mode, width, height, native_reference);
+			IntPtr raw_ret = gst_video_decoder_set_interlaced_output_state(Handle, (int) fmt, (int) interlace_mode, width, height, native_reference);
 			Gst.Video.VideoCodecState ret = Gst.Video.VideoCodecState.New (raw_ret);
 			Marshal.FreeHGlobal (native_reference);
 			return ret;
 		}
 
-		public Gst.Video.VideoCodecState SetInterlacedOutputState(Gst.Video.VideoFormat fmt, Gst.Video.VideoInterlaceMode mode, uint width, uint height) {
-			return SetInterlacedOutputState (fmt, mode, width, height, Gst.Video.VideoCodecState.Zero);
+		public Gst.Video.VideoCodecState SetInterlacedOutputState(Gst.Video.VideoFormat fmt, Gst.Video.VideoInterlaceMode interlace_mode, uint width, uint height) {
+			return SetInterlacedOutputState (fmt, interlace_mode, width, height, Gst.Video.VideoCodecState.Zero);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

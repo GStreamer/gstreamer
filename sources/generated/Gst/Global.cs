@@ -524,8 +524,8 @@ namespace Gst {
 			return ret;
 		}
 
-		public static bool TypeFindRegister(string name, uint rank, Gst.TypeFindFunction func, Gst.Caps possible_caps) {
-			return TypeFindRegister (null, name, rank, func, null, possible_caps);
+		public static bool TypeFindRegister(string name, uint rank, Gst.TypeFindFunction func) {
+			return TypeFindRegister (null, name, rank, func, null, null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

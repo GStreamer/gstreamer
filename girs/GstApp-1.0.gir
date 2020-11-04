@@ -622,7 +622,10 @@ you must check the caps on the samples to get the actual used caps.</doc>
                  line="1113">a #GstAppSink</doc>
             <type name="AppSink" c:type="GstAppSink*"/>
           </instance-parameter>
-          <parameter name="caps" transfer-ownership="none">
+          <parameter name="caps"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/app/gstappsink.c"
                  line="1114">caps to set</doc>
@@ -1866,7 +1869,10 @@ buffers must match the caps or left NULL.</doc>
                  line="1422">a #GstAppSrc</doc>
             <type name="AppSrc" c:type="GstAppSrc*"/>
           </instance-parameter>
-          <parameter name="caps" transfer-ownership="none">
+          <parameter name="caps"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
             <doc xml:space="preserve"
                  filename="gst-libs/gst/app/gstappsrc.c"
                  line="1423">caps to set</doc>

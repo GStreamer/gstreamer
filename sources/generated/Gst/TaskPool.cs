@@ -253,6 +253,59 @@ namespace Gst {
 			unmanaged (this.Handle, id);
 		}
 
+		static DisposeHandleNativeDelegate DisposeHandle_cb_delegate;
+		static DisposeHandleNativeDelegate DisposeHandleVMCallback {
+			get {
+				if (DisposeHandle_cb_delegate == null)
+					DisposeHandle_cb_delegate = new DisposeHandleNativeDelegate (DisposeHandle_cb);
+				return DisposeHandle_cb_delegate;
+			}
+		}
+
+		static void OverrideDisposeHandle (GLib.GType gtype)
+		{
+			OverrideDisposeHandle (gtype, DisposeHandleVMCallback);
+		}
+
+		static void OverrideDisposeHandle (GLib.GType gtype, DisposeHandleNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("dispose_handle"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void DisposeHandleNativeDelegate (IntPtr inst, IntPtr id);
+
+		static void DisposeHandle_cb (IntPtr inst, IntPtr id)
+		{
+			try {
+				TaskPool __obj = GLib.Object.GetObject (inst, false) as TaskPool;
+				__obj.OnDisposeHandle (id);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.TaskPool), ConnectionMethod="OverrideDisposeHandle")]
+		protected virtual void OnDisposeHandle (IntPtr id)
+		{
+			InternalDisposeHandle (id);
+		}
+
+		private void InternalDisposeHandle (IntPtr id)
+		{
+			DisposeHandleNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("dispose_handle"));
+				unmanaged = (DisposeHandleNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(DisposeHandleNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			unmanaged (this.Handle, id);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -288,14 +341,22 @@ namespace Gst {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // join
 							, "push"
+							, "dispose_handle"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("dispose_handle"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // dispose_handle
+							, "join"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _gst_reserved
-							, "join"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _gst_reserved
+							, "dispose_handle"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -325,6 +386,17 @@ namespace Gst {
 
 		public void Cleanup() {
 			gst_task_pool_cleanup(Handle);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_task_pool_dispose_handle(IntPtr raw, IntPtr id);
+
+		public void DisposeHandle(IntPtr id) {
+			gst_task_pool_dispose_handle(Handle, id);
+		}
+
+		public void DisposeHandle() {
+			DisposeHandle (IntPtr.Zero);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
