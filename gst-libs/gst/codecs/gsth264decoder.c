@@ -1424,7 +1424,7 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
   }
 
   /* 8.2.5.3. Ensure the DPB doesn't overflow by discarding the oldest picture */
-  num_ref_pics = gst_h264_dpb_num_ref_pictures (priv->dpb);
+  num_ref_pics = gst_h264_dpb_num_ref_frames (priv->dpb);
   max_num_ref_frames = MAX (1, sps->num_ref_frames);
 
   if (num_ref_pics < max_num_ref_frames)
@@ -1569,11 +1569,11 @@ gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
       && sps->vui_parameters.bitstream_restriction_flag) {
     priv->max_num_reorder_frames = sps->vui_parameters.num_reorder_frames;
     if (priv->max_num_reorder_frames >
-        gst_h264_dpb_get_max_num_pics (priv->dpb)) {
+        gst_h264_dpb_get_max_num_frames (priv->dpb)) {
       GST_WARNING
           ("max_num_reorder_frames present, but larger than MaxDpbFrames (%d > %d)",
           (gint) priv->max_num_reorder_frames,
-          gst_h264_dpb_get_max_num_pics (priv->dpb));
+          gst_h264_dpb_get_max_num_frames (priv->dpb));
 
       priv->max_num_reorder_frames = 0;
       return FALSE;
@@ -1596,11 +1596,11 @@ gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
         break;
       default:
         priv->max_num_reorder_frames =
-            gst_h264_dpb_get_max_num_pics (priv->dpb);
+            gst_h264_dpb_get_max_num_frames (priv->dpb);
         break;
     }
   } else {
-    priv->max_num_reorder_frames = gst_h264_dpb_get_max_num_pics (priv->dpb);
+    priv->max_num_reorder_frames = gst_h264_dpb_get_max_num_frames (priv->dpb);
   }
 
   return TRUE;
@@ -1781,7 +1781,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   /* Safety, so that subclass don't need bound checking */
   g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, FALSE);
 
-  prev_max_dpb_size = gst_h264_dpb_get_max_num_pics (priv->dpb);
+  prev_max_dpb_size = gst_h264_dpb_get_max_num_frames (priv->dpb);
   if (priv->width != sps->width || priv->height != sps->height ||
       prev_max_dpb_size != max_dpb_size) {
     GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
@@ -1805,7 +1805,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
     priv->height = sps->height;
 
     gst_h264_decoder_set_latency (self, sps, max_dpb_size);
-    gst_h264_dpb_set_max_num_pics (priv->dpb, max_dpb_size);
+    gst_h264_dpb_set_max_num_frames (priv->dpb, max_dpb_size);
   }
 
   return gst_h264_decoder_update_max_num_reorder_frames (self, sps);

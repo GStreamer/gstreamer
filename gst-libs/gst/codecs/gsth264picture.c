@@ -106,7 +106,7 @@ gst_h264_picture_get_user_data (GstH264Picture * picture)
 struct _GstH264Dpb
 {
   GArray *pic_list;
-  gint max_num_pics;
+  gint max_num_frames;
   gint num_output_needed;
   gint32 last_output_poc;
 };
@@ -143,32 +143,36 @@ gst_h264_dpb_new (void)
 }
 
 /**
- * gst_h264_dpb_set_max_num_pics:
+ * gst_h264_dpb_set_max_num_frames:
  * @dpb: a #GstH264Dpb
- * @max_num_pics: the maximum number of picture
+ * @max_num_frames: the maximum number of picture
  *
- * Set the number of maximum allowed pictures to store
+ * Set the number of maximum allowed frames to store
+ *
+ * Since: 1.20
  */
 void
-gst_h264_dpb_set_max_num_pics (GstH264Dpb * dpb, gint max_num_pics)
+gst_h264_dpb_set_max_num_frames (GstH264Dpb * dpb, gint max_num_frames)
 {
   g_return_if_fail (dpb != NULL);
 
-  dpb->max_num_pics = max_num_pics;
+  dpb->max_num_frames = max_num_frames;
 }
 
 /**
- * gst_h264_dpb_get_max_num_pics:
+ * gst_h264_dpb_get_max_num_frames:
  * @dpb: a #GstH264Dpb
  *
- * Returns: the number of maximum pictures
+ * Returns: the number of maximum frames
+ *
+ * Since: 1.20
  */
 gint
-gst_h264_dpb_get_max_num_pics (GstH264Dpb * dpb)
+gst_h264_dpb_get_max_num_frames (GstH264Dpb * dpb)
 {
   g_return_val_if_fail (dpb != NULL, 0);
 
-  return dpb->max_num_pics;
+  return dpb->max_num_frames;
 }
 
 /**
@@ -258,13 +262,15 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
 }
 
 /**
- * gst_h264_dpb_num_ref_pictures:
+ * gst_h264_dpb_num_ref_frames:
  * @dpb: a #GstH264Dpb
  *
- * Returns: The number of referenced pictures
+ * Returns: The number of referenced frames
+ *
+ * Since: 1.20
  */
 gint
-gst_h264_dpb_num_ref_pictures (GstH264Dpb * dpb)
+gst_h264_dpb_num_ref_frames (GstH264Dpb * dpb)
 {
   gint i;
   gint ret = 0;
@@ -516,7 +522,7 @@ gst_h264_dpb_get_picture (GstH264Dpb * dpb, guint32 system_frame_number)
 static gboolean
 gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
 {
-  if (dpb->pic_list->len <= dpb->max_num_pics)
+  if (dpb->pic_list->len <= dpb->max_num_frames)
     return TRUE;
 
   return FALSE;

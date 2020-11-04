@@ -197,11 +197,11 @@ GST_CODECS_API
 GstH264Dpb * gst_h264_dpb_new (void);
 
 GST_CODECS_API
-void  gst_h264_dpb_set_max_num_pics (GstH264Dpb * dpb,
-                                     gint max_num_pics);
+void  gst_h264_dpb_set_max_num_frames (GstH264Dpb * dpb,
+                                       gint max_num_frames);
 
 GST_CODECS_API
-gint gst_h264_dpb_get_max_num_pics  (GstH264Dpb * dpb);
+gint gst_h264_dpb_get_max_num_frames  (GstH264Dpb * dpb);
 
 GST_CODECS_API
 void  gst_h264_dpb_free             (GstH264Dpb * dpb);
@@ -217,7 +217,7 @@ GST_CODECS_API
 void  gst_h264_dpb_delete_unused    (GstH264Dpb * dpb);
 
 GST_CODECS_API
-gint  gst_h264_dpb_num_ref_pictures (GstH264Dpb * dpb);
+gint  gst_h264_dpb_num_ref_frames (GstH264Dpb * dpb);
 
 GST_CODECS_API
 void  gst_h264_dpb_mark_all_non_ref (GstH264Dpb * dpb);
