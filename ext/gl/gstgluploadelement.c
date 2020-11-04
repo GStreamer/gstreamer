@@ -167,7 +167,7 @@ _gst_gl_upload_element_transform_caps (GstBaseTransform * bt,
   if (base_filter->display && !gst_gl_base_filter_find_gl_context (base_filter))
     return NULL;
 
-  context = GST_GL_BASE_FILTER (bt)->context;
+  context = gst_gl_base_filter_get_gl_context (base_filter);
 
   GST_OBJECT_LOCK (upload);
   if (upload->upload == NULL) {
@@ -191,7 +191,10 @@ _gst_gl_upload_element_transform_caps (GstBaseTransform * bt,
 
   ret_caps =
       gst_gl_upload_transform_caps (ul, context, direction, caps, filter);
+
   gst_object_unref (ul);
+  if (context)
+    gst_object_unref (context);
 
   return ret_caps;
 }
