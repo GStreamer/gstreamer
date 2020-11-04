@@ -169,7 +169,7 @@ static gboolean gst_h264_decoder_process_sps (GstH264Decoder * self,
     GstH264SPS * sps);
 static gboolean gst_h264_decoder_decode_slice (GstH264Decoder * self);
 static gboolean gst_h264_decoder_decode_nal (GstH264Decoder * self,
-    GstH264NalUnit * nalu, GstClockTime pts);
+    GstH264NalUnit * nalu);
 static gboolean gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
     const GstH264Slice * slice, GstH264Picture * picture);
 static gboolean gst_h264_decoder_calculate_poc (GstH264Decoder * self,
@@ -356,8 +356,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
         map.data, 0, map.size, priv->nal_length_size, &nalu);
 
     while (pres == GST_H264_PARSER_OK && decode_ret) {
-      decode_ret = gst_h264_decoder_decode_nal (self,
-          &nalu, GST_BUFFER_PTS (in_buf));
+      decode_ret = gst_h264_decoder_decode_nal (self, &nalu);
 
       pres = gst_h264_parser_identify_nalu_avc (priv->parser,
           map.data, nalu.offset + nalu.size, map.size, priv->nal_length_size,
@@ -371,8 +370,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
       pres = GST_H264_PARSER_OK;
 
     while (pres == GST_H264_PARSER_OK && decode_ret) {
-      decode_ret = gst_h264_decoder_decode_nal (self,
-          &nalu, GST_BUFFER_PTS (in_buf));
+      decode_ret = gst_h264_decoder_decode_nal (self, &nalu);
 
       pres = gst_h264_parser_identify_nalu (priv->parser,
           map.data, nalu.offset + nalu.size, map.size, &nalu);
@@ -721,8 +719,7 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
 }
 
 static gboolean
-gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu,
-    GstClockTime pts)
+gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264ParserResult pres = GST_H264_PARSER_OK;
@@ -753,7 +750,6 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu,
     gboolean ret = TRUE;
 
     picture = gst_h264_picture_new ();
-    picture->pts = pts;
     /* This allows accessing the frame from the picture. */
     picture->system_frame_number = priv->current_frame->system_frame_number;
 
@@ -780,8 +776,7 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu,
 }
 
 static gboolean
-gst_h264_decoder_decode_nal (GstH264Decoder * self, GstH264NalUnit * nalu,
-    GstClockTime pts)
+gst_h264_decoder_decode_nal (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
   gboolean ret = TRUE;
 
@@ -801,7 +796,7 @@ gst_h264_decoder_decode_nal (GstH264Decoder * self, GstH264NalUnit * nalu,
     case GST_H264_NAL_SLICE_DPC:
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE_EXT:
-      ret = gst_h264_decoder_parse_slice (self, nalu, pts);
+      ret = gst_h264_decoder_parse_slice (self, nalu);
       break;
     default:
       break;

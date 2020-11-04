@@ -51,7 +51,6 @@ gst_h264_picture_new (void)
 
   pic = g_new0 (GstH264Picture, 1);
 
-  pic->pts = GST_CLOCK_TIME_NONE;
   pic->top_field_order_cnt = G_MAXINT32;
   pic->bottom_field_order_cnt = G_MAXINT32;
   pic->field = GST_H264_PICTURE_FIELD_FRAME;
