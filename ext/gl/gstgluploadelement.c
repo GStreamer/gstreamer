@@ -209,19 +209,32 @@ _gst_gl_upload_element_propose_allocation (GstBaseTransform * bt,
     GstQuery * decide_query, GstQuery * query)
 {
   GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (bt);
-  GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
+  GstGLUpload *ul;
+  GstGLContext *context;
   gboolean ret;
 
-  if (!upload->upload)
+  GST_OBJECT_LOCK (upload);
+  if (!upload->upload) {
+    GST_OBJECT_UNLOCK (upload);
     return FALSE;
-  if (!context)
-    return FALSE;
+  }
+  ul = gst_object_ref (upload->upload);
+  GST_OBJECT_UNLOCK (upload);
 
-  gst_gl_upload_set_context (upload->upload, context);
+  context = gst_gl_base_filter_get_gl_context (GST_GL_BASE_FILTER (bt));
+  if (!context) {
+    gst_object_unref (ul);
+    return FALSE;
+  }
+
+  gst_gl_upload_set_context (ul, context);
 
   ret = GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (bt,
       decide_query, query);
-  gst_gl_upload_propose_allocation (upload->upload, decide_query, query);
+  gst_gl_upload_propose_allocation (ul, decide_query, query);
+
+  gst_object_unref (ul);
+  gst_object_unref (context);
 
   return ret;
 }
