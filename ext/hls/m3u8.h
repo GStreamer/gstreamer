@@ -176,6 +176,8 @@ GstHLSMedia * gst_hls_media_ref   (GstHLSMedia * media);
 
 void          gst_hls_media_unref (GstHLSMedia * media);
 
+const gchar * gst_hls_media_type_get_name (GstHLSMediaType mtype);
+
 
 struct _GstHLSVariantStream {
   gchar *name;         /* This will be the "name" of the playlist, the original

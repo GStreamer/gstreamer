@@ -1300,9 +1300,9 @@ gst_m3u8_get_hls_media_type_from_string (const gchar * type_name)
   return GST_HLS_MEDIA_TYPE_INVALID;
 }
 
-#define GST_HLS_MEDIA_TYPE_NAME(mtype) gst_m3u8_hls_media_type_get_nick(mtype)
-static inline const gchar *
-gst_m3u8_hls_media_type_get_nick (GstHLSMediaType mtype)
+#define GST_HLS_MEDIA_TYPE_NAME(mtype) gst_hls_media_type_get_name(mtype)
+const gchar *
+gst_hls_media_type_get_name (GstHLSMediaType mtype)
 {
   static const gchar *nicks[GST_HLS_N_MEDIA_TYPES] = { "audio", "video",
     "subtitle", "closed-captions"
