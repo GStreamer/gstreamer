@@ -1946,6 +1946,9 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
 
       tmp = get_stats_for_srtsock (caller->sock, is_sender, &bytes);
 
+      gst_structure_set (tmp, "caller-address", G_TYPE_SOCKET_ADDRESS,
+          caller->sockaddr, NULL);
+
       g_value_array_append (callers_stats, NULL);
       v = g_value_array_get_nth (callers_stats, callers_stats->n_values - 1);
       g_value_init (v, GST_TYPE_STRUCTURE);
