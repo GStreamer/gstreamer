@@ -567,7 +567,8 @@ gst_h264_decoder_preprocess_slice (GstH264Decoder * self, GstH264Slice * slice)
 }
 
 static void
-gst_h264_decoder_update_pic_nums (GstH264Decoder * self, gint frame_num)
+gst_h264_decoder_update_pic_nums (GstH264Decoder * self,
+    GstH264Picture * current_picture, gint frame_num)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GArray *dpb = gst_h264_dpb_get_pictures_all (priv->dpb);
@@ -575,11 +576,6 @@ gst_h264_decoder_update_pic_nums (GstH264Decoder * self, gint frame_num)
 
   for (i = 0; i < dpb->len; i++) {
     GstH264Picture *picture = g_array_index (dpb, GstH264Picture *, i);
-
-    if (picture->field != GST_H264_PICTURE_FIELD_FRAME) {
-      GST_FIXME_OBJECT (self, "Interlaced video not supported");
-      continue;
-    }
 
     if (!GST_H264_PICTURE_IS_REF (picture))
       continue;
@@ -651,7 +647,8 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
             unused_short_term_frame_num))
       return FALSE;
 
-    gst_h264_decoder_update_pic_nums (self, unused_short_term_frame_num);
+    gst_h264_decoder_update_pic_nums (self, picture,
+        unused_short_term_frame_num);
 
     /* C.2.1 */
     if (!gst_h264_decoder_sliding_window_picture_marking (self)) {
@@ -754,7 +751,7 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
     }
   }
 
-  gst_h264_decoder_update_pic_nums (self, frame_num);
+  gst_h264_decoder_update_pic_nums (self, current_picture, frame_num);
 
   if (priv->process_ref_pic_lists)
     gst_h264_decoder_prepare_ref_pic_lists (self);
@@ -1000,6 +997,7 @@ static gboolean
 gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
     const GstH264Slice * slice, GstH264Picture * picture)
 {
+  GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
   const GstH264SliceHdr *slice_hdr = &slice->header;
   const GstH264PPS *pps;
   const GstH264SPS *sps;
@@ -1028,8 +1026,9 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
   else
     picture->field = GST_H264_PICTURE_FIELD_FRAME;
 
-  if (picture->field != GST_H264_PICTURE_FIELD_FRAME) {
-    GST_FIXME ("Interlace video not supported");
+  if (picture->field != GST_H264_PICTURE_FIELD_FRAME &&
+      !klass->new_field_picture) {
+    GST_FIXME_OBJECT (self, "Subclass doesn't support interlace stream");
     return FALSE;
   }
 
@@ -1726,6 +1725,7 @@ gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
 static gboolean
 gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 {
+  GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
   GstH264DecoderPrivate *priv = self->priv;
   guint8 level;
   gint max_dpb_mbs;
@@ -1734,8 +1734,9 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   gint max_dpb_size;
   gint prev_max_dpb_size;
 
-  if (sps->frame_mbs_only_flag == 0) {
-    GST_FIXME_OBJECT (self, "frame_mbs_only_flag != 1 not supported");
+  if (sps->frame_mbs_only_flag == 0 && !klass->new_field_picture) {
+    GST_FIXME_OBJECT (self,
+        "frame_mbs_only_flag != 1 not supported by subclass");
     return FALSE;
   }
 

@@ -94,6 +94,22 @@ struct _GstH264DecoderClass
                                      GstH264Picture * picture);
 
   /**
+   * GstH264DecoderClass::new_field_picture:
+   * @decoder: a #GstH264Decoder
+   * @first_field: (transfer none): the first field #GstH264Picture already decoded
+   * @second_field: (transfer none): a #GstH264Picture for the second field
+   *
+   * Called when a new field picture is created for interlaced field picture.
+   * Subclass can attach implementation specific user data on @second_field via
+   * gst_h264_picture_set_user_data()
+   *
+   * Since: 1.20
+   */
+  gboolean      (*new_field_picture)  (GstH264Decoder * decoder,
+                                       const GstH264Picture * first_field,
+                                       GstH264Picture * second_field);
+
+  /**
    * GstH264DecoderClass::start_picture:
    * @decoder: a #GstH264Decoder
    * @picture: (transfer none): a #GstH264Picture
