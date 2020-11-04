@@ -32,16 +32,23 @@ gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 cc = meson.get_compiler('c')
 
 if cc.get_id() == 'msvc'
-  # Ignore several spurious warnings for things gstreamer does very commonly
-  # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
-  # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
-  # NOTE: Only add warnings here if you are sure they're spurious
-  add_project_arguments(
+  msvc_args = [
+      # Ignore several spurious warnings for things gstreamer does very commonly
+      # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
+      # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
+      # NOTE: Only add warnings here if you are sure they're spurious
       '/wd4018', # implicit signed/unsigned conversion
       '/wd4146', # unary minus on unsigned (beware INT_MIN)
       '/wd4244', # lossy type conversion (e.g. double -> int)
       '/wd4305', # truncating type conversion (e.g. double -> float)
-      language : 'c')
+      cc.get_supported_arguments(['/utf-8']), # set the input encoding to utf-8
+
+      # Enable some warnings on MSVC to match GCC/Clang behaviour
+      '/w14062', # enumerator 'identifier' in switch of enum 'enumeration' is not handled
+      '/w14101', # 'identifier' : unreferenced local variable
+      '/w14189', # 'identifier' : local variable is initialized but not referenced
+  ]
+  add_project_arguments(msvc_args, language: 'c')
   # Disable SAFESEH with MSVC for plugins and libs that use external deps that
   # are built with MinGW
   noseh_link_args = ['/SAFESEH:NO']
