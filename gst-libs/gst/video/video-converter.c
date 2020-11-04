@@ -612,6 +612,10 @@ gst_line_cache_get_lines (GstLineCache * cache, gint idx, gint out_line,
     if (cache->need_line == NULL)
       break;
 
+    /* We may be able to skip ahead to the earliest line needed */
+    if (cache->lines->len == 0 && cache->first + cache->backlog < in_line)
+      cache->first = in_line - cache->backlog;
+
     oline = out_line + cache->first + cache->lines->len - in_line;
 
     if (!cache->need_line (cache, idx, oline, cache->first + cache->lines->len,
