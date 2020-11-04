@@ -38,7 +38,6 @@ GType gst_webrtc_rtp_sender_get_type(void);
 /**
  * GstWebRTCRTPSender:
  * @transport: The transport for RTP packets
- * @rtcp_transport: The transport for RTCP packets without rtcp-mux
  * @send_encodings: Unused
  * @priority: The priority of the stream (Since: 1.20)
  *
@@ -59,9 +58,8 @@ struct _GstWebRTCRTPSender
 {
   GstObject                          parent;
 
-  /* The MediStreamTrack is represented by the stream and is output into @transport/@rtcp_transport as necessary */
+  /* The MediStreamTrack is represented by the stream and is output into @transport as necessary */
   GstWebRTCDTLSTransport            *transport;
-  GstWebRTCDTLSTransport            *rtcp_transport;
 
   GArray                            *send_encodings;
   GstWebRTCPriorityType              priority;

@@ -121,10 +121,6 @@ gst_webrtc_rtp_sender_finalize (GObject * object)
     gst_object_unref (sender->transport);
   sender->transport = NULL;
 
-  if (sender->rtcp_transport)
-    gst_object_unref (sender->rtcp_transport);
-  sender->rtcp_transport = NULL;
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 

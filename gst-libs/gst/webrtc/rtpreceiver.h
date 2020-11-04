@@ -38,7 +38,6 @@ GType gst_webrtc_rtp_receiver_get_type(void);
 /**
  * GstWebRTCRTPReceiver:
  * @transport: The transport for RTP packets
- * @rtcp_transport: The transport for RTCP packets without rtcp-mux
  *
  * An object to track the receiving aspect of the stream
  *
@@ -50,9 +49,8 @@ struct _GstWebRTCRTPReceiver
 {
   GstObject                          parent;
 
-  /* The MediStreamTrack is represented by the stream and is output into @transport/@rtcp_transport as necessary */
+  /* The MediStreamTrack is represented by the stream and is output into @transport as necessary */
   GstWebRTCDTLSTransport            *transport;
-  GstWebRTCDTLSTransport            *rtcp_transport;
 
   gpointer                          _padding[GST_PADDING];
 };

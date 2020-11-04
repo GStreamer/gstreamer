@@ -84,10 +84,6 @@ gst_webrtc_rtp_receiver_finalize (GObject * object)
     gst_object_unref (webrtc->transport);
   webrtc->transport = NULL;
 
-  if (webrtc->rtcp_transport)
-    gst_object_unref (webrtc->rtcp_transport);
-  webrtc->rtcp_transport = NULL;
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
