@@ -624,21 +624,35 @@ mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstFlowReturn
-empty_adapter_into_pad (MpegTSParse2Adapter * ts_adapter, GstPad * pad)
+empty_adapter_into_pad (MpegTSParse2 * parse, MpegTSParse2Adapter * ts_adapter,
+    GstPad * pad)
 {
   GstAdapter *adapter = ts_adapter->adapter;
   GstBuffer *buf = NULL;
-  GstClockTime ts = gst_adapter_prev_pts (adapter, NULL);
+  guint64 pts_dist, dts_dist;
+  GstClockTime pts, dts;
   gsize avail = gst_adapter_available (adapter);
   GstFlowReturn ret = GST_FLOW_OK;
+  gsize offset;
 
   if (avail > 0)
     buf = gst_adapter_take_buffer (adapter, avail);
+  /* Find the previous PTS/DTS. We also handle un-aligned input since want to
+   * use the most recent PTS/DTS if present */
+  offset = MIN (GST_MPEGTS_BASE (parse)->packetizer->packet_size, 188);
+  pts = gst_adapter_prev_pts_at_offset (adapter, offset, &pts_dist);
+  dts = gst_adapter_prev_dts_at_offset (adapter, offset, &dts_dist);
+
+  GST_LOG_OBJECT (ts_adapter,
+      "prev pts:%" GST_TIME_FORMAT " (dist:%" G_GUINT64_FORMAT ") dts:%"
+      GST_TIME_FORMAT " (dist:%" G_GUINT64_FORMAT ")",
+      GST_TIME_ARGS (pts), pts_dist, GST_TIME_ARGS (dts), dts_dist);
 
   ts_adapter->packets_in_adapter = 0;
 
   if (buf) {
-    GST_BUFFER_PTS (buf) = ts;
+    GST_BUFFER_PTS (buf) = pts;
+    GST_BUFFER_DTS (buf) = dts;
     if (!ts_adapter->first_is_keyframe)
       gst_buffer_set_flags (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     ret = gst_pad_push (pad, buf);
@@ -660,7 +674,7 @@ enqueue_and_maybe_push_buffer (MpegTSParse2 * parse, GstPad * pad,
     } else {
       if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)
           && parse->split_on_rai) {
-        ret = empty_adapter_into_pad (ts_adapter, pad);
+        ret = empty_adapter_into_pad (parse, ts_adapter, pad);
         ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
       }
       gst_adapter_push (ts_adapter->adapter, buffer);
@@ -672,7 +686,7 @@ enqueue_and_maybe_push_buffer (MpegTSParse2 * parse, GstPad * pad,
 
       if (ts_adapter->packets_in_adapter == parse->alignment
           && ts_adapter->packets_in_adapter > 0) {
-        ret = empty_adapter_into_pad (ts_adapter, pad);
+        ret = empty_adapter_into_pad (parse, ts_adapter, pad);
         ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
       }
     }
@@ -683,7 +697,8 @@ enqueue_and_maybe_push_buffer (MpegTSParse2 * parse, GstPad * pad,
 
 static GstFlowReturn
 mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
-    GstMpegtsSection * section, MpegTSPacketizerPacket * packet)
+    GstMpegtsSection * section, MpegTSPacketizerPacket * packet,
+    GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean to_push = TRUE;
@@ -710,10 +725,9 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
       tspad->program_number, section->table_id);
 
   if (to_push) {
-    GstBuffer *buf = mpegts_packet_to_buffer (packet);
     ret =
-        enqueue_and_maybe_push_buffer (parse, tspad->pad, &tspad->ts_adapter,
-        buf);
+        enqueue_and_maybe_push_buffer (parse, tspad->pad,
+        &tspad->ts_adapter, gst_buffer_ref (buf));
   }
 
   GST_LOG_OBJECT (parse, "Returning %s", gst_flow_get_name (ret));
@@ -722,7 +736,7 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
 
 static GstFlowReturn
 mpegts_parse_tspad_push (MpegTSParse2 * parse, MpegTSParsePad * tspad,
-    MpegTSPacketizerPacket * packet)
+    MpegTSPacketizerPacket * packet, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   MpegTSBaseProgram *bp = NULL;
@@ -738,9 +752,8 @@ mpegts_parse_tspad_push (MpegTSParse2 * parse, MpegTSParsePad * tspad,
   if (bp) {
     if (packet->pid == bp->pmt_pid || bp->streams == NULL
         || bp->streams[packet->pid]) {
-      GstBuffer *buf = mpegts_packet_to_buffer (packet);
       /* push if there's no filter or if the pid is in the filter */
-      ret = gst_pad_push (tspad->pad, buf);
+      ret = gst_pad_push (tspad->pad, gst_buffer_ref (buf));
       ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
     }
   }
@@ -794,7 +807,11 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
       && !(packet->afc_flags & MPEGTS_AFC_RANDOM_ACCESS_FLAG)) {
     gst_buffer_set_flags (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
-  ret = mpegts_parse_have_buffer (base, buf);
+
+  /* Copy over input PTS/DTS (if present) */
+  GST_BUFFER_DTS (buf) = base->packetizer->last_pts;
+  GST_BUFFER_PTS (buf) = base->packetizer->last_dts;
+  ret = mpegts_parse_have_buffer (base, gst_buffer_ref (buf));
 
   while (pad && !done) {
     tspad = gst_pad_get_element_private (pad);
@@ -802,9 +819,11 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     if (G_LIKELY (!tspad->pushed)) {
       if (section) {
         tspad->flow_return =
-            mpegts_parse_tspad_push_section (parse, tspad, section, packet);
+            mpegts_parse_tspad_push_section (parse, tspad, section, packet,
+            buf);
       } else {
-        tspad->flow_return = mpegts_parse_tspad_push (parse, tspad, packet);
+        tspad->flow_return =
+            mpegts_parse_tspad_push (parse, tspad, packet, buf);
       }
       tspad->pushed = TRUE;
 
@@ -844,6 +863,7 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     }
   }
 
+  gst_buffer_unref (buf);
   return ret;
 }
 
@@ -1013,7 +1033,7 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
   }
 
   if (parse->is_eos) {
-    empty_adapter_into_pad (&parse->ts_adapter, parse->srcpad);
+    empty_adapter_into_pad (parse, &parse->ts_adapter, parse->srcpad);
   }
 
   parse->pending_buffers = end;
@@ -1071,9 +1091,8 @@ mpegts_parse_have_buffer (MpegTSBase * base, GstBuffer * buffer)
   }
 
   ret =
-      enqueue_and_maybe_push_buffer (parse, parse->srcpad, &parse->ts_adapter,
-      buffer);
-
+      enqueue_and_maybe_push_buffer (parse, parse->srcpad,
+      &parse->ts_adapter, buffer);
   return ret;
 }
 
@@ -1082,8 +1101,7 @@ empty_pad (GstPad * pad, MpegTSParse2 * parse)
 {
   MpegTSParsePad *tspad = (MpegTSParsePad *) gst_pad_get_element_private (pad);
   GstFlowReturn ret;
-
-  ret = empty_adapter_into_pad (&tspad->ts_adapter, tspad->pad);
+  ret = empty_adapter_into_pad (parse, &tspad->ts_adapter, tspad->pad);
   ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
 }
 
@@ -1097,7 +1115,7 @@ mpegts_parse_input_done (MpegTSBase * base)
     return GST_FLOW_OK;
 
   if (parse->alignment == 0) {
-    ret = empty_adapter_into_pad (&parse->ts_adapter, parse->srcpad);
+    ret = empty_adapter_into_pad (parse, &parse->ts_adapter, parse->srcpad);
     ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
     g_list_foreach (parse->srcpads, (GFunc) empty_pad, parse);
   }

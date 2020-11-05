@@ -283,6 +283,10 @@ struct _MpegTSPacketizer2 {
   MpegTSPCR *observations[MAX_PCR_OBS_CHANNELS];
   guint8 lastobsid;
   GstClockTime pcr_discont_threshold;
+
+  /* PTS/DTS of last buffer */
+  GstClockTime last_pts;
+  GstClockTime last_dts;
 };
 
 struct _MpegTSPacketizer2Class {

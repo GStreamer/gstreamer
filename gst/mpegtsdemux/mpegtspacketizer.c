@@ -270,6 +270,8 @@ mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
   packetizer->refoffset = -1;
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
   packetizer->pcr_discont_threshold = GST_SECOND;
+  packetizer->last_pts = GST_CLOCK_TIME_NONE;
+  packetizer->last_dts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -590,6 +592,8 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
   packetizer->map_size = 0;
   packetizer->map_offset = 0;
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
+  packetizer->last_pts = GST_CLOCK_TIME_NONE;
+  packetizer->last_dts = GST_CLOCK_TIME_NONE;
 
   pcrtable = packetizer->observations[packetizer->pcrtablelut[0x1fff]];
   if (pcrtable)
@@ -630,6 +634,8 @@ mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer, gboolean hard)
   packetizer->map_size = 0;
   packetizer->map_offset = 0;
   packetizer->last_in_time = GST_CLOCK_TIME_NONE;
+  packetizer->last_pts = GST_CLOCK_TIME_NONE;
+  packetizer->last_dts = GST_CLOCK_TIME_NONE;
 
   pcrtable = packetizer->observations[packetizer->pcrtablelut[0x1fff]];
   if (pcrtable)
@@ -691,6 +697,8 @@ mpegts_packetizer_push (MpegTSPacketizer2 * packetizer, GstBuffer * buffer)
   ts = GST_BUFFER_DTS_OR_PTS (buffer);
   if (GST_CLOCK_TIME_IS_VALID (ts))
     packetizer->last_in_time = ts;
+  packetizer->last_pts = GST_BUFFER_PTS (buffer);
+  packetizer->last_dts = GST_BUFFER_DTS (buffer);
 }
 
 static void
