@@ -1229,15 +1229,21 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
             picture->pic_order_cnt_msb + picture->pic_order_cnt_lsb;
       }
 
-      if (picture->field != GST_H264_PICTURE_FIELD_TOP_FIELD) {
-        if (GST_H264_PICTURE_IS_FRAME (picture)) {
-          picture->bottom_field_order_cnt =
-              picture->top_field_order_cnt +
+      switch (picture->field) {
+        case GST_H264_PICTURE_FIELD_FRAME:
+          picture->top_field_order_cnt = picture->pic_order_cnt_msb +
+              picture->pic_order_cnt_lsb;
+          picture->bottom_field_order_cnt = picture->top_field_order_cnt +
               picture->delta_pic_order_cnt_bottom;
-        } else {
-          picture->bottom_field_order_cnt =
-              picture->pic_order_cnt_msb + picture->pic_order_cnt_lsb;
-        }
+          break;
+        case GST_H264_PICTURE_FIELD_TOP_FIELD:
+          picture->top_field_order_cnt = picture->pic_order_cnt_msb +
+              picture->pic_order_cnt_lsb;
+          break;
+        case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
+          picture->bottom_field_order_cnt = picture->pic_order_cnt_msb +
+              picture->pic_order_cnt_lsb;
+          break;
       }
       break;
     }
