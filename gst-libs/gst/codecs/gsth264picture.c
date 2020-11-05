@@ -726,6 +726,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
         other->ref = FALSE;
+        GST_TRACE ("MMCO-1: unmark short-term ref picture %p, (poc %d)",
+            other, other->pic_order_cnt);
       } else {
         GST_WARNING ("Invalid picNumX %d for operation type 1", pic_num_x);
         return FALSE;
@@ -738,6 +740,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
           ref_pic_marking->long_term_pic_num);
       if (other) {
         other->ref = FALSE;
+        GST_TRACE ("MMCO-2: unmark long-term ref picture %p, (poc %d)",
+            other, other->pic_order_cnt);
       } else {
         GST_WARNING ("Invalid LongTermPicNum %d for operation type 2",
             ref_pic_marking->long_term_pic_num);
@@ -754,10 +758,10 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
 
         if (other->ref && other->long_term && other->long_term_frame_idx ==
             ref_pic_marking->long_term_frame_idx) {
-          GST_LOG ("Unmark old long-term ref pic %p (poc %d)",
-              other, other->pic_order_cnt);
           other->ref = FALSE;
           other->long_term = FALSE;
+          GST_TRACE ("MMCO-3: unmark old long-term ref pic %p (poc %d)",
+              other, other->pic_order_cnt);
           break;
         }
       }
@@ -765,8 +769,10 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       pic_num_x = get_picNumX (picture, ref_pic_marking);
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
-        other->long_term = TRUE;;
+        other->long_term = TRUE;
         other->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
+        GST_TRACE ("MMCO-3: mark long-term ref pic %p, index %d, (poc %d)",
+            other, other->long_term_frame_idx, other->pic_order_cnt);
       } else {
         GST_WARNING ("Invalid picNumX %d for operation type 3", pic_num_x);
         return FALSE;
@@ -779,6 +785,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       max_long_term_frame_idx =
           ref_pic_marking->max_long_term_frame_idx_plus1 - 1;
 
+      GST_TRACE ("MMCO-4: max_long_term_frame_idx %d", max_long_term_frame_idx);
+
       for (i = 0; i < dpb->pic_list->len; i++) {
         other = g_array_index (dpb->pic_list, GstH264Picture *, i);
 
@@ -786,6 +794,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
             other->long_term_frame_idx > max_long_term_frame_idx) {
           other->ref = FALSE;
           other->long_term = FALSE;
+          GST_TRACE ("MMCO-4: unmark long-term ref pic %p, index %d, (poc %d)",
+              other, other->long_term_frame_idx, other->pic_order_cnt);
         }
       }
       break;
@@ -809,7 +819,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
 
         if (other->ref && other->long_term && other->long_term_frame_idx ==
             ref_pic_marking->long_term_frame_idx) {
-          GST_LOG ("Unmark old long-term ref pic %p (poc %d)",
+          GST_TRACE ("MMCO-6: unmark old long-term ref pic %p (poc %d)",
               other, other->pic_order_cnt);
           other->ref = FALSE;
           other->long_term = FALSE;

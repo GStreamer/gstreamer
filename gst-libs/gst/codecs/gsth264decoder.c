@@ -611,14 +611,32 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     return FALSE;
   }
 
+  if (priv->prev_ref_frame_num == frame_num) {
+    GST_TRACE_OBJECT (self,
+        "frame_num == PrevRefFrameNum (%d), not a gap", frame_num);
+    return TRUE;
+  }
+
+  if (((priv->prev_ref_frame_num + 1) % priv->max_frame_num) == frame_num) {
+    GST_TRACE_OBJECT (self,
+        "frame_num ==  (PrevRefFrameNum + 1) %% MaxFrameNum (%d), not a gap",
+        frame_num);
+    return TRUE;
+  }
+
+  if (gst_h264_dpb_get_size (priv->dpb) == 0) {
+    GST_TRACE_OBJECT (self, "DPB is empty, not a gap");
+    return TRUE;
+  }
+
   if (!sps->gaps_in_frame_num_value_allowed_flag) {
     /* This is likely the case where some frames were dropped.
      * then we need to keep decoding without error out */
     GST_WARNING_OBJECT (self, "Invalid frame num %d", frame_num);
   }
 
-  GST_DEBUG_OBJECT (self, "Handling frame num gap %d -> %d",
-      priv->prev_ref_frame_num, frame_num);
+  GST_DEBUG_OBJECT (self, "Handling frame num gap %d -> %d (MaxFrameNum: %d)",
+      priv->prev_ref_frame_num, frame_num, priv->max_frame_num);
 
   /* 7.4.3/7-23 */
   unused_short_term_frame_num =
@@ -708,13 +726,8 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
   if (priv->current_slice.nalu.idr_pic_flag)
     priv->prev_ref_frame_num = 0;
 
-  /* 7.4.3 */
-  if (frame_num != priv->prev_ref_frame_num &&
-      frame_num != (priv->prev_ref_frame_num + 1) % priv->max_frame_num &&
-      gst_h264_dpb_get_size (priv->dpb) > 0) {
-    if (!gst_h264_decoder_handle_frame_num_gap (self, frame_num))
-      return FALSE;
-  }
+  if (!gst_h264_decoder_handle_frame_num_gap (self, frame_num))
+    return FALSE;
 
   if (!gst_h264_decoder_init_current_picture (self))
     return FALSE;
