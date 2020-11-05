@@ -181,7 +181,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
   guint8 addr[ETH_ALEN];
   int fd, res, ifindex;
 
-  fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
+  fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_ALL));
   if (fd < 0) {
     GST_ERROR_OBJECT (avtpcrfbase, "Failed to open socket: %s",
         g_strerror (errno));
@@ -197,7 +197,7 @@ setup_socket (GstAvtpCrfBase * avtpcrfbase)
   }
 
   sk_addr.sll_family = AF_PACKET;
-  sk_addr.sll_protocol = htons (ETH_P_TSN);
+  sk_addr.sll_protocol = htons (ETH_P_ALL);
   sk_addr.sll_ifindex = ifindex;
 
   res = bind (fd, (struct sockaddr *) &sk_addr, sizeof (sk_addr));
