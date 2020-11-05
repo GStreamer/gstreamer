@@ -180,8 +180,8 @@ GstH264Picture * gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb,
                                                         gint pic_num);
 
 GST_CODECS_API
-GstH264Picture * gst_h264_dpb_get_long_ref_by_pic_num  (GstH264Dpb * dpb,
-                                                        gint pic_num);
+GstH264Picture * gst_h264_dpb_get_long_ref_by_long_term_pic_num (GstH264Dpb * dpb,
+                                                                 gint long_term_pic_num);
 
 GST_CODECS_API
 GstH264Picture * gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb);

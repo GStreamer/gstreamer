@@ -2207,7 +2207,7 @@ modify_ref_pic_list (GstH264Decoder * self, int list)
       case 2:
         /* (8-28) */
         g_assert (num_ref_idx_lX_active_minus1 + 1 < 32);
-        pic = gst_h264_dpb_get_long_ref_by_pic_num (priv->dpb,
+        pic = gst_h264_dpb_get_long_ref_by_long_term_pic_num (priv->dpb,
             list_mod->value.long_term_pic_num);
         if (!pic) {
           GST_WARNING_OBJECT (self, "Malformed stream, no pic num %d",

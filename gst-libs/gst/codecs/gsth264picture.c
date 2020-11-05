@@ -333,16 +333,19 @@ gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
 }
 
 /**
- * gst_h264_dpb_get_long_ref_by_pic_num:
+ * gst_h264_dpb_get_long_ref_by_long_term_pic_num:
  * @dpb: a #GstH264Dpb
- * @pic_num: a picture number
+ * @pic_num: a long term picture number
  *
- * Find a long term reference picture which has matching picture number
+ * Find a long term reference picture which has matching long term picture number
  *
  * Returns: (nullable) (transfer none): a #GstH264Picture
+ *
+ * Since: 1.20
  */
 GstH264Picture *
-gst_h264_dpb_get_long_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
+gst_h264_dpb_get_long_ref_by_long_term_pic_num (GstH264Dpb * dpb,
+    gint long_term_pic_num)
 {
   gint i;
 
@@ -352,11 +355,12 @@ gst_h264_dpb_get_long_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && picture->long_term && picture->pic_num == pic_num)
+    if (picture->ref && picture->long_term &&
+        picture->long_term_pic_num == long_term_pic_num)
       return picture;
   }
 
-  GST_WARNING ("No long term reference picture for %d", pic_num);
+  GST_WARNING ("No long term reference picture for %d", long_term_pic_num);
 
   return NULL;
 }
@@ -736,7 +740,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
     case 2:
       /* 8.2.5.4.2 Mark a long term reference picture as unused so it can be
        * removed if outputted */
-      other = gst_h264_dpb_get_long_ref_by_pic_num (dpb,
+      other = gst_h264_dpb_get_long_ref_by_long_term_pic_num (dpb,
           ref_pic_marking->long_term_pic_num);
       if (other) {
         other->ref = FALSE;
