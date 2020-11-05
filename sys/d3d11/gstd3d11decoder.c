@@ -1403,8 +1403,8 @@ do_process:
 gboolean
 gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
     GstVideoCodecState * input_state, GstVideoFormat format,
-    guint width, guint height, GstVideoCodecState ** output_state,
-    gboolean * downstream_supports_d3d11)
+    guint width, guint height, GstVideoInterlaceMode interlace_mode,
+    GstVideoCodecState ** output_state, gboolean * downstream_supports_d3d11)
 {
   GstCaps *peer_caps;
   GstVideoCodecState *state;
@@ -1419,6 +1419,8 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
 
   state = gst_video_decoder_set_output_state (decoder,
       format, width, height, input_state);
+  if (interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+    state->info.interlace_mode = interlace_mode;
   state->caps = gst_video_info_to_caps (&state->info);
 
   if (*output_state)

@@ -119,6 +119,7 @@ gboolean          gst_d3d11_decoder_negotiate           (GstVideoDecoder * decod
                                                          GstVideoFormat format,
                                                          guint width,
                                                          guint height,
+                                                         GstVideoInterlaceMode interlace_mode,
                                                          GstVideoCodecState ** output_state,
                                                          gboolean * downstream_supports_d3d11);
 

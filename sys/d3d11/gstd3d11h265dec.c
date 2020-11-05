@@ -310,8 +310,9 @@ gst_d3d11_h265_dec_negotiate (GstVideoDecoder * decoder)
   GstH265Decoder *h265dec = GST_H265_DECODER (decoder);
 
   if (!gst_d3d11_decoder_negotiate (decoder, h265dec->input_state,
-          self->out_format, self->width, self->height, &self->output_state,
-          &self->use_d3d11_output))
+          self->out_format, self->width, self->height,
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+          &self->output_state, &self->use_d3d11_output))
     return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);

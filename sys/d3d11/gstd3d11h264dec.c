@@ -98,6 +98,7 @@ typedef struct _GstD3D11H264Dec
   guint bitdepth;
   guint chroma_format_idc;
   GstVideoFormat out_format;
+  gboolean interlaced;
 
   /* Array of DXVA_Slice_H264_Short */
   GArray *slice_list;
@@ -152,6 +153,8 @@ static gboolean gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size);
 static gboolean gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture);
+static gboolean gst_d3d11_h264_dec_new_field_picture (GstH264Decoder *
+    decoder, const GstH264Picture * first_field, GstH264Picture * second_field);
 static GstFlowReturn gst_d3d11_h264_dec_output_picture (GstH264Decoder *
     decoder, GstVideoCodecFrame * frame, GstH264Picture * picture);
 static gboolean gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
@@ -227,6 +230,8 @@ gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_new_sequence);
   h264decoder_class->new_picture =
       GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_new_picture);
+  h264decoder_class->new_field_picture =
+      GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_new_field_picture);
   h264decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_output_picture);
   h264decoder_class->start_picture =
@@ -335,8 +340,10 @@ gst_d3d11_h264_dec_negotiate (GstVideoDecoder * decoder)
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
 
   if (!gst_d3d11_decoder_negotiate (decoder, h264dec->input_state,
-          self->out_format, self->width, self->height, &self->output_state,
-          &self->use_d3d11_output))
+          self->out_format, self->width, self->height,
+          self->interlaced ? GST_VIDEO_INTERLACE_MODE_MIXED :
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+          &self->output_state, &self->use_d3d11_output))
     return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
@@ -381,6 +388,7 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   gint crop_width, crop_height;
+  gboolean interlaced;
   gboolean modified = FALSE;
   static const GUID *supported_profiles[] = {
     &GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT,
@@ -418,6 +426,13 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
   if (self->chroma_format_idc != sps->chroma_format_idc) {
     GST_INFO_OBJECT (self, "chroma format changed");
     self->chroma_format_idc = sps->chroma_format_idc;
+    modified = TRUE;
+  }
+
+  interlaced = !sps->frame_mbs_only_flag;
+  if (self->interlaced != interlaced) {
+    GST_INFO_OBJECT (self, "interlaced sequence changed");
+    self->interlaced = interlaced;
     modified = TRUE;
   }
 
@@ -559,8 +574,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
 
   dpb_array = gst_h264_dpb_get_pictures_all (dpb);
 
-  for (i = 0; i < dpb_array->len; i++) {
-    guint ref = 3;
+  for (i = dpb_array->len - 1, j = 0; i >= 0 && j < 16; i--) {
     GstH264Picture *other = g_array_index (dpb_array, GstH264Picture *, i);
     ID3D11VideoDecoderOutputView *other_view;
     gint id = 0xff;
@@ -568,20 +582,61 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     if (!GST_H264_PICTURE_IS_REF (other))
       continue;
 
+    /* The second field picture will be handled differently */
+    if (other->second_field)
+      continue;
+
     other_view = gst_d3d11_h264_dec_get_output_view_from_picture (self, other);
 
     if (other_view)
       id = gst_d3d11_decoder_get_output_view_index (other_view);
 
-    self->ref_frame_list[i].Index7Bits = id;
-    self->ref_frame_list[i].AssociatedFlag =
-        GST_H264_PICTURE_IS_LONG_TERM_REF (other);
-    self->field_order_cnt_list[i][0] = other->top_field_order_cnt;
-    self->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
-    self->frame_num_list[i] = self->ref_frame_list[i].AssociatedFlag
-        ? other->long_term_frame_idx : other->frame_num;
-    self->used_for_reference_flags |= ref << (2 * i);
-    self->non_existing_frame_flags |= (other->nonexisting) << i;
+    self->ref_frame_list[j].Index7Bits = id;
+
+    if (GST_H264_PICTURE_IS_LONG_TERM_REF (other)) {
+      self->ref_frame_list[j].AssociatedFlag = 1;
+      self->frame_num_list[j] = other->long_term_frame_idx;
+    } else {
+      self->ref_frame_list[j].AssociatedFlag = 0;
+      self->frame_num_list[j] = other->frame_num;
+    }
+
+    switch (other->field) {
+      case GST_H264_PICTURE_FIELD_TOP_FIELD:
+        self->field_order_cnt_list[j][0] = other->top_field_order_cnt;
+        self->used_for_reference_flags |= 0x1 << (2 * j);
+        break;
+      case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
+        self->field_order_cnt_list[j][1] = other->bottom_field_order_cnt;
+        self->used_for_reference_flags |= 0x1 << (2 * j + 1);
+        break;
+      default:
+        self->field_order_cnt_list[j][0] = other->top_field_order_cnt;
+        self->field_order_cnt_list[j][1] = other->bottom_field_order_cnt;
+        self->used_for_reference_flags |= 0x3 << (2 * j);
+        break;
+    }
+
+    if (other->other_field) {
+      GstH264Picture *other_field = other->other_field;
+
+      switch (other_field->field) {
+        case GST_H264_PICTURE_FIELD_TOP_FIELD:
+          self->field_order_cnt_list[j][0] = other_field->top_field_order_cnt;
+          self->used_for_reference_flags |= 0x1 << (2 * j);
+          break;
+        case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
+          self->field_order_cnt_list[j][1] =
+              other_field->bottom_field_order_cnt;
+          self->used_for_reference_flags |= 0x1 << (2 * j + 1);
+          break;
+        default:
+          break;
+      }
+    }
+
+    self->non_existing_frame_flags |= (other->nonexisting) << j;
+    j++;
   }
 
   gst_d3d11_h264_dec_fill_picture_params (self, &slice->header, &pic_params);
@@ -591,12 +646,12 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
   pic_params.RefPicFlag = GST_H264_PICTURE_IS_REF (picture);
   pic_params.frame_num = picture->frame_num;
 
-  if (pic_params.field_pic_flag && pic_params.CurrPic.AssociatedFlag) {
-    pic_params.CurrFieldOrderCnt[1] = picture->bottom_field_order_cnt;
-    pic_params.CurrFieldOrderCnt[0] = 0;
-  } else if (pic_params.field_pic_flag && !pic_params.CurrPic.AssociatedFlag) {
+  if (picture->field == GST_H264_PICTURE_FIELD_TOP_FIELD) {
     pic_params.CurrFieldOrderCnt[0] = picture->top_field_order_cnt;
     pic_params.CurrFieldOrderCnt[1] = 0;
+  } else if (picture->field == GST_H264_PICTURE_FIELD_BOTTOM_FIELD) {
+    pic_params.CurrFieldOrderCnt[0] = 0;
+    pic_params.CurrFieldOrderCnt[1] = picture->bottom_field_order_cnt;
   } else {
     pic_params.CurrFieldOrderCnt[0] = picture->top_field_order_cnt;
     pic_params.CurrFieldOrderCnt[1] = picture->bottom_field_order_cnt;
@@ -707,6 +762,32 @@ gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
   return TRUE;
 }
 
+static gboolean
+gst_d3d11_h264_dec_new_field_picture (GstH264Decoder * decoder,
+    const GstH264Picture * first_field, GstH264Picture * second_field)
+{
+  GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
+  GstBuffer *view_buffer;
+  GstD3D11Memory *mem;
+
+  view_buffer = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+
+  if (!view_buffer) {
+    GST_WARNING_OBJECT (self, "First picture does not have output view buffer");
+    return TRUE;
+  }
+
+  mem = (GstD3D11Memory *) gst_buffer_peek_memory (view_buffer, 0);
+
+  GST_LOG_OBJECT (self, "New field picture with buffer %" GST_PTR_FORMAT
+      " (index %d)", view_buffer, mem->subresource_index);
+
+  gst_h264_picture_set_user_data (second_field,
+      gst_buffer_ref (view_buffer), (GDestroyNotify) gst_buffer_unref);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
@@ -756,6 +837,17 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
           view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
+  }
+
+  if (picture->buffer_flags != 0) {
+    gboolean interlaced =
+        (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
+    gboolean tff = (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
+
+    GST_TRACE_OBJECT (self,
+        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
+        picture->buffer_flags, interlaced, tff);
+    GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
   }
 
   gst_h264_picture_unref (picture);
@@ -903,7 +995,9 @@ gst_d3d11_h264_dec_picture_params_from_sps (GstD3D11H264Dec * self,
   (params)->f = (sps)->f
 
   params->wFrameWidthInMbsMinus1 = sps->pic_width_in_mbs_minus1;
-  params->wFrameHeightInMbsMinus1 = sps->pic_height_in_map_units_minus1;
+  params->wFrameHeightInMbsMinus1 =
+      ((sps->pic_height_in_map_units_minus1 + 1) << !sps->frame_mbs_only_flag)
+      - 1;
   params->residual_colour_transform_flag = sps->separate_colour_plane_flag;
   params->MbaffFrameFlag = (sps->mb_adaptive_frame_field_flag && !field_pic);
   params->field_pic_flag = field_pic;

@@ -260,8 +260,9 @@ gst_d3d11_vp8_dec_negotiate (GstVideoDecoder * decoder)
   GstVp8Decoder *vp8dec = GST_VP8_DECODER (decoder);
 
   if (!gst_d3d11_decoder_negotiate (decoder, vp8dec->input_state,
-          self->out_format, self->width, self->height, &self->output_state,
-          &self->use_d3d11_output))
+          self->out_format, self->width, self->height,
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+          &self->output_state, &self->use_d3d11_output))
     return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
