@@ -194,6 +194,12 @@ gst_rtsp_session_media_matches (GstRTSPSessionMedia * media,
   if (len < priv->path_len)
     return FALSE;
 
+  /* special case when "/" is the entire path */
+  if (priv->path_len == 1 && priv->path[0] == '/' && path[0] == '/') {
+    *matched = 1;
+    return TRUE;
+  }
+
   /* if media path is larger, it there should be a / following the path */
   if (len > priv->path_len && path[priv->path_len] != '/')
     return FALSE;

@@ -1320,10 +1320,12 @@ default_make_path_from_uri (GstRTSPClient * client, const GstRTSPUrl * uri)
 {
   gchar *path;
 
-  if (uri->query)
+  if (uri->query) {
     path = g_strconcat (uri->abspath, "?", uri->query, NULL);
-  else
-    path = g_strdup (uri->abspath);
+  } else {
+    /* normalize rtsp://<IP>:<PORT> to rtsp://<IP>:<PORT>/ */
+    path = g_strdup (uri->abspath[0] ? uri->abspath : "/");
+  }
 
   return path;
 }
@@ -2763,9 +2765,15 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     }
   } else {
     /* path is what matched. */
-    path[matched] = '\0';
+    gchar *newpath = g_strndup (path, matched);
     /* control is remainder */
-    control = &path[matched + 1];
+    if (matched == 1 && path[0] == '/')
+      control = g_strdup (&path[1]);
+    else
+      control = g_strdup (&path[matched + 1]);
+
+    g_free (path);
+    path = newpath;
 
     /* find the stream now using the control part */
     stream = gst_rtsp_media_find_stream (media, control);
@@ -2977,6 +2985,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   g_object_unref (media);
   g_object_unref (session);
   g_free (path);
+  g_free (control);
 
   return TRUE;
 
@@ -3109,6 +3118,7 @@ keymgmt_error:
       g_object_unref (session);
   cleanup_path:
     g_free (path);
+    g_free (control);
     return FALSE;
   }
 }

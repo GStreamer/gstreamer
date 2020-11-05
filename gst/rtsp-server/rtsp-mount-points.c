@@ -171,7 +171,8 @@ gst_rtsp_mount_points_new (void)
 static gchar *
 default_make_path (GstRTSPMountPoints * mounts, const GstRTSPUrl * url)
 {
-  return g_strdup (url->abspath);
+  /* normalize rtsp://<IP>:<PORT> to rtsp://<IP>:<PORT>/ */
+  return g_strdup (url->abspath[0] ? url->abspath : "/");
 }
 
 /**
@@ -209,6 +210,10 @@ has_prefix (DataItem * str, DataItem * prefix)
   /* prefix needs to be smaller than str */
   if (str->len < prefix->len)
     return FALSE;
+
+  /* special case when "/" is the entire prefix */
+  if (prefix->len == 1 && prefix->path[0] == '/' && str->path[0] == '/')
+    return TRUE;
 
   /* if str is larger, it there should be a / following the prefix */
   if (str->len > prefix->len && str->path[prefix->len] != '/')
@@ -331,7 +336,8 @@ gst_rtsp_mount_points_remove_factory_unlocked (GstRTSPMountPoints * mounts,
  *
  * Attach @factory to the mount point @path in @mounts.
  *
- * @path is of the form (/node)+. Any previous mount point will be freed.
+ * @path is either of the form (/node)+ or the root path '/'. (An empty path is
+ * not allowed.) Any previous mount point will be freed.
  *
  * Ownership is taken of the reference on @factory so that @factory should not be
  * used after calling this function.
@@ -345,7 +351,7 @@ gst_rtsp_mount_points_add_factory (GstRTSPMountPoints * mounts,
 
   g_return_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts));
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
-  g_return_if_fail (path != NULL);
+  g_return_if_fail (path != NULL && path[0] == '/');
 
   priv = mounts->priv;
 
@@ -374,7 +380,7 @@ gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints * mounts,
   GstRTSPMountPointsPrivate *priv;
 
   g_return_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts));
-  g_return_if_fail (path != NULL);
+  g_return_if_fail (path != NULL && path[0] == '/');
 
   priv = mounts->priv;
 
