@@ -565,7 +565,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     ID3D11VideoDecoderOutputView *other_view;
     gint id = 0xff;
 
-    if (!other->ref)
+    if (!GST_H264_PICTURE_IS_REF (other))
       continue;
 
     other_view = gst_d3d11_h264_dec_get_output_view_from_picture (self, other);
@@ -574,7 +574,8 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
       id = gst_d3d11_decoder_get_output_view_index (other_view);
 
     self->ref_frame_list[i].Index7Bits = id;
-    self->ref_frame_list[i].AssociatedFlag = other->long_term;
+    self->ref_frame_list[i].AssociatedFlag =
+        GST_H264_PICTURE_IS_LONG_TERM_REF (other);
     self->field_order_cnt_list[i][0] = other->top_field_order_cnt;
     self->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
     self->frame_num_list[i] = self->ref_frame_list[i].AssociatedFlag
@@ -587,7 +588,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
 
   pic_params.CurrPic.Index7Bits =
       gst_d3d11_decoder_get_output_view_index (view);
-  pic_params.RefPicFlag = picture->ref;
+  pic_params.RefPicFlag = GST_H264_PICTURE_IS_REF (picture);
   pic_params.frame_num = picture->frame_num;
 
   if (pic_params.field_pic_flag && pic_params.CurrPic.AssociatedFlag) {

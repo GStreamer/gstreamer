@@ -37,6 +37,39 @@ typedef struct _GstH264Picture GstH264Picture;
 /* As specified in A.3.1 h) and A.3.2 f) */
 #define GST_H264_DPB_MAX_SIZE 16
 
+/**
+ * GST_H264_PICTURE_IS_REF:
+ * @picture: a #GstH264Picture
+ *
+ * Check whether @picture is used for short-term or long-term reference
+ *
+ * Since: 1.20
+ */
+#define GST_H264_PICTURE_IS_REF(picture) \
+    ((picture)->ref != GST_H264_PICTURE_REF_NONE)
+
+/**
+ * GST_H264_PICTURE_IS_SHORT_TERM_REF:
+ * @picture: a #GstH264Picture
+ *
+ * Check whether @picture is used for short-term reference
+ *
+ * Since: 1.20
+ */
+#define GST_H264_PICTURE_IS_SHORT_TERM_REF(picture) \
+    ((picture)->ref == GST_H264_PICTURE_REF_SHORT_TERM)
+
+/**
+ * GST_H264_PICTURE_IS_LONG_TERM_REF:
+ * @picture: a #GstH264Picture
+ *
+ * Check whether @picture is used for long-term reference
+ *
+ * Since: 1.20
+ */
+#define GST_H264_PICTURE_IS_LONG_TERM_REF(picture) \
+    ((picture)->ref == GST_H264_PICTURE_REF_LONG_TERM)
+
 struct _GstH264Slice
 {
   GstH264SliceHdr header;
@@ -51,6 +84,21 @@ typedef enum
   GST_H264_PICTURE_FIELD_TOP_FIELD,
   GST_H264_PICTURE_FIELD_BOTTOM_FIELD,
 } GstH264PictureField;
+
+/**
+ * GstH264PictureReference:
+ * @GST_H264_PICTURE_REF_NONE: Not used for reference picture
+ * @GST_H264_PICTURE_REF_SHORT_TERM: Used for short-term reference picture
+ * @GST_H264_PICTURE_REF_LONG_TERM: Used for long-term reference picture
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_H264_PICTURE_REF_NONE = 0,
+  GST_H264_PICTURE_REF_SHORT_TERM,
+  GST_H264_PICTURE_REF_LONG_TERM,
+} GstH264PictureReference;
 
 struct _GstH264Picture
 {
@@ -83,8 +131,7 @@ struct _GstH264Picture
   gint nal_ref_idc;
   gboolean idr;
   gint idr_pic_id;
-  gboolean ref;
-  gboolean long_term;
+  GstH264PictureReference ref;
   gboolean needed_for_output;
   gboolean mem_mgmt_5;
 
@@ -217,6 +264,10 @@ GST_CODECS_API
 gboolean         gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
                                                                            GstH264RefPicMarking *ref_pic_marking,
                                                                            GstH264Picture * picture);
+
+/* Internal methods */
+void  gst_h264_picture_set_reference (GstH264Picture * picture,
+                                      GstH264PictureReference reference);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Picture, gst_h264_picture_unref)
 

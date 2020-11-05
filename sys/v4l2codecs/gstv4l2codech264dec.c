@@ -476,8 +476,10 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
       .top_field_order_cnt = ref_pic->pic_order_cnt,
       .bottom_field_order_cnt = ref_pic->bottom_field_order_cnt,
       .flags = V4L2_H264_DPB_ENTRY_FLAG_VALID
-          | (ref_pic->ref ? V4L2_H264_DPB_ENTRY_FLAG_ACTIVE : 0)
-          | (ref_pic->long_term ? V4L2_H264_DPB_ENTRY_FLAG_LONG_TERM : 0),
+          | (GST_H264_PICTURE_IS_REF (ref_pic) ?
+              V4L2_H264_DPB_ENTRY_FLAG_ACTIVE : 0)
+          | (GST_H264_PICTURE_IS_LONG_TERM_REF (ref_pic) ?
+              V4L2_H264_DPB_ENTRY_FLAG_LONG_TERM : 0),
     };
   }
   /* *INDENT-ON* */

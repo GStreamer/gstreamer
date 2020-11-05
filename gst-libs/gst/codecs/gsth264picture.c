@@ -248,7 +248,7 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
 
     /* NOTE: don't use g_array_remove_index_fast here since the last picture
      * need to be referenced for bumping decision */
-    if (!picture->needed_for_output && !picture->ref) {
+    if (!picture->needed_for_output && !GST_H264_PICTURE_IS_REF (picture)) {
       GST_TRACE ("remove picture %p (frame num %d) from dpb",
           picture, picture->frame_num);
       g_array_remove_index (dpb->pic_list, i);
@@ -275,7 +275,7 @@ gst_h264_dpb_num_ref_pictures (GstH264Dpb * dpb)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref)
+    if (GST_H264_PICTURE_IS_REF (picture))
       ret++;
   }
 
@@ -299,7 +299,7 @@ gst_h264_dpb_mark_all_non_ref (GstH264Dpb * dpb)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    picture->ref = FALSE;
+    gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_NONE);
   }
 }
 
@@ -323,7 +323,8 @@ gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && !picture->long_term && picture->pic_num == pic_num)
+    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture)
+        && picture->pic_num == pic_num)
       return picture;
   }
 
@@ -355,7 +356,7 @@ gst_h264_dpb_get_long_ref_by_long_term_pic_num (GstH264Dpb * dpb,
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && picture->long_term &&
+    if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture) &&
         picture->long_term_pic_num == long_term_pic_num)
       return picture;
   }
@@ -385,7 +386,7 @@ gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && !picture->long_term &&
+    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture) &&
         (!ret || picture->frame_num_wrap < ret->frame_num_wrap))
       ret = picture;
   }
@@ -417,7 +418,7 @@ gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GArray * out)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && !picture->long_term) {
+    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture)) {
       gst_h264_picture_ref (picture);
       g_array_append_val (out, picture);
     }
@@ -445,7 +446,7 @@ gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GArray * out)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && picture->long_term) {
+    if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
       gst_h264_picture_ref (picture);
       g_array_append_val (out, picture);
     }
@@ -675,7 +676,7 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
 
   /* NOTE: don't use g_array_remove_index_fast here since the last picture
    * need to be referenced for bumping decision */
-  if (!picture->ref || drain)
+  if (!GST_H264_PICTURE_IS_REF (picture) || drain)
     g_array_remove_index (dpb->pic_list, index);
 
   dpb->last_output_poc = picture->pic_order_cnt;
@@ -729,7 +730,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       pic_num_x = get_picNumX (picture, ref_pic_marking);
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
-        other->ref = FALSE;
+        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
         GST_TRACE ("MMCO-1: unmark short-term ref picture %p, (poc %d)",
             other, other->pic_order_cnt);
       } else {
@@ -743,7 +744,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       other = gst_h264_dpb_get_long_ref_by_long_term_pic_num (dpb,
           ref_pic_marking->long_term_pic_num);
       if (other) {
-        other->ref = FALSE;
+        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
         GST_TRACE ("MMCO-2: unmark long-term ref picture %p, (poc %d)",
             other, other->pic_order_cnt);
       } else {
@@ -760,10 +761,10 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       for (i = 0; i < dpb->pic_list->len; i++) {
         other = g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-        if (other->ref && other->long_term && other->long_term_frame_idx ==
+        if (GST_H264_PICTURE_IS_LONG_TERM_REF (other)
+            && other->long_term_frame_idx ==
             ref_pic_marking->long_term_frame_idx) {
-          other->ref = FALSE;
-          other->long_term = FALSE;
+          gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
           GST_TRACE ("MMCO-3: unmark old long-term ref pic %p (poc %d)",
               other, other->pic_order_cnt);
           break;
@@ -773,7 +774,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       pic_num_x = get_picNumX (picture, ref_pic_marking);
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
-        other->long_term = TRUE;
+        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_LONG_TERM);
         other->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
         GST_TRACE ("MMCO-3: mark long-term ref pic %p, index %d, (poc %d)",
             other, other->long_term_frame_idx, other->pic_order_cnt);
@@ -794,10 +795,9 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       for (i = 0; i < dpb->pic_list->len; i++) {
         other = g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-        if (other->ref && other->long_term &&
+        if (GST_H264_PICTURE_IS_LONG_TERM_REF (other) &&
             other->long_term_frame_idx > max_long_term_frame_idx) {
-          other->ref = FALSE;
-          other->long_term = FALSE;
+          gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
           GST_TRACE ("MMCO-4: unmark long-term ref pic %p, index %d, (poc %d)",
               other, other->long_term_frame_idx, other->pic_order_cnt);
         }
@@ -807,8 +807,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       /* 8.2.5.4.5 Unmark all reference pictures */
       for (i = 0; i < dpb->pic_list->len; i++) {
         other = g_array_index (dpb->pic_list, GstH264Picture *, i);
-        other->ref = FALSE;
-        other->long_term = FALSE;
+        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
       }
       picture->mem_mgmt_5 = TRUE;
       picture->frame_num = 0;
@@ -822,18 +821,17 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       for (i = 0; i < dpb->pic_list->len; i++) {
         other = g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-        if (other->ref && other->long_term && other->long_term_frame_idx ==
+        if (GST_H264_PICTURE_IS_LONG_TERM_REF (other) &&
+            other->long_term_frame_idx ==
             ref_pic_marking->long_term_frame_idx) {
           GST_TRACE ("MMCO-6: unmark old long-term ref pic %p (poc %d)",
               other, other->pic_order_cnt);
-          other->ref = FALSE;
-          other->long_term = FALSE;
+          gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
           break;
         }
       }
 
-      picture->ref = TRUE;
-      picture->long_term = TRUE;
+      gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_LONG_TERM);
       picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
       break;
     default:
@@ -842,4 +840,22 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
   }
 
   return TRUE;
+}
+
+/**
+ * gst_h264_picture_set_reference:
+ * @picture: a #GstH264Picture
+ * @reference: a GstH264PictureReference
+ *
+ * Update reference picture type of @picture with @reference
+ *
+ * Since: 1.20
+ */
+void
+gst_h264_picture_set_reference (GstH264Picture * picture,
+    GstH264PictureReference reference)
+{
+  g_return_if_fail (picture != NULL);
+
+  picture->ref = reference;
 }

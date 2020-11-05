@@ -158,11 +158,11 @@ _fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture)
   va_picture->picture_id = gst_va_decode_picture_get_surface (va_pic);
   va_picture->flags = 0;
 
-  if (picture->ref && picture->long_term) {
+  if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
     va_picture->flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
     va_picture->frame_idx = picture->long_term_frame_idx;
   } else {
-    if (picture->ref)
+    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture))
       va_picture->flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
     va_picture->frame_idx = picture->frame_num;
   }

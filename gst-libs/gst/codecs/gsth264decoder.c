@@ -581,10 +581,10 @@ gst_h264_decoder_update_pic_nums (GstH264Decoder * self, gint frame_num)
       continue;
     }
 
-    if (!picture->ref)
+    if (!GST_H264_PICTURE_IS_REF (picture))
       continue;
 
-    if (picture->long_term) {
+    if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
       picture->long_term_pic_num = picture->long_term_frame_idx;
     } else {
       if (picture->frame_num > frame_num)
@@ -1034,7 +1034,8 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
   }
 
   picture->nal_ref_idc = slice->nalu.ref_idc;
-  picture->ref = slice->nalu.ref_idc != 0;
+  if (slice->nalu.ref_idc != 0)
+    gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_SHORT_TERM);
 
   /* This assumes non-interlaced stream */
   picture->frame_num = picture->pic_num = slice_hdr->frame_num;
@@ -1457,7 +1458,7 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
         "Unmark reference flag of picture %p (frame_num %d, poc %d)",
         to_unmark, to_unmark->frame_num, to_unmark->pic_order_cnt);
 
-    to_unmark->ref = FALSE;
+    gst_h264_picture_set_reference (to_unmark, GST_H264_PICTURE_REF_NONE);
     gst_h264_picture_unref (to_unmark);
 
     num_ref_pics--;
@@ -1482,11 +1483,11 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
     gst_h264_dpb_mark_all_non_ref (priv->dpb);
 
     if (picture->dec_ref_pic_marking.long_term_reference_flag) {
-      picture->long_term = TRUE;
+      gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_LONG_TERM);
       picture->long_term_frame_idx = 0;
       priv->max_long_term_frame_idx = 0;
     } else {
-      picture->long_term = FALSE;
+      gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_SHORT_TERM);
       priv->max_long_term_frame_idx = -1;
     }
 
@@ -1817,7 +1818,7 @@ gst_h264_decoder_init_gap_picture (GstH264Decoder * self,
   picture->nal_ref_idc = 1;
   picture->frame_num = picture->pic_num = frame_num;
   picture->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag = FALSE;
-  picture->ref = TRUE;
+  picture->ref = GST_H264_PICTURE_REF_SHORT_TERM;
   picture->dec_ref_pic_marking.long_term_reference_flag = FALSE;
   picture->field = GST_H264_PICTURE_FIELD_FRAME;
 
@@ -1910,7 +1911,7 @@ construct_ref_pic_lists_p (GstH264Decoder * self)
     for (pos = 0; pos < priv->ref_pic_list_p0->len; pos++) {
       GstH264Picture *ref =
           g_array_index (priv->ref_pic_list_p0, GstH264Picture *, pos);
-      if (!ref->long_term)
+      if (!GST_H264_PICTURE_IS_LONG_TERM_REF (ref))
         g_string_append_printf (str, "|%i", ref->pic_num);
       else
         g_string_append_printf (str, "|%is", ref->pic_num);
@@ -1966,7 +1967,7 @@ print_ref_pic_list_b (GstH264Decoder * self, GArray * ref_list_b, gint index)
   for (i = 0; i < ref_list_b->len; i++) {
     GstH264Picture *ref = g_array_index (ref_list_b, GstH264Picture *, i);
 
-    if (!ref->long_term)
+    if (!GST_H264_PICTURE_IS_LONG_TERM_REF (ref))
       g_string_append_printf (str, "|%i", ref->pic_order_cnt);
     else
       g_string_append_printf (str, "|%il", ref->long_term_pic_num);
@@ -2078,7 +2079,7 @@ gst_h264_decoder_clear_ref_pic_lists (GstH264Decoder * self)
 static gint
 long_term_pic_num_f (GstH264Decoder * self, const GstH264Picture * picture)
 {
-  if (picture->ref && picture->long_term)
+  if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture))
     return picture->long_term_pic_num;
   return 2 * (self->priv->max_long_term_frame_idx + 1);
 }
@@ -2086,7 +2087,7 @@ long_term_pic_num_f (GstH264Decoder * self, const GstH264Picture * picture)
 static gint
 pic_num_f (GstH264Decoder * self, const GstH264Picture * picture)
 {
-  if (!picture->long_term)
+  if (!GST_H264_PICTURE_IS_LONG_TERM_REF (picture))
     return picture->pic_num;
   return self->priv->max_pic_num;
 }

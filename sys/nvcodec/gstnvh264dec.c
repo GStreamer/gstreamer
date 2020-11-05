@@ -643,13 +643,13 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
   /* nBitstreamDataLen, pBitstreamData, nNumSlices and pSliceDataOffsets
    * will be set later */
 
-  params->ref_pic_flag = picture->ref;
+  params->ref_pic_flag = GST_H264_PICTURE_IS_REF (picture);
   /* will be updated later, if any slices belong to this frame is not
    * intra slice */
   params->intra_pic_flag = 1;
 
   h264_params->frame_num = picture->frame_num;
-  h264_params->ref_pic_flag = picture->ref;
+  h264_params->ref_pic_flag = GST_H264_PICTURE_IS_REF (picture);
   /* FIXME: should be updated depending on field type? */
   h264_params->CurrFieldOrderCnt[0] = picture->top_field_order_cnt;
   h264_params->CurrFieldOrderCnt[1] = picture->bottom_field_order_cnt;
@@ -689,7 +689,7 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
       picture_index = other_frame->index;
 
     dpb->PicIdx = picture_index;
-    if (other->long_term) {
+    if (GST_H264_PICTURE_IS_LONG_TERM_REF (other)) {
       dpb->FrameIdx = other->long_term_frame_idx;
       dpb->is_long_term = 1;
     } else {
