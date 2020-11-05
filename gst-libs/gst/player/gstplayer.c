@@ -3680,7 +3680,9 @@ gst_player_set_mute (GstPlayer * self, gboolean val)
  * gst_player_get_pipeline:
  * @player: #GstPlayer instance
  *
- * Returns: (transfer full): The internal playbin instance
+ * Returns: (transfer full): The internal playbin instance.
+ *
+ * The caller should free it with g_object_unref()
  */
 GstElement *
 gst_player_get_pipeline (GstPlayer * self)
