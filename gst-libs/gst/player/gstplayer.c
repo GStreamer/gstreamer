@@ -3791,7 +3791,7 @@ gst_player_get_current_video_track (GstPlayer * self)
  *
  * A Function to get current subtitle #GstPlayerSubtitleInfo instance.
  *
- * Returns: (transfer none): current subtitle track.
+ * Returns: (transfer full): current subtitle track.
  *
  * The caller should free it with g_object_unref()
  */
