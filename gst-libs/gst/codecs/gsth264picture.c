@@ -811,6 +811,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
         other->long_term = FALSE;
       }
       picture->mem_mgmt_5 = TRUE;
+      picture->frame_num = 0;
       break;
     case 6:
       /* 8.2.5.4.6 Replace long term reference pictures with current picture.
