@@ -541,6 +541,11 @@ gst_gl_base_filter_find_gl_context_unlocked (GstGLBaseFilter * filter)
 
   _find_local_gl_context_unlocked (filter);
 
+  if (!filter->display) {
+    GST_WARNING_OBJECT (filter, "filter has NULL display.");
+    return FALSE;
+  }
+
   if (!filter->context) {
     GST_OBJECT_LOCK (filter->display);
     do {
