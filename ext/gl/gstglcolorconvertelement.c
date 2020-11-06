@@ -149,7 +149,7 @@ gst_gl_color_convert_element_transform_caps (GstBaseTransform * bt,
   GstCaps *ret;
 
   if (base_filter->display && !gst_gl_base_filter_find_gl_context (base_filter))
-    return NULL;
+    return gst_caps_new_empty ();
 
   context = gst_gl_base_filter_get_gl_context (base_filter);
 
