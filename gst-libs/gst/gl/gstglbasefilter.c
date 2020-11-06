@@ -464,10 +464,8 @@ gst_gl_base_filter_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_gl_ensure_element_data (element, &filter->display,
-              &filter->priv->other_context)) {
-        GST_OBJECT_UNLOCK (filter);
+              &filter->priv->other_context))
         return GST_STATE_CHANGE_FAILURE;
-      }
 
       gst_gl_display_filter_gl_api (filter->display,
           filter_class->supported_gl_api);
