@@ -965,6 +965,39 @@ gst_glimage_sink_mouse_scroll_event_cb (GstGLWindow * window,
       posx, posy, delta_x, delta_y);
 }
 
+static void
+_set_context (GstGLImageSink * gl_sink, GstGLContext * context)
+{
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+  if (gl_sink->context)
+    gst_object_unref (gl_sink->context);
+
+  gl_sink->context = context;
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+}
+
+static void
+_set_other_context (GstGLImageSink * gl_sink, GstGLContext * other_context)
+{
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+  if (gl_sink->other_context)
+    gst_object_unref (gl_sink->other_context);
+
+  gl_sink->other_context = other_context;
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+}
+
+static void
+_set_display (GstGLImageSink * gl_sink, GstGLDisplay * display)
+{
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+  if (gl_sink->display)
+    gst_object_unref (gl_sink->display);
+
+  gl_sink->display = display;
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+}
+
 static gboolean
 _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
@@ -976,12 +1009,10 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
     GST_OBJECT_LOCK (gl_sink->display);
     do {
       GstGLContext *other_context = NULL;
+      GstGLContext *context = NULL;
       GstGLWindow *window = NULL;
 
-      if (gl_sink->context) {
-        gst_object_unref (gl_sink->context);
-        gl_sink->context = NULL;
-      }
+      _set_context (gl_sink, NULL);
 
       GST_DEBUG_OBJECT (gl_sink,
           "No current context, creating one for %" GST_PTR_FORMAT,
@@ -995,12 +1026,14 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
       }
 
       if (!gst_gl_display_create_context (gl_sink->display,
-              other_context, &gl_sink->context, &error)) {
+              other_context, &context, &error)) {
         if (other_context)
           gst_object_unref (other_context);
         GST_OBJECT_UNLOCK (gl_sink->display);
         goto context_error;
       }
+      _set_context (gl_sink, context);
+      context = NULL;
 
       GST_DEBUG_OBJECT (gl_sink,
           "created context %" GST_PTR_FORMAT " from other context %"
@@ -1062,10 +1095,7 @@ context_error:
     GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
 
-    if (gl_sink->context) {
-      gst_object_unref (gl_sink->context);
-      gl_sink->context = NULL;
-    }
+    _set_context (gl_sink, NULL);
 
     g_clear_error (&error);
 
@@ -1134,10 +1164,30 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      if (gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
-              glimage_sink->display, glimage_sink->context,
-              glimage_sink->other_context))
-        return TRUE;
+      GstGLContext *context = NULL;
+      GstGLContext *other_context = NULL;
+      GstGLDisplay *display = NULL;
+
+      GST_GLIMAGE_SINK_LOCK (bsink);
+      if (glimage_sink->context)
+        context = gst_object_ref (glimage_sink->context);
+      if (glimage_sink->other_context)
+        other_context = gst_object_ref (glimage_sink->other_context);
+      if (glimage_sink->display)
+        display = gst_object_ref (glimage_sink->display);
+      GST_GLIMAGE_SINK_UNLOCK (bsink);
+
+      res = gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
+          display, context, other_context);
+
+      if (context)
+        gst_object_unref (context);
+      if (other_context)
+        gst_object_unref (other_context);
+      if (display)
+        gst_object_unref (display);
+      if (res)
+        return res;
       break;
     }
     case GST_QUERY_DRAIN:
@@ -1176,9 +1226,12 @@ static void
 gst_glimage_sink_set_context (GstElement * element, GstContext * context)
 {
   GstGLImageSink *gl_sink = GST_GLIMAGE_SINK (element);
+  GstGLContext *other_context = NULL;
+  GstGLDisplay *display = NULL;
 
-  gst_gl_handle_set_context (element, context, &gl_sink->display,
-      &gl_sink->other_context);
+  gst_gl_handle_set_context (element, context, &display, &other_context);
+  _set_other_context (gl_sink, other_context);
+  _set_display (gl_sink, display);
 
   if (gl_sink->display)
     gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
@@ -1191,6 +1244,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstGLImageSink *glimage_sink;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstGLContext *context;
 
   GST_DEBUG ("changing state: %s => %s",
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
@@ -1277,8 +1331,14 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         glimage_sink->overlay_compositor = NULL;
       }
 
-      if (glimage_sink->context) {
-        GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
+      context = NULL;
+      GST_GLIMAGE_SINK_LOCK (glimage_sink);
+      if (glimage_sink->context)
+        context = gst_object_ref (glimage_sink->context);
+      GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+
+      if (context) {
+        GstGLWindow *window = gst_gl_context_get_window (context);
 
         gst_gl_window_send_message (window,
             GST_GL_WINDOW_CB (gst_glimage_sink_cleanup_glthread), glimage_sink);
@@ -1299,21 +1359,15 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         glimage_sink->mouse_scroll_sig_id = 0;
 
         gst_object_unref (window);
-        gst_object_unref (glimage_sink->context);
-        glimage_sink->context = NULL;
+        _set_context (glimage_sink, NULL);
+
+        gst_object_unref (context);
       }
 
       glimage_sink->window_id = 0;
 
-      if (glimage_sink->other_context) {
-        gst_object_unref (glimage_sink->other_context);
-        glimage_sink->other_context = NULL;
-      }
-
-      if (glimage_sink->display) {
-        gst_object_unref (glimage_sink->display);
-        glimage_sink->display = NULL;
-      }
+      _set_other_context (glimage_sink, NULL);
+      _set_display (glimage_sink, NULL);
       break;
     default:
       break;
@@ -1939,8 +1993,17 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   guint size;
   gboolean need_pool;
   GstStructure *allocation_meta = NULL;
+  GstGLContext *context = NULL;
 
   if (!_ensure_gl_setup (glimage_sink))
+    return FALSE;
+
+  GST_GLIMAGE_SINK_LOCK (glimage_sink);
+  if (glimage_sink->context)
+    context = gst_object_ref (glimage_sink->context);
+  GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+
+  if (!context)
     return FALSE;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
@@ -1957,7 +2020,7 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (need_pool) {
     GST_DEBUG_OBJECT (glimage_sink, "create new pool");
 
-    pool = gst_gl_buffer_pool_new (glimage_sink->context);
+    pool = gst_gl_buffer_pool_new (context);
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
     gst_buffer_pool_config_add_option (config,
@@ -1974,7 +2037,7 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (pool)
     g_object_unref (pool);
 
-  if (glimage_sink->context->gl_vtable->FenceSync)
+  if (context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
 
   if (glimage_sink->window_width != 0 && glimage_sink->window_height != 0) {
@@ -1994,21 +2057,25 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (allocation_meta)
     gst_structure_free (allocation_meta);
 
+  gst_object_unref (context);
   return TRUE;
 
   /* ERRORS */
 no_caps:
   {
+    gst_object_unref (context);
     GST_WARNING_OBJECT (bsink, "no caps specified");
     return FALSE;
   }
 invalid_caps:
   {
+    gst_object_unref (context);
     GST_WARNING_OBJECT (bsink, "invalid caps specified");
     return FALSE;
   }
 config_failed:
   {
+    gst_object_unref (context);
     GST_WARNING_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
@@ -2274,9 +2341,9 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
-  gl = gl_sink->context->gl_vtable;
-
   GST_GLIMAGE_SINK_LOCK (gl_sink);
+
+  gl = gl_sink->context->gl_vtable;
 
   /* check if texture is ready for being drawn */
   if (!gl_sink->redisplay_texture) {
