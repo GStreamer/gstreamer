@@ -156,18 +156,25 @@ typedef struct _GstMyFilterClass {
 /* Standard function returning type information. */
 GType gst_my_filter_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE(my_filter)
+
 ```
 
-Using this header file, you can use the following macro to setup the
-`GObject` basics in your source file so that all functions will be
+Using this header file, you can use the following macros to setup the
+`Element` basics in your source file so that all functions will be
 called appropriately:
 
 ``` c
 #include "filter.h"
 
 G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE(my_filter, "my-filter", GST_RANK_NONE, GST_TYPE_MY_FILTER);
 
 ```
+
+The macro `GST_ELEMENT_REGISTER_DEFINE` in combination with `GST_ELEMENT_REGISTER_DECLARE`
+allows to register the element from within the plugin or from any other plugin/application by calling
+`GST_ELEMENT_REGISTER (my_filter)`.
 
 ## Element metadata
 
@@ -337,9 +344,7 @@ plugin should be registered.
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  return gst_element_register (plugin, "my_filter",
-                   GST_RANK_NONE,
-                   GST_TYPE_MY_FILTER);
+  return GST_ELEMENT_REGISTER (my_filter, plugin);
 }
 
 GST_PLUGIN_DEFINE (

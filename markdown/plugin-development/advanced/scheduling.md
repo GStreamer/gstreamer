@@ -124,7 +124,7 @@ static gboolean gst_my_filter_activate_mode (GstPad      * pad,
 static void gst_my_filter_loop      (GstMyFilter * filter);
 
 G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE(my_filter, "my-filter", GST_RANK_NONE, GST_TYPE_MY_FILTER);
 
 static void
 gst_my_filter_init (GstMyFilter * filter)
@@ -300,7 +300,7 @@ static GstFlowReturn
                      GstBuffer ** buf);
 
 G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE(my_filter, "my-filter", GST_RANK_NONE, GST_TYPE_MY_FILTER);
 
 
 static void

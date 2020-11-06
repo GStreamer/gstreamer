@@ -40,8 +40,7 @@ able to call `gst_element_factory_make
 static gboolean
 register_elements (GstPlugin *plugin)
 {
-  return gst_element_register (plugin, "my-element-name",
-                   GST_RANK_NONE, MY_PLUGIN_TYPE);
+  return GST_ELEMENT_REGISTER (my_element_name, plugin);
 }
 
 static

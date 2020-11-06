@@ -112,7 +112,7 @@ G_DEFINE_TYPE_WITH_CODE (GstMyFilter, gst_my_filter,GST_TYPE_ELEMENT,
      G_IMPLEMENT_INTERFACE (GST_TYPE_SOME_INTERFACE,
             gst_my_filter_some_interface_init));
 
-
+GST_ELEMENT_REGISTER_DEFINE(my_filter, "my-filter", GST_RANK_NONE, GST_TYPE_MY_FILTER);
 ```
 
 ## URI interface
