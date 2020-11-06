@@ -229,6 +229,7 @@ class LauncherConfig(Loggable):
         self.sync = False
         self.force_sync = False
         self.sync_all = False
+        self.sync_version = None
         self.check_bugs_status = False
         self.retry_on_failures = False
         self.html = False
@@ -584,6 +585,8 @@ class LauncherConfig(Loggable):
         assets_group.add_argument("--sync-all", dest="sync_all", action="store_true",
                                   help="Synchronize asset repository,"
                                   " including big media files")
+        assets_group.add_argument("--sync-version", dest="sync_version",
+                                  help="Version of the asset repository, default is GST_VALIDATE_TESTSUITE_VERSION")
         assets_group.add_argument("--usage", action=PrintUsage,
                                   help="Print usage documentation")
         return parser
