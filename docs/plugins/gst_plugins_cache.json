@@ -1790,6 +1790,18 @@
                         "readable": true,
                         "type": "GstCompositorBackground",
                         "writable": true
+                    },
+                    "zero-size-is-unscaled": {
+                        "blurb": "If TRUE, then input video is unscaled in that dimension if width or height is 0 (for backwards compatibility)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
                     }
                 },
                 "rank": "primary + 1"
@@ -1876,7 +1888,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": true,
-                        "default": "0",
+                        "default": "-1",
                         "max": "2147483647",
                         "min": "-2147483648",
                         "mutable": "null",
@@ -1902,7 +1914,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": true,
-                        "default": "0",
+                        "default": "-1",
                         "max": "2147483647",
                         "min": "-2147483648",
                         "mutable": "null",

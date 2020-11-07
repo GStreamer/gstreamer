@@ -167,8 +167,8 @@ gst_compositor_background_get_type (void)
 
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
-#define DEFAULT_PAD_WIDTH  0
-#define DEFAULT_PAD_HEIGHT 0
+#define DEFAULT_PAD_WIDTH  -1
+#define DEFAULT_PAD_HEIGHT -1
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_OPERATOR COMPOSITOR_OPERATOR_OVER
 enum
@@ -254,8 +254,8 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
 }
 
 static void
-_mixer_pad_get_output_size (GstCompositorPad * comp_pad, gint out_par_n,
-    gint out_par_d, gint * width, gint * height)
+_mixer_pad_get_output_size (GstCompositor * comp, GstCompositorPad * comp_pad,
+    gint out_par_n, gint out_par_d, gint * width, gint * height)
 {
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (comp_pad);
   gint pad_width, pad_height;
@@ -270,12 +270,27 @@ _mixer_pad_get_output_size (GstCompositorPad * comp_pad, gint out_par_n,
     return;
   }
 
-  pad_width =
-      comp_pad->width <=
-      0 ? GST_VIDEO_INFO_WIDTH (&vagg_pad->info) : comp_pad->width;
-  pad_height =
-      comp_pad->height <=
-      0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : comp_pad->height;
+  if (comp->zero_size_is_unscaled) {
+    pad_width =
+        comp_pad->width <=
+        0 ? GST_VIDEO_INFO_WIDTH (&vagg_pad->info) : comp_pad->width;
+    pad_height =
+        comp_pad->height <=
+        0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : comp_pad->height;
+  } else {
+    pad_width =
+        comp_pad->width <
+        0 ? GST_VIDEO_INFO_WIDTH (&vagg_pad->info) : comp_pad->width;
+    pad_height =
+        comp_pad->height <
+        0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : comp_pad->height;
+  }
+
+  if (pad_width == 0 || pad_height == 0) {
+    *width = 0;
+    *height = 0;
+    return;
+  }
 
   if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
           GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
@@ -357,8 +372,9 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
   pad_rect.x = cpad->xpos;
   pad_rect.y = cpad->ypos;
   /* Handle pixel and display aspect ratios to find the actual size */
-  _mixer_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
-      GST_VIDEO_INFO_PAR_D (&vagg->info), &(pad_rect.w), &(pad_rect.h));
+  _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
+      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
+      &(pad_rect.w), &(pad_rect.h));
 
   if (!is_rectangle_contained (rect, pad_rect))
     return FALSE;
@@ -395,8 +411,9 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    *     width/height. See ->set_info()
    * */
 
-  _mixer_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
-      GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
+  _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
+      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
+      &width, &height);
 
   if (cpad->alpha == 0.0) {
     GST_DEBUG_OBJECT (pad, "Pad has alpha 0.0, not converting frame");
@@ -451,8 +468,9 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
   if (!conversion_info->finfo)
     return;
 
-  _mixer_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
-      GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
+  _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
+      GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
+      &width, &height);
 
   /* The only thing that can change here is the width
    * and height, otherwise set_info would've been called */
@@ -532,15 +550,19 @@ gst_compositor_pad_init (GstCompositorPad * compo_pad)
   compo_pad->ypos = DEFAULT_PAD_YPOS;
   compo_pad->alpha = DEFAULT_PAD_ALPHA;
   compo_pad->op = DEFAULT_PAD_OPERATOR;
+  compo_pad->width = DEFAULT_PAD_WIDTH;
+  compo_pad->height = DEFAULT_PAD_HEIGHT;
 }
 
 
 /* GstCompositor */
 #define DEFAULT_BACKGROUND COMPOSITOR_BACKGROUND_CHECKER
+#define DEFAULT_ZERO_SIZE_IS_UNSCALED TRUE
 enum
 {
   PROP_0,
   PROP_BACKGROUND,
+  PROP_ZERO_SIZE_IS_UNSCALED,
 };
 
 static void
@@ -552,6 +574,9 @@ gst_compositor_get_property (GObject * object,
   switch (prop_id) {
     case PROP_BACKGROUND:
       g_value_set_enum (value, self->background);
+      break;
+    case PROP_ZERO_SIZE_IS_UNSCALED:
+      g_value_set_boolean (value, self->zero_size_is_unscaled);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -568,6 +593,9 @@ gst_compositor_set_property (GObject * object,
   switch (prop_id) {
     case PROP_BACKGROUND:
       self->background = g_value_get_enum (value);
+      break;
+    case PROP_ZERO_SIZE_IS_UNSCALED:
+      self->zero_size_is_unscaled = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -786,7 +814,8 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
 
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
-    _mixer_pad_get_output_size (compositor_pad, par_n, par_d, &width, &height);
+    _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), compositor_pad, par_n,
+        par_d, &width, &height);
 
     if (width == 0 || height == 0)
       continue;
@@ -1374,6 +1403,22 @@ gst_compositor_class_init (GstCompositorClass * klass)
           GST_TYPE_COMPOSITOR_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * compositor:zero-size-is-unscaled:
+   *
+   * Whether a pad with height or width 0 should be left unscaled
+   * in that dimension, or simply not composited in. Setting it to
+   * %FALSE might be useful when animating those properties.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_ZERO_SIZE_IS_UNSCALED,
+      g_param_spec_boolean ("zero-size-is-unscaled", "Zero size is unscaled",
+          "If TRUE, then input video is unscaled in that dimension "
+          "if width or height is 0 (for backwards compatibility)",
+          DEFAULT_ZERO_SIZE_IS_UNSCALED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
@@ -1394,6 +1439,7 @@ gst_compositor_init (GstCompositor * self)
 {
   /* initialize variables */
   self->background = DEFAULT_BACKGROUND;
+  self->zero_size_is_unscaled = DEFAULT_ZERO_SIZE_IS_UNSCALED;
 }
 
 /* GstChildProxy implementation */

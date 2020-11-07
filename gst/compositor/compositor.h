@@ -114,6 +114,14 @@ struct _GstCompositor
   GstVideoAggregator videoaggregator;
   GstCompositorBackground background;
 
+  /* Property to allow overriding the default behaviour of
+   * pad.width == 0 or pad.height == 0: by default it means the input
+   * image should be left unscaled in that dimension, but it may be desirable
+   * to have it simply mean the image should not be composited into the output
+   * image, for example when animating the property.
+   */
+  gboolean zero_size_is_unscaled;
+
   /* The 'blend' compositing function does not preserve the alpha value of the
    * background, while 'overlay' does; i.e., COMPOSITOR_OPERATOR_ADD is the
    * same as COMPOSITOR_OPERATOR_OVER when using the 'blend' BlendFunction. */
