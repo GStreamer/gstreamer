@@ -578,7 +578,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     self->field_order_cnt_list[i][0] = other->top_field_order_cnt;
     self->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
     self->frame_num_list[i] = self->ref_frame_list[i].AssociatedFlag
-        ? other->long_term_pic_num : other->frame_num;
+        ? other->long_term_frame_idx : other->frame_num;
     self->used_for_reference_flags |= ref << (2 * i);
     self->non_existing_frame_flags |= (other->nonexisting) << i;
   }
@@ -904,7 +904,7 @@ gst_d3d11_h264_dec_picture_params_from_sps (GstD3D11H264Dec * self,
   params->wFrameWidthInMbsMinus1 = sps->pic_width_in_mbs_minus1;
   params->wFrameHeightInMbsMinus1 = sps->pic_height_in_map_units_minus1;
   params->residual_colour_transform_flag = sps->separate_colour_plane_flag;
-  params->MbaffFrameFlag = sps->mb_adaptive_frame_field_flag && field_pic;
+  params->MbaffFrameFlag = (sps->mb_adaptive_frame_field_flag && !field_pic);
   params->field_pic_flag = field_pic;
   params->MinLumaBipredSize8x8Flag = sps->level_idc >= 31;
 
