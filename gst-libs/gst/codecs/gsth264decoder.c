@@ -1399,7 +1399,8 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
             ref_pic_marking, picture)) {
       GST_WARNING_OBJECT (self, "memory management operation type %d failed",
           type);
-      return FALSE;
+      /* Most likely our implementation fault, but let's just perform
+       * next MMCO if any */
     }
   }
 
@@ -1423,19 +1424,26 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
   num_ref_pics = gst_h264_dpb_num_ref_pictures (priv->dpb);
   max_num_ref_frames = MAX (1, sps->num_ref_frames);
 
-  if (num_ref_pics > max_num_ref_frames) {
-    GST_WARNING_OBJECT (self,
-        "num_ref_pics %d is larger than allowed maximum %d",
-        num_ref_pics, max_num_ref_frames);
-    return FALSE;
-  }
+  if (num_ref_pics < max_num_ref_frames)
+    return TRUE;
 
-  if (num_ref_pics == max_num_ref_frames) {
+  /* In theory, num_ref_pics shouldn't be larger than max_num_ref_frames
+   * but it could happen if our implementation is wrong somehow or so.
+   * Just try to remove reference pictures as many as possible in order to
+   * avoid DPB overflow.
+   */
+  while (num_ref_pics >= max_num_ref_frames) {
     /* Max number of reference pics reached, need to remove one of the short
      * term ones. Find smallest frame_num_wrap short reference picture and mark
      * it as unused */
     GstH264Picture *to_unmark =
         gst_h264_dpb_get_lowest_frame_num_short_ref (priv->dpb);
+
+    if (num_ref_pics > max_num_ref_frames) {
+      GST_WARNING_OBJECT (self,
+          "num_ref_pics %d is larger than allowed maximum %d",
+          num_ref_pics, max_num_ref_frames);
+    }
 
     if (!to_unmark) {
       GST_WARNING_OBJECT (self, "Could not find a short ref picture to unmark");
@@ -1448,6 +1456,8 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
 
     to_unmark->ref = FALSE;
     gst_h264_picture_unref (to_unmark);
+
+    num_ref_pics--;
   }
 
   return TRUE;
