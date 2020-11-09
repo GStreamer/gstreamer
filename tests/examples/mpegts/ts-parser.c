@@ -80,12 +80,20 @@ dump_memory_bytes (guint8 * data, guint len, guint spacing)
 #define dump_memory_content(desc, spacing) dump_memory_bytes((desc)->data + 2, (desc)->length, spacing)
 
 static const gchar *
-descriptor_name (gint val)
+descriptor_name (GstMpegtsDescriptor * desc)
 {
-  GEnumValue *en;
+  GEnumValue *en = NULL;
+  gint val = desc->tag;
 
-  en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
-          (GST_TYPE_MPEGTS_DESCRIPTOR_TYPE)), val);
+  /* Treat extended descriptors */
+  if (val == 0x7f) {
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEGTS_DVB_EXTENDED_DESCRIPTOR_TYPE)),
+        desc->tag_extension);
+  }
+  if (en == NULL)
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEGTS_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
     /* Else try with DVB enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
@@ -510,7 +518,7 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
   for (i = 0; i < descriptors->len; i++) {
     GstMpegtsDescriptor *desc = g_ptr_array_index (descriptors, i);
     g_printf ("%*s [descriptor 0x%02x (%s) length:%d]\n", spacing, "",
-        desc->tag, descriptor_name (desc->tag), desc->length);
+        desc->tag, descriptor_name (desc), desc->length);
     if (DUMP_DESCRIPTORS)
       dump_memory_content (desc, spacing + 2);
     switch (desc->tag) {
@@ -1340,6 +1348,7 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEGTS_RUNNING_STATUS);
   g_type_class_ref (GST_TYPE_MPEGTS_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_DVB_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_DVB_EXTENDED_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_ATSC_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_ISDB_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_MISC_DESCRIPTOR_TYPE);
