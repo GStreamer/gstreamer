@@ -109,6 +109,8 @@ struct _GstH264Dpb
   gint max_num_frames;
   gint num_output_needed;
   gint32 last_output_poc;
+
+  gboolean interlaced;
 };
 
 static void
@@ -176,6 +178,37 @@ gst_h264_dpb_get_max_num_frames (GstH264Dpb * dpb)
 }
 
 /**
+ * gst_h264_dpb_set_interlaced:
+ * @dpb: a #GstH264Dpb
+ * @interlaced: %TRUE if interlaced
+ *
+ * Since: 1.20
+ */
+void
+gst_h264_dpb_set_interlaced (GstH264Dpb * dpb, gboolean interlaced)
+{
+  g_return_if_fail (dpb != NULL);
+
+  dpb->interlaced = interlaced;
+}
+
+/**
+ * gst_h264_dpb_get_interlaced:
+ * @dpb: a #GstH264Dpb
+ *
+ * Returns: %TRUE if @dpb is configured for interlaced stream
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_h264_dpb_get_interlaced (GstH264Dpb * dpb)
+{
+  g_return_val_if_fail (dpb != NULL, FALSE);
+
+  return dpb->interlaced;
+}
+
+/**
  * gst_h264_dpb_free:
  * @dpb: a #GstH264Dpb to free
  *
@@ -225,7 +258,19 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
    * as "not needed for output", and the DPB fullness is incremented by one */
   if (!picture->nonexisting) {
     picture->needed_for_output = TRUE;
-    dpb->num_output_needed++;
+
+    if (picture->field == GST_H264_PICTURE_FIELD_FRAME) {
+      dpb->num_output_needed++;
+    } else {
+      /* We can do output only when field pair are complete */
+      if (picture->second_field) {
+        dpb->num_output_needed++;
+
+        /* And link each field */
+        if (picture->other_field)
+          picture->other_field->other_field = picture;
+      }
+    }
   } else {
     picture->needed_for_output = FALSE;
   }
@@ -253,8 +298,9 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
     /* NOTE: don't use g_array_remove_index_fast here since the last picture
      * need to be referenced for bumping decision */
     if (!picture->needed_for_output && !GST_H264_PICTURE_IS_REF (picture)) {
-      GST_TRACE ("remove picture %p (frame num %d) from dpb",
-          picture, picture->frame_num);
+      GST_TRACE
+          ("remove picture %p (frame num: %d, poc: %d, field: %d) from dpb",
+          picture, picture->frame_num, picture->pic_order_cnt, picture->field);
       g_array_remove_index (dpb->pic_list, i);
       i--;
     }
@@ -281,6 +327,10 @@ gst_h264_dpb_num_ref_frames (GstH264Dpb * dpb)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
+    /* Count frame, not field picture */
+    if (picture->second_field)
+      continue;
+
     if (GST_H264_PICTURE_IS_REF (picture))
       ret++;
   }
@@ -305,7 +355,7 @@ gst_h264_dpb_mark_all_non_ref (GstH264Dpb * dpb)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_NONE);
+    gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_NONE, FALSE);
   }
 }
 
@@ -522,8 +572,26 @@ gst_h264_dpb_get_picture (GstH264Dpb * dpb, guint32 system_frame_number)
 static gboolean
 gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
 {
-  if (dpb->pic_list->len <= dpb->max_num_frames)
-    return TRUE;
+  if (!dpb->interlaced) {
+    if (dpb->pic_list->len <= dpb->max_num_frames)
+      return TRUE;
+  } else {
+    gint i;
+    gint count = 0;
+    /* Count pictures without second fields */
+    for (i = 0; i < dpb->pic_list->len; i++) {
+      GstH264Picture *picture =
+          g_array_index (dpb->pic_list, GstH264Picture *, i);
+
+      if (picture->second_field)
+        continue;
+
+      count++;
+    }
+
+    if (count <= dpb->max_num_frames)
+      return TRUE;
+  }
 
   return FALSE;
 }
@@ -543,6 +611,10 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
     if (!picture->needed_for_output)
+      continue;
+
+    if (picture->field != GST_H264_PICTURE_FIELD_FRAME &&
+        (!picture->other_field || picture->second_field))
       continue;
 
     if (!lowest) {
@@ -666,6 +738,8 @@ GstH264Picture *
 gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
 {
   GstH264Picture *picture;
+  GstH264Picture *other_picture;
+  gint i;
   gint index;
 
   g_return_val_if_fail (dpb != NULL, NULL);
@@ -685,6 +759,32 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
   if (!GST_H264_PICTURE_IS_REF (picture) || drain)
     g_array_remove_index (dpb->pic_list, index);
 
+  other_picture = picture->other_field;
+  if (other_picture) {
+    other_picture->needed_for_output = FALSE;
+
+    /* At this moment, this picture should be interlaced */
+    picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_INTERLACED;
+
+    /* FIXME: need to check picture timing SEI for the case where top/bottom poc
+     * are identical */
+    if (picture->pic_order_cnt < other_picture->pic_order_cnt)
+      picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
+
+    if (!other_picture->ref) {
+      for (i = 0; i < dpb->pic_list->len; i++) {
+        GstH264Picture *tmp =
+            g_array_index (dpb->pic_list, GstH264Picture *, i);
+
+        if (tmp == other_picture) {
+          g_array_remove_index (dpb->pic_list, i);
+          break;
+        }
+      }
+    }
+    /* Now other field may or may not exist */
+  }
+
   dpb->last_output_poc = picture->pic_order_cnt;
 
   return picture;
@@ -693,7 +793,6 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
 static gint
 get_picNumX (GstH264Picture * picture, GstH264RefPicMarking * ref_pic_marking)
 {
-  /* FIXME: support interlaced */
   return picture->pic_num -
       (ref_pic_marking->difference_of_pic_nums_minus1 + 1);
 }
@@ -736,7 +835,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       pic_num_x = get_picNumX (picture, ref_pic_marking);
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
-        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
+        gst_h264_picture_set_reference (other,
+            GST_H264_PICTURE_REF_NONE, FALSE);
         GST_TRACE ("MMCO-1: unmark short-term ref picture %p, (poc %d)",
             other, other->pic_order_cnt);
       } else {
@@ -750,7 +850,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       other = gst_h264_dpb_get_long_ref_by_long_term_pic_num (dpb,
           ref_pic_marking->long_term_pic_num);
       if (other) {
-        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
+        gst_h264_picture_set_reference (other,
+            GST_H264_PICTURE_REF_NONE, FALSE);
         GST_TRACE ("MMCO-2: unmark long-term ref picture %p, (poc %d)",
             other, other->pic_order_cnt);
       } else {
@@ -770,7 +871,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
         if (GST_H264_PICTURE_IS_LONG_TERM_REF (other)
             && other->long_term_frame_idx ==
             ref_pic_marking->long_term_frame_idx) {
-          gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
+          gst_h264_picture_set_reference (other,
+              GST_H264_PICTURE_REF_NONE, TRUE);
           GST_TRACE ("MMCO-3: unmark old long-term ref pic %p (poc %d)",
               other, other->pic_order_cnt);
           break;
@@ -780,10 +882,17 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       pic_num_x = get_picNumX (picture, ref_pic_marking);
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
-        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_LONG_TERM);
+        gst_h264_picture_set_reference (other,
+            GST_H264_PICTURE_REF_LONG_TERM, picture->second_field);
         other->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
         GST_TRACE ("MMCO-3: mark long-term ref pic %p, index %d, (poc %d)",
             other, other->long_term_frame_idx, other->pic_order_cnt);
+
+        if (picture->other_field &&
+            GST_H264_PICTURE_IS_LONG_TERM_REF (picture->other_field)) {
+          picture->other_field->long_term_frame_idx =
+              ref_pic_marking->long_term_frame_idx;
+        }
       } else {
         GST_WARNING ("Invalid picNumX %d for operation type 3", pic_num_x);
         return FALSE;
@@ -803,7 +912,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
 
         if (GST_H264_PICTURE_IS_LONG_TERM_REF (other) &&
             other->long_term_frame_idx > max_long_term_frame_idx) {
-          gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
+          gst_h264_picture_set_reference (other,
+              GST_H264_PICTURE_REF_NONE, FALSE);
           GST_TRACE ("MMCO-4: unmark long-term ref pic %p, index %d, (poc %d)",
               other, other->long_term_frame_idx, other->pic_order_cnt);
         }
@@ -813,7 +923,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       /* 8.2.5.4.5 Unmark all reference pictures */
       for (i = 0; i < dpb->pic_list->len; i++) {
         other = g_array_index (dpb->pic_list, GstH264Picture *, i);
-        gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
+        gst_h264_picture_set_reference (other,
+            GST_H264_PICTURE_REF_NONE, FALSE);
       }
       picture->mem_mgmt_5 = TRUE;
       picture->frame_num = 0;
@@ -832,13 +943,20 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
             ref_pic_marking->long_term_frame_idx) {
           GST_TRACE ("MMCO-6: unmark old long-term ref pic %p (poc %d)",
               other, other->pic_order_cnt);
-          gst_h264_picture_set_reference (other, GST_H264_PICTURE_REF_NONE);
+          gst_h264_picture_set_reference (other,
+              GST_H264_PICTURE_REF_NONE, TRUE);
           break;
         }
       }
 
-      gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_LONG_TERM);
+      gst_h264_picture_set_reference (picture,
+          GST_H264_PICTURE_REF_LONG_TERM, picture->second_field);
       picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
+      if (picture->other_field &&
+          GST_H264_PICTURE_IS_LONG_TERM_REF (picture->other_field)) {
+        picture->other_field->long_term_frame_idx =
+            ref_pic_marking->long_term_frame_idx;
+      }
       break;
     default:
       g_assert_not_reached ();
@@ -852,6 +970,8 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
  * gst_h264_picture_set_reference:
  * @picture: a #GstH264Picture
  * @reference: a GstH264PictureReference
+ * @other_field: %TRUE if @reference needs to be applied to the
+ * other field if any
  *
  * Update reference picture type of @picture with @reference
  *
@@ -859,9 +979,12 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
  */
 void
 gst_h264_picture_set_reference (GstH264Picture * picture,
-    GstH264PictureReference reference)
+    GstH264PictureReference reference, gboolean other_field)
 {
   g_return_if_fail (picture != NULL);
 
   picture->ref = reference;
+
+  if (other_field && picture->other_field)
+    picture->other_field->ref = reference;
 }

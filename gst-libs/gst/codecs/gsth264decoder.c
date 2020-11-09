@@ -181,7 +181,8 @@ static void gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self);
 static void gst_h264_decoder_clear_ref_pic_lists (GstH264Decoder * self);
 static gboolean gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self);
 static gboolean
-gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self);
+gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self,
+    GstH264Picture * picture);
 static void gst_h264_decoder_do_output_picture (GstH264Decoder * self,
     GstH264Picture * picture);
 
@@ -581,14 +582,24 @@ gst_h264_decoder_update_pic_nums (GstH264Decoder * self,
       continue;
 
     if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
-      picture->long_term_pic_num = picture->long_term_frame_idx;
+      if (current_picture->field == GST_H264_PICTURE_FIELD_FRAME)
+        picture->long_term_pic_num = picture->long_term_frame_idx;
+      else if (current_picture->field == picture->field)
+        picture->long_term_pic_num = 2 * picture->long_term_frame_idx + 1;
+      else
+        picture->long_term_pic_num = 2 * picture->long_term_frame_idx;
     } else {
       if (picture->frame_num > frame_num)
         picture->frame_num_wrap = picture->frame_num - priv->max_frame_num;
       else
         picture->frame_num_wrap = picture->frame_num;
 
-      picture->pic_num = picture->frame_num_wrap;
+      if (current_picture->field == GST_H264_PICTURE_FIELD_FRAME)
+        picture->pic_num = picture->frame_num_wrap;
+      else if (picture->field == current_picture->field)
+        picture->pic_num = 2 * picture->frame_num_wrap + 1;
+      else
+        picture->pic_num = 2 * picture->frame_num_wrap;
     }
   }
 
@@ -651,7 +662,7 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
         unused_short_term_frame_num);
 
     /* C.2.1 */
-    if (!gst_h264_decoder_sliding_window_picture_marking (self)) {
+    if (!gst_h264_decoder_sliding_window_picture_marking (self, picture)) {
       GST_ERROR_OBJECT (self,
           "Couldn't perform sliding window picture marking");
       return FALSE;
@@ -769,6 +780,95 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
   return TRUE;
 }
 
+static GstH264Picture *
+gst_h264_decoder_new_field_picture (GstH264Decoder * self,
+    GstH264Picture * picture)
+{
+  GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
+  GstH264Picture *new_picture;
+
+  /* Should not happen */
+  g_assert (picture->field != GST_H264_PICTURE_FIELD_FRAME);
+
+  if (!klass->new_field_picture) {
+    GST_WARNING_OBJECT (self, "Subclass does not support interlaced stream");
+    return NULL;
+  }
+
+  new_picture = gst_h264_picture_new ();
+  if (!klass->new_field_picture (self, picture, new_picture)) {
+    GST_ERROR_OBJECT (self, "Subclass couldn't handle new field picture");
+    gst_h264_picture_unref (new_picture);
+
+    return NULL;
+  }
+
+  new_picture->other_field = picture;
+  new_picture->second_field = TRUE;
+  new_picture->field = picture->field == GST_H264_PICTURE_FIELD_TOP_FIELD ?
+      GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FIELD_TOP_FIELD;
+
+  return new_picture;
+}
+
+static gboolean
+gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
+    GstH264Slice * slice, GstH264Picture ** first_field)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  const GstH264SliceHdr *slice_hdr = &slice->header;
+  GstH264Picture *prev_picture;
+  GArray *pictures;
+
+  *first_field = NULL;
+
+  /* DPB is empty, must be the first field */
+  if (gst_h264_dpb_get_size (priv->dpb) == 0)
+    return TRUE;
+
+  pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
+  prev_picture = g_array_index (pictures, GstH264Picture *, pictures->len - 1);
+
+  /* This is not a field picture */
+  if (!slice_hdr->field_pic_flag) {
+    /* Check whether the last picture is complete or not */
+    if (prev_picture->field != GST_H264_PICTURE_FIELD_FRAME &&
+        !prev_picture->other_field) {
+      GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
+          prev_picture, prev_picture->pic_order_cnt);
+
+      /* FIXME: implement fill gap field picture */
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  /* Previous picture was not a field picture or complete already */
+  if (prev_picture->field == GST_H264_PICTURE_FIELD_FRAME ||
+      prev_picture->other_field)
+    return TRUE;
+
+  if (prev_picture->frame_num == slice_hdr->frame_num) {
+    GstH264PictureField current_field = slice_hdr->bottom_field_flag ?
+        GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FIELD_TOP_FIELD;
+
+    if (current_field == prev_picture->field) {
+      GST_WARNING_OBJECT (self,
+          "Currnet picture and previous picture have identical field %d",
+          current_field);
+
+      /* FIXME: implement fill gap field picture */
+      return FALSE;
+    }
+
+    *first_field = prev_picture;
+    return TRUE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
@@ -797,25 +897,41 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 
   if (!priv->current_picture) {
     GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
-    GstH264Picture *picture;
+    GstH264Picture *picture = NULL;
+    GstH264Picture *first_field = NULL;
     gboolean ret = TRUE;
 
-    picture = gst_h264_picture_new ();
-    /* This allows accessing the frame from the picture. */
-    picture->system_frame_number = priv->current_frame->system_frame_number;
-
-    priv->current_picture = picture;
     g_assert (priv->current_frame);
 
-    if (klass->new_picture)
-      ret = klass->new_picture (self, priv->current_frame, picture);
-
-    if (!ret) {
-      GST_ERROR_OBJECT (self, "subclass does not want accept new picture");
-      priv->current_picture = NULL;
-      gst_h264_picture_unref (picture);
+    if (!gst_h264_decoder_find_first_field_picture (self,
+            &priv->current_slice, &first_field)) {
+      GST_ERROR_OBJECT (self, "Couldn't find or determine first picture");
       return FALSE;
     }
+
+    if (first_field) {
+      picture = gst_h264_decoder_new_field_picture (self, first_field);
+
+      if (!picture) {
+        GST_ERROR_OBJECT (self, "Couldn't duplicate the first field picture");
+        return FALSE;
+      }
+    } else {
+      picture = gst_h264_picture_new ();
+
+      if (klass->new_picture)
+        ret = klass->new_picture (self, priv->current_frame, picture);
+
+      if (!ret) {
+        GST_ERROR_OBJECT (self, "subclass does not want accept new picture");
+        gst_h264_picture_unref (picture);
+        return FALSE;
+      }
+    }
+
+    /* This allows accessing the frame from the picture. */
+    picture->system_frame_number = priv->current_frame->system_frame_number;
+    priv->current_picture = picture;
 
     if (!gst_h264_decoder_start_current_picture (self)) {
       GST_ERROR_OBJECT (self, "start picture failed");
@@ -1034,10 +1150,16 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
 
   picture->nal_ref_idc = slice->nalu.ref_idc;
   if (slice->nalu.ref_idc != 0)
-    gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_SHORT_TERM);
+    gst_h264_picture_set_reference (picture,
+        GST_H264_PICTURE_REF_SHORT_TERM, FALSE);
 
-  /* This assumes non-interlaced stream */
-  picture->frame_num = picture->pic_num = slice_hdr->frame_num;
+  picture->frame_num = slice_hdr->frame_num;
+
+  /* 7.4.3 */
+  if (!slice_hdr->field_pic_flag)
+    picture->pic_num = slice_hdr->frame_num;
+  else
+    picture->pic_num = 2 * slice_hdr->frame_num + 1;
 
   picture->pic_order_cnt_type = sps->pic_order_cnt_type;
   switch (picture->pic_order_cnt_type) {
@@ -1411,12 +1533,17 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
 }
 
 static gboolean
-gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
+gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self,
+    GstH264Picture * picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
   const GstH264SPS *sps = priv->active_sps;
   gint num_ref_pics;
   gint max_num_ref_frames;
+
+  /* Skip this for the second field */
+  if (picture->second_field)
+    return TRUE;
 
   if (!sps) {
     GST_ERROR_OBJECT (self, "No active sps");
@@ -1457,7 +1584,7 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
         "Unmark reference flag of picture %p (frame_num %d, poc %d)",
         to_unmark, to_unmark->frame_num, to_unmark->pic_order_cnt);
 
-    gst_h264_picture_set_reference (to_unmark, GST_H264_PICTURE_REF_NONE);
+    gst_h264_picture_set_reference (to_unmark, GST_H264_PICTURE_REF_NONE, TRUE);
     gst_h264_picture_unref (to_unmark);
 
     num_ref_pics--;
@@ -1482,11 +1609,13 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
     gst_h264_dpb_mark_all_non_ref (priv->dpb);
 
     if (picture->dec_ref_pic_marking.long_term_reference_flag) {
-      gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_LONG_TERM);
+      gst_h264_picture_set_reference (picture,
+          GST_H264_PICTURE_REF_LONG_TERM, FALSE);
       picture->long_term_frame_idx = 0;
       priv->max_long_term_frame_idx = 0;
     } else {
-      gst_h264_picture_set_reference (picture, GST_H264_PICTURE_REF_SHORT_TERM);
+      gst_h264_picture_set_reference (picture,
+          GST_H264_PICTURE_REF_SHORT_TERM, FALSE);
       priv->max_long_term_frame_idx = -1;
     }
 
@@ -1507,13 +1636,14 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
     return gst_h264_decoder_handle_memory_management_opt (self, picture);
   }
 
-  return gst_h264_decoder_sliding_window_picture_marking (self);
+  return gst_h264_decoder_sliding_window_picture_marking (self, picture);
 }
 
 static gboolean
 gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture * picture)
 {
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
 
   /* Finish processing the picture.
@@ -1535,6 +1665,15 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
   /* Remove unused (for reference or later output) pictures from DPB, marking
    * them as such */
   gst_h264_dpb_delete_unused (priv->dpb);
+
+  /* If this is the second field, drop corresponding frame */
+  if (picture->second_field) {
+    GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
+        picture->system_frame_number);
+
+    gst_video_decoder_release_frame (decoder, frame);
+  }
+
   gst_h264_dpb_add (priv->dpb, picture);
 
   GST_LOG_OBJECT (self,
@@ -1733,12 +1872,25 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   gint max_dpb_frames;
   gint max_dpb_size;
   gint prev_max_dpb_size;
+  gboolean prev_interlaced;
+  gboolean interlaced;
 
-  if (sps->frame_mbs_only_flag == 0 && !klass->new_field_picture) {
-    GST_FIXME_OBJECT (self,
-        "frame_mbs_only_flag != 1 not supported by subclass");
-    return FALSE;
+  if (sps->frame_mbs_only_flag == 0) {
+    if (!klass->new_field_picture) {
+      GST_FIXME_OBJECT (self,
+          "frame_mbs_only_flag != 1 not supported by subclass");
+      return FALSE;
+    }
+
+    if (sps->mb_adaptive_frame_field_flag) {
+      GST_LOG_OBJECT (self,
+          "mb_adaptive_frame_field_flag == 1, MBAFF sequence");
+    } else {
+      GST_LOG_OBJECT (self, "mb_adaptive_frame_field_flag == 0, PAFF sequence");
+    }
   }
+
+  interlaced = !sps->frame_mbs_only_flag;
 
   /* Spec A.3.1 and A.3.2
    * For Baseline, Constrained Baseline and Main profile, the indicated level is
@@ -1782,14 +1934,16 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, FALSE);
 
   prev_max_dpb_size = gst_h264_dpb_get_max_num_frames (priv->dpb);
+  prev_interlaced = gst_h264_dpb_get_interlaced (priv->dpb);
   if (priv->width != sps->width || priv->height != sps->height ||
-      prev_max_dpb_size != max_dpb_size) {
+      prev_max_dpb_size != max_dpb_size || prev_interlaced != interlaced) {
     GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
 
     GST_DEBUG_OBJECT (self,
-        "SPS updated, resolution: %dx%d -> %dx%d, dpb size: %d -> %d",
+        "SPS updated, resolution: %dx%d -> %dx%d, dpb size: %d -> %d, "
+        "interlaced %d -> %d",
         priv->width, priv->height, sps->width, sps->height,
-        prev_max_dpb_size, max_dpb_size);
+        prev_max_dpb_size, max_dpb_size, prev_interlaced, interlaced);
 
     if (gst_h264_decoder_drain (GST_VIDEO_DECODER (self)) != GST_FLOW_OK)
       return FALSE;
@@ -1806,6 +1960,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 
     gst_h264_decoder_set_latency (self, sps, max_dpb_size);
     gst_h264_dpb_set_max_num_frames (priv->dpb, max_dpb_size);
+    gst_h264_dpb_set_interlaced (priv->dpb, interlaced);
   }
 
   return gst_h264_decoder_update_max_num_reorder_frames (self, sps);

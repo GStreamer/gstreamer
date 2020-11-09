@@ -21,8 +21,8 @@
 #define __GST_H264_PICTURE_H__
 
 #include <gst/codecs/codecs-prelude.h>
-
 #include <gst/codecparsers/gsth264parser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -141,6 +141,12 @@ struct _GstH264Picture
 
   GstH264DecRefPicMarking dec_ref_pic_marking;
 
+  /* For interlaced decoding */
+  gboolean second_field;
+  GstH264Picture * other_field;
+
+  GstVideoBufferFlags buffer_flags;
+
   gpointer user_data;
   GDestroyNotify notify;
 };
@@ -202,6 +208,13 @@ void  gst_h264_dpb_set_max_num_frames (GstH264Dpb * dpb,
 
 GST_CODECS_API
 gint gst_h264_dpb_get_max_num_frames  (GstH264Dpb * dpb);
+
+GST_CODECS_API
+void gst_h264_dpb_set_interlaced      (GstH264Dpb * dpb,
+                                       gboolean interlaced);
+
+GST_CODECS_API
+gboolean gst_h264_dpb_get_interlaced  (GstH264Dpb * dpb);
 
 GST_CODECS_API
 void  gst_h264_dpb_free             (GstH264Dpb * dpb);
@@ -267,7 +280,8 @@ gboolean         gst_h264_dpb_perform_memory_management_control_operation (GstH2
 
 /* Internal methods */
 void  gst_h264_picture_set_reference (GstH264Picture * picture,
-                                      GstH264PictureReference reference);
+                                      GstH264PictureReference reference,
+                                      gboolean other_field);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Picture, gst_h264_picture_unref)
 
