@@ -1057,7 +1057,9 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
     gst_video_aggregator_reset_qos (vagg);
   }
 
+  GST_OBJECT_LOCK (vagg);
   vagg->info = info;
+  GST_OBJECT_UNLOCK (vagg);
 
   finfo = vagg->info.finfo;
 
@@ -1416,7 +1418,10 @@ gst_video_aggregator_reset (GstVideoAggregator * vagg)
   GstAggregator *agg = GST_AGGREGATOR (vagg);
   GList *l;
 
+  GST_OBJECT_LOCK (vagg);
   gst_video_info_init (&vagg->info);
+  GST_OBJECT_UNLOCK (vagg);
+
   vagg->priv->ts_offset = 0;
   vagg->priv->nframes = 0;
   vagg->priv->live = FALSE;
