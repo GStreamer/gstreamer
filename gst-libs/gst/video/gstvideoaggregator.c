@@ -1061,7 +1061,7 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
   vagg->info = info;
   GST_OBJECT_UNLOCK (vagg);
 
-  finfo = vagg->info.finfo;
+  finfo = info.finfo;
 
   if (at_least_one_alpha && !(finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
     GST_ELEMENT_ERROR (vagg, CORE, NEGOTIATION,
@@ -1082,7 +1082,7 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
 
     gst_aggregator_set_src_caps (agg, caps);
     latency = gst_util_uint64_scale (GST_SECOND,
-        GST_VIDEO_INFO_FPS_D (&vagg->info), GST_VIDEO_INFO_FPS_N (&vagg->info));
+        GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
     gst_aggregator_set_latency (agg, latency, latency);
   }
 
