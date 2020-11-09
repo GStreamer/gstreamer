@@ -675,7 +675,7 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
 
   /* NOTE: don't use g_array_remove_index_fast here since the last picture
    * need to be referenced for bumping decision */
-  if (!picture->ref)
+  if (!picture->ref || drain)
     g_array_remove_index (dpb->pic_list, index);
 
   dpb->last_output_poc = picture->pic_order_cnt;
