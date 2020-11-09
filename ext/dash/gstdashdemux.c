@@ -218,8 +218,7 @@
  * GstDashDemuxStream->actual_position.
  *
  * The downstream position of the pipeline is obtained via QoS events and
- * is stored in GstAdaptiveDemuxStream->qos_earliest_time (note: it's a
- * running time value).
+ * is stored in GstAdaptiveDemux (note: it's a running time value).
  *
  * The estimated buffering level between dashdemux and downstream is
  * therefore:
@@ -1764,6 +1763,7 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
   GstClockTimeDiff diff;
   GstClockTime ret = cur_position;
   GstClockTime deadline;
+  GstClockTime upstream_earliest_time;
   GstClockTime earliest_time = GST_CLOCK_TIME_NONE;
 
   g_assert (min_skip > 0);
@@ -1785,7 +1785,9 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
    * flush, as otherwise base_time and clock might not be correct because of a
    * still pre-rolling sink
    */
-  if (stream->qos_earliest_time != GST_CLOCK_TIME_NONE) {
+  upstream_earliest_time =
+      gst_adaptive_demux_get_qos_earliest_time ((GstAdaptiveDemux *) dashdemux);
+  if (upstream_earliest_time != GST_CLOCK_TIME_NONE) {
     GstClock *clock;
 
     clock = gst_element_get_clock (GST_ELEMENT_CAST (dashdemux));
@@ -1803,9 +1805,9 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
 
       gst_object_unref (clock);
 
-      earliest_time = MAX (now_time, stream->qos_earliest_time);
+      earliest_time = MAX (now_time, upstream_earliest_time);
     } else {
-      earliest_time = stream->qos_earliest_time;
+      earliest_time = upstream_earliest_time;
     }
   }
 

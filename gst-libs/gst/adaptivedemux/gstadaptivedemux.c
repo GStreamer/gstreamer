@@ -205,6 +205,8 @@ struct _GstAdaptiveDemuxPrivate
    * without needing to stop tasks when they just want to
    * update the segment boundaries */
   GMutex segment_lock;
+
+  GstClockTime qos_earliest_time;
 };
 
 typedef struct _GstAdaptiveDemuxTimer
@@ -1203,12 +1205,12 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
 
     stream->pending_segment = gst_event_new_segment (&stream->segment);
     gst_event_set_seqnum (stream->pending_segment, demux->priv->segment_seqnum);
-    stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
 
     GST_DEBUG_OBJECT (demux,
         "Prepared segment %" GST_SEGMENT_FORMAT " for stream %p",
         &stream->segment, stream);
   }
+  demux->priv->qos_earliest_time = GST_CLOCK_TIME_NONE;
 
   return TRUE;
 }
@@ -1526,8 +1528,8 @@ gst_adaptive_demux_update_streams_segment (GstAdaptiveDemux * demux,
     gst_event_unref (seg_evt);
     /* Make sure the first buffer after a seek has the discont flag */
     stream->discont = TRUE;
-    stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
   }
+  demux->priv->qos_earliest_time = GST_CLOCK_TIME_NONE;
 }
 
 #define IS_SNAP_SEEK(f) (f & (GST_SEEK_FLAG_SNAP_BEFORE |	  \
@@ -1907,25 +1909,19 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       return TRUE;
     }
     case GST_EVENT_QOS:{
-      GstAdaptiveDemuxStream *stream;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
 
-      GST_MANIFEST_LOCK (demux);
-      stream = gst_adaptive_demux_find_stream_for_pad (demux, pad);
-
-      if (stream) {
-        GstClockTimeDiff diff;
-        GstClockTime timestamp;
-
-        gst_event_parse_qos (event, NULL, NULL, &diff, &timestamp);
-        /* Only take into account lateness if late */
-        if (diff > 0)
-          stream->qos_earliest_time = timestamp + 2 * diff;
-        else
-          stream->qos_earliest_time = timestamp;
-        GST_DEBUG_OBJECT (stream->pad, "qos_earliest_time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (stream->qos_earliest_time));
-      }
-      GST_MANIFEST_UNLOCK (demux);
+      gst_event_parse_qos (event, NULL, NULL, &diff, &timestamp);
+      /* Only take into account lateness if late */
+      GST_OBJECT_LOCK (demux);
+      if (diff > 0)
+        demux->priv->qos_earliest_time = timestamp + 2 * diff;
+      else
+        demux->priv->qos_earliest_time = timestamp;
+      GST_OBJECT_UNLOCK (demux);
+      GST_DEBUG_OBJECT (demux, "qos_earliest_time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (demux->priv->qos_earliest_time));
       break;
     }
     default:
@@ -2197,10 +2193,10 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
 
       stream->download_error_count = 0;
       stream->need_header = TRUE;
-      stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
     }
     list_to_process = demux->prepared_streams;
   }
+  demux->priv->qos_earliest_time = GST_CLOCK_TIME_NONE;
 }
 
 /* must be called with manifest_lock taken */
@@ -4658,4 +4654,23 @@ gst_adaptive_demux_clock_callback (GstClock * clock,
   g_cond_signal (timer->cond);
   g_mutex_unlock (timer->mutex);
   return TRUE;
+}
+
+/**
+ * gst_adaptive_demux_get_qos_earliest_time:
+ *
+ * Returns: The QOS earliest time
+ *
+ * Since: 1.18
+ */
+GstClockTime
+gst_adaptive_demux_get_qos_earliest_time (GstAdaptiveDemux * demux)
+{
+  GstClockTime earliest;
+
+  GST_OBJECT_LOCK (demux);
+  earliest = demux->priv->qos_earliest_time;
+  GST_OBJECT_UNLOCK (demux);
+
+  return earliest;
 }
