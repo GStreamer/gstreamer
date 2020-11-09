@@ -1386,7 +1386,19 @@ calculate_skew (MpegTSPacketizer2 * packetizer,
       /* Small jumps backward, assume some arrival jitter and skip it */
       send_diff = 0;
 
-      if (pcr->last_pcrtime - gstpcrtime < GST_SECOND) {
+      /* The following code are the different ways we deal with small-ish
+       * jitter, ranging in severity from "can be ignored" to "this needs a full
+       * resync" */
+
+      if (time == pcr->base_time) {
+        /* If this comes from a non-fully-timestamped source (i.e. adaptive
+         * streams), then cope with the fact that some producers generate utter
+         * PCR garbage on fragment ends.
+         *
+         * We detect this comes from a non-fully-timestamped source by the fact
+         * that the buffer time never changes */
+        GST_DEBUG ("Ignoring PCR resets on non-fully timestamped stream");
+      } else if (pcr->last_pcrtime - gstpcrtime < GST_SECOND) {
         GST_WARNING
             ("(small) backward timestamps at server or no buffer timestamps. Ignoring.");
         /* This will trigger the no_skew logic before but leave other state
@@ -1444,8 +1456,8 @@ calculate_skew (MpegTSPacketizer2 * packetizer,
    * changed too quickly we have to resync because the server likely restarted
    * its timestamps. */
   if (ABS (delta - pcr->skew) > packetizer->pcr_discont_threshold) {
-    GST_WARNING ("delta - skew: %" GST_TIME_FORMAT " too big, reset skew",
-        GST_TIME_ARGS (delta - pcr->skew));
+    GST_WARNING ("delta - skew: %" GST_STIME_FORMAT " too big, reset skew",
+        GST_STIME_ARGS (delta - pcr->skew));
     mpegts_packetizer_resync (pcr, time, gstpcrtime, TRUE);
     send_diff = 0;
     delta = 0;
