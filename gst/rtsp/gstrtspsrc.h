@@ -324,6 +324,9 @@ struct _GstRTSPSrc {
   GstRTSPVersion version;
 
   GstEvent *initial_seek;
+
+  guint group_id;
+  GMutex group_lock;
 };
 
 struct _GstRTSPSrcClass {
