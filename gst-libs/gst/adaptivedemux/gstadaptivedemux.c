@@ -1912,17 +1912,23 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_QOS:{
       GstClockTimeDiff diff;
       GstClockTime timestamp;
+      GstClockTime earliest_time;
 
       gst_event_parse_qos (event, NULL, NULL, &diff, &timestamp);
       /* Only take into account lateness if late */
-      GST_OBJECT_LOCK (demux);
       if (diff > 0)
-        demux->priv->qos_earliest_time = timestamp + 2 * diff;
+        earliest_time = timestamp + 2 * diff;
       else
-        demux->priv->qos_earliest_time = timestamp;
+        earliest_time = timestamp;
+
+      GST_OBJECT_LOCK (demux);
+      if (!GST_CLOCK_TIME_IS_VALID (demux->priv->qos_earliest_time) ||
+          earliest_time > demux->priv->qos_earliest_time) {
+        demux->priv->qos_earliest_time = earliest_time;
+        GST_DEBUG_OBJECT (demux, "qos_earliest_time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (demux->priv->qos_earliest_time));
+      }
       GST_OBJECT_UNLOCK (demux);
-      GST_DEBUG_OBJECT (demux, "qos_earliest_time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->priv->qos_earliest_time));
       break;
     }
     default:
@@ -4663,7 +4669,7 @@ gst_adaptive_demux_clock_callback (GstClock * clock,
  *
  * Returns: The QOS earliest time
  *
- * Since: 1.18
+ * Since: 1.20
  */
 GstClockTime
 gst_adaptive_demux_get_qos_earliest_time (GstAdaptiveDemux * demux)
