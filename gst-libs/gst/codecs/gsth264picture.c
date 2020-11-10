@@ -335,7 +335,7 @@ gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
 /**
  * gst_h264_dpb_get_long_ref_by_long_term_pic_num:
  * @dpb: a #GstH264Dpb
- * @pic_num: a long term picture number
+ * @long_term_pic_num: a long term picture number
  *
  * Find a long term reference picture which has matching long term picture number
  *
@@ -559,7 +559,7 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
 /**
  * gst_h264_dpb_needs_bump:
  * @dpb: a #GstH264Dpb
- * @current_picture: a #GstH264Picture currently decoded but not added to dpb
+ * @max_num_reorder_frames: allowed max_num_reorder_frames as specified by sps
  * @low_latency: %TRUE if low-latency bumping is required
  *
  * Returns: %TRUE if bumping is required
