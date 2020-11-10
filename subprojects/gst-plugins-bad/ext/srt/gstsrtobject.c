@@ -363,10 +363,11 @@ gst_srt_object_destroy (GstSRTObject * srtobject)
 {
   g_return_if_fail (srtobject != NULL);
 
-  if (srtobject->poll_id != SRT_ERROR) {
-    srt_epoll_release (srtobject->poll_id);
-    srtobject->poll_id = SRT_ERROR;
+  if (srtobject->sock != SRT_INVALID_SOCK) {
+    srt_close (srtobject->sock);
   }
+
+  srt_epoll_release (srtobject->poll_id);
 
   g_cond_clear (&srtobject->sock_cond);
 
@@ -1170,7 +1171,7 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
   if (sock == SRT_INVALID_SOCK) {
     g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, "%s",
         srt_getlasterror_str ());
-    goto failed;
+    return FALSE;
   }
 
   if (!gst_srt_object_set_common_params (sock, srtobject, error)) {
@@ -1254,6 +1255,7 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
   if (srt_connect (sock, sa, sa_len) == SRT_ERROR) {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ, "%s",
         srt_getlasterror_str ());
+    srt_epoll_remove_usock (srtobject->poll_id, sock);
     goto failed;
   }
 
@@ -1262,18 +1264,7 @@ gst_srt_object_connect (GstSRTObject * srtobject, GCancellable * cancellable,
   return TRUE;
 
 failed:
-
-  if (srtobject->poll_id != SRT_ERROR) {
-    srt_epoll_release (srtobject->poll_id);
-  }
-
-  if (sock != SRT_INVALID_SOCK) {
-    srt_close (sock);
-  }
-
-  srtobject->poll_id = SRT_ERROR;
-  srtobject->sock = SRT_INVALID_SOCK;
-
+  srt_close (sock);
   return FALSE;
 }
 
@@ -1381,9 +1372,7 @@ gst_srt_object_close (GstSRTObject * srtobject)
   g_mutex_lock (&srtobject->sock_lock);
 
   if (srtobject->sock != SRT_INVALID_SOCK) {
-    if (srtobject->poll_id != SRT_ERROR) {
-      srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
-    }
+    srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
 
     GST_DEBUG_OBJECT (srtobject->element, "Closing SRT socket (0x%x)",
         srtobject->sock);
@@ -1584,7 +1573,7 @@ gst_srt_object_wakeup (GstSRTObject * srtobject, GCancellable * cancellable)
 
   /* Removing all socket descriptors from the monitoring list
    * wakes up SRT's threads. We only have one to remove. */
-  if (srtobject->sock != SRT_INVALID_SOCK && srtobject->poll_id != SRT_ERROR) {
+  if (srtobject->sock != SRT_INVALID_SOCK) {
     srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
   }
 
