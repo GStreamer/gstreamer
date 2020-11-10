@@ -2398,6 +2398,81 @@ GST_END_TEST;
 #undef HEIGHT
 #undef TIME
 
+typedef struct
+{
+  const gchar *name;
+  GstVideoChromaSite site;
+} ChromaSiteElem;
+
+GST_START_TEST (test_video_chroma_site)
+{
+  ChromaSiteElem valid_sites[] = {
+    /* pre-defined flags */
+    {"jpeg", GST_VIDEO_CHROMA_SITE_JPEG},
+    {"mpeg2", GST_VIDEO_CHROMA_SITE_MPEG2},
+    {"dv", GST_VIDEO_CHROMA_SITE_DV},
+    {"alt-line", GST_VIDEO_CHROMA_SITE_ALT_LINE},
+    {"cosited", GST_VIDEO_CHROMA_SITE_COSITED},
+    /* new values */
+    {"v-cosited", GST_VIDEO_CHROMA_SITE_V_COSITED},
+    {"v-cosited+alt-line",
+        GST_VIDEO_CHROMA_SITE_V_COSITED | GST_VIDEO_CHROMA_SITE_ALT_LINE},
+  };
+  ChromaSiteElem unknown_sites[] = {
+    {NULL, GST_VIDEO_CHROMA_SITE_UNKNOWN},
+    /* Any combination with GST_VIDEO_CHROMA_SITE_NONE doesn' make sense */
+    {NULL, GST_VIDEO_CHROMA_SITE_NONE | GST_VIDEO_CHROMA_SITE_H_COSITED},
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (valid_sites); i++) {
+    gchar *site = gst_video_chroma_site_to_string (valid_sites[i].site);
+
+    fail_unless (site != NULL);
+    fail_unless (g_strcmp0 (site, valid_sites[i].name) == 0);
+    fail_unless (gst_video_chroma_site_from_string (site) ==
+        valid_sites[i].site);
+    g_free (site);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (unknown_sites); i++) {
+    gchar *site = gst_video_chroma_site_to_string (unknown_sites[i].site);
+    fail_unless (site == NULL);
+  }
+
+  /* totally wrong string */
+  fail_unless (gst_video_chroma_site_from_string ("foo/bar") ==
+      GST_VIDEO_CHROMA_SITE_UNKNOWN);
+
+  /* valid ones */
+  fail_unless (gst_video_chroma_site_from_string ("jpeg") ==
+      GST_VIDEO_CHROMA_SITE_NONE);
+  fail_unless (gst_video_chroma_site_from_string ("none") ==
+      GST_VIDEO_CHROMA_SITE_NONE);
+
+  fail_unless (gst_video_chroma_site_from_string ("mpeg2") ==
+      GST_VIDEO_CHROMA_SITE_H_COSITED);
+  fail_unless (gst_video_chroma_site_from_string ("h-cosited") ==
+      GST_VIDEO_CHROMA_SITE_H_COSITED);
+
+  /* Equal to "cosited" */
+  fail_unless (gst_video_chroma_site_from_string ("v-cosited+h-cosited") ==
+      GST_VIDEO_CHROMA_SITE_COSITED);
+
+  fail_unless (gst_video_chroma_site_from_string ("v-cosited") ==
+      GST_VIDEO_CHROMA_SITE_V_COSITED);
+
+  /* none + something doesn't make sense */
+  fail_unless (gst_video_chroma_site_from_string ("none+v-cosited") ==
+      GST_VIDEO_CHROMA_SITE_UNKNOWN);
+
+  /* mix of valid and invalid strings */
+  fail_unless (gst_video_chroma_site_from_string ("mpeg2+foo/bar") ==
+      GST_VIDEO_CHROMA_SITE_UNKNOWN);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_scaler)
 {
   GstVideoScaler *scale;
@@ -3959,6 +4034,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
   tcase_add_test (tc_chain, test_video_pack_unpack2);
   tcase_add_test (tc_chain, test_video_chroma);
+  tcase_add_test (tc_chain, test_video_chroma_site);
   tcase_add_test (tc_chain, test_video_scaler);
   tcase_add_test (tc_chain, test_video_color_convert_rgb_rgb);
   tcase_add_test (tc_chain, test_video_color_convert_rgb_yuv);
