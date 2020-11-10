@@ -1400,6 +1400,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->onvif_rate_control = DEFAULT_ONVIF_RATE_CONTROL;
   src->is_live = DEFAULT_IS_LIVE;
   src->seek_seqnum = GST_SEQNUM_INVALID;
+  src->group_id = GST_GROUP_ID_INVALID;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1422,6 +1423,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   g_mutex_init (&src->conninfo.send_lock);
   g_mutex_init (&src->conninfo.recv_lock);
   g_cond_init (&src->cmd_cond);
+
+  g_mutex_init (&src->group_lock);
 
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
   gst_bin_set_suppressed_flags (GST_BIN (src),
@@ -1477,6 +1480,8 @@ gst_rtspsrc_finalize (GObject * object)
   g_mutex_clear (&rtspsrc->conninfo.send_lock);
   g_mutex_clear (&rtspsrc->conninfo.recv_lock);
   g_cond_clear (&rtspsrc->cmd_cond);
+
+  g_mutex_clear (&rtspsrc->group_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2987,6 +2992,19 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
+static void
+gst_rtspsrc_stream_start_event_add_group_id (GstRTSPSrc * src, GstEvent * event)
+{
+  g_mutex_lock (&src->group_lock);
+
+  if (src->group_id == GST_GROUP_ID_INVALID)
+    src->group_id = gst_util_group_id_next ();
+
+  g_mutex_unlock (&src->group_lock);
+
+  gst_event_set_group_id (event, src->group_id);
+}
+
 static gboolean
 gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
@@ -3005,12 +3023,15 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
       cs = g_checksum_new (G_CHECKSUM_SHA256);
       uri = self->conninfo.location;
       g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+
       stream_id =
           g_strdup_printf ("%s/%s", g_checksum_get_string (cs),
           stream->stream_id);
+
       g_checksum_free (cs);
       gst_event_unref (event);
       event = gst_event_new_stream_start (stream_id);
+      gst_rtspsrc_stream_start_event_add_group_id (self, event);
       g_free (stream_id);
       break;
     }
@@ -5393,7 +5414,6 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     GChecksum *cs;
     gchar *uri;
     GList *streams;
-    guint group_id = gst_util_group_id_next ();
 
     /* generate an SHA256 sum of the URI */
     cs = g_checksum_new (G_CHECKSUM_SHA256);
@@ -5411,8 +5431,10 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
 
       stream_id =
           g_strdup_printf ("%s/%d", g_checksum_get_string (cs), ostream->id);
+
       event = gst_event_new_stream_start (stream_id);
-      gst_event_set_group_id (event, group_id);
+
+      gst_rtspsrc_stream_start_event_add_group_id (src, event);
 
       g_free (stream_id);
       gst_rtspsrc_stream_push_event (src, ostream, event);
@@ -9173,6 +9195,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      rtspsrc->group_id = GST_GROUP_ID_INVALID;
       break;
     default:
       break;
