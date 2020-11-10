@@ -2773,7 +2773,8 @@ gst_adaptive_demux_eos_handling (GstAdaptiveDemuxStream * stream)
     /* Last chance to figure out a fallback nominal bitrate if neither baseclass
        nor the HTTP Content-Length implementation worked. */
     if (stream->fragment.bitrate == 0 && stream->fragment.duration != 0 &&
-        stream->fragment_bytes_downloaded != 0) {
+        stream->fragment_bytes_downloaded != 0 && !stream->downloading_index &&
+        !stream->downloading_header) {
       guint bitrate = MIN (G_MAXUINT,
           gst_util_uint64_scale (stream->fragment_bytes_downloaded,
               8 * GST_SECOND, stream->fragment.duration));
