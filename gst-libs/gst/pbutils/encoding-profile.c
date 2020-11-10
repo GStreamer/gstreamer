@@ -1383,7 +1383,7 @@ gst_encoding_profile_get_file_extension (GstEncodingProfile * profile)
   has_video = gst_encoding_container_profile_has_video (cprofile);
 
   /* Ogg */
-  if (strcmp (ext, "ogg") == 0) {
+  if (g_strcmp0 (ext, "ogg") == 0) {
     /* ogg with video => .ogv */
     if (has_video) {
       ext = "ogv";
@@ -1404,7 +1404,7 @@ gst_encoding_profile_get_file_extension (GstEncodingProfile * profile)
   }
 
   /* Matroska */
-  if (has_video && strcmp (ext, "mka") == 0) {
+  if (has_video && g_strcmp0 (ext, "mka") == 0) {
     ext = "mkv";
     goto done;
   }
