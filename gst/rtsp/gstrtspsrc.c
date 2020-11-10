@@ -2998,12 +2998,17 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:{
-      const gchar *upstream_id;
+      GChecksum *cs;
+      gchar *uri;
       gchar *stream_id;
 
-      gst_event_parse_stream_start (event, &upstream_id);
-      stream_id = g_strdup_printf ("%s/%s", upstream_id, stream->stream_id);
-
+      cs = g_checksum_new (G_CHECKSUM_SHA256);
+      uri = self->conninfo.location;
+      g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+      stream_id =
+          g_strdup_printf ("%s/%s", g_checksum_get_string (cs),
+          stream->stream_id);
+      g_checksum_free (cs);
       gst_event_unref (event);
       event = gst_event_new_stream_start (stream_id);
       g_free (stream_id);
