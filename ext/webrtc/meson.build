@@ -15,7 +15,7 @@ webrtc_sources = [
   'webrtcdatachannel.c',
 ]
 
-libnice_dep = dependency('nice', version : '>=0.1.16', required : get_option('webrtc'),
+libnice_dep = dependency('nice', version : '>=0.1.17', required : get_option('webrtc'),
                          fallback : ['libnice', 'libnice_dep'],
                          default_options: ['tests=disabled'])
 
