@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 #define GST_VP8_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_VP8_DECODER,GstVp8DecoderClass))
 #define GST_IS_VP8_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VP8_DECODER))
 #define GST_IS_VP8_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VP8_DECODER))
-#define GST_VP8_DECODER_CAST(obj)       ((GstVP8Decoder*)obj)
+#define GST_VP8_DECODER_CAST(obj)       ((GstVp8Decoder*)obj)
 
 typedef struct _GstVp8Decoder GstVp8Decoder;
 typedef struct _GstVp8DecoderClass GstVp8DecoderClass;

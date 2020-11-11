@@ -19,7 +19,7 @@
 
 /**
  * SECTION:gstvp8decoder
- * @title: GstVP8Decoder
+ * @title: GstVp8Decoder
  * @short_description: Base class to implement stateless VP8 decoders
  * @sources:
  * - gstvp8picture.h
