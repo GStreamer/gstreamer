@@ -1557,10 +1557,14 @@ gst_ps_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (demux->random_access) {
         /* In pull mode we can seek in TIME format if we have the SCR */
         if (fmt != GST_FORMAT_TIME || demux->scr_rate_n == G_MAXUINT64
-            || demux->scr_rate_d == G_MAXUINT64)
+            || demux->scr_rate_d == G_MAXUINT64) {
           gst_query_set_seeking (query, fmt, FALSE, -1, -1);
-        else
-          gst_query_set_seeking (query, fmt, TRUE, 0, -1);
+        } else {
+          gint64 dur = -1;
+          if (GST_CLOCK_TIME_IS_VALID (demux->src_segment.duration))
+            dur = demux->src_segment.duration;
+          gst_query_set_seeking (query, fmt, TRUE, 0, dur);
+        }
       } else {
         if (fmt == GST_FORMAT_BYTES) {
           /* Seeking in BYTES format not supported at all */
