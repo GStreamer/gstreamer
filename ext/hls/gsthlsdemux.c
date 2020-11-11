@@ -1759,7 +1759,8 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate,
 
   stream = adaptive_demux->streams->data;
 
-  previous_variant = demux->current_variant;
+  /* Make sure we keep a reference in case we need to switch back */
+  previous_variant = gst_hls_variant_stream_ref (demux->current_variant);
   new_variant =
       gst_hls_master_playlist_get_variant_for_bitrate (demux->master,
       demux->current_variant, max_bitrate);
@@ -1773,6 +1774,7 @@ retry_failover_protection:
   /* Don't do anything else if the playlist is the same */
   if (new_bandwidth == old_bandwidth) {
     GST_M3U8_CLIENT_UNLOCK (demux->client);
+    gst_hls_variant_stream_unref (previous_variant);
     return TRUE;
   }
 
@@ -1834,6 +1836,7 @@ retry_failover_protection:
     return gst_hls_demux_change_playlist (demux, new_bandwidth - 1, changed);
   }
 
+  gst_hls_variant_stream_unref (previous_variant);
   return TRUE;
 }
 
