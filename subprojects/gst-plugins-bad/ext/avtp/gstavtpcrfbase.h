@@ -51,13 +51,13 @@ struct _GstAvtpCrfThreadData
   guint64 type;
   guint64 mr;
 
-  GstClockTime *past_periods;
+  gdouble *past_periods;
   int past_periods_iter;
   int periods_stored;
   /** The time in ns between two events. The type of the event is depending on
    *  the CRF type: Audio sample, video frame sync, video line sync, ...
    */
-  GstClockTime average_period;
+  gdouble average_period;
   GstClockTime current_ts;
   GstClockTime last_received_tstamp;
   guint64 last_seqnum;

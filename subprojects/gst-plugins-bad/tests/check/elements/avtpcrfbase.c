@@ -481,8 +481,7 @@ GST_START_TEST (test_gst_base_freq_multiplier)
 GST_END_TEST;
 
 static void
-setup_thread_defaults (GstAvtpCrfBase * avtpcrfbase,
-    GstClockTime * past_periods)
+setup_thread_defaults (GstAvtpCrfBase * avtpcrfbase, gdouble * past_periods)
 {
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -501,7 +500,7 @@ GST_START_TEST (test_calculate_average_period_multiple_crf_tstamps)
 {
   int data_len = 64;
   struct avtp_crf_pdu *crf_pdu = generate_crf_pdu (data_len, 1000);
-  GstClockTime past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
+  gdouble past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -513,8 +512,8 @@ GST_START_TEST (test_calculate_average_period_multiple_crf_tstamps)
   thread_data->periods_stored = 2;
 
   calculate_average_period (avtpcrfbase, crf_pdu);
-  fail_unless_equals_uint64 (thread_data->average_period, 20777);
-  fail_unless_equals_uint64 (thread_data->past_periods[2], 20833);
+  fail_unless_equals_float (thread_data->average_period, 20777.7775);
+  fail_unless_equals_float (thread_data->past_periods[2], 20833.3325);
   fail_unless_equals_uint64 (thread_data->current_ts, 1000);
 
   gst_object_unref (avtpcrfbase);
@@ -532,7 +531,7 @@ GST_START_TEST
   int data_len = 64;
   struct avtp_crf_pdu *crf_pdu =
       generate_crf_pdu (data_len, 18446744073709501615ULL);
-  GstClockTime past_periods[10] =
+  gdouble past_periods[10] =
       { 21000, 20500, 21220, 21345, 20990, 21996, 20220, 20915, 21324, 23123 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
@@ -545,8 +544,8 @@ GST_START_TEST
   thread_data->periods_stored = 10;
 
   calculate_average_period (avtpcrfbase, crf_pdu);
-  fail_unless_equals_uint64 (thread_data->average_period, 21147);
-  fail_unless_equals_uint64 (thread_data->past_periods[5], 20833);
+  fail_unless_equals_float (thread_data->average_period, 21147.03325);
+  fail_unless_equals_float (thread_data->past_periods[5], 20833.3325);
   fail_unless_equals_uint64 (thread_data->current_ts, 18446744073709501615ULL);
 
   g_free (crf_pdu);
@@ -563,7 +562,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp)
 {
   int data_len = 8;
   struct avtp_crf_pdu *crf_pdu = generate_crf_pdu (data_len, 21833);
-  GstClockTime past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
+  gdouble past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -579,8 +578,8 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp)
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_SEQ_NUM, 10);
 
   calculate_average_period (avtpcrfbase, crf_pdu);
-  fail_unless_equals_uint64 (thread_data->average_period, 20777);
-  fail_unless_equals_uint64 (thread_data->past_periods[2], 20833);
+  fail_unless_equals_float (thread_data->average_period, 20777.6666666);
+  fail_unless_equals_float (thread_data->past_periods[2], 20833);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 10);
   fail_unless_equals_uint64 (thread_data->last_received_tstamp, 21833);
   fail_unless_equals_uint64 (thread_data->current_ts, 21833);
@@ -600,7 +599,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_init)
   int data_len = 8;
   struct avtp_crf_pdu *crf_pdu1 = generate_crf_pdu (data_len, 1000);
   struct avtp_crf_pdu *crf_pdu2 = generate_crf_pdu (data_len, 21833);
-  GstClockTime past_periods[10] = { 0 };
+  gdouble past_periods[10] = { 0 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -613,15 +612,15 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_init)
   avtp_crf_pdu_set (crf_pdu2, AVTP_CRF_FIELD_SEQ_NUM, 11);
 
   calculate_average_period (avtpcrfbase, crf_pdu1);
-  fail_unless_equals_uint64 (thread_data->past_periods[0], 0);
+  fail_unless_equals_float (thread_data->past_periods[0], 0);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 10);
-  fail_unless_equals_uint64 (thread_data->average_period, 20854);
+  fail_unless_equals_float (thread_data->average_period, 20854);
   fail_unless_equals_uint64 (thread_data->current_ts, 1000);
 
   calculate_average_period (avtpcrfbase, crf_pdu2);
-  fail_unless_equals_uint64 (thread_data->past_periods[0], 20833);
+  fail_unless_equals_float (thread_data->past_periods[0], 20833);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 11);
-  fail_unless_equals_uint64 (thread_data->average_period, 20833);
+  fail_unless_equals_float (thread_data->average_period, 20833);
   fail_unless_equals_uint64 (thread_data->current_ts, 21833);
 
   g_free (crf_pdu1);
@@ -645,7 +644,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_interval)
    * = 1/48kHz * 160 + 1000
    */
   struct avtp_crf_pdu *crf_pdu2 = generate_crf_pdu (data_len, 3334280);
-  GstClockTime past_periods[10] = { 0 };
+  gdouble past_periods[10] = { 0 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -658,15 +657,15 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_interval)
   avtp_crf_pdu_set (crf_pdu2, AVTP_CRF_FIELD_SEQ_NUM, 11);
 
   calculate_average_period (avtpcrfbase, crf_pdu1);
-  fail_unless_equals_uint64 (thread_data->past_periods[0], 0);
+  fail_unless_equals_float (thread_data->past_periods[0], 0);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 10);
-  fail_unless_equals_uint64 (thread_data->average_period, 20854);
+  fail_unless_equals_float (thread_data->average_period, 20854);
   fail_unless_equals_uint64 (thread_data->current_ts, 1000);
 
   calculate_average_period (avtpcrfbase, crf_pdu2);
-  fail_unless_equals_uint64 (thread_data->past_periods[0], 20833);
+  fail_unless_equals_float (thread_data->past_periods[0], 20833);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 11);
-  fail_unless_equals_uint64 (thread_data->average_period, 20833);
+  fail_unless_equals_float (thread_data->average_period, 20833);
   fail_unless_equals_uint64 (thread_data->current_ts, 3334280);
 
   g_free (crf_pdu1);
@@ -684,7 +683,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_64_bit_overflow)
 {
   int data_len = 8;
   struct avtp_crf_pdu *crf_pdu = generate_crf_pdu (data_len, 20833);
-  GstClockTime past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
+  gdouble past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -700,8 +699,8 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_64_bit_overflow)
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_SEQ_NUM, 10);
 
   calculate_average_period (avtpcrfbase, crf_pdu);
-  fail_unless_equals_uint64 (thread_data->average_period, 20778);
-  fail_unless_equals_uint64 (thread_data->past_periods[2], 20834);
+  fail_unless_equals_float (thread_data->average_period, 20778);
+  fail_unless_equals_float (thread_data->past_periods[2], 20834);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 10);
   fail_unless_equals_uint64 (thread_data->last_received_tstamp, 20833);
   fail_unless_equals_uint64 (thread_data->current_ts, 20833);
@@ -721,7 +720,7 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_seq_num_skip)
 {
   int data_len = 8;
   struct avtp_crf_pdu *crf_pdu = generate_crf_pdu (data_len, 21833);
-  GstClockTime past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
+  gdouble past_periods[10] = { 21000, 20500, 0, 0, 0, 0, 0, 0, 0, 0 };
   GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
   GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
 
@@ -737,8 +736,8 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_seq_num_skip)
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_SEQ_NUM, 12);
 
   calculate_average_period (avtpcrfbase, crf_pdu);
-  fail_unless_equals_uint64 (thread_data->average_period, 20750);
-  fail_unless_equals_uint64 (thread_data->past_periods[2], 0);
+  fail_unless_equals_float (thread_data->average_period, 20750);
+  fail_unless_equals_float (thread_data->past_periods[2], 0);
   fail_unless_equals_uint64 (thread_data->last_seqnum, 12);
   fail_unless_equals_uint64 (thread_data->last_received_tstamp, 21833);
   fail_unless_equals_uint64 (thread_data->current_ts, 21833);
