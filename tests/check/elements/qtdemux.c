@@ -799,7 +799,7 @@ GST_START_TEST (test_qtdemux_pad_names)
   caps =
       gst_caps_new_simple ("video/quicktime",
       "variant", G_TYPE_STRING, "mss-fragmented",
-      "timesacle", G_TYPE_UINT64, G_GUINT64_CONSTANT (10000000),
+      "timescale", G_TYPE_UINT64, G_GUINT64_CONSTANT (10000000),
       "media-caps", GST_TYPE_CAPS, mediacaps, NULL);
 
   /* Send segment event* */
@@ -855,7 +855,7 @@ GST_START_TEST (test_qtdemux_pad_names)
   caps =
       gst_caps_new_simple ("video/quicktime",
       "variant", G_TYPE_STRING, "mss-fragmented",
-      "timesacle", G_TYPE_UINT64, G_GUINT64_CONSTANT (10000000),
+      "timescale", G_TYPE_UINT64, G_GUINT64_CONSTANT (10000000),
       "media-caps", GST_TYPE_CAPS, mediacaps, NULL);
 
   /* Send segment event* */
