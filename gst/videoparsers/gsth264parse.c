@@ -167,7 +167,7 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
           "is attached to incoming buffer and also Picture Timing SEI exists "
           "in the bitstream. To make this property work, SPS must contain "
           "VUI and pic_struct_present_flag of VUI must be non-zero",
-          DEFAULT_CONFIG_INTERVAL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_UPDATE_TIMECODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_h264_parse_start);
@@ -200,7 +200,7 @@ gst_h264_parse_init (GstH264Parse * h264parse)
 
   h264parse->aud_needed = TRUE;
   h264parse->aud_insert = TRUE;
-  h264parse->update_timecode = FALSE;
+  h264parse->update_timecode = DEFAULT_UPDATE_TIMECODE;
 }
 
 static void
