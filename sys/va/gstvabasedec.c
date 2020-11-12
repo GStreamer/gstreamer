@@ -334,6 +334,8 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_object_unref (allocator);
   gst_object_unref (pool);
 
+  /* There's no need to chain decoder's method since all what is
+   * needed is done. */
   return TRUE;
 
 wrong_caps:

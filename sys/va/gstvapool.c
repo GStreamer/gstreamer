@@ -145,7 +145,14 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
   vpool->caps_info = caps_info;
   vpool->alloc_info = alloc_info;
 
-  /* May adjust the stride alignment based on the real HW alignment */
+  /* May adjust the stride alignment based on the real HW alignment:
+   *
+   * Counts the number of consecutive bits from lower significant
+   * bit. This number is then converted to the notion of alignment in
+   * GStreamer and passed as as constraint in GstVideoAlignment. The
+   * side effect is that the updated GstVideoInfo is now guarantied to
+   * endup with the same stride (ndufresne).
+   */
   if (vpool->need_alignment) {
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&alloc_info); i++) {
       gint nth_bit;
