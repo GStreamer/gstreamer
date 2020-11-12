@@ -535,9 +535,9 @@ gst_nv_vp9_dec_output_picture (GstVp9Decoder * decoder,
     goto error;
   }
 
-  if (self->output_type == GST_NV_DECOCER_OUTPUT_TYPE_GL) {
+  if (self->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
     ret = gst_nv_decoder_finish_frame (self->decoder,
-        GST_NV_DECOCER_OUTPUT_TYPE_GL, self->gl_context,
+        GST_NV_DECODER_OUTPUT_TYPE_GL, self->gl_context,
         decoder_frame, frame->output_buffer);
 
     /* FIXME: This is the case where OpenGL context of downstream glbufferpool
@@ -547,7 +547,7 @@ gst_nv_vp9_dec_output_picture (GstVp9Decoder * decoder,
     if (!ret) {
       GST_WARNING_OBJECT (self,
           "Couldn't copy frame to GL memory, fallback to system memory");
-      self->output_type = GST_NV_DECOCER_OUTPUT_TYPE_SYSTEM;
+      self->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
     }
   }
 

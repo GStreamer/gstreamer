@@ -48,9 +48,9 @@ typedef struct _GstNvDecoderFrame
 
 typedef enum
 {
-  GST_NV_DECOCER_OUTPUT_TYPE_SYSTEM = 0,
-  GST_NV_DECOCER_OUTPUT_TYPE_GL,
-  GST_NV_DECOCER_OUTPUT_TYPE_CUDA,
+  GST_NV_DECODER_OUTPUT_TYPE_SYSTEM = 0,
+  GST_NV_DECODER_OUTPUT_TYPE_GL,
+  GST_NV_DECODER_OUTPUT_TYPE_CUDA,
   /* FIXME: add support D3D11 memory */
 } GstNvDecoderOutputType;
 
@@ -116,7 +116,7 @@ gboolean gst_nv_decoder_negotiate            (GstVideoDecoder * decoder,
                                               GstNvDecoderOutputType * output_type);
 
 gboolean gst_nv_decoder_decide_allocation (GstNvDecoder * nvdec,
-                                           GstVideoDecoder * decocer,
+                                           GstVideoDecoder * decoder,
                                            GstQuery * query,
                                            GstObject * gl_context,
                                            GstNvDecoderOutputType output_type);
