@@ -60,63 +60,94 @@ struct _GstH264Decoder
 
 /**
  * GstH264DecoderClass:
- * @new_sequence:   Notifies subclass of SPS update
- * @new_picture:    Optional.
- *                  Called whenever new #GstH264Picture is created.
- *                  Subclass can set implementation specific user data
- *                  on the #GstH264Picture via gst_h264_picture_set_user_data()
- * @start_picture:  Optional.
- *                  Called per one #GstH264Picture to notify subclass to prepare
- *                  decoding process for the #GstH264Picture
- * @decode_slice:   Provides per slice data with parsed slice header and
- *                  required raw bitstream for subclass to decode it.
- *                  if gst_h264_decoder_set_process_ref_pic_lists() is called
- *                  with %TRUE by the subclass, @ref_pic_list0 and @ref_pic_list1
- *                  are non-%NULL.
- * @end_picture:    Optional.
- *                  Called per one #GstH264Picture to notify subclass to finish
- *                  decoding process for the #GstH264Picture
- * @output_picture: Called with a #GstH264Picture which is required to be outputted.
- *                  The #GstVideoCodecFrame must be consumed by subclass via
- *                  gst_video_decoder_{finish,drop,release}_frame().
+ *
+ * The opaque #GstH264DecoderClass data structure.
  */
 struct _GstH264DecoderClass
 {
   GstVideoDecoderClass parent_class;
 
+  /**
+   * GstH264DecoderClass::new_sequence:
+   * @decoder: a #GstH264Decoder
+   * @sps: a #GstH264SPS
+   * @max_dpb_size: the size of dpb
+   *
+   * Notifies subclass of SPS update
+   */
   gboolean      (*new_sequence)     (GstH264Decoder * decoder,
                                      const GstH264SPS * sps,
                                      gint max_dpb_size);
 
   /**
-   * GstH264Decoder:new_picture:
+   * GstH264DecoderClass::new_picture:
    * @decoder: a #GstH264Decoder
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstH264Picture
+   *
+   * Optional. Called whenever new #GstH264Picture is created.
+   * Subclass can set implementation specific user data
+   * on the #GstH264Picture via gst_h264_picture_set_user_data()
    */
   gboolean      (*new_picture)      (GstH264Decoder * decoder,
                                      GstVideoCodecFrame * frame,
                                      GstH264Picture * picture);
 
+  /**
+   * GstH264DecoderClass::start_picture:
+   * @decoder: a #GstH264Decoder
+   * @picture: (transfer none): a #GstH264Picture
+   * @slice: (transfer none): a #GstH264Slice
+   * @dpb: (transfer none): a #GstH264Dpb
+   *
+   * Optional. Called per one #GstH264Picture to notify subclass to prepare
+   * decoding process for the #GstH264Picture
+   */
   gboolean      (*start_picture)    (GstH264Decoder * decoder,
                                      GstH264Picture * picture,
                                      GstH264Slice * slice,
                                      GstH264Dpb * dpb);
 
+  /**
+   * GstH264DecoderClass::decode_slice:
+   * @decoder: a #GstH264Decoder
+   * @picture: (transfer none): a #GstH264Picture
+   * @slice: (transfer none): a #GstH264Slice
+   * @ref_pic_list0: (element-type GstH264Picture) (transfer none):
+   *    an array of #GstH264Picture pointers
+   * @ref_pic_list1: (element-type GstH264Picture) (transfer none):
+   *    an array of #GstH264Picture pointers
+   *
+   * Provides per slice data with parsed slice header and required raw bitstream
+   * for subclass to decode it. If gst_h264_decoder_set_process_ref_pic_lists()
+   * is called with %TRUE by the subclass, @ref_pic_list0 and @ref_pic_list1
+   * are non-%NULL.
+   */
   gboolean      (*decode_slice)     (GstH264Decoder * decoder,
                                      GstH264Picture * picture,
                                      GstH264Slice * slice,
                                      GArray * ref_pic_list0,
                                      GArray * ref_pic_list1);
 
+  /**
+   * GstH264DecoderClass::end_picture:
+   * @decoder: a #GstH264Decoder
+   * @picture: (transfer none): a #GstH264Picture
+   *
+   * Optional. Called per one #GstH264Picture to notify subclass to finish
+   * decoding process for the #GstH264Picture
+   */
   gboolean      (*end_picture)      (GstH264Decoder * decoder,
                                      GstH264Picture * picture);
 
   /**
-   * GstH264Decoder:output_picture:
+   * GstH264DecoderClass::output_picture:
    * @decoder: a #GstH264Decoder
    * @frame: (transfer full): a #GstVideoCodecFrame
    * @picture: (transfer full): a #GstH264Picture
+   *
+   * Called with a #GstH264Picture which is required to be outputted.
+   * The #GstVideoCodecFrame must be consumed by subclass.
    */
   GstFlowReturn (*output_picture)   (GstH264Decoder * decoder,
                                      GstVideoCodecFrame * frame,
