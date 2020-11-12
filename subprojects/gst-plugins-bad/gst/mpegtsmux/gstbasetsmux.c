@@ -372,10 +372,8 @@ release_buffer_cb (guint8 * data, void *user_data)
 static GstFlowReturn
 gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
 {
-  GstFlowReturn ret = GST_FLOW_ERROR;
   GstCaps *caps;
   GstStructure *s;
-  GstPad *pad;
   guint st = TSMUX_ST_RESERVED;
   const gchar *mt;
   const GValue *value = NULL;
@@ -385,16 +383,18 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   guint8 main_level = 0;
   guint32 max_rate = 0;
   guint8 color_spec = 0;
-  j2k_private_data *private_data = NULL;
   const gchar *stream_format = NULL;
+  const char *interlace_mode = NULL;
 
-  pad = GST_PAD (ts_pad);
-  caps = gst_pad_get_current_caps (pad);
-  if (caps == NULL)
-    goto not_negotiated;
+  caps = gst_pad_get_current_caps (GST_PAD (ts_pad));
+  if (caps == NULL) {
+    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set before pushing");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
-  GST_DEBUG_OBJECT (pad, "Creating stream with PID 0x%04x for caps %"
-      GST_PTR_FORMAT, ts_pad->pid, caps);
+  GST_DEBUG_OBJECT (ts_pad,
+      "Creating stream with PID 0x%04x for caps %" GST_PTR_FORMAT,
+      ts_pad->pid, caps);
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -421,7 +421,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
     gint mpegversion;
 
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
-      GST_ERROR_OBJECT (pad, "caps missing mpegversion");
+      GST_ERROR_OBJECT (ts_pad, "caps missing mpegversion");
       goto not_negotiated;
     }
 
@@ -460,7 +460,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
         /* Check the stream format. We need codec_data with RAW streams and mpegversion=4 */
         if (g_strcmp0 (stream_format, "raw") == 0) {
           if (codec_data) {
-            GST_DEBUG_OBJECT (pad,
+            GST_DEBUG_OBJECT (ts_pad,
                 "we have additional codec data (%" G_GSIZE_FORMAT " bytes)",
                 gst_buffer_get_size (codec_data));
             ts_pad->codec_data = gst_buffer_ref (codec_data);
@@ -474,14 +474,14 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
         break;
       }
       default:
-        GST_WARNING_OBJECT (pad, "unsupported mpegversion %d", mpegversion);
+        GST_WARNING_OBJECT (ts_pad, "unsupported mpegversion %d", mpegversion);
         goto not_negotiated;
     }
   } else if (strcmp (mt, "video/mpeg") == 0) {
     gint mpegversion;
 
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
-      GST_ERROR_OBJECT (pad, "caps missing mpegversion");
+      GST_ERROR_OBJECT (ts_pad, "caps missing mpegversion");
       goto not_negotiated;
     }
 
@@ -496,7 +496,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
         st = TSMUX_ST_VIDEO_MPEG4;
         break;
       default:
-        GST_WARNING_OBJECT (pad, "unsupported mpegversion %d", mpegversion);
+        GST_WARNING_OBJECT (ts_pad, "unsupported mpegversion %d", mpegversion);
         goto not_negotiated;
     }
   } else if (strcmp (mt, "subpicture/x-dvb") == 0) {
@@ -511,7 +511,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
 
     if (!gst_codec_utils_opus_parse_caps (caps, NULL, &channels,
             &mapping_family, &stream_count, &coupled_count, channel_mapping)) {
-      GST_ERROR_OBJECT (pad, "Incomplete Opus caps");
+      GST_ERROR_OBJECT (ts_pad, "Incomplete Opus caps");
       goto not_negotiated;
     }
 
@@ -558,7 +558,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
               channels) == 0) {
         opus_channel_config_code = channels | 0x80;
       } else {
-        GST_FIXME_OBJECT (pad, "Opus channel mapping not handled");
+        GST_FIXME_OBJECT (ts_pad, "Opus channel mapping not handled");
         goto not_negotiated;
       }
     }
@@ -580,21 +580,22 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
     const GValue *vMainlevel = gst_structure_get_value (s, "main-level");
     const GValue *vFramerate = gst_structure_get_value (s, "framerate");
     const GValue *vColorimetry = gst_structure_get_value (s, "colorimetry");
-    private_data = g_new0 (j2k_private_data, 1);
+    j2k_private_data *private_data;
+
     /* for now, we relax the condition that profile must exist and equal
      * GST_JPEG2000_PARSE_PROFILE_BC_SINGLE */
     if (vProfile) {
       profile = g_value_get_int (vProfile);
       if (profile != GST_JPEG2000_PARSE_PROFILE_BC_SINGLE) {
-        GST_LOG_OBJECT (pad, "Invalid JPEG 2000 profile %d", profile);
-        /*goto not_negotiated; */
+        GST_LOG_OBJECT (ts_pad, "Invalid JPEG 2000 profile %d", profile);
+        /* goto not_negotiated; */
       }
     }
     /* for now, we will relax the condition that the main level must be present */
     if (vMainlevel) {
       main_level = g_value_get_uint (vMainlevel);
       if (main_level > 11) {
-        GST_ERROR_OBJECT (pad, "Invalid main level %d", main_level);
+        GST_ERROR_OBJECT (ts_pad, "Invalid main level %d", main_level);
         goto not_negotiated;
       }
       if (main_level >= 6) {
@@ -618,10 +619,12 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
         }
       }
     } else {
-      /*GST_ERROR_OBJECT (pad, "Missing main level");
-         goto not_negotiated; */
+      /* GST_ERROR_OBJECT (ts_pad, "Missing main level");
+       * goto not_negotiated; */
     }
+
     /* We always mux video in J2K-over-MPEG-TS non-interlaced mode */
+    private_data = g_new0 (j2k_private_data, 1);
     private_data->interlace = FALSE;
     private_data->den = 0;
     private_data->num = 0;
@@ -651,7 +654,8 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
       }
       private_data->color_spec = color_spec;
     } else {
-      GST_ERROR_OBJECT (pad, "Colorimetry not present in caps");
+      GST_ERROR_OBJECT (ts_pad, "Colorimetry not present in caps");
+      g_free (private_data);
       goto not_negotiated;
     }
     st = TSMUX_ST_VIDEO_JP2K;
@@ -666,56 +670,56 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
     }
   }
 
-
-  if (st != TSMUX_ST_RESERVED) {
-    ts_pad->stream = tsmux_create_stream (mux->tsmux, st, ts_pad->pid,
-        ts_pad->language);
-  } else {
-    GST_DEBUG_OBJECT (pad, "Failed to determine stream type");
+  if (st == TSMUX_ST_RESERVED) {
+    GST_ERROR_OBJECT (ts_pad, "Failed to determine stream type");
+    goto error;
   }
 
-  if (ts_pad->stream != NULL) {
-    const char *interlace_mode = gst_structure_get_string (s, "interlace-mode");
-    gst_structure_get_int (s, "rate", &ts_pad->stream->audio_sampling);
-    gst_structure_get_int (s, "channels", &ts_pad->stream->audio_channels);
-    gst_structure_get_int (s, "bitrate", &ts_pad->stream->audio_bitrate);
+  ts_pad->stream =
+      tsmux_create_stream (mux->tsmux, st, ts_pad->pid, ts_pad->language);
+  if (ts_pad->stream == NULL)
+    goto error;
 
-    /* frame rate */
-    gst_structure_get_fraction (s, "framerate", &ts_pad->stream->num,
-        &ts_pad->stream->den);
+  interlace_mode = gst_structure_get_string (s, "interlace-mode");
+  gst_structure_get_int (s, "rate", &ts_pad->stream->audio_sampling);
+  gst_structure_get_int (s, "channels", &ts_pad->stream->audio_channels);
+  gst_structure_get_int (s, "bitrate", &ts_pad->stream->audio_bitrate);
 
-    /* Interlace mode */
-    ts_pad->stream->interlace_mode = FALSE;
-    if (interlace_mode) {
-      ts_pad->stream->interlace_mode =
-          g_str_equal (interlace_mode, "interleaved");
-    }
-    /* Width and Height */
-    gst_structure_get_int (s, "width", &ts_pad->stream->horizontal_size);
-    gst_structure_get_int (s, "height", &ts_pad->stream->vertical_size);
+  /* frame rate */
+  gst_structure_get_fraction (s, "framerate", &ts_pad->stream->num,
+      &ts_pad->stream->den);
 
-    ts_pad->stream->color_spec = color_spec;
-    ts_pad->stream->max_bitrate = max_rate;
-    ts_pad->stream->profile_and_level = profile | main_level;
-
-    ts_pad->stream->opus_channel_config_code = opus_channel_config_code;
-
-    tsmux_stream_set_buffer_release_func (ts_pad->stream, release_buffer_cb);
-    tsmux_program_add_stream (ts_pad->prog, ts_pad->stream);
-
-    ret = GST_FLOW_OK;
+  /* Interlace mode */
+  ts_pad->stream->interlace_mode = FALSE;
+  if (interlace_mode) {
+    ts_pad->stream->interlace_mode =
+        g_str_equal (interlace_mode, "interleaved");
   }
+
+  /* Width and Height */
+  gst_structure_get_int (s, "width", &ts_pad->stream->horizontal_size);
+  gst_structure_get_int (s, "height", &ts_pad->stream->vertical_size);
+
+  ts_pad->stream->color_spec = color_spec;
+  ts_pad->stream->max_bitrate = max_rate;
+  ts_pad->stream->profile_and_level = profile | main_level;
+
+  ts_pad->stream->opus_channel_config_code = opus_channel_config_code;
+
+  tsmux_stream_set_buffer_release_func (ts_pad->stream, release_buffer_cb);
+  tsmux_program_add_stream (ts_pad->prog, ts_pad->stream);
+
   gst_caps_unref (caps);
-  return ret;
+  return GST_FLOW_OK;
+
   /* ERRORS */
 not_negotiated:
-  {
-    g_free (private_data);
-    GST_DEBUG_OBJECT (pad, "Sink pad caps were not set before pushing");
-    if (caps)
-      gst_caps_unref (caps);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
+  gst_caps_unref (caps);
+  return GST_FLOW_NOT_NEGOTIATED;
+
+error:
+  gst_caps_unref (caps);
+  return GST_FLOW_ERROR;
 }
 
 static gboolean
