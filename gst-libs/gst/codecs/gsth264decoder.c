@@ -632,7 +632,10 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
   if (!sps->gaps_in_frame_num_value_allowed_flag) {
     /* This is likely the case where some frames were dropped.
      * then we need to keep decoding without error out */
-    GST_WARNING_OBJECT (self, "Invalid frame num %d", frame_num);
+    GST_WARNING_OBJECT (self, "Invalid frame num %d, maybe frame drop",
+        frame_num);
+
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (self, "Handling frame num gap %d -> %d (MaxFrameNum: %d)",
