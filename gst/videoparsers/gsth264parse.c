@@ -2841,16 +2841,16 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
 
   num_clock_ts = num_clock_ts_table[h264parse->sei_pic_struct];
 
-  if (num_meta != num_clock_ts) {
+  if (num_meta > num_clock_ts) {
     GST_LOG_OBJECT (h264parse,
-        "The number of timecode meta %d is not equal to required %d",
+        "The number of timecode meta %d is superior to required %d",
         num_meta, num_clock_ts);
 
     return NULL;
   }
 
   GST_LOG_OBJECT (h264parse,
-      "The number of timecode meta %d is equal", num_meta);
+      "The number of timecode meta %d is compatible", num_meta);
 
   memset (&sei, 0, sizeof (GstH264SEIMessage));
   sei.payloadType = GST_H264_SEI_PIC_TIMING;
