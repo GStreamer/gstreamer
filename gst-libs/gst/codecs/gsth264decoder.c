@@ -1806,8 +1806,6 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
     gst_h264_dpb_set_max_num_pics (priv->dpb, max_dpb_size);
   }
 
-  GST_DEBUG_OBJECT (self, "Set DPB max size %d", max_dpb_size);
-
   return gst_h264_decoder_update_max_num_reorder_frames (self, sps);
 }
 
