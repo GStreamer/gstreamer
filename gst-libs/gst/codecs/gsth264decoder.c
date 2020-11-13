@@ -2354,7 +2354,7 @@ modify_ref_pic_list (GstH264Decoder * self, int list)
         if (!pic) {
           GST_WARNING_OBJECT (self, "Malformed stream, no pic num %d",
               pic_num_lx);
-          return FALSE;
+          break;
         }
         shift_right_and_insert (ref_pic_listx, ref_idx_lx,
             num_ref_idx_lX_active_minus1, pic);
@@ -2380,7 +2380,7 @@ modify_ref_pic_list (GstH264Decoder * self, int list)
         if (!pic) {
           GST_WARNING_OBJECT (self, "Malformed stream, no pic num %d",
               list_mod->value.long_term_pic_num);
-          return FALSE;
+          break;
         }
         shift_right_and_insert (ref_pic_listx, ref_idx_lx,
             num_ref_idx_lX_active_minus1, pic);
