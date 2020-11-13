@@ -173,7 +173,7 @@ static gboolean
 gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
 {
   GstStructure *s;
-  GstCaps *src_caps = NULL, *allowed;
+  GstCaps *src_caps = NULL, *peercaps;
   gboolean res = FALSE;
   const gchar *stream_format;
   guint8 codec_data[2];
@@ -226,8 +226,8 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   if (stream_format)
     gst_structure_set (s, "stream-format", G_TYPE_STRING, stream_format, NULL);
 
-  allowed = gst_pad_get_allowed_caps (GST_BASE_PARSE (aacparse)->srcpad);
-  if (allowed && !gst_caps_can_intersect (src_caps, allowed)) {
+  peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (aacparse), NULL);
+  if (peercaps && !gst_caps_can_intersect (src_caps, peercaps)) {
     GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
         "Caps can not intersect");
     if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
@@ -235,7 +235,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
           "Input is ADTS, trying raw");
       gst_caps_set_simple (src_caps, "stream-format", G_TYPE_STRING, "raw",
           NULL);
-      if (gst_caps_can_intersect (src_caps, allowed)) {
+      if (gst_caps_can_intersect (src_caps, peercaps)) {
         GstBuffer *codec_data_buffer;
 
         GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
@@ -255,15 +255,15 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
           "Input is raw, trying ADTS");
       gst_caps_set_simple (src_caps, "stream-format", G_TYPE_STRING, "adts",
           NULL);
-      if (gst_caps_can_intersect (src_caps, allowed)) {
+      if (gst_caps_can_intersect (src_caps, peercaps)) {
         GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
             "Caps can intersect, we will prepend ADTS headers");
         aacparse->output_header_type = DSPAAC_HEADER_ADTS;
       }
     }
   }
-  if (allowed)
-    gst_caps_unref (allowed);
+  if (peercaps)
+    gst_caps_unref (peercaps);
 
   aacparse->last_parsed_channels = 0;
   aacparse->last_parsed_sample_rate = 0;
