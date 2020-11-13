@@ -1,8 +1,11 @@
-encoding_sources = ['gstencodebin.c',
+encoding_sources = [
+  'gstencodebasebin.c',
+  'gstencodebin.c',
   'gstsmartencoder.c',
   'gststreamcombiner.c',
   'gststreamsplitter.c',
-  ]
+  'plugin.c',
+]
 
 gstencoding = library('gstencoding',
   encoding_sources,

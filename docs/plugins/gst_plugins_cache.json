@@ -1967,6 +1967,7 @@
                 "description": "Convenience encoding/muxing element",
                 "hierarchy": [
                     "GstEncodeBin",
+                    "GstEncodeBaseBin",
                     "GstBin",
                     "GstElement",
                     "GstObject",
@@ -2175,6 +2176,137 @@
         "filename": "gstencoding",
         "license": "LGPL",
         "other-types": {
+            "GstEncodeBaseBin": {
+                "hierarchy": [
+                    "GstEncodeBaseBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "kind": "object",
+                "properties": {
+                    "audio-jitter-tolerance": {
+                        "blurb": "Amount of timestamp jitter/imperfection to allow on audio streams before inserting/dropping samples (ns)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "avoid-reencoding": {
+                        "blurb": "Whether to re-encode portions of compatible video streams that lay on segment boundaries",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "flags": {
+                        "blurb": "Flags to control behaviour",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "(none)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstEncodeBinFlags",
+                        "writable": true
+                    },
+                    "profile": {
+                        "blurb": "The GstEncodingProfile to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstEncodingProfile",
+                        "writable": true
+                    },
+                    "queue-buffers-max": {
+                        "blurb": "Max. number of buffers in the queue (0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "200",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "queue-bytes-max": {
+                        "blurb": "Max. amount of data in the queue (bytes, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10485760",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "queue-time-max": {
+                        "blurb": "Max. amount of data in the queue (in ns, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    }
+                },
+                "signals": {
+                    "request-pad": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstCaps"
+                            }
+                        ],
+                        "return-type": "GstPad",
+                        "when": "last"
+                    },
+                    "request-profile-pad": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "gchararray"
+                            }
+                        ],
+                        "return-type": "GstPad",
+                        "when": "last"
+                    }
+                }
+            },
             "GstEncodeBinFlags": {
                 "kind": "flags",
                 "values": [
