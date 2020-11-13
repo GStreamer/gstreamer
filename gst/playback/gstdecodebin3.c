@@ -221,6 +221,8 @@ struct _GstDecodebin3
   /* End of variables protected by input_lock */
 
   GstElement *multiqueue;
+  GstClockTime default_mq_min_interleave;
+  GstClockTime current_mq_min_interleave;
 
   /* selection_lock protects access to following variables */
   GMutex selection_lock;
@@ -350,6 +352,9 @@ struct _DecodebinOutputStream
   GstPad *src_pad;
   /* Flag if ghost pad is exposed */
   gboolean src_exposed;
+
+  /* Reported decoder latency */
+  GstClockTime decoder_latency;
 
   /* keyframe dropping probe */
   gulong drop_probe_id;
@@ -620,6 +625,9 @@ gst_decodebin3_init (GstDecodebin3 * dbin)
   dbin->main_input = create_new_input (dbin, TRUE);
 
   dbin->multiqueue = gst_element_factory_make ("multiqueue", NULL);
+  g_object_get (dbin->multiqueue, "min-interleave-time",
+      &dbin->default_mq_min_interleave, NULL);
+  dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
   g_object_set (dbin->multiqueue, "sync-by-running-time", TRUE,
       "max-size-buffers", 0, "use-interleave", TRUE, NULL);
   gst_bin_add ((GstBin *) dbin, dbin->multiqueue);
@@ -1431,6 +1439,40 @@ handle_stream_collection (GstDecodebin3 * dbin,
   SELECTION_UNLOCK (dbin);
 }
 
+/* Must be called with the selection lock taken */
+static void
+gst_decodebin3_update_min_interleave (GstDecodebin3 * dbin)
+{
+  GstClockTime max_latency = GST_CLOCK_TIME_NONE;
+  GList *tmp;
+
+  GST_DEBUG_OBJECT (dbin, "Recalculating max latency of decoders");
+  for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
+    DecodebinOutputStream *out = (DecodebinOutputStream *) tmp->data;
+    if (GST_CLOCK_TIME_IS_VALID (out->decoder_latency)) {
+      if (max_latency == GST_CLOCK_TIME_NONE
+          || out->decoder_latency > max_latency)
+        max_latency = out->decoder_latency;
+    }
+  }
+  GST_DEBUG_OBJECT (dbin, "max latency of all decoders: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (max_latency));
+
+  if (!GST_CLOCK_TIME_IS_VALID (max_latency))
+    return;
+
+  /* Make sure we keep an extra overhead */
+  max_latency += 100 * GST_MSECOND;
+  if (max_latency == dbin->current_mq_min_interleave)
+    return;
+
+  dbin->current_mq_min_interleave = max_latency;
+  GST_DEBUG_OBJECT (dbin, "Setting mq min-interleave to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (dbin->current_mq_min_interleave));
+  g_object_set (dbin->multiqueue, "min-interleave-time",
+      dbin->current_mq_min_interleave, NULL);
+}
+
 static void
 gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
 {
@@ -1467,6 +1509,31 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
       if (collection)
         gst_object_unref (collection);
       break;
+    }
+    case GST_MESSAGE_LATENCY:
+    {
+      GList *tmp;
+      /* Check if this is from one of our decoders */
+      SELECTION_LOCK (dbin);
+      for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
+        DecodebinOutputStream *out = (DecodebinOutputStream *) tmp->data;
+        if (out->decoder == (GstElement *) GST_MESSAGE_SRC (message)) {
+          GstClockTime min, max;
+          if (GST_IS_VIDEO_DECODER (out->decoder)) {
+            gst_video_decoder_get_latency (GST_VIDEO_DECODER (out->decoder),
+                &min, &max);
+            GST_DEBUG_OBJECT (dbin,
+                "Got latency update from one of our decoders. min: %"
+                GST_TIME_FORMAT " max: %" GST_TIME_FORMAT, GST_TIME_ARGS (min),
+                GST_TIME_ARGS (max));
+            out->decoder_latency = min;
+            /* Trigger recalculation */
+            gst_decodebin3_update_min_interleave (dbin);
+          }
+          break;
+        }
+      }
+      SELECTION_UNLOCK (dbin);
     }
     default:
       break;
@@ -1831,6 +1898,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
               dbin->output_streams =
                   g_list_remove (dbin->output_streams, output);
               free_output_stream (dbin, output);
+              /* Reacalculate min interleave */
+              gst_decodebin3_update_min_interleave (dbin);
             }
             slot->probe_id = 0;
             dbin->slots = g_list_remove (dbin->slots, slot);
@@ -2209,6 +2278,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
 
     gst_bin_remove ((GstBin *) dbin, output->decoder);
     output->decoder = NULL;
+    output->decoder_latency = GST_CLOCK_TIME_NONE;
   }
 
   gst_caps_unref (new_caps);
@@ -2827,6 +2897,7 @@ create_output_stream (GstDecodebin3 * dbin, GstStreamType type)
 
   res->type = type;
   res->dbin = dbin;
+  res->decoder_latency = GST_CLOCK_TIME_NONE;
 
   if (type & GST_STREAM_TYPE_VIDEO) {
     templ = &video_src_template;
@@ -2928,6 +2999,10 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
       /* Free inputs */
       /* Reset the main input group id since it will get a new id on a new stream */
       dbin->main_input->group_id = GST_GROUP_ID_INVALID;
+      /* Reset multiqueue to default interleave */
+      g_object_set (dbin->multiqueue, "min-interleave-time",
+          dbin->default_mq_min_interleave, NULL);
+      dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
     }
       break;
     default:
