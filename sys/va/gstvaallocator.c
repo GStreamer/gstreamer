@@ -1348,7 +1348,8 @@ gst_va_allocator_try (GstAllocator * allocator)
   GST_INFO_OBJECT (self,
       "va allocator info, surface format: %s, image format: %s, "
       "use derived: %s, rt format: 0x%x, fourcc: %" GST_FOURCC_FORMAT,
-      gst_video_format_to_string (self->surface_format),
+      (self->surface_format == GST_VIDEO_FORMAT_UNKNOWN) ? "unknown"
+      : gst_video_format_to_string (self->surface_format),
       gst_video_format_to_string (self->img_format),
       self->use_derived ? "true" : "false", self->rt_format,
       GST_FOURCC_ARGS (self->fourcc));
