@@ -1334,6 +1334,70 @@ GST_START_TEST (test_ssrc_collision_third_party_favor_new)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ssrc_collision_never_send_on_non_internal_source)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GstEvent *ev;
+  GSocketAddress *saddr;
+  gboolean had_collision = FALSE;
+
+  g_signal_connect (h->internal_session, "on-ssrc-collision",
+      G_CALLBACK (on_ssrc_collision_cb), &had_collision);
+
+  /* Push SDES with identical SSRC as what we will use for sending RTP,
+     establishing this as a non-internal SSRC */
+  buf = gst_rtcp_buffer_new (1400);
+  add_rtcp_sdes_packet (buf, 0xdeadbeef, "test@foo.bar");
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  session_harness_recv_rtcp (h, buf);
+  g_object_unref (saddr);
+
+  fail_unless (had_collision == FALSE);
+
+  /* Push RTP buffer making our internal SSRC=0xdeadbeef */
+  buf = generate_test_buffer (0, 0xdeadbeef);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_send_rtp (h, buf));
+
+  fail_unless (had_collision == TRUE);
+
+  /* verify we drop this packet because of SSRC collision */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->send_rtp_h));
+  /* Verify the packet we just sent is not being boomeranged back to us
+     as a received packet! */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  /* verify we get an upstream GstRTPCollision event */
+  while ((ev = gst_harness_try_pull_upstream_event (h->send_rtp_h)) != NULL) {
+    if (GST_EVENT_CUSTOM_UPSTREAM == GST_EVENT_TYPE (ev) &&
+        gst_event_has_name (ev, "GstRTPCollision"))
+      break;
+    gst_event_unref (ev);
+  }
+  fail_unless (ev != NULL);
+  gst_event_unref (ev);
+
+  /* Push another RTP buffer and verify that one is not send or "received" as well */
+  buf = generate_test_buffer (1, 0xdeadbeef);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_send_rtp (h, buf));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->send_rtp_h));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  /* now generate a BYE to the non-internal SSRC */
+  session_harness_produce_rtcp (h, 1);
+
+  /* and verify we can now send using that SSRC */
+  buf = generate_test_buffer (2, 0xdeadbeef);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_send_rtp (h, buf));
+  fail_unless_equals_int (1, gst_harness_buffers_in_queue (h->send_rtp_h));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_request_fir)
 {
   SessionHarness *h = session_harness_new ();
@@ -3647,11 +3711,15 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_receive_rtcp_app_packet);
   tcase_add_test (tc_chain, test_dont_lock_on_stats);
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
+
   tcase_add_test (tc_chain, test_ssrc_collision_when_sending);
   tcase_add_test (tc_chain, test_ssrc_collision_when_sending_loopback);
   tcase_add_test (tc_chain, test_ssrc_collision_when_receiving);
   tcase_add_test (tc_chain, test_ssrc_collision_third_party);
   tcase_add_test (tc_chain, test_ssrc_collision_third_party_favor_new);
+  tcase_add_test (tc_chain,
+      test_ssrc_collision_never_send_on_non_internal_source);
+
   tcase_add_test (tc_chain, test_request_fir);
   tcase_add_test (tc_chain, test_request_pli);
   tcase_add_test (tc_chain, test_request_fir_after_pli_in_caps);
