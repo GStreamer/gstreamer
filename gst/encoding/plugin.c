@@ -27,6 +27,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstencodebin.h"
+#include "gstencodebin2.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -42,6 +43,9 @@ plugin_init (GstPlugin * plugin)
 
   res = gst_element_register (plugin, "encodebin", GST_RANK_NONE,
       gst_encode_bin_get_type ());
+
+  res |= gst_element_register (plugin, "encodebin2", GST_RANK_NONE,
+      gst_encode_bin2_get_type ());
 
   return res;
 }

@@ -2120,6 +2120,47 @@
                     }
                 }
             },
+            "encodebin2": {
+                "author": "Edward Hervey <edward.hervey@collabora.co.uk>",
+                "description": "Convenience encoding/muxing element",
+                "hierarchy": [
+                    "GstEncodeBin2",
+                    "GstEncodeBaseBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Generic/Bin/Encoder",
+                "long-name": "Encoder Bin",
+                "pad-templates": {
+                    "audio_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "private_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "video_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    }
+                },
+                "rank": "none"
+            },
             "streamcombiner": {
                 "author": "Edward Hervey <edward.hervey@collabora.co.uk>",
                 "description": "Recombines streams split by the streamsplitter element",

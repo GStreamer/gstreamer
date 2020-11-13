@@ -1,6 +1,7 @@
 encoding_sources = [
   'gstencodebasebin.c',
   'gstencodebin.c',
+  'gstencodebin2.c',
   'gstsmartencoder.c',
   'gststreamcombiner.c',
   'gststreamsplitter.c',

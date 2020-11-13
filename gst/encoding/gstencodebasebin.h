@@ -1,6 +1,8 @@
 /* GStreamer encoding bin
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *           (C) 2009 Nokia Corporation
+ *           (C) 2016 Jan Schmidt <jan@centricular.com>
+ *           (C) 2020 Thibault saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +20,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_ENCODEBIN_H__
-#define __GST_ENCODEBIN_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
@@ -29,6 +30,7 @@
 #define GST_ENCODE_BASE_BIN_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ENCODE_BASE_BIN,GstEncodeBinClass))
 #define GST_IS_ENCODE_BASE_BIN(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODE_BASE_BIN))
 #define GST_IS_ENCODE_BASE_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ENCODE_BASE_BIN))
+#define GST_ENCODE_BASE_BIN_GET_CLASS(klass)   (G_TYPE_INSTANCE_GET_CLASS ((klass), GST_TYPE_ENCODE_BASE_BIN, GstEncodeBaseBinClass))
 
 typedef struct _GstEncodeBaseBin GstEncodeBaseBin;
 typedef struct _GstEncodeBaseBinClass GstEncodeBaseBinClass;
@@ -91,5 +93,3 @@ struct _GstEncodeBaseBinClass
 
 GType gst_encode_base_bin_get_type(void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodeBaseBin, gst_object_unref)
-
-#endif /* __GST_ENCODEBIN_H__ */

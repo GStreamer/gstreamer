@@ -2,6 +2,7 @@
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *           (C) 2009 Nokia Corporation
  *           (C) 2016 Jan Schmidt <jan@centricular.com>
+ *           (C) 2020 Thibault saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -273,6 +274,8 @@ gst_encode_base_bin_class_init (GstEncodeBaseBinClass * klass)
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (gst_encode_base_bin_debug, "encodebasebin", 0,
+      "base encodebin");
   gobject_klass->dispose = gst_encode_base_bin_dispose;
   gobject_klass->set_property = gst_encode_base_bin_set_property;
   gobject_klass->get_property = gst_encode_base_bin_get_property;
@@ -2018,7 +2021,7 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
       gst_encoding_profile_get_name (ebin->profile));
 
   if (GST_IS_ENCODING_CONTAINER_PROFILE (ebin->profile)) {
-    /* 1. Get the compatible muxer */
+    /* Get the compatible muxer */
     muxer = _get_muxer (ebin);
     if (G_UNLIKELY (muxer == NULL))
       goto no_muxer;
@@ -2027,19 +2030,38 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
     ebin->muxer = muxer;
     gst_bin_add ((GstBin *) ebin, muxer);
 
-    /* 2. Ghost the muxer source pad */
-
-    /* FIXME : We should figure out if it's a static/request/dyamic pad,
+    /* If the subclass exposes a static sourcepad, ghost the muxer
+     * output, otherwise expose the muxer srcpad if it has one,
+     * do not expose any srcpad if we are dealing with a muxing sink. */
+    /* FIXME : We should figure out if it's a static/request/dynamic pad,
      * but for the time being let's assume it's a static pad :) */
     muxerpad = gst_element_get_static_pad (muxer, "src");
-    if (G_UNLIKELY (muxerpad == NULL))
-      goto no_muxer_pad;
+    if (ebin->srcpad) {
+      if (G_UNLIKELY (muxerpad == NULL))
+        goto no_muxer_pad;
+      if (!gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), muxerpad))
+        goto no_muxer_ghost_pad;
 
-    if (!gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), muxerpad))
-      goto no_muxer_ghost_pad;
+      gst_object_unref (muxerpad);
+    } else if (muxerpad) {
+      GstPadTemplate *template =
+          gst_element_get_pad_template (GST_ELEMENT (ebin), "src_%u");
+      gchar *name;
+      GstPad *pad;
 
-    gst_object_unref (muxerpad);
-    /* 3. Activate fixed presence streams */
+      GST_OBJECT_LOCK (ebin);
+      name = g_strdup_printf ("src_%u", GST_ELEMENT (ebin)->numsrcpads);
+      GST_OBJECT_UNLOCK (ebin);
+
+      pad = gst_ghost_pad_new_from_template (name, muxerpad, template);
+      g_free (name);
+      if (!pad)
+        goto no_muxer_ghost_pad;
+
+      gst_element_add_pad (GST_ELEMENT (ebin), pad);
+    }
+
+    /* Activate fixed presence streams */
     profiles =
         gst_encoding_container_profile_get_profiles
         (GST_ENCODING_CONTAINER_PROFILE (ebin->profile));
@@ -2290,6 +2312,8 @@ stream_group_remove (GstEncodeBaseBin * ebin, StreamGroup * sgroup)
 static void
 gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
 {
+  GstElement *element = GST_ELEMENT (ebin);
+
   if (G_UNLIKELY (ebin->profile == NULL))
     return;
 
@@ -2299,14 +2323,21 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
   while (ebin->streams)
     stream_group_remove (ebin, (StreamGroup *) ebin->streams->data);
 
-  /* Set ghostpad target to NULL */
-  gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), NULL);
+  if (ebin->srcpad) {
+    /* Set ghostpad target to NULL */
+    gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), NULL);
+  }
 
   /* Remove muxer if present */
   if (ebin->muxer) {
     gst_element_set_state (ebin->muxer, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (ebin), ebin->muxer);
     ebin->muxer = NULL;
+  }
+
+  if (!element->srcpads) {
+    while (element->srcpads)
+      gst_element_remove_pad (element, element->srcpads->data);
   }
 
   /* free/clear profile */
