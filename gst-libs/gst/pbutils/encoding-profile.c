@@ -1496,13 +1496,16 @@ done:
 
 static GstCaps *
 get_profile_format_from_possible_factory_name (const gchar * factory_desc,
-    gchar ** new_factory_name, GstCaps ** restrictions)
+    gchar ** new_factory_name, GstCaps ** restrictions,
+    gboolean * is_rendering_muxer)
 {
   GList *tmp;
   GstCaps *caps = NULL, *tmpcaps = gst_caps_from_string (factory_desc);
   GstStructure *tmpstruct;
   GstElementFactory *fact = NULL;
 
+  if (is_rendering_muxer)
+    *is_rendering_muxer = FALSE;
   *new_factory_name = NULL;
   if (gst_caps_get_size (tmpcaps) != 1)
     goto done;
@@ -1554,8 +1557,15 @@ get_profile_format_from_possible_factory_name (const gchar * factory_desc,
       *restrictions = tmpcaps;
       tmpcaps = NULL;
     }
+  } else if (gst_element_factory_list_is_type (fact,
+          GST_ELEMENT_FACTORY_TYPE_MUXER)) {
+    *new_factory_name = g_strdup (gst_structure_get_name (tmpstruct));
 
+    caps = gst_caps_ref (gst_caps_new_empty ());
+    if (is_rendering_muxer)
+      *is_rendering_muxer = TRUE;
   }
+
 
 done:
   if (fact)
@@ -1571,11 +1581,18 @@ static GstEncodingProfile *
 create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
     GstCaps * restrictioncaps, gint presence, gboolean single_segment,
     gchar * factory_name, GList * muxers_and_encoders, GstCaps * raw_audio_caps,
-    GstCaps * raw_video_caps)
+    GstCaps * raw_video_caps, gboolean is_rendering_muxer)
 {
   GstEncodingProfile *profile = NULL;
   GList *factories = NULL;
   gboolean is_raw_audio = FALSE, is_raw_video = FALSE;
+
+  if (is_rendering_muxer) {
+    profile =
+        GST_ENCODING_PROFILE (gst_encoding_container_profile_new
+        ("User profile", "User profile", caps, NULL));
+    goto done;
+  }
 
   if (gst_caps_can_intersect (raw_audio_caps, caps)) {
     is_raw_audio = TRUE;
@@ -1609,6 +1626,7 @@ create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
         GST_ENCODING_PROFILE (gst_encoding_container_profile_new
         ("User profile", "User profile", caps, NULL));
 
+done:
   if (factory_name && profile)
     gst_encoding_profile_set_preset_name (profile, factory_name);
   gst_encoding_profile_set_single_segment (profile, single_segment);
@@ -1722,17 +1740,21 @@ create_encoding_stream_profile (gchar * serialized_profile,
   if (caps) {
     profile = create_encoding_profile_from_caps (caps, preset_name,
         restrictioncaps, presence, single_segment, NULL, muxers_and_encoders,
-        raw_audio_caps, raw_video_caps);
+        raw_audio_caps, raw_video_caps, FALSE);
     gst_caps_unref (caps);
   }
 
   if (!profile) {
+    gboolean is_rendering_muxer;
+
     caps = get_profile_format_from_possible_factory_name (strcaps,
-        &factory_name, restrictioncaps ? NULL : &restrictioncaps);
+        &factory_name, restrictioncaps ? NULL : &restrictioncaps,
+        &is_rendering_muxer);
     if (caps) {
       profile = create_encoding_profile_from_caps (caps, preset_name,
           restrictioncaps, presence, single_segment, factory_name,
-          muxers_and_encoders, raw_audio_caps, raw_video_caps);
+          muxers_and_encoders, raw_audio_caps, raw_video_caps,
+          is_rendering_muxer);
       gst_caps_unref (caps);
     }
   }
