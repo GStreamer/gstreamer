@@ -1831,7 +1831,7 @@ timeout_conflicting_addresses (GList * conflicting_addresses,
     RTPConflictingAddress *known_conflict = item->data;
     GList *next_item = g_list_next (item);
 
-    if (known_conflict->time < current_time - collision_timeout) {
+    if (known_conflict->time + collision_timeout < current_time) {
       gchar *buf;
 
       conflicting_addresses = g_list_delete_link (conflicting_addresses, item);
