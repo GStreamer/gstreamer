@@ -533,6 +533,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   VADRMPRIMESurfaceDescriptor desc = { 0, };
   VASurfaceID surface;
   guint32 i, fourcc, rt_format, export_flags;
+  GDestroyNotify buffer_destroy = NULL;
 
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
 
@@ -590,12 +591,18 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
     gst_buffer_append_memory (buffer, mem);
 
-    if (G_LIKELY (!info))
+    if (G_LIKELY (!info)) {
       GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
+    } else {
+      /* if no @info, surface will be destroyed as soon as buffer is
+       * destroyed (e.g. gst_va_dmabuf_allocator_try()) */
+      buf->display = gst_object_ref (self->display);
+      buffer_destroy = gst_va_buffer_surface_unref;
+    }
 
     g_atomic_int_add (&buf->ref_count, 1);
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
-        gst_va_buffer_surface_quark (), buf, NULL);
+        gst_va_buffer_surface_quark (), buf, buffer_destroy);
 
     *drm_mod = desc.objects[i].drm_format_modifier;
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), gst_va_drm_mod_quark (),
