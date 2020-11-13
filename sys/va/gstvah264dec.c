@@ -198,7 +198,13 @@ _fill_ref_pic_list (VAPictureH264 va_reflist[32], GArray * reflist)
 
   for (i = 0; i < reflist->len; i++) {
     GstH264Picture *picture = g_array_index (reflist, GstH264Picture *, i);
-    _fill_vaapi_pic (&va_reflist[i], picture);
+
+    if (picture) {
+      _fill_vaapi_pic (&va_reflist[i], picture);
+    } else {
+      /* list might include null picture if reference picture was missing */
+      _init_vaapi_pic (&va_reflist[i]);
+    }
   }
 
   for (; i < 32; i++)
