@@ -2268,7 +2268,7 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
       res = GST_CLOCK_TIME_NONE;
     else {
       GstClockTime tmp = pcrtable->base_time + pcrtable->skew;
-      if (tmp + res > pcrtable->base_pcrtime)
+      if (tmp + res >= pcrtable->base_pcrtime)
         res += tmp - pcrtable->base_pcrtime;
       else
         res = GST_CLOCK_TIME_NONE;
