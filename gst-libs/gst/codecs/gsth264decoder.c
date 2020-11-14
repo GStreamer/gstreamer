@@ -787,9 +787,6 @@ gst_h264_decoder_new_field_picture (GstH264Decoder * self,
   GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
   GstH264Picture *new_picture;
 
-  /* Should not happen */
-  g_assert (picture->field != GST_H264_PICTURE_FIELD_FRAME);
-
   if (!klass->new_field_picture) {
     GST_WARNING_OBJECT (self, "Subclass does not support interlaced stream");
     return NULL;
@@ -805,8 +802,6 @@ gst_h264_decoder_new_field_picture (GstH264Decoder * self,
 
   new_picture->other_field = picture;
   new_picture->second_field = TRUE;
-  new_picture->field = picture->field == GST_H264_PICTURE_FIELD_TOP_FIELD ?
-      GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FIELD_TOP_FIELD;
 
   return new_picture;
 }
@@ -1671,7 +1666,52 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     gst_video_decoder_release_frame (decoder, frame);
   }
 
-  gst_h264_dpb_add (priv->dpb, picture);
+  /* Split frame into top/bottom field pictures for reference picture marking
+   * process. Even if current picture has field_pic_flag equal to zero,
+   * if next picture is a field picture, complementary field pair of reference
+   * frame should have individual pic_num and long_term_pic_num.
+   */
+  if (gst_h264_dpb_get_interlaced (priv->dpb) &&
+      GST_H264_PICTURE_IS_FRAME (picture)) {
+    GstH264Picture *other_field =
+        gst_h264_decoder_new_field_picture (self, picture);
+
+    if (!other_field) {
+      GST_WARNING_OBJECT (self,
+          "Couldn't split frame into complementary field pair");
+
+      /* Keep decoding anyway... */
+      gst_h264_dpb_add (priv->dpb, picture);
+    } else {
+      GST_LOG_OBJECT (self, "Split picture %p, poc %d, frame num %d",
+          picture, picture->pic_order_cnt, picture->frame_num);
+
+      /* FIXME: enhance TFF decision by using picture timing SEI */
+      if (picture->top_field_order_cnt < picture->bottom_field_order_cnt) {
+        picture->field = GST_H264_PICTURE_FIELD_TOP_FIELD;
+        picture->pic_order_cnt = picture->top_field_order_cnt;
+
+        other_field->field = GST_H264_PICTURE_FIELD_BOTTOM_FIELD;
+        other_field->pic_order_cnt = picture->bottom_field_order_cnt;
+      } else {
+        picture->field = GST_H264_PICTURE_FIELD_BOTTOM_FIELD;
+        picture->pic_order_cnt = picture->bottom_field_order_cnt;
+
+        other_field->field = GST_H264_PICTURE_FIELD_TOP_FIELD;
+        other_field->pic_order_cnt = picture->top_field_order_cnt;
+      }
+
+      other_field->top_field_order_cnt = picture->top_field_order_cnt;
+      other_field->bottom_field_order_cnt = picture->bottom_field_order_cnt;
+      other_field->frame_num = picture->frame_num;
+      other_field->ref = picture->ref;
+
+      gst_h264_dpb_add (priv->dpb, picture);
+      gst_h264_dpb_add (priv->dpb, other_field);
+    }
+  } else {
+    gst_h264_dpb_add (priv->dpb, picture);
+  }
 
   GST_LOG_OBJECT (self,
       "Finishing picture %p (frame_num %d, poc %d), entries in DPB %d",
