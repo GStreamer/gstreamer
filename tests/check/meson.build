@@ -15,7 +15,7 @@ exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
 # Since nalutils API is internal, need to build it again
 nalutils_dep = gstcodecparsers_dep.partial_dependency (compile_args: true, includes: true)
 
-enable_gst_player_tests = get_option('gst_player_tests')
+enable_gst_play_tests = get_option('gst_play_tests')
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [
@@ -69,7 +69,7 @@ base_tests = [
   [['libs/mpegts.c'], false, [gstmpegts_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
-  [['libs/player.c'], not enable_gst_player_tests, [gstplayer_dep]],
+  [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep]],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp9parser.c'], false, [gstcodecparsers_dep]],
@@ -229,6 +229,6 @@ if have_orcc and orc_test_dep.found()
   endforeach
 endif
 
-if enable_gst_player_tests
+if enable_gst_play_tests
   subdir ('media')
 endif
