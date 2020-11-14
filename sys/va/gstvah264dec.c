@@ -371,7 +371,8 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
     /* .ReferenceFrames */
     .picture_width_in_mbs_minus1 = sps->pic_width_in_mbs_minus1,
     .picture_height_in_mbs_minus1 =
-        sps->pic_height_in_map_units_minus1 << !sps->frame_mbs_only_flag,
+        ((sps->pic_height_in_map_units_minus1 + 1) <<
+            !sps->frame_mbs_only_flag) -1,
     .bit_depth_luma_minus8 = sps->bit_depth_luma_minus8,
     .bit_depth_chroma_minus8 = sps->bit_depth_chroma_minus8,
     .num_ref_frames = sps->num_ref_frames,
