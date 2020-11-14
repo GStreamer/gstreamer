@@ -836,7 +836,7 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
       if (other) {
         gst_h264_picture_set_reference (other,
-            GST_H264_PICTURE_REF_NONE, FALSE);
+            GST_H264_PICTURE_REF_NONE, GST_H264_PICTURE_IS_FRAME (picture));
         GST_TRACE ("MMCO-1: unmark short-term ref picture %p, (poc %d)",
             other, other->pic_order_cnt);
       } else {
