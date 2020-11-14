@@ -863,39 +863,83 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
     case 3:
       /* 8.2.5.4.3 Mark a short term reference picture as long term reference */
 
+      pic_num_x = get_picNumX (picture, ref_pic_marking);
+
+      other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
+      if (!other) {
+        GST_WARNING ("Invalid picNumX %d for operation type 3", pic_num_x);
+        return FALSE;
+      }
+
       /* If we have long-term ref picture for LongTermFrameIdx,
        * mark the picture as non-reference */
       for (i = 0; i < dpb->pic_list->len; i++) {
-        other = g_array_index (dpb->pic_list, GstH264Picture *, i);
+        GstH264Picture *tmp =
+            g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-        if (GST_H264_PICTURE_IS_LONG_TERM_REF (other)
-            && other->long_term_frame_idx ==
-            ref_pic_marking->long_term_frame_idx) {
-          gst_h264_picture_set_reference (other,
-              GST_H264_PICTURE_REF_NONE, TRUE);
-          GST_TRACE ("MMCO-3: unmark old long-term ref pic %p (poc %d)",
-              other, other->pic_order_cnt);
+        if (GST_H264_PICTURE_IS_LONG_TERM_REF (tmp)
+            && tmp->long_term_frame_idx == ref_pic_marking->long_term_frame_idx) {
+          if (GST_H264_PICTURE_IS_FRAME (tmp)) {
+            /* When long_term_frame_idx is already assigned to a long-term
+             * reference frame, that frame is marked as "unused for reference"
+             */
+            gst_h264_picture_set_reference (tmp,
+                GST_H264_PICTURE_REF_NONE, TRUE);
+            GST_TRACE ("MMCO-3: unmark old long-term frame %p (poc %d)",
+                tmp, tmp->pic_order_cnt);
+          } else if (tmp->other_field &&
+              GST_H264_PICTURE_IS_LONG_TERM_REF (tmp->other_field) &&
+              tmp->other_field->long_term_frame_idx ==
+              ref_pic_marking->long_term_frame_idx) {
+            /* When long_term_frame_idx is already assigned to a long-term
+             * reference field pair, that complementary field pair and both of
+             * its fields are marked as "unused for reference"
+             */
+            gst_h264_picture_set_reference (tmp,
+                GST_H264_PICTURE_REF_NONE, TRUE);
+            GST_TRACE ("MMCO-3: unmark old long-term field-pair %p (poc %d)",
+                tmp, tmp->pic_order_cnt);
+          } else {
+            /* When long_term_frame_idx is already assigned to a reference field,
+             * and that reference field is not part of a complementary field
+             * pair that includes the picture specified by picNumX,
+             * that field is marked as "unused for reference"
+             */
+
+            /* Check "tmp" (a long-term ref pic) is part of
+             * "other" (a picture to be updated from short-term to long-term)
+             * complementary field pair */
+
+            /* NOTE: "other" here is short-ref, so "other" and "tmp" must not be
+             * identical picture */
+            if (!tmp->other_field) {
+              gst_h264_picture_set_reference (tmp,
+                  GST_H264_PICTURE_REF_NONE, FALSE);
+              GST_TRACE ("MMCO-3: unmark old long-term field %p (poc %d)",
+                  tmp, tmp->pic_order_cnt);
+            } else if (tmp->other_field != other &&
+                (!other->other_field || other->other_field != tmp)) {
+              gst_h264_picture_set_reference (tmp,
+                  GST_H264_PICTURE_REF_NONE, FALSE);
+              GST_TRACE ("MMCO-3: unmark old long-term field %p (poc %d)",
+                  tmp, tmp->pic_order_cnt);
+            }
+          }
           break;
         }
       }
 
-      pic_num_x = get_picNumX (picture, ref_pic_marking);
-      other = gst_h264_dpb_get_short_ref_by_pic_num (dpb, pic_num_x);
-      if (other) {
-        gst_h264_picture_set_reference (other,
-            GST_H264_PICTURE_REF_LONG_TERM, picture->second_field);
-        other->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
-        GST_TRACE ("MMCO-3: mark long-term ref pic %p, index %d, (poc %d)",
-            other, other->long_term_frame_idx, other->pic_order_cnt);
+      gst_h264_picture_set_reference (other,
+          GST_H264_PICTURE_REF_LONG_TERM, GST_H264_PICTURE_IS_FRAME (picture));
+      other->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
 
-        if (picture->other_field &&
-            GST_H264_PICTURE_IS_LONG_TERM_REF (picture->other_field)) {
-          picture->other_field->long_term_frame_idx =
-              ref_pic_marking->long_term_frame_idx;
-        }
-      } else {
-        GST_WARNING ("Invalid picNumX %d for operation type 3", pic_num_x);
-        return FALSE;
+      GST_TRACE ("MMCO-3: mark long-term ref pic %p, index %d, (poc %d)",
+          other, other->long_term_frame_idx, other->pic_order_cnt);
+
+      if (other->other_field &&
+          GST_H264_PICTURE_IS_LONG_TERM_REF (other->other_field)) {
+        other->other_field->long_term_frame_idx =
+            ref_pic_marking->long_term_frame_idx;
       }
       break;
     case 4:
