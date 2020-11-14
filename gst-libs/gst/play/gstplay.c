@@ -489,6 +489,8 @@ gst_play_finalize (GObject * object)
     gst_structure_free (self->config);
   if (self->collection)
     gst_object_unref (self->collection);
+  if (self->media_info)
+    g_object_unref (self->media_info);
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
 
