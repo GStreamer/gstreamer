@@ -86,6 +86,7 @@ struct _GstVaH264Dec
   GArray *ref_list;
 
   gboolean need_negotiation;
+  gboolean interlaced;
 };
 
 #define parent_class gst_va_base_dec_parent_class
@@ -131,6 +132,17 @@ gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
   if (base->copy_frames)
     gst_va_base_dec_copy_output_buffer (base, frame);
 
+  if (picture->buffer_flags != 0) {
+    gboolean interlaced =
+        (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
+    gboolean tff = (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
+
+    GST_TRACE_OBJECT (self,
+        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
+        picture->buffer_flags, interlaced, tff);
+    GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
+  }
+
   gst_h264_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
@@ -147,7 +159,8 @@ _init_vaapi_pic (VAPictureH264 * va_picture)
 }
 
 static void
-_fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture)
+_fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture,
+    gboolean merge_other_field)
 {
   GstVaDecodePicture *va_pic;
 
@@ -176,13 +189,23 @@ _fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture)
       va_picture->BottomFieldOrderCnt = picture->bottom_field_order_cnt;
       break;
     case GST_H264_PICTURE_FIELD_TOP_FIELD:
-      va_picture->flags |= VA_PICTURE_H264_TOP_FIELD;
+      if (merge_other_field && picture->other_field) {
+        va_picture->BottomFieldOrderCnt =
+            picture->other_field->bottom_field_order_cnt;
+      } else {
+        va_picture->flags |= VA_PICTURE_H264_TOP_FIELD;
+        va_picture->BottomFieldOrderCnt = 0;
+      }
       va_picture->TopFieldOrderCnt = picture->top_field_order_cnt;
-      va_picture->BottomFieldOrderCnt = 0;
       break;
     case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
-      va_picture->flags |= VA_PICTURE_H264_BOTTOM_FIELD;
-      va_picture->TopFieldOrderCnt = 0;
+      if (merge_other_field && picture->other_field) {
+        va_picture->TopFieldOrderCnt =
+            picture->other_field->top_field_order_cnt;
+      } else {
+        va_picture->flags |= VA_PICTURE_H264_BOTTOM_FIELD;
+        va_picture->TopFieldOrderCnt = 0;
+      }
       va_picture->BottomFieldOrderCnt = picture->bottom_field_order_cnt;
       break;
     default:
@@ -195,7 +218,8 @@ _fill_vaapi_pic (VAPictureH264 * va_picture, GstH264Picture * picture)
 /* fill the VA API reference picture lists from the GstCodec reference
  * picture list */
 static void
-_fill_ref_pic_list (VAPictureH264 va_reflist[32], GArray * reflist)
+_fill_ref_pic_list (VAPictureH264 va_reflist[32], GArray * reflist,
+    GstH264Picture * current_picture)
 {
   guint i;
 
@@ -203,7 +227,8 @@ _fill_ref_pic_list (VAPictureH264 va_reflist[32], GArray * reflist)
     GstH264Picture *picture = g_array_index (reflist, GstH264Picture *, i);
 
     if (picture) {
-      _fill_vaapi_pic (&va_reflist[i], picture);
+      _fill_vaapi_pic (&va_reflist[i], picture,
+          GST_H264_PICTURE_IS_FRAME (current_picture));
     } else {
       /* list might include null picture if reference picture was missing */
       _init_vaapi_pic (&va_reflist[i]);
@@ -328,8 +353,8 @@ gst_va_h264_dec_decode_slice (GstH264Decoder * decoder,
   };
   /* *INDENT-ON* */
 
-  _fill_ref_pic_list (slice_param.RefPicList0, ref_pic_list0);
-  _fill_ref_pic_list (slice_param.RefPicList1, ref_pic_list1);
+  _fill_ref_pic_list (slice_param.RefPicList0, ref_pic_list0, picture);
+  _fill_ref_pic_list (slice_param.RefPicList1, ref_pic_list1, picture);
 
   _fill_pred_weight_table (header, &slice_param);
 
@@ -411,7 +436,7 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
   };
   /* *INDENT-ON* */
 
-  _fill_vaapi_pic (&pic_param.CurrPic, picture);
+  _fill_vaapi_pic (&pic_param.CurrPic, picture, FALSE);
 
   /* reference frames */
   {
@@ -421,14 +446,14 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
     gst_h264_dpb_get_pictures_short_term_ref (dpb, FALSE, FALSE, ref_list);
     for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
       GstH264Picture *pic = g_array_index (ref_list, GstH264Picture *, i);
-      _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic);
+      _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic, TRUE);
     }
     g_array_set_size (ref_list, 0);
 
     gst_h264_dpb_get_pictures_long_term_ref (dpb, FALSE, ref_list);
     for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
       GstH264Picture *pic = g_array_index (ref_list, GstH264Picture *, i);
-      _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic);
+      _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic, TRUE);
     }
     g_array_set_size (ref_list, 0);
 
@@ -637,6 +662,7 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
   gint display_height;
   guint rt_format;
   gboolean negotiation_needed = FALSE;
+  gboolean interlaced;
 
   if (self->dpb_size < max_dpb_size)
     self->dpb_size = max_dpb_size;
@@ -678,6 +704,14 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     negotiation_needed = TRUE;
     GST_INFO_OBJECT (self, "Resolution changed to %dx%d", base->width,
         base->height);
+  }
+
+  interlaced = !sps->frame_mbs_only_flag;
+  if (self->interlaced != interlaced) {
+    self->interlaced = interlaced;
+
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Interlaced mode changed to %d", interlaced);
   }
 
   base->need_valign = base->width < self->coded_width
@@ -795,6 +829,8 @@ gst_va_h264_dec_negotiate (GstVideoDecoder * decoder)
   base->output_state =
       gst_video_decoder_set_output_state (decoder, format,
       base->width, base->height, h264dec->input_state);
+  if (self->interlaced)
+    base->output_state->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
 
   base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
   if (capsfeatures)
