@@ -138,6 +138,11 @@ struct _GstH264DecoderClass
    * for subclass to decode it. If gst_h264_decoder_set_process_ref_pic_lists()
    * is called with %TRUE by the subclass, @ref_pic_list0 and @ref_pic_list1
    * are non-%NULL.
+   * In case of interlaced stream, @ref_pic_list0 and @ref_pic_list1 will
+   * contain only the first field of complementary reference field pair
+   * if currently being decoded picture is a frame picture. Subclasses might
+   * need to retrive the other field (i.e., the second field) of the picture
+   * if needed.
    */
   gboolean      (*decode_slice)     (GstH264Decoder * decoder,
                                      GstH264Picture * picture,

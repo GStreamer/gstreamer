@@ -137,6 +137,13 @@ struct _GstH264DecoderPrivate
   GArray *ref_pic_list_b0;
   GArray *ref_pic_list_b1;
 
+  /* Temporary picture list, for reference picture lists in fields,
+   * corresponding to 8.2.4.2.2 refFrameList0ShortTerm, refFrameList0LongTerm
+   * and 8.2.4.2.5 refFrameList1ShortTerm and refFrameListLongTerm */
+  GArray *ref_frame_list_0_short_term;
+  GArray *ref_frame_list_1_short_term;
+  GArray *ref_frame_list_long_term;
+
   /* Reference picture lists, constructed for each slice */
   GArray *ref_pic_list0;
   GArray *ref_pic_list1;
@@ -231,6 +238,21 @@ gst_h264_decoder_init (GstH264Decoder * self)
   g_array_set_clear_func (priv->ref_pic_list_b1,
       (GDestroyNotify) gst_h264_picture_clear);
 
+  priv->ref_frame_list_0_short_term = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 32);
+  g_array_set_clear_func (priv->ref_frame_list_0_short_term,
+      (GDestroyNotify) gst_h264_picture_clear);
+
+  priv->ref_frame_list_1_short_term = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 32);
+  g_array_set_clear_func (priv->ref_frame_list_1_short_term,
+      (GDestroyNotify) gst_h264_picture_clear);
+
+  priv->ref_frame_list_long_term = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 32);
+  g_array_set_clear_func (priv->ref_frame_list_long_term,
+      (GDestroyNotify) gst_h264_picture_clear);
+
   priv->ref_pic_list0 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
@@ -246,6 +268,9 @@ gst_h264_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list_p0);
   g_array_unref (priv->ref_pic_list_b0);
   g_array_unref (priv->ref_pic_list_b1);
+  g_array_unref (priv->ref_frame_list_0_short_term);
+  g_array_unref (priv->ref_frame_list_1_short_term);
+  g_array_unref (priv->ref_frame_list_long_term);
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
 
@@ -2152,6 +2177,139 @@ construct_ref_pic_lists_p (GstH264Decoder * self,
 #endif
 }
 
+static gint
+frame_num_wrap_desc_compare (const GstH264Picture ** a,
+    const GstH264Picture ** b)
+{
+  return (*b)->frame_num_wrap - (*a)->frame_num_wrap;
+}
+
+static gint
+long_term_frame_idx_asc_compare (const GstH264Picture ** a,
+    const GstH264Picture ** b)
+{
+  return (*a)->long_term_frame_idx - (*b)->long_term_frame_idx;
+}
+
+/* init_picture_refs_fields_1 in gstvaapidecoder_h264.c */
+static void
+init_picture_refs_fields_1 (GstH264Decoder * self, GstH264PictureField field,
+    GArray * ref_frame_list, GArray * ref_pic_list_x)
+{
+  guint i = 0, j = 0;
+
+  do {
+    for (; i < ref_frame_list->len; i++) {
+      GstH264Picture *pic = g_array_index (ref_frame_list, GstH264Picture *, i);
+      if (pic->field == field) {
+        pic = gst_h264_picture_ref (pic);
+        g_array_append_val (ref_pic_list_x, pic);
+        i++;
+        break;
+      }
+    }
+
+    for (; j < ref_frame_list->len; j++) {
+      GstH264Picture *pic = g_array_index (ref_frame_list, GstH264Picture *, j);
+      if (pic->field != field) {
+        pic = gst_h264_picture_ref (pic);
+        g_array_append_val (ref_pic_list_x, pic);
+        j++;
+        break;
+      }
+    }
+  } while (i < ref_frame_list->len || j < ref_frame_list->len);
+}
+
+static void
+construct_ref_field_pic_lists_p (GstH264Decoder * self,
+    GstH264Picture * current_picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  gint pos;
+
+  g_array_set_size (priv->ref_pic_list_p0, 0);
+  g_array_set_size (priv->ref_frame_list_0_short_term, 0);
+  g_array_set_size (priv->ref_frame_list_long_term, 0);
+
+  /* 8.2.4.2.2, 8.2.4.2.5 refFrameList0ShortTerm:
+   * short-term ref pictures sorted by descending frame_num_wrap.
+   */
+  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb,
+      TRUE, TRUE, priv->ref_frame_list_0_short_term);
+  g_array_sort (priv->ref_frame_list_0_short_term,
+      (GCompareFunc) frame_num_wrap_desc_compare);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE
+      && priv->ref_frame_list_0_short_term->len) {
+    GString *str = g_string_new (NULL);
+    for (pos = 0; pos < priv->ref_frame_list_0_short_term->len; pos++) {
+      GstH264Picture *ref = g_array_index (priv->ref_frame_list_0_short_term,
+          GstH264Picture *, pos);
+      g_string_append_printf (str, "|%i(%d)", ref->frame_num_wrap, ref->field);
+    }
+    GST_TRACE_OBJECT (self, "ref_frame_list_0_short_term (%d): %s|",
+        current_picture->field, str->str);
+    g_string_free (str, TRUE);
+  }
+#endif
+
+  /* 8.2.4.2.2 refFrameList0LongTerm,:
+   * long-term ref pictures sorted by ascending long_term_frame_idx.
+   */
+  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
+      TRUE, priv->ref_frame_list_long_term);
+  g_array_sort (priv->ref_frame_list_long_term,
+      (GCompareFunc) long_term_frame_idx_asc_compare);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE
+      && priv->ref_frame_list_long_term->len) {
+    GString *str = g_string_new (NULL);
+    for (pos = 0; pos < priv->ref_frame_list_long_term->len; pos++) {
+      GstH264Picture *ref = g_array_index (priv->ref_frame_list_0_short_term,
+          GstH264Picture *, pos);
+      g_string_append_printf (str, "|%i(%d)", ref->long_term_frame_idx,
+          ref->field);
+    }
+    GST_TRACE_OBJECT (self, "ref_frame_list_0_long_term (%d): %s|",
+        current_picture->field, str->str);
+    g_string_free (str, TRUE);
+  }
+#endif
+
+  /* 8.2.4.2.5 */
+  init_picture_refs_fields_1 (self, current_picture->field,
+      priv->ref_frame_list_0_short_term, priv->ref_pic_list_p0);
+  init_picture_refs_fields_1 (self, current_picture->field,
+      priv->ref_frame_list_long_term, priv->ref_pic_list_p0);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG
+      && priv->ref_pic_list_p0->len) {
+    GString *str = g_string_new (NULL);
+    for (pos = 0; pos < priv->ref_pic_list_p0->len; pos++) {
+      GstH264Picture *ref =
+          g_array_index (priv->ref_pic_list_p0, GstH264Picture *, pos);
+      if (!GST_H264_PICTURE_IS_LONG_TERM_REF (ref))
+        g_string_append_printf (str, "|%i(%d)s", ref->frame_num_wrap,
+            ref->field);
+      else
+        g_string_append_printf (str, "|%i(%d)l", ref->long_term_frame_idx,
+            ref->field);
+    }
+    GST_DEBUG_OBJECT (self, "ref_pic_list_p0 (%d): %s|", current_picture->field,
+        str->str);
+    g_string_free (str, TRUE);
+  }
+#endif
+
+  /* Clear temporary lists, now pictures are owned by ref_pic_list_p0 */
+  g_array_set_size (priv->ref_frame_list_0_short_term, 0);
+  g_array_set_size (priv->ref_frame_list_long_term, 0);
+}
+
 static gboolean
 lists_are_equal (GArray * l1, GArray * l2)
 {
@@ -2301,6 +2459,111 @@ construct_ref_pic_lists_b (GstH264Decoder * self,
 }
 
 static void
+construct_ref_field_pic_lists_b (GstH264Decoder * self,
+    GstH264Picture * current_picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  gint pos;
+
+  /* refFrameList0ShortTerm (8.2.4.2.4) [[1] [2]], where:
+   * [1] shortterm ref pics with POC < current_picture's POC sorted by descending POC,
+   * [2] shortterm ref pics with POC > current_picture's POC by ascending POC,
+   */
+  g_array_set_size (priv->ref_pic_list_b0, 0);
+  g_array_set_size (priv->ref_pic_list_b1, 0);
+  g_array_set_size (priv->ref_frame_list_0_short_term, 0);
+  g_array_set_size (priv->ref_frame_list_1_short_term, 0);
+  g_array_set_size (priv->ref_frame_list_long_term, 0);
+
+  /* 8.2.4.2.4
+   * When pic_order_cnt_type is equal to 0, reference pictures that are marked
+   * as "non-existing" as specified in clause 8.2.5.2 are not included in either
+   * RefPicList0 or RefPicList1
+   */
+  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb,
+      current_picture->pic_order_cnt_type != 0, TRUE,
+      priv->ref_frame_list_0_short_term);
+
+  /* First sort ascending, this will put [1] in right place and finish
+   * [2]. */
+  print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term, 0);
+  g_array_sort (priv->ref_pic_list_b0, (GCompareFunc) poc_asc_compare);
+  print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term, 0);
+
+  /* Find first with POC > current_picture's POC to get first element
+   * in [2]... */
+  pos = split_ref_pic_list_b (self, priv->ref_frame_list_0_short_term,
+      (GCompareFunc) poc_asc_compare);
+
+  GST_DEBUG_OBJECT (self, "split point %i", pos);
+
+  /* and sort [1] descending, thus finishing sequence [1] [2]. */
+  g_qsort_with_data (priv->ref_frame_list_0_short_term->data, pos,
+      sizeof (gpointer), (GCompareDataFunc) poc_desc_compare, NULL);
+
+  /* refFrameList1ShortTerm (8.2.4.2.4) [[1] [2]], where:
+   * [1] shortterm ref pics with POC > curr_pic's POC sorted by ascending POC,
+   * [2] shortterm ref pics with POC < curr_pic's POC by descending POC,
+   */
+  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb,
+      current_picture->pic_order_cnt_type != 0, TRUE,
+      priv->ref_frame_list_1_short_term);
+
+  /* First sort by descending POC. */
+  g_array_sort (priv->ref_frame_list_1_short_term,
+      (GCompareFunc) poc_desc_compare);
+
+  /* Split at first with POC < current_picture's POC to get first element
+   * in [2]... */
+  pos = split_ref_pic_list_b (self, priv->ref_frame_list_1_short_term,
+      (GCompareFunc) poc_desc_compare);
+
+  /* and sort [1] ascending. */
+  g_qsort_with_data (priv->ref_frame_list_1_short_term->data, pos,
+      sizeof (gpointer), (GCompareDataFunc) poc_asc_compare, NULL);
+
+  /* 8.2.4.2.2 refFrameList0LongTerm,:
+   * long-term ref pictures sorted by ascending long_term_frame_idx.
+   */
+  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
+      TRUE, priv->ref_frame_list_long_term);
+  g_array_sort (priv->ref_frame_list_long_term,
+      (GCompareFunc) long_term_frame_idx_asc_compare);
+
+  /* 8.2.4.2.5 RefPicList0 */
+  init_picture_refs_fields_1 (self, current_picture->field,
+      priv->ref_frame_list_0_short_term, priv->ref_pic_list_b0);
+  init_picture_refs_fields_1 (self, current_picture->field,
+      priv->ref_frame_list_long_term, priv->ref_pic_list_b0);
+
+  /* 8.2.4.2.5 RefPicList1 */
+  init_picture_refs_fields_1 (self, current_picture->field,
+      priv->ref_frame_list_1_short_term, priv->ref_pic_list_b1);
+  init_picture_refs_fields_1 (self, current_picture->field,
+      priv->ref_frame_list_long_term, priv->ref_pic_list_b1);
+
+  /* If lists identical, swap first two entries in RefPicList1 (spec
+   * 8.2.4.2.5) */
+  if (priv->ref_pic_list_b1->len > 1
+      && lists_are_equal (priv->ref_pic_list_b0, priv->ref_pic_list_b1)) {
+    /* swap */
+    GstH264Picture **list = (GstH264Picture **) priv->ref_pic_list_b1->data;
+    GstH264Picture *pic = list[0];
+    list[0] = list[1];
+    list[1] = pic;
+  }
+
+  print_ref_pic_list_b (self, priv->ref_pic_list_b0, 0);
+  print_ref_pic_list_b (self, priv->ref_pic_list_b1, 1);
+
+  /* Clear temporary lists, now pictures are owned by ref_pic_list_b0
+   * and ref_pic_list_b1 */
+  g_array_set_size (priv->ref_frame_list_0_short_term, 0);
+  g_array_set_size (priv->ref_frame_list_1_short_term, 0);
+  g_array_set_size (priv->ref_frame_list_long_term, 0);
+}
+
+static void
 gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self,
     GstH264Picture * current_picture)
 {
@@ -2329,8 +2592,13 @@ gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self,
     return;
   }
 
-  construct_ref_pic_lists_p (self, current_picture);
-  construct_ref_pic_lists_b (self, current_picture);
+  if (GST_H264_PICTURE_IS_FRAME (current_picture)) {
+    construct_ref_pic_lists_p (self, current_picture);
+    construct_ref_pic_lists_b (self, current_picture);
+  } else {
+    construct_ref_field_pic_lists_p (self, current_picture);
+    construct_ref_field_pic_lists_b (self, current_picture);
+  }
 }
 
 static void
