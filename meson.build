@@ -20,8 +20,8 @@ gmodule_dep = dependency('gmodule-2.0',
 
 gst_dep = dependency('gstreamer-1.0',
     fallback : ['gstreamer', 'gst_dep'])
-gstplayer_dep = dependency('gstreamer-player-1.0', version: '>= 1.7.1.1',
-    fallback: ['gst-plugins-bad', 'gstplayer_dep'])
+gstplay_dep = dependency('gstreamer-play-1.0', version: '>= 1.19.0.1',
+    fallback: ['gst-plugins-bad', 'gstplay_dep'])
 gsttag_dep = dependency('gstreamer-tag-1.0',
     fallback: ['gst-plugins-base', 'tag_dep'])
 gstwebrtc_dep = dependency('gstreamer-webrtc-1.0', version: '>= 1.14.0',
