@@ -582,7 +582,7 @@ gst_h264_decoder_update_pic_nums (GstH264Decoder * self,
       continue;
 
     if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
-      if (current_picture->field == GST_H264_PICTURE_FIELD_FRAME)
+      if (GST_H264_PICTURE_IS_FRAME (current_picture))
         picture->long_term_pic_num = picture->long_term_frame_idx;
       else if (current_picture->field == picture->field)
         picture->long_term_pic_num = 2 * picture->long_term_frame_idx + 1;
@@ -594,7 +594,7 @@ gst_h264_decoder_update_pic_nums (GstH264Decoder * self,
       else
         picture->frame_num_wrap = picture->frame_num;
 
-      if (current_picture->field == GST_H264_PICTURE_FIELD_FRAME)
+      if (GST_H264_PICTURE_IS_FRAME (current_picture))
         picture->pic_num = picture->frame_num_wrap;
       else if (picture->field == current_picture->field)
         picture->pic_num = 2 * picture->frame_num_wrap + 1;
@@ -832,8 +832,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
   /* This is not a field picture */
   if (!slice_hdr->field_pic_flag) {
     /* Check whether the last picture is complete or not */
-    if (prev_picture->field != GST_H264_PICTURE_FIELD_FRAME &&
-        !prev_picture->other_field) {
+    if (!GST_H264_PICTURE_IS_FRAME (prev_picture) && !prev_picture->other_field) {
       GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
           prev_picture, prev_picture->pic_order_cnt);
 
@@ -845,8 +844,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
   }
 
   /* Previous picture was not a field picture or complete already */
-  if (prev_picture->field == GST_H264_PICTURE_FIELD_FRAME ||
-      prev_picture->other_field)
+  if (GST_H264_PICTURE_IS_FRAME (prev_picture) || prev_picture->other_field)
     return TRUE;
 
   if (prev_picture->frame_num == slice_hdr->frame_num) {
@@ -1142,8 +1140,7 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
   else
     picture->field = GST_H264_PICTURE_FIELD_FRAME;
 
-  if (picture->field != GST_H264_PICTURE_FIELD_FRAME &&
-      !klass->new_field_picture) {
+  if (!GST_H264_PICTURE_IS_FRAME (picture) && !klass->new_field_picture) {
     GST_FIXME_OBJECT (self, "Subclass doesn't support interlace stream");
     return FALSE;
   }
@@ -1238,7 +1235,7 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
       }
 
       if (picture->field != GST_H264_PICTURE_FIELD_TOP_FIELD) {
-        if (picture->field == GST_H264_PICTURE_FIELD_FRAME) {
+        if (GST_H264_PICTURE_IS_FRAME (picture)) {
           picture->bottom_field_order_cnt =
               picture->top_field_order_cnt +
               picture->delta_pic_order_cnt_bottom;
@@ -1305,7 +1302,7 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
       if (!picture->nal_ref_idc)
         expected_pic_order_cnt += sps->offset_for_non_ref_pic;
 
-      if (picture->field == GST_H264_PICTURE_FIELD_FRAME) {
+      if (GST_H264_PICTURE_IS_FRAME (picture)) {
         picture->top_field_order_cnt =
             expected_pic_order_cnt + picture->delta_pic_order_cnt0;
         picture->bottom_field_order_cnt = picture->top_field_order_cnt +
@@ -1345,7 +1342,7 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
             2 * (picture->frame_num_offset + picture->frame_num);
       }
 
-      if (picture->field == GST_H264_PICTURE_FIELD_FRAME) {
+      if (GST_H264_PICTURE_IS_FRAME (picture)) {
         picture->top_field_order_cnt = temp_pic_order_cnt;
         picture->bottom_field_order_cnt = temp_pic_order_cnt;
       } else if (picture->field == GST_H264_PICTURE_FIELD_BOTTOM_FIELD) {

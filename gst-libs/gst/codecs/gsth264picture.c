@@ -259,7 +259,7 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
   if (!picture->nonexisting) {
     picture->needed_for_output = TRUE;
 
-    if (picture->field == GST_H264_PICTURE_FIELD_FRAME) {
+    if (GST_H264_PICTURE_IS_FRAME (picture)) {
       dpb->num_output_needed++;
     } else {
       /* We can do output only when field pair are complete */
@@ -613,7 +613,7 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
     if (!picture->needed_for_output)
       continue;
 
-    if (picture->field != GST_H264_PICTURE_FIELD_FRAME &&
+    if (!GST_H264_PICTURE_IS_FRAME (picture) &&
         (!picture->other_field || picture->second_field))
       continue;
 

@@ -70,6 +70,17 @@ typedef struct _GstH264Picture GstH264Picture;
 #define GST_H264_PICTURE_IS_LONG_TERM_REF(picture) \
     ((picture)->ref == GST_H264_PICTURE_REF_LONG_TERM)
 
+/**
+ * GST_H264_PICTURE_IS_FRAME:
+ * @picture: a #GstH264Picture
+ *
+ * Check whether @picture is a frame (not a field picture)
+ *
+ * Since: 1.20
+ */
+#define GST_H264_PICTURE_IS_FRAME(picture) \
+    ((picture)->field == GST_H264_PICTURE_FIELD_FRAME)
+
 struct _GstH264Slice
 {
   GstH264SliceHdr header;
