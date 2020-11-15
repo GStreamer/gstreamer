@@ -82,6 +82,9 @@ struct _GstVaH264Dec
   gint coded_height;
   gint dpb_size;
 
+  /* Used to fill VAPictureParameterBufferH264.ReferenceFrames */
+  GArray *ref_list;
+
   gboolean need_negotiation;
 };
 
@@ -347,6 +350,7 @@ static gboolean
 gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
+  GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
   GstH264PPS *pps;
   GstH264SPS *sps;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
@@ -354,6 +358,7 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
   VAIQMatrixBufferH264 iq_matrix = { 0, };
   VAPictureParameterBufferH264 pic_param;
   guint i, n;
+  GArray *ref_list = self->ref_list;
 
   va_pic = gst_h264_picture_get_user_data (picture);
 
@@ -409,26 +414,25 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
 
   /* reference frames */
   {
-    GArray *ref_list = g_array_sized_new (FALSE, FALSE,
-        sizeof (GstH264Picture *), 16);
-    g_array_set_clear_func (ref_list, (GDestroyNotify) gst_h264_picture_clear);
+    guint ref_frame_idx = 0;
+    g_array_set_size (ref_list, 0);
 
     gst_h264_dpb_get_pictures_short_term_ref (dpb, ref_list);
-    for (i = 0; i < 16 && i < ref_list->len; i++) {
+    for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
       GstH264Picture *pic = g_array_index (ref_list, GstH264Picture *, i);
-      _fill_vaapi_pic (&pic_param.ReferenceFrames[i], pic);
+      _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic);
     }
     g_array_set_size (ref_list, 0);
 
     gst_h264_dpb_get_pictures_long_term_ref (dpb, ref_list);
-    for (; i < 16 && i < ref_list->len; i++) {
+    for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
       GstH264Picture *pic = g_array_index (ref_list, GstH264Picture *, i);
-      _fill_vaapi_pic (&pic_param.ReferenceFrames[i], pic);
+      _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic);
     }
-    g_array_unref (ref_list);
+    g_array_set_size (ref_list, 0);
 
-    for (; i < 16; i++)
-      _init_vaapi_pic (&pic_param.ReferenceFrames[i]);
+    for (; ref_frame_idx < 16; ref_frame_idx++)
+      _init_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx]);
   }
 
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
@@ -781,7 +785,11 @@ gst_va_h264_dec_negotiate (GstVideoDecoder * decoder)
 static void
 gst_va_h264_dec_dispose (GObject * object)
 {
+  GstVaH264Dec *self = GST_VA_H264_DEC (object);
+
   gst_va_base_dec_close (GST_VIDEO_DECODER (object));
+  g_clear_pointer (&self->ref_list, g_array_unref);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -845,9 +853,16 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_va_h264_dec_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstVaH264Dec *self = GST_VA_H264_DEC (instance);
+
   gst_va_base_dec_init (GST_VA_BASE_DEC (instance), GST_CAT_DEFAULT);
   gst_h264_decoder_set_process_ref_pic_lists (GST_H264_DECODER (instance),
       TRUE);
+
+  self->ref_list = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 16);
+  g_array_set_clear_func (self->ref_list,
+      (GDestroyNotify) gst_h264_picture_clear);
 }
 
 static gpointer
