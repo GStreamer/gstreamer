@@ -438,6 +438,22 @@ _default_video_format_from_chroma (guint chroma_type)
   }
 }
 
+/* Check whether the downstream supports VideoMeta; if not, we need to
+ * fallback to the system memory. */
+static gboolean
+_downstream_has_video_meta (GstVaBaseDec * base, GstCaps * caps)
+{
+  GstQuery *query;
+  gboolean ret = FALSE;
+
+  query = gst_query_new_allocation (caps, FALSE);
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SRC_PAD (base), query))
+    ret = gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_unref (query);
+
+  return ret;
+}
+
 void
 gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
     GstVideoFormat * format, GstCapsFeatures ** capsfeatures)
@@ -447,8 +463,17 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   GstStructure *structure;
   const GValue *v_format;
   guint num_structures, i;
+  gboolean is_any;
 
   g_return_if_fail (base);
+
+  /* verify if peer caps is any */
+  {
+    peer_caps =
+        gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (base), NULL);
+    is_any = gst_caps_is_any (peer_caps);
+    gst_clear_caps (&peer_caps);
+  }
 
   peer_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (base));
   GST_DEBUG_OBJECT (base, "Allowed caps %" GST_PTR_FORMAT, peer_caps);
@@ -475,19 +500,32 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   else
     gst_clear_caps (&peer_caps);
 
-  if (gst_caps_is_empty (preferred_caps)
-      || gst_caps_is_any (preferred_caps)) {
-    /* if any or not linked yet then system memory and nv12 */
+  if (gst_caps_is_empty (preferred_caps)) {
     if (capsfeatures)
-      *capsfeatures = NULL;
+      *capsfeatures = NULL;     /* system memory */
     if (format)
       *format = _default_video_format_from_chroma (base->rt_format);
     goto bail;
   }
 
-  features = gst_caps_get_features (preferred_caps, 0);
-  if (features && capsfeatures)
-    *capsfeatures = gst_caps_features_copy (features);
+  if (capsfeatures) {
+    features = gst_caps_get_features (preferred_caps, 0);
+    if (features) {
+      *capsfeatures = gst_caps_features_copy (features);
+
+      if (is_any
+          && !gst_caps_features_is_equal (features,
+              GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+          && !_downstream_has_video_meta (base, preferred_caps)) {
+        GST_INFO_OBJECT (base, "Downstream reports ANY caps but without"
+            " VideoMeta support; fallback to system memory.");
+        gst_caps_features_free (*capsfeatures);
+        *capsfeatures = NULL;
+      }
+    } else {
+      *capsfeatures = NULL;
+    }
+  }
 
   if (!format)
     goto bail;
