@@ -86,15 +86,7 @@ cerbero_before_script() {
     pwd
     ls -lha
 
-    # Copy cerbero git repo stored on the image, delete an existing checkout if
-    # it exists. Sometimes the git dir gets corrupted on the Windows runner,
-    # and there's no way to clean it up because gitlab will keep trying to
-    # reuse the cached image.
-    if ! [[ -d ${CERBERO_HOST_DIR}/.git ]]; then
-        mv "${CERBERO_HOST_DIR}/.git" "${CERBERO_HOST_DIR}/.git-old"
-        # rm -rf is very slow on Windows, so do it in the background
-        rm -rf "${CERBERO_HOST_DIR}/.git-old" &
-    fi
+    # Copy cerbero git repo stored on the image
     cp -a "${CERBERO_HOST_DIR}/.git" .
     git checkout .
     git status
@@ -122,9 +114,6 @@ cerbero_before_script() {
     # a dirty builddir, or tarballs/pkg files, leftover files from an old
     # cerbero commit, etc. Skip the things we actually need to keep.
     time git clean -xdff -e cerbero_setup.sh -e manifest.xml -e localconf.cbc -e "${CERBERO_SOURCES}"
-
-    # Wait for the rm -rf from above if needed
-    [[ -n $(jobs -p) ]] && fg
 }
 
 cerbero_script() {
