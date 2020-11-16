@@ -68,8 +68,6 @@ struct _GstVaBaseDec
   gboolean need_valign;
   GstVideoAlignment valign;
 
-  gboolean has_videometa;
-
   gboolean copy_frames;
 };
 

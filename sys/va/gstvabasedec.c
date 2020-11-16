@@ -198,16 +198,23 @@ _create_other_pool (GstVaBaseDec * base, GstAllocator * allocator,
   base->other_pool = pool;
 }
 
-/* 1. get allocator in query
- *    1.1 if allocator is not ours and downstream doesn't handle
- *        videometa, keep it for other_pool
+/* We only support system pool and va pool. For va pool, its allocator
+ * should be va allocator or dma allocator.
+ *   If output caps is memory:VAMemory, the pool should be a va pool
+ *   with va allocator.
+ *   If output caps is memory:DMABuf, the pool should be a va pool
+ *   with dma allocator.
+ *   If output caps is raw(system mem), the pool should be a va pool
+ *   with va allocator as an internal pool. We need the other_pool,
+ *   which is a system pool, to copy frames to system mem and output.
+ *
+ * 1. get allocator in query
+ *    1.1 if allocator is not ours and caps is raw, keep it for other_pool.
  * 2. get pool in query
- *    2.1 if pool is not va, keep it as other_pool if downstream
- *        doesn't handle videometa or (it doesn't handle alignment and
- *        the stream needs cropping)
- *    2.2 if there's no pool in query and downstream doesn't handle
- *        videometa, create other_pool as GstVideoPool with the non-va
- *        from query and query's params
+ *    2.1 if pool is not va, downstream doesn't support video meta and
+ *        caps are raw, keep it as other_pool.
+ *    2.2 if there's no pool in query and and caps is raw, create other_pool
+ *        as GstVideoPool with the non-va from query and query's params.
  * 3. create our allocator and pool if they aren't in query
  * 4. add or update pool and allocator in query
  * 5. set our custom pool configuration
@@ -217,12 +224,13 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstAllocator *allocator = NULL, *other_allocator = NULL;
   GstAllocationParams other_params, params;
-  GstBufferPool *pool = NULL;
+  GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *caps = NULL;
   GstVideoInfo info;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   guint size = 0, min, max;
-  gboolean update_pool = FALSE, update_allocator = FALSE, has_videoalignment;
+  gboolean update_pool = FALSE, update_allocator = FALSE, has_videometa;
+  gboolean ret = TRUE;
 
   g_assert (base->min_buffers > 0);
 
@@ -231,7 +239,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (!(caps && gst_video_info_from_caps (&info, caps)))
     goto wrong_caps;
 
-  base->has_videometa = gst_query_find_allocation_meta (query,
+  has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
   if (gst_query_get_n_allocation_params (query) > 0) {
@@ -253,16 +261,10 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     if (pool) {
       if (!GST_IS_VA_POOL (pool)) {
-        has_videoalignment = gst_buffer_pool_has_option (pool,
-            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-        if (!base->has_videometa || (!has_videoalignment && base->need_valign)) {
-          GST_DEBUG_OBJECT (base,
-              "keeping other pool for copy %" GST_PTR_FORMAT, pool);
-          gst_object_replace ((GstObject **) & base->other_pool,
-              (GstObject *) pool);
-          gst_object_unref (pool);      /* decrease previous increase */
-        }
-        gst_clear_object (&pool);
+        GST_DEBUG_OBJECT (base,
+            "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
+        other_pool = pool;
+        pool = NULL;
       }
     }
 
@@ -272,20 +274,15 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     update_pool = TRUE;
   } else {
     size = GST_VIDEO_INFO_SIZE (&info);
-
-    if (!base->has_videometa && !gst_caps_is_vamemory (caps)) {
-      _create_other_pool (base, other_allocator, &other_params, caps, size);
-    } else {
-      gst_clear_object (&other_allocator);
-    }
-
     min = base->min_buffers;
     max = 0;
   }
 
   if (!allocator) {
-    if (!(allocator = _create_allocator (base, caps)))
-      return FALSE;
+    if (!(allocator = _create_allocator (base, caps))) {
+      ret = FALSE;
+      goto cleanup;
+    }
   }
 
   if (!pool)
@@ -308,8 +305,10 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     gst_buffer_pool_config_set_va_allocation_params (config,
         VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
 
-    if (!gst_buffer_pool_set_config (pool, config))
-      return FALSE;
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      ret = FALSE;
+      goto cleanup;
+    }
   }
 
   if (update_allocator)
@@ -322,21 +321,30 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  if (!base->has_videometa) {
-    if ((base->copy_frames = gst_va_pool_requires_video_meta (pool))) {
-      GST_INFO_OBJECT (base, "Raw frame copy enabled.");
+  base->copy_frames = (!has_videometa && gst_va_pool_requires_video_meta (pool)
+      && gst_caps_is_raw (caps));
+  if (base->copy_frames) {
+    if (other_pool) {
+      gst_object_replace ((GstObject **) & base->other_pool,
+          (GstObject *) other_pool);
+    } else {
       _create_other_pool (base, other_allocator, &other_params, caps, size);
     }
-  }
-  if (!base->copy_frames)
+    GST_DEBUG_OBJECT (base, "Use the other pool for copy %" GST_PTR_FORMAT,
+        base->other_pool);
+  } else {
     gst_clear_object (&base->other_pool);
+  }
 
-  gst_object_unref (allocator);
-  gst_object_unref (pool);
+cleanup:
+  gst_clear_object (&allocator);
+  gst_clear_object (&other_allocator);
+  gst_clear_object (&pool);
+  gst_clear_object (&other_pool);
 
   /* There's no need to chain decoder's method since all what is
    * needed is done. */
-  return TRUE;
+  return ret;
 
 wrong_caps:
   {
