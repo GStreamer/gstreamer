@@ -613,7 +613,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
   window->render_info.colorimetry.primaries =
       window->info.colorimetry.primaries;
   window->render_info.colorimetry.transfer = window->info.colorimetry.transfer;
-  window->render_info.colorimetry.range = window->info.colorimetry.range;
+  /* prefer FULL range RGB. STUDIO range doesn't seem to be well supported
+   * color space by GPUs and we don't need to preserve color range for
+   * target display color space type */
+  window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
 #if (DXGI_HEADER_VERSION >= 4)
   {
