@@ -571,7 +571,9 @@ _get_profile (GstVaH264Dec * self, const GstH264SPS * sps, gint max_dpb_size)
 
   switch (sps->profile_idc) {
     case GST_H264_PROFILE_BASELINE:
-      if (sps->constraint_set1_flag) {  /* A.2.2 (main profile) */
+      /* A.2 compliant */
+      if (sps->constraint_set0_flag || sps->constraint_set1_flag
+          || sps->constraint_set2_flag) {
         profiles[i++] = VAProfileH264ConstrainedBaseline;
         profiles[i++] = VAProfileH264Main;
       }
