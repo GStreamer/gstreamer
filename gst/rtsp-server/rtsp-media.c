@@ -1656,7 +1656,7 @@ update_stream_storage_size (GstRTSPMedia * media, GstRTSPStream * stream,
       sessid, &storage);
 
   if (storage) {
-    guint size_time = 0;
+    guint64 size_time = 0;
 
     if (!gst_rtsp_stream_is_tcp_receiver (stream))
       size_time = (media->priv->latency + 50) * GST_MSECOND;
