@@ -499,6 +499,27 @@ error:
   }
 }
 
+static gboolean
+gst_va_h264_dec_new_field_picture (GstH264Decoder * decoder,
+    const GstH264Picture * first_field, GstH264Picture * second_field)
+{
+  GstVaDecodePicture *first_pic, *second_pic;
+  GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
+
+  first_pic = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+  if (!first_pic)
+    return FALSE;
+
+  second_pic = gst_va_decode_picture_new (first_pic->gstbuffer);
+  gst_h264_picture_set_user_data (second_field, second_pic,
+      (GDestroyNotify) gst_va_decode_picture_free);
+
+  GST_LOG_OBJECT (self, "New va decode picture %p - %#x", second_pic,
+      gst_va_decode_picture_get_surface (second_pic));
+
+  return TRUE;
+}
+
 static inline guint
 _get_num_views (const GstH264SPS * sps)
 {
@@ -844,6 +865,8 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_h264_dec_start_picture);
   h264decoder_class->end_picture =
       GST_DEBUG_FUNCPTR (gst_va_h264_dec_end_picture);
+  h264decoder_class->new_field_picture =
+      GST_DEBUG_FUNCPTR (gst_va_h264_dec_new_field_picture);
 
   g_free (long_name);
   g_free (cdata->description);
