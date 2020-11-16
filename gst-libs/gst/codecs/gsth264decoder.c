@@ -2255,6 +2255,31 @@ construct_ref_pic_lists_b (GstH264Decoder * self)
 static void
 gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self)
 {
+  GstH264DecoderPrivate *priv = self->priv;
+  gboolean construct_list = FALSE;
+  gint i;
+  GArray *dpb_array = gst_h264_dpb_get_pictures_all (priv->dpb);
+
+  /* 8.2.4.2.1 ~ 8.2.4.2.4
+   * When this process is invoked, there shall be at least one reference entry
+   * that is currently marked as "used for reference"
+   * (i.e., as "used for short-term reference" or "used for long-term reference")
+   * and is not marked as "non-existing"
+   */
+  for (i = 0; i < dpb_array->len; i++) {
+    GstH264Picture *picture = g_array_index (dpb_array, GstH264Picture *, i);
+    if (GST_H264_PICTURE_IS_REF (picture) && !picture->nonexisting) {
+      construct_list = TRUE;
+      break;
+    }
+  }
+  g_array_unref (dpb_array);
+
+  if (!construct_list) {
+    gst_h264_decoder_clear_ref_pic_lists (self);
+    return;
+  }
+
   construct_ref_pic_lists_p (self);
   construct_ref_pic_lists_b (self);
 }
@@ -2474,11 +2499,15 @@ gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264SliceHdr *slice_hdr = &priv->current_slice.header;
 
-  /* fill reference picture lists for B and S/SP slices */
+  g_array_set_size (priv->ref_pic_list0, 0);
+  g_array_set_size (priv->ref_pic_list1, 0);
+
   if (GST_H264_IS_P_SLICE (slice_hdr) || GST_H264_IS_SP_SLICE (slice_hdr)) {
+    /* 8.2.4 fill reference picture list RefPicList0 for P or SP slice */
     copy_pic_list_into (priv->ref_pic_list0, priv->ref_pic_list_p0);
     return modify_ref_pic_list (self, 0);
-  } else {
+  } else if (GST_H264_IS_B_SLICE (slice_hdr)) {
+    /* 8.2.4 fill reference picture list RefPicList0 and RefPicList1 for B slice */
     copy_pic_list_into (priv->ref_pic_list0, priv->ref_pic_list_b0);
     copy_pic_list_into (priv->ref_pic_list1, priv->ref_pic_list_b1);
     return modify_ref_pic_list (self, 0)
