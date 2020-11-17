@@ -381,6 +381,10 @@ _available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems,
     }
 
     GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+    /* when mem are pushed available queue its allocator is unref,
+     * then now it is required to ref the allocator here because
+     * memory's finalize will unref it again */
+    gst_object_ref (mem->allocator);
     gst_memory_unref (mem);
   }
 }
@@ -438,6 +442,8 @@ gst_va_dmabuf_allocator_finalize (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
+  gst_atomic_queue_unref (self->available_mems);
+  gst_clear_object (&self->display);
   g_cond_clear (&self->buffer_cond);
 
   G_OBJECT_CLASS (dmabuf_parent_class)->finalize (object);
@@ -452,10 +458,6 @@ gst_va_dmabuf_allocator_dispose (GObject * object)
       &self->surface_count);
   if (self->surface_count != 0)
     GST_WARNING_OBJECT (self, "Surfaces leaked: %d", self->surface_count);
-
-  gst_atomic_queue_unref (self->available_mems);
-
-  gst_clear_object (&self->display);
 
   G_OBJECT_CLASS (dmabuf_parent_class)->dispose (object);
 }
@@ -513,6 +515,8 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
 
   GST_OBJECT_UNLOCK (self);
 
+  /* Keep last in case we are holding on the last allocator ref */
+  gst_object_unref (mem->allocator);
 
   /* don't call mini_object's free */
   return FALSE;
@@ -676,8 +680,10 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
   GST_OBJECT_UNLOCK (self);
 
   /* append them in reverse order */
-  for (j = idx - 1; j >= 0; j--)
+  for (j = idx - 1; j >= 0; j--) {
+    gst_object_ref (mem[j]->allocator);
     gst_buffer_append_memory (buffer, mem[j]);
+  }
 
   GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface, buffer);
 
@@ -886,6 +892,9 @@ gst_va_allocator_finalize (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
+  gst_atomic_queue_unref (self->available_mems);
+  gst_clear_object (&self->display);
+  g_clear_pointer (&self->surface_formats, g_array_unref);
   g_cond_clear (&self->buffer_cond);
 
   G_OBJECT_CLASS (gst_va_allocator_parent_class)->finalize (object);
@@ -900,11 +909,6 @@ gst_va_allocator_dispose (GObject * object)
       &self->surface_count);
   if (self->surface_count != 0)
     GST_WARNING_OBJECT (self, "Surfaces leaked: %d", self->surface_count);
-
-  gst_atomic_queue_unref (self->available_mems);
-
-  gst_clear_object (&self->display);
-  g_clear_pointer (&self->surface_formats, g_array_unref);
 
   G_OBJECT_CLASS (gst_va_allocator_parent_class)->dispose (object);
 }
@@ -1224,6 +1228,9 @@ gst_va_memory_release (GstMiniObject * mini_object)
 
   GST_OBJECT_UNLOCK (self);
 
+  /* Keep last in case we are holding on the last allocator ref */
+  gst_object_unref (mem->allocator);
+
   /* don't call mini_object's free */
   return FALSE;
 }
@@ -1293,6 +1300,7 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   mem = gst_atomic_queue_pop (self->available_mems);
   GST_OBJECT_UNLOCK (self);
 
+  gst_object_ref (mem->allocator);
   surface = gst_va_memory_get_surface (mem);
   gst_buffer_append_memory (buffer, mem);
 
