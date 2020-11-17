@@ -457,14 +457,19 @@ gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb)
 /**
  * gst_h264_dpb_get_pictures_short_term_ref:
  * @dpb: a #GstH264Dpb
+ * @include_non_existing: %TRUE if non-existing pictures need to be included
+ * @include_second_field: %TRUE if the second field pictures need to be included
  * @out: (out) (element-type GstH264Picture) (transfer full): an array
  *   of #GstH264Picture pointers
  *
  * Retrieve all short-term reference pictures from @dpb. The picture will be
  * appended to the array.
+ *
+ * Since: 1.20
  */
 void
-gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GArray * out)
+gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb,
+    gboolean include_non_existing, gboolean include_second_field, GArray * out)
 {
   gint i;
 
@@ -475,7 +480,12 @@ gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GArray * out)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture)) {
+    if (!include_second_field && picture->second_field)
+      continue;
+
+    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture) &&
+        (include_non_existing || (!include_non_existing &&
+                !picture->nonexisting))) {
       gst_h264_picture_ref (picture);
       g_array_append_val (out, picture);
     }
@@ -485,14 +495,18 @@ gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GArray * out)
 /**
  * gst_h264_dpb_get_pictures_long_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out) (element-type GstH264Picture) (transfer full): an arrat
+ * @include_second_field: %TRUE if the second field pictures need to be included
+ * @out: (out) (element-type GstH264Picture) (transfer full): an array
  *   of #GstH264Picture pointer
  *
  * Retrieve all long-term reference pictures from @dpb. The picture will be
  * appended to the array.
+ *
+ * Since: 1.20
  */
 void
-gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GArray * out)
+gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb,
+    gboolean include_second_field, GArray * out)
 {
   gint i;
 
@@ -502,6 +516,9 @@ gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GArray * out)
   for (i = 0; i < dpb->pic_list->len; i++) {
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
+
+    if (!include_second_field && picture->second_field)
+      continue;
 
     if (GST_H264_PICTURE_IS_LONG_TERM_REF (picture)) {
       gst_h264_picture_ref (picture);

@@ -417,14 +417,14 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
     guint ref_frame_idx = 0;
     g_array_set_size (ref_list, 0);
 
-    gst_h264_dpb_get_pictures_short_term_ref (dpb, ref_list);
+    gst_h264_dpb_get_pictures_short_term_ref (dpb, FALSE, FALSE, ref_list);
     for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
       GstH264Picture *pic = g_array_index (ref_list, GstH264Picture *, i);
       _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic);
     }
     g_array_set_size (ref_list, 0);
 
-    gst_h264_dpb_get_pictures_long_term_ref (dpb, ref_list);
+    gst_h264_dpb_get_pictures_long_term_ref (dpb, FALSE, ref_list);
     for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
       GstH264Picture *pic = g_array_index (ref_list, GstH264Picture *, i);
       _fill_vaapi_pic (&pic_param.ReferenceFrames[ref_frame_idx++], pic);

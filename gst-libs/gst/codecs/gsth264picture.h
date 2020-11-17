@@ -259,10 +259,13 @@ GstH264Picture * gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb);
 
 GST_CODECS_API
 void  gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb,
+                                                gboolean include_non_existing,
+                                                gboolean include_second_field,
                                                 GArray * out);
 
 GST_CODECS_API
 void  gst_h264_dpb_get_pictures_long_term_ref  (GstH264Dpb * dpb,
+                                                gboolean include_second_field,
                                                 GArray * out);
 
 GST_CODECS_API

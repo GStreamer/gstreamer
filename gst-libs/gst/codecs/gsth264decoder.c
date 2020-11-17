@@ -177,7 +177,8 @@ static gboolean gst_h264_decoder_drain_internal (GstH264Decoder * self);
 static gboolean gst_h264_decoder_finish_current_picture (GstH264Decoder * self);
 static gboolean gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture * picture);
-static void gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self);
+static void gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self,
+    GstH264Picture * current_picture);
 static void gst_h264_decoder_clear_ref_pic_lists (GstH264Decoder * self);
 static gboolean gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self);
 static gboolean
@@ -816,7 +817,7 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
   gst_h264_decoder_update_pic_nums (self, current_picture, frame_num);
 
   if (priv->process_ref_pic_lists)
-    gst_h264_decoder_prepare_ref_pic_lists (self);
+    gst_h264_decoder_prepare_ref_pic_lists (self, current_picture);
 
   klass = GST_H264_DECODER_GET_CLASS (self);
   if (klass->start_picture)
@@ -2111,7 +2112,8 @@ long_term_pic_num_asc_compare (const GstH264Picture ** a,
 }
 
 static void
-construct_ref_pic_lists_p (GstH264Decoder * self)
+construct_ref_pic_lists_p (GstH264Decoder * self,
+    GstH264Picture * current_picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
   gint pos;
@@ -2122,11 +2124,13 @@ construct_ref_pic_lists_p (GstH264Decoder * self)
    */
   g_array_set_size (priv->ref_pic_list_p0, 0);
 
-  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb, priv->ref_pic_list_p0);
+  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb,
+      TRUE, FALSE, priv->ref_pic_list_p0);
   g_array_sort (priv->ref_pic_list_p0, (GCompareFunc) pic_num_desc_compare);
 
   pos = priv->ref_pic_list_p0->len;
-  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb, priv->ref_pic_list_p0);
+  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
+      FALSE, priv->ref_pic_list_p0);
   g_qsort_with_data (&g_array_index (priv->ref_pic_list_p0, gpointer, pos),
       priv->ref_pic_list_p0->len - pos, sizeof (gpointer),
       (GCompareDataFunc) long_term_pic_num_asc_compare, NULL);
@@ -2206,7 +2210,8 @@ print_ref_pic_list_b (GstH264Decoder * self, GArray * ref_list_b, gint index)
 }
 
 static void
-construct_ref_pic_lists_b (GstH264Decoder * self)
+construct_ref_pic_lists_b (GstH264Decoder * self,
+    GstH264Picture * current_picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
   gint pos;
@@ -2218,7 +2223,14 @@ construct_ref_pic_lists_b (GstH264Decoder * self)
    */
   g_array_set_size (priv->ref_pic_list_b0, 0);
   g_array_set_size (priv->ref_pic_list_b1, 0);
-  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb, priv->ref_pic_list_b0);
+
+  /* 8.2.4.2.3
+   * When pic_order_cnt_type is equal to 0, reference pictures that are marked
+   * as "non-existing" as specified in clause 8.2.5.2 are not included in either
+   * RefPicList0 or RefPicList1
+   */
+  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb,
+      current_picture->pic_order_cnt_type != 0, FALSE, priv->ref_pic_list_b0);
 
   /* First sort ascending, this will put [1] in right place and finish
    * [2]. */
@@ -2239,7 +2251,8 @@ construct_ref_pic_lists_b (GstH264Decoder * self)
 
   /* Now add [3] and sort by ascending long_term_pic_num. */
   pos = priv->ref_pic_list_b0->len;
-  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb, priv->ref_pic_list_b0);
+  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
+      FALSE, priv->ref_pic_list_b0);
   g_qsort_with_data (&g_array_index (priv->ref_pic_list_b0, gpointer, pos),
       priv->ref_pic_list_b0->len - pos, sizeof (gpointer),
       (GCompareDataFunc) long_term_pic_num_asc_compare, NULL);
@@ -2249,7 +2262,8 @@ construct_ref_pic_lists_b (GstH264Decoder * self)
    * [2] shortterm ref pics with POC < curr_pic's POC by descending POC,
    * [3] longterm ref pics by ascending long_term_pic_num.
    */
-  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb, priv->ref_pic_list_b1);
+  gst_h264_dpb_get_pictures_short_term_ref (priv->dpb,
+      current_picture->pic_order_cnt_type != 0, FALSE, priv->ref_pic_list_b1);
 
   /* First sort by descending POC. */
   g_array_sort (priv->ref_pic_list_b1, (GCompareFunc) poc_desc_compare);
@@ -2265,7 +2279,8 @@ construct_ref_pic_lists_b (GstH264Decoder * self)
 
   /* Now add [3] and sort by ascending long_term_pic_num */
   pos = priv->ref_pic_list_b1->len;
-  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb, priv->ref_pic_list_b1);
+  gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
+      FALSE, priv->ref_pic_list_b1);
   g_qsort_with_data (&g_array_index (priv->ref_pic_list_b1, gpointer, pos),
       priv->ref_pic_list_b1->len - pos, sizeof (gpointer),
       (GCompareDataFunc) long_term_pic_num_asc_compare, NULL);
@@ -2286,7 +2301,8 @@ construct_ref_pic_lists_b (GstH264Decoder * self)
 }
 
 static void
-gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self)
+gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self,
+    GstH264Picture * current_picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
   gboolean construct_list = FALSE;
@@ -2313,8 +2329,8 @@ gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self)
     return;
   }
 
-  construct_ref_pic_lists_p (self);
-  construct_ref_pic_lists_b (self);
+  construct_ref_pic_lists_p (self, current_picture);
+  construct_ref_pic_lists_b (self, current_picture);
 }
 
 static void
