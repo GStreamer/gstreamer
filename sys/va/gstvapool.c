@@ -309,11 +309,28 @@ gst_va_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   if (GST_IS_VA_DMABUF_ALLOCATOR (vpool->allocator)) {
     if (gst_va_dmabuf_allocator_prepare_buffer (vpool->allocator, *buffer))
       return GST_FLOW_OK;
+
+    if (params && (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT))
+      return GST_FLOW_EOS;
+    if (!gst_va_dmabuf_allocator_wait_for_memory (vpool->allocator, *buffer))
+      goto flushing;
+
+    return GST_FLOW_OK;
   } else if (GST_IS_VA_ALLOCATOR (vpool->allocator)) {
     if (gst_va_allocator_prepare_buffer (vpool->allocator, *buffer))
       return GST_FLOW_OK;
+
+    if (params && (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT))
+      return GST_FLOW_EOS;
+    if (!gst_va_allocator_wait_for_memory (vpool->allocator, *buffer))
+      goto flushing;
+
+    return GST_FLOW_OK;
   }
 
+  return GST_FLOW_ERROR;
+
+flushing:
   gst_buffer_replace (buffer, NULL);
   return GST_FLOW_FLUSHING;
 }

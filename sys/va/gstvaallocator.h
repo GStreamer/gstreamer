@@ -36,6 +36,8 @@ gboolean              gst_va_dmabuf_allocator_setup_buffer (GstAllocator * alloc
                                                             GstBuffer * buffer);
 gboolean              gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
                                                               GstBuffer * buffer);
+gboolean              gst_va_dmabuf_allocator_wait_for_memory (GstAllocator * allocator,
+                                                               GstBuffer * buffer);
 void                  gst_va_dmabuf_allocator_flush       (GstAllocator * allocator);
 gboolean              gst_va_dmabuf_allocator_set_format  (GstAllocator * allocator,
                                                            GstVideoInfo * info,
@@ -63,6 +65,8 @@ GstAllocator *        gst_va_allocator_new                (GstVaDisplay * displa
                                                            GArray * surface_formats);
 GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator);
 gboolean              gst_va_allocator_prepare_buffer     (GstAllocator * allocator,
+                                                           GstBuffer * buffer);
+gboolean              gst_va_allocator_wait_for_memory    (GstAllocator * allocator,
                                                            GstBuffer * buffer);
 void                  gst_va_allocator_flush              (GstAllocator * allocator);
 gboolean              gst_va_allocator_set_format         (GstAllocator * allocator,
