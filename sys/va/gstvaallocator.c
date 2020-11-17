@@ -407,6 +407,8 @@ struct _GstVaDmabufAllocator
 
   GstVideoInfo info;
   guint usage_hint;
+
+  gboolean flushing;
 };
 
 #define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
@@ -659,8 +661,13 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
   GST_OBJECT_LOCK (self);
 
   /* if available mems, use them */
-  if (gst_atomic_queue_length (self->available_mems) == 0)
+  while (gst_atomic_queue_length (self->available_mems) == 0 && !self->flushing)
     g_cond_wait (&self->buffer_cond, GST_OBJECT_GET_LOCK (self));
+
+  if (self->flushing) {
+    GST_OBJECT_UNLOCK (self);
+    return FALSE;
+  }
 
   mem[0] = gst_atomic_queue_pop (self->available_mems);
   surface = gst_va_memory_get_surface (mem[0]);
@@ -696,9 +703,11 @@ gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
   GST_OBJECT_LOCK (self);
+  self->flushing = TRUE;
   _available_mems_flush (self->display, self->available_mems,
       &self->surface_count);
-  g_cond_signal (&self->buffer_cond);
+  self->flushing = FALSE;
+  g_cond_broadcast (&self->buffer_cond);
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -862,6 +871,8 @@ struct _GstVaAllocator
 
   GstVideoInfo info;
   guint usage_hint;
+
+  gboolean flushing;
 };
 
 typedef struct _GstVaMemory GstVaMemory;
@@ -1293,8 +1304,14 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   VASurfaceID surface;
 
   GST_OBJECT_LOCK (self);
+
+  if (self->flushing) {
+    GST_OBJECT_UNLOCK (self);
+    return FALSE;
+  }
+
   /* if available mems, use them */
-  if (gst_atomic_queue_length (self->available_mems) == 0)
+  while (gst_atomic_queue_length (self->available_mems) == 0)
     g_cond_wait (&self->buffer_cond, GST_OBJECT_GET_LOCK (self));
 
   mem = gst_atomic_queue_pop (self->available_mems);
@@ -1315,9 +1332,11 @@ gst_va_allocator_flush (GstAllocator * allocator)
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
 
   GST_OBJECT_LOCK (self);
+  self->flushing = TRUE;
   _available_mems_flush (self->display, self->available_mems,
       &self->surface_count);
-  g_cond_signal (&self->buffer_cond);
+  self->flushing = FALSE;
+  g_cond_broadcast (&self->buffer_cond);
   GST_OBJECT_UNLOCK (self);
 }
 

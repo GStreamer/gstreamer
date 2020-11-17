@@ -315,7 +315,7 @@ gst_va_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   gst_buffer_replace (buffer, NULL);
-  return GST_FLOW_ERROR;
+  return GST_FLOW_FLUSHING;
 }
 
 static void
