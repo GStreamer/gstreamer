@@ -265,14 +265,15 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
       /* We can do output only when field pair are complete */
       if (picture->second_field) {
         dpb->num_output_needed++;
-
-        /* And link each field */
-        if (picture->other_field)
-          picture->other_field->other_field = picture;
       }
     }
   } else {
     picture->needed_for_output = FALSE;
+  }
+
+  /* Link each field */
+  if (picture->second_field && picture->other_field) {
+    picture->other_field->other_field = picture;
   }
 
   g_array_append_val (dpb->pic_list, picture);

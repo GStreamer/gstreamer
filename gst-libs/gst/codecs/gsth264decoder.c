@@ -185,6 +185,8 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self,
     GstH264Picture * picture);
 static void gst_h264_decoder_do_output_picture (GstH264Decoder * self,
     GstH264Picture * picture);
+static GstH264Picture *gst_h264_decoder_new_field_picture (GstH264Decoder *
+    self, GstH264Picture * picture);
 
 static void
 gst_h264_decoder_class_init (GstH264DecoderClass * klass)
@@ -606,6 +608,47 @@ gst_h264_decoder_update_pic_nums (GstH264Decoder * self,
   g_array_unref (dpb);
 }
 
+static GstH264Picture *
+gst_h264_decoder_split_frame (GstH264Decoder * self, GstH264Picture * picture)
+{
+  GstH264Picture *other_field;
+
+  g_assert (GST_H264_PICTURE_IS_FRAME (picture));
+
+  other_field = gst_h264_decoder_new_field_picture (self, picture);
+  if (!other_field) {
+    GST_WARNING_OBJECT (self,
+        "Couldn't split frame into complementary field pair");
+    return NULL;
+  }
+
+  GST_LOG_OBJECT (self, "Split picture %p, poc %d, frame num %d",
+      picture, picture->pic_order_cnt, picture->frame_num);
+
+  /* FIXME: enhance TFF decision by using picture timing SEI */
+  if (picture->top_field_order_cnt < picture->bottom_field_order_cnt) {
+    picture->field = GST_H264_PICTURE_FIELD_TOP_FIELD;
+    picture->pic_order_cnt = picture->top_field_order_cnt;
+
+    other_field->field = GST_H264_PICTURE_FIELD_BOTTOM_FIELD;
+    other_field->pic_order_cnt = picture->bottom_field_order_cnt;
+  } else {
+    picture->field = GST_H264_PICTURE_FIELD_BOTTOM_FIELD;
+    picture->pic_order_cnt = picture->bottom_field_order_cnt;
+
+    other_field->field = GST_H264_PICTURE_FIELD_TOP_FIELD;
+    other_field->pic_order_cnt = picture->top_field_order_cnt;
+  }
+
+  other_field->top_field_order_cnt = picture->top_field_order_cnt;
+  other_field->bottom_field_order_cnt = picture->bottom_field_order_cnt;
+  other_field->frame_num = picture->frame_num;
+  other_field->ref = picture->ref;
+  other_field->nonexisting = picture->nonexisting;
+
+  return other_field;
+}
+
 static gboolean
 gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 {
@@ -669,7 +712,15 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     }
 
     gst_h264_dpb_delete_unused (priv->dpb);
-    gst_h264_dpb_add (priv->dpb, picture);
+    if (gst_h264_dpb_get_interlaced (priv->dpb)) {
+      GstH264Picture *other_field =
+          gst_h264_decoder_split_frame (self, picture);
+
+      gst_h264_dpb_add (priv->dpb, picture);
+      gst_h264_dpb_add (priv->dpb, other_field);
+    } else {
+      gst_h264_dpb_add (priv->dpb, picture);
+    }
     while (gst_h264_dpb_needs_bump (priv->dpb, priv->max_num_reorder_frames,
             FALSE)) {
       GstH264Picture *to_output;
@@ -793,7 +844,9 @@ gst_h264_decoder_new_field_picture (GstH264Decoder * self,
   }
 
   new_picture = gst_h264_picture_new ();
-  if (!klass->new_field_picture (self, picture, new_picture)) {
+  /* don't confuse subclass by non-existing picture */
+  if (!picture->nonexisting &&
+      !klass->new_field_picture (self, picture, new_picture)) {
     GST_ERROR_OBJECT (self, "Subclass couldn't handle new field picture");
     gst_h264_picture_unref (new_picture);
 
@@ -1679,40 +1732,14 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
    */
   if (gst_h264_dpb_get_interlaced (priv->dpb) &&
       GST_H264_PICTURE_IS_FRAME (picture)) {
-    GstH264Picture *other_field =
-        gst_h264_decoder_new_field_picture (self, picture);
+    GstH264Picture *other_field = gst_h264_decoder_split_frame (self, picture);
 
+    gst_h264_dpb_add (priv->dpb, picture);
     if (!other_field) {
       GST_WARNING_OBJECT (self,
           "Couldn't split frame into complementary field pair");
-
       /* Keep decoding anyway... */
-      gst_h264_dpb_add (priv->dpb, picture);
     } else {
-      GST_LOG_OBJECT (self, "Split picture %p, poc %d, frame num %d",
-          picture, picture->pic_order_cnt, picture->frame_num);
-
-      /* FIXME: enhance TFF decision by using picture timing SEI */
-      if (picture->top_field_order_cnt < picture->bottom_field_order_cnt) {
-        picture->field = GST_H264_PICTURE_FIELD_TOP_FIELD;
-        picture->pic_order_cnt = picture->top_field_order_cnt;
-
-        other_field->field = GST_H264_PICTURE_FIELD_BOTTOM_FIELD;
-        other_field->pic_order_cnt = picture->bottom_field_order_cnt;
-      } else {
-        picture->field = GST_H264_PICTURE_FIELD_BOTTOM_FIELD;
-        picture->pic_order_cnt = picture->bottom_field_order_cnt;
-
-        other_field->field = GST_H264_PICTURE_FIELD_TOP_FIELD;
-        other_field->pic_order_cnt = picture->top_field_order_cnt;
-      }
-
-      other_field->top_field_order_cnt = picture->top_field_order_cnt;
-      other_field->bottom_field_order_cnt = picture->bottom_field_order_cnt;
-      other_field->frame_num = picture->frame_num;
-      other_field->ref = picture->ref;
-
-      gst_h264_dpb_add (priv->dpb, picture);
       gst_h264_dpb_add (priv->dpb, other_field);
     }
   } else {
