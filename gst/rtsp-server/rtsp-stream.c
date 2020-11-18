@@ -220,6 +220,7 @@ struct _GstRTSPStreamPrivate
   guint32 blocked_seqnum;
   guint32 blocked_rtptime;
   GstClockTime blocked_running_time;
+  gint blocked_clock_rate;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -4308,6 +4309,14 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
           goto stats;
         *running_time = priv->blocked_running_time;
       }
+
+      if (clock_rate) {
+        *clock_rate = priv->blocked_clock_rate;
+
+        if (*clock_rate == 0 && running_time)
+          *running_time = GST_CLOCK_TIME_NONE;
+      }
+
       goto done;
     }
   }
@@ -5270,6 +5279,17 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     gst_event_unref (event);
   }
 
+  event = gst_pad_get_sticky_event (pad, GST_EVENT_CAPS, 0);
+  if (event) {
+    GstCaps *caps;
+    GstStructure *s;
+
+    gst_event_parse_caps (event, &caps);
+    s = gst_caps_get_structure (caps, 0);
+    gst_structure_get_int (s, "clock-rate", &priv->blocked_clock_rate);
+    gst_event_unref (event);
+  }
+
   priv->blocking = TRUE;
 
   GST_DEBUG_OBJECT (pad, "Now blocking");
@@ -5311,6 +5331,7 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
         priv->blocking = FALSE;
         priv->blocked_buffer = FALSE;
         priv->blocked_running_time = GST_CLOCK_TIME_NONE;
+        priv->blocked_clock_rate = 0;
         priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
             GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
             GST_PAD_PROBE_TYPE_BUFFER_LIST |
