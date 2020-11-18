@@ -293,10 +293,12 @@ if get_option('default_library') == 'static'
     link_arg = '-Wl,--version-script=' + symbol_map
     if cc.has_link_argument(link_arg)
       gstfull_link_args += link_arg
+      link_deps += symbol_map
+    elif cc.get_id() == 'msvc'
+      warning('FIXME: Provide a def file to publish the public symbols')
     else
       error('Failed to link with version script (' + symbol_map + '), check logs for details')
     endif
-    link_deps += symbol_map
   endif
 
   # Build both shared and static library
