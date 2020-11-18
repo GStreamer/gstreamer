@@ -59,6 +59,8 @@ struct _GstClockSync
   GCond          blocked_cond;
   gboolean       blocked;
   GstClockTimeDiff  ts_offset;
+  gboolean sync_to_first;
+  gboolean is_first;
 
   GstClockTime   upstream_latency;
 };

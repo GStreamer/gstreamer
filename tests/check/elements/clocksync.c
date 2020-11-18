@@ -168,6 +168,76 @@ GST_START_TEST (test_stopping_element_unschedules_sync)
 
 GST_END_TEST;
 
+typedef struct
+{
+  guint notify_count;
+  GstClockTimeDiff ts_offset;
+} ClockSyncTestData;
+
+static void
+clock_sync_ts_offset_changed_cb (GstElement * clocksync, GParamSpec * pspec,
+    ClockSyncTestData * data)
+{
+  data->notify_count++;
+  g_object_get (clocksync, "ts-offset", &data->ts_offset, NULL);
+}
+
+GST_START_TEST (test_sync_to_first)
+{
+  /* the reason to use the queue in front of the clocksync element
+     is to effectively make gst_harness_push asynchronous, not locking
+     up the test, waiting for gst_clock_id_wait */
+  GstHarness *h =
+      gst_harness_new_parse ("queue ! clocksync sync-to-first=true");
+  GstBuffer *buf;
+  GstClock *clock;
+  GstClockTime timestamp = 123456789;
+  GstElement *clocksync;
+  ClockSyncTestData data;
+  data.notify_count = 0;
+  data.ts_offset = 0;
+
+  clocksync = gst_harness_find_element (h, "clocksync");
+  g_signal_connect (clocksync, "notify::ts-offset",
+      G_CALLBACK (clock_sync_ts_offset_changed_cb), &data);
+  gst_object_unref (clocksync);
+
+  /* use testclock */
+  gst_harness_use_testclock (h);
+  gst_harness_set_src_caps_str (h, "mycaps");
+
+  /* make a buffer and set the timestamp */
+  buf = gst_buffer_new ();
+  GST_BUFFER_PTS (buf) = timestamp;
+
+  /* push the buffer, and verify it does *not* make it through */
+  gst_harness_push (h, buf);
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  /* verify the clocksync element has registered exactly one GstClockID */
+  fail_unless (gst_harness_wait_for_clock_id_waits (h, 1, 42));
+
+  /* crank the clock and pull the buffer */
+  gst_harness_crank_single_clock_wait (h);
+  buf = gst_harness_pull (h);
+
+  /* verify that the buffer has the right timestamp, and that the time on
+     the clock is equal to the timestamp */
+  fail_unless_equals_int64 (timestamp, GST_BUFFER_PTS (buf));
+  clock = gst_element_get_clock (h->element);
+  /* this buffer must be pushed without clock waiting */
+  fail_unless_equals_int64 (gst_clock_get_time (clock), 0);
+  fail_unless_equals_int (data.notify_count, 1);
+  fail_unless_equals_int64 (data.ts_offset, -timestamp);
+
+  /* cleanup */
+  gst_object_unref (clock);
+  gst_buffer_unref (buf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 clocksync_suite (void)
 {
@@ -179,6 +249,7 @@ clocksync_suite (void)
   tcase_add_test (tc_chain, test_sync_on_timestamp);
   tcase_add_test (tc_chain, test_stopping_element_unschedules_sync);
   tcase_add_test (tc_chain, test_no_sync_on_timestamp);
+  tcase_add_test (tc_chain, test_sync_to_first);
 
 
   return s;

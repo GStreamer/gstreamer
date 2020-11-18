@@ -92,6 +92,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "sync-to-first": {
+                        "blurb": "Automatically set ts-offset based on running time of the first buffer and pipeline's running time (i.e., ts-offset = \"pipeline running time\" - \"buffer running time\"). When enabled, clocksync element will update ts-offset on the first buffer per flush event or READY to PAUSED state change. This property can be useful in case that buffer timestamp does not necessarily have to be synchronized with pipeline's running time, but duration of the buffer through clocksync element needs to be synchronized with the amount of clock time go. Note that mixed use of ts-offset and this property would be racy if clocksync element is running already.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "ts-offset": {
                         "blurb": "Timestamp offset in nanoseconds for synchronisation, negative for earlier sync",
                         "conditionally-available": false,
