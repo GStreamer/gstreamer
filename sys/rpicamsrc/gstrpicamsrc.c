@@ -1266,6 +1266,7 @@ gst_rpi_cam_src_stop (GstBaseSrc * parent)
     raspi_capture_stop (src->capture_state);
   raspi_capture_free (src->capture_state);
   src->capture_state = NULL;
+  src->started = FALSE;
   return TRUE;
 }
 
