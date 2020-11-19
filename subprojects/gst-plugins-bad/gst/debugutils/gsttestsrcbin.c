@@ -77,12 +77,15 @@ struct _GstTestSrcBin
   gint group_id;
   GstFlowCombiner *flow_combiner;
   GstCaps *streams_def;
+  GstCaps *next_streams_def;
+  gboolean expose_sources_async;
 };
 
 enum
 {
   PROP_0,
   PROP_STREAM_TYPES,
+  PROP_EXPOSE_SOURCES_ASYNC,
   PROP_LAST
 };
 
@@ -350,32 +353,28 @@ gst_test_check_prev_stream_def (GstTestSrcBin * self, GstCaps * prev_streams,
 }
 
 static gboolean
-gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
-    const gchar * uri, GError ** error)
+gst_test_src_bin_create_sources (GstTestSrcBin * self)
 {
-  GstTestSrcBin *self = GST_TEST_SRC_BIN (handler);
-  gchar *tmp, *location = gst_uri_get_location (uri);
   gint i, n_audio = 0, n_video = 0;
   GstStreamCollection *collection = gst_stream_collection_new (NULL);
-  GstCaps *streams_def, *prev_streams = self->streams_def;
+  GstCaps *streams_def, *prev_streams_def;
 
-  for (tmp = location; *tmp != '\0'; tmp++)
-    if (*tmp == '+')
-      *tmp = ';';
-
-  streams_def = gst_caps_from_string (location);
-  g_free (location);
-
-  if (!streams_def)
-    goto failed;
+  GST_OBJECT_LOCK (self);
+  streams_def = self->next_streams_def;
+  prev_streams_def = self->streams_def;
+  self->next_streams_def = NULL;
+  self->streams_def = NULL;
+  GST_OBJECT_UNLOCK (self);
 
   self->group_id = gst_util_group_id_next ();
   for (i = 0; i < gst_caps_get_size (streams_def); i++) {
     GstStream *stream;
-    GstStructure *stream_def = gst_caps_get_structure (streams_def, i);
+    GstStructure *stream_def =
+        gst_caps_get_structure (streams_def, i);
 
     if ((stream =
-            gst_test_check_prev_stream_def (self, prev_streams, stream_def))) {
+            gst_test_check_prev_stream_def (self, prev_streams_def,
+                stream_def))) {
       GST_INFO_OBJECT (self,
           "Reusing already existing stream: %" GST_PTR_FORMAT, stream_def);
       gst_stream_collection_add_stream (collection, stream);
@@ -396,33 +395,83 @@ gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
       GST_ERROR_OBJECT (self, "Unknown type %s",
           gst_structure_get_name (stream_def));
   }
-  self->streams_def = streams_def;
 
-  if (prev_streams) {
-    for (i = 0; i < gst_caps_get_size (prev_streams); i++) {
-      GstStructure *prev_stream = gst_caps_get_structure (prev_streams, i);
+  if (prev_streams_def) {
+    for (i = 0; i < gst_caps_get_size (prev_streams_def); i++) {
+      GstStructure *prev_stream = gst_caps_get_structure (prev_streams_def, i);
       GstElement *child;
 
       gst_structure_get (prev_stream, "__src__", GST_TYPE_OBJECT, &child, NULL);
       gst_test_src_bin_remove_child (GST_ELEMENT (self), child);
     }
-    gst_clear_caps (&prev_streams);
+    gst_clear_caps (&prev_streams_def);
   }
 
-  if (!n_video && !n_audio)
+  if (!n_video && !n_audio) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+        ("No audio or video stream defined."), (NULL));
     goto failed;
+  }
 
-  self->uri = g_strdup (uri);
+  GST_OBJECT_LOCK (self);
+  self->streams_def = streams_def;
+  GST_OBJECT_UNLOCK (self);
+
   gst_element_post_message (GST_ELEMENT (self),
       gst_message_new_stream_collection (GST_OBJECT (self), collection));
+
+  gst_element_no_more_pads (GST_ELEMENT (self));
 
   return TRUE;
 
 failed:
-  if (error)
-    *error =
-        g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "No media type specified in the testbin:// URL.");
+  return FALSE;
+}
+
+static gboolean
+gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
+    const gchar * uri, GError ** error)
+{
+  GstTestSrcBin *self = GST_TEST_SRC_BIN (handler);
+  gchar *tmp, *location = gst_uri_get_location (uri);
+  GstCaps *streams_def;
+
+  for (tmp = location; *tmp != '\0'; tmp++)
+    if (*tmp == '+')
+      *tmp = ';';
+
+  streams_def = gst_caps_from_string (location);
+  g_free (location);
+
+  if (!streams_def)
+    goto failed;
+
+  GST_OBJECT_LOCK (self);
+  gst_clear_caps (&self->next_streams_def);
+  self->next_streams_def = streams_def;
+  g_free (self->uri);
+  self->uri = g_strdup (uri);
+
+  if (GST_STATE (self) >= GST_STATE_PAUSED) {
+
+    if (self->expose_sources_async) {
+      GST_OBJECT_UNLOCK (self);
+
+      gst_element_call_async (GST_ELEMENT (self),
+          (GstElementCallAsyncFunc) gst_test_src_bin_create_sources,
+          NULL, NULL);
+    } else {
+      GST_OBJECT_UNLOCK (self);
+
+      gst_test_src_bin_create_sources (self);
+    }
+  } else {
+    GST_OBJECT_UNLOCK (self);
+  }
+
+  return TRUE;
+
+failed:
 
   return FALSE;
 }
@@ -461,6 +510,13 @@ gst_test_src_bin_set_property (GObject * object, guint prop_id,
       g_free (uri);
       break;
     }
+    case PROP_EXPOSE_SOURCES_ASYNC:
+    {
+      GST_OBJECT_LOCK (self);
+      self->expose_sources_async = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -485,6 +541,13 @@ gst_test_src_bin_get_property (GObject * object, guint prop_id, GValue * value,
       }
       break;
     }
+    case PROP_EXPOSE_SOURCES_ASYNC:
+    {
+      GST_OBJECT_LOCK (self);
+      g_value_set_boolean (value, self->expose_sources_async);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -496,6 +559,21 @@ gst_test_src_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstTestSrcBin *self = GST_TEST_SRC_BIN (element);
   GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      if (self->expose_sources_async) {
+        gst_element_call_async (element,
+            (GstElementCallAsyncFunc) gst_test_src_bin_create_sources,
+            NULL, NULL);
+      } else {
+        gst_test_src_bin_create_sources (self);
+      }
+      break;
+    }
+    default:
+      break;
+  }
 
   result =
       GST_ELEMENT_CLASS (gst_test_src_bin_parent_class)->change_state (element,
@@ -540,7 +618,7 @@ gst_test_src_bin_class_init (GstTestSrcBinClass * klass)
   gobject_class->set_property = gst_test_src_bin_set_property;
 
   /**
-   * GstTestSrcBin::stream-types:
+   * GstTestSrcBin:stream-types:
    *
    * String describing the stream types to expose, eg. "video+audio".
    */
@@ -548,6 +626,20 @@ gst_test_src_bin_class_init (GstTestSrcBinClass * klass)
       g_param_spec_string ("stream-types", "Stream types",
           "String describing the stream types to expose, eg. \"video+audio\".",
           NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstTestSrcBin:expose-sources-async:
+   *
+   * Whether to expose sources at random time to simulate a source that is
+   * reading a file and exposing the srcpads later.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_EXPOSE_SOURCES_ASYNC,
+      g_param_spec_boolean ("expose-sources-async", "Expose Sources Async",
+          " Whether to expose sources at random time to simulate a source that is"
+          " reading a file and exposing the srcpads later.",
+          FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_test_src_bin_change_state);
