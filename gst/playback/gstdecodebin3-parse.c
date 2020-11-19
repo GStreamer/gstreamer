@@ -143,11 +143,13 @@ static GstCaps *
 get_parser_caps_filter (GstDecodebin3 * dbin, GstCaps * caps)
 {
   GList *tmp;
-  GstCaps *filter_caps = gst_caps_new_empty ();
+  GstCaps *filter_caps;
 
   /* If no filter was provided, it can handle anything */
   if (!caps || gst_caps_is_any (caps))
     return gst_caps_new_any ();
+
+  filter_caps = gst_caps_new_empty ();
 
   g_mutex_lock (&dbin->factories_lock);
   gst_decode_bin_update_factories_list (dbin);
