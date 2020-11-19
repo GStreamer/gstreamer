@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
  * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -83,8 +83,12 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
-  PROP_FILE
+  PROP_FILE,
+  PROP_GROWING_FILE,
 };
+
+static gint waiting_data_signal = 0;
+static gint done_waiting_data_signal = 0;
 
 #define gst_gio_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGioSrc, gst_gio_src,
@@ -100,6 +104,113 @@ static void gst_gio_src_get_property (GObject * object, guint prop_id,
 static GInputStream *gst_gio_src_get_stream (GstGioBaseSrc * bsrc);
 
 static gboolean gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query);
+
+static void
+gst_gio_src_file_changed_cb (GstGioSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "Underlying file changed.");
+  GST_OBJECT_LOCK (src);
+  src->changed = TRUE;
+  if (src->monitoring_mainloop)
+    g_main_loop_quit (src->monitoring_mainloop);
+  GST_OBJECT_UNLOCK (src);
+}
+
+static void
+gst_gio_src_waited_for_data (GstGioBaseSrc * bsrc)
+{
+  GstGioSrc *src = GST_GIO_SRC (bsrc);
+
+  src->waiting_for_data = FALSE;
+  g_signal_emit (bsrc, done_waiting_data_signal, 0, NULL);
+}
+
+static gboolean
+gst_gio_src_wait_for_data (GstGioBaseSrc * bsrc)
+{
+  GMainContext *ctx;
+  GstGioSrc *src = GST_GIO_SRC (bsrc);
+
+  g_return_val_if_fail (!src->monitor, FALSE);
+
+  GST_OBJECT_LOCK (src);
+  if (!src->is_growing) {
+    GST_OBJECT_UNLOCK (src);
+
+    return FALSE;
+  }
+
+  src->monitor = g_file_monitor (src->file, G_FILE_MONITOR_NONE,
+      bsrc->cancel, NULL);
+
+  if (!src->monitor) {
+    GST_OBJECT_UNLOCK (src);
+
+    GST_WARNING_OBJECT (bsrc, "Could not create a monitor");
+    return FALSE;
+  }
+
+  g_signal_connect_swapped (src->monitor, "changed",
+      G_CALLBACK (gst_gio_src_file_changed_cb), src);
+  GST_OBJECT_UNLOCK (src);
+
+  if (!src->waiting_for_data) {
+    g_signal_emit (src, waiting_data_signal, 0, NULL);
+    src->waiting_for_data = TRUE;
+  }
+
+  ctx = g_main_context_new ();
+  g_main_context_push_thread_default (ctx);
+  GST_OBJECT_LOCK (src);
+  src->changed = FALSE;
+  src->monitoring_mainloop = g_main_loop_new (ctx, FALSE);
+  GST_OBJECT_UNLOCK (src);
+
+  g_main_loop_run (src->monitoring_mainloop);
+
+  g_signal_handlers_disconnect_by_func (src->monitor,
+      gst_gio_src_file_changed_cb, src);
+
+  GST_OBJECT_LOCK (src);
+  gst_clear_object (&src->monitor);
+  g_main_loop_unref (src->monitoring_mainloop);
+  src->monitoring_mainloop = NULL;
+  GST_OBJECT_UNLOCK (src);
+
+  g_main_context_pop_thread_default (ctx);
+  g_main_context_unref (ctx);
+
+  return src->changed;
+}
+
+static gboolean
+gst_gio_src_unlock (GstBaseSrc * base_src)
+{
+  GstGioSrc *src = GST_GIO_SRC (base_src);
+
+  GST_LOG_OBJECT (src, "triggering cancellation");
+
+  GST_OBJECT_LOCK (src);
+  while (src->monitoring_mainloop) {
+    /* Ensure that we have already started the mainloop */
+    if (!g_main_loop_is_running (src->monitoring_mainloop)) {
+      GST_OBJECT_UNLOCK (src);
+
+      /* Letting a chance for the waiting for data function to cleanup the
+       * mainloop. */
+      g_thread_yield ();
+
+      GST_OBJECT_LOCK (src);
+      continue;
+    }
+    g_main_loop_quit (src->monitoring_mainloop);
+    break;
+  }
+  GST_OBJECT_UNLOCK (src);
+
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, unlock, (base_src),
+      TRUE);
+}
 
 static void
 gst_gio_src_class_init (GstGioSrcClass * klass)
@@ -122,11 +233,28 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
   /**
    * GstGioSrc:file:
    *
-   * %GFile to read from.
+   * #GFile to read from.
    */
   g_object_class_install_property (gobject_class, PROP_FILE,
       g_param_spec_object ("file", "File", "GFile to read from",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGioSrc:is-growing:
+   *
+   * Whether the file is currently growing. When activated EOS is never pushed
+   * and the user needs to handle it himself. This modes allows to keep reading
+   * the file while it is being written on file.
+   *
+   * You can reset the property to %FALSE at any time and the file will start
+   * not being considered growing and EOS will be pushed when required.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_GROWING_FILE,
+      g_param_spec_boolean ("is-growing", "File is growing",
+          "Whether the file is growing, ignoring its end",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class, "GIO source",
       "Source/File",
@@ -135,9 +263,34 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_gio_src_query);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_gio_src_unlock);
 
   gstgiobasesrc_class->get_stream = GST_DEBUG_FUNCPTR (gst_gio_src_get_stream);
   gstgiobasesrc_class->close_on_stop = TRUE;
+  gstgiobasesrc_class->wait_for_data = gst_gio_src_wait_for_data;
+  gstgiobasesrc_class->waited_for_data = gst_gio_src_waited_for_data;
+
+  /**
+   * GstGioSrc::waiting-data:
+   *
+   * Signal notifying that we are stalled waiting for data
+   *
+   * Since: 1.20
+   */
+  waiting_data_signal = g_signal_new ("waiting-data",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      NULL, G_TYPE_NONE, 0);
+
+  /**
+   * GstGioSrc::done-waiting-data:
+   *
+   * Signal notifying that we are done waiting for data
+   *
+   * Since: 1.20
+   */
+  done_waiting_data_signal = g_signal_new ("done-waiting-data",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+      NULL, G_TYPE_NONE, 0);
 }
 
 static void
@@ -193,6 +346,32 @@ gst_gio_src_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (GST_OBJECT (src));
       break;
     }
+    case PROP_GROWING_FILE:
+    {
+      gboolean was_growing;
+
+      GST_OBJECT_LOCK (src);
+      was_growing = src->is_growing;
+      src->is_growing = g_value_get_boolean (value);
+      gst_base_src_set_dynamic_size (GST_BASE_SRC (src), src->is_growing);
+      gst_base_src_set_automatic_eos (GST_BASE_SRC (src), !src->is_growing);
+
+      while (was_growing && !src->is_growing && src->monitoring_mainloop) {
+        /* Ensure that we have already started the mainloop */
+        if (!g_main_loop_is_running (src->monitoring_mainloop)) {
+          GST_OBJECT_UNLOCK (src);
+          /* Letting a chance for the waiting for data function to cleanup the
+           * mainloop. */
+          GST_OBJECT_LOCK (src);
+          continue;
+        }
+        g_main_loop_quit (src->monitoring_mainloop);
+        break;
+      }
+      GST_OBJECT_UNLOCK (src);
+
+      break;
+    }
     case PROP_FILE:
       if (GST_STATE (src) == GST_STATE_PLAYING ||
           GST_STATE (src) == GST_STATE_PAUSED) {
@@ -241,6 +420,11 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, src->file);
       GST_OBJECT_UNLOCK (GST_OBJECT (src));
       break;
+    case PROP_GROWING_FILE:
+    {
+      g_value_set_boolean (value, src->is_growing);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -281,8 +465,10 @@ gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query)
 
       gst_query_set_scheduling (query, flags, 1, -1, 0);
       gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
-      if (flags & GST_SCHEDULING_FLAG_SEEKABLE)
+      GST_OBJECT_LOCK (src);
+      if (flags & GST_SCHEDULING_FLAG_SEEKABLE && !src->is_growing)
         gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+      GST_OBJECT_UNLOCK (src);
 
       res = TRUE;
       break;

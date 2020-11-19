@@ -2459,6 +2459,18 @@
                         "type": "GFile",
                         "writable": true
                     },
+                    "is-growing": {
+                        "blurb": "Whether the file is growing, ignoring its end",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "location": {
                         "blurb": "URI location to read from",
                         "conditionally-available": false,
@@ -2472,7 +2484,19 @@
                         "writable": true
                     }
                 },
-                "rank": "secondary"
+                "rank": "secondary",
+                "signals": {
+                    "done-waiting-data": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "waiting-data": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
             },
             "giostreamsink": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",

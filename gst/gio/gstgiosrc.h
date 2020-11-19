@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
  * Copyright (C) 2007-2009 Sebastian Dröge <slomo@circular-chaos.org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -40,9 +40,15 @@ G_DECLARE_FINAL_TYPE (GstGioSrc, gst_gio_src, GST, GIO_SRC, GstGioBaseSrc)
 struct _GstGioSrc
 {
   GstGioBaseSrc src;
-  
+
   /*< private >*/
   GFile *file;
+
+  gboolean is_growing;
+  GFileMonitor *monitor;
+  GMainLoop *monitoring_mainloop;
+  gboolean changed;
+  gboolean waiting_for_data;
 };
 
 G_END_DECLS

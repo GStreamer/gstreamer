@@ -18,6 +18,7 @@ tests = [
     'videorate/rate_2_0',
     'videorate/rate_2_0_with_decoder',
     'compositor/renogotiate_failing_unsupported_src_format',
+    'giosrc/read-growing-file',
 ]
 
 env = environment()
