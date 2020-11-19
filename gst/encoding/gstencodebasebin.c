@@ -999,41 +999,62 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
   return ret;
 }
 
-/* FIXME : Improve algorithm for finding compatible muxer sink pad */
 static inline GstPad *
-get_compatible_muxer_sink_pad (GstEncodeBaseBin * ebin, GstElement * encoder,
-    GstCaps * sinkcaps)
+get_compatible_muxer_sink_pad (GstEncodeBaseBin * ebin,
+    GstEncodingProfile * sprof, GstCaps * sinkcaps)
 {
   GstPad *sinkpad;
-  GstPadTemplate *srctempl = NULL;
-  GstPadTemplate *sinktempl;
+  GList *padl, *compatible_templates = NULL;
 
-  if (encoder) {
-    GstPad *srcpad;
-    srcpad = gst_element_get_static_pad (encoder, "src");
+  GST_DEBUG_OBJECT (ebin, "Finding muxer pad for caps: %" GST_PTR_FORMAT,
+      sinkcaps);
+  padl = gst_element_get_pad_template_list (ebin->muxer);
+  for (; padl; padl = padl->next) {
+    const gchar *type_name, *other_type_name;
+    GstPadTemplate *padtempl = padl->data;
 
-    srctempl = gst_pad_get_pad_template (srcpad);
+    if (padtempl->direction == GST_PAD_SRC)
+      continue;
 
-    GST_DEBUG_OBJECT (ebin,
-        "Attempting to find pad from muxer %s compatible with %s:%s",
-        GST_ELEMENT_NAME (ebin->muxer), GST_DEBUG_PAD_NAME (srcpad));
+    if (!gst_caps_can_intersect (GST_PAD_TEMPLATE_CAPS (padtempl), sinkcaps))
+      continue;
 
-    gst_object_unref (srcpad);
-    sinktempl = gst_element_get_compatible_pad_template (ebin->muxer, srctempl);
-    gst_object_unref (srctempl);
-  } else {
-    srctempl =
-        gst_pad_template_new ("whatever", GST_PAD_SRC, GST_PAD_ALWAYS,
-        sinkcaps);
-    g_assert (srctempl != NULL);
-    sinktempl = gst_element_get_compatible_pad_template (ebin->muxer, srctempl);
-    gst_object_unref (srctempl);
+    if (!gst_caps_is_any (GST_PAD_TEMPLATE_CAPS (padtempl))) {
+      compatible_templates = g_list_append (compatible_templates, padtempl);
+      continue;
+    }
+
+    if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
+      type_name = "video";
+      other_type_name = "audio";
+    } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)) {
+      type_name = "audio";
+      other_type_name = "video";
+    } else {
+      compatible_templates = g_list_prepend (compatible_templates, padtempl);
+      continue;
+    }
+
+    if (strstr (padtempl->name_template, type_name) == padtempl->name_template)
+      compatible_templates = g_list_prepend (compatible_templates, padtempl);
+    else if (!strstr (padtempl->name_template, other_type_name))
+      compatible_templates = g_list_append (compatible_templates, padtempl);
+    else
+      GST_LOG_OBJECT (padtempl, "not compatible with %" GST_PTR_FORMAT, sprof);
   }
 
-  if (G_UNLIKELY (sinktempl == NULL))
+  if (G_UNLIKELY (compatible_templates == NULL))
     goto no_template;
 
-  sinkpad = gst_element_get_pad_from_template (ebin->muxer, sinktempl);
+  for (padl = compatible_templates; padl; padl = padl->next) {
+    sinkpad = gst_element_get_pad_from_template (ebin->muxer, padl->data);
+    if (sinkpad)
+      break;
+  }
+
+  g_list_free (compatible_templates);
+
+  GST_DEBUG_OBJECT (ebin, "Returning pad: %" GST_PTR_FORMAT, sinkpad);
 
   return sinkpad;
 
@@ -1332,7 +1353,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
    * If we are handling a container profile, figure out if the muxer has a
    * sinkpad compatible with the selected profile */
   if (ebin->muxer) {
-    muxerpad = get_compatible_muxer_sink_pad (ebin, NULL, format);
+    muxerpad = get_compatible_muxer_sink_pad (ebin, sprof, format);
     if (G_UNLIKELY (muxerpad == NULL))
       goto no_muxer_pad;
 
