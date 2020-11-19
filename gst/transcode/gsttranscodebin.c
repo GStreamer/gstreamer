@@ -211,7 +211,7 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
     return pad;
   }
 
-  gst_bin_add_many (GST_BIN (self), convert, gst_object_ref (filter), NULL);
+  gst_bin_add_many (GST_BIN (self), convert, NULL);
 
   convert_sink = gst_element_get_static_pad (convert, "sink");
   g_assert (convert_sink);
@@ -836,6 +836,8 @@ _set_filter (GstTranscodeBin * self, GstElement * filter, GstElement ** mfilter)
       goto bail_out;
     }
     GST_OBJECT_UNLOCK (filter);
+
+    gst_bin_add (GST_BIN (self), gst_object_ref (filter));
   }
 
   GST_OBJECT_LOCK (self);
