@@ -460,6 +460,27 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       DXGI_FORMAT_R8G8_B8G8_UNORM;
   n_formats++;
 
+  /* Y210 and Y410 formats cannot support rtv */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y210;
+  priv->format_table[n_formats].resource_format[0] =
+      DXGI_FORMAT_R16G16B16A16_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_Y210,
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_Y210;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y410;
+  priv->format_table[n_formats].resource_format[0] =
+      DXGI_FORMAT_R10G10B10A2_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_Y410,
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_Y410;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
   /* YUV semi-planar */
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_NV12;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;

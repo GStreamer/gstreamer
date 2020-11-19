@@ -622,6 +622,16 @@ get_packed_yuv_components (GstD3D11ColorConverter * self, GstVideoFormat
       *u = 'z';
       *v = 'x';
       break;
+    case GST_VIDEO_FORMAT_Y210:
+      *y = 'r';
+      *u = 'g';
+      *v = 'a';
+      break;
+    case GST_VIDEO_FORMAT_Y410:
+      *y = 'g';
+      *u = 'r';
+      *v = 'b';
+      break;
     default:
       g_assert_not_reached ();
       return FALSE;
@@ -645,6 +655,8 @@ setup_convert_info_yuv_to_rgb (GstD3D11ColorConverter * self,
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_VYUY:
+    case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y410:
     {
       gchar y, u, v;
       if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
@@ -954,7 +966,9 @@ setup_convert_info_yuv_to_yuv (GstD3D11ColorConverter * self,
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_I420_10LE);
   in_packed = (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2 ||
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_UYVY ||
-      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_VYUY);
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_VYUY ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y210 ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y410);
   out_planar = (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420 ||
       GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420_10LE);
 

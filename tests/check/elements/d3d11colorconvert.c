@@ -253,7 +253,7 @@ GST_END_TEST;
 GST_START_TEST (test_d3d11_color_convert_packed_yuv_yuv)
 {
   const gchar *in_format_list[] = {
-    "YUY2", "UYVY", "VYUY",
+    "YUY2", "UYVY", "VYUY", "Y210", "Y410",
   };
   const gchar *out_format_list[] = {
     "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
@@ -275,7 +275,7 @@ GST_END_TEST;
 GST_START_TEST (test_d3d11_color_convert_packed_yuv_rgb)
 {
   const gchar *in_format_list[] = {
-    "YUY2", "UYVY", "VYUY",
+    "YUY2", "UYVY", "VYUY", "Y210", "Y410",
   };
   const gchar *out_format_list[] = {
     "BGRA", "RGBA", "RGB10A2_LE",

@@ -625,6 +625,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
     case DXGI_FORMAT_R16G16_UNORM:
     case DXGI_FORMAT_G8R8_G8B8_UNORM:
     case DXGI_FORMAT_R8G8_B8G8_UNORM:
+    case DXGI_FORMAT_R16G16B16A16_UNORM:
       num_views = 1;
       formats[0] = mem->desc.Format;
       break;
@@ -643,6 +644,14 @@ create_shader_resource_views (GstD3D11Memory * mem)
       num_views = 2;
       formats[0] = DXGI_FORMAT_R16_UNORM;
       formats[1] = DXGI_FORMAT_R16G16_UNORM;
+      break;
+    case DXGI_FORMAT_Y210:
+      num_views = 1;
+      formats[0] = DXGI_FORMAT_R16G16B16A16_UNORM;
+      break;
+    case DXGI_FORMAT_Y410:
+      num_views = 1;
+      formats[0] = DXGI_FORMAT_R10G10B10A2_UNORM;
       break;
     default:
       g_assert_not_reached ();

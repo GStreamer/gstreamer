@@ -46,6 +46,9 @@ gst_d3d11_dxgi_format_n_planes (DXGI_FORMAT format)
     case DXGI_FORMAT_R16G16_UNORM:
     case DXGI_FORMAT_G8R8_G8B8_UNORM:
     case DXGI_FORMAT_R8G8_B8G8_UNORM:
+    case DXGI_FORMAT_Y210:
+    case DXGI_FORMAT_Y410:
+    case DXGI_FORMAT_R16G16B16A16_UNORM:
       return 1;
     case DXGI_FORMAT_NV12:
     case DXGI_FORMAT_P010:
@@ -77,6 +80,9 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
     case DXGI_FORMAT_R16G16_UNORM:
     case DXGI_FORMAT_G8R8_G8B8_UNORM:
     case DXGI_FORMAT_R8G8_B8G8_UNORM:
+    case DXGI_FORMAT_Y210:
+    case DXGI_FORMAT_Y410:
+    case DXGI_FORMAT_R16G16B16A16_UNORM:
       offset[0] = 0;
       stride[0] = pitch;
       *size = pitch * height;
