@@ -87,6 +87,9 @@ struct _RTPTWCCManager
   gboolean first_fci_parse;
   guint16 expected_parsed_seqnum;
   guint8 expected_parsed_fb_pkt_count;
+
+  GstClockTime next_feedback_send_time;
+  GstClockTime feedback_interval;
 };
 
 G_DEFINE_TYPE (RTPTWCCManager, rtp_twcc_manager, G_TYPE_OBJECT);
@@ -105,6 +108,9 @@ rtp_twcc_manager_init (RTPTWCCManager * twcc)
   twcc->recv_sender_ssrc = -1;
 
   twcc->first_fci_parse = TRUE;
+
+  twcc->feedback_interval = GST_CLOCK_TIME_NONE;
+  twcc->next_feedback_send_time = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -155,6 +161,19 @@ rtp_twcc_manager_set_mtu (RTPTWCCManager * twcc, guint mtu)
      packet_chunk 2 bytes +  
      recv_deltas (2 * 7) 14 bytes */
   twcc->max_packets_per_rtcp = ((twcc->mtu - 32) * 7) / (2 + 14);
+}
+
+void
+rtp_twcc_manager_set_feedback_interval (RTPTWCCManager * twcc,
+    GstClockTime feedback_interval)
+{
+  twcc->feedback_interval = feedback_interval;
+}
+
+GstClockTime
+rtp_twcc_manager_get_feedback_interval (RTPTWCCManager * twcc)
+{
+  return twcc->feedback_interval;
 }
 
 static gint
@@ -609,7 +628,20 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
   GST_LOG ("Receive: twcc-seqnum: %u, marker: %d, ts: %" GST_TIME_FORMAT,
       seqnum, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
 
-  if (pinfo->marker || _many_packets_some_lost (twcc, seqnum)) {
+  /* are we sending on an interval, or based on marker bit */
+  if (GST_CLOCK_TIME_IS_VALID (twcc->feedback_interval)) {
+    if (!GST_CLOCK_TIME_IS_VALID (twcc->next_feedback_send_time))
+      twcc->next_feedback_send_time =
+          pinfo->running_time + twcc->feedback_interval;
+
+    if (pinfo->running_time >= twcc->next_feedback_send_time) {
+      rtp_twcc_manager_create_feedback (twcc);
+      send_feedback = TRUE;
+
+      while (pinfo->running_time >= twcc->next_feedback_send_time)
+        twcc->next_feedback_send_time += twcc->feedback_interval;
+    }
+  } else if (pinfo->marker || _many_packets_some_lost (twcc, seqnum)) {
     rtp_twcc_manager_create_feedback (twcc);
     send_feedback = TRUE;
   }

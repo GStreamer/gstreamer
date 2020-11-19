@@ -3685,6 +3685,48 @@ GST_START_TEST (test_twcc_send_and_recv)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstClockTime interval;
+  guint num_packets;
+  GstClockTime ts_delta;
+  guint num_feedback;
+} TWCCFeedbackIntervalCtx;
+
+static TWCCFeedbackIntervalCtx test_twcc_feedback_interval_ctx[] = {
+  {50 * GST_MSECOND, 21, 10 * GST_MSECOND, 4},
+  {50 * GST_MSECOND, 16, 7 * GST_MSECOND, 2},
+  {50 * GST_MSECOND, 16, 66 * GST_MSECOND, 15},
+  {50 * GST_MSECOND, 15, 33 * GST_MSECOND, 9},
+};
+
+GST_START_TEST (test_twcc_feedback_interval)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  TWCCFeedbackIntervalCtx *ctx = &test_twcc_feedback_interval_ctx[__i__];
+
+  session_harness_set_twcc_recv_ext_id (h, TEST_TWCC_EXT_ID);
+  g_object_set (h->internal_session, "twcc-feedback-interval", ctx->interval,
+      NULL);
+
+  for (guint i = 0; i < ctx->num_packets; i++) {
+    GstClockTime ts = i * ctx->ts_delta;
+    gst_test_clock_set_time ((h->testclock), ts);
+    fail_unless_equals_int (GST_FLOW_OK,
+        session_harness_recv_rtp (h, generate_twcc_recv_buffer (i, ts, FALSE)));
+  }
+
+  for (guint i = 0; i < ctx->num_feedback; i++) {
+    buf = session_harness_produce_twcc (h);
+    gst_buffer_unref (buf);
+  }
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -3749,6 +3791,9 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_twcc_recv_rtcp_reordered);
   tcase_add_test (tc_chain, test_twcc_no_exthdr_in_buffer);
   tcase_add_test (tc_chain, test_twcc_send_and_recv);
+  tcase_add_loop_test (tc_chain, test_twcc_feedback_interval, 0,
+      G_N_ELEMENTS (test_twcc_feedback_interval_ctx));
+
 
   return s;
 }

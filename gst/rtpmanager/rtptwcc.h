@@ -54,6 +54,9 @@ struct _RTPTWCCPacket
 RTPTWCCManager * rtp_twcc_manager_new (guint mtu);
 
 void rtp_twcc_manager_set_mtu (RTPTWCCManager * twcc, guint mtu);
+void rtp_twcc_manager_set_feedback_interval (RTPTWCCManager * twcc,
+    GstClockTime feedback_interval);
+GstClockTime rtp_twcc_manager_get_feedback_interval (RTPTWCCManager * twcc);
 
 gboolean rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
     guint16 seqnum, RTPPacketInfo * pinfo);
