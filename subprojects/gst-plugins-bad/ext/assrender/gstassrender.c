@@ -923,7 +923,7 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
     ass_set_pixel_aspect (render->ass_renderer,
         (gdouble) render->info.par_n / (gdouble) render->info.par_d);
     ass_set_font_scale (render->ass_renderer, 1.0);
-    ass_set_hinting (render->ass_renderer, ASS_HINTING_LIGHT);
+    ass_set_hinting (render->ass_renderer, ASS_HINTING_NONE);
 
     ass_set_fonts (render->ass_renderer, "Arial", "sans-serif", 1, NULL, 1);
     ass_set_fonts (render->ass_renderer, NULL, "Sans", 1, NULL, 1);
