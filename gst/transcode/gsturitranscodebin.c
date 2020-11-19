@@ -89,6 +89,15 @@ enum
  LAST_PROP
 };
 
+/* signals */
+enum
+{
+  SIGNAL_SOURCE_SETUP,
+  SIGNAL_ELEMENT_SETUP,
+  LAST_SIGNAL
+};
+static guint signals[LAST_SIGNAL] = { 0 };
+
 static void
 post_missing_plugin_error (GstElement * dec, const gchar * element_name)
 {
@@ -287,6 +296,13 @@ src_pad_removed_cb (GstElement * element, GstPad * pad,
   /* FIXME : IMPLEMENT */
 }
 
+static void
+source_setup_cb (GstElement * element, GstElement * source,
+    GstUriTranscodeBin * self)
+{
+  g_signal_emit (self, signals[SIGNAL_SOURCE_SETUP], 0, source);
+}
+
 static gboolean
 make_source (GstUriTranscodeBin * self)
 {
@@ -306,6 +322,8 @@ make_source (GstUriTranscodeBin * self)
   g_signal_connect (self->src, "pad-added", (GCallback) src_pad_added_cb, self);
   g_signal_connect (self->src, "pad-removed",
       (GCallback) src_pad_removed_cb, self);
+  g_signal_connect (self->src, "source-setup",
+      G_CALLBACK (source_setup_cb), self);
 
   return TRUE;
 
@@ -393,6 +411,7 @@ deep_element_added (GstBin * bin, GstBin * sub_bin, GstElement * child)
   GstUriTranscodeBin *self = GST_URI_TRANSCODE_BIN (bin);
 
   set_location_on_muxer_if_sink (self, child);
+  g_signal_emit (bin, signals[SIGNAL_ELEMENT_SETUP], 0, child);
 
   GST_BIN_CLASS (parent_class)->deep_element_added (bin, sub_bin, child);
 }
@@ -680,6 +699,46 @@ gst_uri_transcode_bin_class_init (GstUriTranscodeBinClass * klass)
       g_param_spec_object ("audio-filter", "Audio filter",
           "the audio filter(s) to apply, if possible",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstUriTranscodeBin::source-setup:
+   * @uritranscodebin: a #GstUriTranscodeBin
+   * @source: source element
+   *
+   * This signal is emitted after the source element has been created, so
+   * it can be configured by setting additional properties (e.g. set a
+   * proxy server for an http source, or set the device and read speed for
+   * an audio cd source). This is functionally equivalent to connecting to
+   * the notify::source signal, but more convenient.
+   *
+   * This signal is usually emitted from the context of a GStreamer streaming
+   * thread.
+   *
+   * Since: 1.20
+   */
+  signals[SIGNAL_SOURCE_SETUP] =
+      g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
+  /**
+   * GstUriTranscodeBin::element-setup:
+   * @uritranscodebin: a #GstUriTranscodeBin
+   * @element: an element that was added to the uritranscodebin hierarchy
+   *
+   * This signal is emitted when a new element is added to uritranscodebin or any of
+   * its sub-bins. This signal can be used to configure elements, e.g. to set
+   * properties on decoders. This is functionally equivalent to connecting to
+   * the deep-element-added signal, but more convenient.
+   *
+   * This signal is usually emitted from the context of a GStreamer streaming
+   * thread, so might be called at the same time as code running in the main
+   * application thread.
+   *
+   * Since: 1.20
+   */
+  signals[SIGNAL_ELEMENT_SETUP] =
+      g_signal_new ("element-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 }
 
 static void
