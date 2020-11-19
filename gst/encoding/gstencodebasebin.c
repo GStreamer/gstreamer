@@ -1934,7 +1934,7 @@ compare_elements (gconstpointer a, gconstpointer b, gpointer udata)
 static inline GstElement *
 _get_muxer (GstEncodeBaseBin * ebin)
 {
-  GList *muxers, *formatters, *tmpmux;
+  GList *muxers = NULL, *formatters, *tmpmux;
   GstElement *muxer = NULL;
   GstElementFactory *muxerfact = NULL;
   const GList *tmp;
@@ -1945,11 +1945,23 @@ _get_muxer (GstEncodeBaseBin * ebin)
   preset = gst_encoding_profile_get_preset (ebin->profile);
   preset_name = gst_encoding_profile_get_preset_name (ebin->profile);
 
-  GST_DEBUG ("Getting list of muxers for format %" GST_PTR_FORMAT, format);
+  GST_DEBUG_OBJECT (ebin, "Getting list of muxers for format %" GST_PTR_FORMAT,
+      format);
 
-  muxers =
-      gst_element_factory_list_filter (ebin->muxers, format, GST_PAD_SRC,
-      !preset_name);
+  if (preset_name) {
+    GstElementFactory *f =
+        (GstElementFactory *) gst_registry_find_feature (gst_registry_get (),
+        preset_name,
+        GST_TYPE_ELEMENT_FACTORY);
+
+    if (f)
+      muxers = g_list_append (muxers, f);
+  } else {
+    muxers =
+        gst_element_factory_list_filter (ebin->muxers, format, GST_PAD_SRC,
+        !preset_name);
+
+  }
 
   formatters =
       gst_element_factory_list_filter (ebin->formatters, format, GST_PAD_SRC,
@@ -1973,7 +1985,7 @@ _get_muxer (GstEncodeBaseBin * ebin)
 
     muxerfact = (GstElementFactory *) tmpmux->data;
 
-    GST_DEBUG ("Trying muxer %s", GST_OBJECT_NAME (muxerfact));
+    GST_DEBUG_OBJECT (ebin, "Trying muxer %s", GST_OBJECT_NAME (muxerfact));
 
     /* See if the muxer can sink all of our stream profile caps */
     for (tmp = profiles; tmp; tmp = tmp->next) {
@@ -1981,7 +1993,7 @@ _get_muxer (GstEncodeBaseBin * ebin)
       GstCaps *sformat = gst_encoding_profile_get_format (sprof);
 
       if (!_factory_can_handle_caps (muxerfact, sformat, GST_PAD_SINK, FALSE)) {
-        GST_DEBUG ("Skipping muxer because it can't sink caps %"
+        GST_ERROR ("Skipping muxer because it can't sink caps %"
             GST_PTR_FORMAT, sformat);
         cansinkstreams = FALSE;
         if (sformat)
