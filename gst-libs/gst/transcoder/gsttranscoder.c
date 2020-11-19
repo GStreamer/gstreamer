@@ -1079,13 +1079,20 @@ _error_cb (GstTranscoder * self, GError * error, GstStructure * details,
 {
   if (data->error == NULL)
     g_propagate_error (&data->error, error);
-  g_main_loop_quit (data->loop);
+
+  if (data->loop) {
+    g_main_loop_quit (data->loop);
+    data->loop = NULL;
+  }
 }
 
 static void
 _done_cb (GstTranscoder * self, RunSyncData * data)
 {
-  g_main_loop_quit (data->loop);
+  if (data->loop) {
+    g_main_loop_quit (data->loop);
+    data->loop = NULL;
+  }
 }
 
 /**
@@ -1109,6 +1116,9 @@ gst_transcoder_run (GstTranscoder * self, GError ** error)
 
   if (!data.error)
     g_main_loop_run (data.loop);
+
+  g_signal_handlers_disconnect_by_func (self, _error_cb, &data);
+  g_signal_handlers_disconnect_by_func (self, _done_cb, &data);
 
   if (data.error) {
     if (error)
