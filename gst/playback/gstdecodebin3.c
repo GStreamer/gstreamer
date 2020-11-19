@@ -812,14 +812,22 @@ ensure_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
   }
 
   if (GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) != GST_OBJECT (dbin)) {
+    /* The state lock is taken so that we ensure we are the one (de)activating
+     * parsebin. We need to do this to ensure any activation taking place in
+     * parsebin (including by elements doing upstream activation) are done
+     * within the same thread. */
+    GST_STATE_LOCK (input->parsebin);
     gst_bin_add (GST_BIN (dbin), input->parsebin);
     set_state = TRUE;
   }
 
   gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink),
       input->parsebin_sink);
-  if (set_state)
+
+  if (set_state) {
     gst_element_sync_state_with_parent (input->parsebin);
+    GST_STATE_UNLOCK (input->parsebin);
+  }
 
   return TRUE;
 
