@@ -487,22 +487,26 @@ tick_cb (gpointer user_data)
   GstTranscoder *self = GST_TRANSCODER (user_data);
   gint64 position;
 
-  if (self->target_state >= GST_STATE_PAUSED
-      && gst_element_query_position (self->transcodebin, GST_FORMAT_TIME,
+  if (self->target_state < GST_STATE_PAUSED)
+    return G_SOURCE_CONTINUE;
+
+  if (!gst_element_query_position (self->transcodebin, GST_FORMAT_TIME,
           &position)) {
-    GST_LOG_OBJECT (self, "Position %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (position));
+    GST_LOG_OBJECT (self, "Could not query position");
+    return G_SOURCE_CONTINUE;
+  }
 
-    if (g_signal_handler_find (self, G_SIGNAL_MATCH_ID,
-            signals[SIGNAL_POSITION_UPDATED], 0, NULL, NULL, NULL) != 0) {
-      PositionUpdatedSignalData *data = g_new0 (PositionUpdatedSignalData, 1);
+  GST_LOG_OBJECT (self, "Position %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
 
-      data->transcoder = g_object_ref (self);
-      data->position = position;
-      gst_transcoder_signal_dispatcher_dispatch (self->signal_dispatcher, self,
-          position_updated_dispatch, data,
-          (GDestroyNotify) position_updated_signal_data_free);
-    }
+  if (g_signal_handler_find (self, G_SIGNAL_MATCH_ID,
+          signals[SIGNAL_POSITION_UPDATED], 0, NULL, NULL, NULL) != 0) {
+    PositionUpdatedSignalData *data = g_new0 (PositionUpdatedSignalData, 1);
+
+    data->transcoder = g_object_ref (self);
+    data->position = position;
+    gst_transcoder_signal_dispatcher_dispatch (self->signal_dispatcher, self,
+        position_updated_dispatch, data,
+        (GDestroyNotify) position_updated_signal_data_free);
   }
 
   return G_SOURCE_CONTINUE;
