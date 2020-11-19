@@ -148,6 +148,26 @@ post_missing_plugin_error (GstElement * dec, const gchar * element_name)
 }
 /* *INDENT-ON* */
 
+static gboolean
+filter_handles_any (GstElement * filter)
+{
+  GList *tmp;
+
+  for (tmp = gst_element_get_pad_template_list (filter); tmp; tmp = tmp->next) {
+    GstPadTemplate *tmpl = tmp->data;
+    GstCaps *caps = gst_pad_template_get_caps (tmpl);
+
+    if (!gst_caps_is_any (caps)) {
+      gst_caps_unref (caps);
+      return FALSE;
+    }
+
+    gst_caps_unref (caps);
+  }
+
+  return gst_element_get_pad_template_list (filter) != NULL;
+}
+
 static GstPad *
 _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
     GstCaps * caps)
@@ -163,14 +183,16 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
   if (self->video_filter && g_str_has_prefix (media_type, "video")) {
     audio = FALSE;
 
-    if (!g_strcmp0 (media_type, "video/x-raw"))
+    if (!g_strcmp0 (media_type, "video/x-raw")
+        || filter_handles_any (self->video_filter))
       filter = self->video_filter;
     else
       GST_ERROR_OBJECT (pad, "decodebin pad does not produce raw data (%"
           GST_PTR_FORMAT "), cannot add video filter '%s'", caps,
           GST_ELEMENT_NAME (self->video_filter));
   } else if (self->audio_filter && g_str_has_prefix (media_type, "audio")) {
-    if (!g_strcmp0 (media_type, "audio/x-raw"))
+    if (!g_strcmp0 (media_type, "audio/x-raw")
+        || filter_handles_any (self->audio_filter))
       filter = self->audio_filter;
     else
       GST_ERROR_OBJECT (pad, "decodebin pad does not produce raw data (%"
@@ -181,7 +203,8 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
   if (!filter)
     return pad;
 
-  if ((filter_parent = gst_object_get_parent (GST_OBJECT (filter)))) {
+  filter_parent = gst_object_get_parent (GST_OBJECT (filter));
+  if (filter_parent != GST_OBJECT_CAST (self)) {
     GST_WARNING_OBJECT (self,
         "Filter already in use (inside %" GST_PTR_FORMAT ").", filter_parent);
     GST_FIXME_OBJECT (self,
@@ -191,13 +214,16 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
     return pad;
   }
 
+  gst_object_unref (filter_parent);
   /* We are guaranteed filters only have 1 unique sinkpad and srcpad */
   GST_OBJECT_LOCK (filter);
   filter_sink = filter->sinkpads->data;
   filter_src = filter->srcpads->data;
   GST_OBJECT_UNLOCK (filter);
 
-  if (audio)
+  if (filter_handles_any (filter))
+    convert = gst_element_factory_make ("identity", NULL);
+  else if (audio)
     convert = gst_element_factory_make ("audioconvert", NULL);
   else
     convert = gst_element_factory_make ("videoconvert", NULL);
@@ -639,7 +665,7 @@ _setup_avoid_reencoding (GstTranscodeBin * self)
         && self->audio_filter)
       filter = self->audio_filter;
 
-    if (!filter) {
+    if (!filter || filter_handles_any (filter)) {
       GST_DEBUG_OBJECT (self,
           "adding %" GST_PTR_FORMAT " as output caps to decodebin", encodecaps);
       gst_caps_append (decodecaps, encodecaps);
