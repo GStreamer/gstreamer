@@ -50,10 +50,22 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+/**
+ * GstTranscodeBin!src_%u:
+ *
+ * The sometimes source pad, it will be exposed depending on the
+ * #transcodebin:profile in use.
+ * 
+ * Note: in GStreamer 1.18 it was a static
+ * srcpad but in the the 1.20 cycle it was decided that we should make it a
+ * sometimes pad as part of the development of #encodebin2.
+ *
+ * Since: 1.20
+ */
 static GstStaticPadTemplate transcode_bin_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+    GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 typedef struct
@@ -92,7 +104,6 @@ typedef struct
   GstEncodingProfile *profile;
   gboolean avoid_reencoding;
   GstPad *sinkpad;
-  GstPad *srcpad;
 
   GstElement *audio_filter;
   GstElement *video_filter;
@@ -364,32 +375,46 @@ decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad,
       (GstPadProbeCallback) wait_stream_start_probe, self, NULL);
 }
 
+static void
+encodebin_pad_added_cb (GstElement * encodebin, GstPad * pad, GstElement * self)
+{
+  GstPadTemplate *template;
+  GstPad *new_pad;
+  gchar *name;
+
+  if (!GST_PAD_IS_SRC (pad))
+    return;
+
+  template = gst_element_get_pad_template (self, "src_%u");
+
+  GST_OBJECT_LOCK (self);
+  name = g_strdup_printf ("src_%u", GST_ELEMENT (self)->numsrcpads);
+  GST_OBJECT_UNLOCK (self);
+  new_pad = gst_ghost_pad_new_from_template (name, pad, template);
+  g_free (name);
+  GST_DEBUG_OBJECT (self, "Encodebin exposed srcpad: %" GST_PTR_FORMAT, pad);
+
+  gst_element_add_pad (self, new_pad);
+}
+
 static gboolean
 make_encodebin (GstTranscodeBin * self)
 {
-  GstPad *pad;
   GST_INFO_OBJECT (self, "making new encodebin");
 
   if (!self->profile)
     goto no_profile;
 
-  self->encodebin = gst_element_factory_make ("encodebin", NULL);
+  self->encodebin = gst_element_factory_make ("encodebin2", NULL);
   if (!self->encodebin)
     goto no_encodebin;
 
   gst_bin_add (GST_BIN (self), self->encodebin);
+
+  g_signal_connect (self->encodebin, "pad-added",
+      G_CALLBACK (encodebin_pad_added_cb), self);
+
   g_object_set (self->encodebin, "profile", self->profile, NULL);
-
-  pad = gst_element_get_static_pad (self->encodebin, "src");
-  if (!gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), pad)) {
-
-    gst_object_unref (pad);
-    GST_ERROR_OBJECT (self, "Could not ghost %" GST_PTR_FORMAT " srcpad",
-        self->encodebin);
-
-    return FALSE;
-  }
-  gst_object_unref (pad);
 
   return gst_element_sync_state_with_parent (self->encodebin);
 
@@ -942,14 +967,6 @@ gst_transcode_bin_init (GstTranscodeBin * self)
   self->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", pad_tmpl);
   gst_pad_set_active (self->sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
-
-  gst_object_unref (pad_tmpl);
-
-  pad_tmpl = gst_static_pad_template_get (&transcode_bin_src_template);
-
-  self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", pad_tmpl);
-  gst_pad_set_active (self->srcpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   gst_object_unref (pad_tmpl);
 

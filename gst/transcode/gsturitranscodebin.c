@@ -104,67 +104,58 @@ post_missing_plugin_error (GstElement * dec, const gchar * element_name)
 /* *INDENT-ON* */
 
 static gboolean
-make_transcodebin (GstUriTranscodeBin * self)
-{
-  GST_INFO_OBJECT (self, "making new transcodebin");
-
-  self->transcodebin = gst_element_factory_make ("transcodebin", NULL);
-  if (!self->transcodebin)
-    goto no_transcodebin;
-
-  g_object_set (self->transcodebin, "profile", self->profile,
-      "video-filter", self->video_filter,
-      "audio-filter", self->audio_filter,
-      "avoid-reencoding", self->avoid_reencoding, NULL);
-
-  gst_bin_add (GST_BIN (self), self->transcodebin);
-  if (!gst_element_link (self->transcodebin, self->sink)) {
-    GST_ERROR ("Could not link transcodbin");
-    return FALSE;
-  }
-
-  return TRUE;
-
-  /* ERRORS */
-no_transcodebin:
-  {
-    post_missing_plugin_error (GST_ELEMENT_CAST (self), "transcodebin");
-
-    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
-        ("No transcodebin element, check your installation"));
-
-    return FALSE;
-  }
-}
-
-static gboolean
 make_dest (GstUriTranscodeBin * self)
 {
   GError *err = NULL;
 
+  GST_OBJECT_LOCK (self);
+  if (!self->dest_uri) {
+    GST_INFO_OBJECT (self, "Sink already set: %" GST_PTR_FORMAT, self->sink);
+    goto ok_unlock;
+  }
+
+  if (!self->dest_uri)
+    goto ok_unlock;
+
   if (!gst_uri_is_valid (self->dest_uri))
-    goto invalid_uri;
+    goto invalid_uri_unlock;
 
   self->sink = gst_element_make_from_uri (GST_URI_SINK, self->dest_uri,
       "sink", &err);
   if (!self->sink)
-    goto no_sink;
+    goto no_sink_unlock;
 
+  GST_OBJECT_UNLOCK (self);
   gst_bin_add (GST_BIN (self), self->sink);
   g_object_set (self->sink, "sync", TRUE, "max-lateness", GST_CLOCK_TIME_NONE,
       NULL);
+
   return TRUE;
 
-invalid_uri:
+ok_unlock:
+  GST_OBJECT_UNLOCK (self);
+  return TRUE;
+
+invalid_uri_unlock:
   {
+    GST_OBJECT_UNLOCK (self);
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Invalid URI \"%s\".", self->dest_uri), (NULL));
     g_clear_error (&err);
     return FALSE;
   }
 
-no_sink:
+invalid_uri:
   {
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+        ("Invalid URI \"%s\".", self->source_uri), (NULL));
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+no_sink_unlock:
+  {
+    GST_OBJECT_UNLOCK (self);
     /* whoops, could not create the source element, dig a little deeper to
      * figure out what might be wrong. */
     if (err != NULL && err->code == GST_URI_ERROR_UNSUPPORTED_PROTOCOL) {
@@ -188,6 +179,69 @@ no_sink:
     }
 
     g_clear_error (&err);
+
+    return FALSE;
+  }
+}
+
+static void
+transcodebin_pad_added_cb (GstElement * transcodebin, GstPad * pad,
+    GstUriTranscodeBin * self)
+{
+
+  GstPad *sinkpad;
+
+  if (GST_PAD_IS_SINK (pad))
+    return;
+
+  make_dest (self);
+  if (!self->sink) {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL), ("No sink configured."));
+    return;
+  }
+
+  sinkpad = gst_element_get_static_pad (self->sink, "sink");
+  if (!sinkpad) {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL), ("Sink has not sinkpad?!"));
+    return;
+  }
+
+  if (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK) {
+    GST_ERROR_OBJECT (self,
+        "Could not link %" GST_PTR_FORMAT " and %" GST_PTR_FORMAT, pad,
+        sinkpad);
+    /* Let `pad unlinked` error pop up later */
+  }
+}
+
+static gboolean
+make_transcodebin (GstUriTranscodeBin * self)
+{
+  GST_INFO_OBJECT (self, "making new transcodebin");
+
+  self->transcodebin = gst_element_factory_make ("transcodebin", NULL);
+  if (!self->transcodebin)
+    goto no_transcodebin;
+
+  g_signal_connect (self->transcodebin, "pad-added",
+      G_CALLBACK (transcodebin_pad_added_cb), self);
+
+  g_object_set (self->transcodebin, "profile", self->profile,
+      "video-filter", self->video_filter,
+      "audio-filter", self->audio_filter,
+      "avoid-reencoding", self->avoid_reencoding, NULL);
+
+  gst_bin_add (GST_BIN (self), self->transcodebin);
+
+  return TRUE;
+
+  /* ERRORS */
+no_transcodebin:
+  {
+    post_missing_plugin_error (GST_ELEMENT_CAST (self), "transcodebin");
+
+    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
+        ("No transcodebin element, check your installation"));
 
     return FALSE;
   }
@@ -297,6 +351,52 @@ remove_all_children (GstUriTranscodeBin * self)
   }
 }
 
+static void
+set_location_on_muxer_if_sink (GstUriTranscodeBin * self, GstElement * child)
+{
+  GstElementFactory *factory = gst_element_get_factory (child);
+
+  if (!factory)
+    return;
+
+  if (!self->dest_uri)
+    return;
+
+  /* Set out dest URI as location for muxer sinks. */
+  if (!gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MUXER) ||
+      !gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_SINK)) {
+
+    return;
+  }
+
+  if (!g_object_class_find_property (G_OBJECT_GET_CLASS (child), "location"))
+    return;
+
+  if (!gst_uri_has_protocol (self->dest_uri, "file")) {
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("Trying to use a not local file with a muxing sink which is not"
+            " supported."), (NULL));
+    return;
+  }
+
+  GST_OBJECT_FLAG_SET (self->transcodebin, GST_ELEMENT_FLAG_SINK);
+  g_object_set (child, "location", &self->dest_uri[strlen ("file://")], NULL);
+  GST_DEBUG_OBJECT (self, "Setting location: %s",
+      &self->dest_uri[strlen ("file://")]);
+}
+
+static void
+deep_element_added (GstBin * bin, GstBin * sub_bin, GstElement * child)
+{
+  GstUriTranscodeBin *self = GST_URI_TRANSCODE_BIN (bin);
+
+  set_location_on_muxer_if_sink (self, child);
+
+  GST_BIN_CLASS (parent_class)->deep_element_added (bin, sub_bin, child);
+}
+
 static GstStateChangeReturn
 gst_uri_transcode_bin_change_state (GstElement * element,
     GstStateChange transition)
@@ -307,16 +407,13 @@ gst_uri_transcode_bin_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
 
-      if (!make_dest (self))
-        goto setup_failed;
-
       if (!make_transcodebin (self))
         goto setup_failed;
 
       if (!make_source (self))
         goto setup_failed;
 
-      if (gst_element_set_state (self->sink,
+      if (self->sink && gst_element_set_state (self->sink,
               GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
         GST_ERROR_OBJECT (self,
             "Could not set %" GST_PTR_FORMAT " state to PAUSED", self->sink);
@@ -497,6 +594,7 @@ gst_uri_transcode_bin_class_init (GstUriTranscodeBinClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_klass;
+  GstBinClass *gstbin_klass;
 
   object_class->get_property = gst_uri_transcode_bin_get_property;
   object_class->set_property = gst_uri_transcode_bin_set_property;
@@ -506,6 +604,9 @@ gst_uri_transcode_bin_class_init (GstUriTranscodeBinClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_transcode_bin_change_state);
+
+  gstbin_klass = (GstBinClass *) klass;
+  gstbin_klass->deep_element_added = GST_DEBUG_FUNCPTR (deep_element_added);
 
   GST_DEBUG_CATEGORY_INIT (gst_uri_transcodebin_debug, "uritranscodebin", 0,
       "UriTranscodebin element");
