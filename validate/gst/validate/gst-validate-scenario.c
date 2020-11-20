@@ -237,7 +237,7 @@ struct _GstValidateScenarioPrivate
 
   guint execute_actions_source_id;      /* MT safe. Protect with SCENARIO_LOCK */
   guint wait_id;
-  guint signal_handler_id;
+  guint signal_handler_id;      /* MT safe. Protect with SCENARIO_LOCK */
   guint action_execution_interval;
 
   /* Name of message the wait action is waiting for */
@@ -2725,12 +2725,13 @@ stop_waiting (GstValidateAction * action)
 static void
 stop_waiting_signal (GstStructure * data)
 {
+  guint sigid = 0;
   GstElement *target;
   GstValidateAction *action;
   GstValidateScenario *scenario;
 
   gst_structure_get (data, "target", G_TYPE_POINTER, &target,
-      "action", G_TYPE_POINTER, &action, NULL);
+      "action", G_TYPE_POINTER, &action, "sigid", G_TYPE_UINT, &sigid, NULL);
   gst_structure_free (data);
 
   scenario = gst_validate_action_get_scenario (action);
@@ -2738,9 +2739,13 @@ stop_waiting_signal (GstStructure * data)
   g_assert (scenario);
   gst_validate_printf (scenario, "Stop waiting for signal\n");
 
-  g_signal_handler_disconnect (target, scenario->priv->signal_handler_id);
+  SCENARIO_LOCK (scenario);
+  g_signal_handler_disconnect (target,
+      sigid ? sigid : scenario->priv->signal_handler_id);
+  if (!sigid)
+    scenario->priv->signal_handler_id = 0;
+  SCENARIO_UNLOCK (scenario);
 
-  scenario->priv->signal_handler_id = 0;
   gst_validate_action_set_done (action);
   _add_execute_actions_gsource (scenario);
   gst_object_unref (scenario);
@@ -2801,10 +2806,12 @@ static GstValidateExecuteActionReturn
 _execute_wait_for_signal (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
+  gboolean non_blocking;
   GstValidateScenarioPrivate *priv = scenario->priv;
   const gchar *signal_name = gst_structure_get_string
       (action->structure, "signal-name");
   GstElement *target;
+  GstStructure *data;
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
   if (signal_name == NULL) {
@@ -2826,14 +2833,29 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
     priv->execute_actions_source_id = 0;
   }
 
-  priv->signal_handler_id =
-      g_signal_connect_swapped (target, signal_name,
-      (GCallback) stop_waiting_signal, gst_structure_new ("a", "action",
-          G_TYPE_POINTER, action, "target", G_TYPE_POINTER, target, NULL));
+  data =
+      gst_structure_new ("a", "action", G_TYPE_POINTER, action, "target",
+      G_TYPE_POINTER, target, NULL);
+  SCENARIO_LOCK (scenario);
+  priv->signal_handler_id = g_signal_connect_swapped (target, signal_name,
+      (GCallback) stop_waiting_signal, data);
+
+  non_blocking =
+      gst_structure_get_boolean (action->structure, "non-blocking",
+      &non_blocking);
+  if (non_blocking) {
+    gst_validate_action_ref (action);
+    gst_structure_set (data, "sigid", G_TYPE_UINT, priv->signal_handler_id,
+        NULL);
+    priv->signal_handler_id = 0;
+  }
+  SCENARIO_UNLOCK (scenario);
 
   gst_object_unref (pipeline);
 
-  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+
+  return non_blocking ? GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING :
+      GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
 static gboolean
@@ -6403,7 +6425,17 @@ register_action_types (void)
         },
         {
           .name = "signal-name",
-          .description = "The name of the signal to wait for on @target-element-name",
+          .description = "The name of the signal to wait for on @target-element-name."
+              " To ensure that the signal is executed without blocking while waiting for it"
+              " you can set the field 'non-blocking=true'.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "non-blocking",
+          .description = "**Only for signals**."
+            " Ensures that the signal is emitted without a blocking waiting.",
           .mandatory = FALSE,
           .types = "string",
           NULL
