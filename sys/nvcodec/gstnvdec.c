@@ -323,13 +323,21 @@ gst_nvdec_get_max_display_delay (GstNvDec * nvdec)
 static gint64
 gst_nvdec_get_latency (GstNvDec * nvdec)
 {
+  gint fps_n, fps_d;
+
   if (!nvdec->input_state)
     return 0;
+  fps_n = GST_VIDEO_INFO_FPS_N (&nvdec->input_state->info);
+  fps_d = GST_VIDEO_INFO_FPS_D (&nvdec->input_state->info);
+
+  /* We assume 25 fps if the input framerate is invalid */
+  if (fps_n < 1 || fps_d < 1) {
+    fps_n = 25;
+    fps_d = 1;
+  }
 
   return gst_util_uint64_scale_int ((nvdec->num_decode_surface +
-          gst_nvdec_get_max_display_delay (nvdec)) * GST_SECOND,
-      GST_VIDEO_INFO_FPS_D (&nvdec->input_state->info),
-      GST_VIDEO_INFO_FPS_N (&nvdec->input_state->info));
+          gst_nvdec_get_max_display_delay (nvdec)) * GST_SECOND, fps_d, fps_n);
 }
 
 /* 0: fail, 1: succeeded, > 1: override dpb size of parser
