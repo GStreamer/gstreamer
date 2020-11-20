@@ -236,10 +236,11 @@ _error_cb (GstTranscoder * transcoder, GError * err, GstStructure * details)
             GST_TYPE_PAD_LINK_RETURN, &lret,
             "msg-source-type", G_TYPE_GTYPE, &type, NULL) &&
         type == g_type_from_name ("GstTranscodeBin")) {
+      const gchar *debug = gst_structure_get_string (details, "debug");
+
       error ("\nCould not setup transcoding pipeline,"
           " make sure that your transcoding format parameters"
-          " are compatible with the input stream.");
-
+          " are compatible with the input stream.\n\n%s", debug);
       return;
     }
   }

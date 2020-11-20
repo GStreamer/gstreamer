@@ -55,7 +55,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
  *
  * The sometimes source pad, it will be exposed depending on the
  * #transcodebin:profile in use.
- * 
+ *
  * Note: in GStreamer 1.18 it was a static
  * srcpad but in the the 1.20 cycle it was decided that we should make it a
  * sometimes pad as part of the development of #encodebin2.
@@ -341,12 +341,16 @@ gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
       GstCaps *othercaps = gst_pad_query_caps (stream->encodebin_pad, NULL);
       caps = gst_pad_get_current_caps (pad);
 
+      if (!caps)
+        caps = gst_pad_query_caps (pad, NULL);
+
       GST_ELEMENT_ERROR_WITH_DETAILS (self, CORE, PAD,
           (NULL),
           ("Couldn't link pads:\n    %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT
               "\nand:\n"
-              "    %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT "\n\n",
-              pad, caps, stream->encodebin_pad, othercaps),
+              "    %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT "\n\n Error: %s\n",
+              pad, caps, stream->encodebin_pad, othercaps,
+              gst_pad_link_get_name (lret)),
           ("linking-error", GST_TYPE_PAD_LINK_RETURN, lret,
               "source-pad", GST_TYPE_PAD, pad,
               "source-caps", GST_TYPE_CAPS, caps,
