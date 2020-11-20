@@ -264,7 +264,14 @@ GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *info);
 
 GST_PBUTILS_API
-GstEncodingProfile * gst_encoding_profile_copy (GstEncodingProfile *self);
+GstEncodingProfile * gst_encoding_profile_copy            (GstEncodingProfile *self);
+
+GST_PBUTILS_API
+void gst_encoding_profile_set_element_properties          (GstEncodingProfile *self,
+                                                           GstStructure *element_properties);
+
+GST_PBUTILS_API
+GstStructure *gst_encoding_profile_get_element_properties (GstEncodingProfile *self);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingAudioProfile, gst_object_unref)
 

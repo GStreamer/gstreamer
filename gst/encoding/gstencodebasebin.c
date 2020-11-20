@@ -870,12 +870,84 @@ beach:
   return parser;
 }
 
+static gboolean
+_set_properties (GQuark property_id, const GValue * value, GObject * element)
+{
+  GST_DEBUG_OBJECT (element, "Setting %s", g_quark_to_string (property_id));
+  g_object_set_property (element, g_quark_to_string (property_id), value);
+
+  return TRUE;
+}
+
+static void
+set_element_properties_from_encoding_profile (GstEncodingProfile * profile,
+    GParamSpec * arg G_GNUC_UNUSED, GstElement * element)
+{
+  gint i;
+  const GValue *v;
+  GstElementFactory *factory;
+  GstStructure *properties =
+      gst_encoding_profile_get_element_properties (profile);
+
+  if (!properties)
+    return;
+
+  if (!gst_structure_has_name (properties, "element-properties-map")) {
+    gst_structure_foreach (properties,
+        (GstStructureForeachFunc) _set_properties, element);
+    goto done;
+  }
+
+  factory = gst_element_get_factory (element);
+  if (!factory) {
+    GST_INFO_OBJECT (profile, "No factory for underlying element, "
+        "not setting properties");
+    return;
+  }
+
+  v = gst_structure_get_value (properties, "map");
+  for (i = 0; i < gst_value_list_get_size (v); i++) {
+    const GValue *map_value = gst_value_list_get_value (v, i);
+    const GstStructure *tmp_properties;
+
+    if (!GST_VALUE_HOLDS_STRUCTURE (map_value)) {
+      g_warning ("Invalid value type %s in the property map "
+          "(expected GstStructure)", G_VALUE_TYPE_NAME (map_value));
+      continue;
+    }
+
+    tmp_properties = gst_value_get_structure (map_value);
+    if (!gst_structure_has_name (tmp_properties, GST_OBJECT_NAME (factory))) {
+      GST_INFO_OBJECT (GST_OBJECT_PARENT (element),
+          "Ignoring values for %" GST_PTR_FORMAT, tmp_properties);
+      continue;
+    }
+
+    GST_DEBUG_OBJECT (GST_OBJECT_PARENT (element),
+        "Setting %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, tmp_properties,
+        element);
+    gst_structure_foreach (tmp_properties,
+        (GstStructureForeachFunc) _set_properties, element);
+    goto done;
+  }
+
+  GST_ERROR_OBJECT (GST_OBJECT_PARENT (element), "Unknown factory: %s",
+      GST_OBJECT_NAME (factory));
+
+done:
+  gst_structure_free (properties);
+}
+
 static GstElement *
 _create_element_and_set_preset (GstElementFactory * factory,
-    const gchar * preset, const gchar * name, const gchar * preset_name)
+    GstEncodingProfile * profile, const gchar * name)
 {
   GstElement *res = NULL;
+  const gchar *preset;
+  const gchar *preset_name;
 
+  preset_name = gst_encoding_profile_get_preset_name (profile);
+  preset = gst_encoding_profile_get_preset (profile);
   GST_DEBUG ("Creating element from factory %s (preset factory name: %s"
       " preset name: %s)", GST_OBJECT_NAME (factory), preset_name, preset);
 
@@ -902,6 +974,12 @@ _create_element_and_set_preset (GstElementFactory * factory,
     }
   }
   /* Else we keep it */
+  if (res) {
+    set_element_properties_from_encoding_profile (profile, NULL, res);
+
+    g_signal_connect (profile, "notify::element-properties",
+        G_CALLBACK (set_element_properties_from_encoding_profile), res);
+  }
 
   return res;
 }
@@ -914,11 +992,8 @@ _get_encoder (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof)
   GstElement *encoder = NULL;
   GstElementFactory *encoderfact = NULL;
   GstCaps *format;
-  const gchar *preset, *preset_name;
 
   format = gst_encoding_profile_get_format (sprof);
-  preset = gst_encoding_profile_get_preset (sprof);
-  preset_name = gst_encoding_profile_get_preset_name (sprof);
 
   GST_DEBUG ("Getting list of encoders for format %" GST_PTR_FORMAT, format);
 
@@ -948,8 +1023,7 @@ _get_encoder (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof)
 
   for (tmp = encoders; tmp; tmp = tmp->next) {
     encoderfact = (GstElementFactory *) tmp->data;
-    if ((encoder = _create_element_and_set_preset (encoderfact, preset,
-                NULL, preset_name)))
+    if ((encoder = _create_element_and_set_preset (encoderfact, sprof, NULL)))
       break;
   }
 
@@ -1458,7 +1532,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
       tosync = g_list_append (tosync, sgroup->identity);
     } else {
       GST_INFO_OBJECT (ebin, "Single segment is not supported when avoiding"
-          " to reencode!");
+          " to re-encode!");
     }
   }
 
@@ -1900,11 +1974,7 @@ _get_formatter (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof)
   GstElement *formatter = NULL;
   GstElementFactory *formatterfact = NULL;
   GstCaps *format;
-  const gchar *preset, *preset_name;
-
   format = gst_encoding_profile_get_format (sprof);
-  preset = gst_encoding_profile_get_preset (sprof);
-  preset_name = gst_encoding_profile_get_preset_name (sprof);
 
   GST_DEBUG ("Getting list of formatters for format %" GST_PTR_FORMAT, format);
 
@@ -1923,8 +1993,7 @@ _get_formatter (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof)
         GST_OBJECT_NAME (formatterfact));
 
     if ((formatter =
-            _create_element_and_set_preset (formatterfact, preset,
-                NULL, preset_name)))
+            _create_element_and_set_preset (formatterfact, sprof, NULL)))
       break;
   }
 
@@ -1969,10 +2038,9 @@ _get_muxer (GstEncodeBaseBin * ebin)
   GstElementFactory *muxerfact = NULL;
   const GList *tmp;
   GstCaps *format;
-  const gchar *preset, *preset_name;
+  const gchar *preset_name;
 
   format = gst_encoding_profile_get_format (ebin->profile);
-  preset = gst_encoding_profile_get_preset (ebin->profile);
   preset_name = gst_encoding_profile_get_preset_name (ebin->profile);
 
   GST_DEBUG_OBJECT (ebin, "Getting list of muxers for format %" GST_PTR_FORMAT,
@@ -2037,8 +2105,7 @@ _get_muxer (GstEncodeBaseBin * ebin)
     /* Only use a muxer than can use all streams and than can accept the
      * preset (which may be present or not) */
     if (cansinkstreams && (muxer =
-            _create_element_and_set_preset (muxerfact, preset, "muxer",
-                preset_name)))
+            _create_element_and_set_preset (muxerfact, ebin->profile, "muxer")))
       break;
   }
 
@@ -2259,8 +2326,11 @@ stream_group_free (GstEncodeBaseBin * ebin, StreamGroup * sgroup)
   if (sgroup->inqueue)
     gst_element_set_state (sgroup->inqueue, GST_STATE_NULL);
 
-  if (sgroup->encoder)
+  if (sgroup->encoder) {
     gst_element_set_state (sgroup->encoder, GST_STATE_NULL);
+    g_signal_handlers_disconnect_by_func (sgroup->profile,
+        set_element_properties_from_encoding_profile, sgroup->encoder);
+  }
   if (sgroup->fakesink)
     gst_element_set_state (sgroup->fakesink, GST_STATE_NULL);
   if (sgroup->outfilter) {
@@ -2372,6 +2442,8 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
 
   /* Remove muxer if present */
   if (ebin->muxer) {
+    g_signal_handlers_disconnect_by_func (ebin->profile,
+        set_element_properties_from_encoding_profile, ebin->muxer);
     gst_element_set_state (ebin->muxer, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (ebin), ebin->muxer);
     ebin->muxer = NULL;

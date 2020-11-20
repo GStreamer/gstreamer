@@ -19,6 +19,7 @@ tests = [
     'videorate/rate_2_0_with_decoder',
     'compositor/renogotiate_failing_unsupported_src_format',
     'giosrc/read-growing-file',
+    'encodebin/set-encoder-properties',
 ]
 
 env = environment()
