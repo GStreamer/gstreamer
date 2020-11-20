@@ -2462,15 +2462,16 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
 }
 
 /**
- * gst_mpegts_descriptor_parse_audio_selection_list:
+ * gst_mpegts_descriptor_parse_audio_preselection_list:
  * @descriptor: a %GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION #GstMpegtsDescriptor
  * @list: (out) (transfer full) (element-type GstMpegtsAudioPreselectionDescriptor):
  * the list of audio preselection
  *
- *
  * Parses out a list of audio preselection from the @descriptor.
  *
  * Returns: %TRUE if the parsing happened correctly, else %FALSE.
+ *
+ * Since: 1.20
  */
 gboolean
 gst_mpegts_descriptor_parse_audio_preselection_list (const GstMpegtsDescriptor

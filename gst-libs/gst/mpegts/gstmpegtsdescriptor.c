@@ -1342,6 +1342,8 @@ gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
  * Creates a #GstMpegtsDescriptor with custom @tag, @tag_extension and @data
  *
  * Returns: #GstMpegtsDescriptor
+ *
+ * Since: 1.20
  */
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom_with_extension (guint8 tag,

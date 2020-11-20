@@ -380,11 +380,6 @@ GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 *data, gsize length);
 
 
-/**
- * gst_mpegts_descriptor_from_custom_with_extension:
- *
- * Since: 1.20
- */
 GST_MPEGTS_API
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom_with_extension (guint8 tag, guint8 tag_extension, const guint8 *data, gsize length);

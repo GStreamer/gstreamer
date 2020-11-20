@@ -1101,11 +1101,6 @@ struct _GstMpegtsAudioPreselectionDescriptor
   guint8                                message_id;
 };
 
-/**
- * gst_mpegts_descriptor_parse_audio_preselection_list:
- *
- * Since: 1.20
- */
 GST_MPEGTS_API
 gboolean
 gst_mpegts_descriptor_parse_audio_preselection_list (const GstMpegtsDescriptor
