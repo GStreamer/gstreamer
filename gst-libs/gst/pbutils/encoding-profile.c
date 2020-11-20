@@ -37,53 +37,60 @@
  * reference one or more #GstEncodingProfile(s) which indicate which encoding
  * format should be used on each individual streams.
  *
- * #GstEncodingProfile(s) can be provided to the 'encodebin' element, which
- * will take care of selecting and setting up the required elements to produce
- * an output stream conforming to the specifications of the profile.
+ * #GstEncodingProfile(s) can be provided to the 'encodebin' element, which will
+ * take care of selecting and setting up the required elements to produce an
+ * output stream conforming to the specifications of the profile.
  *
- * Unlike other systems, the encoding profiles do not specify which #GstElement
- * to use for the various encoding and muxing steps, but instead relies on
- * specifying the format one wishes to use.
+ * The encoding profiles do not necessarily specify which #GstElement to use for
+ * the various encoding and muxing steps, as they allow to specifying the format
+ * one wishes to use.
  *
- * Encoding profiles can be created at runtime by the application or loaded
- * from (and saved to) file using the #GstEncodingTarget API.
+ * Encoding profiles can be created at runtime by the application or loaded from
+ * (and saved to) file using the #GstEncodingTarget API.
  *
- * ## Defining a GstEncodingProfile as a string
+ * ## The encoding profile serialization format
  *
- * ### Serialized encoding profile formats
+ * Encoding profiles can be serialized to be used in the command line tools or
+ * to set it on other other #GObject-s using #gst_util_set_object_arg for
+ * example.
  *
- * #### Using encoders and muxer element factory name:
+ * The serialization format aims at being simple to understand although flexible
+ * enough to describe any possible encoding profile. There are several ways to
+ * describe the profile depending on the context but the general idea is that it
+ * is a colon separated list of EncodingProfiles descriptions, the first one
+ * needs to describe a #GstEncodingContainerProfile and the following ones
+ * describe elementary streams.
+ *
+ * ### Using encoders and muxer element factory name
  *
  * ```
  *   muxer_factory_name:video_encoder_factory_name:audio_encoder_factory_name
  * ```
  *
  * For example to encode a stream into a WebM container, with an OGG audio
- * stream and a VP8 video stream, the serialized #GstEncodingProfile looks
- * like:
+ * stream and a VP8 video stream, the serialized #GstEncodingProfile looks like:
  *
  * ```
  *   webmmux:vp8enc:vorbisenc
  * ```
  *
- * #### Define the encoding profile in a generic way using caps:
+ * ### Define the encoding profile in a generic way using caps:
  *
  * ```
  *   muxer_source_caps:video_encoder_source_caps:audio_encoder_source_caps
  * ```
  *
  * For example to encode a stream into a WebM container, with an OGG audio
- * stream and a VP8 video stream, the serialized #GstEncodingProfile looks
- * like:
+ * stream and a VP8 video stream, the serialized #GstEncodingProfile looks like:
  *
  * ```
  *   video/webm:video/x-vp8:audio/x-vorbis
  * ```
  *
- * It is possible to mix caps and element type names so you can specify a specific
- * video encoder while using caps for other encoders/muxer.
+ * It is possible to mix caps and element type names so you can specify a
+ * specific video encoder while using caps for other encoders/muxer.
  *
- * ### Advanced encoding format serialization features:
+ * ### Using preset
  *
  * You can also set the preset name of the encoding profile using the
  * caps+preset_name syntax as in:
@@ -91,6 +98,8 @@
  * ```
  *   video/webm:video/x-vp8+youtube-preset:audio/x-vorbis
  * ```
+ *
+ * ### Setting properties on muxers or on the encoding profile itself
  *
  * Moreover, you can set extra properties `presence`, `single-segment` and
  * `variable-framerate` * of an * encoding profile using the `|presence=` syntax
@@ -104,15 +113,17 @@
  * #GstEncodingProfile can be used inside an encodebin. If 0, it is not a
  * mandatory stream and can be used as many times as necessary.
  *
+ * ### Enforcing properties to the stream itself (video size, number of audio channels, etc..)
+ *
  * You can also use the `restriction_caps->encoded_format_caps` syntax to
  * specify the restriction caps to be set on a #GstEncodingProfile
  *
  * It corresponds to the restriction #GstCaps to apply before the encoder that
- * will be used in the profile. The fields present in restriction caps are
- * properties of the raw stream (that is, before encoding), such as height and
- * width for video and depth and sampling rate for audio. This property does
- * not make sense for muxers. See #gst_encoding_profile_get_restriction for
- * more details.
+ * will be used in the profile (See #gst_encoding_profile_get_restriction). The
+ * fields present in restriction caps are properties of the raw stream (that is,
+ * before encoding), such as height and width for video and depth and sampling
+ * rate for audio. This property does not make sense for muxers. See
+ * #gst_encoding_profile_get_restriction for more details.
  *
  * To force a video stream to be encoded with a Full HD resolution (using WebM
  * as the container format, VP8 as the video codec and Vorbis as the audio
@@ -125,27 +136,28 @@
  * > NOTE: Make sure to enclose into quotes to avoid '>' to be reinterpreted by
  * > the shell.
  *
- * In the case you are using encoder types, the following is also possible:
+ * In the case you are specifying encoders directly, the following is also
+ * possible:
  *
  * ```
- *   "matroskamux:x264enc,width=1920,height=1080:audio/x-vorbis"
+ *   matroskamux:x264enc,width=1920,height=1080:audio/x-vorbis
  * ```
  *
- * ## Some serialized encoding formats examples:
+ * ## Some serialized encoding formats examples
  *
- * MP3 audio and H264 in MP4:
+ * ### MP3 audio and H264 in MP4**
  *
  * ```
  *   video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3
  * ```
  *
- * Vorbis and theora in OGG:
+ * ### Vorbis and theora in OGG
  *
  * ```
  *   application/ogg:video/x-theora:audio/x-vorbis
  * ```
  *
- * AC3 and H264 in MPEG-TS:
+ * ### AC3 and H264 in MPEG-TS
  *
  * ```
  *   video/mpegts:video/x-h264:audio/x-ac3
@@ -153,8 +165,8 @@
  *
  * ## Loading a profile from encoding targets
  *
- * Anywhere where you have to use a string to define a #GstEncodingProfile,
- * you can use load it from a #GstEncodingTarget using the following syntaxes:
+ * Anywhere you have to use a string to define a #GstEncodingProfile, you
+ * can use load it from a #GstEncodingTarget using the following syntaxes:
  *
  * ```
  *   target_name[/profilename/category]
