@@ -898,7 +898,8 @@ chain_upsample (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     prev = convert->upsample_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
-    prev->n_lines = 4;
+    /* XXX: why this hardcoded value? */
+    prev->n_lines = 5;
     prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (prev,
         do_upsample_lines, idx, convert, NULL);
@@ -2002,7 +2003,8 @@ chain_downsample (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     prev = convert->downsample_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
-    prev->n_lines = 4;
+    /* XXX: why this hardcoded value? */
+    prev->n_lines = 5;
     prev->stride = convert->current_pstride * convert->current_width;
     gst_line_cache_set_need_line_func (prev,
         do_downsample_lines, idx, convert, NULL);
