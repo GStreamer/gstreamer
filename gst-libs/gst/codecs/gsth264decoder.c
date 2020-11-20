@@ -902,6 +902,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
 
   pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
   prev_picture = g_array_index (pictures, GstH264Picture *, pictures->len - 1);
+  g_array_unref (pictures);     /* prev_picture should be hold */
 
   /* This is not a field picture */
   if (!slice_hdr->field_pic_flag) {
@@ -934,7 +935,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
       return FALSE;
     }
 
-    *first_field = prev_picture;
+    *first_field = gst_h264_picture_ref (prev_picture);
     return TRUE;
   }
 
@@ -983,6 +984,7 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 
     if (first_field) {
       picture = gst_h264_decoder_new_field_picture (self, first_field);
+      gst_h264_picture_unref (first_field);
 
       if (!picture) {
         GST_ERROR_OBJECT (self, "Couldn't duplicate the first field picture");
