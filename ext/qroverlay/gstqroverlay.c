@@ -68,9 +68,10 @@ struct _GstQROverlay
 G_DEFINE_TYPE (GstQROverlay, gst_qr_overlay, GST_TYPE_BASE_QR_OVERLAY);
 
 static gchar *
-get_qrcode_content (GstBaseQROverlay * filter, GstVideoFrame * frame)
+get_qrcode_content (GstBaseQROverlay * self, GstBuffer * buf,
+    GstVideoInfo * info)
 {
-  return g_strdup (GST_QR_OVERLAY (filter)->data);
+  return g_strdup (GST_QR_OVERLAY (self)->data);
 }
 
 static void

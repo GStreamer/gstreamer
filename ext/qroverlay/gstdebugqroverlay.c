@@ -59,8 +59,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_qr_overlay_debug);
 #define GST_CAT_DEFAULT gst_debug_qr_overlay_debug
 
-static gchar *get_qrcode_content (GstBaseQROverlay * filter,
-    GstVideoFrame * frame);
+static gchar *get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
+    GstVideoInfo * info);
 
 enum
 {
@@ -231,14 +231,13 @@ gst_debug_qr_overlay_get_property (GObject * object, guint prop_id,
 }
 
 static gchar *
-get_qrcode_content (GstBaseQROverlay * base, GstVideoFrame * frame)
+get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
+    GstVideoInfo * info)
 {
   GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (base);
-  GstBuffer *buf = frame->buffer;
   GString *res = g_string_new (NULL);
   JsonGenerator *jgen;
-  gchar *framerate_string =
-      g_strdup_printf ("%d/%d", frame->info.fps_n, frame->info.fps_d);
+  gchar *framerate_string = g_strdup_printf ("%d/%d", info->fps_n, info->fps_d);
 
   JsonObject *jobj = json_object_new ();
   JsonNode *root = json_node_new (JSON_NODE_OBJECT);

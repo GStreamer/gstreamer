@@ -32,9 +32,9 @@ G_DECLARE_DERIVABLE_TYPE (GstBaseQROverlay, gst_base_qr_overlay, GST, BASE_QR_OV
 
 struct _GstBaseQROverlayClass
 {
-  GstVideoFilterClass parent;
+  GstBinClass parent;
 
-  gchar* (*get_content) (GstBaseQROverlay *self, GstVideoFrame *frame);
+  gchar* (*get_content) (GstBaseQROverlay *self, GstBuffer *buf, GstVideoInfo *info);
 };
 
 G_END_DECLS

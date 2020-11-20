@@ -62,26 +62,30 @@ struct _GstBaseQROverlayPrivate
   QRecLevel level;
   gfloat x_percent;
   gfloat y_percent;
+  GstElement *overlaycomposition;
+  GstVideoInfo info;
+  gboolean valid;
+
+  GstPad *sinkpad, *srcpad;
 };
 
 #define PRIV(s) gst_base_qr_overlay_get_instance_private (GST_BASE_QR_OVERLAY (s))
 
+#define OVERLAY_COMPOSITION_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS)
+
+#define ALL_CAPS OVERLAY_COMPOSITION_CAPS ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420 }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
+    GST_STATIC_CAPS (ALL_CAPS)
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420 }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
+    GST_STATIC_CAPS (ALL_CAPS)
     );
 
 #define DEFAULT_PROP_QUALITY    1
@@ -110,16 +114,132 @@ gst_qrcode_quality_get_type (void)
 
 #define gst_base_qr_overlay_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstBaseQROverlay, gst_base_qr_overlay,
-    GST_TYPE_VIDEO_FILTER);
+    GST_TYPE_BIN);
 
 static void gst_base_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_qr_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn
-gst_base_qr_overlay_transform_frame_ip (GstVideoFilter * base,
-    GstVideoFrame * frame);
+static void
+gst_base_qr_overlay_caps_changed_cb (GstBaseQROverlay * self, GstCaps * caps,
+    gint window_width, gint window_height, GstElement * overlay)
+{
+  GstBaseQROverlayPrivate *priv = PRIV (self);
+
+  if (gst_video_info_from_caps (&priv->info, caps))
+    priv->valid = TRUE;
+  else
+    priv->valid = FALSE;
+}
+
+static GstVideoOverlayComposition *
+draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
+{
+  guint8 *qr_data, *pixels;
+  gint stride, pstride, y, x, yy, square_size;
+  gsize offset, line_offset;
+  GstVideoInfo info;
+  GstVideoOverlayRectangle *rect;
+  GstVideoOverlayComposition *comp;
+  GstBuffer *buf;
+  GstBaseQROverlayPrivate *priv = PRIV (self);
+
+  gst_video_info_init (&info);
+
+  square_size = (qrcode->width + 4 * 2) * priv->qrcode_size;
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_ARGB, square_size,
+      square_size);
+
+  pixels = g_malloc ((size_t) info.size);
+  stride = info.stride[0];
+  pstride = info.finfo->pixel_stride[0];
+
+  /* White background */
+  for (y = 0; y < info.height; y++)
+    memset (&pixels[y * stride], 0xff, stride);
+
+  /* Draw the black QR code blocks with 4px white space around it
+   * on top */
+  line_offset = 4 * priv->qrcode_size * stride;
+  qr_data = qrcode->data;
+  for (y = 0; y < qrcode->width; y++) {
+    for (x = 0; x < (qrcode->width); x++) {
+      for (yy = 0; yy < priv->qrcode_size * pstride; yy += pstride) {
+        if (!(*qr_data & 1))
+          continue;
+
+        offset =
+            (((line_offset + (stride * (yy / pstride))) +
+                x * priv->qrcode_size * pstride)) +
+            (priv->qrcode_size * pstride) + (4 * priv->qrcode_size * pstride);
+
+        for (gint i = 0; i < priv->qrcode_size * pstride; i += pstride) {
+          pixels[offset + i] = 0x00;
+          pixels[offset + i + 1] = 0x00;
+          pixels[offset + i + 2] = 0x00;
+        }
+      }
+      qr_data++;
+    }
+    line_offset += (stride * priv->qrcode_size);
+  }
+
+  buf = gst_buffer_new_wrapped (pixels, info.size);
+  gst_buffer_add_video_meta (buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, info.width, info.height);
+
+  x = (int) (priv->info.width - square_size) * (priv->x_percent / 100);
+  x = GST_ROUND_DOWN_2 (x);
+  y = (int) (priv->info.height - square_size) * (priv->y_percent / 100);
+  y = GST_ROUND_DOWN_4 (y);
+
+  rect = gst_video_overlay_rectangle_new_raw (buf, x, y,
+      info.width, info.height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  comp = gst_video_overlay_composition_new (rect);
+  gst_video_overlay_rectangle_unref (rect);
+
+  return comp;
+}
+
+static GstVideoOverlayComposition *
+gst_base_qr_overlay_draw_cb (GstBaseQROverlay * self, GstSample * sample,
+    GstElement * _)
+{
+  GstBaseQROverlayPrivate *priv = PRIV (self);
+  QRcode *qrcode;
+  gchar *content;
+  GstVideoOverlayComposition *overlay = NULL;
+  GstBuffer *buffer = gst_sample_get_buffer (sample);
+  GstSegment *segment = gst_sample_get_segment (sample);
+  GstClockTime rtime = gst_segment_to_running_time (segment, GST_FORMAT_TIME,
+      GST_BUFFER_PTS (buffer));
+
+  if (!priv->valid) {
+    GST_ERROR_OBJECT (self, "Trying to draw before negotiation?");
+
+    return NULL;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (rtime))
+    gst_object_sync_values (GST_OBJECT (self), rtime);
+
+  content =
+      GST_BASE_QR_OVERLAY_GET_CLASS (self)->get_content (GST_BASE_QR_OVERLAY
+      (self), buffer, &priv->info);
+  GST_INFO_OBJECT (self, "String will be encoded : %s", content);
+  qrcode = QRcode_encodeString (content, 0, priv->qrcode_quality, QR_MODE_8, 0);
+
+  if (qrcode) {
+    GST_DEBUG_OBJECT (self, "String encoded");
+    overlay = draw_overlay (GST_BASE_QR_OVERLAY (self), qrcode);
+  } else {
+    GST_WARNING_OBJECT (self, "Could not encode content: %s", content);
+  }
+  g_free (content);
+
+  return overlay;
+}
 
 /* GObject vmethod implementations */
 
@@ -135,6 +255,9 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
 
   gobject_class->set_property = gst_base_qr_overlay_set_property;
   gobject_class->get_property = gst_base_qr_overlay_get_property;
+
+  GST_DEBUG_CATEGORY_INIT (gst_base_qr_overlay_debug, "qroverlay", 0,
+      "Qrcode overlay base class");
 
   g_object_class_install_property (gobject_class,
       PROP_X_AXIS, g_param_spec_float ("x",
@@ -164,9 +287,6 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
       gst_static_pad_template_get (&sink_template));
 
   gst_type_mark_as_plugin_api (GST_TYPE_QRCODE_QUALITY, 0);
-
-  GST_VIDEO_FILTER_CLASS (klass)->transform_frame_ip =
-      GST_DEBUG_FUNCPTR (gst_base_qr_overlay_transform_frame_ip);
   gst_type_mark_as_plugin_api (GST_TYPE_QRCODE_QUALITY, 0);
 }
 
@@ -174,15 +294,39 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
  * initialize instance structure
  */
 static void
-gst_base_qr_overlay_init (GstBaseQROverlay * filter)
+gst_base_qr_overlay_init (GstBaseQROverlay * self)
 {
-  GstBaseQROverlayPrivate *priv = PRIV (filter);
+  GstBaseQROverlayPrivate *priv = PRIV (self);
 
   priv->x_percent = 50.0;
   priv->y_percent = 50.0;
   priv->qrcode_quality = DEFAULT_PROP_QUALITY;
   priv->span_frame = 0;
   priv->qrcode_size = DEFAULT_PROP_PIXEL_SIZE;
+  priv->overlaycomposition =
+      gst_element_factory_make ("overlaycomposition", NULL);
+  gst_video_info_init (&priv->info);
+
+  if (priv->overlaycomposition) {
+    GstPadTemplate *sink_tmpl = gst_static_pad_template_get (&sink_template);
+    GstPadTemplate *src_tmpl = gst_static_pad_template_get (&src_template);
+
+    gst_bin_add (GST_BIN (self), priv->overlaycomposition);
+
+    gst_element_add_pad (GST_ELEMENT_CAST (self),
+        gst_ghost_pad_new_from_template ("sink",
+            priv->overlaycomposition->sinkpads->data, sink_tmpl));
+    gst_element_add_pad (GST_ELEMENT_CAST (self),
+        gst_ghost_pad_new_from_template ("src",
+            priv->overlaycomposition->srcpads->data, src_tmpl));
+    gst_object_unref (sink_tmpl);
+    gst_object_unref (src_tmpl);
+
+    g_signal_connect_swapped (priv->overlaycomposition, "draw",
+        G_CALLBACK (gst_base_qr_overlay_draw_cb), self);
+    g_signal_connect_swapped (priv->overlaycomposition, "caps-changed",
+        G_CALLBACK (gst_base_qr_overlay_caps_changed_cb), self);
+  }
 }
 
 static void
@@ -233,104 +377,4 @@ gst_base_qr_overlay_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static void
-overlay_qr_in_frame (GstBaseQROverlay * filter, QRcode * qrcode,
-    GstVideoFrame * frame)
-{
-  GstBaseQROverlayPrivate *priv = PRIV (filter);
-  guchar *source_data;
-  gint32 k, y, x, yy, square_size, line = 0;
-  int x1, x2, y1, y2;
-  guint8 *d;
-  gint stride;
-
-  square_size = (qrcode->width + 4 * 2) * priv->qrcode_size;
-  /* White bg */
-  x1 = (int) (GST_VIDEO_FRAME_WIDTH (frame) -
-      square_size) * (priv->x_percent / 100);
-  x1 = GST_ROUND_DOWN_2 (x1);
-  x2 = x1 + square_size;
-  y1 = (int) (GST_VIDEO_FRAME_HEIGHT (frame) -
-      square_size) * (priv->y_percent / 100);
-  y1 = GST_ROUND_DOWN_4 (y1);
-  y2 = y1 + square_size;
-
-  d = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-
-  /* Start drawing the white luma plane */
-  for (y = y1; y < y2; y++) {
-    for (x = x1; x < x2; x += square_size)
-      memset (&d[y * stride + x], 0xff, square_size);
-  }
-
-  /* Draw the black QR code blocks with 4px white space around it
-   * on top */
-  line += 4 * priv->qrcode_size * stride;
-  source_data = qrcode->data;
-  for (y = 0; y < qrcode->width; y++) {
-    for (x = 0; x < (qrcode->width); x++) {
-      for (yy = 0; yy < priv->qrcode_size; yy++) {
-        k = ((((line + (4 * priv->qrcode_size))) + stride * yy +
-                x * priv->qrcode_size) + x1) + (y1 * stride);
-        if (*source_data & 1) {
-          memset (d + k, 0, priv->qrcode_size);
-        }
-      }
-      source_data++;
-    }
-    line += (stride * priv->qrcode_size);
-  }
-
-  /* Set Chrominance planes */
-  x1 /= 2;
-  x2 /= 2;
-  y1 /= 2;
-  y2 /= 2;
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  for (y = y1; y < y2; y++) {
-    for (x = x1; x < x2; x += (x2 - x1)) {
-      d = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-      memset (&d[y * stride + x], 128, (x2 - x1));
-      d = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-      memset (&d[y * stride + x], 128, (x2 - x1));
-    }
-  }
-
-  QRcode_free (qrcode);
-}
-
-/* GstBaseTransform vmethod implementations */
-/* this function does the actual processing
- */
-static GstFlowReturn
-gst_base_qr_overlay_transform_frame_ip (GstVideoFilter * base,
-    GstVideoFrame * frame)
-{
-  GstBaseQROverlayPrivate *priv = PRIV (base);
-  QRcode *qrcode;
-  gchar *content;
-  GstClockTime rtime =
-      gst_segment_to_running_time (&GST_BASE_TRANSFORM (base)->segment,
-      GST_FORMAT_TIME, GST_BUFFER_PTS (frame->buffer));
-
-  if (GST_CLOCK_TIME_IS_VALID (rtime))
-    gst_object_sync_values (GST_OBJECT (base), rtime);
-
-  content =
-      GST_BASE_QR_OVERLAY_GET_CLASS (base)->get_content (GST_BASE_QR_OVERLAY
-      (base), frame);
-  GST_INFO_OBJECT (base, "String will be encoded : %s", content);
-  qrcode = QRcode_encodeString (content, 0, priv->qrcode_quality, QR_MODE_8, 0);
-  if (qrcode) {
-    GST_DEBUG_OBJECT (base, "String encoded");
-    overlay_qr_in_frame (GST_BASE_QR_OVERLAY (base), qrcode, frame);
-  } else {
-    GST_WARNING_OBJECT (base, "Could not encode content: %s", content);
-  }
-  g_free (content);
-
-  return GST_FLOW_OK;
 }
