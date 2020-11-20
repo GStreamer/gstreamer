@@ -4883,16 +4883,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
           if (split[0] && sscanf (split[0], "%u", &ssrc) && split[1]
               && g_str_has_prefix (split[1], "cname:")) {
-            SsrcMapItem ssrc_item;
-
-            ssrc_item.media_idx = i;
-            ssrc_item.ssrc = ssrc;
-            g_array_append_val (item->remote_ssrcmap, ssrc_item);
-
-            /* Must be done aftrer the value has been appended because
-             * a weak ref cannot be moved. */
-            g_weak_ref_init (&g_array_index (item->remote_ssrcmap, SsrcMapItem,
-                    item->remote_ssrcmap->len - 1).rtpjitterbuffer, NULL);
+            g_ptr_array_add (item->remote_ssrcmap, ssrcmap_item_new (ssrc, i));
           }
           g_strfreev (split);
         }
@@ -5522,8 +5513,7 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
     media_idx = session_id;
 
     for (i = 0; i < stream->remote_ssrcmap->len; i++) {
-      SsrcMapItem *item =
-          &g_array_index (stream->remote_ssrcmap, SsrcMapItem, i);
+      SsrcMapItem *item = g_ptr_array_index (stream->remote_ssrcmap, i);
       if (item->ssrc == ssrc) {
         media_idx = item->media_idx;
         found_ssrc = TRUE;
@@ -5974,8 +5964,7 @@ on_rtpbin_new_jitterbuffer (GstElement * rtpbin, GstElement * jitterbuffer,
         WEBRTC_TRANSCEIVER (trans)->do_nack, NULL);
 
     for (i = 0; i < trans->stream->remote_ssrcmap->len; i++) {
-      SsrcMapItem *item =
-          &g_array_index (trans->stream->remote_ssrcmap, SsrcMapItem, i);
+      SsrcMapItem *item = g_ptr_array_index (trans->stream->remote_ssrcmap, i);
 
       if (item->ssrc == ssrc) {
         g_weak_ref_set (&item->rtpjitterbuffer, jitterbuffer);

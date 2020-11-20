@@ -318,8 +318,7 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_get (source_stats, "have-sr", G_TYPE_BOOLEAN, &have_sr, NULL);
 
     for (i = 0; i < stream->remote_ssrcmap->len; i++) {
-      SsrcMapItem *item =
-          &g_array_index (stream->remote_ssrcmap, SsrcMapItem, i);
+      SsrcMapItem *item = g_ptr_array_index (stream->remote_ssrcmap, i);
 
       if (item->ssrc == ssrc) {
         GObject *jb = g_weak_ref_get (&item->rtpjitterbuffer);

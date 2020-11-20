@@ -197,7 +197,7 @@ transport_stream_finalize (GObject * object)
   TransportStream *stream = TRANSPORT_STREAM (object);
 
   g_array_free (stream->ptmap, TRUE);
-  g_array_free (stream->remote_ssrcmap, TRUE);
+  g_ptr_array_free (stream->remote_ssrcmap, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -289,10 +289,24 @@ clear_ptmap_item (PtMapItem * item)
   if (item->caps)
     gst_caps_unref (item->caps);
 }
+
+SsrcMapItem *
+ssrcmap_item_new (guint32 ssrc, guint media_idx)
+{
+  SsrcMapItem *ssrc_item = g_slice_new (SsrcMapItem);
+
+  ssrc_item->media_idx = media_idx;
+  ssrc_item->ssrc = ssrc;
+  g_weak_ref_init (&ssrc_item->rtpjitterbuffer, NULL);
+
+  return ssrc_item;
+}
+
 static void
-clear_ssrcmap_item (SsrcMapItem * item)
+ssrcmap_item_free (SsrcMapItem * item)
 {
   g_weak_ref_clear (&item->rtpjitterbuffer);
+  g_slice_free (SsrcMapItem, item);
 }
 
 static void
@@ -300,9 +314,8 @@ transport_stream_init (TransportStream * stream)
 {
   stream->ptmap = g_array_new (FALSE, TRUE, sizeof (PtMapItem));
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
-  stream->remote_ssrcmap = g_array_new (FALSE, TRUE, sizeof (SsrcMapItem));
-  g_array_set_clear_func (stream->remote_ssrcmap,
-      (GDestroyNotify) clear_ssrcmap_item);
+  stream->remote_ssrcmap = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) ssrcmap_item_free);
 }
 
 TransportStream *

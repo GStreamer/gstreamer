@@ -44,6 +44,9 @@ typedef struct
   GWeakRef rtpjitterbuffer; /* for stats */
 } SsrcMapItem;
 
+SsrcMapItem *           ssrcmap_item_new            (guint32 ssrc,
+                                                     guint media_idx);
+
 struct _TransportStream
 {
   GstObject                 parent;
@@ -61,7 +64,7 @@ struct _TransportStream
   GstWebRTCDTLSTransport   *transport;
 
   GArray                   *ptmap;                  /* array of PtMapItem's */
-  GArray                   *remote_ssrcmap;         /* array of SsrcMapItem's */
+  GPtrArray                *remote_ssrcmap;         /* array of SsrcMapItem's */
   gboolean                  output_connected;       /* whether receive bin is connected to rtpbin */
 
   GstElement               *rtxsend;
