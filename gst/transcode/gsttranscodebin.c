@@ -672,8 +672,12 @@ _setup_avoid_reencoding (GstTranscodeBin * self)
     }
   }
 
+  GST_OBJECT_UNLOCK (self);
+
   g_object_set (self->decodebin, "caps", decodecaps, NULL);
   gst_caps_unref (decodecaps);
+
+  GST_OBJECT_LOCK (self);
 }
 
 static gboolean
