@@ -504,7 +504,6 @@ gst_shared_task_pool_set_max_threads (GstSharedTaskPool * pool,
 /**
  * gst_shared_task_pool_get_max_threads:
  * @pool: a #GstSharedTaskPool
- * @max_threads: Maximum number of threads to spawn.
  *
  * Returns: the maximum number of threads @pool is configured to spawn
  * Since: 1.20
