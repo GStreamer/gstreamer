@@ -189,7 +189,7 @@ struct _GstValidateScenarioPrivate
   GMutex lock;
 
   GList *actions;
-  GList *interlaced_actions;    /* MT safe. Protected with SCENARIO_LOCK */
+  GList *non_blocking_running_actions;  /* MT safe. Protected with SCENARIO_LOCK */
   GList *on_addition_actions;   /* MT safe. Protected with SCENARIO_LOCK */
 
   gboolean needs_playback_parsing;
@@ -445,8 +445,8 @@ gst_validate_action_return_get_name (GstValidateActionReturn r)
       return "OK";
     case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
       return "ASYNC";
-    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
-      return "INTERLACED";
+    case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
+      return "NON-BLOCKING";
     case GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
       return "ERROR(reported)";
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
@@ -780,7 +780,7 @@ _check_scenario_is_done (GstValidateScenario * scenario)
 {
   SCENARIO_LOCK (scenario);
   if (actions_list_is_done (scenario->priv->actions) &&
-      actions_list_is_done (scenario->priv->interlaced_actions) &&
+      actions_list_is_done (scenario->priv->non_blocking_running_actions) &&
       actions_list_is_done (scenario->priv->on_addition_actions)) {
     SCENARIO_UNLOCK (scenario);
 
@@ -2032,7 +2032,7 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
     res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
   } else {
     gst_mini_object_ref ((GstMiniObject *) action);
-    res = GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
+    res = GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING;
   }
 
 done:
@@ -2616,7 +2616,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 
   switch (act->priv->state) {
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
-    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+    case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
       break;
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
       return G_SOURCE_CONTINUE;
@@ -2684,9 +2684,10 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
       return G_SOURCE_CONTINUE;
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
       return G_SOURCE_CONTINUE;
-    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+    case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
       SCENARIO_LOCK (scenario);
-      priv->interlaced_actions = g_list_append (priv->interlaced_actions, act);
+      priv->non_blocking_running_actions =
+          g_list_append (priv->non_blocking_running_actions, act);
       priv->actions = g_list_remove (priv->actions, act);
       SCENARIO_UNLOCK (scenario);
       return gst_validate_scenario_execute_next_or_restart_looping (scenario);
@@ -3425,7 +3426,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   } else {
     gst_validate_printf (NULL,
         "Pipeline is not ready to push buffers, interlacing appsrc-push action...\n");
-    res = GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
+    res = GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING;
   }
 done:
   gst_clear_object (&target);
@@ -4570,7 +4571,7 @@ gst_validate_scenario_finalize (GObject * object)
   g_list_free_full (priv->sinks,
       (GDestroyNotify) gst_validate_sink_information_free);
   g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
-  g_list_free_full (priv->interlaced_actions,
+  g_list_free_full (priv->non_blocking_running_actions,
       (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->on_addition_actions,
       (GDestroyNotify) gst_mini_object_unref);
@@ -5635,13 +5636,13 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
     g_source_remove (priv->execute_actions_source_id);
     priv->execute_actions_source_id = 0;
   }
-  if (scenario->priv->actions || scenario->priv->interlaced_actions ||
+  if (scenario->priv->actions || scenario->priv->non_blocking_running_actions ||
       scenario->priv->on_addition_actions) {
     guint nb_actions = 0;
     gchar *actions = g_strdup (""), *tmpconcat;
     GList *tmp;
     GList *all_actions = g_list_concat (g_list_concat (scenario->priv->actions,
-            scenario->priv->interlaced_actions),
+            scenario->priv->non_blocking_running_actions),
         scenario->priv->on_addition_actions);
 
     for (tmp = all_actions; tmp; tmp = tmp->next) {
@@ -5674,7 +5675,7 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
     }
     g_list_free (all_actions);
     scenario->priv->actions = NULL;
-    scenario->priv->interlaced_actions = NULL;
+    scenario->priv->non_blocking_running_actions = NULL;
     scenario->priv->on_addition_actions = NULL;
 
 
@@ -5754,7 +5755,7 @@ _action_set_done (GstValidateAction * action)
 
       break;
     }
-    case GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+    case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
       break;
   }
 
@@ -5772,7 +5773,7 @@ _action_set_done (GstValidateAction * action)
       GST_TIME_ARGS (action->priv->execution_duration));
   g_free (repeat_message);
 
-  if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
+  if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING)
     /* We took the 'scenario' reference... unreffing it now */
     gst_validate_action_unref (action);
 
@@ -5792,15 +5793,16 @@ void
 gst_validate_action_set_done (GstValidateAction * action)
 {
 
-  if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_INTERLACED) {
+  if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING) {
     GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
     GList *item = NULL;
 
     if (scenario) {
       SCENARIO_LOCK (scenario);
-      item = g_list_find (scenario->priv->interlaced_actions, action);
-      scenario->priv->interlaced_actions =
-          g_list_delete_link (scenario->priv->interlaced_actions, item);
+      item = g_list_find (scenario->priv->non_blocking_running_actions, action);
+      scenario->priv->non_blocking_running_actions =
+          g_list_delete_link (scenario->priv->non_blocking_running_actions,
+          item);
       SCENARIO_UNLOCK (scenario);
       g_object_unref (scenario);
     }
@@ -6837,7 +6839,7 @@ register_action_types (void)
       " This allows checking the checksum of a buffer after a 'seek' or after a"
       " GESTimeline 'commit'"
       " for example",
-      GST_VALIDATE_ACTION_TYPE_INTERLACED);
+      GST_VALIDATE_ACTION_TYPE_NON_BLOCKING);
 
     REGISTER_ACTION_TYPE ("crank-clock", _execute_crank_clock,
       ((GstValidateActionParameter []) {

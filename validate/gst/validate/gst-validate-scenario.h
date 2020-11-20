@@ -47,7 +47,6 @@ typedef struct _GstValidateActionParameter GstValidateActionParameter;
  * GST_VALIDATE_EXECUTE_ACTION_ERROR:
  * GST_VALIDATE_EXECUTE_ACTION_OK:
  * GST_VALIDATE_EXECUTE_ACTION_ASYNC:
- * GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
  * GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
  * GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
  * GST_VALIDATE_EXECUTE_ACTION_NONE:
@@ -58,7 +57,23 @@ typedef enum
   GST_VALIDATE_EXECUTE_ACTION_ERROR,
   GST_VALIDATE_EXECUTE_ACTION_OK,
   GST_VALIDATE_EXECUTE_ACTION_ASYNC,
-  GST_VALIDATE_EXECUTE_ACTION_INTERLACED,
+
+  /**
+    * GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
+    *
+    * The action will be executed asynchronously without blocking further
+    * actions to be executed
+    *
+    * Since: 1.20
+    */
+  GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING,
+
+  /**
+   * GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+   *
+   * Deprecated: 1.20: Use #GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING instead.
+   */
+  GST_VALIDATE_EXECUTE_ACTION_INTERLACED = GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING,
   GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED,
   GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS,
   GST_VALIDATE_EXECUTE_ACTION_NONE,
@@ -175,9 +190,6 @@ GType gst_validate_action_get_type (void);
  * @GST_VALIDATE_ACTION_TYPE_NONE: No special flag
  * @GST_VALIDATE_ACTION_TYPE_CONFIG: The action is a config
  * @GST_VALIDATE_ACTION_TYPE_ASYNC: The action can be executed ASYNC
- * @GST_VALIDATE_ACTION_TYPE_INTERLACED: The action will be executed async
- *                                       but without blocking further actions
- *                                       to be executed
  * @GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION: The action will be executed on 'element-added'
  *                                                 for a particular element type if no playback-time
  *                                                 is specified
@@ -196,7 +208,23 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_NONE = 0,
     GST_VALIDATE_ACTION_TYPE_CONFIG = 1 << 1,
     GST_VALIDATE_ACTION_TYPE_ASYNC = 1 << 2,
+    GST_VALIDATE_ACTION_TYPE_NON_BLOCKING = 1 << 3,
+
+    /**
+     * GST_VALIDATE_ACTION_TYPE_INTERLACED:
+     *
+     * Deprecated: 1.20: Use #GST_VALIDATE_ACTION_TYPE_NON_BLOCKING instead.
+     */
     GST_VALIDATE_ACTION_TYPE_INTERLACED = 1 << 3,
+
+    /**
+      * GST_VALIDATE_ACTION_TYPE_NON_BLOCKING:
+      *
+      * The action can be executed asynchronously but without blocking further
+      * actions execution.
+      *
+      * Since: 1.20
+      */
     GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION = 1 << 4,
     GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK = 1 << 5,
     GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL = 1 << 6,
