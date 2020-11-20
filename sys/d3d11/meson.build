@@ -47,6 +47,7 @@ d3d11_headers = [
 
 have_d3d11 = false
 extra_c_args = ['-DCOBJMACROS']
+extra_cpp_args = []
 have_dxgi_header = false
 have_d3d11_header = false
 have_d3d11sdk_h = false
@@ -131,6 +132,13 @@ if winapi_app_only
   extra_dep += [runtimeobject_lib, d3dcompiler_lib]
 else
   d3d11_sources += ['gstd3d11window_win32.cpp']
+  if d3d11_conf.get('DXGI_HEADER_VERSION') >= 6
+    # Desktop Duplication API is unavailable for UWP
+    # and MinGW is not supported due to some missing headers
+    d3d11_conf.set('HAVE_DXGI_DESKTOP_DUP', 1)
+    d3d11_sources += ['gstd3d11desktopdup.cpp', 'gstd3d11desktopdupsrc.c']
+    message('Enable D3D11 Desktop Duplication API')
+  endif
 endif
 
 d3d11_conf.set10('GST_D3D11_WINAPI_ONLY_APP', winapi_app_only)
@@ -200,10 +208,21 @@ configure_file(
   configuration: d3d11_conf,
 )
 
+# MinGW 32bits compiler seems to be complaining about redundant-decls
+# when ComPtr is in use. Let's just disable the warning
+if cc.get_id() != 'msvc'
+  extra_args = cc.get_supported_arguments([
+    '-Wno-redundant-decls',
+  ])
+
+  extra_c_args += extra_args
+  extra_cpp_args += extra_args
+endif
+
 gstd3d11 = library('gstd3d11',
   d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
-  cpp_args: gst_plugins_bad_args,
+  cpp_args: gst_plugins_bad_args + extra_cpp_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstcontroller_dep, d3d11_lib, dxgi_lib] + extra_dep,
   install : true,

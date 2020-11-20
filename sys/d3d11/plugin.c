@@ -39,6 +39,9 @@
 #include "gstd3d11vp9dec.h"
 #include "gstd3d11vp8dec.h"
 #endif
+#ifdef HAVE_DXGI_DESKTOP_DUP
+#include "gstd3d11desktopdupsrc.h"
+#endif
 
 GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
@@ -60,6 +63,10 @@ GST_DEBUG_CATEGORY (gst_d3d11_h264_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_h265_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp9_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp8_dec_debug);
+#endif
+
+#ifdef HAVE_DXGI_DESKTOP_DUP
+GST_DEBUG_CATEGORY (gst_d3d11_desktop_dup_debug);
 #endif
 
 #define GST_CAT_DEFAULT gst_d3d11_debug
@@ -198,6 +205,15 @@ plugin_init (GstPlugin * plugin)
       gst_clear_object (&decoder);
       i++;
     } while (1);
+  }
+#endif
+
+#ifdef HAVE_DXGI_DESKTOP_DUP
+  if (gst_d3d11_is_windows_8_or_greater ()) {
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_desktop_dup_debug,
+        "d3d11desktopdupsrc", 0, "d3d11desktopdupsrc");
+    gst_element_register (plugin,
+        "d3d11desktopdupsrc", GST_RANK_NONE, GST_TYPE_D3D11_DESKTOP_DUP_SRC);
   }
 #endif
 
