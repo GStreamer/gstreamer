@@ -60,6 +60,7 @@ enum
   PROP_ENABLE_NAVIGATION_EVENTS,
   PROP_FULLSCREEN_TOGGLE_MODE,
   PROP_FULLSCREEN,
+  PROP_RENDER_STATS,
 };
 
 /* basesink */
@@ -85,6 +86,7 @@ enum
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 #define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
 #define DEFAULT_FULLSCREEN                FALSE
+#define DEFAULT_RENDER_STATS              FALSE
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -238,6 +240,15 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           "fullscreen",
           "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
           DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#ifdef HAVE_DIRECT_WRITE
+  g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
+      g_param_spec_boolean ("render-stats",
+          "Render Stats",
+          "Render statistics data (e.g., average framerate) on window",
+          DEFAULT_RENDER_STATS,
+          GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 video sink bin", "Sink/Video",

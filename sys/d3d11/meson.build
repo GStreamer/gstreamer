@@ -65,6 +65,8 @@ d3d11_lib = cc.find_library('d3d11', required : d3d11_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d11_option)
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
+dwrite_lib = cc.find_library('dwrite', required : false)
+d2d1_lib = cc.find_library('d2d1', required : false)
 
 foreach dxgi_h: dxgi_headers
   if not have_dxgi_header and cc.has_header(dxgi_h[0])
@@ -177,6 +179,15 @@ if get_option('debug') and not (winapi_app_only and get_option('b_vscrt') == 'md
       set_variable(f.get(3), true)
     endif
   endforeach
+
+  # Maybe we want to implement DirectWrite based text rendering in the future,
+  # but currently only debugging purpose.
+  # Also, MinGW is not supported for now because of toolchain issue
+  if cc.get_id() == 'msvc' and dwrite_lib.found() and d2d1_lib.found() and cc.has_header('dwrite.h') and cc.has_header('d2d1_1.h')
+    d3d11_conf.set('HAVE_DIRECT_WRITE', 1)
+    extra_dep += [dwrite_lib, d2d1_lib]
+    message('Enable DirectWrite support in D3D11 plugin')
+  endif
 else
   message('Disable D3D11Debug and DXGIDebug layers')
 endif

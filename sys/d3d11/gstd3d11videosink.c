@@ -44,6 +44,7 @@ enum
   PROP_ENABLE_NAVIGATION_EVENTS,
   PROP_FULLSCREEN_TOGGLE_MODE,
   PROP_FULLSCREEN,
+  PROP_RENDER_STATS,
 };
 
 #define DEFAULT_ADAPTER                   -1
@@ -51,6 +52,7 @@ enum
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 #define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
 #define DEFAULT_FULLSCREEN                FALSE
+#define DEFAULT_RENDER_STATS              FALSE
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -84,6 +86,7 @@ struct _GstD3D11VideoSink
   gboolean enable_navigation_events;
   GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
   gboolean fullscreen;
+  gboolean render_stats;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -178,6 +181,16 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
           DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifdef HAVE_DIRECT_WRITE
+  g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
+      g_param_spec_boolean ("render-stats",
+          "Render Stats",
+          "Render statistics data (e.g., average framerate) on window",
+          DEFAULT_RENDER_STATS,
+          GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_set_context);
 
@@ -213,6 +226,7 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
   self->fullscreen_toggle_mode = DEFAULT_FULLSCREEN_TOGGLE_MODE;
   self->fullscreen = DEFAULT_FULLSCREEN;
+  self->render_stats = DEFAULT_RENDER_STATS;
 }
 
 static void
@@ -252,6 +266,11 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
         g_object_set (self->window, "fullscreen", self->fullscreen, NULL);
       }
       break;
+#ifdef HAVE_DIRECT_WRITE
+    case PROP_RENDER_STATS:
+      self->render_stats = g_value_get_boolean (value);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -285,6 +304,11 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
         g_value_set_boolean (value, self->fullscreen);
       }
       break;
+#ifdef HAVE_DIRECT_WRITE
+    case PROP_RENDER_STATS:
+      g_value_set_boolean (value, self->render_stats);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -592,6 +616,9 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
       "fullscreen-toggle-mode", self->fullscreen_toggle_mode,
       "fullscreen", self->fullscreen,
       "enable-navigation-events", self->enable_navigation_events, NULL);
+#ifdef HAVE_DIRECT_WRITE
+  g_object_set (self->window, "render-stats", self->render_stats, NULL);
+#endif
   GST_OBJECT_UNLOCK (self);
 
   g_signal_connect (self->window, "key-event",
@@ -864,6 +891,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   gboolean need_unref = FALSE;
   gboolean do_device_copy = TRUE;
   gint i;
+  GstStructure *stats = NULL;
 
   render_buf = buf;
 
@@ -955,7 +983,10 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   rect.w = self->video_width;
   rect.h = self->video_height;
 
-  ret = gst_d3d11_window_render (self->window, render_buf, &rect);
+  if (self->render_stats)
+    stats = gst_base_sink_get_stats (GST_BASE_SINK_CAST (self));
+
+  ret = gst_d3d11_window_render (self->window, render_buf, &rect, stats);
   if (need_unref)
     gst_buffer_unref (render_buf);
 
@@ -1013,7 +1044,7 @@ gst_d3d11_video_sink_expose (GstVideoOverlay * overlay)
     rect.w = GST_VIDEO_SINK_WIDTH (self);
     rect.h = GST_VIDEO_SINK_HEIGHT (self);
 
-    gst_d3d11_window_render (self->window, NULL, &rect);
+    gst_d3d11_window_render (self->window, NULL, &rect, NULL);
   }
 }
 
