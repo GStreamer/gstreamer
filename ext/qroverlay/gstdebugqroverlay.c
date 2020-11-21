@@ -60,7 +60,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_qr_overlay_debug);
 #define GST_CAT_DEFAULT gst_debug_qr_overlay_debug
 
 static gchar *get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
-    GstVideoInfo * info);
+    GstVideoInfo * info, gboolean * reuse_prev);
 
 enum
 {
@@ -232,7 +232,7 @@ gst_debug_qr_overlay_get_property (GObject * object, guint prop_id,
 
 static gchar *
 get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
-    GstVideoInfo * info)
+    GstVideoInfo * info, gboolean * reuse_prev)
 {
   GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (base);
   GString *res = g_string_new (NULL);
@@ -242,6 +242,7 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
   JsonObject *jobj = json_object_new ();
   JsonNode *root = json_node_new (JSON_NODE_OBJECT);
 
+  *reuse_prev = FALSE;
   json_object_set_int_member (jobj, "TIMESTAMP",
       (gint64) GST_BUFFER_TIMESTAMP (buf));
   json_object_set_int_member (jobj, "BUFFERCOUNT",

@@ -34,7 +34,8 @@ struct _GstBaseQROverlayClass
 {
   GstBinClass parent;
 
-  gchar* (*get_content) (GstBaseQROverlay *self, GstBuffer *buf, GstVideoInfo *info);
+  gchar* (*get_content) (GstBaseQROverlay *self, GstBuffer *buf, GstVideoInfo *info,
+    gboolean *reuse_previous);
 };
 
 G_END_DECLS

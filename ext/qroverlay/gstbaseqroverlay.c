@@ -67,6 +67,7 @@ struct _GstBaseQROverlayPrivate
   gboolean valid;
 
   GstPad *sinkpad, *srcpad;
+  GstVideoOverlayComposition *prev_overlay;
 };
 
 #define PRIV(s) gst_base_qr_overlay_get_instance_private (GST_BASE_QR_OVERLAY (s))
@@ -209,6 +210,7 @@ gst_base_qr_overlay_draw_cb (GstBaseQROverlay * self, GstSample * sample,
   GstBaseQROverlayPrivate *priv = PRIV (self);
   QRcode *qrcode;
   gchar *content;
+  gboolean reuse_previous = FALSE;
   GstVideoOverlayComposition *overlay = NULL;
   GstBuffer *buffer = gst_sample_get_buffer (sample);
   GstSegment *segment = gst_sample_get_segment (sample);
@@ -226,15 +228,22 @@ gst_base_qr_overlay_draw_cb (GstBaseQROverlay * self, GstSample * sample,
 
   content =
       GST_BASE_QR_OVERLAY_GET_CLASS (self)->get_content (GST_BASE_QR_OVERLAY
-      (self), buffer, &priv->info);
-  GST_INFO_OBJECT (self, "String will be encoded : %s", content);
-  qrcode = QRcode_encodeString (content, 0, priv->qrcode_quality, QR_MODE_8, 0);
+      (self), buffer, &priv->info, &reuse_previous);
+  if (reuse_previous && priv->prev_overlay) {
+    overlay = gst_video_overlay_composition_ref (priv->prev_overlay);
+  } else if (content) {
+    GST_INFO_OBJECT (self, "String will be encoded : %s", content);
+    qrcode =
+        QRcode_encodeString (content, 0, priv->qrcode_quality, QR_MODE_8, 0);
 
-  if (qrcode) {
-    GST_DEBUG_OBJECT (self, "String encoded");
-    overlay = draw_overlay (GST_BASE_QR_OVERLAY (self), qrcode);
-  } else {
-    GST_WARNING_OBJECT (self, "Could not encode content: %s", content);
+    if (qrcode) {
+      GST_DEBUG_OBJECT (self, "String encoded");
+      overlay = draw_overlay (GST_BASE_QR_OVERLAY (self), qrcode);
+      gst_mini_object_replace (((GstMiniObject **) & priv->prev_overlay),
+          (GstMiniObject *) overlay);
+    } else {
+      GST_WARNING_OBJECT (self, "Could not encode content: %s", content);
+    }
   }
   g_free (content);
 
@@ -242,6 +251,14 @@ gst_base_qr_overlay_draw_cb (GstBaseQROverlay * self, GstSample * sample,
 }
 
 /* GObject vmethod implementations */
+
+static void
+gst_base_qr_overlay_dispose (GObject * object)
+{
+  GstBaseQROverlayPrivate *priv = PRIV (object);
+
+  gst_mini_object_replace (((GstMiniObject **) & priv->prev_overlay), NULL);
+}
 
 /* initialize the qroverlay's class */
 static void
@@ -255,6 +272,7 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
 
   gobject_class->set_property = gst_base_qr_overlay_set_property;
   gobject_class->get_property = gst_base_qr_overlay_get_property;
+  gobject_class->dispose = gst_base_qr_overlay_dispose;
 
   GST_DEBUG_CATEGORY_INIT (gst_base_qr_overlay_debug, "qroverlay", 0,
       "Qrcode overlay base class");

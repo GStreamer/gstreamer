@@ -62,16 +62,26 @@ struct _GstQROverlay
 {
   GstBaseQROverlay parent;
   gchar *data;
+
+  gboolean data_changed;
 };
 
 #define gst_qr_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstQROverlay, gst_qr_overlay, GST_TYPE_BASE_QR_OVERLAY);
 
 static gchar *
-get_qrcode_content (GstBaseQROverlay * self, GstBuffer * buf,
-    GstVideoInfo * info)
+get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
+    GstVideoInfo * info, gboolean * reuse_prev)
 {
-  return g_strdup (GST_QR_OVERLAY (self)->data);
+  gchar *content;
+  GstQROverlay *self = GST_QR_OVERLAY (base);
+
+  GST_OBJECT_LOCK (self);
+  content = g_strdup (self->data);
+  *reuse_prev = self->data_changed;
+  GST_OBJECT_UNLOCK (self);
+
+  return content;
 }
 
 static void
@@ -82,7 +92,10 @@ gst_qr_overlay_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DATA:
+      GST_OBJECT_LOCK (self);
       self->data = g_value_dup_string (value);
+      self->data_changed = TRUE;
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
