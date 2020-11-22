@@ -85,6 +85,12 @@
  * * gst_mpegts_section_get_tot()
  * * %GstMpegtsTOT
  *
+ * ## Selection Information Table (SIT)
+ * See:
+ * * gst_mpegts_section_get_sit()
+ * * %GstMpegtsSIT
+ * * %GstMpegtsSITService
+ *
  * # API
  */
 
@@ -1251,4 +1257,161 @@ gst_mpegts_section_get_tot (GstMpegtsSection * section)
         (GDestroyNotify) _gst_mpegts_tot_free);
 
   return (const GstMpegtsTOT *) section->cached_parsed;
+}
+
+
+/* Selection Information Table (SIT) */
+
+static GstMpegtsSITService *
+_gst_mpegts_sit_service_copy (GstMpegtsSITService * sit)
+{
+  GstMpegtsSITService *copy = g_slice_dup (GstMpegtsSITService, sit);
+
+  copy->service_id = sit->service_id;
+  copy->running_status = sit->running_status;
+  copy->descriptors = g_ptr_array_ref (sit->descriptors);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_sit_service_free (GstMpegtsSITService * sit)
+{
+  if (sit->descriptors)
+    g_ptr_array_unref (sit->descriptors);
+  g_slice_free (GstMpegtsSITService, sit);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsSITService, gst_mpegts_sit_service,
+    (GBoxedCopyFunc) _gst_mpegts_sit_service_copy,
+    (GFreeFunc) _gst_mpegts_sit_service_free);
+
+static GstMpegtsSIT *
+_gst_mpegts_sit_copy (GstMpegtsSIT * sit)
+{
+  GstMpegtsSIT *copy = g_slice_dup (GstMpegtsSIT, sit);
+
+  copy->services = g_ptr_array_ref (sit->services);
+  copy->descriptors = g_ptr_array_ref (sit->descriptors);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_sit_free (GstMpegtsSIT * sit)
+{
+  g_ptr_array_unref (sit->services);
+  g_ptr_array_unref (sit->descriptors);
+  g_slice_free (GstMpegtsSIT, sit);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsSIT, gst_mpegts_sit,
+    (GBoxedCopyFunc) _gst_mpegts_sit_copy, (GFreeFunc) _gst_mpegts_sit_free);
+
+
+static gpointer
+_parse_sit (GstMpegtsSection * section)
+{
+  GstMpegtsSIT *sit = NULL;
+  guint i = 0, allocated_services = 8;
+  guint8 *data, *end, *entry_begin;
+  guint sit_info_length;
+  guint descriptors_loop_length;
+
+  GST_DEBUG ("SIT");
+
+  sit = g_slice_new0 (GstMpegtsSIT);
+
+  data = section->data;
+  end = data + section->section_length;
+
+  /* Skip common fields */
+  data += 8;
+
+  descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0fff;
+  data += 2;
+  sit->descriptors =
+      gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+  if (sit->descriptors == NULL)
+    goto error;
+  data += descriptors_loop_length;
+
+  sit_info_length = end - data;;
+  sit->services = g_ptr_array_new_full (allocated_services,
+      (GDestroyNotify) _gst_mpegts_sit_service_free);
+
+  /* read up to the CRC */
+  while (sit_info_length - 4 > 0) {
+    GstMpegtsSITService *service = g_slice_new0 (GstMpegtsSITService);
+    g_ptr_array_add (sit->services, service);
+
+    entry_begin = data;
+
+    if (sit_info_length - 4 < 4) {
+      /* each entry must be at least 4 bytes (+4 bytes for the CRC) */
+      GST_WARNING ("PID %d invalid SIT entry size %d",
+          section->pid, sit_info_length);
+      goto error;
+    }
+
+    service->service_id = GST_READ_UINT16_BE (data);
+    data += 2;
+
+    service->running_status = (*data >> 5) & 0x07;
+    descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0fff;
+    data += 2;
+
+    if (descriptors_loop_length && (data + descriptors_loop_length > end - 4)) {
+      GST_WARNING ("PID %d invalid SIT entry %d descriptors loop length %d",
+          section->pid, service->service_id, descriptors_loop_length);
+      goto error;
+    }
+    service->descriptors =
+        gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+    if (!service->descriptors)
+      goto error;
+    data += descriptors_loop_length;
+
+    sit_info_length -= data - entry_begin;
+    i += 1;
+  }
+
+  if (data != end - 4) {
+    GST_WARNING ("PID %d invalid SIT parsed %d length %d",
+        section->pid, (gint) (data - section->data), section->section_length);
+    goto error;
+  }
+
+  return sit;
+
+error:
+  if (sit)
+    _gst_mpegts_sit_free (sit);
+
+  return NULL;
+}
+
+/**
+ * gst_mpegts_section_get_sit:
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_SIT
+ *
+ * Returns the #GstMpegtsSIT contained in the @section.
+ *
+ * Returns: The #GstMpegtsSIT contained in the section, or %NULL if an error
+ * happened.
+ *
+ * Since: 1.20
+ */
+const GstMpegtsSIT *
+gst_mpegts_section_get_sit (GstMpegtsSection * section)
+{
+  g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_SIT, NULL);
+  g_return_val_if_fail (section->cached_parsed || section->data, NULL);
+
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_section_checks (section, 18, _parse_sit,
+        (GDestroyNotify) _gst_mpegts_sit_free);
+
+  return (const GstMpegtsSIT *) section->cached_parsed;
 }

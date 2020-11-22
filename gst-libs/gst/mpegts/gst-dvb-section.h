@@ -433,6 +433,68 @@ GType gst_mpegts_tot_get_type (void);
 GST_MPEGTS_API
 const GstMpegtsTOT *gst_mpegts_section_get_tot (GstMpegtsSection *section);
 
+/* SIT */
+
+typedef struct _GstMpegtsSITService GstMpegtsSITService;
+/**
+ * GST_TYPE_MPEGTS_SIT_SERVICE:
+ *
+ * Since: 1.20
+ */
+#define GST_TYPE_MPEGTS_SIT_SERVICE (gst_mpegts_sit_service_get_type())
+
+typedef struct _GstMpegtsSIT GstMpegtsSIT;
+/**
+ * GST_TYPE_MPEGTS_SIT:
+ *
+ * Since: 1.20
+ */
+#define GST_TYPE_MPEGTS_SIT (gst_mpegts_sit_get_type())
+
+/**
+ * GstMpegtsSITService:
+ * @service_id: The Program number this table belongs to
+ * @running_status: Status of this service
+ * @descriptors: (element-type GstMpegtsDescriptor): List of descriptors
+ *
+ * SIT Service entry
+ *
+ * Since: 1.20
+ */
+struct _GstMpegtsSITService
+{
+  guint16        service_id;
+  GstMpegtsRunningStatus running_status;
+
+  GPtrArray     *descriptors;
+};
+
+/**
+ * GstMpegtsSIT:
+ * @descriptors: (element-type GstMpegtsDescriptor): List of descriptors
+ * @services: (element-type GstMpegtsSITService): List of services
+ *
+ * Selection Information Table (EN 300 468)
+ *
+ * Since: 1.20
+ */
+struct _GstMpegtsSIT
+{
+  GPtrArray     *descriptors;
+  GPtrArray     *services;
+};
+
+
+GST_MPEGTS_API
+GType gst_mpegts_sit_get_type (void);
+
+GST_MPEGTS_API
+GType gst_mpegts_sit_service_get_type (void);
+
+GST_MPEGTS_API
+const GstMpegtsSIT *gst_mpegts_section_get_sit (GstMpegtsSection *section);
+
+
 G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */

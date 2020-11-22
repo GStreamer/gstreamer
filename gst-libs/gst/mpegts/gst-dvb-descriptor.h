@@ -86,6 +86,13 @@ typedef enum {
   GST_MTS_DESC_DVB_SERVICE_MOVE                 = 0x60,
   GST_MTS_DESC_DVB_SHORT_SMOOTHING_BUFFER       = 0x61,
   GST_MTS_DESC_DVB_FREQUENCY_LIST               = 0x62,
+  /**
+   * GST_MTS_DESC_DVB_PARTIAL_TRANSPORT_STREAM:
+   *
+   * Partial Transport Stream descriptor. Only present in SIT Sections.
+   *
+   * See also: %GST_MPEGTS_SECTION_SIT, %GstMpegtsSIT
+   */
   GST_MTS_DESC_DVB_PARTIAL_TRANSPORT_STREAM     = 0x63,
   GST_MTS_DESC_DVB_DATA_BROADCAST               = 0x64,
   GST_MTS_DESC_DVB_SCRAMBLING                   = 0x65,

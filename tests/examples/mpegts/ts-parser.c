@@ -1035,6 +1035,29 @@ dump_sdt (GstMpegtsSection * section)
   }
 }
 
+
+static void
+dump_sit (GstMpegtsSection * section)
+{
+  const GstMpegtsSIT *sit = gst_mpegts_section_get_sit (section);
+  guint i, len;
+
+  g_assert (sit);
+
+  dump_descriptors (sit->descriptors, 7);
+  len = sit->services->len;
+  g_printf ("     %d Services:\n", len);
+  for (i = 0; i < len; i++) {
+    GstMpegtsSITService *service = g_ptr_array_index (sit->services, i);
+    g_print
+        ("       service_id:0x%04x, running_status:0x%02x (%s)\n",
+        service->service_id, service->running_status,
+        enum_name (GST_TYPE_MPEGTS_RUNNING_STATUS, service->running_status));
+    dump_descriptors (service->descriptors, 9);
+  }
+}
+
+
 static void
 dump_tdt (GstMpegtsSection * section)
 {
@@ -1255,6 +1278,9 @@ dump_section (GstMpegtsSection * section)
       break;
     case GST_MPEGTS_SECTION_EIT:
       dump_eit (section);
+      break;
+    case GST_MPEGTS_SECTION_SIT:
+      dump_sit (section);
       break;
     case GST_MPEGTS_SECTION_ATSC_MGT:
       dump_mgt (section);
