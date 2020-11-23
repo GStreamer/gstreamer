@@ -358,14 +358,54 @@ gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
   return buf;
 }
 
+/*=========================== GstVaMemoryPool ================================*/
+
+/* queue for disposed surfaces */
+typedef struct _GstVaMemoryPool GstVaMemoryPool;
+struct _GstVaMemoryPool
+{
+  GstAtomicQueue *queue;
+  gint surface_count;
+
+  GMutex lock;
+  GCond cond;
+
+  gboolean flushing;
+};
+
+#define GST_VA_MEMORY_POOL_CAST(obj) ((GstVaMemoryPool *)obj)
+#define GST_VA_MEMORY_POOL_LOCK(obj) g_mutex_lock (&GST_VA_MEMORY_POOL_CAST(obj)->lock)
+#define GST_VA_MEMORY_POOL_UNLOCK(obj) g_mutex_unlock (&GST_VA_MEMORY_POOL_CAST(obj)->lock)
+
 static void
-_available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems,
-    gint * surface_count)
+gst_va_memory_pool_init (GstVaMemoryPool * self)
+{
+  self->queue = gst_atomic_queue_new (2);
+
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond);
+
+  self->flushing = FALSE;
+  self->surface_count = 0;
+}
+
+static void
+gst_va_memory_pool_finalize (GstVaMemoryPool * self)
+{
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond);
+
+  gst_atomic_queue_unref (self->queue);
+}
+
+static void
+gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
+    GstVaDisplay * display)
 {
   GstMemory *mem;
   GstVaBufferSurface *buf;
 
-  while ((mem = gst_atomic_queue_pop (available_mems))) {
+  while ((mem = gst_atomic_queue_pop (self->queue))) {
     /* destroy the surface */
     buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
         gst_va_buffer_surface_quark ());
@@ -373,11 +413,11 @@ _available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems,
       if (g_atomic_int_dec_and_test (&buf->ref_count)) {
         GST_LOG ("Destroying surface %#x", buf->surface);
         _destroy_surfaces (display, &buf->surface, 1);
-        *surface_count -= 1;    /* GstVaDmabufAllocator */
+        self->surface_count -= 1;       /* GstVaDmabufAllocator */
         g_slice_free (GstVaBufferSurface, buf);
       }
     } else {
-      *surface_count -= 1;      /* GstVaAllocator */
+      self->surface_count -= 1; /* GstVaAllocator */
     }
 
     GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
@@ -389,27 +429,78 @@ _available_mems_flush (GstVaDisplay * display, GstAtomicQueue * available_mems,
   }
 }
 
+static void
+gst_va_memory_pool_flush (GstVaMemoryPool * self, GstVaDisplay * display)
+{
+  GST_VA_MEMORY_POOL_LOCK (self);
+
+  self->flushing = TRUE;
+  gst_va_memory_pool_flush_unlocked (self, display);
+  self->flushing = FALSE;
+
+  g_cond_broadcast (&self->cond);
+
+  GST_VA_MEMORY_POOL_UNLOCK (self);
+}
+
+static inline void
+gst_va_memory_pool_push (GstVaMemoryPool * self, GstMemory * mem)
+{
+  GST_VA_MEMORY_POOL_LOCK (self);
+
+  gst_atomic_queue_push (self->queue, gst_memory_ref (mem));
+  g_cond_signal (&self->cond);
+
+  GST_VA_MEMORY_POOL_UNLOCK (self);
+}
+
+static inline GstMemory *
+gst_va_memory_pool_pop (GstVaMemoryPool * self)
+{
+  return gst_atomic_queue_pop (self->queue);
+}
+
+static inline GstMemory *
+gst_va_memory_pool_peek (GstVaMemoryPool * self)
+{
+  return gst_atomic_queue_peek (self->queue);
+}
+
+static gboolean
+gst_va_memory_pool_wait_unlocked (GstVaMemoryPool * self)
+{
+  while (gst_atomic_queue_length (self->queue) == 0 && !self->flushing)
+    g_cond_wait (&self->cond, &self->lock);
+
+  return !self->flushing;
+}
+
+static inline guint
+gst_va_memory_pool_surface_count (GstVaMemoryPool * self)
+{
+  return g_atomic_int_get (&self->surface_count);
+}
+
+static inline void
+gst_va_memory_pool_surface_inc (GstVaMemoryPool * self)
+{
+  g_atomic_int_inc (&self->surface_count);
+}
+
 /*=========================== GstVaDmabufAllocator ===========================*/
 
 struct _GstVaDmabufAllocator
 {
   GstDmaBufAllocator parent;
 
-  /* queue for disposed surfaces */
-  GstAtomicQueue *available_mems;
-  gint surface_count;
-
   GstVaDisplay *display;
 
   GstMemoryMapFunction parent_map;
 
-  GMutex buffer_lock;
-  GCond buffer_cond;
-
   GstVideoInfo info;
   guint usage_hint;
 
-  gboolean flushing;
+  GstVaMemoryPool pool;
 };
 
 #define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
@@ -445,10 +536,8 @@ gst_va_dmabuf_allocator_finalize (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
-  gst_atomic_queue_unref (self->available_mems);
+  gst_va_memory_pool_finalize (&self->pool);
   gst_clear_object (&self->display);
-  g_mutex_clear (&self->buffer_lock);
-  g_cond_clear (&self->buffer_cond);
 
   G_OBJECT_CLASS (dmabuf_parent_class)->finalize (object);
 }
@@ -458,10 +547,11 @@ gst_va_dmabuf_allocator_dispose (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
-  _available_mems_flush (self->display, self->available_mems,
-      &self->surface_count);
-  if (self->surface_count != 0)
-    GST_WARNING_OBJECT (self, "Surfaces leaked: %d", self->surface_count);
+  gst_va_memory_pool_flush_unlocked (&self->pool, self->display);
+  if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
+    GST_WARNING_OBJECT (self, "Surfaces leaked: %d",
+        gst_va_memory_pool_surface_count (&self->pool));
+  }
 
   G_OBJECT_CLASS (dmabuf_parent_class)->dispose (object);
 }
@@ -478,10 +568,7 @@ gst_va_dmabuf_allocator_class_init (GstVaDmabufAllocatorClass * klass)
 static void
 gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
 {
-  self->available_mems = gst_atomic_queue_new (2);
-  g_mutex_init (&self->buffer_lock);
-  g_cond_init (&self->buffer_cond);
-
+  gst_va_memory_pool_init (&self->pool);
   self->parent_map = GST_ALLOCATOR (self)->mem_map;
   GST_ALLOCATOR (self)->mem_map = gst_va_dmabuf_mem_map;
 }
@@ -513,11 +600,7 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
 
   GST_LOG ("releasing %p", mem);
-
-  g_mutex_lock (&self->buffer_lock);
-  gst_atomic_queue_push (self->available_mems, gst_memory_ref (mem));
-  g_cond_signal (&self->buffer_cond);
-  g_mutex_unlock (&self->buffer_lock);
+  gst_va_memory_pool_push (&self->pool, mem);
 
   /* Keep last in case we are holding on the last allocator ref */
   gst_object_unref (mem->allocator);
@@ -628,7 +711,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
       GST_VIDEO_INFO_PLANE_STRIDE (info, i) = desc.layers[i].pitch[0];
     }
   } else {
-    g_atomic_int_inc (&self->surface_count);
+    gst_va_memory_pool_surface_inc (&self->pool);
   }
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d] size %" G_GSIZE_FORMAT,
@@ -659,7 +742,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
   VASurfaceID surface;
   gint j, idx = 1;
 
-  mem[0] = gst_atomic_queue_pop (self->available_mems);
+  mem[0] = gst_va_memory_pool_pop (&self->pool);
   if (!mem[0])
     return VA_INVALID_ID;
 
@@ -668,7 +751,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
     GstMemory *pmem;
     VASurfaceID psurface;
 
-    pmem = gst_atomic_queue_peek (self->available_mems);
+    pmem = gst_va_memory_pool_peek (&self->pool);
     if (!pmem)
       break;
 
@@ -676,7 +759,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
     if (psurface != surface)
       break;
 
-    mem[idx++] = gst_atomic_queue_pop (self->available_mems);
+    mem[idx++] = gst_va_memory_pool_pop (&self->pool);
   };
 
   /* append them in reverse order */
@@ -695,9 +778,9 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
   VASurfaceID surface;
 
-  g_mutex_lock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
-  g_mutex_unlock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
   if (surface != VA_INVALID_ID) {
     GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
@@ -714,17 +797,13 @@ gst_va_dmabuf_allocator_wait_for_memory (GstAllocator * allocator,
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
   VASurfaceID surface;
 
-  g_mutex_lock (&self->buffer_lock);
-  while (gst_atomic_queue_length (self->available_mems) == 0 && !self->flushing)
-    g_cond_wait (&self->buffer_cond, &self->buffer_lock);
-
-  if (self->flushing) {
-    g_mutex_unlock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_LOCK (&self->pool);
+  if (!gst_va_memory_pool_wait_unlocked (&self->pool)) {
+    GST_VA_MEMORY_POOL_LOCK (&self->pool);
     return FALSE;
   }
-
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
-  g_mutex_unlock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
   if (surface != VA_INVALID_ID) {
     GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
@@ -739,13 +818,7 @@ gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  g_mutex_lock (&self->buffer_lock);
-  self->flushing = TRUE;
-  _available_mems_flush (self->display, self->available_mems,
-      &self->surface_count);
-  self->flushing = FALSE;
-  g_cond_broadcast (&self->buffer_cond);
-  g_mutex_unlock (&self->buffer_lock);
+  gst_va_memory_pool_flush (&self->pool, self->display);
 }
 
 static gboolean
@@ -778,7 +851,7 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
 
   self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  if (self->surface_count != 0) {
+  if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
     if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_INFO_FORMAT (&self->info)
         && GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&self->info)
         && GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&self->info)
@@ -890,10 +963,6 @@ struct _GstVaAllocator
 {
   GstAllocator parent;
 
-  /* queue for disposed surfaces */
-  GstAtomicQueue *available_mems;
-  gint surface_count;
-
   GstVaDisplay *display;
 
   gboolean use_derived;
@@ -904,13 +973,10 @@ struct _GstVaAllocator
   guint32 fourcc;
   guint32 rt_format;
 
-  GMutex buffer_lock;
-  GCond buffer_cond;
-
   GstVideoInfo info;
   guint usage_hint;
 
-  gboolean flushing;
+  GstVaMemoryPool pool;
 };
 
 typedef struct _GstVaMemory GstVaMemory;
@@ -941,11 +1007,9 @@ gst_va_allocator_finalize (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
-  gst_atomic_queue_unref (self->available_mems);
-  gst_clear_object (&self->display);
+  gst_va_memory_pool_finalize (&self->pool);
   g_clear_pointer (&self->surface_formats, g_array_unref);
-  g_mutex_clear (&self->buffer_lock);
-  g_cond_clear (&self->buffer_cond);
+  gst_clear_object (&self->display);
 
   G_OBJECT_CLASS (gst_va_allocator_parent_class)->finalize (object);
 }
@@ -955,10 +1019,11 @@ gst_va_allocator_dispose (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
-  _available_mems_flush (self->display, self->available_mems,
-      &self->surface_count);
-  if (self->surface_count != 0)
-    GST_WARNING_OBJECT (self, "Surfaces leaked: %d", self->surface_count);
+  gst_va_memory_pool_flush_unlocked (&self->pool, self->display);
+  if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
+    GST_WARNING_OBJECT (self, "Surfaces leaked: %d",
+        gst_va_memory_pool_surface_count (&self->pool));
+  }
 
   G_OBJECT_CLASS (gst_va_allocator_parent_class)->dispose (object);
 }
@@ -1250,8 +1315,6 @@ gst_va_allocator_init (GstVaAllocator * self)
 {
   GstAllocator *allocator = GST_ALLOCATOR (self);
 
-  self->available_mems = gst_atomic_queue_new (2);
-
   allocator->mem_type = GST_ALLOCATOR_VASURFACE;
   allocator->mem_map = (GstMemoryMapFunction) _va_map;
   allocator->mem_unmap = (GstMemoryUnmapFunction) _va_unmap;
@@ -1259,8 +1322,7 @@ gst_va_allocator_init (GstVaAllocator * self)
 
   self->use_derived = TRUE;
 
-  g_mutex_init (&self->buffer_lock);
-  g_cond_init (&self->buffer_cond);
+  gst_va_memory_pool_init (&self->pool);
 
   GST_OBJECT_FLAG_SET (self, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
@@ -1272,11 +1334,7 @@ gst_va_memory_release (GstMiniObject * mini_object)
   GstVaAllocator *self = GST_VA_ALLOCATOR (mem->allocator);
 
   GST_LOG ("releasing %p", mem);
-
-  g_mutex_lock (&self->buffer_lock);
-  gst_atomic_queue_push (self->available_mems, gst_memory_ref (mem));
-  g_cond_signal (&self->buffer_cond);
-  g_mutex_unlock (&self->buffer_lock);
+  gst_va_memory_pool_push (&self->pool, mem);
 
   /* Keep last in case we are holding on the last allocator ref */
   gst_object_unref (mem->allocator);
@@ -1312,7 +1370,7 @@ gst_va_allocator_alloc (GstAllocator * allocator)
   _reset_mem (mem, allocator, GST_VIDEO_INFO_SIZE (&self->info));
 
   GST_MINI_OBJECT (mem)->dispose = gst_va_memory_release;
-  g_atomic_int_inc (&self->surface_count);
+  gst_va_memory_pool_surface_inc (&self->pool);
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d]", mem->surface,
       GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info));
@@ -1342,7 +1400,7 @@ gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
   GstMemory *mem;
   VASurfaceID surface;
 
-  mem = gst_atomic_queue_pop (self->available_mems);
+  mem = gst_va_memory_pool_pop (&self->pool);
   if (!mem)
     return VA_INVALID_ID;
 
@@ -1359,9 +1417,9 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
   VASurfaceID surface;
 
-  g_mutex_lock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
-  g_mutex_unlock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
   if (surface != VA_INVALID_ID) {
     GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
@@ -1377,17 +1435,13 @@ gst_va_allocator_wait_for_memory (GstAllocator * allocator, GstBuffer * buffer)
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
   VASurfaceID surface;
 
-  g_mutex_lock (&self->buffer_lock);
-  while (gst_atomic_queue_length (self->available_mems) == 0 && !self->flushing)
-    g_cond_wait (&self->buffer_cond, &self->buffer_lock);
-
-  if (self->flushing) {
-    g_mutex_unlock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_LOCK (&self->pool);
+  if (!gst_va_memory_pool_wait_unlocked (&self->pool)) {
+    GST_VA_MEMORY_POOL_LOCK (&self->pool);
     return FALSE;
   }
-
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
-  g_mutex_unlock (&self->buffer_lock);
+  GST_VA_MEMORY_POOL_LOCK (&self->pool);
 
   if (surface != VA_INVALID_ID) {
     GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
@@ -1402,13 +1456,7 @@ gst_va_allocator_flush (GstAllocator * allocator)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
 
-  g_mutex_lock (&self->buffer_lock);
-  self->flushing = TRUE;
-  _available_mems_flush (self->display, self->available_mems,
-      &self->surface_count);
-  self->flushing = FALSE;
-  g_cond_broadcast (&self->buffer_cond);
-  g_mutex_unlock (&self->buffer_lock);
+  gst_va_memory_pool_flush (&self->pool, self->display);
 }
 
 static gboolean
@@ -1467,7 +1515,7 @@ gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  if (self->surface_count != 0) {
+  if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
     if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_INFO_FORMAT (&self->info)
         && GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&self->info)
         && GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&self->info)
