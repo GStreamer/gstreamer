@@ -473,6 +473,7 @@ static void
 gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
 {
   self->available_mems = gst_atomic_queue_new (2);
+  g_cond_init (&self->buffer_cond);
 
   self->parent_map = GST_ALLOCATOR (self)->mem_map;
   GST_ALLOCATOR (self)->mem_map = gst_va_dmabuf_mem_map;
