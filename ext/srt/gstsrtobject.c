@@ -1602,8 +1602,10 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
   gint poll_timeout;
   const guint8 *msg = mapinfo->data;
   gint payload_size, optlen = 1;
+  gboolean wait_for_connection;
 
   GST_OBJECT_LOCK (srtobject->element);
+  wait_for_connection = srtobject->wait_for_connection;
   if (!gst_structure_get_int (srtobject->parameters, "poll-timeout",
           &poll_timeout)) {
     poll_timeout = GST_SRT_DEFAULT_POLL_TIMEOUT;
@@ -1626,6 +1628,13 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
     gint rest;
 
     if (g_cancellable_is_cancelled (cancellable)) {
+      break;
+    }
+
+    if (!wait_for_connection &&
+        srt_getsockstate (srtobject->sock) == SRTS_CONNECTING) {
+      GST_LOG_OBJECT (srtobject->element,
+          "Not connected yet. Dropping the buffer.");
       break;
     }
 
