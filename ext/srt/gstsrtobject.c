@@ -133,6 +133,52 @@ static const struct srt_constant_params srt_params[] = {
 };
 /* *INDENT-ON* */
 
+typedef struct
+{
+  const gchar *name;
+  SRT_SOCKOPT opt;
+  GType gtype;
+} SrtOption;
+
+SrtOption srt_options[] = {
+  {"mss", SRTO_MSS, G_TYPE_INT},
+  {"fc", SRTO_FC, G_TYPE_INT},
+  {"sndbuf", SRTO_SNDBUF, G_TYPE_INT},
+  {"rcvbuf", SRTO_RCVBUF, G_TYPE_INT},
+  {"maxbw", SRTO_MAXBW, G_TYPE_INT64},
+  {"tsbpdmode", SRTO_TSBPDMODE, G_TYPE_BOOLEAN},
+  {"latency", SRTO_LATENCY, G_TYPE_INT},
+  {"inputbw", SRTO_INPUTBW, G_TYPE_INT64},
+  {"oheadbw", SRTO_OHEADBW, G_TYPE_INT},
+  {"passphrase", SRTO_PASSPHRASE, G_TYPE_STRING},
+  {"pbkeylen", SRTO_PBKEYLEN, G_TYPE_INT},
+  {"ipttl", SRTO_IPTTL, G_TYPE_INT},
+  {"iptos", SRTO_IPTOS, G_TYPE_INT},
+  {"tlpktdrop", SRTO_TLPKTDROP, G_TYPE_BOOLEAN},
+  {"snddropdelay", SRTO_SNDDROPDELAY, G_TYPE_INT},
+  {"nakreport", SRTO_NAKREPORT, G_TYPE_BOOLEAN},
+  {"conntimeo", SRTO_CONNTIMEO, G_TYPE_INT},
+  {"drifttracer", SRTO_DRIFTTRACER, G_TYPE_BOOLEAN},
+  {"lossmaxttl", SRTO_LOSSMAXTTL, G_TYPE_INT},
+  {"rcvlatency", SRTO_RCVLATENCY, G_TYPE_INT},
+  {"peerlatency", SRTO_PEERLATENCY, G_TYPE_INT},
+  {"minversion", SRTO_MINVERSION, G_TYPE_INT},
+  {"streamid", SRTO_STREAMID, G_TYPE_STRING},
+  {"congestion", SRTO_CONGESTION, G_TYPE_STRING},
+  {"messageapi", SRTO_MESSAGEAPI, G_TYPE_BOOLEAN},
+  {"payloadsize", SRTO_PAYLOADSIZE, G_TYPE_INT},
+  {"transtype", SRTO_TRANSTYPE, G_TYPE_INT},
+  {"kmrefreshrate", SRTO_KMREFRESHRATE, G_TYPE_INT},
+  {"kmpreannounce", SRTO_KMPREANNOUNCE, G_TYPE_INT},
+  {"enforcedencryption", SRTO_ENFORCEDENCRYPTION, G_TYPE_BOOLEAN},
+  {"ipv6only", SRTO_IPV6ONLY, G_TYPE_INT},
+  {"peeridletimeo", SRTO_PEERIDLETIMEO, G_TYPE_INT},
+  {"bindtodevice", SRTO_BINDTODEVICE, G_TYPE_STRING},
+  {"packetfilter", SRTO_PACKETFILTER, G_TYPE_STRING},
+  {"retransmitalgo", SRTO_RETRANSMITALGO, G_TYPE_INT},
+  {NULL}
+};
+
 static gint srt_init_refcount = 0;
 
 static GSocketAddress *
@@ -186,11 +232,68 @@ name_resolve:
 }
 
 static gboolean
+gst_srt_object_apply_socket_option (SRTSOCKET sock, SrtOption * option,
+    const GValue * value, GError ** error)
+{
+  union
+  {
+    int32_t i;
+    int64_t i64;
+    gboolean b;
+    const gchar *c;
+  } u;
+  const void *optval = &u;
+  gint optlen;
+
+  if (!G_VALUE_HOLDS (value, option->gtype)) {
+    goto bad_type;
+  }
+
+  switch (option->gtype) {
+    case G_TYPE_INT:
+      u.i = g_value_get_int (value);
+      optlen = sizeof u.i;
+      break;
+    case G_TYPE_INT64:
+      u.i64 = g_value_get_int64 (value);
+      optlen = sizeof u.i64;
+      break;
+    case G_TYPE_BOOLEAN:
+      u.b = g_value_get_boolean (value);
+      optlen = sizeof u.b;
+      break;
+    case G_TYPE_STRING:
+      u.c = g_value_get_string (value);
+      optval = u.c;
+      optlen = u.c ? strlen (u.c) : 0;
+      if (optlen == 0) {
+        return TRUE;
+      }
+      break;
+    default:
+      goto bad_type;
+  }
+
+  if (srt_setsockopt (sock, 0, option->opt, optval, optlen)) {
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+        "failed to set %s (reason: %s)", option->name, srt_getlasterror_str ());
+    return FALSE;
+  }
+
+  return TRUE;
+
+bad_type:
+  g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+      "option %s has unsupported type", option->name);
+  return FALSE;
+}
+
+static gboolean
 gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     GError ** error)
 {
   const struct srt_constant_params *params = srt_params;
-  const gchar *passphrase;
+  SrtOption *option = srt_options;
 
   GST_OBJECT_LOCK (srtobject->element);
 
@@ -203,50 +306,12 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     }
   }
 
-  passphrase = gst_structure_get_string (srtobject->parameters, "passphrase");
-  if (passphrase != NULL && passphrase[0] != '\0') {
-    int32_t pbkeylen;
+  for (; option->name; ++option) {
+    const GValue *val;
 
-    if (srt_setsockopt (sock, 0, SRTO_PASSPHRASE, passphrase,
-            strlen (passphrase))) {
-      g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
-          "failed to set passphrase (reason: %s)", srt_getlasterror_str ());
-
+    val = gst_structure_get_value (srtobject->parameters, option->name);
+    if (val && !gst_srt_object_apply_socket_option (sock, option, val, error)) {
       goto err;
-    }
-
-    if (!gst_structure_get_int (srtobject->parameters, "pbkeylen", &pbkeylen)) {
-      pbkeylen = GST_SRT_DEFAULT_PBKEYLEN;
-    }
-
-    if (srt_setsockopt (sock, 0, SRTO_PBKEYLEN, &pbkeylen, sizeof pbkeylen)) {
-      g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
-          "failed to set pbkeylen (reason: %s)", srt_getlasterror_str ());
-      goto err;
-    }
-  }
-
-  {
-    int32_t latency;
-
-    if (!gst_structure_get_int (srtobject->parameters, "latency", &latency))
-      latency = GST_SRT_DEFAULT_LATENCY;
-    if (srt_setsockopt (sock, 0, SRTO_LATENCY, &latency, sizeof latency)) {
-      g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
-          "failed to set latency (reason: %s)", srt_getlasterror_str ());
-      goto err;
-    }
-  }
-
-  if (gst_structure_has_field (srtobject->parameters, "streamid")) {
-    const gchar *streamid;
-
-    streamid = gst_structure_get_string (srtobject->parameters, "streamid");
-    if (streamid != NULL && streamid[0] != '\0') {
-      if (srt_setsockopt (sock, 0, SRTO_STREAMID, streamid, strlen (streamid))) {
-        g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
-            "failed to set stream ID (reason: %s)", srt_getlasterror_str ());
-      }
     }
   }
 
@@ -339,7 +404,8 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       gst_structure_set_value (srtobject->parameters, "passphrase", value);
       break;
     case PROP_PBKEYLEN:
-      gst_structure_set_value (srtobject->parameters, "pbkeylen", value);
+      gst_structure_set (srtobject->parameters, "pbkeylen", G_TYPE_INT,
+          g_value_get_enum (value), NULL);
       break;
     case PROP_WAIT_FOR_CONNECTION:
       srtobject->wait_for_connection = g_value_get_boolean (value);
@@ -407,8 +473,8 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       GstSRTKeyLength v;
 
       GST_OBJECT_LOCK (srtobject->element);
-      if (!gst_structure_get_enum (srtobject->parameters, "pbkeylen",
-              GST_TYPE_SRT_KEY_LENGTH, (gint *) & v)) {
+      if (!gst_structure_get_int (srtobject->parameters, "pbkeylen",
+              (gint *) & v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'pbkeylen'");
         v = GST_SRT_KEY_LENGTH_NO_KEY;
       }
@@ -660,6 +726,65 @@ gst_srt_object_set_int_value (GstStructure * s, const gchar * key,
 }
 
 static void
+gst_srt_object_set_int64_value (GstStructure * s, const gchar * key,
+    const gchar * value)
+{
+  gst_structure_set (s, key, G_TYPE_INT64,
+      g_ascii_strtoll (value, NULL, 10), NULL);
+}
+
+static void
+gst_srt_object_set_boolean_value (GstStructure * s, const gchar * key,
+    const gchar * value)
+{
+  gboolean bool_val;
+  static const gchar *true_names[] = {
+    "1", "yes", "on", "true", NULL
+  };
+  static const gchar *false_names[] = {
+    "0", "no", "off", "false", NULL
+  };
+
+  if (g_strv_contains (true_names, value)) {
+    bool_val = TRUE;
+  } else if (g_strv_contains (false_names, value)) {
+    bool_val = FALSE;
+  } else {
+    return;
+  }
+
+  gst_structure_set (s, key, G_TYPE_BOOLEAN, bool_val, NULL);
+}
+
+static void
+gst_srt_object_set_socket_option (GstStructure * s, const gchar * key,
+    const gchar * value)
+{
+  SrtOption *option = srt_options;
+
+  for (; option; ++option) {
+    if (g_str_equal (key, option->name)) {
+      switch (option->gtype) {
+        case G_TYPE_INT:
+          gst_srt_object_set_int_value (s, key, value);
+          break;
+        case G_TYPE_INT64:
+          gst_srt_object_set_int64_value (s, key, value);
+          break;
+        case G_TYPE_STRING:
+          gst_srt_object_set_string_value (s, key, value);
+          break;
+        case G_TYPE_BOOLEAN:
+          gst_srt_object_set_boolean_value (s, key, value);
+          break;
+      }
+
+      break;
+    }
+  }
+}
+
+static void
 gst_srt_object_validate_parameters (GstStructure * s, GstUri * uri)
 {
   GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
@@ -747,17 +872,10 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
         gst_srt_object_set_string_value (srtobject->parameters, key, value);
       } else if (!g_strcmp0 ("localport", key)) {
         gst_srt_object_set_uint_value (srtobject->parameters, key, value);
-      } else if (!g_strcmp0 ("passphrase", key)) {
-        gst_srt_object_set_string_value (srtobject->parameters, key, value);
-      } else if (!g_strcmp0 ("pbkeylen", key)) {
-        gst_srt_object_set_enum_value (srtobject->parameters,
-            GST_TYPE_SRT_KEY_LENGTH, key, value);
-      } else if (!g_strcmp0 ("streamid", key)) {
-        gst_srt_object_set_string_value (srtobject->parameters, key, value);
-      } else if (!g_strcmp0 ("latency", key)) {
-        gst_srt_object_set_int_value (srtobject->parameters, key, value);
       } else if (!g_strcmp0 ("poll-timeout", key)) {
         gst_srt_object_set_int_value (srtobject->parameters, key, value);
+      } else {
+        gst_srt_object_set_socket_option (srtobject->parameters, key, value);
       }
     }
 
