@@ -1424,7 +1424,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       /* Means we had all pads muted, create some silence */
       outbuf = gst_buffer_new_allocate (NULL, outsize, NULL);
       gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
-      gst_audio_format_fill_silence (adder->info.finfo, map.data, outsize);
+      gst_audio_format_info_fill_silence (adder->info.finfo, map.data, outsize);
       gst_buffer_unmap (outbuf, &map);
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
     } else {

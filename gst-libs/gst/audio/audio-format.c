@@ -459,9 +459,29 @@ gst_audio_format_get_info (GstAudioFormat format)
  * @length: the length to fill
  *
  * Fill @length bytes in @dest with silence samples for @info.
+ *
+ * Deprecated: 1.20: Use gst_audio_format_info_fill_silence() instead.
  */
 void
 gst_audio_format_fill_silence (const GstAudioFormatInfo * info,
+    gpointer dest, gsize length)
+{
+  gst_audio_format_info_fill_silence (info, dest, length);
+}
+
+/**
+ * gst_audio_format_info_fill_silence:
+ * @info: a #GstAudioFormatInfo
+ * @dest: (array length=length) (element-type guint8): a destination
+ *   to fill
+ * @length: the length to fill
+ *
+ * Fill @length bytes in @dest with silence samples for @info.
+ *
+ * Since: 1.20
+ */
+void
+gst_audio_format_info_fill_silence (const GstAudioFormatInfo * info,
     gpointer dest, gsize length)
 {
   guint8 *dptr = dest;

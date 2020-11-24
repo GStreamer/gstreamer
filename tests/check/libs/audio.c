@@ -926,7 +926,7 @@ GST_START_TEST (test_fill_silence)
   for (f = GST_AUDIO_FORMAT_S8; f < GST_AUDIO_FORMAT_F64; f++) {
     gst_audio_info_set_format (&info, f, 48000, 1, NULL);
 
-    gst_audio_format_fill_silence (info.finfo, test_silence,
+    gst_audio_format_info_fill_silence (info.finfo, test_silence,
         GST_AUDIO_INFO_BPF (&info) * 4);
 
     for (i = 0; i < 4; i++)

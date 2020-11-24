@@ -1870,7 +1870,8 @@ gst_audio_aggregator_create_output_buffer (GstAudioAggregator * aagg,
     gst_object_unref (allocator);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
-  gst_audio_format_fill_silence (srcpad->info.finfo, outmap.data, outmap.size);
+  gst_audio_format_info_fill_silence (srcpad->info.finfo, outmap.data,
+      outmap.size);
   gst_buffer_unmap (outbuf, &outmap);
 
   return outbuf;

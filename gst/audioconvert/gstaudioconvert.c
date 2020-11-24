@@ -849,8 +849,8 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     /* Create silence buffer */
     gint i;
     for (i = 0; i < dstabuf.n_planes; i++) {
-      gst_audio_format_fill_silence (this->out_info.finfo, dstabuf.planes[i],
-          GST_AUDIO_BUFFER_PLANE_SIZE (&dstabuf));
+      gst_audio_format_info_fill_silence (this->out_info.finfo,
+          dstabuf.planes[i], GST_AUDIO_BUFFER_PLANE_SIZE (&dstabuf));
     }
   }
   ret = GST_FLOW_OK;

@@ -478,7 +478,7 @@ do_unpack (AudioChain * chain, gpointer user_data)
       }
     } else {
       for (i = 0; i < chain->blocks; i++) {
-        gst_audio_format_fill_silence (chain->finfo, tmp[i],
+        gst_audio_format_info_fill_silence (chain->finfo, tmp[i],
             num_samples * chain->inc);
       }
     }
@@ -1102,7 +1102,7 @@ converter_passthrough (GstAudioConverter * convert,
     }
   } else {
     for (i = 0; i < chain->blocks; i++)
-      gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
+      gst_audio_format_info_fill_silence (convert->in.finfo, out[i], samples);
   }
   return TRUE;
 }
@@ -1248,7 +1248,7 @@ converter_endian (GstAudioConverter * convert,
       convert->swap_endian (out[i], in[i], samples);
   } else {
     for (i = 0; i < chain->blocks; i++)
-      gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
+      gst_audio_format_info_fill_silence (convert->in.finfo, out[i], samples);
   }
   return TRUE;
 }

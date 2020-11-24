@@ -559,7 +559,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       fill = gst_buffer_new_and_alloc (fillsize);
 
       gst_buffer_map (fill, &fillmap, GST_MAP_WRITE);
-      gst_audio_format_fill_silence (audiorate->info.finfo, fillmap.data,
+      gst_audio_format_info_fill_silence (audiorate->info.finfo, fillmap.data,
           fillmap.size);
       gst_buffer_unmap (fill, &fillmap);
 
