@@ -65,8 +65,7 @@ if have_nasm and host_cpu == 'x86_64'
   else
     asm_outformat = 'elf64'
   endif
-  asm_x = files('x86/yadif.asm',
-                'x86/x86inc.asm')
+  asm_x = files('x86/yadif.asm')
 
   asm_stackalign_def = '-DSTACK_ALIGNMENT=64'
   asm_incdir = 'x86'
