@@ -40,12 +40,13 @@ enum AppState
 };
 
 static GMainLoop *loop;
-static GstElement *pipe1, *webrtc1;
+static GstElement *pipe1, *webrtc1 = NULL;
 static GObject *send_channel, *receive_channel;
 
 static SoupWebsocketConnection *ws_conn = NULL;
 static enum AppState app_state = 0;
-static const gchar *peer_id = NULL;
+static gchar *peer_id = NULL;
+static gchar *our_id = NULL;
 static const gchar *server_url = "wss://webrtc.nirbheek.in:8443";
 static gboolean disable_ssl = FALSE;
 static gboolean remote_is_offerer = FALSE;
@@ -53,6 +54,8 @@ static gboolean remote_is_offerer = FALSE;
 static GOptionEntry entries[] = {
   {"peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id,
       "String ID of the peer to connect to", "ID"},
+  {"our-id", 0, 0, G_OPTION_ARG_STRING, &our_id,
+      "String ID of the session that peer can connect to us", "ID"},
   {"server", 0, 0, G_OPTION_ARG_STRING, &server_url,
       "Signalling server to connect to", "URL"},
   {"disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL},
@@ -75,12 +78,12 @@ cleanup_and_quit_loop (const gchar * msg, enum AppState state)
       /* This will call us again */
       soup_websocket_connection_close (ws_conn, 1000, "");
     else
-      g_object_unref (ws_conn);
+      g_clear_object (&ws_conn);
   }
 
   if (loop) {
     g_main_loop_quit (loop);
-    loop = NULL;
+    g_clear_pointer (&loop, g_main_loop_unref);
   }
 
   /* To allow usage as a GSourceFunc */
@@ -114,7 +117,7 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
   GstElement *q, *conv, *resample, *sink;
   GstPadLinkReturn ret;
 
-  gst_print ("Trying to handle stream with %s ! %s", convert_name, sink_name);
+  gst_println ("Trying to handle stream with %s ! %s", convert_name, sink_name);
 
   q = gst_element_factory_make ("queue", NULL);
   g_assert_nonnull (q);
@@ -284,7 +287,7 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
 {
   app_state = PEER_CALL_NEGOTIATING;
 
-  if (remote_is_offerer) {
+  if (remote_is_offerer || our_id) {
     gchar *msg = g_strdup_printf ("OFFER_REQUEST");
     soup_websocket_connection_send_text (ws_conn, msg);
     g_free (msg);
@@ -464,19 +467,28 @@ static gboolean
 register_with_server (void)
 {
   gchar *hello;
-  gint32 our_id;
 
   if (soup_websocket_connection_get_state (ws_conn) !=
       SOUP_WEBSOCKET_STATE_OPEN)
     return FALSE;
 
-  our_id = g_random_int_range (10, 10000);
-  gst_print ("Registering id %i with server\n", our_id);
+  if (!our_id) {
+    gint32 id;
+
+    id = g_random_int_range (10, 10000);
+    gst_print ("Registering id %i with server\n", id);
+
+    hello = g_strdup_printf ("HELLO %i", id);
+  } else {
+    gst_print ("Registering id %s with server\n", our_id);
+
+    hello = g_strdup_printf ("HELLO %s", our_id);
+  }
+
   app_state = SERVER_REGISTERING;
 
   /* Register with the server with a random integer id. Reply will be received
    * by on_server_message() */
-  hello = g_strdup_printf ("HELLO %i", our_id);
   soup_websocket_connection_send_text (ws_conn, hello);
   g_free (hello);
 
@@ -572,10 +584,14 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     }
     app_state = SERVER_REGISTERED;
     gst_print ("Registered with server\n");
-    /* Ask signalling server to connect us with a specific peer */
-    if (!setup_call ()) {
-      cleanup_and_quit_loop ("ERROR: Failed to setup call", PEER_CALL_ERROR);
-      goto out;
+    if (!our_id) {
+      /* Ask signalling server to connect us with a specific peer */
+      if (!setup_call ()) {
+        cleanup_and_quit_loop ("ERROR: Failed to setup call", PEER_CALL_ERROR);
+        goto out;
+      }
+    } else {
+      gst_println ("Waiting for connection from peer (our-id: %s)", our_id);
     }
     /* Call has been setup by the server, now we can start negotiation */
   } else if (g_strcmp0 (text, "SESSION_OK") == 0) {
@@ -626,6 +642,17 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       gst_printerr ("Unknown json message '%s', ignoring", text);
       g_object_unref (parser);
       goto out;
+    }
+
+    /* If peer connection wasn't made yet and we are expecting peer will
+     * connect to us, launch pipeline at this moment */
+    if (!webrtc1 && our_id) {
+      if (!start_pipeline ()) {
+        cleanup_and_quit_loop ("ERROR: failed to start pipeline",
+            PEER_CALL_ERROR);
+      }
+
+      app_state = PEER_CALL_NEGOTIATING;
     }
 
     object = json_node_get_object (root);
@@ -786,6 +813,7 @@ main (int argc, char *argv[])
 {
   GOptionContext *context;
   GError *error = NULL;
+  int ret_code = -1;
 
   context = g_option_context_new ("- gstreamer webrtc sendrecv demo");
   g_option_context_add_main_entries (context, entries, NULL);
@@ -795,13 +823,21 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  if (!check_plugins ())
-    return -1;
-
-  if (!peer_id) {
-    gst_printerr ("--peer-id is a required argument\n");
-    return -1;
+  if (!check_plugins ()) {
+    goto out;
   }
+
+  if (!peer_id && !our_id) {
+    gst_printerr ("--peer-id or --our-id is a required argument\n");
+    goto out;
+  }
+
+  if (peer_id && our_id) {
+    gst_printerr ("specify only --peer-id or --our-id\n");
+    goto out;
+  }
+
+  ret_code = 0;
 
   /* Disable ssl when running a localhost server, because
    * it's probably a test server with a self-signed certificate */
@@ -818,7 +854,9 @@ main (int argc, char *argv[])
   connect_to_websocket_server_async ();
 
   g_main_loop_run (loop);
-  g_main_loop_unref (loop);
+
+  if (loop)
+    g_main_loop_unref (loop);
 
   if (pipe1) {
     gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_NULL);
@@ -826,5 +864,9 @@ main (int argc, char *argv[])
     gst_object_unref (pipe1);
   }
 
-  return 0;
+out:
+  g_free (peer_id);
+  g_free (our_id);
+
+  return ret_code;
 }
