@@ -44,9 +44,11 @@ gst_cuda_nvrtc_compile (const gchar * source)
 {
   nvrtcProgram prog;
   nvrtcResult ret;
+  CUresult curet;
   const gchar *opts[] = { "--gpu-architecture=compute_30" };
   gsize ptx_size;
   gchar *ptx = NULL;
+  int driverVersion;
 
   g_return_val_if_fail (source != NULL, FALSE);
 
@@ -54,11 +56,24 @@ gst_cuda_nvrtc_compile (const gchar * source)
 
   GST_TRACE ("CUDA kernel source \n%s", source);
 
+  curet = CuDriverGetVersion (&driverVersion);
+  if (curet != CUDA_SUCCESS) {
+    GST_ERROR ("Failed to query CUDA Driver version, ret %d", curet);
+    return NULL;
+  }
+
+  GST_DEBUG ("CUDA Driver Version %d.%d", driverVersion / 1000,
+      (driverVersion % 1000) / 10);
+
   ret = NvrtcCreateProgram (&prog, source, NULL, 0, NULL, NULL);
   if (ret != NVRTC_SUCCESS) {
     GST_ERROR ("couldn't create nvrtc program, ret %d", ret);
     return NULL;
   }
+
+  /* Starting from CUDA 11, the lowest supported architecture is 5.2 */
+  if (driverVersion >= 11000)
+    opts[0] = "--gpu-architecture=compute_52";
 
   ret = NvrtcCompileProgram (prog, 1, opts);
   if (ret != NVRTC_SUCCESS) {
