@@ -1623,7 +1623,7 @@ GST_START_TEST (rtp_vorbis_renegotiate)
   gst_audio_info_from_caps (&info, caps);
   buffer = gst_buffer_new_and_alloc (44100 * info.bpf);
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  gst_audio_format_fill_silence (info.finfo, map.data, map.size);
+  gst_audio_format_info_fill_silence (info.finfo, map.data, map.size);
   gst_buffer_unmap (buffer, &map);
   GST_BUFFER_PTS (buffer) = 0;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
@@ -1647,7 +1647,7 @@ GST_START_TEST (rtp_vorbis_renegotiate)
   gst_audio_info_from_caps (&info, caps);
   buffer = gst_buffer_new_and_alloc (48000 * info.bpf);
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  gst_audio_format_fill_silence (info.finfo, map.data, map.size);
+  gst_audio_format_info_fill_silence (info.finfo, map.data, map.size);
   gst_buffer_unmap (buffer, &map);
   GST_BUFFER_PTS (buffer) = 0;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
