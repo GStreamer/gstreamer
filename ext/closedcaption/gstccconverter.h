@@ -43,9 +43,17 @@ typedef struct _GstCCConverterClass GstCCConverterClass;
 #define MAX_CDP_PACKET_LEN 256
 #define MAX_CEA608_LEN 32
 
+typedef enum {
+  GST_CC_CONVERTER_CDP_MODE_TIME_CODE   = (1<<0),
+  GST_CC_CONVERTER_CDP_MODE_CC_DATA     = (1<<1),
+  GST_CC_CONVERTER_CDP_MODE_CC_SVC_INFO = (1<<2)
+} GstCCConverterCDPMode;
+
 struct _GstCCConverter
 {
   GstBaseTransform parent;
+
+  GstCCConverterCDPMode cdp_mode;
 
   GstVideoCaptionType input_caption_type;
   GstVideoCaptionType output_caption_type;
