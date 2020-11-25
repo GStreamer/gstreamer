@@ -1851,9 +1851,18 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
           colorimetry, NULL);
     g_free (colorimetry);
 
-    if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
-      gst_caps_set_simple (state->caps, "chroma-site", G_TYPE_STRING,
-          gst_video_chroma_to_string (info->chroma_site), NULL);
+    if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+      gchar *chroma_site = gst_video_chroma_site_to_string (info->chroma_site);
+
+      if (!chroma_site) {
+        GST_WARNING ("Couldn't convert chroma-site 0x%x to string",
+            info->chroma_site);
+      } else {
+        gst_caps_set_simple (state->caps,
+            "chroma-site", G_TYPE_STRING, chroma_site, NULL);
+        g_free (chroma_site);
+      }
+    }
 
     if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
       const gchar *caps_mview_mode =

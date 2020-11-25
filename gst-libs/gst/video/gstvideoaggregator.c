@@ -583,7 +583,7 @@ static void
 {
   GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD (pad);
   gchar *colorimetry, *best_colorimetry;
-  const gchar *chroma, *best_chroma;
+  gchar *chroma, *best_chroma;
 
   g_return_if_fail (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
   g_return_if_fail (convert_info != NULL);
@@ -599,10 +599,10 @@ static void
   }
 
   colorimetry = gst_video_colorimetry_to_string (&vpad->info.colorimetry);
-  chroma = gst_video_chroma_to_string (vpad->info.chroma_site);
+  chroma = gst_video_chroma_site_to_string (vpad->info.chroma_site);
 
   best_colorimetry = gst_video_colorimetry_to_string (&agg->info.colorimetry);
-  best_chroma = gst_video_chroma_to_string (agg->info.chroma_site);
+  best_chroma = gst_video_chroma_site_to_string (agg->info.chroma_site);
 
   if (GST_VIDEO_INFO_FORMAT (&agg->info) != GST_VIDEO_INFO_FORMAT (&vpad->info)
       || g_strcmp0 (colorimetry, best_colorimetry)
@@ -632,6 +632,8 @@ static void
 
   g_free (colorimetry);
   g_free (best_colorimetry);
+  g_free (chroma);
+  g_free (best_chroma);
 }
 
 static void
@@ -1045,6 +1047,7 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   GstVideoFormat best_format;
   GstVideoInfo best_info;
   gchar *color_name;
+  gchar *chroma_site;
 
   best_format = GST_VIDEO_FORMAT_UNKNOWN;
   gst_video_info_init (&best_info);
@@ -1063,25 +1066,26 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   }
 
   color_name = gst_video_colorimetry_to_string (&best_info.colorimetry);
+  chroma_site = gst_video_chroma_site_to_string (best_info.chroma_site);
 
   GST_DEBUG_OBJECT (vagg,
       "The output format will now be : %s with chroma : %s and colorimetry %s",
       gst_video_format_to_string (best_format),
-      GST_STR_NULL (gst_video_chroma_to_string (best_info.chroma_site)),
-      GST_STR_NULL (color_name));
+      GST_STR_NULL (chroma_site), GST_STR_NULL (color_name));
 
   best_format_caps = gst_caps_copy (caps);
   gst_caps_set_simple (best_format_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (best_format), NULL);
 
-  if (best_info.chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
+  if (chroma_site != NULL)
     gst_caps_set_simple (best_format_caps, "chroma-site", G_TYPE_STRING,
-        gst_video_chroma_to_string (best_info.chroma_site), NULL);
+        chroma_site, NULL);
   if (color_name != NULL)
     gst_caps_set_simple (best_format_caps, "colorimetry", G_TYPE_STRING,
         color_name, NULL);
 
   g_free (color_name);
+  g_free (chroma_site);
   ret = gst_caps_merge (best_format_caps, gst_caps_ref (caps));
 
   return ret;

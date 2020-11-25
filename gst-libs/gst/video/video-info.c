@@ -508,7 +508,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   }
 
   if ((s = gst_structure_get_string (structure, "chroma-site")))
-    info->chroma_site = gst_video_chroma_from_string (s);
+    info->chroma_site = gst_video_chroma_site_from_string (s);
   else
     info->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
 
@@ -723,9 +723,18 @@ gst_video_info_to_caps (GstVideoInfo * info)
   gst_caps_set_simple (caps, "pixel-aspect-ratio",
       GST_TYPE_FRACTION, par_n, par_d, NULL);
 
-  if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
-    gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,
-        gst_video_chroma_to_string (info->chroma_site), NULL);
+  if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+    gchar *chroma_site = gst_video_chroma_site_to_string (info->chroma_site);
+
+    if (!chroma_site) {
+      GST_WARNING ("Couldn't convert chroma-site 0x%x to string",
+          info->chroma_site);
+    } else {
+      gst_caps_set_simple (caps,
+          "chroma-site", G_TYPE_STRING, chroma_site, NULL);
+      g_free (chroma_site);
+    }
+  }
 
   /* make sure we set the RGB matrix for RGB formats */
   colorimetry = info->colorimetry;
