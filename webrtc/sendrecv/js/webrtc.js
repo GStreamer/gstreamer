@@ -120,11 +120,11 @@ function onServerMessage(event) {
                 handleIncomingError(event.data);
                 return;
             }
-	    if (event.data.startsWith("OFFER_REQUEST")) {
-	      // The peer wants us to set up and then send an offer
-              if (!peer_connection)
-                  createCall(null).then (generateOffer);
-	    }
+            if (event.data.startsWith("OFFER_REQUEST")) {
+            // The peer wants us to set up and then send an offer
+                if (!peer_connection)
+                    createCall(null).then (generateOffer);
+            }
             else {
                 // Handle incoming JSON SDP and ICE messages
                 try {
@@ -149,7 +149,7 @@ function onServerMessage(event) {
                 } else {
                     handleIncomingError("Unknown incoming JSON: " + msg);
                 }
-	    }
+            }
     }
 }
 
@@ -302,13 +302,13 @@ function createCall(msg) {
     }
 
     peer_connection.onicecandidate = (event) => {
-	// We have a candidate, send it to the remote party with the
-	// same uuid
-	if (event.candidate == null) {
-            console.log("ICE Candidate was null, done");
-            return;
-	}
-	ws_conn.send(JSON.stringify({'ice': event.candidate}));
+        // We have a candidate, send it to the remote party with the
+        // same uuid
+        if (event.candidate == null) {
+                console.log("ICE Candidate was null, done");
+                return;
+        }
+        ws_conn.send(JSON.stringify({'ice': event.candidate}));
     };
 
     if (msg != null)
