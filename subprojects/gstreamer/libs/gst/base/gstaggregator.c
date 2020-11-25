@@ -1973,6 +1973,14 @@ gst_aggregator_default_sink_event (GstAggregator * self,
 
       goto eat;
     }
+    case GST_EVENT_RECONFIGURE:
+    {
+      SRC_LOCK (self);
+      self->priv->has_peer_latency = FALSE;
+      SRC_BROADCAST (self);
+      SRC_UNLOCK (self);
+      break;
+    }
     case GST_EVENT_TAG:
       goto eat;
     default:
