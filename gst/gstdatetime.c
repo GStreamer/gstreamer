@@ -70,14 +70,14 @@ static void gst_date_time_free (GstDateTime * datetime);
 
 /**
  * gst_date_time_new_from_g_date_time:
- * @dt: (transfer full): the #GDateTime. The new #GstDateTime takes ownership.
+ * @dt: (transfer full) (nullable): the #GDateTime. The new #GstDateTime takes ownership.
  *
  * Creates a new #GstDateTime from a #GDateTime object.
  *
  * Free-function: gst_date_time_unref
  *
  * Returns: (transfer full) (nullable): a newly created #GstDateTime,
- * or %NULL on error
+ * or %NULL if @dt is %NULL.
  */
 GstDateTime *
 gst_date_time_new_from_g_date_time (GDateTime * dt)
@@ -106,7 +106,8 @@ gst_date_time_new_from_g_date_time (GDateTime * dt)
  * Free-function: g_date_time_unref
  *
  * Returns: (transfer full) (nullable): a newly created #GDateTime, or
- * %NULL on error
+ * %NULL on error or if @datetime does not have a year, month, day, hour,
+ * minute and second.
  */
 GDateTime *
 gst_date_time_to_g_date_time (GstDateTime * datetime)
