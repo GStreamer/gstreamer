@@ -361,7 +361,8 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_y (gint year)
@@ -384,7 +385,8 @@ gst_date_time_new_y (gint year)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_ym (gint year, gint month)
@@ -411,7 +413,8 @@ gst_date_time_new_ym (gint year, gint month)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_ymd (gint year, gint month, gint day)
@@ -428,7 +431,8 @@ gst_date_time_new_ymd (gint year, gint month, gint day)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
@@ -436,6 +440,9 @@ gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
   GDateTime *datetime;
 
   datetime = g_date_time_new_from_unix_local (secs);
+  if (!datetime)
+    return NULL;
+
   return gst_date_time_new_from_g_date_time (datetime);
 }
 
@@ -448,15 +455,19 @@ gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_from_unix_epoch_utc (gint64 secs)
 {
-  GstDateTime *datetime;
-  datetime =
-      gst_date_time_new_from_g_date_time (g_date_time_new_from_unix_utc (secs));
-  return datetime;
+  GDateTime *datetime;
+
+  datetime = g_date_time_new_from_unix_utc (secs);
+  if (!datetime)
+    return NULL;
+
+  return gst_date_time_new_from_g_date_time (datetime);
 }
 
 /**
@@ -466,7 +477,8 @@ gst_date_time_new_from_unix_epoch_utc (gint64 secs)
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @usecs. The #GstDateTime is in the local timezone.
  *
- * Returns: (transfer full) (nullable): a newly created #GstDateTime
+ * Returns: (transfer full) (nullable): a newly created #GstDateTime, or %NULL
+ * on error.
  *
  * Since: 1.18
  */
@@ -478,8 +490,13 @@ gst_date_time_new_from_unix_epoch_local_time_usecs (gint64 usecs)
   gint64 usec_part = usecs % G_USEC_PER_SEC;
 
   dt = g_date_time_new_from_unix_local (secs);
+  if (!dt)
+    return NULL;
   datetime = g_date_time_add_seconds (dt, (gdouble) usec_part / G_USEC_PER_SEC);
   g_date_time_unref (dt);
+  if (!datetime)
+    return NULL;
+
   return gst_date_time_new_from_g_date_time (datetime);
 }
 
@@ -490,7 +507,8 @@ gst_date_time_new_from_unix_epoch_local_time_usecs (gint64 usecs)
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @usecs. The #GstDateTime is in UTC.
  *
- * Returns: (transfer full) (nullable): a newly created #GstDateTime
+ * Returns: (transfer full) (nullable): a newly created #GstDateTime, or %NULL
+ * on error.
  *
  * Since: 1.18
  */
@@ -502,8 +520,13 @@ gst_date_time_new_from_unix_epoch_utc_usecs (gint64 usecs)
   gint64 usec_part = usecs % G_USEC_PER_SEC;
 
   dt = g_date_time_new_from_unix_utc (secs);
+  if (!dt)
+    return NULL;
   datetime = g_date_time_add_seconds (dt, (gdouble) usec_part / G_USEC_PER_SEC);
   g_date_time_unref (dt);
+  if (!datetime)
+    return NULL;
+
   return gst_date_time_new_from_g_date_time (datetime);
 }
 
@@ -556,28 +579,43 @@ gst_date_time_check_fields (gint * year, gint * month, gint * day,
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
     gint minute, gdouble seconds)
 {
   GstDateTimeFields fields;
+  GDateTime *dt;
   GstDateTime *datetime;
 
-  g_return_val_if_fail (year > 0 && year <= 9999, NULL);
-  g_return_val_if_fail ((month > 0 && month <= 12) || month == -1, NULL);
-  g_return_val_if_fail ((day > 0 && day <= 31) || day == -1, NULL);
-  g_return_val_if_fail ((hour >= 0 && hour < 24) || hour == -1, NULL);
-  g_return_val_if_fail ((minute >= 0 && minute < 60) || minute == -1, NULL);
-  g_return_val_if_fail ((seconds >= 0 && seconds < 60) || seconds == -1, NULL);
+  if (year <= 0 || year > 9999)
+    return NULL;
+
+  if ((month <= 0 || month > 12) && month != -1)
+    return NULL;
+
+  if ((day <= 0 || day > 31) && day != -1)
+    return NULL;
+
+  if ((hour < 0 || hour >= 24) && hour != -1)
+    return NULL;
+
+  if ((minute < 0 || minute >= 60) && minute != -1)
+    return NULL;
+
+  if ((seconds < 0 || seconds >= 60) && seconds != -1)
+    return NULL;
 
   fields = gst_date_time_check_fields (&year, &month, &day,
       &hour, &minute, &seconds);
 
-  datetime = gst_date_time_new_from_g_date_time (g_date_time_new_local (year,
-          month, day, hour, minute, seconds));
+  dt = g_date_time_new_local (year, month, day, hour, minute, seconds);
+  if (dt == NULL)
+    return NULL;
 
+  datetime = gst_date_time_new_from_g_date_time (dt);
   if (datetime == NULL)
     return NULL;
 
@@ -592,13 +630,19 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime which should
- *     be freed with gst_date_time_unref().
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime which should
+ *     be freed with gst_date_time_unref(), or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_now_local_time (void)
 {
-  return gst_date_time_new_from_g_date_time (g_date_time_new_now_local ());
+  GDateTime *dt;
+
+  dt = g_date_time_new_now_local ();
+  if (!dt)
+    return NULL;
+
+  return gst_date_time_new_from_g_date_time (dt);
 }
 
 /**
@@ -609,13 +653,19 @@ gst_date_time_new_now_local_time (void)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full): the newly created #GstDateTime which should
- *   be freed with gst_date_time_unref().
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime which should
+ *   be freed with gst_date_time_unref(), or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new_now_utc (void)
 {
-  return gst_date_time_new_from_g_date_time (g_date_time_new_now_utc ());
+  GDateTime *dt;
+
+  dt = g_date_time_new_now_utc ();
+  if (!dt)
+    return NULL;
+
+  return gst_date_time_new_from_g_date_time (dt);
 }
 
 gint
@@ -668,7 +718,8 @@ __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full) (nullable): the newly created #GstDateTime,
+ * or %NULL on error.
  */
 GstDateTime *
 gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
@@ -681,15 +732,30 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
   GstDateTime *datetime;
   gint tzhour, tzminute;
 
-  g_return_val_if_fail (year > 0 && year <= 9999, NULL);
-  g_return_val_if_fail ((month > 0 && month <= 12) || month == -1, NULL);
-  g_return_val_if_fail ((day > 0 && day <= 31) || day == -1, NULL);
-  g_return_val_if_fail ((hour >= 0 && hour < 24) || hour == -1, NULL);
-  g_return_val_if_fail ((minute >= 0 && minute < 60) || minute == -1, NULL);
-  g_return_val_if_fail ((seconds >= 0 && seconds < 60) || seconds == -1, NULL);
-  g_return_val_if_fail (tzoffset >= -12.0 && tzoffset <= 12.0, NULL);
-  g_return_val_if_fail ((hour >= 0 && minute >= 0) ||
-      (hour == -1 && minute == -1 && seconds == -1 && tzoffset == 0.0), NULL);
+  if (year <= 0 || year > 9999)
+    return NULL;
+
+  if ((month <= 0 || month > 12) && month != -1)
+    return NULL;
+
+  if ((day <= 0 || day > 31) && day != -1)
+    return NULL;
+
+  if ((hour < 0 || hour >= 24) && hour != -1)
+    return NULL;
+
+  if ((minute < 0 || minute >= 60) && minute != -1)
+    return NULL;
+
+  if ((seconds < 0 || seconds >= 60) && seconds != -1)
+    return NULL;
+
+  if (tzoffset < -12.0 || tzoffset > 12.0)
+    return NULL;
+
+  if ((hour < 0 || minute < 0) &&
+      (hour != -1 || minute != -1 || seconds != -1 || tzoffset != 0.0))
+    return NULL;
 
   tzhour = (gint) ABS (tzoffset);
   tzminute = (gint) ((ABS (tzoffset) - tzhour) * 60);
@@ -959,6 +1025,9 @@ ymd_hms:
 
     /* No date was supplied: make it today */
     now_utc = g_date_time_new_now_utc ();
+    if (!now_utc)
+      return NULL;
+
     if (tzoffset != 0.0) {
       /* If a timezone offset was supplied, get the date of that timezone */
       g_assert (gmt_offset_min != -99);
@@ -967,6 +1036,8 @@ ymd_hms:
           g_date_time_add_minutes (now_utc,
           (60 * gmt_offset_hour) + gmt_offset_min);
       g_date_time_unref (now_utc);
+      if (!now_in_given_tz)
+        return NULL;
     } else {
       now_in_given_tz = now_utc;
     }
