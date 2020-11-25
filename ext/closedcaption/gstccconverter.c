@@ -1509,10 +1509,9 @@ convert_cea608_raw_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
 static GstFlowReturn
 convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, const GstVideoTimeCodeMeta * tc_meta)
 {
   GstMapInfo in, out;
-  const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *in_fps_entry, *out_fps_entry;
   guint cc_data_len = MAX_CDP_PACKET_LEN;
   guint cea608_1_len = MAX_CDP_PACKET_LEN;
@@ -1548,10 +1547,6 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     gst_buffer_unmap (inbuf, &in);
     cea608_1_len += n * 2;
     self->input_frames++;
-
-    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
-  } else {
-    tc_meta = NULL;
   }
 
   out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
@@ -1662,10 +1657,9 @@ convert_cea608_s334_1a_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
 static GstFlowReturn
 convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, const GstVideoTimeCodeMeta * tc_meta)
 {
   GstMapInfo in, out;
-  const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *in_fps_entry, *out_fps_entry;
   guint cc_data_len = MAX_CDP_PACKET_LEN;
   guint cea608_1_len = MAX_CDP_PACKET_LEN, cea608_2_len = MAX_CDP_PACKET_LEN;
@@ -1708,9 +1702,6 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     }
     gst_buffer_unmap (inbuf, &in);
     self->input_frames++;
-    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
-  } else {
-    tc_meta = NULL;
   }
 
   out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
@@ -1833,10 +1824,9 @@ convert_cea708_cc_data_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
 
 static GstFlowReturn
 convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, const GstVideoTimeCodeMeta * tc_meta)
 {
   GstMapInfo in, out;
-  const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *in_fps_entry, *out_fps_entry;
   guint in_cc_data_len;
   guint cc_data_len = MAX_CDP_PACKET_LEN, ccp_data_len = MAX_CDP_PACKET_LEN;
@@ -1849,12 +1839,10 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     gst_buffer_map (inbuf, &in, GST_MAP_READ);
     in_cc_data = in.data;
     in_cc_data_len = in.size;
-    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
     self->input_frames++;
   } else {
     in_cc_data = NULL;
     in_cc_data_len = 0;
-    tc_meta = NULL;
   }
 
   in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
@@ -1905,7 +1893,7 @@ drop:
 
 static GstFlowReturn
 convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, const GstVideoTimeCodeMeta * tc_meta)
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
@@ -1934,8 +1922,7 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 
   gst_buffer_set_size (outbuf, cea608_1_len);
 
-  if (self->current_output_timecode.config.fps_n != 0
-      && !gst_buffer_get_video_time_code_meta (inbuf)) {
+  if (self->current_output_timecode.config.fps_n != 0 && !tc_meta) {
     gst_buffer_add_video_time_code_meta (outbuf,
         &self->current_output_timecode);
     gst_video_time_code_increment_frame (&self->current_output_timecode);
@@ -1946,7 +1933,7 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 
 static GstFlowReturn
 convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, const GstVideoTimeCodeMeta * tc_meta)
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
@@ -1985,8 +1972,7 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
 
   gst_buffer_set_size (outbuf, cc_data_len);
 
-  if (self->current_output_timecode.config.fps_n != 0
-      && !gst_buffer_get_video_time_code_meta (inbuf)) {
+  if (self->current_output_timecode.config.fps_n != 0 && !tc_meta) {
     gst_buffer_add_video_time_code_meta (outbuf,
         &self->current_output_timecode);
     gst_video_time_code_increment_frame (&self->current_output_timecode);
@@ -2001,7 +1987,7 @@ drop:
 
 static GstFlowReturn
 convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, const GstVideoTimeCodeMeta * tc_meta)
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
@@ -2036,8 +2022,7 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_unmap (outbuf, &out);
   self->output_frames++;
 
-  if (self->current_output_timecode.config.fps_n != 0
-      && !gst_buffer_get_video_time_code_meta (inbuf)) {
+  if (self->current_output_timecode.config.fps_n != 0 && !tc_meta) {
     gst_buffer_add_video_time_code_meta (outbuf,
         &self->current_output_timecode);
     gst_video_time_code_increment_frame (&self->current_output_timecode);
@@ -2137,7 +2122,7 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
           ret = convert_cea608_raw_cea708_cc_data (self, inbuf, outbuf);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-          ret = convert_cea608_raw_cea708_cdp (self, inbuf, outbuf);
+          ret = convert_cea608_raw_cea708_cdp (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
         default:
@@ -2156,7 +2141,8 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
           ret = convert_cea608_s334_1a_cea708_cc_data (self, inbuf, outbuf);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-          ret = convert_cea608_s334_1a_cea708_cdp (self, inbuf, outbuf);
+          ret =
+              convert_cea608_s334_1a_cea708_cdp (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
         default:
@@ -2175,7 +2161,8 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
           ret = convert_cea708_cc_data_cea608_s334_1a (self, inbuf, outbuf);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-          ret = convert_cea708_cc_data_cea708_cdp (self, inbuf, outbuf);
+          ret =
+              convert_cea708_cc_data_cea708_cdp (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
         default:
@@ -2188,13 +2175,15 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
 
       switch (self->output_caption_type) {
         case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-          ret = convert_cea708_cdp_cea608_raw (self, inbuf, outbuf);
+          ret = convert_cea708_cdp_cea608_raw (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
-          ret = convert_cea708_cdp_cea608_s334_1a (self, inbuf, outbuf);
+          ret =
+              convert_cea708_cdp_cea608_s334_1a (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-          ret = convert_cea708_cdp_cea708_cc_data (self, inbuf, outbuf);
+          ret =
+              convert_cea708_cdp_cea708_cc_data (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
           ret = convert_cea708_cdp_cea708_cdp (self, inbuf, outbuf);
