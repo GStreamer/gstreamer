@@ -763,7 +763,15 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
   g_snprintf (buf, 6, "%c%02d%02d", tzoffset >= 0 ? '+' : '-', tzhour,
       tzminute);
 
+#if GLIB_CHECK_VERSION (2, 67, 1)
+  /* g_time_zone_new() would always return UTC if the identifier can't be
+   * parsed, which is rather suboptimal. */
+  tz = g_time_zone_new_identifier (buf);
+  if (!tz)
+    return NULL;
+#else
   tz = g_time_zone_new (buf);
+#endif
 
   fields = gst_date_time_check_fields (&year, &month, &day,
       &hour, &minute, &seconds);
