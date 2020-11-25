@@ -160,6 +160,7 @@ struct _GstXvContext
   gboolean have_colorkey;
   gboolean have_double_buffer;
   gboolean have_iturbt709;
+  gboolean have_xvcolorspace;
 
   GList *formats_list;
 

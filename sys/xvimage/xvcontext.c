@@ -159,6 +159,7 @@ gst_xvcontext_get_xv_support (GstXvContext * context,
     static const char dbl_buffer[] = "XV_DOUBLE_BUFFER";
     static const char colorkey[] = "XV_COLORKEY";
     static const char iturbt709[] = "XV_ITURBT_709";
+    static const char *xv_colorspace = "XV_COLORSPACE";
 
     GST_DEBUG ("Checking %d Xv port attributes", count);
 
@@ -166,6 +167,7 @@ gst_xvcontext_get_xv_support (GstXvContext * context,
     context->have_double_buffer = FALSE;
     context->have_colorkey = FALSE;
     context->have_iturbt709 = FALSE;
+    context->have_xvcolorspace = FALSE;
 
     for (i = 0; ((i < count) && todo); i++) {
       GST_DEBUG ("Got attribute %s", attr[i].name);
@@ -234,6 +236,9 @@ gst_xvcontext_get_xv_support (GstXvContext * context,
       } else if (!strcmp (attr[i].name, iturbt709)) {
         todo--;
         context->have_iturbt709 = TRUE;
+      } else if (!strcmp (attr[i].name, xv_colorspace)) {
+        context->have_xvcolorspace = TRUE;
+        todo--;
       }
     }
 
@@ -905,7 +910,7 @@ gst_xvcontext_set_colorimetry (GstXvContext * context,
   Atom prop_atom;
   int xv_value;
 
-  if (!context->have_iturbt709)
+  if (!context->have_iturbt709 && !context->have_xvcolorspace)
     return;
 
   switch (colorimetry->matrix) {
@@ -919,10 +924,20 @@ gst_xvcontext_set_colorimetry (GstXvContext * context,
   }
 
   g_mutex_lock (&context->lock);
-  prop_atom = XInternAtom (context->disp, "XV_ITURBT_709", True);
-  if (prop_atom != None) {
-    XvSetPortAttribute (context->disp,
-        context->xv_port_id, prop_atom, xv_value);
+  if (context->have_iturbt709) {
+    prop_atom = XInternAtom (context->disp, "XV_ITURBT_709", True);
+    if (prop_atom != None) {
+      XvSetPortAttribute (context->disp,
+          context->xv_port_id, prop_atom, xv_value);
+    }
+  }
+
+  if (context->have_xvcolorspace) {
+    prop_atom = XInternAtom (context->disp, "XV_COLORSPACE", True);
+    if (prop_atom != None) {
+      XvSetPortAttribute (context->disp,
+          context->xv_port_id, prop_atom, xv_value);
+    }
   }
   g_mutex_unlock (&context->lock);
 }
