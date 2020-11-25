@@ -402,7 +402,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
         period_samples - n);
     mem = gst_allocator_alloc (NULL, (period_samples - n) * bpf, NULL);
     if (gst_memory_map (mem, &map, GST_MAP_WRITE)) {
-      gst_audio_format_fill_silence (interaudiosrc->info.finfo, map.data,
+      gst_audio_format_info_fill_silence (interaudiosrc->info.finfo, map.data,
           map.size);
       gst_memory_unmap (mem, &map);
     }

@@ -588,7 +588,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
             silence = gst_buffer_new_and_alloc (n_samples * bpf);
             GST_BUFFER_FLAG_SET (silence, GST_BUFFER_FLAG_GAP);
             gst_buffer_map (silence, &map, GST_MAP_WRITE);
-            gst_audio_format_fill_silence (info, map.data, map.size);
+            gst_audio_format_info_fill_silence (info, map.data, map.size);
             gst_buffer_unmap (silence, &map);
 
             gst_adapter_push (self->adapter, silence);
