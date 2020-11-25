@@ -214,15 +214,16 @@ gst_date_time_get_year (const GstDateTime * datetime)
  * @datetime: a #GstDateTime
  *
  * Returns the month of this #GstDateTime. January is 1, February is 2, etc..
- * Call gst_date_time_has_month() before, to avoid warnings.
  *
- * Return value: The month of this #GstDateTime
+ * Return value: The month of this #GstDateTime, or -1 if none is set.
  */
 gint
 gst_date_time_get_month (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0);
-  g_return_val_if_fail (gst_date_time_has_month (datetime), 0);
+
+  if (!gst_date_time_has_month (datetime))
+    return -1;
 
   return g_date_time_get_month (datetime->datetime);
 }
@@ -232,15 +233,16 @@ gst_date_time_get_month (const GstDateTime * datetime)
  * @datetime: a #GstDateTime
  *
  * Returns the day of the month of this #GstDateTime.
- * Call gst_date_time_has_day() before, to avoid warnings.
  *
- * Return value: The day of this #GstDateTime
+ * Return value: The day of this #GstDateTime, or -1 if none is set.
  */
 gint
 gst_date_time_get_day (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0);
-  g_return_val_if_fail (gst_date_time_has_day (datetime), 0);
+
+  if (!gst_date_time_has_day (datetime))
+    return -1;
 
   return g_date_time_get_day_of_month (datetime->datetime);
 }
@@ -251,15 +253,16 @@ gst_date_time_get_day (const GstDateTime * datetime)
  *
  * Retrieves the hour of the day represented by @datetime in the gregorian
  * calendar. The return is in the range of 0 to 23.
- * Call gst_date_time_has_time() before, to avoid warnings.
  *
- * Return value: the hour of the day
+ * Return value: the hour of the day, or -1 if none is set.
  */
 gint
 gst_date_time_get_hour (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0);
-  g_return_val_if_fail (gst_date_time_has_time (datetime), 0);
+
+  if (!gst_date_time_has_time (datetime))
+    return -1;
 
   return g_date_time_get_hour (datetime->datetime);
 }
@@ -270,15 +273,16 @@ gst_date_time_get_hour (const GstDateTime * datetime)
  *
  * Retrieves the minute of the hour represented by @datetime in the gregorian
  * calendar.
- * Call gst_date_time_has_time() before, to avoid warnings.
  *
- * Return value: the minute of the hour
+ * Return value: the minute of the hour, or -1 if none is set.
  */
 gint
 gst_date_time_get_minute (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0);
-  g_return_val_if_fail (gst_date_time_has_time (datetime), 0);
+
+  if (!gst_date_time_has_time (datetime))
+    return -1;
 
   return g_date_time_get_minute (datetime->datetime);
 }
@@ -289,15 +293,16 @@ gst_date_time_get_minute (const GstDateTime * datetime)
  *
  * Retrieves the second of the minute represented by @datetime in the gregorian
  * calendar.
- * Call gst_date_time_has_time() before, to avoid warnings.
  *
- * Return value: the second represented by @datetime
+ * Return value: the second represented by @datetime, or -1 if none is set.
  */
 gint
 gst_date_time_get_second (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0);
-  g_return_val_if_fail (gst_date_time_has_second (datetime), 0);
+
+  if (!gst_date_time_has_second (datetime))
+    return -1;
 
   return g_date_time_get_second (datetime->datetime);
 }
@@ -309,13 +314,15 @@ gst_date_time_get_second (const GstDateTime * datetime)
  * Retrieves the fractional part of the seconds in microseconds represented by
  * @datetime in the gregorian calendar.
  *
- * Return value: the microsecond of the second
+ * Return value: the microsecond of the second, or -1 if none is set.
  */
 gint
 gst_date_time_get_microsecond (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0);
-  g_return_val_if_fail (gst_date_time_has_second (datetime), 0);
+
+  if (!gst_date_time_has_second (datetime))
+    return -1;
 
   return g_date_time_get_microsecond (datetime->datetime);
 }
@@ -329,13 +336,15 @@ gst_date_time_get_microsecond (const GstDateTime * datetime)
  * values, timezones before (to the west) of UTC have negative values.
  * If @datetime represents UTC time, then the offset is zero.
  *
- * Return value: the offset from UTC in hours
+ * Return value: the offset from UTC in hours, or %G_MAXDOUBLE if none is set.
  */
 gfloat
 gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
 {
   g_return_val_if_fail (datetime != NULL, 0.0);
-  g_return_val_if_fail (gst_date_time_has_time (datetime), 0.0);
+
+  if (!gst_date_time_has_time (datetime))
+    return G_MAXDOUBLE;
 
   return (g_date_time_get_utc_offset (datetime->datetime) /
       G_USEC_PER_SEC) / 3600.0;
