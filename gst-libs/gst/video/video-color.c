@@ -399,7 +399,7 @@ gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr,
  * @func: a #GstVideoTransferFunction
  * @val: a value
  *
- * Deprecated: Use gst_video_transfer_function_encode() instead.
+ * Deprecated: 1.20: Use gst_video_transfer_function_encode() instead.
  *
  * Since: 1.6
  */
@@ -531,7 +531,7 @@ gst_video_transfer_function_encode (GstVideoTransferFunction func, gdouble val)
  * @func: a #GstVideoTransferFunction
  * @val: a value
  *
- * Deprecated: Use gst_video_transfer_function_decode() instead.
+ * Deprecated: 1.20: Use gst_video_transfer_function_decode() instead.
  *
  * Since: 1.6
  */
