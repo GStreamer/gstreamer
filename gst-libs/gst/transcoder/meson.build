@@ -1,5 +1,5 @@
-sources = files(['gsttranscoder.c'])
-headers = files(['gsttranscoder.h', 'transcoder-prelude.h'])
+sources = files(['gsttranscoder.c', 'gsttranscoder-signal-adapter.c'])
+headers = files(['gsttranscoder.h', 'transcoder-prelude.h', 'gsttranscoder-signal-adapter.h'])
 
 install_headers(headers, subdir : 'gstreamer-' + api_version + '/gst/transcoder')
 

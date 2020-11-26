@@ -282,6 +282,7 @@ main (int argc, char *argv[])
   GError *err = NULL;
   GstTranscoder *transcoder;
   GOptionContext *ctx;
+  GstTranscoderSignalAdapter *signal_adapter;
   Settings settings = {
     .cpu_usage = 100,
     .rate = -1,
@@ -371,19 +372,22 @@ main (int argc, char *argv[])
   }
 
   transcoder = gst_transcoder_new_full (settings.src_uri, settings.dest_uri,
-      settings.profile, NULL);
+      settings.profile);
   gst_transcoder_set_avoid_reencoding (transcoder, TRUE);
-
   gst_transcoder_set_cpu_usage (transcoder, settings.cpu_usage);
-  g_signal_connect (transcoder, "position-updated",
-      G_CALLBACK (position_updated_cb), NULL);
-  g_signal_connect (transcoder, "warning", G_CALLBACK (_warning_cb), NULL);
-  g_signal_connect (transcoder, "error", G_CALLBACK (_error_cb), NULL);
 
-  g_assert (transcoder);
+  signal_adapter = gst_transcoder_signal_adapter_new (transcoder, NULL);
+  g_signal_connect_swapped (signal_adapter, "position-updated",
+      G_CALLBACK (position_updated_cb), transcoder);
+  g_signal_connect_swapped (signal_adapter, "warning", G_CALLBACK (_warning_cb),
+      transcoder);
+  g_signal_connect_swapped (signal_adapter, "error", G_CALLBACK (_error_cb),
+      transcoder);
+
 
   ok ("Starting transcoding...");
   gst_transcoder_run (transcoder, &err);
+  g_object_unref (signal_adapter);
   if (!err)
     ok ("\nDONE.");
 
