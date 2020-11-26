@@ -313,6 +313,9 @@ draw_cb (gpointer data)
     if (window->queue_resize || window_eagl->priv->window_width != size.width ||
         window_eagl->priv->window_height != size.height) {
 
+      window_eagl->priv->window_width = size.width;
+      window_eagl->priv->window_height = size.height;
+
       gst_gl_context_eagl_resize (eagl_context);
 
       gst_gl_window_resize (window, window_eagl->priv->window_width,
@@ -366,16 +369,6 @@ gst_gl_window_eagl_get_layer (GstGLWindowEagl * window_eagl)
 -(void) setGstWindow:(GstGLWindowEagl *) window
 {
   window_eagl = window;
-}
-
--(void) layoutSubViews
-{
-  g_mutex_lock (&window_eagl->priv->draw_lock);
-  [super layoutSubviews];
-  CGSize rect = self.bounds.size;
-  self->window_eagl->priv->window_width = rect.width;
-  self->window_eagl->priv->window_height = rect.height;
-  g_mutex_unlock (&window_eagl->priv->draw_lock);
 }
 
 @end
