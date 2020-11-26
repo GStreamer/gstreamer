@@ -57,7 +57,7 @@ struct _GstGLWindowEaglPrivate
   gpointer external_view;
   gpointer internal_view;
   gpointer layer;
-  gint window_width, window_height;
+  CGFloat window_width, window_height;
   gint preferred_width, preferred_height;
   gpointer gl_queue;
   GMutex draw_lock;
