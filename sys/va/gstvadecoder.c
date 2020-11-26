@@ -640,34 +640,22 @@ fail_end_pic:
   }
 }
 
-gboolean
-gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
+static gboolean
+_va_decoder_picture_destroy_buffers (GstVaDecodePicture * pic)
 {
   VABufferID buffer;
   VADisplay dpy;
   VAStatus status;
-  VASurfaceID surface;
   guint i;
   gboolean ret = TRUE;
 
-  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
-  g_return_val_if_fail (pic, FALSE);
-
-  surface = gst_va_decode_picture_get_surface (pic);
-  if (surface == VA_INVALID_ID) {
-    GST_ERROR_OBJECT (self, "Decode picture without VASurfaceID");
-    return FALSE;
-  }
-
-  GST_TRACE_OBJECT (self, "Destroy buffers of surface %#x", surface);
-
-  dpy = gst_va_display_get_va_dpy (self->display);
+  dpy = gst_va_display_get_va_dpy (pic->display);
 
   for (i = 0; i < pic->buffers->len; i++) {
     buffer = g_array_index (pic->buffers, VABufferID, i);
-    gst_va_display_lock (self->display);
+    gst_va_display_lock (pic->display);
     status = vaDestroyBuffer (dpy, buffer);
-    gst_va_display_unlock (self->display);
+    gst_va_display_unlock (pic->display);
     if (status != VA_STATUS_SUCCESS) {
       ret = FALSE;
       GST_WARNING ("Failed to destroy parameter buffer: %s",
@@ -677,9 +665,9 @@ gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
 
   for (i = 0; i < pic->slices->len; i++) {
     buffer = g_array_index (pic->slices, VABufferID, i);
-    gst_va_display_lock (self->display);
+    gst_va_display_lock (pic->display);
     status = vaDestroyBuffer (dpy, buffer);
-    gst_va_display_unlock (self->display);
+    gst_va_display_unlock (pic->display);
     if (status != VA_STATUS_SUCCESS) {
       ret = FALSE;
       GST_WARNING ("Failed to destroy slice buffer: %s", vaErrorStr (status));
@@ -692,18 +680,41 @@ gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
   return ret;
 }
 
+gboolean
+gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
+{
+  VASurfaceID surface;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+  g_return_val_if_fail (pic, FALSE);
+
+  surface = gst_va_decode_picture_get_surface (pic);
+  if (surface == VA_INVALID_ID) {
+    GST_ERROR_OBJECT (self, "Decode picture without VASurfaceID");
+    return FALSE;
+  }
+
+  g_assert (pic->display == self->display);
+
+  GST_TRACE_OBJECT (self, "Destroy buffers of surface %#x", surface);
+
+  return _va_decoder_picture_destroy_buffers (pic);
+}
+
 
 GstVaDecodePicture *
-gst_va_decode_picture_new (GstBuffer * buffer)
+gst_va_decode_picture_new (GstVaDecoder * self, GstBuffer * buffer)
 {
   GstVaDecodePicture *pic;
 
   g_return_val_if_fail (buffer && GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (self && GST_IS_VA_DECODER (self), NULL);
 
   pic = g_slice_new (GstVaDecodePicture);
   pic->gstbuffer = gst_buffer_ref (buffer);
   pic->buffers = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 16);
   pic->slices = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 64);
+  pic->display = gst_object_ref (self->display);
 
   return pic;
 }
@@ -722,12 +733,15 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
 {
   g_return_if_fail (pic);
 
-  if (pic->buffers->len > 0 || pic->slices->len > 0)
-    GST_WARNING ("VABufferID are leaked");
+  if (pic->buffers->len > 0 || pic->slices->len > 0) {
+    GST_WARNING ("VABufferIDs have not been released.");
+    _va_decoder_picture_destroy_buffers (pic);
+  }
 
   gst_buffer_unref (pic->gstbuffer);
   g_clear_pointer (&pic->buffers, g_array_unref);
   g_clear_pointer (&pic->slices, g_array_unref);
+  gst_clear_object (&pic->display);
 
   g_slice_free (GstVaDecodePicture, pic);
 }

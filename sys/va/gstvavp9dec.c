@@ -198,12 +198,13 @@ gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
   ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (ret != GST_FLOW_OK)
     goto error;
 
-  pic = gst_va_decode_picture_new (frame->output_buffer);
+  pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
 
   gst_vp9_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);

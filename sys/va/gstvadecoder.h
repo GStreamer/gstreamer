@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 typedef struct _GstVaDecodePicture GstVaDecodePicture;
 struct _GstVaDecodePicture
 {
+  VADisplay display;
   GArray *buffers;
   GArray *slices;
   GstBuffer *gstbuffer;
@@ -69,7 +70,8 @@ gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
 gboolean              gst_va_decoder_destroy_buffers      (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
 
-GstVaDecodePicture *  gst_va_decode_picture_new           (GstBuffer * buffer);
+GstVaDecodePicture *  gst_va_decode_picture_new           (GstVaDecoder * self,
+                                                           GstBuffer * buffer);
 VASurfaceID           gst_va_decode_picture_get_surface   (GstVaDecodePicture * pic);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
 GstVaDecodePicture *  gst_va_decode_picture_dup           (GstVaDecodePicture * pic);

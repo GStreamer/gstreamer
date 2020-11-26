@@ -500,12 +500,13 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
   self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (self->last_ret != GST_FLOW_OK)
     goto error;
 
-  pic = gst_va_decode_picture_new (frame->output_buffer);
+  pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
 
   gst_h264_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
@@ -530,12 +531,13 @@ gst_va_h264_dec_new_field_picture (GstH264Decoder * decoder,
 {
   GstVaDecodePicture *first_pic, *second_pic;
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
   first_pic = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
   if (!first_pic)
     return FALSE;
 
-  second_pic = gst_va_decode_picture_new (first_pic->gstbuffer);
+  second_pic = gst_va_decode_picture_new (base->decoder, first_pic->gstbuffer);
   gst_h264_picture_set_user_data (second_field, second_pic,
       (GDestroyNotify) gst_va_decode_picture_free);
 

@@ -603,12 +603,13 @@ gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
   GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
   self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (self->last_ret != GST_FLOW_OK)
     goto error;
 
-  pic = gst_va_decode_picture_new (frame->output_buffer);
+  pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
 
   gst_h265_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
