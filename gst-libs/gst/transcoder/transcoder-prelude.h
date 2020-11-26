@@ -33,4 +33,6 @@
 # endif
 #endif
 
+#include <gst/transcoder/transcoder-enumtypes.h>
+
 #endif /* __GST_TRANSCODER_PRELUDE_H__ */

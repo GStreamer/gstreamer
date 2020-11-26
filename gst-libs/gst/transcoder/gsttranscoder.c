@@ -1352,27 +1352,6 @@ gst_transcoder_set_avoid_reencoding (GstTranscoder * self,
   g_object_set (self->transcodebin, "avoid-reencoding", avoid_reencoding, NULL);
 }
 
-#define C_ENUM(v) ((gint) v)
-#define C_FLAGS(v) ((guint) v)
-
-GType
-gst_transcoder_error_get_type (void)
-{
-  static gsize id = 0;
-  static const GEnumValue values[] = {
-    {C_ENUM (GST_TRANSCODER_ERROR_FAILED), "GST_TRANSCODER_ERROR_FAILED",
-        "failed"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstTranscoderError", values);
-    g_once_init_leave (&id, tmp);
-  }
-
-  return (GType) id;
-}
-
 /**
  * gst_transcoder_error_get_name:
  * @error: a #GstTranscoderError

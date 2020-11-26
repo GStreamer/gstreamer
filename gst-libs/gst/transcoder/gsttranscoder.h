@@ -8,6 +8,7 @@
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 #include "transcoder-prelude.h"
+#include "transcoder-enumtypes.h"
 
 G_BEGIN_DECLS
 
@@ -16,7 +17,6 @@ typedef struct _GstTranscoderSignalDispatcherInterface GstTranscoderSignalDispat
 
 /*********** Error definitions ************/
 #define      GST_TRANSCODER_ERROR                         (gst_transcoder_error_quark ())
-#define      GST_TYPE_TRANSCODER_ERROR                    (gst_transcoder_error_get_type ())
 
 /**
  * GstTranscoderError:
@@ -28,8 +28,6 @@ typedef enum {
 
 GST_TRANSCODER_API
 GQuark        gst_transcoder_error_quark    (void);
-GST_TRANSCODER_API
-GType         gst_transcoder_error_get_type (void);
 GST_TRANSCODER_API
 const gchar * gst_transcoder_error_get_name (GstTranscoderError error);
 
