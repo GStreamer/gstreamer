@@ -35,18 +35,14 @@ const gchar * gst_transcoder_error_get_name (GstTranscoderError error);
 
 /*********** GstTranscoder definition  ************/
 #define GST_TYPE_TRANSCODER (gst_transcoder_get_type ())
-#define GST_TRANSCODER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TRANSCODER, GstTranscoder))
-#define GST_TRANSCODER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TRANSCODER, GstTranscoderClass))
-#define GST_IS_TRANSCODER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TRANSCODER))
-#define GST_IS_TRANSCODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TRANSCODER))
-#define GST_TRANSCODER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TRANSCODER, GstTranscoderClass))
 
-typedef struct _GstTranscoder  GstTranscoder;
-typedef struct _GstTranscoderClass  GstTranscoderClass;
-typedef struct _GstTranscoderPrivate GstTranscoderPrivate;
-
+/**
+ * GstTranscoderClass.parent_class:
+ *
+ * Since: 1.20
+ */
 GST_TRANSCODER_API
-GType           gst_transcoder_get_type                   (void);
+G_DECLARE_FINAL_TYPE (GstTranscoder, gst_transcoder, GST, TRANSCODER, GstObject)
 
 GST_TRANSCODER_API
 GstTranscoder * gst_transcoder_new                        (const gchar * source_uri,
