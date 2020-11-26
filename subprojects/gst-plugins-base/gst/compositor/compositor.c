@@ -575,6 +575,20 @@ gst_compositor_pad_prepare_frame_start (GstVideoAggregatorPad * pad,
   if (l)
     l = l->next;
   for (; l; l = l->next) {
+    GstBuffer *pad_buffer;
+
+    pad_buffer =
+        gst_video_aggregator_pad_get_current_buffer (GST_VIDEO_AGGREGATOR_PAD
+        (l->data));
+
+    if (pad_buffer == NULL)
+      continue;
+
+    if (gst_buffer_get_size (pad_buffer) == 0 &&
+        GST_BUFFER_FLAG_IS_SET (pad_buffer, GST_BUFFER_FLAG_GAP)) {
+      continue;
+    }
+
     if (_pad_obscures_rectangle (vagg, l->data, frame_rect)) {
       frame_obscured = TRUE;
       break;
