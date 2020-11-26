@@ -585,6 +585,15 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
     ret = GST_FLOW_OK;
     outbuf = NULL;
     goto finish;
+  } else if ((err != AAC_DEC_OK) && (flags & AACDEC_FLUSH)) {
+    /*
+     * A flush/drain was requested when set_format got called. When a flush
+     * gets requested, aacDecoder_DecodeFrame may not return AAC_DEC_OK. Do
+     * not report a decoding error with GST_AUDIO_DECODER_ERROR for this case.
+     */
+    GST_LOG_OBJECT (self, "Decoder flush was requested");
+    ret = GST_FLOW_OK;
+    goto out;
   } else if (err != AAC_DEC_OK) {
     GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
         ("decoding error: %d", err), ret);
