@@ -404,6 +404,20 @@ check commits:
     - ci-fairy check-commits --textwidth 0 --no-signed-off-by
 
 #
+# Check "allow-edit" checkbox on merge requests with ci-fairy
+#
+check allow-edit:
+  extends: '.fdo.ci-fairy'
+  needs: []
+  stage: 'preparation'
+  variables:
+    GIT_STRATEGY: 'none'
+  script:
+    - ci-fairy check-merge-request --require-allow-collaboration
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+#
 # gst-build setup templates
 #
 .gst_build_template: &gst_build
