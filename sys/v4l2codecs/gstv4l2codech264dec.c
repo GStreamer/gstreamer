@@ -67,6 +67,7 @@ struct _GstV4l2CodecH264Dec
   guint bitdepth;
   guint chroma_format_idc;
   guint num_slices;
+  gboolean first_slice;
 
   GstV4l2CodecAllocator *sink_allocator;
   GstV4l2CodecAllocator *src_allocator;
@@ -883,6 +884,8 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
   gst_v4l2_codec_h264_dec_fill_decoder_params (self, &slice->header, picture,
       dpb);
 
+  self->first_slice = TRUE;
+
   return TRUE;
 }
 
@@ -1027,24 +1030,17 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   GstV4l2Request *prev_request, *request = NULL;
   gsize bytesused;
   gboolean ret = FALSE;
-  guint count;
+  guint count = 0;
 
   /* *INDENT-OFF* */
+  /* Reserve space for controls */
   struct v4l2_ext_control control[] = {
-    {
-      .id = V4L2_CID_STATELESS_H264_PPS,
-      .ptr = &self->pps,
-      .size = sizeof (self->pps),
-    },
-    {
-      .id = V4L2_CID_STATELESS_H264_DECODE_PARAMS,
-      .ptr = &self->decode_params,
-      .size = sizeof (self->decode_params),
-    },
-    { },
-    { },
-    { },
-    { },
+    { }, /* SPS */
+    { }, /* PPS */
+    { }, /* DECODE_PARAMS */
+    { }, /* SLICE_PARAMS */
+    { }, /* SCALING_MATRIX */
+    { }, /* PRED_WEIGHTS */
   };
   /* *INDENT-ON* */
 
@@ -1080,9 +1076,6 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
-  /* Always set PPS and DECODE_PARAMS */
-  count = 2;
-
   if (self->need_sequence) {
     control[count].id = V4L2_CID_STATELESS_H264_SPS;
     control[count].ptr = &self->sps;
@@ -1091,11 +1084,25 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     self->need_sequence = FALSE;
   }
 
-  if (self->scaling_matrix_present) {
-    control[count].id = V4L2_CID_STATELESS_H264_SCALING_MATRIX;
-    control[count].ptr = &self->scaling_matrix;
-    control[count].size = sizeof (self->scaling_matrix);
+  if (self->first_slice) {
+    control[count].id = V4L2_CID_STATELESS_H264_PPS;
+    control[count].ptr = &self->pps;
+    control[count].size = sizeof (self->pps);
     count++;
+
+    if (self->scaling_matrix_present) {
+      control[count].id = V4L2_CID_STATELESS_H264_SCALING_MATRIX;
+      control[count].ptr = &self->scaling_matrix;
+      control[count].size = sizeof (self->scaling_matrix);
+      count++;
+    }
+
+    control[count].id = V4L2_CID_STATELESS_H264_DECODE_PARAMS;
+    control[count].ptr = &self->decode_params;
+    control[count].size = sizeof (self->decode_params);
+    count++;
+
+    self->first_slice = FALSE;
   }
 
   /* If it's not slice-based then it doesn't support per-slice controls. */
