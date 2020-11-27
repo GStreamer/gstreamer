@@ -292,6 +292,10 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
 
 WPEView::~WPEView()
 {
+    GstEGLImage *egl_pending = NULL;
+    GstEGLImage *egl_committed = NULL;
+    GstBuffer *shm_pending = NULL;
+    GstBuffer *shm_committed = NULL;
     GST_TRACE ("%p destroying", this);
 
     g_mutex_clear(&threading.ready_mutex);
@@ -301,24 +305,33 @@ WPEView::~WPEView()
         GMutexHolder lock(images_mutex);
 
         if (egl.pending) {
-            gst_egl_image_unref(egl.pending);
+            egl_pending = egl.pending;
             egl.pending = nullptr;
         }
         if (egl.committed) {
-            gst_egl_image_unref(egl.committed);
+            egl_committed = egl.committed;
             egl.committed = nullptr;
         }
         if (shm.pending) {
             GST_TRACE ("%p freeing shm pending %" GST_PTR_FORMAT, this, shm.pending);
-            gst_buffer_unref(shm.pending);
+            shm_pending = shm.pending;
             shm.pending = nullptr;
         }
         if (shm.committed) {
             GST_TRACE ("%p freeing shm commited %" GST_PTR_FORMAT, this, shm.committed);
-            gst_buffer_unref(shm.committed);
+            shm_committed = shm.committed;
             shm.committed = nullptr;
         }
     }
+
+    if (egl_pending)
+        gst_egl_image_unref (egl_pending);
+    if (egl_committed)
+        gst_egl_image_unref (egl_committed);
+    if (shm_pending)
+        gst_buffer_unref (shm_pending);
+    if (shm_committed)
+        gst_buffer_unref (shm_committed);
 
     WPEContextThread::singleton().dispatch([&]() {
         if (webkit.view) {
@@ -370,6 +383,7 @@ GstEGLImage* WPEView::image()
 {
     GstEGLImage* ret = nullptr;
     bool dispatchFrameComplete = false;
+    GstEGLImage *prev_image = NULL;
 
     {
         GMutexHolder lock(images_mutex);
@@ -380,18 +394,19 @@ GstEGLImage* WPEView::image()
                   GST_IS_EGL_IMAGE(egl.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(egl.committed)) : 0);
 
         if (egl.pending) {
-            auto* previousImage = egl.committed;
+            prev_image = egl.committed;
             egl.committed = egl.pending;
             egl.pending = nullptr;
 
-            if (previousImage)
-                gst_egl_image_unref(previousImage);
             dispatchFrameComplete = true;
         }
 
         if (egl.committed)
             ret = egl.committed;
     }
+
+    if (prev_image)
+        gst_egl_image_unref(prev_image);
 
     if (dispatchFrameComplete)
         frameComplete();
@@ -403,6 +418,7 @@ GstBuffer* WPEView::buffer()
 {
     GstBuffer* ret = nullptr;
     bool dispatchFrameComplete = false;
+    GstBuffer *prev_image = NULL;
 
     {
         GMutexHolder lock(images_mutex);
@@ -413,18 +429,19 @@ GstBuffer* WPEView::buffer()
                   GST_IS_BUFFER(shm.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(shm.committed)) : 0);
 
         if (shm.pending) {
-            auto* previousImage = shm.committed;
+            prev_image = shm.committed;
             shm.committed = shm.pending;
             shm.pending = nullptr;
 
-            if (previousImage)
-                gst_buffer_unref(previousImage);
             dispatchFrameComplete = true;
         }
 
         if (shm.committed)
             ret = shm.committed;
     }
+
+    if (prev_image)
+        gst_buffer_unref(prev_image);
 
     if (dispatchFrameComplete)
         frameComplete();
