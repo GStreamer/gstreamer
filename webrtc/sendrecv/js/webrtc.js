@@ -25,6 +25,16 @@ var ws_conn;
 // Promise for local stream after constraints are approved by the user
 var local_stream_promise;
 
+function onConnectClicked() {
+    var id = document.getElementById("peer-connect").value;
+    if (id == "") {
+        alert("Peer id must be filled out");
+        return;
+    }
+
+    ws_conn.send("SESSION " + id);
+}
+
 function getOurId() {
     return Math.floor(Math.random() * (9000 - 10) + 10).toString();
 }
@@ -114,6 +124,11 @@ function onServerMessage(event) {
     switch (event.data) {
         case "HELLO":
             setStatus("Registered with server, waiting for call");
+            return;
+        case "SESSION_OK":
+            setStatus("Starting negotiation");
+            if (!peer_connection)
+                createCall(null).then (generateOffer);
             return;
         default:
             if (event.data.startsWith("ERROR")) {
