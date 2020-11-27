@@ -176,7 +176,6 @@ typedef struct _GstAudioDecoderContext
   /* output */
   gboolean do_plc;
   gboolean do_estimate_rate;
-  gint max_errors;
   GstCaps *allocation_caps;
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
@@ -235,6 +234,8 @@ struct _GstAudioDecoderPrivate
   guint sync_flush;
   /* error count */
   gint error_count;
+  /* max errors */
+  gint max_errors;
 
   /* upstream stream tags (global tags are passed through as-is) */
   GstTagList *upstream_tags;
@@ -497,7 +498,7 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
   dec->priv->plc = DEFAULT_PLC;
   dec->priv->drainable = DEFAULT_DRAINABLE;
   dec->priv->needs_format = DEFAULT_NEEDS_FORMAT;
-  dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
+  dec->priv->max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
 
   /* init state */
   dec->priv->ctx.min_latency = 0;
@@ -3254,8 +3255,8 @@ _gst_audio_decoder_error (GstAudioDecoder * dec, gint weight,
     GST_WARNING_OBJECT (dec, "error: %s", dbg);
   dec->priv->error_count += weight;
   dec->priv->discont = TRUE;
-  if (dec->priv->ctx.max_errors >= 0
-      && dec->priv->ctx.max_errors < dec->priv->error_count) {
+  if (dec->priv->max_errors >= 0
+      && dec->priv->max_errors < dec->priv->error_count) {
     gst_element_message_full (GST_ELEMENT (dec), GST_MESSAGE_ERROR, domain,
         code, txt, dbg, file, function, line);
     return GST_FLOW_ERROR;
@@ -3367,7 +3368,7 @@ gst_audio_decoder_set_max_errors (GstAudioDecoder * dec, gint num)
 {
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
 
-  dec->priv->ctx.max_errors = num;
+  dec->priv->max_errors = num;
 }
 
 /**
@@ -3381,7 +3382,7 @@ gst_audio_decoder_get_max_errors (GstAudioDecoder * dec)
 {
   g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), 0);
 
-  return dec->priv->ctx.max_errors;
+  return dec->priv->max_errors;
 }
 
 /**
