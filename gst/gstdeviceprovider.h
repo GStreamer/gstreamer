@@ -26,6 +26,57 @@
 
 #include <gst/gstelement.h>
 
+/**
+ * GST_DEVICE_PROVIDER_REGISTER_DEFINE:
+ *
+ * @d_p: The device provider name in lower case, with words separated by '_'.
+ * Used to generate `gst_device_provider_register_*(GstPlugin* plugin)`.
+ * @d_p_n: The public name of the device provider
+ * @r: The #GstRank of the device provider (higher rank means more importance when autoplugging, see #GstRank)
+ * @t: The #GType of the device provider.
+ *
+ * A convenience macro to define the entry point of a
+ * device provider `gst_device_provider_register_*(GstPlugin* plugin)`.
+ *
+ * Since: 1.20
+ */
+#define GST_DEVICE_PROVIDER_REGISTER_DEFINE(d_p, d_p_n, r, t) \
+G_BEGIN_DECLS \
+gboolean G_PASTE (gst_device_provider_register_, d_p) (GstPlugin * plugin) \
+{ \
+  return gst_device_provider_register (plugin, d_p_n, r, t); \
+} \
+G_END_DECLS
+
+/**
+ * GST_DEVICE_PROVIDER_REGISTER_DECLARE:
+ * @d_p: The device provider name in lower case, with words separated by '_'.
+ *
+ * This macro can be used to declare a new device provider.
+ * It has to be used in combination with #GST_DEVICE_PROVIDER_REGISTER_DEFINE macro
+ * and must be placed outside any block to declare the device provider registration
+ * function.
+ *
+ * Since: 1.20
+ */
+#define GST_DEVICE_PROVIDER_REGISTER_DECLARE(d_p) \
+G_BEGIN_DECLS \
+gboolean G_PASTE(gst_device_provider_register_, d_p) (GstPlugin * plugin); \
+G_END_DECLS
+
+/**
+ * GST_DEVICE_PROVIDER_REGISTER:
+ * @d_p: The device provider name in lower case, with words separated by '_'.
+ * @plugin: The #GstPlugin where to register the device provider.
+ *
+ * This macro can be used to register a device provider into a #GstPlugin.
+ * This method will be usually called in the plugin init function
+ * but can also be called with a NULL plugin.
+ *
+ * Since: 1.20
+ */
+#define GST_DEVICE_PROVIDER_REGISTER(d_p, plugin) G_PASTE(gst_device_provider_register_, d_p) (plugin)
+
 G_BEGIN_DECLS
 
 typedef struct _GstDeviceProvider GstDeviceProvider;
