@@ -37,8 +37,10 @@
 struct _GstGLContextWGLPrivate
 {
   PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
+  PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB;
 
   GstGLAPI context_api;
+  const gchar *wgl_exts;
 };
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
@@ -59,6 +61,8 @@ static void gst_gl_context_wgl_destroy_context (GstGLContext * context);
 GstGLAPI gst_gl_context_wgl_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_wgl_get_gl_platform (GstGLContext *
     context);
+static gboolean gst_gl_context_wgl_check_feature (GstGLContext * context,
+    const gchar * feature);
 
 static void
 gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
@@ -82,6 +86,8 @@ gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
   context_class->get_gl_api = GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_api);
   context_class->get_gl_platform =
       GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_platform);
+  context_class->check_feature =
+      GST_DEBUG_FUNCPTR (gst_gl_context_wgl_check_feature);
 }
 
 static void
@@ -189,10 +195,21 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
   context_wgl->priv->wglCreateContextAttribsARB =
       (PFNWGLCREATECONTEXTATTRIBSARBPROC)
       wglGetProcAddress ("wglCreateContextAttribsARB");
+  context_wgl->priv->wglGetExtensionsStringARB =
+      (PFNWGLGETEXTENSIONSSTRINGARBPROC)
+      wglGetProcAddress ("wglGetExtensionsStringARB");
 
   wglMakeCurrent (device, 0);
   wglDeleteContext (trampoline);
   trampoline = NULL;
+
+  if (context_wgl->priv->wglGetExtensionsStringARB) {
+    context_wgl->priv->wgl_exts =
+        context_wgl->priv->wglGetExtensionsStringARB (device);
+
+    GST_DEBUG_OBJECT (context, "Available WGL extensions %s",
+        GST_STR_NULL (context_wgl->priv->wgl_exts));
+  }
 
   if (context_wgl->priv->wglCreateContextAttribsARB != NULL
       && gl_api & GST_GL_API_OPENGL3) {
@@ -393,6 +410,14 @@ static GstGLPlatform
 gst_gl_context_wgl_get_gl_platform (GstGLContext * context)
 {
   return GST_GL_PLATFORM_WGL;
+}
+
+static gboolean
+gst_gl_context_wgl_check_feature (GstGLContext * context, const gchar * feature)
+{
+  GstGLContextWGL *context_wgl = GST_GL_CONTEXT_WGL (context);
+
+  return gst_gl_check_extension (feature, context_wgl->priv->wgl_exts);
 }
 
 gpointer
