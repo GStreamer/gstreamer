@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>org.freedesktop.GstDebugViewer</id>
-  <launchable type="desktop">org.freedesktop.GstDebugViewer.desktop</launchable>
+  <launchable type="desktop-id">org.freedesktop.GstDebugViewer.desktop</launchable>
   <metadata_license>CC-BY-3.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
   <name>GStreamer Debug Viewer</name>
