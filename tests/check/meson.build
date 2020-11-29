@@ -16,6 +16,8 @@ exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
 nalutils_dep = gstcodecparsers_dep.partial_dependency (compile_args: true, includes: true)
 
 enable_gst_play_tests = get_option('gst_play_tests')
+libsoup_dep = dependency('libsoup-2.4', version : '>=2.48', required : enable_gst_play_tests,
+  fallback : ['libsoup', 'libsoup_dep'])
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [
@@ -69,7 +71,7 @@ base_tests = [
   [['libs/mpegts.c'], false, [gstmpegts_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
-  [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep]],
+  [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep, libsoup_dep]],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp9parser.c'], false, [gstcodecparsers_dep]],

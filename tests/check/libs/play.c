@@ -36,6 +36,12 @@
 # include <valgrind/valgrind.h>
 #endif
 
+#define SOUP_VERSION_MIN_REQUIRED (SOUP_VERSION_2_40)
+#include <libsoup/soup.h>
+#if !defined(SOUP_MINOR_VERSION) || SOUP_MINOR_VERSION < 44
+#define SoupStatus SoupKnownStatusCode
+#endif
+
 #include <gst/check/gstcheck.h>
 
 #define fail_unless_equals_int(a, b)                                    \
@@ -1547,6 +1553,134 @@ START_TEST (test_restart)
 
 END_TEST;
 
+static void
+do_get (SoupMessage * msg, const char *path)
+{
+  char *uri;
+  SoupStatus status = SOUP_STATUS_OK;
+
+  uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
+  GST_DEBUG ("request: \"%s\"", uri);
+
+  if (status != (SoupStatus) SOUP_STATUS_OK)
+    goto beach;
+
+  if (msg->method == SOUP_METHOD_GET) {
+    char *full_path = g_strconcat (TEST_PATH, path, NULL);
+    char *buf;
+    gsize buflen;
+
+    if (!g_file_get_contents (full_path, &buf, &buflen, NULL)) {
+      status = SOUP_STATUS_NOT_FOUND;
+      g_free (full_path);
+      goto beach;
+    }
+
+    g_free (full_path);
+    soup_message_body_append (msg->response_body, SOUP_MEMORY_TAKE,
+        buf, buflen);
+  }
+
+beach:
+  soup_message_set_status (msg, status);
+  g_free (uri);
+}
+
+static void
+server_callback (SoupServer * server, SoupMessage * msg,
+    const char *path, GHashTable * query,
+    SoupClientContext * context, gpointer data)
+{
+  GST_DEBUG ("%s %s HTTP/1.%d", msg->method, path,
+      soup_message_get_http_version (msg));
+  if (msg->request_body->length)
+    GST_DEBUG ("%s", msg->request_body->data);
+
+  if (msg->method == SOUP_METHOD_GET)
+    do_get (msg, path);
+  else
+    soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+
+  GST_DEBUG ("  -> %d %s", msg->status_code, msg->reason_phrase);
+}
+
+static guint
+get_port_from_server (SoupServer * server)
+{
+  GSList *uris;
+  guint port;
+
+  uris = soup_server_get_uris (server);
+  g_assert (g_slist_length (uris) == 1);
+  port = soup_uri_get_port (uris->data);
+  g_slist_free_full (uris, (GDestroyNotify) soup_uri_free);
+
+  return port;
+}
+
+typedef struct
+{
+  GMainLoop *loop;
+  GMainContext *ctx;
+  GThread *thread;
+  SoupServer *server;
+  GMutex lock;
+  GCond cond;
+} ServerContext;
+
+static gboolean
+main_loop_running_cb (gpointer data)
+{
+  ServerContext *context = (ServerContext *) data;
+
+  g_mutex_lock (&context->lock);
+  g_cond_signal (&context->cond);
+  g_mutex_unlock (&context->lock);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+http_main (gpointer data)
+{
+  ServerContext *context = (ServerContext *) data;
+  GSource *source;
+
+  context->server = soup_server_new (NULL, NULL);
+  soup_server_add_handler (context->server, NULL, server_callback, NULL, NULL);
+
+  g_main_context_push_thread_default (context->ctx);
+
+  {
+    GSocketAddress *address;
+    GError *err = NULL;
+    SoupServerListenOptions listen_flags = 0;
+
+    address =
+        g_inet_socket_address_new_from_string ("0.0.0.0",
+        SOUP_ADDRESS_ANY_PORT);
+    soup_server_listen (context->server, address, listen_flags, &err);
+    g_object_unref (address);
+
+    if (err) {
+      GST_ERROR ("Failed to start HTTP server: %s", err->message);
+      g_object_unref (context->server);
+      g_error_free (err);
+    }
+  }
+
+  source = g_idle_source_new ();
+  g_source_set_callback (source, (GSourceFunc) main_loop_running_cb, context,
+      NULL);
+  g_source_attach (source, context->ctx);
+  g_source_unref (source);
+
+  g_main_loop_run (context->loop);
+  g_main_context_pop_thread_default (context->ctx);
+  g_object_unref (context->server);
+  return NULL;
+}
+
 #define TEST_USER_AGENT "test user agent"
 
 static void
@@ -1554,10 +1688,8 @@ test_user_agent_cb (GstPlay * player,
     TestPlayerStateChange change, TestPlayerState * old_state,
     TestPlayerState * new_state)
 {
-  /* React on error message, which is a hack. If we were playing a valid asset
-     hosted on a local/mock server, we could instead react on state change
-     notifications. */
-  if (change == STATE_CHANGE_ERROR) {
+  if (change == STATE_CHANGE_STATE_CHANGED
+      && new_state->state == GST_PLAY_STATE_PAUSED) {
     GstElement *pipeline;
     GstElement *source;
     gchar *user_agent;
@@ -1579,6 +1711,27 @@ START_TEST (test_user_agent)
   GstStructure *config;
   gchar *user_agent;
   TestPlayerState state;
+  guint port;
+  gchar *url;
+  ServerContext *context = g_new (ServerContext, 1);
+
+  g_mutex_init (&context->lock);
+  g_cond_init (&context->cond);
+  context->ctx = g_main_context_new ();
+  context->loop = g_main_loop_new (context->ctx, FALSE);
+  context->server = NULL;
+
+  g_mutex_lock (&context->lock);
+  context->thread = g_thread_new ("HTTP Server", http_main, context);
+  while (!g_main_loop_is_running (context->loop))
+    g_cond_wait (&context->cond, &context->lock);
+  g_mutex_unlock (&context->lock);
+
+  if (context->server == NULL) {
+    g_print ("Failed to start up HTTP server");
+    /* skip this test */
+    goto beach;
+  }
 
   memset (&state, 0, sizeof (state));
   state.test_callback = test_user_agent_cb;
@@ -1587,8 +1740,12 @@ START_TEST (test_user_agent)
   player = gst_play_new (NULL);
   fail_unless (player != NULL);
 
-  /* FIXME: This test should rely on a HTTP mock (or local) server. */
-  gst_play_set_uri (player, "http://example.com/test.mkv");
+  port = get_port_from_server (context->server);
+  url = g_strdup_printf ("http://127.0.0.1:%u/audio.ogg", port);
+  fail_unless (url != NULL);
+
+  gst_play_set_uri (player, url);
+  g_free (url);
 
   config = gst_play_get_config (player);
   gst_play_config_set_user_agent (config, TEST_USER_AGENT);
@@ -1604,6 +1761,15 @@ START_TEST (test_user_agent)
 
   stop_player (player, &state);
   g_object_unref (player);
+
+beach:
+  g_main_loop_quit (context->loop);
+  g_thread_unref (context->thread);
+  g_main_loop_unref (context->loop);
+  context->loop = NULL;
+  g_main_context_unref (context->ctx);
+  context->ctx = NULL;
+  g_free (context);
 }
 
 END_TEST;
