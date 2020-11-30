@@ -28,8 +28,11 @@
 #include <string.h>
 
 #include "gstssaparse.h"
+#include "gstsubparseelements.h"
+
 
 GST_DEBUG_CATEGORY_STATIC (ssa_parse_debug);
+#undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ssa_parse_debug
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -46,6 +49,9 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_ssa_parse_parent_class parent_class
 G_DEFINE_TYPE (GstSsaParse, gst_ssa_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ssaparse, "ssaparse",
+    GST_RANK_PRIMARY, GST_TYPE_SSA_PARSE, sub_parse_element_init (plugin));
+
 
 static GstStateChangeReturn gst_ssa_parse_change_state (GstElement *
     element, GstStateChange transition);

@@ -24,30 +24,13 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-GST_DEBUG_CATEGORY_EXTERN (sub_parse_debug);
-#define GST_CAT_DEFAULT sub_parse_debug
+#include "gstsubparseelements.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_SUBPARSE (gst_sub_parse_get_type ())
 G_DECLARE_FINAL_TYPE (GstSubParse, gst_sub_parse, GST, SUBPARSE, GstElement)
 
-/* format enum */
-typedef enum
-{
-  GST_SUB_PARSE_FORMAT_UNKNOWN = 0,
-  GST_SUB_PARSE_FORMAT_MDVDSUB = 1,
-  GST_SUB_PARSE_FORMAT_SUBRIP = 2,
-  GST_SUB_PARSE_FORMAT_MPSUB = 3,
-  GST_SUB_PARSE_FORMAT_SAMI = 4,
-  GST_SUB_PARSE_FORMAT_TMPLAYER = 5,
-  GST_SUB_PARSE_FORMAT_MPL2 = 6,
-  GST_SUB_PARSE_FORMAT_SUBVIEWER = 7,
-  GST_SUB_PARSE_FORMAT_DKS = 8,
-  GST_SUB_PARSE_FORMAT_QTTEXT = 9,
-  GST_SUB_PARSE_FORMAT_LRC = 10,
-  GST_SUB_PARSE_FORMAT_VTT = 11
-} GstSubParseFormat;
 
 typedef struct {
   int      state;

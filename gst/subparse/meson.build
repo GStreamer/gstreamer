@@ -1,6 +1,8 @@
 subparse_sources = [
   'gstssaparse.c',
   'gstsubparse.c',
+  'gstsubparseelement.c',
+  'gstsubparseplugin.c',
   'samiparse.c',
   'tmplayerparse.c',
   'mpl2parse.c',
