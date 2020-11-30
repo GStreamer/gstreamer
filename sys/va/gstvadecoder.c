@@ -65,6 +65,8 @@ enum
 
 static GParamSpec *g_properties[N_PROPERTIES];
 
+static gboolean _destroy_buffers (GstVaDecodePicture * pic);
+
 static void
 gst_va_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -619,15 +621,13 @@ gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
   gst_va_display_lock (self->display);
   status = vaEndPicture (dpy, self->context);
   gst_va_display_unlock (self->display);
-  if (status != VA_STATUS_SUCCESS) {
+  if (status != VA_STATUS_SUCCESS)
     GST_WARNING_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
-    goto bail;
-  }
-
-  ret = TRUE;
+  else
+    ret = TRUE;
 
 bail:
-  gst_va_decoder_destroy_buffers (self, pic);
+  _destroy_buffers (pic);
 
   return ret;
 
@@ -641,13 +641,15 @@ fail_end_pic:
 }
 
 static gboolean
-_va_decoder_picture_destroy_buffers (GstVaDecodePicture * pic)
+_destroy_buffers (GstVaDecodePicture * pic)
 {
   VABufferID buffer;
   VADisplay dpy;
   VAStatus status;
   guint i;
   gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (pic->display), FALSE);
 
   dpy = gst_va_display_get_va_dpy (pic->display);
 
@@ -679,28 +681,6 @@ _va_decoder_picture_destroy_buffers (GstVaDecodePicture * pic)
 
   return ret;
 }
-
-gboolean
-gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
-{
-  VASurfaceID surface;
-
-  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
-  g_return_val_if_fail (pic, FALSE);
-
-  surface = gst_va_decode_picture_get_surface (pic);
-  if (surface == VA_INVALID_ID) {
-    GST_ERROR_OBJECT (self, "Decode picture without VASurfaceID");
-    return FALSE;
-  }
-
-  g_assert (pic->display == self->display);
-
-  GST_TRACE_OBJECT (self, "Destroy buffers of surface %#x", surface);
-
-  return _va_decoder_picture_destroy_buffers (pic);
-}
-
 
 GstVaDecodePicture *
 gst_va_decode_picture_new (GstVaDecoder * self, GstBuffer * buffer)
@@ -735,7 +715,7 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
 
   if (pic->buffers->len > 0 || pic->slices->len > 0) {
     GST_WARNING ("VABufferIDs have not been released.");
-    _va_decoder_picture_destroy_buffers (pic);
+    _destroy_buffers (pic);
   }
 
   gst_buffer_unref (pic->gstbuffer);

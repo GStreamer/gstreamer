@@ -331,7 +331,6 @@ gst_va_h264_dec_decode_slice (GstH264Decoder * decoder,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaDecodePicture *va_pic;
   VASliceParameterBufferH264 slice_param;
-  gboolean ret;
 
   /* *INDENT-OFF* */
   slice_param = (VASliceParameterBufferH264) {
@@ -360,15 +359,9 @@ gst_va_h264_dec_decode_slice (GstH264Decoder * decoder,
 
   va_pic = gst_h264_picture_get_user_data (picture);
 
-  ret = gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
+  return gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
       sizeof (slice_param), slice->nalu.data + slice->nalu.offset,
       slice->nalu.size);
-  if (!ret) {
-    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 static gboolean
@@ -463,7 +456,7 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
 
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
           VAPictureParameterBufferType, &pic_param, sizeof (pic_param)))
-    goto fail;
+    return FALSE;
 
   /* there are always 6 4x4 scaling lists */
   for (i = 0; i < 6; i++) {
@@ -480,17 +473,8 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
         [i], pps->scaling_lists_8x8[i]);
   }
 
-  if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
-          VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix)))
-    goto fail;
-
-  return TRUE;
-
-fail:
-  {
-    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
-    return FALSE;
-  }
+  return gst_va_decoder_add_param_buffer (base->decoder, va_pic,
+      VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix));
 }
 
 static gboolean

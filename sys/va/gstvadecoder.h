@@ -67,8 +67,6 @@ gboolean              gst_va_decoder_add_slice_buffer     (GstVaDecoder * self,
                                                            gsize slice_size);
 gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
-gboolean              gst_va_decoder_destroy_buffers      (GstVaDecoder * self,
-                                                           GstVaDecodePicture * pic);
 
 GstVaDecodePicture *  gst_va_decode_picture_new           (GstVaDecoder * self,
                                                            GstBuffer * buffer);

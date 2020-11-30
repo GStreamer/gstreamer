@@ -363,24 +363,7 @@ static gboolean
 gst_va_vp9_decode_picture (GstVp9Decoder * decoder, GstVp9Picture * picture,
     GstVp9Dpb * dpb)
 {
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-
-  if (!_fill_param (decoder, picture, dpb))
-    goto fail;
-
-  if (!_fill_slice (decoder, picture))
-    goto fail;
-
-  return TRUE;
-
-fail:
-  {
-    GstVaDecodePicture *va_pic;
-
-    va_pic = gst_vp9_picture_get_user_data (picture);
-    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
-    return FALSE;
-  }
+  return _fill_param (decoder, picture, dpb) && _fill_slice (decoder, picture);
 }
 
 static gboolean

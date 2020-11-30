@@ -361,7 +361,6 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaDecodePicture *va_pic;
   VASliceParameterBufferHEVC slice_param;
-  gboolean ret;
 
   /* *INDENT-OFF* */
   slice_param = (VASliceParameterBufferHEVC) {
@@ -416,15 +415,9 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
 
   va_pic = gst_h265_picture_get_user_data (picture);
 
-  ret = gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
+  return gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
       sizeof (slice_param), slice->nalu.data + slice->nalu.offset,
       slice->nalu.size);
-  if (!ret) {
-    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 static gboolean
@@ -544,7 +537,7 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
 
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
           VAPictureParameterBufferType, pic_param, sizeof (*pic_param)))
-    goto fail;
+    return FALSE;
 
   if (pps->scaling_list_data_present_flag ||
       (sps->scaling_list_enabled_flag
@@ -582,18 +575,11 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
       iq_matrix.ScalingListDC32x32[i] =
           scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
 
-    if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
-            VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix)))
-      goto fail;
+    return gst_va_decoder_add_param_buffer (base->decoder, va_pic,
+        VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix));
   }
 
   return TRUE;
-
-fail:
-  {
-    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
-    return FALSE;
-  }
 }
 
 static gboolean

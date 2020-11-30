@@ -413,24 +413,8 @@ static gboolean
 gst_va_vp8_dec_decode_picture (GstVp8Decoder * decoder, GstVp8Picture * picture,
     GstVp8Parser * parser)
 {
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstVaDecodePicture *va_pic;
-
-  if (!_fill_picture (decoder, picture, parser))
-    goto error;
-
-  if (!_add_slice (decoder, picture, parser))
-    goto error;
-
-  return TRUE;
-
-error:
-  {
-    GST_WARNING_OBJECT (base, "Decode the picture error");
-    va_pic = gst_vp8_picture_get_user_data (picture);
-    gst_va_decoder_destroy_buffers (base->decoder, va_pic);
-    return FALSE;
-  }
+  return _fill_picture (decoder, picture, parser) &&
+      _add_slice (decoder, picture, parser);
 }
 
 static gboolean
