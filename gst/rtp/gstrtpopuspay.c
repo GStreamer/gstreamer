@@ -36,10 +36,12 @@ GST_DEBUG_CATEGORY_STATIC (rtpopuspay_debug);
 
 
 static GstStaticPadTemplate gst_rtp_opus_pay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus, channel-mapping-family = (int) 0")
+    GST_STATIC_CAPS ("audio/x-opus, channel-mapping-family = (int) 0;"
+        "audio/x-opus, channel-mapping-family = (int) 0, channels = (int) [1, 2];"
+        "audio/x-opus, channel-mapping-family = (int) 1, channels = (int) [3, 255]")
     );
 
 static GstStaticPadTemplate gst_rtp_opus_pay_src_template =
@@ -50,8 +52,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 48000, "
-        "encoding-params = (string) \"2\", "
-        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\" }")
+        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\", \"multiopus\" }")
     );
 
 static gboolean gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload,
@@ -103,7 +104,9 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   GstCaps *src_caps;
   GstStructure *s, *outcaps;
   const char *encoding_name = "OPUS";
-  gint channels, rate;
+  gint channels = 2;
+  gint rate;
+  gchar *encoding_params;
 
   outcaps = gst_structure_new_empty ("unused");
 
@@ -130,14 +133,59 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   s = gst_caps_get_structure (caps, 0);
   if (gst_structure_get_int (s, "channels", &channels)) {
     if (channels > 2) {
-      GST_ERROR_OBJECT (payload,
-          "More than 2 channels with channel-mapping-family=0 is invalid");
-      return FALSE;
+      /* Implies channel-mapping-family = 1. */
+
+      gint stream_count, coupled_count;
+      const GValue *channel_mapping_array;
+
+      /* libwebrtc only supports "multiopus" when channels > 2. Mono and stereo
+       * sound must always be payloaded according to RFC 7587. */
+      encoding_name = "multiopus";
+
+      if (gst_structure_get_int (s, "stream-count", &stream_count)) {
+        char *num_streams = g_strdup_printf ("%d", stream_count);
+        gst_structure_set (outcaps, "num_streams", G_TYPE_STRING, num_streams,
+            NULL);
+        g_free (num_streams);
+      }
+      if (gst_structure_get_int (s, "coupled-count", &coupled_count)) {
+        char *coupled_streams = g_strdup_printf ("%d", coupled_count);
+        gst_structure_set (outcaps, "coupled_streams", G_TYPE_STRING,
+            coupled_streams, NULL);
+        g_free (coupled_streams);
+      }
+
+      channel_mapping_array = gst_structure_get_value (s, "channel-mapping");
+      if (GST_VALUE_HOLDS_ARRAY (channel_mapping_array)) {
+        GString *str = g_string_new (NULL);
+        guint i;
+
+        for (i = 0; i < gst_value_array_get_size (channel_mapping_array); ++i) {
+          if (i != 0) {
+            g_string_append_c (str, ',');
+          }
+          g_string_append_printf (str, "%d",
+              g_value_get_int (gst_value_array_get_value (channel_mapping_array,
+                      i)));
+        }
+
+        gst_structure_set (outcaps, "channel_mapping", G_TYPE_STRING, str->str,
+            NULL);
+
+        g_string_free (str, TRUE);
+      }
     } else {
       gst_structure_set (outcaps, "sprop-stereo", G_TYPE_STRING,
           (channels == 2) ? "1" : "0", NULL);
+      /* RFC 7587 requires the number of channels always be 2. */
+      channels = 2;
     }
   }
+
+  encoding_params = g_strdup_printf ("%d", channels);
+  gst_structure_set (outcaps, "encoding-params", G_TYPE_STRING,
+      encoding_params, NULL);
+  g_free (encoding_params);
 
   if (gst_structure_get_int (s, "rate", &rate)) {
     gchar *sprop_maxcapturerate = g_strdup_printf ("%d", rate);
