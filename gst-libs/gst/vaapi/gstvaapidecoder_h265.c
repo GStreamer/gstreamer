@@ -1735,7 +1735,7 @@ init_picture_refs (GstVaapiDecoderH265 * decoder,
   if (pps->pps_scc_extension_params.pps_curr_pic_ref_enabled_flag
       && !ref_pic_list_modification->ref_pic_list_modification_flag_l0
       && (NumRpsCurrTempList0 > num_ref_idx_l0_active_minus1 + 1))
-    priv->RefPicList0[rIdx++] = picture;
+    priv->RefPicList0[num_ref_idx_l0_active_minus1] = picture;
   priv->RefPicList0_count = rIdx;
 
   if (type == GST_H265_B_SLICE) {
