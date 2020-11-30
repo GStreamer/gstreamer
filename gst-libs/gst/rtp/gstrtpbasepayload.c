@@ -891,6 +891,51 @@ update_max_ptime (GstRTPBasePayload * rtpbasepayload)
     rtpbasepayload->max_ptime = DEFAULT_MAX_PTIME;
 }
 
+static gboolean
+_set_caps (GQuark field_id, const GValue * value, GstCaps * caps)
+{
+  gst_caps_set_value (caps, g_quark_to_string (field_id), value);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtp_base_payload_set_outcaps_structure:
+ * @payload: a #GstRTPBasePayload
+ * @s: (nullable): a #GstStructure with the caps fields
+ *
+ * Configure the output caps with the optional fields.
+ *
+ * Returns: %TRUE if the caps could be set.
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_rtp_base_payload_set_outcaps_structure (GstRTPBasePayload * payload,
+    GstStructure * s)
+{
+  GstCaps *srccaps;
+
+  /* fill in the defaults, their properties cannot be negotiated. */
+  srccaps = gst_caps_new_simple ("application/x-rtp",
+      "media", G_TYPE_STRING, payload->media,
+      "clock-rate", G_TYPE_INT, payload->clock_rate,
+      "encoding-name", G_TYPE_STRING, payload->encoding_name, NULL);
+
+  GST_DEBUG_OBJECT (payload, "defaults: %" GST_PTR_FORMAT, srccaps);
+
+  if (s && gst_structure_n_fields (s) > 0) {
+    gst_structure_foreach (s, (GstStructureForeachFunc) _set_caps, srccaps);
+
+    GST_DEBUG_OBJECT (payload, "custom added: %" GST_PTR_FORMAT, srccaps);
+  }
+
+  gst_caps_replace (&payload->priv->subclass_srccaps, srccaps);
+  gst_caps_unref (srccaps);
+
+  return gst_rtp_base_payload_negotiate (payload);
+}
+
 /**
  * gst_rtp_base_payload_set_outcaps:
  * @payload: a #GstRTPBasePayload
@@ -908,31 +953,25 @@ gboolean
 gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
     const gchar * fieldname, ...)
 {
-  GstCaps *srccaps;
-
-  /* fill in the defaults, their properties cannot be negotiated. */
-  srccaps = gst_caps_new_simple ("application/x-rtp",
-      "media", G_TYPE_STRING, payload->media,
-      "clock-rate", G_TYPE_INT, payload->clock_rate,
-      "encoding-name", G_TYPE_STRING, payload->encoding_name, NULL);
-
-  GST_DEBUG_OBJECT (payload, "defaults: %" GST_PTR_FORMAT, srccaps);
+  gboolean result;
+  GstStructure *s = NULL;
 
   if (fieldname) {
     va_list varargs;
 
+    s = gst_structure_new_empty ("unused");
+
     /* override with custom properties */
     va_start (varargs, fieldname);
-    gst_caps_set_simple_valist (srccaps, fieldname, varargs);
+    gst_structure_set_valist (s, fieldname, varargs);
     va_end (varargs);
-
-    GST_DEBUG_OBJECT (payload, "custom added: %" GST_PTR_FORMAT, srccaps);
   }
 
-  gst_caps_replace (&payload->priv->subclass_srccaps, srccaps);
-  gst_caps_unref (srccaps);
+  result = gst_rtp_base_payload_set_outcaps_structure (payload, s);
 
-  return gst_rtp_base_payload_negotiate (payload);
+  gst_clear_structure (&s);
+
+  return result;
 }
 
 static void

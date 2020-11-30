@@ -161,6 +161,10 @@ gboolean        gst_rtp_base_payload_set_outcaps        (GstRTPBasePayload *payl
                                                          const gchar *fieldname, ...);
 
 GST_RTP_API
+gboolean        gst_rtp_base_payload_set_outcaps_structure (GstRTPBasePayload *payload,
+                                                            GstStructure *s);
+
+GST_RTP_API
 gboolean        gst_rtp_base_payload_is_filled          (GstRTPBasePayload *payload,
                                                          guint size, GstClockTime duration);
 
