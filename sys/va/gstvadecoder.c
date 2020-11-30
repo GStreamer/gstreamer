@@ -713,10 +713,10 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
 {
   g_return_if_fail (pic);
 
-  if (pic->buffers->len > 0 || pic->slices->len > 0) {
-    GST_WARNING ("VABufferIDs have not been released.");
+  /* only if add_param_buffer() or add_slice_buffer() failed */
+  if ((pic->buffers != NULL && pic->buffers->len > 0)
+      || (pic->slices != NULL && pic->slices->len > 0))
     _destroy_buffers (pic);
-  }
 
   gst_buffer_unref (pic->gstbuffer);
   g_clear_pointer (&pic->buffers, g_array_unref);
@@ -733,11 +733,10 @@ gst_va_decode_picture_dup (GstVaDecodePicture * pic)
 
   g_return_val_if_fail (pic, NULL);
 
-  dup = g_slice_new (GstVaDecodePicture);
-  dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
-  dup->buffers = g_array_ref (pic->buffers);
-  dup->slices = g_array_ref (pic->slices);
+  dup = g_slice_new0 (GstVaDecodePicture);
 
+  /* dups only need gstbuffer */
+  dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
   return dup;
 }
 
