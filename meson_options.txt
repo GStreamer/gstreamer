@@ -29,7 +29,6 @@ option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('benchmarks', type : 'feature', value : 'auto', yield : true)
 option('tools', type : 'feature', value : 'auto', yield : true)
-option('gtk_doc', type : 'feature', value : 'auto', yield : true, description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
