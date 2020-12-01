@@ -50,6 +50,14 @@
 
 gboolean colored_output = TRUE;
 
+typedef enum
+{
+  SORT_TYPE_NONE = 0,
+  SORT_TYPE_NAME,               /* default */
+} SortType;
+
+SortType sort_output = SORT_TYPE_NAME;
+
 #ifdef G_OS_UNIX
 static const gchar DEFAULT_PAGER[] = "less";
 GPid child_pid = -1;
@@ -727,10 +735,22 @@ print_element_properties_info (GstElement * element)
       G_OBJECT_GET_CLASS (element), "Element Properties");
 }
 
+static gint
+gst_static_pad_compare_func (gconstpointer p1, gconstpointer p2)
+{
+  GstStaticPadTemplate *pt1, *pt2;
+
+  pt1 = (GstStaticPadTemplate *) p1;
+  pt2 = (GstStaticPadTemplate *) p2;
+
+  return strcmp (pt1->name_template, pt2->name_template);
+}
+
+
 static void
 print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 {
-  const GList *pads;
+  GList *pads;
   GstStaticPadTemplate *padtemplate;
   GstPadTemplate *tmpl;
 
@@ -743,7 +763,9 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
     goto done;
   }
 
-  pads = gst_element_factory_get_static_pad_templates (factory);
+  pads = g_list_copy ((GList *)
+      gst_element_factory_get_static_pad_templates (factory));
+  pads = g_list_sort (pads, gst_static_pad_compare_func);
   while (pads) {
     padtemplate = (GstStaticPadTemplate *) (pads->data);
     pads = g_list_next (pads);
@@ -806,7 +828,7 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
     if (pads != NULL)
       n_print ("\n");
   }
-
+  g_list_free (pads);
 done:
   pop_indent ();
 }
@@ -1142,6 +1164,19 @@ print_preset_list (GstElement * element)
   }
 }
 
+static gint
+gst_plugin_name_compare_func (gconstpointer p1, gconstpointer p2)
+{
+  return strcmp (gst_plugin_get_name ((GstPlugin *) p1),
+      gst_plugin_get_name ((GstPlugin *) p2));
+}
+
+static gint
+gst_plugin_feature_name_compare_func (gconstpointer p1, gconstpointer p2)
+{
+  return strcmp (GST_OBJECT_NAME (p1), GST_OBJECT_NAME (p2));
+}
+
 static void
 print_blacklist (void)
 {
@@ -1151,6 +1186,9 @@ print_blacklist (void)
   g_print ("%s%s%s\n", HEADING_COLOR, _("Blacklisted files:"), RESET_COLOR);
 
   plugins = gst_registry_get_plugin_list (gst_registry_get ());
+  if (sort_output == SORT_TYPE_NAME)
+    plugins = g_list_sort (plugins, gst_plugin_name_compare_func);
+
   for (cur = plugins; cur != NULL; cur = g_list_next (cur)) {
     GstPlugin *plugin = (GstPlugin *) (cur->data);
     if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED)) {
@@ -1196,6 +1234,8 @@ print_element_list (gboolean print_all, gchar * ftypes)
   }
 
   orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
+  if (sort_output == SORT_TYPE_NAME)
+    plugins = g_list_sort (plugins, gst_plugin_name_compare_func);
   while (plugins) {
     GList *features, *orig_features;
     GstPlugin *plugin;
@@ -1212,6 +1252,8 @@ print_element_list (gboolean print_all, gchar * ftypes)
     orig_features = features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get (),
         gst_plugin_get_name (plugin));
+    if (sort_output == SORT_TYPE_NAME)
+      features = g_list_sort (features, gst_plugin_feature_name_compare_func);
     while (features) {
       GstPluginFeature *feature;
 
@@ -1313,14 +1355,16 @@ print_all_uri_handlers (void)
   GList *plugins, *p, *features, *f;
 
   plugins = gst_registry_get_plugin_list (gst_registry_get ());
-
+  if (sort_output == SORT_TYPE_NAME)
+    plugins = g_list_sort (plugins, gst_plugin_name_compare_func);
   for (p = plugins; p; p = p->next) {
     GstPlugin *plugin = (GstPlugin *) (p->data);
 
     features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get (),
         gst_plugin_get_name (plugin));
-
+    if (sort_output == SORT_TYPE_NAME)
+      features = g_list_sort (features, gst_plugin_feature_name_compare_func);
     for (f = features; f; f = f->next) {
       GstPluginFeature *feature = GST_PLUGIN_FEATURE (f->data);
 
@@ -1456,7 +1500,8 @@ print_plugin_features (GstPlugin * plugin)
   origlist = features =
       gst_registry_get_feature_list_by_plugin (gst_registry_get (),
       gst_plugin_get_name (plugin));
-
+  if (sort_output == SORT_TYPE_NAME)
+    features = g_list_sort (features, gst_plugin_feature_name_compare_func);
   while (features) {
     GstPluginFeature *feature;
 
@@ -1885,6 +1930,8 @@ print_all_plugin_automatic_install_info (void)
   GList *plugins, *orig_plugins;
 
   orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
+  if (sort_output == SORT_TYPE_NAME)
+    plugins = g_list_sort (plugins, gst_plugin_name_compare_func);
   while (plugins) {
     GstPlugin *plugin;
 
@@ -1951,6 +1998,21 @@ child_exit_cb (GPid child_pid, gint status, gpointer user_data)
 }
 #endif
 
+static gboolean
+_parse_sort_type (const gchar * option_name, const gchar * optarg,
+    gpointer data, GError ** error)
+{
+  if (!g_strcmp0 (optarg, "name")) {
+    sort_output = SORT_TYPE_NAME;
+    return TRUE;
+  } else if (!g_strcmp0 (optarg, "none")) {
+    sort_output = SORT_TYPE_NONE;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2000,6 +2062,10 @@ main (int argc, char *argv[])
           ("Disable colors in output. You can also achieve the same by setting"
               "'GST_INSPECT_NO_COLORS' environment variable to any value."),
         NULL},
+    {"sort", '\0', G_OPTION_ARG_NONE, G_OPTION_ARG_CALLBACK, &_parse_sort_type,
+          "Sort plugins and features. Sorting keys: name (default), none.",
+        "<sort-key>"}
+    ,
     {"color", 'C', 0, G_OPTION_ARG_NONE, &color_always,
           N_("Color output, even when not sending to a tty."),
         NULL},
