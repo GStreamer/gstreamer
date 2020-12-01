@@ -75,6 +75,91 @@ GST_START_TEST (test_depay_to_pay)
 }
 
 GST_END_TEST;
+GST_START_TEST (test_pay_to_depay_multichannel)
+{
+  GstHarness *h = gst_harness_new_parse ("rtpopuspay ! rtpopusdepay");
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstStructure *s;
+  const GValue *channel_mapping;
+  gint val, i;
+
+  static const int expected_channel_mapping[] = { 0, 4, 1, 2, 3, 5 };
+
+  buf = buffer_from_array (opus_data);
+
+  gst_harness_set_src_caps_str (h, "audio/x-opus,channel-mapping-family=1,"
+      "rate=48000,channels=6,stream-count=4,coupled-count=2,channel-mapping=<0,4,1,2,3,5>");
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  caps = gst_pad_get_current_caps (h->srcpad);
+  s = gst_caps_get_structure (caps, 0);
+
+  assert_equals_string (gst_structure_get_name (s), "audio/x-opus");
+
+  fail_unless (gst_structure_get_int (s, "rate", &val));
+  fail_unless_equals_int (val, 48000);
+  fail_unless (gst_structure_get_int (s, "channels", &val));
+  fail_unless_equals_int (val, 6);
+  fail_unless (gst_structure_get_int (s, "channel-mapping-family", &val));
+  fail_unless_equals_int (val, 1);
+  fail_unless (gst_structure_get_int (s, "stream-count", &val));
+  fail_unless_equals_int (val, 4);
+  fail_unless (gst_structure_get_int (s, "coupled-count", &val));
+  fail_unless_equals_int (val, 2);
+
+  channel_mapping = gst_structure_get_value (s, "channel-mapping");
+  g_assert (GST_VALUE_HOLDS_ARRAY (channel_mapping));
+
+  for (i = 0; i != gst_value_array_get_size (channel_mapping); ++i) {
+    fail_unless_equals_int (expected_channel_mapping[i],
+        g_value_get_int (gst_value_array_get_value (channel_mapping, i)));
+  }
+
+  gst_caps_unref (caps);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+GST_START_TEST (test_depay_to_pay_multichannel)
+{
+  GstHarness *h = gst_harness_new_parse ("rtpopusdepay ! rtpopuspay");
+  guint8 opus_rtp_buf[] = {
+    0x80, 0x60, 0x54, 0xfd, 0x3b, 0x5a, 0x93, 0xf9, 0x1c, 0x33, 0x2b, 0xbb,
+  };
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstStructure *s;
+  gint val;
+
+  buf = buffer_from_array (opus_rtp_buf);
+
+  gst_harness_set_src_caps_str (h,
+      "application/x-rtp,encoding-name=OPUS,media=audio,clock-rate=48000,payload=96,"
+      "encoding-params=6,num_streams=4,coupled_streams=2,channel_mapping=\"0,4,1,2,3,5\"");
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  caps = gst_pad_get_current_caps (h->srcpad);
+  s = gst_caps_get_structure (caps, 0);
+
+  assert_equals_string (gst_structure_get_name (s), "application/x-rtp");
+
+  fail_unless (gst_structure_get_int (s, "encoding-params", &val));
+  fail_unless_equals_int (val, 6);
+  fail_unless_equals_string (gst_structure_get_string (s, "channel_mapping"),
+      "0,4,1,2,3,5");
+  fail_unless (gst_structure_get_int (s, "num_streams", &val));
+  fail_unless_equals_int (val, 4);
+  fail_unless (gst_structure_get_int (s, "coupled_streams", &val));
+  fail_unless_equals_int (val, 2);
+
+  gst_caps_unref (caps);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtpopus_suite (void)
@@ -85,6 +170,8 @@ rtpopus_suite (void)
   suite_add_tcase (s, (tc_chain = tcase_create ("rtpopus")));
   tcase_add_test (tc_chain, test_pay_to_depay);
   tcase_add_test (tc_chain, test_depay_to_pay);
+  tcase_add_test (tc_chain, test_pay_to_depay_multichannel);
+  tcase_add_test (tc_chain, test_depay_to_pay_multichannel);
 
   return s;
 }
