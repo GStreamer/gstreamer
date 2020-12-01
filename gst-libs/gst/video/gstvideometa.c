@@ -460,7 +460,7 @@ gst_video_meta_set_alignment (GstVideoMeta * meta, GstVideoAlignment alignment)
 /**
  * gst_video_meta_get_plane_size:
  * @meta: a #GstVideoMeta
- * @plane_size: (out): array used to store the plane sizes
+ * @plane_size: (out caller-allocates) (array fixed-size=4): array used to store the plane sizes
  *
  * Compute the size, in bytes, of each video plane described in @meta including
  * any padding and alignment constraint defined in @meta->alignment.
@@ -483,7 +483,7 @@ gst_video_meta_get_plane_size (GstVideoMeta * meta,
 /**
  * gst_video_meta_get_plane_height:
  * @meta: a #GstVideoMeta
- * @plane_height: (out): array used to store the plane height
+ * @plane_height: (out caller-allocates) (array fixed-size=4): array used to store the plane height
  *
  * Compute the padded height of each plane from @meta (padded size
  * divided by stride).
