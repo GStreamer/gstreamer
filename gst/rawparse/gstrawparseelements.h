@@ -1,5 +1,5 @@
 /*
- * Copyright (C) <2016> Carlos Rafael Giani <dv at pseudoterminal dot org>
+ * Copyright (C) <2020> The GStreamer Contributors.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,29 +16,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_RAWPARSE_ELEMENTS_H__
+#define __GST_RAWPARSE_ELEMENTS_H__
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 
 #include <gst/gst.h>
 
-#include "gstrawparseelements.h"
+G_BEGIN_DECLS
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+GST_ELEMENT_REGISTER_DECLARE (unalignedaudioparse);
+GST_ELEMENT_REGISTER_DECLARE (unalignedvideoparse);
+GST_ELEMENT_REGISTER_DECLARE (rawaudioparse);
+GST_ELEMENT_REGISTER_DECLARE (rawvideoparse);
 
-  ret |= GST_ELEMENT_REGISTER (unalignedaudioparse, plugin);
-  ret |= GST_ELEMENT_REGISTER (unalignedvideoparse, plugin);
-  ret |= GST_ELEMENT_REGISTER (rawaudioparse, plugin);
-  ret |= GST_ELEMENT_REGISTER (rawvideoparse, plugin);
+G_END_DECLS
 
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    rawparse,
-    "Parses byte streams into raw frames",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+#endif /* __GST_RAWPARSE_ELEMENTS_H__ */

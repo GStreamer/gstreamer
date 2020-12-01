@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include "gstunalignedaudioparse.h"
+#include "gstrawparseelements.h"
 #include "unalignedaudio.h"
 
 GST_DEBUG_CATEGORY (unaligned_audio_parse_debug);
@@ -51,6 +52,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 G_DEFINE_TYPE (GstUnalignedAudioParse, gst_unaligned_audio_parse, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (unalignedaudioparse,
+    "unalignedaudioparse", GST_RANK_MARGINAL, GST_TYPE_UNALIGNED_AUDIO_PARSE);
 
 static void
 gst_unaligned_audio_parse_class_init (GstUnalignedAudioParseClass * klass)

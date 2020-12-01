@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gstunalignedvideoparse.h"
+#include "gstrawparseelements.h"
 #include "unalignedvideo.h"
 
 GST_DEBUG_CATEGORY (unaligned_video_parse_debug);
@@ -50,6 +51,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 G_DEFINE_TYPE (GstUnalignedVideoParse, gst_unaligned_video_parse, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (unalignedvideoparse,
+    "unalignedvideoparse", GST_RANK_MARGINAL, GST_TYPE_UNALIGNED_VIDEO_PARSE);
 
 static void
 gst_unaligned_video_parse_class_init (GstUnalignedVideoParseClass * klass)

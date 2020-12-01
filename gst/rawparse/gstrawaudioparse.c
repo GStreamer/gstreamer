@@ -77,6 +77,7 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <string.h>
+#include "gstrawparseelements.h"
 #include "gstrawaudioparse.h"
 #include "unalignedaudio.h"
 
@@ -122,6 +123,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_raw_audio_parse_parent_class parent_class
 G_DEFINE_TYPE (GstRawAudioParse, gst_raw_audio_parse, GST_TYPE_RAW_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (rawaudioparse, "rawaudioparse",
+    GST_RANK_NONE, GST_TYPE_RAW_AUDIO_PARSE);
 
 static void gst_raw_audio_parse_set_property (GObject * object, guint prop_id,
     GValue const *value, GParamSpec * pspec);

@@ -75,6 +75,7 @@
 #endif
 
 #include <string.h>
+#include "gstrawparseelements.h"
 #include "gstrawvideoparse.h"
 #include "unalignedvideo.h"
 
@@ -127,6 +128,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_raw_video_parse_parent_class parent_class
 G_DEFINE_TYPE (GstRawVideoParse, gst_raw_video_parse, GST_TYPE_RAW_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (rawvideoparse, "rawvideoparse",
+    GST_RANK_NONE, GST_TYPE_RAW_VIDEO_PARSE);
 
 static void gst_raw_video_parse_set_property (GObject * object, guint prop_id,
     GValue const *value, GParamSpec * pspec);
