@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) 2015 Jan Schmidt <jan@centricular.com>
  *
- * gstpbtypes: Plugin which registers extra caps types from plugins-base libs
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -19,24 +17,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_PB_TYPES_H__
+#define __GST_PB_TYPES_H__
 
-#include <gst/video/video.h>
-#include "gstpbtypes.h"
+#include <gst/gst.h>
 
-GST_DYNAMIC_TYPE_REGISTER_DEFINE (video_multiview_flagset,
-    GST_TYPE_VIDEO_MULTIVIEW_FLAGSET);
+GST_DYNAMIC_TYPE_REGISTER_DECLARE (video_multiview_flagset);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return GST_DYNAMIC_TYPE_REGISTER (video_multiview_flagset, plugin);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    pbtypes,
-    "gst-plugins-base dynamic types",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif //__GST_PB_TYPES_H__
