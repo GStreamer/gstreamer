@@ -669,18 +669,17 @@ _get_target_object_property (GstValidateScenario * scenario,
   gchar **elem_pad_name = NULL;
   gchar **object_prop_name = NULL;
   const gchar *elemname;
-  const gchar *propname;
   const gchar *padname = NULL;
   GstObject *target = NULL;
+  gint i;
 
   elem_pad_name = g_strsplit (property_path, ".", 2);
   object_prop_name =
       g_strsplit (elem_pad_name[1] ? elem_pad_name[1] : elem_pad_name[0], "::",
-      2);
+      -1);
   REPORT_UNLESS (object_prop_name[1], err,
-      "Property specification %s is missing a `:propename` part",
+      "Property specification %s is missing a `::propename` part",
       property_path);
-  propname = object_prop_name[1];
 
   if (elem_pad_name[1]) {
     elemname = elem_pad_name[0];
@@ -732,10 +731,29 @@ _get_target_object_property (GstValidateScenario * scenario,
   }
   REPORT_UNLESS (target, err, "Could not find pad: %s::%s", elemname, padname);
 
-  *pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (target), propname);
+  for (i = 1;;) {
+    const gchar *propname = object_prop_name[i];
 
-  REPORT_UNLESS (*pspec, err,
-      "Could not find property from: %" GST_PTR_FORMAT ":%s", target, propname);
+    *pspec =
+        g_object_class_find_property (G_OBJECT_GET_CLASS (target), propname);
+
+    REPORT_UNLESS (*pspec, err,
+        "Object %" GST_PTR_FORMAT " doesn't have a property call '%s'", target,
+        propname);
+
+    if (!object_prop_name[++i])
+      break;
+
+    REPORT_UNLESS (g_type_is_a ((*pspec)->owner_type, G_TYPE_OBJECT), err,
+        "Property: %" GST_PTR_FORMAT "::%s not a GObject, can't use it.",
+        target, propname);
+
+    g_object_get (target, propname, &target, NULL);
+    REPORT_UNLESS (target, err,
+        "Property: %" GST_PTR_FORMAT "::%s is NULL can't get %s.",
+        target, propname, object_prop_name[i + 1]);
+  }
+
   REPORT_UNLESS (res == GST_VALIDATE_EXECUTE_ACTION_OK, err, "Something fishy");
 
 done:
