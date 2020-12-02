@@ -72,6 +72,9 @@ struct _GstRetinex
   double *weights;
   double *sigmas;
 
+  double sigma;
+  int gain, offset;
+
   cv::Mat cvA;
   cv::Mat cvB;
   cv::Mat cvC;
