@@ -682,7 +682,7 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   gsize max_align;
 
   width = GST_VIDEO_INFO_WIDTH (info);
-  height = GST_VIDEO_INFO_HEIGHT (info);
+  height = MAX (GST_VIDEO_INFO_HEIGHT (info), ffmpegdec->context->coded_height);
 
   /* let ffmpeg find the alignment and padding */
   avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
