@@ -14,7 +14,7 @@ particular:
 ## Introduction
 
 When streaming, media chunks are decoded and queued for presentation as
-soon as they arrive form the network. This means that if a chunk is
+soon as they arrive from the network. This means that if a chunk is
 delayed (which is not an uncommon situation at all on the Internet) the
 presentation queue might run dry and media playback could stall.
 
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 
 The only special thing this tutorial does is react to certain messages;
 therefore, the initialization code is very simple and should be
-self-explanative by now. The only new bit is the detection of live
+self-explanatory by now. The only new bit is the detection of live
 streams:
 
 ``` c
