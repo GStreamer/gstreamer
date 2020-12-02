@@ -530,6 +530,10 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
 
   g_return_if_fail (category != NULL);
 
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
+#endif
+
   if (level > gst_debug_category_get_threshold (category))
     return;
 
@@ -1164,6 +1168,10 @@ gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
   gchar *ret, *obj_str = NULL;
   const gchar *message_str;
 
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
+#endif
+
   _gst_debug_log_preamble (message, object, &file, &message_str, &obj_str,
       &elapsed);
 
@@ -1256,6 +1264,10 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #define FFLUSH_DEBUG(f) G_STMT_START { \
     fflush (f); \
   } G_STMT_END
+#endif
+
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
 #endif
 
   _gst_debug_log_preamble (message, object, &file, &message_str, &obj,
