@@ -1274,7 +1274,8 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
        * Even if it doesn't do that, we will change its state later in
        * gst_adaptive_demux_stop_tasks.
        */
-      GST_LOG_OBJECT (stream, "Marking stream as cancelled");
+      GST_LOG_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
+          "Marking stream as cancelled");
       gst_task_stop (stream->download_task);
       g_mutex_lock (&stream->fragment_download_lock);
       stream->cancelled = TRUE;
@@ -2290,9 +2291,9 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
 
   average_bitrate = _update_average_bitrate (demux, stream, fragment_bitrate);
 
-  GST_INFO_OBJECT (stream, "last fragment bitrate was %" G_GUINT64_FORMAT,
-      fragment_bitrate);
-  GST_INFO_OBJECT (stream,
+  GST_INFO_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
+      "last fragment bitrate was %" G_GUINT64_FORMAT, fragment_bitrate);
+  GST_INFO_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
       "Last %u fragments average bitrate is %" G_GUINT64_FORMAT,
       NUM_LOOKBACK_FRAGMENTS, average_bitrate);
 
@@ -2531,7 +2532,8 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
   g_mutex_lock (&stream->fragment_download_lock);
   if (G_UNLIKELY (stream->cancelled)) {
-    GST_LOG_OBJECT (stream, "Stream was cancelled");
+    GST_LOG_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
+        "Stream was cancelled");
     ret = stream->last_ret = GST_FLOW_FLUSHING;
     g_mutex_unlock (&stream->fragment_download_lock);
     return ret;
