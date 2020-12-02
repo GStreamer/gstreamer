@@ -45,6 +45,12 @@ G_BEGIN_DECLS
 #define GST_WEBRTC_ECHO_PROBE_LOCK(obj) g_mutex_lock (&GST_WEBRTC_ECHO_PROBE (obj)->lock)
 #define GST_WEBRTC_ECHO_PROBE_UNLOCK(obj) g_mutex_unlock (&GST_WEBRTC_ECHO_PROBE (obj)->lock)
 
+/* From the webrtc audio_frame.h definition of kMaxDataSizeSamples:
+ * Stereo, 32 kHz, 120 ms (2 * 32 * 120)
+ * Stereo, 192 kHz, 20 ms (2 * 192 * 20)
+ */
+#define MAX_DATA_SIZE_SAMPLES 7680
+
 typedef struct _GstWebrtcEchoProbe GstWebrtcEchoProbe;
 typedef struct _GstWebrtcEchoProbeClass GstWebrtcEchoProbeClass;
 
@@ -71,6 +77,7 @@ struct _GstWebrtcEchoProbe
   GstClockTime latency;
   gint delay;
   gboolean interleaved;
+  gint extra_delay;
 
   GstSegment segment;
   GstAdapter *adapter;
@@ -92,7 +99,7 @@ GST_ELEMENT_REGISTER_DECLARE (webrtcechoprobe);
 GstWebrtcEchoProbe *gst_webrtc_acquire_echo_probe (const gchar * name);
 void gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe);
 gint gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self,
-    GstClockTime rec_time, gpointer frame, GstBuffer ** buf);
+    GstClockTime rec_time, GstBuffer ** buf);
 
 G_END_DECLS
 #endif /* __GST_WEBRTC_ECHO_PROBE_H__ */

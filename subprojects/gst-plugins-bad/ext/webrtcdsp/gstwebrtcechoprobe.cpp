@@ -33,7 +33,8 @@
 
 #include "gstwebrtcechoprobe.h"
 
-#include <webrtc/modules/interface/module_common_types.h>
+#include <modules/audio_processing/include/audio_processing.h>
+
 #include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_EXTERN (webrtc_dsp_debug);
@@ -102,7 +103,7 @@ gst_webrtc_echo_probe_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   self->period_size = self->period_samples * info->bpf;
 
   if (self->interleaved &&
-      (webrtc::AudioFrame::kMaxDataSizeSamples * 2) < self->period_size)
+      (MAX_DATA_SIZE_SAMPLES * 2) < self->period_size)
     goto period_too_big;
 
   GST_WEBRTC_ECHO_PROBE_UNLOCK (self);
@@ -112,9 +113,9 @@ gst_webrtc_echo_probe_setup (GstAudioFilter * filter, const GstAudioInfo * info)
 period_too_big:
   GST_WEBRTC_ECHO_PROBE_UNLOCK (self);
   GST_WARNING_OBJECT (self, "webrtcdsp format produce too big period "
-      "(maximum is %" G_GSIZE_FORMAT " samples and we have %u samples), "
+      "(maximum is %d samples and we have %u samples), "
       "reduce the number of channels or the rate.",
-      webrtc::AudioFrame::kMaxDataSizeSamples, self->period_size / 2);
+      MAX_DATA_SIZE_SAMPLES, self->period_size / 2);
   return FALSE;
 }
 
@@ -303,18 +304,20 @@ gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe)
 
 gint
 gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
-    gpointer _frame, GstBuffer ** buf)
+    GstBuffer ** buf)
 {
-  webrtc::AudioFrame * frame = (webrtc::AudioFrame *) _frame;
   GstClockTimeDiff diff;
-  gsize avail, skip, offset, size;
+  gsize avail, skip, offset, size = 0;
   gint delay = -1;
 
   GST_WEBRTC_ECHO_PROBE_LOCK (self);
 
+  /* We always return a buffer -- if don't have data (size == 0), we generate a
+   * silence buffer */
+
   if (!GST_CLOCK_TIME_IS_VALID (self->latency) ||
       !GST_AUDIO_INFO_IS_VALID (&self->info))
-    goto done;
+    goto copy;
 
   if (self->interleaved)
     avail = gst_adapter_available (self->adapter) / self->info.bpf;
@@ -324,7 +327,7 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
   /* In delay agnostic mode, just return 10ms of data */
   if (!GST_CLOCK_TIME_IS_VALID (rec_time)) {
     if (avail < self->period_samples)
-      goto done;
+      goto copy;
 
     size = self->period_samples;
     skip = 0;
@@ -371,23 +374,51 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
   size = MIN (avail - offset, self->period_samples - skip);
 
 copy:
-  if (self->interleaved) {
-    skip *= self->info.bpf;
-    offset *= self->info.bpf;
-    size *= self->info.bpf;
-
-    if (size < self->period_size)
-      memset (frame->data_, 0, self->period_size);
-
-    if (size) {
-      gst_adapter_copy (self->adapter, (guint8 *) frame->data_ + skip,
-          offset, size);
-      gst_adapter_flush (self->adapter, offset + size);
-    }
+  if (!size) {
+    /* No data, provide a period's worth of silence */
+    *buf = gst_buffer_new_allocate (NULL, self->period_size, NULL);
+    gst_buffer_memset (*buf, 0, 0, self->period_size);
+    gst_buffer_add_audio_meta (*buf, &self->info, self->period_samples,
+        NULL);
   } else {
+    /* We have some actual data, pop period_samples' worth if have it, else pad
+     * with silence and provide what we do have */
     GstBuffer *ret, *taken, *tmp;
 
-    if (size) {
+    if (self->interleaved) {
+      skip *= self->info.bpf;
+      offset *= self->info.bpf;
+      size *= self->info.bpf;
+
+      gst_adapter_flush (self->adapter, offset);
+
+      /* we need to fill silence at the beginning and/or the end of the
+       * buffer in order to have period_samples in the buffer */
+      if (size < self->period_size) {
+        gsize padding = self->period_size - (skip + size);
+
+        taken = gst_adapter_take_buffer (self->adapter, size);
+        ret = gst_buffer_new ();
+
+        /* need some silence at the beginning */
+        if (skip) {
+          tmp = gst_buffer_new_allocate (NULL, skip, NULL);
+          gst_buffer_memset (tmp, 0, 0, skip);
+          ret = gst_buffer_append (ret, tmp);
+        }
+
+        ret = gst_buffer_append (ret, taken);
+
+        /* need some silence at the end */
+        if (padding) {
+          tmp = gst_buffer_new_allocate (NULL, padding, NULL);
+          gst_buffer_memset (tmp, 0, 0, padding);
+          ret = gst_buffer_append (ret, tmp);
+        }
+      } else {
+        ret = gst_adapter_take_buffer (self->adapter, size);
+      }
+    } else {
       gst_planar_audio_adapter_flush (self->padapter, offset);
 
       /* we need to fill silence at the beginning and/or the end of each
@@ -430,23 +461,13 @@ copy:
         ret = gst_planar_audio_adapter_take_buffer (self->padapter, size,
           GST_MAP_READWRITE);
       }
-    } else {
-      ret = gst_buffer_new_allocate (NULL, self->period_size, NULL);
-      gst_buffer_memset (ret, 0, 0, self->period_size);
-      gst_buffer_add_audio_meta (ret, &self->info, self->period_samples,
-          NULL);
     }
 
     *buf = ret;
   }
 
-  frame->num_channels_ = self->info.channels;
-  frame->sample_rate_hz_ = self->info.rate;
-  frame->samples_per_channel_ = self->period_samples;
-
   delay = self->delay;
 
-done:
   GST_WEBRTC_ECHO_PROBE_UNLOCK (self);
 
   return delay;
