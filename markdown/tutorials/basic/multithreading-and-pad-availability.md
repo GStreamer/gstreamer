@@ -292,7 +292,7 @@ The sink Pads we have obtained need to be released with
 longer need them, at the end of the program.
 
 We then set the pipeline to playing as usual, and wait until an error
-message or an EOS is produced. The only thing left to so is cleanup the
+message or an EOS is produced. The only thing left to do is cleanup the
 requested Pads:
 
 ``` c
