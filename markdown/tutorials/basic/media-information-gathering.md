@@ -467,7 +467,7 @@ with `gst_tag_list_foreach()`, which will call `print_tag_foreach` for
 each tag found (the list could also be traversed manually, for example,
 or a specific tag could be searched for with
 `gst_tag_list_get_string()`). The code for `print_tag_foreach` is pretty
-much self-explicative.
+much self-explanatory.
 
 ``` c
 sinfo = gst_discoverer_info_get_stream_info (info);
@@ -514,14 +514,14 @@ static void print_topology (GstDiscovererStreamInfo *info, gint depth) {
 ```
 
 The `print_stream_info` function's code is also pretty much
-self-explicative: it prints the stream's capabilities and then the
+self-explanatory: it prints the stream's capabilities and then the
 associated caps, using `print_tag_foreach` too.
 
 Then, `print_topology` looks for the next element to display. If
 `gst_discoverer_stream_info_get_next()` returns a non-NULL stream info,
 it refers to our descendant and that should be displayed. Otherwise, if
 we are a container, recursively call `print_topology` on each of our
-children obatined with `gst_discoverer_container_info_get_streams()`.
+children obtained with `gst_discoverer_container_info_get_streams()`.
 Otherwise, we are a final stream, and do not need to recurse (This part
 of the Discoverer API is admittedly a bit obscure).
 
