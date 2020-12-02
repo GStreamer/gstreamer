@@ -543,7 +543,7 @@ gst_stream_get_property (GObject * object, guint prop_id,
  *
  * Get a descriptive string for a given #GstStreamType
  *
- * Returns: (nullable): A string describing the stream type
+ * Returns: A string describing the stream type
  *
  * Since: 1.10
  */
@@ -563,8 +563,7 @@ gst_stream_type_get_name (GstStreamType stype)
     case GST_STREAM_TYPE_TEXT:
       return "text";
     default:
-      return NULL;
+      g_return_val_if_reached ("invalid");
+      return "invalid";
   }
-
-  return NULL;
 }
