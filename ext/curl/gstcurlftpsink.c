@@ -111,7 +111,6 @@ gst_curl_ftp_sink_class_init (GstCurlFtpSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_curl_ftp_sink_debug, "curlftpsink", 0,
       "curl ftp sink element");
-  GST_DEBUG_OBJECT (klass, "class_init");
 
   gst_element_class_set_static_metadata (element_class,
       "Curl ftp sink",

@@ -104,7 +104,6 @@ gst_curl_file_sink_class_init (GstCurlFileSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_curl_file_sink_debug, "curlfilesink", 0,
       "curl file sink element");
-  GST_DEBUG_OBJECT (klass, "class_init");
 
   gst_element_class_set_static_metadata (element_class,
       "Curl file sink",
