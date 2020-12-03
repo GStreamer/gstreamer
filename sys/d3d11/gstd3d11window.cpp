@@ -544,11 +544,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create swapchain");
-    gst_d3d11_device_unlock (window->device);
-
-    return FALSE;
+    goto error;
   }
-  gst_d3d11_device_unlock (window->device);
 
   /* this rect struct will be used to calculate render area */
   window->render_rect.left = 0;
@@ -737,8 +734,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create converter");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
-
-    return FALSE;
+    goto error;
   }
 
   window->compositor =
@@ -747,9 +743,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create overlay compositor");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create overlay compositor");
-
-    return FALSE;
+    goto error;
   }
+  gst_d3d11_device_unlock (window->device);
 
   /* call resize to allocated resources */
   klass->on_resize (window, display_width, display_height);
@@ -761,6 +757,11 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
   GST_DEBUG_OBJECT (window, "New swap chain 0x%p created", window->swap_chain);
 
   return TRUE;
+
+error:
+  gst_d3d11_device_unlock (window->device);
+
+  return FALSE;
 }
 
 void

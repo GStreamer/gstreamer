@@ -1523,6 +1523,7 @@ gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
 
+    gst_d3d11_device_lock (filter->device);
     g_object_get (filter->device, "hardware", &hardware, NULL);
     if (hardware) {
       processor = gst_d3d11_video_processor_new (filter->device,
@@ -1566,6 +1567,7 @@ gst_d3d11_convert_set_info (GstD3D11BaseFilter * filter,
     }
 
     self->processor = processor;
+    gst_d3d11_device_unlock (filter->device);
   }
 #endif
 
