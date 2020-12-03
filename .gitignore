@@ -84,6 +84,7 @@ subprojects/libpng-*
 subprojects/libpng.wrap
 subprojects/pango
 subprojects/pixman
+subprojects/webrtc-audio-processing
 prefix/
 pygobject
 .gdbinit
