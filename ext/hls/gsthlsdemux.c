@@ -948,7 +948,7 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
         ret = gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
       }
 
-      GST_LOG_OBJECT (stream,
+      GST_LOG_OBJECT (stream->pad,
           "Fragment PCRs were %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (hls_stream->tsreader.first_pcr),
           GST_TIME_ARGS (hls_stream->tsreader.last_pcr));
