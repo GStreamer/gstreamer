@@ -179,7 +179,6 @@ gst_curl_base_sink_class_init (GstCurlBaseSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_curl_base_sink_debug, "curlbasesink", 0,
       "curl base sink element");
-  GST_DEBUG_OBJECT (klass, "class_init");
 
   gst_element_class_set_static_metadata (element_class,
       "Curl base sink",

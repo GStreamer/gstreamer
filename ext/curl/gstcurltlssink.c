@@ -96,7 +96,6 @@ gst_curl_tls_sink_class_init (GstCurlTlsSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_curl_tls_sink_debug, "curltlssink", 0,
       "curl tls sink element");
-  GST_DEBUG_OBJECT (klass, "class_init");
 
   gst_element_class_set_static_metadata (element_class,
       "Curl tls sink",

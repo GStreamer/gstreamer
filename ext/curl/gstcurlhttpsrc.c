@@ -273,8 +273,6 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_curl_http_src_debug, "curlhttpsrc",
       0, "UriHandler for libcURL");
 
-  GST_INFO_OBJECT (klass, "class_init started!");
-
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_curl_http_src_change_state);
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_curl_http_src_create);

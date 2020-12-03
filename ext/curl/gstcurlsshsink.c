@@ -120,8 +120,6 @@ gst_curl_ssh_sink_class_init (GstCurlSshSinkClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_curl_ssh_sink_debug, "curlsshsink", 0,
       "curl ssh sink element");
 
-  GST_DEBUG_OBJECT (klass, "class_init");
-
   gst_element_class_set_static_metadata (element_class,
       "Curl SSH sink", "Sink/Network",
       "Upload data over SSH/SFTP using libcurl", "Sorin L. <sorin@axis.com>");

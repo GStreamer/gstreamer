@@ -252,7 +252,6 @@ gst_curl_smtp_sink_class_init (GstCurlSmtpSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_curl_smtp_sink_debug, "curlsmtpsink", 0,
       "curl smtp sink element");
-  GST_DEBUG_OBJECT (klass, "class_init");
 
   gst_element_class_set_static_metadata (element_class,
       "Curl smtp sink",
