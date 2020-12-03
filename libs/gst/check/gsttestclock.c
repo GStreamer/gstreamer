@@ -923,7 +923,7 @@ gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
  *
  * MT safe.
  *
- * Returns: (transfer full): a #GstClockID containing the next pending clock
+ * Returns: (transfer full) (nullable): a #GstClockID containing the next pending clock
  * notification.
  *
  * Since: 1.2
