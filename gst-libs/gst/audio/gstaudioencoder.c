@@ -1265,7 +1265,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   discont = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT);
   if (G_UNLIKELY (discont)) {
-    GST_LOG_OBJECT (buffer, "marked discont");
+    GST_LOG_OBJECT (enc, "marked discont");
     enc->priv->discont = discont;
   }
 
