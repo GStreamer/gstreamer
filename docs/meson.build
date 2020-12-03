@@ -14,7 +14,6 @@ if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
     plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
 else
-    required_hotdoc_extensions += ['gst-extension']
     plugins_cache_generator = find_program(join_paths(gst_dep.get_pkgconfig_variable('libexecdir'), 'gstreamer-' + api_version, 'gst-plugins-doc-cache-generator'),
         required: false)
 endif
@@ -59,7 +58,6 @@ foreach extension: required_hotdoc_extensions
         endif
 
         message('@0@ extensions not found, not building documentation requiring it'.format(extension))
-        subdir_done()
     endif
 endforeach
 
@@ -68,7 +66,7 @@ if not build_gir
         error('Documentation enabled but introspection not built.')
     endif
 
-    message('Introspection not built, can\'t build the documentation')
+    message('Introspection not built, won\'t build documentation requiring it')
     subdir_done()
 endif
 
