@@ -2,6 +2,8 @@
 short-description: The mandatory 'Hello world' example
 ...
 
+{{ ALERT_JS.md }}
+
 # Basic tutorial 1: Hello world!
 
 ## Goal
@@ -12,58 +14,74 @@ to print “Hello World” on the screen!
 But since we are dealing with multimedia frameworks, we are going to
 play a video instead.
 
+{{ C.md }}
 Do not be scared by the amount of code below: there are only 4 lines
 which do *real* work. The rest is cleanup code, and, in C, this is
 always a bit verbose.
+{{ END_LANG.md }}
 
 Without further ado, get ready for your first GStreamer application...
 
 ## Hello world
 
-Copy this code into a text file named `basic-tutorial-1.c` (or find it
-in your GStreamer installation).
+{{ C+JS_FALLBACK.md }}
+  Copy this code into a text file named `basic-tutorial-1.c` (or find it
+  in your GStreamer installation).
 
-**basic-tutorial-1.c**
+  **basic-tutorial-1.c**
 
-{{ tutorials/basic-tutorial-1.c }}
+  {{ tutorials/basic-tutorial-1.c }}
 
-Compile it as described in [Installing on Linux], [Installing on Mac OS
-X] or [Installing on Windows]. If you get compilation errors,
-double-check the instructions given in those sections.
+  Compile it as described in [Installing on Linux], [Installing on Mac OS
+  X] or [Installing on Windows]. If you get compilation errors,
+  double-check the instructions given in those sections.
 
-If everything built fine, fire up the executable! You should see a
-window pop up, containing a video being played straight from the
-Internet, along with audio. Congratulations!
+  If everything built fine, fire up the executable! You should see a
+  window pop up, containing a video being played straight from the
+  Internet, along with audio. Congratulations!
 
-> ![Information] Need help?
->
-> If you need help to compile this code, refer to the **Building the
-> tutorials** section for your platform: [Linux], [Mac OS X] or
-> [Windows], or use this specific command on Linux:
->
-> `` gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ``
->
-> If you need help to run this code, refer to the **Running the
-> tutorials** section for your platform: [Linux][1], [Mac OS X][2] or
-> [Windows][3].
->
-> This tutorial opens a window and displays a movie, with accompanying
-> audio. The media is fetched from the Internet, so the window might
-> take a few seconds to appear, depending on your connection speed.
-> Also, there is no latency management (buffering), so on slow
-> connections, the movie might stop after a few seconds. See how [Basic
-> tutorial 12: Streaming] solves this issue.
->
-> Required libraries: `gstreamer-1.0`
+  > ![Information] Need help?
+  >
+  > If you need help to compile this code, refer to the **Building the
+  > tutorials** section for your platform: [Linux], [Mac OS X] or
+  > [Windows], or use this specific command on Linux:
+  >
+  > `` gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0` ``
+  >
+  > If you need help to run this code, refer to the **Running the
+  > tutorials** section for your platform: [Linux][1], [Mac OS X][2] or
+  > [Windows][3].
+  >
+  > Required libraries: `gstreamer-1.0`
+{{ END_LANG.md }}
+
+{{ PY.md }}
+  **basic-tutorial-1.py**
+
+  {{ tutorials/python/basic-tutorial-1.py }}
+
+  Just run the file with `python3 basic-tutorial-1.py`
+{{ END_LANG.md }}
+
+
+This tutorial opens a window and displays a movie, with accompanying audio. The
+media is fetched from the Internet, so the window might take a few seconds to
+appear, depending on your connection speed. Also, there is no latency management
+(buffering), so on slow connections, the movie might stop after a few seconds.
+See how [Basic tutorial 12: Streaming] solves this issue.
 
 ## Walkthrough
 
 Let's review these lines of code and see what they do:
 
-``` c
-/* Initialize GStreamer */
-gst_init (&argc, &argv);
-```
+{{ C+JS_FALLBACK.md }}
+ {{ tutorials/basic-tutorial-1.c[9:11] }}
+{{ END_LANG.md }}
+
+{{ PY.md }}
+ {{ tutorials/python/basic-tutorial-1.py[15:17] }}
+{{ END_LANG.md }}
+
 
 This must always be your first GStreamer command. Among other things,
 [gst_init]\():
@@ -79,13 +97,13 @@ If you always pass your command-line parameters
 benefit from the GStreamer standard command-line options (more on this
 in [Basic tutorial 10: GStreamer tools])
 
-``` c
-/* Build the pipeline */
-pipeline =
-    gst_parse_launch
-    ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
-    NULL);
-```
+{{ C+JS_FALLBACK.md }}
+  {{ tutorials/basic-tutorial-1.c[13:17] }}
+{{ END_LANG.md }}
+
+{{ PY.md }}
+  {{ tutorials/python/basic-tutorial-1.py[18:22] }}
+{{ END_LANG.md }}
 
 This line is the heart of this tutorial, and exemplifies **two** key
 points: [gst_parse_launch]\() and [playbin].
@@ -136,10 +154,13 @@ plug-in, GStreamer provides several notification mechanisms, but the
 only thing we are doing in this example is exiting on error, so do not
 expect much feedback.
 
-``` c
-/* Start playing */
-gst_element_set_state (pipeline, GST_STATE_PLAYING);
-```
+{{ C+JS_FALLBACK.md }}
+ {{ tutorials/basic-tutorial-1.c[18:20] }}
+{{ END_LANG.md }}
+
+{{ PY.md }}
+    {{ tutorials/python/basic-tutorial-1.py[23:25] }}
+{{ END_LANG.md }}
 
 This line highlights another interesting concept: the state. Every
 GStreamer element has an associated state, which you can more or less
@@ -150,13 +171,13 @@ to the `PLAYING` state.
 In this line, [gst_element_set_state]\() is setting `pipeline` (our only
 element, remember) to the `PLAYING` state, thus initiating playback.
 
-``` c
-/* Wait until error or EOS */
-bus = gst_element_get_bus (pipeline);
-msg =
-    gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-    GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-```
+{{ C+JS_FALLBACK.md }}
+  {{ tutorials/basic-tutorial-1.c[21:26] }}
+{{ END_LANG.md }}
+
+{{ C.md }}
+  {{ tutorials/python/basic-tutorial-1.py[26:32] }}
+{{ END_LANG.md }}
 
 These lines will wait until an error occurs or the end of the stream is
 found. [gst_element_get_bus]\() retrieves the pipeline's bus, and
@@ -176,30 +197,28 @@ control-C in the console.
 Before terminating the application, though, there is a couple of things
 we need to do to tidy up correctly after ourselves.
 
-``` c
-/* Free resources */
-if (msg != NULL)
-  gst_message_unref (msg);
-gst_object_unref (bus);
-gst_element_set_state (pipeline, GST_STATE_NULL);
-gst_object_unref (pipeline);
-```
+{{ C+JS_FALLBACK.md }}
+  {{ tutorials/basic-tutorial-1.c[27:33] }}
 
-Always read the documentation of the functions you use, to know if you
-should free the objects they return after using them.
+  Always read the documentation of the functions you use, to know if you
+  should free the objects they return after using them.
 
-In this case, [gst_bus_timed_pop_filtered]\() returned a message which
-needs to be freed with [gst_message_unref]\() (more about messages in
-[Basic tutorial 2: GStreamer concepts][Basic tutorial 2: GStreamer
-concepts]).
+  In this case, [gst_bus_timed_pop_filtered]\() returned a message which
+  needs to be freed with [gst_message_unref]\() (more about messages in
+  [Basic tutorial 2: GStreamer concepts][Basic tutorial 2: GStreamer
+  concepts]).
 
-[gst_element_get_bus]\() added a reference to the bus that must be freed
-with [gst_object_unref]\(). Setting the pipeline to the NULL state will
-make sure it frees any resources it has allocated (More about states in
-[Basic tutorial 3: Dynamic pipelines]). Finally, unreferencing the
-pipeline will destroy it, and all its contents.
-
-_______________________________________________________________________________
+  [gst_element_get_bus]\() added a reference to the bus that must be freed
+  with [gst_object_unref]\(). Setting the pipeline to the NULL state will
+  make sure it frees any resources it has allocated (More about states in
+  [Basic tutorial 3: Dynamic pipelines]). Finally, unreferencing the
+  pipeline will destroy it, and all its contents.
+{{ END_LANG.md }}
+{{ PY.md }}
+ {{ tutorials/python/basic-tutorial-1.py[33:35] }}
+ The pipeline state should always be set back to [GST_STATE_NULL] before
+ quitting.
+{{ END_LANG.md }}
 
 ## Conclusion
 
@@ -249,3 +268,4 @@ It has been a pleasure having you here, and see you soon!
   [gst_parse_launch]: gst_parse_launch
   [playbin]: playbin
   [gst-launch-1.0]: tools/gst-launch.md
+  [GST_STATE_NULL]: GST_STATE_NULL
