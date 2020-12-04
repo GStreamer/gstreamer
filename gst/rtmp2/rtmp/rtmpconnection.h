@@ -51,7 +51,7 @@ typedef void (*GstRtmpCommandCallback) (const gchar * command_name,
 
 GType gst_rtmp_connection_get_type (void);
 
-GstRtmpConnection *gst_rtmp_connection_new (GSocketConnection * connection);
+GstRtmpConnection *gst_rtmp_connection_new (GSocketConnection * connection, GCancellable * cancellable);
 
 GSocket *gst_rtmp_connection_get_socket (GstRtmpConnection * connection);
 
