@@ -499,7 +499,8 @@ handshake_done (GObject * source, GAsyncResult * result, gpointer user_data)
     return;
   }
 
-  data->connection = gst_rtmp_connection_new (socket_connection);
+  data->connection = gst_rtmp_connection_new (socket_connection,
+      g_task_get_cancellable (task));
   data->error_handler_id = g_signal_connect (data->connection,
       "error", G_CALLBACK (connection_error), task);
 
@@ -510,8 +511,9 @@ static void
 connection_error (GstRtmpConnection * connection, gpointer user_data)
 {
   GTask *task = user_data;
-  g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-      "error during connection attempt");
+  if (!g_task_had_error (task))
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+        "error during connection attempt");
 }
 
 static gchar *

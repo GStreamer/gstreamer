@@ -251,7 +251,6 @@ gst_rtmp_connection_class_init (GstRtmpConnectionClass * klass)
 static void
 gst_rtmp_connection_init (GstRtmpConnection * rtmpconnection)
 {
-  rtmpconnection->cancellable = g_cancellable_new ();
   rtmpconnection->output_queue =
       g_async_queue_new_full ((GDestroyNotify) gst_buffer_unref);
   rtmpconnection->input_streams = gst_rtmp_chunk_streams_new ();
@@ -334,11 +333,16 @@ gst_rtmp_connection_set_socket_connection (GstRtmpConnection * sc,
 }
 
 GstRtmpConnection *
-gst_rtmp_connection_new (GSocketConnection * connection)
+gst_rtmp_connection_new (GSocketConnection * connection,
+    GCancellable * cancellable)
 {
   GstRtmpConnection *sc;
 
   sc = g_object_new (GST_TYPE_RTMP_CONNECTION, NULL);
+  if (cancellable)
+    sc->cancellable = g_object_ref (cancellable);
+  else
+    sc->cancellable = g_cancellable_new ();
 
   gst_rtmp_connection_set_socket_connection (sc, connection);
 
