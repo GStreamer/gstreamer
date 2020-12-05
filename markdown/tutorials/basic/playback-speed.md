@@ -1,5 +1,11 @@
 # Basic tutorial 13: Playback speed
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
+
 ## Goal
 
 Fast-forward, reverse-playback and slow-motion are all techniques

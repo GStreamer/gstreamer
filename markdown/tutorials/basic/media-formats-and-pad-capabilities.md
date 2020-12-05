@@ -1,5 +1,10 @@
 #  Basic tutorial 6: Media formats and Pad Capabilities
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 Pad Capabilities are a fundamental element of GStreamer, although most

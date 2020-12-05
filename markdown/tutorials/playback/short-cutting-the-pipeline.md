@@ -1,5 +1,10 @@
 # Playback tutorial 3: Short-cutting the pipeline
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 [](tutorials/basic/short-cutting-the-pipeline.md) showed

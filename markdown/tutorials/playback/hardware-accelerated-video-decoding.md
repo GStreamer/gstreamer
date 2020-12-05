@@ -1,5 +1,10 @@
 # Playback tutorial 8: Hardware-accelerated video decoding
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ### Goal
 
 Hardware-accelerated video decoding has rapidly become a necessity, as

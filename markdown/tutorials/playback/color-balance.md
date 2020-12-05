@@ -1,5 +1,10 @@
 # Playback tutorial 5: Color Balance
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 Brightness, Contrast, Hue and Saturation are common video adjustments,

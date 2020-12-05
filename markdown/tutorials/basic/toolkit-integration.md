@@ -1,5 +1,10 @@
 #  Basic tutorial 5: GUI toolkit integration
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 This tutorial shows how to integrate GStreamer in a Graphical User

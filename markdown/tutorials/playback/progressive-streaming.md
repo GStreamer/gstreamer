@@ -1,5 +1,10 @@
 # Playback tutorial 4: Progressive streaming
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 [](tutorials/basic/streaming.md) showed how to

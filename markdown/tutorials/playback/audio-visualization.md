@@ -1,5 +1,10 @@
 # Playback tutorial 6: Audio visualization
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 GStreamer comes with a set of elements that turn audio into video. They

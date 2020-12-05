@@ -1,5 +1,10 @@
 # Playback tutorial 1: Playbin usage
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 We have already worked with the `playbin` element, which is capable of

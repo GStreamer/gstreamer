@@ -1,5 +1,10 @@
 #  Basic tutorial 4: Time management
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 This tutorial shows how to use GStreamer time-related facilities. In

@@ -1,5 +1,10 @@
 #  Basic tutorial 8: Short-cutting the pipeline
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 Pipelines constructed with GStreamer do not need to be completely

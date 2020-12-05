@@ -1,5 +1,10 @@
 # Playback tutorial 7: Custom playbin sinks
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 `playbin` can be further customized by manually selecting its audio and

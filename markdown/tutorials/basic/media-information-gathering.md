@@ -1,5 +1,10 @@
 # Basic tutorial 9: Media information gathering
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 Sometimes you might want to quickly find out what kind of media a file

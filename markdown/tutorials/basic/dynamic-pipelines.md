@@ -1,5 +1,10 @@
 #  Basic tutorial 3: Dynamic pipelines
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 This tutorial shows the rest of the basic concepts required to use

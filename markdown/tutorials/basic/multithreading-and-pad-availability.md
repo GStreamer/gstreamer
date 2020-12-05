@@ -1,5 +1,10 @@
 # Basic tutorial 7: Multithreading and Pad Availability
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 GStreamer handles multithreading automatically, but, under some

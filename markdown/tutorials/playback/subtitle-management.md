@@ -1,5 +1,10 @@
 # Playback tutorial 2: Subtitle management
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 This tutorial is very similar to the previous one, but instead of

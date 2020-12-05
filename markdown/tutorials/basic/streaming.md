@@ -1,5 +1,10 @@
 # Basic tutorial 12: Streaming
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 Playing media straight from the Internet without storing it locally is

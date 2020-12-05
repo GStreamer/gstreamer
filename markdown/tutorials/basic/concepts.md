@@ -1,5 +1,10 @@
 # Basic tutorial 2: GStreamer concepts
 
+
+{{ ALERT_PY.md }}
+
+{{ ALERT_JS.md }}
+
 ## Goal
 
 The previous tutorial showed how to build a pipeline automatically. Now
