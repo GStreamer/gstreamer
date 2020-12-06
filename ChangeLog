@@ -1,3 +1,25 @@
+=== release 1.18.2 ===
+
+2020-12-06 13:25:18 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.18.2
+
+2020-11-30 18:00:30 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: H265: Fix a typo in scc reference setting.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/403>
+
+2020-10-27 12:34:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.1 ===
 
 2020-10-26 11:16:51 +0000  Tim-Philipp Müller <tim@centricular.com>
