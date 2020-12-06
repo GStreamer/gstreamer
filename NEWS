@@ -2,8 +2,8 @@ GStreamer 1.18 Release Notes
 
 GStreamer 1.18.0 was originally released on 8 September 2020.
 
-The latest bug-fix release in the 1.18 series is 1.18.1 and was released
-on 26 October 2020.
+The latest bug-fix release in the 1.18 series is 1.18.2 and was released
+on 6 December 2020.
 
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
@@ -2386,6 +2386,195 @@ List of merge requests and issues fixed in 1.18.1
 
 -   List of Merge Requests applied in 1.18.1
 -   List of Issues fixed in 1.18.1
+
+1.18.2
+
+The second 1.18 bug-fix release (1.18.2) was released on 6 December
+2020.
+
+This release only contains bugfixes and it should be safe to update from
+1.18.x.
+
+Highlighted bugfixes in 1.18.2
+
+-   Fix MPEG-TS timestamping regression when playing DVB streams
+-   compositor: fix artefacts in certain input scaling/conversion
+    situations and make sure that the output format is actually
+    supported, plus renegotiation fixes
+-   Fix sftp:// URI playback in decodebin/playbin via giosrc
+-   adaptivedemux/dashdemux/hlsdemux fixes
+-   rtsp-server fixes
+-   android media: fix crash when encoding AVC
+-   fix races in various unit tests
+-   lots of other bug fixes and memory leak fixes
+-   various stability, performance and reliability improvements
+-   g-i annotation fixes
+-   build fixes
+
+gstreamer
+
+-   bin: When removing a sink, check if the EOS status changed
+-   info: colorize PIDs in log messages
+-   aggregator: Include min-upstream-latency in buffering time, helps
+    especially with performance issues on single core systems where
+    there are a lot of threads running
+-   typefind: copy seqnum to new segment event, fixing issues with
+    oggdemux operating in push mode with typefind operating in pull mode
+-   identity, clocksync: Also provide system clock if sync=false
+-   queue2: Fix modes in scheduling query handling
+-   harness: Handle element not being set cleanly
+-   g-i: Add some missing nullable annotations, and fix some nullable
+    annotations:
+    -   gst_test_clock_process_next_clock_id() returns nullable
+    -   gst_stream_type_get_name() is not nullable
+-   build: fix build issue when compiling for 32-bit architectures with
+    64-bit time_t (e.g. riscv32) by increasing padding in
+    GstClockEntryImpl in gst_private.h
+
+gst-plugins-base
+
+-   gl/eagl: internal view resize fixes for glimagesink
+-   video-converter: increase the number of cache lines for resampling,
+    fixes significant color issues and artefacts with “special” resizing
+    parameters in compositor
+-   compositor: Don’t crash in prepare_frame() if the pad was just
+    removed
+-   decodebin3: Properly handle caps query with no filter
+-   videoaggregator: Guarantee that the output format is supported
+-   videoaggregator: Fix locking around vagg->info
+-   gluploadelement: Avoid race condition of base class’ context
+-   gluploadelement: Avoid race condition of inside upload creation
+-   gl: Fix prototype of glGetSynciv()
+-   tcpserversink: Don’t assume g_socket_get_remote_address() succeeds
+-   video-aggregator: Fix renegotiation when using convert pads
+-   videoaggregator: document and fix locking in convert pad
+-   audiodecoder, videodecoder: Don’t reset max-errors property value in
+    reset()
+-   audioencoder: Fix incorrect GST_LOG_OBJECT usage
+-   pbutils: Fix segfault when using invalid encoding profile
+-   g-i: videometa: gir annotate the size of plane array in new API
+-   examples/gl/gtk: Add missing dependency on gstgl
+-   video: fix doc warning
+
+gst-plugins-good
+
+-   rpicamsrc: add vchostif library as it is required to build
+    successful
+-   deinterlace: Enable x86 assembly with nasm on MSVC
+-   v4l2: caps negotiate wrong as interlace feature
+-   aacparse: Fix caps change handling
+-   rtspsrc: Use URI hash for stream id
+-   flvmux: Release pads via GstAggregator
+-   qtmux: Chain up when releasing pad, and fix some locking
+-   matroska-mux: Fix sparse stream crash
+-   Splitmux testsuite races
+
+gst-plugins-bad
+
+-   tsparse: timestamp packetized buffers, fixing timestamp handling
+    regression in connection with dvbsrc in MeTV
+-   ttmlparse: fix issues in aggregation of input TTML
+-   mpegdemux: Set duration on seeking query if possible, fixes seeking
+    in MPEG-PS streams in gst-play-1.0
+-   mpegtsdemux: Fix off by one error
+-   adaptivedemux: Store QoS values on the element
+-   adaptivedemux: Don’t calculate bitrate for header/index fragments
+-   hlsdemux: Don’t double-free variant streams on errors
+-   mpegtspacketizer: Handle PCR issues with adaptive streams
+-   player: call ref_sink on pipeline
+-   vkdeviceprovider: Avoid deadlock on physical device
+-   wlvideoformat: fix DMA format convertor
+-   Webrtc shutdown crashes
+-   decklink: Update enum value bounds check in gst_decklink_get_mode()
+-   decklink: correct framerate 2KDCI 23.98
+-   amc: Fix crash when encoding AVC
+-   d3d11videoprocessor: Fix wrong input/output supportability check
+-   opencv: allow compilation against 4.5.x
+-   tests: svthevcenc: Fix test_encode_simple
+-   tests: dtls: Don’t set dtlsenc state before linking
+-   mpegtsmux: Restore intervals when creating TsMux
+-   adaptivedemux, hlsdemux, curl: Use actual object for logging
+-   gi: player: Fix get_current_subtitle_track() annotation
+
+gst-plugins-ugly
+
+-   no changes
+
+gst-libav
+
+-   avauddec: Check planar-ness of frame rather than context, fixes
+    issue with aptX HD decoding
+
+gst-rtsp-server
+
+-   stream: collect a clock_rate when blocking
+-   media: Ignore GstRTSPStreamBlocking from incomplete streams, to
+    prevent cases with prerolling when the inactive stream prerolls
+    first and the server proceeds without waiting for the active stream.
+    When there are no complete streams (during DESCRIBE), we will listen
+    to all streams.
+-   media: Use guint64 for setting the size-time property on rtpstorage,
+    fixes potential crashes or memory corruption.
+-   media: Get rates only on sender streams, fixing issue with ONVIF
+    audio backchannel streams
+-   media: Plug memory leak
+
+gstreamer-vaapi
+
+-   H265 decoder: Fix a typo in scc reference setting
+
+gstreamer-sharp
+
+-   no changes
+
+gst-omx
+
+-   no changes
+
+gst-python
+
+-   no changes
+
+gst-editing-services
+
+-   Fix static build
+-   ges_init(): Fix potential initialisation crash on error
+
+gst-integration-testsuites
+
+-   no changes
+
+gst-build
+
+-   gst-env: use Path.open() in get_pkgconfig_variable_from_pcfile(),
+    fixes issues with python 3.5
+-   subprojects: pin orc to 0.4.32 release (was 0.4.29) and pin libpsl
+    to 0.21.1 (was master)
+
+Cerbero build tool and packaging changes in 1.18.2
+
+-   build-tools: copy the removed site.py from setuptools, fixing python
+    programs (like meson) from using libraries from incorrect places
+
+Contributors to 1.18.2
+
+Arun Raghavan, Bing Song, Chris Bass, Chris Duncan, Chris White, David
+Keijser, David Phung, Edward Hervey, Fabrice Fontaine, Guillaume
+Desmottes, Guiqin Zou, He Junyan, Jan Alexander Steffens (heftig), Jan
+Schmidt, Jason Pereira, Jonathan Matthew, Jose Quaresma, Julian Bouzas,
+Khem Raj, Kristofer Björkström, Marijn Suijten, Mart Raudsepp, Mathieu
+Duponchelle, Matthew Waters, Nicola Murino, Nicolas Dufresne, Nirbheek
+Chauhan, Olivier Crête, Philippe Normand, Rafostar, Randy Li, Sanchayan
+Maity, Sebastian Dröge, Seungha Yang, Thibault Saunier, Tim-Philipp
+Müller, Vivia Nikolaidou, Xavier Claessens
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.18.2
+
+-   List of Merge Requests applied in 1.18.2
+-   List of Issues fixed in 1.18.2
 
 Schedule for 1.20
 
