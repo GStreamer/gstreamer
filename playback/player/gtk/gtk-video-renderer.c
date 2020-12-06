@@ -20,7 +20,7 @@
 
 #include "gtk-video-renderer.h"
 
-struct _GstPlayerGtkVideoRenderer
+struct _GstPlayGtkVideoRenderer
 {
   GObject parent;
 
@@ -28,14 +28,14 @@ struct _GstPlayerGtkVideoRenderer
   GtkWidget *widget;
 };
 
-struct _GstPlayerGtkVideoRendererClass
+struct _GstPlayGtkVideoRendererClass
 {
   GObjectClass parent_class;
 };
 
 static void
     gst_player_gtk_video_renderer_interface_init
-    (GstPlayerVideoRendererInterface * iface);
+    (GstPlayVideoRendererInterface * iface);
 
 enum
 {
@@ -44,9 +44,9 @@ enum
   GTK_VIDEO_RENDERER_PROP_LAST
 };
 
-G_DEFINE_TYPE_WITH_CODE (GstPlayerGtkVideoRenderer,
+G_DEFINE_TYPE_WITH_CODE (GstPlayGtkVideoRenderer,
     gst_player_gtk_video_renderer, G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PLAYER_VIDEO_RENDERER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PLAY_VIDEO_RENDERER,
         gst_player_gtk_video_renderer_interface_init));
 
 static GParamSpec
@@ -56,7 +56,7 @@ static void
 gst_player_gtk_video_renderer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstPlayerGtkVideoRenderer *self = GST_PLAYER_GTK_VIDEO_RENDERER (object);
+  GstPlayGtkVideoRenderer *self = GST_PLAY_GTK_VIDEO_RENDERER (object);
 
   switch (prop_id) {
     case GTK_VIDEO_RENDERER_PROP_WIDGET:
@@ -71,7 +71,7 @@ gst_player_gtk_video_renderer_get_property (GObject * object,
 static void
 gst_player_gtk_video_renderer_finalize (GObject * object)
 {
-  GstPlayerGtkVideoRenderer *self = GST_PLAYER_GTK_VIDEO_RENDERER (object);
+  GstPlayGtkVideoRenderer *self = GST_PLAY_GTK_VIDEO_RENDERER (object);
 
   if (self->sink)
     gst_object_unref (self->sink);
@@ -84,7 +84,7 @@ gst_player_gtk_video_renderer_finalize (GObject * object)
 
 static void
     gst_player_gtk_video_renderer_class_init
-    (GstPlayerGtkVideoRendererClass * klass)
+    (GstPlayGtkVideoRendererClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
@@ -102,7 +102,7 @@ static void
 }
 
 static void
-gst_player_gtk_video_renderer_init (GstPlayerGtkVideoRenderer * self)
+gst_player_gtk_video_renderer_init (GstPlayGtkVideoRenderer * self)
 {
   GstElement *gtk_sink = gst_element_factory_make ("gtkglsink", NULL);
 
@@ -122,27 +122,27 @@ gst_player_gtk_video_renderer_init (GstPlayerGtkVideoRenderer * self)
 }
 
 static GstElement *gst_player_gtk_video_renderer_create_video_sink
-    (GstPlayerVideoRenderer * iface, GstPlayer * player)
+    (GstPlayVideoRenderer * iface, GstPlay * player)
 {
-  GstPlayerGtkVideoRenderer *self = GST_PLAYER_GTK_VIDEO_RENDERER (iface);
+  GstPlayGtkVideoRenderer *self = GST_PLAY_GTK_VIDEO_RENDERER (iface);
 
   return gst_object_ref (self->sink);
 }
 
 static void
     gst_player_gtk_video_renderer_interface_init
-    (GstPlayerVideoRendererInterface * iface)
+    (GstPlayVideoRendererInterface * iface)
 {
   iface->create_video_sink = gst_player_gtk_video_renderer_create_video_sink;
 }
 
 /**
- * gst_player_gtk_video_renderer_new:
+ * gst_play_gtk_video_renderer_new:
  *
  * Returns: (transfer full):
  */
-GstPlayerVideoRenderer *
-gst_player_gtk_video_renderer_new (void)
+GstPlayVideoRenderer *
+gst_play_gtk_video_renderer_new (void)
 {
   GstElementFactory *factory;
 
@@ -154,21 +154,21 @@ gst_player_gtk_video_renderer_new (void)
 
   gst_object_unref (factory);
 
-  return g_object_new (GST_TYPE_PLAYER_GTK_VIDEO_RENDERER, NULL);
+  return g_object_new (GST_TYPE_PLAY_GTK_VIDEO_RENDERER, NULL);
 }
 
 /**
- * gst_player_gtk_video_renderer_get_widget:
- * @self: #GstPlayerVideoRenderer instance
+ * gst_play_gtk_video_renderer_get_widget:
+ * @self: #GstPlayVideoRenderer instance
  *
  * Returns: (transfer full): The GtkWidget
  */
-GtkWidget *gst_player_gtk_video_renderer_get_widget
-    (GstPlayerGtkVideoRenderer * self)
+GtkWidget *gst_play_gtk_video_renderer_get_widget
+    (GstPlayGtkVideoRenderer * self)
 {
   GtkWidget *widget;
 
-  g_return_val_if_fail (GST_IS_PLAYER_GTK_VIDEO_RENDERER (self), NULL);
+  g_return_val_if_fail (GST_IS_PLAY_GTK_VIDEO_RENDERER (self), NULL);
 
   g_object_get (self, "widget", &widget, NULL);
 

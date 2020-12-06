@@ -21,28 +21,28 @@
 #ifndef __GTK_VIDEO_RENDERER_H__
 #define __GTK_VIDEO_RENDERER_H__
 
-#include <gst/player/player.h>
+#include <gst/play/play.h>
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstPlayerGtkVideoRenderer
-    GstPlayerGtkVideoRenderer;
-typedef struct _GstPlayerGtkVideoRendererClass
-    GstPlayerGtkVideoRendererClass;
+typedef struct _GstPlayGtkVideoRenderer
+    GstPlayGtkVideoRenderer;
+typedef struct _GstPlayGtkVideoRendererClass
+    GstPlayGtkVideoRendererClass;
 
-#define GST_TYPE_PLAYER_GTK_VIDEO_RENDERER             (gst_player_gtk_video_renderer_get_type ())
-#define GST_IS_PLAYER_GTK_VIDEO_RENDERER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLAYER_GTK_VIDEO_RENDERER))
-#define GST_IS_PLAYER_GTK_VIDEO_RENDERER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAYER_GTK_VIDEO_RENDERER))
-#define GST_PLAYER_GTK_VIDEO_RENDERER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLAYER_GTK_VIDEO_RENDERER, GstPlayerGtkVideoRendererClass))
-#define GST_PLAYER_GTK_VIDEO_RENDERER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLAYER_GTK_VIDEO_RENDERER, GstPlayerGtkVideoRenderer))
-#define GST_PLAYER_GTK_VIDEO_RENDERER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLAYER_GTK_VIDEO_RENDERER, GstPlayerGtkVideoRendererClass))
-#define GST_PLAYER_GTK_VIDEO_RENDERER_CAST(obj)        ((GstPlayerGtkVideoRenderer*)(obj))
+#define GST_TYPE_PLAY_GTK_VIDEO_RENDERER             (gst_player_gtk_video_renderer_get_type ())
+#define GST_IS_PLAY_GTK_VIDEO_RENDERER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLAY_GTK_VIDEO_RENDERER))
+#define GST_IS_PLAY_GTK_VIDEO_RENDERER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY_GTK_VIDEO_RENDERER))
+#define GST_PLAY_GTK_VIDEO_RENDERER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLAY_GTK_VIDEO_RENDERER, GstPlayGtkVideoRendererClass))
+#define GST_PLAY_GTK_VIDEO_RENDERER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLAY_GTK_VIDEO_RENDERER, GstPlayGtkVideoRenderer))
+#define GST_PLAY_GTK_VIDEO_RENDERER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLAY_GTK_VIDEO_RENDERER, GstPlayGtkVideoRendererClass))
+#define GST_PLAY_GTK_VIDEO_RENDERER_CAST(obj)        ((GstPlayGtkVideoRenderer*)(obj))
 
 GType gst_player_gtk_video_renderer_get_type (void);
 
-GstPlayerVideoRenderer * gst_player_gtk_video_renderer_new (void);
-GtkWidget * gst_player_gtk_video_renderer_get_widget (GstPlayerGtkVideoRenderer * self);
+GstPlayVideoRenderer * gst_play_gtk_video_renderer_new (void);
+GtkWidget * gst_play_gtk_video_renderer_get_widget (GstPlayGtkVideoRenderer * self);
 
 G_END_DECLS
 
