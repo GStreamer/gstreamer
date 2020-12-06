@@ -1,3 +1,81 @@
+=== release 1.18.2 ===
+
+2020-12-06 13:24:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.18.2
+
+2020-11-18 20:36:50 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: collect a clock_rate when blocking
+	  This lets us provide a clock_rate in a fashion similar to the
+	  other code paths in get_rtpinfo()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/175>
+
+2020-11-03 16:56:28 +0100  David Phung <davidph@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-media: Ignore GstRTSPStreamBlocking from incomplete streams
+	  To prevent cases with prerolling when the inactive stream prerolls first
+	  and the server proceeds without waiting for the active stream, we will
+	  ignore GstRTSPStreamBlocking messages from incomplete streams. When
+	  there are no complete streams (during DESCRIBE), we will listen to all
+	  streams.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/173>
+
+2020-10-28 21:48:06 +0100  Kristofer Björkström <kristofb@axis.com>
+
+	* tests/check/gst/media.c:
+	* tests/check/meson.build:
+	* tests/files/test.avi:
+	  media test: Add test for seeking one active stream with a demuxer
+	  Add another seek_one_active_stream test but with a demuxer. The demuxer
+	  will flush both streams in opposed to the existing test which only
+	  flushes the active stream. This will help exposing problems with the
+	  prerolling process after a flushing seek.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/173>
+
+2020-11-16 10:34:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Use guint64 for setting the size-time property on rtpstorage
+	  Otherwise this will cause memory corruption as the property expects a 64
+	  bit integer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/172>
+
+2020-09-28 22:03:47 +0200  David Phung <davidph@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Plug memory leak
+	  The get-storage signal of rtpbin increases the ref count of the storage.
+	  So we have to unref it after usage.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/171>
+
+2020-09-11 15:46:41 +0200  Guiqin Zou <guiqinzu@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Get rates only on sender streams
+	  When play a media with both sender and receiver stream, like ONVIF
+	  back channel audio in, gst_rtsp_media_get_rates call
+	  gst_rtsp_stream_get_rates for each stream to set the rates. But
+	  gst_rtsp_stream_get_rates return false for the receiver steam, which
+	  lead a g_assert crash.
+	  Instead to get rates on all streams, now just get rates on sender
+	  streams.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/170>
+
+2020-10-27 12:34:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.18.1 ===
 
 2020-10-26 11:15:28 +0000  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +83,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.1
