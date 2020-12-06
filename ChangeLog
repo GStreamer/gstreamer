@@ -1,3 +1,30 @@
+=== release 1.18.2 ===
+
+2020-12-06 13:24:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.18.2
+
+2020-10-27 06:33:29 -0400  Arun Raghavan <arun@asymptotic.io>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Check planar-ness of frame rather than context
+	  The check seems to be to present to verify that the decoded frame
+	  matches the format we expect. The actual check for the layout of the
+	  frame was being performed against the context instead.
+	  The check fails at least for avdec_aptx_hd, where the AVCodecContext has
+	  the sample format set to AV_SAMPLE_FMT_NONE.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/108>
+
+2020-10-27 12:34:39 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.1 ===
 
 2020-10-26 11:15:11 +0000  Tim-Philipp Müller <tim@centricular.com>
