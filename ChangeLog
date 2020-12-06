@@ -1,3 +1,51 @@
+=== release 1.18.2 ===
+
+2020-12-06 13:25:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.18.2
+
+2020-10-30 00:30:52 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ges/ges.c:
+	* tools/ges-launcher.c:
+	  init: Fix initialisation crash
+	  Fix a case where initialisation fails without setting
+	  the passed-in GError and the caller assumes it will be
+	  set, and add a guard to catch the condition in case it
+	  happens again in the future.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/218>
+
+2020-10-18 16:08:36 +0200  Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.c:
+	* tools/utils.h:
+	  utils.c: fix static build
+	  Static build fails since version 1.17.1 and
+	  https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/commit/1e488d4311420b5ca193155ad8ab05509c9a4a37
+	  on:
+	  FAILED: tools/ges-launch-1.0
+	  /srv/storage/autobuild/run/instance-2/output-1/host/bin/arm-linux-gcc  -o tools/ges-launch-1.0 tools/ges-launch-1.0.p/ges-validate.c.o tools/ges-launch-1.0.p/ges-launch.c.o tools/ges-launch-1.0.p/ges-launcher.c.o tools/ges-launch-1.0.p/utils.c.o -Wl,--as-needed -Wl,--no-undefined -Wl,-O1 -Wl,-Bsymbolic-functions -static -Wl,--start-group ges/libges-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstreamer-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgobject-2.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libglib-2.0.a -pthread /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libpcre.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libffi.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgmodule-2.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstbase-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstvideo-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstpbutils-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstaudio-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libz.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgsttag-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstcontroller-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgio-2.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libmount.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libblkid.a -lm -Wl,--end-group
+	  /srv/storage/autobuild/run/instance-2/output-1/host/opt/ext-toolchain/bin/../lib/gcc/arm-buildroot-linux-uclibcgnueabi/8.3.0/../../../../arm-buildroot-linux-uclibcgnueabi/bin/ld: /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libc.a(err.os): in function `warn':
+	  err.c:(.text+0x1d8): multiple definition of `warn'; tools/ges-launch-1.0.p/utils.c.o:utils.c:(.text+0x9bc): first defined here
+	  So rename warn function to ges_warn
+	  Also prefix ok, print and printerr function by ges_ for consistancy and
+	  run gst-indent on tools/ges-launcher.c
+	  Fixes:
+	  - http://autobuild.buildroot.org/results/2a528a1185644f5b23d26eb3f2b342e99aa1e493
+	  Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/221>
+
+2020-10-27 12:34:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.1 ===
 
 2020-10-26 11:16:25 +0000  Tim-Philipp Müller <tim@centricular.com>
