@@ -876,14 +876,25 @@ no_stream_group:
 
 /* Create a parser for the given stream profile */
 static inline GstElement *
-_get_parser (GstEncodeBin * ebin, GstEncodingProfile * sprof)
+_get_parser (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+    GstElement * encoder)
 {
   GList *parsers1, *parsers, *tmp;
   GstElement *parser = NULL;
   GstElementFactory *parserfact = NULL;
-  GstCaps *format;
+  GstCaps *format = NULL;
 
-  format = gst_encoding_profile_get_format (sprof);
+  if (encoder) {
+    GstPadTemplate *template = gst_element_get_pad_template (encoder, "src");
+
+    if (template)
+      format = gst_pad_template_get_caps (template);
+  }
+
+  if (!format || gst_caps_is_any (format)) {
+    gst_clear_caps (&format);
+    format = gst_encoding_profile_get_format (sprof);
+  }
 
   GST_DEBUG ("Getting list of parsers for format %" GST_PTR_FORMAT, format);
 
@@ -1266,7 +1277,7 @@ setup_smart_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     goto err;
   }
 
-  parser = _get_parser (ebin, sprof);
+  parser = _get_parser (ebin, sprof, encoder);
   sgroup->smart_capsfilter = gst_element_factory_make ("capsfilter", NULL);
   reencoder_bin = gst_bin_new (NULL);
   g_object_set (sgroup->smart_capsfilter, "caps", format, NULL);
@@ -1450,9 +1461,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     goto outfilter_link_failure;
   last = sgroup->outfilter;
 
-
-  sgroup->parser = _get_parser (ebin, sprof);
-
+  sgroup->encoder = _get_encoder (ebin, sprof);
+  sgroup->parser = _get_parser (ebin, sgroup->profile, sgroup->encoder);
   if (sgroup->parser != NULL) {
     GST_DEBUG ("Got a parser %s", GST_ELEMENT_NAME (sgroup->parser));
     gst_bin_add (GST_BIN (ebin), sgroup->parser);
@@ -1561,8 +1571,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   /* 1. Create the encoder */
   GST_LOG ("Adding encoder");
-  sgroup->encoder = _get_encoder (ebin, sprof);
-  if (sgroup->encoder != NULL) {
+  if (sgroup->encoder) {
     gst_bin_add ((GstBin *) ebin, sgroup->encoder);
     tosync = g_list_append (tosync, sgroup->encoder);
 
