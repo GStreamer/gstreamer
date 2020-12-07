@@ -362,84 +362,99 @@ gboolean
 gst_srt_object_get_property_helper (GstSRTObject * srtobject,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GST_OBJECT_LOCK (srtobject->element);
-
   switch (prop_id) {
     case PROP_URI:
+      GST_OBJECT_LOCK (srtobject->element);
       g_value_take_string (value, gst_uri_to_string (srtobject->uri));
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     case PROP_MODE:{
       GstSRTConnectionMode v;
+
+      GST_OBJECT_LOCK (srtobject->element);
       if (!gst_structure_get_enum (srtobject->parameters, "mode",
               GST_TYPE_SRT_CONNECTION_MODE, (gint *) & v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'mode'");
         v = GST_SRT_CONNECTION_MODE_NONE;
       }
       g_value_set_enum (value, v);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     }
     case PROP_LOCALADDRESS:
+      GST_OBJECT_LOCK (srtobject->element);
       g_value_set_string (value,
           gst_structure_get_string (srtobject->parameters, "localaddress"));
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     case PROP_LOCALPORT:{
       guint v;
+
+      GST_OBJECT_LOCK (srtobject->element);
       if (!gst_structure_get_uint (srtobject->parameters, "localport", &v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'localport'");
         v = GST_SRT_DEFAULT_PORT;
       }
       g_value_set_uint (value, v);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     }
     case PROP_PBKEYLEN:{
       GstSRTKeyLength v;
+
+      GST_OBJECT_LOCK (srtobject->element);
       if (!gst_structure_get_enum (srtobject->parameters, "pbkeylen",
               GST_TYPE_SRT_KEY_LENGTH, (gint *) & v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'pbkeylen'");
         v = GST_SRT_KEY_LENGTH_NO_KEY;
       }
       g_value_set_enum (value, v);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     }
     case PROP_POLL_TIMEOUT:{
       gint v;
+
+      GST_OBJECT_LOCK (srtobject->element);
       if (!gst_structure_get_int (srtobject->parameters, "poll-timeout", &v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'poll-timeout'");
         v = GST_SRT_DEFAULT_POLL_TIMEOUT;
       }
       g_value_set_int (value, v);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     }
     case PROP_LATENCY:{
       gint v;
+
+      GST_OBJECT_LOCK (srtobject->element);
       if (!gst_structure_get_int (srtobject->parameters, "latency", &v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'latency'");
         v = GST_SRT_DEFAULT_LATENCY;
       }
       g_value_set_int (value, v);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     }
     case PROP_STATS:
       g_value_take_boxed (value, gst_srt_object_get_stats (srtobject));
       break;
     case PROP_WAIT_FOR_CONNECTION:
+      GST_OBJECT_LOCK (srtobject->element);
       g_value_set_boolean (value, srtobject->wait_for_connection);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
-    case PROP_STREAMID:{
+    case PROP_STREAMID:
+      GST_OBJECT_LOCK (srtobject->element);
       g_value_set_string (value,
           gst_structure_get_string (srtobject->parameters, "streamid"));
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
-    }
     default:
-      goto err;
+      return FALSE;
   }
 
-  GST_OBJECT_UNLOCK (srtobject->element);
   return TRUE;
-
-err:
-  GST_OBJECT_UNLOCK (srtobject->element);
-  return FALSE;
 }
 
 void
