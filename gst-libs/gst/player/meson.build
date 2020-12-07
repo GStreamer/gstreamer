@@ -5,6 +5,7 @@ gstplayer_sources = [
   'gstplayer-media-info.c',
   'gstplayer-g-main-context-signal-dispatcher.c',
   'gstplayer-video-overlay-video-renderer.c',
+  'gstplayer-wrapped-video-renderer.c',
   'gstplayer-visualization.c',
 ]
 
@@ -31,7 +32,7 @@ gstplayer = library('gstplayer-' + api_version,
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstplay_dep,
                   gsttag_dep, gstpbutils_dep],
 )
 
@@ -56,7 +57,7 @@ if build_gir
       'GstAudio-1.0', 'GstTag-1.0'],
     install : true,
     extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/player/player.h'],
-    dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
+    dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstplay_dep,
                   gsttag_dep, gstpbutils_dep]
   )
   gen_sources += player_gir
@@ -65,7 +66,7 @@ endif
 gstplayer_dep = declare_dependency(link_with : gstplayer,
   include_directories : [libsinc],
   sources: gen_sources,
-  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstplay_dep,
                   gsttag_dep, gstpbutils_dep])
 
 meson.override_dependency('gstreamer-player-1.0', gstplayer_dep)
