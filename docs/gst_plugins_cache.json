@@ -14791,12 +14791,12 @@
                 "long-name": "RTP Opus packet depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00 }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)multiopus }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-opus:\nchannel-mapping-family: 0\n",
+                        "caps": "audio/x-opus:\nchannel-mapping-family: [ 0, 1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14819,12 +14819,12 @@
                 "long-name": "RTP Opus payloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-opus:\nchannel-mapping-family: 0\n",
+                        "caps": "audio/x-opus:\nchannel-mapping-family: 0\naudio/x-opus:\nchannel-mapping-family: 0\n       channels: [ 1, 2 ]\naudio/x-opus:\nchannel-mapping-family: 1\n       channels: [ 3, 255 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\nencoding-params: 2\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00 }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)multiopus }\n",
                         "direction": "src",
                         "presence": "always"
                     }
