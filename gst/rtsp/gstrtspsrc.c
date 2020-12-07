@@ -5596,11 +5596,15 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   while (TRUE) {
     gst_rtsp_message_unset (&message);
 
-    /* protect the connection with the connection lock so that we can see when
-     * we are finished doing server communication */
-    res =
-        gst_rtspsrc_connection_receive (src, &src->conninfo,
-        &message, src->tcp_timeout);
+    if (src->conninfo.flushing) {
+      /* do not attempt to receive if flushing */
+      res = GST_RTSP_EINTR;
+    } else {
+      /* protect the connection with the connection lock so that we can see when
+       * we are finished doing server communication */
+      res = gst_rtspsrc_connection_receive (src, &src->conninfo, &message,
+          src->tcp_timeout);
+    }
 
     switch (res) {
       case GST_RTSP_OK:
@@ -5715,8 +5719,13 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     /* we should continue reading the TCP socket because the server might
      * send us requests. When the session timeout expires, we need to send a
      * keep-alive request to keep the session open. */
-    res = gst_rtspsrc_connection_receive (src, &src->conninfo, &message,
-        timeout);
+    if (src->conninfo.flushing) {
+      /* do not attempt to receive if flushing */
+      res = GST_RTSP_EINTR;
+    } else {
+      res = gst_rtspsrc_connection_receive (src, &src->conninfo, &message,
+          timeout);
+    }
 
     switch (res) {
       case GST_RTSP_OK:
@@ -6363,8 +6372,13 @@ gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
   GstRTSPResult res;
 
 next:
-  res = gst_rtspsrc_connection_receive (src, conninfo, response,
-      src->tcp_timeout);
+  if (conninfo->flushing) {
+    /* do not attempt to receive if flushing */
+    res = GST_RTSP_EINTR;
+  } else {
+    res = gst_rtspsrc_connection_receive (src, conninfo, response,
+        src->tcp_timeout);
+  }
 
   if (res < 0)
     goto receive_error;
