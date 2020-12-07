@@ -19,6 +19,29 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-rtpopuspay
+ * @title: rtpopuspay
+ *
+ * rtpopuspay encapsulates Opus-encoded audio data into RTP packets following
+ * the payload format described in RFC 7587.
+ *
+ * In addition to the RFC, which assumes only mono and stereo payload,
+ * the element supports multichannel Opus audio streams using a non-standardized
+ * SDP config and "multiopus" codec developed by Google for libwebrtc. When the
+ * input data have more than 2 channels, rtpopuspay will add extra fields to
+ * output caps that can be used to generate SDP in the syntax understood by
+ * libwebrtc. For example in the case of 5.1 audio:
+ *
+ * |[
+ *  a=rtpmap:96 multiopus/48000/6
+ *  a=fmtp:96 num_streams=4;coupled_streams=2;channel_mapping=0,4,1,2,3,5
+ * ]|
+ *
+ * See https://webrtc-review.googlesource.com/c/src/+/129768 for more details on
+ * multichannel Opus in libwebrtc.
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
