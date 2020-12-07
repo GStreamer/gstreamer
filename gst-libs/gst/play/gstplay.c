@@ -445,6 +445,8 @@ gst_play_dispose (GObject * object)
 
   GST_TRACE_OBJECT (self, "Stopping main thread");
 
+  gst_bus_set_flushing (self->api_bus, TRUE);
+
   if (self->loop) {
     g_main_loop_quit (self->loop);
 
