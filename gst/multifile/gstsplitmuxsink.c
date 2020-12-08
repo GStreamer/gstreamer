@@ -1321,8 +1321,13 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
                 grow_blocked_queues (splitmux);
 
               if (cmd->start_new_fragment) {
-                GST_DEBUG_OBJECT (splitmux, "Got cmd to start new fragment");
-                splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_FILE;
+                if (splitmux->muxed_out_bytes > 0) {
+                  GST_DEBUG_OBJECT (splitmux, "Got cmd to start new fragment");
+                  splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_FILE;
+                } else {
+                  GST_DEBUG_OBJECT (splitmux,
+                      "Got cmd to start new fragment, but fragment is empty - ignoring.");
+                }
               } else {
                 GST_DEBUG_OBJECT (splitmux,
                     "Got new output cmd for time %" GST_STIME_FORMAT,
@@ -2019,9 +2024,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   }
 
   GST_SPLITMUX_LOCK (splitmux);
-  if (splitmux->muxed_out_bytes > 0
-      || splitmux->fragment_id == splitmux->start_index)
-    set_next_filename (splitmux, ctx);
+  set_next_filename (splitmux, ctx);
   splitmux->muxed_out_bytes = 0;
   GST_SPLITMUX_UNLOCK (splitmux);
 
@@ -2210,8 +2213,11 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   /* Have we muxed at least one thing from the reference
    * stream into the file? If not, no other streams can have
    * either */
-  if (splitmux->fragment_reference_bytes <= 0)
+  if (splitmux->fragment_reference_bytes <= 0) {
+    GST_TRACE_OBJECT (splitmux,
+        "Not ready to split - nothing muxed on the reference stream");
     return FALSE;
+  }
 
   /* User told us to split now */
   if (g_atomic_int_get (&(splitmux->do_split_next_gop)) == TRUE) {
@@ -2234,6 +2240,10 @@ need_new_fragment (GstSplitMuxSink * splitmux,
       gst_queue_array_pop_head_struct (splitmux->times_to_split);
       ptr_to_time = gst_queue_array_peek_head_struct (splitmux->times_to_split);
     }
+    GST_TRACE_OBJECT (splitmux,
+        "GOP start time %" GST_STIME_FORMAT " is after requested split point %"
+        GST_STIME_FORMAT, GST_STIME_ARGS (splitmux->gop_start_time),
+        GST_STIME_ARGS (time_to_split));
     GST_OBJECT_UNLOCK (splitmux);
     return TRUE;
   }
@@ -2421,6 +2431,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
 
   /* Now either way - either there was no overflow, or we requested a new fragment: release this GOP */
   splitmux->fragment_total_bytes += splitmux->gop_total_bytes;
+  splitmux->fragment_reference_bytes += splitmux->gop_reference_bytes;
 
   if (splitmux->gop_total_bytes > 0) {
     GST_LOG_OBJECT (splitmux,
@@ -2440,6 +2451,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   }
 
   splitmux->gop_total_bytes = 0;
+  splitmux->gop_reference_bytes = 0;
   return;
 
 error_gop_duration:
@@ -2844,7 +2856,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   /* Update total input byte counter for overflow detect */
   splitmux->gop_total_bytes += buf_info->buf_size;
   if (ctx->is_reference) {
-    splitmux->fragment_reference_bytes += buf_info->buf_size;
+    splitmux->gop_reference_bytes += buf_info->buf_size;
   }
 
   /* Now add this buffer to the queue just before returning */
@@ -3542,6 +3554,7 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
   splitmux->fragment_total_bytes = 0;
   splitmux->fragment_reference_bytes = 0;
   splitmux->gop_total_bytes = 0;
+  splitmux->gop_reference_bytes = 0;
   splitmux->muxed_out_bytes = 0;
   splitmux->ready_for_output = FALSE;
 
