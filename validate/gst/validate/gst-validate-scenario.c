@@ -2749,7 +2749,8 @@ stop_waiting_signal (GstStructure * data)
   GstValidateScenario *scenario;
 
   gst_structure_get (data, "target", G_TYPE_POINTER, &target,
-      "action", G_TYPE_POINTER, &action, "sigid", G_TYPE_UINT, &sigid, NULL);
+      "action", GST_TYPE_VALIDATE_ACTION, &action, "sigid", G_TYPE_UINT, &sigid,
+      NULL);
   gst_structure_free (data);
 
   scenario = gst_validate_action_get_scenario (action);
@@ -2765,6 +2766,7 @@ stop_waiting_signal (GstStructure * data)
   SCENARIO_UNLOCK (scenario);
 
   gst_validate_action_set_done (action);
+  gst_validate_action_unref (action);
   _add_execute_actions_gsource (scenario);
   gst_object_unref (scenario);
   gst_object_unref (target);
@@ -2845,8 +2847,8 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
   }
 
   data =
-      gst_structure_new ("a", "action", G_TYPE_POINTER, action, "target",
-      G_TYPE_POINTER, target, NULL);
+      gst_structure_new ("a", "action", GST_TYPE_VALIDATE_ACTION, action,
+      "target", G_TYPE_POINTER, target, NULL);
   SCENARIO_LOCK (scenario);
   priv->signal_handler_id = g_signal_connect_swapped (target, signal_name,
       (GCallback) stop_waiting_signal, data);
@@ -2855,7 +2857,6 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
       gst_structure_get_boolean (action->structure, "non-blocking",
       &non_blocking);
   if (non_blocking) {
-    gst_validate_action_ref (action);
     gst_structure_set (data, "sigid", G_TYPE_UINT, priv->signal_handler_id,
         NULL);
     priv->signal_handler_id = 0;
