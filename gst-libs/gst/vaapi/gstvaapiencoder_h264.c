@@ -2943,6 +2943,23 @@ error:
   }
 }
 
+/* reorder_list sorting for hierarchical-b encode */
+static gint
+sort_hierarchical_b (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+  GstVaapiEncPicture *pic1 = (GstVaapiEncPicture *) a;
+  GstVaapiEncPicture *pic2 = (GstVaapiEncPicture *) b;
+
+  if (pic1->type != GST_VAAPI_PICTURE_TYPE_B)
+    return 1;
+  if (pic2->type != GST_VAAPI_PICTURE_TYPE_B)
+    return -1;
+  if (pic1->temporal_id == pic2->temporal_id)
+    return pic1->poc - pic2->poc;
+  else
+    return pic1->temporal_id - pic2->temporal_id;
+}
+
 struct _PendingIterState
 {
   guint cur_view;
@@ -2955,7 +2972,7 @@ gst_vaapi_encoder_h264_get_pending_reordered (GstVaapiEncoder * base_encoder,
 {
   GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVaapiH264ViewReorderPool *reorder_pool;
-  GstVaapiEncPicture *pic;
+  GstVaapiEncPicture *pic = NULL;
   struct _PendingIterState *iter;
 
   g_return_val_if_fail (state, FALSE);
@@ -2979,13 +2996,28 @@ gst_vaapi_encoder_h264_get_pending_reordered (GstVaapiEncoder * base_encoder,
     return TRUE;                /* perhaps other views has pictures? */
   }
 
-  pic = g_queue_pop_tail (&reorder_pool->reorder_frame_list);
-  g_assert (pic);
   if (iter->pic_type == GST_VAAPI_PICTURE_TYPE_P) {
+    pic = g_queue_pop_tail (&reorder_pool->reorder_frame_list);
+    g_assert (pic);
     set_p_frame (pic, encoder);
+
+    g_queue_foreach (&reorder_pool->reorder_frame_list, (GFunc) set_b_frame,
+        encoder);
+    /* sort the queued list of frames for hierarchical-b based on
+     * temporal level where each frame belongs */
+    if (encoder->prediction_type ==
+        GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_B) {
+      pic->temporal_id = 0;
+      GST_VAAPI_PICTURE_FLAG_SET (pic, GST_VAAPI_ENC_PICTURE_FLAG_REFERENCE);
+
+      g_queue_sort (&reorder_pool->reorder_frame_list, sort_hierarchical_b,
+          NULL);
+    }
+
     iter->pic_type = GST_VAAPI_PICTURE_TYPE_B;
   } else if (iter->pic_type == GST_VAAPI_PICTURE_TYPE_B) {
-    set_b_frame (pic, encoder);
+    pic = g_queue_pop_head (&reorder_pool->reorder_frame_list);
+    g_assert (pic);
   } else {
     GST_WARNING ("Unhandled pending picture type");
   }
@@ -3139,23 +3171,6 @@ get_temporal_id (GstVaapiEncoderH264 * encoder, guint32 display_order)
 
   GST_WARNING ("Couldn't find valid temporal id");
   return 0;
-}
-
-/* reorder_list sorting for hierarchical-b encode */
-static gint
-sort_hierarchical_b (gconstpointer a, gconstpointer b, gpointer user_data)
-{
-  GstVaapiEncPicture *pic1 = (GstVaapiEncPicture *) a;
-  GstVaapiEncPicture *pic2 = (GstVaapiEncPicture *) b;
-
-  if (pic1->type != GST_VAAPI_PICTURE_TYPE_B)
-    return 1;
-  if (pic2->type != GST_VAAPI_PICTURE_TYPE_B)
-    return -1;
-  if (pic1->temporal_id == pic2->temporal_id)
-    return pic1->poc - pic2->poc;
-  else
-    return pic1->temporal_id - pic2->temporal_id;
 }
 
 static GstVaapiEncoderStatus
