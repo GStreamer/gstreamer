@@ -2830,19 +2830,12 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
       (action->structure, "signal-name");
   GstElement *target;
   GstStructure *data;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
-  if (signal_name == NULL) {
-    GST_ERROR ("No signal-name given for wait action");
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-  }
-
-  target = _get_target_element (scenario, action);
-  if (target == NULL) {
-    gst_object_unref (pipeline);
-
-    return FALSE;
-  }
+  REPORT_UNLESS (signal_name, err, "No signal-name given for wait action");
+  REPORT_UNLESS ((target = _get_target_element (scenario, action)), err,
+      "Could not find target element.");
 
   gst_validate_printf (action, "Waiting for '%s' signal\n", signal_name);
 
@@ -2874,6 +2867,10 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
 
   return non_blocking ? GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING :
       GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+
+err:
+  gst_object_unref (pipeline);
+  return res;
 }
 
 static gboolean
