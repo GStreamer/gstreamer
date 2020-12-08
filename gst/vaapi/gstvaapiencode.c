@@ -565,7 +565,10 @@ gst_vaapiencode_drain (GstVaapiEncode * encode)
   if (!encode->encoder)
     return TRUE;
 
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
   status = gst_vaapi_encoder_flush (encode->encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encode);
+
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return FALSE;
   gst_vaapiencode_purge (encode);
@@ -722,10 +725,12 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
   if (!encode->encoder)
     return GST_FLOW_NOT_NEGOTIATED;
 
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
+
   status = gst_vaapi_encoder_flush (encode->encoder);
 
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
   gst_pad_stop_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+
   GST_VIDEO_ENCODER_STREAM_LOCK (encode);
 
   while (status == GST_VAAPI_ENCODER_STATUS_SUCCESS && ret == GST_FLOW_OK)
