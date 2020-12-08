@@ -388,8 +388,8 @@ gst_validate_action_get_type (void)
   if (_gst_validate_action_type == 0) {
     _gst_validate_action_type =
         g_boxed_type_register_static (g_intern_static_string
-        ("GstValidateAction"), (GBoxedCopyFunc) gst_mini_object_ref,
-        (GBoxedFreeFunc) gst_mini_object_unref);
+        ("GstValidateAction"), (GBoxedCopyFunc) gst_validate_action_ref,
+        (GBoxedFreeFunc) gst_validate_action_unref);
 
     json_boxed_register_serialize_func (_gst_validate_action_type,
         JSON_NODE_OBJECT,
@@ -2049,7 +2049,7 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
   if (scenario->priv->target_state > GST_STATE_PAUSED) {
     res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
   } else {
-    gst_mini_object_ref ((GstMiniObject *) action);
+    gst_validate_action_ref (action);
     res = GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING;
   }
 
@@ -4610,11 +4610,11 @@ gst_validate_scenario_finalize (GObject * object)
       (GDestroyNotify) gst_validate_seek_information_free);
   g_list_free_full (priv->sinks,
       (GDestroyNotify) gst_validate_sink_information_free);
-  g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
+  g_list_free_full (priv->actions, (GDestroyNotify) gst_validate_action_unref);
   g_list_free_full (priv->non_blocking_running_actions,
-      (GDestroyNotify) gst_mini_object_unref);
+      (GDestroyNotify) gst_validate_action_unref);
   g_list_free_full (priv->on_addition_actions,
-      (GDestroyNotify) gst_mini_object_unref);
+      (GDestroyNotify) gst_validate_action_unref);
   g_free (priv->pipeline_name);
   gst_structure_free (priv->vars);
   if (self->description)
@@ -5856,7 +5856,7 @@ gst_validate_action_set_done (GstValidateAction * action)
 
   g_main_context_invoke_full (NULL, G_PRIORITY_DEFAULT_IDLE,
       (GSourceFunc) _action_set_done,
-      gst_mini_object_ref (GST_MINI_OBJECT (action)),
+      gst_validate_action_ref (action),
       (GDestroyNotify) gst_validate_action_unref);
 }
 
@@ -6097,7 +6097,7 @@ gst_validate_scenario_get_actions (GstValidateScenario * scenario)
   g_return_val_if_fail (main_context_acquired, NULL);
 
   ret = g_list_copy_deep (scenario->priv->actions,
-      (GCopyFunc) gst_mini_object_ref, NULL);
+      (GCopyFunc) gst_validate_action_ref, NULL);
 
   g_main_context_release (g_main_context_default ());
 
