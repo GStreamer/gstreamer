@@ -69,6 +69,7 @@ enum
   PROP_WAIT_FOR_CONNECTION,
   PROP_STREAMID,
   PROP_AUTHENTICATION,
+  PROP_AUTO_RECONNECT,
   PROP_LAST
 };
 
@@ -353,6 +354,7 @@ gst_srt_object_new (GstElement * element)
   srtobject->listener_poll_id = SRT_ERROR;
   srtobject->sent_headers = FALSE;
   srtobject->wait_for_connection = GST_SRT_DEFAULT_WAIT_FOR_CONNECTION;
+  srtobject->auto_reconnect = GST_SRT_DEFAULT_AUTO_RECONNECT;
 
   g_cond_init (&srtobject->sock_cond);
   return srtobject;
@@ -424,6 +426,8 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       break;
     case PROP_AUTHENTICATION:
       srtobject->authentication = g_value_get_boolean (value);
+    case PROP_AUTO_RECONNECT:
+      srtobject->auto_reconnect = g_value_get_boolean (value);
       break;
     default:
       goto err;
@@ -531,6 +535,10 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       break;
     case PROP_AUTHENTICATION:
       g_value_set_boolean (value, srtobject->authentication);
+    case PROP_AUTO_RECONNECT:
+      GST_OBJECT_LOCK (srtobject->element);
+      g_value_set_boolean (value, srtobject->auto_reconnect);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     default:
       return FALSE;
@@ -692,6 +700,22 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
           "Authentication",
           "Authenticate a connection",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSRTSrc:auto-reconnect:
+   *
+   * Boolean to choose whether to automatically reconnect.  If TRUE, an element
+   * in caller mode will try to reconnect instead of reporting an error.
+   *
+   * Since: 1.22
+   *
+   */
+  g_object_class_install_property (gobject_class, PROP_AUTO_RECONNECT,
+      g_param_spec_boolean ("auto-reconnect",
+          "Automatic reconnect",
+          "Automatically reconnect when connection fails",
+          GST_SRT_DEFAULT_AUTO_RECONNECT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -1453,6 +1477,7 @@ gst_srt_object_read (GstSRTObject * srtobject,
   gint poll_timeout;
   GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
   gint poll_id = SRT_ERROR;
+  gboolean auto_reconnect;
 
   /* Only source element can read data */
   g_return_val_if_fail (gst_uri_handler_get_uri_type (GST_URI_HANDLER
@@ -1467,6 +1492,8 @@ gst_srt_object_read (GstSRTObject * srtobject,
           &poll_timeout)) {
     poll_timeout = GST_SRT_DEFAULT_POLL_TIMEOUT;
   }
+
+  auto_reconnect = srtobject->auto_reconnect;
 
   GST_OBJECT_UNLOCK (srtobject->element);
 
@@ -1523,6 +1550,13 @@ gst_srt_object_read (GstSRTObject * srtobject,
           return 0;
         }
 
+        if (!auto_reconnect) {
+          g_set_error (error, GST_RESOURCE_ERROR,
+              GST_RESOURCE_ERROR_NOT_AUTHORIZED,
+              "Failed to authenticate: %" REASON_FORMAT, REASON_ARGS (reason));
+          return -1;
+        }
+
         GST_ELEMENT_WARNING (srtobject->element, RESOURCE, NOT_AUTHORIZED,
             ("Failed to authenticate: %" REASON_FORMAT ". Trying to reconnect",
                 REASON_ARGS (reason)), (NULL));
@@ -1530,6 +1564,12 @@ gst_srt_object_read (GstSRTObject * srtobject,
         if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
           /* Caller has disappeared. */
           return 0;
+        }
+
+        if (!auto_reconnect) {
+          g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+              "Error on SRT socket: %" REASON_FORMAT, REASON_ARGS (reason));
+          return -1;
         }
 
         GST_ELEMENT_WARNING (srtobject->element, RESOURCE, READ,
@@ -1735,10 +1775,12 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
   gint poll_timeout;
   const guint8 *msg = mapinfo->data;
   gint payload_size, optlen = sizeof (payload_size);
-  gboolean wait_for_connection;
+  gboolean wait_for_connection, auto_reconnect;
 
   GST_OBJECT_LOCK (srtobject->element);
   wait_for_connection = srtobject->wait_for_connection;
+  auto_reconnect = srtobject->auto_reconnect;
+
   if (!gst_structure_get_int (srtobject->parameters, "poll-timeout",
           &poll_timeout)) {
     poll_timeout = GST_SRT_DEFAULT_POLL_TIMEOUT;
@@ -1796,10 +1838,23 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
       gint reason = srt_getrejectreason (wsock);
 
       if (reason == SRT_REJ_BADSECRET || reason == SRT_REJ_UNSECURE) {
+        if (!auto_reconnect) {
+          g_set_error (error, GST_RESOURCE_ERROR,
+              GST_RESOURCE_ERROR_NOT_AUTHORIZED,
+              "Failed to authenticate: %" REASON_FORMAT, REASON_ARGS (reason));
+          return -1;
+        }
+
         GST_ELEMENT_WARNING (srtobject->element, RESOURCE, NOT_AUTHORIZED,
             ("Failed to authenticate: %" REASON_FORMAT ". Trying to reconnect",
                 REASON_ARGS (reason)), (NULL));
       } else {
+        if (!auto_reconnect) {
+          g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
+              "Error on SRT socket: %" REASON_FORMAT, REASON_ARGS (reason));
+          return -1;
+        }
+
         GST_ELEMENT_WARNING (srtobject->element, RESOURCE, WRITE,
             ("Error on SRT socket: %" REASON_FORMAT ". Trying to reconnect",
                 REASON_ARGS (reason)), (NULL));
