@@ -272,9 +272,13 @@ gst_base_ts_mux_set_header_on_caps (GstBaseTsMux * mux)
   GValue value = { 0 };
   GstCaps *caps;
 
-  caps =
-      gst_caps_make_writable (gst_pad_get_current_caps (GST_AGGREGATOR_SRC_PAD
-          (mux)));
+  caps = gst_pad_get_current_caps (GST_AGGREGATOR_SRC_PAD (mux));
+
+  /* If we have no caps, we are possibly shutting down */
+  if (!caps)
+    return;
+
+  caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
   g_value_init (&array, GST_TYPE_ARRAY);
