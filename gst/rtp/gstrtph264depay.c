@@ -38,6 +38,14 @@ GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
  * expressed a restriction or preference via caps */
 #define DEFAULT_BYTE_STREAM   TRUE
 #define DEFAULT_ACCESS_UNIT   FALSE
+#define DEFAULT_WAIT_FOR_KEYFRAME FALSE
+
+enum
+{
+  PROP_0,
+  PROP_WAIT_FOR_KEYFRAME
+};
+
 
 /* 3 zero bytes syncword */
 static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
@@ -100,6 +108,38 @@ static void gst_rtp_h264_depay_push (GstRtpH264Depay * rtph264depay,
     gboolean marker);
 
 static void
+gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpH264Depay *self = GST_RTP_H264_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      self->wait_for_keyframe = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpH264Depay *self = GST_RTP_H264_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      g_value_set_boolean (value, self->wait_for_keyframe);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
 {
   GObjectClass *gobject_class;
@@ -111,6 +151,23 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h264_depay_finalize;
+  gobject_class->set_property = gst_rtp_h264_depay_set_property;
+  gobject_class->get_property = gst_rtp_h264_depay_get_property;
+
+  /**
+   * GstRtpH264Depay:wait-for-keyframe:
+   *
+   * Wait for the next keyframe after packet loss,
+   * meaningful only when outputting access units
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_WAIT_FOR_KEYFRAME,
+      g_param_spec_boolean ("wait-for-keyframe", "Wait for Keyframe",
+          "Wait for the next keyframe after packet loss, meaningful only when "
+          "outputting access units",
+          DEFAULT_WAIT_FOR_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_rtp_h264_depay_src_template);
@@ -139,6 +196,7 @@ gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay)
       (GDestroyNotify) gst_buffer_unref);
   rtph264depay->pps = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_buffer_unref);
+  rtph264depay->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
 }
 
 static void
@@ -146,6 +204,7 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay, gboolean hard)
 {
   gst_adapter_clear (rtph264depay->adapter);
   rtph264depay->wait_start = TRUE;
+  rtph264depay->waiting_for_keyframe = rtph264depay->wait_for_keyframe;
   gst_adapter_clear (rtph264depay->picture_adapter);
   rtph264depay->picture_start = FALSE;
   rtph264depay->last_keyframe = FALSE;
@@ -952,37 +1011,40 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   if (rtph264depay->merge) {
     gboolean start = FALSE, complete = FALSE;
 
+    /* consider a coded slices (IDR or not) to start a picture,
+     * (so ending the previous one) if first_mb_in_slice == 0
+     * (non-0 is part of previous one) */
+    /* NOTE this is not entirely according to Access Unit specs in 7.4.1.2.4,
+     * but in practice it works in sane cases, needs not much parsing,
+     * and also works with broken frame_num in NAL (where spec-wise would fail) */
+    /* FIXME: this code isn't correct for interlaced content as AUs should be
+     * constructed with pairs of fields and the guess here will just push out
+     * AUs with a single field in it */
+    if (nal_type == 1 || nal_type == 2 || nal_type == 5) {
+      /* we have a picture start */
+      start = TRUE;
+      if (map.data[5] & 0x80) {
+        /* first_mb_in_slice == 0 completes a picture */
+        complete = TRUE;
+      }
+    } else if (nal_type >= 6 && nal_type <= 9) {
+      /* SEI, SPS, PPS, AU terminate picture */
+      complete = TRUE;
+    }
+    GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
+
     /* marker bit isn't mandatory so in the following code we try to guess
      * an AU boundary by detecting a new picture start */
     if (!marker) {
-      /* consider a coded slices (IDR or not) to start a picture,
-       * (so ending the previous one) if first_mb_in_slice == 0
-       * (non-0 is part of previous one) */
-      /* NOTE this is not entirely according to Access Unit specs in 7.4.1.2.4,
-       * but in practice it works in sane cases, needs not much parsing,
-       * and also works with broken frame_num in NAL (where spec-wise would fail) */
-      /* FIXME: this code isn't correct for interlaced content as AUs should be
-       * constructed with pairs of fields and the guess here will just push out
-       * AUs with a single field in it */
-      if (nal_type == 1 || nal_type == 2 || nal_type == 5) {
-        /* we have a picture start */
-        start = TRUE;
-        if (map.data[5] & 0x80) {
-          /* first_mb_in_slice == 0 completes a picture */
-          complete = TRUE;
-        }
-      } else if (nal_type >= 6 && nal_type <= 9) {
-        /* SEI, SPS, PPS, AU terminate picture */
-        complete = TRUE;
-      }
-      GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
-
       if (complete && rtph264depay->picture_start)
         outbuf = gst_rtp_h264_complete_au (rtph264depay, &out_timestamp,
             &out_keyframe);
     }
     /* add to adapter */
     gst_buffer_unmap (nal, &map);
+
+    if (!rtph264depay->picture_start && start && out_keyframe)
+      rtph264depay->waiting_for_keyframe = FALSE;
 
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
     gst_adapter_push (rtph264depay->picture_adapter, nal);
@@ -1001,8 +1063,15 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   }
 
   if (outbuf) {
-    gst_rtp_h264_depay_push (rtph264depay, outbuf, out_keyframe, out_timestamp,
-        marker);
+    if (!rtph264depay->waiting_for_keyframe) {
+      gst_rtp_h264_depay_push (rtph264depay, outbuf, out_keyframe,
+          out_timestamp, marker);
+    } else {
+      GST_LOG_OBJECT (depayload,
+          "Dropping %" GST_PTR_FORMAT ", we are waiting for a keyframe",
+          outbuf);
+      gst_buffer_unref (outbuf);
+    }
   }
 
   return;
@@ -1056,12 +1125,19 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
+  if (!rtph264depay->merge)
+    rtph264depay->waiting_for_keyframe = FALSE;
+
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
     gst_adapter_clear (rtph264depay->adapter);
     rtph264depay->wait_start = TRUE;
     rtph264depay->current_fu_type = 0;
     rtph264depay->last_fu_seqnum = 0;
+
+    if (rtph264depay->merge && rtph264depay->wait_for_keyframe) {
+      rtph264depay->waiting_for_keyframe = TRUE;
+    }
   }
 
   {
