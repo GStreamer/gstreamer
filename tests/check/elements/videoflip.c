@@ -144,6 +144,82 @@ GST_START_TEST (test_change_method)
 
 GST_END_TEST;
 
+GST_START_TEST (test_change_method_twice_same_caps_different_method)
+{
+  GstHarness *flip = gst_harness_new ("videoflip");
+  GstVideoInfo in_info, out_info;
+  GstCaps *in_caps, *out_caps;
+  GstEvent *e;
+  GstBuffer *input, *output, *buf;
+  GstMapInfo in_map_info, out_map_info;
+
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, 4, 9);
+  in_caps = gst_video_info_to_caps (&in_info);
+
+  gst_harness_set_src_caps (flip, in_caps);
+
+  e = gst_harness_pull_event (flip);
+  fail_unless_equals_int (GST_EVENT_TYPE (e), GST_EVENT_STREAM_START);
+  gst_event_unref (e);
+  e = gst_harness_pull_event (flip);
+  fail_unless_equals_int (GST_EVENT_TYPE (e), GST_EVENT_CAPS);
+  gst_event_parse_caps (e, &out_caps);
+  fail_unless (gst_video_info_from_caps (&out_info, out_caps));
+  fail_unless_equals_int (GST_VIDEO_INFO_WIDTH (&in_info),
+      GST_VIDEO_INFO_WIDTH (&out_info));
+  fail_unless_equals_int (GST_VIDEO_INFO_HEIGHT (&in_info),
+      GST_VIDEO_INFO_HEIGHT (&out_info));
+  gst_event_unref (e);
+
+  e = gst_harness_pull_event (flip);
+  fail_unless_equals_int (GST_EVENT_TYPE (e), GST_EVENT_SEGMENT);
+  gst_event_unref (e);
+
+  buf = create_test_video_buffer_rgba8 (&in_info);
+  buf = gst_harness_push_and_pull (flip, buf);
+  fail_unless (buf != NULL);
+  gst_buffer_unref (buf);
+
+  g_object_set (flip->element, "video-direction", 1 /* 90r */ , NULL);
+  g_object_set (flip->element, "video-direction", 2 /* 180 */ , NULL);
+
+  input = create_test_video_buffer_rgba8 (&in_info);
+  fail_unless_equals_int (gst_harness_push (flip, gst_buffer_ref (input)),
+      GST_FLOW_OK);
+  /* caps will not change and basetransform won't send updated ones so we
+   * can't check for them */
+  output = gst_harness_pull (flip);
+  fail_unless (output != NULL);
+
+  fail_unless (gst_buffer_map (input, &in_map_info, GST_MAP_READ));
+  fail_unless (gst_buffer_map (output, &out_map_info, GST_MAP_READ));
+
+  {
+    gsize top_right = (GST_VIDEO_INFO_WIDTH (&in_info) - 1) * 4;
+    gsize bottom_left =
+        (GST_VIDEO_INFO_HEIGHT (&out_info) -
+        1) * GST_VIDEO_INFO_PLANE_STRIDE (&out_info, 0);
+
+    fail_unless_equals_int (in_map_info.data[top_right + 0],
+        out_map_info.data[bottom_left + 0]);
+    fail_unless_equals_int (in_map_info.data[top_right + 1],
+        out_map_info.data[bottom_left + 1]);
+    fail_unless_equals_int (in_map_info.data[top_right + 2],
+        out_map_info.data[bottom_left + 2]);
+    fail_unless_equals_int (in_map_info.data[top_right + 3],
+        out_map_info.data[bottom_left + 3]);
+  }
+
+  gst_buffer_unmap (input, &in_map_info);
+  gst_buffer_unmap (output, &out_map_info);
+
+  gst_buffer_unref (input);
+  gst_buffer_unref (output);
+
+  gst_harness_teardown (flip);
+}
+
+GST_END_TEST;
 GST_START_TEST (test_stress_change_method)
 {
   GstHarness *flip = gst_harness_new ("videoflip");
@@ -201,6 +277,8 @@ videoflip_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_passthrough);
   tcase_add_test (tc_chain, test_change_method);
+  tcase_add_test (tc_chain,
+      test_change_method_twice_same_caps_different_method);
   tcase_add_test (tc_chain, test_stress_change_method);
 
   return s;
