@@ -65,6 +65,7 @@ struct _MpegTSBaseStream
 
   GstMpegtsPMTStream *stream;
   GstStream          *stream_object;
+  gboolean            in_collection;
   gchar              *stream_id;
 };
 

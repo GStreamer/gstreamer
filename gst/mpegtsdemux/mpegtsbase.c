@@ -607,9 +607,11 @@ mpegts_base_program_add_stream (MpegTSBase * base,
   program->stream_list = g_list_append (program->stream_list, bstream);
 
   if (klass->stream_added)
-    if (klass->stream_added (base, bstream, program))
+    if (klass->stream_added (base, bstream, program)) {
       gst_stream_collection_add_stream (program->collection,
           (GstStream *) gst_object_ref (bstream->stream_object));
+      bstream->in_collection = TRUE;
+    }
 
 
   return bstream;
@@ -692,7 +694,7 @@ mpegts_base_update_program (MpegTSBase * base, MpegTSBaseProgram * program,
   /* Copy over gststream that still exist into the collection */
   for (tmp = program->stream_list; tmp; tmp = tmp->next) {
     MpegTSBaseStream *stream = (MpegTSBaseStream *) tmp->data;
-    if (_stream_in_pmt (pmt, stream)) {
+    if (_stream_in_pmt (pmt, stream) && stream->in_collection) {
       gst_stream_collection_add_stream (program->collection,
           gst_object_ref (stream->stream_object));
     }
