@@ -73,6 +73,7 @@ struct _GstRtpH264Depay
   GstAllocationParams params;
 
   gboolean wait_for_keyframe;
+  gboolean request_keyframe;
   gboolean waiting_for_keyframe;
 };
 

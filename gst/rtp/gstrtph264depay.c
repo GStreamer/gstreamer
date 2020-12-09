@@ -39,11 +39,13 @@ GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
 #define DEFAULT_BYTE_STREAM   TRUE
 #define DEFAULT_ACCESS_UNIT   FALSE
 #define DEFAULT_WAIT_FOR_KEYFRAME FALSE
+#define DEFAULT_REQUEST_KEYFRAME FALSE
 
 enum
 {
   PROP_0,
-  PROP_WAIT_FOR_KEYFRAME
+  PROP_WAIT_FOR_KEYFRAME,
+  PROP_REQUEST_KEYFRAME,
 };
 
 
@@ -117,6 +119,9 @@ gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
     case PROP_WAIT_FOR_KEYFRAME:
       self->wait_for_keyframe = g_value_get_boolean (value);
       break;
+    case PROP_REQUEST_KEYFRAME:
+      self->request_keyframe = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -132,6 +137,9 @@ gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WAIT_FOR_KEYFRAME:
       g_value_set_boolean (value, self->wait_for_keyframe);
+      break;
+    case PROP_REQUEST_KEYFRAME:
+      g_value_set_boolean (value, self->request_keyframe);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -169,6 +177,19 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
           DEFAULT_WAIT_FOR_KEYFRAME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpH264Depay:request-keyframe:
+   *
+   * Request new keyframe when packet loss is detected
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_REQUEST_KEYFRAME,
+      g_param_spec_boolean ("request-keyframe", "Request Keyframe",
+          "Request new keyframe when packet loss is detected",
+          DEFAULT_REQUEST_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_rtp_h264_depay_src_template);
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -197,6 +218,7 @@ gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay)
   rtph264depay->pps = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_buffer_unref);
   rtph264depay->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
+  rtph264depay->request_keyframe = DEFAULT_REQUEST_KEYFRAME;
 }
 
 static void
@@ -1138,6 +1160,12 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     if (rtph264depay->merge && rtph264depay->wait_for_keyframe) {
       rtph264depay->waiting_for_keyframe = TRUE;
     }
+
+
+    if (rtph264depay->request_keyframe)
+      gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depayload),
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 0));
   }
 
   {
