@@ -20,11 +20,13 @@ meta,
 
 
 crank-clock, repeat=5
+wait, on-clock=true
 wait, signal-name=waiting-data, target-element-name=giosrc
 
 checkpoint
 
 crank-clock, repeat=5
+wait, on-clock=true
 wait, signal-name=waiting-data, target-element-name=giosrc
 
 wait, signal-name=done-waiting-data, target-element-name=giosrc, non-blocking=true
@@ -36,7 +38,5 @@ wait, signal-name=waiting-data, target-element-name=giosrc
 
 checkpoint
 
-# Make sure EOS is outputted now.
+# Make sure EOS is outputted now, the scenario will automatically quit on EOS
 set-properties, giosrc::is_growing=false
-
-stop, on-message=eos
