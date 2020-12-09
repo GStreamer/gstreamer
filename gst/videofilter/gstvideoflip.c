@@ -135,6 +135,26 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
 
   ret = gst_caps_copy (caps);
 
+  GST_OBJECT_LOCK (videoflip);
+
+  if (videoflip->change_configuring_method) {
+    GEnumValue *configuring_method_enum, *method_enum;
+    GEnumClass *enum_class =
+        g_type_class_ref (GST_TYPE_VIDEO_ORIENTATION_METHOD);
+
+    configuring_method_enum =
+        g_enum_get_value (enum_class, videoflip->configuring_method);
+    method_enum = g_enum_get_value (enum_class, videoflip->proposed_method);
+    GST_LOG_OBJECT (videoflip,
+        "Changing configuring method from %s to proposed %s",
+        configuring_method_enum ? configuring_method_enum->value_nick : "(nil)",
+        method_enum ? method_enum->value_nick : "(nil)");
+    g_type_class_unref (enum_class);
+
+    videoflip->configuring_method = videoflip->proposed_method;
+  }
+  videoflip->change_configuring_method = FALSE;
+
   for (i = 0; i < gst_caps_get_size (ret); i++) {
     GstStructure *structure = gst_caps_get_structure (ret, i);
     gint par_n, par_d;
@@ -142,7 +162,7 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
     if (gst_structure_get_int (structure, "width", &width) &&
         gst_structure_get_int (structure, "height", &height)) {
 
-      switch (videoflip->active_method) {
+      switch (videoflip->configuring_method) {
         case GST_VIDEO_ORIENTATION_90R:
         case GST_VIDEO_ORIENTATION_90L:
         case GST_VIDEO_ORIENTATION_UL_LR:
@@ -177,6 +197,7 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
       }
     }
   }
+  GST_OBJECT_UNLOCK (videoflip);
 
   GST_DEBUG_OBJECT (videoflip, "transformed %" GST_PTR_FORMAT " to %"
       GST_PTR_FORMAT, caps, ret);
@@ -435,7 +456,7 @@ gst_video_flip_planar_yuv (GstVideoFlip * videoflip, GstVideoFrame * dest,
       }
       break;
     case GST_VIDEO_ORIENTATION_IDENTITY:
-      g_assert_not_reached ();
+      gst_video_frame_copy (dest, src);
       break;
     default:
       g_assert_not_reached ();
@@ -634,7 +655,7 @@ gst_video_flip_semi_planar_yuv (GstVideoFlip * videoflip, GstVideoFrame * dest,
       }
       break;
     case GST_VIDEO_ORIENTATION_IDENTITY:
-      g_assert_not_reached ();
+      gst_video_frame_copy (dest, src);
       break;
     default:
       g_assert_not_reached ();
@@ -735,7 +756,7 @@ gst_video_flip_packed_simple (GstVideoFlip * videoflip, GstVideoFrame * dest,
       }
       break;
     case GST_VIDEO_ORIENTATION_IDENTITY:
-      g_assert_not_reached ();
+      gst_video_frame_copy (dest, src);
       break;
     default:
       g_assert_not_reached ();
@@ -951,7 +972,7 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, GstVideoFrame * dest,
       }
       break;
     case GST_VIDEO_ORIENTATION_IDENTITY:
-      g_assert_not_reached ();
+      gst_video_frame_copy (dest, src);
       break;
     default:
       g_assert_not_reached ();
@@ -959,55 +980,10 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, GstVideoFrame * dest,
   }
 }
 
-
-static gboolean
-gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
-    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
+static void
+gst_video_flip_configure_process (GstVideoFlip * vf)
 {
-  GstVideoFlip *vf = GST_VIDEO_FLIP (vfilter);
-  gboolean ret = FALSE;
-
-  vf->process = NULL;
-
-  if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_INFO_FORMAT (out_info))
-    goto invalid_caps;
-
-  /* Check that they are correct */
-  switch (vf->active_method) {
-    case GST_VIDEO_ORIENTATION_90R:
-    case GST_VIDEO_ORIENTATION_90L:
-    case GST_VIDEO_ORIENTATION_UL_LR:
-    case GST_VIDEO_ORIENTATION_UR_LL:
-      if ((in_info->width != out_info->height) ||
-          (in_info->height != out_info->width)) {
-        GST_ERROR_OBJECT (vf, "we are inverting width and height but caps "
-            "are not correct : %dx%d to %dx%d", in_info->width,
-            in_info->height, out_info->width, out_info->height);
-        goto beach;
-      }
-      break;
-    case GST_VIDEO_ORIENTATION_IDENTITY:
-
-      break;
-    case GST_VIDEO_ORIENTATION_180:
-    case GST_VIDEO_ORIENTATION_HORIZ:
-    case GST_VIDEO_ORIENTATION_VERT:
-      if ((in_info->width != out_info->width) ||
-          (in_info->height != out_info->height)) {
-        GST_ERROR_OBJECT (vf, "we are keeping width and height but caps "
-            "are not correct : %dx%d to %dx%d", in_info->width,
-            in_info->height, out_info->width, out_info->height);
-        goto beach;
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  ret = TRUE;
-
-  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
+  switch (vf->v_format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -1041,8 +1017,80 @@ gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
     default:
       break;
   }
+}
+
+static gboolean
+gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
+{
+  GstVideoFlip *vf = GST_VIDEO_FLIP (vfilter);
+  gboolean ret = FALSE, need_reconfigure = FALSE;
+
+  vf->process = NULL;
+
+  if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_INFO_FORMAT (out_info))
+    goto invalid_caps;
+
+  /* Check that they are correct */
+  GST_OBJECT_LOCK (vf);
+  switch (vf->configuring_method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      if ((in_info->width != out_info->height) ||
+          (in_info->height != out_info->width)) {
+        GST_ERROR_OBJECT (vf, "we are inverting width and height but caps "
+            "are not correct : %dx%d to %dx%d", in_info->width,
+            in_info->height, out_info->width, out_info->height);
+        goto beach;
+      }
+      break;
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+    case GST_VIDEO_ORIENTATION_180:
+    case GST_VIDEO_ORIENTATION_HORIZ:
+    case GST_VIDEO_ORIENTATION_VERT:
+      if ((in_info->width != out_info->width) ||
+          (in_info->height != out_info->height)) {
+        GST_ERROR_OBJECT (vf, "we are keeping width and height but caps "
+            "are not correct : %dx%d to %dx%d", in_info->width,
+            in_info->height, out_info->width, out_info->height);
+        goto beach;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  ret = TRUE;
+
+  {
+    GEnumValue *active_method_enum, *method_enum;
+    GEnumClass *enum_class =
+        g_type_class_ref (GST_TYPE_VIDEO_ORIENTATION_METHOD);
+
+    active_method_enum = g_enum_get_value (enum_class, vf->active_method);
+    method_enum = g_enum_get_value (enum_class, vf->configuring_method);
+    GST_LOG_OBJECT (vf, "Changing active method from %s to configuring %s",
+        active_method_enum ? active_method_enum->value_nick : "(nil)",
+        method_enum ? method_enum->value_nick : "(nil)");
+    g_type_class_unref (enum_class);
+  }
+  vf->active_method = vf->configuring_method;
+  vf->change_configuring_method = TRUE;
+  if (vf->active_method != vf->proposed_method)
+    need_reconfigure = TRUE;
+
+  vf->v_format = GST_VIDEO_INFO_FORMAT (in_info);
+  gst_video_flip_configure_process (vf);
 
 beach:
+  GST_OBJECT_UNLOCK (vf);
+  if (need_reconfigure) {
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (vf));
+  }
+
   return ret && (vf->process != NULL);
 
 invalid_caps:
@@ -1075,7 +1123,7 @@ gst_video_flip_set_method (GstVideoFlip * videoflip,
   else
     method = videoflip->method;
 
-  if (method != videoflip->active_method) {
+  if (method != videoflip->proposed_method) {
     GEnumValue *active_method_enum, *method_enum;
     GstBaseTransform *btrans = GST_BASE_TRANSFORM (videoflip);
     GEnumClass *enum_class =
@@ -1084,12 +1132,12 @@ gst_video_flip_set_method (GstVideoFlip * videoflip,
     active_method_enum =
         g_enum_get_value (enum_class, videoflip->active_method);
     method_enum = g_enum_get_value (enum_class, method);
-    GST_DEBUG_OBJECT (videoflip, "Changing method from %s to %s",
+    GST_LOG_OBJECT (videoflip, "Changing method from %s to %s",
         active_method_enum ? active_method_enum->value_nick : "(nil)",
         method_enum ? method_enum->value_nick : "(nil)");
     g_type_class_unref (enum_class);
 
-    videoflip->active_method = method;
+    videoflip->proposed_method = method;
 
     GST_OBJECT_UNLOCK (videoflip);
 
@@ -1123,26 +1171,46 @@ gst_video_flip_transform_frame (GstVideoFilter * vfilter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
   GEnumClass *enum_class;
+  GstVideoOrientationMethod active, proposed;
   GEnumValue *active_method_enum;
   GstVideoFlip *videoflip = GST_VIDEO_FLIP (vfilter);
 
+  GST_OBJECT_LOCK (videoflip);
   if (G_UNLIKELY (videoflip->process == NULL))
     goto not_negotiated;
 
+  if (videoflip->configuring_method != videoflip->active_method) {
+    videoflip->active_method = videoflip->configuring_method;
+    gst_video_flip_configure_process (videoflip);
+  }
+
   enum_class = g_type_class_ref (GST_TYPE_VIDEO_ORIENTATION_METHOD);
   active_method_enum = g_enum_get_value (enum_class, videoflip->active_method);
-  GST_LOG_OBJECT (videoflip, "videoflip: flipping (%s)",
-      active_method_enum ? active_method_enum->value_nick : "(nil)");
+  GST_LOG_OBJECT (videoflip,
+      "videoflip: flipping (%s), input %ux%u output %ux%u",
+      active_method_enum ? active_method_enum->value_nick : "(nil)",
+      GST_VIDEO_FRAME_WIDTH (in_frame), GST_VIDEO_FRAME_HEIGHT (in_frame),
+      GST_VIDEO_FRAME_WIDTH (out_frame), GST_VIDEO_FRAME_HEIGHT (out_frame));
   g_type_class_unref (enum_class);
 
-  GST_OBJECT_LOCK (videoflip);
   videoflip->process (videoflip, out_frame, in_frame);
+
+  proposed = videoflip->proposed_method;
+  active = videoflip->active_method;
+  videoflip->change_configuring_method = TRUE;
   GST_OBJECT_UNLOCK (videoflip);
+
+  if (proposed != active) {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (videoflip),
+        proposed == GST_VIDEO_ORIENTATION_IDENTITY);
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (videoflip));
+  }
 
   return GST_FLOW_OK;
 
 not_negotiated:
   {
+    GST_OBJECT_UNLOCK (videoflip);
     GST_ERROR_OBJECT (videoflip, "Not negotiated yet");
     return GST_FLOW_NOT_NEGOTIATED;
   }
@@ -1168,6 +1236,7 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
       if (gst_structure_get_double (structure, "pointer_x", &x) &&
           gst_structure_get_double (structure, "pointer_y", &y)) {
         GST_DEBUG_OBJECT (vf, "converting %fx%f", x, y);
+        GST_OBJECT_LOCK (vf);
         switch (vf->active_method) {
           case GST_VIDEO_ORIENTATION_90R:
             new_x = y;
@@ -1202,6 +1271,7 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
             new_y = y;
             break;
         }
+        GST_OBJECT_UNLOCK (vf);
         GST_DEBUG_OBJECT (vf, "to %fx%f", new_x, new_y);
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
             "pointer_y", G_TYPE_DOUBLE, new_y, NULL);
@@ -1301,6 +1371,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
+  GParamSpec *pspec;
 
   GST_DEBUG_CATEGORY_INIT (video_flip_debug, "videoflip", 0, "videoflip");
 
@@ -1311,10 +1382,14 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
       g_param_spec_enum ("method", "method",
           "method (deprecated, use video-direction instead)",
           GST_TYPE_VIDEO_FLIP_METHOD, PROP_METHOD_DEFAULT,
-          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-          G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
       "video-direction");
+  /* override the overriden property's flags to include the mutable in playing
+   * flag */
+  pspec = g_object_class_find_property (gobject_class, "video-direction");
+  pspec->flags |= GST_PARAM_MUTABLE_PLAYING;
 
   gst_element_class_set_static_metadata (gstelement_class, "Video flipper",
       "Filter/Effect/Video",
@@ -1345,4 +1420,6 @@ gst_video_flip_init (GstVideoFlip * videoflip)
   /* AUTO is not valid for active method, this is just to ensure we setup the
    * method in gst_video_flip_set_method() */
   videoflip->active_method = GST_VIDEO_ORIENTATION_AUTO;
+  videoflip->proposed_method = GST_VIDEO_ORIENTATION_IDENTITY;
+  videoflip->configuring_method = GST_VIDEO_ORIENTATION_IDENTITY;
 }

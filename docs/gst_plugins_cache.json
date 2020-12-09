@@ -25542,7 +25542,7 @@
                         "construct-only": false,
                         "controllable": true,
                         "default": "none (0)",
-                        "mutable": "null",
+                        "mutable": "playing",
                         "readable": true,
                         "type": "GstVideoFlipMethod",
                         "writable": true
