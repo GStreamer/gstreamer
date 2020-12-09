@@ -64,11 +64,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "encoding-name = (string) { \"VP8\", \"VP8-DRAFT-IETF-01\" }"));
 
 #define DEFAULT_WAIT_FOR_KEYFRAME FALSE
+#define DEFAULT_REQUEST_KEYFRAME FALSE
 
 enum
 {
   PROP_0,
-  PROP_WAIT_FOR_KEYFRAME
+  PROP_WAIT_FOR_KEYFRAME,
+  PROP_REQUEST_KEYFRAME,
 };
 
 #define PICTURE_ID_NONE (UINT_MAX)
@@ -80,6 +82,7 @@ gst_rtp_vp8_depay_init (GstRtpVP8Depay * self)
   self->adapter = gst_adapter_new ();
   self->started = FALSE;
   self->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
+  self->request_keyframe = DEFAULT_REQUEST_KEYFRAME;
   self->last_pushed_was_lost_event = FALSE;
 }
 
@@ -109,6 +112,19 @@ gst_rtp_vp8_depay_class_init (GstRtpVP8DepayClass * gst_rtp_vp8_depay_class)
       g_param_spec_boolean ("wait-for-keyframe", "Wait for Keyframe",
           "Wait for the next keyframe after packet loss",
           DEFAULT_WAIT_FOR_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpVP8Depay:request-keyframe:
+   *
+   * Request new keyframe when packet loss is detected
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (object_class, PROP_REQUEST_KEYFRAME,
+      g_param_spec_boolean ("request-keyframe", "Request Keyframe",
+          "Request new keyframe when packet loss is detected",
+          DEFAULT_REQUEST_KEYFRAME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_rtp_vp8_depay_change_state;
@@ -146,6 +162,9 @@ gst_rtp_vp8_depay_set_property (GObject * object, guint prop_id,
     case PROP_WAIT_FOR_KEYFRAME:
       self->wait_for_keyframe = g_value_get_boolean (value);
       break;
+    case PROP_REQUEST_KEYFRAME:
+      self->request_keyframe = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -161,6 +180,9 @@ gst_rtp_vp8_depay_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WAIT_FOR_KEYFRAME:
       g_value_set_boolean (value, self->wait_for_keyframe);
+      break;
+    case PROP_REQUEST_KEYFRAME:
+      g_value_set_boolean (value, self->request_keyframe);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -276,6 +298,11 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
 
     if (self->wait_for_keyframe)
       self->waiting_for_keyframe = TRUE;
+
+    if (self->request_keyframe)
+      gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depay),
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 0));
   }
 
   /* At least one header and one vp8 byte */
