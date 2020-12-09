@@ -98,6 +98,7 @@ good_tests = [
   [ 'elements/videobox' ],
   [ 'elements/videocrop' ],
   [ 'elements/videofilter' ],
+  [ 'elements/videoflip' ],
   [ 'elements/videomixer' ],
   [ 'elements/aspectratiocrop' ],
   [ 'pipelines/wavenc' ],
