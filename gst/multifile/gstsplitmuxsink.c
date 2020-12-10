@@ -2768,7 +2768,12 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
     switch (splitmux->input_state) {
       case SPLITMUX_INPUT_STATE_COLLECTING_GOP_START:
-        if (ctx->is_reference) {
+        if (ctx->is_releasing) {
+          /* The pad belonging to this context is being released */
+          GST_WARNING_OBJECT (pad, "Pad is being released while the muxer is "
+              "running. Data might not drain correctly");
+          loop_again = FALSE;
+        } else if (ctx->is_reference) {
           /* This is the reference context. If it's a keyframe,
            * it marks the start of a new GOP and we should wait in
            * check_completed_gop before continuing, but either way
@@ -3232,6 +3237,9 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
 
   GST_SPLITMUX_LOCK (splitmux);
 
+  ctx->is_releasing = TRUE;
+  GST_SPLITMUX_BROADCAST_INPUT (splitmux);
+
   /* Can release the context now */
   mq_stream_ctx_free (ctx);
   if (ctx == splitmux->reference_ctx)
@@ -3253,6 +3261,10 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
   /* Reset the internal elements only after all request pads are released */
   if (splitmux->contexts == NULL)
     gst_splitmux_reset_elements (splitmux);
+
+  /* Wake up other input streams to check if the completion conditions have
+   * changed */
+  GST_SPLITMUX_BROADCAST_INPUT (splitmux);
 
 fail:
   GST_SPLITMUX_UNLOCK (splitmux);
