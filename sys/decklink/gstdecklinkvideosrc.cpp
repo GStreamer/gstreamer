@@ -223,6 +223,8 @@ static GstStateChangeReturn
 gst_decklink_video_src_change_state (GstElement * element,
     GstStateChange transition);
 
+static GstCaps *gst_decklink_video_src_get_caps (GstBaseSrc * bsrc,
+    GstCaps * filter);
 static gboolean gst_decklink_video_src_query (GstBaseSrc * bsrc,
     GstQuery * query);
 static gboolean gst_decklink_video_src_unlock (GstBaseSrc * bsrc);
@@ -259,6 +261,7 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
 
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_decklink_video_src_query);
   basesrc_class->negotiate = NULL;
+  basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_video_src_get_caps);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock);
   basesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock_stop);
@@ -1372,6 +1375,31 @@ retry:
   capture_frame_clear (&f);
 
   return flow_ret;
+}
+
+static GstCaps *
+gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
+{
+  GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
+  GstCaps *caps;
+
+  if (self->mode != GST_DECKLINK_MODE_AUTO) {
+    caps = gst_decklink_mode_get_caps (self->mode, self->caps_format, TRUE);
+  } else if (self->caps_mode != GST_DECKLINK_MODE_AUTO) {
+    caps =
+        gst_decklink_mode_get_caps (self->caps_mode, self->caps_format, TRUE);
+  } else {
+    caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
+  }
+
+  if (filter) {
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
+  }
+
+  return caps;
 }
 
 static gboolean

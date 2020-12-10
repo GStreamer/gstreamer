@@ -125,6 +125,8 @@ gst_decklink_audio_src_change_state (GstElement * element,
 
 static gboolean gst_decklink_audio_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_decklink_audio_src_unlock_stop (GstBaseSrc * bsrc);
+static GstCaps *gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc,
+    GstCaps * filter);
 static gboolean gst_decklink_audio_src_query (GstBaseSrc * bsrc,
     GstQuery * query);
 
@@ -156,6 +158,7 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
 
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_query);
   basesrc_class->negotiate = NULL;
+  basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_get_caps);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_decklink_audio_src_unlock);
   basesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_src_unlock_stop);
@@ -795,6 +798,42 @@ retry:
   capture_packet_clear (&p);
 
   return flow_ret;
+}
+
+static GstCaps *
+gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
+{
+  GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (bsrc);
+  GstCaps *caps, *template_caps;
+  const GstStructure *s;
+  gint channels;
+
+  channels = self->channels;
+  if (channels == 0)
+    channels = self->channels_found;
+
+  template_caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
+  if (channels == 0) {
+    caps = template_caps;
+  } else {
+    if (channels > 2)
+      s = gst_caps_get_structure (template_caps, 1);
+    else
+      s = gst_caps_get_structure (template_caps, 0);
+
+    caps = gst_caps_new_full (gst_structure_copy (s), NULL);
+    gst_caps_set_simple (caps, "channels", G_TYPE_INT, channels, NULL);
+    gst_caps_unref (template_caps);
+  }
+
+  if (filter) {
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
+  }
+
+  return caps;
 }
 
 static gboolean
