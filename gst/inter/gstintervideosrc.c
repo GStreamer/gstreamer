@@ -498,8 +498,9 @@ gst_inter_video_src_fixate (GstBaseSrc * src, GstCaps * caps)
   if (gst_structure_has_field (structure, "chroma-site"))
     gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
 
-  if (gst_structure_has_field (structure, "interlaced"))
-    gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
+  if (gst_structure_has_field (structure, "interlace-mode"))
+    gst_structure_fixate_field_string (structure, "interlace-mode",
+        "progressive");
 
   return caps;
 }
