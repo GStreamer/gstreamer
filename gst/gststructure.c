@@ -2337,6 +2337,14 @@ priv_gst_structure_parse_fields (gchar * str, gchar ** end,
                 && g_ascii_isspace (r[1]))))
       r++;
 
+    /* Trailing comma */
+    if (*r == '\0') {
+      break;
+    } else if (*r == ';') {
+      r++;
+      break;
+    }
+
     memset (&field, 0, sizeof (field));
     if (G_UNLIKELY (!gst_structure_parse_field (r, &r, &field))) {
       GST_WARNING ("Failed to parse field, r=%s", r);
