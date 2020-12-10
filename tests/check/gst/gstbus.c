@@ -900,6 +900,32 @@ GST_START_TEST (test_async_message)
 
 GST_END_TEST;
 
+GST_START_TEST (test_single_gsource)
+{
+  GstBus *bus = gst_bus_new ();
+  GSource *source = gst_bus_create_watch (bus);
+  g_source_attach (source, NULL);
+  g_source_unref (source);
+
+  source = gst_bus_create_watch (bus);
+  fail_if (source, "Only one GSource can be added to a bus");
+
+  ASSERT_CRITICAL (gst_bus_add_signal_watch (bus));
+  ASSERT_CRITICAL (gst_bus_remove_signal_watch (bus));
+
+  fail_unless (gst_bus_remove_watch (bus), "Could not remove watch");
+  gst_bus_add_signal_watch (bus);
+
+  fail_if (gst_bus_remove_watch (bus), "Signal watch should be removed"
+      " with gst_bus_remove_signal_watch");
+
+  gst_bus_remove_signal_watch (bus);
+
+  gst_object_unref (bus);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bus_suite (void)
 {
@@ -922,6 +948,7 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_timed_pop_filtered_with_timeout);
   tcase_add_test (tc_chain, test_custom_main_context);
   tcase_add_test (tc_chain, test_async_message);
+  tcase_add_test (tc_chain, test_single_gsource);
   return s;
 }
 
