@@ -191,7 +191,6 @@ msdk_open_session (mfxIMPL impl)
   };
   mfxIMPL implementation;
   mfxStatus status;
-  mfxU16 codename;
 
   static const gchar *implementation_names[] = {
     "AUTO", "SOFTWARE", "HARDWARE", "AUTO_ANY", "HARDWARE_ANY", "HARDWARE2",
@@ -218,13 +217,6 @@ msdk_open_session (mfxIMPL impl)
     goto failed;
   }
 
-  codename = msdk_get_platform_codename (session);
-
-  if (codename != MFX_PLATFORM_UNKNOWN)
-    GST_INFO ("Detected MFX platform with device code %d", codename);
-  else
-    GST_WARNING ("Unknown MFX platform");
-
   GST_INFO ("MFX implementation: 0x%04x (%s)", implementation,
       implementation_names[MFX_IMPL_BASETYPE (implementation)]);
   GST_INFO ("MFX version: %d.%d", version.Major, version.Minor);
@@ -239,12 +231,14 @@ failed:
 gboolean
 msdk_is_available (void)
 {
-  mfxSession session = msdk_open_session (MFX_IMPL_HARDWARE_ANY);
-  if (!session) {
+  /* Make sure we can create GstMsdkContext instance (the job type is not used actually) */
+  GstMsdkContext *msdk_context = gst_msdk_context_new (1, GST_MSDK_JOB_DECODER);
+
+  if (!msdk_context) {
     return FALSE;
   }
 
-  msdk_close_session (session);
+  gst_object_unref (msdk_context);
   return TRUE;
 }
 
