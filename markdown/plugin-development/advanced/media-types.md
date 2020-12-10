@@ -82,28 +82,28 @@ will recognize AVI files, which start with a “RIFF” tag, then the size
 of the file and then an “AVI” tag:
 
 ``` c
+static GstStaticCaps avi_caps = GST_STATIC_CAPS ("video/x-msvideo");
+#define AVI_CAPS gst_static_caps_get(&avi_caps)
 static void
-gst_my_typefind_function (GstTypeFind *tf,
-              gpointer     data)
+gst_avi_typefind_function (GstTypeFind *tf,
+              gpointer     pointer)
 {
   guint8 *data = gst_type_find_peek (tf, 0, 12);
 
   if (data &&
       GUINT32_FROM_LE (&((guint32 *) data)[0]) == GST_MAKE_FOURCC ('R','I','F','F') &&
       GUINT32_FROM_LE (&((guint32 *) data)[2]) == GST_MAKE_FOURCC ('A','V','I',' ')) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
-               gst_caps_new_simple ("video/x-msvideo", NULL));
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, AVI_CAPS);
   }
 }
+
+GST_TYPE_FIND_REGISTER_DEFINE(avi, "video/x-msvideo", GST_RANK_PRIMARY,
+    gst_avi_typefind_function, "avi", AVI_CAPS, NULL, NULL);
 
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  if (!gst_type_find_register (plugin, "", GST_RANK_PRIMARY,
-                   gst_my_typefind_function, "avi",
-                   gst_caps_new_simple ("video/x-msvideo",
-                            NULL), NULL))
-    return FALSE;
+  return GST_TYPEFIND_REGISTER(avi, plugin);
 }
 
 ```
