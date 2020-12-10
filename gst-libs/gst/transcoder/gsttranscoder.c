@@ -920,7 +920,6 @@ gst_transcoder_main (gpointer data)
   GstTranscoder *self = GST_TRANSCODER (data);
   GstBus *bus;
   GSource *source;
-  GSource *bus_source;
 
   GST_TRACE_OBJECT (self, "Starting main thread");
 
@@ -933,10 +932,7 @@ gst_transcoder_main (gpointer data)
   g_source_unref (source);
 
   self->bus = bus = gst_element_get_bus (self->transcodebin);
-  bus_source = gst_bus_create_watch (bus);
-  g_source_set_callback (bus_source, (GSourceFunc) gst_bus_async_signal_func,
-      NULL, NULL);
-  g_source_attach (bus_source, self->context);
+  gst_bus_add_signal_watch (bus);
 
   g_signal_connect (G_OBJECT (bus), "message::error", G_CALLBACK (error_cb),
       self);
@@ -965,8 +961,7 @@ gst_transcoder_main (gpointer data)
   g_main_loop_run (self->loop);
   GST_TRACE_OBJECT (self, "Stopped main loop");
 
-  g_source_destroy (bus_source);
-  g_source_unref (bus_source);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
 
   remove_tick_source (self);
