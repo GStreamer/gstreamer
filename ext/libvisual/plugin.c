@@ -30,8 +30,8 @@ GST_DEBUG_CATEGORY (libvisual_debug);
 static void
 libvisual_log_handler (const char *message, const char *funcname, void *priv)
 {
-  GST_CAT_LEVEL_LOG (libvisual_debug, (GstDebugLevel) (priv), NULL, "%s - %s",
-      funcname, message);
+  GST_CAT_LEVEL_LOG (libvisual_debug, (GstDebugLevel) GPOINTER_TO_INT (priv),
+      NULL, "%s - %s", funcname, message);
 }
 
 /*
@@ -86,13 +86,14 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_LOW);
-  visual_log_set_info_handler (libvisual_log_handler, (void *) GST_LEVEL_INFO);
+  visual_log_set_info_handler (libvisual_log_handler,
+      GINT_TO_POINTER (GST_LEVEL_INFO));
   visual_log_set_warning_handler (libvisual_log_handler,
-      (void *) GST_LEVEL_WARNING);
+      GINT_TO_POINTER (GST_LEVEL_WARNING));
   visual_log_set_critical_handler (libvisual_log_handler,
-      (void *) GST_LEVEL_ERROR);
+      GINT_TO_POINTER (GST_LEVEL_ERROR));
   visual_log_set_error_handler (libvisual_log_handler,
-      (void *) GST_LEVEL_ERROR);
+      GINT_TO_POINTER (GST_LEVEL_ERROR));
 
   if (!visual_is_initialized ())
     if (visual_init (NULL, NULL) != 0)
