@@ -53,7 +53,6 @@ G_END_DECLS
 
 /**
  * GST_ELEMENT_REGISTER_DEFINE_CUSTOM:
- *
  * @element: The element name in lower case, with words separated by '_'.
  * Used to generate `gst_element_register_*(GstPlugin* plugin)`.
  * @register_func: pointer to a method with the format: `gboolean register_func (GstPlugin* plugin);`
@@ -80,7 +79,6 @@ G_END_DECLS
 
 /**
  * GST_ELEMENT_REGISTER_DEFINE:
- *
  * @e: The element name in lower case, with words separated by '_'.
  * Used to generate `gst_element_register_*(GstPlugin* plugin)`.
  * @e_n: The public name of the element
@@ -102,7 +100,6 @@ G_END_DECLS
 
 /**
  * GST_ELEMENT_REGISTER_DEFINE_WITH_CODE:
- *
  * @e: The element name in lower case, with words separated by '_'.
  * Used to generate `gst_element_register_*(GstPlugin* plugin)`.
  * @e_n: The public name of the element

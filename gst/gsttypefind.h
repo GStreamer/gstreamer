@@ -30,7 +30,6 @@
 G_BEGIN_DECLS
 /**
  * GST_TYPE_FIND_REGISTER_DEFINE_CUSTOM:
- *
  * @type_find: The type find name in lower case, with words separated by '_'.
  * Used to generate `gst_type_find_register_*(GstPlugin* plugin)`.
  * @register_func: pointer to a method with the format: `gboolean register_func (GstPlugin* plugin);`
@@ -57,7 +56,6 @@ G_END_DECLS
 
 /**
  * GST_TYPE_FIND_REGISTER_DEFINE:
- *
  * @t_f: The type find name in lower case, with words separated by '_'.
  * Used to generate `gst_type_find_register_*(GstPlugin* plugin)`.
  * @t_f_n: The public name of the type find

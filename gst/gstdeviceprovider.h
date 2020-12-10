@@ -28,7 +28,6 @@
 
 /**
  * GST_DEVICE_PROVIDER_REGISTER_DEFINE:
- *
  * @d_p: The device provider name in lower case, with words separated by '_'.
  * Used to generate `gst_device_provider_register_*(GstPlugin* plugin)`.
  * @d_p_n: The public name of the device provider

@@ -24,7 +24,6 @@
 
 /**
  * GST_DYNAMIC_TYPE_REGISTER_DEFINE:
- *
  * @t_n: The dynamic type name in lower case, with words separated by '_'.
  * Used to generate `gst_dynamic_type_register_*(GstPlugin* plugin)`.
  * @t: The #GType of the dynamic type
