@@ -805,13 +805,6 @@ typedef struct
 } GstBusSource;
 
 static gboolean
-gst_bus_source_prepare (GSource * source, gint * timeout)
-{
-  *timeout = -1;
-  return FALSE;
-}
-
-static gboolean
 gst_bus_source_check (GSource * source)
 {
   GstBusSource *bsrc = (GstBusSource *) source;
@@ -902,7 +895,7 @@ gst_bus_source_finalize (GSource * source)
 }
 
 static GSourceFuncs gst_bus_source_funcs = {
-  gst_bus_source_prepare,
+  NULL,
   gst_bus_source_check,
   gst_bus_source_dispatch,
   gst_bus_source_finalize
