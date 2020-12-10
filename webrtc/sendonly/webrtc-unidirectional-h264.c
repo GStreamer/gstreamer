@@ -19,6 +19,12 @@
 #define SOUP_HTTP_PORT 57778
 #define STUN_SERVER "stun.l.google.com:19302"
 
+#ifdef G_OS_WIN32
+#define VIDEO_SRC "mfvideosrc"
+#else
+#define VIDEO_SRC "v4l2src"
+#endif
+
 gchar *video_priority = NULL;
 gchar *audio_priority = NULL;
 
@@ -232,11 +238,12 @@ create_receiver_entry (SoupWebsocketConnection * connection)
   receiver_entry->pipeline =
       gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://"
       STUN_SERVER " "
-      "v4l2src ! videorate ! videoscale ! video/x-raw,width=640,height=360,framerate=15/1 ! videoconvert ! queue max-size-buffers=1 ! x264enc bitrate=600 speed-preset=ultrafast tune=zerolatency key-int-max=15 ! video/x-h264,profile=constrained-baseline ! queue max-size-time=100000000 ! h264parse ! "
+      VIDEO_SRC
+      " ! videorate ! videoscale ! video/x-raw,width=640,height=360,framerate=15/1 ! videoconvert ! queue max-size-buffers=1 ! x264enc bitrate=600 speed-preset=ultrafast tune=zerolatency key-int-max=15 ! video/x-h264,profile=constrained-baseline ! queue max-size-time=100000000 ! h264parse ! "
       "rtph264pay config-interval=-1 name=payloader aggregate-mode=zero-latency ! "
       "application/x-rtp,media=video,encoding-name=H264,payload="
       RTP_PAYLOAD_TYPE " ! webrtcbin. "
-      "autoaudiosrc is-live=1 ! queue max-size-buffers=1 leaky=downstream ! opusenc ! rtpopuspay pt="
+      "autoaudiosrc is-live=1 ! queue max-size-buffers=1 leaky=downstream ! audioconvert ! audioresample ! opusenc ! rtpopuspay pt="
       RTP_AUDIO_PAYLOAD_TYPE " ! webrtcbin. ", &error);
   if (error != NULL) {
     g_error ("Could not create WebRTC pipeline: %s\n", error->message);
