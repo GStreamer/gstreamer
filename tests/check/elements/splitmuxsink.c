@@ -289,9 +289,18 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   gst_object_unref (pipeline);
 }
 
+struct splitmux_location_state
+{
+  GstElement *splitmuxsink;
+  gboolean got_format_location;
+  gboolean fragment_opened;
+  gchar *current_location;
+};
+
 static gchar *
 check_format_location (GstElement * object,
-    guint fragment_id, GstSample * first_sample)
+    guint fragment_id, GstSample * first_sample,
+    struct splitmux_location_state *location_state)
 {
   GstBuffer *buf = gst_sample_get_buffer (first_sample);
 
@@ -300,7 +309,52 @@ check_format_location (GstElement * object,
   GST_LOG ("New file - first buffer %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
+  if (location_state) {
+    fail_unless (location_state->got_format_location == FALSE,
+        "Got format-location signal twice without an intervening splitmuxsink-fragment-closed");
+    location_state->got_format_location = TRUE;
+  }
+
   return NULL;
+}
+
+static GstBusSyncReply
+bus_sync_handler (GstBus * bus, GstMessage * message,
+    struct splitmux_location_state *location_state)
+{
+  switch (message->type) {
+    case GST_MESSAGE_ELEMENT:
+    {
+      const GstStructure *s = gst_message_get_structure (message);
+      if (message->src == GST_OBJECT_CAST (location_state->splitmuxsink)) {
+        if (gst_structure_has_name (s, "splitmuxsink-fragment-opened")) {
+          const gchar *location = gst_structure_get_string (s, "location");
+          fail_unless (location != NULL);
+          fail_unless (location_state->got_format_location == TRUE,
+              "Failed to get format-location before fragment start");
+          fail_unless (location_state->fragment_opened == FALSE);
+          location_state->fragment_opened = TRUE;
+
+          /* The location must be different to last time */
+          fail_unless (location_state->current_location == NULL
+              || !g_str_equal (location_state->current_location, location));
+          g_free (location_state->current_location);
+          location_state->current_location = g_strdup (location);
+
+        } else if (gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
+          fail_unless (location_state->got_format_location == TRUE);
+          fail_unless (location_state->fragment_opened == TRUE);
+          location_state->got_format_location = FALSE;  /* We need another format-location before the next open */
+          location_state->fragment_opened = FALSE;
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BUS_PASS;
 }
 
 GST_START_TEST (test_splitmuxsink)
@@ -313,6 +367,8 @@ GST_START_TEST (test_splitmuxsink)
   gchar *dest_pattern;
   guint count;
   gchar *in_pattern;
+  struct splitmux_location_state location_state = { NULL, FALSE, FALSE, NULL };
+  GstBus *bus;
 
   /* This pipeline has a small time cutoff - it should start a new file
    * every GOP, ie 1 second */
@@ -322,16 +378,26 @@ GST_START_TEST (test_splitmuxsink)
       " queue ! theoraenc keyframe-force=5 ! splitmuxsink name=splitsink "
       " max-size-time=1000000 max-size-bytes=1000000 muxer=oggmux", NULL);
   fail_if (pipeline == NULL);
-  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  location_state.splitmuxsink = sink =
+      gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
   fail_if (sink == NULL);
   g_signal_connect (sink, "format-location-full",
-      (GCallback) check_format_location, NULL);
+      (GCallback) check_format_location, &location_state);
+
   dest_pattern = g_build_filename (tmpdir, "out%05d.ogg", NULL);
   g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
   g_free (dest_pattern);
   g_object_unref (sink);
 
+  bus = gst_element_get_bus (pipeline);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
+      &location_state, NULL);
+  gst_object_unref (bus);
+
   msg = run_pipeline (pipeline);
+
+  /* Clean up the location state */
+  g_free (location_state.current_location);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
