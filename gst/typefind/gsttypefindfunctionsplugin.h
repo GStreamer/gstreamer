@@ -29,6 +29,9 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (type_find_functions_debug);
+#define GST_CAT_DEFAULT type_find_functions_debug
+
 /*** plugin initialization ***/
 
 /*RIFF type find declaration */

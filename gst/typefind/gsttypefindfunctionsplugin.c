@@ -30,14 +30,13 @@
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_STATIC (type_find_debug);
-#define GST_CAT_DEFAULT type_find_debug
+GST_DEBUG_CATEGORY (type_find_functions_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   /* can't initialize this via a struct as caps can't be statically initialized */
-  GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
+  GST_DEBUG_CATEGORY_INIT (type_find_functions_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
   /* note: asx/wax/wmx are XML files, asf doesn't handle them */
   /* must use strings, macros don't accept initializers */

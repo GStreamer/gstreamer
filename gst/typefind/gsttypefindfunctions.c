@@ -45,9 +45,6 @@
 
 #include "gsttypefindfunctionsplugin.h"
 
-GST_DEBUG_CATEGORY_STATIC (type_find_debug);
-#define GST_CAT_DEFAULT type_find_debug
-
 /* DataScanCtx: helper for typefind functions that scan through data
  * step-by-step, to avoid doing a peek at each and every offset */
 

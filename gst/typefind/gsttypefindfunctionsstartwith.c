@@ -33,9 +33,6 @@
 #include "gsttypefindfunctionsplugin.h"
 #include "gsttypefindfunctionsdata.h"
 
-GST_DEBUG_CATEGORY_STATIC (type_find_debug);
-#define GST_CAT_DEFAULT type_find_debug
-
 static void
 start_with_type_find (GstTypeFind * tf, gpointer private)
 {
