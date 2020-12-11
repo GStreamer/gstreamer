@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <scerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,28 +25,14 @@
 
 #include "gsttcpelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+GST_DEBUG_CATEGORY (tcp_debug);
+
+void
+tcp_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (socketsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (tcpclientsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (tcpclientsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (tcpserversink, plugin);
-  ret |= GST_ELEMENT_REGISTER (tcpserversrc, plugin);
-
-#ifdef HAVE_SYS_SOCKET_H
-  ret |= GST_ELEMENT_REGISTER (multifdsink, plugin);
-
-#endif
-  ret |= GST_ELEMENT_REGISTER (multisocketsink, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (tcp_debug, "tcp", 0, "TCP calls");
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    tcp,
-    "transfer data over the network via TCP",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

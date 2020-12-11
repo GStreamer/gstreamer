@@ -44,6 +44,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include "gsttcp.h"
+#include "gsttcpelements.h"
 #include "gsttcpclientsink.h"
 
 /* TCPClientSink signals and args */
@@ -90,6 +91,8 @@ static void gst_tcp_client_sink_get_property (GObject * object, guint prop_id,
 
 #define gst_tcp_client_sink_parent_class parent_class
 G_DEFINE_TYPE (GstTCPClientSink, gst_tcp_client_sink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tcpclientsink, "tcpclientsink",
+    GST_RANK_NONE, GST_TYPE_TCP_CLIENT_SINK, tcp_element_init (plugin));
 
 static void
 gst_tcp_client_sink_class_init (GstTCPClientSinkClass * klass)

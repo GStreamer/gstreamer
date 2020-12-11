@@ -41,6 +41,7 @@
 #include <string.h>             /* memset */
 
 #include "gsttcp.h"
+#include "gsttcpelements.h"
 #include "gsttcpserversink.h"
 
 #define TCP_BACKLOG             5
@@ -71,6 +72,8 @@ static void gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
 #define gst_tcp_server_sink_parent_class parent_class
 G_DEFINE_TYPE (GstTCPServerSink, gst_tcp_server_sink,
     GST_TYPE_MULTI_SOCKET_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tcpserversink, "tcpserversink",
+    GST_RANK_NONE, GST_TYPE_TCP_SERVER_SINK, tcp_element_init (plugin));
 
 static void
 gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)

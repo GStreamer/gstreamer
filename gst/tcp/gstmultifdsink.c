@@ -119,6 +119,7 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 
+#include "gsttcpelements.h"
 #include "gstmultifdsink.h"
 
 #define NOT_IMPLEMENTED 0
@@ -194,6 +195,8 @@ static void gst_multi_fd_sink_get_property (GObject * object, guint prop_id,
 
 #define gst_multi_fd_sink_parent_class parent_class
 G_DEFINE_TYPE (GstMultiFdSink, gst_multi_fd_sink, GST_TYPE_MULTI_HANDLE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (multifdsink, "multifdsink",
+    GST_RANK_NONE, GST_TYPE_MULTI_FD_SINK, tcp_element_init (plugin));
 
 static guint gst_multi_fd_sink_signals[LAST_SIGNAL] = { 0 };
 

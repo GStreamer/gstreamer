@@ -109,6 +109,7 @@
 #include <string.h>
 
 #include "gstmultisocketsink.h"
+#include "gsttcpelements.h"
 
 #ifndef G_OS_WIN32
 #include <netinet/in.h>
@@ -206,6 +207,8 @@ static void gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
 #define gst_multi_socket_sink_parent_class parent_class
 G_DEFINE_TYPE (GstMultiSocketSink, gst_multi_socket_sink,
     GST_TYPE_MULTI_HANDLE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (multisocketsink, "multisocketsink",
+    GST_RANK_NONE, GST_TYPE_MULTI_SOCKET_SINK, tcp_element_init (plugin));
 
 static guint gst_multi_socket_sink_signals[LAST_SIGNAL] = { 0 };
 

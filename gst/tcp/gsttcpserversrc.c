@@ -42,6 +42,7 @@
 
 #include <gst/gst-i18n-plugin.h>
 #include "gsttcp.h"
+#include "gsttcpelements.h"
 #include "gsttcpsrcstats.h"
 #include "gsttcpserversrc.h"
 
@@ -69,6 +70,8 @@ enum
 
 #define gst_tcp_server_src_parent_class parent_class
 G_DEFINE_TYPE (GstTCPServerSrc, gst_tcp_server_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tcpserversrc, "tcpserversrc",
+    GST_RANK_NONE, GST_TYPE_TCP_SERVER_SRC, tcp_element_init (plugin));
 
 static void gst_tcp_server_src_finalize (GObject * gobject);
 
