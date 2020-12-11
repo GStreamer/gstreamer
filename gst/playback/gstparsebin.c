@@ -3953,8 +3953,10 @@ gst_parse_pad_stream_start_event (GstParsePad * parsepad, GstEvent * event)
   GstStream *stream = NULL;
   const gchar *stream_id = NULL;
   gboolean repeat_event = FALSE;
+  GstStreamFlags streamflags;
 
   gst_event_parse_stream_start (event, &stream_id);
+  gst_event_parse_stream_flags (event, &streamflags);
 
   if (parsepad->active_stream != NULL &&
       g_str_equal (parsepad->active_stream->stream_id, stream_id))
@@ -3989,7 +3991,7 @@ gst_parse_pad_stream_start_event (GstParsePad * parsepad, GstEvent * event)
     } else {
       stream =
           gst_stream_new (stream_id, NULL, GST_STREAM_TYPE_UNKNOWN,
-          GST_STREAM_FLAG_NONE);
+          streamflags);
       gst_object_replace ((GstObject **) & parsepad->active_stream,
           (GstObject *) stream);
     }
