@@ -683,7 +683,7 @@ gst_harness_new_empty (void)
   h->priv = g_new0 (GstHarnessPrivate, 1);
   priv = h->priv;
 
-  GST_DEBUG_OBJECT (h, "about to create new harness %p", h);
+  GST_DEBUG ("about to create new harness %p", h);
   priv->last_push_ts = GST_CLOCK_TIME_NONE;
   priv->latency_min = 0;
   priv->latency_max = GST_CLOCK_TIME_NONE;
@@ -794,7 +794,7 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
 
   gst_harness_element_ref (h);
 
-  GST_DEBUG_OBJECT (h, "added element to harness %p "
+  GST_DEBUG ("added element to harness %p "
       "with element_srcpad_name (%p, %s, %s) and element_sinkpad_name (%p, %s, %s)",
       h, h->srcpad, GST_DEBUG_PAD_NAME (h->srcpad),
       h->sinkpad, GST_DEBUG_PAD_NAME (h->sinkpad));
@@ -1625,8 +1625,7 @@ gst_harness_create_buffer (GstHarness * h, gsize size)
     flow = gst_buffer_pool_acquire_buffer (priv->pool, &ret, NULL);
     g_assert_cmpint (flow, ==, GST_FLOW_OK);
     if (gst_buffer_get_size (ret) != size) {
-      GST_DEBUG_OBJECT (h,
-          "use fallback, pool is configured with a different size (%"
+      GST_DEBUG ("use fallback, pool is configured with a different size (%"
           G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT ")",
           size, gst_buffer_get_size (ret));
       gst_buffer_unref (ret);
