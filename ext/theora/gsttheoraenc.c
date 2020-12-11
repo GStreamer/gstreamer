@@ -176,6 +176,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_theora_enc_parent_class parent_class
 G_DEFINE_TYPE (GstTheoraEnc, gst_theora_enc, GST_TYPE_VIDEO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (theoraenc, "theoraenc",
+    GST_RANK_PRIMARY, GST_TYPE_THEORA_ENC);
 
 static gboolean theora_enc_start (GstVideoEncoder * enc);
 static gboolean theora_enc_stop (GstVideoEncoder * enc);

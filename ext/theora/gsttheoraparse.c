@@ -91,6 +91,8 @@ enum
 
 #define gst_theora_parse_parent_class parent_class
 G_DEFINE_TYPE (GstTheoraParse, gst_theora_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (theoraparse, "theoraparse",
+    GST_RANK_NONE, GST_TYPE_THEORA_PARSE);
 
 static void theora_parse_dispose (GObject * object);
 

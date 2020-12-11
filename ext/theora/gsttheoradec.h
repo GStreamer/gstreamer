@@ -87,6 +87,8 @@ struct _GstTheoraDecClass
 
 GType gst_theora_dec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (theoradec);
+
 G_END_DECLS
 
 #endif /* __GST_THEORADEC_H__ */

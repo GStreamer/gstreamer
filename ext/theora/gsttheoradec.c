@@ -91,6 +91,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_theora_dec_parent_class parent_class
 G_DEFINE_TYPE (GstTheoraDec, gst_theora_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (theoradec, "theoradec",
+    GST_RANK_PRIMARY, GST_TYPE_THEORA_DEC);
 
 static void theora_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);

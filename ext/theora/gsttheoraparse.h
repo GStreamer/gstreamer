@@ -82,6 +82,8 @@ struct _GstTheoraParseClass {
 
 GType gst_theora_parse_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (theoraparse);
+
 G_END_DECLS
 
 #endif /* __GST_THEORA_PARSE_H__ */
