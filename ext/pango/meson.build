@@ -1,4 +1,6 @@
 pango_sources = [
+  'gstpangoelement.c',
+  'gstpangoplugin.c',
   'gstbasetextoverlay.c',
   'gstclockoverlay.c',
   'gsttextoverlay.c',

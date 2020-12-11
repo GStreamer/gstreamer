@@ -49,10 +49,11 @@
 #include "config.h"
 #endif
 
-#include "gstclockoverlay.h"
 #include <gst/video/video.h>
 #include <time.h>
 
+#include "gstclockoverlay.h"
+#include "gstpangoelements.h"
 
 #define DEFAULT_PROP_TIMEFORMAT 	"%H:%M:%S"
 
@@ -65,6 +66,8 @@ enum
 
 #define gst_clock_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstClockOverlay, gst_clock_overlay, GST_TYPE_BASE_TEXT_OVERLAY);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (clockoverlay, "clockoverlay",
+    GST_RANK_NONE, GST_TYPE_CLOCK_OVERLAY, pango_element_init (plugin));
 
 static void gst_clock_overlay_finalize (GObject * object);
 static void gst_clock_overlay_set_property (GObject * object, guint prop_id,

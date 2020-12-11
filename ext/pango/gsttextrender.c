@@ -42,12 +42,13 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
+#include <string.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
 #include "gsttextrender.h"
-#include <string.h>
+#include "gstpangoelements.h"
+
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 # define CAIRO_ARGB_A 3
@@ -165,6 +166,8 @@ static void gst_text_render_adjust_values_with_fontdesc (GstTextRender *
 
 #define gst_text_render_parent_class parent_class
 G_DEFINE_TYPE (GstTextRender, gst_text_render, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (textrender, "textrender",
+    GST_RANK_NONE, GST_TYPE_TEXT_RENDER, pango_element_init (plugin));
 
 static void gst_text_render_finalize (GObject * object);
 static void gst_text_render_set_property (GObject * object,

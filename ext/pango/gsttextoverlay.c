@@ -75,7 +75,8 @@
 #include "config.h"
 #endif
 
-#include <gsttextoverlay.h>
+#include "gsttextoverlay.h"
+#include "gstpangoelements.h"
 
 static GstStaticPadTemplate text_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("text_sink",
@@ -85,6 +86,8 @@ GST_STATIC_PAD_TEMPLATE ("text_sink",
     );
 
 G_DEFINE_TYPE (GstTextOverlay, gst_text_overlay, GST_TYPE_BASE_TEXT_OVERLAY);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (textoverlay, "textoverlay",
+    GST_RANK_NONE, GST_TYPE_TEXT_OVERLAY, pango_element_init (plugin));
 
 static void
 gst_text_overlay_class_init (GstTextOverlayClass * klass)

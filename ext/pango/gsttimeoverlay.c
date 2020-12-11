@@ -51,6 +51,7 @@
 #include <gst/video/video.h>
 
 #include "gsttimeoverlay.h"
+#include "gstpangoelements.h"
 
 #define DEFAULT_TIME_LINE GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME
 #define DEFAULT_SHOW_TIMES_AS_DATES FALSE
@@ -67,6 +68,8 @@ enum
 
 #define gst_time_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstTimeOverlay, gst_time_overlay, GST_TYPE_BASE_TEXT_OVERLAY);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (timeoverlay, "timeoverlay",
+    GST_RANK_NONE, GST_TYPE_TIME_OVERLAY, pango_element_init (plugin));
 
 static void gst_time_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -43,9 +43,6 @@
  *    clipped properly during blitting (if wrapping is disabled)
  */
 
-GST_DEBUG_CATEGORY (pango_debug);
-#define GST_CAT_DEFAULT pango_debug
-
 #define DEFAULT_PROP_TEXT 	""
 #define DEFAULT_PROP_SHADING	FALSE
 #define DEFAULT_PROP_VALIGNMENT	GST_BASE_TEXT_OVERLAY_VALIGN_BASELINE
@@ -3075,28 +3072,3 @@ gst_base_text_overlay_change_state (GstElement * element,
 
   return ret;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "textoverlay", GST_RANK_NONE,
-          GST_TYPE_TEXT_OVERLAY) ||
-      !gst_element_register (plugin, "timeoverlay", GST_RANK_NONE,
-          GST_TYPE_TIME_OVERLAY) ||
-      !gst_element_register (plugin, "clockoverlay", GST_RANK_NONE,
-          GST_TYPE_CLOCK_OVERLAY) ||
-      !gst_element_register (plugin, "textrender", GST_RANK_NONE,
-          GST_TYPE_TEXT_RENDER)) {
-    return FALSE;
-  }
-
-  /*texttestsrc_plugin_init(module, plugin); */
-
-  GST_DEBUG_CATEGORY_INIT (pango_debug, "pango", 0, "Pango elements");
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    pango, "Pango-based text rendering and overlay", plugin_init,
-    VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
