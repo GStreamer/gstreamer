@@ -2950,9 +2950,19 @@ default_frame_sizes:
         pixelformat);
 
     if (!v4l2object->skip_try_fmt_probes) {
+      gint probed_w, probed_h;
+      if (v4l2object->info.width >= min_w && v4l2object->info.width <= max_w &&
+          v4l2object->info.height >= min_h
+          && v4l2object->info.height <= max_h) {
+        probed_w = v4l2object->info.width;
+        probed_h = v4l2object->info.height;
+      } else {
+        probed_w = max_w;
+        probed_h = max_h;
+      }
       /* We could consider to check colorspace for min too, in case it depends on
        * the size. But in this case, min and max could not be enough */
-      gst_v4l2_object_add_colorspace (v4l2object, tmp, max_w, max_h,
+      gst_v4l2_object_add_colorspace (v4l2object, tmp, probed_w, probed_h,
           pixelformat);
     }
 
