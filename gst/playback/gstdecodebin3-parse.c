@@ -120,22 +120,37 @@ static void
 check_all_streams_for_eos (GstDecodebin3 * dbin)
 {
   GList *tmp;
+  GList *outputpads = NULL;
 
   if (!all_inputs_are_eos (dbin))
     return;
 
   /* We know all streams are EOS, properly clean up everything */
+
+  /* We grab all peer pads *while* the selection lock is taken and then we will
+     push EOS downstream with the selection lock released */
   for (tmp = dbin->input_streams; tmp; tmp = tmp->next) {
     DecodebinInputStream *input = (DecodebinInputStream *) tmp->data;
     GstPad *peer = gst_pad_get_peer (input->srcpad);
 
-    /* Send EOS and then remove elements */
-    if (peer) {
-      gst_pad_send_event (peer, gst_event_new_eos ());
-      gst_object_unref (peer);
-    }
-    GST_FIXME_OBJECT (input->srcpad, "Remove input stream");
+    /* Keep a reference to the peer pad */
+    if (peer)
+      outputpads = g_list_append (outputpads, peer);
   }
+
+  SELECTION_UNLOCK (dbin);
+  /*  */
+  for (tmp = outputpads; tmp; tmp = tmp->next) {
+    GstPad *peer = (GstPad *) tmp->data;
+
+    /* Send EOS and then remove elements */
+    gst_pad_send_event (peer, gst_event_new_eos ());
+    GST_FIXME_OBJECT (peer, "Remove input stream");
+    gst_object_unref (peer);
+  }
+  SELECTION_LOCK (dbin);
+
+  g_list_free (outputpads);
 }
 
 /* Get the intersection of parser caps and available (sorted) decoders */
@@ -533,7 +548,9 @@ parsebin_pending_event_probe (GstPad * pad, GstPadProbeInfo * info,
       gst_pad_remove_probe (ppad->pad, ppad->event_probe);
       g_free (ppad);
 
+      SELECTION_LOCK (dbin);
       check_all_streams_for_eos (dbin);
+      SELECTION_UNLOCK (dbin);
     }
       break;
     default:
