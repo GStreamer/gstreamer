@@ -22,8 +22,8 @@
 #ifndef __GST_GIO_BASE_SRC_H__
 #define __GST_GIO_BASE_SRC_H__
 
-#include "gstgio.h"
-
+#include <gst/gst.h>
+#include <gio/gio.h>
 #include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS

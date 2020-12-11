@@ -10,22 +10,31 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * License along with this library; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_GIO_H__
-#define __GST_GIO_H__
+#ifndef __GST_GIO_ELEMENTS_H__
+#define __GST_GIO_ELEMENTS_H__
+
 
 #include <gio/gio.h>
 #include <gst/gst.h>
 
+#include "gstgiobasesink.h"
+
 G_BEGIN_DECLS
+
+G_GNUC_INTERNAL void gio_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (giosink);
+GST_ELEMENT_REGISTER_DECLARE (giosrc);
+GST_ELEMENT_REGISTER_DECLARE (giostreamsink);
+GST_ELEMENT_REGISTER_DECLARE (giostreamsrc);
 
 #define GST_GIO_ERROR_MATCHES(err, code) g_error_matches (err, G_IO_ERROR, G_IO_ERROR_##code)
 
@@ -39,4 +48,4 @@ void gst_gio_uri_handler_do_init (GType type);
 
 G_END_DECLS
 
-#endif /* __GST_GIO_H__ */
+#endif /* __GST_GIO_ELEMENTS_H__ */

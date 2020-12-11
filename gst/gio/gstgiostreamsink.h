@@ -22,7 +22,6 @@
 #ifndef __GST_GIO_STREAM_SINK_H__
 #define __GST_GIO_STREAM_SINK_H__
 
-#include "gstgio.h"
 #include "gstgiobasesink.h"
 
 #include <gst/base/gstbasesink.h>

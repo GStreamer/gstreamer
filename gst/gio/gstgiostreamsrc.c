@@ -66,6 +66,7 @@ g_object_set (G_OBJECT (src), "stream", stream, NULL);
 #endif
 
 #include "gstgiostreamsrc.h"
+#include "gstgioelements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gio_stream_src_debug);
 #define GST_CAT_DEFAULT gst_gio_stream_src_debug
@@ -78,6 +79,8 @@ enum
 
 #define gst_gio_stream_src_parent_class parent_class
 G_DEFINE_TYPE (GstGioStreamSrc, gst_gio_stream_src, GST_TYPE_GIO_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (giostreamsrc, "giostreamsrc",
+    GST_RANK_NONE, GST_TYPE_GIO_STREAM_SRC, gio_element_init (plugin));
 
 static void gst_gio_stream_src_finalize (GObject * object);
 static void gst_gio_stream_src_set_property (GObject * object, guint prop_id,

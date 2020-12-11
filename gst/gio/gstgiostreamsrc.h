@@ -22,7 +22,6 @@
 #ifndef __GST_GIO_STREAM_SRC_H__
 #define __GST_GIO_STREAM_SRC_H__
 
-#include "gstgio.h"
 #include "gstgiobasesrc.h"
 
 #include <gst/base/gstbasesrc.h>

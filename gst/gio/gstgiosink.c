@@ -78,6 +78,7 @@
 #endif
 
 #include "gstgiosink.h"
+#include "gstgioelements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gio_sink_debug);
 #define GST_CAT_DEFAULT gst_gio_sink_debug
@@ -98,6 +99,9 @@ enum
 #define gst_gio_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGioSink, gst_gio_sink, GST_TYPE_GIO_BASE_SINK,
     gst_gio_uri_handler_do_init (g_define_type_id));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (giosink, "giosink",
+    GST_RANK_SECONDARY, GST_TYPE_GIO_SINK, gio_element_init (plugin));
+
 
 static void gst_gio_sink_finalize (GObject * object);
 static void gst_gio_sink_set_property (GObject * object, guint prop_id,

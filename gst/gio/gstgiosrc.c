@@ -74,7 +74,7 @@
 #endif
 
 #include "gstgiosrc.h"
-#include <string.h>
+#include "gstgioelements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gio_src_debug);
 #define GST_CAT_DEFAULT gst_gio_src_debug
@@ -93,6 +93,8 @@ static gint done_waiting_data_signal = 0;
 #define gst_gio_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGioSrc, gst_gio_src,
     GST_TYPE_GIO_BASE_SRC, gst_gio_uri_handler_do_init (g_define_type_id));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (giosrc, "giosrc",
+    GST_RANK_SECONDARY, GST_TYPE_GIO_SRC, gio_element_init (plugin));
 
 static void gst_gio_src_finalize (GObject * object);
 

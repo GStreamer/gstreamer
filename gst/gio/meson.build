@@ -1,4 +1,5 @@
 gio_sources = ['gstgio.c',
+  'gstgioelement.c',
   'gstgiobasesink.c',
   'gstgiobasesrc.c',
   'gstgiosink.c',

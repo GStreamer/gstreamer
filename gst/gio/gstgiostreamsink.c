@@ -60,12 +60,12 @@ out_data = g_memory_ouput_stream_get_data (G_MEMORY_OUTPUT_STREAM (stream));
  * ]|
  *
  */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include "gstgiostreamsink.h"
+#include "gstgioelements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gio_stream_sink_debug);
 #define GST_CAT_DEFAULT gst_gio_stream_sink_debug
@@ -84,6 +84,8 @@ enum
 
 #define gst_gio_stream_sink_parent_class parent_class
 G_DEFINE_TYPE (GstGioStreamSink, gst_gio_stream_sink, GST_TYPE_GIO_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (giostreamsink, "giostreamsink",
+    GST_RANK_NONE, GST_TYPE_GIO_STREAM_SINK, gio_element_init (plugin));
 
 static void gst_gio_stream_sink_finalize (GObject * object);
 static void gst_gio_stream_sink_set_property (GObject * object, guint prop_id,

@@ -24,6 +24,7 @@
 #endif
 
 #include "gstgiobasesink.h"
+#include "gstgioelements.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gio_base_sink_debug);
 #define GST_CAT_DEFAULT gst_gio_base_sink_debug

@@ -22,8 +22,9 @@
 #ifndef __GST_GIO_BASE_SINK_H__
 #define __GST_GIO_BASE_SINK_H__
 
-#include "gstgio.h"
 
+#include <gst/gst.h>
+#include <gio/gio.h>
 #include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
