@@ -288,8 +288,6 @@ gst_sbc_enc_handle_frame (GstAudioEncoder * audio_enc, GstBuffer * buffer)
       gst_buffer_replace (&outbuf, NULL);
   }
 
-done:
-
   gst_buffer_unmap (buffer, &in_map);
 
   return gst_audio_encoder_finish_frame (audio_enc, outbuf,
@@ -298,13 +296,16 @@ done:
 /* ERRORS */
 no_buffer:
   {
-    GST_ERROR_OBJECT (enc, "could not allocate output buffer");
-    goto done;
+    gst_buffer_unmap (buffer, &in_map);
+    GST_ELEMENT_ERROR (enc, STREAM, FAILED, (NULL),
+        ("Could not allocate output buffer"));
+    return GST_FLOW_ERROR;
   }
 map_failed:
   {
-    GST_ERROR_OBJECT (enc, "could not map input buffer");
-    goto done;
+    GST_ELEMENT_ERROR (enc, STREAM, FAILED, (NULL),
+        ("Could not allocate output buffer"));
+    return GST_FLOW_ERROR;
   }
 }
 
