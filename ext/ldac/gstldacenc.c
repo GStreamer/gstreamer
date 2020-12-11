@@ -438,8 +438,8 @@ gst_ldac_enc_handle_frame (GstAudioEncoder * audio_enc, GstBuffer * buffer)
     ret = ldacBT_encode (enc->ldac, (void *) inp_data, &encoded,
         (guint8 *) out_data, &written, &ldac_frame_num);
     if (ret < 0) {
-      GST_ERROR_OBJECT (enc, "encoding error, ret = %d written = %d",
-          ret, ldac_frame_num);
+      GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+          ("encoding error, ret = %d written = %d", ret, ldac_frame_num));
       goto encoding_error;
     } else {
       to_encode -= encoded;
@@ -474,7 +474,8 @@ no_buffer:
   {
     gst_buffer_unmap (buffer, &in_map);
 
-    GST_ERROR_OBJECT (enc, "could not allocate output buffer");
+    GST_ELEMENT_ERROR (enc, STREAM, FAILED, (NULL),
+        ("could not allocate output buffer"));
 
     return GST_FLOW_ERROR;
   }
