@@ -165,7 +165,8 @@ enum
 #define gst_audio_convert_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioConvert, gst_audio_convert,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
-
+GST_ELEMENT_REGISTER_DEFINE (audioconvert, "audioconvert",
+    GST_RANK_PRIMARY, GST_TYPE_AUDIO_CONVERT);
 /*** GSTREAMER PROTOTYPES *****************************************************/
 
 #define STATIC_CAPS \

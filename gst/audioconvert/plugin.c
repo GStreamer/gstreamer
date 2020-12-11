@@ -28,11 +28,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "audioconvert",
-          GST_RANK_PRIMARY, GST_TYPE_AUDIO_CONVERT))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (audioconvert, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
