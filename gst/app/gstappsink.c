@@ -16,22 +16,20 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:element-appsink
+ * @title: appsink
+ *
+ * Appsink is a sink plugin that supports many different methods for making
+ * the application get a handle on the GStreamer data in a pipeline. Unlike
+ * most GStreamer elements, Appsink provides external API functions.
+ *
+ * For the documentation of the API, please see the
+ * <link linkend="gst-plugins-base-libs-appsink">libgstapp</link> section in
+ * the GStreamer Plugins Base Libraries documentation.
+ */
 
 #include "gstappelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (appsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (appsink, plugin);
-
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    app,
-    "Elements used to communicate with applications",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+GST_ELEMENT_REGISTER_DEFINE (appsink, "appsink", GST_RANK_NONE,
+    GST_TYPE_APP_SINK);
