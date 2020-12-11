@@ -36,6 +36,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstgleffects.h"
 
 #define GST_CAT_DEFAULT gst_gl_effects_debug
@@ -55,6 +56,15 @@ enum
 #define gst_gl_effects_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLEffects, gst_gl_effects, GST_TYPE_GL_FILTER,
     DEBUG_INIT);
+
+static gboolean
+gst_element_init_gleffects (GstPlugin * plugin)
+{
+  gl_element_init (plugin);
+  return gst_gl_effects_register_filters (plugin, GST_RANK_NONE);
+}
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (gleffects, gst_element_init_gleffects);
 
 static void gst_gl_effects_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

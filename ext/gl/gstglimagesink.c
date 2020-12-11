@@ -87,6 +87,7 @@
 #include <gst/video/navigation.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 
+#include "gstglelements.h"
 #include "gstglimagesink.h"
 #include "gstglsinkbin.h"
 #include "gstglutils.h"
@@ -109,6 +110,9 @@ typedef GstGLSinkBin GstGLImageSinkBin;
 typedef GstGLSinkBinClass GstGLImageSinkBinClass;
 
 G_DEFINE_TYPE (GstGLImageSinkBin, gst_gl_image_sink_bin, GST_TYPE_GL_SINK_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glimagesink, "glimagesink",
+    GST_RANK_SECONDARY, gst_gl_image_sink_bin_get_type (),
+    gl_element_init (plugin));
 
 enum
 {
@@ -665,6 +669,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLImageSink, gst_glimage_sink,
         gst_glimage_sink_navigation_interface_init);
     GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
         "OpenGL Video Sink"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glimagesinkelement, "glimagesinkelement",
+    GST_RANK_NONE, gst_glimage_sink_get_type (), gl_element_init (plugin));
 
 static void
 gst_glimage_sink_class_init (GstGLImageSinkClass * klass)

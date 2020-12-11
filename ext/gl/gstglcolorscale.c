@@ -44,6 +44,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglcolorscale.h"
 
 #define GST_CAT_DEFAULT gst_gl_colorscale_debug
@@ -60,6 +61,8 @@ enum
 #define gst_gl_colorscale_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLColorscale, gst_gl_colorscale,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glcolorscale, "glcolorscale",
+    GST_RANK_NONE, GST_TYPE_GL_COLORSCALE, gl_element_init (plugin));
 
 static void gst_gl_colorscale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

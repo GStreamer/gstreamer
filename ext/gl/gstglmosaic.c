@@ -42,6 +42,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglmosaic.h"
 #include "gstglutils.h"
 
@@ -63,6 +64,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLMosaic, gst_gl_mosaic, GST_TYPE_GL_MIXER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_gl_mosaic_child_proxy_init);
     DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glmosaic, "glmosaic",
+    GST_RANK_NONE, GST_TYPE_GL_MOSAIC, gl_element_init (plugin));
 
 static GstPad *gst_gl_mosaic_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);

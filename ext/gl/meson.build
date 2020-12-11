@@ -1,5 +1,6 @@
 opengl_sources = [
   'gstopengl.c',
+  'gstglelement.c',
   'gstglalpha.c',
   'gstgluploadelement.c',
   'gstgldownloadelement.c',

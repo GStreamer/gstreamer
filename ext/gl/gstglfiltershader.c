@@ -58,6 +58,7 @@
 
 #include <gst/gl/gstglfuncs.h>
 
+#include "gstglelements.h"
 #include "gstglfiltershader.h"
 #ifdef HAVE_GRAPHENE
 #include <graphene-gobject.h>
@@ -91,6 +92,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_gl_filtershader_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterShader, gst_gl_filtershader,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glshader, "glshader",
+    GST_RANK_NONE, GST_TYPE_GL_FILTERSHADER, gl_element_init (plugin));
 
 static void gst_gl_filtershader_finalize (GObject * object);
 static void gst_gl_filtershader_set_property (GObject * object, guint prop_id,

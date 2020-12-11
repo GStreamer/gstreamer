@@ -38,6 +38,7 @@
 
 #include <gst/gl/gstglfuncs.h>
 
+#include "gstglelements.h"
 #include "gstgldeinterlace.h"
 
 #define GST_CAT_DEFAULT gst_gl_deinterlace_debug
@@ -54,6 +55,8 @@ enum
 #define gst_gl_deinterlace_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLDeinterlace, gst_gl_deinterlace,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gldeinterlace, "gldeinterlace",
+    GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE, gl_element_init (plugin));
 
 static void gst_gl_deinterlace_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);

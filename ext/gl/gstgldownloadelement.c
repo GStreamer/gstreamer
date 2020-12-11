@@ -28,6 +28,7 @@
 #include <gst/allocators/gstdmabuf.h>
 #endif
 
+#include "gstglelements.h"
 #include "gstgldownloadelement.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_download_element_debug);
@@ -38,6 +39,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDownloadElement, gst_gl_download_element,
     GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_download_element_debug, "gldownloadelement",
         0, "download element"););
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gldownload, "gldownload",
+    GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD_ELEMENT, gl_element_init (plugin));
 
 static gboolean gst_gl_download_element_start (GstBaseTransform * bt);
 static gboolean gst_gl_download_element_stop (GstBaseTransform * bt);

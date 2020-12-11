@@ -45,6 +45,7 @@
 #include <gst/gl/gstglfuncs.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include "gstglelements.h"
 #include "gstgltestsrc.h"
 #include "gltestsrc.h"
 
@@ -74,6 +75,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_gl_test_src_parent_class parent_class
 G_DEFINE_TYPE (GstGLTestSrc, gst_gl_test_src, GST_TYPE_GL_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gltestsrc, "gltestsrc",
+    GST_RANK_NONE, GST_TYPE_GL_TEST_SRC, gl_element_init (plugin));
 
 static void gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc,
     int pattern_type);

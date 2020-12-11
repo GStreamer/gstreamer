@@ -35,6 +35,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglvideoflip.h"
 
 #define GST_CAT_DEFAULT gst_gl_video_flip_debug
@@ -120,6 +121,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLVideoFlip, gst_gl_video_flip,
         "glvideoflip", 0, "glvideoflip element");
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
         gst_gl_video_flip_video_direction_interface_init););
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glvideoflip, "glvideoflip",
+    GST_RANK_NONE, GST_TYPE_GL_VIDEO_FLIP, gl_element_init (plugin));
 
 static void
 gst_gl_video_flip_video_direction_interface_init (GstVideoDirectionInterface

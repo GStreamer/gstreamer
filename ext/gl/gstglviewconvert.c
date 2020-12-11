@@ -48,6 +48,7 @@
 
 #include <gst/base/gstbasetransform.h>
 
+#include "gstglelements.h"
 #include "gstglviewconvert.h"
 
 #define GST_CAT_DEFAULT gst_gl_view_convert_element_debug
@@ -68,9 +69,11 @@ enum
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_view_convert_element_debug, "glview_convertelement", 0, "glview_convert element");
 
+#define parent_class gst_gl_view_convert_element_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLViewConvertElement, gst_gl_view_convert_element,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
-#define parent_class gst_gl_view_convert_element_parent_class
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glviewconvert, "glviewconvert",
+    GST_RANK_NONE, GST_TYPE_GL_VIEW_CONVERT_ELEMENT, gl_element_init (plugin));
 
 static void gst_gl_view_convert_dispose (GObject * object);
 static void gst_gl_view_convert_element_set_property (GObject * object,

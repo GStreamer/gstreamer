@@ -45,6 +45,8 @@
 #endif
 
 #include <gst/gl/gstglapi.h>
+
+#include "gstglelements.h"
 #include "gstglfiltercube.h"
 #include "gstglutils.h"
 
@@ -68,6 +70,8 @@ enum
 #define gst_gl_filter_cube_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterCube, gst_gl_filter_cube,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glfiltercube, "glfiltercube",
+    GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE, gl_element_init (plugin));
 
 static void gst_gl_filter_cube_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

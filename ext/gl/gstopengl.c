@@ -43,261 +43,67 @@
 #include "config.h"
 #endif
 
-#include "gstglimagesink.h"
-#include "gstgluploadelement.h"
-#include "gstgldownloadelement.h"
-#include "gstglcolorconvertelement.h"
-#include "gstglcolorbalance.h"
-#include "gstglfilterbin.h"
-#include "gstglsinkbin.h"
-#include "gstglsrcbin.h"
-
-#include "gstglfiltercube.h"
-#include "gstgleffects.h"
-#include "gstglcolorscale.h"
+#include "gstglelements.h"
 
 #include "gstglmixerbin.h"
 #include "gstglvideomixer.h"
 #include "gstglstereomix.h"
-
-#include "gstglfiltershader.h"
-#include "gstglfilterapp.h"
-#include "gstglstereosplit.h"
-#include "gstglviewconvert.h"
-#include "gstgltestsrc.h"
-#include "gstgldeinterlace.h"
-#include "gstglalpha.h"
-#include "gstgloverlaycompositorelement.h"
-
-#ifdef HAVE_GRAPHENE
-#include "gstgltransformation.h"
-#include "gstglvideoflip.h"
-#endif
-#if defined(HAVE_JPEG) && defined(HAVE_PNG)
-#include "gstgloverlay.h"
-#endif
-
-#include "gstglmixerbin.h"
-#include "gstglvideomixer.h"
-#include "gstglstereomix.h"
-
-#if GST_GL_HAVE_OPENGL
-#endif /* GST_GL_HAVE_OPENGL */
-
-#if GST_GL_HAVE_OPENGL
-#include "gstglfilterglass.h"
-/* #include "gstglfilterreflectedscreen.h" */
-#include "gstglmosaic.h"
-#ifdef HAVE_PNG
-#include "gstgldifferencematte.h"
-/* #include "gstglbumper.h" */
-#endif /* HAVE_PNG */
-#endif /* GST_GL_HAVE_OPENGL */
-
-#if GST_GL_HAVE_WINDOW_COCOA
-/* avoid including Cocoa/CoreFoundation from a C file... */
-extern GType gst_ca_opengl_layer_sink_bin_get_type (void);
-#endif
-
-#if GST_GL_HAVE_WINDOW_DISPMANX
-extern void bcm_host_init (void);
-#endif
-
-#if GST_GL_HAVE_WINDOW_X11
-#include <X11/Xlib.h>
-#endif
-
-#define GST_CAT_DEFAULT gst_gl_gstgl_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /* Register filters that make up the gstgl plugin */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
+  gboolean ret = FALSE;
 
-#if GST_GL_HAVE_WINDOW_DISPMANX
-  GST_DEBUG ("Initialize BCM host");
-  bcm_host_init ();
-#endif
-
-#if GST_GL_HAVE_WINDOW_X11
-  if (g_getenv ("GST_GL_XINITTHREADS"))
-    XInitThreads ();
-#endif
-
-  if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_SECONDARY, gst_gl_image_sink_bin_get_type ())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glimagesinkelement",
-          GST_RANK_NONE, gst_glimage_sink_get_type ())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glupload",
-          GST_RANK_NONE, GST_TYPE_GL_UPLOAD_ELEMENT)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "gldownload",
-          GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD_ELEMENT)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glcolorconvert",
-          GST_RANK_NONE, GST_TYPE_GL_COLOR_CONVERT_ELEMENT)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glcolorbalance",
-          GST_RANK_NONE, GST_TYPE_GL_COLOR_BALANCE)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glfilterbin",
-          GST_RANK_NONE, GST_TYPE_GL_FILTER_BIN)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glsinkbin",
-          GST_RANK_NONE, GST_TYPE_GL_SINK_BIN)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glsrcbin",
-          GST_RANK_NONE, GST_TYPE_GL_SRC_BIN)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glmixerbin",
-          GST_RANK_NONE, GST_TYPE_GL_MIXER_BIN)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glfiltercube",
-          GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (glimagesink, plugin);
+  ret |= GST_ELEMENT_REGISTER (glimagesinkelement, plugin);
+  ret |= GST_ELEMENT_REGISTER (glupload, plugin);
+  ret |= GST_ELEMENT_REGISTER (gldownload, plugin);
+  ret |= GST_ELEMENT_REGISTER (glcolorconvert, plugin);
+  ret |= GST_ELEMENT_REGISTER (glcolorbalance, plugin);
+  ret |= GST_ELEMENT_REGISTER (glfilterbin, plugin);
+  ret |= GST_ELEMENT_REGISTER (glsinkbin, plugin);
+  ret |= GST_ELEMENT_REGISTER (glsrcbin, plugin);
+  ret |= GST_ELEMENT_REGISTER (glmixerbin, plugin);
+  ret |= GST_ELEMENT_REGISTER (glfiltercube, plugin);
 #ifdef HAVE_GRAPHENE
-  if (!gst_element_register (plugin, "gltransformation",
-          GST_RANK_NONE, GST_TYPE_GL_TRANSFORMATION)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glvideoflip",
-          GST_RANK_NONE, GST_TYPE_GL_VIDEO_FLIP)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (gltransformation, plugin);
+  ret |= GST_ELEMENT_REGISTER (glvideoflip, plugin);
 #endif
-
-  if (!gst_gl_effects_register_filters (plugin, GST_RANK_NONE)) {
-    return FALSE;
-  };
-
-  if (!gst_element_register (plugin, "glcolorscale",
-          GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glvideomixer",
-          GST_RANK_NONE, gst_gl_video_mixer_bin_get_type ())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glvideomixerelement",
-          GST_RANK_NONE, gst_gl_video_mixer_get_type ())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glshader",
-          GST_RANK_NONE, gst_gl_filtershader_get_type ())) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glfilterapp",
-          GST_RANK_NONE, GST_TYPE_GL_FILTER_APP)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glviewconvert",
-          GST_RANK_NONE, GST_TYPE_GL_VIEW_CONVERT_ELEMENT)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glstereosplit",
-          GST_RANK_NONE, GST_TYPE_GL_STEREOSPLIT)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glstereomix",
-          GST_RANK_NONE, GST_TYPE_GL_STEREO_MIX)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "gltestsrc",
-          GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "gldeinterlace",
-          GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glalpha",
-          GST_RANK_NONE, GST_TYPE_GL_ALPHA)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "gloverlaycompositor",
-          GST_RANK_NONE, GST_TYPE_GL_OVERLAY_COMPOSITOR_ELEMENT)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (gleffects, plugin);
+  ret |= GST_ELEMENT_REGISTER (glcolorscale, plugin);
+  ret |= GST_ELEMENT_REGISTER (glvideomixer, plugin);
+  ret |= GST_ELEMENT_REGISTER (glvideomixerelement, plugin);
+  ret |= GST_ELEMENT_REGISTER (glshader, plugin);
+  ret |= GST_ELEMENT_REGISTER (glfilterapp, plugin);
+  ret |= GST_ELEMENT_REGISTER (glviewconvert, plugin);
+  ret |= GST_ELEMENT_REGISTER (glstereosplit, plugin);
+  ret |= GST_ELEMENT_REGISTER (glstereomix, plugin);
+  ret |= GST_ELEMENT_REGISTER (gltestsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (gldeinterlace, plugin);
+  ret |= GST_ELEMENT_REGISTER (glalpha, plugin);
+  ret |= GST_ELEMENT_REGISTER (gloverlaycompositor, plugin);
 #if defined(HAVE_JPEG) && defined(HAVE_PNG)
-  if (!gst_element_register (plugin, "gloverlay",
-          GST_RANK_NONE, gst_gl_overlay_get_type ())) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (gloverlay, plugin);
 #endif
 #if GST_GL_HAVE_OPENGL
-  if (!gst_element_register (plugin, "glfilterglass",
-          GST_RANK_NONE, GST_TYPE_GL_FILTER_GLASS)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (glfilterglass, plugin);
 #if 0
-  if (!gst_element_register (plugin, "glfilterreflectedscreen",
-          GST_RANK_NONE, GST_TYPE_GL_FILTER_REFLECTED_SCREEN)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (glfilterreflectedscreen, plugin);
 #endif
-
-  if (!gst_element_register (plugin, "glmosaic",
-          GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (glmosaic, plugin);
 #ifdef HAVE_PNG
-  if (!gst_element_register (plugin, "gldifferencematte",
-          GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (gldifferencematte, plugin);
 #if 0
-  if (!gst_element_register (plugin, "glbumper",
-          GST_RANK_NONE, gst_gl_bumper_get_type ())) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (glbumper, plugin);
 #endif
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 #if GST_GL_HAVE_WINDOW_COCOA
-  if (!gst_element_register (plugin, "caopengllayersink",
-          GST_RANK_NONE, gst_ca_opengl_layer_sink_bin_get_type ())) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (caopengllayersink, plugin);
 #endif
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

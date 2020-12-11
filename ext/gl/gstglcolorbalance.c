@@ -43,6 +43,7 @@
 #include <gst/math-compat.h>
 #include <gst/video/colorbalance.h>
 
+#include "gstglelements.h"
 #include "gstglcolorbalance.h"
 
 GST_DEBUG_CATEGORY_STATIC (glcolorbalance_debug);
@@ -131,6 +132,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLColorBalance, gst_gl_color_balance,
     GST_TYPE_GL_FILTER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_gl_color_balance_colorbalance_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glcolorbalance, "glcolorbalance",
+    GST_RANK_NONE, GST_TYPE_GL_COLOR_BALANCE, gl_element_init (plugin));
 
 static GstCaps *
 gcb_transform_internal_caps (GstGLFilter * filter,

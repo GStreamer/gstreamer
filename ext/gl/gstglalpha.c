@@ -45,6 +45,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglalpha.h"
 #include <string.h>
 #include <math.h>
@@ -222,6 +223,8 @@ static void gst_gl_alpha_get_property (GObject * object, guint prop_id,
 
 #define gst_gl_alpha_parent_class parent_class
 G_DEFINE_TYPE (GstGLAlpha, gst_gl_alpha, GST_TYPE_GL_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glalpha, "glalpha",
+    GST_RANK_NONE, GST_TYPE_GL_ALPHA, gl_element_init (plugin));
 
 static gboolean
 gst_gl_alpha_is_passthrough (GstGLAlpha * glalpha)

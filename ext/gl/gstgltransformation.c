@@ -45,6 +45,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstgltransformation.h"
 
 #include <gst/gl/gstglapi.h>
@@ -89,6 +90,8 @@ enum
 
 G_DEFINE_TYPE_WITH_CODE (GstGLTransformation, gst_gl_transformation,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gltransformation, "gltransformation",
+    GST_RANK_NONE, GST_TYPE_GL_TRANSFORMATION, gl_element_init (plugin));
 
 static void gst_gl_transformation_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

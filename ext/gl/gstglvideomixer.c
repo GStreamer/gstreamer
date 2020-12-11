@@ -48,6 +48,7 @@
 #include <gst/gl/gstglfuncs.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 
+#include "gstglelements.h"
 #include "gstglvideomixer.h"
 
 #include "gstglmixerbin.h"
@@ -390,6 +391,9 @@ typedef GstGLMixerBinClass GstGLVideoMixerBinClass;
 
 G_DEFINE_TYPE (GstGLVideoMixerBin, gst_gl_video_mixer_bin,
     GST_TYPE_GL_MIXER_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glvideomixer, "glvideomixer",
+    GST_RANK_NONE, gst_gl_video_mixer_bin_get_type (),
+    gl_element_init (plugin));
 
 static void
 gst_gl_video_mixer_bin_init (GstGLVideoMixerBin * self)
@@ -458,6 +462,9 @@ static void gst_gl_video_mixer_child_proxy_init (gpointer g_iface,
 G_DEFINE_TYPE_WITH_CODE (GstGLVideoMixer, gst_gl_video_mixer, GST_TYPE_GL_MIXER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_gl_video_mixer_child_proxy_init); DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glvideomixerelement,
+    "glvideomixerelement", GST_RANK_NONE, gst_gl_video_mixer_get_type (),
+    gl_element_init (plugin));
 
 static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

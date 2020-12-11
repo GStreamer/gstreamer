@@ -61,6 +61,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglstereomix.h"
 
 #define GST_CAT_DEFAULT gst_gl_stereo_mix_debug
@@ -85,6 +86,8 @@ static void gst_gl_stereo_mix_child_proxy_init (gpointer g_iface,
 G_DEFINE_TYPE_WITH_CODE (GstGLStereoMix, gst_gl_stereo_mix, GST_TYPE_GL_MIXER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_gl_stereo_mix_child_proxy_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glstereomix, "glstereomix",
+    GST_RANK_NONE, GST_TYPE_GL_STEREO_MIX, gl_element_init (plugin));
 
 static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
 static gboolean _negotiated_caps (GstAggregator * aggregator, GstCaps * caps);

@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 
+#include "gstglelements.h"
 #include "gstglmixerbin.h"
 
 #define GST_CAT_DEFAULT gst_gl_mixer_bin_debug
@@ -139,6 +140,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLMixerBin, gst_gl_mixer_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstGLMixerBin)
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_gl_mixer_bin_child_proxy_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glmixerbin, "glmixerbin",
+    GST_RANK_NONE, GST_TYPE_GL_MIXER_BIN, gl_element_init (plugin));
 
 static guint gst_gl_mixer_bin_signals[LAST_SIGNAL] = { 0 };
 

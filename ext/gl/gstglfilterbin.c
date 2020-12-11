@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglfilterbin.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_bin_debug
@@ -47,6 +48,8 @@ static guint gst_gl_filter_bin_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterBin, gst_gl_filter_bin,
     GST_TYPE_BIN, GST_DEBUG_CATEGORY_INIT (gst_gl_filter_bin_debug,
         "glfilterbin", 0, "glfilterbin element"););
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glfilterbin, "glfilterbin",
+    GST_RANK_NONE, GST_TYPE_GL_FILTER_BIN, gl_element_init (plugin));
 
 static void gst_gl_filter_bin_finalize (GObject * object);
 static void gst_gl_filter_bin_get_property (GObject * object, guint prop_id,

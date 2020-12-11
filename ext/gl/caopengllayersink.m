@@ -30,6 +30,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "caopengllayersink.h"
 #include "gstglsinkbin.h"
 #include <QuartzCore/QuartzCore.h>
@@ -42,6 +43,11 @@ typedef GstGLSinkBinClass GstCAOpenGLLayerSinkBinClass;
 
 G_DEFINE_TYPE (GstCAOpenGLLayerSinkBin, gst_ca_opengl_layer_sink_bin,
     GST_TYPE_GL_SINK_BIN);
+
+#define _do_init \
+    gl_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (caopengllayersink, "caopengllayersink",
+    GST_RANK_NONE, GST_TYPE_CA_OPENGL_LAYER_SINK, _do_init);
 
 enum
 {

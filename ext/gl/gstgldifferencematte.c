@@ -41,6 +41,7 @@
 
 #include <gst/gl/gstglfuncs.h>
 
+#include "gstglelements.h"
 #include "gstgldifferencematte.h"
 #include "effects/gstgleffectssources.h"
 
@@ -58,6 +59,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_gl_differencematte_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLDifferenceMatte, gst_gl_differencematte,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gldifferencematte, "gldifferencematte",
+    GST_RANK_NONE, GST_TYPE_GL_DIFFERENCEMATTE, gl_element_init (plugin));
 
 static void gst_gl_differencematte_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);

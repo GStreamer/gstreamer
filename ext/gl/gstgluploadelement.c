@@ -25,6 +25,8 @@
 #include <stdio.h>
 
 #include <gst/gl/gl.h>
+
+#include "gstglelements.h"
 #include "gstgluploadelement.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_element_debug);
@@ -35,6 +37,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLUploadElement, gst_gl_upload_element,
     GST_TYPE_GL_BASE_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_gl_upload_element_debug, "gluploadelement", 0,
         "glupload Element"););
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glupload, "glupload",
+    GST_RANK_NONE, GST_TYPE_GL_UPLOAD_ELEMENT, gl_element_init (plugin));
 
 static gboolean gst_gl_upload_element_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);

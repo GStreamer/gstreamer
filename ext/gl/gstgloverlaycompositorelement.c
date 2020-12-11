@@ -30,6 +30,7 @@
 #include <gst/gl/gstglfuncs.h>
 #include <gst/video/video.h>
 
+#include "gstglelements.h"
 #include "gstgloverlaycompositorelement.h"
 
 enum
@@ -46,6 +47,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_gl_overlay_compositor_element_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLOverlayCompositorElement,
     gst_gl_overlay_compositor_element, GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gloverlaycompositor,
+    "gloverlaycompositor", GST_RANK_NONE,
+    GST_TYPE_GL_OVERLAY_COMPOSITOR_ELEMENT, gl_element_init (plugin));
 
 static GstStaticPadTemplate overlay_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink",

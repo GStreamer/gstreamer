@@ -39,6 +39,8 @@
 
 #include <stdlib.h>
 #include <png.h>
+
+#include "gstglelements.h"
 #include "gstglbumper.h"
 
 #if PNG_LIBPNG_VER >= 10400
@@ -60,6 +62,8 @@ enum
 
 G_DEFINE_TYPE_WITH_CODE (GstGLBumper, gst_gl_bumper, GST_TYPE_GL_FILTER,
     DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glbumper, "glbumper",
+    GST_RANK_NONE, GST_TYPE_GL_BUMPER, gl_element_init (plugin));
 
 static void gst_gl_bumper_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

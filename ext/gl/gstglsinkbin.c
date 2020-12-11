@@ -26,6 +26,7 @@
 #include <gst/video/navigation.h>
 #include <gst/controller/gstproxycontrolbinding.h>
 
+#include "gstglelements.h"
 #include "gstglsinkbin.h"
 
 GST_DEBUG_CATEGORY (gst_debug_gl_sink_bin);
@@ -105,6 +106,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLSinkBin, gst_gl_sink_bin,
         gst_gl_sink_bin_color_balance_init)
     GST_DEBUG_CATEGORY_INIT (gst_debug_gl_sink_bin, "glimagesink", 0,
         "OpenGL Video Sink Bin"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glsinkbin, "glsinkbin",
+    GST_RANK_NONE, GST_TYPE_GL_SINK_BIN, gl_element_init (plugin));
 
 static void
 gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)

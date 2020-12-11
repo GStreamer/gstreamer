@@ -36,6 +36,7 @@
 #include "config.h"
 #endif
 
+#include "gstglelements.h"
 #include "gstglstereosplit.h"
 
 #define GST_CAT_DEFAULT gst_gl_stereosplit_debug
@@ -47,6 +48,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_DEFINE_TYPE_WITH_CODE (GstGLStereoSplit, gst_gl_stereosplit,
     GST_TYPE_ELEMENT, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glstereosplit, "glstereosplit",
+    GST_RANK_NONE, GST_TYPE_GL_STEREOSPLIT, gl_element_init (plugin));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK, GST_PAD_ALWAYS,

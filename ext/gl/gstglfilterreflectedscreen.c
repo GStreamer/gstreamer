@@ -36,6 +36,8 @@
 #endif
 
 #include <math.h>
+
+#include "gstglelements.h"
 #include "gstglfilterreflectedscreen.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_reflected_screen_debug
@@ -58,6 +60,9 @@ enum
 
 G_DEFINE_TYPE_WITH_CODE (GstGLFilterReflectedScreen,
     gst_gl_filter_reflected_screen, GST_TYPE_GL_FILTER, DEBUG_INIT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glfilterreflectedscreen,
+    "glfilterreflectedscreen", GST_RANK_NONE,
+    GST_TYPE_GL_FILTER_REFLECTED_SCREEN, gl_element_init (plugin));
 
 static void gst_gl_filter_reflected_screen_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
