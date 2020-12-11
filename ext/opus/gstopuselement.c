@@ -1,6 +1,8 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2008> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Julian Bouzas <julian.bouzas@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,19 +25,15 @@
 
 #include "gstopuselements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+#include <gst/tag/tag.h>
+
+void
+opus_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (opusenc, plugin);
-  ret |= GST_ELEMENT_REGISTER (opusdec, plugin);
-
-  return ret;
+  if (g_once_init_enter (&res)) {
+    gst_tag_register_musicbrainz_tags ();
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    opus,
-    "OPUS plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

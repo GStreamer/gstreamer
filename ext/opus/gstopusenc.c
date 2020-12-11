@@ -52,6 +52,8 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/tag/tag.h>
 #include <gst/glib-compat-private.h>
+
+#include "gstopuselements.h"
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusenc.h"
@@ -243,6 +245,8 @@ static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buffer);
 G_DEFINE_TYPE_WITH_CODE (GstOpusEnc, gst_opus_enc, GST_TYPE_AUDIO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (opusenc, "opusenc",
+    GST_RANK_PRIMARY, GST_TYPE_OPUS_ENC, opus_element_init (plugin));
 
 static void
 gst_opus_enc_set_tags (GstOpusEnc * enc)

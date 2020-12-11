@@ -1,5 +1,6 @@
 opus_sources = [
   'gstopus.c',
+  'gstopuselement.c',
   'gstopuscommon.c',
   'gstopusdec.c',
   'gstopusenc.c',

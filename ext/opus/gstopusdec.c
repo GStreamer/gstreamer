@@ -46,6 +46,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include "gstopuselements.h"
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusdec.h"
@@ -78,6 +79,8 @@ static GstStaticPadTemplate opus_dec_sink_factory =
     );
 
 G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (opusdec, "opusdec",
+    GST_RANK_PRIMARY, GST_TYPE_OPUS_DEC, opus_element_init (plugin));
 
 #define DB_TO_LINEAR(x) pow (10., (x) / 20.)
 
