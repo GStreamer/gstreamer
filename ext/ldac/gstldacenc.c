@@ -197,11 +197,11 @@ gst_ldac_enc_do_negotiate (GstAudioEncoder * audio_enc)
 
   /* Negotiate output format based on downstream caps restrictions */
   caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (enc));
-  if (caps == GST_CAPS_NONE || gst_caps_is_empty (caps))
-    goto failure;
 
   if (caps == NULL)
     caps = gst_static_pad_template_get_caps (&ldac_enc_src_factory);
+  else if (gst_caps_is_empty (caps))
+    goto failure;
 
   /* Fixate output caps */
   filter_caps = gst_caps_new_simple ("audio/x-ldac", "rate", G_TYPE_INT,

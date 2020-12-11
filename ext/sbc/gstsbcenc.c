@@ -89,11 +89,11 @@ gst_sbc_enc_set_format (GstAudioEncoder * audio_enc, GstAudioInfo * info)
 
   /* negotiate output format based on downstream caps restrictions */
   caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (enc));
-  if (caps == GST_CAPS_NONE || gst_caps_is_empty (caps))
-    goto failure;
 
   if (caps == NULL)
     caps = gst_static_pad_template_get_caps (&sbc_enc_src_factory);
+  else if (gst_caps_is_empty (caps))
+    goto failure;
 
   /* fixate output caps */
   filter_caps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT,
