@@ -39,10 +39,8 @@
 #include "config.h"
 #endif
 
+#include "gstaudiomixerelements.h"
 #include "gstaudiointerleave.h"
-#include <gst/audio/audio.h>
-
-#include <string.h>
 
 #define GST_CAT_DEFAULT gst_audio_interleave_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -55,6 +53,8 @@ enum
 
 G_DEFINE_TYPE (GstAudioInterleavePad, gst_audio_interleave_pad,
     GST_TYPE_AUDIO_AGGREGATOR_PAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (audiointerleave, "audiointerleave",
+    GST_RANK_NONE, GST_TYPE_AUDIO_INTERLEAVE, audiomixer_element_init (plugin));
 
 static void
 gst_audio_interleave_pad_get_property (GObject * object, guint prop_id,

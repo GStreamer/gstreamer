@@ -1,6 +1,9 @@
 audiomixer_sources = [
   'gstaudiomixer.c',
+  'gstaudiomixerelement.c',
+  'gstliveadder.c',
   'gstaudiointerleave.c',
+  'gstaudiomixerplugin.c'
 ]
 
 orcsrc = 'gstaudiomixerorc'
