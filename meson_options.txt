@@ -116,6 +116,7 @@ option('ladspa', type : 'feature', value : 'auto', description : 'LADSPA plugin 
 option('ldac', type : 'feature', value : 'auto', description : 'LDAC bluetooth audio codec plugin')
 option('libde265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video decoder plugin')
 option('libmms', type : 'feature', value : 'auto', description : 'Microsoft multimedia server network source plugin')
+option('libopenaptx', type : 'feature', value : 'auto', description : 'Open Source implementation of Audio Processing Technology codec (aptX) plugin')
 option('lv2', type : 'feature', value : 'auto', description : 'LV2 audio plugin bridge')
 option('mediafoundation', type : 'feature', value : 'auto', description : 'Microsoft Media Foundation plugin')
 option('microdns', type : 'feature', value : 'auto', description : 'libmicrodns-based device provider')
