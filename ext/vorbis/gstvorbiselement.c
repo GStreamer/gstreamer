@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <scerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,24 +24,20 @@
 #endif
 
 #include "gstvorbiselements.h"
+#include "gst/tag/tag.h"
 
-GST_DEBUG_CATEGORY (ivorbisdec_debug);
+GST_DEBUG_CATEGORY (vorbisenc_debug);
+GST_DEBUG_CATEGORY (vorbisdec_debug);
+GST_DEBUG_CATEGORY (vorbisparse_debug);
+GST_DEBUG_CATEGORY (vorbistag_debug);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+vorbis_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (ivorbisdec_debug, "ivorbisdec", 0,
-      "vorbis decoding element (integer decoder)");
-
-  ret |= GST_ELEMENT_REGISTER (ivorbisdec, plugin);
-
-  return ret;
+  if (g_once_init_enter (&res)) {
+    gst_tag_register_musicbrainz_tags ();
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    ivorbisdec,
-    "Vorbis Tremor decoder",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -1,5 +1,6 @@
 vorbis_sources = [
   'gstvorbis.c',
+  'gstvorbiselement.c',
   'gstvorbisdec.c',
   'gstvorbisdeclib.c',
   'gstvorbisenc.c',
@@ -10,6 +11,7 @@ vorbis_sources = [
 
 vorbisidec_sources = [
   'gstivorbisdec.c',
+  'gstvorbiselement.c',
   'gstvorbisdec.c',
   'gstvorbisdeclib.c',
   'gstvorbiscommon.c',

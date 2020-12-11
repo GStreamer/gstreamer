@@ -21,49 +21,19 @@
 #include "config.h"
 #endif
 
-#include "gst/tag/tag.h"
-
-#include "gstvorbisenc.h"
-#include "gstvorbisdec.h"
-#include "gstvorbisparse.h"
-#include "gstvorbistag.h"
-
-GST_DEBUG_CATEGORY (vorbisenc_debug);
-GST_DEBUG_CATEGORY (vorbisdec_debug);
-GST_DEBUG_CATEGORY (vorbisparse_debug);
-GST_DEBUG_CATEGORY (vorbistag_debug);
+#include "gstvorbiselements.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "vorbisenc", GST_RANK_PRIMARY,
-          GST_TYPE_VORBISENC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "vorbisdec", GST_RANK_PRIMARY,
-          gst_vorbis_dec_get_type ()))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (vorbisenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (vorbisdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (vorbisparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (vorbistag, plugin);
 
-  if (!gst_element_register (plugin, "vorbisparse", GST_RANK_NONE,
-          gst_vorbis_parse_get_type ()))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "vorbistag", GST_RANK_NONE,
-          gst_vorbis_tag_get_type ()))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (vorbisenc_debug, "vorbisenc", 0,
-      "vorbis encoding element");
-  GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0,
-      "vorbis decoding element");
-  GST_DEBUG_CATEGORY_INIT (vorbisparse_debug, "vorbisparse", 0,
-      "vorbis parsing element");
-  GST_DEBUG_CATEGORY_INIT (vorbistag_debug, "vorbistag", 0,
-      "vorbis tagging element");
-
-  gst_tag_register_musicbrainz_tags ();
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

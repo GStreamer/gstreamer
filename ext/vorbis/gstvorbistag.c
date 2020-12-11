@@ -55,6 +55,7 @@
 
 #include <vorbis/codec.h>
 
+#include "gstvorbiselements.h"
 #include "gstvorbistag.h"
 
 
@@ -67,6 +68,8 @@ static GstFlowReturn gst_vorbis_tag_parse_packet (GstVorbisParse * parse,
 #define gst_vorbis_tag_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVorbisTag, gst_vorbis_tag,
     GST_TYPE_VORBIS_PARSE, G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vorbistag, "vorbistag",
+    GST_RANK_NONE, GST_TYPE_VORBIS_TAG, vorbis_element_init (plugin));
 
 static void
 gst_vorbis_tag_class_init (GstVorbisTagClass * klass)

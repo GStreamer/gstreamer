@@ -44,6 +44,7 @@
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 
+#include "gstvorbiselements.h"
 #include "gstvorbiscommon.h"
 
 #ifndef TREMOR
@@ -69,6 +70,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_vorbis_dec_parent_class parent_class
 G_DEFINE_TYPE (GstVorbisDec, gst_vorbis_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vorbisdec, "vorbisdec",
+    GST_RANK_PRIMARY, GST_TYPE_VORBIS_DEC, vorbis_element_init (plugin));
+
+GST_ELEMENT_REGISTER_DEFINE (ivorbisdec, "ivorbisdec",
+    GST_RANK_SECONDARY, GST_TYPE_VORBIS_DEC);
 
 static void vorbis_dec_finalize (GObject * object);
 

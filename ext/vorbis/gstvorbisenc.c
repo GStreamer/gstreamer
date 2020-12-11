@@ -52,6 +52,7 @@
 #include <gst/audio/audio.h>
 #include "gstvorbisenc.h"
 
+#include "gstvorbiselements.h"
 #include "gstvorbiscommon.h"
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
@@ -108,6 +109,8 @@ static void gst_vorbis_enc_flush (GstAudioEncoder * vorbisenc);
 #define gst_vorbis_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVorbisEnc, gst_vorbis_enc,
     GST_TYPE_AUDIO_ENCODER, G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vorbisenc, "vorbisenc",
+    GST_RANK_PRIMARY, GST_TYPE_VORBISENC, vorbis_element_init (plugin));
 
 static void
 gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
