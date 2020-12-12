@@ -610,10 +610,10 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
     g_mutex_lock (&bus->priv->queue_lock);
 
     if (ret == 0) {
-      GST_INFO_OBJECT (bus, "timed out, breaking loop");
+      GST_DEBUG_OBJECT (bus, "timed out, breaking loop");
       break;
     } else {
-      GST_INFO_OBJECT (bus, "we got woken up, recheck for message");
+      GST_DEBUG_OBJECT (bus, "we got woken up, recheck for message");
     }
   }
 
