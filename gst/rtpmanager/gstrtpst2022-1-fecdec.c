@@ -440,7 +440,7 @@ xor_items (GstRTPST_2022_1_FecDec * dec, Rtp2DFecHeader * fec, GList * packets,
 
     gst_rtp_buffer_map (item->buffer, GST_MAP_READ, &media_rtp);
     _xor_mem (xored, gst_rtp_buffer_get_payload (&media_rtp),
-        gst_rtp_buffer_get_payload_len (&media_rtp));
+        MIN (gst_rtp_buffer_get_payload_len (&media_rtp), xored_payload_len));
     xored_timestamp ^= gst_rtp_buffer_get_timestamp (&media_rtp);
     xored_pt ^= gst_rtp_buffer_get_payload_type (&media_rtp);
     xored_marker ^= gst_rtp_buffer_get_marker (&media_rtp);
