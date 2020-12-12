@@ -168,6 +168,9 @@ typedef struct
   guint8 seq_ext;
   guint8 *payload;
   guint payload_len;
+  gboolean marker;
+  gboolean padding;
+  gboolean extension;
 } Rtp2DFecHeader;
 
 static GstStaticPadTemplate fec_sink_template =
@@ -280,16 +283,21 @@ lookup_media_packet (GstRTPST_2022_1_FecDec * dec, guint16 seqnum)
 }
 
 static gboolean
-parse_header (Rtp2DFecHeader * fec, guint8 * data, guint len)
+parse_header (GstRTPBuffer * rtp, Rtp2DFecHeader * fec)
 {
   gboolean ret = FALSE;
   GstBitReader bits;
+  guint8 *data = gst_rtp_buffer_get_payload (rtp);
+  guint len = gst_rtp_buffer_get_payload_len (rtp);
 
   if (len < 16)
     goto done;
 
   gst_bit_reader_init (&bits, data, len);
 
+  fec->marker = gst_rtp_buffer_get_marker (rtp);
+  fec->padding = gst_rtp_buffer_get_padding (rtp);
+  fec->extension = gst_rtp_buffer_get_extension (rtp);
   fec->seq = gst_bit_reader_get_bits_uint16_unchecked (&bits, 16);
   fec->len = gst_bit_reader_get_bits_uint16_unchecked (&bits, 16);
   fec->E = gst_bit_reader_get_bits_uint8_unchecked (&bits, 1);
@@ -392,6 +400,9 @@ xor_items (GstRTPST_2022_1_FecDec * dec, Rtp2DFecHeader * fec, GList * packets,
   GList *tmp;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer;
+  gboolean xored_marker;
+  gboolean xored_padding;
+  gboolean xored_extension;
 
   /* Figure out the recovered packet length first */
   xored_payload_len = fec->len;
@@ -419,6 +430,9 @@ xor_items (GstRTPST_2022_1_FecDec * dec, Rtp2DFecHeader * fec, GList * packets,
   memcpy (xored, fec->payload, xored_payload_len);
   xored_timestamp = fec->timestamp;
   xored_pt = fec->pt;
+  xored_marker = fec->marker;
+  xored_padding = fec->padding;
+  xored_extension = fec->extension;
 
   for (tmp = packets; tmp; tmp = tmp->next) {
     GstRTPBuffer media_rtp = GST_RTP_BUFFER_INIT;
@@ -429,6 +443,9 @@ xor_items (GstRTPST_2022_1_FecDec * dec, Rtp2DFecHeader * fec, GList * packets,
         gst_rtp_buffer_get_payload_len (&media_rtp));
     xored_timestamp ^= gst_rtp_buffer_get_timestamp (&media_rtp);
     xored_pt ^= gst_rtp_buffer_get_payload_type (&media_rtp);
+    xored_marker ^= gst_rtp_buffer_get_marker (&media_rtp);
+    xored_padding ^= gst_rtp_buffer_get_padding (&media_rtp);
+    xored_extension ^= gst_rtp_buffer_get_extension (&media_rtp);
 
     gst_rtp_buffer_unmap (&media_rtp);
   }
@@ -442,6 +459,9 @@ xor_items (GstRTPST_2022_1_FecDec * dec, Rtp2DFecHeader * fec, GList * packets,
   gst_rtp_buffer_set_timestamp (&rtp, xored_timestamp);
   gst_rtp_buffer_set_seq (&rtp, seqnum);
   gst_rtp_buffer_set_payload_type (&rtp, xored_pt);
+  gst_rtp_buffer_set_marker (&rtp, xored_marker);
+  gst_rtp_buffer_set_padding (&rtp, xored_padding);
+  gst_rtp_buffer_set_extension (&rtp, xored_extension);
 
   gst_rtp_buffer_unmap (&rtp);
 
@@ -535,16 +555,11 @@ check_fec_item (GstRTPST_2022_1_FecDec * dec, Item * item)
 {
   Rtp2DFecHeader fec;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-  guint payload_len;
-  guint8 *payload;
   GstFlowReturn ret;
 
   gst_rtp_buffer_map (item->buffer, GST_MAP_READ, &rtp);
 
-  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
-  payload = gst_rtp_buffer_get_payload (&rtp);
-
-  parse_header (&fec, payload, payload_len);
+  parse_header (&rtp, &fec);
 
   ret = check_fec (dec, &fec);
 
@@ -617,7 +632,7 @@ gst_rtpst_2022_1_fecdec_sink_chain_fec (GstPad * pad, GstObject * parent,
   payload_len = gst_rtp_buffer_get_payload_len (&rtp);
   payload = gst_rtp_buffer_get_payload (&rtp);
 
-  if (!parse_header (&fec, payload, payload_len)) {
+  if (!parse_header (&rtp, &fec)) {
     GST_WARNING_OBJECT (pad, "Failed to parse FEC header (payload len: %d)",
         payload_len);
     GST_MEMDUMP_OBJECT (pad, "Invalid payload", payload, payload_len);

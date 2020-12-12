@@ -114,6 +114,9 @@ typedef struct
   guint32 xored_timestamp;
   guint8 xored_pt;
   guint16 xored_payload_len;
+  gboolean xored_marker;
+  gboolean xored_padding;
+  gboolean xored_extension;
 
   guint16 seq_base;
 
@@ -256,6 +259,9 @@ fec_packet_update (FecPacket * fec, GstRTPBuffer * rtp)
     fec->xored_payload_len = gst_rtp_buffer_get_payload_len (rtp);
     fec->xored_pt = gst_rtp_buffer_get_payload_type (rtp);
     fec->xored_timestamp = gst_rtp_buffer_get_timestamp (rtp);
+    fec->xored_marker = gst_rtp_buffer_get_marker (rtp);
+    fec->xored_padding = gst_rtp_buffer_get_padding (rtp);
+    fec->xored_extension = gst_rtp_buffer_get_extension (rtp);
     fec->xored_payload = g_malloc (sizeof (guint8) * fec->payload_len);
     memcpy (fec->xored_payload, gst_rtp_buffer_get_payload (rtp),
         fec->payload_len);
@@ -271,6 +277,9 @@ fec_packet_update (FecPacket * fec, GstRTPBuffer * rtp)
     fec->xored_timestamp ^= gst_rtp_buffer_get_timestamp (rtp);
     _xor_mem (fec->xored_payload, gst_rtp_buffer_get_payload (rtp),
         gst_rtp_buffer_get_payload_len (rtp));
+    fec->xored_marker ^= gst_rtp_buffer_get_marker (rtp);
+    fec->xored_padding ^= gst_rtp_buffer_get_padding (rtp);
+    fec->xored_extension ^= gst_rtp_buffer_get_extension (rtp);
   }
 
   fec->n_packets += 1;
@@ -331,6 +340,9 @@ queue_fec_packet (GstRTPST_2022_1_FecEnc * enc, FecPacket * fec, gboolean row)
 
   gst_rtp_buffer_set_payload_type (&rtp, enc->pt);
   gst_rtp_buffer_set_seq (&rtp, row ? enc->row_seq++ : enc->column_seq++);
+  gst_rtp_buffer_set_marker (&rtp, fec->xored_marker);
+  gst_rtp_buffer_set_padding (&rtp, fec->xored_padding);
+  gst_rtp_buffer_set_extension (&rtp, fec->xored_extension);
 
   /* We're sending it out immediately */
   if (row)
