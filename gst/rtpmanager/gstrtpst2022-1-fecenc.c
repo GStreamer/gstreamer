@@ -266,20 +266,23 @@ fec_packet_update (FecPacket * fec, GstRTPBuffer * rtp)
     memcpy (fec->xored_payload, gst_rtp_buffer_get_payload (rtp),
         fec->payload_len);
   } else {
-    if (fec->payload_len < gst_rtp_buffer_get_payload_len (rtp)) {
-      fec->payload_len = gst_rtp_buffer_get_payload_len (rtp);
+    guint plen = gst_rtp_buffer_get_payload_len (rtp);
+
+    if (fec->payload_len < plen) {
       fec->xored_payload =
-          g_realloc (fec->xored_payload, sizeof (guint8) * fec->payload_len);
+          g_realloc (fec->xored_payload, sizeof (guint8) * plen);
+      memset (fec->xored_payload + fec->payload_len, 0,
+          plen - fec->payload_len);
+      fec->payload_len = plen;
     }
 
-    fec->xored_payload_len ^= gst_rtp_buffer_get_payload_len (rtp);
+    fec->xored_payload_len ^= plen;
     fec->xored_pt ^= gst_rtp_buffer_get_payload_type (rtp);
     fec->xored_timestamp ^= gst_rtp_buffer_get_timestamp (rtp);
-    _xor_mem (fec->xored_payload, gst_rtp_buffer_get_payload (rtp),
-        gst_rtp_buffer_get_payload_len (rtp));
     fec->xored_marker ^= gst_rtp_buffer_get_marker (rtp);
     fec->xored_padding ^= gst_rtp_buffer_get_padding (rtp);
     fec->xored_extension ^= gst_rtp_buffer_get_extension (rtp);
+    _xor_mem (fec->xored_payload, gst_rtp_buffer_get_payload (rtp), plen);
   }
 
   fec->n_packets += 1;
