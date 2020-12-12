@@ -61,7 +61,7 @@ gst_vaapi_video_buffer_pool_finalize (GObject * object)
       GST_VAAPI_VIDEO_BUFFER_POOL (object)->priv;
 
   gst_vaapi_display_replace (&priv->display, NULL);
-  g_clear_object (&priv->allocator);
+  gst_clear_object (&priv->allocator);
   if (priv->dma_mem_map)
     g_hash_table_destroy (priv->dma_mem_map);
 

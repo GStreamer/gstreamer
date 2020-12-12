@@ -411,7 +411,7 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
   /* create the queue */
   vaapidecbin->queue = gst_element_factory_make ("queue", "vaapi-queue");
   if (!vaapidecbin->queue) {
-    g_clear_object (&vaapidecbin->decoder);
+    gst_clear_object (&vaapidecbin->decoder);
     post_missing_element_message (vaapidecbin, "queue");
     return;
   }
@@ -420,8 +420,8 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
       vaapidecbin->queue, NULL);
 
   if (!gst_element_link (vaapidecbin->decoder, vaapidecbin->queue)) {
-    g_clear_object (&vaapidecbin->decoder);
-    g_clear_object (&vaapidecbin->queue);
+    gst_clear_object (&vaapidecbin->decoder);
+    gst_clear_object (&vaapidecbin->queue);
     g_critical ("failed to link decoder and queue");
     return;
   }
