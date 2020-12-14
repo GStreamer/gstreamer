@@ -107,6 +107,10 @@ descriptor_name (GstMpegtsDescriptor * desc)
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
             (GST_TYPE_MPEGTS_ISDB_DESCRIPTOR_TYPE)), val);
   if (en == NULL)
+    /* Else try with SCTE enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEGTS_SCTE_DESCRIPTOR_TYPE)), val);
+  if (en == NULL)
     /* Else try with misc enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
             (GST_TYPE_MPEGTS_MISC_DESCRIPTOR_TYPE)), val);
@@ -146,6 +150,10 @@ stream_type_name (gint val)
 
   en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
           (GST_TYPE_MPEGTS_STREAM_TYPE)), val);
+  if (en == NULL)
+    /* Else try with HDMV enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEGTS_HDMV_STREAM_TYPE)), val);
   if (en == NULL)
     /* Else try with SCTE enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
@@ -1377,6 +1385,7 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEGTS_DVB_EXTENDED_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_ATSC_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_ISDB_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_SCTE_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_MISC_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_ISO639_AUDIO_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_DVB_SERVICE_TYPE);
@@ -1396,6 +1405,7 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEGTS_COMPONENT_STREAM_CONTENT);
   g_type_class_ref (GST_TYPE_MPEGTS_CONTENT_NIBBLE_HI);
   g_type_class_ref (GST_TYPE_MPEGTS_SCTE_STREAM_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_HDMV_STREAM_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_SECTION_SCTE_TABLE_ID);
 
   mainloop = g_main_loop_new (NULL, FALSE);
