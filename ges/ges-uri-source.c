@@ -71,13 +71,17 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
           (ges_extractable_get_asset (GES_EXTRACTABLE (self->element)))));
   gboolean wanted = !g_strcmp0 (stream_id, wanted_id);
 
-
   if (!ges_source_get_rendering_smartly (GES_SOURCE (self->element))) {
-    if (!wanted && are_raw_caps (caps)) {
-      GST_DEBUG_OBJECT (self->element, "Totally skipping %s", stream_id);
+    if (!are_raw_caps (caps))
+      goto done;
+
+    if (!wanted) {
+      GST_INFO_OBJECT (self->element, "Not matching stream id: %s -> SKIPPING",
+          stream_id);
       res = GST_AUTOPLUG_SELECT_SKIP;
+    } else {
+      GST_INFO_OBJECT (self->element, "Using stream %s", stream_id);
     }
-    GST_LOG_OBJECT (self->element, "Not being smart here");
     goto done;
   }
 
@@ -182,4 +186,38 @@ ges_uri_source_init (GESTrackElement * element, GESUriSource * self)
   self->element = element;
   g_signal_connect (element, "notify::track",
       G_CALLBACK (ges_uri_source_track_set_cb), self);
+}
+
+gboolean
+ges_uri_source_select_pad (GESSource * self, GstPad * pad)
+{
+  gboolean res = TRUE;
+  gboolean is_nested_timeline;
+  GESUriSourceAsset *asset =
+      GES_URI_SOURCE_ASSET (ges_extractable_get_asset (GES_EXTRACTABLE (self)));
+  const GESUriClipAsset *clip_asset =
+      ges_uri_source_asset_get_filesource_asset (asset);
+  const gchar *wanted_stream_id = ges_asset_get_id (GES_ASSET (asset));
+  gchar *stream_id;
+
+  if (clip_asset) {
+    g_object_get (G_OBJECT (clip_asset), "is-nested-timeline",
+        &is_nested_timeline, NULL);
+
+    if (is_nested_timeline) {
+      GST_DEBUG_OBJECT (self, "Nested timeline track selection is handled"
+          " by the timeline SELECT_STREAM events handling.");
+
+      return TRUE;
+    }
+  }
+
+  stream_id = gst_pad_get_stream_id (pad);
+  res = !g_strcmp0 (stream_id, wanted_stream_id);
+
+  GST_INFO_OBJECT (self, "%s pad with stream id: %s as %s wanted",
+      res ? "Using" : "Ignoring", stream_id, wanted_stream_id);
+  g_free (stream_id);
+
+  return res;
 }

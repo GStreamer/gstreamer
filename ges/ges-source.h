@@ -55,9 +55,21 @@ struct _GESSourceClass {
   /*< private >*/
   GESTrackElementClass parent_class;
 
-  /*< private >*/
+  /**
+   * GESSourceClass::select_pad:
+   * @source: The @source for which to check if @pad should be used or not
+   * @pad: The pad to check
+   *
+   * Check whether @pad should be exposed/used.
+   *
+   * Returns: %TRUE if @pad should be used %FALSE otherwise.
+   *
+   * Since: 1.20
+   */
+  gboolean (*select_pad)(GESSource *source, GstPad *pad);
+
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING - 1];
 };
 
 G_END_DECLS
