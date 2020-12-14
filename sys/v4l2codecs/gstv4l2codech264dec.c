@@ -337,7 +337,7 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
   min = MAX (2, min);
 
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SINK, self->min_pool_size + 2);
+      GST_PAD_SINK, 2);
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SRC, self->min_pool_size + min + 4);
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
@@ -825,24 +825,6 @@ fail:
   return FALSE;
 }
 
-static gboolean
-gst_v4l2_codec_h264_dec_wait (GstV4l2CodecH264Dec * self,
-    GstV4l2Request * request)
-{
-  gint ret = gst_v4l2_request_poll (request, GST_SECOND);
-  if (ret == 0) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoding frame took too long"), (NULL));
-    return FALSE;
-  } else if (ret < 0) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoding request failed: %s", g_strerror (errno)), (NULL));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
@@ -850,40 +832,34 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_h264_picture_get_user_data (picture);
+  gint ret;
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
   if (gst_v4l2_request_is_done (request))
     goto finish_frame;
 
-  if (!gst_v4l2_codec_h264_dec_wait (self, request))
+  ret = gst_v4l2_request_poll (request, GST_SECOND);
+  if (ret == 0) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoding frame %u took too long", picture->system_frame_number),
+        (NULL));
     goto error;
-
-  while (TRUE) {
-    guint32 frame_num;
-    GstH264Picture *other_pic;
-    GstV4l2Request *other_request;
-
-    if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
-      GST_ELEMENT_ERROR (self, STREAM, DECODE,
-          ("Decoder did not produce a frame"), (NULL));
-      goto error;
-    }
-
-    if (frame_num == picture->system_frame_number)
-      break;
-
-    other_pic = gst_h264_decoder_get_picture (decoder, frame_num);
-    if (other_pic) {
-      other_request = gst_h264_picture_get_user_data (other_pic);
-      gst_v4l2_request_set_done (other_request);
-      gst_h264_picture_unref (other_pic);
-    }
+  } else if (ret < 0) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoding request failed: %s", g_strerror (errno)), (NULL));
+    goto error;
   }
 
-finish_frame:
   gst_v4l2_request_set_done (request);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
+
+finish_frame:
+  if (gst_v4l2_request_failed (request)) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+    goto error;
+  }
 
   /* Hold on reference buffers for the rest of the picture lifetime */
   gst_h264_picture_set_user_data (picture,
@@ -937,14 +913,6 @@ gst_v4l2_codec_h264_dec_ensure_output_buffer (GstV4l2CodecH264Dec * self,
     return FALSE;
   }
 
-  if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
-          frame->system_frame_number)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
-        ("Driver did not accept the picture buffer."), (NULL));
-    gst_buffer_unref (buffer);
-    return FALSE;
-  }
-
   frame->output_buffer = buffer;
   return TRUE;
 }
@@ -953,8 +921,7 @@ static gboolean
 gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     GstH264Picture * picture, guint flags)
 {
-  GstVideoCodecFrame *frame;
-  GstV4l2Request *prev_request, *request;
+  GstV4l2Request *prev_request, *request = NULL;
   gsize bytesused;
   gboolean ret = FALSE;
 
@@ -989,22 +956,37 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   };
   /* *INDENT-ON* */
 
-  request = gst_v4l2_decoder_alloc_request (self->decoder);
+  prev_request = gst_h264_picture_get_user_data (picture);
+
+  bytesused = self->bitstream_map.size;
+  gst_memory_unmap (self->bitstream, &self->bitstream_map);
+  self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
+  gst_memory_resize (self->bitstream, 0, bytesused);
+
+  if (prev_request) {
+    request = gst_v4l2_decoder_alloc_sub_request (self->decoder, prev_request,
+        self->bitstream);
+  } else {
+    GstVideoCodecFrame *frame;
+
+    frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+        picture->system_frame_number);
+    g_return_val_if_fail (frame, FALSE);
+
+    if (!gst_v4l2_codec_h264_dec_ensure_output_buffer (self, frame))
+      goto done;
+
+    request = gst_v4l2_decoder_alloc_request (self->decoder,
+        picture->system_frame_number, self->bitstream, frame->output_buffer);
+
+    gst_video_codec_frame_unref (frame);
+  }
+
   if (!request) {
     GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
         ("Failed to allocate a media request object."), (NULL));
     goto done;
   }
-
-
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
-  g_return_val_if_fail (frame, FALSE);
-
-  if (!gst_v4l2_codec_h264_dec_ensure_output_buffer (self, frame))
-    goto done;
-
-  gst_video_codec_frame_unref (frame);
 
   if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
           G_N_ELEMENTS (control))) {
@@ -1013,28 +995,10 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
     goto done;
   }
 
-  bytesused = self->bitstream_map.size;
-  gst_memory_unmap (self->bitstream, &self->bitstream_map);
-  self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
-
-  if (!gst_v4l2_decoder_queue_sink_mem (self->decoder, request, self->bitstream,
-          picture->system_frame_number, bytesused, flags)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
-        ("Driver did not accept the bitstream data."), (NULL));
-    goto done;
-  }
-
-  if (!gst_v4l2_request_queue (request)) {
+  if (!gst_v4l2_request_queue (request, flags)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the decode request."), (NULL));
     goto done;
-  }
-
-  prev_request = gst_h264_picture_get_user_data (picture);
-  if (prev_request) {
-    if (!gst_v4l2_codec_h264_dec_wait (self, prev_request))
-      goto done;
-    gst_v4l2_request_set_done (prev_request);
   }
 
   gst_h264_picture_set_user_data (picture, g_steal_pointer (&request),
@@ -1044,6 +1008,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
 done:
   if (request)
     gst_v4l2_request_free (request);
+
   gst_v4l2_codec_h264_dec_reset_picture (self);
 
   return ret;

@@ -49,10 +49,17 @@ struct _GstV4l2Request
 {
   GstV4l2Decoder *decoder;
   gint fd;
+  guint32 frame_num;
   GstMemory *bitstream;
+  GstBuffer *pic_buf;
   GstPoll *poll;
   GstPollFD pollfd;
+
+  /* request state */
   gboolean pending;
+  gboolean failed;
+  gboolean hold_pic_buf;
+  gboolean sub_request;
 };
 
 struct _GstV4l2Decoder
@@ -225,11 +232,12 @@ gst_v4l2_decoder_streamon (GstV4l2Decoder * self, GstPadDirection direction)
 gboolean
 gst_v4l2_decoder_streamoff (GstV4l2Decoder * self, GstPadDirection direction)
 {
-  GstV4l2Request *pending_req;
   guint32 type = direction_to_buffer_type (self, direction);
   gint ret;
 
   if (direction == GST_PAD_SRC) {
+    GstV4l2Request *pending_req;
+
     /* STREAMOFF have the effect of cancelling all requests and unqueuing all
      * buffers, so clear the pending request list */
     while ((pending_req = gst_queue_array_pop_head (self->pending_requests))) {
@@ -530,12 +538,13 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
   return TRUE;
 }
 
-gboolean
+static gboolean
 gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     GstV4l2Request * request, GstMemory * mem, guint32 frame_num,
-    gsize bytesused, guint flags)
+    guint flags)
 {
   gint ret;
+  gsize bytesused = gst_memory_get_sizes (mem, NULL, NULL);
   struct v4l2_plane plane = {
     .bytesused = bytesused,
   };
@@ -563,14 +572,11 @@ gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     return FALSE;
   }
 
-  request->bitstream = gst_memory_ref (mem);
-
   return TRUE;
 }
 
-gboolean
-gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self, GstBuffer * buffer,
-    guint32 frame_num)
+static gboolean
+gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self, GstBuffer * buffer)
 {
   gint i, ret;
   struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
@@ -606,7 +612,7 @@ gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self, GstBuffer * buffer,
   return TRUE;
 }
 
-gboolean
+static gboolean
 gst_v4l2_decoder_dequeue_sink (GstV4l2Decoder * self)
 {
   gint ret;
@@ -632,7 +638,7 @@ gst_v4l2_decoder_dequeue_sink (GstV4l2Decoder * self)
   return TRUE;
 }
 
-gboolean
+static gboolean
 gst_v4l2_decoder_dequeue_src (GstV4l2Decoder * self, guint32 * out_frame_num)
 {
   gint ret;
@@ -806,8 +812,23 @@ gst_v4l2_decoder_register (GstPlugin * plugin,
   g_free (type_name);
 }
 
+/*
+ * gst_v4l2_decoder_alloc_request:
+ * @self a #GstV4l2Decoder pointer
+ * @frame_num: Used as a timestamp to identify references
+ * @bitstream the #GstMemory that holds the bitstream data
+ * @pic_buf the #GstBuffer holding the decoded picture
+ *
+ * Allocate a Linux media request file descriptor. This request wrapper will
+ * hold a reference to the requested bitstream memory to decoded and the
+ * picture buffer this request will decode to. This will be used for
+ * transparent management of the V4L2 queues.
+ *
+ * Returns: a new #GstV4l2Request
+ */
 GstV4l2Request *
-gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self)
+gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self, guint32 frame_num,
+    GstMemory * bitstream, GstBuffer * pic_buf)
 {
   GstV4l2Request *request = gst_queue_array_pop_head (self->request_pool);
   gint ret;
@@ -830,8 +851,59 @@ gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self)
   }
 
   request->decoder = g_object_ref (self);
+  request->bitstream = gst_memory_ref (bitstream);
+  request->pic_buf = gst_buffer_ref (pic_buf);
+  request->frame_num = frame_num;
+
   return request;
 }
+
+/*
+ * gst_v4l2_decoder_alloc_sub_request:
+ * @self a #GstV4l2Decoder pointer
+ * @prev_request the #GstV4l2Request this request continue
+ * @bitstream the #GstMemory that holds the bitstream data
+ *
+ * Allocate a Linux media request file descriptor. Similar to
+ * gst_v4l2_decoder_alloc_request(), but used when a request is the
+ * continuation of the decoding of the same picture. This is notably the case
+ * for subsequent slices or for second field of a frame.
+ *
+ * Returns: a new #GstV4l2Request
+ */
+GstV4l2Request *
+gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
+    GstV4l2Request * prev_request, GstMemory * bitstream)
+{
+  GstV4l2Request *request = gst_queue_array_pop_head (self->request_pool);
+  gint ret;
+
+  if (!request) {
+    request = g_new0 (GstV4l2Request, 1);
+
+    ret = ioctl (self->media_fd, MEDIA_IOC_REQUEST_ALLOC, &request->fd);
+    if (ret < 0) {
+      GST_ERROR_OBJECT (self, "MEDIA_IOC_REQUEST_ALLOC failed: %s",
+          g_strerror (errno));
+      return NULL;
+    }
+
+    request->poll = gst_poll_new (FALSE);
+    gst_poll_fd_init (&request->pollfd);
+    request->pollfd.fd = request->fd;
+    gst_poll_add_fd (request->poll, &request->pollfd);
+    gst_poll_fd_ctl_pri (request->poll, &request->pollfd, TRUE);
+  }
+
+  request->decoder = g_object_ref (self);
+  request->bitstream = gst_memory_ref (bitstream);
+  request->pic_buf = gst_buffer_ref (prev_request->pic_buf);
+  request->frame_num = prev_request->frame_num;
+  request->sub_request = TRUE;
+
+  return request;
+}
+
 
 void
 gst_v4l2_request_free (GstV4l2Request * request)
@@ -847,6 +919,11 @@ gst_v4l2_request_free (GstV4l2Request * request)
   }
 
   g_clear_pointer (&request->bitstream, gst_memory_unref);
+  g_clear_pointer (&request->pic_buf, gst_buffer_unref);
+  request->frame_num = G_MAXUINT32;
+  request->failed = FALSE;
+  request->hold_pic_buf = FALSE;
+  request->sub_request = FALSE;
   request->decoder = NULL;
 
   if (request->pending) {
@@ -879,21 +956,48 @@ gst_v4l2_request_free (GstV4l2Request * request)
 }
 
 gboolean
-gst_v4l2_request_queue (GstV4l2Request * request)
+gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
 {
+  GstV4l2Decoder *decoder = request->decoder;
   gint ret;
 
-  GST_TRACE_OBJECT (request->decoder, "Queuing request %p.", request);
+  GST_TRACE_OBJECT (decoder, "Queuing request %p.", request);
+
+  if (!gst_v4l2_decoder_queue_sink_mem (decoder, request,
+          request->bitstream, request->frame_num, flags)) {
+    GST_ERROR_OBJECT (decoder, "Driver did not accept the bitstream data.");
+    return FALSE;
+  }
+
+  if (!request->sub_request &&
+      !gst_v4l2_decoder_queue_src_buffer (decoder, request->pic_buf)) {
+    GST_ERROR_OBJECT (decoder, "Driver did not accept the picture buffer.");
+    return FALSE;
+  }
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_QUEUE, NULL);
   if (ret < 0) {
-    GST_ERROR_OBJECT (request->decoder, "MEDIA_REQUEST_IOC_QUEUE, failed: %s",
+    GST_ERROR_OBJECT (decoder, "MEDIA_REQUEST_IOC_QUEUE, failed: %s",
         g_strerror (errno));
     return FALSE;
   }
 
+  if (flags & V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF)
+    request->hold_pic_buf = TRUE;
+
   request->pending = TRUE;
-  gst_queue_array_push_tail (request->decoder->pending_requests, request);
+  gst_queue_array_push_tail (decoder->pending_requests, request);
+
+  /* FIXME to support more then one pending requests, we need the request to
+   * be refcounted */
+  if (gst_queue_array_get_length (decoder->pending_requests) > 1) {
+    GstV4l2Request *pending_req;
+
+    pending_req = gst_queue_array_peek_head (decoder->pending_requests);
+    ret = gst_v4l2_request_poll (pending_req, GST_SECOND);
+    if (ret > 0)
+      gst_v4l2_request_set_done (pending_req);
+  }
 
   return TRUE;
 }
@@ -907,32 +1011,48 @@ gst_v4l2_request_poll (GstV4l2Request * request, GstClockTime timeout)
 void
 gst_v4l2_request_set_done (GstV4l2Request * request)
 {
-  if (request->bitstream) {
-    GstV4l2Decoder *dec = request->decoder;
-    GstV4l2Request *pending_req;
+  GstV4l2Decoder *decoder = request->decoder;
+  GstV4l2Request *pending_req = NULL;
 
-    while ((pending_req = gst_queue_array_pop_head (dec->pending_requests))) {
-      gst_v4l2_decoder_dequeue_sink (request->decoder);
-      g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
-      pending_req->pending = FALSE;
+  if (!request->pending)
+    return;
 
-      if (pending_req == request)
-        break;
+  while ((pending_req = gst_queue_array_pop_head (decoder->pending_requests))) {
+    gst_v4l2_decoder_dequeue_sink (decoder);
+    g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
+
+    if (!pending_req->hold_pic_buf) {
+      guint32 frame_num = G_MAXUINT32;
+
+      if (!gst_v4l2_decoder_dequeue_src (decoder, &frame_num)) {
+        pending_req->failed = TRUE;
+      } else if (frame_num != pending_req->frame_num) {
+        GST_WARNING_OBJECT (decoder,
+            "Requested frame %u, but driver returned frame %u.",
+            pending_req->frame_num, frame_num);
+        pending_req->failed = TRUE;
+      }
     }
 
-    /* Pending request should always be found in the fifo */
-    if (pending_req != request) {
-      g_warning ("Pending request not found in the pending list.");
-      gst_v4l2_decoder_dequeue_sink (request->decoder);
-      g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
-    }
+    g_clear_pointer (&pending_req->pic_buf, gst_buffer_unref);
+    pending_req->pending = FALSE;
+
+    if (pending_req == request)
+      break;
   }
 
-  request->pending = FALSE;
+  /* Pending request must be in the pending request list */
+  g_assert (pending_req == request);
 }
 
 gboolean
 gst_v4l2_request_is_done (GstV4l2Request * request)
 {
   return !request->pending;
+}
+
+gboolean
+gst_v4l2_request_failed (GstV4l2Request * request)
+{
+  return request->failed;
 }

@@ -246,7 +246,7 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
   min = MAX (2, min);
 
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SINK, self->min_pool_size + 2);
+      GST_PAD_SINK, 2);
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SRC, self->min_pool_size + min + 4);
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
@@ -539,15 +539,10 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   };
   /* *INDENT-ON* */
 
-  request = gst_v4l2_decoder_alloc_request (self->decoder);
-  if (!request) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
-        ("Failed to allocate a media request object."), (NULL));
-    goto fail;
-  }
-
-  gst_vp8_picture_set_user_data (picture, request,
-      (GDestroyNotify) gst_v4l2_request_free);
+  bytesused = self->bitstream_map.size;
+  gst_memory_unmap (self->bitstream, &self->bitstream_map);
+  self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
+  gst_memory_resize (self->bitstream, 0, bytesused);
 
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
       &buffer, NULL);
@@ -567,6 +562,17 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   frame->output_buffer = buffer;
   gst_video_codec_frame_unref (frame);
 
+  request = gst_v4l2_decoder_alloc_request (self->decoder,
+      picture->system_frame_number, self->bitstream, buffer);
+  if (!request) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
+        ("Failed to allocate a media request object."), (NULL));
+    goto fail;
+  }
+
+  gst_vp8_picture_set_user_data (picture, request,
+      (GDestroyNotify) gst_v4l2_request_free);
+
   if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
           G_N_ELEMENTS (control))) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
@@ -574,26 +580,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
     goto fail;
   }
 
-  bytesused = self->bitstream_map.size;
-  gst_memory_unmap (self->bitstream, &self->bitstream_map);
-  self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
-
-  if (!gst_v4l2_decoder_queue_sink_mem (self->decoder, request, self->bitstream,
-          picture->system_frame_number, bytesused, 0)) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
-        ("Driver did not accept the bitstream data."), (NULL));
-    goto fail;
-  }
-
-
-  if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
-          picture->system_frame_number)) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
-        ("Driver did not accept the picture buffer."), (NULL));
-    goto fail;
-  }
-
-  if (!gst_v4l2_request_queue (request)) {
+  if (!gst_v4l2_request_queue (request, 0)) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
         ("Driver did not accept the decode request."), (NULL));
     goto fail;
@@ -663,7 +650,6 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_vp8_picture_get_user_data (picture);
   gint ret;
-  guint32 frame_num;
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
@@ -682,17 +668,15 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
     goto error;
   }
 
-  do {
-    if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
-      GST_ELEMENT_ERROR (self, STREAM, DECODE,
-          ("Decoder did not produce a frame"), (NULL));
-      goto error;
-    }
-  } while (frame_num != picture->system_frame_number);
-
-finish_frame:
   gst_v4l2_request_set_done (request);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
+
+finish_frame:
+  if (gst_v4l2_request_failed (request)) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+    goto error;
+  }
 
   /* Hold on reference buffers for the rest of the picture lifetime */
   gst_vp8_picture_set_user_data (picture,
