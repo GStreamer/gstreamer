@@ -765,8 +765,12 @@ gst_rtsp_client_finalize (GObject * obj)
   /* the watch and related state should be cleared before finalize
    * as the watch actually holds a strong reference to the client */
   g_assert (priv->watch == NULL);
-  g_assert (priv->watch_context == NULL);
   g_assert (priv->rtsp_ctrl_timeout == NULL);
+
+  if (priv->watch_context) {
+    g_main_context_unref (priv->watch_context);
+    priv->watch_context = NULL;
+  }
 
   gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
@@ -1306,11 +1310,6 @@ gst_rtsp_client_close (GstRTSPClient * client)
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
     gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
     rtsp_ctrl_timeout_remove (client);
-  }
-
-  if (priv->watch_context) {
-    g_main_context_unref (priv->watch_context);
-    priv->watch_context = NULL;
   }
 
   g_mutex_unlock (&priv->watch_lock);
@@ -5071,11 +5070,6 @@ handle_tunnel (GstRTSPClient * client)
     rtsp_ctrl_timeout_remove (client);
   }
 
-  if (priv->watch_context) {
-    g_main_context_unref (priv->watch_context);
-    priv->watch_context = NULL;
-  }
-
   return GST_RTSP_STS_OK;
 
   /* ERRORS */
@@ -5174,10 +5168,6 @@ client_watch_notify (GstRTSPClient * client)
   gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
   rtsp_ctrl_timeout_remove (client);
   gst_rtsp_client_session_filter (client, cleanup_session, &closed);
-  if (priv->watch_context) {
-    g_main_context_unref (priv->watch_context);
-    priv->watch_context = NULL;
-  }
 
   if (closed)
     g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
@@ -5210,6 +5200,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   priv = client->priv;
   g_return_val_if_fail (priv->connection != NULL, 0);
   g_return_val_if_fail (priv->watch == NULL, 0);
+  g_return_val_if_fail (priv->watch_context == NULL, 0);
 
   /* make sure noone will free the context before the watch is destroyed */
   priv->watch_context = g_main_context_ref (context);
