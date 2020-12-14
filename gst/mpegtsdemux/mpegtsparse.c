@@ -643,7 +643,7 @@ empty_adapter_into_pad (MpegTSParse2 * parse, MpegTSParse2Adapter * ts_adapter,
   pts = gst_adapter_prev_pts_at_offset (adapter, offset, &pts_dist);
   dts = gst_adapter_prev_dts_at_offset (adapter, offset, &dts_dist);
 
-  GST_LOG_OBJECT (ts_adapter,
+  GST_LOG_OBJECT (pad,
       "prev pts:%" GST_TIME_FORMAT " (dist:%" G_GUINT64_FORMAT ") dts:%"
       GST_TIME_FORMAT " (dist:%" G_GUINT64_FORMAT ")",
       GST_TIME_ARGS (pts), pts_dist, GST_TIME_ARGS (dts), dts_dist);
