@@ -1983,6 +1983,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
     case AV_CODEC_ID_ADPCM_IMA_WAV:
     case AV_CODEC_ID_ADPCM_IMA_DK3:
     case AV_CODEC_ID_ADPCM_IMA_DK4:
+    case AV_CODEC_ID_ADPCM_IMA_OKI:
     case AV_CODEC_ID_ADPCM_IMA_WS:
     case AV_CODEC_ID_ADPCM_IMA_SMJPEG:
     case AV_CODEC_ID_ADPCM_IMA_AMV:
@@ -2021,6 +2022,9 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           break;
         case AV_CODEC_ID_ADPCM_IMA_DK4:
           layout = "dk4";
+          break;
+        case AV_CODEC_ID_ADPCM_IMA_OKI:
+          layout = "oki";
           break;
         case AV_CODEC_ID_ADPCM_IMA_WS:
           layout = "westwood";
@@ -4167,6 +4171,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = AV_CODEC_ID_ADPCM_IMA_DK3;
     } else if (!strcmp (layout, "dk4")) {
       id = AV_CODEC_ID_ADPCM_IMA_DK4;
+    } else if (!strcmp (layout, "oki")) {
+      id = AV_CODEC_ID_ADPCM_IMA_OKI;
     } else if (!strcmp (layout, "westwood")) {
       id = AV_CODEC_ID_ADPCM_IMA_WS;
     } else if (!strcmp (layout, "iss")) {
