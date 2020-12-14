@@ -2786,6 +2786,7 @@ gst_video_aggregator_init (GstVideoAggregator * vagg,
 {
   GstCaps *src_template;
   GstPadTemplate *pad_template;
+  gint i;
 
   vagg->priv = gst_video_aggregator_get_instance_private (vagg);
   vagg->priv->current_caps = NULL;
@@ -2800,7 +2801,7 @@ gst_video_aggregator_init (GstVideoAggregator * vagg,
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "src");
   src_template = gst_pad_template_get_caps (pad_template);
-  for (gint i = 0; i < gst_caps_get_size (src_template); i++) {
+  for (i = 0; i < gst_caps_get_size (src_template); i++) {
     const GValue *v =
         gst_structure_get_value (gst_caps_get_structure (src_template, i),
         "format");
