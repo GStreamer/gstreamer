@@ -362,29 +362,27 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
   /**
    * GstSRTSrc::caller-added:
    * @gstsrtsrc: the srtsrc element that emitted this signal
-   * @sock: the client socket descriptor that was added to srtsrc
-   * @addr: the #GSocketAddress that describes the @sock
-   *
-   * The given socket descriptor was added to srtsink.
+   * @addr: the #GSocketAddress of the new caller
+   * 
+   * A new caller has connected to srtsrc.
    */
   signals[SIG_CALLER_ADDED] =
       g_signal_new ("caller-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSrcClass, caller_added),
-      NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSrc::caller-removed:
    * @gstsrtsrc: the srtsrc element that emitted this signal
-   * @sock: the client socket descriptor that was added to srtsrc
-   * @addr: the #GSocketAddress that describes the @sock
+   * @addr: the #GSocketAddress of the caller
    *
-   * The given socket descriptor was removed from srtsrc.
+   * The given caller has disconnected.
    */
   signals[SIG_CALLER_REMOVED] =
       g_signal_new ("caller-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSrcClass,
           caller_added), NULL, NULL, NULL, G_TYPE_NONE,
-      2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
+      1, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSrc::caller-rejected:

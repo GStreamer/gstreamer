@@ -126,7 +126,7 @@ srt_caller_signal_removed (SRTCaller * caller, GstSRTObject * srtobject)
    * socket. Deliver the stats to the app before we throw them away. */
   gst_structure_free (stats);
 
-  g_signal_emit_by_name (srtobject->element, "caller-removed", caller->sock,
+  g_signal_emit_by_name (srtobject->element, "caller-removed",
       caller->sockaddr);
 }
 
@@ -990,7 +990,7 @@ thread_func (gpointer data)
       g_mutex_unlock (&srtobject->sock_lock);
 
       /* notifying caller-added */
-      g_signal_emit_by_name (srtobject->element, "caller-added", caller->sock,
+      g_signal_emit_by_name (srtobject->element, "caller-added",
           caller->sockaddr);
 
       if (gst_uri_handler_get_uri_type (GST_URI_HANDLER (srtobject->element)) ==
