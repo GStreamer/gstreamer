@@ -32,10 +32,39 @@ G_BEGIN_DECLS
 
 /**
  * GstMpegtsSectionDVBTableID:
+ * @GST_MTS_TABLE_ID_NETWORK_INFORMATION_ACTUAL_NETWORK: Network Information Table (NIT), Actual Network
+ * @GST_MTS_TABLE_ID_NETWORK_INFORMATION_OTHER_NETWORK: Network Information Table (NIT), Other Network
+ * @GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_ACTUAL_TS: Service Description Table (SDT), Actual Transport Stream
+ * @GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_OTHER_TS: Service Description Table (SDT), Other Transport Stream
+ * @GST_MTS_TABLE_ID_BOUQUET_ASSOCIATION: Bouquet Association Table (BAT)
+ * @GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT: Event Information Table (EIT), Actual Transport Stream, present/following
+ * @GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_PRESENT: Event Information Table (EIT), Other Transport Stream, present/following
+ * @GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_SCHEDULE_1: Event Information Table (EIT), Actual Transport Stream, Schedule (first)
+ * @GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_SCHEDULE_N: Event Information Table (EIT), Actual Transport Stream, Schedule (last)
+ * @GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_SCHEDULE_1: Event Information Table (EIT), Other Transport Stream, Schedule (first)
+ * @GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_SCHEDULE_N: Event Information Table (EIT), Other Transport Stream, Schedule (last)
+ * @GST_MTS_TABLE_ID_TIME_DATE: Time Date Table (TDT)
+ * @GST_MTS_TABLE_ID_RUNNING_STATUS: Running Status Table (RST)
+ * @GST_MTS_TABLE_ID_STUFFING: Stuffing Table (ST)
+ * @GST_MTS_TABLE_ID_TIME_OFFSET: Time Offset Table (TOT)
+ * @GST_MTS_TABLE_ID_APPLICATION_INFORMATION_TABLE: ETSI TS 102 323: Application Information Table (AIT)
+ * @GST_MTS_TABLE_ID_CONTAINER: ETSI TS 102 323: Container Section
+ * @GST_MTS_TABLE_ID_RELATED_CONTENT: ETSI TS 102 323: Related Content Table (RCT)
+ * @GST_MTS_TABLE_ID_CONTENT_IDENTIFIER: ETSI TS 102 323: Content Identifier Table (CIT)
+ * @GST_MTS_TABLE_ID_MPE_FEC: ETSI TS 301 192: MPE-FEC Section
+ * @GST_MTS_TABLE_ID_RESOLUTION_NOTIFICATION: ETSI 103 323: Resolution Provider Notification Table (RNT)
+ * @GST_MTS_TABLE_ID_MPE_IFEC: ETSI TS 102 772: MPE-IFEC Section
+ * @GST_MTS_TABLE_ID_DISCONTINUITY_INFORMATION: Discontinuity Information Table (DIT)
+ * @GST_MTS_TABLE_ID_SELECTION_INFORMATION: Selection Information Table (SIT)
+ * @GST_MTS_TABLE_ID_CA_MESSAGE_ECM_0: ETSI TR 289: CA Message Table (CMT): ECM 0
+ * @GST_MTS_TABLE_ID_CA_MESSAGE_ECM_1: ETSI TR 289: CA Message Table (CMT): ECM 1
+ * @GST_MTS_TABLE_ID_CA_MESSAGE_SYSTEM_PRIVATE_1: ETSI TR 289: CA Message Table (CMT): CA System Private (First)
+ * @GST_MTS_TABLE_ID_CA_MESSAGE_SYSTEM_PRIVATE_N: ETSI TR 289: CA Message Table (CMT): CA System Private (Last)
  *
  * Values for a #GstMpegtsSection table_id.
  *
- * These are the registered DVB table_id variants.
+ * These are the registered DVB table_id variants. Unless specified otherwise,
+ * they come from the DVB Specification for SI (ETSI EN 300 468).
  *
  * see also: #GstMpegtsSectionTableID
  */
@@ -46,6 +75,28 @@ typedef enum {
   GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_ACTUAL_TS	= 0x42,
   GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_OTHER_TS		= 0x46,
   GST_MTS_TABLE_ID_BOUQUET_ASSOCIATION			= 0x4A,
+
+  /* ETSI TS 102 006 */
+  /**
+   * GST_MTS_TABLE_ID_UPDATE_NOTIFICATION:
+   *
+   * ETSI TS 102 006: Update Notification Table (UNT)
+   *
+   * Since: 1.20
+   */
+  GST_MTS_TABLE_ID_UPDATE_NOTIFICATION			= 0x4B,
+
+  /* ETSI EN 303 560 */
+  /**
+   * GST_MTS_TABLE_ID_DOWNLOADABLE_FONT_INFO:
+   *
+   * ETSI EN 303 560: Downloadable Font Info
+   *
+   * Since: 1.20
+   */
+  GST_MTS_TABLE_ID_DOWNLOADABLE_FONT_INFO		= 0x4C,
+
+  /* EN 300 468 */
   GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT	= 0x4E,
   GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_PRESENT	= 0x4F,
   GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_SCHEDULE_1	= 0x50,
@@ -74,6 +125,16 @@ typedef enum {
   /* TS 102 772 (DVB-SH Multi-Protocol Encapsulation) */
   GST_MTS_TABLE_ID_MPE_IFEC				= 0x7A,
 
+  /* TS 102 809 (DVB Hybrid Broadcast/Broadband) */
+  /**
+   * GST_MTS_TABLE_ID_PROTECTION_MESSAGE:
+   *
+   * ETSI TS 102 809: Protection Message Section
+   *
+   * Since: 1.20
+   */
+  GST_MTS_TABLE_ID_PROTECTION_MESSAGE			= 0x7B,
+
   /* EN 300 468 (DVB) v 1.12.1 */
   GST_MTS_TABLE_ID_DISCONTINUITY_INFORMATION		= 0x7E,
   GST_MTS_TABLE_ID_SELECTION_INFORMATION		= 0x7F,
@@ -87,6 +148,7 @@ typedef enum {
   /* ... */
 
   /* EN 301 790 (DVB interaction channel for satellite distribution channels) */
+  /* Note: Not 100% sure we want those exposed here ... */
   GST_MTS_TABLE_ID_SCT					= 0xA0,
   GST_MTS_TABLE_ID_FCT					= 0xA1,
   GST_MTS_TABLE_ID_TCT					= 0xA2,

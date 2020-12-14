@@ -1,4 +1,5 @@
 mpegts_sources = [
+  'mpegts.c',
   'gstmpegtssection.c',
   'gstmpegtsdescriptor.c',
   'gst-dvb-descriptor.c',
@@ -12,8 +13,11 @@ mpegts_headers = [
   'gst-atsc-section.h',
   'gst-dvb-section.h',
   'gst-scte-section.h',
+  'gst-hdmv-section.h',
   'gstmpegtsdescriptor.h',
+  'gst-atsc-descriptor.h',
   'gst-dvb-descriptor.h',
+  'gst-isdb-descriptor.h',
   'mpegts-prelude.h',
   'mpegts.h',
 ]

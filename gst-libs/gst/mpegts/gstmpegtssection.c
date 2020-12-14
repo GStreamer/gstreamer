@@ -39,76 +39,56 @@
 #include "gstmpegts-private.h"
 
 /**
- * SECTION:gstmpegts
- * @title: Mpeg-ts helper library
- * @short_description: Mpeg-ts helper library for plugins and applications
- * @include: gst/mpegts/mpegts.h
- */
-
-/**
  * SECTION:gstmpegtssection
  * @title: Base MPEG-TS sections
  * @short_description: Sections for ITU H.222.0 | ISO/IEC 13818-1
  * @include: gst/mpegts/mpegts.h
- * @symbols:
- * - GST_MPEGTS_SECTION_TYPE
- * - GstMpegtsSection
- * - GstMpegtsSectionTableID
- * - GstMpegtsSectionType
- * - gst_message_new_mpegts_section
- * - gst_message_parse_mpegts_section
- * - gst_mpegts_section_send_event
- * - gst_event_parse_mpegts_section
- * - gst_mpegts_section_packetize
- * - gst_mpegts_section_new
- * - gst_mpegts_section_ref
- * - gst_mpegts_section_unref
- * - GstMpegtsPatProgram
- * - gst_mpegts_section_get_pat
- * - gst_mpegts_pat_new
- * - gst_mpegts_pat_program_new
- * - gst_mpegts_section_from_pat
- * - GstMpegtsPMT
- * - GstMpegtsPMTStream
- * - GstMpegtsStreamType
- * - gst_mpegts_section_get_pmt
- * - gst_mpegts_pmt_new
- * - gst_mpegts_pmt_stream_new
- * - gst_mpegts_section_from_pmt
- * - gst_mpegts_section_get_tsdt
- * - gst_mpegts_section_get_cat
- * - GST_TYPE_MPEGTS_SECTION_TABLE_ID
- * - GST_TYPE_MPEGTS_SECTION_TYPE
- * - GST_TYPE_MPEGTS_SECTION_DVB_TABLE_ID
- * - GST_MPEGTS_SECTION
- * - GST_TYPE_MPEGTS_STREAM_TYPE
- * - GST_TYPE_MPEGTS_PMT
- * - GST_TYPE_MPEGTS_PMT_STREAM
- * - GST_TYPE_MPEGTS_SECTION
- * - gst_mpegts_section_table_id_get_type
- * - gst_mpegts_section_type_get_type
- * - gst_mpegts_pmt_get_type
- * - gst_mpegts_pmt_stream_get_type
- * - gst_mpegts_section_get_type
- * - gst_mpegts_stream_type_get_type
+ *
+ * ## Generic usage of sections with %GstMpegtsSection
+ *
+ * The %GstMpegtsSection object is the representation of MPEG-TS Section (SI or
+ * PSI).
+ *
+ * Various elements can post those on the bus via %GstMessage of type
+ * %GST_MESSAGE_ELEMENT. The gst_message_parse_mpegts_section() function
+ * provides access to the section.
+ *
+ * Applications (or other elements) can create them either by using one of the
+ * `gst_mpegts_section_from_*` functions, or by providing the raw SI data via
+ * gst_mpegts_section_new().
+ *
+ * Elements outputting MPEG-TS streams can also create sections using the
+ * various convenience functions and then get the packetized data (to be
+ * inserted in MPEG-TS packets) using gst_mpegts_section_packetize().
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
  * and other specifications mentioned in the documentation.
- */
-
-/*
- * TODO
  *
- * * Check minimum size for section parsing in the various
- *   gst_mpegts_section_get_<tabld>() methods
+ * # Supported base MPEG-TS sections
+ * These are the sections for which parsing and packetizing code exists.
  *
- * * Implement parsing code for
- *   * BAT
- *   * CAT
- *   * TSDT
+ * ## Program Association Table (PAT)
+ * See:
+ * * gst_mpegts_section_get_pat()
+ * * gst_mpegts_pat_program_new()
+ * * %GstMpegtsPatProgram
+ *
+ * ## Conditional Access Table (CAT)
+ * See:
+ * * gst_mpegts_section_get_cat()
+ *
+ * ## Program Map Table (PMT)
+ * See:
+ * * %GstMpegtsPMT
+ * * gst_mpegts_section_get_pmt()
+ * * gst_mpegts_pmt_new()
+ * * %GstMpegtsPMTStream
+ *
+ * ## Transport Stream Description Table (TSDT)
+ * See:
+ * * gst_mpegts_section_get_tsdt()
+ * # API
  */
-
-GST_DEBUG_CATEGORY (mpegts_debug);
 
 static GQuark QUARK_PAT;
 static GQuark QUARK_CAT;
@@ -392,7 +372,8 @@ _mpegts_section_get_event (GstMpegtsSection * section)
  *
  * Extracts the #GstMpegtsSection contained in the @event #GstEvent
  *
- * Returns: (transfer full): The extracted #GstMpegtsSection
+ * Returns: (transfer full): The extracted #GstMpegtsSection , or %NULL if the
+ * event did not contain a valid #GstMpegtsSection.
  */
 GstMpegtsSection *
 gst_event_parse_mpegts_section (GstEvent * event)
@@ -417,10 +398,10 @@ gst_event_parse_mpegts_section (GstEvent * event)
  * @element: (transfer none): The #GstElement to send to section event to
  * @section: (transfer none): The #GstMpegtsSection to put in the event
  *
- * Creates a custom #GstEvent with a @GstMpegtsSection.
- * The #GstEvent is sent to the @element #GstElement.
+ * Creates a custom #GstEvent with a @GstMpegtsSection and send it the @element
+ * #GstElement.
  *
- * Returns: %TRUE if the event is sent
+ * Returns: %TRUE if the event was sent to the element.
  */
 gboolean
 gst_mpegts_section_send_event (GstMpegtsSection * section, GstElement * element)
@@ -509,12 +490,13 @@ _parse_pat (GstMpegtsSection * section)
  *
  * Returns the array of #GstMpegtsPatProgram contained in the section.
  *
- * Note: The PAT "transport_id" field corresponds to the "subtable_extension"
- * field of the provided @section.
+ * Note: The PAT `transport_stream_id` field corresponds to the
+ * "subtable_extension" field of the provided @section.
  *
  * Returns: (transfer container) (element-type GstMpegtsPatProgram): The
- * #GstMpegtsPatProgram contained in the section, or %NULL if an error
- * happened. Release with #g_ptr_array_unref when done.
+ * #GstMpegtsPatProgram contained in the section, or %NULL if an error happened
+ * or the @section did not contain a valid PAT. Release with #g_ptr_array_unref
+ * when done.
  */
 GPtrArray *
 gst_mpegts_section_get_pat (GstMpegtsSection * section)
@@ -535,7 +517,8 @@ gst_mpegts_section_get_pat (GstMpegtsSection * section)
 /**
  * gst_mpegts_pat_new:
  *
- * Allocates a new #GPtrArray for #GstMpegtsPatProgram
+ * Allocates a new #GPtrArray for #GstMpegtsPatProgram. The array can be filled
+ * and then converted to a PAT section with gst_mpegts_section_from_pat().
  *
  * Returns: (transfer full) (element-type GstMpegtsPatProgram): A newly allocated #GPtrArray
  */
@@ -782,7 +765,7 @@ error:
  * gst_mpegts_section_get_pmt:
  * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_PMT
  *
- * Returns the #GstMpegtsPMT contained in the @section.
+ * Parses the Program Map Table contained in the @section.
  *
  * Returns: The #GstMpegtsPMT contained in the section, or %NULL if an error
  * happened.
@@ -804,7 +787,9 @@ gst_mpegts_section_get_pmt (GstMpegtsSection * section)
 /**
  * gst_mpegts_pmt_new:
  *
- * Allocates and initializes a new #GstMpegtsPMT.
+ * Allocates and initializes a new #GstMpegtsPMT. #GstMpegtsPMTStream can be
+ * added to the streams array, and global PMT #GstMpegtsDescriptor to the
+ * descriptors array.
  *
  * Returns: (transfer full): #GstMpegtsPMT
  */
@@ -982,11 +967,13 @@ _parse_cat (GstMpegtsSection * section)
  * gst_mpegts_section_get_cat:
  * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_CAT
  *
+ * Parses a Conditional Access Table.
+ *
  * Returns the array of #GstMpegtsDescriptor contained in the Conditional
  * Access Table.
  *
- * Returns: (transfer container) (element-type GstMpegtsDescriptor): The
- * #GstMpegtsDescriptor contained in the section, or %NULL if an error
+ * Returns: (transfer container) (element-type GstMpegtsDescriptor): The array
+ * of #GstMpegtsDescriptor contained in the section, or %NULL if an error
  * happened. Release with #g_array_unref when done.
  */
 GPtrArray *
@@ -1010,10 +997,12 @@ gst_mpegts_section_get_cat (GstMpegtsSection * section)
  * gst_mpegts_section_get_tsdt:
  * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_TSDT
  *
+ * Parses a Transport Stream Description Table.
+ *
  * Returns the array of #GstMpegtsDescriptor contained in the section
  *
- * Returns: (transfer container) (element-type GstMpegtsDescriptor): The
- * #GstMpegtsDescriptor contained in the section, or %NULL if an error
+ * Returns: (transfer container) (element-type GstMpegtsDescriptor): The array
+ * of #GstMpegtsDescriptor contained in the section, or %NULL if an error
  * happened. Release with #g_array_unref when done.
  */
 GPtrArray *
@@ -1030,39 +1019,7 @@ gst_mpegts_section_get_tsdt (GstMpegtsSection * section)
 }
 
 
-/**
- * gst_mpegts_initialize:
- *
- * Initializes the MPEG-TS helper library. Must be called before any
- * usage.
- */
-void
-gst_mpegts_initialize (void)
-{
-  if (_gst_mpegts_section_type)
-    return;
 
-  GST_DEBUG_CATEGORY_INIT (mpegts_debug, "mpegts", 0, "MPEG-TS helper library");
-
-  /* FIXME : Temporary hack to initialize section gtype */
-  _gst_mpegts_section_type = gst_mpegts_section_get_type ();
-
-  QUARK_PAT = g_quark_from_string ("pat");
-  QUARK_CAT = g_quark_from_string ("cat");
-  QUARK_PMT = g_quark_from_string ("pmt");
-  QUARK_NIT = g_quark_from_string ("nit");
-  QUARK_BAT = g_quark_from_string ("bat");
-  QUARK_SDT = g_quark_from_string ("sdt");
-  QUARK_EIT = g_quark_from_string ("eit");
-  QUARK_TDT = g_quark_from_string ("tdt");
-  QUARK_TOT = g_quark_from_string ("tot");
-  QUARK_SECTION = g_quark_from_string ("section");
-
-  __initialize_descriptors ();
-}
-
-/* FIXME : Later on we might need to use more than just the table_id
- * to figure out which type of section this is. */
 static GstMpegtsSectionType
 _identify_section (guint16 pid, guint8 table_id)
 {
@@ -1220,8 +1177,8 @@ _packetize_common_section (GstMpegtsSection * section, gsize length)
 /**
  * gst_mpegts_section_new:
  * @pid: the PID to which this section belongs
- * @data: (transfer full) (array length=data_size): a pointer to the beginning of the section (i.e. the first byte
- * should contain the table_id field).
+ * @data: (transfer full) (array length=data_size): a pointer to the beginning of
+ * the section (i.e. the first byte should contain the `table_id` field).
  * @data_size: size of the @data argument.
  *
  * Creates a new #GstMpegtsSection from the provided @data.
@@ -1320,10 +1277,11 @@ bad_long_packet:
  * @section: (transfer none): the #GstMpegtsSection that holds the data
  * @output_size: (out): #gsize to hold the size of the data
  *
- * If the data in @section has already been packetized, the data pointer is returned
- * immediately. Otherwise, the data field is allocated and populated.
+ * Packetize (i.e. serialize) the @section. If the data in @section has already
+ * been packetized, the data pointer is returned immediately. Otherwise, the
+ * data field is allocated and populated.
  *
- * Returns: (transfer none): pointer to section data, or %NULL on fail
+ * Returns: (transfer none): pointer to section data, or %NULL on failure.
  */
 guint8 *
 gst_mpegts_section_packetize (GstMpegtsSection * section, gsize * output_size)
@@ -1351,4 +1309,22 @@ gst_mpegts_section_packetize (GstMpegtsSection * section, gsize * output_size)
   *output_size = section->section_length;
 
   return section->data;
+}
+
+void
+__initialize_sections (void)
+{
+  /* FIXME : Temporary hack to initialize section gtype */
+  _gst_mpegts_section_type = gst_mpegts_section_get_type ();
+
+  QUARK_PAT = g_quark_from_string ("pat");
+  QUARK_CAT = g_quark_from_string ("cat");
+  QUARK_PMT = g_quark_from_string ("pmt");
+  QUARK_NIT = g_quark_from_string ("nit");
+  QUARK_BAT = g_quark_from_string ("bat");
+  QUARK_SDT = g_quark_from_string ("sdt");
+  QUARK_EIT = g_quark_from_string ("eit");
+  QUARK_TDT = g_quark_from_string ("tdt");
+  QUARK_TOT = g_quark_from_string ("tot");
+  QUARK_SECTION = g_quark_from_string ("section");
 }

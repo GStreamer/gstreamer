@@ -46,12 +46,13 @@ G_BEGIN_DECLS
  * @GST_MPEGTS_STREAM_TYPE_SCTE_SYNC_DATA:   SCTE-07 Synchronous data
  * @GST_MPEGTS_STREAM_TYPE_SCTE_ASYNC_DATA:  SCTE-53 Asynchronous data
  *
- * Type of mpeg-ts streams for SCTE
+ * Type of mpeg-ts streams for SCTE. Most users would want to use the
+ * #GstMpegtsATSCStreamType instead since it also covers these stream types
  *
  */
 typedef enum {
 
-  /* 0x01 - 0x82 : defined in other specs */
+  /* 0x01 - 0x7f : defined in other specs */
   GST_MPEGTS_STREAM_TYPE_SCTE_SUBTITLING = 0x82,   /* Subtitling data */
   GST_MPEGTS_STREAM_TYPE_SCTE_ISOCH_DATA = 0x83,   /* Isochronous data */
   /* 0x84 - 0x85 : defined in other specs */

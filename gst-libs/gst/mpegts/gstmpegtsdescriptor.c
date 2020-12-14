@@ -47,165 +47,12 @@ static void _##name##_free (type * source) \
  * @title: Base MPEG-TS descriptors
  * @short_description: Descriptors for ITU H.222.0 | ISO/IEC 13818-1
  * @include: gst/mpegts/mpegts.h
- * @symbols:
- * - GstMpegtsDescriptor
- * - GstMpegtsDescriptorType
- * - GstMpegtsMiscDescriptorType
- * - gst_mpegts_find_descriptor
- * - gst_mpegts_parse_descriptors
- * - gst_mpegts_descriptor_from_custom
- * - gst_mpegts_descriptor_from_registration
- * - GstMpegtsISO639LanguageDescriptor
- * - GstMpegtsIso639AudioType
- * - gst_mpegts_descriptor_parse_iso_639_language
- * - gst_mpegts_descriptor_parse_iso_639_language_idx
- * - gst_mpegts_descriptor_parse_iso_639_language_nb
- * - gst_mpegts_iso_639_language_descriptor_free
- * - GstMpegtsLogicalChannel
- * - GstMpegtsLogicalChannelDescriptor
- * - gst_mpegts_descriptor_parse_logical_channel
- * - GST_TYPE_MPEGTS_DVB_CODE_RATE
- * - GST_TYPE_MPEGTS_CABLE_OUTER_FEC_SCHEME
- * - GST_TYPE_MPEGTS_MODULATION_TYPE
- * - GST_TYPE_MPEGTS_SATELLITE_POLARIZATION_TYPE
- * - GST_TYPE_MPEGTS_SATELLITE_ROLLOFF
- * - GST_TYPE_MPEGTS_ISO_639_LANGUAGE
- * - GST_TYPE_MPEGTS_DESCRIPTOR
- * - GST_TYPE_MPEGTS_DVB_SERVICE_TYPE
- * - GST_TYPE_MPEGTS_DESCRIPTOR_TYPE
- * - GST_TYPE_MPEGTS_ISO639_AUDIO_TYPE
- * - GST_TYPE_MPEGTS_DVB_DESCRIPTOR_TYPE
- * - GST_TYPE_MPEGTS_MISC_DESCRIPTOR_TYPE
- * - gst_mpegts_descriptor_get_type
- * - gst_mpegts_iso_639_language_get_type
- * - gst_mpegts_cable_outer_fec_scheme_get_type
- * - gst_mpegts_modulation_type_get_type
- * - gst_mpegts_satellite_polarization_type_get_type
- * - gst_mpegts_satellite_rolloff_get_type
- * - gst_mpegts_descriptor_type_get_type
- * - gst_mpegts_dvb_descriptor_type_get_type
- * - gst_mpegts_misc_descriptor_type_get_type
- * - gst_mpegts_iso639_audio_type_get_type
- * - gst_mpegts_dvb_service_type_get_type
  *
  * These are the base descriptor types and methods.
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
  * and other specifications mentioned in the documentation.
  */
-
-/* FIXME : Move this to proper file once we have a C file for ATSC/ISDB descriptors */
-/**
- * SECTION:gst-atsc-descriptor
- * @title: ATSC variants of MPEG-TS descriptors
- * @short_description: Descriptors for the various ATSC specifications
- * @include: gst/mpegts/mpegts.h
- * @symbols:
- * - GstMpegtsATSCDescriptorType
- * - GST_TYPE_MPEGTS_ATSC_DESCRIPTOR_TYPE
- * - gst_mpegts_atsc_descriptor_type_get_type
- * - GstMpegtsDVBDescriptorType
- * - GstMpegtsDVBExtendedDescriptorType
- * - GstMpegtsContent
- * - gst_mpegts_descriptor_parse_dvb_content
- * - GstMpegtsComponentDescriptor
- * - gst_mpegts_dvb_component_descriptor_free
- * - gst_mpegts_descriptor_parse_dvb_component
- * - GstMpegtsExtendedEventItem
- * - GstMpegtsExtendedEventDescriptor
- * - gst_mpegts_extended_event_descriptor_free
- * - gst_mpegts_descriptor_parse_dvb_extended_event
- * - GstMpegtsSatelliteDeliverySystemDescriptor
- * - GstMpegtsDVBCodeRate
- * - GstMpegtsModulationType
- * - GstMpegtsSatellitePolarizationType
- * - GstMpegtsSatelliteRolloff
- * - gst_mpegts_descriptor_parse_satellite_delivery_system
- * - GstMpegtsCableDeliverySystemDescriptor
- * - GstMpegtsCableOuterFECScheme
- * - gst_mpegts_descriptor_parse_cable_delivery_system
- * - GstMpegtsTerrestrialDeliverySystemDescriptor
- * - GstMpegtsTerrestrialTransmissionMode
- * - GstMpegtsTerrestrialGuardInterval
- * - GstMpegtsTerrestrialHierarchy
- * - gst_mpegts_descriptor_parse_terrestrial_delivery_system
- * - GstMpegtsT2DeliverySystemCellExtension
- * - GstMpegtsT2DeliverySystemCell
- * - GstMpegtsT2DeliverySystemDescriptor
- * - gst_mpegts_t2_delivery_system_descriptor_free
- * - gst_mpegts_descriptor_parse_dvb_t2_delivery_system
- * - gst_mpegts_descriptor_parse_dvb_short_event
- * - gst_mpegts_descriptor_parse_dvb_network_name
- * - gst_mpegts_descriptor_from_dvb_network_name
- * - GstMpegtsDVBServiceType
- * - gst_mpegts_descriptor_parse_dvb_service
- * - gst_mpegts_descriptor_from_dvb_service
- * - GstMpegtsDVBTeletextType
- * - gst_mpegts_descriptor_parse_dvb_teletext_idx
- * - gst_mpegts_descriptor_parse_dvb_teletext_nb
- * - gst_mpegts_descriptor_parse_dvb_subtitling_idx
- * - gst_mpegts_descriptor_parse_dvb_subtitling_nb
- * - gst_mpegts_descriptor_from_dvb_subtitling
- * - GstMpegtsDVBLinkageType
- * - GstMpegtsDVBLinkageHandOverType
- * - GstMpegtsDVBLinkageMobileHandOver
- * - GstMpegtsDVBLinkageEvent
- * - GstMpegtsDVBLinkageExtendedEvent
- * - GstMpegtsDVBLinkageDescriptor
- * - gst_mpegts_dvb_linkage_descriptor_free
- * - gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over
- * - gst_mpegts_dvb_linkage_descriptor_get_event
- * - gst_mpegts_dvb_linkage_descriptor_get_extended_event
- * - gst_mpegts_descriptor_parse_dvb_linkage
- * - gst_mpegts_descriptor_parse_dvb_private_data_specifier
- * - gst_mpegts_descriptor_parse_dvb_frequency_list
- * - GstMpegtsDataBroadcastDescriptor
- * - gst_mpegts_dvb_data_broadcast_descriptor_free
- * - gst_mpegts_descriptor_parse_dvb_data_broadcast
- * - GstMpegtsDVBScramblingModeType
- * - gst_mpegts_descriptor_parse_dvb_scrambling
- * - gst_mpegts_descriptor_parse_dvb_data_broadcast_id
- * - GstMpegtsDVBParentalRatingItem
- * - gst_mpegts_descriptor_parse_dvb_parental_rating
- * - gst_mpegts_descriptor_parse_dvb_stream_identifier
- * - gst_mpegts_descriptor_parse_dvb_ca_identifier
- * - GstMpegtsDVBServiceListItem
- * - gst_mpegts_descriptor_parse_dvb_service_list
- * - gst_mpegts_descriptor_parse_dvb_stuffing
- * - gst_mpegts_descriptor_parse_dvb_bouquet_name
- * - GstMpegtsDvbMultilingualNetworkNameItem
- * - gst_mpegts_descriptor_parse_dvb_multilingual_network_name
- * - GstMpegtsDvbMultilingualBouquetNameItem
- * - gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name
- * - GstMpegtsDvbMultilingualServiceNameItem
- * - gst_mpegts_descriptor_parse_dvb_multilingual_service_name
- * - GstMpegtsDvbMultilingualComponentItem
- * - gst_mpegts_descriptor_parse_dvb_multilingual_component
- * - GST_TYPE_MPEGTS_COMPONENT_DESCRIPTOR
- * - GST_TYPE_MPEGTS_DVB_DATA_BROADCAST_DESCRIPTOR
- * - GST_TYPE_MPEGTS_DVB_LINKAGE_DESCRIPTOR
- * - GST_TYPE_MPEGTS_EXTENDED_EVENT_DESCRIPTOR
- * - GST_TYPE_MPEGTS_T2_DELIVERY_SYSTEM_DESCRIPTOR
- * - gst_mpegts_dvb_code_rate_get_type
- * - gst_mpegts_component_descriptor_get_type
- * - gst_mpegts_dvb_data_broadcast_descriptor_get_type
- * - gst_mpegts_dvb_linkage_descriptor_get_type
- * - gst_mpegts_extended_event_descriptor_get_type
- * - gst_mpegts_t2_delivery_system_descriptor_get_type
- *
- */
-
-/**
- * SECTION:gst-isdb-descriptor
- * @title: ISDB variants of MPEG-TS descriptors
- * @short_description: Descriptors for the various ISDB specifications
- * @include: gst/mpegts/mpegts.h
- * @symbols:
- * - GstMpegtsISDBDescriptorType
- * - GST_TYPE_MPEGTS_ISDB_DESCRIPTOR_TYPE
- * -  gst_mpegts_isdb_descriptor_type_get_type
- */
-
 
 /*
  * TODO
@@ -1048,6 +895,47 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
     memcpy (descriptor->data + 6, additional_info, additional_info_length);
 
   return descriptor;
+}
+
+/**
+ * gst_mpegts_descriptor_parse_registration:
+ * @descriptor: a %GST_MTS_DESC_REGISTRATION #GstMpegtsDescriptor
+ * @registration_id: (out): The registration ID (in host endiannes)
+ * @additional_info: (out) (allow-none) (array length=additional_info_length): The additional information
+ * @additional_info_length: (out) (allow-none): The size of @additional_info in bytes.
+ *
+ * Extracts the Registration information from @descriptor.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ *
+ * Since: 1.20
+ */
+
+gboolean
+gst_mpegts_descriptor_parse_registration (GstMpegtsDescriptor * descriptor,
+    guint32 * registration_id,
+    guint8 ** additional_info, gsize * additional_info_length)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && registration_id != NULL, FALSE);
+
+  /* The smallest registration is 4 bytes */
+  __common_desc_checks (descriptor, GST_MTS_DESC_REGISTRATION, 4, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+  *registration_id = GST_READ_UINT32_BE (data);
+  data += 4;
+  if (additional_info && additional_info_length) {
+    *additional_info_length = descriptor->length - 4;
+    if (descriptor->length > 4) {
+      *additional_info = data;
+    } else {
+      *additional_info = NULL;
+    }
+  }
+
+  return TRUE;
 }
 
 /* GST_MTS_DESC_CA (0x09) */

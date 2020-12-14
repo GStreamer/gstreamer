@@ -44,6 +44,48 @@
  * @short_description: Sections for the various DVB specifications
  * @include: gst/mpegts/mpegts.h
  *
+ * The list of section types defined and used by the DVB specifications can be
+ * seen in %GstMpegtsSectionDVBTableID.
+ *
+ * # Supported DVB MPEG-TS sections
+ * These are the sections for which parsing and packetizing code exists.
+ *
+ * ## Network Information Table (NIT)
+ * See:
+ * * gst_mpegts_section_get_nit()
+ * * %GstMpegtsNIT
+ * * %GstMpegtsNITStream
+ * * gst_mpegts_nit_new()
+ *
+ * ## Service Description Table (SDT)
+ * See:
+ * * gst_mpegts_section_get_sdt()
+ * * %GstMpegtsSDT
+ * * %GstMpegtsSDTService
+ * * gst_mpegts_sdt_new()
+ *
+ * ## Bouquet Association Table (BAT)
+ * See:
+ * * gst_mpegts_section_get_bat()
+ * * %GstMpegtsBAT
+ * * %GstMpegtsBATStream
+ *
+ * ## Event Information Table (EIT)
+ * See:
+ * * gst_mpegts_section_get_eit()
+ * * %GstMpegtsEIT
+ * * %GstMpegtsEITEvent
+ *
+ * ## Time Date Table (TDT)
+ * See:
+ * * gst_mpegts_section_get_tdt()
+ *
+ * ## Time Offset Table (TOT)
+ * See:
+ * * gst_mpegts_section_get_tot()
+ * * %GstMpegtsTOT
+ *
+ * # API
  */
 
 

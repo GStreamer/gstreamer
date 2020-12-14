@@ -31,12 +31,15 @@
 
 #include <gst/mpegts/mpegts-prelude.h>
 #include <gst/mpegts/gstmpegtsdescriptor.h>
+#include <gst/mpegts/gst-atsc-descriptor.h>
 #include <gst/mpegts/gst-dvb-descriptor.h>
+#include <gst/mpegts/gst-isdb-descriptor.h>
 #include <gst/mpegts/gstmpegtssection.h>
 #include <gst/mpegts/gst-atsc-section.h>
 #include <gst/mpegts/gst-dvb-section.h>
 #include <gst/mpegts/gst-scte-section.h>
 #include <gst/mpegts/gstmpegts-enumtypes.h>
+#include <gst/mpegts/gst-hdmv-section.h>
 
 G_BEGIN_DECLS
 

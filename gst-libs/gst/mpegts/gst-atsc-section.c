@@ -35,6 +35,50 @@
  * @short_description: Sections for the various ATSC specifications
  * @include: gst/mpegts/mpegts.h
  *
+ * The list of section types defined and used by the ATSC specifications can be
+ * seen in %GstMpegtsSectionATSCTableID.
+ *
+ * # Supported ATSC MPEG-TS sections
+ * These are the sections for which parsing and packetizing code exists.
+ *
+ * ## Master Guide Table (MGT)
+ * See:
+ * * gst_mpegts_section_get_atsc_mgt()
+ * * %GstMpegtsAtscMGT
+ * * %GstMpegtsAtscMGTTable
+ * * gst_mpegts_atsc_mgt_new()
+ *
+ * ## Terrestrial (TVCT) and Cable (CVCT) Virtual Channel Table
+ * See:
+ * * gst_mpegts_section_get_atsc_tvct()
+ * * gst_mpegts_section_get_atsc_cvct()
+ * * %GstMpegtsAtscVCT
+ * * %GstMpegtsAtscVCTSource
+ *
+ * ## Rating Region Table (RRT)
+ * See:
+ * * gst_mpegts_section_get_atsc_rrt()
+ * * %GstMpegtsAtscRRT
+ * * gst_mpegts_atsc_rrt_new()
+ * 
+ * ## Event Information Table (EIT)
+ * See:
+ * * gst_mpegts_section_get_atsc_eit()
+ * * %GstMpegtsAtscEIT
+ * * %GstMpegtsAtscEITEvent
+ *
+ * ## Extended Text Table (ETT)
+ * See:
+ * * gst_mpegts_section_get_atsc_ett()
+ * * %GstMpegtsAtscETT
+ *
+ * ## System Time Table (STT)
+ * See:
+ * * gst_mpegts_section_get_atsc_stt()
+ * * %GstMpegtsAtscSTT
+ * * gst_mpegts_atsc_stt_new()
+ *
+ * # API
  */
 
 /* Terrestrial/Cable Virtual Channel Table TVCT/CVCT */

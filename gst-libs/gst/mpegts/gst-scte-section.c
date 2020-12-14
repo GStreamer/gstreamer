@@ -35,6 +35,7 @@
  * @short_description: Sections for the various SCTE specifications
  * @include: gst/mpegts/mpegts.h
  *
+ * This contains the %GstMpegtsSection relevent to SCTE specifications.
  */
 
 /* Splice Information Table (SIT) */

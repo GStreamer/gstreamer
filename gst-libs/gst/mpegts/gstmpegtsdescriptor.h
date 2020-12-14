@@ -148,93 +148,28 @@ typedef enum {
  */
 typedef enum {
   /* 0x80 - 0xFE are user defined */
-  GST_MTS_DESC_AC3_AUDIO_STREAM                 = 0x81,
-  GST_MTS_DESC_DTG_LOGICAL_CHANNEL              = 0x83,    /* from DTG D-Book */
+  GST_MTS_DESC_DTG_LOGICAL_CHANNEL              = 0x83,    /* from DTG D-Book, only present in NIT */
 } GstMpegtsMiscDescriptorType;
 
 /**
- * GstMpegtsATSCDescriptorType:
+ * GstMpegtsSCTEDescriptorType:
  *
- * These values correspond to the registered descriptor type from
- * the various ATSC specifications.
+ * These values correspond to the ones defined by SCTE (amongst other in ANSI/SCTE 57)
  *
- * Consult the relevant specifications for more details.
+ * Since: 1.20
  */
 typedef enum {
-  /* ATSC A/65 2009 */
-  GST_MTS_DESC_ATSC_STUFFING                    = 0x80,
-  GST_MTS_DESC_ATSC_AC3                         = 0x83,
-  GST_MTS_DESC_ATSC_CAPTION_SERVICE             = 0x86,
-  GST_MTS_DESC_ATSC_CONTENT_ADVISORY            = 0x87,
-  GST_MTS_DESC_ATSC_EXTENDED_CHANNEL_NAME       = 0xA0,
-  GST_MTS_DESC_ATSC_SERVICE_LOCATION            = 0xA1,
-  GST_MTS_DESC_ATSC_TIME_SHIFTED_SERVICE        = 0xA2,
-  GST_MTS_DESC_ATSC_COMPONENT_NAME              = 0xA3,
-  GST_MTS_DESC_ATSC_DCC_DEPARTING_REQUEST       = 0xA8,
-  GST_MTS_DESC_ATSC_DCC_ARRIVING_REQUEST        = 0xA9,
-  GST_MTS_DESC_ATSC_REDISTRIBUTION_CONTROL      = 0xAA,
-  GST_MTS_DESC_ATSC_GENRE                       = 0xAB,
-  GST_MTS_DESC_ATSC_PRIVATE_INFORMATION         = 0xAD,
-  GST_MTS_DESC_ATSC_EAC3                        = 0xCC,
+  GST_MTS_DESC_SCTE_STUFFING                    = 0x80,
+  GST_MTS_DESC_SCTE_AC3				= 0x81,
+  GST_MTS_DESC_SCTE_FRAME_RATE			= 0x82,
+  GST_MTS_DESC_SCTE_EXTENDED_VIDEO		= 0x83,
+  GST_MTS_DESC_SCTE_COMPONENT_NAME		= 0x84,
+  GST_MTS_DESC_SCTE_FREQUENCY_SPEC		= 0x90,
+  GST_MTS_DESC_SCTE_MODULATION_PARAMS		= 0x91,
+  GST_MTS_DESC_SCTE_TRANSPORT_STREAM_ID		= 0x92
+} GstMpegtsSCTEDescriptorType;
 
-  /* ATSC A/53:3 2009 */
-  GST_MTS_DESC_ATSC_ENHANCED_SIGNALING          = 0xB2,
 
-  /* ATSC A/90 */
-  GST_MTS_DESC_ATSC_DATA_SERVICE                = 0xA4,
-  GST_MTS_DESC_ATSC_PID_COUNT                   = 0xA5,
-  GST_MTS_DESC_ATSC_DOWNLOAD_DESCRIPTOR         = 0xA6,
-  GST_MTS_DESC_ATSC_MULTIPROTOCOL_ENCAPSULATION = 0xA7,
-  GST_MTS_DESC_ATSC_MODULE_LINK                 = 0xB4,
-  GST_MTS_DESC_ATSC_CRC32                       = 0xB5,
-  GST_MTS_DESC_ATSC_GROUP_LINK                  = 0xB8,
-} GstMpegtsATSCDescriptorType;
-
-/**
- * GstMpegtsISDBDescriptorType:
- *
- * These values correspond to the registered descriptor type from
- * the various ISDB specifications.
- *
- * Consult the relevant specifications for more details.
- */
-typedef enum {
-  /* ISDB ARIB B10 v4.6 */
-  GST_MTS_DESC_ISDB_HIERARCHICAL_TRANSMISSION   = 0xC0,
-  GST_MTS_DESC_ISDB_DIGITAL_COPY_CONTROL        = 0xC1,
-  GST_MTS_DESC_ISDB_NETWORK_IDENTIFICATION      = 0xC2,
-  GST_MTS_DESC_ISDB_PARTIAL_TS_TIME             = 0xc3,
-  GST_MTS_DESC_ISDB_AUDIO_COMPONENT             = 0xc4,
-  GST_MTS_DESC_ISDB_HYPERLINK                   = 0xc5,
-  GST_MTS_DESC_ISDB_TARGET_REGION               = 0xc6,
-  GST_MTS_DESC_ISDB_DATA_CONTENT                = 0xc7,
-  GST_MTS_DESC_ISDB_VIDEO_DECODE_CONTROL        = 0xc8,
-  GST_MTS_DESC_ISDB_DOWNLOAD_CONTENT            = 0xc9,
-  GST_MTS_DESC_ISDB_CA_EMM_TS                   = 0xca,
-  GST_MTS_DESC_ISDB_CA_CONTRACT_INFORMATION     = 0xcb,
-  GST_MTS_DESC_ISDB_CA_SERVICE                  = 0xcc,
-  GST_MTS_DESC_ISDB_TS_INFORMATION              = 0xcd,
-  GST_MTS_DESC_ISDB_EXTENDED_BROADCASTER        = 0xce,
-  GST_MTS_DESC_ISDB_LOGO_TRANSMISSION           = 0xcf,
-  GST_MTS_DESC_ISDB_BASIC_LOCAL_EVENT           = 0xd0,
-  GST_MTS_DESC_ISDB_REFERENCE                   = 0xd1,
-  GST_MTS_DESC_ISDB_NODE_RELATION               = 0xd2,
-  GST_MTS_DESC_ISDB_SHORT_NODE_INFORMATION      = 0xd3,
-  GST_MTS_DESC_ISDB_STC_REFERENCE               = 0xd4,
-  GST_MTS_DESC_ISDB_SERIES                      = 0xd5,
-  GST_MTS_DESC_ISDB_EVENT_GROUP                 = 0xd6,
-  GST_MTS_DESC_ISDB_SI_PARAMETER                = 0xd7,
-  GST_MTS_DESC_ISDB_BROADCASTER_NAME            = 0xd8,
-  GST_MTS_DESC_ISDB_COMPONENT_GROUP             = 0xd9,
-  GST_MTS_DESC_ISDB_SI_PRIME_TS                 = 0xda,
-  GST_MTS_DESC_ISDB_BOARD_INFORMATION           = 0xdb,
-  GST_MTS_DESC_ISDB_LDT_LINKAGE                 = 0xdc,
-  GST_MTS_DESC_ISDB_CONNECTED_TRANSMISSION      = 0xdd,
-  GST_MTS_DESC_ISDB_CONTENT_AVAILABILITY        = 0xde,
-  /* ... */
-  GST_MTS_DESC_ISDB_SERVICE_GROUP               = 0xe0
-
-} GstMpegtsISDBDescriptorType;
 
 typedef struct _GstMpegtsDescriptor GstMpegtsDescriptor;
 
@@ -277,6 +212,69 @@ const GstMpegtsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
 GST_MPEGTS_API
 const GstMpegtsDescriptor * gst_mpegts_find_descriptor_with_extension (GPtrArray *descriptors,
 							guint8 tag, guint8 tag_extension);
+/**
+ * GstMpegtsRegistrationId:
+ * @GST_MTS_REGISTRATION_0: Undefined registration id
+ * @GST_MTS_REGISTRATION_AC_3: Audio AC-3, ATSC A/52
+ * @GST_MTS_REGISTRATION_AC_4: Audio AC-4, ETSI 103 190-2
+ * @GST_MTS_REGISTRATION_CUEI: SCTE 35, "Digital Program Insertion Cueing Message"
+ * @GST_MTS_REGISTRATION_drac: Dirac Video codec
+ * @GST_MTS_REGISTRATION_DTS1: DTS Audio
+ * @GST_MTS_REGISTRATION_DTS2: DTS Audio
+ * @GST_MTS_REGISTRATION_DTS3: DTS Audio
+ * @GST_MTS_REGISTRATION_EAC3: Enhanced AC-3 (i.e. EAC3)
+ * @GST_MTS_REGISTRATION_ETV1: Cablelabs ETV
+ * @GST_MTS_REGISTRATION_BSSD: SMPTE 302M, Mapping of AES3 Data in mpeg-ts
+ * @GST_MTS_REGISTRATION_GA94: ATSC A/53 compliant stream (i.e. ATSC)
+ * @GST_MTS_REGISTRATION_HDMV: Blu-ray, "System Description Blu-ray Disc
+ *             Read-Only Format part 3 Audio Visual Basic Specifications" 
+ * @GST_MTS_REGISTRATION_KLVA: SMPTE RP217 : Non-synchronized Mapping of KLV
+ *             Packets in mpeg-ts
+ * @GST_MTS_REGISTRATION_OPUS: Opus Audio
+ * @GST_MTS_REGISTRATION_TSHV: HDV (Sony)
+ * @GST_MTS_REGISTRATION_VC_1: Video VC-1, SMPTE RP227 "VC-1 Bitstream Transport Encodings"
+ * @GST_MTS_REGISTRATION_OTHER_HEVC: HEVC / h265
+ *
+ * Well-known registration ids, expressed as native-endian 32bit integers. These
+ * are used in descriptors of type %GST_MTS_DESC_REGISTRATION. Unless specified
+ * otherwise (by use of the "OTHER" prefix), they are all registered by the
+ * [SMPTE Registration Authority](https://smpte-ra.org/) or specified in
+ * "official" documentation for the given format.
+ *
+ * Since: 1.20
+ */
+
+/**
+ * REG_TO_UINT32: (skip) (attributes doc.skip=true)
+ */
+#define REG_TO_UINT32(a,b,c,d)((a) << 24 | (b) << 16 | (c) << 8 | (d))
+
+typedef enum {
+  GST_MTS_REGISTRATION_0 = 0,
+
+  /* SMPTE-RA registered */
+  GST_MTS_REGISTRATION_AC_3 = REG_TO_UINT32 ('A', 'C', '-', '3'),
+  GST_MTS_REGISTRATION_CUEI = REG_TO_UINT32 ('C', 'U', 'E', 'I'),
+  GST_MTS_REGISTRATION_drac = REG_TO_UINT32 ('d', 'r', 'a', 'c'),
+  GST_MTS_REGISTRATION_DTS1 = REG_TO_UINT32 ('D', 'T', 'S', '1'),
+  GST_MTS_REGISTRATION_DTS2 = REG_TO_UINT32 ('D', 'T', 'S', '2'),
+  GST_MTS_REGISTRATION_DTS3 = REG_TO_UINT32 ('D', 'T', 'S', '3'),
+  GST_MTS_REGISTRATION_BSSD = REG_TO_UINT32 ('B', 'S', 'S', 'D'),
+  GST_MTS_REGISTRATION_EAC3 = REG_TO_UINT32 ('E', 'A', 'C', '3'),
+  GST_MTS_REGISTRATION_ETV1 = REG_TO_UINT32 ('E', 'T', 'V', '1'),
+  GST_MTS_REGISTRATION_GA94 = REG_TO_UINT32 ('G', 'A', '9', '4'),
+  GST_MTS_REGISTRATION_HDMV = REG_TO_UINT32 ('H', 'D', 'M', 'V'),
+  GST_MTS_REGISTRATION_KLVA = REG_TO_UINT32 ('K', 'L', 'V', 'A'),
+  GST_MTS_REGISTRATION_OPUS = REG_TO_UINT32 ('O', 'P', 'U', 'S'),
+  GST_MTS_REGISTRATION_TSHV = REG_TO_UINT32 ('T', 'S', 'H', 'V'),
+  GST_MTS_REGISTRATION_VC_1 = REG_TO_UINT32 ('V', 'C', '-', '1'),
+
+  /* Self-registered by formats, but not in SMPTE-RA registry */
+  GST_MTS_REGISTRATION_AC_4 = REG_TO_UINT32 ('A', 'C', '-', '4'),
+
+  /* Found elsewhere */
+  GST_MTS_REGISTRATION_OTHER_HEVC = REG_TO_UINT32 ('H', 'E', 'V', 'C')
+} GstMpegtsRegistrationId;
 
 /* GST_MTS_DESC_REGISTRATION (0x05) */
 
@@ -284,6 +282,12 @@ GST_MPEGTS_API
 GstMpegtsDescriptor *gst_mpegts_descriptor_from_registration (
     const gchar *format_identifier,
     guint8 *additional_info, gsize additional_info_length);
+
+GST_MPEGTS_API
+gboolean gst_mpegts_descriptor_parse_registration(GstMpegtsDescriptor *descriptor,
+						  guint32 *registration_id,
+						  guint8 **additional_info,
+						  gsize *additional_info_length);
 
 /* GST_MTS_DESC_CA (0x09) */
 
