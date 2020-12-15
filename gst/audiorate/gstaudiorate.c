@@ -647,6 +647,8 @@ send:
   if (gst_buffer_get_size (buf) == 0)
     goto beach;
 
+  buf = gst_buffer_make_writable (buf);
+
   /* Now calculate parameters for whichever buffer (either the original
    * or truncated one) we're pushing. */
   GST_BUFFER_OFFSET (buf) = audiorate->next_offset;
@@ -660,14 +662,12 @@ send:
   if (audiorate->discont) {
     /* we need to output a discont buffer, do so now */
     GST_DEBUG_OBJECT (audiorate, "marking DISCONT on output buffer");
-    buf = gst_buffer_make_writable (buf);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     audiorate->discont = FALSE;
   } else if (GST_BUFFER_IS_DISCONT (buf)) {
     /* else we make everything continuous so we can safely remove the DISCONT
      * flag from the buffer if there was one */
     GST_DEBUG_OBJECT (audiorate, "removing DISCONT from buffer");
-    buf = gst_buffer_make_writable (buf);
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
