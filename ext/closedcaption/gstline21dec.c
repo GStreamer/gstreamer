@@ -37,6 +37,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_line_21_decoder_debug);
 #define GST_CAT_DEFAULT gst_line_21_decoder_debug
 
+enum
+{
+  PROP_0,
+  PROP_NTSC_ONLY,
+};
+
+#define DEFAULT_NTSC_ONLY FALSE
+
 #define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY, v210 }, interlace-mode=interleaved"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -65,6 +73,38 @@ static GstFlowReturn gst_line_21_decoder_prepare_output_buffer (GstBaseTransform
     * trans, GstBuffer * in, GstBuffer ** out);
 
 static void
+gst_line_21_decoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstLine21Decoder *enc = GST_LINE21DECODER (object);
+
+  switch (prop_id) {
+    case PROP_NTSC_ONLY:
+      enc->ntsc_only = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_line_21_decoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstLine21Decoder *enc = GST_LINE21DECODER (object);
+
+  switch (prop_id) {
+    case PROP_NTSC_ONLY:
+      g_value_set_boolean (value, enc->ntsc_only);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_line_21_decoder_class_init (GstLine21DecoderClass * klass)
 {
   GObjectClass *gobject_class;
@@ -78,6 +118,24 @@ gst_line_21_decoder_class_init (GstLine21DecoderClass * klass)
   filter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->finalize = gst_line_21_decoder_finalize;
+  gobject_class->set_property = gst_line_21_decoder_set_property;
+  gobject_class->get_property = gst_line_21_decoder_get_property;
+
+  /**
+   * line21decoder:ntsc-only
+   *
+   * Whether line 21 decoding should only be attempted when the
+   * input resolution matches NTSC (720 x 525) or NTSC usable
+   * lines (720 x 486)
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_NTSC_ONLY, g_param_spec_boolean ("ntsc-only",
+          "NTSC only",
+          "Whether line 21 decoding should only be attempted when the "
+          "input resolution matches NTSC", DEFAULT_NTSC_ONLY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Line 21 CC Decoder",
@@ -105,8 +163,10 @@ gst_line_21_decoder_init (GstLine21Decoder * filter)
 {
   GstLine21Decoder *self = (GstLine21Decoder *) filter;
 
+  self->info = NULL;
   self->line21_offset = -1;
   self->max_line_probes = 40;
+  self->ntsc_only = DEFAULT_NTSC_ONLY;
 }
 
 static vbi_pixfmt
@@ -169,6 +229,15 @@ gst_line_21_decoder_set_info (GstVideoFilter * filter,
 
   if (GST_VIDEO_INFO_WIDTH (in_info) != 720) {
     GST_DEBUG_OBJECT (filter, "Only 720 pixel wide formats are supported");
+    self->compatible_format = FALSE;
+    return TRUE;
+  }
+
+  if (self->ntsc_only &&
+      GST_VIDEO_INFO_HEIGHT (in_info) != 525 &&
+      GST_VIDEO_INFO_HEIGHT (in_info) != 486) {
+    GST_DEBUG_OBJECT (filter,
+        "NTSC-only, only 525 or 486 pixel high formats are supported");
     self->compatible_format = FALSE;
     return TRUE;
   }
@@ -428,6 +497,10 @@ gst_line_21_decoder_stop (GstBaseTransform * btrans)
   GstLine21Decoder *self = (GstLine21Decoder *) btrans;
 
   vbi_raw_decoder_destroy (&self->zvbi_decoder);
+  if (self->info) {
+    gst_video_info_free (self->info);
+    self->info = NULL;
+  }
 
   return TRUE;
 }

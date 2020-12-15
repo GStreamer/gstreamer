@@ -60,6 +60,8 @@ struct _GstLine21Decoder
   guint8 *converted_lines;
   
   GstVideoInfo *info;
+
+  gboolean ntsc_only;
 };
 
 struct _GstLine21DecoderClass
