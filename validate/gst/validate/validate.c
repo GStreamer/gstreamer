@@ -217,6 +217,41 @@ create_config (const gchar * config)
 }
 
 static GList *
+get_structures_from_array (GstStructure * structure, const gchar * fieldname)
+{
+  const GValue *value;
+  GList *res = NULL;
+  guint i, size;
+
+  value = gst_structure_get_value (structure, fieldname);
+  if (!value)
+    return NULL;
+
+  if (GST_VALUE_HOLDS_STRUCTURE (value)) {
+    return g_list_append (res,
+        gst_structure_copy (gst_value_get_structure (value)));
+  }
+
+  if (!GST_VALUE_HOLDS_LIST (value)) {
+    return NULL;
+  }
+
+  size = gst_value_list_get_size (value);
+  for (i = 0; i < size; i++) {
+    const GValue *v1 = gst_value_list_get_value (value, i);
+
+    if (!GST_VALUE_HOLDS_STRUCTURE (v1))
+      break;
+
+    res =
+        g_list_append (res, gst_structure_copy (gst_value_get_structure (v1)));
+  }
+
+
+  return res;
+}
+
+static GList *
 get_structures_from_array_in_meta (const gchar * fieldname)
 {
   GList *res = NULL;
@@ -226,6 +261,10 @@ get_structures_from_array_in_meta (const gchar * fieldname)
 
   if (!meta)
     return NULL;
+
+  res = get_structures_from_array (meta, fieldname);
+  if (res)
+    return res;
 
   gst_structure_get (meta,
       "__lineno__", G_TYPE_INT, &current_lineno,

@@ -4129,7 +4129,8 @@ handle_bus_message (MessageData * d)
       GST_DEBUG_OBJECT (scenario, "Got EOS; generate 'stop' action");
 
       stop_action_type = _find_action_type ("stop");
-      s = gst_structure_from_string ("stop, generated-after-eos=true;", NULL);
+      s = gst_structure_new ("stop", "generated-after-eos", G_TYPE_BOOLEAN,
+          !is_error, "generated-after-error", G_TYPE_BOOLEAN, is_error, NULL);
       stop_action = gst_validate_action_new (scenario, stop_action_type,
           s, FALSE);
       gst_structure_free (s);
