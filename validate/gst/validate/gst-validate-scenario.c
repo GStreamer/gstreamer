@@ -506,6 +506,15 @@ gst_validate_action_unref (GstValidateAction * action)
   gst_mini_object_unref (GST_MINI_OBJECT (action));
 }
 
+/**
+ * gst_validate_action_new:
+ * @scenario: (allow-none): The scenario executing the action
+ * @action_type: The action type
+ * @structure: The structure containing the action arguments
+ * @add_to_lists: Weather the action should be added to the scenario action list
+ *
+ * Returns: A newly created #GstValidateAction
+ */
 GstValidateAction *
 gst_validate_action_new (GstValidateScenario * scenario,
     GstValidateActionType * action_type, GstStructure * structure,
