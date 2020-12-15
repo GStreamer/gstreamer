@@ -521,10 +521,16 @@ gst_validate_action_new (GstValidateScenario * scenario,
 
   g_weak_ref_set (&action->priv->scenario, scenario);
   if (structure) {
+    gchar *filename = NULL;
     gst_structure_get (structure,
         "__lineno__", G_TYPE_INT, &GST_VALIDATE_ACTION_LINENO (action),
-        "__filename__", G_TYPE_STRING, &GST_VALIDATE_ACTION_FILENAME (action),
+        "__filename__", G_TYPE_STRING, &filename,
         "__debug__", G_TYPE_STRING, &GST_VALIDATE_ACTION_DEBUG (action), NULL);
+    if (filename) {
+      GST_VALIDATE_ACTION_FILENAME (action) =
+          g_filename_display_basename (filename);
+      g_free (filename);
+    }
     gst_structure_remove_fields (structure, "__lineno__", "__filename__",
         "__debug__", NULL);
     action->priv->state =
@@ -2732,8 +2738,6 @@ stop_waiting (GstValidateAction * action)
 {
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
-  gst_validate_printf (scenario, "Stop waiting\n");
-
   SCENARIO_LOCK (scenario);
   scenario->priv->wait_id = 0;
   SCENARIO_UNLOCK (scenario);
@@ -2762,8 +2766,6 @@ stop_waiting_signal (GstStructure * data)
   scenario = gst_validate_action_get_scenario (action);
 
   g_assert (scenario);
-  gst_validate_printf (scenario, "Stop waiting for signal\n");
-
   SCENARIO_LOCK (scenario);
   g_signal_handler_disconnect (target,
       sigid ? sigid : scenario->priv->signal_handler_id);
@@ -4857,7 +4859,7 @@ gst_validate_scenario_new (GstValidateRunner *
         GST_CLOCK_CAST (scenario->priv->clock));
   }
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
-      g_strdup (scenario_name));
+      g_filename_display_basename (scenario_name));
 
   g_signal_connect (pipeline, "element-added", (GCallback) _element_added_cb,
       scenario);
@@ -5727,7 +5729,6 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
         scenario->priv->on_addition_actions);
 
     for (tmp = all_actions; tmp; tmp = tmp->next) {
-      gchar *action_string;
       GstValidateAction *remaining_action = (GstValidateAction *) tmp->data;
       GstValidateActionType *type;
 
@@ -5748,11 +5749,12 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 
       nb_actions++;
 
-      action_string = gst_structure_to_string (remaining_action->structure);
-      actions = g_strdup_printf ("%s\n%*s%s", actions, 20, "", action_string);
+      actions = g_strdup_printf ("%s\n%*s- `%s` at %s:%d", actions, 20, "",
+          remaining_action->type,
+          GST_VALIDATE_ACTION_FILENAME (remaining_action),
+          GST_VALIDATE_ACTION_LINENO (remaining_action));
       gst_validate_action_unref (remaining_action);
       g_free (tmpconcat);
-      g_free (action_string);
     }
     g_list_free (all_actions);
     scenario->priv->actions = NULL;
@@ -5846,9 +5848,11 @@ _action_set_done (GstValidateAction * action)
         GST_VALIDATE_ACTION_N_REPEATS (action));
 
   gst_validate_printf (NULL,
-      "%*c⇨ Action %s done '%s' %s (duration: %" GST_TIME_FORMAT ")\n\n",
-      (action->priv->subaction_level * 2) - 1, ' ',
+      "%*c⇨ Action `%s` at %s:%d done '%s' %s (duration: %" GST_TIME_FORMAT
+      ")\n\n", (action->priv->subaction_level * 2) - 1, ' ',
       gst_structure_get_name (action->priv->main_structure),
+      GST_VALIDATE_ACTION_FILENAME (action),
+      GST_VALIDATE_ACTION_LINENO (action),
       gst_validate_action_return_get_name (action->priv->state),
       repeat_message ? repeat_message : "",
       GST_TIME_ARGS (action->priv->execution_duration));

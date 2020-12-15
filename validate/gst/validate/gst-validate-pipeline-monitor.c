@@ -680,7 +680,8 @@ _bus_handler (GstBus * bus, GstMessage * message,
         } else {
           json_builder_add_string_value (jbuilder, "progress");
         }
-        gst_validate_printf (NULL, "%s %d%%  \r", "Buffering...", percent);
+        if (is_tty ())
+          gst_validate_printf (NULL, "%s %d%%  \r", "Buffering...", percent);
       }
       json_builder_set_member_name (jbuilder, "position");
       json_builder_add_int_value (jbuilder, percent);

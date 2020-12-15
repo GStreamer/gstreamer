@@ -70,4 +70,5 @@ G_GNUC_INTERNAL GList * gst_validate_get_test_file_expected_issues (void);
 
 G_GNUC_INTERNAL gboolean gst_validate_extra_checks_init (void);
 G_GNUC_INTERNAL gboolean gst_validate_flow_init (void);
+G_GNUC_INTERNAL gboolean is_tty (void);
 #endif

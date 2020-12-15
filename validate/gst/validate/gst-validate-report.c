@@ -917,8 +917,9 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
     PrintActionFieldData d = { NULL, indent, 0 };
     d.str = string = g_string_new (NULL);
 
-    g_string_append_printf (string, "%s",
-        gst_structure_get_name (action->structure));
+    g_string_append_printf (string, "`%s` at %s:%d", action->type,
+        GST_VALIDATE_ACTION_FILENAME (action),
+        GST_VALIDATE_ACTION_LINENO (action));
 
     if (GST_VALIDATE_ACTION_N_REPEATS (action))
       g_string_append_printf (string, " [%s=%d/%d]",
@@ -1464,4 +1465,10 @@ gst_validate_abort (const gchar * format, ...)
 
   g_print ("Bail out! %s\n", tmp);
   exit (-18);
+}
+
+gboolean
+is_tty ()
+{
+  return output_is_tty;
 }
