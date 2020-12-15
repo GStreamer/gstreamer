@@ -143,6 +143,7 @@ struct _GstV4l2Object {
   struct v4l2_format format;
   GstVideoInfo info;
   GstVideoAlignment align;
+  GstVideoTransferFunction transfer;
 
   /* Features */
   gboolean need_video_meta;
