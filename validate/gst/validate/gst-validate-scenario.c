@@ -134,6 +134,7 @@ enum
 enum
 {
   DONE,
+  ACTION_DONE,
   LAST_SIGNAL
 };
 
@@ -4588,6 +4589,20 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
   scenario_signals[DONE] =
       g_signal_new ("done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  /**
+   * GstValidateScenario::action-done:
+   * @scenario: The scenario running
+   * @action: The #GstValidateAction that is done running
+   *
+   * Emitted when an action is done.
+   *
+   * Since: 1.20
+   */
+  scenario_signals[ACTION_DONE] =
+      g_signal_new ("action-done", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1,
+      GST_TYPE_VALIDATE_ACTION);
 }
 
 static void
@@ -5858,6 +5873,7 @@ _action_set_done (GstValidateAction * action)
       GST_TIME_ARGS (action->priv->execution_duration));
   g_free (repeat_message);
 
+  g_signal_emit (scenario, scenario_signals[ACTION_DONE], 0, action);
   if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING)
     /* We took the 'scenario' reference... unreffing it now */
     gst_validate_action_unref (action);
