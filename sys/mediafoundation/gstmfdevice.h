@@ -31,9 +31,6 @@ G_DECLARE_FINAL_TYPE (GstMFDevice, gst_mf_device, GST, MF_DEVICE, GstDevice);
 G_DECLARE_FINAL_TYPE (GstMFDeviceProvider,
     gst_mf_device_provider, GST, MF_DEVICE_PROVIDER, GstDeviceProvider);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMFDevice, gst_object_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMFDeviceProvider, gst_object_unref)
-
 G_END_DECLS
 
 #endif /* __GST_MF_DEVICE_H__ */
