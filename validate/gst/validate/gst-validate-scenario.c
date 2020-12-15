@@ -242,7 +242,7 @@ struct _GstValidateScenarioPrivate
   guint action_execution_interval;
 
   /* Name of message the wait action is waiting for */
-  const gchar *message_type;
+  GstValidateAction *wait_message_action;
 
   gboolean buffering;
 
@@ -2152,7 +2152,7 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
 
   SCENARIO_LOCK (scenario);
   if (priv->execute_actions_source_id == 0 && priv->wait_id == 0
-      && priv->signal_handler_id == 0 && priv->message_type == NULL) {
+      && priv->signal_handler_id == 0 && priv->wait_message_action == NULL) {
     if (!scenario->priv->action_execution_interval)
       priv->execute_actions_source_id =
           g_idle_add ((GSourceFunc) execute_next_action, scenario);
@@ -2899,7 +2899,8 @@ _execute_wait_for_message (GstValidateScenario * scenario,
     priv->execute_actions_source_id = 0;
   }
 
-  priv->message_type = g_strdup (message_type);
+  g_assert (!priv->wait_message_action);
+  priv->wait_message_action = gst_validate_action_ref (action);
   gst_object_unref (pipeline);
 
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
@@ -3820,24 +3821,82 @@ gst_validate_foreach_prepare (GstValidateAction * action)
   return GST_VALIDATE_EXECUTE_ACTION_DONE;
 }
 
+static gboolean
+_check_structure_has_expected_value (GQuark field_id, const GValue * value,
+    GstStructure * message_struct)
+{
+  const GValue *v = gst_structure_id_get_value (message_struct, field_id);
+
+  if (!v) {
+    gst_structure_set (message_struct, "__validate_has_expected_values",
+        G_TYPE_BOOLEAN, FALSE, NULL);
+    return FALSE;
+  }
+
+  if (gst_value_compare (value, v) != GST_VALUE_EQUAL) {
+    gst_structure_set (message_struct, "__validate_has_expected_values",
+        G_TYPE_BOOLEAN, FALSE, NULL);
+    return FALSE;
+  }
+
+  gst_structure_set (message_struct, "__validate_has_expected_values",
+      G_TYPE_BOOLEAN, TRUE, NULL);
+
+  return TRUE;
+}
+
 static void
 _check_waiting_for_message (GstValidateScenario * scenario,
     GstMessage * message)
 {
+  GstStructure *expected_values = NULL;
   GstValidateScenarioPrivate *priv = scenario->priv;
+  const gchar *message_type;
 
-  if (!g_strcmp0 (priv->message_type,
-          gst_message_type_get_name (GST_MESSAGE_TYPE (message)))) {
-    GstValidateAction *action = scenario->priv->actions->data;
-
-    g_free ((gpointer) priv->message_type);
-    priv->message_type = NULL;
-
-    gst_validate_printf (scenario, "Stop waiting for message\n");
-
-    gst_validate_action_set_done (action);
-    _add_execute_actions_gsource (scenario);
+  if (!priv->wait_message_action) {
+    GST_LOG_OBJECT (scenario, "Not waiting for message");
+    return;
   }
+
+  message_type = gst_structure_get_string (priv->wait_message_action->structure,
+      "message-type");
+
+  if (g_strcmp0 (message_type, GST_MESSAGE_TYPE_NAME (message)))
+    return;
+
+  GST_LOG_OBJECT (scenario, " Waiting for %s and got %s", message_type,
+      GST_MESSAGE_TYPE_NAME (message));
+
+  gst_structure_get (priv->wait_message_action->structure, "expected-values",
+      GST_TYPE_STRUCTURE, &expected_values, NULL);
+  if (expected_values) {
+    gboolean res = FALSE;
+    GstStructure *message_struct =
+        (GstStructure *) gst_message_get_structure (message);
+
+    message_struct =
+        message_struct ? gst_structure_copy (message_struct) : NULL;
+    if (!message_struct) {
+      GST_DEBUG_OBJECT (scenario,
+          "Waiting for %" GST_PTR_FORMAT " but message has no structure.",
+          priv->wait_message_action->structure);
+      return;
+    }
+
+    gst_structure_set (message_struct, "__validate_has_expected_values",
+        G_TYPE_BOOLEAN, FALSE, NULL);
+    gst_structure_foreach (expected_values,
+        (GstStructureForeachFunc) _check_structure_has_expected_value,
+        message_struct);
+
+    if (!gst_structure_get_boolean (message_struct,
+            "__validate_has_expected_values", &res) || !res) {
+      return;
+    }
+  }
+
+  gst_validate_action_set_done (priv->wait_message_action);
+  _add_execute_actions_gsource (scenario);
 }
 
 static gboolean
@@ -4035,9 +4094,9 @@ handle_bus_message (MessageData * d)
 
       if (!is_error) {
         priv->got_eos = TRUE;
-        if (priv->message_type) {
+        if (priv->wait_message_action) {
 
-          if (priv->actions->next) {
+          if (priv->actions && priv->actions->next) {
             GST_DEBUG_OBJECT (scenario,
                 "Waiting for a message and got a next action"
                 " to execute, letting it a chance!");
@@ -4184,8 +4243,7 @@ handle_bus_message (MessageData * d)
 done:
   gst_object_unref (pipeline);
   /* Check if we got the message expected by a wait action */
-  if (priv->message_type)
-    _check_waiting_for_message (scenario, message);
+  _check_waiting_for_message (scenario, message);
 
   execute_next_action_full (scenario, message);
 
@@ -5894,10 +5952,10 @@ void
 gst_validate_action_set_done (GstValidateAction * action)
 {
   GMainContext *context = action->priv->context;
+  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
   action->priv->context = NULL;
   if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING) {
-    GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
     GList *item = NULL;
 
     if (scenario) {
@@ -5907,7 +5965,6 @@ gst_validate_action_set_done (GstValidateAction * action)
           g_list_delete_link (scenario->priv->non_blocking_running_actions,
           item);
       SCENARIO_UNLOCK (scenario);
-      g_object_unref (scenario);
     }
 
     if (item)
@@ -5916,6 +5973,10 @@ gst_validate_action_set_done (GstValidateAction * action)
 
   g_assert (!action->priv->pending_set_done);
   action->priv->pending_set_done = TRUE;
+
+  if (scenario && scenario->priv->wait_message_action == action)
+    scenario->priv->wait_message_action = NULL;
+  gst_clear_object (&scenario);
 
   g_main_context_invoke_full (action->priv->context,
       G_PRIORITY_DEFAULT_IDLE,
@@ -6531,6 +6592,15 @@ register_action_types (void)
             " if specified)",
           .mandatory = FALSE,
           .types = "string",
+          NULL
+        },
+        {
+          .name = "expected-values",
+          .description = "Expected values in the message structure (valid only when "
+            "`message-type`). Example: "
+            "wait, on-client=true, message-type=buffering, expected-values=[values, buffer-percent=100]",
+          .mandatory = FALSE,
+          .types = "GstStructure",
           NULL
         },
         {
