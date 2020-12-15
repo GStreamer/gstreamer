@@ -629,10 +629,10 @@ gst_video_hdr_parse_hdr10_plus (const guint8 * data, gsize size,
     hdr10_plus->num_cols_targeted_system_display_actual_peak_luminance =
         gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
     if (hdr10_plus->num_rows_targeted_system_display_actual_peak_luminance >
-        GST_VIDEO_HDR10_PLUS_MAX_TSD_APL)
+        GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL)
       return FALSE;
     if (hdr10_plus->num_cols_targeted_system_display_actual_peak_luminance >
-        GST_VIDEO_HDR10_PLUS_MAX_TSD_APL)
+        GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL)
       return FALSE;
     CHECK_HDR10PLUS_REMAINING (br,
         hdr10_plus->num_rows_targeted_system_display_actual_peak_luminance *
@@ -657,8 +657,8 @@ gst_video_hdr_parse_hdr10_plus (const guint8 * data, gsize size,
           gst_bit_reader_get_bits_uint32_unchecked (&br, 17);
       hdr10_plus->processing_window[w].num_distribution_maxrgb_percentiles =
           gst_bit_reader_get_bits_uint8_unchecked (&br, 4);
-      if (hdr10_plus->
-          processing_window[w].num_distribution_maxrgb_percentiles !=
+      if (hdr10_plus->processing_window[w].
+          num_distribution_maxrgb_percentiles !=
           HDR10_PLUS_MAX_DIST_MAXRGB_PERCENTILES)
         return FALSE;
       CHECK_HDR10PLUS_REMAINING (br,
@@ -688,10 +688,10 @@ gst_video_hdr_parse_hdr10_plus (const guint8 * data, gsize size,
     hdr10_plus->num_cols_mastering_display_actual_peak_luminance =
         gst_bit_reader_get_bits_uint8_unchecked (&br, 5);
     if (hdr10_plus->num_rows_mastering_display_actual_peak_luminance >
-        GST_VIDEO_HDR10_PLUS_MAX_MD_APL)
+        GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL)
       return FALSE;
     if (hdr10_plus->num_cols_mastering_display_actual_peak_luminance >
-        GST_VIDEO_HDR10_PLUS_MAX_MD_APL)
+        GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL)
       return FALSE;
     CHECK_HDR10PLUS_REMAINING (br,
         hdr10_plus->num_rows_mastering_display_actual_peak_luminance *

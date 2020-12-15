@@ -31,7 +31,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_HDR_FORMAT_NONE: No HDR format detected.
  * @GST_VIDEO_HDR_FORMAT_HDR10: HDR10 format
  * @GST_VIDEO_HDR_FORMAT_HDR10_PLUS: HDR10+ format
- * * @GST_VIDEO_HDR_FORMAT_DOLBY_VISION: Dolby Vision format
+ * @GST_VIDEO_HDR_FORMAT_DOLBY_VISION: Dolby Vision format
  *
  * Enum value describing the most common video for High Dynamic Range (HDR) formats.
  *
@@ -44,11 +44,50 @@ typedef enum {
   GST_VIDEO_HDR_FORMAT_DOLBY_VISION,
 } GstVideoHDRFormat;
 
+/**
+ * GST_VIDEO_HDR10_PLUS_MAX_BYTES:
+ *
+ * Specify the max size for a HDR10+ content
+ *
+ * Since: 1.20
+ */
 #define GST_VIDEO_HDR10_PLUS_MAX_BYTES 1024
-/* defined in CTA-861-G */
-#define GST_VIDEO_HDR10_PLUS_NUM_WINDOWS 1 /* number of windows, shall be 1. */
-#define GST_VIDEO_HDR10_PLUS_MAX_TSD_APL 25 /* targeted_system_display_actual_peak_luminance max value */
-#define GST_VIDEO_HDR10_PLUS_MAX_MD_APL 25 /* mastering_display_actual_peak_luminance max value */
+
+/**
+ * GST_VIDEO_HDR10_PLUS_NUM_WINDOWS:
+ *
+ * Number of windows in HDR10+ dynamic metadata.
+ * Defined in CTA-861-G.
+ * Shall be 1.
+ *
+ * Since: 1.20
+ */
+#define GST_VIDEO_HDR10_PLUS_NUM_WINDOWS 1
+
+/**
+ * GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL:
+ *
+ * Specifies the number of columns in the
+ * targeted_system_display_actual_peak_luminance
+ * array.
+ * Defined in CTA-861-G.
+ *
+ * Since: 1.20
+ */
+#define GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL 25
+
+/**
+ * GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL:
+ *
+ * Specifies the number of columns in the
+ * targeted_system_display_actual_peak_luminance
+ * array.
+ * Defined in CTA-861-G.
+ *
+ *
+ * Since: 1.20
+ */
+#define GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL 25
 
 typedef struct _GstVideoMasteringDisplayInfoCoordinates GstVideoMasteringDisplayInfoCoordinates;
 typedef struct _GstVideoMasteringDisplayInfo GstVideoMasteringDisplayInfo;
@@ -80,12 +119,26 @@ typedef struct {
   gsize size;
 } GstVideoHDRMeta;
 
+/**
+ * gst_video_hdr_meta_api_get_type: (attributes doc.skip=true)
+ */
 GST_VIDEO_API
 GType gst_video_hdr_meta_api_get_type (void);
+
+/**
+ * GST_VIDEO_HDR_META_API_TYPE: (attributes doc.skip=true)
+ */
 #define GST_VIDEO_HDR_META_API_TYPE (gst_video_hdr_meta_api_get_type())
 
+/**
+ * gst_video_hdr_meta_get_info: (attributes doc.skip=true)
+ */
 GST_VIDEO_API
 const GstMetaInfo *gst_video_hdr_meta_get_info (void);
+
+/**
+ * GST_VIDEO_HDR_META_INFO: (attributes doc.skip=true)
+ */
 #define GST_VIDEO_HDR_META_INFO (gst_video_hdr_meta_get_info())
 
 /**
@@ -332,11 +385,11 @@ struct _GstVideoHDR10Plus
   guint8 targeted_system_display_actual_peak_luminance_flag;
   guint8 num_rows_targeted_system_display_actual_peak_luminance;
   guint8 num_cols_targeted_system_display_actual_peak_luminance;
-  guint8 targeted_system_display_actual_peak_luminance[GST_VIDEO_HDR10_PLUS_MAX_TSD_APL][GST_VIDEO_HDR10_PLUS_MAX_TSD_APL];
+  guint8 targeted_system_display_actual_peak_luminance[GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL][GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL];
   guint8 mastering_display_actual_peak_luminance_flag;
   guint8 num_rows_mastering_display_actual_peak_luminance;
   guint8 num_cols_mastering_display_actual_peak_luminance;
-  guint8 mastering_display_actual_peak_luminance[GST_VIDEO_HDR10_PLUS_MAX_MD_APL][GST_VIDEO_HDR10_PLUS_MAX_MD_APL];
+  guint8 mastering_display_actual_peak_luminance[GST_VIDEO_HDR10_PLUS_MAX_ROWS_TSD_APL][GST_VIDEO_HDR10_PLUS_MAX_COLS_MD_APL];
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
