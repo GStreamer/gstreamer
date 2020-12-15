@@ -150,7 +150,7 @@ gst_validate_bin_monitor_dispose (GObject * object)
   if (monitor->scenario) {
     gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER
         (monitor->scenario));
-    gst_object_unref (monitor->scenario);
+    gst_clear_object (&monitor->scenario);
   }
 
   g_list_free_full (monitor->element_monitors, purge_and_unref_reporter);
@@ -349,4 +349,22 @@ _validate_bin_element_removed (GstBin * bin, GstElement * element,
     gst_validate_printf (NULL, "(element-removed) %s removed from %s\n",
         GST_ELEMENT_NAME (element),
         gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)));
+}
+
+/**
+ * gst_validate_bin_monitor_get_scenario:
+ * @monitor: A #GstValidateBinMonitor
+ *
+ * Returns: (transfer full) (nullable): The #GstValidateScenario being executed
+ * under @monitor watch
+ *
+ * Since: 1.20
+ */
+GstValidateScenario *
+gst_validate_bin_monitor_get_scenario (GstValidateBinMonitor * monitor)
+{
+  if (monitor->scenario)
+    return gst_object_ref (monitor->scenario);
+
+  return NULL;
 }

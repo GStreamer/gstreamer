@@ -77,8 +77,13 @@ struct _GstValidateBinMonitorClass {
 GST_VALIDATE_API
 GType		gst_validate_bin_monitor_get_type		(void);
 
-GST_VALIDATE_API
-GstValidateBinMonitor *   gst_validate_bin_monitor_new      (GstBin * bin, GstValidateRunner * runner, GstValidateMonitor * parent);
+GST_VALIDATE_API GstValidateBinMonitor *
+gst_validate_bin_monitor_new                (GstBin * bin,
+                                             GstValidateRunner * runner,
+                                             GstValidateMonitor * parent);
+
+GST_VALIDATE_API GstValidateScenario *
+gst_validate_bin_monitor_get_scenario       (GstValidateBinMonitor * monitor);
 
 G_END_DECLS
 
