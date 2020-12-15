@@ -20123,11 +20123,11 @@
                         "args": [
                             {
                                 "name": "arg0",
-                                "type": "gpointer"
+                                "type": "GstRTSPMessage"
                             },
                             {
                                 "name": "arg1",
-                                "type": "gpointer"
+                                "type": "GstRTSPMessage"
                             }
                         ],
                         "return-type": "void"
