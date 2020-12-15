@@ -738,7 +738,9 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
    */
   gst_rtsp_client_sink_signals[SIGNAL_HANDLE_REQUEST] =
       g_signal_new ("handle-request", G_TYPE_FROM_CLASS (klass), 0,
-      0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_POINTER);
+      0, NULL, NULL, NULL, G_TYPE_NONE, 2,
+      GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE,
+      GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstRTSPClientSink::new-manager:
