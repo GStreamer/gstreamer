@@ -406,6 +406,14 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
           gst_wl_window_render (sink->window, NULL, NULL);
         }
       }
+
+      g_mutex_lock (&sink->render_lock);
+      if (sink->callback) {
+        wl_callback_destroy (sink->callback);
+        sink->callback = NULL;
+      }
+      sink->redraw_pending = FALSE;
+      g_mutex_unlock (&sink->render_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       g_mutex_lock (&sink->display_lock);
@@ -419,12 +427,9 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
        * to avoid requesting them again from the application if/when we are
        * restarted (GstVideoOverlay behaves like that in other sinks)
        */
-      if (sink->display && !sink->window) {     /* -> the window was toplevel */
+      if (sink->display && !sink->window)       /* -> the window was toplevel */
         g_clear_object (&sink->display);
-        g_mutex_lock (&sink->render_lock);
-        sink->redraw_pending = FALSE;
-        g_mutex_unlock (&sink->render_lock);
-      }
+
       g_mutex_unlock (&sink->display_lock);
       g_clear_object (&sink->pool);
       break;
@@ -639,10 +644,12 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 
   g_mutex_lock (&sink->render_lock);
   sink->redraw_pending = FALSE;
-  sink->window->callback = NULL;
-  g_mutex_unlock (&sink->render_lock);
 
-  wl_callback_destroy (callback);
+  if (sink->callback) {
+    wl_callback_destroy (callback);
+    sink->callback = NULL;
+  }
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -663,7 +670,7 @@ render_last_buffer (GstWaylandSink * sink, gboolean redraw)
 
   sink->redraw_pending = TRUE;
   callback = wl_surface_frame (surface);
-  sink->window->callback = callback;
+  sink->callback = callback;
   wl_callback_add_listener (callback, &frame_callback_listener, sink);
 
   if (G_UNLIKELY (sink->video_info_changed && !redraw)) {

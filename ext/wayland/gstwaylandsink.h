@@ -67,6 +67,8 @@ struct _GstWaylandSink
   gboolean redraw_pending;
   GMutex render_lock;
   GstBuffer *last_buffer;
+
+  struct wl_callback *callback;
 };
 
 struct _GstWaylandSinkClass
