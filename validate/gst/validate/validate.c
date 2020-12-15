@@ -60,6 +60,7 @@ static GList *all_configs = NULL;
 static gboolean got_configs = FALSE;
 
 static GList *core_config = NULL;
+static gboolean testfile_used = FALSE;
 static GList *testfile_structs = NULL;
 static gchar *global_testfile = NULL;
 static gboolean validate_initialized = FALSE;
@@ -513,7 +514,7 @@ gst_validate_get_test_file_scenario (GList ** structs,
   GList *res = NULL, *tmp;
   GstStructure *meta = get_test_file_meta ();
 
-  if (!testfile_structs)
+  if (!testfile_structs || testfile_used)
     return FALSE;
 
   if (meta && gst_structure_has_field (meta, "scenario")) {
@@ -537,10 +538,12 @@ gst_validate_get_test_file_scenario (GList ** structs,
 
   *structs = res;
   *original_name = global_testfile;
+  testfile_used = TRUE;
 
   return TRUE;
 }
 
+/* Only the first monitor pipeline will be used */
 GstStructure *
 gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
 {
