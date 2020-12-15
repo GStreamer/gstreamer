@@ -246,6 +246,7 @@ enum
   SIGNAL_NEW_PAYLOADER,
   SIGNAL_REQUEST_RTCP_KEY,
   SIGNAL_ACCEPT_CERTIFICATE,
+  SIGNAL_UPDATE_SDP,
   LAST_SIGNAL
 };
 
@@ -804,6 +805,22 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
       G_SIGNAL_RUN_LAST, 0, g_signal_accumulator_true_handled, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_TLS_CONNECTION, G_TYPE_TLS_CERTIFICATE,
       G_TYPE_TLS_CERTIFICATE_FLAGS);
+
+  /**
+   * GstRTSPClientSink::update-sdp:
+   * @rtsp_client_sink: a #GstRTSPClientSink
+   * @sdp: a #GstSDPMessage
+   *
+   * Emitted right before the ANNOUNCE request is sent to the server with the
+   * generated SDP. The SDP can be updated from signal handlers but the order
+   * and number of medias must not be changed.
+   *
+   * Since: 1.20
+   */
+  gst_rtsp_client_sink_signals[SIGNAL_UPDATE_SDP] =
+      g_signal_new_class_handler ("update-sdp", G_TYPE_FROM_CLASS (klass),
+      0, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_SDP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gstelement_class->provide_clock = gst_rtsp_client_sink_provide_clock;
   gstelement_class->change_state = gst_rtsp_client_sink_change_state;
@@ -4452,6 +4469,8 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
       sink->conninfo.url_str);
   if (res < 0)
     goto create_request_failed;
+
+  g_signal_emit (sink, gst_rtsp_client_sink_signals[SIGNAL_UPDATE_SDP], 0, sdp);
 
   gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CONTENT_TYPE,
       "application/sdp");

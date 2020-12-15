@@ -414,6 +414,15 @@
                         ],
                         "return-type": "GstCaps",
                         "when": "last"
+                    },
+                    "update-sdp": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstSDPMessage"
+                            }
+                        ],
+                        "return-type": "void"
                     }
                 }
             }
