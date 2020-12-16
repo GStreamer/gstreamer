@@ -21,7 +21,7 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2020-10-22.0'
+  FEDORA_TAG:  '2021-01-22.0'
   CERBERO_TAG: '2020-10-22.0'
   ANDROID_TAG: '2020-10-22.0'
   MANIFEST_TAG: '2020-10-22.0'
@@ -427,7 +427,11 @@ check allow-edit:
   - cd gst-build/
   # only copy immediate directories. We don't want to modify .wrap files
   - find /gst-build/subprojects/ -mindepth 1 -maxdepth 1 -type d -exec cp -r \{\} subprojects/ \;
+
+  # Reset the state of the subprojects to what gst-build expects
+  - meson subprojects update --reset
   - ./git-update --no-interaction --manifest="${CI_PROJECT_DIR}/manifest.xml"
+
   - meson build/ $MESON_ARGS
   - ninja -C build/
   - ccache --show-stats
@@ -1114,7 +1118,7 @@ documentation:
   - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc@28ad9aa59daa49d6b3fd1bc6b144df52af39475b
 
   # FIXME: remove this once the docs image is updated
-  - rm -rf /gst-build/subprojects/pygobject/
+  - pip3 install -U meson==0.56.2
 
   - *gst_build
   - ./gst-uninstalled.py ninja -C build/ plugins_doc_caches
