@@ -37,13 +37,24 @@
 GST_DEBUG_CATEGORY_STATIC (gst_line_21_decoder_debug);
 #define GST_CAT_DEFAULT gst_line_21_decoder_debug
 
+/**
+ * GstLine21DecoderMode:
+ * @GST_LINE_21_DECODER_MODE_ADD: add new CC meta on top of other CC meta, if any
+ * @GST_LINE_21_DECODER_MODE_DROP: ignore CC if a CC meta was already present
+ * @GST_LINE_21_DECODER_MODE_REPLACE: replace existing CC meta
+ *
+ * Since: 1.20
+ */
+
 enum
 {
   PROP_0,
   PROP_NTSC_ONLY,
+  PROP_MODE,
 };
 
 #define DEFAULT_NTSC_ONLY FALSE
+#define DEFAULT_MODE GST_LINE_21_DECODER_MODE_ADD
 
 #define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY, v210 }, interlace-mode=interleaved"
 
@@ -62,6 +73,33 @@ G_DEFINE_TYPE (GstLine21Decoder, gst_line_21_decoder, GST_TYPE_VIDEO_FILTER);
 GST_ELEMENT_REGISTER_DEFINE (line21decoder, "line21decoder",
     GST_RANK_NONE, GST_TYPE_LINE21DECODER);
 
+#define GST_TYPE_LINE_21_DECODER_MODE (gst_line_21_decoder_mode_get_type())
+static GType
+gst_line_21_decoder_mode_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {GST_LINE_21_DECODER_MODE_ADD,
+        "add new CC meta on top of other CC meta, if any", "add"},
+    {GST_LINE_21_DECODER_MODE_DROP,
+          "ignore CC if a CC meta was already present",
+        "drop"},
+    {GST_LINE_21_DECODER_MODE_REPLACE,
+        "replace existing CC meta", "replace"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstLine21DecoderMode", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
 static void gst_line_21_decoder_finalize (GObject * self);
 static gboolean gst_line_21_decoder_stop (GstBaseTransform * btrans);
 static gboolean gst_line_21_decoder_set_info (GstVideoFilter * filter,
@@ -79,6 +117,9 @@ gst_line_21_decoder_set_property (GObject * object, guint prop_id,
   GstLine21Decoder *enc = GST_LINE21DECODER (object);
 
   switch (prop_id) {
+    case PROP_MODE:
+      enc->mode = g_value_get_enum (value);
+      break;
     case PROP_NTSC_ONLY:
       enc->ntsc_only = g_value_get_boolean (value);
       break;
@@ -95,6 +136,9 @@ gst_line_21_decoder_get_property (GObject * object, guint prop_id,
   GstLine21Decoder *enc = GST_LINE21DECODER (object);
 
   switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, enc->mode);
+      break;
     case PROP_NTSC_ONLY:
       g_value_set_boolean (value, enc->ntsc_only);
       break;
@@ -137,6 +181,22 @@ gst_line_21_decoder_class_init (GstLine21DecoderClass * klass)
           "input resolution matches NTSC", DEFAULT_NTSC_ONLY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstLine21Decoder:mode
+   *
+   * Control whether and how detected CC meta should be inserted
+   * in the list of existing CC meta on a frame (if any).
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MODE, g_param_spec_enum ("mode",
+          "Mode",
+          "Control whether and how detected CC meta should be inserted "
+          "in the list of existing CC meta on a frame (if any).",
+          GST_TYPE_LINE_21_DECODER_MODE, DEFAULT_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "Line 21 CC Decoder",
       "Filter/Video/ClosedCaption",
@@ -167,6 +227,7 @@ gst_line_21_decoder_init (GstLine21Decoder * filter)
   self->line21_offset = -1;
   self->max_line_probes = 40;
   self->ntsc_only = DEFAULT_NTSC_ONLY;
+  self->mode = DEFAULT_MODE;
 }
 
 static vbi_pixfmt
@@ -404,6 +465,15 @@ get_video_data (GstLine21Decoder * self, GstVideoFrame * frame, gint line)
   return self->converted_lines;
 }
 
+static gboolean
+drop_cc_meta (GstBuffer * buffer, GstMeta ** meta, gpointer unused)
+{
+  if ((*meta)->info->api == GST_VIDEO_CAPTION_META_API_TYPE)
+    *meta = NULL;
+
+  return TRUE;
+}
+
 /* Call this to scan for CC
  * Returns TRUE if it was found and set, else FALSE */
 static gboolean
@@ -413,6 +483,13 @@ gst_line_21_decoder_scan (GstLine21Decoder * self, GstVideoFrame * frame)
   vbi_sliced sliced[52];
   gboolean found = FALSE;
   guint8 *data;
+
+  if (self->mode == GST_LINE_21_DECODER_MODE_DROP &&
+      gst_buffer_get_n_meta (frame->buffer,
+          GST_VIDEO_CAPTION_META_API_TYPE) > 0) {
+    GST_DEBUG_OBJECT (self, "Mode drop and buffer had CC meta, ignoring");
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (self, "Starting probing. max_line_probes:%d",
       self->max_line_probes);
@@ -443,7 +520,6 @@ gst_line_21_decoder_scan (GstLine21Decoder * self, GstVideoFrame * frame)
   }
 
   if (!found) {
-    GST_DEBUG_OBJECT (self, "No CC found");
     self->line21_offset = -1;
   } else {
     guint base_line1 = 0, base_line2 = 0;
@@ -455,6 +531,12 @@ gst_line_21_decoder_scan (GstLine21Decoder * self, GstVideoFrame * frame)
     } else if (GST_VIDEO_FRAME_HEIGHT (frame) == 625) {
       base_line1 = 5;
       base_line2 = 318;
+    }
+
+    if (self->mode == GST_LINE_21_DECODER_MODE_REPLACE) {
+      GST_DEBUG_OBJECT (self,
+          "Mode replace and new CC meta, removing existing CC meta");
+      gst_buffer_foreach_meta (frame->buffer, drop_cc_meta, NULL);
     }
 
     ccdata[0] |= (base_line1 < i ? i - base_line1 : 0) & 0x1f;
