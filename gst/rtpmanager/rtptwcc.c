@@ -794,7 +794,7 @@ _check_for_lost_packets (RTPTWCCManager * twcc, GArray * twcc_packets,
   /* we have gone backwards, don't reset the expectations,
      but process the packet nonetheless */
   if (fb_pkt_count_diff < 0) {
-    GST_WARNING ("feedback packet count going backwards (%u < %u)",
+    GST_DEBUG ("feedback packet count going backwards (%u < %u)",
         fb_pkt_count, twcc->expected_parsed_fb_pkt_count);
     return;
   }
@@ -802,9 +802,15 @@ _check_for_lost_packets (RTPTWCCManager * twcc, GArray * twcc_packets,
   /* we have jumped forwards, reset expectations, but don't trigger
      lost packets in case the missing fb-packet(s) arrive later */
   if (fb_pkt_count_diff > 0) {
-    GST_WARNING ("feedback packet count jumped ahead (%u > %u)",
+    GST_DEBUG ("feedback packet count jumped ahead (%u > %u)",
         fb_pkt_count, twcc->expected_parsed_fb_pkt_count);
     goto done;
+  }
+
+  if (base_seqnum < twcc->expected_parsed_seqnum) {
+    GST_DEBUG ("twcc seqnum is older than expected  (%u < %u)", base_seqnum,
+        twcc->expected_parsed_seqnum);
+    return;
   }
 
   packets_lost = base_seqnum - twcc->expected_parsed_seqnum;

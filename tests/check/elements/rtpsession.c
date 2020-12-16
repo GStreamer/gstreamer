@@ -3780,6 +3780,58 @@ GST_START_TEST (test_twcc_feedback_count_wrap)
 
 GST_END_TEST;
 
+GST_START_TEST (test_twcc_feedback_old_seqnum)
+{
+  SessionHarness *h = session_harness_new ();
+  guint i;
+  GstBuffer *buf;
+  GstEvent *event;
+  GValueArray *packets_array;
+
+  guint8 fci1[] = {
+    0x05, 0xfd,                 /* base sequence number: 1533 */
+    0x00, 0x00,                 /* packet status count: 0 */
+    0x00, 0x00, 0x00,           /* reference time: 0 */
+    0x00,                       /* feedback packet count: 255 */
+    0x00, 0x00,                 /* packet chunk: run-length, 0 */
+    0x00,                       /* 0 recv-delta */
+  };
+
+  guint8 fci2[] = {
+    0x05, 0xdc,                 /* base sequence number: 1500 */
+    0x00, 0x00,                 /* packet status count: 0 */
+    0x00, 0x00, 0x00,           /* reference time: 0 */
+    0x01,                       /* feedback packet count: 1 */
+    0x00, 0x00,                 /* packet chunk: run-length, 0 */
+    0x00,                       /* 0 recv-delta */
+  };
+
+  buf = generate_twcc_feedback_rtcp (fci1, sizeof (fci1));
+  session_harness_recv_rtcp (h, buf);
+
+  buf = generate_twcc_feedback_rtcp (fci2, sizeof (fci2));
+  session_harness_recv_rtcp (h, buf);
+
+  /* two reconfigure events */
+  for (i = 0; i < 2; i++)
+    gst_event_unref (gst_harness_pull_upstream_event (h->send_rtp_h));
+
+  for (i = 0; i < 2; i++) {
+    event = gst_harness_pull_upstream_event (h->send_rtp_h);
+    packets_array =
+        g_value_get_boxed (gst_structure_get_value (gst_event_get_structure
+            (event), "packets"));
+
+    /* we expect zero packets due to old sequence number */
+    fail_unless_equals_int (packets_array->n_values, 0);
+    gst_event_unref (event);
+  }
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rtpsession_suite (void)
@@ -3848,6 +3900,7 @@ rtpsession_suite (void)
   tcase_add_loop_test (tc_chain, test_twcc_feedback_interval, 0,
       G_N_ELEMENTS (test_twcc_feedback_interval_ctx));
   tcase_add_test (tc_chain, test_twcc_feedback_count_wrap);
+  tcase_add_test (tc_chain, test_twcc_feedback_old_seqnum);
 
 
   return s;
