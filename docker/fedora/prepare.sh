@@ -238,3 +238,9 @@ rustc --version
 git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-build.git /gst-build/
 cd /gst-build
 meson subprojects download
+
+# Run git gc to prune unwanted refs and reduce the size of the image
+for i in $(find subprojects/ -mindepth 1- maxdepth 1 -type d);
+do
+    git -C $i gc --aggressive || true;
+done
