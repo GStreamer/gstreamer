@@ -793,9 +793,17 @@ valgrind ges:
     - python clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination $env:CI_PROJECT_DIR/gst-build
     - cd $env:CI_PROJECT_DIR/gst-build
 
+    # Update meson
+    # FIXME: remove this once the windows image is rebuilt/updated
+    - pip install -U meson==0.56.2
+
     - cp -r C:/subprojects/* subprojects/
+    - cd $env:CI_PROJECT_DIR/gst-build
+    # Reset the subprojects to invalidate the cache if needed
+    - meson subprojects update --reset
     # Run the git-update script and feed it the manifest to setup the environment
-    - cd $env:CI_PROJECT_DIR/gst-build;  python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
+    - python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
+
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
