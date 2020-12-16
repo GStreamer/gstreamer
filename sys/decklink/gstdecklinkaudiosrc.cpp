@@ -654,6 +654,8 @@ retry:
   // Convert to the sample numbers
   start_offset =
       gst_util_uint64_scale (start_time, self->info.rate, GST_SECOND);
+  // Convert back to round down to a sample multiple and get rid of rounding errors
+  start_time = gst_util_uint64_scale (start_offset, GST_SECOND, self->info.rate);
 
   end_offset = start_offset + sample_count;
   end_time = gst_util_uint64_scale_int (end_offset, GST_SECOND,
