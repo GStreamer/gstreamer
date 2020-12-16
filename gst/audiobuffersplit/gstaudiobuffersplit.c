@@ -230,8 +230,9 @@ gst_audio_buffer_split_update_samples_per_buffer (GstAudioBufferSplit * self)
   }
 
   if (self->output_buffer_size) {
-    self->output_buffer_duration_n = GST_AUDIO_INFO_BPF (&self->info);
-    self->output_buffer_duration_d = self->output_buffer_size;
+    self->output_buffer_duration_n =
+        self->output_buffer_size / GST_AUDIO_INFO_BPF (&self->info);
+    self->output_buffer_duration_d = GST_AUDIO_INFO_RATE (&self->info);
   }
 
   self->samples_per_buffer =
