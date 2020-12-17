@@ -44,6 +44,21 @@ G_BEGIN_DECLS
 typedef struct _GstUDPSrc GstUDPSrc;
 typedef struct _GstUDPSrcClass GstUDPSrcClass;
 
+
+/**
+ * GstSocketTimestampMode:
+ * @GST_SOCKET_TIMESTAMP_MODE_DISABLED: Disable additional timestamps
+ * @GST_SOCKET_TIMESTAMP_MODE_REALTIME: Timestamp with realtime clock (nsec
+ *      resolution, may not be monotonic)
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_SOCKET_TIMESTAMP_MODE_DISABLED = 0,
+  GST_SOCKET_TIMESTAMP_MODE_REALTIME
+} GstSocketTimestampMode;
+
 struct _GstUDPSrc {
   GstPushSrc parent;
 
@@ -67,6 +82,7 @@ struct _GstUDPSrc {
   gboolean   auto_multicast;
   gboolean   reuse;
   gboolean   loop;
+  GstSocketTimestampMode socket_timestamp_mode;
 
   /* stats */
   guint      max_size;

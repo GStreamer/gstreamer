@@ -401,6 +401,110 @@ gst_ip_recvdstaddr_message_class_init (GstIPRecvdstaddrMessageClass * class)
 }
 #endif
 
+#define GST_TYPE_SOCKET_TIMESTAMP_MODE gst_socket_timestamp_mode_get_type()
+#define GST_SOCKET_TIMESTAMP_MODE (gst_socket_timestamp_mode_get_type ())
+static GType
+gst_socket_timestamp_mode_get_type (void)
+{
+  static GType socket_timestamp_mode_type = 0;
+  static const GEnumValue socket_timestamp_mode_types[] = {
+    {GST_SOCKET_TIMESTAMP_MODE_DISABLED, "Disable additional timestamps",
+        "disabled"},
+    {GST_SOCKET_TIMESTAMP_MODE_REALTIME,
+          "Timestamp with realtime clock (nsec resolution, may not be monotonic)",
+        "realtime"},
+    {0, NULL, NULL}
+  };
+
+  if (!socket_timestamp_mode_type)
+    socket_timestamp_mode_type =
+        g_enum_register_static ("GstSocketTimestampMode",
+        socket_timestamp_mode_types);
+
+  return socket_timestamp_mode_type;
+}
+
+#ifdef SO_TIMESTAMPNS
+GType gst_socket_timestamp_message_get_type (void);
+
+#define GST_TYPE_SOCKET_TIMESTAMP_MESSAGE          (gst_socket_timestamp_message_get_type ())
+#define GST_SOCKET_TIMESTAMP_MESSAGE(o)            (G_TYPE_CHECK_INSTANCE_CAST ((o), GST_TYPE_SOCKET_TIMESTAMP_MESSAGE, GstSocketTimestampMessage))
+#define GST_SOCKET_TIMESTAMP_MESSAGE_CLASS(c)      (G_TYPE_CHECK_CLASS_CAST ((c), GST_TYPE_SOCKET_TIMESTAMP_MESSAGE, GstSocketTimestampMessageClass))
+#define GST_IS_SOCKET_TIMESTAMP_MESSAGE(o)         (G_TYPE_CHECK_INSTANCE_TYPE ((o), GST_TYPE_SOCKET_TIMESTAMP_MESSAGE))
+#define GST_IS_SOCKET_TIMESTAMP_MESSAGE_CLASS(c)   (G_TYPE_CHECK_CLASS_TYPE ((c), GST_TYPE_SOCKET_TIMESTAMP_MESSAGE))
+#define GST_SOCKET_TIMESTAMP_MESSAGE_GET_CLASS(o)  (G_TYPE_INSTANCE_GET_CLASS ((o), GST_TYPE_SOCKET_TIMESTAMP_MESSAGE, GstSocketTimestampMessageClass))
+
+typedef struct _GstSocketTimestampMessage GstSocketTimestampMessage;
+typedef struct _GstSocketTimestampMessageClass GstSocketTimestampMessageClass;
+
+struct _GstSocketTimestampMessageClass
+{
+  GSocketControlMessageClass parent_class;
+};
+
+struct _GstSocketTimestampMessage
+{
+  GSocketControlMessage parent;
+  struct timespec socket_ts;
+};
+
+G_DEFINE_TYPE (GstSocketTimestampMessage, gst_socket_timestamp_message,
+    G_TYPE_SOCKET_CONTROL_MESSAGE);
+
+static gsize
+gst_socket_timestamp_message_get_size (GSocketControlMessage * message)
+{
+  return sizeof (struct timespec);
+}
+
+static int
+gst_socket_timestamp_message_get_level (GSocketControlMessage * message)
+{
+  return SOL_SOCKET;
+}
+
+static int
+gst_socket_timestamp_message_get_msg_type (GSocketControlMessage * message)
+{
+  return SCM_TIMESTAMPNS;
+}
+
+static GSocketControlMessage *
+gst_socket_timestamp_message_deserialize (gint level,
+    gint type, gsize size, gpointer data)
+{
+  GstSocketTimestampMessage *message;
+
+  if (level != SOL_SOCKET)
+    return NULL;
+
+  if (size < sizeof (struct timespec))
+    return NULL;
+
+  message = g_object_new (GST_TYPE_SOCKET_TIMESTAMP_MESSAGE, NULL);
+  memcpy (&message->socket_ts, data, sizeof (struct timespec));
+
+  return G_SOCKET_CONTROL_MESSAGE (message);
+}
+
+static void
+gst_socket_timestamp_message_init (GstSocketTimestampMessage * message)
+{
+}
+
+static void
+gst_socket_timestamp_message_class_init (GstSocketTimestampMessageClass * class)
+{
+  GSocketControlMessageClass *scm_class;
+
+  scm_class = G_SOCKET_CONTROL_MESSAGE_CLASS (class);
+  scm_class->get_size = gst_socket_timestamp_message_get_size;
+  scm_class->get_level = gst_socket_timestamp_message_get_level;
+  scm_class->get_type = gst_socket_timestamp_message_get_msg_type;
+  scm_class->deserialize = gst_socket_timestamp_message_deserialize;
+}
+#endif
+
 static gboolean
 gst_udpsrc_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
@@ -487,6 +591,7 @@ enum
   PROP_LOOP,
   PROP_RETRIEVE_SENDER_ADDRESS,
   PROP_MTU,
+  PROP_SOCKET_TIMESTAMP,
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -534,6 +639,9 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
 #endif
 #ifdef IP_RECVDSTADDR
   GST_TYPE_IP_RECVDSTADDR_MESSAGE;
+#endif
+#ifdef SO_TIMESTAMPNS
+  GST_TYPE_SOCKET_TIMESTAMP_MESSAGE;
 #endif
 
   gobject_class->set_property = gst_udpsrc_set_property;
@@ -653,6 +761,21 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           0, G_MAXINT, UDP_DEFAULT_MTU,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstUDPSrc:socket-timestamp:
+   *
+   * Can be used to read the timestamp on incoming buffers using socket
+   * control messages and set as the DTS.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_SOCKET_TIMESTAMP,
+      g_param_spec_enum ("socket-timestamp",
+          "Use Socket Control Message Timestamp for DTS",
+          "Used for adding alternative timestamp using SO_TIMESTAMP.",
+          GST_SOCKET_TIMESTAMP_MODE, GST_SOCKET_TIMESTAMP_MODE_REALTIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -669,6 +792,8 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   gstbasesrc_class->decide_allocation = gst_udpsrc_decide_allocation;
 
   gstpushsrc_class->fill = gst_udpsrc_fill;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SOCKET_TIMESTAMP_MODE, 0);
 }
 
 static void
@@ -814,6 +939,10 @@ gst_udpsrc_fill (GstPushSrc * psrc, GstBuffer * outbuf)
           (udpsrc->addr)) == G_SOCKET_FAMILY_IPV4)
     p_msgs = NULL;
 #endif
+#ifdef SO_TIMESTAMPNS
+  if (udpsrc->socket_timestamp_mode == GST_SOCKET_TIMESTAMP_MODE_REALTIME)
+    p_msgs = &msgs;
+#endif
 
   /* Retrieve sender address unless we've been configured not to do so */
   p_saddr = (udpsrc->retrieve_sender_address) ? &saddr : NULL;
@@ -939,6 +1068,68 @@ retry:
         if (sizeof (msg->addr) == iaddr_size
             && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
           skip_packet = TRUE;
+      }
+#endif
+#ifdef SO_TIMESTAMPNS
+      if (GST_IS_SOCKET_TIMESTAMP_MESSAGE (msgs[i])) {
+        GstSocketTimestampMessage *msg = GST_SOCKET_TIMESTAMP_MESSAGE (msgs[i]);
+        GstClock *clock;
+        GstClockTime socket_ts;
+
+        socket_ts = GST_TIMESPEC_TO_TIME (msg->socket_ts);
+        GST_TRACE_OBJECT (udpsrc,
+            "Got SCM_TIMESTAMPNS %" GST_TIME_FORMAT " in msg",
+            GST_TIME_ARGS (socket_ts));
+
+        clock = gst_element_get_clock (GST_ELEMENT_CAST (udpsrc));
+        if (clock != NULL) {
+          gint64 adjust_dts, cur_sys_time, delta;
+          GstClockTime base_time, cur_gst_clk_time, running_time;
+
+          /*
+           * We use g_get_real_time as the time reference for SCM timestamps
+           * is always CLOCK_REALTIME.
+           */
+          cur_sys_time = g_get_real_time () * GST_USECOND;
+          cur_gst_clk_time = gst_clock_get_time (clock);
+
+          delta = (gint64) cur_sys_time - (gint64) socket_ts;
+          if (delta < 0) {
+            /*
+             * The current system time will always be greater than the SCM
+             * timestamp as the packet would have been timestamped at least
+             * some clock cycles before. If it is not, then the system time
+             * was adjusted. Since we cannot rely on the delta calculation in
+             * such a case, set the DTS to current pipeline clock when this
+             * happens.
+             */
+            GST_LOG_OBJECT (udpsrc,
+                "Current system time is behind SCM timestamp, setting DTS to pipeline clock");
+            GST_BUFFER_DTS (outbuf) = cur_gst_clk_time;
+          } else {
+            base_time = gst_element_get_base_time (GST_ELEMENT_CAST (udpsrc));
+            running_time = cur_gst_clk_time - base_time;
+            adjust_dts = (gint64) running_time - delta;
+            /*
+             * If the system time was adjusted much further ahead, we might
+             * end up with delta > cur_gst_clk_time. Set the DTS to current
+             * pipeline clock for this scenario as well.
+             */
+            if (adjust_dts < 0) {
+              GST_LOG_OBJECT (udpsrc,
+                  "Current system time much ahead in time, setting DTS to pipeline clock");
+              GST_BUFFER_DTS (outbuf) = cur_gst_clk_time;
+            } else {
+              GST_BUFFER_DTS (outbuf) = adjust_dts;
+              GST_LOG_OBJECT (udpsrc, "Setting DTS to %" GST_TIME_FORMAT,
+                  GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)));
+            }
+          }
+          g_object_unref (clock);
+        } else {
+          GST_ERROR_OBJECT (udpsrc,
+              "Failed to get element clock, not setting DTS");
+        }
       }
 #endif
     }
@@ -1175,6 +1366,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_MTU:
       udpsrc->mtu = g_value_get_uint (value);
       break;
+    case PROP_SOCKET_TIMESTAMP:
+      udpsrc->socket_timestamp_mode = g_value_get_enum (value);
+      break;
     default:
       break;
   }
@@ -1237,6 +1431,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MTU:
       g_value_set_uint (value, udpsrc->mtu);
+      break;
+    case PROP_SOCKET_TIMESTAMP:
+      g_value_set_enum (value, udpsrc->socket_timestamp_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1530,6 +1727,26 @@ gst_udpsrc_open (GstUDPSrc * src)
 #endif
     }
   }
+
+  if (src->socket_timestamp_mode == GST_SOCKET_TIMESTAMP_MODE_REALTIME) {
+#ifdef SO_TIMESTAMPNS
+    if (!g_socket_set_option (src->used_socket, SOL_SOCKET, SO_TIMESTAMPNS,
+            TRUE, &err)) {
+      GST_WARNING_OBJECT (src,
+          "Failed to enable socket control message timestamps: %s",
+          err->message);
+      g_clear_error (&err);
+      src->socket_timestamp_mode = GST_SOCKET_TIMESTAMP_MODE_DISABLED;
+      g_object_notify (G_OBJECT (src), "socket-timestamp");
+    } else {
+      GST_LOG_OBJECT (src, "Socket control message timestamps enabled");
+    }
+  }
+#else
+    GST_WARNING_OBJECT (src,
+        "socket-timestamp was requested but SO_TIMESTAMPNS is not defined");
+  }
+#endif
 
   /* NOTE: sockaddr_in.sin_port works for ipv4 and ipv6 because sin_port
    * follows ss_family on both */

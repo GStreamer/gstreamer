@@ -23468,6 +23468,18 @@
                         "type": "GSocket",
                         "writable": true
                     },
+                    "socket-timestamp": {
+                        "blurb": "Used for adding alternative timestamp using SO_TIMESTAMP.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "disabled (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstSocketTimestampMode",
+                        "writable": true
+                    },
                     "timeout": {
                         "blurb": "Post a message after timeout nanoseconds (0 = disabled)",
                         "conditionally-available": false,
@@ -23511,7 +23523,23 @@
         },
         "filename": "gstudp",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstSocketTimestampMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Disable additional timestamps",
+                        "name": "disabled",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Timestamp with realtime clock (nsec resolution, may not be monotonic)",
+                        "name": "realtime",
+                        "value": "1"
+                    }
+                ]
+            }
+        },
         "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},
