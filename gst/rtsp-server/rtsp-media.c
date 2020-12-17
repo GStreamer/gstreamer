@@ -3146,19 +3146,20 @@ set_target_state (GstRTSPMedia * media, GstState state, gboolean do_state)
 }
 
 static void
-stream_collect_active (GstRTSPStream * stream, guint * active_streams)
+stream_collect_active_sender (GstRTSPStream * stream, guint * active_streams)
 {
-  if (gst_rtsp_stream_is_complete (stream))
+  if (gst_rtsp_stream_is_complete (stream)
+      && gst_rtsp_stream_is_sender (stream))
     (*active_streams)++;
 }
 
 static guint
-nbr_active_streams (GstRTSPMedia * media)
+nbr_active_sender_streams (GstRTSPMedia * media)
 {
   guint ret = 0;
 
-  g_ptr_array_foreach (media->priv->streams, (GFunc) stream_collect_active,
-      &ret);
+  g_ptr_array_foreach (media->priv->streams,
+      (GFunc) stream_collect_active_sender, &ret);
 
   return ret;
 }
@@ -3271,7 +3272,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       s = gst_message_get_structure (message);
       if (gst_structure_has_name (s, "GstRTSPStreamBlocking")) {
         gboolean is_complete = FALSE;
-        guint n_active_streams;
+        guint n_active_sender_streams;
         guint expected_nbr_blocking_msg;
 
         /* to prevent problems when some streams are complete, some are not,
@@ -3279,16 +3280,16 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
          * streams (during DESCRIBE), we will listen to all streams. */
 
         gst_structure_get_boolean (s, "is_complete", &is_complete);
-        n_active_streams = nbr_active_streams (media);
-        expected_nbr_blocking_msg = n_active_streams;
+        n_active_sender_streams = nbr_active_sender_streams (media);
+        expected_nbr_blocking_msg = n_active_sender_streams;
         GST_DEBUG_OBJECT (media, "media received blocking message,"
-            " n_active_streams = %d, is_complete = %d",
-            n_active_streams, is_complete);
+            " n_active_sender_streams = %d, is_complete = %d",
+            n_active_sender_streams, is_complete);
 
-        if (n_active_streams == 0 || is_complete)
+        if (n_active_sender_streams == 0 || is_complete)
           priv->blocking_msg_received++;
 
-        if (n_active_streams == 0)
+        if (n_active_sender_streams == 0)
           expected_nbr_blocking_msg = priv->streams->len;
 
         if (priv->blocked && media_streams_blocking (media) &&
