@@ -818,6 +818,26 @@ gst_uri_decode_bin_set_encoding (GstURIDecodeBin * dec, const gchar * encoding)
 }
 
 static void
+gst_uri_decode_bin_set_connection_speed (GstURIDecodeBin * dec)
+{
+  GSList *walk;
+  guint64 connection_speed;
+
+  GST_OBJECT_LOCK (dec);
+  connection_speed = dec->connection_speed;
+  GST_OBJECT_UNLOCK (dec);
+
+  /* set the property on all decodebins now */
+  GST_URI_DECODE_BIN_LOCK (dec);
+  for (walk = dec->decodebins; walk; walk = g_slist_next (walk)) {
+    GObject *decodebin = G_OBJECT (walk->data);
+
+    g_object_set (decodebin, "connection-speed", connection_speed / 1000, NULL);
+  }
+  GST_URI_DECODE_BIN_UNLOCK (dec);
+}
+
+static void
 gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -834,6 +854,7 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (dec);
       dec->connection_speed = g_value_get_uint64 (value) * 1000;
       GST_OBJECT_UNLOCK (dec);
+      gst_uri_decode_bin_set_connection_speed (dec);
       break;
     case PROP_CAPS:
       GST_OBJECT_LOCK (dec);

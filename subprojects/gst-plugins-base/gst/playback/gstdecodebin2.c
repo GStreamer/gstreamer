@@ -1282,6 +1282,73 @@ gst_decode_bin_get_subs_encoding (GstDecodeBin * dbin)
 }
 
 static void
+gst_decode_bin_set_demux_connection_speed (GstDecodeBin * dbin,
+    GstElement * element)
+{
+  guint64 speed = 0;
+  gboolean wrong_type = FALSE;
+  GParamSpec *pspec;
+
+  GST_OBJECT_LOCK (dbin);
+  speed = dbin->connection_speed / 1000;
+  GST_OBJECT_UNLOCK (dbin);
+
+  if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+              "connection-speed"))) {
+    if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT) {
+      GParamSpecUInt *pspecuint = G_PARAM_SPEC_UINT (pspec);
+
+      speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
+    } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT) {
+      GParamSpecInt *pspecint = G_PARAM_SPEC_INT (pspec);
+
+      speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
+    } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT64) {
+      GParamSpecUInt64 *pspecuint = G_PARAM_SPEC_UINT64 (pspec);
+
+      speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
+    } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT64) {
+      GParamSpecInt64 *pspecint = G_PARAM_SPEC_INT64 (pspec);
+
+      speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
+    } else {
+      GST_WARNING_OBJECT (dbin,
+          "The connection speed property %" G_GUINT64_FORMAT " of type %s"
+          " is not useful not setting it", speed,
+          g_type_name (G_PARAM_SPEC_TYPE (pspec)));
+      wrong_type = TRUE;
+    }
+
+    if (!wrong_type) {
+      GST_DEBUG_OBJECT (dbin, "setting connection-speed=%" G_GUINT64_FORMAT
+          " to demuxer element", speed);
+
+      g_object_set (element, "connection-speed", speed, NULL);
+    }
+  }
+}
+
+static void
+gst_decode_bin_update_connection_speed (GstDecodeBin * dbin)
+{
+  GstElement *demuxer = NULL;
+
+  if (!dbin->decode_chain)
+    return;
+
+  CHAIN_MUTEX_LOCK (dbin->decode_chain);
+  if (dbin->decode_chain->adaptive_demuxer) {
+    GstDecodeElement *delem = dbin->decode_chain->elements->data;
+    demuxer = gst_object_ref (delem->element);
+  }
+  CHAIN_MUTEX_UNLOCK (dbin->decode_chain);
+  if (demuxer) {
+    gst_decode_bin_set_demux_connection_speed (dbin, demuxer);
+    gst_object_unref (demuxer);
+  }
+}
+
+static void
 gst_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -1330,6 +1397,7 @@ gst_decode_bin_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (dbin);
       dbin->connection_speed = g_value_get_uint64 (value) * 1000;
       GST_OBJECT_UNLOCK (dbin);
+      gst_decode_bin_update_connection_speed (dbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2451,44 +2519,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
     /* Set connection-speed property if needed */
     if (chain->demuxer) {
-      GParamSpec *pspec;
-
-      if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-                  "connection-speed"))) {
-        guint64 speed = dbin->connection_speed / 1000;
-        gboolean wrong_type = FALSE;
-
-        if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT) {
-          GParamSpecUInt *pspecuint = G_PARAM_SPEC_UINT (pspec);
-
-          speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
-        } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT) {
-          GParamSpecInt *pspecint = G_PARAM_SPEC_INT (pspec);
-
-          speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
-        } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT64) {
-          GParamSpecUInt64 *pspecuint = G_PARAM_SPEC_UINT64 (pspec);
-
-          speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
-        } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT64) {
-          GParamSpecInt64 *pspecint = G_PARAM_SPEC_INT64 (pspec);
-
-          speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
-        } else {
-          GST_WARNING_OBJECT (dbin,
-              "The connection speed property %" G_GUINT64_FORMAT " of type %s"
-              " is not useful not setting it", speed,
-              g_type_name (G_PARAM_SPEC_TYPE (pspec)));
-          wrong_type = TRUE;
-        }
-
-        if (!wrong_type) {
-          GST_DEBUG_OBJECT (dbin, "setting connection-speed=%" G_GUINT64_FORMAT
-              " to demuxer element", speed);
-
-          g_object_set (element, "connection-speed", speed, NULL);
-        }
-      }
+      gst_decode_bin_set_demux_connection_speed (dbin, element);
     }
 
     /* try to configure the subtitle encoding property when we can */

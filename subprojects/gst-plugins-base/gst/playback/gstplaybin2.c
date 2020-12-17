@@ -2469,10 +2469,30 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
           g_value_get_string (value));
       break;
     case PROP_CONNECTION_SPEED:
+    {
+      guint64 connection_speed = 0;
       GST_PLAY_BIN_LOCK (playbin);
       playbin->connection_speed = g_value_get_uint64 (value) * 1000;
+      connection_speed = playbin->connection_speed;
+      if (playbin->curr_group) {
+        GST_SOURCE_GROUP_LOCK (playbin->curr_group);
+        if (playbin->curr_group->uridecodebin) {
+          g_object_set (playbin->curr_group->uridecodebin,
+              "connection-speed", connection_speed / 1000, NULL);
+        }
+        GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+      }
+      if (playbin->next_group) {
+        GST_SOURCE_GROUP_LOCK (playbin->next_group);
+        if (playbin->next_group->uridecodebin) {
+          g_object_set (playbin->next_group->uridecodebin,
+              "connection-speed", connection_speed / 1000, NULL);
+        }
+        GST_SOURCE_GROUP_UNLOCK (playbin->next_group);
+      }
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
+    }
     case PROP_BUFFER_SIZE:
       playbin->buffer_size = g_value_get_int (value);
       break;
