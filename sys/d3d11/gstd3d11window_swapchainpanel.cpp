@@ -344,6 +344,38 @@ gst_d3d11_window_swap_chain_panel_unprepare (GstD3D11Window * window)
   self->storage = NULL;
 }
 
+static IDXGISwapChain1 *
+create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
+    GstD3D11Device * device, DXGI_SWAP_CHAIN_DESC1 * desc, IDXGIOutput * output)
+{
+  HRESULT hr;
+  IDXGISwapChain1 *swap_chain = NULL;
+  ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
+  IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
+  IDXGIFactory2 *factory2 = NULL;
+
+  hr = factory->QueryInterface (IID_PPV_ARGS (&factory2));
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (self, "IDXGIFactory2 interface is unavailable");
+    return NULL;
+  }
+
+  gst_d3d11_device_lock (device);
+  hr = factory2->CreateSwapChainForComposition ((IUnknown *) device_handle,
+      desc, output, &swap_chain);
+  gst_d3d11_device_unlock (device);
+
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    swap_chain = NULL;
+  }
+
+  factory2->Release ();
+
+  return swap_chain;
+}
+
 static gboolean
 gst_d3d11_window_swap_chain_panel_create_swap_chain (GstD3D11Window * window,
     DXGI_FORMAT format, guint width, guint height, guint swapchain_flags,
@@ -372,7 +404,7 @@ gst_d3d11_window_swap_chain_panel_create_swap_chain (GstD3D11Window * window,
   desc1.Flags = swapchain_flags;
 
   new_swapchain =
-    gst_d3d11_device_create_swap_chain_for_composition (device, &desc1, NULL);
+    create_swap_chain_for_composition (self, device, &desc1, NULL);
 
   if (!new_swapchain) {
     GST_ERROR_OBJECT (self, "Cannot create swapchain");

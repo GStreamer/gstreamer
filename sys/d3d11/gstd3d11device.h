@@ -83,44 +83,11 @@ ID3D11Device *        gst_d3d11_device_get_device_handle  (GstD3D11Device * devi
 
 ID3D11DeviceContext * gst_d3d11_device_get_device_context_handle (GstD3D11Device * device);
 
+IDXGIFactory1 *       gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device);
+
 GstD3D11DXGIFactoryVersion gst_d3d11_device_get_chosen_dxgi_factory_version (GstD3D11Device * device);
 
 D3D_FEATURE_LEVEL     gst_d3d11_device_get_chosen_feature_level (GstD3D11Device * device);
-
-IDXGISwapChain *      gst_d3d11_device_create_swap_chain  (GstD3D11Device * device,
-                                                           const DXGI_SWAP_CHAIN_DESC * desc);
-
-#if (DXGI_HEADER_VERSION >= 2)
-#if (!GST_D3D11_WINAPI_ONLY_APP)
-IDXGISwapChain1 *     gst_d3d11_device_create_swap_chain_for_hwnd (GstD3D11Device * device,
-                                                                   HWND hwnd,
-                                                                   const DXGI_SWAP_CHAIN_DESC1 * desc,
-                                                                   const DXGI_SWAP_CHAIN_FULLSCREEN_DESC * fullscreen_desc,
-                                                                   IDXGIOutput * output);
-#endif
-
-#if GST_D3D11_WINAPI_ONLY_APP
-IDXGISwapChain1 *      gst_d3d11_device_create_swap_chain_for_core_window (GstD3D11Device * device,
-                                                                           guintptr core_window,
-                                                                           const DXGI_SWAP_CHAIN_DESC1 * desc,
-                                                                           IDXGIOutput * output);
-
-IDXGISwapChain1 *      gst_d3d11_device_create_swap_chain_for_composition (GstD3D11Device * device,
-                                                                           const DXGI_SWAP_CHAIN_DESC1 * desc,
-                                                                           IDXGIOutput * output);
-
-#endif /* GST_D3D11_WINAPI_ONLY_APP */
-#endif /* (DXGI_HEADER_VERSION >= 2) */
-
-void                  gst_d3d11_device_release_swap_chain (GstD3D11Device * device,
-                                                           IDXGISwapChain * swap_chain);
-
-ID3D11Texture2D *     gst_d3d11_device_create_texture     (GstD3D11Device * device,
-                                                           const D3D11_TEXTURE2D_DESC * desc,
-                                                           const D3D11_SUBRESOURCE_DATA *inital_data);
-
-void                  gst_d3d11_device_release_texture    (GstD3D11Device * device,
-                                                           ID3D11Texture2D * texture);
 
 void                  gst_d3d11_device_lock               (GstD3D11Device * device);
 

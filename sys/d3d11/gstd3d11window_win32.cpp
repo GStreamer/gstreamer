@@ -750,6 +750,65 @@ gst_d3d11_window_win32_disable_alt_enter (GstD3D11WindowWin32 * self,
   factory->Release ();
 }
 
+static IDXGISwapChain *
+create_swap_chain (GstD3D11WindowWin32 * self, GstD3D11Device * device,
+    DXGI_SWAP_CHAIN_DESC * desc)
+{
+  HRESULT hr;
+  IDXGISwapChain *swap_chain = NULL;
+  ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
+  IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
+
+  gst_d3d11_device_lock (device);
+  hr = factory->CreateSwapChain ((IUnknown *) device_handle,
+      desc, &swap_chain);
+  gst_d3d11_device_unlock (device);
+
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    swap_chain = NULL;
+  }
+
+  return swap_chain;
+}
+
+#if (DXGI_HEADER_VERSION >= 2)
+static IDXGISwapChain1 *
+create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
+    HWND hwnd, DXGI_SWAP_CHAIN_DESC1 * desc,
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC * fullscreen_desc, IDXGIOutput * output)
+{
+  HRESULT hr;
+  IDXGISwapChain1 *swap_chain = NULL;
+  ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
+  IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
+  IDXGIFactory2 *factory2 = NULL;
+
+  hr = factory->QueryInterface (IID_PPV_ARGS (&factory2));
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (self, "IDXGIFactory2 interface is unavailable");
+    return NULL;
+  }
+
+  gst_d3d11_device_lock (device);
+  hr = factory2->CreateSwapChainForHwnd (
+      (IUnknown *) device_handle, hwnd, desc, fullscreen_desc,
+      output, &swap_chain);
+  gst_d3d11_device_unlock (device);
+
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    swap_chain = NULL;
+  }
+
+  factory2->Release ();
+
+  return swap_chain;
+}
+#endif
+
 static gboolean
 gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
     DXGI_FORMAT format, guint width, guint height,
@@ -785,7 +844,7 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
     desc1.Flags = swapchain_flags;
 
     new_swapchain = (IDXGISwapChain *)
-        gst_d3d11_device_create_swap_chain_for_hwnd (device,
+        create_swap_chain_for_hwnd (self, device,
         self->internal_hwnd, &desc1, NULL, NULL);
 
     if (!new_swapchain) {
@@ -820,7 +879,7 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
     desc.Windowed = TRUE;
     desc.Flags = swapchain_flags;
 
-    new_swapchain = gst_d3d11_device_create_swap_chain (device, &desc);
+    new_swapchain = create_swap_chain (self, device, &desc);
   }
 
   if (!new_swapchain) {

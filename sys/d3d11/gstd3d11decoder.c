@@ -568,6 +568,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   guint aligned_width, aligned_height;
   guint alignment;
   GstD3D11DeviceVendor vendor;
+  ID3D11Device *device_handle;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (codec > GST_D3D11_CODEC_NONE, FALSE);
@@ -582,6 +583,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   priv = decoder->priv;
   decoder->opened = FALSE;
   priv->use_array_of_texture = FALSE;
+
+  device_handle = gst_d3d11_device_get_device_handle (priv->device);
 
   d3d11_format = gst_d3d11_device_format_from_gst (priv->device,
       GST_VIDEO_INFO_FORMAT (info));
@@ -749,9 +752,9 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   staging_desc.Usage = D3D11_USAGE_STAGING;
   staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-  priv->staging = gst_d3d11_device_create_texture (priv->device,
-      &staging_desc, NULL);
-  if (!priv->staging) {
+  hr = ID3D11Device_CreateTexture2D (device_handle, &staging_desc, NULL,
+      &priv->staging);
+  if (!gst_d3d11_result (hr, priv->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't create staging texture");
     goto error;
   }
@@ -803,17 +806,17 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     texture_desc.Usage = D3D11_USAGE_DEFAULT;
     texture_desc.BindFlags = D3D11_BIND_RENDER_TARGET;
 
-    priv->fallback_shader_output_texture =
-        gst_d3d11_device_create_texture (priv->device, &texture_desc, NULL);
-    if (!priv->fallback_shader_output_texture) {
+    hr = ID3D11Device_CreateTexture2D (device_handle, &texture_desc, NULL,
+        &priv->fallback_shader_output_texture);
+    if (!gst_d3d11_result (hr, priv->device)) {
       GST_ERROR_OBJECT (decoder, "Couldn't create shader output texture");
       goto error;
     }
 
     texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    priv->shader_resource_texture =
-        gst_d3d11_device_create_texture (priv->device, &texture_desc, NULL);
-    if (!priv->shader_resource_texture) {
+    hr = ID3D11Device_CreateTexture2D (device_handle, &texture_desc, NULL,
+        &priv->shader_resource_texture);
+    if (!gst_d3d11_result (hr, priv->device)) {
       GST_ERROR_OBJECT (decoder, "Couldn't create shader input texture");
       goto error;
     }

@@ -229,6 +229,9 @@ create_staging_texture (GstD3D11Device * device,
     const D3D11_TEXTURE2D_DESC * ref)
 {
   D3D11_TEXTURE2D_DESC desc = { 0, };
+  ID3D11Texture2D *texture = NULL;
+  ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
+  HRESULT hr;
 
   desc.Width = ref->Width;
   desc.Height = ref->Height;
@@ -239,7 +242,13 @@ create_staging_texture (GstD3D11Device * device,
   desc.Usage = D3D11_USAGE_STAGING;
   desc.CPUAccessFlags = (D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE);
 
-  return gst_d3d11_device_create_texture (device, &desc, NULL);
+  hr = ID3D11Device_CreateTexture2D (device_handle, &desc, NULL, &texture);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Failed to create texture");
+    return NULL;
+  }
+
+  return texture;
 }
 
 static gboolean
@@ -498,8 +507,8 @@ gst_d3d11_allocator_dispose (GObject * object)
   g_clear_pointer (&priv->decoder_output_view_array, g_array_unref);
   g_clear_pointer (&priv->processor_input_view_array, g_array_unref);
 
-  if (alloc->device && priv->texture) {
-    gst_d3d11_device_release_texture (alloc->device, priv->texture);
+  if (priv->texture) {
+    ID3D11Texture2D_Release (priv->texture);
     priv->texture = NULL;
   }
 
@@ -820,6 +829,8 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   guint index_to_use = 0;
   GstD3D11AllocatorPrivate *priv;
   GstD3D11MemoryType type = GST_D3D11_MEMORY_TYPE_TEXTURE;
+  HRESULT hr;
+  ID3D11Device *device_handle;
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
   g_return_val_if_fail (desc != NULL, NULL);
@@ -827,6 +838,7 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
 
   priv = allocator->priv;
   device = allocator->device;
+  device_handle = gst_d3d11_device_get_device_handle (device);
 
   if ((flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
     gint i;
@@ -882,8 +894,9 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
 
     if (!priv->texture) {
-      priv->texture = gst_d3d11_device_create_texture (device, desc, NULL);
-      if (!priv->texture) {
+      hr = ID3D11Device_CreateTexture2D (device_handle, desc, NULL,
+          &priv->texture);
+      if (!gst_d3d11_result (hr, device)) {
         GST_ERROR_OBJECT (allocator, "Couldn't create texture");
         goto error;
       }
@@ -894,8 +907,8 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
 
     type = GST_D3D11_MEMORY_TYPE_ARRAY;
   } else {
-    texture = gst_d3d11_device_create_texture (device, desc, NULL);
-    if (!texture) {
+    hr = ID3D11Device_CreateTexture2D (device_handle, desc, NULL, &texture);
+    if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (allocator, "Couldn't create texture");
       goto error;
     }
@@ -917,7 +930,7 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
 
 error:
   if (texture)
-    gst_d3d11_device_release_texture (device, texture);
+    ID3D11Texture2D_Release (texture);
 
   return NULL;
 }
@@ -969,7 +982,7 @@ gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
 
 error:
   if (texture)
-    gst_d3d11_device_release_texture (device, texture);
+    ID3D11Texture2D_Release (texture);
 
   return NULL;
 }

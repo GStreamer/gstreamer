@@ -180,11 +180,11 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
   texture_desc.CPUAccessFlags = 0;
 
-  texture = gst_d3d11_device_create_texture (device,
-      &texture_desc, &subresource_data);
+  hr = ID3D11Device_CreateTexture2D (device_handle, &texture_desc,
+      &subresource_data, &texture);
   gst_video_meta_unmap (vmeta, 0, &info);
 
-  if (!texture) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Failed to create texture");
     return NULL;
   }
