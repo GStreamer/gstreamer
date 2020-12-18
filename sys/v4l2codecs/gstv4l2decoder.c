@@ -47,6 +47,9 @@ enum
 
 struct _GstV4l2Request
 {
+  /* non-thread safe */
+  gint ref_count;
+
   GstV4l2Decoder *decoder;
   gint fd;
   guint32 frame_num;
@@ -84,6 +87,8 @@ struct _GstV4l2Decoder
 G_DEFINE_TYPE_WITH_CODE (GstV4l2Decoder, gst_v4l2_decoder, GST_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (v4l2_decoder_debug, "v4l2codecs-decoder", 0,
         "V4L2 stateless decoder helper"));
+
+static void gst_v4l2_request_free (GstV4l2Request * request);
 
 static guint32
 direction_to_buffer_type (GstV4l2Decoder * self, GstPadDirection direction)
@@ -199,6 +204,9 @@ gst_v4l2_decoder_close (GstV4l2Decoder * self)
 {
   GstV4l2Request *request;
 
+  while ((request = gst_queue_array_pop_head (self->pending_requests)))
+    gst_v4l2_request_unref (request);
+
   while ((request = gst_queue_array_pop_head (self->request_pool)))
     gst_v4l2_request_free (request);
 
@@ -243,6 +251,7 @@ gst_v4l2_decoder_streamoff (GstV4l2Decoder * self, GstPadDirection direction)
     while ((pending_req = gst_queue_array_pop_head (self->pending_requests))) {
       g_clear_pointer (&pending_req->bitstream, gst_memory_unref);
       pending_req->pending = FALSE;
+      gst_v4l2_request_unref (pending_req);
     }
   }
 
@@ -854,6 +863,7 @@ gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self, guint32 frame_num,
   request->bitstream = gst_memory_ref (bitstream);
   request->pic_buf = gst_buffer_ref (pic_buf);
   request->frame_num = frame_num;
+  request->ref_count = 1;
 
   return request;
 }
@@ -900,23 +910,42 @@ gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
   request->pic_buf = gst_buffer_ref (prev_request->pic_buf);
   request->frame_num = prev_request->frame_num;
   request->sub_request = TRUE;
+  request->ref_count = 1;
 
   return request;
 }
 
+GstV4l2Request *
+gst_v4l2_request_ref (GstV4l2Request * request)
+{
+  request->ref_count++;
+  return request;
+}
+
+static void
+gst_v4l2_request_free (GstV4l2Request * request)
+{
+  GstV4l2Decoder *decoder = request->decoder;
+
+  request->decoder = NULL;
+  close (request->fd);
+  gst_poll_free (request->poll);
+  g_free (request);
+
+  if (decoder)
+    g_object_unref (decoder);
+}
 
 void
-gst_v4l2_request_free (GstV4l2Request * request)
+gst_v4l2_request_unref (GstV4l2Request * request)
 {
   GstV4l2Decoder *decoder = request->decoder;
   gint ret;
 
-  if (!decoder) {
-    close (request->fd);
-    gst_poll_free (request->poll);
-    g_free (request);
+  g_return_if_fail (request->ref_count > 0);
+
+  if (--request->ref_count > 0)
     return;
-  }
 
   g_clear_pointer (&request->bitstream, gst_memory_unref);
   g_clear_pointer (&request->pic_buf, gst_buffer_unref);
@@ -924,7 +953,6 @@ gst_v4l2_request_free (GstV4l2Request * request)
   request->failed = FALSE;
   request->hold_pic_buf = FALSE;
   request->sub_request = FALSE;
-  request->decoder = NULL;
 
   if (request->pending) {
     gint idx;
@@ -936,7 +964,6 @@ gst_v4l2_request_free (GstV4l2Request * request)
       gst_queue_array_drop_element (decoder->pending_requests, idx);
 
     gst_v4l2_request_free (request);
-    g_object_unref (decoder);
     return;
   }
 
@@ -947,12 +974,11 @@ gst_v4l2_request_free (GstV4l2Request * request)
     GST_ERROR_OBJECT (request->decoder, "MEDIA_REQUEST_IOC_REINIT failed: %s",
         g_strerror (errno));
     gst_v4l2_request_free (request);
-    g_object_unref (decoder);
     return;
   }
 
   gst_queue_array_push_tail (decoder->request_pool, request);
-  g_object_unref (decoder);
+  g_clear_object (&request->decoder);
 }
 
 gboolean
@@ -986,11 +1012,12 @@ gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
     request->hold_pic_buf = TRUE;
 
   request->pending = TRUE;
-  gst_queue_array_push_tail (decoder->pending_requests, request);
+  gst_queue_array_push_tail (decoder->pending_requests,
+      gst_v4l2_request_ref (request));
 
   /* FIXME to support more then one pending requests, we need the request to
    * be refcounted */
-  if (gst_queue_array_get_length (decoder->pending_requests) > 1) {
+  if (gst_queue_array_get_length (decoder->pending_requests) > 6) {
     GstV4l2Request *pending_req;
 
     pending_req = gst_queue_array_peek_head (decoder->pending_requests);
@@ -1036,6 +1063,7 @@ gst_v4l2_request_set_done (GstV4l2Request * request)
 
     g_clear_pointer (&pending_req->pic_buf, gst_buffer_unref);
     pending_req->pending = FALSE;
+    gst_v4l2_request_unref (pending_req);
 
     if (pending_req == request)
       break;

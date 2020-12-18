@@ -571,7 +571,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   }
 
   gst_vp8_picture_set_user_data (picture, request,
-      (GDestroyNotify) gst_v4l2_request_free);
+      (GDestroyNotify) gst_v4l2_request_unref);
 
   if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
           G_N_ELEMENTS (control))) {

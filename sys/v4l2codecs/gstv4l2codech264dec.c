@@ -1002,12 +1002,12 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   }
 
   gst_h264_picture_set_user_data (picture, g_steal_pointer (&request),
-      (GDestroyNotify) gst_v4l2_request_free);
+      (GDestroyNotify) gst_v4l2_request_unref);
   ret = TRUE;
 
 done:
   if (request)
-    gst_v4l2_request_free (request);
+    gst_v4l2_request_unref (request);
 
   gst_v4l2_codec_h264_dec_reset_picture (self);
 
