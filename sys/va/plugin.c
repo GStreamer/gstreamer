@@ -31,6 +31,7 @@
 #include "gstvadevice.h"
 #include "gstvah264dec.h"
 #include "gstvah265dec.h"
+#include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp9dec.h"
@@ -117,6 +118,13 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
         if (!gst_va_vp9_dec_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE)) {
           GST_WARNING ("Failed to register VP9 decoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case MPEG2:
+        if (!gst_va_mpeg2_dec_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE)) {
+          GST_WARNING ("Failed to register Mpeg2 decoder: %s",
               device->render_device_path);
         }
         break;

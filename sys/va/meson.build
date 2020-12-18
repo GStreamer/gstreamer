@@ -17,6 +17,7 @@ va_sources = [
   'gstvavideoformat.c',
   'gstvavp8dec.c',
   'gstvavp9dec.c',
+  'gstvampeg2dec.c',
   'gstvavpp.c'
 ]
 

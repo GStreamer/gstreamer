@@ -512,7 +512,6 @@ gst_va_decoder_add_param_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
   g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
   g_return_val_if_fail (pic && data && size > 0, FALSE);
-  g_return_val_if_fail (pic->buffers->len + 1 <= 16, FALSE);
 
   dpy = gst_va_display_get_va_dpy (self->display);
   gst_va_display_lock (self->display);
