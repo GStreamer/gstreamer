@@ -3027,6 +3027,52 @@ GST_START_TEST (test_twcc_seqnum_wrap)
 GST_END_TEST;
 
 
+GST_START_TEST (test_twcc_seqnum_wrap_with_loss)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+
+  TWCCPacket packets[] = {
+    {65534, 0 * 250 * GST_USECOND, TRUE},
+    {1, 3 * 250 * GST_USECOND, TRUE},
+  };
+
+  guint8 exp_fci0[] = {
+    0xff, 0xfe,                 /* base sequence number: 65534 */
+    0x00, 0x01,                 /* packet status count: 2 */
+    0x00, 0x00, 0x00,           /* reference time: 0 */
+    0x00,                       /* feedback packet count: 0 */
+    0x20, 0x01,                 /* packet chunk */
+    0x00,                       /* recv delta: +0:00:00.000000000 */
+    0x00,                       /* padding */
+  };
+
+  guint8 exp_fci1[] = {
+    0x00, 0x01,                 /* base sequence number: 1 */
+    0x00, 0x01,                 /* packet status count: 1 */
+    0x00, 0x00, 0x00,           /* reference time: 0 */
+    0x01,                       /* feedback packet count: 1 */
+    0x20, 0x01,                 /* packet chunk */
+    0x03,                       /* recv delta: +0:00:00.000750000 */
+    0x00,                       /* padding */
+  };
+
+  twcc_push_packets (h, packets);
+
+  buf = session_harness_produce_twcc (h);
+  twcc_verify_fci (buf, exp_fci0);
+  gst_buffer_unref (buf);
+
+  buf = session_harness_produce_twcc (h);
+  twcc_verify_fci (buf, exp_fci1);
+  gst_buffer_unref (buf);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_twcc_double_packets)
 {
   SessionHarness *h = session_harness_new ();
@@ -3956,6 +4002,7 @@ rtpsession_suite (void)
   tcase_add_loop_test (tc_chain, test_twcc_various_gaps, 0, 50);
   tcase_add_test (tc_chain, test_twcc_negative_delta);
   tcase_add_test (tc_chain, test_twcc_seqnum_wrap);
+  tcase_add_test (tc_chain, test_twcc_seqnum_wrap_with_loss);
   tcase_add_test (tc_chain, test_twcc_huge_seqnum_gap);
   tcase_add_test (tc_chain, test_twcc_double_packets);
   tcase_add_test (tc_chain, test_twcc_duplicate_seqnums);

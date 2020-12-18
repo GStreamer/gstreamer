@@ -596,7 +596,7 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
 {
   gboolean send_feedback = FALSE;
   RecvPacket packet;
-  gint32 diff;
+  gint diff;
 
   /* if this packet would exceed the capacity of our MTU, we create a feedback
      with the current packets, and start over with this one */
@@ -614,8 +614,8 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
   /* check if we are reordered, and treat it as lost if we already sent
      a feedback msg with a higher seqnum. If the diff is huge, treat
      it as a restart of a stream */
-  diff = (gint32) seqnum - (gint32) twcc->expected_recv_seqnum;
-  if (twcc->fb_pkt_count > 0 && diff < 0 && diff > -1000) {
+  diff = gst_rtp_buffer_compare_seqnum (twcc->expected_recv_seqnum, seqnum);
+  if (twcc->fb_pkt_count > 0 && diff < 0) {
     GST_INFO ("Received out of order packet (%u after %u), treating as lost",
         seqnum, twcc->expected_recv_seqnum);
     return FALSE;
