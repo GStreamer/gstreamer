@@ -3532,6 +3532,77 @@ GST_START_TEST (test_twcc_recv_packets_reordered)
 
 GST_END_TEST;
 
+GST_START_TEST (test_twcc_recv_late_packet_fb_pkt_count_wrap)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  guint i;
+
+  guint8 exp_fci0[] = {
+    0x01, 0x00,                 /* base sequence number: 256 */
+    0x00, 0x01,                 /* packet status count: 1 */
+    0x00, 0x00, 0x01,           /* reference time: 0 */
+    0x00,                       /* feedback packet count: 00 */
+    /* packet chunks: */
+    0x20, 0x01,                 /* 0 0 1 0 0 0 0 0 | 0 0 0 0 0 0 0 1 */
+    0x00,                       /* 0 recv-delta */
+    0x00,                       /* padding */
+  };
+
+  guint8 exp_fci1[] = {
+    0x01, 0x01,                 /* base sequence number: 257 */
+    0x00, 0x01,                 /* packet status count: 1 */
+    0x00, 0x00, 0x01,           /* reference time: 0 */
+    0x01,                       /* feedback packet count: 0 */
+    /* packet chunks: */
+    0x20, 0x01,                 /* 0 0 1 0 0 0 0 0 | 0 0 0 0 0 0 0 1 */
+    0x01,                       /* 1 recv-delta */
+    0x00,                       /* padding */
+  };
+
+  session_harness_set_twcc_recv_ext_id ((h), TEST_TWCC_EXT_ID);
+
+  /* Push packets to get the feedback packet count wrap limit */
+  for (i = 0; i < 255; i++) {
+    fail_unless_equals_int (GST_FLOW_OK,
+        session_harness_recv_rtp ((h),
+            generate_twcc_recv_buffer (i, i * 250 * GST_USECOND, TRUE)));
+
+    /* ignore the twcc for these ones */
+    gst_buffer_unref (session_harness_produce_twcc (h));
+  }
+
+  /* push pkt #256 to jump ahead and force the overflow */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp ((h),
+          generate_twcc_recv_buffer (256, 256 * 250 * GST_USECOND, TRUE)));
+
+  /* pkt #255 is late and should be dropped */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp ((h),
+          generate_twcc_recv_buffer (255, 255 * 250 * GST_USECOND, TRUE)));
+
+  /* push pkt #257 to verify fci is correct */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp ((h),
+          generate_twcc_recv_buffer (257, 257 * 250 * GST_USECOND, TRUE)));
+
+
+  /* we expect a fci for pkt #256 */
+  buf = session_harness_produce_twcc (h);
+  twcc_verify_fci (buf, exp_fci0);
+  gst_buffer_unref (buf);
+
+  /* and one fci for pkt #257 */
+  buf = session_harness_produce_twcc (h);
+  twcc_verify_fci (buf, exp_fci1);
+  gst_buffer_unref (buf);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_twcc_recv_rtcp_reordered)
 {
   SessionHarness *send_h = session_harness_new ();
@@ -3894,6 +3965,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_twcc_delta_ts_rounding);
   tcase_add_test (tc_chain, test_twcc_double_gap);
   tcase_add_test (tc_chain, test_twcc_recv_packets_reordered);
+  tcase_add_test (tc_chain, test_twcc_recv_late_packet_fb_pkt_count_wrap);
   tcase_add_test (tc_chain, test_twcc_recv_rtcp_reordered);
   tcase_add_test (tc_chain, test_twcc_no_exthdr_in_buffer);
   tcase_add_test (tc_chain, test_twcc_send_and_recv);

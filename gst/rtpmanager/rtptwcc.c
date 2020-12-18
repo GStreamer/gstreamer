@@ -72,7 +72,7 @@ struct _RTPTWCCManager
   guint max_packets_per_rtcp;
   GArray *recv_packets;
 
-  guint8 fb_pkt_count;
+  guint64 fb_pkt_count;
   gint32 last_seqnum;
 
   GArray *sent_packets;
@@ -438,7 +438,7 @@ rtp_twcc_manager_add_fci (RTPTWCCManager * twcc, GstRTCPPacket * packet)
   GST_WRITE_UINT16_BE (header.base_seqnum, first->seqnum);
   GST_WRITE_UINT16_BE (header.packet_count, packet_count);
   GST_WRITE_UINT24_BE (header.base_time, base_time);
-  GST_WRITE_UINT8 (header.fb_pkt_count, twcc->fb_pkt_count);
+  GST_WRITE_UINT8 (header.fb_pkt_count, twcc->fb_pkt_count % G_MAXUINT8);
 
   base_time *= REF_TIME_UNIT;
   ts_rounded = base_time;
@@ -446,7 +446,7 @@ rtp_twcc_manager_add_fci (RTPTWCCManager * twcc, GstRTCPPacket * packet)
   GST_DEBUG ("Created TWCC feedback: base_seqnum: #%u, packet_count: %u, "
       "base_time %" GST_TIME_FORMAT " fb_pkt_count: %u",
       first->seqnum, packet_count, GST_TIME_ARGS (base_time),
-      twcc->fb_pkt_count);
+      twcc->fb_pkt_count % G_MAXUINT8);
 
   twcc->fb_pkt_count++;
   twcc->expected_recv_seqnum = first->seqnum + packet_count;
