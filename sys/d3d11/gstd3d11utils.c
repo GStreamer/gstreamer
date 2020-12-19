@@ -23,7 +23,7 @@
 
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
-#include "gstd3d11memory.h"
+#include "gstd3d11bufferpool.h"
 
 #include <windows.h>
 #include <versionhelpers.h>
@@ -667,4 +667,39 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src)
   }
 
   return TRUE;
+}
+
+GstBufferPool *
+gst_d3d11_buffer_pool_new_with_options (GstD3D11Device * device,
+    GstCaps * caps, GstD3D11AllocationParams * alloc_params,
+    guint min_buffers, guint max_buffers)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstVideoInfo info;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+  g_return_val_if_fail (alloc_params != NULL, NULL);
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (device, "invalid caps");
+    return NULL;
+  }
+
+  pool = gst_d3d11_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config,
+      caps, GST_VIDEO_INFO_SIZE (&info), min_buffers, max_buffers);
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, alloc_params);
+
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_ERROR_OBJECT (pool, "Couldn't set config");
+    gst_object_unref (pool);
+    return NULL;
+  }
+
+  return pool;
 }

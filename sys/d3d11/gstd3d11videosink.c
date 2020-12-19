@@ -367,8 +367,6 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   GError *error = NULL;
-  GstStructure *config;
-  gint i;
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
@@ -462,13 +460,8 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   if (self->fallback_pool) {
     gst_buffer_pool_set_active (self->fallback_pool, FALSE);
-    gst_object_unref (self->fallback_pool);
+    gst_clear_object (&self->fallback_pool);
   }
-
-  self->fallback_pool = gst_d3d11_buffer_pool_new (self->device);
-  config = gst_buffer_pool_get_config (self->fallback_pool);
-  gst_buffer_pool_config_set_params (config,
-      caps, GST_VIDEO_INFO_SIZE (&self->info), 0, 2);
 
   {
     GstD3D11AllocationParams *d3d11_params;
@@ -488,23 +481,18 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
       bind_flags |= D3D11_BIND_RENDER_TARGET;
     }
 
-    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-    if (!d3d11_params) {
-      d3d11_params = gst_d3d11_allocation_params_new (self->device,
-          &self->info, 0, bind_flags);
-    } else {
-      /* Set bind flag */
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
-        d3d11_params->desc[i].BindFlags |= bind_flags;
-      }
-    }
+    d3d11_params = gst_d3d11_allocation_params_new (self->device,
+        &self->info, 0, bind_flags);
 
-    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    self->fallback_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
+        caps, d3d11_params, 0, 2);
     gst_d3d11_allocation_params_free (d3d11_params);
   }
 
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_set_config (self->fallback_pool, config);
+  if (!self->fallback_pool) {
+    GST_ERROR_OBJECT (self, "Failed to configure fallback pool");
+    return FALSE;
+  }
 
   return TRUE;
 
@@ -685,7 +673,6 @@ static gboolean
 gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
-  GstStructure *config;
   GstCaps *caps;
   GstBufferPool *pool = NULL;
   GstVideoInfo info;
@@ -707,39 +694,26 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
   size = info.size;
 
   if (need_pool) {
-    gint i;
     GstD3D11AllocationParams *d3d11_params;
 
     GST_DEBUG_OBJECT (self, "create new pool");
 
-    pool = gst_d3d11_buffer_pool_new (self->device);
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, 2,
-        DXGI_MAX_SWAP_CHAIN_BUFFERS);
-
-    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-    if (!d3d11_params) {
-      d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
-          D3D11_BIND_SHADER_RESOURCE);
-    } else {
-      /* Set bind flag */
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-        d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
-      }
-    }
-
-    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
+        D3D11_BIND_SHADER_RESOURCE);
+    pool = gst_d3d11_buffer_pool_new_with_options (self->device, caps,
+        d3d11_params, 0, 2);
     gst_d3d11_allocation_params_free (d3d11_params);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      g_object_unref (pool);
-      goto config_failed;
+    if (!pool) {
+      GST_ERROR_OBJECT (self, "Failed to create buffer pool");
+      return FALSE;
     }
+
+    size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
   }
 
-  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  /* We don't need more than two buffers */
+  gst_query_add_allocation_pool (query, pool, size, 0, 2);
   if (pool)
     g_object_unref (pool);
 
@@ -758,11 +732,6 @@ no_caps:
 invalid_caps:
   {
     GST_WARNING_OBJECT (self, "invalid caps specified");
-    return FALSE;
-  }
-config_failed:
-  {
-    GST_WARNING_OBJECT (self, "failed setting config");
     return FALSE;
   }
 

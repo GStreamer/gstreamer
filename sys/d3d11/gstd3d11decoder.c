@@ -376,7 +376,6 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
   GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11AllocationParams *alloc_params = NULL;
   GstBufferPool *pool = NULL;
-  GstStructure *config = NULL;
   GstCaps *caps = NULL;
   GstVideoAlignment align;
   GstD3D11AllocationFlags alloc_flags = 0;
@@ -410,29 +409,19 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
     goto error;
   }
 
-  pool = gst_d3d11_buffer_pool_new (priv->device);
-  if (!pool) {
-    GST_ERROR_OBJECT (self, "Failed to create buffer pool");
-    goto error;
-  }
-
-  /* Setup buffer pool */
-  config = gst_buffer_pool_get_config (pool);
   caps = gst_video_info_to_caps (info);
   if (!caps) {
     GST_ERROR_OBJECT (self, "Couldn't convert video info to caps");
     goto error;
   }
 
-  gst_buffer_pool_config_set_params (config, caps, GST_VIDEO_INFO_SIZE (info),
-      0, pool_size);
-  gst_buffer_pool_config_set_d3d11_allocation_params (config, alloc_params);
-  gst_caps_unref (caps);
-  gst_d3d11_allocation_params_free (alloc_params);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  pool = gst_d3d11_buffer_pool_new_with_options (priv->device,
+      caps, alloc_params, 0, pool_size);
+  gst_clear_caps (&caps);
+  g_clear_pointer (&alloc_params, gst_d3d11_allocation_params_free);
 
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    GST_ERROR_OBJECT (self, "Invalid pool config");
+  if (!pool) {
+    GST_ERROR_OBJECT (self, "Failed to create buffer pool");
     goto error;
   }
 

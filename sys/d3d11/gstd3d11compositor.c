@@ -799,8 +799,8 @@ static gboolean
 gst_d3d11_compositor_configure_fallback_pool (GstD3D11Compositor * self,
     GstVideoInfo * info, gint bind_flags, GstBufferPool ** pool)
 {
-  GstStructure *config;
   GstD3D11AllocationParams *d3d11_params;
+  GstBufferPool *new_pool;
   GstCaps *caps;
 
   if (*pool) {
@@ -814,28 +814,21 @@ gst_d3d11_compositor_configure_fallback_pool (GstD3D11Compositor * self,
     return FALSE;
   }
 
-  *pool = gst_d3d11_buffer_pool_new (self->device);
-  config = gst_buffer_pool_get_config (*pool);
-  gst_buffer_pool_config_set_params (config,
-      caps, GST_VIDEO_INFO_SIZE (info), 0, 0);
+  d3d11_params = gst_d3d11_allocation_params_new (self->device,
+      info, 0, bind_flags);
+
+  new_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
+      caps, d3d11_params, 0, 0);
   gst_caps_unref (caps);
-
-  d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-  if (!d3d11_params) {
-    d3d11_params = gst_d3d11_allocation_params_new (self->device,
-        info, 0, bind_flags);
-  } else {
-    gint i;
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
-      d3d11_params->desc[i].BindFlags |= bind_flags;
-  }
-
-  gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
   gst_d3d11_allocation_params_free (d3d11_params);
 
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_set_config (*pool, config);
-  gst_buffer_pool_set_active (*pool, TRUE);
+  if (!new_pool) {
+    GST_ERROR_OBJECT (self, "Failed to configure fallback pool");
+    return FALSE;
+  }
+
+  gst_buffer_pool_set_active (new_pool, TRUE);
+  *pool = new_pool;
 
   return TRUE;
 }
@@ -1742,35 +1735,19 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * aggregator,
     return FALSE;
 
   if (gst_query_get_n_allocation_pools (query) == 0) {
-    GstStructure *config;
     GstD3D11AllocationParams *d3d11_params;
-    gint i;
 
-    pool = gst_d3d11_buffer_pool_new (self->device);
-    config = gst_buffer_pool_get_config (pool);
+    d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
+        D3D11_BIND_SHADER_RESOURCE);
 
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-    if (!d3d11_params) {
-      d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
-          D3D11_BIND_SHADER_RESOURCE);
-    } else {
-      /* Set bind flag */
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-        d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
-      }
-    }
-
-    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    pool = gst_d3d11_buffer_pool_new_with_options (self->device,
+        caps, d3d11_params, 0, 0);
     gst_d3d11_allocation_params_free (d3d11_params);
 
-    size = GST_VIDEO_INFO_SIZE (&info);
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto config_failed;
+    if (!pool) {
+      GST_ERROR_OBJECT (self, "Failed to create buffer pool");
+      return FALSE;
+    }
 
     /* d3d11 buffer pool might update buffer size by self */
     size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
@@ -1782,14 +1759,6 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * aggregator,
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   return TRUE;
-
-  /* ERRORS */
-config_failed:
-  {
-    GST_ERROR_OBJECT (self, "failed to set config");
-    gst_object_unref (pool);
-    return FALSE;
-  }
 }
 
 static gboolean
