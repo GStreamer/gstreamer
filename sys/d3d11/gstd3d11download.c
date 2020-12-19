@@ -348,15 +348,11 @@ gst_d3d11_download_can_use_staging_buffer (GstD3D11Download * self,
     GstBuffer * inbuf)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
-  gint i;
+  ID3D11Device *device_handle =
+      gst_d3d11_device_get_device_handle (filter->device);
 
-  /* staging buffer doesn't need to be used for non-d3d11 memory */
-  for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
-
-    if (!gst_is_d3d11_memory (mem))
-      return FALSE;
-  }
+  if (!gst_d3d11_buffer_can_access_device (inbuf, device_handle))
+    return FALSE;
 
   if (self->staging_buffer)
     return TRUE;
@@ -390,7 +386,8 @@ gst_d3d11_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_TRACE_OBJECT (self, "Copy input buffer to staging buffer");
 
     /* Copy d3d11 texture to staging texture */
-    if (!gst_d3d11_buffer_copy_into (self->staging_buffer, inbuf)) {
+    if (!gst_d3d11_buffer_copy_into (self->staging_buffer,
+            inbuf, &filter->in_info)) {
       GST_ERROR_OBJECT (self,
           "Failed to copy input buffer into staging texture");
       return GST_FLOW_ERROR;

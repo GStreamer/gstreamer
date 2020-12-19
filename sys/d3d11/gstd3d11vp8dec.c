@@ -341,7 +341,6 @@ gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder,
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   GstBuffer *view_buffer;
-  GstD3D11Memory *mem;
 
   view_buffer = gst_d3d11_decoder_get_output_view_buffer (self->d3d11_decoder);
   if (!view_buffer) {
@@ -349,10 +348,7 @@ gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder,
     return FALSE;
   }
 
-  mem = (GstD3D11Memory *) gst_buffer_peek_memory (view_buffer, 0);
-
-  GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT " (index %d)",
-      view_buffer, mem->subresource_index);
+  GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT, view_buffer);
 
   gst_vp8_picture_set_user_data (picture,
       view_buffer, (GDestroyNotify) gst_buffer_unref);

@@ -38,6 +38,8 @@ G_BEGIN_DECLS
 #define GST_D3D11_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_ALLOCATOR, GstD3D11AllocatorClass))
 #define GST_D3D11_ALLOCATOR_CAST(obj)       ((GstD3D11Allocator *)obj)
 
+typedef struct _GstD3D11MemoryPrivate GstD3D11MemoryPrivate;
+
 #define GST_D3D11_MEMORY_NAME "D3D11Memory"
 
 /**
@@ -91,13 +93,6 @@ struct _GstD3D11AllocationParams
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
-typedef enum
-{
-  GST_D3D11_MEMORY_TYPE_TEXTURE = 0,
-  GST_D3D11_MEMORY_TYPE_ARRAY = 1,
-  GST_D3D11_MEMORY_TYPE_STAGING = 2,
-} GstD3D11MemoryType;
-
 struct _GstD3D11Memory
 {
   GstMemory mem;
@@ -105,30 +100,9 @@ struct _GstD3D11Memory
   /*< public > */
   GstD3D11Device *device;
 
-  ID3D11Texture2D *texture;
-  ID3D11Texture2D *staging;
-
-  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
-  guint num_shader_resource_views;
-
-  ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
-  guint num_render_target_views;
-
-  ID3D11VideoDecoderOutputView *decoder_output_view;
-  ID3D11VideoProcessorInputView *processor_input_view;
-  ID3D11VideoProcessorOutputView *processor_output_view;
-
-  GstD3D11MemoryType type;
-
-  /* > 0 if this is Array typed memory */
-  guint subresource_index;
-
-  D3D11_TEXTURE2D_DESC desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-
   /*< private >*/
-  GMutex lock;
-  gint cpu_map_count;
+  GstD3D11MemoryPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstD3D11Allocator
@@ -184,21 +158,34 @@ void                gst_d3d11_allocator_set_flushing (GstD3D11Allocator * alloca
 
 gboolean            gst_is_d3d11_memory           (GstMemory * mem);
 
-gboolean            gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem);
+ID3D11Texture2D *   gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem);
 
-gboolean            gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem);
+gboolean                   gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
+                                                              D3D11_TEXTURE2D_DESC * desc);
 
-gboolean            gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
-                                                                 ID3D11VideoDevice * video_device,
-                                                                 GUID * decoder_profile);
+guint                      gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem);
 
-gboolean            gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
-                                                                  ID3D11VideoDevice * video_device,
-                                                                  ID3D11VideoProcessorEnumerator * enumerator);
+guint                      gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem);
 
-gboolean            gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
-                                                                   ID3D11VideoDevice * video_device,
-                                                                   ID3D11VideoProcessorEnumerator * enumerator);
+ID3D11ShaderResourceView * gst_d3d11_memory_get_shader_resource_view      (GstD3D11Memory * mem,
+                                                                           guint index);
+
+guint                      gst_d3d11_memory_get_render_target_view_size   (GstD3D11Memory * mem);
+
+ID3D11RenderTargetView *   gst_d3d11_memory_get_render_target_view        (GstD3D11Memory * mem,
+                                                                           guint index);
+
+ID3D11VideoDecoderOutputView *    gst_d3d11_memory_get_decoder_output_view  (GstD3D11Memory * mem,
+                                                                             ID3D11VideoDevice * video_device,
+                                                                             GUID * decoder_profile);
+
+ID3D11VideoProcessorInputView *   gst_d3d11_memory_get_processor_input_view  (GstD3D11Memory * mem,
+                                                                              ID3D11VideoDevice * video_device,
+                                                                              ID3D11VideoProcessorEnumerator * enumerator);
+
+ID3D11VideoProcessorOutputView *  gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
+                                                                              ID3D11VideoDevice * video_device,
+                                                                              ID3D11VideoProcessorEnumerator * enumerator);
 
 G_END_DECLS
 

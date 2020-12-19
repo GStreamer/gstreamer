@@ -766,7 +766,6 @@ gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstBuffer *view_buffer;
-  GstD3D11Memory *mem;
 
   view_buffer = gst_d3d11_decoder_get_output_view_buffer (self->d3d11_decoder);
   if (!view_buffer) {
@@ -774,10 +773,7 @@ gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
     return FALSE;
   }
 
-  mem = (GstD3D11Memory *) gst_buffer_peek_memory (view_buffer, 0);
-
-  GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT " (index %d)",
-      view_buffer, mem->subresource_index);
+  GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT, view_buffer);
 
   gst_h264_picture_set_user_data (picture,
       view_buffer, (GDestroyNotify) gst_buffer_unref);
@@ -793,7 +789,6 @@ gst_d3d11_h264_dec_new_field_picture (GstH264Decoder * decoder,
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstBuffer *view_buffer;
-  GstD3D11Memory *mem;
 
   view_buffer = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
 
@@ -802,10 +797,8 @@ gst_d3d11_h264_dec_new_field_picture (GstH264Decoder * decoder,
     return TRUE;
   }
 
-  mem = (GstD3D11Memory *) gst_buffer_peek_memory (view_buffer, 0);
-
-  GST_LOG_OBJECT (self, "New field picture with buffer %" GST_PTR_FORMAT
-      " (index %d)", view_buffer, mem->subresource_index);
+  GST_LOG_OBJECT (self, "New field picture with buffer %" GST_PTR_FORMAT,
+      view_buffer);
 
   gst_h264_picture_set_user_data (second_field,
       gst_buffer_ref (view_buffer), (GDestroyNotify) gst_buffer_unref);

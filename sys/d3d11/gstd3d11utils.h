@@ -66,14 +66,33 @@ GstBuffer *     gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
                                                        gboolean add_videometa);
 
 gboolean        gst_d3d11_buffer_copy_into          (GstBuffer * dst,
-                                                     GstBuffer * src);
+                                                     GstBuffer * src,
+                                                     const GstVideoInfo * info);
+
+gboolean        gst_is_d3d11_buffer                 (GstBuffer * buffer);
+
+gboolean        gst_d3d11_buffer_can_access_device  (GstBuffer * buffer,
+                                                     ID3D11Device * device);
+
+gboolean        gst_d3d11_buffer_map                (GstBuffer * buffer,
+                                                     ID3D11Device * device,
+                                                     GstMapInfo info[GST_VIDEO_MAX_PLANES],
+                                                     GstMapFlags flags);
+
+gboolean        gst_d3d11_buffer_unmap              (GstBuffer * buffer,
+                                                     GstMapInfo info[GST_VIDEO_MAX_PLANES]);
+
+guint           gst_d3d11_buffer_get_shader_resource_view (GstBuffer * buffer,
+                                                           ID3D11ShaderResourceView * view[GST_VIDEO_MAX_PLANES]);
+
+guint           gst_d3d11_buffer_get_render_target_view   (GstBuffer * buffer,
+                                                           ID3D11RenderTargetView * view[GST_VIDEO_MAX_PLANES]);
 
 GstBufferPool * gst_d3d11_buffer_pool_new_with_options  (GstD3D11Device * device,
                                                          GstCaps * caps,
                                                          GstD3D11AllocationParams * alloc_params,
                                                          guint min_buffers,
                                                          guint max_buffers);
-
 
 gboolean       _gst_d3d11_result                    (HRESULT hr,
                                                      GstD3D11Device * device,

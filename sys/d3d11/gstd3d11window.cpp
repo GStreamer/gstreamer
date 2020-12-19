@@ -1008,6 +1008,7 @@ gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
     GstBuffer * buffer, ID3D11VideoProcessorInputView ** in_view)
 {
   GstD3D11Memory *mem;
+  ID3D11VideoProcessorInputView *piv;
 
   if (!self->processor)
     return FALSE;
@@ -1016,18 +1017,13 @@ gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
     return FALSE;
 
   mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
-
-  if (!gst_d3d11_video_processor_check_bind_flags_for_input_view
-      (mem->desc.BindFlags)) {
+  piv = gst_d3d11_video_processor_get_input_view (self->processor, mem);
+  if (!piv) {
+    GST_LOG_OBJECT (self, "Failed to get processor input view");
     return FALSE;
   }
 
-  if (!gst_d3d11_video_processor_ensure_input_view (self->processor, mem)) {
-    GST_LOG_OBJECT (self, "Failed to create processor input view");
-    return FALSE;
-  }
-
-  *in_view = mem->processor_input_view;
+  *in_view = piv;
 
   return TRUE;
 }
@@ -1096,19 +1092,25 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
   }
 
   if (self->cached_buffer) {
+    GstMapInfo infos[GST_VIDEO_MAX_PLANES];
     ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
     ID3D11VideoProcessorInputView *piv = NULL;
-    guint i, j, k;
+    ID3D11Device *device_handle =
+        gst_d3d11_device_get_device_handle (self->device);
 
-    if (!gst_d3d11_window_buffer_ensure_processor_input (self,
-        self->cached_buffer, &piv)) {
-      for (i = 0, j = 0; i < gst_buffer_n_memory (self->cached_buffer); i++) {
-        GstD3D11Memory *mem =
-            (GstD3D11Memory *) gst_buffer_peek_memory (self->cached_buffer, i);
-        for (k = 0; k < mem->num_shader_resource_views; k++) {
-          srv[j] = mem->shader_resource_view[k];
-          j++;
-        }
+    /* Map memory in any case so that we can upload pending stage texture */
+    if (!gst_d3d11_buffer_map (self->cached_buffer, device_handle,
+        infos, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Couldn't map buffer");
+
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_d3d11_buffer_get_shader_resource_view (self->cached_buffer, srv)) {
+      if (!gst_d3d11_window_buffer_ensure_processor_input (self,
+          self->cached_buffer, &piv)) {
+        GST_ERROR_OBJECT (self, "Input texture cannot be used for converter");
+        return GST_FLOW_ERROR;
       }
     }
 
@@ -1131,7 +1133,8 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       if (!gst_d3d11_video_processor_render_unlocked (self->processor,
           &self->input_rect, piv, &self->render_rect, self->pov)) {
         GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using processor");
-        return GST_FLOW_ERROR;
+        ret = GST_FLOW_ERROR;
+        goto unmap_and_out;
       } else {
         GST_TRACE_OBJECT (self, "Rendered using processor");
       }
@@ -1139,7 +1142,8 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       if (!gst_d3d11_color_converter_convert_unlocked (self->converter,
           srv, &self->rtv, NULL, NULL)) {
         GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
-        return GST_FLOW_ERROR;
+        ret = GST_FLOW_ERROR;
+        goto unmap_and_out;
       } else {
         GST_TRACE_OBJECT (self, "Rendered using converter");
       }
@@ -1161,6 +1165,9 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     ret = klass->present (self, present_flags);
 
     self->first_present = FALSE;
+
+unmap_and_out:
+    gst_d3d11_buffer_unmap (self->cached_buffer, infos);
   }
 
   return ret;

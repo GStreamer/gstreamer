@@ -1627,10 +1627,10 @@ gst_d3d11_convert_prefer_video_processor (GstD3D11Convert * self,
   /* If we can use shader, we prefer to use shader instead of video processor
    * because video processor implementation is vendor dependent
    * and not flexible */
-  if (gst_d3d11_memory_ensure_shader_resource_view (dmem))
+  if (gst_d3d11_memory_get_shader_resource_view_size (dmem))
     return FALSE;
 
-  if (!gst_d3d11_video_processor_ensure_input_view (self->processor, dmem))
+  if (!gst_d3d11_video_processor_get_input_view (self->processor, dmem))
     return FALSE;
 
   mem = gst_buffer_peek_memory (outbuf, 0);
@@ -1640,35 +1640,34 @@ gst_d3d11_convert_prefer_video_processor (GstD3D11Convert * self,
   if (dmem->device != filter->device)
     return FALSE;
 
-  if (!gst_d3d11_video_processor_ensure_output_view (self->processor, dmem))
+  if (!gst_d3d11_video_processor_get_output_view (self->processor, dmem))
     return FALSE;
 
   return TRUE;
 }
 
-static GstFlowReturn
+static gboolean
 gst_d3d11_convert_transform_using_processor (GstD3D11Convert * self,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstMemory *in_mem, *out_mem;
-  GstD3D11Memory *in_dmem, *out_dmem;
-  GstMapInfo in_map, out_map;
+  GstD3D11Memory *in_mem, *out_mem;
   RECT in_rect, out_rect;
-  gboolean ret;
+  ID3D11VideoProcessorInputView *piv;
+  ID3D11VideoProcessorOutputView *pov;
 
-  in_mem = gst_buffer_peek_memory (inbuf, 0);
-  in_dmem = (GstD3D11Memory *) in_mem;
-  if (!gst_memory_map (in_mem, &in_map, GST_MAP_D3D11 | GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Failed to map input d3d11 memory");
-    return GST_FLOW_ERROR;
+  in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (inbuf, 0);
+  out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, 0);
+
+  piv = gst_d3d11_video_processor_get_input_view (self->processor, in_mem);
+  if (!piv) {
+    GST_ERROR_OBJECT (self, "ID3D11VideoProcessorInputView is unavailable");
+    return FALSE;
   }
 
-  out_mem = gst_buffer_peek_memory (outbuf, 0);
-  out_dmem = (GstD3D11Memory *) out_mem;
-  if (!gst_memory_map (out_mem, &out_map, GST_MAP_D3D11 | GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Failed to map output d3d11 memory");
-    gst_memory_unmap (in_mem, &in_map);
-    return GST_FLOW_ERROR;
+  pov = gst_d3d11_video_processor_get_output_view (self->processor, out_mem);
+  if (!pov) {
+    GST_ERROR_OBJECT (self, "ID3D11VideoProcessorOutputView is unavailable");
+    return FALSE;
   }
 
   in_rect.left = 0;
@@ -1681,19 +1680,8 @@ gst_d3d11_convert_transform_using_processor (GstD3D11Convert * self,
   out_rect.right = self->out_src_box.right;
   out_rect.bottom = self->out_src_box.bottom;
 
-  ret = gst_d3d11_video_processor_render (self->processor,
-      &in_rect, in_dmem->processor_input_view, &out_rect,
-      out_dmem->processor_output_view);
-
-  gst_memory_unmap (in_mem, &in_map);
-  gst_memory_unmap (out_mem, &out_map);
-
-  if (!ret) {
-    GST_ERROR_OBJECT (self, "Couldn't convert using video processor");
-    return GST_FLOW_ERROR;
-  }
-
-  return GST_FLOW_OK;
+  return gst_d3d11_video_processor_render (self->processor,
+      &in_rect, piv, &out_rect, pov);
 }
 
 static GstFlowReturn
@@ -1702,135 +1690,156 @@ gst_d3d11_convert_transform (GstBaseTransform * trans,
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstD3D11Convert *self = GST_D3D11_CONVERT (trans);
+  GstD3D11Device *device = filter->device;
+  ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
   ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  gint i, j, view_index;
+  gint i;
   gboolean copy_input = FALSE;
   gboolean copy_output = FALSE;
-  GstD3D11Device *device = filter->device;
+  GstMapInfo in_map[GST_VIDEO_MAX_PLANES];
+  GstMapInfo out_map[GST_VIDEO_MAX_PLANES];
 
-  if (gst_d3d11_convert_prefer_video_processor (self, inbuf, outbuf))
-    return gst_d3d11_convert_transform_using_processor (self, inbuf, outbuf);
-
+  device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
-  view_index = 0;
-  for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
-    GstD3D11Memory *d3d11_mem;
-    GstMapInfo info;
-
-    g_assert (gst_is_d3d11_memory (mem));
-
-    d3d11_mem = (GstD3D11Memory *) mem;
-    /* map to transfer pending staging data if any */
-    if (d3d11_mem->desc.Usage == D3D11_USAGE_DEFAULT) {
-      gst_memory_map (mem, &info, GST_MAP_READ | GST_MAP_D3D11);
-      gst_memory_unmap (mem, &info);
-    }
-
-    if (gst_d3d11_memory_ensure_shader_resource_view (d3d11_mem)) {
-      GST_TRACE_OBJECT (self, "Use input texture resource without copy");
-
-      for (j = 0; j < d3d11_mem->num_shader_resource_views; j++) {
-        resource_view[view_index] = d3d11_mem->shader_resource_view[j];
-        view_index++;
-      }
-    } else {
-      GST_TRACE_OBJECT (self, "Render using fallback input texture");
-      copy_input = TRUE;
-
-      if (!create_shader_input_resource (self, device,
-              self->in_d3d11_format, &filter->in_info)) {
-        GST_ERROR_OBJECT (self, "Failed to configure fallback input texture");
-        return GST_FLOW_ERROR;
-      }
-      break;
-    }
+  if (!gst_d3d11_buffer_map (inbuf, device_handle, in_map, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Couldn't map input buffer");
+    goto invalid_memory;
   }
 
-  /* if input memory has no resource view,
-   * copy texture into our fallback texture */
-  if (copy_input) {
+  if (!gst_d3d11_buffer_map (outbuf, device_handle, out_map, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Couldn't map output buffer");
+    gst_d3d11_buffer_unmap (inbuf, in_map);
+    goto invalid_memory;
+  }
+
+  if (gst_d3d11_convert_prefer_video_processor (self, inbuf, outbuf)) {
+    gboolean ret =
+        gst_d3d11_convert_transform_using_processor (self, inbuf, outbuf);
+
+    if (!ret) {
+      GST_ERROR_OBJECT (self, "Couldn't convert using video processor");
+      goto conversion_failed;
+    }
+
+    gst_d3d11_buffer_unmap (inbuf, in_map);
+    gst_d3d11_buffer_unmap (outbuf, out_map);
+
+    return GST_FLOW_OK;
+  }
+
+  /* Ensure shader resource views */
+  if (!gst_d3d11_buffer_get_shader_resource_view (inbuf, resource_view)) {
+    if (!create_shader_input_resource (self, device,
+            self->in_d3d11_format, &filter->in_info)) {
+      GST_ERROR_OBJECT (self, "Failed to configure fallback input texture");
+      goto fallback_failed;
+    }
+
+    copy_input = TRUE;
     gst_d3d11_device_lock (device);
     for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
-      GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
-      GstD3D11Memory *d3d11_mem;
+      GstD3D11Memory *mem =
+          (GstD3D11Memory *) gst_buffer_peek_memory (inbuf, i);
+      guint subidx;
+      D3D11_BOX src_box = { 0, };
+      D3D11_TEXTURE2D_DESC src_desc;
+      D3D11_TEXTURE2D_DESC dst_desc;
 
-      g_assert (gst_is_d3d11_memory (mem));
+      subidx = gst_d3d11_memory_get_subresource_index (mem);
+      gst_d3d11_memory_get_texture_desc (mem, &src_desc);
 
-      d3d11_mem = (GstD3D11Memory *) mem;
+      ID3D11Texture2D_GetDesc (self->in_texture[i], &dst_desc);
+
+      src_box.left = 0;
+      src_box.top = 0;
+      src_box.front = 0;
+      src_box.back = 1;
+      src_box.right = MIN (src_desc.Width, dst_desc.Width);
+      src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
       ID3D11DeviceContext_CopySubresourceRegion (context_handle,
           (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
-          (ID3D11Resource *) d3d11_mem->texture, d3d11_mem->subresource_index,
-          &self->in_src_box);
+          (ID3D11Resource *) in_map[i].data, subidx, &src_box);
     }
     gst_d3d11_device_unlock (device);
   }
 
-  view_index = 0;
-  for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
-    GstD3D11Memory *d3d11_mem;
-
-    g_assert (gst_is_d3d11_memory (mem));
-
-    d3d11_mem = (GstD3D11Memory *) mem;
-
-    if (gst_d3d11_memory_ensure_render_target_view (d3d11_mem)) {
-      GST_TRACE_OBJECT (self, "Render to output texture directly");
-
-      for (j = 0; j < d3d11_mem->num_render_target_views; j++) {
-        render_view[view_index] = d3d11_mem->render_target_view[j];
-        view_index++;
-      }
-    } else {
-      GST_TRACE_OBJECT (self, "Render to fallback output texture");
-      copy_output = TRUE;
-
-      if (!create_shader_output_resource (self, device, self->out_d3d11_format,
-              &filter->out_info)) {
-        GST_ERROR_OBJECT (self, "Failed to configure fallback output texture");
-        return GST_FLOW_ERROR;
-      }
-      break;
+  /* Ensure render target views */
+  if (!gst_d3d11_buffer_get_render_target_view (outbuf, render_view)) {
+    if (!create_shader_output_resource (self, device,
+            self->out_d3d11_format, &filter->out_info)) {
+      GST_ERROR_OBJECT (self, "Failed to configure fallback output texture");
+      goto fallback_failed;
     }
+
+    copy_output = TRUE;
   }
 
   if (!gst_d3d11_color_converter_convert (self->converter,
           copy_input ? self->shader_resource_view : resource_view,
           copy_output ? self->render_target_view : render_view, NULL, NULL)) {
-    GST_ERROR_OBJECT (self, "Failed to convert");
-
-    return GST_FLOW_ERROR;
+    goto conversion_failed;
   }
 
   if (copy_output) {
     gst_d3d11_device_lock (device);
     for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
-      GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
-      GstD3D11Memory *d3d11_mem;
+      GstD3D11Memory *mem =
+          (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
+      guint subidx;
+      D3D11_BOX src_box = { 0, };
+      D3D11_TEXTURE2D_DESC src_desc;
+      D3D11_TEXTURE2D_DESC dst_desc;
 
-      g_assert (gst_is_d3d11_memory (mem));
+      ID3D11Texture2D_GetDesc (self->out_texture[i], &src_desc);
+      subidx = gst_d3d11_memory_get_subresource_index (mem);
+      gst_d3d11_memory_get_texture_desc (mem, &dst_desc);
 
-      d3d11_mem = (GstD3D11Memory *) mem;
+      src_box.left = 0;
+      src_box.top = 0;
+      src_box.front = 0;
+      src_box.back = 1;
+      src_box.right = MIN (src_desc.Width, dst_desc.Width);
+      src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
       ID3D11DeviceContext_CopySubresourceRegion (context_handle,
-          (ID3D11Resource *) d3d11_mem->texture, d3d11_mem->subresource_index,
-          0, 0, 0, (ID3D11Resource *) self->out_texture[i], 0,
-          &self->out_src_box);
+          (ID3D11Resource *) out_map[i].data, subidx, 0, 0, 0,
+          (ID3D11Resource *) self->out_texture[i], 0, &src_box);
     }
     gst_d3d11_device_unlock (device);
-  } else {
-    for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
-      GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
-      GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
-    }
   }
 
+  gst_d3d11_buffer_unmap (inbuf, in_map);
+  gst_d3d11_buffer_unmap (outbuf, out_map);
+
   return GST_FLOW_OK;
+
+invalid_memory:
+  {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL), ("Invalid memory"));
+    return GST_FLOW_ERROR;
+  }
+fallback_failed:
+  {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
+        ("Couldn't prepare fallback memory"));
+    gst_d3d11_buffer_unmap (inbuf, in_map);
+    gst_d3d11_buffer_unmap (outbuf, out_map);
+
+    return GST_FLOW_ERROR;
+  }
+conversion_failed:
+  {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
+        ("Couldn't convert texture"));
+    gst_d3d11_buffer_unmap (inbuf, in_map);
+    gst_d3d11_buffer_unmap (outbuf, out_map);
+
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstCaps *gst_d3d11_color_convert_transform_caps (GstBaseTransform *

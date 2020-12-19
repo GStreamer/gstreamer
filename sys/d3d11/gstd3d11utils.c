@@ -579,22 +579,59 @@ _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
 #endif
 }
 
+static gboolean
+gst_d3d11_buffer_copy_into_fallback (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  GstVideoFrame in_frame, out_frame;
+  gboolean ret;
+
+  if (!gst_video_frame_map (&in_frame, (GstVideoInfo *) info, src,
+          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+    goto invalid_buffer;
+
+  if (!gst_video_frame_map (&out_frame, (GstVideoInfo *) info, dst,
+          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+    gst_video_frame_unmap (&in_frame);
+    goto invalid_buffer;
+  }
+
+  ret = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return ret;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    GST_ERROR ("Invalid video buffer");
+    return FALSE;
+  }
+}
+
 gboolean
-gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src)
+gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info)
 {
   guint i;
-  guint num_mem;
 
   g_return_val_if_fail (GST_IS_BUFFER (dst), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
 
-  num_mem = gst_buffer_n_memory (dst);
-  if (num_mem != gst_buffer_n_memory (src)) {
-    GST_WARNING ("different num memory");
-    return FALSE;
+  if (gst_buffer_n_memory (dst) != gst_buffer_n_memory (src)) {
+    GST_LOG ("different memory layout, perform fallback copy");
+    return gst_d3d11_buffer_copy_into_fallback (dst, src, info);
   }
 
-  for (i = 0; i < num_mem; i++) {
+  if (!gst_is_d3d11_buffer (dst) || !gst_is_d3d11_buffer (src)) {
+    GST_LOG ("non-d3d11 memory, perform fallback copy");
+    return gst_d3d11_buffer_copy_into_fallback (dst, src, info);
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (dst); i++) {
     GstMemory *dst_mem, *src_mem;
     GstD3D11Memory *dst_dmem, *src_dmem;
     GstMapInfo dst_info;
@@ -603,30 +640,25 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src)
     ID3D11DeviceContext *device_context;
     GstD3D11Device *device;
     D3D11_BOX src_box = { 0, };
+    D3D11_TEXTURE2D_DESC dst_desc, src_desc;
+    guint dst_subidx, src_subidx;
 
     dst_mem = gst_buffer_peek_memory (dst, i);
     src_mem = gst_buffer_peek_memory (src, i);
-
-    if (!gst_is_d3d11_memory (dst_mem)) {
-      GST_WARNING ("dst memory is not d3d11");
-      return FALSE;
-    }
-
-    if (!gst_is_d3d11_memory (src_mem)) {
-      GST_WARNING ("src memory is not d3d11");
-      return FALSE;
-    }
 
     dst_dmem = (GstD3D11Memory *) dst_mem;
     src_dmem = (GstD3D11Memory *) src_mem;
 
     device = dst_dmem->device;
     if (device != src_dmem->device) {
-      GST_WARNING ("different device");
-      return FALSE;
+      GST_LOG ("different device, perform fallback copy");
+      return gst_d3d11_buffer_copy_into_fallback (dst, src, info);
     }
 
-    if (dst_dmem->desc.Format != src_dmem->desc.Format) {
+    gst_d3d11_memory_get_texture_desc (dst_dmem, &dst_desc);
+    gst_d3d11_memory_get_texture_desc (src_dmem, &src_desc);
+
+    if (dst_desc.Format != src_desc.Format) {
       GST_WARNING ("different dxgi format");
       return FALSE;
     }
@@ -653,13 +685,15 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src)
     src_box.top = 0;
     src_box.front = 0;
     src_box.back = 1;
-    src_box.right = MIN (src_dmem->desc.Width, dst_dmem->desc.Width);
-    src_box.bottom = MIN (src_dmem->desc.Height, dst_dmem->desc.Height);
+    src_box.right = MIN (src_desc.Width, dst_desc.Width);
+    src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
+
+    dst_subidx = gst_d3d11_memory_get_subresource_index (dst_dmem);
+    src_subidx = gst_d3d11_memory_get_subresource_index (src_dmem);
 
     gst_d3d11_device_lock (device);
     ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        dst_texture, dst_dmem->subresource_index, 0, 0, 0,
-        src_texture, src_dmem->subresource_index, &src_box);
+        dst_texture, dst_subidx, 0, 0, 0, src_texture, src_subidx, &src_box);
     gst_d3d11_device_unlock (device);
 
     gst_memory_unmap (src_mem, &src_info);
@@ -667,6 +701,189 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src)
   }
 
   return TRUE;
+}
+
+gboolean
+gst_is_d3d11_buffer (GstBuffer * buffer)
+{
+  guint i;
+  guint size;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  size = gst_buffer_n_memory (buffer);
+  if (size == 0)
+    return FALSE;
+
+  for (i = 0; i < size; i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    if (!gst_is_d3d11_memory (mem))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_buffer_can_access_device (GstBuffer * buffer, ID3D11Device * device)
+{
+  guint i;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  if (!gst_is_d3d11_buffer (buffer)) {
+    GST_LOG ("Not a d3d11 buffer");
+    return FALSE;
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    ID3D11Device *handle;
+
+    handle = gst_d3d11_device_get_device_handle (mem->device);
+    if (handle != device) {
+      GST_LOG ("D3D11 device is incompatible");
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_buffer_map (GstBuffer * buffer, ID3D11Device * device,
+    GstMapInfo info[GST_VIDEO_MAX_PLANES], GstMapFlags flags)
+{
+  GstMapFlags map_flags;
+  gint num_mapped = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  if (!gst_d3d11_buffer_can_access_device (buffer, device))
+    return FALSE;
+
+  map_flags = flags | GST_MAP_D3D11;
+
+  for (num_mapped = 0; num_mapped < gst_buffer_n_memory (buffer); num_mapped++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
+
+    if (!gst_memory_map (mem, &info[num_mapped], map_flags)) {
+      GST_ERROR ("Couldn't map memory");
+      goto error;
+    }
+  }
+
+  return TRUE;
+
+error:
+  {
+    gint i;
+    for (i = 0; i < num_mapped; i++) {
+      GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
+      gst_memory_unmap (mem, &info[i]);
+    }
+
+    return FALSE;
+  }
+}
+
+gboolean
+gst_d3d11_buffer_unmap (GstBuffer * buffer,
+    GstMapInfo info[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    gst_memory_unmap (mem, &info[i]);
+  }
+
+  return TRUE;
+}
+
+guint
+gst_d3d11_buffer_get_shader_resource_view (GstBuffer * buffer,
+    ID3D11ShaderResourceView * view[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+  guint num_views = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (view != NULL, 0);
+
+  if (!gst_is_d3d11_buffer (buffer)) {
+    GST_ERROR ("Buffer contains non-d3d11 memory");
+    return 0;
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    guint view_size;
+    gint j;
+
+    view_size = gst_d3d11_memory_get_shader_resource_view_size (mem);
+    if (!view_size) {
+      GST_LOG ("SRV is unavailable for memory index %d", i);
+      return 0;
+    }
+
+    for (j = 0; j < view_size; j++) {
+      if (num_views >= GST_VIDEO_MAX_PLANES) {
+        GST_ERROR ("Too many SRVs");
+        return 0;
+      }
+
+      view[num_views++] = gst_d3d11_memory_get_shader_resource_view (mem, j);
+    }
+  }
+
+  return num_views;
+}
+
+guint
+gst_d3d11_buffer_get_render_target_view (GstBuffer * buffer,
+    ID3D11RenderTargetView * view[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+  guint num_views = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (view != NULL, 0);
+
+  if (!gst_is_d3d11_buffer (buffer)) {
+    GST_ERROR ("Buffer contains non-d3d11 memory");
+    return 0;
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    guint view_size;
+    gint j;
+
+    view_size = gst_d3d11_memory_get_render_target_view_size (mem);
+    if (!view_size) {
+      GST_LOG ("RTV is unavailable for memory index %d", i);
+      return 0;
+    }
+
+    for (j = 0; j < view_size; j++) {
+      if (num_views >= GST_VIDEO_MAX_PLANES) {
+        GST_ERROR ("Too many RTVs");
+        return 0;
+      }
+
+      view[num_views++] = gst_d3d11_memory_get_render_target_view (mem, j);
+    }
+  }
+
+  return num_views;
 }
 
 GstBufferPool *

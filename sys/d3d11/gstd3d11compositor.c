@@ -864,12 +864,12 @@ gst_d3d11_compsitor_prepare_fallback_buffer (GstD3D11Compositor * self,
     GstD3D11Memory *new_mem =
         (GstD3D11Memory *) gst_buffer_peek_memory (new_buf, i);
 
-    if (is_input && !gst_d3d11_memory_ensure_shader_resource_view (new_mem)) {
+    if (is_input && !gst_d3d11_memory_get_shader_resource_view_size (new_mem)) {
       GST_ERROR_OBJECT (self, "Couldn't prepare shader resource view");
       gst_buffer_unref (new_buf);
       return FALSE;
     } else if (!is_input &&
-        !gst_d3d11_memory_ensure_render_target_view (new_mem)) {
+        !gst_d3d11_memory_get_render_target_view_size (new_mem)) {
       GST_ERROR_OBJECT (self, "Couldn't prepare render target view");
       gst_buffer_unref (new_buf);
       return FALSE;
@@ -889,7 +889,7 @@ gst_d3d11_compositor_copy_buffer (GstD3D11Compositor * self,
   gint i;
 
   if (do_device_copy) {
-    return gst_d3d11_buffer_copy_into (dest_buf, src_buf);
+    return gst_d3d11_buffer_copy_into (dest_buf, src_buf, info);
   } else {
     GstVideoFrame src_frame, dest_frame;
 
@@ -949,10 +949,10 @@ gst_d3d11_compositor_check_d3d11_memory (GstD3D11Compositor * self,
     }
 
     if (is_input) {
-      if (!gst_d3d11_memory_ensure_shader_resource_view (dmem))
+      if (!gst_d3d11_memory_get_shader_resource_view_size (dmem))
         *view_available = FALSE;
     } else {
-      if (!gst_d3d11_memory_ensure_render_target_view (dmem))
+      if (!gst_d3d11_memory_get_render_target_view_size (dmem))
         *view_available = FALSE;
     }
   }
@@ -2097,6 +2097,7 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
   for (i = 0; i < gst_buffer_n_memory (target_buf); i++) {
     GstMemory *mem = gst_buffer_peek_memory (target_buf, i);
     GstD3D11Memory *dmem;
+    guint rtv_size;
 
     if (!gst_is_d3d11_memory (mem)) {
       GST_ERROR_OBJECT (self, "Invalid output memory");
@@ -2104,15 +2105,16 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     }
 
     dmem = (GstD3D11Memory *) mem;
-    if (!gst_d3d11_memory_ensure_render_target_view (dmem)) {
+    rtv_size = gst_d3d11_memory_get_render_target_view_size (dmem);
+    if (!rtv_size) {
       GST_ERROR_OBJECT (self, "Render target view is unavailable");
       return GST_FLOW_ERROR;
     }
 
-    for (j = 0; j < dmem->num_render_target_views; j++) {
+    for (j = 0; j < rtv_size; j++) {
       g_assert (view_idx < GST_VIDEO_MAX_PLANES);
 
-      rtv[view_idx] = dmem->render_target_view[j];
+      rtv[view_idx] = gst_d3d11_memory_get_render_target_view (dmem, j);
       view_idx++;
     }
 
@@ -2155,11 +2157,12 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
       GstD3D11Memory *dmem =
           (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+      guint srv_size = gst_d3d11_memory_get_shader_resource_view_size (dmem);
 
-      for (j = 0; j < dmem->num_shader_resource_views; j++) {
+      for (j = 0; j < srv_size; j++) {
         g_assert (view_idx < GST_VIDEO_MAX_PLANES);
 
-        srv[view_idx] = dmem->shader_resource_view[j];
+        srv[view_idx] = gst_d3d11_memory_get_shader_resource_view (dmem, j);
         view_idx++;
       }
     }

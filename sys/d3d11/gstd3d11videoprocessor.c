@@ -445,11 +445,11 @@ gst_d3d11_video_processor_create_input_view (GstD3D11VideoProcessor * processor,
   return TRUE;
 }
 
-gboolean
-gst_d3d11_video_processor_ensure_input_view (GstD3D11VideoProcessor * processor,
+ID3D11VideoProcessorInputView *
+gst_d3d11_video_processor_get_input_view (GstD3D11VideoProcessor * processor,
     GstD3D11Memory * mem)
 {
-  return gst_d3d11_memory_ensure_processor_input_view (mem,
+  return gst_d3d11_memory_get_processor_input_view (mem,
       processor->video_device, processor->enumerator);
 }
 
@@ -473,11 +473,11 @@ gst_d3d11_video_processor_create_output_view (GstD3D11VideoProcessor *
   return TRUE;
 }
 
-gboolean
-gst_d3d11_video_processor_ensure_output_view (GstD3D11VideoProcessor *
+ID3D11VideoProcessorOutputView *
+gst_d3d11_video_processor_get_output_view (GstD3D11VideoProcessor *
     processor, GstD3D11Memory * mem)
 {
-  return gst_d3d11_memory_ensure_processor_output_view (mem,
+  return gst_d3d11_memory_get_processor_output_view (mem,
       processor->video_device, processor->enumerator);
 }
 

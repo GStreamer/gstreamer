@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_D3D11_ALLOCATOR_UNLOCK(a) g_mutex_unlock(GST_D3D11_ALLOCATOR_GET_LOCK(a))
 
 #define GST_D3D11_MEMORY_CAST(m) ((GstD3D11Memory *) m)
-#define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->lock))
+#define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->priv->lock))
 #define GST_D3D11_MEMORY_LOCK(m) g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m))
 #define GST_D3D11_MEMORY_UNLOCK(m) g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m))
 
@@ -191,6 +191,41 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
     (GBoxedFreeFunc) gst_d3d11_allocation_params_free,
     _init_alloc_params (g_define_type_id));
 
+typedef enum
+{
+  GST_D3D11_MEMORY_TYPE_TEXTURE = 0,
+  GST_D3D11_MEMORY_TYPE_ARRAY = 1,
+  GST_D3D11_MEMORY_TYPE_STAGING = 2,
+} GstD3D11MemoryType;
+
+struct _GstD3D11MemoryPrivate
+{
+  GstD3D11MemoryType type;
+
+  ID3D11Texture2D *texture;
+  D3D11_TEXTURE2D_DESC desc;
+
+  /* valid only for array typed memory */
+  guint subresource_index;
+
+  ID3D11Texture2D *staging;
+
+  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
+  guint num_shader_resource_views;
+
+  ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
+  guint num_render_target_views;
+
+  ID3D11VideoDecoderOutputView *decoder_output_view;
+  ID3D11VideoProcessorInputView *processor_input_view;
+  ID3D11VideoProcessorOutputView *processor_output_view;
+
+  D3D11_MAPPED_SUBRESOURCE map;
+
+  GMutex lock;
+  gint cpu_map_count;
+};
+
 struct _GstD3D11AllocatorPrivate
 {
   /* parent texture when array typed memory is used */
@@ -254,21 +289,22 @@ create_staging_texture (GstD3D11Device * device,
 static gboolean
 map_cpu_access_data (GstD3D11Memory * dmem, D3D11_MAP map_type)
 {
+  GstD3D11MemoryPrivate *priv = dmem->priv;
   HRESULT hr;
   gboolean ret = TRUE;
-  ID3D11Resource *texture = (ID3D11Resource *) dmem->texture;
-  ID3D11Resource *staging = (ID3D11Resource *) dmem->staging;
+  ID3D11Resource *texture = (ID3D11Resource *) priv->texture;
+  ID3D11Resource *staging = (ID3D11Resource *) priv->staging;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
   gst_d3d11_device_lock (dmem->device);
   if (GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD)) {
     ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        staging, 0, 0, 0, 0, texture, dmem->subresource_index, NULL);
+        staging, 0, 0, 0, 0, texture, priv->subresource_index, NULL);
   }
 
   hr = ID3D11DeviceContext_Map (device_context,
-      staging, 0, map_type, 0, &dmem->map);
+      staging, 0, map_type, 0, &priv->map);
 
   if (!gst_d3d11_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
@@ -285,9 +321,10 @@ static gpointer
 gst_d3d11_memory_map_staging (GstMemory * mem, GstMapFlags flags)
 {
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  GstD3D11MemoryPrivate *priv = dmem->priv;
 
   GST_D3D11_MEMORY_LOCK (dmem);
-  if (dmem->cpu_map_count == 0) {
+  if (priv->cpu_map_count == 0) {
     ID3D11DeviceContext *device_context =
         gst_d3d11_device_get_device_context_handle (dmem->device);
     D3D11_MAP map_type;
@@ -298,7 +335,7 @@ gst_d3d11_memory_map_staging (GstMemory * mem, GstMapFlags flags)
 
     gst_d3d11_device_lock (dmem->device);
     hr = ID3D11DeviceContext_Map (device_context,
-        (ID3D11Resource *) dmem->texture, 0, map_type, 0, &dmem->map);
+        (ID3D11Resource *) priv->texture, 0, map_type, 0, &priv->map);
     if (!gst_d3d11_result (hr, dmem->device)) {
       GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
           "Failed to map staging texture (0x%x)", (guint) hr);
@@ -312,35 +349,36 @@ gst_d3d11_memory_map_staging (GstMemory * mem, GstMapFlags flags)
     }
   }
 
-  dmem->cpu_map_count++;
+  priv->cpu_map_count++;
   GST_D3D11_MEMORY_UNLOCK (dmem);
 
-  return dmem->map.pData;
+  return dmem->priv->map.pData;
 }
 
 static gpointer
 gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  GstD3D11MemoryPrivate *priv = dmem->priv;
 
-  if (dmem->type == GST_D3D11_MEMORY_TYPE_STAGING) {
+  if (priv->type == GST_D3D11_MEMORY_TYPE_STAGING) {
     if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11)
-      return dmem->texture;
+      return priv->texture;
 
     return gst_d3d11_memory_map_staging (mem, flags);
   }
 
   GST_D3D11_MEMORY_LOCK (dmem);
   if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
-    if (dmem->staging &&
+    if (priv->staging &&
         GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD)) {
       ID3D11DeviceContext *device_context =
           gst_d3d11_device_get_device_context_handle (dmem->device);
 
       gst_d3d11_device_lock (dmem->device);
       ID3D11DeviceContext_CopySubresourceRegion (device_context,
-          (ID3D11Resource *) dmem->texture, dmem->subresource_index, 0, 0, 0,
-          (ID3D11Resource *) dmem->staging, 0, NULL);
+          (ID3D11Resource *) priv->texture, priv->subresource_index, 0, 0, 0,
+          (ID3D11Resource *) priv->staging, 0, NULL);
       gst_d3d11_device_unlock (dmem->device);
     }
 
@@ -349,21 +387,21 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
     if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-    g_assert (dmem->texture != NULL);
+    g_assert (priv->texture != NULL);
     GST_D3D11_MEMORY_UNLOCK (dmem);
 
-    return dmem->texture;
+    return priv->texture;
   }
 
-  if (dmem->cpu_map_count == 0) {
+  if (priv->cpu_map_count == 0) {
     D3D11_MAP map_type;
 
     /* Allocate staging texture for CPU access */
-    if (!dmem->staging) {
-      dmem->staging = create_staging_texture (dmem->device, &dmem->desc);
-      if (!dmem->staging) {
+    if (!priv->staging) {
+      priv->staging = create_staging_texture (dmem->device, &priv->desc);
+      if (!priv->staging) {
         GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging texture");
-        g_mutex_unlock (&dmem->lock);
+        GST_D3D11_MEMORY_UNLOCK (dmem);
 
         return NULL;
       }
@@ -387,21 +425,22 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 
   GST_MEMORY_FLAG_UNSET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-  dmem->cpu_map_count++;
+  priv->cpu_map_count++;
   GST_D3D11_MEMORY_UNLOCK (dmem);
 
-  return dmem->map.pData;
+  return dmem->priv->map.pData;
 }
 
 static void
 unmap_cpu_access_data (GstD3D11Memory * dmem)
 {
-  ID3D11Resource *staging = (ID3D11Resource *) dmem->staging;
+  GstD3D11MemoryPrivate *priv = dmem->priv;
+  ID3D11Resource *staging = (ID3D11Resource *) priv->staging;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
-  if (dmem->type == GST_D3D11_MEMORY_TYPE_STAGING)
-    staging = (ID3D11Resource *) dmem->texture;
+  if (priv->type == GST_D3D11_MEMORY_TYPE_STAGING)
+    staging = (ID3D11Resource *) priv->texture;
 
   gst_d3d11_device_lock (dmem->device);
   ID3D11DeviceContext_Unmap (device_context, staging, 0);
@@ -412,10 +451,11 @@ static void
 gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 {
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  GstD3D11MemoryPrivate *priv = dmem->priv;
 
   GST_D3D11_MEMORY_LOCK (dmem);
   if ((info->flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
-    if (dmem->type != GST_D3D11_MEMORY_TYPE_STAGING &&
+    if (priv->type != GST_D3D11_MEMORY_TYPE_STAGING &&
         (info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -423,12 +463,12 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
     return;
   }
 
-  if (dmem->type != GST_D3D11_MEMORY_TYPE_STAGING &&
+  if (priv->type != GST_D3D11_MEMORY_TYPE_STAGING &&
       (info->flags & GST_MAP_WRITE))
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
-  dmem->cpu_map_count--;
-  if (dmem->cpu_map_count > 0) {
+  priv->cpu_map_count--;
+  if (priv->cpu_map_count > 0) {
     GST_D3D11_MEMORY_UNLOCK (dmem);
     return;
   }
@@ -458,43 +498,43 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GstD3D11Allocator *self = GST_D3D11_ALLOCATOR (allocator);
   GstD3D11AllocatorPrivate *priv = self->priv;
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  GstD3D11MemoryPrivate *dmem_priv = dmem->priv;
   gint i;
 
   if (priv->array_in_use) {
     GST_D3D11_ALLOCATOR_LOCK (self);
-    g_array_index (priv->array_in_use, guint8, dmem->subresource_index) = 0;
+    g_array_index (priv->array_in_use,
+        guint8, dmem_priv->subresource_index) = 0;
     g_cond_broadcast (&priv->cond);
     GST_D3D11_ALLOCATOR_UNLOCK (self);
   }
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (dmem->render_target_view[i])
-      ID3D11RenderTargetView_Release (dmem->render_target_view[i]);
-    dmem->render_target_view[i] = NULL;
+    if (dmem_priv->render_target_view[i])
+      ID3D11RenderTargetView_Release (dmem_priv->render_target_view[i]);
 
-    if (dmem->shader_resource_view[i])
-      ID3D11ShaderResourceView_Release (dmem->shader_resource_view[i]);
-    dmem->shader_resource_view[i] = NULL;
+    if (dmem_priv->shader_resource_view[i])
+      ID3D11ShaderResourceView_Release (dmem_priv->shader_resource_view[i]);
   }
 
-  if (dmem->decoder_output_view)
-    ID3D11VideoDecoderOutputView_Release (dmem->decoder_output_view);
+  if (dmem_priv->decoder_output_view)
+    ID3D11VideoDecoderOutputView_Release (dmem_priv->decoder_output_view);
 
-  if (dmem->processor_input_view)
-    ID3D11VideoProcessorInputView_Release (dmem->processor_input_view);
+  if (dmem_priv->processor_input_view)
+    ID3D11VideoProcessorInputView_Release (dmem_priv->processor_input_view);
 
-  if (dmem->processor_output_view)
-    ID3D11VideoProcessorOutputView_Release (dmem->processor_output_view);
+  if (dmem_priv->processor_output_view)
+    ID3D11VideoProcessorOutputView_Release (dmem_priv->processor_output_view);
 
-  if (dmem->texture)
-    ID3D11Texture2D_Release (dmem->texture);
+  if (dmem_priv->texture)
+    ID3D11Texture2D_Release (dmem_priv->texture);
 
-  if (dmem->staging)
-    ID3D11Texture2D_Release (dmem->staging);
+  if (dmem_priv->staging)
+    ID3D11Texture2D_Release (dmem_priv->staging);
 
   gst_clear_object (&dmem->device);
-  g_mutex_clear (&dmem->lock);
-
+  g_mutex_clear (&dmem_priv->lock);
+  g_free (dmem->priv);
   g_free (dmem);
 }
 
@@ -615,6 +655,7 @@ calculate_mem_size (GstD3D11Device * device, ID3D11Texture2D * texture,
 static gboolean
 create_shader_resource_views (GstD3D11Memory * mem)
 {
+  GstD3D11MemoryPrivate *priv = mem->priv;
   gint i;
   HRESULT hr;
   guint num_views = 0;
@@ -624,7 +665,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
 
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
-  switch (mem->desc.Format) {
+  switch (priv->desc.Format) {
     case DXGI_FORMAT_B8G8R8A8_UNORM:
     case DXGI_FORMAT_R8G8B8A8_UNORM:
     case DXGI_FORMAT_R10G10B10A2_UNORM:
@@ -636,7 +677,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
     case DXGI_FORMAT_R8G8_B8G8_UNORM:
     case DXGI_FORMAT_R16G16B16A16_UNORM:
       num_views = 1;
-      formats[0] = mem->desc.Format;
+      formats[0] = priv->desc.Format;
       break;
     case DXGI_FORMAT_AYUV:
     case DXGI_FORMAT_YUY2:
@@ -667,7 +708,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
       return FALSE;
   }
 
-  if ((mem->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) ==
+  if ((priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) ==
       D3D11_BIND_SHADER_RESOURCE) {
     resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     resource_desc.Texture2D.MipLevels = 1;
@@ -675,8 +716,8 @@ create_shader_resource_views (GstD3D11Memory * mem)
     for (i = 0; i < num_views; i++) {
       resource_desc.Format = formats[i];
       hr = ID3D11Device_CreateShaderResourceView (device_handle,
-          (ID3D11Resource *) mem->texture, &resource_desc,
-          &mem->shader_resource_view[i]);
+          (ID3D11Resource *) priv->texture, &resource_desc,
+          &priv->shader_resource_view[i]);
 
       if (!gst_d3d11_result (hr, mem->device)) {
         GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
@@ -685,7 +726,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
       }
     }
 
-    mem->num_shader_resource_views = num_views;
+    priv->num_shader_resource_views = num_views;
 
     return TRUE;
   }
@@ -694,12 +735,12 @@ create_shader_resource_views (GstD3D11Memory * mem)
 
 error:
   for (i = 0; i < num_views; i++) {
-    if (mem->shader_resource_view[i])
-      ID3D11ShaderResourceView_Release (mem->shader_resource_view[i]);
-    mem->shader_resource_view[i] = NULL;
+    if (priv->shader_resource_view[i])
+      ID3D11ShaderResourceView_Release (priv->shader_resource_view[i]);
+    priv->shader_resource_view[i] = NULL;
   }
 
-  mem->num_shader_resource_views = 0;
+  priv->num_shader_resource_views = 0;
 
   return FALSE;
 }
@@ -707,6 +748,7 @@ error:
 static gboolean
 create_render_target_views (GstD3D11Memory * mem)
 {
+  GstD3D11MemoryPrivate *priv = mem->priv;
   gint i;
   HRESULT hr;
   guint num_views = 0;
@@ -716,7 +758,7 @@ create_render_target_views (GstD3D11Memory * mem)
 
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
-  switch (mem->desc.Format) {
+  switch (priv->desc.Format) {
     case DXGI_FORMAT_B8G8R8A8_UNORM:
     case DXGI_FORMAT_R8G8B8A8_UNORM:
     case DXGI_FORMAT_R10G10B10A2_UNORM:
@@ -725,7 +767,7 @@ create_render_target_views (GstD3D11Memory * mem)
     case DXGI_FORMAT_R16_UNORM:
     case DXGI_FORMAT_R16G16_UNORM:
       num_views = 1;
-      formats[0] = mem->desc.Format;
+      formats[0] = priv->desc.Format;
       break;
     case DXGI_FORMAT_AYUV:
       num_views = 1;
@@ -747,7 +789,7 @@ create_render_target_views (GstD3D11Memory * mem)
       return FALSE;
   }
 
-  if ((mem->desc.BindFlags & D3D11_BIND_RENDER_TARGET) ==
+  if ((priv->desc.BindFlags & D3D11_BIND_RENDER_TARGET) ==
       D3D11_BIND_RENDER_TARGET) {
     render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     render_desc.Texture2D.MipSlice = 0;
@@ -756,8 +798,8 @@ create_render_target_views (GstD3D11Memory * mem)
       render_desc.Format = formats[i];
 
       hr = ID3D11Device_CreateRenderTargetView (device_handle,
-          (ID3D11Resource *) mem->texture, &render_desc,
-          &mem->render_target_view[i]);
+          (ID3D11Resource *) priv->texture, &render_desc,
+          &priv->render_target_view[i]);
       if (!gst_d3d11_result (hr, mem->device)) {
         GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
             "Failed to create %dth render target view (0x%x)", i, (guint) hr);
@@ -765,7 +807,7 @@ create_render_target_views (GstD3D11Memory * mem)
       }
     }
 
-    mem->num_render_target_views = num_views;
+    priv->num_render_target_views = num_views;
 
     return TRUE;
   }
@@ -774,12 +816,12 @@ create_render_target_views (GstD3D11Memory * mem)
 
 error:
   for (i = 0; i < num_views; i++) {
-    if (mem->render_target_view[i])
-      ID3D11RenderTargetView_Release (mem->render_target_view[i]);
-    mem->render_target_view[i] = NULL;
+    if (priv->render_target_view[i])
+      ID3D11RenderTargetView_Release (priv->render_target_view[i]);
+    priv->render_target_view[i] = NULL;
   }
 
-  mem->num_render_target_views = 0;
+  priv->num_render_target_views = 0;
 
   return FALSE;
 }
@@ -915,16 +957,17 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   }
 
   mem = g_new0 (GstD3D11Memory, 1);
+  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       0, GST_ALLOCATOR_CAST (allocator), NULL, size, 0, 0, size);
 
-  g_mutex_init (&mem->lock);
-  mem->desc = *desc;
-  mem->texture = texture;
+  g_mutex_init (&mem->priv->lock);
+  mem->priv->texture = texture;
+  mem->priv->desc = *desc;
+  mem->priv->type = type;
+  mem->priv->subresource_index = index_to_use;
   mem->device = gst_object_ref (device);
-  mem->type = type;
-  mem->subresource_index = index_to_use;
 
   return GST_MEMORY_CAST (mem);
 
@@ -964,15 +1007,16 @@ gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
   }
 
   mem = g_new0 (GstD3D11Memory, 1);
+  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       0, GST_ALLOCATOR_CAST (allocator), NULL, mem_size, 0, 0, mem_size);
 
-  g_mutex_init (&mem->lock);
-  mem->desc = *desc;
-  mem->texture = texture;
+  g_mutex_init (&mem->priv->lock);
+  mem->priv->texture = texture;
+  mem->priv->desc = *desc;
+  mem->priv->type = GST_D3D11_MEMORY_TYPE_STAGING;
   mem->device = gst_object_ref (device);
-  mem->type = GST_D3D11_MEMORY_TYPE_STAGING;
 
   /* every plan will have identical size */
   if (stride)
@@ -1010,21 +1054,48 @@ gst_is_d3d11_memory (GstMemory * mem)
       GST_IS_D3D11_ALLOCATOR (mem->allocator);
 }
 
+ID3D11Texture2D *
+gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+
+  return mem->priv->texture;
+}
+
+guint
+gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
+
+  return mem->priv->subresource_index;
+}
+
 gboolean
+gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
+    D3D11_TEXTURE2D_DESC * desc)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (desc != NULL, FALSE);
+
+  *desc = mem->priv->desc;
+
+  return TRUE;
+}
+
+static gboolean
 gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
 {
+  GstD3D11MemoryPrivate *priv = mem->priv;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
-
-  if (!(mem->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
+  if (!(priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
     GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+        "Need BindFlags, current flag 0x%x", priv->desc.BindFlags);
     return FALSE;
   }
 
   GST_D3D11_MEMORY_LOCK (mem);
-  if (mem->num_shader_resource_views) {
+  if (priv->num_shader_resource_views) {
     ret = TRUE;
     goto done;
   }
@@ -1037,21 +1108,51 @@ done:
   return ret;
 }
 
-gboolean
+guint
+gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
+
+  if (!gst_d3d11_memory_ensure_shader_resource_view (mem))
+    return 0;
+
+  return mem->priv->num_shader_resource_views;
+}
+
+ID3D11ShaderResourceView *
+gst_d3d11_memory_get_shader_resource_view (GstD3D11Memory * mem, guint index)
+{
+  GstD3D11MemoryPrivate *priv;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+
+  if (!gst_d3d11_memory_ensure_shader_resource_view (mem))
+    return NULL;
+
+  priv = mem->priv;
+
+  if (index >= priv->num_shader_resource_views) {
+    GST_ERROR ("Invalid SRV index %d", index);
+    return NULL;
+  }
+
+  return priv->shader_resource_view[index];
+}
+
+static gboolean
 gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem)
 {
+  GstD3D11MemoryPrivate *priv = mem->priv;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
-
-  if (!(mem->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
+  if (!(priv->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
     GST_WARNING_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+        "Need BindFlags, current flag 0x%x", priv->desc.BindFlags);
     return FALSE;
   }
 
   GST_D3D11_MEMORY_LOCK (mem);
-  if (mem->num_render_target_views) {
+  if (priv->num_render_target_views) {
     ret = TRUE;
     goto done;
   }
@@ -1064,10 +1165,42 @@ done:
   return ret;
 }
 
-gboolean
+guint
+gst_d3d11_memory_get_render_target_view_size (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
+
+  if (!gst_d3d11_memory_ensure_render_target_view (mem))
+    return 0;
+
+  return mem->priv->num_render_target_views;
+}
+
+ID3D11RenderTargetView *
+gst_d3d11_memory_get_render_target_view (GstD3D11Memory * mem, guint index)
+{
+  GstD3D11MemoryPrivate *priv;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+
+  if (!gst_d3d11_memory_ensure_render_target_view (mem))
+    return NULL;
+
+  priv = mem->priv;
+
+  if (index >= priv->num_render_target_views) {
+    GST_ERROR ("Invalid RTV index %d", index);
+    return NULL;
+  }
+
+  return priv->render_target_view[index];
+}
+
+static gboolean
 gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device, GUID * decoder_profile)
 {
+  GstD3D11MemoryPrivate *dmem_priv = mem->priv;
   GstD3D11Allocator *allocator;
   GstD3D11AllocatorPrivate *priv;
   D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC desc;
@@ -1075,37 +1208,34 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   HRESULT hr;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (video_device != NULL, FALSE);
-  g_return_val_if_fail (decoder_profile != NULL, FALSE);
-
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
   priv = allocator->priv;
 
-  if (!(mem->desc.BindFlags & D3D11_BIND_DECODER)) {
+  if (!(dmem_priv->desc.BindFlags & D3D11_BIND_DECODER)) {
     GST_LOG_OBJECT (allocator,
-        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+        "Need BindFlags, current flag 0x%x", dmem_priv->desc.BindFlags);
     return FALSE;
   }
 
   GST_D3D11_MEMORY_LOCK (mem);
-  if (mem->decoder_output_view) {
-    ID3D11VideoDecoderOutputView_GetDesc (mem->decoder_output_view, &desc);
+  if (dmem_priv->decoder_output_view) {
+    ID3D11VideoDecoderOutputView_GetDesc (dmem_priv->decoder_output_view,
+        &desc);
     if (IsEqualGUID (&desc.DecodeProfile, decoder_profile)) {
       goto succeeded;
     } else {
       /* Shouldn't happen, but try again anyway */
       GST_WARNING_OBJECT (allocator,
           "Existing view has different decoder profile");
-      ID3D11VideoDecoderOutputView_Release (mem->decoder_output_view);
-      mem->decoder_output_view = NULL;
+      ID3D11VideoDecoderOutputView_Release (dmem_priv->decoder_output_view);
+      dmem_priv->decoder_output_view = NULL;
     }
   }
 
   if (priv->decoder_output_view_array) {
     GST_D3D11_ALLOCATOR_LOCK (allocator);
     view = g_array_index (priv->decoder_output_view_array,
-        ID3D11VideoDecoderOutputView *, mem->subresource_index);
+        ID3D11VideoDecoderOutputView *, dmem_priv->subresource_index);
 
     if (view) {
       ID3D11VideoDecoderOutputView_GetDesc (view, &desc);
@@ -1117,25 +1247,27 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
         ID3D11VideoDecoderOutputView_Release (view);
         view = NULL;
         g_array_index (priv->decoder_output_view_array,
-            ID3D11VideoDecoderOutputView *, mem->subresource_index) = NULL;
+            ID3D11VideoDecoderOutputView *,
+            dmem_priv->subresource_index) = NULL;
       } else {
         /* Increase refcount and reuse existing view */
-        mem->decoder_output_view = view;
+        dmem_priv->decoder_output_view = view;
         ID3D11VideoDecoderOutputView_AddRef (view);
       }
     }
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
-  if (mem->decoder_output_view)
+  if (dmem_priv->decoder_output_view)
     goto succeeded;
 
   desc.DecodeProfile = *decoder_profile;
   desc.ViewDimension = D3D11_VDOV_DIMENSION_TEXTURE2D;
-  desc.Texture2D.ArraySlice = mem->subresource_index;
+  desc.Texture2D.ArraySlice = dmem_priv->subresource_index;
 
   hr = ID3D11VideoDevice_CreateVideoDecoderOutputView (video_device,
-      (ID3D11Resource *) mem->texture, &desc, &mem->decoder_output_view);
+      (ID3D11Resource *) dmem_priv->texture, &desc,
+      &dmem_priv->decoder_output_view);
   if (!gst_d3d11_result (hr, mem->device)) {
     GST_ERROR_OBJECT (allocator,
         "Could not create decoder output view, hr: 0x%x", (guint) hr);
@@ -1146,15 +1278,15 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   if (priv->decoder_output_view_array) {
     GST_D3D11_ALLOCATOR_LOCK (allocator);
     view = g_array_index (priv->decoder_output_view_array,
-        ID3D11VideoDecoderOutputView *, mem->subresource_index);
+        ID3D11VideoDecoderOutputView *, dmem_priv->subresource_index);
 
     if (view)
       ID3D11VideoDecoderOutputView_Release (view);
 
     g_array_index (priv->decoder_output_view_array,
-        ID3D11VideoDecoderOutputView *, mem->subresource_index) =
-        mem->decoder_output_view;
-    ID3D11VideoDecoderOutputView_AddRef (mem->decoder_output_view);
+        ID3D11VideoDecoderOutputView *, dmem_priv->subresource_index) =
+        dmem_priv->decoder_output_view;
+    ID3D11VideoDecoderOutputView_AddRef (dmem_priv->decoder_output_view);
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
@@ -1167,11 +1299,27 @@ done:
   return ret;
 }
 
-gboolean
+ID3D11VideoDecoderOutputView *
+gst_d3d11_memory_get_decoder_output_view (GstD3D11Memory * mem,
+    ID3D11VideoDevice * video_device, GUID * decoder_profile)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+  g_return_val_if_fail (video_device != NULL, NULL);
+  g_return_val_if_fail (decoder_profile != NULL, NULL);
+
+  if (!gst_d3d11_memory_ensure_decoder_output_view (mem,
+          video_device, decoder_profile))
+    return NULL;
+
+  return mem->priv->decoder_output_view;
+}
+
+static gboolean
 gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device,
     ID3D11VideoProcessorEnumerator * enumerator)
 {
+  GstD3D11MemoryPrivate *dmem_priv = mem->priv;
   GstD3D11Allocator *allocator;
   GstD3D11AllocatorPrivate *priv;
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC desc;
@@ -1179,47 +1327,43 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   HRESULT hr;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (video_device != NULL, FALSE);
-  g_return_val_if_fail (enumerator != NULL, FALSE);
-
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
   priv = allocator->priv;
 
-  if (!check_bind_flags_for_processor_input_view (mem->desc.BindFlags)) {
+  if (!check_bind_flags_for_processor_input_view (dmem_priv->desc.BindFlags)) {
     GST_LOG_OBJECT (allocator,
-        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+        "Need BindFlags, current flag 0x%x", dmem_priv->desc.BindFlags);
     return FALSE;
   }
 
   GST_D3D11_MEMORY_LOCK (mem);
-  if (mem->processor_input_view)
+  if (dmem_priv->processor_input_view)
     goto succeeded;
 
   if (priv->processor_input_view_array) {
     GST_D3D11_ALLOCATOR_LOCK (allocator);
     view = g_array_index (priv->processor_input_view_array,
-        ID3D11VideoProcessorInputView *, mem->subresource_index);
+        ID3D11VideoProcessorInputView *, dmem_priv->subresource_index);
 
     /* Increase refcount and reuse existing view */
     if (view) {
-      mem->processor_input_view = view;
+      dmem_priv->processor_input_view = view;
       ID3D11VideoProcessorInputView_AddRef (view);
     }
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
-  if (mem->processor_input_view)
+  if (dmem_priv->processor_input_view)
     goto succeeded;
 
   desc.FourCC = 0;
   desc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
   desc.Texture2D.MipSlice = 0;
-  desc.Texture2D.ArraySlice = mem->subresource_index;
+  desc.Texture2D.ArraySlice = dmem_priv->subresource_index;
 
   hr = ID3D11VideoDevice_CreateVideoProcessorInputView (video_device,
-      (ID3D11Resource *) mem->texture, enumerator, &desc,
-      &mem->processor_input_view);
+      (ID3D11Resource *) dmem_priv->texture, enumerator, &desc,
+      &dmem_priv->processor_input_view);
   if (!gst_d3d11_result (hr, mem->device)) {
     GST_ERROR_OBJECT (allocator,
         "Could not create processor input view, hr: 0x%x", (guint) hr);
@@ -1230,15 +1374,15 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   if (priv->processor_input_view_array) {
     GST_D3D11_ALLOCATOR_LOCK (allocator);
     view = g_array_index (priv->processor_input_view_array,
-        ID3D11VideoProcessorInputView *, mem->subresource_index);
+        ID3D11VideoProcessorInputView *, dmem_priv->subresource_index);
 
     if (view)
       ID3D11VideoProcessorInputView_Release (view);
 
     g_array_index (priv->processor_input_view_array,
-        ID3D11VideoProcessorInputView *, mem->subresource_index) =
-        mem->processor_input_view;
-    ID3D11VideoProcessorInputView_AddRef (mem->processor_input_view);
+        ID3D11VideoProcessorInputView *, dmem_priv->subresource_index) =
+        dmem_priv->processor_input_view;
+    ID3D11VideoProcessorInputView_AddRef (dmem_priv->processor_input_view);
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
@@ -1251,45 +1395,58 @@ done:
   return ret;
 }
 
-gboolean
+ID3D11VideoProcessorInputView *
+gst_d3d11_memory_get_processor_input_view (GstD3D11Memory * mem,
+    ID3D11VideoDevice * video_device,
+    ID3D11VideoProcessorEnumerator * enumerator)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+  g_return_val_if_fail (video_device != NULL, NULL);
+  g_return_val_if_fail (enumerator != NULL, NULL);
+
+  if (!gst_d3d11_memory_ensure_processor_input_view (mem, video_device,
+          enumerator))
+    return NULL;
+
+  return mem->priv->processor_input_view;
+}
+
+static gboolean
 gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device,
     ID3D11VideoProcessorEnumerator * enumerator)
 {
+  GstD3D11MemoryPrivate *priv = mem->priv;
   GstD3D11Allocator *allocator;
   D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC desc = { 0, };
   HRESULT hr;
   gboolean ret;
 
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (video_device != NULL, FALSE);
-  g_return_val_if_fail (enumerator != NULL, FALSE);
-
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
 
-  if (!(mem->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
+  if (!(priv->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
     GST_LOG_OBJECT (allocator,
-        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
+        "Need BindFlags, current flag 0x%x", priv->desc.BindFlags);
     return FALSE;
   }
 
   /* FIXME: texture array should be supported at some point */
-  if (mem->subresource_index != 0) {
+  if (priv->subresource_index != 0) {
     GST_FIXME_OBJECT (allocator,
         "Texture array is not suppoted for processor output view");
     return FALSE;
   }
 
   GST_D3D11_MEMORY_LOCK (mem);
-  if (mem->processor_output_view)
+  if (priv->processor_output_view)
     goto succeeded;
 
   desc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
   desc.Texture2D.MipSlice = 0;
 
   hr = ID3D11VideoDevice_CreateVideoProcessorOutputView (video_device,
-      (ID3D11Resource *) mem->texture, enumerator, &desc,
-      &mem->processor_output_view);
+      (ID3D11Resource *) priv->texture, enumerator, &desc,
+      &priv->processor_output_view);
   if (!gst_d3d11_result (hr, mem->device)) {
     GST_ERROR_OBJECT (allocator,
         "Could not create processor input view, hr: 0x%x", (guint) hr);
@@ -1303,4 +1460,20 @@ done:
   GST_D3D11_MEMORY_UNLOCK (mem);
 
   return ret;
+}
+
+ID3D11VideoProcessorOutputView *
+gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
+    ID3D11VideoDevice * video_device,
+    ID3D11VideoProcessorEnumerator * enumerator)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+  g_return_val_if_fail (video_device != NULL, NULL);
+  g_return_val_if_fail (enumerator != NULL, NULL);
+
+  if (!gst_d3d11_memory_ensure_processor_output_view (mem, video_device,
+          enumerator))
+    return NULL;
+
+  return mem->priv->processor_output_view;
 }
