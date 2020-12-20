@@ -125,6 +125,7 @@ static gboolean gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink);
 
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf);
+static gboolean gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self);
 
 #define gst_d3d11_video_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11VideoSink, gst_d3d11_video_sink,
@@ -371,6 +372,9 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
+  if (!gst_d3d11_video_sink_prepare_window (self))
+    goto no_window;
+
   if (!gst_video_info_from_caps (&self->info, caps))
     goto invalid_format;
 
@@ -511,6 +515,12 @@ invalid_format:
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
+no_window:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
+        ("Failed to open window."));
+    return FALSE;
+  }
 no_disp_ratio:
   {
     GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
@@ -552,7 +562,6 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   gboolean is_hardware = TRUE;
-  GstD3D11WindowNativeType window_type = GST_D3D11_WINDOW_NATIVE_TYPE_HWND;
 
   GST_DEBUG_OBJECT (self, "Start");
 
@@ -562,6 +571,25 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
     return FALSE;
   }
 
+  g_object_get (self->device, "hardware", &is_hardware, NULL);
+  if (!is_hardware) {
+    GST_WARNING_OBJECT (self, "D3D11 device is running on software emulation");
+    self->can_convert = FALSE;
+  } else {
+    self->can_convert = TRUE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
+{
+  GstD3D11WindowNativeType window_type = GST_D3D11_WINDOW_NATIVE_TYPE_HWND;
+
+  if (self->window)
+    return TRUE;
+
   if (!self->window_id)
     gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (self));
 
@@ -570,6 +598,8 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
         gst_d3d11_window_get_native_type_from_handle (self->window_id);
 
     if (window_type != GST_D3D11_WINDOW_NATIVE_TYPE_NONE) {
+      GST_DEBUG_OBJECT (self, "Have window handle %" G_GUINTPTR_FORMAT,
+          self->window_id);
       gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (self),
           self->window_id);
     }
@@ -606,7 +636,7 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
   }
 
   if (!self->window) {
-    GST_ERROR_OBJECT (sink, "Cannot create d3d11window");
+    GST_ERROR_OBJECT (self, "Cannot create d3d11window");
     return FALSE;
   }
 
@@ -625,15 +655,6 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
       G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
-
-  g_object_get (self->device, "hardware", &is_hardware, NULL);
-
-  if (!is_hardware) {
-    GST_WARNING_OBJECT (self, "D3D11 device is running on software emulation");
-    self->can_convert = FALSE;
-  } else {
-    self->can_convert = TRUE;
-  }
 
   return TRUE;
 }
