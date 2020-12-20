@@ -26,7 +26,8 @@
 G_BEGIN_DECLS
 
 void gst_mf_h264_enc_plugin_init (GstPlugin * plugin,
-                                  guint rank);
+                                  guint rank,
+                                  GList * d3d11_device);
 
 G_END_DECLS
 

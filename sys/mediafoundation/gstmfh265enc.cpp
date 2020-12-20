@@ -115,6 +115,8 @@ enum
   PROP_QP_P,
   PROP_QP_B,
   PROP_REF,
+  PROP_D3D11_AWARE,
+  PROP_ADAPTER,
 };
 
 #define DEFAULT_BITRATE (2 * 1024)
@@ -353,6 +355,21 @@ gst_mf_h265_enc_class_init (GstMFH265EncClass * klass, gpointer data)
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
+  g_object_class_install_property (gobject_class, PROP_D3D11_AWARE,
+      g_param_spec_boolean ("d3d11-aware", "D3D11 Aware",
+          "Whether device can support Direct3D11 interop",
+          device_caps->d3d11_aware,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  if (device_caps->d3d11_aware) {
+    g_object_class_install_property (gobject_class, PROP_ADAPTER,
+        g_param_spec_uint ("adapter", "Adapter",
+            "DXGI Adapter index for creating device",
+            0, G_MAXUINT32, device_caps->adapter,
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+  }
+
   long_name = g_strdup_printf ("Media Foundation %s", cdata->device_name);
   classification = g_strdup_printf ("Codec/Encoder/Video%s",
       (cdata->enum_flags & MFT_ENUM_FLAG_HARDWARE) == MFT_ENUM_FLAG_HARDWARE ?
@@ -411,6 +428,7 @@ gst_mf_h265_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstMFH265Enc *self = (GstMFH265Enc *) (object);
+  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_BITRATE:
@@ -463,6 +481,12 @@ gst_mf_h265_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_REF:
       g_value_set_uint (value, self->max_num_ref);
+      break;
+    case PROP_D3D11_AWARE:
+      g_value_set_boolean (value, klass->device_caps.d3d11_aware);
+      break;
+    case PROP_ADAPTER:
+      g_value_set_uint (value, klass->device_caps.adapter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -753,7 +777,8 @@ gst_mf_h265_enc_set_src_caps (GstMFVideoEnc * mfenc,
 }
 
 void
-gst_mf_h265_enc_plugin_init (GstPlugin * plugin, guint rank)
+gst_mf_h265_enc_plugin_init (GstPlugin * plugin, guint rank,
+    GList * d3d11_device)
 {
   GTypeInfo type_info = {
     sizeof (GstMFH265EncClass),
@@ -770,5 +795,5 @@ gst_mf_h265_enc_plugin_init (GstPlugin * plugin, guint rank)
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_h265_enc_debug, "mfh265enc", 0, "mfh265enc");
 
-  gst_mf_video_enc_register (plugin, rank, &subtype, &type_info);
+  gst_mf_video_enc_register (plugin, rank, &subtype, &type_info, d3d11_device);
 }

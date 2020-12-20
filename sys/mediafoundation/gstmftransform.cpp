@@ -22,7 +22,10 @@
 #include "config.h"
 #endif
 
+#include "gstmfconfig.h"
+
 #include <gst/gst.h>
+#include <gmodule.h>
 #include "gstmftransform.h"
 #include "gstmfutils.h"
 #include <string.h>
@@ -36,6 +39,43 @@ GST_DEBUG_CATEGORY_EXTERN (gst_mf_transform_debug);
 #define GST_CAT_DEFAULT gst_mf_transform_debug
 
 G_END_DECLS
+
+static GModule *mf_plat_module = NULL;
+typedef HRESULT (__stdcall *pMFTEnum2) (GUID guidCategory,
+                                        UINT32 Flags,
+                                        const MFT_REGISTER_TYPE_INFO * pInputType,
+                                        const MFT_REGISTER_TYPE_INFO * pOutputType,
+                                        IMFAttributes * pAttributes,
+                                        IMFActivate *** pppMFTActivate,
+                                        UINT32 * pnumMFTActivate);
+static pMFTEnum2 GstMFTEnum2Func = NULL;
+
+gboolean
+gst_mf_transform_load_library (void)
+{
+#if GST_MF_HAVE_D3D11
+  static volatile gsize _init = 0;
+  if (g_once_init_enter (&_init)) {
+    mf_plat_module = g_module_open ("mfplat.dll", G_MODULE_BIND_LAZY);
+
+    if (mf_plat_module) {
+      if (!g_module_symbol (mf_plat_module, "MFTEnum2",
+              (gpointer *) & GstMFTEnum2Func)) {
+        GST_WARNING ("Cannot load MFTEnum2 symbol");
+        g_module_close (mf_plat_module);
+        mf_plat_module = NULL;
+        GstMFTEnum2Func = NULL;
+      } else {
+        GST_INFO ("MFTEnum2 symbol is available");
+      }
+    }
+
+    g_once_init_leave (&_init, 1);
+  }
+#endif
+
+  return ! !GstMFTEnum2Func;
+}
 
 typedef HRESULT (*GstMFTransformAsyncCallbackOnEvent) (MediaEventType event,
     GstObject * client);
@@ -221,6 +261,7 @@ enum
   PROP_DEVICE_NAME,
   PROP_HARDWARE,
   PROP_ENUM_PARAMS,
+  PROP_D3D11_AWARE,
 };
 
 struct _GstMFTransform
@@ -232,6 +273,7 @@ struct _GstMFTransform
 
   gchar *device_name;
   gboolean hardware;
+  gboolean d3d11_aware;
 
   IMFActivate *activate;
   IMFTransform *transform;
@@ -299,6 +341,10 @@ gst_mf_transform_class_init (GstMFTransformClass * klass)
           "GstMFTransformEnumParams for MFTEnumEx",
           (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
           G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_D3D11_AWARE,
+      g_param_spec_boolean ("d3d11-aware", "D3D11 Aware",
+          "Whether Direct3D11 supports Direct3D11", FALSE,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -382,6 +428,9 @@ gst_mf_transform_get_property (GObject * object, guint prop_id,
     case PROP_HARDWARE:
       g_value_set_boolean (value, self->hardware);
       break;
+    case PROP_D3D11_AWARE:
+      g_value_set_boolean (value, self->d3d11_aware);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -404,6 +453,7 @@ gst_mf_transform_set_property (GObject * object, guint prop_id,
       self->enum_params.category = params->category;
       self->enum_params.enum_flags = params->enum_flags;
       self->enum_params.device_index = params->device_index;
+      self->enum_params.adapter_luid = params->adapter_luid;
       if (params->input_typeinfo) {
         self->enum_params.input_typeinfo = g_new0 (MFT_REGISTER_TYPE_INFO, 1);
         memcpy (self->enum_params.input_typeinfo, params->input_typeinfo,
@@ -438,7 +488,7 @@ gst_mf_transform_main_loop_running_cb (GstMFTransform * self)
 static gpointer
 gst_mf_transform_thread_func (GstMFTransform * self)
 {
-  HRESULT hr;
+  HRESULT hr = S_OK;
   IMFActivate **devices = NULL;
   UINT32 num_devices, i;
   LPWSTR name = NULL;
@@ -454,9 +504,43 @@ gst_mf_transform_thread_func (GstMFTransform * self)
   g_source_attach (source, self->context);
   g_source_unref (source);
 
-  hr = MFTEnumEx (self->enum_params.category, self->enum_params.enum_flags,
-      self->enum_params.input_typeinfo, self->enum_params.output_typeinfo,
-      &devices, &num_devices);
+  /* NOTE: MFTEnum2 is desktop only and requires Windows 10 */
+#if GST_MF_HAVE_D3D11
+  if (GstMFTEnum2Func && self->enum_params.adapter_luid &&
+      (self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE) != 0) {
+    ComPtr<IMFAttributes> attr;
+    LUID luid;
+
+    hr = MFCreateAttributes (&attr, 1);
+    if (!gst_mf_result (hr)) {
+      GST_ERROR_OBJECT (self, "Couldn't create IMFAttributes");
+      goto run_loop;
+    }
+
+    GST_INFO_OBJECT (self,
+        "Enumerating MFT for adapter-luid %" G_GINT64_FORMAT,
+        self->enum_params.adapter_luid);
+
+    luid.LowPart = (DWORD) (self->enum_params.adapter_luid & 0xffffffff);
+    luid.HighPart = (LONG) (self->enum_params.adapter_luid >> 32);
+
+    hr = attr->SetBlob (GST_GUID_MFT_ENUM_ADAPTER_LUID, (BYTE *) &luid,
+        sizeof (LUID));
+    if (!gst_mf_result (hr)) {
+      GST_ERROR_OBJECT (self, "Couldn't set MFT_ENUM_ADAPTER_LUID");
+      goto run_loop;
+    }
+
+    hr = GstMFTEnum2Func (self->enum_params.category,
+        self->enum_params.enum_flags, self->enum_params.input_typeinfo,
+        self->enum_params.output_typeinfo, attr.Get (), &devices, &num_devices);
+  } else
+#endif
+  {
+    hr = MFTEnumEx (self->enum_params.category, self->enum_params.enum_flags,
+        self->enum_params.input_typeinfo, self->enum_params.output_typeinfo,
+        &devices, &num_devices);
+  }
 
   if (!gst_mf_result (hr)) {
     GST_WARNING_OBJECT (self, "MFTEnumEx failure");
@@ -833,6 +917,7 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
 
   if (object->hardware) {
     ComPtr<IMFAttributes> attr;
+    UINT32 supports_d3d11 = 0;
 
     hr = object->transform->GetAttributes (attr.GetAddressOf ());
     if (!gst_mf_result (hr)) {
@@ -844,6 +929,12 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "MF_TRANSFORM_ASYNC_UNLOCK error");
       goto done;
+    }
+
+    hr = attr->GetUINT32 (GST_GUID_MF_SA_D3D11_AWARE, &supports_d3d11);
+    if (gst_mf_result (hr) && supports_d3d11 != 0) {
+      GST_DEBUG_OBJECT (object, "MFT supports direct3d11");
+      object->d3d11_aware = TRUE;
     }
 
     /* Create our IMFAsyncCallback object so that listen METransformNeedInput
@@ -907,6 +998,29 @@ gst_mf_transform_open (GstMFTransform * object)
   g_mutex_unlock (&object->lock);
 
   return data.ret;
+}
+
+gboolean
+gst_mf_transform_set_device_manager (GstMFTransform * object,
+    IMFDXGIDeviceManager * manager)
+{
+  HRESULT hr;
+
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
+
+  if (!object->transform) {
+    GST_ERROR_OBJECT (object, "IMFTransform is not configured yet");
+    return FALSE;
+  }
+
+  hr = object->transform->ProcessMessage (MFT_MESSAGE_SET_D3D_MANAGER,
+      (ULONG_PTR) manager);
+  if (!gst_mf_result (hr)) {
+    GST_ERROR_OBJECT (object, "Couldn't set device manager");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 void

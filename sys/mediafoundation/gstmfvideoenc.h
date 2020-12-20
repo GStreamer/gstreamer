@@ -21,10 +21,16 @@
 #ifndef __GST_MF_VIDEO_ENC_H__
 #define __GST_MF_VIDEO_ENC_H__
 
+#include "gstmfconfig.h"
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gstmfutils.h"
 #include "gstmftransform.h"
+
+#if GST_MF_HAVE_D3D11
+#include <gst/d3d11/gstd3d11.h>
+#endif
 
 G_BEGIN_DECLS
 
@@ -66,6 +72,11 @@ struct _GstMFVideoEncDeviceCaps
   gboolean max_num_ref;   /* AVEncVideoMaxNumRefFrame */
   guint max_num_ref_high;
   guint max_num_ref_low;
+
+  /* TRUE if MFT support d3d11 and also we can use d3d11 interop */
+  gboolean d3d11_aware;
+  /* DXGI adapter index to use, ignored if d3d11-unaware  */
+  guint adapter;
 };
 
 struct _GstMFVideoEncClassData
@@ -88,6 +99,15 @@ struct _GstMFVideoEnc
   GstFlowReturn last_ret;
 
   GstVideoCodecState *input_state;
+
+#if GST_MF_HAVE_D3D11
+  /* For D3D11 interop. */
+  GstD3D11Device *other_d3d11_device;
+  GstD3D11Device *d3d11_device;
+  IMFDXGIDeviceManager *device_manager;
+  UINT reset_token;
+  IMFVideoSampleAllocatorEx *mf_allocator;
+#endif
 };
 
 struct _GstMFVideoEncClass
@@ -114,7 +134,8 @@ GType gst_mf_video_enc_get_type (void);
 void  gst_mf_video_enc_register (GstPlugin * plugin,
                                  guint rank,
                                  GUID * subtype,
-                                 GTypeInfo * type_info);
+                                 GTypeInfo * type_info,
+                                 GList * d3d11_device);
 
 G_END_DECLS
 

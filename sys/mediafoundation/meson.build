@@ -37,8 +37,11 @@ mf_header_deps = [
 winapi_desktop = false
 winapi_app = false
 have_capture_engine = false
+have_mf_d3d11 = false
 mf_lib_deps = []
 mf_config = configuration_data()
+extra_c_args = ['-DCOBJMACROS']
+extra_cpp_args = []
 
 mf_option = get_option('mediafoundation')
 if host_system != 'windows' or mf_option.disabled()
@@ -120,10 +123,22 @@ endif
 
 if winapi_desktop
   mf_sources += mf_desktop_sources
+  # We need d3d11_4.h header for querying "ExtendedNV12SharedTextureSupported"
+  # Since MFTEnum2 is desktop only we don't support d3d11 interop for UWP build
+  # And because MFTEnum2 is Windows 10 API, we will load MFTEnum2 symbol
+  # by using g_module_open() so that keep supporting old OS versions
+  if gstd3d11_dep.found() and cc.has_header('d3d11_4.h')
+    have_mf_d3d11 = true
+    mf_lib_deps += [gstd3d11_dep, gmodule_dep]
+    extra_c_args += ['-DGST_USE_UNSTABLE_API']
+    extra_cpp_args += ['-DGST_USE_UNSTABLE_API']
+    message ('Enable D3D11 interop for MediaFoundation plugin')
+  endif
 endif
 
 mf_config.set10('GST_MF_WINAPI_APP', winapi_app)
 mf_config.set10('GST_MF_WINAPI_DESKTOP', winapi_desktop)
+mf_config.set10('GST_MF_HAVE_D3D11', have_mf_d3d11)
 
 configure_file(
   output: 'gstmfconfig.h',
@@ -132,8 +147,8 @@ configure_file(
 
 gstmediafoundation = library('gstmediafoundation',
   mf_sources,
-  c_args : gst_plugins_bad_args + ['-DCOBJMACROS'],
-  cpp_args : gst_plugins_bad_args,
+  c_args : gst_plugins_bad_args + extra_c_args,
+  cpp_args : gst_plugins_bad_args + extra_cpp_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstpbutils_dep] + mf_lib_deps,
   install : true,
