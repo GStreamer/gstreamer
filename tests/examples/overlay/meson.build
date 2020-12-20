@@ -43,4 +43,11 @@ if host_system == 'windows'
     dependencies : [gst_dep, video_dep],
     install: false,
   )
+
+  executable('win32-videooverlay-playbin', 'win32-videooverlay-playbin.c',
+    c_args : gst_plugins_base_args,
+    include_directories : [configinc, libsinc],
+    dependencies : [gst_dep, video_dep],
+    install: false,
+  )
 endif
