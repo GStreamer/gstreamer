@@ -24,14 +24,8 @@
 #endif
 
 #include <gst/controller/gstproxycontrolbinding.h>
-#include "gstd3d11_fwd.h"
 #include "gstd3d11compositorbin.h"
 #include "gstd3d11compositor.h"
-#include "gstd3d11device.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11bufferpool.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11format.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_compositor_debug

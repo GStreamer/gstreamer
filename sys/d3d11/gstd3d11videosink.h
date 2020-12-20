@@ -25,8 +25,7 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
-
-#include "gstd3d11_fwd.h"
+#include <gst/d3d11/gstd3d11.h>
 #include "gstd3d11window.h"
 
 G_BEGIN_DECLS

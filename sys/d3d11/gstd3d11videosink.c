@@ -22,12 +22,8 @@
 #endif
 
 #include "gstd3d11videosink.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11device.h"
-#include "gstd3d11bufferpool.h"
-#include "gstd3d11format.h"
 #include "gstd3d11videoprocessor.h"
+#include "gstd3d11pluginutils.h"
 
 #if GST_D3D11_WINAPI_ONLY_APP
 #include "gstd3d11window_corewindow.h"
@@ -327,6 +323,70 @@ gst_d3d11_video_sink_set_context (GstElement * element, GstContext * context)
 }
 
 static GstCaps *
+gst_d3d11_video_sink_get_supported_caps (GstD3D11VideoSink * self,
+    D3D11_FORMAT_SUPPORT flags)
+{
+  GstD3D11Device *device;
+  ID3D11Device *d3d11_device;
+  HRESULT hr;
+  gint i;
+  GValue v_list = G_VALUE_INIT;
+  GstCaps *supported_caps;
+  static const GstVideoFormat format_list[] = {
+    GST_VIDEO_FORMAT_BGRA,
+    GST_VIDEO_FORMAT_RGBA,
+    GST_VIDEO_FORMAT_RGB10A2_LE,
+    GST_VIDEO_FORMAT_VUYA,
+    GST_VIDEO_FORMAT_NV12,
+    GST_VIDEO_FORMAT_P010_10LE,
+    GST_VIDEO_FORMAT_P016_LE,
+    GST_VIDEO_FORMAT_I420,
+    GST_VIDEO_FORMAT_I420_10LE,
+  };
+
+  device = self->device;
+
+  d3d11_device = gst_d3d11_device_get_device_handle (device);
+  g_value_init (&v_list, GST_TYPE_LIST);
+
+  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
+    UINT format_support = 0;
+    GstVideoFormat format;
+    const GstD3D11Format *d3d11_format;
+
+    d3d11_format = gst_d3d11_device_format_from_gst (device, format_list[i]);
+    if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN)
+      continue;
+
+    format = d3d11_format->format;
+    hr = ID3D11Device_CheckFormatSupport (d3d11_device,
+        d3d11_format->dxgi_format, &format_support);
+
+    if (SUCCEEDED (hr) && ((format_support & flags) == flags)) {
+      GValue v_str = G_VALUE_INIT;
+      g_value_init (&v_str, G_TYPE_STRING);
+
+      GST_LOG_OBJECT (self, "d3d11 device can support %s with flags 0x%x",
+          gst_video_format_to_string (format), flags);
+      g_value_set_string (&v_str, gst_video_format_to_string (format));
+      gst_value_list_append_and_take_value (&v_list, &v_str);
+    }
+  }
+
+  supported_caps = gst_caps_new_simple ("video/x-raw",
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  gst_caps_set_value (supported_caps, "format", &v_list);
+  g_value_unset (&v_list);
+
+  gst_caps_set_features_simple (supported_caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+
+  return supported_caps;
+}
+
+static GstCaps *
 gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
@@ -336,7 +396,7 @@ gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
     GstCaps *overlaycaps;
     GstCapsFeatures *features;
 
-    caps = gst_d3d11_device_get_supported_caps (self->device,
+    caps = gst_d3d11_video_sink_get_supported_caps (self,
         D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
     overlaycaps = gst_caps_copy (caps);
     features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,

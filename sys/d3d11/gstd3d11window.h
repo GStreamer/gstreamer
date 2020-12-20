@@ -24,10 +24,11 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d11_fwd.h"
+#include <gst/d3d11/gstd3d11.h>
 #include "gstd3d11colorconverter.h"
 #include "gstd3d11overlaycompositor.h"
 #include "gstd3d11videoprocessor.h"
+#include "gstd3d11pluginutils.h"
 
 G_BEGIN_DECLS
 

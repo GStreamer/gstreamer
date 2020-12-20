@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstpushsrc.h>
-#include "gstd3d11_fwd.h"
+#include <gst/d3d11/gstd3d11.h>
 
 G_BEGIN_DECLS
 

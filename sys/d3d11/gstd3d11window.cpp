@@ -23,9 +23,7 @@
 #endif
 
 #include "gstd3d11window.h"
-#include "gstd3d11device.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11utils.h"
+#include "gstd3d11pluginutils.h"
 
 #if GST_D3D11_WINAPI_ONLY_APP
 /* workaround for GetCurrentTime collision */

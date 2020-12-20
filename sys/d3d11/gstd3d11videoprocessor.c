@@ -21,10 +21,6 @@
 #  include <config.h>
 #endif
 
-#include "gstd3d11device.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11format.h"
-#include "gstd3d11memory.h"
 #include "gstd3d11videoprocessor.h"
 
 #include <string.h>

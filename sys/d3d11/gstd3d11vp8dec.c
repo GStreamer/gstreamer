@@ -22,8 +22,6 @@
 #endif
 
 #include "gstd3d11vp8dec.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11bufferpool.h"
 
 #include <gst/codecs/gstvp8decoder.h>
 #include <string.h>

@@ -52,8 +52,6 @@
 #endif
 
 #include "gstd3d11vp9dec.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11bufferpool.h"
 
 #include <gst/codecs/gstvp9decoder.h>
 #include <string.h>

@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,7 +25,26 @@
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11format.h"
-#include "gmodule.h"
+#include "gstd3d11_private.h"
+#include <gmodule.h>
+
+#include <windows.h>
+#include <versionhelpers.h>
+
+/**
+ * SECTION:gstd3d11device
+ * @short_description: Direct3D11 device abstraction
+ * @title: GstD3D11Device
+ *
+ * #GstD3D11Device wraps ID3D11Device and ID3D11DeviceContext for GPU resources
+ * to be able to be shared among various elements. Caller can get native
+ * Direct3D11 handles via getter method.
+ * Basically Direct3D11 API doesn't require dedicated thread like that of
+ * OpenGL context, and ID3D11Device APIs are supposed to be thread-safe.
+ * But concurrent call for ID3D11DeviceContext and DXGI API are not allowed.
+ * To protect such object, callers need to make use of gst_d3d11_device_lock()
+ * and gst_d3d11_device_unlock()
+ */
 
 #if HAVE_D3D11SDKLAYERS_H
 #include <d3d11sdklayers.h>
@@ -48,9 +68,9 @@ static DXGIGetDebugInterface_t GstDXGIGetDebugInterface = NULL;
 #endif
 
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_debug_layer_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_d3d11_debug_layer_debug);
 #endif
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_device_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_d3d11_device_debug);
 #define GST_CAT_DEFAULT gst_d3d11_device_debug
 
 enum
@@ -99,8 +119,20 @@ struct _GstD3D11DevicePrivate
 #endif
 };
 
+static void
+do_debug_init (void)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
+      "d3d11device", 0, "d3d11 device object");
+#if defined(HAVE_D3D11SDKLAYERS_H) || defined(HAVE_DXGIDEBUG_H)
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug_layer_debug,
+      "d3d11debuglayer", 0, "native d3d11 and dxgi debug");
+#endif
+}
+
 #define gst_d3d11_device_parent_class parent_class
-G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Device, gst_d3d11_device, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE (GstD3D11Device, gst_d3d11_device, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstD3D11Device); do_debug_init ());
 
 static void gst_d3d11_device_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -215,7 +247,7 @@ gst_d3d11_device_enable_dxgi_debug (void)
       g_module_symbol (dxgi_debug_module,
           "DXGIGetDebugInterface", (gpointer *) & GstDXGIGetDebugInterface);
     ret = ! !GstDXGIGetDebugInterface;
-#elif (DXGI_HEADER_VERSION >= 3)
+#elif (GST_D3D11_DXGI_HEADER_VERSION >= 3)
     ret = TRUE;
 #endif
     g_once_init_leave (&_init, 1);
@@ -231,7 +263,7 @@ gst_d3d11_device_dxgi_get_device_interface (REFIID riid, void **debug)
   if (GstDXGIGetDebugInterface) {
     return GstDXGIGetDebugInterface (riid, debug);
   }
-#elif (DXGI_HEADER_VERSION >= 3)
+#elif (GST_D3D11_DXGI_HEADER_VERSION >= 3)
   return DXGIGetDebugInterface1 (0, riid, debug);
 #endif
 
@@ -375,6 +407,26 @@ gst_d3d11_device_init (GstD3D11Device * self)
 }
 
 static gboolean
+is_windows_8_or_greater (void)
+{
+  static gsize version_once = 0;
+  static gboolean ret = FALSE;
+
+  if (g_once_init_enter (&version_once)) {
+#if (!GST_D3D11_WINAPI_ONLY_APP)
+    if (IsWindows8OrGreater ())
+      ret = TRUE;
+#else
+    ret = TRUE;
+#endif
+
+    g_once_init_leave (&version_once, 1);
+  }
+
+  return ret;
+}
+
+static gboolean
 can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
     D3D11_FORMAT_SUPPORT extra_flags)
 {
@@ -386,7 +438,7 @@ can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
 
   flags |= extra_flags;
 
-  if (!gst_d3d11_is_windows_8_or_greater ()) {
+  if (!is_windows_8_or_greater ()) {
     GST_WARNING_OBJECT (self, "DXGI format %d needs Windows 8 or greater",
         (guint) format);
     return FALSE;
@@ -567,7 +619,7 @@ gst_d3d11_device_constructed (GObject * object)
   D3D_FEATURE_LEVEL selected_level;
 
   GST_DEBUG_OBJECT (self,
-      "Built with DXGI header version %d", DXGI_HEADER_VERSION);
+      "Built with DXGI header version %d", GST_D3D11_DXGI_HEADER_VERSION);
 
 #if HAVE_DXGIDEBUG_H
   if (gst_debug_category_get_threshold (gst_d3d11_debug_layer_debug) >
@@ -601,7 +653,7 @@ gst_d3d11_device_constructed (GObject * object)
   }
 #endif
 
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   hr = CreateDXGIFactory1 (&IID_IDXGIFactory5, (void **) &factory);
   if (!gst_d3d11_result (hr, NULL)) {
     GST_INFO_OBJECT (self, "IDXGIFactory5 was unavailable");
@@ -714,7 +766,8 @@ gst_d3d11_device_constructed (GObject * object)
   if (gst_d3d11_result (hr, NULL)) {
     GST_DEBUG_OBJECT (self, "Selected feature level 0x%x", selected_level);
   } else {
-    GST_ERROR_OBJECT (self, "cannot create d3d11 device, hr: 0x%x", (guint) hr);
+    GST_WARNING_OBJECT (self,
+        "cannot create d3d11 device, hr: 0x%x", (guint) hr);
     goto error;
   }
 
@@ -901,8 +954,10 @@ gst_d3d11_device_finalize (GObject * object)
  * @adapter: the index of adapter for creating d3d11 device
  * @flags: a D3D11_CREATE_DEVICE_FLAG value used for creating d3d11 device
  *
- * Returns: (transfer full) (nullable): a new #GstD3D11Device for @adapter or %NULL
- * when failed to create D3D11 device with given adapter index.
+ * Returns: (transfer full) (nullable): a new #GstD3D11Device for @adapter
+ * or %NULL when failed to create D3D11 device with given adapter index.
+ *
+ * Since: 1.20
  */
 GstD3D11Device *
 gst_d3d11_device_new (guint adapter, guint flags)
@@ -929,10 +984,12 @@ gst_d3d11_device_new (guint adapter, guint flags)
  * gst_d3d11_device_get_device_handle:
  * @device: a #GstD3D11Device
  *
- * Used for various D3D11 APIs directly.
- * Caller must not destroy returned device object.
+ * Used for various D3D11 APIs directly. Caller must not destroy returned device
+ * object.
  *
- * Returns: (transfer none): the ID3D11Device
+ * Returns: (transfer none): the ID3D11Device handle
+ *
+ * Since: 1.20
  */
 ID3D11Device *
 gst_d3d11_device_get_device_handle (GstD3D11Device * device)
@@ -946,10 +1003,13 @@ gst_d3d11_device_get_device_handle (GstD3D11Device * device)
  * gst_d3d11_device_get_device_context_handle:
  * @device: a #GstD3D11Device
  *
- * Used for various D3D11 APIs directly.
- * Caller must not destroy returned device object.
+ * Used for various D3D11 APIs directly. Caller must not destroy returned device
+ * object. Any ID3D11DeviceContext call needs to be protected by
+ * gst_d3d11_device_lock() and gst_d3d11_device_unlock() method.
  *
- * Returns: (transfer none): the ID3D11DeviceContext
+ * Returns: (transfer none): the immeidate ID3D11DeviceContext handle
+ *
+ * Since: 1.20
  */
 ID3D11DeviceContext *
 gst_d3d11_device_get_device_context_handle (GstD3D11Device * device)
@@ -959,6 +1019,17 @@ gst_d3d11_device_get_device_context_handle (GstD3D11Device * device)
   return device->priv->device_context;
 }
 
+/**
+ * gst_d3d11_device_get_dxgi_factory_handle:
+ * @device: a #GstD3D11Device
+ *
+ * Used for various D3D11 APIs directly. Caller must not destroy returned device
+ * object.
+ *
+ * Returns: (transfer none): the IDXGIFactory1 handle
+ *
+ * Since: 1.20
+ */
 IDXGIFactory1 *
 gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device)
 {
@@ -967,6 +1038,16 @@ gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device)
   return device->priv->factory;
 }
 
+/**
+ * gst_d3d11_device_lock:
+ * @device: a #GstD3D11Device
+ *
+ * Take lock for @device. Any thread-unsafe API call needs to be
+ * protected by this method. This call must be paired with
+ * gst_d3d11_device_unlock()
+ *
+ * Since: 1.20
+ */
 void
 gst_d3d11_device_lock (GstD3D11Device * device)
 {
@@ -981,6 +1062,15 @@ gst_d3d11_device_lock (GstD3D11Device * device)
   GST_TRACE_OBJECT (device, "device locked");
 }
 
+/**
+ * gst_d3d11_device_unlock:
+ * @device: a #GstD3D11Device
+ *
+ * Release lock for @device. This call must be paired with
+ * gst_d3d11_device_lock()
+ *
+ * Since: 1.20
+ */
 void
 gst_d3d11_device_unlock (GstD3D11Device * device)
 {
@@ -994,6 +1084,16 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
   GST_TRACE_OBJECT (device, "device unlocked");
 }
 
+/**
+ * gst_d3d11_device_format_from_gst:
+ * @device: a #GstD3D11Device
+ * @format: a #GstVideoFormat
+ *
+ * Returns: (transfer none) (nullable): a pointer to #GstD3D11Format
+ * or %NULL if @format is not supported by @device
+ *
+ * Since: 1.20
+ */
 const GstD3D11Format *
 gst_d3d11_device_format_from_gst (GstD3D11Device * device,
     GstVideoFormat format)

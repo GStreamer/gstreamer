@@ -23,7 +23,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d11_fwd.h"
 #include "gstd3d11window.h"
 
 G_BEGIN_DECLS

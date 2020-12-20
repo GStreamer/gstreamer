@@ -22,10 +22,6 @@
 #endif
 
 #include "gstd3d11download.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11device.h"
-#include "gstd3d11bufferpool.h"
-#include "gstd3d11utils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_download_debug);
 #define GST_CAT_DEFAULT gst_d3d11_download_debug

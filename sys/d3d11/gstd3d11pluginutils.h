@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,16 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_UTILS_H__
-#define __GST_D3D11_UTILS_H__
+#ifndef __GST_D3D11_PLUGIN_UTILS_H__
+#define __GST_D3D11_PLUGIN_UTILS_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "gstd3d11_fwd.h"
-#include "gstd3d11memory.h"
+#include <gst/d3d11/gstd3d11.h>
 
 G_BEGIN_DECLS
+
+typedef struct _GstDxgiColorSpace GstDxgiColorSpace;
 
 typedef enum
 {
@@ -38,22 +39,32 @@ typedef enum
   GST_D3D11_DEVICE_VENDOR_XBOX,
 } GstD3D11DeviceVendor;
 
-gboolean        gst_d3d11_handle_set_context        (GstElement * element,
-                                                     GstContext * context,
-                                                     gint adapter,
-                                                     GstD3D11Device ** device);
-
-gboolean        gst_d3d11_handle_context_query      (GstElement * element,
-                                                     GstQuery * query,
-                                                     GstD3D11Device * device);
-
-gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
-                                                     gint adapter,
-                                                     GstD3D11Device ** device);
+struct _GstDxgiColorSpace
+{
+  guint dxgi_color_space_type;
+  GstVideoColorRange range;
+  GstVideoColorMatrix matrix;
+  GstVideoTransferFunction transfer;
+  GstVideoColorPrimaries primaries;
+};
 
 gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
 GstD3D11DeviceVendor gst_d3d11_get_device_vendor    (GstD3D11Device * device);
+
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
+gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInfo * minfo,
+                                                     GstVideoContentLightLevel * cll,
+                                                     DXGI_HDR_METADATA_HDR10 * dxgi_hdr10);
+#endif
+
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
+const GstDxgiColorSpace * gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info);
+
+const GstDxgiColorSpace * gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
+                                                                 IDXGISwapChain3 * swapchain,
+                                                                 gboolean use_hdr10);
+#endif
 
 GstBuffer *     gst_d3d11_allocate_staging_buffer   (GstD3D11Allocator * allocator,
                                                      const GstVideoInfo * info,
@@ -94,23 +105,6 @@ GstBufferPool * gst_d3d11_buffer_pool_new_with_options  (GstD3D11Device * device
                                                          guint min_buffers,
                                                          guint max_buffers);
 
-gboolean       _gst_d3d11_result                    (HRESULT hr,
-                                                     GstD3D11Device * device,
-                                                     GstDebugCategory * cat,
-                                                     const gchar * file,
-                                                     const gchar * function,
-                                                     gint line);
-/**
- * gst_d3d11_result:
- * @result: D3D11 API return code #HRESULT
- * @device: (nullable): Associated #GstD3D11Device
- *
- * Returns: %TRUE if D3D11 API call result is SUCCESS
- */
-#define gst_d3d11_result(result,device) \
-    _gst_d3d11_result (result, device, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
-
-
 G_END_DECLS
 
-#endif /* __GST_D3D11_UTILS_H__ */
+#endif /* __GST_D3D11_PLUGIN_UTILS_H__ */

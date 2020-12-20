@@ -24,9 +24,6 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11device.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11utils.h"
 #include "gstd3d11window_win32.h"
 
 extern "C" {

@@ -1,6 +1,5 @@
-/*
- * GStreamer
- * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+/* GStreamer
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,23 +17,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_WINDOW_SWAP_CHAIN_PANEL_H__
-#define __GST_D3D11_WINDOW_SWAP_CHAIN_PANEL_H__
+#ifndef __GST_D3D11_PRIVATE_H__
+#define __GST_D3D11_PRIVATE_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d11window.h"
+#include <gst/d3d11/gstd3d11_fwd.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_WINDOW_SWAP_CHAIN_PANEL (gst_d3d11_window_swap_chain_panel_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D11WindowSwapChainPanel,
-    gst_d3d11_window_swap_chain_panel,
-    GST, D3D11_WINDOW_SWAP_CHAIN_PANEL, GstD3D11Window);
+void  gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
+                                    const gchar * file,
+                                    const gchar * function,
+                                    gint line);
 
-GstD3D11Window * gst_d3d11_window_swap_chain_panel_new (GstD3D11Device * device,
-                                                        guintptr handle);
+void  gst_d3d11_device_dxgi_debug  (GstD3D11Device * device,
+                                    const gchar * file,
+                                    const gchar * function,
+                                    gint line);
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_WINDOW_SWAP_CHAIN_PANEL_H__ */
+#endif /* __GST_D3D11_PRIVATE_H__ */

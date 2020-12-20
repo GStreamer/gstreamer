@@ -26,15 +26,10 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11_fwd.h"
 #include "gstd3d11compositor.h"
-#include "gstd3d11device.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11bufferpool.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11format.h"
 #include "gstd3d11colorconverter.h"
 #include "gstd3d11shader.h"
+#include "gstd3d11pluginutils.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_compositor_debug);

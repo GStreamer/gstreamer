@@ -47,9 +47,6 @@
 #endif
 
 #include "gstd3d11desktopdup.h"
-#include "gstd3d11device.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11utils.h"
 #include "gstd3d11shader.h"
 #include <string.h>
 

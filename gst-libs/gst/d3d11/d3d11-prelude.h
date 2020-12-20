@@ -1,6 +1,5 @@
-/*
- * GStreamer
- * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+/* GStreamer
+ * Copyright (C) 2020 GStreamer developers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,23 +17,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_WINDOW_SWAP_CHAIN_PANEL_H__
-#define __GST_D3D11_WINDOW_SWAP_CHAIN_PANEL_H__
+#ifndef __GST_D3D11_PRELUDE_H__
+#define __GST_D3D11_PRELUDE_H__
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
-#include "gstd3d11window.h"
 
-G_BEGIN_DECLS
+#ifndef GST_D3D11_API
+# ifdef BUILDING_GST_D3D11
+#  define GST_D3D11_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_D3D11_API GST_API_IMPORT
+# endif
+#endif
 
-#define GST_TYPE_D3D11_WINDOW_SWAP_CHAIN_PANEL (gst_d3d11_window_swap_chain_panel_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D11WindowSwapChainPanel,
-    gst_d3d11_window_swap_chain_panel,
-    GST, D3D11_WINDOW_SWAP_CHAIN_PANEL, GstD3D11Window);
-
-GstD3D11Window * gst_d3d11_window_swap_chain_panel_new (GstD3D11Device * device,
-                                                        guintptr handle);
-
-G_END_DECLS
-
-#endif /* __GST_D3D11_WINDOW_SWAP_CHAIN_PANEL_H__ */
+#endif /* __GST_D3D11_PRELUDE_H__ */

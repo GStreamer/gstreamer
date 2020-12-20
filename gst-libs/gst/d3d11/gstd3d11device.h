@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,8 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "gstd3d11_fwd.h"
+#include <gst/d3d11/gstd3d11_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -55,31 +55,29 @@ struct _GstD3D11DeviceClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_D3D11_API
 GType                 gst_d3d11_device_get_type           (void);
 
+GST_D3D11_API
 GstD3D11Device *      gst_d3d11_device_new                (guint adapter,
                                                            guint flags);
 
+GST_D3D11_API
 ID3D11Device *        gst_d3d11_device_get_device_handle  (GstD3D11Device * device);
 
+GST_D3D11_API
 ID3D11DeviceContext * gst_d3d11_device_get_device_context_handle (GstD3D11Device * device);
 
+GST_D3D11_API
 IDXGIFactory1 *       gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device);
 
+GST_D3D11_API
 void                  gst_d3d11_device_lock               (GstD3D11Device * device);
 
+GST_D3D11_API
 void                  gst_d3d11_device_unlock             (GstD3D11Device * device);
 
-void                  gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
-                                                    const gchar * file,
-                                                    const gchar * function,
-                                                    gint line);
-
-void                  gst_d3d11_device_dxgi_debug  (GstD3D11Device * device,
-                                                    const gchar * file,
-                                                    const gchar * function,
-                                                    gint line);
-
+GST_D3D11_API
 const GstD3D11Format * gst_d3d11_device_format_from_gst (GstD3D11Device * device,
                                                          GstVideoFormat format);
 

@@ -49,12 +49,7 @@
 
 #include "gstd3d11colorconvert.h"
 #include "gstd3d11colorconverter.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11device.h"
-#include "gstd3d11bufferpool.h"
 #include "gstd3d11videoprocessor.h"
-#include "gstd3d11format.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_convert_debug);
 #define GST_CAT_DEFAULT gst_d3d11_convert_debug

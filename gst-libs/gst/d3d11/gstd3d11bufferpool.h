@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,8 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "gstd3d11_fwd.h"
+#include <gst/d3d11/gstd3d11_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -56,12 +56,16 @@ struct _GstD3D11BufferPoolClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_D3D11_API
 GType                gst_d3d11_buffer_pool_get_type  (void);
 
-GstBufferPool *      gst_d3d11_buffer_pool_new       (GstD3D11Device *device);
+GST_D3D11_API
+GstBufferPool *      gst_d3d11_buffer_pool_new       (GstD3D11Device * device);
 
+GST_D3D11_API
 GstD3D11AllocationParams * gst_buffer_pool_config_get_d3d11_allocation_params (GstStructure * config);
 
+GST_D3D11_API
 void                 gst_buffer_pool_config_set_d3d11_allocation_params (GstStructure * config,
                                                                          GstD3D11AllocationParams * params);
 

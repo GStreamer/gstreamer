@@ -52,8 +52,6 @@
 #endif
 
 #include "gstd3d11h264dec.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11bufferpool.h"
 
 #include <gst/codecs/gsth264decoder.h>
 #include <string.h>

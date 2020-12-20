@@ -23,10 +23,7 @@
 #endif
 
 #include "gstd3d11colorconverter.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11device.h"
 #include "gstd3d11shader.h"
-#include "gstd3d11format.h"
 
 #include <string.h>
 

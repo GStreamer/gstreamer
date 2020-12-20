@@ -22,8 +22,9 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/d3d11/gstd3d11_fwd.h>
 
-#include "gstd3d11_fwd.h"
+G_BEGIN_DECLS
 
 #define GST_D3D11_COMMON_FORMATS \
     "BGRA, RGBA, RGB10A2_LE, VUYA, NV12, P010_10LE, P016_LE, I420, I420_10LE"
@@ -42,10 +43,6 @@
 
 #define GST_D3D11_N_FORMATS 14
 
-G_BEGIN_DECLS
-
-typedef struct _GstDxgiColorSpace GstDxgiColorSpace;
-
 struct _GstD3D11Format
 {
   GstVideoFormat format;
@@ -54,20 +51,16 @@ struct _GstD3D11Format
   DXGI_FORMAT dxgi_format;
 
   /* formats for texture processing */
-  DXGI_FORMAT resource_format[GST_VIDEO_MAX_COMPONENTS];
+  DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES];
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstDxgiColorSpace
-{
-  guint dxgi_color_space_type;
-  GstVideoColorRange range;
-  GstVideoColorMatrix matrix;
-  GstVideoTransferFunction transfer;
-  GstVideoColorPrimaries primaries;
-};
-
+GST_D3D11_API
 guint           gst_d3d11_dxgi_format_n_planes      (DXGI_FORMAT format);
 
+GST_D3D11_API
 gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
                                                      guint width,
                                                      guint height,
@@ -75,23 +68,6 @@ gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
                                                      gsize offset[GST_VIDEO_MAX_PLANES],
                                                      gint stride[GST_VIDEO_MAX_PLANES],
                                                      gsize *size);
-
-GstCaps *       gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
-                                                     D3D11_FORMAT_SUPPORT flags);
-
-#if (DXGI_HEADER_VERSION >= 5)
-gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInfo * minfo,
-                                                     GstVideoContentLightLevel * cll,
-                                                     DXGI_HDR_METADATA_HDR10 * dxgi_hdr10);
-#endif
-
-#if (DXGI_HEADER_VERSION >= 4)
-const GstDxgiColorSpace * gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info);
-
-const GstDxgiColorSpace * gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
-                                                                 IDXGISwapChain3 * swapchain,
-                                                                 gboolean use_hdr10);
-#endif
 
 G_END_DECLS
 

@@ -52,10 +52,8 @@
 #endif
 
 #include "gstd3d11decoder.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11bufferpool.h"
-#include "gstd3d11device.h"
 #include "gstd3d11colorconverter.h"
+#include "gstd3d11pluginutils.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY (d3d11_decoder_debug);

@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,9 +24,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "gstd3d11_fwd.h"
-#include "gstd3d11format.h"
+#include <gst/d3d11/gstd3d11_fwd.h>
+#include <gst/d3d11/gstd3d11format.h>
 
 G_BEGIN_DECLS
 
@@ -38,14 +38,12 @@ G_BEGIN_DECLS
 #define GST_D3D11_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_ALLOCATOR, GstD3D11AllocatorClass))
 #define GST_D3D11_ALLOCATOR_CAST(obj)       ((GstD3D11Allocator *)obj)
 
-typedef struct _GstD3D11MemoryPrivate GstD3D11MemoryPrivate;
-
-#define GST_D3D11_MEMORY_NAME "D3D11Memory"
-
 /**
  * GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY:
  *
  * Name of the caps feature for indicating the use of #GstD3D11Memory
+ *
+ * Since: 1.20
  */
 #define GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "memory:D3D11Memory"
 
@@ -53,12 +51,19 @@ typedef struct _GstD3D11MemoryPrivate GstD3D11MemoryPrivate;
  * GST_MAP_D3D11:
  *
  * Flag indicating that we should map the D3D11 resource instead of to system memory.
+ *
+ * Since: 1.20
  */
 #define GST_MAP_D3D11 (GST_MAP_FLAG_LAST << 1)
 
 /**
  * GstD3D11AllocationFlags:
- * GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture should be array type
+ * GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture
+ *                                          should be array type. This type of
+ *                                          is used for D3D11/DXVA decoders
+ *                                          in general.
+ *
+ * Since: 1.20
  */
 typedef enum
 {
@@ -71,6 +76,8 @@ typedef enum
  *                                           to the staging texture memory
  * @GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD:   the staging texture needs uploading
  *                                           to the texture
+ *
+ * Since: 1.20
  */
 typedef enum
 {
@@ -124,65 +131,85 @@ struct _GstD3D11AllocatorClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_D3D11_API
 GType               gst_d3d11_allocation_params_get_type (void);
 
+GST_D3D11_API
 GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstD3D11Device * device,
                                                             GstVideoInfo * info,
                                                             GstD3D11AllocationFlags flags,
-                                                            gint bind_flags);
+                                                            guint bind_flags);
 
+GST_D3D11_API
 GstD3D11AllocationParams * gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src);
 
+GST_D3D11_API
 void                       gst_d3d11_allocation_params_free (GstD3D11AllocationParams * params);
 
+GST_D3D11_API
 gboolean                   gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * parms,
                                                                   GstVideoAlignment * align);
 
+GST_D3D11_API
 GType               gst_d3d11_allocator_get_type  (void);
 
+GST_D3D11_API
 GstD3D11Allocator * gst_d3d11_allocator_new       (GstD3D11Device *device);
 
+GST_D3D11_API
 GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator,
                                                    const D3D11_TEXTURE2D_DESC * desc,
                                                    GstD3D11AllocationFlags flags,
                                                    gsize size);
 
+GST_D3D11_API
 GstMemory *         gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
                                                        const D3D11_TEXTURE2D_DESC * desc,
                                                        GstD3D11AllocationFlags flags,
                                                        gint * stride);
 
-
+GST_D3D11_API
 void                gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
                                                       gboolean flushing);
 
+GST_D3D11_API
 gboolean            gst_is_d3d11_memory           (GstMemory * mem);
 
+GST_D3D11_API
 ID3D11Texture2D *   gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem);
 
+GST_D3D11_API
 gboolean                   gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
                                                               D3D11_TEXTURE2D_DESC * desc);
 
+GST_D3D11_API
 guint                      gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem);
 
+GST_D3D11_API
 guint                      gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem);
 
+GST_D3D11_API
 ID3D11ShaderResourceView * gst_d3d11_memory_get_shader_resource_view      (GstD3D11Memory * mem,
                                                                            guint index);
 
+GST_D3D11_API
 guint                      gst_d3d11_memory_get_render_target_view_size   (GstD3D11Memory * mem);
 
+GST_D3D11_API
 ID3D11RenderTargetView *   gst_d3d11_memory_get_render_target_view        (GstD3D11Memory * mem,
                                                                            guint index);
 
+GST_D3D11_API
 ID3D11VideoDecoderOutputView *    gst_d3d11_memory_get_decoder_output_view  (GstD3D11Memory * mem,
                                                                              ID3D11VideoDevice * video_device,
                                                                              GUID * decoder_profile);
 
+GST_D3D11_API
 ID3D11VideoProcessorInputView *   gst_d3d11_memory_get_processor_input_view  (GstD3D11Memory * mem,
                                                                               ID3D11VideoDevice * video_device,
                                                                               ID3D11VideoProcessorEnumerator * enumerator);
 
+GST_D3D11_API
 ID3D11VideoProcessorOutputView *  gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
                                                                               ID3D11VideoDevice * video_device,
                                                                               ID3D11VideoProcessorEnumerator * enumerator);

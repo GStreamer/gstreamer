@@ -21,8 +21,8 @@
 #define __GST_D3D11_SHADER_H__
 
 #include <gst/gst.h>
-#include "gstd3d11_fwd.h"
 #include <gst/video/video.h>
+#include <gst/d3d11/gstd3d11.h>
 
 #include <d3dcompiler.h>
 

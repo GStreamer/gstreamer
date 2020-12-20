@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -38,9 +39,26 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_D3D11_MEMORY_LOCK(m) g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m))
 #define GST_D3D11_MEMORY_UNLOCK(m) g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m))
 
+#define GST_D3D11_MEMORY_NAME "D3D11Memory"
+
+/**
+ * gst_d3d11_allocation_params_new:
+ * @device: a #GstD3D11Device
+ * @info: a #GstVideoInfo
+ * @flags: a #GstD3D11AllocationFlags
+ * @bind_flags: D3D11_BIND_FLAG value used for creating Direct3D11 texture
+ *
+ * Create #GstD3D11AllocationParams object which is used by #GstD3D11BufferPool
+ * and #GstD3D11Allocator in order to allocate new ID3D11Texture2D
+ * object with given configuration
+ *
+ * Returns: a #GstD3D11AllocationParams or %NULL if @info is not supported
+ *
+ * Since: 1.20
+ */
 GstD3D11AllocationParams *
 gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
-    GstD3D11AllocationFlags flags, gint bind_flags)
+    GstD3D11AllocationFlags flags, guint bind_flags)
 {
   GstD3D11AllocationParams *ret;
   const GstD3D11Format *d3d11_format;
@@ -106,6 +124,18 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
   return ret;
 }
 
+/**
+ * gst_d3d11_allocation_params_alignment:
+ * @params: a #GstD3D11AllocationParams
+ * @align: a #GstVideoAlignment
+ *
+ * Adjust Width and Height fields of D3D11_TEXTURE2D_DESC with given
+ * @align
+ *
+ * Returns: %TRUE if alignment could be applied
+ *
+ * Since: 1.20
+ */
 gboolean
 gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
     GstVideoAlignment * align)
@@ -141,6 +171,14 @@ gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
   return TRUE;
 }
 
+/**
+ * gst_d3d11_allocation_params_copy:
+ * @src: a #GstD3D11AllocationParams
+ *
+ * Returns: a copy of @src
+ *
+ * Since: 1.20
+ */
 GstD3D11AllocationParams *
 gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src)
 {
@@ -154,6 +192,14 @@ gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src)
   return dst;
 }
 
+/**
+ * gst_d3d11_allocation_params_free:
+ * @params: a #GstD3D11AllocationParams
+ *
+ * Free @params
+ *
+ * Since: 1.20
+ */
 void
 gst_d3d11_allocation_params_free (GstD3D11AllocationParams * params)
 {
@@ -608,6 +654,14 @@ gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
   allocator->priv = priv;
 }
 
+/**
+ * gst_d3d11_allocator_new:
+ * @device: a #GstD3D11Device
+ *
+ * Returns: a newly created #GstD3D11Allocator
+ *
+ * Since: 1.20
+ */
 GstD3D11Allocator *
 gst_d3d11_allocator_new (GstD3D11Device * device)
 {
@@ -860,6 +914,17 @@ check_bind_flags_for_processor_input_view (guint bind_flags)
   return FALSE;
 }
 
+/**
+ * gst_d3d11_allocator_alloc:
+ * @allocator: a #GstD3D11Allocator
+ * @desc: a D3D11_TEXTURE2D_DESC struct
+ * @flags: a #GstD3D11AllocationFlags
+ * @size: a size of CPU accesible memory
+ *
+ * Returns: a newly allocated #GstD3D11Memory with given parameters.
+ *
+ * Since: 1.20
+ */
 GstMemory *
 gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
@@ -978,6 +1043,18 @@ error:
   return NULL;
 }
 
+/**
+ * gst_d3d11_allocator_alloc_staging:
+ * @allocator: a #GstD3D11Allocator
+ * @desc: a D3D11_TEXTURE2D_DESC struct
+ * @flags: a #GstD3D11AllocationFlags
+ * @stride: (out): a stride of CPU accesible memory
+ *
+ * Returns: a newly allocated #GstD3D11Memory with given parameters.
+ * Returned #GstD3D11Memory can be used only for staging texture.
+ *
+ * Since: 1.20
+ */
 GstMemory *
 gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
     const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
@@ -1031,6 +1108,15 @@ error:
   return NULL;
 }
 
+/**
+ * gst_d3d11_allocator_set_flushing:
+ * @allocator: a #GstD3D11Allocator
+ * @flusing: whether to start or stop flusing
+ *
+ * Enable or disable the flushing state of @allocator.
+ *
+ * Since: 1.20
+ */
 void
 gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
     gboolean flushing)
@@ -1047,6 +1133,14 @@ gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
   GST_D3D11_ALLOCATOR_UNLOCK (allocator);
 }
 
+/**
+ * gst_is_d3d11_memory:
+ * @mem: a #GstMemory
+ *
+ * Returns: whether @mem is a #GstD3D11Memory
+ *
+ * Since: 1.20
+ */
 gboolean
 gst_is_d3d11_memory (GstMemory * mem)
 {
@@ -1054,6 +1148,15 @@ gst_is_d3d11_memory (GstMemory * mem)
       GST_IS_D3D11_ALLOCATOR (mem->allocator);
 }
 
+/**
+ * gst_d3d11_memory_get_texture_handle:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: (transfer none): a ID3D11Texture2D handle. Caller must not release
+ * returned handle.
+ *
+ * Since: 1.20
+ */
 ID3D11Texture2D *
 gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem)
 {
@@ -1062,6 +1165,14 @@ gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem)
   return mem->priv->texture;
 }
 
+/**
+ * gst_d3d11_memory_get_subresource_index:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: subresource index corresponding to @mem.
+ *
+ * Since: 1.20
+ */
 guint
 gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
 {
@@ -1070,6 +1181,17 @@ gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
   return mem->priv->subresource_index;
 }
 
+/**
+ * gst_d3d11_memory_get_texture_desc:
+ * @mem: a #GstD3D11Memory
+ * @desc: (out): a D3D11_TEXTURE2D_DESC
+ *
+ * Fill @desc with D3D11_TEXTURE2D_DESC for ID3D11Texture2D
+ *
+ * Returns: %TRUE if successeed
+ *
+ * Since: 1.20
+ */
 gboolean
 gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
     D3D11_TEXTURE2D_DESC * desc)
@@ -1108,6 +1230,15 @@ done:
   return ret;
 }
 
+/**
+ * gst_d3d11_memory_get_shader_resource_view_size:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: the number of ID3D11ShaderResourceView that can be used
+ * for processing GPU operation with @mem
+ *
+ * Since: 1.20
+ */
 guint
 gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
 {
@@ -1119,6 +1250,17 @@ gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
   return mem->priv->num_shader_resource_views;
 }
 
+/**
+ * gst_d3d11_memory_get_shader_resource_view:
+ * @mem: a #GstD3D11Memory
+ * @index: the index of the ID3D11ShaderResourceView
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID3D11ShaderResourceView or %NULL if ID3D11ShaderResourceView is unavailable
+ * for @index
+ *
+ * Since: 1.20
+ */
 ID3D11ShaderResourceView *
 gst_d3d11_memory_get_shader_resource_view (GstD3D11Memory * mem, guint index)
 {
@@ -1165,6 +1307,15 @@ done:
   return ret;
 }
 
+/**
+ * gst_d3d11_memory_get_render_target_view_size:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: the number of ID3D11RenderTargetView that can be used
+ * for processing GPU operation with @mem
+ *
+ * Since: 1.20
+ */
 guint
 gst_d3d11_memory_get_render_target_view_size (GstD3D11Memory * mem)
 {
@@ -1176,6 +1327,17 @@ gst_d3d11_memory_get_render_target_view_size (GstD3D11Memory * mem)
   return mem->priv->num_render_target_views;
 }
 
+/**
+ * gst_d3d11_memory_get_render_target_view:
+ * @mem: a #GstD3D11Memory
+ * @index: the index of the ID3D11RenderTargetView
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID3D11RenderTargetView or %NULL if ID3D11RenderTargetView is unavailable
+ * for @index
+ *
+ * Since: 1.20
+ */
 ID3D11RenderTargetView *
 gst_d3d11_memory_get_render_target_view (GstD3D11Memory * mem, guint index)
 {
@@ -1299,6 +1461,16 @@ done:
   return ret;
 }
 
+/**
+ * gst_d3d11_memory_get_decoder_output_view:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID3D11VideoDecoderOutputView or %NULL if ID3D11VideoDecoderOutputView is
+ * unavailable
+ *
+ * Since: 1.20
+ */
 ID3D11VideoDecoderOutputView *
 gst_d3d11_memory_get_decoder_output_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device, GUID * decoder_profile)
@@ -1395,6 +1567,18 @@ done:
   return ret;
 }
 
+/**
+ * gst_d3d11_memory_get_processor_input_view:
+ * @mem: a #GstD3D11Memory
+ * @video_device: a #ID3D11VideoDevice
+ * @enumerator: a #ID3D11VideoProcessorEnumerator
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID3D11VideoProcessorInputView or %NULL if ID3D11VideoProcessorInputView is
+ * unavailable
+ *
+ * Since: 1.20
+ */
 ID3D11VideoProcessorInputView *
 gst_d3d11_memory_get_processor_input_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device,
@@ -1462,6 +1646,18 @@ done:
   return ret;
 }
 
+/**
+ * gst_d3d11_memory_get_processor_output_view:
+ * @mem: a #GstD3D11Memory
+ * @video_device: a #ID3D11VideoDevice
+ * @enumerator: a #ID3D11VideoProcessorEnumerator
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID3D11VideoProcessorOutputView or %NULL if ID3D11VideoProcessorOutputView is
+ * unavailable
+ *
+ * Since: 1.20
+ */
 ID3D11VideoProcessorOutputView *
 gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device,

@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,6 +28,17 @@
 #include "gstd3d11utils.h"
 
 #include <string.h>
+
+/**
+ * SECTION:gstd3d11bufferpool
+ * @title: GstD3D11BufferPool
+ * @short_description: buffer pool for #GstD3D11Memory objects
+ * @see_also: #GstBufferPool, #GstGLMemory
+ *
+ * a #GstD3D11BufferPool is an object that allocates buffers with #GstD3D11Memory
+ *
+ * A #GstGLBufferPool is created with gst_d3d11_buffer_pool_new()
+ */
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_d3d11_buffer_pool_debug
@@ -104,6 +116,79 @@ gst_d3d11_buffer_pool_get_options (GstBufferPool * pool)
   static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
 
   return options;
+}
+
+static GstBuffer *
+allocate_staging_buffer (GstD3D11Allocator * allocator,
+    const GstVideoInfo * info, const GstD3D11Format * format,
+    const D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES],
+    gboolean add_videometa)
+{
+  GstBuffer *buffer;
+  gint i;
+  gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
+  GstMemory *mem;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (format != NULL, NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  buffer = gst_buffer_new ();
+
+  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    gsize size[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[i], 0,
+          &stride[i]);
+
+      if (!mem) {
+        GST_ERROR_OBJECT (allocator, "Couldn't allocate memory for plane %d",
+            i);
+        goto error;
+      }
+
+      size[i] = gst_memory_get_sizes (mem, NULL, NULL);
+      if (i > 0)
+        offset[i] = offset[i - 1] + size[i - 1];
+      gst_buffer_append_memory (buffer, mem);
+    }
+  } else {
+    /* must be YUV semi-planar or single plane */
+    g_assert (GST_VIDEO_INFO_N_PLANES (info) <= 2);
+
+    mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[0], 0,
+        &stride[0]);
+
+    if (!mem) {
+      GST_ERROR_OBJECT (allocator, "Couldn't allocate memory");
+      goto error;
+    }
+
+    gst_memory_get_sizes (mem, NULL, NULL);
+    gst_buffer_append_memory (buffer, mem);
+
+    if (GST_VIDEO_INFO_N_PLANES (info) == 2) {
+      stride[1] = stride[0];
+      offset[1] = stride[0] * desc[0].Height;
+    }
+  }
+
+  if (add_videometa) {
+    gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        offset, stride);
+  }
+
+  return buffer;
+
+error:
+  gst_buffer_unref (buffer);
+
+  return NULL;
 }
 
 static gboolean
@@ -230,7 +315,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     }
   }
 
-  staging_buffer = gst_d3d11_allocate_staging_buffer (priv->allocator,
+  staging_buffer = allocate_staging_buffer (priv->allocator,
       &info, priv->d3d11_params->d3d11_format, priv->d3d11_params->desc, TRUE);
 
   if (!staging_buffer) {
@@ -360,6 +445,14 @@ gst_d3d11_buffer_pool_flush_stop (GstBufferPool * pool)
     gst_d3d11_allocator_set_flushing (priv->allocator, FALSE);
 }
 
+/**
+ * gst_d3d11_buffer_pool_new:
+ * @device: a #GstD3D11Device to use
+ *
+ * Returns: a #GstBufferPool that allocates buffers with #GstD3D11Memory
+ *
+ * Since: 1.20
+ */
 GstBufferPool *
 gst_d3d11_buffer_pool_new (GstD3D11Device * device)
 {
@@ -377,6 +470,16 @@ gst_d3d11_buffer_pool_new (GstD3D11Device * device)
   return GST_BUFFER_POOL_CAST (pool);
 }
 
+/**
+ * gst_buffer_pool_config_get_d3d11_allocation_params:
+ * @config: a buffer pool config
+ *
+ * Returns: (transfer full) (nullable): the currently configured
+ * #GstD3D11AllocationParams on @config or %NULL if @config doesn't contain
+ * #GstD3D11AllocationParams
+ *
+ * Since: 1.20
+ */
 GstD3D11AllocationParams *
 gst_buffer_pool_config_get_d3d11_allocation_params (GstStructure * config)
 {
@@ -389,6 +492,15 @@ gst_buffer_pool_config_get_d3d11_allocation_params (GstStructure * config)
   return ret;
 }
 
+/**
+ * gst_buffer_pool_config_set_d3d11_allocation_params:
+ * @config: a buffer pool config
+ * @params: (transfer none): a #GstD3D11AllocationParams
+ *
+ * Sets @params on @config
+ *
+ * Since: 1.20
+ */
 void
 gst_buffer_pool_config_set_d3d11_allocation_params (GstStructure * config,
     GstD3D11AllocationParams * params)

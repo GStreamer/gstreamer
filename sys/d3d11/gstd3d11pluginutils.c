@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,165 +22,75 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11format.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11device.h"
-#include "gstd3d11memory.h"
+#include "gstd3d11pluginutils.h"
 
-#include <string.h>
+#include <windows.h>
+#include <versionhelpers.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_format_debug);
-#define GST_CAT_DEFAULT gst_d3d11_format_debug
-
-guint
-gst_d3d11_dxgi_format_n_planes (DXGI_FORMAT format)
-{
-  switch (format) {
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_R8G8B8A8_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_AYUV:
-    case DXGI_FORMAT_YUY2:
-    case DXGI_FORMAT_R8_UNORM:
-    case DXGI_FORMAT_R8G8_UNORM:
-    case DXGI_FORMAT_R16_UNORM:
-    case DXGI_FORMAT_R16G16_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_Y210:
-    case DXGI_FORMAT_Y410:
-    case DXGI_FORMAT_R16G16B16A16_UNORM:
-      return 1;
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-      return 2;
-    default:
-      break;
-  }
-
-  return 0;
-}
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
+#define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug
 
 gboolean
-gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
-    guint pitch, gsize offset[GST_VIDEO_MAX_PLANES],
-    gint stride[GST_VIDEO_MAX_PLANES], gsize * size)
+gst_d3d11_is_windows_8_or_greater (void)
 {
-  g_return_val_if_fail (format != DXGI_FORMAT_UNKNOWN, FALSE);
+  static gsize version_once = 0;
+  static gboolean ret = FALSE;
 
-  switch (format) {
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_R8G8B8A8_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_AYUV:
-    case DXGI_FORMAT_YUY2:
-    case DXGI_FORMAT_R8_UNORM:
-    case DXGI_FORMAT_R8G8_UNORM:
-    case DXGI_FORMAT_R16_UNORM:
-    case DXGI_FORMAT_R16G16_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_Y210:
-    case DXGI_FORMAT_Y410:
-    case DXGI_FORMAT_R16G16B16A16_UNORM:
-      offset[0] = 0;
-      stride[0] = pitch;
-      *size = pitch * height;
+  if (g_once_init_enter (&version_once)) {
+#if (!GST_D3D11_WINAPI_ONLY_APP)
+    if (IsWindows8OrGreater ())
+      ret = TRUE;
+#else
+    ret = TRUE;
+#endif
+
+    g_once_init_leave (&version_once, 1);
+  }
+
+  return ret;
+}
+
+GstD3D11DeviceVendor
+gst_d3d11_get_device_vendor (GstD3D11Device * device)
+{
+  guint device_id = 0;
+  guint vendor_id = 0;
+  gchar *desc = NULL;
+  GstD3D11DeviceVendor vendor = GST_D3D11_DEVICE_VENDOR_UNKNOWN;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+
+  g_object_get (device, "device-id", &device_id, "vendor-id", &vendor_id,
+      "description", &desc, NULL);
+
+  switch (vendor_id) {
+    case 0:
+      if (device_id == 0 && desc && g_strrstr (desc, "SraKmd"))
+        vendor = GST_D3D11_DEVICE_VENDOR_XBOX;
       break;
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-      offset[0] = 0;
-      stride[0] = pitch;
-      offset[1] = offset[0] + stride[0] * height;
-      stride[1] = pitch;
-      *size = offset[1] + stride[1] * GST_ROUND_UP_2 (height / 2);
+    case 0x1002:
+    case 0x1022:
+      vendor = GST_D3D11_DEVICE_VENDOR_AMD;
+      break;
+    case 0x8086:
+      vendor = GST_D3D11_DEVICE_VENDOR_INTEL;
+      break;
+    case 0x10de:
+      vendor = GST_D3D11_DEVICE_VENDOR_NVIDIA;
+      break;
+    case 0x4d4f4351:
+      vendor = GST_D3D11_DEVICE_VENDOR_QUALCOMM;
       break;
     default:
-      return FALSE;
+      break;
   }
 
-  GST_LOG ("Calculated buffer size: %" G_GSIZE_FORMAT
-      " (dxgi format:%d, %dx%d, Pitch %d)",
-      *size, format, width, height, pitch);
+  g_free (desc);
 
-  return TRUE;
+  return vendor;
 }
 
-/**
- * gst_d3d11_device_get_supported_caps:
- * @device: a #GstD3DDevice
- * @flags: D3D11_FORMAT_SUPPORT flags
- *
- * Check supported format with given flags
- *
- * Returns: a #GstCaps representing supported format
- */
-GstCaps *
-gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
-    D3D11_FORMAT_SUPPORT flags)
-{
-  ID3D11Device *d3d11_device;
-  HRESULT hr;
-  gint i;
-  GValue v_list = G_VALUE_INIT;
-  GstCaps *supported_caps;
-  static const GstVideoFormat format_list[] = {
-    GST_VIDEO_FORMAT_BGRA,
-    GST_VIDEO_FORMAT_RGBA,
-    GST_VIDEO_FORMAT_RGB10A2_LE,
-    GST_VIDEO_FORMAT_VUYA,
-    GST_VIDEO_FORMAT_NV12,
-    GST_VIDEO_FORMAT_P010_10LE,
-    GST_VIDEO_FORMAT_P016_LE,
-    GST_VIDEO_FORMAT_I420,
-    GST_VIDEO_FORMAT_I420_10LE,
-  };
-
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
-
-  d3d11_device = gst_d3d11_device_get_device_handle (device);
-  g_value_init (&v_list, GST_TYPE_LIST);
-
-  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    UINT format_support = 0;
-    GstVideoFormat format;
-    const GstD3D11Format *d3d11_format;
-
-    d3d11_format = gst_d3d11_device_format_from_gst (device, format_list[i]);
-    if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN)
-      continue;
-
-    format = d3d11_format->format;
-    hr = ID3D11Device_CheckFormatSupport (d3d11_device,
-        d3d11_format->dxgi_format, &format_support);
-
-    if (SUCCEEDED (hr) && ((format_support & flags) == flags)) {
-      GValue v_str = G_VALUE_INIT;
-      g_value_init (&v_str, G_TYPE_STRING);
-
-      GST_LOG_OBJECT (device, "d3d11 device can support %s with flags 0x%x",
-          gst_video_format_to_string (format), flags);
-      g_value_set_string (&v_str, gst_video_format_to_string (format));
-      gst_value_list_append_and_take_value (&v_list, &v_str);
-    }
-  }
-
-  supported_caps = gst_caps_new_simple ("video/x-raw",
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-  gst_caps_set_value (supported_caps, "format", &v_list);
-  g_value_unset (&v_list);
-
-  gst_caps_set_features_simple (supported_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
-
-  return supported_caps;
-}
-
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 gboolean
 gst_d3d11_hdr_meta_data_to_dxgi (GstVideoMasteringDisplayInfo * minfo,
     GstVideoContentLightLevel * cll, DXGI_HDR_METADATA_HDR10 * dxgi_hdr10)
@@ -211,7 +122,7 @@ gst_d3d11_hdr_meta_data_to_dxgi (GstVideoMasteringDisplayInfo * minfo,
 }
 #endif
 
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 typedef enum
 {
   GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 = 0,
@@ -608,5 +519,493 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
 
   return colorspace;
 }
-
 #endif
+
+GstBuffer *
+gst_d3d11_allocate_staging_buffer (GstD3D11Allocator * allocator,
+    const GstVideoInfo * info, const GstD3D11Format * format,
+    const D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES],
+    gboolean add_videometa)
+{
+  GstBuffer *buffer;
+  gint i;
+  gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
+  GstMemory *mem;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (format != NULL, NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  buffer = gst_buffer_new ();
+
+  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    gsize size[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[i], 0,
+          &stride[i]);
+
+      if (!mem) {
+        GST_ERROR_OBJECT (allocator, "Couldn't allocate memory for plane %d",
+            i);
+        goto error;
+      }
+
+      size[i] = gst_memory_get_sizes (mem, NULL, NULL);
+      if (i > 0)
+        offset[i] = offset[i - 1] + size[i - 1];
+      gst_buffer_append_memory (buffer, mem);
+    }
+  } else {
+    /* must be YUV semi-planar or single plane */
+    g_assert (GST_VIDEO_INFO_N_PLANES (info) <= 2);
+
+    mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[0], 0,
+        &stride[0]);
+
+    if (!mem) {
+      GST_ERROR_OBJECT (allocator, "Couldn't allocate memory");
+      goto error;
+    }
+
+    gst_memory_get_sizes (mem, NULL, NULL);
+    gst_buffer_append_memory (buffer, mem);
+
+    if (GST_VIDEO_INFO_N_PLANES (info) == 2) {
+      stride[1] = stride[0];
+      offset[1] = stride[0] * desc[0].Height;
+    }
+  }
+
+  if (add_videometa) {
+    gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        offset, stride);
+  }
+
+  return buffer;
+
+error:
+  gst_buffer_unref (buffer);
+
+  return NULL;
+}
+
+GstBuffer *
+gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
+    const GstVideoInfo * info, gboolean add_videometa)
+{
+  GstD3D11Memory *dmem;
+  GstD3D11Device *device;
+  GstD3D11AllocationParams *params = NULL;
+  GstD3D11Allocator *alloc = NULL;
+  GstBuffer *staging_buffer = NULL;
+  D3D11_TEXTURE2D_DESC *desc;
+  gint i;
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    if (!gst_is_d3d11_memory (mem)) {
+      GST_DEBUG ("Not a d3d11 memory");
+
+      return NULL;
+    }
+  }
+
+  dmem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
+  device = dmem->device;
+
+  params = gst_d3d11_allocation_params_new (device, (GstVideoInfo *) info,
+      0, 0);
+
+  if (!params) {
+    GST_WARNING ("Couldn't create alloc params");
+    goto done;
+  }
+
+  desc = &params->desc[0];
+  /* resolution of semi-planar formats must be multiple of 2 */
+  if (desc[0].Format == DXGI_FORMAT_NV12 || desc[0].Format == DXGI_FORMAT_P010
+      || desc[0].Format == DXGI_FORMAT_P016) {
+    if (desc[0].Width % 2 || desc[0].Height % 2) {
+      gint width, height;
+      GstVideoAlignment align;
+
+      width = GST_ROUND_UP_2 (desc[0].Width);
+      height = GST_ROUND_UP_2 (desc[0].Height);
+
+      gst_video_alignment_reset (&align);
+      align.padding_right = width - desc[0].Width;
+      align.padding_bottom = height - desc[0].Height;
+
+      gst_d3d11_allocation_params_alignment (params, &align);
+    }
+  }
+
+  alloc = gst_d3d11_allocator_new (device);
+  if (!alloc) {
+    GST_WARNING ("Couldn't create allocator");
+    goto done;
+  }
+
+  staging_buffer = gst_d3d11_allocate_staging_buffer (alloc,
+      info, params->d3d11_format, params->desc, add_videometa);
+
+  if (!staging_buffer)
+    GST_WARNING ("Couldn't allocate staging buffer");
+
+done:
+  if (params)
+    gst_d3d11_allocation_params_free (params);
+
+  if (alloc)
+    gst_object_unref (alloc);
+
+  return staging_buffer;
+}
+
+static gboolean
+gst_d3d11_buffer_copy_into_fallback (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  GstVideoFrame in_frame, out_frame;
+  gboolean ret;
+
+  if (!gst_video_frame_map (&in_frame, (GstVideoInfo *) info, src,
+          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+    goto invalid_buffer;
+
+  if (!gst_video_frame_map (&out_frame, (GstVideoInfo *) info, dst,
+          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+    gst_video_frame_unmap (&in_frame);
+    goto invalid_buffer;
+  }
+
+  ret = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return ret;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    GST_ERROR ("Invalid video buffer");
+    return FALSE;
+  }
+}
+
+gboolean
+gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  guint i;
+
+  g_return_val_if_fail (GST_IS_BUFFER (dst), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  if (gst_buffer_n_memory (dst) != gst_buffer_n_memory (src)) {
+    GST_LOG ("different memory layout, perform fallback copy");
+    return gst_d3d11_buffer_copy_into_fallback (dst, src, info);
+  }
+
+  if (!gst_is_d3d11_buffer (dst) || !gst_is_d3d11_buffer (src)) {
+    GST_LOG ("non-d3d11 memory, perform fallback copy");
+    return gst_d3d11_buffer_copy_into_fallback (dst, src, info);
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (dst); i++) {
+    GstMemory *dst_mem, *src_mem;
+    GstD3D11Memory *dst_dmem, *src_dmem;
+    GstMapInfo dst_info;
+    GstMapInfo src_info;
+    ID3D11Resource *dst_texture, *src_texture;
+    ID3D11DeviceContext *device_context;
+    GstD3D11Device *device;
+    D3D11_BOX src_box = { 0, };
+    D3D11_TEXTURE2D_DESC dst_desc, src_desc;
+    guint dst_subidx, src_subidx;
+
+    dst_mem = gst_buffer_peek_memory (dst, i);
+    src_mem = gst_buffer_peek_memory (src, i);
+
+    dst_dmem = (GstD3D11Memory *) dst_mem;
+    src_dmem = (GstD3D11Memory *) src_mem;
+
+    device = dst_dmem->device;
+    if (device != src_dmem->device) {
+      GST_LOG ("different device, perform fallback copy");
+      return gst_d3d11_buffer_copy_into_fallback (dst, src, info);
+    }
+
+    gst_d3d11_memory_get_texture_desc (dst_dmem, &dst_desc);
+    gst_d3d11_memory_get_texture_desc (src_dmem, &src_desc);
+
+    if (dst_desc.Format != src_desc.Format) {
+      GST_WARNING ("different dxgi format");
+      return FALSE;
+    }
+
+    device_context = gst_d3d11_device_get_device_context_handle (device);
+
+    if (!gst_memory_map (dst_mem, &dst_info, GST_MAP_WRITE | GST_MAP_D3D11)) {
+      GST_ERROR ("Cannot map dst d3d11 memory");
+      return FALSE;
+    }
+
+    if (!gst_memory_map (src_mem, &src_info, GST_MAP_READ | GST_MAP_D3D11)) {
+      GST_ERROR ("Cannot map src d3d11 memory");
+      gst_memory_unmap (dst_mem, &dst_info);
+      return FALSE;
+    }
+
+    dst_texture = (ID3D11Resource *) dst_info.data;
+    src_texture = (ID3D11Resource *) src_info.data;
+
+    /* src/dst texture size might be different if padding was used.
+     * select smaller size */
+    src_box.left = 0;
+    src_box.top = 0;
+    src_box.front = 0;
+    src_box.back = 1;
+    src_box.right = MIN (src_desc.Width, dst_desc.Width);
+    src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
+
+    dst_subidx = gst_d3d11_memory_get_subresource_index (dst_dmem);
+    src_subidx = gst_d3d11_memory_get_subresource_index (src_dmem);
+
+    gst_d3d11_device_lock (device);
+    ID3D11DeviceContext_CopySubresourceRegion (device_context,
+        dst_texture, dst_subidx, 0, 0, 0, src_texture, src_subidx, &src_box);
+    gst_d3d11_device_unlock (device);
+
+    gst_memory_unmap (src_mem, &src_info);
+    gst_memory_unmap (dst_mem, &dst_info);
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_is_d3d11_buffer (GstBuffer * buffer)
+{
+  guint i;
+  guint size;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  size = gst_buffer_n_memory (buffer);
+  if (size == 0)
+    return FALSE;
+
+  for (i = 0; i < size; i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    if (!gst_is_d3d11_memory (mem))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_buffer_can_access_device (GstBuffer * buffer, ID3D11Device * device)
+{
+  guint i;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  if (!gst_is_d3d11_buffer (buffer)) {
+    GST_LOG ("Not a d3d11 buffer");
+    return FALSE;
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    ID3D11Device *handle;
+
+    handle = gst_d3d11_device_get_device_handle (mem->device);
+    if (handle != device) {
+      GST_LOG ("D3D11 device is incompatible");
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_buffer_map (GstBuffer * buffer, ID3D11Device * device,
+    GstMapInfo info[GST_VIDEO_MAX_PLANES], GstMapFlags flags)
+{
+  GstMapFlags map_flags;
+  gint num_mapped = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  if (!gst_d3d11_buffer_can_access_device (buffer, device))
+    return FALSE;
+
+  map_flags = flags | GST_MAP_D3D11;
+
+  for (num_mapped = 0; num_mapped < gst_buffer_n_memory (buffer); num_mapped++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
+
+    if (!gst_memory_map (mem, &info[num_mapped], map_flags)) {
+      GST_ERROR ("Couldn't map memory");
+      goto error;
+    }
+  }
+
+  return TRUE;
+
+error:
+  {
+    gint i;
+    for (i = 0; i < num_mapped; i++) {
+      GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
+      gst_memory_unmap (mem, &info[i]);
+    }
+
+    return FALSE;
+  }
+}
+
+gboolean
+gst_d3d11_buffer_unmap (GstBuffer * buffer,
+    GstMapInfo info[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+    gst_memory_unmap (mem, &info[i]);
+  }
+
+  return TRUE;
+}
+
+guint
+gst_d3d11_buffer_get_shader_resource_view (GstBuffer * buffer,
+    ID3D11ShaderResourceView * view[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+  guint num_views = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (view != NULL, 0);
+
+  if (!gst_is_d3d11_buffer (buffer)) {
+    GST_ERROR ("Buffer contains non-d3d11 memory");
+    return 0;
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    guint view_size;
+    gint j;
+
+    view_size = gst_d3d11_memory_get_shader_resource_view_size (mem);
+    if (!view_size) {
+      GST_LOG ("SRV is unavailable for memory index %d", i);
+      return 0;
+    }
+
+    for (j = 0; j < view_size; j++) {
+      if (num_views >= GST_VIDEO_MAX_PLANES) {
+        GST_ERROR ("Too many SRVs");
+        return 0;
+      }
+
+      view[num_views++] = gst_d3d11_memory_get_shader_resource_view (mem, j);
+    }
+  }
+
+  return num_views;
+}
+
+guint
+gst_d3d11_buffer_get_render_target_view (GstBuffer * buffer,
+    ID3D11RenderTargetView * view[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+  guint num_views = 0;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (view != NULL, 0);
+
+  if (!gst_is_d3d11_buffer (buffer)) {
+    GST_ERROR ("Buffer contains non-d3d11 memory");
+    return 0;
+  }
+
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    guint view_size;
+    gint j;
+
+    view_size = gst_d3d11_memory_get_render_target_view_size (mem);
+    if (!view_size) {
+      GST_LOG ("RTV is unavailable for memory index %d", i);
+      return 0;
+    }
+
+    for (j = 0; j < view_size; j++) {
+      if (num_views >= GST_VIDEO_MAX_PLANES) {
+        GST_ERROR ("Too many RTVs");
+        return 0;
+      }
+
+      view[num_views++] = gst_d3d11_memory_get_render_target_view (mem, j);
+    }
+  }
+
+  return num_views;
+}
+
+GstBufferPool *
+gst_d3d11_buffer_pool_new_with_options (GstD3D11Device * device,
+    GstCaps * caps, GstD3D11AllocationParams * alloc_params,
+    guint min_buffers, guint max_buffers)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstVideoInfo info;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+  g_return_val_if_fail (alloc_params != NULL, NULL);
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (device, "invalid caps");
+    return NULL;
+  }
+
+  pool = gst_d3d11_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config,
+      caps, GST_VIDEO_INFO_SIZE (&info), min_buffers, max_buffers);
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, alloc_params);
+
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_ERROR_OBJECT (pool, "Couldn't set config");
+    gst_object_unref (pool);
+    return NULL;
+  }
+
+  return pool;
+}

@@ -21,9 +21,8 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11config.h"
-
 #include <gst/gst.h>
+#include <gst/d3d11/gstd3d11.h>
 #include "gstd3d11videosink.h"
 #include "gstd3d11upload.h"
 #include "gstd3d11download.h"
@@ -33,7 +32,6 @@
 #include "gstd3d11compositor.h"
 #include "gstd3d11compositorbin.h"
 #ifdef HAVE_DXVA_H
-#include "gstd3d11utils.h"
 #include "gstd3d11h264dec.h"
 #include "gstd3d11h265dec.h"
 #include "gstd3d11vp9dec.h"
@@ -46,17 +44,13 @@
 GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
-GST_DEBUG_CATEGORY (gst_d3d11_utils_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_plugin_utils_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_overlay_compositor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_window_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_video_processor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_compositor_debug);
-
-#if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
-GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
-#endif
 
 #ifdef HAVE_DXVA_H
 GST_DEBUG_CATEGORY (gst_d3d11_h264_dec_debug);
@@ -88,12 +82,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11shader", 0, "d3d11shader");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_colorconverter_debug,
       "d3d11colorconverter", 0, "d3d11colorconverter");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_utils_debug,
-      "d3d11utils", 0, "d3d11 utility functions");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_format_debug,
-      "d3d11format", 0, "d3d11 specific formats");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
-      "d3d11device", 0, "d3d11 device object");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_plugin_utils_debug,
+      "d3d11pluginutils", 0, "d3d11 plugin utility functions");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_overlay_compositor_debug,
       "d3d11overlaycompositor", 0, "d3d11overlaycompositor");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_window_debug,
@@ -102,12 +92,6 @@ plugin_init (GstPlugin * plugin)
       "d3d11videoprocessor", 0, "d3d11videoprocessor");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_compositor_debug,
       "d3d11compositor", 0, "d3d11compositor element");
-
-#if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
-  /* NOTE: enabled only for debug build */
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug_layer_debug,
-      "d3d11debuglayer", 0, "native d3d11 and dxgi debug");
-#endif
 
   if (!gst_d3d11_shader_init ()) {
     GST_WARNING ("Cannot initialize d3d11 shader");

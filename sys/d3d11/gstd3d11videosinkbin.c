@@ -25,15 +25,9 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
-
-#include "gstd3d11videosinkbin.h"
+#include <gst/d3d11/gstd3d11.h>
 #include "gstd3d11videosink.h"
-#include "gstd3d11upload.h"
-#include "gstd3d11colorconvert.h"
-#include "gstd3d11memory.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11device.h"
-#include "gstd3d11format.h"
+#include "gstd3d11videosinkbin.h"
 
 enum
 {

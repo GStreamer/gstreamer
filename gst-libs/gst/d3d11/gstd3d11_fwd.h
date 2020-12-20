@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,33 +22,34 @@
 #define __GST_D3D11_FWD_H__
 
 #include <gst/gst.h>
-#include "gstd3d11config.h"
+#include <gst/d3d11/gstd3d11config.h>
+#include <gst/d3d11/d3d11-prelude.h>
 
 #ifndef INITGUID
 #include <initguid.h>
 #endif
 
-#if (D3D11_HEADER_VERSION >= 4)
+#if (GST_D3D11_HEADER_VERSION >= 4)
 #include <d3d11_4.h>
-#elif (D3D11_HEADER_VERSION >= 3)
+#elif (GST_D3D11_HEADER_VERSION >= 3)
 #include <d3d11_3.h>
-#elif (D3D11_HEADER_VERSION >= 2)
+#elif (GST_D3D11_HEADER_VERSION >= 2)
 #include <d3d11_2.h>
-#elif (D3D11_HEADER_VERSION >= 1)
+#elif (GST_D3D11_HEADER_VERSION >= 1)
 #include <d3d11_1.h>
 #else
 #include <d3d11.h>
 #endif
 
-#if (DXGI_HEADER_VERSION >= 6)
+#if (GST_D3D11_DXGI_H_VERSION >= 6)
 #include <dxgi1_6.h>
-#elif (DXGI_HEADER_VERSION >= 5)
+#elif (GST_D3D11_DXGI_H_VERSION >= 5)
 #include <dxgi1_5.h>
-#elif (DXGI_HEADER_VERSION >= 4)
+#elif (GST_D3D11_DXGI_H_VERSION >= 4)
 #include <dxgi1_4.h>
-#elif (DXGI_HEADER_VERSION >= 3)
+#elif (GST_D3D11_DXGI_H_VERSION >= 3)
 #include <dxgi1_3.h>
-#elif (DXGI_HEADER_VERSION >= 2)
+#elif (GST_D3D11_DXGI_H_VERSION >= 2)
 #include <dxgi1_2.h>
 #else
 #include <dxgi.h>
@@ -61,6 +63,7 @@ typedef struct _GstD3D11DevicePrivate GstD3D11DevicePrivate;
 
 typedef struct _GstD3D11AllocationParams GstD3D11AllocationParams;
 typedef struct _GstD3D11Memory GstD3D11Memory;
+typedef struct _GstD3D11MemoryPrivate GstD3D11MemoryPrivate;
 typedef struct _GstD3D11Allocator GstD3D11Allocator;
 typedef struct _GstD3D11AllocatorClass GstD3D11AllocatorClass;
 typedef struct _GstD3D11AllocatorPrivate GstD3D11AllocatorPrivate;

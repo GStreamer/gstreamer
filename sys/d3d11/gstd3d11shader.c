@@ -22,8 +22,6 @@
 #endif
 
 #include "gstd3d11shader.h"
-#include "gstd3d11device.h"
-#include "gstd3d11utils.h"
 #include <gmodule.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_shader_debug);

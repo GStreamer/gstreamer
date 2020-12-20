@@ -37,12 +37,6 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11memory.h"
-#include "gstd3d11utils.h"
-#include "gstd3d11bufferpool.h"
-#include "gstd3d11format.h"
-#include "gstd3d11device.h"
-
 #include "gstd3d11desktopdupsrc.h"
 #include "gstd3d11desktopdup.h"
 
