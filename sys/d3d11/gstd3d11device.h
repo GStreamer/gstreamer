@@ -37,15 +37,6 @@ G_BEGIN_DECLS
 
 #define GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE "gst.d3d11.device.handle"
 
-/**
- * GstD3D11DeviceThreadFunc:
- * @device: a #GstD3D11Device
- * @data: user data
- *
- * Represents a function to run in the D3D11 device thread with @device and @data
- */
-typedef void (*GstD3D11DeviceThreadFunc) (GstD3D11Device * device, gpointer data);
-
 typedef enum
 {
   GST_D3D11_DXGI_FACTORY_UNKNOWN = 0,
