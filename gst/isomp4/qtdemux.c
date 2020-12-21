@@ -8320,10 +8320,19 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
         GST_FOURCC_ARGS (stream->protection_scheme_type));
     return FALSE;
   }
+
+  s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
+  if (!gst_structure_has_name (s, "application/x-cenc")) {
+    gst_structure_set (s,
+        "original-media-type", G_TYPE_STRING, gst_structure_get_name (s), NULL);
+    gst_structure_set_name (s, "application/x-cenc");
+  }
+
   if (qtdemux->protection_system_ids == NULL) {
-    GST_ERROR_OBJECT (qtdemux, "stream is protected using cenc, but no "
-        "cenc protection system information has been found");
-    return FALSE;
+    GST_DEBUG_OBJECT (qtdemux, "stream is protected using cenc, but no "
+        "cenc protection system information has been found, not setting a "
+        "protection system UUID");
+    return TRUE;
   }
 
   gst_qtdemux_request_protection_context (qtdemux, stream);
@@ -8360,14 +8369,10 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
   GST_DEBUG_OBJECT (qtdemux, "selected protection system is %s",
       selected_system);
 
-  s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
-  if (!gst_structure_has_name (s, "application/x-cenc")) {
-    gst_structure_set (s,
-        "original-media-type", G_TYPE_STRING, gst_structure_get_name (s),
-        GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING, selected_system,
-        NULL);
-    gst_structure_set_name (s, "application/x-cenc");
-  }
+  gst_structure_set (s,
+      GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING, selected_system,
+      NULL);
+
   return TRUE;
 }
 
