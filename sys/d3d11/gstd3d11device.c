@@ -62,9 +62,11 @@ enum
   PROP_HARDWARE,
   PROP_DESCRIPTION,
   PROP_ALLOW_TEARING,
+  PROP_CREATE_FLAGS,
 };
 
 #define DEFAULT_ADAPTER 0
+#define DEFAULT_CREATE_FLAGS 0
 
 struct _GstD3D11DevicePrivate
 {
@@ -74,6 +76,7 @@ struct _GstD3D11DevicePrivate
   gboolean hardware;
   gchar *description;
   gboolean allow_tearing;
+  guint create_flags;
 
   ID3D11Device *device;
   ID3D11DeviceContext *device_context;
@@ -345,6 +348,12 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
       g_param_spec_boolean ("allow-tearing", "Allow tearing",
           "Whether dxgi device supports allow-tearing feature or not", FALSE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_CREATE_FLAGS,
+      g_param_spec_uint ("create-flags", "Create flags",
+          "D3D11_CREATE_DEVICE_FLAG flags used for D3D11CreateDevice",
+          0, G_MAXUINT32, DEFAULT_CREATE_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -539,7 +548,7 @@ gst_d3d11_device_constructed (GObject * object)
   IDXGIAdapter1 *adapter = NULL;
   IDXGIFactory1 *factory = NULL;
   HRESULT hr;
-  UINT d3d11_flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+  UINT d3d11_flags = priv->create_flags;
 
   static const D3D_FEATURE_LEVEL feature_levels[] = {
     D3D_FEATURE_LEVEL_11_1,
@@ -733,6 +742,10 @@ gst_d3d11_device_constructed (GObject * object)
   }
 #endif
 
+  /* Update final create flags here, since D3D11_CREATE_DEVICE_DEBUG
+   * might be added by us */
+  priv->create_flags = d3d11_flags;
+
   IDXGIAdapter1_Release (adapter);
   gst_d3d11_device_setup_format_table (self);
 
@@ -762,6 +775,9 @@ gst_d3d11_device_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ADAPTER:
       priv->adapter = g_value_get_uint (value);
+      break;
+    case PROP_CREATE_FLAGS:
+      priv->create_flags = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -794,6 +810,9 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ALLOW_TEARING:
       g_value_set_boolean (value, priv->allow_tearing);
+      break;
+    case PROP_CREATE_FLAGS:
+      g_value_set_uint (value, priv->create_flags);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -875,17 +894,19 @@ gst_d3d11_device_finalize (GObject * object)
 /**
  * gst_d3d11_device_new:
  * @adapter: the index of adapter for creating d3d11 device
+ * @flags: a D3D11_CREATE_DEVICE_FLAG value used for creating d3d11 device
  *
  * Returns: (transfer full) (nullable): a new #GstD3D11Device for @adapter or %NULL
  * when failed to create D3D11 device with given adapter index.
  */
 GstD3D11Device *
-gst_d3d11_device_new (guint adapter)
+gst_d3d11_device_new (guint adapter, guint flags)
 {
   GstD3D11Device *device = NULL;
   GstD3D11DevicePrivate *priv;
 
-  device = g_object_new (GST_TYPE_D3D11_DEVICE, "adapter", adapter, NULL);
+  device = g_object_new (GST_TYPE_D3D11_DEVICE, "adapter", adapter,
+      "create-flags", flags, NULL);
 
   priv = device->priv;
 

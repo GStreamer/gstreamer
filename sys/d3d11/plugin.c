@@ -120,7 +120,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin,
       "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
 
-  device = gst_d3d11_device_new (0);
+  device = gst_d3d11_device_new (0, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
 
   /* FIXME: Our shader code is not compatible with D3D_FEATURE_LEVEL_9_3
    * or lower. So HLSL compiler cannot understand our shader code and
@@ -167,7 +167,7 @@ plugin_init (GstPlugin * plugin)
       gboolean hardware;
 
       if (!device)
-        device = gst_d3d11_device_new (i);
+        device = gst_d3d11_device_new (i, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
 
       if (!device)
         break;

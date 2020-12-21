@@ -311,7 +311,9 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
   if (adapter > 0)
     target_adapter = adapter;
 
-  *device = gst_d3d11_device_new (target_adapter);
+  /* Needs D3D11_CREATE_DEVICE_BGRA_SUPPORT flag for Direct2D interop */
+  *device = gst_d3d11_device_new (target_adapter,
+      D3D11_CREATE_DEVICE_BGRA_SUPPORT);
 
   if (*device == NULL) {
     GST_ERROR_OBJECT (element,
