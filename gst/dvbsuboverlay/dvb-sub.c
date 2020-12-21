@@ -1139,6 +1139,7 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
     gint buf_size)
 {
   int dds_version, info_byte;
+  int display_width, display_height;
 
   if (buf_size < 5)
     return -1;
@@ -1146,14 +1147,23 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
   info_byte = *buf++;
   dds_version = info_byte >> 4;
 
+  display_width = GST_READ_UINT16_BE (buf) + 1;
+  buf += 2;
+  display_height = GST_READ_UINT16_BE (buf) + 1;
+  buf += 2;
+
+  if ((display_width != dvb_sub->display_def.display_width)
+      || (display_height != dvb_sub->display_def.display_height)) {
+    dvb_sub->display_def.display_width = display_width;
+    dvb_sub->display_def.display_height = display_height;
+
+    dvb_sub->display_def.version = -1;
+  }
+
   if (dvb_sub->display_def.version == dds_version)
     return 0;                   /* already have this display definition version */
 
   dvb_sub->display_def.version = dds_version;
-  dvb_sub->display_def.display_width = GST_READ_UINT16_BE (buf) + 1;
-  buf += 2;
-  dvb_sub->display_def.display_height = GST_READ_UINT16_BE (buf) + 1;
-  buf += 2;
 
   dvb_sub->display_def.window_flag = info_byte & 1 << 3;
 
