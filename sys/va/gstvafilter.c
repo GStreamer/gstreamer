@@ -699,6 +699,129 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
   return TRUE;
 }
 
+/**
+ * GstVaDeinterlaceMethods:
+ * @GST_VA_DEINTERLACE_BOB: Interpolating missing lines by using the
+ *   adjacent lines.
+ * @GST_VA_DEINTERLACE_WEAVE: Show both fields per frame. (don't use)
+ * @GST_VA_DEINTERLACE_ADAPTIVE: Interpolating missing lines by using
+ *   spatial/temporal references.
+ * @GST_VA_DEINTERLACE_COMPENSATED: Recreating missing lines by using
+ *   motion vector.
+ *
+ * Since: 1.20
+ */
+/* *INDENT-OFF* */
+static const GEnumValue di_desc[] = {
+  [GST_VA_DEINTERLACE_BOB] =
+      { VAProcDeinterlacingBob,
+        "Bob: Interpolating missing lines by using the adjacent lines.", "bob" },
+  [GST_VA_DEINTERLACE_WEAVE] =
+      { VAProcDeinterlacingWeave, "Weave: Show both fields per frame. (don't use)",
+        "weave" },
+  [GST_VA_DEINTERLACE_ADAPTIVE] =
+      { VAProcDeinterlacingMotionAdaptive,
+        "Adaptive: Interpolating missing lines by using spatial/temporal references.",
+        "adaptive" },
+  [GST_VA_DEINTERLACE_COMPENSATED] =
+      { VAProcDeinterlacingMotionCompensated,
+        "Compensation: Recreating missing lines by using motion vector.",
+        "compensated" },
+};
+/* *INDENT-ON* */
+
+static GType
+gst_va_deinterlace_methods_get_type (guint num_caps,
+    const VAProcFilterCapDeinterlacing * caps)
+{
+  guint i, j = 0;
+  static GType deinterlace_methods_type = 0;
+  static GEnumValue methods_types[VAProcDeinterlacingCount];
+
+  if (deinterlace_methods_type > 0)
+    return deinterlace_methods_type;
+
+  for (i = 0; i < num_caps; i++) {
+    if (caps[i].type > VAProcDeinterlacingNone
+        && caps[i].type < VAProcDeinterlacingCount)
+      methods_types[j++] = di_desc[caps[i].type];
+  }
+
+  /* *INDENT-OFF* */
+  methods_types[j] = (GEnumValue) { 0, NULL, NULL };
+  /* *INDENT-ON* */
+
+  deinterlace_methods_type = g_enum_register_static ("GstVaDeinterlaceMethods",
+      (const GEnumValue *) methods_types);
+
+  return deinterlace_methods_type;
+}
+
+gboolean
+gst_va_filter_install_deinterlace_properties (GstVaFilter * self,
+    GObjectClass * klass)
+{
+  GType type;
+  guint i;
+  const GParamFlags common_flags = G_PARAM_READWRITE
+      | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING;
+
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  if (!gst_va_filter_ensure_filters (self))
+    return FALSE;
+
+  for (i = 0; i < self->available_filters->len; i++) {
+    const struct VaFilter *filter =
+        &g_array_index (self->available_filters, struct VaFilter, i);
+
+    if (filter->type == VAProcFilterDeinterlacing) {
+      guint i, default_method = 0;
+      const VAProcFilterCapDeinterlacing *caps = filter->caps.deint;
+      if (!caps)
+        break;
+
+      /* use the first method in the list as default */
+      for (i = 0; i < filter->num_caps; i++) {
+        if (caps[i].type > VAProcDeinterlacingNone
+            && caps[i].type < VAProcDeinterlacingCount) {
+          default_method = caps[i].type;
+          break;
+        }
+      }
+
+      if (default_method == 0)
+        break;
+
+      type = gst_va_deinterlace_methods_get_type (filter->num_caps, caps);
+      gst_type_mark_as_plugin_api (type, 0);
+
+      /**
+       * GstVaDeinterlace:method
+       *
+       * Selects the different deinterlacing algorithms that can be used.
+       *
+       * It depends on the driver the number of available algorithms,
+       * and they provide different quality and different processing
+       * consumption.
+       *
+       * Since: 1.20
+       */
+      g_object_class_install_property (klass,
+          GST_VA_FILTER_PROP_DEINTERLACE_METHOD,
+          g_param_spec_enum ("method", "Method", "Deinterlace Method",
+              type, default_method, common_flags));
+
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 gboolean
 gst_va_filter_has_filter (GstVaFilter * self, VAProcFilterType type)
 {

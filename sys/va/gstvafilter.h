@@ -31,6 +31,13 @@ G_BEGIN_DECLS
 #define GST_TYPE_VA_FILTER (gst_va_filter_get_type())
 G_DECLARE_FINAL_TYPE (GstVaFilter, gst_va_filter, GST, VA_FILTER, GstObject)
 
+typedef enum {
+  GST_VA_DEINTERLACE_BOB = VAProcDeinterlacingBob,
+  GST_VA_DEINTERLACE_WEAVE = VAProcDeinterlacingWeave,
+  GST_VA_DEINTERLACE_ADAPTIVE = VAProcDeinterlacingMotionAdaptive,
+  GST_VA_DEINTERLACE_COMPENSATED = VAProcDeinterlacingMotionCompensated,
+} GstVaDeinterlaceMethods;
+
 enum {
   GST_VA_FILTER_PROP_DENOISE = 1,
   GST_VA_FILTER_PROP_SHARPEN,
@@ -44,6 +51,7 @@ enum {
   GST_VA_FILTER_PROP_AUTO_BRIGHTNESS,
   GST_VA_FILTER_PROP_AUTO_CONTRAST,
   GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH,
+  GST_VA_FILTER_PROP_DEINTERLACE_METHOD,
   GST_VA_FILTER_PROP_LAST
 };
 
@@ -65,6 +73,9 @@ gboolean              gst_va_filter_is_open               (GstVaFilter * self);
 gboolean              gst_va_filter_has_filter            (GstVaFilter * self,
                                                            VAProcFilterType type);
 gboolean              gst_va_filter_install_properties    (GstVaFilter * self,
+                                                           GObjectClass * klass);
+gboolean              gst_va_filter_install_deinterlace_properties
+                                                          (GstVaFilter * self,
                                                            GObjectClass * klass);
 gboolean              gst_va_filter_set_orientation       (GstVaFilter * self,
                                                            GstVideoOrientationMethod orientation);
