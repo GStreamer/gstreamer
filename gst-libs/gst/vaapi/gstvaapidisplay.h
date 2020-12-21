@@ -94,13 +94,6 @@ typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
  *   https://gitlab.freedesktop.org/mesa/mesa/merge_requests/2016
  * @GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD: if driver does not
  *   properly report supported vpp color standards.
- * @GST_VAAPI_DRIVER_QUIRK_NO_RGBYUV_VPP_COLOR_PRIMARY: if driver can
- *   only do CSC from YUV to RGB, and vice-versa without changing the
- *   color standard primaries.  This quirk is initially introduced to
- *   work around a problem in the intel-media-driver (iHD) reported here:
- *   https://github.com/intel/media-driver/issues/860.  Once the driver
- *   issue is fixed, we should remove this quirk.  Also see this issue:
- *   https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues/238
  * @GST_VAAPI_DRIVER_QUIRK_MISSING_RGBA_IMAGE_FORMAT: i965 driver doesn't
  *   report to support ARGB format, but if it's forced to create a RGBA
  *   surface, it works. Driver issue:
@@ -116,7 +109,6 @@ typedef enum
 {
   GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE = (1U << 0),
   GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD = (1U << 1),
-  GST_VAAPI_DRIVER_QUIRK_NO_RGBYUV_VPP_COLOR_PRIMARY = (1U << 2),
   GST_VAAPI_DRIVER_QUIRK_MISSING_RGBA_IMAGE_FORMAT = (1U << 3),
   GST_VAAPI_DRIVER_QUIRK_JPEG_ENC_SHIFT_VALUE_BY_50 = (1U << 4),
   GST_VAAPI_DRIVER_QUIRK_HEVC_ENC_SLICE_NOT_SPAN_TILE = (1U << 5),
