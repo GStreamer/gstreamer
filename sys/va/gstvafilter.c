@@ -573,6 +573,9 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
   for (i = 0; i < self->available_filters->len; i++) {
     const struct VaFilter *filter =
         &g_array_index (self->available_filters, struct VaFilter, i);
+    const GParamFlags common_flags = G_PARAM_READWRITE
+        | GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS
+        | GST_PARAM_DOC_SHOW_DEFAULT;
 
     switch (filter->type) {
       case VAProcFilterNoiseReduction:{
@@ -582,8 +585,7 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             g_param_spec_float ("denoise", "Noise reduction",
                 "Noise reduction factor", caps->range.min_value,
                 caps->range.max_value, caps->range.default_value,
-                G_PARAM_READWRITE | GST_PARAM_CONDITIONALLY_AVAILABLE
-                | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT));
+                common_flags));
         break;
       }
       case VAProcFilterSharpening:{
@@ -593,25 +595,21 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             g_param_spec_float ("sharpen", "Sharpening Level",
                 "Sharpening/blurring filter", caps->range.min_value,
                 caps->range.max_value, caps->range.default_value,
-                G_PARAM_READWRITE | GST_PARAM_CONDITIONALLY_AVAILABLE
-                | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT));
+                common_flags));
         break;
       }
       case VAProcFilterSkinToneEnhancement:{
         const VAProcFilterCap *caps = &filter->caps.simple;
-        const GParamFlags flags = G_PARAM_READWRITE
-            | GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS
-            | GST_PARAM_DOC_SHOW_DEFAULT;
         GParamSpec *pspec;
 
         /* i965 filter */
         if (filter->num_caps == 0) {
           pspec = g_param_spec_boolean ("skin-tone", "Skin Tone Enhancenment",
-              "Skin Tone Enhancenment filter", FALSE, flags);
+              "Skin Tone Enhancenment filter", FALSE, common_flags);
         } else {
           pspec = g_param_spec_float ("skin-tone", "Skin Tone Enhancenment",
               "Skin Tone Enhancenment filter", caps->range.min_value,
-              caps->range.max_value, caps->range.default_value, flags);
+              caps->range.max_value, caps->range.default_value, common_flags);
         }
 
         g_object_class_install_property (klass, GST_VA_FILTER_PROP_SKINTONE,
@@ -620,9 +618,6 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
       }
       case VAProcFilterColorBalance:{
         const VAProcFilterCapColorBalance *caps = filter->caps.cb;
-        const GParamFlags flags = G_PARAM_READWRITE
-            | GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS
-            | GST_PARAM_DOC_SHOW_DEFAULT;
         GParamSpec *pspec;
         guint j, k;
 
@@ -631,10 +626,11 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
           if (caps[j].range.min_value < caps[j].range.max_value) {
             pspec = g_param_spec_float (cb_desc[k].name, cb_desc[k].nick,
                 cb_desc[k].blurb, caps[j].range.min_value,
-                caps[j].range.max_value, caps[j].range.default_value, flags);
+                caps[j].range.max_value, caps[j].range.default_value,
+                common_flags);
           } else {
             pspec = g_param_spec_boolean (cb_desc[k].name, cb_desc[k].nick,
-                cb_desc[k].blurb, FALSE, flags);
+                cb_desc[k].blurb, FALSE, common_flags);
           }
 
           g_object_class_install_property (klass, cb_desc[k].prop_id, pspec);
