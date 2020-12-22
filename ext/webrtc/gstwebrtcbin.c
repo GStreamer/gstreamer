@@ -2447,7 +2447,7 @@ static gboolean
 sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     GstWebRTCRTPTransceiver * trans, GstWebRTCSDPType type, guint media_idx,
     GString * bundled_mids, guint bundle_idx, gchar * bundle_ufrag,
-    gchar * bundle_pwd, GArray * reserved_pts)
+    gchar * bundle_pwd, GArray * reserved_pts, GHashTable * all_mids)
 {
   /* TODO:
    * rtp header extensions
@@ -2589,10 +2589,18 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   if (trans->mid) {
     gst_sdp_media_add_attribute (media, "mid", trans->mid);
   } else {
-    sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
-        webrtc->priv->media_counter++);
-    gst_sdp_media_add_attribute (media, "mid", sdp_mid);
-    g_free (sdp_mid);
+    /* Make sure to avoid mid collisions */
+    while (TRUE) {
+      sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
+          webrtc->priv->media_counter++);
+      if (g_hash_table_contains (all_mids, (gpointer) sdp_mid)) {
+        g_free (sdp_mid);
+      } else {
+        gst_sdp_media_add_attribute (media, "mid", sdp_mid);
+        g_hash_table_insert (all_mids, sdp_mid, NULL);
+        break;
+      }
+    }
   }
 
   /* TODO:
@@ -2656,7 +2664,7 @@ gather_reserved_pts (GstWebRTCBin * webrtc)
 static gboolean
 _add_data_channel_offer (GstWebRTCBin * webrtc, GstSDPMessage * msg,
     GstSDPMedia * media, GString * bundled_mids, guint bundle_idx,
-    gchar * bundle_ufrag, gchar * bundle_pwd)
+    gchar * bundle_ufrag, gchar * bundle_pwd, GHashTable * all_mids)
 {
   GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
   gchar *ufrag, *pwd, *sdp_mid;
@@ -2717,10 +2725,18 @@ _add_data_channel_offer (GstWebRTCBin * webrtc, GstSDPMessage * msg,
 
     gst_sdp_media_add_attribute (media, "mid", mid);
   } else {
-    sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
-        webrtc->priv->media_counter++);
-    gst_sdp_media_add_attribute (media, "mid", sdp_mid);
-    g_free (sdp_mid);
+    /* Make sure to avoid mid collisions */
+    while (TRUE) {
+      sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
+          webrtc->priv->media_counter++);
+      if (g_hash_table_contains (all_mids, (gpointer) sdp_mid)) {
+        g_free (sdp_mid);
+      } else {
+        gst_sdp_media_add_attribute (media, "mid", sdp_mid);
+        g_hash_table_insert (all_mids, sdp_mid, NULL);
+        break;
+      }
+    }
   }
 
   if (bundled_mids) {
@@ -2745,11 +2761,14 @@ static GstSDPMessage *
 _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     GError ** error)
 {
-  GstSDPMessage *ret;
+  GstSDPMessage *ret = NULL;
   GString *bundled_mids = NULL;
   gchar *bundle_ufrag = NULL;
   gchar *bundle_pwd = NULL;
   GArray *reserved_pts = NULL;
+  GHashTable *all_mids =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
   GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
   GList *seen_transceivers = NULL;
   guint media_idx = 0;
@@ -2821,6 +2840,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
           if (trans->mid && g_strcmp0 (trans->mid, last_mid) == 0) {
             GstSDPMedia *media;
+            const gchar *mid;
 
             g_assert (!g_list_find (seen_transceivers, trans));
 
@@ -2832,12 +2852,21 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             gst_sdp_media_copy (last_media, &media);
             _media_replace_direction (media, trans->direction);
 
-            if (bundled_mids) {
-              const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
+            mid = gst_sdp_media_get_attribute_val (media, "mid");
+            g_assert (mid);
 
-              g_assert (mid);
-              g_string_append_printf (bundled_mids, " %s", mid);
+            if (g_hash_table_contains (all_mids, mid)) {
+              gst_sdp_media_free (media);
+              g_set_error (error, GST_WEBRTC_BIN_ERROR,
+                  GST_WEBRTC_BIN_ERROR_FAILED,
+                  "Duplicate mid %s when creating offer", mid);
+              goto duplicate_mid;
             }
+
+            g_hash_table_insert (all_mids, g_strdup (mid), NULL);
+
+            if (bundled_mids)
+              g_string_append_printf (bundled_mids, " %s", mid);
 
             gst_sdp_message_add_media (ret, media);
             media_idx++;
@@ -2852,13 +2881,33 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         GstSDPMedia media = { 0, };
         gst_sdp_media_init (&media);
         if (_add_data_channel_offer (webrtc, ret, &media, bundled_mids, 0,
-                bundle_ufrag, bundle_pwd)) {
+                bundle_ufrag, bundle_pwd, all_mids)) {
           gst_sdp_message_add_media (ret, &media);
           media_idx++;
         } else {
           gst_sdp_media_uninit (&media);
         }
       }
+    }
+  }
+
+  /* First, go over all transceivers and gather existing mids */
+  for (i = 0; i < webrtc->priv->transceivers->len; i++) {
+    GstWebRTCRTPTransceiver *trans;
+
+    trans = g_ptr_array_index (webrtc->priv->transceivers, i);
+
+    if (g_list_find (seen_transceivers, trans))
+      continue;
+
+    if (trans->mid) {
+      if (g_hash_table_contains (all_mids, trans->mid)) {
+        g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_FAILED,
+            "Duplicate mid %s when creating offer", trans->mid);
+        goto duplicate_mid;
+      }
+
+      g_hash_table_insert (all_mids, g_strdup (trans->mid), NULL);
     }
   }
 
@@ -2888,7 +2937,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     if (sdp_media_from_transceiver (webrtc, &media, trans,
             GST_WEBRTC_SDP_TYPE_OFFER, media_idx, bundled_mids, 0, bundle_ufrag,
-            bundle_pwd, reserved_pts)) {
+            bundle_pwd, reserved_pts, all_mids)) {
       gst_sdp_message_add_media (ret, &media);
       media_idx++;
     } else {
@@ -2897,12 +2946,14 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_NONE) {
       g_array_free (reserved_pts, TRUE);
+      reserved_pts = NULL;
     }
     seen_transceivers = g_list_prepend (seen_transceivers, trans);
   }
 
   if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE) {
     g_array_free (reserved_pts, TRUE);
+    reserved_pts = NULL;
   }
 
   /* add a data channel if exists and not renegotiated */
@@ -2910,7 +2961,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     GstSDPMedia media = { 0, };
     gst_sdp_media_init (&media);
     if (_add_data_channel_offer (webrtc, ret, &media, bundled_mids, 0,
-            bundle_ufrag, bundle_pwd)) {
+            bundle_ufrag, bundle_pwd, all_mids)) {
       gst_sdp_message_add_media (ret, &media);
       media_idx++;
     } else {
@@ -2925,17 +2976,10 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     gst_sdp_message_add_attribute (ret, "group", mids);
     g_free (mids);
+    bundled_mids = NULL;
   }
 
-  if (bundle_ufrag)
-    g_free (bundle_ufrag);
-
-  if (bundle_pwd)
-    g_free (bundle_pwd);
-
   /* FIXME: pre-emptively setup receiving elements when needed */
-
-  g_list_free (seen_transceivers);
 
   if (webrtc->priv->last_generated_answer)
     gst_webrtc_session_description_free (webrtc->priv->last_generated_answer);
@@ -2949,7 +2993,29 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER, copy);
   }
 
+out:
+  if (reserved_pts)
+    g_array_free (reserved_pts, TRUE);
+
+  g_hash_table_unref (all_mids);
+
+  g_list_free (seen_transceivers);
+
+  if (bundle_ufrag)
+    g_free (bundle_ufrag);
+
+  if (bundle_pwd)
+    g_free (bundle_pwd);
+
+  if (bundled_mids)
+    g_string_free (bundled_mids, TRUE);
+
   return ret;
+
+duplicate_mid:
+  gst_sdp_message_uninit (ret);
+  ret = NULL;
+  goto out;
 }
 
 static void
