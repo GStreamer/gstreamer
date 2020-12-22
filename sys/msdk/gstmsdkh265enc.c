@@ -51,6 +51,7 @@ enum
   PROP_TILE_COL,
   PROP_MAX_SLICE_SIZE,
   PROP_TUNE_MODE,
+  PROP_TRANSFORM_SKIP,
 };
 
 enum
@@ -64,6 +65,7 @@ enum
 #define PROP_TILE_COL_DEFAULT           1
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
 #define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
+#define PROP_TRANSFORM_SKIP_DEFAULT     MFX_CODINGOPTION_UNKNOWN
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
@@ -337,6 +339,14 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 
   /* Enable Extended coding options */
   encoder->option2.MaxSliceSize = h265enc->max_slice_size;
+
+#if (MFX_VERSION >= 1026)
+  if (h265enc->transform_skip != MFX_CODINGOPTION_UNKNOWN) {
+    encoder->option3.TransformSkip = h265enc->transform_skip;
+    encoder->enable_extopt3 = TRUE;
+  }
+#endif
+
   gst_msdkenc_ensure_extended_coding_options (encoder);
 
   if (h265enc->num_tile_rows > 1 || h265enc->num_tile_cols > 1) {
@@ -516,6 +526,10 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->prop_flag |= GST_MSDK_FLAG_TUNE_MODE;
       break;
 
+    case PROP_TRANSFORM_SKIP:
+      thiz->transform_skip = g_value_get_enum (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -554,6 +568,10 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_TUNE_MODE:
       g_value_set_enum (value, thiz->tune_mode);
+      break;
+
+    case PROP_TRANSFORM_SKIP:
+      g_value_set_enum (value, thiz->transform_skip);
       break;
 
     default:
@@ -675,6 +693,12 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           gst_msdkenc_tune_mode_get_type (), PROP_TUNE_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_TRANSFORM_SKIP,
+      g_param_spec_enum ("transform-skip", "Transform Skip",
+          "Transform Skip option",
+          gst_msdkenc_transform_skip_get_type (), PROP_TRANSFORM_SKIP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -694,5 +718,6 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
   thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
   thiz->tune_mode = PROP_TUNE_MODE_DEFAULT;
+  thiz->transform_skip = PROP_TRANSFORM_SKIP_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }

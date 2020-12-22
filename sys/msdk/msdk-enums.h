@@ -101,5 +101,8 @@ gst_msdkvpp_scaling_mode_get_type (void);
 GType
 gst_msdkvpp_frc_algorithm_get_type (void);
 
+GType
+gst_msdkenc_transform_skip_get_type (void);
+
 G_END_DECLS
 #endif
