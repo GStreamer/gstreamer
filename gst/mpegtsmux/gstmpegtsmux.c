@@ -115,7 +115,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false; "
         "video/x-dirac;"
-        "image/x-jpc;"
+        "image/x-jpc, alignment = (string) frame;"
         "video/x-h264,stream-format=(string)byte-stream,"
         "alignment=(string){au, nal}; "
         "video/x-h265,stream-format=(string)byte-stream,"
@@ -139,7 +139,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "channels = (int) [1, 8], "
         "channel-mapping-family = (int) {0, 1};"
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
-        "image/x-jpc, profile = (int)[0, 49151];"));
+        "image/x-jpc, alignment = (string) frame, profile = (int)[0, 49151];"));
 
 static GstStaticPadTemplate gst_mpeg_ts_mux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
