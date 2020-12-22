@@ -69,7 +69,8 @@ static GstStaticPadTemplate gst_openjpeg_dec_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-j2c, "
         GST_JPEG2000_SAMPLING_LIST "; "
-        "image/x-jpc, " GST_JPEG2000_SAMPLING_LIST "; " "image/jp2")
+        "image/x-jpc, alignment=(string) frame,"
+        GST_JPEG2000_SAMPLING_LIST "; " "image/jp2")
     );
 
 static GstStaticPadTemplate gst_openjpeg_dec_src_template =
