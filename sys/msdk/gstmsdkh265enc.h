@@ -63,6 +63,7 @@ struct _GstMsdkH265Enc
   gint tune_mode;
   guint prop_flag;
   gushort transform_skip;
+  guint b_pyramid;
 
   mfxExtHEVCTiles ext_tiles;
   /* roi[0] for current ROI and roi[1] for previous ROI */
