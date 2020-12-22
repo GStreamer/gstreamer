@@ -242,7 +242,8 @@ do_decode (VADisplay dpy, VAContextID ctx, VABufferID * buf_id, void **buf_ptr)
 }
 
 gboolean
-gst_vaapi_picture_decode (GstVaapiPicture * picture)
+gst_vaapi_picture_decode_with_surface_id (GstVaapiPicture * picture,
+    VASurfaceID surface_id)
 {
   GstVaapiIqMatrix *iq_matrix;
   GstVaapiBitPlane *bitplane;
@@ -254,13 +255,14 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture)
   guint i;
 
   g_return_val_if_fail (GST_VAAPI_IS_PICTURE (picture), FALSE);
+  g_return_val_if_fail (surface_id != VA_INVALID_SURFACE, FALSE);
 
   va_display = GET_VA_DISPLAY (picture);
   va_context = GET_VA_CONTEXT (picture);
 
-  GST_DEBUG ("decode picture 0x%08x", picture->surface_id);
+  GST_DEBUG ("decode picture 0x%08x", surface_id);
 
-  status = vaBeginPicture (va_display, va_context, picture->surface_id);
+  status = vaBeginPicture (va_display, va_context, surface_id);
   if (!vaapi_check_status (status, "vaBeginPicture()"))
     return FALSE;
 
@@ -317,6 +319,15 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture)
   if (!vaapi_check_status (status, "vaEndPicture()"))
     return FALSE;
   return TRUE;
+}
+
+gboolean
+gst_vaapi_picture_decode (GstVaapiPicture * picture)
+{
+  g_return_val_if_fail (GST_VAAPI_IS_PICTURE (picture), FALSE);
+
+  return gst_vaapi_picture_decode_with_surface_id (picture,
+      picture->surface_id);
 }
 
 /* Mark picture as output for internal purposes only. Don't push frame out */

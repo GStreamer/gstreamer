@@ -198,6 +198,11 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture);
 
 G_GNUC_INTERNAL
 gboolean
+gst_vaapi_picture_decode_with_surface_id (GstVaapiPicture * picture,
+    VASurfaceID surface_id);
+
+G_GNUC_INTERNAL
+gboolean
 gst_vaapi_picture_output (GstVaapiPicture * picture);
 
 G_GNUC_INTERNAL

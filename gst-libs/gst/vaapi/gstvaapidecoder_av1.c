@@ -945,11 +945,13 @@ static GstVaapiDecoderStatus
 av1_decode_current_picture (GstVaapiDecoderAV1 * decoder)
 {
   GstVaapiDecoderAV1Private *priv = &decoder->priv;
-  GstVaapiPicture *const picture = (GstVaapiPicture *) priv->current_picture;
+  GstVaapiPictureAV1 *const picture =
+      (GstVaapiPictureAV1 *) priv->current_picture;
 
   g_assert (picture);
 
-  if (!gst_vaapi_picture_decode (picture))
+  if (!gst_vaapi_picture_decode_with_surface_id (GST_VAAPI_PICTURE (picture),
+          GST_VAAPI_SURFACE_PROXY_SURFACE_ID (picture->recon_proxy)))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
