@@ -54,6 +54,8 @@ enum
   PROP_TRANSFORM_SKIP,
   PROP_B_PYRAMID,
   PROP_P_PYRAMID,
+  PROP_MIN_QP,
+  PROP_MAX_QP,
 };
 
 enum
@@ -70,6 +72,8 @@ enum
 #define PROP_TRANSFORM_SKIP_DEFAULT     MFX_CODINGOPTION_UNKNOWN
 #define PROP_B_PYRAMID_DEFAULT          FALSE
 #define PROP_P_PYRAMID_DEFAULT          FALSE
+#define PROP_MIN_QP_DEFAULT             0
+#define PROP_MAX_QP_DEFAULT             0
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
@@ -343,6 +347,10 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 
   /* Enable Extended coding options */
   encoder->option2.MaxSliceSize = h265enc->max_slice_size;
+  encoder->option2.MinQPI = encoder->option2.MinQPP = encoder->option2.MinQPB =
+      h265enc->min_qp;
+  encoder->option2.MaxQPI = encoder->option2.MaxQPP = encoder->option2.MaxQPB =
+      h265enc->max_qp;
 
 #if (MFX_VERSION >= 1026)
   if (h265enc->transform_skip != MFX_CODINGOPTION_UNKNOWN) {
@@ -558,6 +566,14 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->p_pyramid = g_value_get_boolean (value);
       break;
 
+    case PROP_MIN_QP:
+      thiz->min_qp = g_value_get_uint (value);
+      break;
+
+    case PROP_MAX_QP:
+      thiz->max_qp = g_value_get_uint (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -608,6 +624,14 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_P_PYRAMID:
       g_value_set_boolean (value, thiz->p_pyramid);
+      break;
+
+    case PROP_MIN_QP:
+      g_value_set_uint (value, thiz->min_qp);
+      break;
+
+    case PROP_MAX_QP:
+      g_value_set_uint (value, thiz->max_qp);
       break;
 
     default:
@@ -745,6 +769,18 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           "Enable P-Pyramid Reference structure", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MIN_QP,
+      g_param_spec_uint ("min-qp", "Min QP",
+          "Minimal quantizer for I/P/B frames",
+          0, 51, PROP_MIN_QP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_QP,
+      g_param_spec_uint ("max-qp", "Max QP",
+          "Maximum quantizer for I/P/B frames",
+          0, 51, PROP_MAX_QP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -767,5 +803,7 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->transform_skip = PROP_TRANSFORM_SKIP_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
   thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
+  thiz->min_qp = PROP_MIN_QP_DEFAULT;
+  thiz->max_qp = PROP_MAX_QP_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }

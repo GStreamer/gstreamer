@@ -65,6 +65,8 @@ struct _GstMsdkH265Enc
   gushort transform_skip;
   guint b_pyramid;
   guint p_pyramid;
+  guint min_qp;
+  guint max_qp;
 
   mfxExtHEVCTiles ext_tiles;
   /* roi[0] for current ROI and roi[1] for previous ROI */

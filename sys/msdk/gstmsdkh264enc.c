@@ -55,6 +55,8 @@ enum
   PROP_B_PYRAMID,
   PROP_TUNE_MODE,
   PROP_P_PYRAMID,
+  PROP_MIN_QP,
+  PROP_MAX_QP,
 };
 
 enum
@@ -72,6 +74,8 @@ enum
 #define PROP_B_PYRAMID_DEFAULT          FALSE
 #define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
 #define PROP_P_PYRAMID_DEFAULT          FALSE
+#define PROP_MIN_QP_DEFAULT             0
+#define PROP_MAX_QP_DEFAULT             0
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -378,6 +382,11 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
 
   encoder->option2.Trellis = thiz->trellis ? thiz->trellis : MFX_TRELLIS_OFF;
   encoder->option2.MaxSliceSize = thiz->max_slice_size;
+  encoder->option2.MinQPI = encoder->option2.MinQPP = encoder->option2.MinQPB =
+      thiz->min_qp;
+  encoder->option2.MaxQPI = encoder->option2.MaxQPP = encoder->option2.MaxQPB =
+      thiz->max_qp;
+
   if (encoder->rate_control == MFX_RATECONTROL_LA ||
       encoder->rate_control == MFX_RATECONTROL_LA_HRD ||
       encoder->rate_control == MFX_RATECONTROL_LA_ICQ)
@@ -571,6 +580,12 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_P_PYRAMID:
       thiz->p_pyramid = g_value_get_boolean (value);
       break;
+    case PROP_MIN_QP:
+      thiz->min_qp = g_value_get_uint (value);
+      break;
+    case PROP_MAX_QP:
+      thiz->max_qp = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -618,6 +633,12 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_P_PYRAMID:
       g_value_set_boolean (value, thiz->p_pyramid);
+      break;
+    case PROP_MIN_QP:
+      g_value_set_uint (value, thiz->min_qp);
+      break;
+    case PROP_MAX_QP:
+      g_value_set_uint (value, thiz->max_qp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -725,6 +746,18 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           "Enable P-Pyramid Reference structure", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MIN_QP,
+      g_param_spec_uint ("min-qp", "Min QP",
+          "Minimal quantizer for I/P/B frames",
+          0, 51, PROP_MIN_QP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_QP,
+      g_param_spec_uint ("max-qp", "Max QP",
+          "Maximum quantizer for I/P/B frames",
+          0, 51, PROP_MAX_QP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder", "Codec/Encoder/Video/Hardware",
       "H264 video encoder based on Intel Media SDK",
@@ -744,4 +777,6 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
   thiz->tune_mode = PROP_TUNE_MODE_DEFAULT;
   thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
+  thiz->min_qp = PROP_MIN_QP_DEFAULT;
+  thiz->max_qp = PROP_MAX_QP_DEFAULT;
 }
