@@ -796,12 +796,11 @@ valgrind ges:
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
         meson build $env:MESON_ARGS &&
         ninja -C build"
-  # XXX: Re-enable when uploading stops timing out
-  #artifacts:
-  #  expire_in: "7 days"
-  #  when: "always"
-  #  paths:
-  #    - 'gst-build/build/meson-logs/'
+  artifacts:
+    expire_in: "7 days"
+    when: "always"
+    paths:
+      - 'gst-build/build/meson-logs/'
 
 build vs2017 amd64:
   extends: '.build windows'
