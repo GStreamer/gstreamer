@@ -13,6 +13,7 @@ d3d11_sources = [
   'gstd3d11videosink.c',
   'gstd3d11videosinkbin.c',
   'gstd3d11window.cpp',
+  'gstd3d11window_dummy.cpp',
   'plugin.c',
 ]
 

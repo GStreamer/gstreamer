@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -56,6 +57,7 @@ enum
   PROP_FULLSCREEN_TOGGLE_MODE,
   PROP_FULLSCREEN,
   PROP_RENDER_STATS,
+  PROP_DRAW_ON_SHARED_TEXTURE,
 };
 
 /* basesink */
@@ -82,6 +84,20 @@ enum
 #define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
 #define DEFAULT_FULLSCREEN                FALSE
 #define DEFAULT_RENDER_STATS              FALSE
+#define DEFAULT_DRAW_ON_SHARED_TEXTURE    FALSE
+
+enum
+{
+  /* signals */
+  SIGNAL_BEGIN_DRAW,
+
+  /* actions */
+  SIGNAL_DRAW,
+
+  LAST_SIGNAL
+};
+
+static guint gst_d3d11_video_sink_bin_signals[LAST_SIGNAL] = { 0, };
 
 static GstStaticCaps pad_template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -118,6 +134,12 @@ static void
 gst_d3d11_video_sink_bin_video_overlay_init (GstVideoOverlayInterface * iface);
 static void
 gst_d3d11_video_sink_bin_navigation_init (GstNavigationInterface * iface);
+static void gst_d311_video_sink_bin_on_begin_draw (GstD3D11VideoSink * sink,
+    gpointer self);
+static gboolean
+gst_d3d11_video_sink_bin_draw_action (GstD3D11VideoSinkBin * self,
+    gpointer shared_handle, guint texture_misc_flags, guint64 acquire_key,
+    guint64 release_key);
 
 #define gst_d3d11_video_sink_bin_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11VideoSinkBin, gst_d3d11_video_sink_bin,
@@ -242,6 +264,33 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
+  g_object_class_install_property (gobject_class, PROP_DRAW_ON_SHARED_TEXTURE,
+      g_param_spec_boolean ("draw-on-shared-texture",
+          "Draw on shared texture",
+          "Draw on user provided shared texture instead of window. "
+          "When enabled, user can pass application's own texture to sink "
+          "by using \"draw\" action signal on \"begin-draw\" signal handler, "
+          "so that sink can draw video data on application's texture. "
+          "Supported texture formats for user texture are "
+          "DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM, and "
+          "DXGI_FORMAT_R10G10B10A2_UNORM.",
+          DEFAULT_DRAW_ON_SHARED_TEXTURE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
+
+  gst_d3d11_video_sink_bin_signals[SIGNAL_BEGIN_DRAW] =
+      g_signal_new ("begin-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstD3D11VideoSinkBinClass, begin_draw),
+      NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  gst_d3d11_video_sink_bin_signals[SIGNAL_DRAW] =
+      g_signal_new ("draw", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstD3D11VideoSinkBinClass, draw), NULL, NULL, NULL,
+      G_TYPE_BOOLEAN, 4, G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT64,
+      G_TYPE_UINT64);
+
+  klass->draw = gst_d3d11_video_sink_bin_draw_action;
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 video sink bin", "Sink/Video",
@@ -258,6 +307,7 @@ static void
 gst_d3d11_video_sink_bin_init (GstD3D11VideoSinkBin * self)
 {
   GstPad *pad;
+  GstD3D11VideoSinkCallbacks callbacks;
 
   self->upload = gst_element_factory_make ("d3d11upload", NULL);
   if (!self->upload) {
@@ -271,6 +321,10 @@ gst_d3d11_video_sink_bin_init (GstD3D11VideoSinkBin * self)
     GST_ERROR_OBJECT (self, "d3d11videosinkelement unavailable");
     return;
   }
+
+  callbacks.begin_draw = gst_d311_video_sink_bin_on_begin_draw;
+  gst_d3d11_video_sink_set_callbacks (GST_D3D11_VIDEO_SINK (self->sink),
+      &callbacks, self);
 
   gst_bin_add_many (GST_BIN (self), self->upload, self->sink, NULL);
 
@@ -307,6 +361,28 @@ gst_d3d11_video_sink_bin_get_property (GObject * object, guint prop_id,
   GstD3D11VideoSinkBin *self = GST_D3D11_VIDEO_SINK_BIN (object);
 
   g_object_get_property (G_OBJECT (self->sink), pspec->name, value);
+}
+
+static void
+gst_d311_video_sink_bin_on_begin_draw (GstD3D11VideoSink * sink, gpointer self)
+{
+  g_signal_emit (self, gst_d3d11_video_sink_bin_signals[SIGNAL_BEGIN_DRAW], 0,
+      NULL);
+}
+
+static gboolean
+gst_d3d11_video_sink_bin_draw_action (GstD3D11VideoSinkBin * self,
+    gpointer shared_handle, guint texture_misc_flags, guint64 acquire_key,
+    guint64 release_key)
+{
+  if (!self->sink) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+        ("D3D11VideoSink element wasn't configured"), (NULL));
+    return FALSE;
+  }
+
+  return gst_d3d11_video_sink_draw (GST_D3D11_VIDEO_SINK (self->sink),
+      shared_handle, texture_misc_flags, acquire_key, release_key);
 }
 
 /* VideoOverlay interface */

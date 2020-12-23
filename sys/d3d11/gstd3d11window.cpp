@@ -126,9 +126,13 @@ static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_d3d11_window_dispose (GObject * object);
 static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
-    GstBuffer * buffer, GstStructure * stats);
+    GstBuffer * buffer, GstStructure * stats,
+    ID3D11VideoProcessorOutputView *pov, ID3D11RenderTargetView * rtv);
 static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
     guint width, guint height);
+static gboolean gst_d3d11_window_prepare_default (GstD3D11Window * window,
+    guint display_width, guint display_height, GstCaps * caps,
+    gboolean * video_processor_available, GError ** error);
 
 static void
 gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
@@ -140,6 +144,7 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
   gobject_class->dispose = gst_d3d11_window_dispose;
 
   klass->on_resize = GST_DEBUG_FUNCPTR (gst_d3d11_window_on_resize_default);
+  klass->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_window_prepare_default);
 
   g_object_class_install_property (gobject_class, PROP_D3D11_DEVICE,
       g_param_spec_object ("d3d11device", "D3D11 Device",
@@ -582,7 +587,10 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
   window->first_present = TRUE;
 
   /* redraw the last scene if cached buffer exits */
-  gst_d3d111_window_present (window, NULL, NULL);
+  if (window->cached_buffer) {
+    gst_d3d111_window_present (window, window->cached_buffer, NULL,
+        window->pov, window->rtv);
+  }
 
 done:
   if (backbuffer)
@@ -623,9 +631,27 @@ typedef struct
   gboolean supported;
 } GstD3D11WindowDisplayFormat;
 
-
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
+    guint display_height, GstCaps * caps, gboolean * video_processor_available,
+    GError ** error)
+{
+  GstD3D11WindowClass *klass;
+
+  g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
+
+  klass = GST_D3D11_WINDOW_GET_CLASS (window);
+  g_assert (klass->prepare != NULL);
+
+  GST_DEBUG_OBJECT (window, "Prepare window, display resolution %dx%d, caps %"
+      GST_PTR_FORMAT, display_width, display_height, caps);
+
+  return klass->prepare (window, display_width, display_height, caps,
+      video_processor_available, error);
+}
+
+static gboolean
+gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     guint display_height, GstCaps * caps, gboolean * video_processor_available,
     GError ** error)
 {
@@ -653,11 +679,6 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
 #if (DXGI_HEADER_VERSION >= 5)
   DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
 #endif
-
-  g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
-
-  GST_DEBUG_OBJECT (window, "Prepare window, display resolution %dx%d, caps %"
-      GST_PTR_FORMAT, display_width, display_height, caps);
 
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
@@ -1079,17 +1100,17 @@ gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
 
 static GstFlowReturn
 gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
-    GstStructure * stats)
+    GstStructure * stats, ID3D11VideoProcessorOutputView *pov,
+    ID3D11RenderTargetView * rtv)
 {
   GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (self);
   GstFlowReturn ret = GST_FLOW_OK;
   guint present_flags = 0;
 
-  if (buffer) {
-    gst_buffer_replace (&self->cached_buffer, buffer);
-  }
+  if (!buffer)
+    return GST_FLOW_OK;
 
-  if (self->cached_buffer) {
+  {
     GstMapInfo infos[GST_VIDEO_MAX_PLANES];
     ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
     ID3D11VideoProcessorInputView *piv = NULL;
@@ -1097,16 +1118,16 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
         gst_d3d11_device_get_device_handle (self->device);
 
     /* Map memory in any case so that we can upload pending stage texture */
-    if (!gst_d3d11_buffer_map (self->cached_buffer, device_handle,
+    if (!gst_d3d11_buffer_map (buffer, device_handle,
         infos, GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "Couldn't map buffer");
 
       return GST_FLOW_ERROR;
     }
 
-    if (!gst_d3d11_buffer_get_shader_resource_view (self->cached_buffer, srv)) {
+    if (!gst_d3d11_buffer_get_shader_resource_view (buffer, srv)) {
       if (!gst_d3d11_window_buffer_ensure_processor_input (self,
-          self->cached_buffer, &piv)) {
+          buffer, &piv)) {
         GST_ERROR_OBJECT (self, "Input texture cannot be used for converter");
         return GST_FLOW_ERROR;
       }
@@ -1127,9 +1148,9 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
           &viewport);
     }
 
-    if (self->processor && piv && self->pov) {
+    if (self->processor && piv && pov) {
       if (!gst_d3d11_video_processor_render_unlocked (self->processor,
-          &self->input_rect, piv, &self->render_rect, self->pov)) {
+          &self->input_rect, piv, &self->render_rect, pov)) {
         GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using processor");
         ret = GST_FLOW_ERROR;
         goto unmap_and_out;
@@ -1138,7 +1159,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       }
     } else {
       if (!gst_d3d11_color_converter_convert_unlocked (self->converter,
-          srv, &self->rtv, NULL, NULL)) {
+          srv, &rtv, NULL, NULL)) {
         GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
         ret = GST_FLOW_ERROR;
         goto unmap_and_out;
@@ -1147,8 +1168,8 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       }
     }
 
-    gst_d3d11_overlay_compositor_upload (self->compositor, self->cached_buffer);
-    gst_d3d11_overlay_compositor_draw_unlocked (self->compositor, &self->rtv);
+    gst_d3d11_overlay_compositor_upload (self->compositor, buffer);
+    gst_d3d11_overlay_compositor_draw_unlocked (self->compositor, &rtv);
 
 #if (DXGI_HEADER_VERSION >= 5)
     if (self->allow_tearing && self->fullscreen) {
@@ -1160,12 +1181,13 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     gst_d3d11_window_present_d2d (self, stats);
 #endif
 
-    ret = klass->present (self, present_flags);
+    if (klass->present)
+      ret = klass->present (self, present_flags);
 
     self->first_present = FALSE;
 
 unmap_and_out:
-    gst_d3d11_buffer_unmap (self->cached_buffer, infos);
+    gst_d3d11_buffer_unmap (buffer, infos);
   }
 
   return ret;
@@ -1192,11 +1214,69 @@ gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
   }
 
   gst_d3d11_device_lock (window->device);
-  ret = gst_d3d111_window_present (window, buffer, stats);
+  gst_buffer_replace (&window->cached_buffer, buffer);
+
+  ret = gst_d3d111_window_present (window, window->cached_buffer, stats,
+      window->pov, window->rtv);
   gst_d3d11_device_unlock (window->device);
 
   if (stats)
     gst_structure_free (stats);
+
+  return ret;
+}
+
+GstFlowReturn
+gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
+    GstBuffer * buffer, HANDLE shared_handle, guint texture_misc_flags,
+    guint64 acquire_key, guint64 release_key)
+{
+  GstD3D11WindowClass *klass;
+  GstMemory *mem;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstD3D11WindowSharedHandleData data = { NULL, };
+  ID3D11VideoProcessorOutputView *pov = NULL;
+  ID3D11RenderTargetView *rtv = NULL;
+
+  g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), GST_FLOW_ERROR);
+
+  klass = GST_D3D11_WINDOW_GET_CLASS (window);
+
+  g_assert (klass->open_shared_handle != NULL);
+  g_assert (klass->release_shared_handle != NULL);
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_ERROR_OBJECT (window, "Invalid buffer");
+
+    return GST_FLOW_ERROR;
+  }
+
+  data.shared_handle = shared_handle;
+  data.texture_misc_flags = texture_misc_flags;
+  data.acquire_key = acquire_key;
+  data.release_key = release_key;
+
+  gst_d3d11_device_lock (window->device);
+  if (!klass->open_shared_handle (window, &data)) {
+    GST_ERROR_OBJECT (window, "Couldn't open shared handle");
+    gst_d3d11_device_unlock (window->device);
+    return GST_FLOW_OK;
+  }
+
+  if (data.fallback_rtv) {
+    rtv = data.fallback_rtv;
+    pov = data.fallback_pov;
+  } else {
+    rtv = data.rtv;
+    pov = data.pov;
+  }
+
+  ret = gst_d3d111_window_present (window, buffer, NULL,
+      pov, rtv);
+
+  klass->release_shared_handle (window, &data);
+  gst_d3d11_device_unlock (window->device);
 
   return ret;
 }

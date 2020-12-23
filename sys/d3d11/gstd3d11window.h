@@ -63,6 +63,22 @@ typedef enum
   GST_D3D11_WINDOW_NATIVE_TYPE_SWAP_CHAIN_PANEL,
 } GstD3D11WindowNativeType;
 
+typedef struct
+{
+  HANDLE shared_handle;
+  guint texture_misc_flags;
+  guint64 acquire_key;
+  guint64 release_key;
+
+  ID3D11Texture2D *texture;
+  IDXGIKeyedMutex *keyed_mutex;
+  ID3D11VideoProcessorOutputView *pov;
+  ID3D11RenderTargetView *rtv;
+
+  ID3D11VideoProcessorOutputView *fallback_pov;
+  ID3D11RenderTargetView *fallback_rtv;
+} GstD3D11WindowSharedHandleData;
+
 struct _GstD3D11Window
 {
   GstObject parent;
@@ -138,7 +154,20 @@ struct _GstD3D11WindowClass
                                            guint width,
                                            guint height);
 
+  gboolean      (*prepare)                (GstD3D11Window * window,
+                                           guint display_width,
+                                           guint display_height,
+                                           GstCaps * caps,
+                                           gboolean * video_processor_available,
+                                           GError ** error);
+
   void          (*unprepare)              (GstD3D11Window * window);
+
+  gboolean      (*open_shared_handle)     (GstD3D11Window * window,
+                                           GstD3D11WindowSharedHandleData * data);
+
+  gboolean      (*release_shared_handle)  (GstD3D11Window * window,
+                                           GstD3D11WindowSharedHandleData * data);
 };
 
 GType         gst_d3d11_window_get_type             (void);
@@ -160,6 +189,13 @@ GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,
                                                      GstBuffer * buffer,
                                                      GstVideoRectangle * src_rect,
                                                      GstStructure * stats);
+
+GstFlowReturn gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
+                                                        GstBuffer * buffer,
+                                                        HANDLE shared_handle,
+                                                        guint texture_misc_flags,
+                                                        guint64 acquire_key,
+                                                        guint64 release_key);
 
 gboolean      gst_d3d11_window_unlock               (GstD3D11Window * window);
 
