@@ -54,6 +54,7 @@ enum
   PROP_MAX_SLICE_SIZE,
   PROP_B_PYRAMID,
   PROP_TUNE_MODE,
+  PROP_P_PYRAMID,
 };
 
 enum
@@ -70,6 +71,7 @@ enum
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
 #define PROP_B_PYRAMID_DEFAULT          FALSE
 #define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
+#define PROP_P_PYRAMID_DEFAULT          FALSE
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -388,6 +390,15 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
     encoder->param.mfx.GopRefDist = 0;
   }
 
+  if (thiz->p_pyramid) {
+    encoder->option3.PRefType = MFX_P_REF_PYRAMID;
+    /* MFX_P_REF_PYRAMID is available for GopRefDist = 1 */
+    encoder->param.mfx.GopRefDist = 1;
+    /* SDK decides the DPB size for P pyramid */
+    encoder->param.mfx.NumRefFrame = 0;
+    encoder->enable_extopt3 = TRUE;
+  }
+
   /* Enable Extended coding options */
   gst_msdkenc_ensure_extended_coding_options (encoder);
 
@@ -557,6 +568,9 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
       thiz->tune_mode = g_value_get_enum (value);
       thiz->prop_flag |= GST_MSDK_FLAG_TUNE_MODE;
       break;
+    case PROP_P_PYRAMID:
+      thiz->p_pyramid = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -601,6 +615,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TUNE_MODE:
       g_value_set_enum (value, thiz->tune_mode);
+      break;
+    case PROP_P_PYRAMID:
+      g_value_set_boolean (value, thiz->p_pyramid);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -703,6 +720,11 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           gst_msdkenc_tune_mode_get_type (), PROP_TUNE_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_P_PYRAMID,
+      g_param_spec_boolean ("p-pyramid", "P-pyramid",
+          "Enable P-Pyramid Reference structure", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder", "Codec/Encoder/Video/Hardware",
       "H264 video encoder based on Intel Media SDK",
@@ -721,4 +743,5 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
   thiz->tune_mode = PROP_TUNE_MODE_DEFAULT;
+  thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
 }

@@ -53,6 +53,7 @@ enum
   PROP_TUNE_MODE,
   PROP_TRANSFORM_SKIP,
   PROP_B_PYRAMID,
+  PROP_P_PYRAMID,
 };
 
 enum
@@ -68,6 +69,7 @@ enum
 #define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
 #define PROP_TRANSFORM_SKIP_DEFAULT     MFX_CODINGOPTION_UNKNOWN
 #define PROP_B_PYRAMID_DEFAULT          FALSE
+#define PROP_P_PYRAMID_DEFAULT          FALSE
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
@@ -356,6 +358,15 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
     encoder->param.mfx.GopRefDist = 0;
   }
 
+  if (h265enc->p_pyramid) {
+    encoder->option3.PRefType = MFX_P_REF_PYRAMID;
+    /* MFX_P_REF_PYRAMID is available for GopRefDist = 1 */
+    encoder->param.mfx.GopRefDist = 1;
+    /* SDK decides the DPB size for P pyramid */
+    encoder->param.mfx.NumRefFrame = 0;
+    encoder->enable_extopt3 = TRUE;
+  }
+
   gst_msdkenc_ensure_extended_coding_options (encoder);
 
   if (h265enc->num_tile_rows > 1 || h265enc->num_tile_cols > 1) {
@@ -543,6 +554,10 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->b_pyramid = g_value_get_boolean (value);
       break;
 
+    case PROP_P_PYRAMID:
+      thiz->p_pyramid = g_value_get_boolean (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -589,6 +604,10 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_B_PYRAMID:
       g_value_set_boolean (value, thiz->b_pyramid);
+      break;
+
+    case PROP_P_PYRAMID:
+      g_value_set_boolean (value, thiz->p_pyramid);
       break;
 
     default:
@@ -721,6 +740,11 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           "Enable B-Pyramid Reference structure", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_P_PYRAMID,
+      g_param_spec_boolean ("p-pyramid", "P-pyramid",
+          "Enable P-Pyramid Reference structure", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -742,5 +766,6 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->tune_mode = PROP_TUNE_MODE_DEFAULT;
   thiz->transform_skip = PROP_TRANSFORM_SKIP_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
+  thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }
