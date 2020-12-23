@@ -37,17 +37,6 @@ G_BEGIN_DECLS
 
 #define GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE "gst.d3d11.device.handle"
 
-typedef enum
-{
-  GST_D3D11_DXGI_FACTORY_UNKNOWN = 0,
-  GST_D3D11_DXGI_FACTORY_1,
-  GST_D3D11_DXGI_FACTORY_2,
-  GST_D3D11_DXGI_FACTORY_3,
-  GST_D3D11_DXGI_FACTORY_4,
-  GST_D3D11_DXGI_FACTORY_5,
-} GstD3D11DXGIFactoryVersion;
-
-
 struct _GstD3D11Device
 {
   GstObject parent;
@@ -76,10 +65,6 @@ ID3D11Device *        gst_d3d11_device_get_device_handle  (GstD3D11Device * devi
 ID3D11DeviceContext * gst_d3d11_device_get_device_context_handle (GstD3D11Device * device);
 
 IDXGIFactory1 *       gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device);
-
-GstD3D11DXGIFactoryVersion gst_d3d11_device_get_chosen_dxgi_factory_version (GstD3D11Device * device);
-
-D3D_FEATURE_LEVEL     gst_d3d11_device_get_chosen_feature_level (GstD3D11Device * device);
 
 void                  gst_d3d11_device_lock               (GstD3D11Device * device);
 

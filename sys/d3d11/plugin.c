@@ -140,8 +140,9 @@ plugin_init (GstPlugin * plugin)
    */
   if (device) {
     D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_10_0;
+    ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
 
-    feature_level = gst_d3d11_device_get_chosen_feature_level (device);
+    feature_level = ID3D11Device_GetFeatureLevel (device_handle);
     if (feature_level >= D3D_FEATURE_LEVEL_10_0)
       video_sink_rank = GST_RANK_PRIMARY;
   }

@@ -88,13 +88,15 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
   const gchar *shader_target;
   D3D_FEATURE_LEVEL feature_level;
   HRESULT hr;
+  ID3D11Device *device_handle;
 
   if (!gst_d3d11_shader_init ()) {
     GST_ERROR ("D3DCompiler is unavailable");
     return NULL;
   }
 
-  feature_level = gst_d3d11_device_get_chosen_feature_level (device);
+  device_handle = gst_d3d11_device_get_device_handle (device);
+  feature_level = ID3D11Device_GetFeatureLevel (device_handle);
 
   if (is_pixel_shader) {
     if (feature_level >= D3D_FEATURE_LEVEL_10_0)

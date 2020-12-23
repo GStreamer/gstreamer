@@ -82,8 +82,6 @@ struct _GstD3D11DevicePrivate
   ID3D11DeviceContext *device_context;
 
   IDXGIFactory1 *factory;
-  GstD3D11DXGIFactoryVersion factory_ver;
-  D3D_FEATURE_LEVEL feature_level;
   GstD3D11Format format_table[GST_D3D11_N_FORMATS];
 
   GRecMutex extern_lock;
@@ -612,12 +610,9 @@ gst_d3d11_device_constructed (GObject * object)
 
     hr = S_OK;
   }
-
-  priv->factory_ver = GST_D3D11_DXGI_FACTORY_5;
 #endif
 
   if (!factory) {
-    priv->factory_ver = GST_D3D11_DXGI_FACTORY_1;
     hr = CreateDXGIFactory1 (&IID_IDXGIFactory1, (void **) &factory);
   }
 
@@ -674,7 +669,6 @@ gst_d3d11_device_constructed (GObject * object)
   hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
       NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
       D3D11_SDK_VERSION, &priv->device, &selected_level, &priv->device_context);
-  priv->feature_level = selected_level;
 
   if (!gst_d3d11_result (hr, NULL)) {
     /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
@@ -682,7 +676,6 @@ gst_d3d11_device_constructed (GObject * object)
         NULL, d3d11_flags, &feature_levels[1],
         G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION, &priv->device,
         &selected_level, &priv->device_context);
-    priv->feature_level = selected_level;
   }
 
   /* if D3D11_CREATE_DEVICE_DEBUG was enabled but couldn't create device,
@@ -697,7 +690,6 @@ gst_d3d11_device_constructed (GObject * object)
         NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
         D3D11_SDK_VERSION, &priv->device, &selected_level,
         &priv->device_context);
-    priv->feature_level = selected_level;
 
     if (!gst_d3d11_result (hr, NULL)) {
       /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
@@ -705,7 +697,6 @@ gst_d3d11_device_constructed (GObject * object)
           NULL, d3d11_flags, &feature_levels[1],
           G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION, &priv->device,
           &selected_level, &priv->device_context);
-      priv->feature_level = selected_level;
     }
   }
 
@@ -960,23 +951,6 @@ gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   return device->priv->factory;
-}
-
-GstD3D11DXGIFactoryVersion
-gst_d3d11_device_get_chosen_dxgi_factory_version (GstD3D11Device * device)
-{
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device),
-      GST_D3D11_DXGI_FACTORY_UNKNOWN);
-
-  return device->priv->factory_ver;
-}
-
-D3D_FEATURE_LEVEL
-gst_d3d11_device_get_chosen_feature_level (GstD3D11Device * device)
-{
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), 0);
-
-  return device->priv->feature_level;
 }
 
 void
