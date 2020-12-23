@@ -294,7 +294,7 @@ _gst_value_list_init (GValue * value, guint prealloc)
  * @value: A zero-filled (uninitialized) #GValue structure
  * @prealloc: The number of entries to pre-allocate in the list
  *
- * Initializes and pre-allocates a #GValue of type #GST_VALUE_LIST.
+ * Initializes and pre-allocates a #GValue of type #GST_TYPE_LIST.
  *
  * Returns: (transfer none): The #GValue structure that has been passed in
  *
@@ -325,7 +325,7 @@ _gst_value_array_init (GValue * value, guint prealloc)
  * @value: A zero-filled (uninitialized) #GValue structure
  * @prealloc: The number of entries to pre-allocate in the array
  *
- * Initializes and pre-allocates a #GValue of type #GST_VALUE_ARRAY.
+ * Initializes and pre-allocates a #GValue of type #GST_TYPE_ARRAY.
  *
  * Returns: (transfer none): The #GValue structure that has been passed in
  *
