@@ -2209,6 +2209,15 @@ reconfigure_output_stream (DecodebinOutputStream * output,
 
     gst_bin_remove ((GstBin *) dbin, output->decoder);
     output->decoder = NULL;
+  } else if (output->linked) {
+    /* Otherwise if we have no decoder yet but the output is linked make
+     * sure that the ghost pad is really unlinked in case no decoder was
+     * needed previously */
+    if (!gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad, NULL)) {
+      GST_ERROR_OBJECT (dbin, "Could not release ghost pad");
+      gst_caps_unref (new_caps);
+      goto cleanup;
+    }
   }
 
   gst_caps_unref (new_caps);
