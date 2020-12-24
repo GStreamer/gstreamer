@@ -152,48 +152,63 @@ _pts_eval (PTSGenerator * tsg, GstClockTime pic_pts, guint pic_tsn)
   return pts;
 }
 
-#define SEQ_HDR_IS_VALID(hdr)                                                  \
-  (((GstMpegVideoSequenceHdr *) hdr)->width > 0 &&                             \
-      ((GstMpegVideoSequenceHdr *) hdr)->height > 0)
-#define SEQ_HDR_INIT(hdr)                                                      \
-  *(GstMpegVideoSequenceHdr *) hdr = (GstMpegVideoSequenceHdr) { }
+static inline gboolean
+_seq_hdr_is_valid (GstMpegVideoSequenceHdr * hdr)
+{
+  return hdr->width > 0 && hdr->height > 0;
+}
 
-#define SEQ_EXT_IS_VALID(ext)                                                  \
-  (((GstMpegVideoSequenceExt *) ext)->profile >= GST_MPEG_VIDEO_PROFILE_422 && \
-      ((GstMpegVideoSequenceExt *) ext)->profile <=                            \
-          GST_MPEG_VIDEO_PROFILE_SIMPLE)
-#define SEQ_EXT_INIT(ext)                                                      \
-  *(GstMpegVideoSequenceExt *) ext =                                           \
-      (GstMpegVideoSequenceExt) { .profile = 0xff, }
+#define SEQ_HDR_INIT (GstMpegVideoSequenceHdr) { 0, }
 
-#define SEQ_DISPLAY_EXT_IS_VALID(ext)                                          \
-  (((GstMpegVideoSequenceDisplayExt *) ext)->video_format != 0xff)
-#define SEQ_DISPLAY_EXT_INIT(ext)                                              \
-  *(GstMpegVideoSequenceDisplayExt *) ext =                                    \
-      (GstMpegVideoSequenceDisplayExt) { .video_format = 0xff, }
+static inline gboolean
+_seq_ext_is_valid (GstMpegVideoSequenceExt * ext)
+{
+  return ext->profile >= GST_MPEG_VIDEO_PROFILE_422
+      && ext->profile <= GST_MPEG_VIDEO_PROFILE_SIMPLE;
+}
 
-#define SEQ_SCALABLE_EXT_IS_VALID(ext)                                         \
-  (((GstMpegVideoSequenceScalableExt *) ext)->scalable_mode != 0xff)
-#define SEQ_SCALABLE_EXT_INIT(ext)                                             \
-  *(GstMpegVideoSequenceScalableExt *) ext =                                   \
-      (GstMpegVideoSequenceScalableExt) { .scalable_mode = 0xff, }
+#define SEQ_EXT_INIT (GstMpegVideoSequenceExt) { 0xff, 0, }
 
-#define QUANT_MATRIX_EXT_IS_VALID(ext)                                         \
-  (((GstMpegVideoQuantMatrixExt *) ext)->load_intra_quantiser_matrix != 0xff)
-#define QUANT_MATRIX_EXT_INIT(ext)                                             \
-  *(GstMpegVideoQuantMatrixExt *) ext =                                        \
-      (GstMpegVideoQuantMatrixExt) { .load_intra_quantiser_matrix = 0xff, }
+static inline gboolean
+_seq_display_ext_is_valid (GstMpegVideoSequenceDisplayExt * ext)
+{
+  return ext->video_format != 0xff;
+}
 
-#define PIC_HDR_IS_VALID(ext) (((GstMpegVideoPictureHdr *) ext)->tsn != 0xffff)
-#define PIC_HDR_INIT(ext)                                                      \
-  *(GstMpegVideoPictureHdr *) ext =                                            \
-      (GstMpegVideoPictureHdr) { .tsn = 0xffff, }
+#define SEQ_DISPLAY_EXT_INIT (GstMpegVideoSequenceDisplayExt) { 0xff, 0, }
 
-#define PIC_HDR_EXT_IS_VALID(ext)                                              \
-  (((GstMpegVideoPictureExt *) ext)->f_code[0][0] != 0xff)
-#define PIC_HDR_EXT_INIT(ext)                                                  \
-  *(GstMpegVideoPictureExt *) ext =                                            \
-      (GstMpegVideoPictureExt) { .f_code[0][0] = 0xff, }
+static inline gboolean
+_seq_scalable_ext_is_valid (GstMpegVideoSequenceScalableExt * ext)
+{
+  return ext->scalable_mode != 0xff;
+}
+
+#define SEQ_SCALABLE_EXT_INIT (GstMpegVideoSequenceScalableExt) { 0xff, 0, }
+
+static inline gboolean
+_quant_matrix_ext_is_valid (GstMpegVideoQuantMatrixExt * ext)
+{
+  return ext->load_intra_quantiser_matrix != 0xff;
+}
+
+#define QUANT_MATRIX_EXT_INIT (GstMpegVideoQuantMatrixExt) { 0xff, { 0, } }
+
+static inline gboolean
+_pic_hdr_is_valid (GstMpegVideoPictureHdr * hdr)
+{
+  return hdr->tsn != 0xffff;
+}
+
+#define PIC_HDR_INIT (GstMpegVideoPictureHdr) { 0xffff, 0, }
+
+static inline gboolean
+_pic_hdr_ext_is_valid (GstMpegVideoPictureExt * ext)
+{
+  return ext->f_code[0][0] != 0xff;
+}
+
+#define PIC_HDR_EXT_INIT                                        \
+    (GstMpegVideoPictureExt) { { { 0xff, 0, }, { 0, } }, 0, }
 
 typedef enum
 {
@@ -228,6 +243,7 @@ struct _GstMpeg2DecoderPrivate
   GstMpegVideoSequenceExt seq_ext;
   GstMpegVideoSequenceDisplayExt seq_display_ext;
   GstMpegVideoSequenceScalableExt seq_scalable_ext;
+
   /* some sequence info changed after last new_sequence () */
   gboolean seq_changed;
   GstMpegVideoGop gop;
@@ -250,7 +266,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMpeg2Decoder, gst_mpeg2_decoder,
     GST_TYPE_VIDEO_DECODER,
     G_ADD_PRIVATE (GstMpeg2Decoder);
     GST_DEBUG_CATEGORY_INIT (gst_mpeg2_decoder_debug, "mpeg2decoder", 0,
-        "Mpeg2 Video Decoder"));
+        "MPEG2 Video Decoder"));
 
 static gboolean gst_mpeg2_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2_decoder_stop (GstVideoDecoder * decoder);
@@ -286,13 +302,13 @@ gst_mpeg2_decoder_init (GstMpeg2Decoder * self)
 
   self->priv = gst_mpeg2_decoder_get_instance_private (self);
 
-  SEQ_HDR_INIT (&self->priv->seq_hdr);
-  SEQ_EXT_INIT (&self->priv->seq_ext);
-  SEQ_DISPLAY_EXT_INIT (&self->priv->seq_display_ext);
-  SEQ_SCALABLE_EXT_INIT (&self->priv->seq_scalable_ext);
-  QUANT_MATRIX_EXT_INIT (&self->priv->quant_matrix);
-  PIC_HDR_INIT (&self->priv->pic_hdr);
-  PIC_HDR_EXT_INIT (&self->priv->pic_ext);
+  self->priv->seq_hdr = SEQ_HDR_INIT;
+  self->priv->seq_ext = SEQ_EXT_INIT;
+  self->priv->seq_display_ext = SEQ_DISPLAY_EXT_INIT;
+  self->priv->seq_scalable_ext = SEQ_SCALABLE_EXT_INIT;
+  self->priv->quant_matrix = QUANT_MATRIX_EXT_INIT;
+  self->priv->pic_hdr = PIC_HDR_INIT;
+  self->priv->pic_ext = PIC_HDR_EXT_INIT;
 }
 
 static gboolean
@@ -359,8 +375,6 @@ gst_mpeg2_decoder_drain (GstVideoDecoder * decoder)
 static GstFlowReturn
 gst_mpeg2_decoder_finish (GstVideoDecoder * decoder)
 {
-  GST_DEBUG_OBJECT (decoder, "finish");
-
   return gst_mpeg2_decoder_drain (decoder);
 }
 
@@ -372,8 +386,8 @@ gst_mpeg2_decoder_flush (GstVideoDecoder * decoder)
 
   gst_mpeg2_dpb_clear (priv->dpb);
   priv->state &= GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS;
-  PIC_HDR_INIT (&priv->pic_hdr);
-  PIC_HDR_EXT_INIT (&priv->pic_ext);
+  priv->pic_hdr = PIC_HDR_INIT;
+  priv->pic_ext = PIC_HDR_EXT_INIT;
 
   return TRUE;
 }
@@ -427,23 +441,22 @@ gst_mpeg2_decoder_handle_sequence (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoSequenceHdr seq_hdr = { };
+  GstMpegVideoSequenceHdr seq_hdr = { 0, };
 
   if (!gst_mpeg_video_packet_parse_sequence_header (packet, &seq_hdr)) {
     GST_ERROR_OBJECT (decoder, "failed to parse sequence header");
     return FALSE;
   }
 
-  if (SEQ_HDR_IS_VALID (&priv->seq_hdr) &&
-      !memcmp (&priv->seq_hdr, &seq_hdr, sizeof (GstMpegVideoSequenceHdr)))
+  if (_seq_hdr_is_valid (&priv->seq_hdr) &&
+      memcmp (&priv->seq_hdr, &seq_hdr, sizeof (seq_hdr)) == 0)
     return TRUE;
 
-  SEQ_EXT_INIT (&priv->seq_ext);
-  SEQ_DISPLAY_EXT_INIT (&priv->seq_display_ext);
-  SEQ_SCALABLE_EXT_INIT (&priv->seq_scalable_ext);
-  QUANT_MATRIX_EXT_INIT (&priv->quant_matrix);
-  PIC_HDR_INIT (&priv->pic_hdr);
-  PIC_HDR_EXT_INIT (&priv->pic_ext);
+  priv->seq_ext = SEQ_EXT_INIT;
+  priv->seq_display_ext = SEQ_DISPLAY_EXT_INIT;
+  priv->seq_scalable_ext = SEQ_SCALABLE_EXT_INIT;
+  priv->quant_matrix = QUANT_MATRIX_EXT_INIT;
+  priv->pic_ext = PIC_HDR_EXT_INIT;;
 
   priv->seq_hdr = seq_hdr;
   priv->seq_changed = TRUE;
@@ -467,7 +480,7 @@ gst_mpeg2_decoder_handle_sequence_ext (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoSequenceExt seq_ext = { };
+  GstMpegVideoSequenceExt seq_ext = { 0, };
   guint width, height;
 
   if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR)) {
@@ -480,8 +493,8 @@ gst_mpeg2_decoder_handle_sequence_ext (GstMpeg2Decoder * decoder,
     return FALSE;
   }
 
-  if (SEQ_EXT_IS_VALID (&priv->seq_ext) &&
-      !memcmp (&priv->seq_ext, &seq_ext, sizeof (GstMpegVideoSequenceExt)))
+  if (_seq_ext_is_valid (&priv->seq_ext) &&
+      memcmp (&priv->seq_ext, &seq_ext, sizeof (seq_ext)) == 0)
     return TRUE;
 
   priv->seq_ext = seq_ext;
@@ -516,7 +529,7 @@ gst_mpeg2_decoder_handle_sequence_display_ext (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoSequenceDisplayExt seq_display_ext = { };
+  GstMpegVideoSequenceDisplayExt seq_display_ext = { 0, };
 
   if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR)) {
     GST_ERROR_OBJECT (decoder,
@@ -530,9 +543,9 @@ gst_mpeg2_decoder_handle_sequence_display_ext (GstMpeg2Decoder * decoder,
     return FALSE;
   }
 
-  if (SEQ_DISPLAY_EXT_IS_VALID (&priv->seq_display_ext) &&
-      !memcmp (&priv->seq_display_ext, &seq_display_ext,
-          sizeof (GstMpegVideoSequenceDisplayExt)))
+  if (_seq_display_ext_is_valid (&priv->seq_display_ext) &&
+      memcmp (&priv->seq_display_ext, &seq_display_ext,
+          sizeof (seq_display_ext)) == 0)
     return TRUE;
 
   priv->seq_display_ext = seq_display_ext;
@@ -549,7 +562,7 @@ gst_mpeg2_decoder_handle_sequence_scalable_ext (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoSequenceScalableExt seq_scalable_ext = { };
+  GstMpegVideoSequenceScalableExt seq_scalable_ext = { 0, };
 
   if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR)) {
     GST_ERROR_OBJECT (decoder,
@@ -563,9 +576,9 @@ gst_mpeg2_decoder_handle_sequence_scalable_ext (GstMpeg2Decoder * decoder,
     return FALSE;
   }
 
-  if (SEQ_SCALABLE_EXT_IS_VALID (&priv->seq_scalable_ext) &&
-      !memcmp (&priv->seq_scalable_ext, &seq_scalable_ext,
-          sizeof (GstMpegVideoSequenceScalableExt)))
+  if (_seq_scalable_ext_is_valid (&priv->seq_scalable_ext) &&
+      memcmp (&priv->seq_scalable_ext, &seq_scalable_ext,
+          sizeof (seq_scalable_ext)) == 0)
     return TRUE;
 
   priv->seq_scalable_ext = seq_scalable_ext;
@@ -579,7 +592,7 @@ gst_mpeg2_decoder_handle_quant_matrix_ext (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoQuantMatrixExt matrix_ext = { };
+  GstMpegVideoQuantMatrixExt matrix_ext = { 0, };
 
   if (!gst_mpeg_video_packet_parse_quant_matrix_extension (packet, &matrix_ext)) {
     GST_ERROR_OBJECT (decoder, "failed to parse sequence-scalable-extension");
@@ -596,7 +609,7 @@ gst_mpeg2_decoder_handle_picture_ext (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoPictureExt pic_ext = { };
+  GstMpegVideoPictureExt pic_ext = { {{0,},}, };
 
   if (!_is_valid_state (decoder,
           GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS |
@@ -639,7 +652,7 @@ gst_mpeg2_decoder_handle_gop (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoGop gop = { };
+  GstMpegVideoGop gop = { 0, };
 
   if (!gst_mpeg_video_packet_parse_gop (packet, &gop)) {
     GST_ERROR_OBJECT (decoder, "failed to parse GOP");
@@ -662,7 +675,7 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
     GstMpegVideoPacket * packet)
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
-  GstMpegVideoPictureHdr pic_hdr = { };
+  GstMpegVideoPictureHdr pic_hdr = { 0, };
   GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
 
   if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS)) {
@@ -674,14 +687,12 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
      the first sequence_header() and the first picture_header() then
      sequence_xxx_extension() shall not occur in the bitstream. */
   if (priv->seq_changed && klass->new_sequence) {
-    g_assert (SEQ_HDR_IS_VALID (&priv->seq_hdr));
-
     priv->seq_changed = FALSE;
     if (!klass->new_sequence (decoder, &priv->seq_hdr,
-            SEQ_EXT_IS_VALID (&priv->seq_ext) ? &priv->seq_ext : NULL,
-            SEQ_DISPLAY_EXT_IS_VALID (&priv->seq_display_ext) ?
+            _seq_ext_is_valid (&priv->seq_ext) ? &priv->seq_ext : NULL,
+            _seq_display_ext_is_valid (&priv->seq_display_ext) ?
             &priv->seq_display_ext : NULL,
-            SEQ_SCALABLE_EXT_IS_VALID (&priv->seq_scalable_ext) ?
+            _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
             &priv->seq_scalable_ext : NULL)) {
       GST_ERROR_OBJECT (decoder, "new sequence error");
       return FALSE;
@@ -906,7 +917,7 @@ gst_mpeg2_decoder_handle_slice (GstMpeg2Decoder * decoder,
 
   if (!gst_mpeg_video_packet_parse_slice_header (packet, &slice_hdr,
           &priv->seq_hdr,
-          SEQ_SCALABLE_EXT_IS_VALID (&priv->seq_scalable_ext) ?
+          _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
           &priv->seq_scalable_ext : NULL)) {
     GST_ERROR_OBJECT (decoder, "failed to parse slice header");
     return FALSE;
@@ -914,12 +925,13 @@ gst_mpeg2_decoder_handle_slice (GstMpeg2Decoder * decoder,
 
   slice.header = slice_hdr;
   slice.packet = *packet;
-  slice.quant_matrix =
-      QUANT_MATRIX_EXT_IS_VALID (&priv->quant_matrix) ?
+  slice.quant_matrix = _quant_matrix_ext_is_valid (&priv->quant_matrix) ?
       &priv->quant_matrix : NULL;
-  g_assert (PIC_HDR_IS_VALID (&priv->pic_hdr));
+  g_assert (_pic_hdr_is_valid (&priv->pic_hdr));
   slice.pic_hdr = &priv->pic_hdr;
-  slice.pic_ext = PIC_HDR_EXT_IS_VALID (&priv->pic_ext) ? &priv->pic_ext : NULL;
+  slice.pic_ext = _pic_hdr_ext_is_valid (&priv->pic_ext) ?
+      &priv->pic_ext : NULL;
+
   if (!gst_mpeg2_decoder_ensure_current_picture (decoder, &slice)) {
     GST_ERROR_OBJECT (decoder, "failed to start current picture");
     return FALSE;
