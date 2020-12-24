@@ -223,6 +223,21 @@ GST_START_TEST (test_from_string)
   ASSERT_CRITICAL (structure = gst_structure_from_string (s, NULL));
   fail_unless (structure == NULL, "Could not get structure from string %s", s);
 
+  /* Test that escaping works both with and without a type */
+  s = "foo/bar, value=\"raven \\\"nevermore\\\"\"";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (val));
+  gst_structure_free (structure);
+
+  s = "foo/bar, value=(string)\"raven \\\"nevermore\\\"\"";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (val));
+  gst_structure_free (structure);
+
   /* make sure we bail out correctly in case of an error or if parsing fails */
   s = "***foo***, abc=(boolean)false";
   structure = gst_structure_from_string (s, NULL);
