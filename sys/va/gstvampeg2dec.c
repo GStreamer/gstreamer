@@ -178,20 +178,18 @@ _get_profile (GstVaMpeg2Dec * self, GstMpegVideoProfile profile,
         hw_profile = VAProfileMPEG2Main;
         break;
       case GST_MPEG_VIDEO_PROFILE_HIGH:
-        // Try to map to main profile if no high profile specific bits used
+        /* Try to map to main profile if no high profile specific bits used */
         if (!seq_scalable_ext && (seq_ext && seq_ext->chroma_format == 1)) {
           hw_profile = VAProfileMPEG2Main;
           break;
         }
-        // fall-through
+        /* fall-through */
       default:
+        GST_ERROR_OBJECT (self, "profile %d is unsupported.", profile);
         hw_profile = VAProfileNone;
         break;
     }
   } while (hw_profile != VAProfileNone);
-
-  if (hw_profile == VAProfileNone)
-    GST_ERROR_OBJECT (self, "profile %d is unsupported.", profile);
 
   return hw_profile;
 }
@@ -350,9 +348,10 @@ gst_va_mpeg2_dec_new_field_picture (GstMpeg2Decoder * decoder,
 static inline guint32
 _pack_f_code (guint8 f_code[2][2])
 {
-  return (((guint32) f_code[0][0] << 12) |
-      ((guint32) f_code[0][1] << 8) |
-      ((guint32) f_code[1][0] << 4) | (f_code[1][1]));
+  return (((guint32) f_code[0][0] << 12)
+      | ((guint32) f_code[0][1] << 8)
+      | ((guint32) f_code[1][0] << 4)
+      | (f_code[1][1]));
 }
 
 static inline void
@@ -428,43 +427,32 @@ gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
 
   va_pic = gst_mpeg2_picture_get_user_data (picture);
 
-  /* *INDENT-OFF* */ 
-  pic_param = (VAPictureParameterBufferMPEG2)
-  {
+  /* *INDENT-OFF* */
+  pic_param = (VAPictureParameterBufferMPEG2) {
     .horizontal_size = base->width,
     .vertical_size = base->height,
     .forward_reference_picture = VA_INVALID_ID,
     .backward_reference_picture = VA_INVALID_ID,
     .picture_coding_type = slice->pic_hdr->pic_type,
     .f_code = _pack_f_code (slice->pic_ext->f_code),
-    .picture_coding_extension.value = 0,
-    .picture_coding_extension.bits.is_first_field =
-        (picture->first_field == NULL),
-    .picture_coding_extension.bits.intra_dc_precision =
-        slice->pic_ext->intra_dc_precision,
-    .picture_coding_extension.bits.picture_structure =
-        slice->pic_ext->picture_structure,
-    .picture_coding_extension.bits.top_field_first =
-        slice->pic_ext->top_field_first,
-    .picture_coding_extension.bits.frame_pred_frame_dct =
-        slice->pic_ext->frame_pred_frame_dct,
-    .picture_coding_extension.bits.concealment_motion_vectors =
-        slice->pic_ext->concealment_motion_vectors,
-    .picture_coding_extension.bits.q_scale_type =
-        slice->pic_ext->q_scale_type,
-    .picture_coding_extension.bits.intra_vlc_format =
-        slice->pic_ext->intra_vlc_format,
-    .picture_coding_extension.bits.alternate_scan =
-        slice->pic_ext->alternate_scan,
-    .picture_coding_extension.bits.repeat_first_field =
-        slice->pic_ext->repeat_first_field,
-    .picture_coding_extension.bits.progressive_frame =
-        slice->pic_ext->progressive_frame,
+    .picture_coding_extension.bits = {
+      .is_first_field = (picture->first_field) ? 0 : 1,
+      .intra_dc_precision = slice->pic_ext->intra_dc_precision,
+      .picture_structure = slice->pic_ext->picture_structure,
+      .top_field_first = slice->pic_ext->top_field_first,
+      .frame_pred_frame_dct = slice->pic_ext->frame_pred_frame_dct,
+      .concealment_motion_vectors = slice->pic_ext->concealment_motion_vectors,
+      .q_scale_type = slice->pic_ext->q_scale_type,
+      .intra_vlc_format = slice->pic_ext->intra_vlc_format,
+      .alternate_scan = slice->pic_ext->alternate_scan,
+      .repeat_first_field = slice->pic_ext->repeat_first_field,
+      .progressive_frame = slice->pic_ext->progressive_frame,
+    },
   };
   /* *INDENT-ON* */
 
-  if (picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_B ||
-      picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_P) {
+  if (picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_B
+      || picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_P) {
     GstVaDecodePicture *prev_pic;
 
     prev_pic =
