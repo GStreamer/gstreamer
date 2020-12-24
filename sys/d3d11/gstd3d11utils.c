@@ -108,12 +108,13 @@ context_set_d3d11_device (GstContext * context, GstD3D11Device * device)
   guint vendor_id = 0;
   gboolean hardware = FALSE;
   gchar *desc = NULL;
+  gint64 adapter_luid = 0;
 
   g_return_if_fail (context != NULL);
 
   g_object_get (G_OBJECT (device), "adapter", &adapter, "device-id", &device_id,
-      "vendor_id", &vendor_id, "hardware", &hardware, "description", &desc,
-      NULL);
+      "vendor-id", &vendor_id, "hardware", &hardware, "description", &desc,
+      "adapter-luid", &adapter_luid, NULL);
 
   GST_CAT_LOG (GST_CAT_CONTEXT,
       "setting GstD3D11Device(%" GST_PTR_FORMAT
@@ -123,6 +124,7 @@ context_set_d3d11_device (GstContext * context, GstD3D11Device * device)
   s = gst_context_writable_structure (context);
   gst_structure_set (s, "device", GST_TYPE_D3D11_DEVICE, device,
       "adapter", G_TYPE_UINT, adapter,
+      "adapter-luid", G_TYPE_INT64, adapter_luid,
       "device-id", G_TYPE_UINT, device_id,
       "vendor-id", G_TYPE_UINT, vendor_id,
       "hardware", G_TYPE_BOOLEAN, hardware,

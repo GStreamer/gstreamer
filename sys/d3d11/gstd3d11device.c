@@ -63,6 +63,7 @@ enum
   PROP_DESCRIPTION,
   PROP_ALLOW_TEARING,
   PROP_CREATE_FLAGS,
+  PROP_ADAPTER_LUID,
 };
 
 #define DEFAULT_ADAPTER 0
@@ -77,6 +78,7 @@ struct _GstD3D11DevicePrivate
   gchar *description;
   gboolean allow_tearing;
   guint create_flags;
+  gint64 adapter_luid;
 
   ID3D11Device *device;
   ID3D11DeviceContext *device_context;
@@ -352,6 +354,11 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
           "D3D11_CREATE_DEVICE_FLAG flags used for D3D11CreateDevice",
           0, G_MAXUINT32, DEFAULT_CREATE_FLAGS,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ADAPTER_LUID,
+      g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+          "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+          0, G_MAXINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -632,22 +639,26 @@ gst_d3d11_device_constructed (GObject * object)
     if (SUCCEEDED (hr)) {
       gchar *description = NULL;
       gboolean is_hardware = FALSE;
+      gint64 adapter_luid;
 
       /* DXGI_ADAPTER_FLAG_SOFTWARE is missing in dxgi.h of mingw */
       if ((desc.Flags & 0x2) != 0x2) {
         is_hardware = TRUE;
       }
 
+      adapter_luid = (((gint64) desc.AdapterLuid.HighPart) << 32) |
+          ((gint64) desc.AdapterLuid.LowPart);
       description = g_utf16_to_utf8 (desc.Description, -1, NULL, NULL, NULL);
       GST_DEBUG_OBJECT (self,
           "adapter index %d: D3D11 device vendor-id: 0x%04x, device-id: 0x%04x, "
-          "Flags: 0x%x, %s",
+          "Flags: 0x%x, adapter-luid: " G_GINT64_FORMAT ", %s",
           priv->adapter, desc.VendorId, desc.DeviceId, desc.Flags, description);
 
       priv->vendor_id = desc.VendorId;
       priv->device_id = desc.DeviceId;
       priv->hardware = is_hardware;
       priv->description = description;
+      priv->adapter_luid = adapter_luid;
     }
   }
 
@@ -804,6 +815,9 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CREATE_FLAGS:
       g_value_set_uint (value, priv->create_flags);
+      break;
+    case PROP_ADAPTER_LUID:
+      g_value_set_int64 (value, priv->adapter_luid);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
