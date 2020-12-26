@@ -36,6 +36,7 @@
 #endif
 
 #include "gstvideosink.h"
+#include "video-info.h"
 
 enum
 {
@@ -46,6 +47,7 @@ enum
 
 struct _GstVideoSinkPrivate
 {
+  GstVideoInfo info;
   gboolean show_preroll_frame;  /* ATOMIC */
 };
 
@@ -78,10 +80,15 @@ static void gst_video_sink_set_property (GObject * object, guint prop_id,
 static void gst_video_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn gst_video_sink_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_video_sink_show_preroll_frame (GstBaseSink * bsink,
     GstBuffer * buf);
 static GstFlowReturn gst_video_sink_show_frame (GstBaseSink * bsink,
     GstBuffer * buf);
+static gboolean gst_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
+static void gst_video_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
 
 /**
  * gst_video_sink_center_rect:
@@ -153,6 +160,7 @@ gst_video_sink_init (GstVideoSink * videosink)
 static void
 gst_video_sink_class_init (GstVideoSinkClass * klass)
 {
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseSinkClass *basesink_class = (GstBaseSinkClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
@@ -173,9 +181,72 @@ gst_video_sink_class_init (GstVideoSinkClass * klass)
           DEFAULT_SHOW_PREROLL_FRAME,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_video_sink_change_state);
+
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_video_sink_show_frame);
   basesink_class->preroll =
       GST_DEBUG_FUNCPTR (gst_video_sink_show_preroll_frame);
+  basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_sink_set_caps);
+  basesink_class->get_times = GST_DEBUG_FUNCPTR (gst_video_sink_get_times);
+}
+
+static GstStateChangeReturn
+gst_video_sink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstVideoSink *vsink;
+
+  vsink = GST_VIDEO_SINK_CAST (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      memset (&vsink->priv->info, 0, sizeof (vsink->priv->info));
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+}
+
+static gboolean
+gst_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+{
+  GstVideoSink *vsink;
+  GstVideoInfo info;
+
+  vsink = GST_VIDEO_SINK_CAST (bsink);
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (bsink, "Failed to parse caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (bsink, "Setting caps %" GST_PTR_FORMAT, caps);
+  vsink->priv->info = info;
+
+  return TRUE;
+}
+
+static void
+gst_video_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
+{
+  GstVideoSink *vsink;
+  GstClockTime timestamp;
+
+  vsink = GST_VIDEO_SINK_CAST (bsink);
+
+  timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    *start = timestamp;
+    if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+      *end = timestamp + GST_BUFFER_DURATION (buffer);
+    } else if (vsink->priv->info.fps_n > 0) {
+      *end = timestamp +
+          gst_util_uint64_scale_int (GST_SECOND, vsink->priv->info.fps_d,
+          vsink->priv->info.fps_n);
+    }
+  }
 }
 
 static GstFlowReturn
