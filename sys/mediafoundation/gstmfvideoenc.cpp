@@ -167,7 +167,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     return FALSE;
 
   if (klass->set_option) {
-    if (!klass->set_option (self, out_type.Get ())) {
+    if (!klass->set_option (self, self->input_state, out_type.Get ())) {
       GST_ERROR_OBJECT (self, "subclass failed to set option");
       return FALSE;
     }

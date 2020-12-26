@@ -124,7 +124,7 @@ enum
 #define DEFAULT_QUALITY_VS_SPEED 50
 #define DEFAULT_CABAC TRUE
 #define DEFAULT_BFRAMES 0
-#define DEFAULT_GOP_SIZE 0
+#define DEFAULT_GOP_SIZE -1
 #define DEFAULT_THREADS 0
 #define DEFAULT_CONTENT_TYPE GST_MF_H265_ENC_CONTENT_TYPE_UNKNOWN
 #define DEFAULT_QP 24
@@ -174,7 +174,7 @@ static void gst_mf_h265_enc_get_property (GObject * object, guint prop_id,
 static void gst_mf_h265_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static gboolean gst_mf_h265_enc_set_option (GstMFVideoEnc * mfenc,
-    IMFMediaType * output_type);
+    GstVideoCodecState * state, IMFMediaType * output_type);
 static gboolean gst_mf_h265_enc_set_src_caps (GstMFVideoEnc * mfenc,
     GstVideoCodecState * state, IMFMediaType * output_type);
 
@@ -253,9 +253,11 @@ gst_mf_h265_enc_class_init (GstMFH265EncClass * klass, gpointer data)
 
   if (device_caps->gop_size) {
     g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
-        g_param_spec_uint ("gop-size", "GOP size",
-            "The number of pictures from one GOP header to the next, "
-            "(0 = MFT default)", 0, G_MAXUINT - 1, DEFAULT_GOP_SIZE,
+        g_param_spec_int ("gop-size", "GOP size",
+            "The number of pictures from one GOP header to the next. "
+            "Depending on GPU vendor implementation, zero gop-size might "
+            "produce only one keyframe at the beginning (-1 for automatic)",
+            -1, G_MAXINT, DEFAULT_GOP_SIZE,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
@@ -430,7 +432,7 @@ gst_mf_h265_enc_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, self->bframes);
       break;
     case PROP_GOP_SIZE:
-      g_value_set_uint (value, self->gop_size);
+      g_value_set_int (value, self->gop_size);
       break;
     case PROP_THREADS:
       g_value_set_uint (value, self->threads);
@@ -494,7 +496,7 @@ gst_mf_h265_enc_set_property (GObject * object, guint prop_id,
       self->bframes = g_value_get_uint (value);
       break;
     case PROP_GOP_SIZE:
-      self->gop_size = g_value_get_uint (value);
+      self->gop_size = g_value_get_int (value);
       break;
     case PROP_THREADS:
       self->threads = g_value_get_uint (value);
@@ -566,7 +568,8 @@ gst_mf_h265_enc_content_type_to_enum (guint rc_mode)
   } G_STMT_END
 
 static gboolean
-gst_mf_h265_enc_set_option (GstMFVideoEnc * mfenc, IMFMediaType * output_type)
+gst_mf_h265_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
+    IMFMediaType * output_type)
 {
   GstMFH265Enc *self = (GstMFH265Enc *) mfenc;
   GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (mfenc);
@@ -632,8 +635,25 @@ gst_mf_h265_enc_set_option (GstMFVideoEnc * mfenc, IMFMediaType * output_type)
   }
 
   if (device_caps->gop_size) {
+    GstVideoInfo *info = &state->info;
+    gint gop_size = self->gop_size;
+    gint fps_n, fps_d;
+
+    /* Set default value (10 sec or 250 frames) like that of x264enc */
+    if (gop_size < 0) {
+      fps_n = GST_VIDEO_INFO_FPS_N (info);
+      fps_d = GST_VIDEO_INFO_FPS_D (info);
+      if (fps_n <= 0 || fps_d <= 0) {
+        gop_size = 250;
+      } else {
+        gop_size = 10 * fps_n / fps_d;
+      }
+
+      GST_DEBUG_OBJECT (self, "Update GOP size to %d", gop_size);
+    }
+
     hr = gst_mf_transform_set_codec_api_uint32 (transform,
-        &CODECAPI_AVEncMPVGOPSize, self->gop_size);
+        &CODECAPI_AVEncMPVGOPSize, gop_size);
     WARNING_HR (hr, CODECAPI_AVEncMPVGOPSize);
   }
 

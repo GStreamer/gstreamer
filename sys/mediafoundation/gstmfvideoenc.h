@@ -101,6 +101,7 @@ struct _GstMFVideoEncClass
   GstMFVideoEncDeviceCaps device_caps;
 
   gboolean (*set_option)    (GstMFVideoEnc * mfenc,
+                             GstVideoCodecState * state,
                              IMFMediaType * output_type);
 
   gboolean (*set_src_caps)  (GstMFVideoEnc * mfenc,
