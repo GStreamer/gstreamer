@@ -103,7 +103,7 @@ PAUSED state is used to preroll data in the pipeline. A state change can
 be performed with `gst_element_set_state()`.
 
 An element always goes through all the intermediate state changes. This
-means that when en element is in the `READY` state and is put to `PLAYING`,
+means that when an element is in the `READY` state and is put to `PLAYING`,
 it will first go through the intermediate `PAUSED` state.
 
 An element state change to `PAUSED` will activate the pads of the element.
