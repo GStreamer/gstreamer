@@ -37,6 +37,47 @@ G_BEGIN_DECLS
 
 typedef struct _GstMFVideoEnc GstMFVideoEnc;
 typedef struct _GstMFVideoEncClass GstMFVideoEncClass;
+typedef struct _GstMFVideoEncDeviceCaps GstMFVideoEncDeviceCaps;
+typedef struct _GstMFVideoEncClassData GstMFVideoEncClassData;
+
+struct _GstMFVideoEncDeviceCaps
+{
+  gboolean rc_mode; /* AVEncCommonRateControlMode */
+  gboolean quality; /* AVEncCommonQuality */
+
+  gboolean adaptive_mode;     /* AVEncAdaptiveMode */
+  gboolean buffer_size;       /* AVEncCommonBufferSize */
+  gboolean max_bitrate;       /* AVEncCommonMaxBitRate */
+  gboolean quality_vs_speed;  /* AVEncCommonQualityVsSpeed */
+  gboolean cabac;             /* AVEncH264CABACEnable */
+  gboolean sps_id;            /* AVEncH264SPSID */
+  gboolean pps_id;            /* AVEncH264PPSID */
+  gboolean bframes;           /* AVEncMPVDefaultBPictureCount */
+  gboolean gop_size;          /* AVEncMPVGOPSize */
+  gboolean threads;           /* AVEncNumWorkerThreads */
+  gboolean content_type;      /* AVEncVideoContentType */
+  gboolean qp;                /* AVEncVideoEncodeQP */
+  gboolean force_keyframe;    /* AVEncVideoForceKeyFrame */
+  gboolean low_latency;       /* AVLowLatencyMode */
+
+  gboolean min_qp;        /* AVEncVideoMinQP */
+  gboolean max_qp;        /* AVEncVideoMaxQP */
+  gboolean frame_type_qp; /* AVEncVideoEncodeFrameTypeQP */
+  gboolean max_num_ref;   /* AVEncVideoMaxNumRefFrame */
+  guint max_num_ref_high;
+  guint max_num_ref_low;
+};
+
+struct _GstMFVideoEncClassData
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  gchar *device_name;
+  guint32 enum_flags;
+  guint device_index;
+  GstMFVideoEncDeviceCaps device_caps;
+  gboolean is_default;
+};
 
 struct _GstMFVideoEnc
 {
@@ -53,10 +94,11 @@ struct _GstMFVideoEncClass
 {
   GstVideoEncoderClass parent_class;
 
-  GUID codec_id;
-  guint32 enum_flags;
-  guint device_index;
-  gboolean can_force_keyframe;
+  /* Set by subclass */
+  GUID codec_id;      /* Output subtype of MFT */
+  guint32 enum_flags; /* MFT_ENUM_FLAG */
+  guint device_index; /* Index of enumerated IMFActivate via MFTEnum */
+  GstMFVideoEncDeviceCaps device_caps;
 
   gboolean (*set_option)    (GstMFVideoEnc * mfenc,
                              IMFMediaType * output_type);
@@ -67,6 +109,11 @@ struct _GstMFVideoEncClass
 };
 
 GType gst_mf_video_enc_get_type (void);
+
+void  gst_mf_video_enc_register (GstPlugin * plugin,
+                                 guint rank,
+                                 GUID * subtype,
+                                 GTypeInfo * type_info);
 
 G_END_DECLS
 

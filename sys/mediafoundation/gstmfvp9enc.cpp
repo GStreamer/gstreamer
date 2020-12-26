@@ -116,21 +116,6 @@ enum
 #define DEFAULT_CONTENT_TYPE GST_MF_VP9_ENC_CONTENT_TYPE_UNKNOWN
 #define DEFAULT_LOW_LATENCY FALSE
 
-#define GST_MF_VP9_ENC_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), G_TYPE_FROM_INSTANCE (obj), GstMFVP9EncClass))
-
-typedef struct _GstMFVP9EncDeviceCaps
-{
-  gboolean rc_mode;           /* AVEncCommonRateControlMode */
-  gboolean max_bitrate;       /* AVEncCommonMaxBitRate */
-  gboolean quality_vs_speed;  /* AVEncCommonQualityVsSpeed */
-  gboolean gop_size;          /* AVEncMPVGOPSize */
-  gboolean threads;           /* AVEncNumWorkerThreads */
-  gboolean content_type;      /* AVEncVideoContentType */
-  gboolean force_keyframe;    /* AVEncVideoForceKeyFrame */
-  gboolean low_latency;       /* AVLowLatencyMode */
-} GstMFVP9EncDeviceCaps;
-
 typedef struct _GstMFVP9Enc
 {
   GstMFVideoEnc parent;
@@ -151,20 +136,7 @@ typedef struct _GstMFVP9Enc
 typedef struct _GstMFVP9EncClass
 {
   GstMFVideoEncClass parent_class;
-
-  GstMFVP9EncDeviceCaps device_caps;
 } GstMFVP9EncClass;
-
-typedef struct
-{
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-  gchar *device_name;
-  guint32 enum_flags;
-  guint device_index;
-  GstMFVP9EncDeviceCaps device_caps;
-  gboolean is_default;
-} GstMFVP9EncClassData;
 
 static GstElementClass *parent_class = NULL;
 
@@ -183,13 +155,12 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstMFVideoEncClass *mfenc_class = GST_MF_VIDEO_ENC_CLASS (klass);
-  GstMFVP9EncClassData *cdata = (GstMFVP9EncClassData *) data;
-  GstMFVP9EncDeviceCaps *device_caps = &cdata->device_caps;
+  GstMFVideoEncClassData *cdata = (GstMFVideoEncClassData *) data;
+  GstMFVideoEncDeviceCaps *device_caps = &cdata->device_caps;
   gchar *long_name;
   gchar *classification;
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
-  klass->device_caps = *device_caps;
 
   gobject_class->get_property = gst_mf_vp9_enc_get_property;
   gobject_class->set_property = gst_mf_vp9_enc_set_property;
@@ -302,7 +273,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   mfenc_class->codec_id = MFVideoFormat_VP90;
   mfenc_class->enum_flags = cdata->enum_flags;
   mfenc_class->device_index = cdata->device_index;
-  mfenc_class->can_force_keyframe = device_caps->force_keyframe;
+  mfenc_class->device_caps = *device_caps;
 
   g_free (cdata->device_name);
   gst_caps_unref (cdata->sink_caps);
@@ -434,8 +405,8 @@ static gboolean
 gst_mf_vp9_enc_set_option (GstMFVideoEnc * mfenc, IMFMediaType * output_type)
 {
   GstMFVP9Enc *self = (GstMFVP9Enc *) mfenc;
-  GstMFVP9EncClass *klass = GST_MF_VP9_ENC_GET_CLASS (self);
-  GstMFVP9EncDeviceCaps *device_caps = &klass->device_caps;
+  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (mfenc);
+  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
   HRESULT hr;
   GstMFTransform *transform = mfenc->transform;
 
@@ -536,21 +507,11 @@ gst_mf_vp9_enc_set_src_caps (GstMFVideoEnc * mfenc,
   gst_tag_list_unref (tags);
 
   return TRUE;
-
 }
 
-static void
-gst_mf_vp9_enc_register (GstPlugin * plugin, guint rank,
-    const gchar * device_name, const GstMFVP9EncDeviceCaps * device_caps,
-    guint32 enum_flags, guint device_index,
-    GstCaps * sink_caps, GstCaps * src_caps)
+void
+gst_mf_vp9_enc_plugin_init (GstPlugin * plugin, guint rank)
 {
-  GType type;
-  gchar *type_name;
-  gchar *feature_name;
-  gint i;
-  GstMFVP9EncClassData *cdata;
-  gboolean is_default = TRUE;
   GTypeInfo type_info = {
     sizeof (GstMFVP9EncClass),
     NULL,
@@ -562,249 +523,9 @@ gst_mf_vp9_enc_register (GstPlugin * plugin, guint rank,
     0,
     (GInstanceInitFunc) gst_mf_vp9_enc_init,
   };
-
-  cdata = g_new0 (GstMFVP9EncClassData, 1);
-  cdata->sink_caps = sink_caps;
-  cdata->src_caps = src_caps;
-  cdata->device_name = g_strdup (device_name);
-  cdata->device_caps = *device_caps;
-  cdata->enum_flags = enum_flags;
-  cdata->device_index = device_index;
-  type_info.class_data = cdata;
-
-  type_name = g_strdup ("GstMFVP9Enc");
-  feature_name = g_strdup ("mfvp9enc");
-
-  i = 1;
-  while (g_type_from_name (type_name) != 0) {
-    g_free (type_name);
-    g_free (feature_name);
-    type_name = g_strdup_printf ("GstMFVP9Device%dEnc", i);
-    feature_name = g_strdup_printf ("mfvp9device%denc", i);
-    is_default = FALSE;
-    i++;
-  }
-
-  cdata->is_default = is_default;
-
-  type =
-      g_type_register_static (GST_TYPE_MF_VIDEO_ENC, type_name, &type_info,
-      (GTypeFlags) 0);
-
-  /* make lower rank than default device */
-  if (rank > 0 && !is_default)
-    rank--;
-
-  if (!gst_element_register (plugin, feature_name, rank, type))
-    GST_WARNING ("Failed to register plugin '%s'", type_name);
-
-  g_free (type_name);
-  g_free (feature_name);
-}
-
-static void
-gst_mf_vp9_enc_plugin_init_internal (GstPlugin * plugin, guint rank,
-    GstMFTransform * transform, guint device_index, guint32 enum_flags)
-{
-  HRESULT hr;
-  MFT_REGISTER_TYPE_INFO *infos;
-  UINT32 info_size;
-  gint i;
-  GstCaps *src_caps = NULL;
-  GstCaps *sink_caps = NULL;
-  GValue *supported_formats = NULL;
-  gboolean have_I420 = FALSE;
-  gchar *device_name = NULL;
-  GstMFVP9EncDeviceCaps device_caps = { 0, };
-  IMFActivate *activate;
-  IMFTransform *encoder;
-  ICodecAPI *codec_api;
-  ComPtr<IMFMediaType> out_type;
-
-  /* NOTE: depending on environment,
-   * some enumerated h/w MFT might not be usable (e.g., multiple GPU case) */
-  if (!gst_mf_transform_open (transform))
-    return;
-
-  activate = gst_mf_transform_get_activate_handle (transform);
-  if (!activate) {
-    GST_WARNING_OBJECT (transform, "No IMFActivate interface available");
-    return;
-  }
-
-  encoder = gst_mf_transform_get_transform_handle (transform);
-  if (!encoder) {
-    GST_WARNING_OBJECT (transform, "No IMFTransform interface available");
-    return;
-  }
-
-  codec_api = gst_mf_transform_get_codec_api_handle (transform);
-  if (!codec_api) {
-    GST_WARNING_OBJECT (transform, "No ICodecAPI interface available");
-    return;
-  }
-
-  g_object_get (transform, "device-name", &device_name, NULL);
-  if (!device_name) {
-    GST_WARNING_OBJECT (transform, "Unknown device name");
-    return;
-  }
-
-  hr = activate->GetAllocatedBlob (MFT_INPUT_TYPES_Attributes,
-      (UINT8 **) & infos, &info_size);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  for (i = 0; i < info_size / sizeof (MFT_REGISTER_TYPE_INFO); i++) {
-    GstVideoFormat vformat;
-    GValue val = G_VALUE_INIT;
-
-    vformat = gst_mf_video_subtype_to_video_format (&infos[i].guidSubtype);
-    if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
-      continue;
-
-    if (!supported_formats) {
-      supported_formats = g_new0 (GValue, 1);
-      g_value_init (supported_formats, GST_TYPE_LIST);
-    }
-
-    /* media foundation has duplicated formats IYUV and I420 */
-    if (vformat == GST_VIDEO_FORMAT_I420) {
-      if (have_I420)
-        continue;
-
-      have_I420 = TRUE;
-    }
-
-    g_value_init (&val, G_TYPE_STRING);
-    g_value_set_static_string (&val, gst_video_format_to_string (vformat));
-
-    gst_value_list_append_and_take_value (supported_formats, &val);
-  }
-
-  CoTaskMemFree (infos);
-
-  if (!supported_formats)
-    goto done;
-
-  /* check supported resolutions */
-  hr = MFCreateMediaType (out_type.GetAddressOf ());
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetGUID (MF_MT_MAJOR_TYPE, MFMediaType_Video);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetGUID (MF_MT_SUBTYPE, MFVideoFormat_VP90);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetUINT32 (MF_MT_AVG_BITRATE, 2048000);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = MFSetAttributeRatio (out_type.Get (), MF_MT_FRAME_RATE, 30, 1);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetUINT32 (MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  GST_DEBUG_OBJECT (transform, "Check supported profiles of %s",
-      device_name);
-
-  src_caps = gst_caps_new_empty_simple ("video/x-vp9");
-  sink_caps = gst_caps_new_empty_simple ("video/x-raw");
-  gst_caps_set_value (sink_caps, "format", supported_formats);
-  g_value_unset (supported_formats);
-  g_free (supported_formats);
-
-  /* FIXME: don't hardcode resolution */
-  gst_caps_set_simple (sink_caps,
-      "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
-  gst_caps_set_simple (src_caps,
-      "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
-
-  GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-
-#define CHECK_DEVICE_CAPS(codec_obj,api,val) \
-  if (SUCCEEDED((codec_obj)->IsSupported(&(api)))) {\
-    device_caps.val = TRUE; \
-  }
-
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonRateControlMode, rc_mode);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonMaxBitRate, max_bitrate);
-  CHECK_DEVICE_CAPS (codec_api,
-      CODECAPI_AVEncCommonQualityVsSpeed, quality_vs_speed);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncMPVGOPSize, gop_size);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncNumWorkerThreads, threads);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoContentType, content_type);
-  CHECK_DEVICE_CAPS (codec_api,
-      CODECAPI_AVEncVideoForceKeyFrame, force_keyframe);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVLowLatencyMode, low_latency);
-
-  gst_mf_vp9_enc_register (plugin, rank, device_name,
-      &device_caps, enum_flags, device_index, sink_caps, src_caps);
-
-done:
-  g_free (device_name);
-}
-
-void
-gst_mf_vp9_enc_plugin_init (GstPlugin * plugin, guint rank)
-{
-  GstMFTransformEnumParams enum_params = { 0, };
-  MFT_REGISTER_TYPE_INFO output_type;
-  GstMFTransform *transform;
-  gint i;
-  gboolean do_next;
+  GUID subtype = MFVideoFormat_VP90;
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_vp9_enc_debug, "mfvp9enc", 0, "mfvp9enc");
 
-  output_type.guidMajorType = MFMediaType_Video;
-  output_type.guidSubtype = MFVideoFormat_VP90;
-
-  enum_params.category = MFT_CATEGORY_VIDEO_ENCODER;
-  enum_params.enum_flags = (MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_ASYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER  | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
-  enum_params.output_typeinfo = &output_type;
-
-  /* register hardware encoders first */
-  i = 0;
-  do {
-    enum_params.device_index = i++;
-    transform = gst_mf_transform_new (&enum_params);
-    do_next = TRUE;
-
-    if (!transform) {
-      do_next = FALSE;
-    } else {
-      gst_mf_vp9_enc_plugin_init_internal (plugin, rank, transform,
-          enum_params.device_index, enum_params.enum_flags);
-      gst_clear_object (&transform);
-    }
-  } while (do_next);
-
-  /* register software encoders */
-  enum_params.enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
-  i = 0;
-  do {
-    enum_params.device_index = i++;
-    transform = gst_mf_transform_new (&enum_params);
-    do_next = TRUE;
-
-    if (!transform) {
-      do_next = FALSE;
-    } else {
-      gst_mf_vp9_enc_plugin_init_internal (plugin, rank, transform,
-          enum_params.device_index, enum_params.enum_flags);
-      gst_clear_object (&transform);
-    }
-  } while (do_next);
+  gst_mf_video_enc_register (plugin, rank, &subtype, &type_info);
 }

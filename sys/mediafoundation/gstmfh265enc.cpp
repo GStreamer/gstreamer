@@ -136,30 +136,6 @@ enum
 #define DEFAULT_QP_B 26
 #define DEFAULT_REF 2
 
-#define GST_MF_H265_ENC_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), G_TYPE_FROM_INSTANCE (obj), GstMFH265EncClass))
-
-typedef struct _GstMFH265EncDeviceCaps
-{
-  gboolean rc_mode;           /* AVEncCommonRateControlMode */
-  gboolean buffer_size;       /* AVEncCommonBufferSize */
-  gboolean max_bitrate;       /* AVEncCommonMaxBitRate */
-  gboolean quality_vs_speed;  /* AVEncCommonQualityVsSpeed */
-  gboolean bframes;           /* AVEncMPVDefaultBPictureCount */
-  gboolean gop_size;          /* AVEncMPVGOPSize */
-  gboolean threads;           /* AVEncNumWorkerThreads */
-  gboolean content_type;      /* AVEncVideoContentType */
-  gboolean qp;                /* AVEncVideoEncodeQP */
-  gboolean force_keyframe;    /* AVEncVideoForceKeyFrame */
-  gboolean low_latency;       /* AVLowLatencyMode */
-  gboolean min_qp;            /* AVEncVideoMinQP */
-  gboolean max_qp;            /* AVEncVideoMaxQP */
-  gboolean frame_type_qp;     /* AVEncVideoEncodeFrameTypeQP */
-  gboolean max_num_ref;       /* AVEncVideoMaxNumRefFrame */
-  guint max_num_ref_high;
-  guint max_num_ref_low;
-} GstMFH265EncDeviceCaps;
-
 typedef struct _GstMFH265Enc
 {
   GstMFVideoEnc parent;
@@ -189,20 +165,7 @@ typedef struct _GstMFH265Enc
 typedef struct _GstMFH265EncClass
 {
   GstMFVideoEncClass parent_class;
-
-  GstMFH265EncDeviceCaps device_caps;
 } GstMFH265EncClass;
-
-typedef struct
-{
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-  gchar *device_name;
-  guint32 enum_flags;
-  guint device_index;
-  GstMFH265EncDeviceCaps device_caps;
-  gboolean is_default;
-} GstMFH265EncClassData;
 
 static GstElementClass *parent_class = NULL;
 
@@ -221,13 +184,12 @@ gst_mf_h265_enc_class_init (GstMFH265EncClass * klass, gpointer data)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstMFVideoEncClass *mfenc_class = GST_MF_VIDEO_ENC_CLASS (klass);
-  GstMFH265EncClassData *cdata = (GstMFH265EncClassData *) data;
-  GstMFH265EncDeviceCaps *device_caps = &cdata->device_caps;
+  GstMFVideoEncClassData *cdata = (GstMFVideoEncClassData *) data;
+  GstMFVideoEncDeviceCaps *device_caps = &cdata->device_caps;
   gchar *long_name;
   gchar *classification;
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
-  klass->device_caps = *device_caps;
 
   gobject_class->get_property = gst_mf_h265_enc_get_property;
   gobject_class->set_property = gst_mf_h265_enc_set_property;
@@ -413,7 +375,7 @@ gst_mf_h265_enc_class_init (GstMFH265EncClass * klass, gpointer data)
   mfenc_class->codec_id = MFVideoFormat_HEVC;
   mfenc_class->enum_flags = cdata->enum_flags;
   mfenc_class->device_index = cdata->device_index;
-  mfenc_class->can_force_keyframe = device_caps->force_keyframe;
+  mfenc_class->device_caps = *device_caps;
 
   g_free (cdata->device_name);
   gst_caps_unref (cdata->sink_caps);
@@ -607,8 +569,8 @@ static gboolean
 gst_mf_h265_enc_set_option (GstMFVideoEnc * mfenc, IMFMediaType * output_type)
 {
   GstMFH265Enc *self = (GstMFH265Enc *) mfenc;
-  GstMFH265EncClass *klass = GST_MF_H265_ENC_GET_CLASS (self);
-  GstMFH265EncDeviceCaps *device_caps = &klass->device_caps;
+  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (mfenc);
+  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
   HRESULT hr;
   GstMFTransform *transform = mfenc->transform;
 
@@ -768,21 +730,11 @@ gst_mf_h265_enc_set_src_caps (GstMFVideoEnc * mfenc,
   gst_tag_list_unref (tags);
 
   return TRUE;
-
 }
 
-static void
-gst_mf_h265_enc_register (GstPlugin * plugin, guint rank,
-    const gchar * device_name, const GstMFH265EncDeviceCaps * device_caps,
-    guint32 enum_flags, guint device_index,
-    GstCaps * sink_caps, GstCaps * src_caps)
+void
+gst_mf_h265_enc_plugin_init (GstPlugin * plugin, guint rank)
 {
-  GType type;
-  gchar *type_name;
-  gchar *feature_name;
-  gint i;
-  GstMFH265EncClassData *cdata;
-  gboolean is_default = TRUE;
   GTypeInfo type_info = {
     sizeof (GstMFH265EncClass),
     NULL,
@@ -794,380 +746,9 @@ gst_mf_h265_enc_register (GstPlugin * plugin, guint rank,
     0,
     (GInstanceInitFunc) gst_mf_h265_enc_init,
   };
-
-  cdata = g_new0 (GstMFH265EncClassData, 1);
-  cdata->sink_caps = sink_caps;
-  cdata->src_caps = src_caps;
-  cdata->device_name = g_strdup (device_name);
-  cdata->device_caps = *device_caps;
-  cdata->enum_flags = enum_flags;
-  cdata->device_index = device_index;
-  type_info.class_data = cdata;
-
-  type_name = g_strdup ("GstMFH265Enc");
-  feature_name = g_strdup ("mfh265enc");
-
-  i = 1;
-  while (g_type_from_name (type_name) != 0) {
-    g_free (type_name);
-    g_free (feature_name);
-    type_name = g_strdup_printf ("GstMFH265Device%dEnc", i);
-    feature_name = g_strdup_printf ("mfh265device%denc", i);
-    is_default = FALSE;
-    i++;
-  }
-
-  cdata->is_default = is_default;
-
-  type =
-      g_type_register_static (GST_TYPE_MF_VIDEO_ENC, type_name, &type_info,
-      (GTypeFlags) 0);
-
-  /* make lower rank than default device */
-  if (rank > 0 && !is_default)
-    rank--;
-
-  if (!gst_element_register (plugin, feature_name, rank, type))
-    GST_WARNING ("Failed to register plugin '%s'", type_name);
-
-  g_free (type_name);
-  g_free (feature_name);
-}
-
-typedef struct
-{
-  guint width;
-  guint height;
-} GstMFH265EncResolution;
-
-typedef struct
-{
-  eAVEncH265VProfile profile;
-  const gchar *profile_str;
-} GStMFH265EncProfileMap;
-
-static void
-gst_mf_h265_enc_plugin_init_internal (GstPlugin * plugin, guint rank,
-    GstMFTransform * transform, guint device_index, guint32 enum_flags)
-{
-  HRESULT hr;
-  MFT_REGISTER_TYPE_INFO *infos;
-  UINT32 info_size;
-  gint i;
-  GstCaps *src_caps = NULL;
-  GstCaps *sink_caps = NULL;
-  GValue *supported_formats = NULL;
-  gboolean have_I420 = FALSE;
-  gchar *device_name = NULL;
-  GstMFH265EncDeviceCaps device_caps = { 0, };
-  IMFActivate *activate;
-  IMFTransform *encoder;
-  ICodecAPI *codec_api;
-  ComPtr<IMFMediaType> out_type;
-  GstMFH265EncResolution resolutions_to_check[] = {
-    {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160}, {8192, 4320}
-  };
-  guint max_width = 0;
-  guint max_height = 0;
-  guint resolution;
-  GStMFH265EncProfileMap profiles_to_check[] = {
-    { eAVEncH265VProfile_Main_420_8, "main" },
-    { eAVEncH265VProfile_Main_420_10, "main-10" },
-  };
-  guint num_profiles = 0;
-  GValue profiles = G_VALUE_INIT;
-
-  /* NOTE: depending on environment,
-   * some enumerated h/w MFT might not be usable (e.g., multiple GPU case) */
-  if (!gst_mf_transform_open (transform))
-    return;
-
-  activate = gst_mf_transform_get_activate_handle (transform);
-  if (!activate) {
-    GST_WARNING_OBJECT (transform, "No IMFActivate interface available");
-    return;
-  }
-
-  encoder = gst_mf_transform_get_transform_handle (transform);
-  if (!encoder) {
-    GST_WARNING_OBJECT (transform, "No IMFTransform interface available");
-    return;
-  }
-
-  codec_api = gst_mf_transform_get_codec_api_handle (transform);
-  if (!codec_api) {
-    GST_WARNING_OBJECT (transform, "No ICodecAPI interface available");
-    return;
-  }
-
-  g_object_get (transform, "device-name", &device_name, NULL);
-  if (!device_name) {
-    GST_WARNING_OBJECT (transform, "Unknown device name");
-    return;
-  }
-
-  g_value_init (&profiles, GST_TYPE_LIST);
-
-  hr = activate->GetAllocatedBlob (MFT_INPUT_TYPES_Attributes,
-      (UINT8 **) & infos, &info_size);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  for (i = 0; i < info_size / sizeof (MFT_REGISTER_TYPE_INFO); i++) {
-    GstVideoFormat vformat;
-    GValue val = G_VALUE_INIT;
-
-    vformat = gst_mf_video_subtype_to_video_format (&infos[i].guidSubtype);
-    if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
-      continue;
-
-    if (!supported_formats) {
-      supported_formats = g_new0 (GValue, 1);
-      g_value_init (supported_formats, GST_TYPE_LIST);
-    }
-
-    /* media foundation has duplicated formats IYUV and I420 */
-    if (vformat == GST_VIDEO_FORMAT_I420) {
-      if (have_I420)
-        continue;
-
-      have_I420 = TRUE;
-    }
-
-    g_value_init (&val, G_TYPE_STRING);
-    g_value_set_static_string (&val, gst_video_format_to_string (vformat));
-
-    gst_value_list_append_and_take_value (supported_formats, &val);
-  }
-
-  CoTaskMemFree (infos);
-
-  if (!supported_formats)
-    goto done;
-
-  /* check supported resolutions */
-  hr = MFCreateMediaType (out_type.GetAddressOf ());
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetGUID (MF_MT_MAJOR_TYPE, MFMediaType_Video);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetGUID (MF_MT_SUBTYPE, MFVideoFormat_HEVC);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetUINT32 (MF_MT_AVG_BITRATE, 2048000);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetUINT32 (MF_MT_MPEG2_PROFILE, eAVEncH265VProfile_Main_420_8);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = MFSetAttributeRatio (out_type.Get (), MF_MT_FRAME_RATE, 30, 1);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  hr = out_type->SetUINT32 (MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  GST_DEBUG_OBJECT (transform, "Check supported profiles of %s",
-      device_name);
-  for (i = 0; i < G_N_ELEMENTS (profiles_to_check); i++) {
-    GValue profile_val = G_VALUE_INIT;
-
-    hr = out_type->SetUINT32 (MF_MT_MPEG2_PROFILE,
-        profiles_to_check[i].profile);
-    if (!gst_mf_result (hr))
-      goto done;
-
-    hr = MFSetAttributeSize (out_type.Get (), MF_MT_FRAME_SIZE,
-        resolutions_to_check[0].width, resolutions_to_check[0].height);
-    if (!gst_mf_result (hr))
-      break;
-
-    if (!gst_mf_transform_set_output_type (transform, out_type.Get ()))
-      break;
-
-    GST_DEBUG_OBJECT (transform, "MFT supports h265 %s profile",
-        profiles_to_check[i].profile_str);
-
-    g_value_init (&profile_val, G_TYPE_STRING);
-    g_value_set_static_string (&profile_val, profiles_to_check[i].profile_str);
-    gst_value_list_append_and_take_value (&profiles, &profile_val);
-    num_profiles++;
-
-    /* clear media type */
-    gst_mf_transform_set_output_type (transform, NULL);
-  }
-
-  if (num_profiles == 0) {
-    GST_WARNING_OBJECT (transform, "Couldn't query supported profile");
-    goto done;
-  }
-
-  hr = out_type->SetUINT32 (MF_MT_MPEG2_PROFILE, eAVEncH265VProfile_Main_420_8);
-  if (!gst_mf_result (hr))
-    goto done;
-
-  /* FIXME: This would take so long time.
-   * Need to find smart way to find supported resolution*/
-#if 0
-  for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-    guint width, height;
-
-    width = resolutions_to_check[i].width;
-    height = resolutions_to_check[i].height;
-
-    hr = MFSetAttributeSize (out_type.Get (), MF_MT_FRAME_SIZE, width, height);
-    if (!gst_mf_result (hr))
-      break;
-
-    if (!gst_mf_transform_set_output_type (transform, out_type.Get ()))
-      break;
-
-    max_width = width;
-    max_height = height;
-
-    GST_DEBUG_OBJECT (transform,
-        "MFT supports resolution %dx%d", max_width, max_height);
-
-    /* clear media type */
-    gst_mf_transform_set_output_type (transform, NULL);
-  }
-
-  if (max_width == 0 || max_height == 0) {
-    GST_WARNING_OBJECT (transform, "Couldn't query supported resolution");
-    goto done;
-  }
-#else
-  /* FIXME: don't hardcode supported resolution */
-  max_width = max_height = 8192;
-#endif
-
-  src_caps = gst_caps_from_string ("video/x-h265, "
-      "stream-format=(string) byte-stream, "
-      "alignment=(string) au");
-  gst_caps_set_value (src_caps, "profile", &profiles);
-
-  sink_caps = gst_caps_new_empty_simple ("video/x-raw");
-  gst_caps_set_value (sink_caps, "format", supported_formats);
-  g_value_unset (supported_formats);
-  g_free (supported_formats);
-
-  /* To cover both landscape and portrait, select max value */
-  resolution = MAX (max_width, max_height);
-  gst_caps_set_simple (sink_caps,
-      "width", GST_TYPE_INT_RANGE, 64, resolution,
-      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
-  gst_caps_set_simple (src_caps,
-      "width", GST_TYPE_INT_RANGE, 64, resolution,
-      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
-
-  GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-
-#define CHECK_DEVICE_CAPS(codec_obj,api,val) \
-  if (SUCCEEDED((codec_obj)->IsSupported(&(api)))) {\
-    device_caps.val = TRUE; \
-  }
-
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonRateControlMode, rc_mode);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonBufferSize, buffer_size);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonMaxBitRate, max_bitrate);
-  CHECK_DEVICE_CAPS (codec_api,
-      CODECAPI_AVEncCommonQualityVsSpeed, quality_vs_speed);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncMPVDefaultBPictureCount, bframes);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncMPVGOPSize, gop_size);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncNumWorkerThreads, threads);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoContentType, content_type);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoEncodeQP, qp);
-  CHECK_DEVICE_CAPS (codec_api,
-      CODECAPI_AVEncVideoForceKeyFrame, force_keyframe);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVLowLatencyMode, low_latency);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoMinQP, min_qp);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoMaxQP, max_qp);
-  CHECK_DEVICE_CAPS (codec_api,
-      CODECAPI_AVEncVideoEncodeFrameTypeQP, frame_type_qp);
-  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoMaxNumRefFrame, max_num_ref);
-  if (device_caps.max_num_ref) {
-    VARIANT min;
-    VARIANT max;
-    VARIANT step;
-
-    hr = codec_api->GetParameterRange (&CODECAPI_AVEncVideoMaxNumRefFrame,
-        &min, &max, &step);
-    if (SUCCEEDED (hr)) {
-      device_caps.max_num_ref = TRUE;
-      device_caps.max_num_ref_high = max.uiVal;
-      device_caps.max_num_ref_low = min.uiVal;
-      VariantClear (&min);
-      VariantClear (&max);
-      VariantClear (&step);
-    }
-  }
-
-  gst_mf_h265_enc_register (plugin, rank, device_name,
-      &device_caps, enum_flags, device_index, sink_caps, src_caps);
-
-done:
-  g_value_unset (&profiles);
-  g_free (device_name);
-}
-
-void
-gst_mf_h265_enc_plugin_init (GstPlugin * plugin, guint rank)
-{
-  GstMFTransformEnumParams enum_params = { 0, };
-  MFT_REGISTER_TYPE_INFO output_type;
-  GstMFTransform *transform;
-  gint i;
-  gboolean do_next;
+  GUID subtype = MFVideoFormat_HEVC;
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_h265_enc_debug, "mfh265enc", 0, "mfh265enc");
 
-  output_type.guidMajorType = MFMediaType_Video;
-  output_type.guidSubtype = MFVideoFormat_HEVC;
-
-  enum_params.category = MFT_CATEGORY_VIDEO_ENCODER;
-  enum_params.enum_flags = (MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_ASYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER  | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
-  enum_params.output_typeinfo = &output_type;
-
-  /* register hardware encoders first */
-  i = 0;
-  do {
-    enum_params.device_index = i++;
-    transform = gst_mf_transform_new (&enum_params);
-    do_next = TRUE;
-
-    if (!transform) {
-      do_next = FALSE;
-    } else {
-      gst_mf_h265_enc_plugin_init_internal (plugin, rank, transform,
-          enum_params.device_index, enum_params.enum_flags);
-      gst_clear_object (&transform);
-    }
-  } while (do_next);
-
-  /* register software encoders */
-  enum_params.enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
-  i = 0;
-  do {
-    enum_params.device_index = i++;
-    transform = gst_mf_transform_new (&enum_params);
-    do_next = TRUE;
-
-    if (!transform) {
-      do_next = FALSE;
-    } else {
-      gst_mf_h265_enc_plugin_init_internal (plugin, rank, transform,
-          enum_params.device_index, enum_params.enum_flags);
-      gst_clear_object (&transform);
-    }
-  } while (do_next);
+  gst_mf_video_enc_register (plugin, rank, &subtype, &type_info);
 }

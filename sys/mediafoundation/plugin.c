@@ -41,6 +41,7 @@ GST_DEBUG_CATEGORY (gst_mf_utils_debug);
 GST_DEBUG_CATEGORY (gst_mf_source_object_debug);
 GST_DEBUG_CATEGORY (gst_mf_transform_debug);
 GST_DEBUG_CATEGORY (gst_mf_video_buffer_debug);
+GST_DEBUG_CATEGORY (gst_mf_video_enc_debug);
 
 #define GST_CAT_DEFAULT gst_mf_debug
 
@@ -71,6 +72,8 @@ plugin_init (GstPlugin * plugin)
       "mftransform", 0, "mftransform");
   GST_DEBUG_CATEGORY_INIT (gst_mf_video_buffer_debug,
       "mfvideobuffer", 0, "mfvideobuffer");
+  GST_DEBUG_CATEGORY_INIT (gst_mf_video_enc_debug,
+      "mfvideoenc", 0, "mfvideoenc");
 
   hr = MFStartup (MF_VERSION, MFSTARTUP_NOSOCKET);
   if (!gst_mf_result (hr)) {

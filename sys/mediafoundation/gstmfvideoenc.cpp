@@ -26,17 +26,20 @@
 #include "gstmfvideoenc.h"
 #include <wrl.h>
 #include "gstmfvideobuffer.h"
+#include <string.h>
 
 using namespace Microsoft::WRL;
 
-GST_DEBUG_CATEGORY (gst_mf_video_enc_debug);
+G_BEGIN_DECLS
+
+GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_enc_debug);
 #define GST_CAT_DEFAULT gst_mf_video_enc_debug
 
+G_END_DECLS
+
 #define gst_mf_video_enc_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMFVideoEnc, gst_mf_video_enc,
-    GST_TYPE_VIDEO_ENCODER,
-    GST_DEBUG_CATEGORY_INIT (gst_mf_video_enc_debug, "mfvideoenc", 0,
-      "mfvideoenc"));
+G_DEFINE_ABSTRACT_TYPE (GstMFVideoEnc, gst_mf_video_enc,
+    GST_TYPE_VIDEO_ENCODER);
 
 static gboolean gst_mf_video_enc_open (GstVideoEncoder * enc);
 static gboolean gst_mf_video_enc_close (GstVideoEncoder * enc);
@@ -494,7 +497,7 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
     goto error;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
-    if (klass->can_force_keyframe) {
+    if (klass->device_caps.force_keyframe) {
       unset_force_keyframe =
           gst_mf_transform_set_codec_api_uint32 (self->transform,
           &CODECAPI_AVEncVideoForceKeyFrame, TRUE);
@@ -788,4 +791,448 @@ gst_mf_video_on_new_sample (GstMFTransform * object,
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
 
   return S_OK;
+}
+
+typedef struct
+{
+  guint profile;
+  const gchar *profile_str;
+} GstMFVideoEncProfileMap;
+
+static void
+gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID &subtype,
+    GstMFVideoEncDeviceCaps * device_caps, GstCaps ** sink_template,
+    GstCaps ** src_template)
+{
+  HRESULT hr;
+  MFT_REGISTER_TYPE_INFO *infos;
+  UINT32 info_size;
+  gint i;
+  GstCaps *src_caps = NULL;
+  GstCaps *sink_caps = NULL;
+  GValue *supported_formats = NULL;
+  GValue *profiles = NULL;
+  gboolean have_I420 = FALSE;
+  gchar *device_name = NULL;
+  IMFActivate *activate;
+  IMFTransform *encoder;
+  ICodecAPI *codec_api;
+  ComPtr<IMFMediaType> out_type;
+  GstMFVideoEncProfileMap h264_profile_map[] = {
+    { eAVEncH264VProfile_High, "high" },
+    { eAVEncH264VProfile_Main, "main" },
+    { eAVEncH264VProfile_Base, "baseline" },
+    { 0, NULL },
+  };
+  GstMFVideoEncProfileMap hevc_profile_map[] = {
+    { eAVEncH265VProfile_Main_420_8, "main" },
+    { eAVEncH265VProfile_Main_420_10, "main-10" },
+    { 0, NULL },
+  };
+  GstMFVideoEncProfileMap *profile_to_check = NULL;
+  static gchar *h264_caps_str =
+      "video/x-h264, stream-format=(string) byte-stream, alignment=(string) au";
+  static gchar *hevc_caps_str =
+      "video/x-h265, stream-format=(string) byte-stream, alignment=(string) au";
+  static gchar *vp9_caps_str = "video/x-vp9";
+  static gchar *codec_caps_str = NULL;
+
+  /* NOTE: depending on environment,
+   * some enumerated h/w MFT might not be usable (e.g., multiple GPU case) */
+  if (!gst_mf_transform_open (transform))
+    return;
+
+  activate = gst_mf_transform_get_activate_handle (transform);
+  if (!activate) {
+    GST_WARNING_OBJECT (transform, "No IMFActivate interface available");
+    return;
+  }
+
+  encoder = gst_mf_transform_get_transform_handle (transform);
+  if (!encoder) {
+    GST_WARNING_OBJECT (transform, "No IMFTransform interface available");
+    return;
+  }
+
+  codec_api = gst_mf_transform_get_codec_api_handle (transform);
+  if (!codec_api) {
+    GST_WARNING_OBJECT (transform, "No ICodecAPI interface available");
+    return;
+  }
+
+  g_object_get (transform, "device-name", &device_name, NULL);
+  if (!device_name) {
+    GST_WARNING_OBJECT (transform, "Unknown device name");
+    return;
+  }
+  g_free (device_name);
+
+  hr = activate->GetAllocatedBlob (MFT_INPUT_TYPES_Attributes,
+      (UINT8 **) & infos, &info_size);
+  if (!gst_mf_result (hr))
+    return;
+
+  for (i = 0; i < info_size / sizeof (MFT_REGISTER_TYPE_INFO); i++) {
+    GstVideoFormat format;
+    GValue val = G_VALUE_INIT;
+
+    format = gst_mf_video_subtype_to_video_format (&infos[i].guidSubtype);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    if (!supported_formats) {
+      supported_formats = g_new0 (GValue, 1);
+      g_value_init (supported_formats, GST_TYPE_LIST);
+    }
+
+    /* media foundation has duplicated formats IYUV and I420 */
+    if (format == GST_VIDEO_FORMAT_I420) {
+      if (have_I420)
+        continue;
+
+      have_I420 = TRUE;
+    }
+
+    g_value_init (&val, G_TYPE_STRING);
+    g_value_set_static_string (&val, gst_video_format_to_string (format));
+    gst_value_list_append_and_take_value (supported_formats, &val);
+  }
+  CoTaskMemFree (infos);
+
+  if (!supported_formats) {
+    GST_WARNING_OBJECT (transform, "Couldn't figure out supported format");
+    return;
+  }
+
+  if (IsEqualGUID (MFVideoFormat_H264, subtype)) {
+    profile_to_check = h264_profile_map;
+    codec_caps_str = h264_caps_str;
+  } else if (IsEqualGUID (MFVideoFormat_HEVC, subtype)) {
+    profile_to_check = hevc_profile_map;
+    codec_caps_str = hevc_caps_str;
+  } else if (IsEqualGUID (MFVideoFormat_VP90, subtype)) {
+    codec_caps_str = vp9_caps_str;
+  } else {
+    g_assert_not_reached ();
+    return;
+  }
+
+  if (profile_to_check) {
+    hr = MFCreateMediaType (&out_type);
+    if (!gst_mf_result (hr))
+      return;
+
+    hr = out_type->SetGUID (MF_MT_MAJOR_TYPE, MFMediaType_Video);
+    if (!gst_mf_result (hr))
+      return;
+
+    hr = out_type->SetGUID (MF_MT_SUBTYPE, subtype);
+    if (!gst_mf_result (hr))
+      return;
+
+    hr = out_type->SetUINT32 (MF_MT_AVG_BITRATE, 2048000);
+    if (!gst_mf_result (hr))
+      return;
+
+    hr = MFSetAttributeRatio (out_type.Get (), MF_MT_FRAME_RATE, 30, 1);
+    if (!gst_mf_result (hr))
+      return;
+
+    hr = out_type->SetUINT32 (MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    if (!gst_mf_result (hr))
+      return;
+
+    hr = MFSetAttributeSize (out_type.Get (), MF_MT_FRAME_SIZE, 1920, 1080);
+    if (!gst_mf_result (hr))
+      return;
+
+    i = 0;
+    do {
+      GValue profile_val = G_VALUE_INIT;
+      guint mf_profile = profile_to_check[i].profile;
+      const gchar *profile_str = profile_to_check[i].profile_str;
+
+      i++;
+
+      if (mf_profile == 0)
+        break;
+
+      g_assert (profile_str != NULL);
+
+      hr = out_type->SetUINT32 (MF_MT_MPEG2_PROFILE, mf_profile);
+      if (!gst_mf_result (hr))
+        return;
+
+      if (!gst_mf_transform_set_output_type (transform, out_type.Get ()))
+        continue;
+
+      if (!profiles) {
+        profiles = g_new0 (GValue, 1);
+        g_value_init (profiles, GST_TYPE_LIST);
+      }
+
+      g_value_init (&profile_val, G_TYPE_STRING);
+      g_value_set_static_string (&profile_val, profile_str);
+      gst_value_list_append_and_take_value (profiles, &profile_val);
+    } while (1);
+
+    if (!profiles) {
+      GST_WARNING_OBJECT (transform, "Couldn't query supported profile");
+      return;
+    }
+  }
+
+  src_caps = gst_caps_from_string (codec_caps_str);
+  if (profiles) {
+    gst_caps_set_value (src_caps, "profile", profiles);
+    g_value_unset (profiles);
+    g_free (profiles);
+  }
+
+  sink_caps = gst_caps_new_empty_simple ("video/x-raw");
+  gst_caps_set_value (sink_caps, "format", supported_formats);
+  g_value_unset (supported_formats);
+  g_free (supported_formats);
+
+  /* FIXME: don't hardcode max resolution, but MF doesn't provide
+   * API for querying supported max resolution... */
+  gst_caps_set_simple (sink_caps,
+      "width", GST_TYPE_INT_RANGE, 64, 8192,
+      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
+  gst_caps_set_simple (src_caps,
+      "width", GST_TYPE_INT_RANGE, 64, 8192,
+      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
+
+  *sink_template = sink_caps;
+  *src_template = src_caps;
+
+#define CHECK_DEVICE_CAPS(codec_obj,api,val) \
+  if (SUCCEEDED((codec_obj)->IsSupported(&(api)))) {\
+    (device_caps)->val = TRUE; \
+  }
+
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonRateControlMode, rc_mode);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonQuality, quality);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncAdaptiveMode, adaptive_mode);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonBufferSize, buffer_size);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonMaxBitRate, max_bitrate);
+  CHECK_DEVICE_CAPS (codec_api,
+      CODECAPI_AVEncCommonQualityVsSpeed, quality_vs_speed);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncH264CABACEnable, cabac);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncH264SPSID, sps_id);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncH264PPSID, pps_id);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncMPVDefaultBPictureCount, bframes);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncMPVGOPSize, gop_size);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncNumWorkerThreads, threads);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoContentType, content_type);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoEncodeQP, qp);
+  CHECK_DEVICE_CAPS (codec_api,
+      CODECAPI_AVEncVideoForceKeyFrame, force_keyframe);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVLowLatencyMode, low_latency);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoMinQP, min_qp);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoMaxQP, max_qp);
+  CHECK_DEVICE_CAPS (codec_api,
+      CODECAPI_AVEncVideoEncodeFrameTypeQP, frame_type_qp);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncVideoMaxNumRefFrame, max_num_ref);
+  if (device_caps->max_num_ref) {
+    VARIANT min;
+    VARIANT max;
+    VARIANT step;
+
+    hr = codec_api->GetParameterRange (&CODECAPI_AVEncVideoMaxNumRefFrame,
+        &min, &max, &step);
+    if (SUCCEEDED (hr)) {
+      device_caps->max_num_ref_high = max.uiVal;
+      device_caps->max_num_ref_low = min.uiVal;
+      VariantClear (&min);
+      VariantClear (&max);
+      VariantClear (&step);
+    } else {
+      device_caps->max_num_ref = FALSE;
+    }
+  }
+#undef CHECK_DEVICE_CAPS
+
+  return;
+}
+
+static GstMFTransform *
+gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
+    GstMFVideoEncDeviceCaps * device_caps, GstCaps ** sink_template,
+    GstCaps ** src_template)
+{
+  GstMFTransformEnumParams enum_params = { 0, };
+  MFT_REGISTER_TYPE_INFO output_type;
+  GstMFTransform *transform;
+
+  *sink_template = NULL;
+  *src_template = NULL;
+  memset (device_caps, 0, sizeof (GstMFVideoEncDeviceCaps));
+
+  if (!IsEqualGUID (MFVideoFormat_H264, *subtype) &&
+      !IsEqualGUID (MFVideoFormat_HEVC, *subtype) &&
+      !IsEqualGUID (MFVideoFormat_VP90, *subtype)) {
+    GST_ERROR ("Unknown subtype GUID");
+
+    return NULL;
+  }
+
+  output_type.guidMajorType = MFMediaType_Video;
+  output_type.guidSubtype = *subtype;
+
+  enum_params.category = MFT_CATEGORY_VIDEO_ENCODER;
+  enum_params.output_typeinfo = &output_type;
+  enum_params.device_index = device_index;
+  enum_params.enum_flags = enum_flags;
+
+  transform = gst_mf_transform_new (&enum_params);
+  if (!transform)
+    return NULL;
+
+  gst_mf_video_enc_enum_internal (transform, output_type.guidSubtype,
+      device_caps, sink_template, src_template);
+
+  return transform;
+}
+
+static void
+gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
+    GUID * subtype, GTypeInfo * type_info,
+    const GstMFVideoEncDeviceCaps * device_caps,
+    guint32 enum_flags, guint device_index, GstMFTransform * transform,
+    GstCaps * sink_caps, GstCaps * src_caps)
+{
+  GType type;
+  GTypeInfo local_type_info;
+  gchar *type_name;
+  gchar *feature_name;
+  gint i;
+  GstMFVideoEncClassData *cdata;
+  gboolean is_default = TRUE;
+  gchar *device_name = NULL;
+  static gchar *type_name_prefix = NULL;
+  static gchar *feature_name_prefix = NULL;
+
+  if (IsEqualGUID (MFVideoFormat_H264, *subtype)) {
+    type_name_prefix = "H264";
+    feature_name_prefix = "h264";
+  } else if (IsEqualGUID (MFVideoFormat_HEVC, *subtype)) {
+    type_name_prefix = "H265";
+    feature_name_prefix = "h265";
+  } else if (IsEqualGUID (MFVideoFormat_VP90, *subtype)) {
+    type_name_prefix = "VP9";
+    feature_name_prefix = "vp9";
+  } else {
+    g_assert_not_reached ();
+    return;
+  }
+
+  /* Must be checked already */
+  g_object_get (transform, "device-name", &device_name, NULL);
+  g_assert (device_name != NULL);
+
+  cdata = g_new0 (GstMFVideoEncClassData, 1);
+  cdata->sink_caps = gst_caps_copy (sink_caps);
+  cdata->src_caps = gst_caps_copy (src_caps);
+  cdata->device_name = device_name;
+  cdata->device_caps = *device_caps;
+  cdata->enum_flags = enum_flags;
+  cdata->device_index = device_index;
+
+  local_type_info = *type_info;
+  local_type_info.class_data = cdata;
+
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_name = g_strdup_printf ("GstMF%sEnc", type_name_prefix);
+  feature_name = g_strdup_printf ("mf%senc", feature_name_prefix);
+
+  i = 1;
+  while (g_type_from_name (type_name) != 0) {
+    g_free (type_name);
+    g_free (feature_name);
+    type_name = g_strdup_printf ("GstMF%sDevice%dEnc", type_name_prefix, i);
+    feature_name = g_strdup_printf ("mf%sdevice%denc", feature_name_prefix, i);
+    is_default = FALSE;
+    i++;
+  }
+
+  cdata->is_default = is_default;
+
+  type =
+      g_type_register_static (GST_TYPE_MF_VIDEO_ENC, type_name,
+      &local_type_info, (GTypeFlags) 0);
+
+  /* make lower rank than default device */
+  if (rank > 0 && !is_default)
+    rank--;
+
+  if (!gst_element_register (plugin, feature_name, rank, type))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
+  g_free (feature_name);
+}
+
+void
+gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
+    GTypeInfo * type_info)
+{
+  GstMFTransform *transform = NULL;
+  GstCaps *sink_template = NULL;
+  GstCaps *src_template = NULL;
+  guint enum_flags;
+  GstMFVideoEncDeviceCaps device_caps;
+  guint i;
+
+  /* register hardware encoders first */
+  enum_flags = (MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_ASYNCMFT |
+      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
+
+  /* AMD seems to be able to support up to 12 GPUs */
+  for (i = 0; i < 12 ; i++) {
+    transform = gst_mf_video_enc_enum (enum_flags, subtype, i, &device_caps,
+        &sink_template, &src_template);
+
+    /* No more MFT to enumerate */
+    if (!transform)
+      break;
+
+    /* Failed to open MFT */
+    if (!sink_template) {
+      gst_clear_object (&transform);
+      continue;
+    }
+
+    gst_mf_video_enc_register_internal (plugin, rank, subtype,
+        type_info, &device_caps, enum_flags, i, transform,
+        sink_template, src_template);
+    gst_clear_object (&transform);
+    gst_clear_caps (&sink_template);
+    gst_clear_caps (&src_template);
+  }
+
+  /* register software encoders */
+  enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
+      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
+
+  transform = gst_mf_video_enc_enum (enum_flags, subtype, 0, &device_caps,
+      &sink_template, &src_template);
+
+  if (!transform)
+    goto done;
+
+  if (!sink_template)
+    goto done;
+
+  gst_mf_video_enc_register_internal (plugin, rank, subtype, type_info,
+      &device_caps, enum_flags, i, transform, sink_template, src_template);
+
+done:
+  gst_clear_object (&transform);
+  gst_clear_caps (&sink_template);
+  gst_clear_caps (&src_template);
 }
