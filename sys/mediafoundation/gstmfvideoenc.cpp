@@ -1229,7 +1229,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
     goto done;
 
   gst_mf_video_enc_register_internal (plugin, rank, subtype, type_info,
-      &device_caps, enum_flags, i, transform, sink_template, src_template);
+      &device_caps, enum_flags, 0, transform, sink_template, src_template);
 
 done:
   gst_clear_object (&transform);
