@@ -26,17 +26,37 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_TYPE_MPEG2_PICTURE:
+ *
+ * Since: 1.20
+ */
 #define GST_TYPE_MPEG2_PICTURE      (gst_mpeg2_picture_get_type())
+/**
+ * GST_IS_MPEG2_PICTURE:
+ *
+ * Since: 1.20
+ */
 #define GST_IS_MPEG2_PICTURE(obj)   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_MPEG2_PICTURE))
+/**
+ * GST_MPEG2_PICTURE:
+ *
+ * Since: 1.20
+ */
 #define GST_MPEG2_PICTURE(obj)      ((GstMpeg2Picture *)obj)
-#define GST_MPEG2_PICTURE_CAST(obj) (GST_MPEG2_PICTURE(obj))
 
 typedef struct _GstMpeg2Slice GstMpeg2Slice;
+typedef struct _GstMpeg2Picture GstMpeg2Picture;
 
+/**
+ * GstMpeg2Slice:
+ *
+ * Since: 1.20
+ */
 struct _GstMpeg2Slice
 {
-  /* The parameter set */
-  GstMpegVideoQuantMatrixExt *quant_matrix;
+  /*< private >*/
+  GstMpegVideoQuantMatrixExt *quant_matrix;   /* The parameter set */
   GstMpegVideoPictureHdr *pic_hdr;
   GstMpegVideoPictureExt *pic_ext;
 
@@ -46,8 +66,11 @@ struct _GstMpeg2Slice
   GstMpegVideoPacket packet;
 };
 
-typedef struct _GstMpeg2Picture GstMpeg2Picture;
-
+/**
+ * GstMpeg2Picture:
+ *
+ * Since: 1.20
+ */
 struct _GstMpeg2Picture
 {
   /*< private >*/
@@ -68,6 +91,14 @@ struct _GstMpeg2Picture
   GDestroyNotify notify;
 };
 
+/**
+ * GST_MPEG2_PICTURE_IS_REF:
+ * @picture: a #GstMpeg2Picture
+ *
+ * Check whether @picture's type is I or P
+ *
+ * Since: 1.20
+ */
 #define GST_MPEG2_PICTURE_IS_REF(picture) \
     (((GstMpeg2Picture *) picture)->type == GST_MPEG_VIDEO_PICTURE_TYPE_I || \
      ((GstMpeg2Picture *) picture)->type == GST_MPEG_VIDEO_PICTURE_TYPE_P)
@@ -115,6 +146,12 @@ void gst_mpeg2_picture_set_user_data (GstMpeg2Picture * picture,
 GST_CODECS_API
 gpointer gst_mpeg2_picture_get_user_data (GstMpeg2Picture * picture);
 
+
+/**
+ * GstMpeg2Dpb:
+ *
+ * Since: 1.20
+ */
 typedef struct _GstMpeg2Dpb GstMpeg2Dpb;
 
 GST_CODECS_API

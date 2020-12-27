@@ -35,7 +35,6 @@ G_BEGIN_DECLS
 #define GST_MPEG2_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_MPEG2_DECODER,GstMpeg2DecoderClass))
 #define GST_IS_MPEG2_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MPEG2_DECODER))
 #define GST_IS_MPEG2_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG2_DECODER))
-#define GST_MPEG2_DECODER_CAST(obj)       ((GstMpeg2Decoder*)obj)
 
 typedef struct _GstMpeg2Decoder GstMpeg2Decoder;
 typedef struct _GstMpeg2DecoderClass GstMpeg2DecoderClass;
@@ -45,6 +44,8 @@ typedef struct _GstMpeg2DecoderPrivate GstMpeg2DecoderPrivate;
  * GstMpeg2Decoder:
  *
  * The opaque #GstMpeg2Decoder data structure.
+ *
+ * Since: 1.20
  */
 struct _GstMpeg2Decoder
 {
@@ -74,6 +75,8 @@ struct _GstMpeg2DecoderClass
    * @seq_ext: a #GstMpegVideoSequenceExt
    *
    * Notifies subclass of SPS update
+   *
+   * Since: 1.20
    */
   gboolean      (*new_sequence)     (GstMpeg2Decoder * decoder,
                                      const GstMpegVideoSequenceHdr * seq,
@@ -90,6 +93,8 @@ struct _GstMpeg2DecoderClass
    * Optional. Called whenever new #GstMpeg2Picture is created.
    * Subclass can set implementation specific user data
    * on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data()
+   *
+   * Since: 1.20
    */
   gboolean      (*new_picture)      (GstMpeg2Decoder * decoder,
                                      GstVideoCodecFrame * frame,
@@ -121,6 +126,8 @@ struct _GstMpeg2DecoderClass
    *
    * Optional. Called per one #GstMpeg2Picture to notify subclass to prepare
    * decoding process for the #GstMpeg2Picture
+   *
+   * Since: 1.20
    */
   gboolean      (*start_picture)    (GstMpeg2Decoder * decoder,
                                      GstMpeg2Picture * picture,
@@ -136,6 +143,8 @@ struct _GstMpeg2DecoderClass
    *
    * Provides per slice data with parsed slice header and required raw bitstream
    * for subclass to decode it.
+   *
+   * Since: 1.20
    */
   gboolean      (*decode_slice)     (GstMpeg2Decoder * decoder,
                                      GstMpeg2Picture * picture,
@@ -148,6 +157,8 @@ struct _GstMpeg2DecoderClass
    *
    * Optional. Called per one #GstMpeg2Picture to notify subclass to finish
    * decoding process for the #GstMpeg2Picture
+   *
+   * Since: 1.20
    */
   gboolean      (*end_picture)      (GstMpeg2Decoder * decoder,
                                      GstMpeg2Picture * picture);
@@ -160,6 +171,8 @@ struct _GstMpeg2DecoderClass
    *
    * Called with a #GstMpeg2Picture which is required to be outputted.
    * The #GstVideoCodecFrame must be consumed by subclass.
+   *
+   * Since: 1.20
    */
   GstFlowReturn (*output_picture)   (GstMpeg2Decoder * decoder,
                                      GstVideoCodecFrame * frame,

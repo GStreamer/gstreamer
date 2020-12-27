@@ -49,6 +49,8 @@ _gst_mpeg2_picture_free (GstMpeg2Picture * picture)
  * Create new #GstMpeg2Picture
  *
  * Returns: a new #GstMpeg2Picture
+ *
+ * Since: 1.20
  */
 GstMpeg2Picture *
 gst_mpeg2_picture_new (void)
@@ -80,6 +82,8 @@ gst_mpeg2_picture_new (void)
  *
  * If a @user_data was previously set, then the previous set @notify will be called
  * before the @user_data is replaced.
+ *
+ * Since: 1.20
  */
 void
 gst_mpeg2_picture_set_user_data (GstMpeg2Picture * picture, gpointer user_data,
@@ -102,6 +106,8 @@ gst_mpeg2_picture_set_user_data (GstMpeg2Picture * picture, gpointer user_data,
  * gst_mpeg2_picture_set_user_data() previously.
  *
  * Returns: (transfer none): The previously set user_data
+ *
+ * Since: 1.20
  */
 gpointer
 gst_mpeg2_picture_get_user_data (GstMpeg2Picture * picture)
@@ -109,9 +115,6 @@ gst_mpeg2_picture_get_user_data (GstMpeg2Picture * picture)
   return picture->user_data;
 }
 
-/*******************
- * GstMpeg2Dpb *
- *******************/
 struct _GstMpeg2Dpb
 {
   GstMpeg2Picture *ref_pic_list[2];
@@ -126,6 +129,8 @@ struct _GstMpeg2Dpb
  * Create new #GstMpeg2Dpb
  *
  * Returns: a new #GstMpeg2Dpb
+ *
+ * Since: 1.20
  */
 GstMpeg2Dpb *
 gst_mpeg2_dpb_new (void)
@@ -138,6 +143,8 @@ gst_mpeg2_dpb_new (void)
  * @dpb: a #GstMpeg2Dpb to free
  *
  * Free the @dpb
+ *
+ * Since: 1.20
  */
 void
 gst_mpeg2_dpb_free (GstMpeg2Dpb * dpb)
@@ -160,6 +167,8 @@ gst_mpeg2_dpb_free (GstMpeg2Dpb * dpb)
  * @dpb: a #GstMpeg2Dpb
  *
  * Clear all stored #GstMpeg2Picture
+ *
+ * Since: 1.20
  */
 void
 gst_mpeg2_dpb_clear (GstMpeg2Dpb * dpb)
@@ -204,6 +213,8 @@ _dpb_add_to_reference (GstMpeg2Dpb * dpb, GstMpeg2Picture * pic)
  * @picture: (transfer full): a #GstMpeg2Picture
  *
  * Store the @picture
+ *
+ * Since: 1.20
  */
 void
 gst_mpeg2_dpb_add (GstMpeg2Dpb * dpb, GstMpeg2Picture * picture)
@@ -220,6 +231,16 @@ gst_mpeg2_dpb_add (GstMpeg2Dpb * dpb, GstMpeg2Picture * picture)
   }
 }
 
+/**
+ * gst_mpeg2_dpb_need_bump:
+ * @dpb: a #GstMpeg2Dpb
+ *
+ * Checks if @dbp has a new picture.
+ *
+ * Returns: #TRUE if @dpb needs to be bumped; otherwise, #FALSE
+ *
+ * Since: 1.20
+ */
 gboolean
 gst_mpeg2_dpb_need_bump (GstMpeg2Dpb * dpb)
 {
@@ -280,6 +301,19 @@ gst_mpeg2_dpb_bump (GstMpeg2Dpb * dpb)
   return pic;
 }
 
+/**
+ * gst_mpeg2_dpb_get_neighbours:
+ * @dpb: a #GstMpeg2Dpb
+ * @picture: current #GstMpeg2Picture
+ * @prev_picture_ptr: (transfer none) (out) (nullable): previuous
+ *     #GstMpeg2Picture in @dpb
+ * @next_picture_ptr: (transfer none) (out) (nullable): next
+ *     #GstMpeg2Picture in @dpb
+ *
+ * Gets the neighbours #GstMpeg2Picture of @picture in @dpb.
+ *
+ * Since: 1.20
+ */
 void
 gst_mpeg2_dpb_get_neighbours (GstMpeg2Dpb * dpb,
     GstMpeg2Picture * picture, GstMpeg2Picture ** prev_picture_ptr,
