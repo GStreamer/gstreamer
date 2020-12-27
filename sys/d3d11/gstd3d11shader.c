@@ -136,6 +136,13 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
     return NULL;
   }
 
+  if (error) {
+    const gchar *err = ID3D10Blob_GetBufferPointer (error);
+
+    GST_WARNING ("HLSL compiler warnings:\n%s", GST_STR_NULL (err));
+    ID3D10Blob_Release (error);
+  }
+
   return ret;
 }
 
