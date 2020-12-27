@@ -377,6 +377,7 @@ struct _GstD3D11CompositorPad
   gboolean alpha_updated;
   gboolean blend_desc_updated;
   ID3D11BlendState *blend;
+  gboolean caps_updated;
 
   /* properties */
   gint xpos;
@@ -1144,13 +1145,14 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   guint zorder = 0;
 #endif
 
-  if (!cpad->convert || cpad->alpha_updated) {
+  if (!cpad->convert || cpad->alpha_updated || cpad->caps_updated) {
     if (cpad->convert)
       gst_d3d11_color_converter_free (cpad->convert);
     cpad->convert =
         gst_d3d11_color_converter_new_with_alpha (self->device,
         &pad->info, &vagg->info, cpad->alpha);
     cpad->alpha_updated = FALSE;
+    cpad->caps_updated = FALSE;
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
@@ -1268,6 +1270,8 @@ static gboolean gst_d3d11_compositor_propose_allocation (GstAggregator *
     GstQuery * query);
 static gboolean gst_d3d11_compositor_decide_allocation (GstAggregator *
     aggregator, GstQuery * query);
+static gboolean gst_d3d11_compositor_sink_event (GstAggregator * agg,
+    GstAggregatorPad * pad, GstEvent * event);
 
 static GstFlowReturn
 gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
@@ -1321,6 +1325,8 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_propose_allocation);
   aggregator_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_decide_allocation);
+  aggregator_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_d3d11_compositor_sink_event);
 
   vagg_class->aggregate_frames =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_aggregate_frames);
@@ -1828,6 +1834,24 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * aggregator,
   gst_object_unref (pool);
 
   return TRUE;
+}
+
+static gboolean
+gst_d3d11_compositor_sink_event (GstAggregator * agg, GstAggregatorPad * pad,
+    GstEvent * event)
+{
+  GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      GST_DEBUG_OBJECT (pad, "Got new caps event %" GST_PTR_FORMAT, event);
+      cpad->caps_updated = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, pad, event);
 }
 
 typedef struct
