@@ -903,15 +903,19 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
         priv->decoder, output_view, content_key_size, content_key);
     gst_d3d11_device_unlock (priv->device);
 
-    if (hr == E_PENDING && retry_count < 50) {
-      GST_LOG_OBJECT (decoder, "GPU busy, try again");
-
-      /* HACK: no better idea other than sleep...
-       * 1ms waiting like msdkdec */
+    /* HACK: Do 100 times retry with 1ms sleep per failure, since DXVA/D3D11
+     * doesn't provide API for "GPU-IS-READY-TO-DECODE" like signal.
+     * In the worst case, we will error out after 100ms.
+     * Note that Windows' clock precision is known to be incorrect,
+     * so it would be longer than 100ms in reality.
+     */
+    if (hr == E_PENDING && retry_count < 100) {
+      GST_LOG_OBJECT (decoder, "GPU is busy, try again. Retry count %d",
+          retry_count);
       g_usleep (1000);
     } else {
       if (gst_d3d11_result (hr, priv->device))
-        GST_LOG_OBJECT (decoder, "Success with retry %d", retry_count);
+        GST_LOG_OBJECT (decoder, "Succeeded with retry count %d", retry_count);
       break;
     }
 
