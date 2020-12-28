@@ -1,4 +1,6 @@
 /built_doc
+.vscode
+build/
 /hotdoc-private*
 /.hotdoc.d
 /*.stamp
