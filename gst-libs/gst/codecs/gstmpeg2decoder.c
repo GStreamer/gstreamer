@@ -455,7 +455,7 @@ gst_mpeg2_decoder_handle_sequence (GstMpeg2Decoder * decoder,
   priv->seq_display_ext = SEQ_DISPLAY_EXT_INIT;
   priv->seq_scalable_ext = SEQ_SCALABLE_EXT_INIT;
   priv->quant_matrix = QUANT_MATRIX_EXT_INIT;
-  priv->pic_ext = PIC_HDR_EXT_INIT;;
+  priv->pic_ext = PIC_HDR_EXT_INIT;
 
   priv->seq_hdr = seq_hdr;
   priv->seq_changed = TRUE;
