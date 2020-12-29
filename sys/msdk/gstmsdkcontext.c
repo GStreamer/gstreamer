@@ -207,7 +207,6 @@ gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
   return TRUE;
 
 failed:
-  msdk_close_session (priv->session);
   return FALSE;
 }
 
