@@ -239,11 +239,11 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 
     /* RTCOutboundRTPStreamStats */
 
-    if (gst_structure_get_uint (source_stats, "sent-fir-count", &fir))
+    if (gst_structure_get_uint (source_stats, "recv-fir-count", &fir))
       gst_structure_set (out, "fir-count", G_TYPE_UINT, fir, NULL);
-    if (gst_structure_get_uint (source_stats, "sent-pli-count", &pli))
+    if (gst_structure_get_uint (source_stats, "recv-pli-count", &pli))
       gst_structure_set (out, "pli-count", G_TYPE_UINT, pli, NULL);
-    if (gst_structure_get_uint (source_stats, "sent-nack-count", &nack))
+    if (gst_structure_get_uint (source_stats, "recv-nack-count", &nack))
       gst_structure_set (out, "nack-count", G_TYPE_UINT, nack, NULL);
     /* XXX: mediaType, trackId, sliCount, qpSum */
 
@@ -391,11 +391,11 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     if (gst_structure_get_uint64 (source_stats, "octets-received", &bytes))
       gst_structure_set (in, "bytes-received", G_TYPE_UINT64, bytes, NULL);
 
-    if (gst_structure_get_uint (source_stats, "recv-fir-count", &fir))
+    if (gst_structure_get_uint (source_stats, "sent-fir-count", &fir))
       gst_structure_set (in, "fir-count", G_TYPE_UINT, fir, NULL);
-    if (gst_structure_get_uint (source_stats, "recv-pli-count", &pli))
+    if (gst_structure_get_uint (source_stats, "sent-pli-count", &pli))
       gst_structure_set (in, "pli-count", G_TYPE_UINT, pli, NULL);
-    if (gst_structure_get_uint (source_stats, "recv-nack-count", &nack))
+    if (gst_structure_get_uint (source_stats, "sent-nack-count", &nack))
       gst_structure_set (in, "nack-count", G_TYPE_UINT, nack, NULL);
     if (jb_stats)
       gst_structure_set (in, "packets-duplicated", G_TYPE_UINT64, duplicates,
