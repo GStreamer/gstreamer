@@ -374,7 +374,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 1, xpos); \
   comp_ypos = (ypos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 1, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 1, xoffset); \
-  comp_yoffset = (yoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 1, yoffset); \
+  comp_yoffset = (yoffset == 0) ? 0 : yoffset >> info->h_sub[1]; \
   _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
@@ -390,7 +390,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 2, xpos); \
   comp_ypos = (ypos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 2, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 2, xoffset); \
-  comp_yoffset = (yoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 2, yoffset); \
+  comp_yoffset = (yoffset == 0) ? 0 : yoffset >> info->h_sub[2]; \
   _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
