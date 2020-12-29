@@ -1026,7 +1026,7 @@ fill_checker_##name##_c (GstVideoFrame * frame, guint y_start, guint y_end) \
   dest_add = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) - width * 2; \
   width /= 2; \
   \
-  dest += dest_add * y_start; \
+  dest += GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) * y_start; \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
       dest[Y1] = tab[((i & 0x8) >> 3) + (((2 * j + 0) & 0x8) >> 3)]; \
