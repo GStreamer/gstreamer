@@ -1171,7 +1171,7 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
     if (!gst_ass_render_negotiate (render, NULL)) {
       gst_pad_mark_reconfigure (render->srcpad);
       if (GST_PAD_IS_FLUSHING (render->srcpad))
-        goto flushing;
+        goto flushing_no_unlock;
       else
         goto not_negotiated;
     }
@@ -1443,7 +1443,6 @@ missing_timestamp:
   }
 not_negotiated:
   {
-    GST_ASS_RENDER_UNLOCK (render);
     GST_DEBUG_OBJECT (render, "not negotiated");
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
@@ -1451,6 +1450,9 @@ not_negotiated:
 flushing:
   {
     GST_ASS_RENDER_UNLOCK (render);
+  }
+flushing_no_unlock:
+  {
     GST_DEBUG_OBJECT (render, "flushing, discarding buffer");
     gst_buffer_unref (buffer);
     return GST_FLOW_FLUSHING;
