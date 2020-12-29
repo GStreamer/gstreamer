@@ -428,7 +428,7 @@ fill_checker_##format_name (GstVideoFrame * frame, guint y_start, guint y_end) \
   \
   for (i = 0; i < comp_height; i++) { \
     for (j = 0; j < comp_width; j++) { \
-      *p++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+      *p++ = tab[(((i + y_start) & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
     } \
     p += rowstride - comp_width; \
   } \
@@ -682,7 +682,7 @@ fill_checker_##format_name (GstVideoFrame * frame, guint y_start, guint y_end) \
   \
   for (i = 0; i < comp_height; i++) { \
     for (j = 0; j < comp_width; j++) { \
-      *p++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+      *p++ = tab[(((i + y_start) & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
     } \
     p += rowstride - comp_width; \
   } \
@@ -845,9 +845,9 @@ fill_checker_##name##_c (GstVideoFrame * frame, guint y_start, guint y_end) \
   dest += y_start * stride; \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
-      dest[r] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* red */ \
-      dest[g] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* green */ \
-      dest[b] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* blue */ \
+      dest[r] = tab[(((i + y_start) & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* red */ \
+      dest[g] = tab[(((i + y_start) & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* green */ \
+      dest[b] = tab[(((i + y_start) & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* blue */ \
       dest += bpp; \
     } \
     dest += dest_add; \
@@ -1029,8 +1029,8 @@ fill_checker_##name##_c (GstVideoFrame * frame, guint y_start, guint y_end) \
   dest += GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) * y_start; \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
-      dest[Y1] = tab[((i & 0x8) >> 3) + (((2 * j + 0) & 0x8) >> 3)]; \
-      dest[Y2] = tab[((i & 0x8) >> 3) + (((2 * j + 1) & 0x8) >> 3)]; \
+      dest[Y1] = tab[(((i + y_start) & 0x8) >> 3) + (((2 * j + 0) & 0x8) >> 3)]; \
+      dest[Y2] = tab[(((i + y_start) & 0x8) >> 3) + (((2 * j + 1) & 0x8) >> 3)]; \
       dest[U] = 128; \
       dest[V] = 128; \
       dest += 4; \
