@@ -779,11 +779,7 @@ gst_mpeg2_decoder_ensure_current_picture (GstMpeg2Decoder * decoder,
 
     picture->structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
   } else {
-    gboolean is_first_field = (priv->pic_ext.picture_structure ==
-        GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD) ^
-        (priv->pic_ext.top_field_first == 0);
-
-    if (is_first_field) {
+    if (!priv->first_field) {
       picture = gst_mpeg2_picture_new ();
       if (klass->new_picture)
         ret = klass->new_picture (decoder, priv->current_frame, picture);
@@ -796,17 +792,8 @@ gst_mpeg2_decoder_ensure_current_picture (GstMpeg2Decoder * decoder,
     } else {
       picture = gst_mpeg2_picture_new ();
 
-      if (priv->first_field == NULL) {
-        GST_WARNING_OBJECT (decoder, "Missing the first field");
-        if (klass->new_picture)
-          ret = klass->new_picture (decoder, priv->current_frame, picture);
-      } else {
-        if (klass->new_field_picture)
-          ret = klass->new_field_picture (decoder, priv->first_field, picture);
-
-        if (ret)
-          picture->first_field = gst_mpeg2_picture_ref (priv->first_field);
-      }
+      if (klass->new_field_picture)
+        ret = klass->new_field_picture (decoder, priv->first_field, picture);
 
       if (!ret) {
         GST_ERROR_OBJECT (decoder,
@@ -814,6 +801,8 @@ gst_mpeg2_decoder_ensure_current_picture (GstMpeg2Decoder * decoder,
         gst_mpeg2_picture_unref (picture);
         return FALSE;
       }
+
+      picture->first_field = gst_mpeg2_picture_ref (priv->first_field);
 
       /* At this moment, this picture should be interlaced */
       picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_INTERLACED;
