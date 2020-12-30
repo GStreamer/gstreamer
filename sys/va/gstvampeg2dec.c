@@ -459,7 +459,9 @@ gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
         prev_picture ? gst_mpeg2_picture_get_user_data (prev_picture) : NULL;
     if (!prev_pic) {
       GST_WARNING_OBJECT (self, "Missing the forward reference picture");
-      return FALSE;
+      pic_param.forward_reference_picture =
+          gst_va_decode_picture_get_surface (gst_mpeg2_picture_get_user_data
+          (picture));
     } else {
       pic_param.forward_reference_picture =
           gst_va_decode_picture_get_surface (prev_pic);
@@ -473,7 +475,9 @@ gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
         next_picture ? gst_mpeg2_picture_get_user_data (next_picture) : NULL;
     if (!next_pic) {
       GST_WARNING_OBJECT (self, "Missing the backward reference picture");
-      return FALSE;
+      pic_param.backward_reference_picture =
+          gst_va_decode_picture_get_surface (gst_mpeg2_picture_get_user_data
+          (picture));
     } else {
       pic_param.backward_reference_picture =
           gst_va_decode_picture_get_surface (next_pic);
