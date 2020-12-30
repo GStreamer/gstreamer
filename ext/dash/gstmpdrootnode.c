@@ -83,17 +83,17 @@ gst_mpd_root_node_set_property (GObject * object, guint prop_id,
     case PROP_MPD_ROOT_AVAILABILTY_START_TIME:
       if (self->availabilityStartTime)
         gst_date_time_unref (self->availabilityStartTime);
-      self->availabilityStartTime = g_value_get_boxed (value);
+      self->availabilityStartTime = g_value_dup_boxed (value);
       break;
     case PROP_MPD_ROOT_AVAILABILTY_END_TIME:
       if (self->availabilityEndTime)
         gst_date_time_unref (self->availabilityEndTime);
-      self->availabilityEndTime = g_value_get_boxed (value);
+      self->availabilityEndTime = g_value_dup_boxed (value);
       break;
     case PROP_MPD_ROOT_PUBLISH_TIME:
       if (self->publishTime)
         gst_date_time_unref (self->publishTime);
-      self->publishTime = g_value_get_boxed (value);
+      self->publishTime = g_value_dup_boxed (value);
       break;
     case PROP_MPD_ROOT_MEDIA_PRESENTATION_DURATION:
       self->mediaPresentationDuration = g_value_get_uint64 (value);
