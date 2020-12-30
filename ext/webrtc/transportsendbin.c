@@ -69,7 +69,6 @@ enum
 {
   PROP_0,
   PROP_STREAM,
-  PROP_RTCP_MUX,
 };
 
 #define TSB_GET_LOCK(tsb) (&tsb->lock)

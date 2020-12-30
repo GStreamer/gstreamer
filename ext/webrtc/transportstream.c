@@ -36,7 +36,6 @@ enum
   PROP_0,
   PROP_WEBRTC,
   PROP_SESSION_ID,
-  PROP_RTCP_MUX,
   PROP_DTLS_CLIENT,
 };
 
@@ -124,9 +123,6 @@ transport_stream_set_property (GObject * object, guint prop_id,
     case PROP_SESSION_ID:
       stream->session_id = g_value_get_uint (value);
       break;
-    case PROP_RTCP_MUX:
-      stream->rtcp_mux = g_value_get_boolean (value);
-      break;
     case PROP_DTLS_CLIENT:
       stream->dtls_client = g_value_get_boolean (value);
       break;
@@ -147,9 +143,6 @@ transport_stream_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SESSION_ID:
       g_value_set_uint (value, stream->session_id);
-      break;
-    case PROP_RTCP_MUX:
-      g_value_set_boolean (value, stream->rtcp_mux);
       break;
     case PROP_DTLS_CLIENT:
       g_value_set_boolean (value, stream->dtls_client);
@@ -269,12 +262,6 @@ transport_stream_class_init (TransportStreamClass * klass)
           "Session ID used for this transport",
           0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_RTCP_MUX,
-      g_param_spec_boolean ("rtcp-mux", "RTCP Mux",
-          "Whether RTCP packets are muxed with RTP packets",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DTLS_CLIENT,

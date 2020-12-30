@@ -63,7 +63,6 @@ void                      webrtc_transceiver_set_transport  (WebRTCTransceiver *
                                                              TransportStream * stream);
 
 GstWebRTCDTLSTransport *  webrtc_transceiver_get_dtls_transport (GstWebRTCRTPTransceiver * trans);
-GstWebRTCDTLSTransport *  webrtc_transceiver_get_rtcp_dtls_transport (GstWebRTCRTPTransceiver * trans);
 
 G_END_DECLS
 

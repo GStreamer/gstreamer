@@ -52,9 +52,6 @@ struct _TransportStream
   GstObject                 parent;
 
   guint                     session_id;             /* session_id */
-  gboolean                  rtcp;
-  gboolean                  rtcp_mux;
-  gboolean                  rtcp_rsize;
   gboolean                  dtls_client;
   gboolean                  active;                 /* TRUE if any mline in the bundle/transport is active */
   TransportSendBin         *send_bin;               /* bin containing all the sending transport elements */

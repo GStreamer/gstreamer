@@ -949,7 +949,6 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
     GstWebRTCDTLSTransport *dtls_transport;
     GstWebRTCICETransport *transport;
     GstWebRTCICEGatheringState ice_state;
-    gboolean rtcp_mux = FALSE;
 
     if (rtp_trans->stopped || stream == NULL) {
       GST_TRACE_OBJECT (webrtc, "transceiver %p stopped or unassociated",
@@ -962,8 +961,6 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
     if (!rtp_trans->mid) {
       GST_TRACE_OBJECT (webrtc, "transceiver %p has no mid", rtp_trans);
     }
-
-    g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
 
     dtls_transport = webrtc_transceiver_get_dtls_transport (rtp_trans);
     if (dtls_transport == NULL) {
@@ -1023,12 +1020,9 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *rtp_trans =
         g_ptr_array_index (webrtc->priv->transceivers, i);
-    WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
-    TransportStream *stream = trans->stream;
     GstWebRTCDTLSTransport *transport;
     GstWebRTCICEConnectionState ice_state;
     GstWebRTCDTLSTransportState dtls_state;
-    gboolean rtcp_mux = FALSE;
 
     if (rtp_trans->stopped) {
       GST_TRACE_OBJECT (webrtc, "transceiver %p stopped", rtp_trans);
@@ -1039,7 +1033,6 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
       continue;
     }
 
-    g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
     transport = webrtc_transceiver_get_dtls_transport (rtp_trans);
 
     /* get transport state */
@@ -2136,8 +2129,6 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
     }
 
     webrtc->priv->data_channel_transport = stream;
-
-    g_object_set (stream, "rtcp-mux", TRUE, NULL);
 
     if (!(sctp_transport = webrtc->priv->sctp_transport)) {
       sctp_transport = gst_webrtc_sctp_transport_new ();
@@ -4028,7 +4019,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   GstWebRTCRTPTransceiverDirection new_dir;
   const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
   GstWebRTCDTLSSetup new_setup;
-  gboolean new_rtcp_mux, new_rtcp_rsize;
+  gboolean new_rtcp_rsize;
   ReceiveState receive_state = RECEIVE_STATE_UNSET;
   int i;
 
@@ -4098,8 +4089,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     }
 
     if (!bundled || bundle_idx == media_idx) {
-      new_rtcp_mux = _media_has_attribute_key (local_media, "rtcp-mux")
-          && _media_has_attribute_key (remote_media, "rtcp-mux");
       new_rtcp_rsize = _media_has_attribute_key (local_media, "rtcp-rsize")
           && _media_has_attribute_key (remote_media, "rtcp-rsize");
 
@@ -4112,8 +4101,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
           g_object_unref (session);
         }
       }
-
-      g_object_set (stream, "rtcp-mux", new_rtcp_mux, NULL);
     }
   }
 
@@ -4319,7 +4306,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
 
   /* data channel is always rtcp-muxed to avoid generating ICE candidates
    * for RTCP */
-  g_object_set (stream, "rtcp-mux", TRUE, "dtls-client",
+  g_object_set (stream, "dtls-client",
       new_setup == GST_WEBRTC_DTLS_SETUP_ACTIVE, NULL);
 
   local_port = _get_sctp_port_from_media (local_media);

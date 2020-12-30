@@ -138,35 +138,6 @@ _stop_thread (GstWebRTCICE * ice)
   g_thread_unref (ice->priv->thread);
 }
 
-#if 0
-static NiceComponentType
-_webrtc_component_to_nice (GstWebRTCICEComponent comp)
-{
-  switch (comp) {
-    case GST_WEBRTC_ICE_COMPONENT_RTP:
-      return NICE_COMPONENT_TYPE_RTP;
-    case GST_WEBRTC_ICE_COMPONENT_RTCP:
-      return NICE_COMPONENT_TYPE_RTCP;
-    default:
-      g_assert_not_reached ();
-      return 0;
-  }
-}
-
-static GstWebRTCICEComponent
-_nice_component_to_webrtc (NiceComponentType comp)
-{
-  switch (comp) {
-    case NICE_COMPONENT_TYPE_RTP:
-      return GST_WEBRTC_ICE_COMPONENT_RTP;
-    case NICE_COMPONENT_TYPE_RTCP:
-      return GST_WEBRTC_ICE_COMPONENT_RTCP;
-    default:
-      g_assert_not_reached ();
-      return 0;
-  }
-}
-#endif
 struct NiceStreamItem
 {
   guint session_id;
@@ -372,16 +343,6 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
   for (i = 0; i < relay_n; i++) {
     ret = nice_agent_set_relay_info (ice->priv->nice_agent,
         item->nice_stream_id, NICE_COMPONENT_TYPE_RTP,
-        gst_uri_get_host (turn_server), gst_uri_get_port (turn_server),
-        user, pass, relays[i]);
-    if (!ret) {
-      gchar *uri = gst_uri_to_string (turn_server);
-      GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
-      g_free (uri);
-      break;
-    }
-    ret = nice_agent_set_relay_info (ice->priv->nice_agent,
-        item->nice_stream_id, NICE_COMPONENT_TYPE_RTCP,
         gst_uri_get_host (turn_server), gst_uri_get_port (turn_server),
         user, pass, relays[i]);
     if (!ret) {
