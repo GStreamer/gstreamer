@@ -1515,7 +1515,7 @@ gst_video_aggregator_reset (GstVideoAggregator * vagg)
 static GstFlowReturn
 gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     GstClockTime output_start_running_time,
-    GstClockTime output_end_running_time)
+    GstClockTime output_end_running_time, gboolean timeout)
 {
   GList *l;
   gboolean eos = TRUE;
@@ -1548,6 +1548,9 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     buf = gst_aggregator_pad_peek_buffer (bpad);
     if (buf) {
       GstClockTime start_time, end_time;
+
+    check_again:
+      GST_TRACE_OBJECT (pad, "Next buffer %" GST_PTR_FORMAT, buf);
 
       start_time = GST_BUFFER_TIMESTAMP (buf);
       if (start_time == -1) {
@@ -1589,6 +1592,13 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           gst_buffer_unref (buf);
           gst_aggregator_pad_drop_buffer (bpad);
           pad->priv->start_time = start_time;
+          if (timeout) {
+            /* If we're called for a timeout, we want to make sure we drain as
+             * much as possible any late data */
+            buf = gst_aggregator_pad_peek_buffer (bpad);
+            if (buf)
+              goto check_again;
+          }
           need_more_data = TRUE;
           continue;
         }
@@ -1996,7 +2006,7 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   } else {
     flow_ret =
         gst_video_aggregator_fill_queues (vagg, output_start_running_time,
-        output_end_running_time);
+        output_end_running_time, timeout);
   }
 
   if (flow_ret == GST_AGGREGATOR_FLOW_NEED_DATA && !timeout) {
