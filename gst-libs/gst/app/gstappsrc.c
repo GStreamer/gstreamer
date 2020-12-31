@@ -468,7 +468,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc:need-data:
+   * GstAppSrc::need-data:
    * @appsrc: the appsrc element that emitted the signal
    * @length: the amount of bytes needed.
    *
@@ -487,7 +487,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
-   * GstAppSrc:enough-data:
+   * GstAppSrc::enough-data:
    * @appsrc: the appsrc element that emitted the signal
    *
    * Signal that the source has enough data. It is recommended that the
@@ -500,7 +500,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstAppSrc:seek-data:
+   * GstAppSrc::seek-data:
    * @appsrc: the appsrc element that emitted the signal
    * @offset: the offset to seek to
    *
@@ -516,7 +516,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT64);
 
    /**
-    * GstAppSrc:push-buffer:
+    * GstAppSrc::push-buffer:
     * @appsrc: the appsrc
     * @buffer: a buffer to push
     *
@@ -534,7 +534,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
 
    /**
-    * GstAppSrc:push-buffer-list:
+    * GstAppSrc::push-buffer-list:
     * @appsrc: the appsrc
     * @buffer_list: a buffer list to push
     *
@@ -555,7 +555,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER_LIST);
 
   /**
-    * GstAppSrc:push-sample:
+    * GstAppSrc::push-sample:
     * @appsrc: the appsrc
     * @sample: a sample from which extract buffer to push
     *
@@ -581,7 +581,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 
 
    /**
-    * GstAppSrc:end-of-stream:
+    * GstAppSrc::end-of-stream:
     * @appsrc: the appsrc
     *
     * Notify @appsrc that no more buffer are available.
