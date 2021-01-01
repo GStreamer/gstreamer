@@ -557,6 +557,17 @@ gst_va_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
   if (base->copy_frames)
     gst_va_base_dec_copy_output_buffer (base, frame);
 
+  if (picture->buffer_flags != 0) {
+    gboolean interlaced =
+        (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
+    gboolean tff = (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
+
+    GST_TRACE_OBJECT (self,
+        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
+        picture->buffer_flags, interlaced, tff);
+    GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
+  }
+
   gst_mpeg2_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
