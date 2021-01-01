@@ -814,6 +814,11 @@ gst_mpeg2_decoder_ensure_current_picture (GstMpeg2Decoder * decoder,
         gst_mpeg2_picture_unref (picture);
         return FALSE;
       }
+
+      /* At this moment, this picture should be interlaced */
+      picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_INTERLACED;
+      if (priv->pic_ext.top_field_first)
+        picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
     }
 
     picture->structure = priv->pic_ext.picture_structure;

@@ -23,6 +23,7 @@
 
 #include <gst/codecs/codecs-prelude.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -81,6 +82,8 @@ struct _GstMpeg2Picture
   gboolean needed_for_output;
   /* For interlaced streams */
   GstMpeg2Picture *first_field;
+
+  GstVideoBufferFlags buffer_flags;
 
   gint pic_order_cnt;
   gint tsn;
