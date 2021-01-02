@@ -715,7 +715,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "multicast-group property for now", UDP_DEFAULT_MULTICAST_GROUP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstUDPSrc::loop:
+   * GstUDPSrc:loop:
    *
    * Can be used to disable multicast loopback.
    *
@@ -727,7 +727,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           " FALSE = disable", UDP_DEFAULT_LOOP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstUDPSrc::retrieve-sender-address:
+   * GstUDPSrc:retrieve-sender-address:
    *
    * Whether to retrieve the sender address and add it to the buffers as
    * meta. Disabling this might result in minor performance improvements
@@ -743,7 +743,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "in certain scenarios", UDP_DEFAULT_RETRIEVE_SENDER_ADDRESS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstUDPSrc::mtu:
+   * GstUDPSrc:mtu:
    *
    * Maximum expected packet size. This directly defines the allocation
    * size of the receive buffer pool.
