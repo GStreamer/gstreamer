@@ -484,6 +484,14 @@ gst_vulkan_window_set_window_handle (GstVulkanWindow * window, guintptr handle)
   }
 }
 
+/**
+ * gst_vulkan_window_get_surface_dimensions:
+ * @window: a #GstVulkanWindow
+ * @width: (out): Current width of @window
+ * @height: (out): Current height of @window
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_window_get_surface_dimensions (GstVulkanWindow * window,
     guint * width, guint * height)

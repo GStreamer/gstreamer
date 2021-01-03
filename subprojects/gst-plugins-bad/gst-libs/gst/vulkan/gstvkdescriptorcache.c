@@ -68,7 +68,8 @@ gst_vulkan_descriptor_cache_finalize (GObject * object)
  * gst_vulkan_descriptor_cache_new:
  * @pool: a #GstVulkanDescriptorPool
  * @n_layouts: number of @layouts
- * @layouts: list of #GstVulkanHandle containing descriptor set layouts
+ * @layouts: (array length=n_layouts): list of #GstVulkanHandle containing
+ *                                     descriptor set layouts
  *
  * Returns: (transfer full): a new #GstVulkanDescriptorCache
  *

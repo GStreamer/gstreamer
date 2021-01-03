@@ -117,6 +117,9 @@ gst_vulkan_descriptor_set_init (GstVulkanDescriptorSet * set,
 /**
  * gst_vulkan_descriptor_set_new_wrapped:
  * @set: a VkDescriptorSet
+ * @n_layouts: number of @layouts
+ * @layouts: (array length=n_layouts): list of #GstVulkanHandle containing
+ *                                     descriptor set layouts
  *
  * Returns: (transfer full): a new #GstVulkanDescriptorSet
  *

@@ -1301,9 +1301,9 @@ gst_vulkan_instance_check_version (GstVulkanInstance * instance,
 /**
  * gst_vulkan_instance_get_version:
  * @instance: a #GstVulkanInstance
- * @major: major version
- * @minor: minor version
- * @patch: patch version
+ * @major: (out): major version
+ * @minor: (out): minor version
+ * @patch: (out): patch version
  *
  * Retrieve the vulkan instance configured version.  Only returns the supported
  * API version by the instance without taking into account the requested API

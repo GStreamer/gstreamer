@@ -196,6 +196,9 @@ descriptor_set_alloc (GstVulkanDescriptorPool * pool, guint n_layouts,
 /**
  * gst_vulkan_descriptor_pool_create:
  * @pool: a #GstVulkanDescriptorPool
+ * @n_layouts: number of @layouts
+ * @layouts: (array length=n_layouts): list of #GstVulkanHandle containing
+ *                                     descriptor set layouts
  * @error: a #GError
  *
  * Returns: a new #GstVulkanDescriptorSet
