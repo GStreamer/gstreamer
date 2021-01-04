@@ -25,6 +25,18 @@
 
 G_BEGIN_DECLS
 
+typedef enum
+{
+  GST_VA_IMPLEMENTATION_MESA_GALLIUM,
+  GST_VA_IMPLEMENTATION_INTEL_I965,
+  GST_VA_IMPLEMENTATION_INTEL_IHD,
+  GST_VA_IMPLEMENTATION_OTHER,
+  GST_VA_IMPLEMENTATION_INVALID,
+} GstVaImplementation;
+
+#define GST_VA_DISPLAY_IS_IMPLEMENTATION(display, impl) \
+  (gst_va_display_is_implementation (display, G_PASTE (GST_VA_IMPLEMENTATION_, impl)))
+
 #define GST_TYPE_VA_DISPLAY (gst_va_display_get_type())
 G_DECLARE_DERIVABLE_TYPE (GstVaDisplay, gst_va_display, GST, VA_DISPLAY, GstObject)
 
@@ -45,5 +57,12 @@ GArray *              gst_va_display_get_profiles         (GstVaDisplay * self,
                                                            guint32 codec,
                                                            VAEntrypoint entrypoint);
 GArray *              gst_va_display_get_image_formats    (GstVaDisplay * self);
+GstVaImplementation   gst_va_display_get_implemenation    (GstVaDisplay * self);
+
+static inline gboolean
+gst_va_display_is_implementation (GstVaDisplay * self, GstVaImplementation impl)
+{
+  return (gst_va_display_get_implemenation (self) == impl);
+}
 
 G_END_DECLS

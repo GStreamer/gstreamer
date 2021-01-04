@@ -37,6 +37,7 @@ struct _GstVaDisplayPrivate
 
   gboolean foreign;
   gboolean init;
+  GstVaImplementation impl;
 };
 
 #define gst_va_display_parent_class parent_class
@@ -54,14 +55,39 @@ static GParamSpec *g_properties[N_PROPERTIES];
 
 #define GET_PRIV(obj) gst_va_display_get_instance_private (GST_VA_DISPLAY (obj))
 
-static gboolean
-_gst_va_display_driver_filter (VADisplay display)
+static GstVaImplementation
+_get_implementation (const char *vendor)
 {
-  const char *vendor = vaQueryVendorString (display);
+  if (g_str_has_prefix (vendor, "Mesa Gallium driver"))
+    return GST_VA_IMPLEMENTATION_MESA_GALLIUM;
+  else if (g_str_has_prefix (vendor, "Intel i965 driver"))
+    return GST_VA_IMPLEMENTATION_INTEL_I965;
+  else if (g_str_has_prefix (vendor, "Intel iHD driver"))
+    return GST_VA_IMPLEMENTATION_INTEL_IHD;
 
+  return GST_VA_IMPLEMENTATION_OTHER;
+}
+
+static gboolean
+_gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
+{
+  GstVaDisplayPrivate *priv = GET_PRIV (self);
+  VADisplay dpy;
+  const char *vendor;
+
+  g_assert ((foreign_display != NULL) ^ (priv->display != NULL));
+  dpy = foreign_display ? foreign_display : priv->display;
+
+  vendor = vaQueryVendorString (dpy);
   GST_INFO ("VA-API driver vendor: %s", vendor);
 
-  /* XXX(victor): driver quirks & driver whitelist */
+  /* XXX(victor): driver allow list */
+
+  if (foreign_display) {
+    priv->display = foreign_display;
+    priv->foreign = TRUE;
+  }
+  priv->impl = _get_implementation (vendor);
 
   return TRUE;
 }
@@ -80,14 +106,10 @@ gst_va_display_set_display (GstVaDisplay * self, gpointer display)
     return;
   }
 
-  if (!_gst_va_display_driver_filter (display))
-    return;
-
-  priv->display = display;
-  priv->foreign = TRUE;
-
   /* assume driver is already initialized */
   priv->init = TRUE;
+
+  _gst_va_display_filter_driver (self, display);
 }
 
 static void
@@ -183,6 +205,7 @@ gst_va_display_init (GstVaDisplay * self)
   GstVaDisplayPrivate *priv = GET_PRIV (self);
 
   g_rec_mutex_init (&priv->lock);
+  priv->impl = GST_VA_IMPLEMENTATION_INVALID;
 }
 
 void
@@ -292,7 +315,7 @@ gst_va_display_initialize (GstVaDisplay * self)
 
   priv->init = TRUE;
 
-  if (!_gst_va_display_driver_filter (priv->display))
+  if (!_gst_va_display_filter_driver (self, NULL))
     return FALSE;
 
   return TRUE;
@@ -415,4 +438,16 @@ gst_va_display_get_image_formats (GstVaDisplay * self)
 bail:
   g_free (va_formats);
   return ret;
+}
+
+GstVaImplementation
+gst_va_display_get_implemenation (GstVaDisplay * self)
+{
+  GstVaDisplayPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self),
+      GST_VA_IMPLEMENTATION_INVALID);
+
+  priv = GET_PRIV (self);
+  return priv->impl;
 }
