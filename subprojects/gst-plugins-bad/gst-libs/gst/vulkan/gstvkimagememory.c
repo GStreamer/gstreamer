@@ -625,8 +625,8 @@ find_view_func (GstVulkanImageView * view, gpointer user_data)
  * @find_func: (scope call): #GstVulkanImageMemoryFindViewFunc to search with
  * @user_data: user data to call @finc_func with
  *
- * Return: (transfer full): the first #GstVulkanImageView that @find_func
- * returns %TRUE for, or %NULL
+ * Return: (transfer full) (nullable): the first #GstVulkanImageView that
+ *                                     @find_func returns %TRUE for, or %NULL
  *
  * Since: 1.18
  */

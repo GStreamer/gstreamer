@@ -114,7 +114,7 @@ gst_vulkan_queue_get_device (GstVulkanQueue * queue)
  * @queue: a #GstVulkanQueue
  * @error: (optional): a #GError
  *
- * Returns: (transfer full): a new #GstVUlkanCommandPool or %NULL
+ * Returns: (transfer full): a new #GstVulkanCommandPool or %NULL
  *
  * Since: 1.18
  */
