@@ -374,10 +374,14 @@ gst_va_display_get_image_formats (GstVaDisplay * self)
 {
   GArray *ret = NULL;
   GstVideoFormat format;
-  VADisplay dpy = gst_va_display_get_va_dpy (self);
+  VADisplay dpy;
   VAImageFormat *va_formats;
   VAStatus status;
   int i, max, num = 0;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
+
+  dpy = gst_va_display_get_va_dpy (self);
 
   gst_va_display_lock (self);
   max = vaMaxNumImageFormats (dpy);

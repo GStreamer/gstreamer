@@ -44,6 +44,6 @@ VADisplay             gst_va_display_get_va_dpy           (GstVaDisplay * self);
 GArray *              gst_va_display_get_profiles         (GstVaDisplay * self,
                                                            guint32 codec,
                                                            VAEntrypoint entrypoint);
-GArray *              gst_va_display_get_image_formats    (GstVaDisplay * display);
+GArray *              gst_va_display_get_image_formats    (GstVaDisplay * self);
 
 G_END_DECLS
