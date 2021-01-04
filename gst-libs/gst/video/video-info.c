@@ -1208,7 +1208,7 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
  * Returns: TRUE if the conversion was successful.
  */
 gboolean
-gst_video_info_convert (GstVideoInfo * info,
+gst_video_info_convert (const GstVideoInfo * info,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value)
 {
@@ -1323,6 +1323,9 @@ done:
  * @info: a #GstVideoInfo
  * @align: alignment parameters
  * @plane_size: (out) (allow-none): array used to store the plane sizes
+ *
+ * Extra padding will be added to the right side when stride alignment padding
+ * is required and @align will be updated with the new padding values.
  *
  * This variant of gst_video_info_align() provides the updated size, in bytes,
  * of each video plane after the alignment, including all horizontal and vertical

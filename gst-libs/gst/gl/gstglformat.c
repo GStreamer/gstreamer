@@ -148,8 +148,8 @@ gst_gl_format_type_n_bytes (guint format, guint type)
  * Returns: the #GstGLFormat necessary for holding the data in @plane of @vinfo
  */
 GstGLFormat
-gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
-    guint plane)
+gst_gl_format_from_video_info (GstGLContext * context,
+    const GstVideoInfo * vinfo, guint plane)
 {
   gboolean texture_rg =
       gst_gl_context_check_feature (context, "GL_EXT_texture_rg")

@@ -612,7 +612,7 @@ G_DEFINE_TYPE_WITH_CODE (GstCompositor, gst_compositor,
         gst_compositor_child_proxy_init));
 
 static gboolean
-set_functions (GstCompositor * self, GstVideoInfo * info)
+set_functions (GstCompositor * self, const GstVideoInfo * info)
 {
   gboolean ret = FALSE;
 

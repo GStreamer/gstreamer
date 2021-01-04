@@ -658,8 +658,8 @@ gst_gl_color_convert_reset (GstGLColorConvert * convert)
 }
 
 static gboolean
-_gst_gl_color_convert_can_passthrough_info (GstVideoInfo * in,
-    GstVideoInfo * out)
+_gst_gl_color_convert_can_passthrough_info (const GstVideoInfo * in,
+    const GstVideoInfo * out)
 {
   gint i;
 

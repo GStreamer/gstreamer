@@ -100,7 +100,8 @@ GST_START_TEST (test_allocator_pbo_alloc)
 GST_END_TEST;
 
 static GstMemory *
-create_memory (const gchar * allocator_name, GstVideoInfo * v_info, guint plane)
+create_memory (const gchar * allocator_name, const GstVideoInfo * v_info,
+    guint plane)
 {
   GstAllocator *gl_allocator;
   GstGLBaseMemoryAllocator *base_mem_alloc;
@@ -194,7 +195,7 @@ GST_START_TEST (test_memory_copy)
 GST_END_TEST;
 
 static GstMemory *
-wrap_raw_data (const gchar * allocator_name, GstVideoInfo * v_info,
+wrap_raw_data (const gchar * allocator_name, const GstVideoInfo * v_info,
     guint plane, guint8 * data)
 {
   GstAllocator *gl_allocator;

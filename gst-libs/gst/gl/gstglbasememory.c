@@ -128,8 +128,9 @@ _mem_create_gl (GstGLContext * context, struct create_data *transfer)
  */
 void
 gst_gl_base_memory_init (GstGLBaseMemory * mem, GstAllocator * allocator,
-    GstMemory * parent, GstGLContext * context, GstAllocationParams * params,
-    gsize size, gpointer user_data, GDestroyNotify notify)
+    GstMemory * parent, GstGLContext * context,
+    const GstAllocationParams * params, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize;
   GstMemoryFlags flags = 0;
@@ -631,7 +632,7 @@ gboolean
 gst_gl_allocation_params_init (GstGLAllocationParams * params,
     gsize struct_size, guint alloc_flags, GstGLAllocationParamsCopyFunc copy,
     GstGLAllocationParamsFreeFunc free, GstGLContext * context,
-    gsize alloc_size, GstAllocationParams * alloc_params,
+    gsize alloc_size, const GstAllocationParams * alloc_params,
     gpointer wrapped_data, gpointer gl_handle, gpointer user_data,
     GDestroyNotify notify)
 {

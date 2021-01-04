@@ -122,7 +122,7 @@ typedef struct
 } GstGLMemoryPBOCopyParams;
 
 static inline guint
-_get_plane_height (GstVideoInfo * info, guint plane)
+_get_plane_height (const GstVideoInfo * info, guint plane)
 {
   if (GST_VIDEO_INFO_IS_YUV (info))
     /* For now component width and plane width are the same and the

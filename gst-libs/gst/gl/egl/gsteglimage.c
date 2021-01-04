@@ -460,7 +460,7 @@ gst_egl_image_from_texture (GstGLContext * context, GstGLMemory * gl_mem,
  * target.
  */
 static int
-_drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane,
+_drm_rgba_fourcc_from_info (const GstVideoInfo * info, int plane,
     GstGLFormat * out_format)
 {
   GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
@@ -571,7 +571,7 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane,
  */
 GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
-    gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset)
+    gint dmabuf, const GstVideoInfo * in_info, gint plane, gsize offset)
 {
   GstGLFormat format = 0;
   guintptr attribs[13];
@@ -621,7 +621,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
  * YUV->RGB conversion matrices etc.)
  */
 static int
-_drm_direct_fourcc_from_info (GstVideoInfo * info)
+_drm_direct_fourcc_from_info (const GstVideoInfo * info)
 {
   GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
 
@@ -729,7 +729,7 @@ _drm_direct_fourcc_from_info (GstVideoInfo * info)
  */
 gboolean
 gst_egl_image_check_dmabuf_direct (GstGLContext * context,
-    GstVideoInfo * in_info, GstGLTextureTarget target)
+    const GstVideoInfo * in_info, GstGLTextureTarget target)
 {
   EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
   GstGLDisplayEGL *display_egl;
@@ -857,7 +857,7 @@ gst_egl_image_check_dmabuf_direct (GstGLContext * context,
  */
 GstEGLImage *
 gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
-    gint * fd, gsize * offset, GstVideoInfo * in_info,
+    gint * fd, const gsize * offset, const GstVideoInfo * in_info,
     GstGLTextureTarget target)
 {
 
@@ -1022,7 +1022,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
  */
 GstEGLImage *
 gst_egl_image_from_dmabuf_direct (GstGLContext * context,
-    gint * fd, gsize * offset, GstVideoInfo * in_info)
+    gint * fd, const gsize * offset, const GstVideoInfo * in_info)
 {
   return gst_egl_image_from_dmabuf_direct_target (context, fd, offset, in_info,
       GST_GL_TEXTURE_TARGET_2D);

@@ -97,7 +97,7 @@ struct create_data
 static void
 _gl_buffer_init (GstGLBuffer * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context, guint gl_target, guint gl_usage,
-    GstAllocationParams * params, gsize size)
+    const GstAllocationParams * params, gsize size)
 {
   mem->target = gl_target;
   mem->usage_hints = gl_usage;
@@ -112,7 +112,7 @@ _gl_buffer_init (GstGLBuffer * mem, GstAllocator * allocator,
 static GstGLBuffer *
 _gl_buffer_new (GstAllocator * allocator, GstMemory * parent,
     GstGLContext * context, guint gl_target, guint gl_usage,
-    GstAllocationParams * params, gsize size)
+    const GstAllocationParams * params, gsize size)
 {
   GstGLBuffer *ret = g_new0 (GstGLBuffer, 1);
   _gl_buffer_init (ret, allocator, parent, context, gl_target, gl_usage,
@@ -371,7 +371,7 @@ G_DEFINE_BOXED_TYPE (GstGLBufferAllocationParams,
  */
 GstGLBufferAllocationParams *
 gst_gl_buffer_allocation_params_new (GstGLContext * context, gsize alloc_size,
-    GstAllocationParams * alloc_params, guint gl_target, guint gl_usage)
+    const GstAllocationParams * alloc_params, guint gl_target, guint gl_usage)
 {
   GstGLBufferAllocationParams *params;
 

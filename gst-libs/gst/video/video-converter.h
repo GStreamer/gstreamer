@@ -276,13 +276,13 @@ typedef enum {
 typedef struct _GstVideoConverter GstVideoConverter;
 
 GST_VIDEO_API
-GstVideoConverter *  gst_video_converter_new            (GstVideoInfo *in_info,
-                                                         GstVideoInfo *out_info,
+GstVideoConverter *  gst_video_converter_new            (const GstVideoInfo *in_info,
+                                                         const GstVideoInfo *out_info,
                                                          GstStructure *config);
 
 GST_VIDEO_API
-GstVideoConverter * gst_video_converter_new_with_pool   (GstVideoInfo * in_info,
-                                                         GstVideoInfo * out_info,
+GstVideoConverter * gst_video_converter_new_with_pool   (const GstVideoInfo * in_info,
+                                                         const GstVideoInfo * out_info,
                                                          GstStructure * config,
                                                          GstTaskPool  * pool);
 

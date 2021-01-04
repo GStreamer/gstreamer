@@ -1426,7 +1426,7 @@ gst_glimage_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
 static gboolean
 configure_display_from_info (GstGLImageSink * glimage_sink,
-    GstVideoInfo * vinfo)
+    const GstVideoInfo * vinfo)
 {
   gint width;
   gint height;

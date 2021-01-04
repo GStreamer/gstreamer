@@ -71,7 +71,7 @@ struct SrcFuncs
 {
   GstGLTestSrcPattern pattern;
   gpointer (*new) (GstGLTestSrc * src);
-  gboolean (*init) (gpointer impl, GstGLContext * context, GstVideoInfo * v_info);
+  gboolean (*init) (gpointer impl, GstGLContext * context, const GstVideoInfo * v_info);
   gboolean (*fill_bound_fbo) (gpointer impl);
   void (*free) (gpointer impl);
 };

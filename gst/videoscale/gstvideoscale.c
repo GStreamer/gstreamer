@@ -47,7 +47,7 @@
  *
  */
 
-/* 
+/*
  * Formulas for PAR, DAR, width and height relations:
  *
  * dar_n   w   par_n
@@ -57,7 +57,7 @@
  * par_n    h   dar_n
  * ----- =  - * -----
  * par_d    w   dar_d
- * 
+ *
  *         dar_n   par_d
  * w = h * ----- * -----
  *         dar_d   par_n

@@ -128,14 +128,14 @@ struct _GstGLRenderbufferAllocationParams
 
 GST_GL_API
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new           (GstGLContext * context,
-                                                                                             GstAllocationParams * alloc_params,
+                                                                                             const GstAllocationParams * alloc_params,
                                                                                              GstGLFormat renderbuffer_format,
                                                                                              guint width,
                                                                                              guint height);
 
 GST_GL_API
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new_wrapped   (GstGLContext * context,
-                                                                                             GstAllocationParams * alloc_params,
+                                                                                             const GstAllocationParams * alloc_params,
                                                                                              GstGLFormat renderbuffer_format,
                                                                                              guint width,
                                                                                              guint height,

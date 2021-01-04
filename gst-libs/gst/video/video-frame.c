@@ -67,7 +67,7 @@ video_frame_get_perf_category (void)
  * Returns: %TRUE on success.
  */
 gboolean
-gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
+gst_video_frame_map_id (GstVideoFrame * frame, const GstVideoInfo * info,
     GstBuffer * buffer, gint id, GstMapFlags flags)
 {
   GstVideoMeta *meta;
@@ -240,7 +240,7 @@ invalid_size:
  * Returns: %TRUE on success.
  */
 gboolean
-gst_video_frame_map (GstVideoFrame * frame, GstVideoInfo * info,
+gst_video_frame_map (GstVideoFrame * frame, const GstVideoInfo * info,
     GstBuffer * buffer, GstMapFlags flags)
 {
   return gst_video_frame_map_id (frame, info, buffer, -1, flags);

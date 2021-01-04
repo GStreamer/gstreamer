@@ -2249,8 +2249,8 @@ convert_get_alpha_mode (GstVideoConverter * convert)
  * Since: 1.20
  */
 GstVideoConverter *
-gst_video_converter_new_with_pool (GstVideoInfo * in_info,
-    GstVideoInfo * out_info, GstStructure * config, GstTaskPool * pool)
+gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
+    const GstVideoInfo * out_info, GstStructure * config, GstTaskPool * pool)
 {
   GstVideoConverter *convert;
   GstLineCache *prev;
@@ -2490,8 +2490,8 @@ no_pack_func:
  * Since: 1.6
  */
 GstVideoConverter *
-gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
-    GstStructure * config)
+gst_video_converter_new (const GstVideoInfo * in_info,
+    const GstVideoInfo * out_info, GstStructure * config)
 {
   return gst_video_converter_new_with_pool (in_info, out_info, config, NULL);
 }

@@ -1078,8 +1078,9 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
 }
 
 static void
-gst_video_overlay_rectangle_convert (GstVideoInfo * src, GstBuffer * src_buffer,
-    GstVideoFormat dest_format, GstVideoInfo * dest, GstBuffer ** dest_buffer)
+gst_video_overlay_rectangle_convert (const GstVideoInfo * src,
+    GstBuffer * src_buffer, GstVideoFormat dest_format, GstVideoInfo * dest,
+    GstBuffer ** dest_buffer)
 {
   gint width, height, stride;
   GstVideoFrame src_frame, dest_frame;

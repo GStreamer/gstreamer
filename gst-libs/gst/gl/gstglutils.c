@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2013 Matthew Waters <ystreet00@gmail.com>
  *
@@ -610,8 +610,8 @@ gst_gl_query_local_gl_context (GstElement * element, GstPadDirection direction,
  * Retrieve the size in bytes of a video plane of data with a certain alignment
  */
 gsize
-gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
-    guint plane)
+gst_gl_get_plane_data_size (const GstVideoInfo * info,
+    const GstVideoAlignment * align, guint plane)
 {
   gint padded_height;
   gsize plane_size;
@@ -639,8 +639,8 @@ gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
  *          and where the data from the previous plane ends.
  */
 gsize
-gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
-    guint plane)
+gst_gl_get_plane_start (const GstVideoInfo * info,
+    const GstVideoAlignment * valign, guint plane)
 {
   gsize plane_start;
   gint i;

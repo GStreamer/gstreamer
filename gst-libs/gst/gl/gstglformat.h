@@ -140,7 +140,7 @@ guint                   gst_gl_format_type_n_bytes                  (guint forma
                                                                      guint type);
 GST_GL_API
 GstGLFormat             gst_gl_format_from_video_info               (GstGLContext * context,
-                                                                     GstVideoInfo * vinfo,
+                                                                     const GstVideoInfo * vinfo,
                                                                      guint plane);
 GST_GL_API
 guint                   gst_gl_sized_gl_format_from_gl_format_type  (GstGLContext * context,

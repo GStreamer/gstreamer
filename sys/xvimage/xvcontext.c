@@ -886,7 +886,8 @@ gst_xvcontext_update_colorbalance (GstXvContext * context,
 /* This function tries to get a format matching with a given caps in the
    supported list of formats we generated in gst_xvimagesink_get_xv_support */
 gint
-gst_xvcontext_get_format_from_info (GstXvContext * context, GstVideoInfo * info)
+gst_xvcontext_get_format_from_info (GstXvContext * context,
+    const GstVideoInfo * info)
 {
   GList *list = NULL;
 

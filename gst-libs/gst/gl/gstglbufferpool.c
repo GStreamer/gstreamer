@@ -406,7 +406,7 @@ gst_buffer_pool_config_get_gl_allocation_params (GstStructure * config)
  */
 void
 gst_buffer_pool_config_set_gl_allocation_params (GstStructure * config,
-    GstGLAllocationParams * params)
+    const GstGLAllocationParams * params)
 {
   g_return_if_fail (config != NULL);
   g_return_if_fail (params != NULL);

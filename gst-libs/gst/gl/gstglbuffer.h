@@ -87,7 +87,7 @@ struct _GstGLBufferAllocationParams
 GST_GL_API
 GstGLBufferAllocationParams *   gst_gl_buffer_allocation_params_new     (GstGLContext * context,
                                                                          gsize alloc_size,
-                                                                         GstAllocationParams * alloc_params,
+                                                                         const GstAllocationParams * alloc_params,
                                                                          guint gl_target,
                                                                          guint gl_usage);
 

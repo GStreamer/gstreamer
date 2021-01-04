@@ -166,7 +166,8 @@ _unbind_buffer (struct SrcShader *src)
 }
 
 static gboolean
-_src_shader_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
+_src_shader_init (gpointer impl, GstGLContext * context,
+    const GstVideoInfo * v_info)
 {
   struct SrcShader *src = impl;
   const GstGLFuncs *gl = context->gl_vtable;
@@ -280,7 +281,7 @@ static const gchar *snow_vertex_src =
     "   out_uv = position.xy;\n"
     "}";
 
-static const gchar *snow_fragment_src = 
+static const gchar *snow_fragment_src =
     "uniform float time;\n"
     "varying vec2 out_uv;\n"
     "\n"
@@ -314,7 +315,8 @@ _src_smpte_new (GstGLTestSrc * test)
 }
 
 static gboolean
-_src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
+_src_smpte_init (gpointer impl, GstGLContext * context,
+    const GstVideoInfo * v_info)
 {
   struct SrcSMPTE *src = impl;
   struct XYZWRGB *coord;
@@ -595,7 +597,7 @@ _src_uni_color_new (GstGLTestSrc * test)
 
 static gboolean
 _src_uni_color_init (gpointer impl, GstGLContext * context,
-    GstVideoInfo * v_info)
+    const GstVideoInfo * v_info)
 {
   struct SrcUniColor *src = impl;
 
@@ -712,7 +714,7 @@ struct SrcCheckers
 
 static gboolean
 _src_checkers_init (gpointer impl, GstGLContext * context,
-    GstVideoInfo * v_info)
+    const GstVideoInfo * v_info)
 {
   struct SrcCheckers *src = impl;
   GError *error = NULL;
@@ -813,7 +815,8 @@ SRC_CHECKERS (4);
 SRC_CHECKERS (8);
 
 static gboolean
-_src_snow_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
+_src_snow_init (gpointer impl, GstGLContext * context,
+    const GstVideoInfo * v_info)
 {
   struct SrcShader *src = impl;
   GError *error = NULL;
@@ -918,7 +921,7 @@ static const gchar *mandelbrot_vertex_src = "attribute vec4 position;\n"
     "  fractal_position *= 2.5;\n"
     "}";
 
-static const gchar *mandelbrot_fragment_src = 
+static const gchar *mandelbrot_fragment_src =
     "uniform float time;\n"
     "varying vec2 fractal_position;\n"
     "const vec4 K = vec4(1.0, 0.66, 0.33, 3.0);\n"
@@ -952,7 +955,7 @@ static const gchar *mandelbrot_fragment_src =
 
 static gboolean
 _src_mandelbrot_init (gpointer impl, GstGLContext * context,
-    GstVideoInfo * v_info)
+    const GstVideoInfo * v_info)
 {
   struct SrcShader *src = impl;
   GError *error = NULL;
@@ -1080,7 +1083,7 @@ static const gchar *circular_fragment_src =
 
 static gboolean
 _src_circular_init (gpointer impl, GstGLContext * context,
-    GstVideoInfo * v_info)
+    const GstVideoInfo * v_info)
 {
   struct SrcShader *src = impl;
   GError *error = NULL;

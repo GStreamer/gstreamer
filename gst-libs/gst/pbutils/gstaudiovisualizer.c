@@ -844,7 +844,7 @@ no_format:
 static gboolean
 gst_audio_visualizer_set_allocation (GstAudioVisualizer * scope,
     GstBufferPool * pool, GstAllocator * allocator,
-    GstAllocationParams * params, GstQuery * query)
+    const GstAllocationParams * params, GstQuery * query)
 {
   GstAllocator *oldalloc;
   GstBufferPool *oldpool;
