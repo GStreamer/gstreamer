@@ -1,4 +1,4 @@
 
 
-<div class="gi-symbol-python">
+<div class="gi-lang-python">
 

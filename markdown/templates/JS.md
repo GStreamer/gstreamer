@@ -1,4 +1,4 @@
 
 
-<div class="gi-symbol-javascript">
+<div class="gi-lang-javascript">
 

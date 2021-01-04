@@ -1,2 +1,2 @@
 
-<div class="gi-symbol-c">
+<div class="gi-lang-c">

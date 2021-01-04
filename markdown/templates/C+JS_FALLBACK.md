@@ -1,4 +1,3 @@
 
 
-<div class="gi-symbol-c gi-symbol-javascript">
-
+<div class="gi-lang-javascript gi-lang-c">

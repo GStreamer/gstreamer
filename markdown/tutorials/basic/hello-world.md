@@ -175,7 +175,7 @@ element, remember) to the `PLAYING` state, thus initiating playback.
   {{ tutorials/basic-tutorial-1.c[21:26] }}
 {{ END_LANG.md }}
 
-{{ C.md }}
+{{ PY.md }}
   {{ tutorials/python/basic-tutorial-1.py[26:32] }}
 {{ END_LANG.md }}
 
