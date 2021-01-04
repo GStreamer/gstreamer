@@ -131,7 +131,12 @@ struct _GstWpeSrc
   gint64 n_frames;              /* total frames sent */
 
   WPEView *view;
+
+  GMutex lock;
 };
+
+#define WPE_LOCK(o) g_mutex_lock(&(o)->lock)
+#define WPE_UNLOCK(o) g_mutex_unlock(&(o)->lock)
 
 static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
 
@@ -175,15 +180,15 @@ gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer *
   GstClockTime next_time;
   gint64 ts_offset = 0;
 
-  GST_OBJECT_LOCK (src);
+  WPE_LOCK (src);
   if (src->gl_enabled) {
-    GST_OBJECT_UNLOCK (src);
+    WPE_UNLOCK (src);
     return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, create, (bsrc, offset, length, buf), ret);
   }
 
   locked_buffer = src->view->buffer ();
   if (locked_buffer == NULL) {
-    GST_OBJECT_UNLOCK (src);
+    WPE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
         ("WPE View did not render a buffer"), (NULL));
     return ret;
@@ -211,7 +216,7 @@ gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer *
   gl_src->running_time = next_time;
 
   ret = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (src);
+  WPE_UNLOCK (src);
   return ret;
 }
 
@@ -229,14 +234,14 @@ gst_wpe_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
     return FALSE;
   }
 
-  GST_OBJECT_LOCK (src);
+  WPE_LOCK (src);
 
   gl = bsrc->context->gl_vtable;
   tex_id = gst_gl_memory_get_texture_id (memory);
   locked_image = src->view->image ();
 
   if (!locked_image) {
-    GST_OBJECT_UNLOCK (src);
+    WPE_UNLOCK (src);
     return TRUE;
   }
 
@@ -245,7 +250,7 @@ gst_wpe_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
   gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
       gst_egl_image_get_image (locked_image));
   gl->Flush ();
-  GST_OBJECT_UNLOCK (src);
+  WPE_UNLOCK (src);
   return TRUE;
 }
 
@@ -258,7 +263,7 @@ gst_wpe_src_start (GstWpeSrc * src)
   gboolean created_view = FALSE;
 
   GST_INFO_OBJECT (src, "Starting up");
-  GST_OBJECT_LOCK (src);
+  WPE_LOCK (src);
 
   if (src->gl_enabled) {
     context = base_src->context;
@@ -278,7 +283,7 @@ gst_wpe_src_start (GstWpeSrc * src)
   }
 
   if (!src->view) {
-    GST_OBJECT_UNLOCK (src);
+    WPE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
         ("WPEBackend-FDO EGL display initialisation failed"), (NULL));
     return FALSE;
@@ -293,7 +298,7 @@ gst_wpe_src_start (GstWpeSrc * src)
   if (created_view) {
     src->n_frames = 0;
   }
-  GST_OBJECT_UNLOCK (src);
+  WPE_UNLOCK (src);
   return TRUE;
 }
 
@@ -304,7 +309,7 @@ gst_wpe_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
   GstWpeSrc *src = GST_WPE_SRC (base_src);
   GstCapsFeatures *caps_features;
 
-  GST_OBJECT_LOCK (src);
+  WPE_LOCK (src);
   caps_features = gst_caps_get_features (gl_src->out_caps, 0);
   if (caps_features != NULL && gst_caps_features_contains (caps_features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     src->gl_enabled = TRUE;
@@ -313,10 +318,10 @@ gst_wpe_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
   }
 
   if (src->gl_enabled) {
-    GST_OBJECT_UNLOCK (src);
+    WPE_UNLOCK (src);
     return GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, decide_allocation, (base_src, query), FALSE);
   }
-  GST_OBJECT_UNLOCK (src);
+  WPE_UNLOCK (src);
   return gst_wpe_src_start (src);
 }
 
@@ -342,9 +347,9 @@ gst_wpe_src_gl_stop (GstGLBaseSrc * base_src)
 {
   GstWpeSrc *src = GST_WPE_SRC (base_src);
 
-  GST_OBJECT_LOCK (src);
+  WPE_LOCK (src);
   gst_wpe_src_stop_unlocked (src);
-  GST_OBJECT_UNLOCK (src);
+  WPE_UNLOCK (src);
 }
 
 static gboolean
@@ -358,7 +363,7 @@ gst_wpe_src_stop (GstBaseSrc * base_src)
   if (!GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, stop, (base_src), FALSE))
     return FALSE;
 
-  GST_OBJECT_LOCK (src);
+  WPE_LOCK (src);
 
   /* if gl-enabled, gst_wpe_src_stop_unlocked() would have already been called
    * inside gst_wpe_src_gl_stop() from the base class stopping the OpenGL
@@ -366,7 +371,7 @@ gst_wpe_src_stop (GstBaseSrc * base_src)
   if (!src->gl_enabled)
     gst_wpe_src_stop_unlocked (src);
 
-  GST_OBJECT_UNLOCK (src);
+  WPE_UNLOCK (src);
   return TRUE;
 }
 
@@ -632,6 +637,18 @@ gst_wpe_src_init (GstWpeSrc * src)
   src->draw_background = TRUE;
 
   gst_base_src_set_live (GST_BASE_SRC_CAST (src), TRUE);
+
+  g_mutex_init (&src->lock);
+}
+
+static void
+gst_wpe_src_finalize (GObject * object)
+{
+  GstWpeSrc *src = GST_WPE_SRC (object);
+
+  g_mutex_clear (&src->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstURIType
@@ -686,6 +703,7 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
 
   gobject_class->set_property = gst_wpe_src_set_property;
   gobject_class->get_property = gst_wpe_src_get_property;
+  gobject_class->finalize = gst_wpe_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
