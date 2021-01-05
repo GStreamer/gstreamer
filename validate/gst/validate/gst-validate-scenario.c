@@ -4433,7 +4433,7 @@ gst_validate_scenario_get_include_paths (const gchar * relative_scenario)
       0) : NULL;
   g_free (scenarios_path);
 
-  n = g_strv_length (env_scenariodir);
+  n = env_scenariodir ? g_strv_length (env_scenariodir) : 0;
   env_scenariodir = g_realloc_n (env_scenariodir, n + 3, sizeof (gchar *));
   env_scenariodir[n] = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, "validate",
