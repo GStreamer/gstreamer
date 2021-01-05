@@ -423,6 +423,20 @@ _is_frame_start (GstMpeg2Picture * picture)
       ? 1 : 0;
 }
 
+static inline VASurfaceID
+_get_surface_id (GstMpeg2Picture * picture)
+{
+  GstVaDecodePicture *va_pic;
+
+  if (!picture)
+    return VA_INVALID_ID;
+
+  va_pic = gst_mpeg2_picture_get_user_data (picture);
+  if (!va_pic)
+    return VA_INVALID_ID;
+  return gst_va_decode_picture_get_surface (va_pic);
+}
+
 static gboolean
 gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
     GstMpeg2Picture * picture, GstMpeg2Slice * slice,
@@ -459,37 +473,32 @@ gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   };
   /* *INDENT-ON* */
 
-  if (picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_B
-      || picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_P) {
-    GstVaDecodePicture *prev_pic;
-
-    prev_pic =
-        prev_picture ? gst_mpeg2_picture_get_user_data (prev_picture) : NULL;
-    if (!prev_pic) {
-      GST_WARNING_OBJECT (self, "Missing the forward reference picture");
-      pic_param.forward_reference_picture =
-          gst_va_decode_picture_get_surface (gst_mpeg2_picture_get_user_data
-          (picture));
-    } else {
-      pic_param.forward_reference_picture =
-          gst_va_decode_picture_get_surface (prev_pic);
+  switch (picture->type) {
+    case GST_MPEG_VIDEO_PICTURE_TYPE_B:{
+      VASurfaceID surface = _get_surface_id (next_picture);
+      if (surface == VA_INVALID_ID) {
+        GST_WARNING_OBJECT (self, "Missing the backward reference picture");
+        if (GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, MESA_GALLIUM))
+          return FALSE;
+        else if (GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_IHD))
+          surface = gst_va_decode_picture_get_surface (va_pic);
+      }
+      pic_param.backward_reference_picture = surface;
     }
-  }
-
-  if (picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_B) {
-    GstVaDecodePicture *next_pic;
-
-    next_pic =
-        next_picture ? gst_mpeg2_picture_get_user_data (next_picture) : NULL;
-    if (!next_pic) {
-      GST_WARNING_OBJECT (self, "Missing the backward reference picture");
-      pic_param.backward_reference_picture =
-          gst_va_decode_picture_get_surface (gst_mpeg2_picture_get_user_data
-          (picture));
-    } else {
-      pic_param.backward_reference_picture =
-          gst_va_decode_picture_get_surface (next_pic);
+      /* fall-through */
+    case GST_MPEG_VIDEO_PICTURE_TYPE_P:{
+      VASurfaceID surface = _get_surface_id (prev_picture);
+      if (surface == VA_INVALID_ID) {
+        GST_WARNING_OBJECT (self, "Missing the forward reference picture");
+        if (GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, MESA_GALLIUM))
+          return FALSE;
+        else if (GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_IHD))
+          surface = gst_va_decode_picture_get_surface (va_pic);
+      }
+      pic_param.forward_reference_picture = surface;
     }
+    default:
+      break;
   }
 
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
