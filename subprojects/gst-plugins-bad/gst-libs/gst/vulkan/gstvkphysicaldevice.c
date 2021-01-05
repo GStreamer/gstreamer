@@ -968,7 +968,7 @@ gst_vulkan_physical_device_get_instance (GstVulkanPhysicalDevice * device)
 {
   g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), NULL);
 
-  return device->instance ? gst_object_ref (device->instance) : NULL;
+  return gst_object_ref (device->instance);
 }
 
 static gboolean

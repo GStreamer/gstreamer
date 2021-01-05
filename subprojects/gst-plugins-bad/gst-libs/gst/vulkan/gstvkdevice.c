@@ -454,7 +454,7 @@ gst_vulkan_device_get_instance (GstVulkanDevice * device)
 {
   g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
 
-  return device->instance ? gst_object_ref (device->instance) : NULL;
+  return gst_object_ref (device->instance);
 }
 
 /**

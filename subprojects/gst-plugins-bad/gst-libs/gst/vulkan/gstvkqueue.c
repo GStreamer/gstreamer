@@ -106,7 +106,7 @@ gst_vulkan_queue_get_device (GstVulkanQueue * queue)
 {
   g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
 
-  return queue->device ? gst_object_ref (queue->device) : NULL;
+  return gst_object_ref (queue->device);
 }
 
 /**

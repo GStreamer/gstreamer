@@ -118,7 +118,7 @@ gst_vulkan_command_pool_get_queue (GstVulkanCommandPool * pool)
 {
   g_return_val_if_fail (GST_IS_VULKAN_COMMAND_POOL (pool), NULL);
 
-  return pool->queue ? gst_object_ref (pool->queue) : NULL;
+  return gst_object_ref (pool->queue);
 }
 
 static GstVulkanCommandBuffer *

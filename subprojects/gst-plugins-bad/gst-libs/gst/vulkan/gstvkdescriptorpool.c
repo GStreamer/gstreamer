@@ -132,7 +132,7 @@ gst_vulkan_descriptor_pool_get_device (GstVulkanDescriptorPool * pool)
 {
   g_return_val_if_fail (GST_IS_VULKAN_DESCRIPTOR_POOL (pool), NULL);
 
-  return pool->device ? gst_object_ref (pool->device) : NULL;
+  return gst_object_ref (pool->device);
 }
 
 /**
