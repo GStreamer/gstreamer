@@ -24,9 +24,17 @@
 /**
  * GstGLTextureTarget:
  * @GST_GL_TEXTURE_TARGET_NONE: no texture target
- * @GST_GL_TEXTURE_TARGET_2D: 2D texture target
+ * @GST_GL_TEXTURE_TARGET_2D: 2D texture target (`GL_TEXTURE_2D`)
  * @GST_GL_TEXTURE_TARGET_RECTANGLE: rectangle texture target
+ *     (`GL_TEXTURE_RECTANGLE`)
  * @GST_GL_TEXTURE_TARGET_EXTERNAL_OES: external oes texture target
+ *     (`GL_TEXTURE_EXTERNAL_OES`)
+ *
+ * The OpenGL texture target that an OpenGL texture can be bound to.  The
+ * gst_gl_value_set_texture_target_from_mask(),
+ * gst_gl_value_get_texture_target_mask(), and
+ * gst_gl_value_set_texture_target() functions can be used for handling texture
+ * targets with #GValue's when e.g. dealing with #GstCaps.
  *
  * Since: 1.8
  */

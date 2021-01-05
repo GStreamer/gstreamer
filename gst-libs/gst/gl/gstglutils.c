@@ -661,7 +661,8 @@ gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
  *
  * See gst_gl_value_set_texture_target_from_mask() for what entails a mask
  *
- * Returns: the mask of #GstGLTextureTarget's in @value
+ * Returns: the mask of #GstGLTextureTarget's in @value or
+ *     %GST_GL_TEXTURE_TARGET_NONE on failure
  */
 GstGLTextureTarget
 gst_gl_value_get_texture_target_mask (const GValue * targets)
