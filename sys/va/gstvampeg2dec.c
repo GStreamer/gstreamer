@@ -415,6 +415,14 @@ gst_va_mpeg2_dec_add_quant_matrix (GstMpeg2Decoder * decoder,
       VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix));
 }
 
+static inline uint32_t
+_is_frame_start (GstMpeg2Picture * picture)
+{
+  return (!picture->first_field
+      || (picture->structure == GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME))
+      ? 1 : 0;
+}
+
 static gboolean
 gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
     GstMpeg2Picture * picture, GstMpeg2Slice * slice,
@@ -436,7 +444,7 @@ gst_va_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
     .picture_coding_type = slice->pic_hdr->pic_type,
     .f_code = _pack_f_code (slice->pic_ext->f_code),
     .picture_coding_extension.bits = {
-      .is_first_field = (picture->first_field) ? 0 : 1,
+      .is_first_field = _is_frame_start (picture),
       .intra_dc_precision = slice->pic_ext->intra_dc_precision,
       .picture_structure = slice->pic_ext->picture_structure,
       .top_field_first = slice->pic_ext->top_field_first,
