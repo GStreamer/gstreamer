@@ -493,6 +493,9 @@ _set_rendering_details (GESLauncher * self)
                     gst_encoding_profile_get_name (profiles->data)) == 0)
               prof = profiles->data;
       }
+
+      if (prof)
+        prof = gst_object_ref (prof);
     }
 
     if (!prof) {
