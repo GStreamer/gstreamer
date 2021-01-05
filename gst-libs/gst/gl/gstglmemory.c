@@ -43,6 +43,12 @@
  * with #GstGLVideoAllocationParams.
  *
  * Data is uploaded or downloaded from the GPU as is necessary.
+ *
+ * The #GstCaps that is used for #GstGLMemory based buffers should contain
+ * the %GST_CAPS_FEATURE_MEMORY_GL_MEMORY as a #GstCapsFeatures and should
+ * contain a 'texture-target' field with one of the #GstGLTextureTarget values
+ * as a string, i.e. some combination of 'texture-target=(string){2D,
+ * rectangle, external-oes}'.
  */
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
