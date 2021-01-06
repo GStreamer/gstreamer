@@ -732,6 +732,11 @@ gst_mpeg2_decoder_start_current_picture (GstMpeg2Decoder * decoder,
   gst_mpeg2_dpb_get_neighbours (priv->dpb, priv->current_picture,
       &prev_picture, &next_picture);
 
+  if (priv->current_picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_B
+      && !prev_picture && !priv->gop.closed_gop) {
+    GST_VIDEO_CODEC_FRAME_FLAG_SET (priv->current_frame,
+        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+  }
 
   ret = klass->start_picture (decoder, priv->current_picture, slice,
       prev_picture, next_picture);
