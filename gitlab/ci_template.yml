@@ -1244,9 +1244,6 @@ build gst-omx tizonia fedora x86_64:
     CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v visualstudio -v nowerror"
     CERBERO_RUN_SUFFIX: ".exe"
     HAVE_CCACHE: ""
-  # FIXME: for some reason the runner is hanging when trying to upload artifacts
-  artifacts:
-    paths: []
   before_script:
     - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\', '/')
     - $env:CERBERO_SCRIPTS_PATH = "$env:CI_PROJECT_DIR/cerbero_setup.sh"
