@@ -723,17 +723,18 @@ gst_mpeg2_decoder_start_current_picture (GstMpeg2Decoder * decoder,
 {
   GstMpeg2DecoderPrivate *priv = decoder->priv;
   GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
-  GstMpeg2Picture *prev_picture_ptr, *next_picture_ptr;
+  GstMpeg2Picture *prev_picture, *next_picture;
   gboolean ret;
 
   if (!klass->start_picture)
     return TRUE;
 
   gst_mpeg2_dpb_get_neighbours (priv->dpb, priv->current_picture,
-      &prev_picture_ptr, &next_picture_ptr);
+      &prev_picture, &next_picture);
+
 
   ret = klass->start_picture (decoder, priv->current_picture, slice,
-      prev_picture_ptr, next_picture_ptr);
+      prev_picture, next_picture);
 
   if (!ret) {
     GST_ERROR_OBJECT (decoder, "subclass does not want to start picture");
