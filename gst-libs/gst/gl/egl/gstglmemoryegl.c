@@ -55,6 +55,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 G_DEFINE_TYPE (GstGLMemoryEGLAllocator, gst_gl_memory_egl_allocator,
     GST_TYPE_GL_MEMORY_ALLOCATOR);
 
+GST_DEFINE_MINI_OBJECT_TYPE (GstGLMemoryEGL, gst_gl_memory_egl);
+
 /**
  * gst_is_gl_memory_egl:
  * @mem: a #GstMemory to test

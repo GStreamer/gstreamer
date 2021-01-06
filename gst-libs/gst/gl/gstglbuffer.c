@@ -70,6 +70,8 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_BUFFER);
 #define GST_CAT_DEFUALT GST_CAT_GL_BUFFER
 
+GST_DEFINE_MINI_OBJECT_TYPE (GstGLBuffer, gst_gl_buffer);
+
 static GstAllocator *_gl_buffer_allocator;
 
 static gboolean

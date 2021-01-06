@@ -65,6 +65,15 @@ struct _GstGLMemoryEGL
  */
 #define GST_GL_MEMORY_EGL_ALLOCATOR_NAME "GLMemoryEGL"
 
+/**
+ * GST_TYPE_GL_MEMORY_EGL:
+ *
+ * Since: 1.18.3
+ */
+#define GST_TYPE_GL_MEMORY_EGL (gst_gl_memory_egl_get_type())
+GST_GL_API
+GType gst_gl_memory_egl_get_type(void);
+
 GST_GL_API
 void          gst_gl_memory_egl_init_once               (void);
 

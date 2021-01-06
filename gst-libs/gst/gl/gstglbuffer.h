@@ -131,6 +131,15 @@ struct _GstGLBufferAllocatorClass
  */
 #define GST_GL_BUFFER_ALLOCATOR_NAME   "GLBuffer"
 
+/**
+ * GST_TYPE_GL_BUFFER:
+ *
+ * Since: 1.18.3
+ */
+#define GST_TYPE_GL_BUFFER (gst_gl_buffer_get_type())
+GST_GL_API
+GType gst_gl_buffer_get_type(void);
+
 GST_GL_API
 void          gst_gl_buffer_init_once (void);
 GST_GL_API

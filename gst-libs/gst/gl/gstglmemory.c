@@ -88,6 +88,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 G_DEFINE_TYPE (GstGLMemoryAllocator, gst_gl_memory_allocator,
     GST_TYPE_GL_BASE_MEMORY_ALLOCATOR);
 
+GST_DEFINE_MINI_OBJECT_TYPE (GstGLMemory, gst_gl_memory);
+
 typedef struct
 {
   /* in */

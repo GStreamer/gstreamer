@@ -104,6 +104,8 @@ static GstAllocator *_gl_allocator;
 G_DEFINE_TYPE (GstGLMemoryPBOAllocator, gst_gl_memory_pbo_allocator,
     GST_TYPE_GL_MEMORY_ALLOCATOR);
 
+GST_DEFINE_MINI_OBJECT_TYPE (GstGLMemoryPBO, gst_gl_memory_pbo);
+
 typedef struct
 {
   /* in */
