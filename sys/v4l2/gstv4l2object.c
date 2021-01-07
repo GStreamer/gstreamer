@@ -1329,7 +1329,7 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
       format = GST_VIDEO_FORMAT_ABGR;
       break;
     case V4L2_PIX_FMT_RGBA32:
-      format = GST_VIDEO_FORMAT_RGB;
+      format = GST_VIDEO_FORMAT_RGBA;
       break;
     case V4L2_PIX_FMT_ARGB32:
       format = GST_VIDEO_FORMAT_ARGB;
