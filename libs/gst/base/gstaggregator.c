@@ -1066,7 +1066,7 @@ gst_aggregator_default_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 static gboolean
 gst_aggregator_set_allocation (GstAggregator * self,
     GstBufferPool * pool, GstAllocator * allocator,
-    GstAllocationParams * params, GstQuery * query)
+    const GstAllocationParams * params, GstQuery * query)
 {
   GstAllocator *oldalloc;
   GstBufferPool *oldpool;
