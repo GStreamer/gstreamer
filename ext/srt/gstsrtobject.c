@@ -45,6 +45,13 @@ GST_DEBUG_CATEGORY_EXTERN (gst_debug_srtobject);
 #define SRTSOCK_ERROR_DEBUG ("libsrt reported reject reason code %d", reason)
 #endif
 
+/* Define options added in later revisions */
+#if SRT_VERSION_VALUE < 0x10402
+#define SRTO_DRIFTTRACER 37
+/* We can't define SRTO_BINDTODEVICE since it depends on configuration flags *sigh* */
+#define SRTO_RETRANSMITALGO 61
+#endif
+
 #define ELEMENT_WARNING_SRTSOCK_ERROR(code, reason) \
   GST_ELEMENT_WARNING (srtobject->element, RESOURCE, code, \
   ("Error on SRT socket. Trying to reconnect."), SRTSOCK_ERROR_DEBUG)
@@ -185,7 +192,9 @@ SrtOption srt_options[] = {
   {"enforcedencryption", SRTO_ENFORCEDENCRYPTION, G_TYPE_BOOLEAN},
   {"ipv6only", SRTO_IPV6ONLY, G_TYPE_INT},
   {"peeridletimeo", SRTO_PEERIDLETIMEO, G_TYPE_INT},
+#if SRT_VERSION_VALUE >= 0x10402
   {"bindtodevice", SRTO_BINDTODEVICE, G_TYPE_STRING},
+#endif
   {"packetfilter", SRTO_PACKETFILTER, G_TYPE_STRING},
   {"retransmitalgo", SRTO_RETRANSMITALGO, G_TYPE_INT},
   {NULL}
