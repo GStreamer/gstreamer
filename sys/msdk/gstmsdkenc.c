@@ -2200,7 +2200,7 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
 
   obj_properties[GST_MSDKENC_PROP_MAX_FRAME_SIZE] =
       g_param_spec_uint ("max-frame-size", "Max Frame Size",
-      "Maximum possible size (in kb) of any compressed frames (0: auto-calculate)",
+      "Maximum possible size (in kbyte) of any compressed frames (0: auto-calculate)",
       0, G_MAXUINT16, PROP_MAX_FRAME_SIZE_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
