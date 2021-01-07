@@ -105,6 +105,25 @@ static GInputStream *gst_gio_src_get_stream (GstGioBaseSrc * bsrc);
 
 static gboolean gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query);
 
+static gboolean
+gst_gio_src_check_deleted (GstGioSrc * src)
+{
+  GstGioBaseSrc *bsrc = GST_GIO_BASE_SRC (src);
+
+  if (!g_file_query_exists (src->file, bsrc->cancel)) {
+    gchar *uri = g_file_get_uri (src->file);
+
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+        ("The underlying file %s is not available anymore", uri));
+
+    g_free (uri);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 gst_gio_src_file_changed_cb (GstGioSrc * src)
 {
@@ -114,6 +133,8 @@ gst_gio_src_file_changed_cb (GstGioSrc * src)
   if (src->monitoring_mainloop)
     g_main_loop_quit (src->monitoring_mainloop);
   GST_OBJECT_UNLOCK (src);
+
+  gst_gio_src_check_deleted (src);
 }
 
 static void
@@ -132,6 +153,9 @@ gst_gio_src_wait_for_data (GstGioBaseSrc * bsrc)
   GstGioSrc *src = GST_GIO_SRC (bsrc);
 
   g_return_val_if_fail (!src->monitor, FALSE);
+
+  if (gst_gio_src_check_deleted (src))
+    return FALSE;
 
   GST_OBJECT_LOCK (src);
   if (!src->is_growing) {
