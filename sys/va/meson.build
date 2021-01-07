@@ -21,8 +21,9 @@ va_sources = [
   'gstvavpp.c'
 ]
 
+have_va = false
 va_option = get_option('va')
-if va_option.disabled()
+if va_option.disabled() or host_system != 'linux'
   subdir_done()
 endif
 

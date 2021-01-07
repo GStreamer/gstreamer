@@ -1,3 +1,7 @@
+if not have_va
+  subdir_done()
+endif
+
 gtk_dep = dependency('gtk+-3.0', required : get_option('examples'))
 gtk_x11_dep = dependency('gtk+-x11-3.0', required : get_option('examples'))
 x11_dep = dependency('x11', required : get_option('examples'))
