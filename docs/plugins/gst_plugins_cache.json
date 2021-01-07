@@ -135,7 +135,7 @@
                 },
                 "properties": {
                     "active-pad": {
-                        "blurb": "Currently active src pad",
+                        "blurb": "Currently active sink pad",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,

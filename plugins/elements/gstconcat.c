@@ -165,7 +165,7 @@ gst_concat_class_init (GstConcatClass * klass)
   gobject_class->set_property = gst_concat_set_property;
 
   pspec_active_pad = g_param_spec_object ("active-pad", "Active pad",
-      "Currently active src pad", GST_TYPE_PAD, G_PARAM_READABLE |
+      "Currently active sink pad", GST_TYPE_PAD, G_PARAM_READABLE |
       G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       pspec_active_pad);
