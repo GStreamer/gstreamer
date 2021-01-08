@@ -116,6 +116,7 @@
  * for re-use. (Since: 1.6)
  *
  */
+#define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
 
 #ifdef HAVE_UNISTD_H
@@ -2870,4 +2871,97 @@ gst_reference_timestamp_meta_get_info (void)
   }
 
   return meta_info;
+}
+
+/**
+ * gst_buffer_ref: (skip)
+ * @buf: a #GstBuffer.
+ *
+ * Increases the refcount of the given buffer by one.
+ *
+ * Note that the refcount affects the writability
+ * of @buf and its metadata, see gst_buffer_is_writable().
+ * It is important to note that keeping additional references to
+ * GstBuffer instances can potentially increase the number
+ * of memcpy operations in a pipeline.
+ *
+ * Returns: (transfer full): @buf
+ */
+GstBuffer *
+gst_buffer_ref (GstBuffer * buf)
+{
+  return (GstBuffer *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (buf));
+}
+
+/**
+ * gst_buffer_unref: (skip)
+ * @buf: (transfer full): a #GstBuffer.
+ *
+ * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
+ * with the associated metadata and memory will be freed.
+ */
+void
+gst_buffer_unref (GstBuffer * buf)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (buf));
+}
+
+/**
+ * gst_clear_buffer: (skip)
+ * @buf_ptr: a pointer to a #GstBuffer reference
+ *
+ * Clears a reference to a #GstBuffer.
+ *
+ * @buf_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the buffer is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+void
+gst_clear_buffer (GstBuffer ** buf_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) buf_ptr);
+}
+
+/**
+ * gst_buffer_copy: (skip)
+ * @buf: a #GstBuffer.
+ *
+ * Create a copy of the given buffer. This will only copy the buffer's
+ * data to a newly allocated memory if needed (if the type of memory
+ * requires it), otherwise the underlying data is just referenced.
+ * Check gst_buffer_copy_deep() if you want to force the data
+ * to be copied to newly allocated memory.
+ *
+ * Returns: (transfer full): a new copy of @buf.
+ */
+GstBuffer *
+gst_buffer_copy (const GstBuffer * buf)
+{
+  return GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (buf)));
+}
+
+/**
+ * gst_buffer_replace: (skip)
+ * @obuf: (inout) (transfer full) (nullable): pointer to a pointer to
+ *     a #GstBuffer to be replaced.
+ * @nbuf: (transfer none) (allow-none): pointer to a #GstBuffer that will
+ *     replace the buffer pointed to by @obuf.
+ *
+ * Modifies a pointer to a #GstBuffer to point to a different #GstBuffer. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old
+ * buffer is unreffed, the new is reffed).
+ *
+ * Either @nbuf or the #GstBuffer pointed to by @obuf may be %NULL.
+ *
+ * Returns: %TRUE when @obuf was different from @nbuf.
+ */
+gboolean
+gst_buffer_replace (GstBuffer ** obuf, GstBuffer * nbuf)
+{
+  return gst_mini_object_replace ((GstMiniObject **) obuf,
+      (GstMiniObject *) nbuf);
 }

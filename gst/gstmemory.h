@@ -318,34 +318,26 @@ void           gst_memory_init         (GstMemory *mem, GstMemoryFlags flags,
 GST_API
 gboolean       gst_memory_is_type      (GstMemory *mem, const gchar *mem_type);
 
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 /* refcounting */
-/**
- * gst_memory_ref: (skip)
- * @memory: The memory to refcount
- *
- * Increase the refcount of this memory.
- *
- * Returns: (transfer full): @memory (for convenience when doing assignments)
- */
-static inline GstMemory* gst_memory_ref(GstMemory* memory);
 static inline GstMemory *
 gst_memory_ref (GstMemory * memory)
 {
   return (GstMemory *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (memory));
 }
 
-/**
- * gst_memory_unref: (skip)
- * @memory: (transfer full): the memory to refcount
- *
- * Decrease the refcount of a memory, freeing it if the refcount reaches 0.
- */
-static inline void gst_memory_unref(GstMemory* memory);
 static inline void
 gst_memory_unref (GstMemory * memory)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (memory));
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstMemory *    gst_memory_ref   (GstMemory * memory);
+
+GST_API
+void           gst_memory_unref (GstMemory * memory);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* getting/setting memory properties */
 

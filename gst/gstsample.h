@@ -87,16 +87,8 @@ void                 gst_sample_set_segment   (GstSample * sample, const GstSegm
 GST_API
 gboolean             gst_sample_set_info      (GstSample *sample, GstStructure *info);
 
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 /* refcounting */
-/**
- * gst_sample_ref: (skip)
- * @sample: a #GstSample
- *
- * Increases the refcount of the given sample by one.
- *
- * Returns: (transfer full): @sample
- */
-static inline GstSample* gst_sample_ref(GstSample* sample);
 static inline GstSample *
 gst_sample_ref (GstSample * sample)
 {
@@ -104,19 +96,18 @@ gst_sample_ref (GstSample * sample)
       sample)));
 }
 
-/**
- * gst_sample_unref: (skip)
- * @sample: (transfer full): a #GstSample
- *
- * Decreases the refcount of the sample. If the refcount reaches 0, the
- * sample will be freed.
- */
-static inline void gst_sample_unref(GstSample* sample);
 static inline void
 gst_sample_unref (GstSample * sample)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (sample));
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstSample * gst_sample_ref    (GstSample * sample);
+
+GST_API
+void        gst_sample_unref  (GstSample * sample);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /**
  * gst_sample_is_writable:
@@ -156,25 +147,17 @@ gst_sample_unref (GstSample * sample)
  */
 #define         gst_sample_make_writable(sample)   GST_SAMPLE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (sample)))
 
-
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 /* copy sample */
-/**
- * gst_sample_copy: (skip)
- * @buf: a #GstSample.
- *
- * Create a copy of the given sample. This will also make a newly allocated
- * copy of the data the source sample contains.
- *
- * Returns: (transfer full): a new copy of @buf.
- *
- * Since: 1.2
- */
-static inline GstSample* gst_sample_copy(const GstSample* buf);
 static inline GstSample *
 gst_sample_copy (const GstSample * buf)
 {
   return GST_SAMPLE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (buf)));
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstSample *   gst_sample_copy(const GstSample * buf);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /**
  * gst_value_set_sample:

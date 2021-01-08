@@ -258,6 +258,7 @@ if build_gir
     gst_gir_extra_args += ['--cflags-begin',
       '-I' + meson.current_source_dir() + '/..',
       '-I' + meson.current_build_dir() + '/..',
+      '-DGST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS',
       '--cflags-end']
   endif
 

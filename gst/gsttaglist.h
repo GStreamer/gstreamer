@@ -399,84 +399,42 @@ gboolean     gst_tag_list_get_sample_index  (const GstTagList * list,
                                              guint              index,
                                              GstSample       ** sample);
 
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 /* refcounting */
-/**
- * gst_tag_list_ref: (skip)
- * @taglist: the #GstTagList to reference
- *
- * Add a reference to a #GstTagList mini object.
- *
- * From this point on, until the caller calls gst_tag_list_unref() or
- * gst_tag_list_make_writable(), it is guaranteed that the taglist object will
- * not change. To use a #GstTagList object, you must always have a refcount on
- * it -- either the one made implicitly by e.g. gst_tag_list_new(), or via
- * taking one explicitly with this function.
- *
- * Returns: the same #GstTagList mini object.
- */
-static inline GstTagList* gst_tag_list_ref(GstTagList* taglist);
 static inline GstTagList *
 gst_tag_list_ref (GstTagList * taglist)
 {
   return (GstTagList *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (taglist));
 }
 
-/**
- * gst_tag_list_unref: (skip)
- * @taglist: a #GstTagList.
- *
- * Unref a #GstTagList, and and free all its memory when the refcount reaches 0.
- */
-static inline void gst_tag_list_unref(GstTagList* taglist);
 static inline void
 gst_tag_list_unref (GstTagList * taglist)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (taglist));
 }
 
-/**
- * gst_clear_tag_list: (skip)
- * @taglist_ptr: a pointer to a #GstTagList reference
- *
- * Clears a reference to a #GstTagList.
- *
- * @taglist_ptr must not be %NULL.
- *
- * If the reference is %NULL then this function does nothing. Otherwise, the
- * reference count of the taglist is decreased and the pointer is set to %NULL.
- *
- * Since: 1.16
- */
 static inline void
 gst_clear_tag_list (GstTagList ** taglist_ptr)
 {
   gst_clear_mini_object ((GstMiniObject **) taglist_ptr);
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstTagList *  gst_tag_list_ref   (GstTagList * taglist);
+
+GST_API
+void          gst_tag_list_unref (GstTagList * taglist);
+
+GST_API
+void          gst_clear_tag_list (GstTagList ** taglist_ptr);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 GST_API
 GstTagList* gst_tag_list_copy(const GstTagList* taglist);
 
 #define gst_tag_list_copy(taglist) GST_TAG_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (taglist)))
 
-/**
- * gst_tag_list_replace:
- * @old_taglist: (inout) (transfer full) (nullable): pointer to a pointer to a
- *     #GstTagList to be replaced.
- * @new_taglist: (transfer none) (allow-none): pointer to a #GstTagList that
- *     will replace the tag list pointed to by @old_taglist.
- *
- * Modifies a pointer to a #GstTagList to point to a different #GstTagList. The
- * modification is done atomically (so this is useful for ensuring thread
- * safety in some cases), and the reference counts are updated appropriately
- * (the old tag list is unreffed, the new is reffed).
- *
- * Either @new_taglist or the #GstTagList pointed to by @old_taglist may be
- * %NULL.
- *
- * Returns: %TRUE if @new_taglist was different from @old_taglist
- *
- * Since: 1.16
- */
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 static inline gboolean
 gst_tag_list_replace (GstTagList **old_taglist, GstTagList *new_taglist)
 {
@@ -484,27 +442,21 @@ gst_tag_list_replace (GstTagList **old_taglist, GstTagList *new_taglist)
         (GstMiniObject *) new_taglist);
 }
 
-/**
- * gst_tag_list_take:
- * @old_taglist: (inout) (transfer full): pointer to a pointer to a #GstTagList
- *     to be replaced.
- * @new_taglist: (transfer full) (allow-none): pointer to a #GstTagList that
- *     will replace the taglist pointed to by @old_taglist.
- *
- * Modifies a pointer to a #GstTagList to point to a different #GstTagList.
- * This function is similar to gst_tag_list_replace() except that it takes
- * ownership of @new_taglist.
- *
- * Returns: %TRUE if @new_taglist was different from @old_taglist
- *
- * Since: 1.16
- */
 static inline gboolean
 gst_tag_list_take (GstTagList **old_taglist, GstTagList *new_taglist)
 {
   return gst_mini_object_take ((GstMiniObject **) old_taglist,
       (GstMiniObject *) new_taglist);
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+gboolean  gst_tag_list_replace (GstTagList ** old_taglist,
+                                GstTagList * new_taglist);
+
+GST_API
+gboolean  gst_tag_list_take    (GstTagList ** old_taglist,
+                                GstTagList * new_taglist);
+#endif
 
 /**
  * gst_tag_list_is_writable:

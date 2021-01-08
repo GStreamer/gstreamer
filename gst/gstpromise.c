@@ -21,6 +21,7 @@
 # include "config.h"
 #endif
 
+#define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
 
 #include "gstpromise.h"
@@ -408,3 +409,34 @@ gst_promise_new_with_change_func (GstPromiseChangeFunc func, gpointer user_data,
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstPromise, gst_promise);
+
+/**
+ * gst_promise_ref:
+ * @promise: a #GstPromise.
+ *
+ * Increases the refcount of the given @promise by one.
+ *
+ * Returns: (transfer full): @promise
+ *
+ * Since: 1.14
+ */
+GstPromise *
+gst_promise_ref (GstPromise * promise)
+{
+  return (GstPromise *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (promise));
+}
+
+/**
+ * gst_promise_unref:
+ * @promise: (transfer full): a #GstPromise.
+ *
+ * Decreases the refcount of the promise. If the refcount reaches 0, the
+ * promise will be freed.
+ *
+ * Since: 1.14
+ */
+void
+gst_promise_unref (GstPromise * promise)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (promise));
+}

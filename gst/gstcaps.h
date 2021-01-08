@@ -188,61 +188,35 @@ GST_API GstCaps * _gst_caps_none;
  */
 #define GST_CAPS_FLAG_UNSET(caps,flag)         GST_MINI_OBJECT_FLAG_UNSET (caps, flag)
 
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 /* refcounting */
-/**
- * gst_caps_ref: (skip)
- * @caps: the #GstCaps to reference
- *
- * Add a reference to a #GstCaps object.
- *
- * From this point on, until the caller calls gst_caps_unref() or
- * gst_caps_make_writable(), it is guaranteed that the caps object will not
- * change. This means its structures won't change, etc. To use a #GstCaps
- * object, you must always have a refcount on it -- either the one made
- * implicitly by e.g. gst_caps_new_simple(), or via taking one explicitly with
- * this function.
- *
- * Returns: the same #GstCaps object.
- */
-static inline GstCaps * gst_caps_ref (GstCaps * caps);
 static inline GstCaps *
 gst_caps_ref (GstCaps * caps)
 {
   return (GstCaps *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (caps));
 }
 
-/**
- * gst_caps_unref: (skip)
- * @caps: a #GstCaps.
- *
- * Unref a #GstCaps and and free all its structures and the
- * structures' values when the refcount reaches 0.
- */
-static inline void gst_caps_unref (GstCaps * caps);
 static inline void
 gst_caps_unref (GstCaps * caps)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (caps));
 }
 
-/**
- * gst_clear_caps: (skip)
- * @caps_ptr: a pointer to a #GstCaps reference
- *
- * Clears a reference to a #GstCaps.
- *
- * @caps_ptr must not be %NULL.
- *
- * If the reference is %NULL then this function does nothing. Otherwise, the
- * reference count of the caps is decreased and the pointer is set to %NULL.
- *
- * Since: 1.16
- */
 static inline void
 gst_clear_caps (GstCaps ** caps_ptr)
 {
   gst_clear_mini_object ((GstMiniObject **) caps_ptr);
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstCaps * gst_caps_ref   (GstCaps * caps);
+
+GST_API
+void      gst_caps_unref (GstCaps * caps);
+
+GST_API
+void      gst_clear_caps (GstCaps ** caps_ptr);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /* copy caps */
 GST_API
@@ -280,48 +254,27 @@ GstCaps * gst_caps_copy (const GstCaps * caps);
  */
 #define         gst_caps_make_writable(caps)   GST_CAPS_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (caps)))
 
-/**
- * gst_caps_replace: (skip)
- * @old_caps: (inout) (transfer full) (nullable): pointer to a pointer
- *     to a #GstCaps to be replaced.
- * @new_caps: (transfer none) (allow-none): pointer to a #GstCaps that will
- *     replace the caps pointed to by @old_caps.
- *
- * Modifies a pointer to a #GstCaps to point to a different #GstCaps. The
- * modification is done atomically (so this is useful for ensuring thread safety
- * in some cases), and the reference counts are updated appropriately (the old
- * caps is unreffed, the new is reffed).
- *
- * Either @new_caps or the #GstCaps pointed to by @old_caps may be %NULL.
- *
- * Returns: %TRUE if @new_caps was different from @old_caps
- */
-static inline gboolean gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps);
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 static inline gboolean
 gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps)
 {
     return gst_mini_object_replace ((GstMiniObject **) old_caps, (GstMiniObject *) new_caps);
 }
 
-/**
- * gst_caps_take: (skip)
- * @old_caps: (inout) (transfer full): pointer to a pointer to a #GstCaps to be
- *     replaced.
- * @new_caps: (transfer full) (allow-none): pointer to a #GstCaps that will
- *     replace the caps pointed to by @old_caps.
- *
- * Modifies a pointer to a #GstCaps to point to a different #GstCaps. This
- * function is similar to gst_caps_replace() except that it takes ownership
- * of @new_caps.
- *
- * Returns: %TRUE if @new_caps was different from @old_caps
- */
-static inline gboolean gst_caps_take (GstCaps **old_caps, GstCaps *new_caps);
 static inline gboolean
 gst_caps_take (GstCaps **old_caps, GstCaps *new_caps)
 {
     return gst_mini_object_take ((GstMiniObject **) old_caps, (GstMiniObject *) new_caps);
 }
+#else  /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+gboolean  gst_caps_replace (GstCaps ** old_caps,
+                            GstCaps * new_caps);
+
+GST_API
+gboolean  gst_caps_take    (GstCaps ** old_caps,
+                            GstCaps * new_caps);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /**
  * GstCaps:
