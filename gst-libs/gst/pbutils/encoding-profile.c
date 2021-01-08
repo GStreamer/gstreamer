@@ -1758,6 +1758,9 @@ create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
         GST_ENCODING_PROFILE (gst_encoding_container_profile_new
         ("User profile", "User profile", caps, NULL));
 
+  if (factories)
+    gst_plugin_feature_list_free (factories);
+
 done:
   if (factory_name && profile)
     gst_encoding_profile_set_preset_name (profile, factory_name);
