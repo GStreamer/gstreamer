@@ -42,6 +42,7 @@ rtp_sources = [
   'gstrtpgsmpay.c',
   'gstrtpamrdepay.c',
   'gstrtpamrpay.c',
+  'gstrtphdrext-colorspace.c',
   'gstrtph261depay.c',
   'gstrtph261pay.c',
   'gstrtph263pdepay.c',

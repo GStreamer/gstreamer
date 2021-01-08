@@ -14084,6 +14084,22 @@
                 },
                 "rank": "secondary"
             },
+            "rtphdrextcolorspace": {
+                "RTP-Header-Extension-URI": "http://www.webrtc.org/experiments/rtp-hdrext/color-space",
+                "author": "Jakub Adam <jakub.adam@collabora.com>",
+                "description": "Extends RTP packets with color space and high dynamic range (HDR) information.",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionColorspace",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "Color Space",
+                "rank": "marginal"
+            },
             "rtpilbcdepay": {
                 "author": "Philippe Kalaf <philippe.kalaf@collabora.co.uk>",
                 "description": "Extracts iLBC audio from RTP packets (RFC 3952)",

@@ -61,6 +61,7 @@ good_tests = [
   [ 'elements/rganalysis' ],
   [ 'elements/rglimiter' ],
   [ 'elements/rgvolume' ],
+  [ 'elements/rtphdrext-colorspace' ],
   [ 'elements/rtph261' ],
   [ 'elements/rtph263' ],
   [ 'elements/rtph264' ],

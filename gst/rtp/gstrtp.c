@@ -127,6 +127,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (rtpulpfecdec, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpulpfecenc, plugin);
   ret |= GST_ELEMENT_REGISTER (rtpstorage, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtphdrextcolorspace, plugin);
 
   return ret;
 }
