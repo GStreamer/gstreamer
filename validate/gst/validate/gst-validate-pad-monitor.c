@@ -935,6 +935,7 @@ gst_validate_pad_monitor_dispose (GObject * object)
   gst_caps_replace (&monitor->last_caps, NULL);
   gst_caps_replace (&monitor->last_query_res, NULL);
   gst_caps_replace (&monitor->last_query_filter, NULL);
+  gst_caps_replace (&monitor->last_refused_caps, NULL);
 
   g_list_free_full (monitor->seeks, (GDestroyNotify) seek_data_free);
 
