@@ -42,6 +42,7 @@
 #  include "config.h"
 #endif
 
+#define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
 #include "gst.h"
 #include "gsturi.h"
@@ -2873,4 +2874,76 @@ gst_uri_get_media_fragment_table (const GstUri * uri)
   if (!uri->fragment)
     return NULL;
   return _gst_uri_string_to_table (uri->fragment, "&", "=", TRUE, TRUE);
+}
+
+/**
+ * gst_uri_copy:
+ * @uri: This #GstUri object.
+ *
+ * Create a new #GstUri object with the same data as this #GstUri object.
+ * If @uri is %NULL then returns %NULL.
+ *
+ * Returns: (transfer full): A new #GstUri object which is a copy of this
+ *          #GstUri or %NULL.
+ *
+ * Since: 1.6
+ */
+GstUri *
+gst_uri_copy (const GstUri * uri)
+{
+  return GST_URI_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (uri)));
+}
+
+/**
+ * gst_uri_ref:
+ * @uri: (transfer none): This #GstUri object.
+ *
+ * Add a reference to this #GstUri object. See gst_mini_object_ref() for further
+ * info.
+ *
+ * Returns: This object with the reference count incremented.
+ *
+ * Since: 1.6
+ */
+GstUri *
+gst_uri_ref (GstUri * uri)
+{
+  return GST_URI_CAST (gst_mini_object_ref (GST_MINI_OBJECT_CAST (uri)));
+}
+
+/**
+ * gst_uri_unref:
+ * @uri: (transfer full): This #GstUri object.
+ *
+ * Decrement the reference count to this #GstUri object.
+ *
+ * If the reference count drops to 0 then finalize this object.
+ *
+ * See gst_mini_object_unref() for further info.
+ *
+ * Since: 1.6
+ */
+void
+gst_uri_unref (GstUri * uri)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (uri));
+}
+
+/**
+ * gst_clear_uri: (skip)
+ * @uri_ptr: a pointer to a #GstUri reference
+ *
+ * Clears a reference to a #GstUri.
+ *
+ * @uri_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the uri is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.18
+ */
+void
+gst_clear_uri (GstUri ** uri_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) uri_ptr);
 }

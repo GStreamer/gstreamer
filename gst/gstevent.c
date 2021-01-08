@@ -71,7 +71,7 @@
  * ]|
  */
 
-
+#define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
 #include <string.h>             /* memcpy */
 
@@ -2386,4 +2386,126 @@ gst_event_parse_instant_rate_sync_time (GstEvent * event,
       rate_multiplier, GST_QUARK (RUNNING_TIME), GST_TYPE_CLOCK_TIME,
       running_time, GST_QUARK (UPSTREAM_RUNNING_TIME), GST_TYPE_CLOCK_TIME,
       upstream_running_time, NULL);
+}
+
+/**
+ * gst_event_replace: (skip)
+ * @old_event: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstEvent to be replaced.
+ * @new_event: (allow-none) (transfer none): pointer to a #GstEvent that will
+ *     replace the event pointed to by @old_event.
+ *
+ * Modifies a pointer to a #GstEvent to point to a different #GstEvent. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old
+ * event is unreffed, the new one is reffed).
+ *
+ * Either @new_event or the #GstEvent pointed to by @old_event may be %NULL.
+ *
+ * Returns: %TRUE if @new_event was different from @old_event
+ */
+gboolean
+gst_event_replace (GstEvent ** old_event, GstEvent * new_event)
+{
+  return gst_mini_object_replace ((GstMiniObject **) old_event,
+      (GstMiniObject *) new_event);
+}
+
+/**
+ * gst_event_steal: (skip)
+ * @old_event: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstEvent to be stolen.
+ *
+ * Atomically replace the #GstEvent pointed to by @old_event with %NULL and
+ * return the original event.
+ *
+ * Returns: the #GstEvent that was in @old_event
+ */
+GstEvent *
+gst_event_steal (GstEvent ** old_event)
+{
+  return GST_EVENT_CAST (gst_mini_object_steal ((GstMiniObject **) old_event));
+}
+
+/**
+ * gst_event_take: (skip)
+ * @old_event: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstEvent to be stolen.
+ * @new_event: (allow-none) (transfer full): pointer to a #GstEvent that will
+ *     replace the event pointed to by @old_event.
+ *
+ * Modifies a pointer to a #GstEvent to point to a different #GstEvent. This
+ * function is similar to gst_event_replace() except that it takes ownership of
+ * @new_event.
+ *
+ * Either @new_event or the #GstEvent pointed to by @old_event may be %NULL.
+ *
+ * Returns: %TRUE if @new_event was different from @old_event
+ */
+gboolean
+gst_event_take (GstEvent ** old_event, GstEvent * new_event)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_event,
+      (GstMiniObject *) new_event);
+}
+
+/**
+ * gst_event_ref: (skip)
+ * @event: The event to refcount
+ *
+ * Increase the refcount of this event.
+ *
+ * Returns: (transfer full): @event (for convenience when doing assignments)
+ */
+GstEvent *
+gst_event_ref (GstEvent * event)
+{
+  return (GstEvent *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (event));
+}
+
+/**
+ * gst_event_unref: (skip)
+ * @event: (transfer full): the event to refcount
+ *
+ * Decrease the refcount of an event, freeing it if the refcount reaches 0.
+ */
+void
+gst_event_unref (GstEvent * event)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (event));
+}
+
+/**
+ * gst_clear_event: (skip)
+ * @event_ptr: a pointer to a #GstEvent reference
+ *
+ * Clears a reference to a #GstEvent.
+ *
+ * @event_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the event is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+void
+gst_clear_event (GstEvent ** event_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) event_ptr);
+}
+
+/**
+ * gst_event_copy: (skip)
+ * @event: The event to copy
+ *
+ * Copy the event using the event specific copy function.
+ *
+ * Returns: (transfer full): the new event
+ */
+GstEvent *
+gst_event_copy (const GstEvent * event)
+{
+  return
+      GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST
+          (event)));
 }

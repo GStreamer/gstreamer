@@ -351,6 +351,7 @@ gboolean gst_uri_set_fragment          (GstUri * uri, const gchar * fragment);
 GST_API
 GHashTable * gst_uri_get_media_fragment_table  (const GstUri * uri);
 
+#ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 /**
  * gst_uri_copy:
  * @uri: This #GstUri object.
@@ -416,6 +417,19 @@ gst_clear_uri (GstUri ** uri_ptr)
 {
   gst_clear_mini_object ((GstMiniObject **) uri_ptr);
 }
+#else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
+GST_API
+GstUri * gst_uri_copy  (const GstUri * uri);
+
+GST_API
+GstUri * gst_uri_ref   (GstUri * uri);
+
+GST_API
+void     gst_uri_unref (GstUri * uri);
+
+GST_API
+void     gst_clear_uri (GstUri ** uri_ptr);
+#endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstUri, gst_uri_unref)
 
