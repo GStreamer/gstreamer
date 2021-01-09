@@ -978,13 +978,8 @@ av1_decoder_update_state (GstVaapiDecoderAV1 * decoder,
 
   for (i = 0; i < GST_AV1_NUM_REF_FRAMES; i++) {
     if ((picture->frame_header.refresh_frame_flags >> i) & 1) {
-      if (picture) {
-        GST_LOG ("reference frame %p to ref slot:%d", picture, i);
-        gst_vaapi_picture_replace (&priv->ref_frames[i], picture);
-      } else {
-        GST_ERROR ("we miss some reference frame for ref slot:%d", i);
-        gst_vaapi_picture_replace (&priv->ref_frames[i], NULL);
-      }
+      GST_LOG ("reference frame %p to ref slot:%d", picture, i);
+      gst_vaapi_picture_replace (&priv->ref_frames[i], picture);
     }
   }
 
