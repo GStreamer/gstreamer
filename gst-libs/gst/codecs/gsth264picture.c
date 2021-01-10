@@ -596,7 +596,7 @@ gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
   } else {
     gint i;
     gint count = 0;
-    /* Count pictures without second fields */
+    /* Count the number of complementary field pairs */
     for (i = 0; i < dpb->pic_list->len; i++) {
       GstH264Picture *picture =
           g_array_index (dpb->pic_list, GstH264Picture *, i);
@@ -604,7 +604,8 @@ gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
       if (picture->second_field)
         continue;
 
-      count++;
+      if (GST_H264_PICTURE_IS_FRAME (picture) || picture->other_field)
+        count++;
     }
 
     if (count <= dpb->max_num_frames)
