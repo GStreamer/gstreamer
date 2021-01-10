@@ -80,11 +80,7 @@ typedef enum
 struct _GstH264DecoderPrivate
 {
   gint width, height;
-  gint fps_num, fps_den;
-  gint upstream_par_n, upstream_par_d;
-  gint parsed_par_n, parsed_par_d;
-  gint parsed_fps_n, parsed_fps_d;
-  GstVideoColorimetry parsed_colorimetry;
+
   /* input codec_data, if any */
   GstBuffer *codec_data;
   guint nal_length_size;
@@ -277,11 +273,28 @@ gst_h264_decoder_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_h264_decoder_reset (GstH264Decoder * self)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+
+  gst_clear_buffer (&priv->codec_data);
+  g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
+  g_clear_pointer (&priv->parser, gst_h264_nal_parser_free);
+  g_clear_pointer (&priv->dpb, gst_h264_dpb_free);
+
+  priv->width = 0;
+  priv->height = 0;
+  priv->nal_length_size = 4;
+}
+
 static gboolean
 gst_h264_decoder_start (GstVideoDecoder * decoder)
 {
   GstH264Decoder *self = GST_H264_DECODER (decoder);
   GstH264DecoderPrivate *priv = self->priv;
+
+  gst_h264_decoder_reset (self);
 
   priv->parser = gst_h264_nal_parser_new ();
   priv->dpb = gst_h264_dpb_new ();
@@ -293,24 +306,8 @@ static gboolean
 gst_h264_decoder_stop (GstVideoDecoder * decoder)
 {
   GstH264Decoder *self = GST_H264_DECODER (decoder);
-  GstH264DecoderPrivate *priv = self->priv;
 
-  if (self->input_state) {
-    gst_video_codec_state_unref (self->input_state);
-    self->input_state = NULL;
-  }
-
-  gst_clear_buffer (&priv->codec_data);
-
-  if (priv->parser) {
-    gst_h264_nal_parser_free (priv->parser);
-    priv->parser = NULL;
-  }
-
-  if (priv->dpb) {
-    gst_h264_dpb_free (priv->dpb);
-    priv->dpb = NULL;
-  }
+  gst_h264_decoder_reset (self);
 
   return TRUE;
 }
