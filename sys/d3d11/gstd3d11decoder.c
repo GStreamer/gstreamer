@@ -627,6 +627,10 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
       else
         alignment = 16;
       break;
+    case GST_D3D11_CODEC_MPEG2:
+      /* XXX: ffmpeg does this */
+      alignment = 32;
+      break;
     default:
       alignment = 16;
       break;
@@ -676,6 +680,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
       case GST_D3D11_CODEC_H265:
       case GST_D3D11_CODEC_VP9:
       case GST_D3D11_CODEC_VP8:
+      case GST_D3D11_CODEC_MPEG2:
         if (config_list[i].ConfigBitstreamRaw == 1)
           best_config = &config_list[i];
         break;

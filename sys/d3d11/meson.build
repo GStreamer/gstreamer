@@ -21,6 +21,7 @@ d3d11_dec_sources = [
   'gstd3d11h264dec.c',
   'gstd3d11vp9dec.c',
   'gstd3d11h265dec.c',
+  'gstd3d11mpeg2dec.c',
   'gstd3d11vp8dec.c',
 ]
 
