@@ -77,6 +77,35 @@ GST_START_TEST (test_create)
 
 GST_END_TEST;
 
+/* test element creation */
+GST_START_TEST (test_element_factory)
+{
+  GstElement *e, *e_name, *e_prop;
+  const gchar name[] = "source";
+  const int nb = 10;
+  const gboolean do_ts = TRUE;
+  int num_buffers = nb;
+  gboolean do_timestamp = do_ts;
+
+  e = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (e == NULL);
+
+  e_name = gst_element_factory_make ("fakesrc", name);
+  fail_if (e_name == NULL || g_strcmp0 (name, GST_OBJECT_NAME (e_name)) != 0);
+
+  e_prop = gst_element_factory_make_full ("fakesrc",
+      "num-buffers", nb, "do-timestamp", do_ts, NULL);
+  g_object_get (e_prop,
+      "num_buffers", &num_buffers, "do-timestamp", &do_timestamp, NULL);
+  fail_if (e_prop == NULL || num_buffers != nb || do_timestamp != do_ts);
+
+  gst_object_unref (e);
+  gst_object_unref (e_name);
+  gst_object_unref (e_prop);
+}
+
+GST_END_TEST;
+
 /* test if the factory can accept some caps */
 GST_START_TEST (test_can_sink_any_caps)
 {
@@ -174,6 +203,7 @@ gst_element_factory_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_class);
   tcase_add_test (tc_chain, test_create);
+  tcase_add_test (tc_chain, test_element_factory);
   tcase_add_test (tc_chain, test_can_sink_any_caps);
   tcase_add_test (tc_chain, test_can_sink_all_caps);
 
