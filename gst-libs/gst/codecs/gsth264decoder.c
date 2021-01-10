@@ -668,6 +668,7 @@ gst_h264_decoder_split_frame (GstH264Decoder * self, GstH264Picture * picture)
   other_field->frame_num = picture->frame_num;
   other_field->ref = picture->ref;
   other_field->nonexisting = picture->nonexisting;
+  other_field->system_frame_number = picture->system_frame_number;
 
   return other_field;
 }
@@ -964,6 +965,29 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 
   priv->active_pps = priv->current_slice.header.pps;
   priv->active_sps = priv->active_pps->sequence;
+
+  /* Check whether field picture boundary within given codec frame.
+   * This might happen in case that upstream sent buffer per frame unit,
+   * not picture unit (i.e., AU unit).
+   * If AU boundary is detected, then finish first field picture we decoded
+   * in this chain, we should finish the current picture and
+   * start new field picture decoding */
+  if (gst_h264_dpb_get_interlaced (priv->dpb) && priv->current_picture &&
+      !GST_H264_PICTURE_IS_FRAME (priv->current_picture) &&
+      !priv->current_picture->second_field) {
+    GstH264PictureField prev_field = priv->current_picture->field;
+    GstH264PictureField cur_field = GST_H264_PICTURE_FIELD_FRAME;
+    if (priv->current_slice.header.field_pic_flag)
+      cur_field = priv->current_slice.header.bottom_field_flag ?
+          GST_H264_PICTURE_FIELD_BOTTOM_FIELD :
+          GST_H264_PICTURE_FIELD_TOP_FIELD;
+
+    if (cur_field != prev_field) {
+      GST_LOG_OBJECT (self,
+          "Found new field picture, finishing the first field picture");
+      gst_h264_decoder_finish_current_picture (self);
+    }
+  }
 
   if (!priv->current_picture) {
     GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
@@ -1742,8 +1766,12 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
    * them as such */
   gst_h264_dpb_delete_unused (priv->dpb);
 
-  /* If this is the second field, drop corresponding frame */
-  if (picture->second_field) {
+  /* If field pictures belong to different codec frame,
+   * drop codec frame of the second field because we are consuming
+   * only the first codec frame via GstH264Decoder::output_picture() method */
+  if (picture->second_field && picture->other_field &&
+      picture->system_frame_number !=
+      picture->other_field->system_frame_number) {
     GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
         picture->system_frame_number);
 
