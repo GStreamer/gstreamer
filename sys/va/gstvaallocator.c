@@ -1437,11 +1437,11 @@ gst_va_allocator_wait_for_memory (GstAllocator * allocator, GstBuffer * buffer)
 
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
   if (!gst_va_memory_pool_wait_unlocked (&self->pool)) {
-    GST_VA_MEMORY_POOL_LOCK (&self->pool);
+    GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
     return FALSE;
   }
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
-  GST_VA_MEMORY_POOL_LOCK (&self->pool);
+  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
   if (surface != VA_INVALID_ID) {
     GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
