@@ -990,8 +990,7 @@ from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
    * GST_VIDEO_COLORIMETRY_BT2020_10 in gstreamer. */
   if (gst_video_colorimetry_matches (colorimetry,
           GST_VIDEO_COLORIMETRY_BT2020_10) ||
-      gst_video_colorimetry_matches (colorimetry,
-          GST_VIDEO_COLORIMETRY_BT2020))
+      gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT2020))
     return VAProcColorStandardBT2020;
   if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT601))
     return VAProcColorStandardBT601;
