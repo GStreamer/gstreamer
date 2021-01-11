@@ -36,7 +36,6 @@
 #endif
 
 #include "gstvideosink.h"
-#include "video-info.h"
 
 enum
 {
@@ -199,7 +198,7 @@ gst_video_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      memset (&vsink->priv->info, 0, sizeof (vsink->priv->info));
+      gst_video_info_init (&vsink->priv->info);
       break;
     default:
       break;
@@ -212,9 +211,11 @@ static gboolean
 gst_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstVideoSink *vsink;
+  GstVideoSinkClass *klass;
   GstVideoInfo info;
 
   vsink = GST_VIDEO_SINK_CAST (bsink);
+  klass = GST_VIDEO_SINK_GET_CLASS (vsink);
 
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_ERROR_OBJECT (bsink, "Failed to parse caps %" GST_PTR_FORMAT, caps);
@@ -223,6 +224,9 @@ gst_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_DEBUG_OBJECT (bsink, "Setting caps %" GST_PTR_FORMAT, caps);
   vsink->priv->info = info;
+
+  if (klass->set_info)
+    return klass->set_info (vsink, caps, &vsink->priv->info);
 
   return TRUE;
 }
