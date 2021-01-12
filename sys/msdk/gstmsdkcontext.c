@@ -34,6 +34,7 @@
 #ifndef _WIN32
 #include <fcntl.h>
 #include <unistd.h>
+#include <xf86drm.h>
 #include <va/va_drm.h>
 #include <gudev/gudev.h>
 #endif
@@ -76,6 +77,31 @@ get_device_id (void)
   const gchar *devnode_path;
   const gchar *devnode_files[2] = { "renderD[0-9]*", "card[0-9]*" };
   int fd = -1, i;
+  const gchar *user_choice = g_getenv ("GST_MSDK_DRM_DEVICE");
+
+  if (user_choice) {
+    if (g_str_has_prefix (user_choice, "/dev/dri/"))
+      fd = open (user_choice, O_RDWR | O_CLOEXEC);
+
+    if (fd >= 0) {
+      drmVersionPtr drm_version = drmGetVersion (fd);
+
+      if (!drm_version || strncmp (drm_version->name, "i915", 4)) {
+        GST_WARNING ("The specified device isn't an Intel device, "
+            "use the default device instead");
+        drmFreeVersion (drm_version);
+        close (fd);
+        fd = -1;
+      } else {
+        GST_DEBUG ("Opened the specified drm device %s", user_choice);
+        drmFreeVersion (drm_version);
+        return fd;
+      }
+    } else {
+      GST_WARNING ("The specified device isn't a valid drm device, "
+          "use the default device instead");
+    }
+  }
 
   client = g_udev_client_new (NULL);
   if (!client)

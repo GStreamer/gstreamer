@@ -124,8 +124,9 @@ else
   libva_dep = dependency('libva-drm', required: get_option('msdk'))
   libdl_dep = cc.find_library('dl', required: get_option('msdk'))
   libgudev_dep = dependency('gudev-1.0', required: get_option('msdk'))
-  msdk_deps = declare_dependency(dependencies: [libva_dep, libdl_dep, libgudev_dep])
-  msdk_deps_found = libva_dep.found() and libdl_dep.found() and libgudev_dep.found()
+  libdrm_dep = dependency('libdrm', required: get_option('msdk'))
+  msdk_deps = declare_dependency(dependencies: [libva_dep, libdl_dep, libgudev_dep, libdrm_dep])
+  msdk_deps_found = libva_dep.found() and libdl_dep.found() and libgudev_dep.found() and libdrm_dep.found()
 endif
 
 if msdk_deps_found
