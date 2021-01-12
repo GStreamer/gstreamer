@@ -99,24 +99,27 @@ ges_structure_parser_parse_whitespace (GESStructureParser * self)
 static void
 _finish_structure (GESStructureParser * self)
 {
-  if (self->current_string) {
-    GstStructure *structure =
-        gst_structure_new_from_string (self->current_string);
+  GstStructure *structure;
 
-    if (structure == NULL) {
-      GST_ERROR ("Could not parse %s", self->current_string);
+  if (!self->current_string)
+    return;
 
-      self->wrong_strings = g_list_append (self->wrong_strings,
-          g_strdup (self->current_string));
+  structure = gst_structure_new_from_string (self->current_string);
 
-      return;
-    }
+  if (structure == NULL) {
+    GST_ERROR ("Could not parse %s", self->current_string);
 
-    self->structures = g_list_append (self->structures, structure);
-    g_free (self->current_string);
-    self->current_string = NULL;
+    self->wrong_strings = g_list_append (self->wrong_strings,
+        g_strdup (self->current_string));
+
+    return;
   }
+
+  self->structures = g_list_append (self->structures, structure);
+  g_free (self->current_string);
+  self->current_string = NULL;
 }
+
 
 void
 ges_structure_parser_end_of_file (GESStructureParser * self)
@@ -146,6 +149,8 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
     ges_structure_parser_parse_string (self, "transition, type=(string)", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "title", 5))
     ges_structure_parser_parse_string (self, "title, text=(string)", TRUE);
+  else if (!g_ascii_strncasecmp (symbol, "track", 5))
+    ges_structure_parser_parse_string (self, "track, type=(string)", TRUE);
 }
 
 void

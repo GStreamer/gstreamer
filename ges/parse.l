@@ -16,6 +16,7 @@ TEST_CLIP       [ ]+\+test-clip[ ]+
 TRANSITION      [ ]+\+transition[ ]+
 EFFECT          [ ]+\+effect[ ]+
 TITLE           [ ]+\+title[ ]+
+TRACK           [ ]+\+track[ ]+
 
 SETTER          [ ]+set-[^ ]+[ ]+
 
@@ -35,7 +36,7 @@ VALUE           {STRING}|([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0
 		ges_structure_parser_parse_string (yyextra, yytext, FALSE);
 }
 
-{CLIP}|{TRANSITION}|{EFFECT}|{TEST_CLIP}|{TITLE}   {
+{TRACK}|{CLIP}|{TRANSITION}|{EFFECT}|{TEST_CLIP}|{TITLE}   {
 		ges_structure_parser_parse_symbol (yyextra, yytext);
 }
 

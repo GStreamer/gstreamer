@@ -716,6 +716,7 @@ static gboolean
 _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
     const gchar * proj_uri, gboolean validate)
 {
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   GESProject *project;
 
   GError *error = NULL;
@@ -723,8 +724,37 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
   if (proj_uri != NULL) {
     project = ges_project_new (proj_uri);
   } else if (!validate) {
-    GST_INFO ("serialized timeline is %s", serialized_timeline);
-    project = ges_project_new (serialized_timeline);
+    GString *timeline_str = g_string_new (serialized_timeline);
+
+    if (!strstr (serialized_timeline, "+track")) {
+      GString *track_def;
+
+      if (opts->track_types & GES_TRACK_TYPE_VIDEO) {
+        track_def = g_string_new (" +track video ");
+
+        if (opts->video_track_caps)
+          g_string_append_printf (track_def, " restrictions=[%s] ",
+              opts->video_track_caps);
+
+        g_string_prepend (timeline_str, track_def->str);
+        g_string_free (track_def, TRUE);
+      }
+
+      if (opts->track_types & GES_TRACK_TYPE_AUDIO) {
+        track_def = g_string_new (" +track audio ");
+
+        if (opts->audio_track_caps)
+          g_string_append_printf (track_def, " restrictions=[%s] ",
+              opts->audio_track_caps);
+
+        g_string_prepend (timeline_str, track_def->str);
+        g_string_free (track_def, TRUE);
+      }
+    }
+
+    GST_INFO ("Launching timeline: `%s`", timeline_str->str);
+    project = ges_project_new (timeline_str->str);
+    g_string_free (timeline_str, TRUE);
   } else {
     project = ges_project_new (NULL);
   }

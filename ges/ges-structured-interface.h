@@ -37,6 +37,11 @@ _ges_add_clip_from_struct                     (GESTimeline * timeline,
                                                GError ** error);
 
 G_GNUC_INTERNAL gboolean
+_ges_add_track_from_struct                    (GESTimeline * timeline,
+                                               GstStructure * structure,
+                                               GError ** error);
+
+G_GNUC_INTERNAL gboolean
 _ges_container_add_child_from_struct          (GESTimeline * timeline,
                                                GstStructure * structure,
                                                GError ** error);

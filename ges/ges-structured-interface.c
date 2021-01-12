@@ -570,6 +570,69 @@ beach:
 }
 
 gboolean
+_ges_add_track_from_struct (GESTimeline * timeline,
+    GstStructure * structure, GError ** error)
+{
+  const gchar *ttype;
+  GESTrack *track;
+  GstCaps *caps;
+
+  const gchar *valid_fields[] = { "type", "restrictions", NULL };
+
+  FieldsError fields_error = { valid_fields, NULL };
+
+  if (!_check_fields (structure, fields_error, error))
+    return FALSE;
+
+  ttype = gst_structure_get_string (structure, "type");
+  if (!g_strcmp0 (ttype, "video")) {
+    track = GES_TRACK (ges_video_track_new ());
+  } else if (!g_strcmp0 (ttype, "audio")) {
+    track = GES_TRACK (ges_audio_track_new ());
+  } else {
+    g_set_error (error, GES_ERROR, 0, "Unhandled track type: `%s`", ttype);
+
+    return FALSE;
+  }
+
+  if (gst_structure_has_field (structure, "restrictions")) {
+    GstStructure *restriction_struct;
+    gchar *restriction_str;
+
+    if (gst_structure_get (structure, "restrictions", GST_TYPE_STRUCTURE,
+            &restriction_struct, NULL)) {
+      caps = gst_caps_new_full (restriction_struct, NULL);
+    } else if (gst_structure_get (structure, "restrictions", G_TYPE_STRING,
+            &restriction_str, NULL)) {
+      caps = gst_caps_from_string (restriction_str);
+
+      if (!caps) {
+        g_set_error (error, GES_ERROR, 0, "Invalid restrictions caps: %s",
+            restriction_str);
+
+        g_free (restriction_str);
+        return FALSE;
+      }
+      g_free (restriction_str);
+    } else if (!gst_structure_get (structure, "restrictions", GST_TYPE_CAPS,
+            &caps, NULL)) {
+      gchar *tmp = gst_structure_to_string (structure);
+
+      g_set_error (error, GES_ERROR, 0, "Can't use restrictions caps from %s",
+          tmp);
+
+      g_object_unref (track);
+      return FALSE;
+    }
+
+    ges_track_set_restriction_caps (track, caps);
+    gst_caps_unref (caps);
+  }
+
+  return ges_timeline_add_track (timeline, track);
+}
+
+gboolean
 _ges_container_add_child_from_struct (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {

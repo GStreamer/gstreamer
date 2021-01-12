@@ -50,6 +50,9 @@ _ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
 static gboolean
 _ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
     GstStructure * structure, GError ** error);
+static gboolean
+_ges_command_line_formatter_add_track (GESTimeline * timeline,
+    GstStructure * structure, GError ** error);
 
 typedef struct
 {
@@ -232,6 +235,16 @@ static GESCommandLineOption options[] = {
       {NULL, 0, 0, NULL, FALSE},
     },
   },
+  {"track", 't', (ActionFromStructureFunc) _ges_command_line_formatter_add_track,
+    "<track type>", "Adds a track to the timeline.", NULL,
+    {
+      {
+        "restrictions", "r", 0, NULL,
+        "The restriction caps to set on the track."
+      },
+      {NULL, 0, 0, NULL, FALSE},
+    },
+  },
   {
     "set-", 0, NULL,
     "<property name> <value>", "Set a property on the last added element."
@@ -259,6 +272,7 @@ typedef enum
   EFFECT,
   TEST_CLIP,
   TITLE,
+  TRACK,
   SET,
 } GESCommandLineOptionType;
 
@@ -442,6 +456,16 @@ _ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
 }
 
 static gboolean
+_ges_command_line_formatter_add_track (GESTimeline * timeline,
+    GstStructure * structure, GError ** error)
+{
+  if (!_cleanup_fields (options[TRACK].properties, structure, error))
+    return FALSE;
+
+  return _ges_add_track_from_struct (timeline, structure, error);
+}
+
+static gboolean
 _ges_command_line_formatter_add_effect (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
@@ -603,11 +627,6 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
   }
 
   g_object_set (timeline, "auto-transition", TRUE, NULL);
-  if (!(ges_timeline_add_track (timeline, GES_TRACK (ges_video_track_new ()))))
-    goto fail;
-
-  if (!(ges_timeline_add_track (timeline, GES_TRACK (ges_audio_track_new ()))))
-    goto fail;
 
   /* Here we've finished initializing our timeline, we're
    * ready to start using it... by solely working with the layer !*/
