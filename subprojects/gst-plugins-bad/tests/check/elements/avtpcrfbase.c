@@ -632,6 +632,51 @@ GST_START_TEST (test_calculate_average_period_single_crf_tstamp_init)
 GST_END_TEST;
 
 /*
+ * Test to ensure average_period is calculated correctly
+ * when receiving multiple CRF AVTPDUs with single CRF timestamp
+ * with timestamp_interval > 1
+ */
+GST_START_TEST (test_calculate_average_period_single_crf_tstamp_interval)
+{
+  int data_len = 8;
+  struct avtp_crf_pdu *crf_pdu1 = generate_crf_pdu (data_len, 1000);
+  /* Used timestamp
+   * = sample_time * timestamp_interval + first_tstamp
+   * = 1/48kHz * 160 + 1000
+   */
+  struct avtp_crf_pdu *crf_pdu2 = generate_crf_pdu (data_len, 3334280);
+  GstClockTime past_periods[10] = { 0 };
+  GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
+  GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
+
+  setup_thread_defaults (avtpcrfbase, past_periods);
+
+  thread_data->timestamp_interval = 160;
+  thread_data->num_pkt_tstamps = 1;
+
+  avtp_crf_pdu_set (crf_pdu1, AVTP_CRF_FIELD_SEQ_NUM, 10);
+  avtp_crf_pdu_set (crf_pdu2, AVTP_CRF_FIELD_SEQ_NUM, 11);
+
+  calculate_average_period (avtpcrfbase, crf_pdu1);
+  fail_unless_equals_uint64 (thread_data->past_periods[0], 0);
+  fail_unless_equals_uint64 (thread_data->last_seqnum, 10);
+  fail_unless_equals_uint64 (thread_data->average_period, 20854);
+  fail_unless_equals_uint64 (thread_data->current_ts, 1000);
+
+  calculate_average_period (avtpcrfbase, crf_pdu2);
+  fail_unless_equals_uint64 (thread_data->past_periods[0], 20833);
+  fail_unless_equals_uint64 (thread_data->last_seqnum, 11);
+  fail_unless_equals_uint64 (thread_data->average_period, 20833);
+  fail_unless_equals_uint64 (thread_data->current_ts, 3334280);
+
+  g_free (crf_pdu1);
+  g_free (crf_pdu2);
+  gst_object_unref (avtpcrfbase);
+}
+
+GST_END_TEST;
+
+/*
  * Test for an overflow in the 64-bit CRF timestamp in the CRF AVTPDU when
  * there is a single CRF timestamp in a packet.
  */
@@ -737,6 +782,8 @@ avtpcrfbase_suite (void)
   tcase_add_test (tc_chain, test_calculate_average_period_single_crf_tstamp);
   tcase_add_test (tc_chain,
       test_calculate_average_period_single_crf_tstamp_init);
+  tcase_add_test (tc_chain,
+      test_calculate_average_period_single_crf_tstamp_interval);
   tcase_add_test (tc_chain,
       test_calculate_average_period_single_crf_tstamp_64_bit_overflow);
   tcase_add_test (tc_chain,
