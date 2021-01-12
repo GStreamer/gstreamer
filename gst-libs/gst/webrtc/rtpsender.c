@@ -51,7 +51,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_PRIORITY
+  PROP_PRIORITY,
+  PROP_TRANSPORT,
 };
 
 //static guint gst_webrtc_rtp_sender_signals[LAST_SIGNAL] = { 0 };
@@ -106,6 +107,11 @@ gst_webrtc_rtp_sender_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, sender->priority);
       GST_OBJECT_UNLOCK (sender);
       break;
+    case PROP_TRANSPORT:
+      GST_OBJECT_LOCK (sender);
+      g_value_set_object (value, sender->transport);
+      GST_OBJECT_UNLOCK (sender);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -147,6 +153,20 @@ gst_webrtc_rtp_sender_class_init (GstWebRTCRTPSenderClass * klass)
           "The priority from which to set the DSCP field on packets",
           GST_TYPE_WEBRTC_PRIORITY_TYPE, GST_WEBRTC_PRIORITY_TYPE_LOW,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCRTPSender:transport:
+   *
+   * The DTLS transport for this sender
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TRANSPORT,
+      g_param_spec_object ("transport", "Transport",
+          "The DTLS transport for this sender",
+          GST_TYPE_WEBRTC_DTLS_TRANSPORT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

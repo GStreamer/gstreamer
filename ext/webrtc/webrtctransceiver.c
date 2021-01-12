@@ -59,12 +59,17 @@ webrtc_transceiver_set_transport (WebRTCTransceiver * trans,
 
   gst_object_replace ((GstObject **) & trans->stream, (GstObject *) stream);
 
-  if (rtp_trans->sender)
+  if (rtp_trans->sender) {
     gst_object_replace ((GstObject **) & rtp_trans->sender->transport,
         (GstObject *) stream->transport);
-  if (rtp_trans->receiver)
+    g_object_notify (G_OBJECT (rtp_trans->sender), "transport");
+  }
+
+  if (rtp_trans->receiver) {
     gst_object_replace ((GstObject **) & rtp_trans->receiver->transport,
         (GstObject *) stream->transport);
+    g_object_notify (G_OBJECT (rtp_trans->receiver), "transport");
+  }
 }
 
 GstWebRTCDTLSTransport *

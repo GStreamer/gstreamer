@@ -49,6 +49,7 @@ enum
 enum
 {
   PROP_0,
+  PROP_TRANSPORT,
 };
 
 //static guint gst_webrtc_rtp_receiver_signals[LAST_SIGNAL] = { 0 };
@@ -68,7 +69,13 @@ static void
 gst_webrtc_rtp_receiver_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstWebRTCRTPReceiver *receiver = GST_WEBRTC_RTP_RECEIVER (object);
   switch (prop_id) {
+    case PROP_TRANSPORT:
+      GST_OBJECT_LOCK (receiver);
+      g_value_set_object (value, receiver->transport);
+      GST_OBJECT_UNLOCK (receiver);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -95,6 +102,20 @@ gst_webrtc_rtp_receiver_class_init (GstWebRTCRTPReceiverClass * klass)
   gobject_class->get_property = gst_webrtc_rtp_receiver_get_property;
   gobject_class->set_property = gst_webrtc_rtp_receiver_set_property;
   gobject_class->finalize = gst_webrtc_rtp_receiver_finalize;
+
+  /**
+   * GstWebRTCRTPReceiver:transport:
+   *
+   * The DTLS transport for this receiver
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TRANSPORT,
+      g_param_spec_object ("transport", "Transport",
+          "The DTLS transport for this receiver",
+          GST_TYPE_WEBRTC_DTLS_TRANSPORT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
