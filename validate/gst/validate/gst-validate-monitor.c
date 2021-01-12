@@ -415,7 +415,7 @@ gst_validate_monitor_set_property (GObject * object, guint prop_id,
       g_assert (gst_validate_monitor_get_target (monitor) == NULL);
       g_weak_ref_init (&monitor->target, target);
 
-      if (target)
+      if (GST_IS_OBJECT (target))
         gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
             gst_object_get_name (target));
 
