@@ -101,7 +101,7 @@ gst_audio_info_new (void)
 
 /**
  * gst_audio_info_init:
- * @info: a #GstAudioInfo
+ * @info: (out caller-allocates): a #GstAudioInfo
  *
  * Initialize @info with default values.
  */
@@ -181,7 +181,7 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
 
 /**
  * gst_audio_info_from_caps:
- * @info: a #GstAudioInfo
+ * @info: (out caller-allocates): a #GstAudioInfo
  * @caps: a #GstCaps
  *
  * Parse @caps and update @info.

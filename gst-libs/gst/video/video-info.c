@@ -117,7 +117,7 @@ static gboolean fill_planes (GstVideoInfo * info,
 
 /**
  * gst_video_info_init:
- * @info: a #GstVideoInfo
+ * @info: (out caller-allocates): a #GstVideoInfo
  *
  * Initialize @info with default values.
  */
@@ -385,7 +385,7 @@ gst_video_field_order_from_string (const gchar * order)
 
 /**
  * gst_video_info_from_caps:
- * @info: a #GstVideoInfo
+ * @info: (out caller-allocates): #GstVideoInfo
  * @caps: a #GstCaps
  *
  * Parse @caps and update @info.
