@@ -1661,7 +1661,7 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
     extlen =
         hdrext.hdr_unit_size * data->payload->priv->header_exts->len +
         hdrext.allocated_size;
-    wordlen = extlen / 4 + (extlen % 4) ? 1 : 0;
+    wordlen = extlen / 4 + ((extlen % 4) ? 1 : 0);
 
     /* XXX: do we need to add to any existing extension data instead of
      * overwriting everything? */
@@ -1675,7 +1675,7 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
     g_ptr_array_foreach (data->payload->priv->header_exts,
         (GFunc) write_header_extension, &hdrext);
 
-    wordlen = hdrext.written_size / 4 + (hdrext.written_size % 4) ? 1 : 0;
+    wordlen = hdrext.written_size / 4 + ((hdrext.written_size % 4) ? 1 : 0);
     gst_rtp_buffer_set_extension_data (&rtp, bit_pattern, wordlen);
   }
   GST_OBJECT_UNLOCK (data->payload);
