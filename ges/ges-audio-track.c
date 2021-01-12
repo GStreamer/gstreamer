@@ -69,15 +69,68 @@ G_DEFINE_TYPE_WITH_PRIVATE (GESAudioTrack, ges_audio_track, GES_TYPE_TRACK);
 /****************************************************
  *              Private methods and utils           *
  ****************************************************/
+static void
+_sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
+{
+  GstCaps *restriction, *caps;
+  gint rate;
+  GstStructure *structure;
+
+  g_object_get (track, "restriction-caps", &restriction, NULL);
+  if (restriction == NULL)
+    return;
+
+  if (gst_caps_get_size (restriction) == 0)
+    goto done;
+
+  structure = gst_caps_get_structure (restriction, 0);
+  if (!gst_structure_get_int (structure, "rate", &rate))
+    goto done;
+
+  caps = gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, rate, NULL);
+
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+done:
+  gst_caps_unref (restriction);
+}
+
+static void
+_track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
+    GstElement * capsfilter)
+{
+  _sync_capsfilter_with_track (track, capsfilter);
+}
+
+static void
+_weak_notify_cb (GESTrack * track, GstElement * capsfilter)
+{
+  g_signal_handlers_disconnect_by_func (track,
+      (GCallback) _track_restriction_changed_cb, capsfilter);
+}
+
 static GstElement *
 create_element_for_raw_audio_gap (GESTrack * track)
 {
-  GstElement *elem;
+  GstElement *bin;
+  GstElement *capsfilter;
 
-  elem = gst_element_factory_make ("audiotestsrc", NULL);
-  g_object_set (elem, "wave", 4, NULL);
+  bin = gst_parse_bin_from_description
+      ("audiotestsrc wave=silence name=src ! audioconvert ! audioresample ! audioconvert ! capsfilter name=gapfilter caps=audio/x-raw",
+      TRUE, NULL);
 
-  return elem;
+  capsfilter = gst_bin_get_by_name (GST_BIN (bin), "gapfilter");
+  g_object_weak_ref (G_OBJECT (capsfilter), (GWeakNotify) _weak_notify_cb,
+      track);
+  g_signal_connect (track, "notify::restriction-caps",
+      (GCallback) _track_restriction_changed_cb, capsfilter);
+
+  _sync_capsfilter_with_track (track, capsfilter);
+
+  gst_object_unref (capsfilter);
+
+  return bin;
 }
 
 
