@@ -4382,6 +4382,8 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
       gst_structure_get_boolean (structure, "ignore-eos", &priv->ignore_eos);
+      gst_structure_get_boolean (structure, "actions-on-idle",
+          &priv->execute_on_idle);
 
       if (!priv->handles_state)
         priv->target_state = GST_STATE_PLAYING;
