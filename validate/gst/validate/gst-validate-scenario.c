@@ -3148,6 +3148,68 @@ done:
   return res;
 }
 
+static gboolean
+set_env_var (GQuark field_id, GValue * value,
+    GSubprocessLauncher * subproc_launcher)
+{
+  g_subprocess_launcher_setenv (subproc_launcher, g_quark_to_string (field_id),
+      g_value_get_string (value), TRUE);
+
+  return TRUE;
+}
+
+static GstValidateExecuteActionReturn
+_run_command (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  gchar **argv = NULL, *_stderr;
+  GError *error = NULL;
+  const GValue *env = NULL;
+  GSubprocess *subproc = NULL;
+  GSubprocessLauncher *subproc_launcher = NULL;
+  GstValidateExecuteActionReturn res =
+      GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+
+  REPORT_UNLESS ((argv = gst_validate_utils_get_strv (action->structure,
+              "argv")), done,
+      "Couldn't find `argv` as array of strings in %" GST_PTR_FORMAT,
+      action->structure);
+
+  subproc_launcher = g_subprocess_launcher_new (G_SUBPROCESS_FLAGS_STDERR_PIPE);
+  g_subprocess_launcher_unsetenv (subproc_launcher, "GST_VALIDATE_SCENARIO");
+  g_subprocess_launcher_unsetenv (subproc_launcher, "GST_VALIDATE_CONFIG");
+
+  env = gst_structure_get_value (action->structure, "env");
+  REPORT_UNLESS (!env || GST_VALUE_HOLDS_STRUCTURE (env), done,
+      "The `env` parameter should be a GstStructure, got %s",
+      G_VALUE_TYPE_NAME (env));
+  if (env) {
+    gst_structure_foreach (gst_value_get_structure (env),
+        (GstStructureForeachFunc) set_env_var, subproc_launcher);
+  }
+
+  REPORT_UNLESS (
+      (subproc =
+          g_subprocess_launcher_spawnv (subproc_launcher,
+              (const gchar * const *) argv, &error)), done,
+      "Couldn't start subprocess: %s", error->message);
+
+  REPORT_UNLESS (g_subprocess_communicate_utf8 (subproc, NULL, NULL, NULL,
+          &_stderr, &error), done, "Failed to run check: %s", error->message);
+
+  REPORT_UNLESS (g_subprocess_get_exit_status (subproc) == 0,
+      done, "Sub command failed. Stderr: %s", _stderr);
+
+  res = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+done:
+  if (argv)
+    g_strfreev (argv);
+  g_clear_object (&subproc_launcher);
+  g_clear_object (&subproc);
+
+  return res;
+}
+
 static GstValidateExecuteActionReturn
 _execute_check_position (GstValidateScenario * scenario,
     GstValidateAction * action)
@@ -7151,6 +7213,27 @@ register_action_types (void)
         {NULL}
       }),
       "Check current pipeline position.\n", GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE("run-command", _run_command,
+      ((GstValidateActionParameter[]) {
+          {
+            .name = "argv",
+            .description = "The subprocess arguments",
+            .mandatory = TRUE,
+            .types = "(string){array,}",
+            NULL
+          },
+          {
+            .name = "env",
+            .description = "Extra environment variables to set",
+            .mandatory = FALSE,
+            .types = "GstStructure",
+            NULL
+          },
+        {NULL}
+      }),
+      "Check current pipeline position.\n",
+      GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL);
 
     REGISTER_ACTION_TYPE("foreach", NULL,
         ((GstValidateActionParameter[]) {
