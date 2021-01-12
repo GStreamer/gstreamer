@@ -1475,6 +1475,25 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
         payload->priv->header_exts);
     g_ptr_array_foreach (to_add, (GFunc) add_item_to,
         payload->priv->header_exts);
+    /* let extensions update their internal state from sinkcaps */
+    if (payload->priv->sinkcaps) {
+      gint i;
+
+      for (i = 0; i < payload->priv->header_exts->len; i++) {
+        GstRTPHeaderExtension *ext;
+
+        ext = g_ptr_array_index (payload->priv->header_exts, i);
+        if (!gst_rtp_header_extension_set_non_rtp_sink_caps (ext,
+                payload->priv->sinkcaps)) {
+          GST_WARNING_OBJECT (payload,
+              "Failed to update rtp header extension (%s) from sink caps",
+              GST_OBJECT_NAME (ext));
+          res = FALSE;
+          GST_OBJECT_UNLOCK (payload);
+          goto ext_out;
+        }
+      }
+    }
     /* add extension information to srccaps */
     g_ptr_array_foreach (payload->priv->header_exts,
         (GFunc) add_header_ext_to_caps, srccaps);

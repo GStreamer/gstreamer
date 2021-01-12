@@ -395,6 +395,36 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
 }
 
 /**
+ * gst_rtp_header_extension_set_non_rtp_sink_caps:
+ * @ext: a #GstRTPHeaderExtension
+ * @caps: sink #GstCaps
+ *
+ * Passes RTP payloader's sink (i.e. not payloaded) @caps to the header
+ * extension.
+ *
+ * Returns: Whether @caps could be read successfully
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_rtp_header_extension_set_non_rtp_sink_caps (GstRTPHeaderExtension * ext,
+    const GstCaps * caps)
+{
+  GstRTPHeaderExtensionClass *klass;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
+  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
+
+  if (klass->set_non_rtp_sink_caps) {
+    return klass->set_non_rtp_sink_caps (ext, caps);
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_rtp_header_extension_set_caps_from_attributes:
  * @ext: a #GstRTPHeaderExtension
  * @caps: writable #GstCaps to modify

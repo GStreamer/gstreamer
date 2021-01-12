@@ -138,7 +138,9 @@ struct _GstRTPHeaderExtension
  *     information is provided to help writing extensions in particular cases.
  * @read: read from a rtp payloaded buffer and extract the extension
  *     information, optionally adding some meta onto the output buffer.
- * @set_attributes_from_caps: read the caps information to set the necesary
+ * @set_non_rtp_sink_caps: read any information from sink caps that the header
+ *     extension needs for its function.
+ * @set_attributes_from_caps: read the caps information to set the necessary
  *     attributes that may be signaled e.g. with an SDP.
  * @set_caps_from_attributes: write the necessary caps field/s for the configured
  *     attributes e.g. as signalled with SDP.
@@ -169,6 +171,8 @@ struct _GstRTPHeaderExtensionClass
                                                      const guint8 * data,
                                                      gsize size,
                                                      GstBuffer * buffer);
+  gboolean              (*set_non_rtp_sink_caps)    (GstRTPHeaderExtension * ext,
+                                                     const GstCaps * caps);
   gboolean              (*set_attributes_from_caps) (GstRTPHeaderExtension * ext,
                                                      const GstCaps * caps);
   gboolean              (*set_caps_from_attributes) (GstRTPHeaderExtension * ext,
@@ -216,6 +220,9 @@ gboolean            gst_rtp_header_extension_read               (GstRTPHeaderExt
                                                                  const guint8 * data,
                                                                  gsize size,
                                                                  GstBuffer * buffer);
+GST_RTP_API
+gboolean            gst_rtp_header_extension_set_non_rtp_sink_caps (GstRTPHeaderExtension * ext,
+                                                                    const GstCaps * caps);
 GST_RTP_API
 gboolean            gst_rtp_header_extension_set_caps_from_attributes (GstRTPHeaderExtension * ext,
                                                                        GstCaps * caps);
