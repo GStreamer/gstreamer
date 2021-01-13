@@ -49,7 +49,7 @@ video_frame_get_perf_category (void)
 
 /**
  * gst_video_frame_map_id:
- * @frame: pointer to #GstVideoFrame
+ * @frame: (out caller-allocates): pointer to #GstVideoFrame
  * @info: a #GstVideoInfo
  * @buffer: the buffer to map
  * @id: the frame id to map
@@ -188,7 +188,7 @@ invalid_size:
 
 /**
  * gst_video_frame_map:
- * @frame: pointer to #GstVideoFrame
+ * @frame: (out caller-allocates): pointer to #GstVideoFrame
  * @info: a #GstVideoInfo
  * @buffer: the buffer to map
  * @flags: #GstMapFlags
