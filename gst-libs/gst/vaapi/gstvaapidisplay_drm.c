@@ -337,15 +337,27 @@ GstVaapiDisplay *
 gst_vaapi_display_drm_new (const gchar * device_path)
 {
   GstVaapiDisplay *display;
-  guint types[2], i, num_types = 0;
+  guint types[3], i, num_types = 0;
+  gpointer device_paths[3];
 
   g_mutex_lock (&g_drm_device_type_lock);
-  if (device_path)
+  if (device_path) {
+    device_paths[num_types] = (gpointer) device_path;
     types[num_types++] = 0;
-  else if (g_drm_device_type)
+  } else if (g_drm_device_type) {
+    device_paths[num_types] = (gpointer) device_path;
     types[num_types++] = g_drm_device_type;
-  else {
+  } else {
+    const gchar *user_choice = g_getenv ("GST_VAAPI_DRM_DEVICE");
+
+    if (user_choice && g_str_has_prefix (user_choice, "/dev/dri/")) {
+      device_paths[num_types] = (gpointer) user_choice;
+      types[num_types++] = 0;
+    }
+
+    device_paths[num_types] = (gpointer) device_path;
     types[num_types++] = DRM_DEVICE_RENDERNODES;
+    device_paths[num_types] = (gpointer) device_path;
     types[num_types++] = DRM_DEVICE_LEGACY;
   }
 
@@ -353,7 +365,7 @@ gst_vaapi_display_drm_new (const gchar * device_path)
     g_drm_device_type = types[i];
     display = g_object_new (GST_TYPE_VAAPI_DISPLAY_DRM, NULL);
     display = gst_vaapi_display_config (display,
-        GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) device_path);
+        GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, device_paths[i]);
     if (display || device_path)
       break;
   }

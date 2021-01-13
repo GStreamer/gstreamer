@@ -27,3 +27,8 @@ example, intel's driver is `i915`, meanwhile mesa is `gallium`.
 This environment variable can be set to a colon-separated list of paths
 (or a semicolon-separated list on Windows). libva will scan these paths
 for va drivers.
+
+**GST_VAAPI_DRM_DEVICE.**
+This environment variable can be set to a specified DRM device when DRM
+display is used, it is ignored when other types of displays are used.
+By default /dev/dri/renderD128 is used for DRM display.
