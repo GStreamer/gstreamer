@@ -1,3 +1,35 @@
+=== release 1.18.3 ===
+
+2021-01-13 21:12:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.18.3
+
+2020-12-17 15:27:27 +0100  Tobias Ronge <tobiasr@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only count senders when counting blocked streams
+	  Only sender streams sends the GstRTSPStreamBlocking message, so only
+	  these should be counted before setting media status to prepared.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/182>
+
+2020-12-14 14:12:38 +1300  Lawrence Troup <lawrence.troup@teknique.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Only unref client watch context on finalize, to avoid deadlock
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/127
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/179>
+
+2020-12-06 23:57:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.18.2 ===
 
 2020-12-06 13:24:47 +0000  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +37,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.2
