@@ -1,3 +1,29 @@
+=== release 1.18.3 ===
+
+2021-01-13 21:11:49 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.18.3
+
+2020-12-30 01:15:16 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Drain decoder on decoding failure
+	  ... and call finish_frame() so that baseclass can reset internal
+	  status. Otherwise baseclass will keep holding the status for
+	  decoding failed frame which will result in outputting buffer with
+	  wrong timestamp.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/113>
+
+2020-12-06 23:57:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.2 ===
 
 2020-12-06 13:24:36 +0000  Tim-Philipp Müller <tim@centricular.com>
