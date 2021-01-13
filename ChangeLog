@@ -1,3 +1,19 @@
+=== release 1.18.3 ===
+
+2021-01-13 21:13:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.18.3
+
+2020-12-06 23:57:14 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.2 ===
 
 2020-12-06 13:25:09 +0000  Tim-Philipp Müller <tim@centricular.com>
