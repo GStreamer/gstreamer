@@ -89,6 +89,25 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   return res;
 }
 
+
+static gboolean
+_set_parent (GESTimelineElement * element, GESTimelineElement * parent)
+{
+  GESVideoSource *self = GES_VIDEO_SOURCE (element);
+
+  if (!parent)
+    return TRUE;
+
+  /* Some subclass might have different access to its natural size only
+   * once it knows its parent */
+  ges_video_source_get_natural_size (GES_VIDEO_SOURCE (self),
+      &self->priv->positioner->natural_width,
+      &self->priv->positioner->natural_height);
+
+  return TRUE;
+}
+
+
 static gboolean
 ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
     gboolean needs_converters)
@@ -223,6 +242,7 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
 
   element_class->set_priority = _set_priority;
   element_class->lookup_child = _lookup_child;
+  element_class->set_parent = _set_parent;
 
   track_element_class->nleobject_factorytype = "nlesource";
   track_element_class->create_element = ges_video_source_create_element;

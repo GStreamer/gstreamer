@@ -91,35 +91,39 @@ get_natural_size (GESVideoSource * source, gint * width, gint * height)
 static gboolean
 _set_parent (GESTimelineElement * element, GESTimelineElement * parent)
 {
+  gint width, height, fps_n, fps_d;
+  GstCaps *caps;
   GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (element);
 
 
-  if (parent) {
-    gint width, height, fps_n, fps_d;
-    GstCaps *caps;
+  if (!parent)
+    goto done;
 
-    g_assert (self->priv->capsfilter);
-    /* Setting the parent ourself as we need it to get the natural size */
-    element->parent = parent;
-    if (!ges_video_source_get_natural_size (GES_VIDEO_SOURCE (self), &width,
-            &height)) {
-      width = DEFAULT_WIDTH;
-      height = DEFAULT_HEIGHT;
-    }
-    if (!ges_timeline_element_get_natural_framerate (parent, &fps_n, &fps_d)) {
-      fps_n = DEFAULT_FRAMERATE_N;
-      fps_d = DEFAULT_FRAMERATE_D;
-    }
-
-    caps = gst_caps_new_simple ("video/x-raw",
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-    g_object_set (self->priv->capsfilter, "caps", caps, NULL);
-    gst_caps_unref (caps);
+  g_assert (self->priv->capsfilter);
+  /* Setting the parent ourself as we need it to get the natural size */
+  element->parent = parent;
+  if (!ges_video_source_get_natural_size (GES_VIDEO_SOURCE (self), &width,
+          &height)) {
+    width = DEFAULT_WIDTH;
+    height = DEFAULT_HEIGHT;
   }
 
-  return TRUE;
+  if (!ges_timeline_element_get_natural_framerate (parent, &fps_n, &fps_d)) {
+    fps_n = DEFAULT_FRAMERATE_N;
+    fps_d = DEFAULT_FRAMERATE_D;
+  }
+
+  caps = gst_caps_new_simple ("video/x-raw",
+      "width", G_TYPE_INT, width,
+      "height", G_TYPE_INT, height,
+      "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+  g_object_set (self->priv->capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+done:
+  return
+      GES_TIMELINE_ELEMENT_CLASS
+      (ges_video_test_source_parent_class)->set_parent (element, parent);
 }
 
 static gboolean
