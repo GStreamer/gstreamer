@@ -37,9 +37,9 @@ v4l2_profile_from_string (const gchar * profile)
 
   if (g_str_equal (profile, "main")) {
     v4l2_profile = V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN;
-  } else if (g_str_equal (profile, "mainstillpicture")) {
+  } else if (g_str_equal (profile, "main-still-picture")) {
     v4l2_profile = V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_STILL_PICTURE;
-  } else if (g_str_equal (profile, "main10")) {
+  } else if (g_str_equal (profile, "main-10")) {
     v4l2_profile = V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_10;
   } else {
     GST_WARNING ("Unsupported profile string '%s'", profile);
@@ -55,9 +55,9 @@ v4l2_profile_to_string (gint v4l2_profile)
     case V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN:
       return "main";
     case V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_STILL_PICTURE:
-      return "mainstillpicture";
+      return "main-still-picture";
     case V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_10:
-      return "main10";
+      return "main-10";
     default:
       GST_WARNING ("Unsupported V4L2 profile %i", v4l2_profile);
       break;
