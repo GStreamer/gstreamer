@@ -2,13 +2,13 @@ GStreamer 1.18 Release Notes
 
 GStreamer 1.18.0 was originally released on 8 September 2020.
 
-The latest bug-fix release in the 1.18 series is 1.18.2 and was released
-on 6 December 2020.
+The latest bug-fix release in the 1.18 series is 1.18.3 and was released
+on 13 January 2021.
 
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
 
-Last updated: Monday 26 October 2020, 11:00 UTC (log)
+Last updated: Wednesday 13 January 2021, 20:00 UTC (log)
 
 Introduction
 
@@ -2576,6 +2576,147 @@ List of merge requests and issues fixed in 1.18.2
 -   List of Merge Requests applied in 1.18.2
 -   List of Issues fixed in 1.18.2
 
+1.18.3
+
+The third 1.18 bug-fix release (1.18.3) was released on 13 January 2021.
+
+This release only contains bugfixes and it should be safe to update from
+1.18.x.
+
+Highlighted bugfixes in 1.18.3
+
+-   fix ogg playback regression for ogg files that also have ID3 or APE
+    tags
+-   compositor: fix artefacts and invalid memory access when blending
+    subsampled formats
+-   exported mini object ref/unref/copy functions for use in bindings
+    such as gstreamer-sharp
+-   Add support for Apple silicon (M1) to cerbero package builder
+-   Ship RIST plugin in binary packages
+-   various stability, performance and reliability improvements
+-   memory leak fixes
+-   build fixes
+
+gstreamer
+
+-   gst: Add non-inline ref/unref/copy/replace methods for various mini
+    objects (buffer, bufferlist, caps, context, event, memory, message,
+    promise, query, sample, taglist, uri) for use in bindings such as
+    gstreamer-sharp
+-   harness: don’t use GST_DEBUG_OBJECT with GstHarness which is not a
+    GObject
+
+gst-plugins-base
+
+-   audiorate: Make buffer writable before changing its metadata
+-   compositor: fix blending of subsampled components
+-   decodebin3: When reconfiguring a slot make sure that the ghostpad is
+    unlinked
+-   decodebin3: Release selection lock when pushing EOS
+-   encodebasebin: Ensure that parsers are compatible with selected
+    encoders
+-   tagdemux: resize and trim buffer in place to fix interaction with
+    oggdemux
+-   videoaggregator: Pop out old buffers on timeout
+-   video-blend: fix blending 8-bit and 16-bit frames together
+-   appsrc: fix signal documentation
+-   gl: document some GL caps specifics
+-   libvisual: workaround clang compiler warning
+
+gst-plugins-good
+
+-   deinterlace: fix build of assembly optimisations on macOS
+-   splitmuxsink: Avoid deadlock when releasing a pad from a running
+    muxer
+-   splitmuxsink: fix bogus fragment split
+-   v4l2object: Map correct video format for RGBA
+-   videoflip: fix possible crash when changing video-direction/method
+    while running
+
+gst-plugins-bad
+
+-   assrender: fix mutex handling in certain flushing/error situations
+-   dvbsuboverlay: Add support for dynamic resolution update
+-   dashsink: fix critical log of dynamic pipeline
+-   d3d11shader: Fix ID3DBlob object leak
+-   d3d11videosink: Prepare window once streaming started
+-   decklinkaudiosrc: Fix duration of the first audio frame after each
+    discont
+-   intervideosrc: fix negotiation of interlaced caps
+-   msdk: needn’t close mfx session when failed, fixes double free /
+    potential crash
+-   msdk: check GstMsdkContext instead of mfxSession instance
+-   srt: fix locking when retrieving stats
+-   rtmp2src: fix leaks when connection is cancelled during startup or
+    connection fails
+
+gst-plugins-ugly
+
+-   no changes
+
+gst-libav
+
+-   avauddec: Drain decoder on decoding failure, fixes timestamps after
+    decoding errors
+
+gst-rtsp-server
+
+-   rtsp-media: Only count senders when counting blocked streams
+-   rtsp-client: Only unref client watch context on finalize, to avoid
+    deadlock
+
+gstreamer-vaapi
+
+-   no changes
+
+gstreamer-sharp
+
+-   no changes
+
+gst-omx
+
+-   no changes
+
+gst-python
+
+-   no changes
+
+gst-editing-services
+
+-   launch: Ensure to add required ref to profiles from project
+-   tests: fix meson test env setup to make sure we use the right
+    gst-plugin-scanner
+
+gst-integration-testsuites
+
+-   no changes
+
+gst-build
+
+-   meson: Update zlib.wrap to use wrapdb instead of github fork
+
+Cerbero build tool and packaging changes in 1.18.3
+
+-   Add support for Apple silicon
+-   Build and ship RIST plugin
+
+Contributors to 1.18.3
+
+Andoni Morales Alastruey, Edward Hervey, Haihao Xiang, Haihua Hu, Hou
+Qi, Ignacio Casal Quinteiro, Jakub Adam, Jan Alexander Steffens
+(heftig), Jan Schmidt, Jordan Petridis, Lawrence Troup, Lim Siew Hoon,
+Mathieu Duponchelle, Matthew Waters, Nicolas Dufresne, Raju Babannavar,
+Sebastian Dröge, Seungha Yang, Thibault Saunier, Tim-Philipp Müller,
+Tobias Ronge, Vivia Nikolaidou,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.18.3
+
+-   List of Merge Requests applied in 1.18.3
+-   List of Issues fixed in 1.18.3
+
 Schedule for 1.20
 
 Our next major feature release will be 1.20, and 1.19 will be the
@@ -2583,8 +2724,9 @@ unstable development version leading up to the stable 1.20 release. The
 development of 1.19/1.20 will happen in the git master branch.
 
 The plan for the 1.20 development cycle is yet to be confirmed, but it
-is now expected that feature freeze will take place some time in January
-2021, with the first 1.20 stable release around February/March 2021.
+is now expected that feature freeze will take place some time in
+January/February 2021, with the first 1.20 stable release hopefully
+around February/March 2021.
 
 1.20 will be backwards-compatible to the stable 1.18, 1.16, 1.14, 1.12,
 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.

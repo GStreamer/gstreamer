@@ -1,3 +1,35 @@
+=== release 1.18.3 ===
+
+2021-01-13 21:13:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.18.3
+
+2021-01-05 11:52:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Ensure to add required ref to profiles from project
+	  We were unreffing something we were not owning
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/226>
+
+2020-11-02 22:18:24 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: fix meson test env setup to make sure we use the right gst-plugin-scanner
+	  This is the same fix that was applied in gst-plugins-good in
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/merge_requests/603
+	  and fixes the testsuite running in gst-build.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/223>
+
+2020-12-06 23:57:12 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.2 ===
 
 2020-12-06 13:25:02 +0000  Tim-Philipp Müller <tim@centricular.com>
