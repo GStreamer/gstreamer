@@ -1821,7 +1821,7 @@ ges_validate_register_action_types (void)
           .mandatory = FALSE,
         },
         {NULL}
-      }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
+      }, "Set a keyframe on @element-name:property-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("copy-element", "ges", _copy_element,
       (GstValidateActionParameter []) {
@@ -1886,7 +1886,7 @@ ges_validate_register_action_types (void)
           .mandatory = FALSE,
         },
         {NULL}
-      }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
+      }, "Remove a keyframe on @element-name:property-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("load-project", "ges", _load_project,
       (GstValidateActionParameter [])  {

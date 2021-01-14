@@ -244,7 +244,7 @@ _load_and_parse (GESBaseXmlFormatter * self, const gchar * uri, GError ** error,
 
 failed:
   g_object_unref (file);
-  GST_WARNING ("failed to load contents from \"%s\"", uri);
+  GST_INFO_OBJECT (self, "failed to load contents from \"%s\"", uri);
   g_propagate_error (error, err);
   return NULL;
 }

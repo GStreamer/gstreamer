@@ -444,7 +444,7 @@ ges_asset_finalize (GObject * object)
 {
   GESAssetPrivate *priv = GES_ASSET (object)->priv;
 
-  GST_DEBUG_OBJECT (object, "finalizing");
+  GST_LOG_OBJECT (object, "finalizing");
 
   if (priv->id)
     g_free (priv->id);
