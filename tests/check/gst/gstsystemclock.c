@@ -328,6 +328,9 @@ GST_START_TEST (test_stress_cleanup_unschedule)
   for (i = 0; i < num; i++) {
     WaitUnscheduleData *d = &data[i];
     d->running = FALSE;
+  }
+  for (i = 0; i < num; i++) {
+    WaitUnscheduleData *d = &data[i];
     g_thread_join (d->thread_wait);
     g_thread_join (d->thread_unschedule);
     g_mutex_clear (&d->lock);
@@ -370,6 +373,9 @@ GST_START_TEST (test_stress_reschedule)
   for (i = 0; i < num; i++) {
     WaitUnscheduleData *d = &data[i];
     d->running = FALSE;
+  }
+  for (i = 0; i < num; i++) {
+    WaitUnscheduleData *d = &data[i];
     g_thread_join (d->thread_wait);
     g_thread_join (d->thread_unschedule);
     g_mutex_clear (&d->lock);
