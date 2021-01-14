@@ -536,7 +536,9 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     if (sink_sampling_string)
       sink_sampling = gst_jpeg2000_sampling_from_string (sink_sampling_string);
 
-  } else {
+  }
+
+  if (colorspace == GST_JPEG2000_COLORSPACE_NONE) {
     /* guess color space based on number of components       */
     if (numcomps == 0 || numcomps > 4) {
       GST_ERROR_OBJECT (jpeg2000parse,
