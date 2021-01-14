@@ -49,7 +49,7 @@ subprojects/libffi
 subprojects/libnice
 subprojects/libunwind
 subprojects/proxy-libintl
-subprojects/zlib-*
+subprojects/zlib*
 subprojects/openh264
 subprojects/pygobject
 subprojects/pycairo
@@ -85,6 +85,8 @@ subprojects/libpng.wrap
 subprojects/pango
 subprojects/pixman
 subprojects/webrtc-audio-processing
+subprojects/dv
+subprojects/opus
 prefix/
 pygobject
 .gdbinit
