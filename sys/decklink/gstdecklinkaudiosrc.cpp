@@ -679,7 +679,9 @@ retry:
         GST_SECOND);
 
     // Discont!
-    if (G_UNLIKELY (diff >= max_sample_diff)) {
+    if (self->alignment_threshold > 0
+        && self->alignment_threshold != GST_CLOCK_TIME_NONE
+        && G_UNLIKELY (diff >= max_sample_diff)) {
       if (self->discont_wait > 0) {
         if (self->discont_time == GST_CLOCK_TIME_NONE) {
           self->discont_time = start_time;
@@ -706,6 +708,8 @@ retry:
     self->next_offset = end_offset;
     // Got a discont and adjusted, reset the discont_time marker.
     self->discont_time = GST_CLOCK_TIME_NONE;
+  } else if (self->alignment_threshold == 0) {
+    // Don't align, just pass through timestamps
   } else {
     // No discont, just keep counting
     timestamp =
