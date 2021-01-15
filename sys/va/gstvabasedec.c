@@ -36,15 +36,27 @@ gst_va_base_dec_open (GstVideoDecoder * decoder)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaBaseDecClass *klass = GST_VA_BASE_DEC_GET_CLASS (decoder);
+  gboolean ret = FALSE;
 
   if (!gst_va_ensure_element_data (decoder, klass->render_device_path,
           &base->display))
     return FALSE;
 
-  if (!base->decoder)
-    base->decoder = gst_va_decoder_new (base->display, klass->codec);
+  if (!g_atomic_pointer_get (&base->decoder)) {
+    GstVaDecoder *va_decoder;
 
-  return (base->decoder != NULL);
+    va_decoder = gst_va_decoder_new (base->display, klass->codec);
+    if (va_decoder)
+      ret = TRUE;
+
+    gst_object_replace ((GstObject **) (&base->decoder),
+        (GstObject *) va_decoder);
+    gst_object_unref (va_decoder);
+  } else {
+    ret = TRUE;
+  }
+
+  return ret;
 }
 
 gboolean
@@ -82,9 +94,14 @@ gst_va_base_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
 {
   GstCaps *caps = NULL, *tmp;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaDecoder *va_decoder = NULL;
 
-  if (base->decoder)
-    caps = gst_va_decoder_get_sinkpad_caps (base->decoder);
+  gst_object_replace ((GstObject **) & va_decoder, (GstObject *) base->decoder);
+
+  if (va_decoder)
+    caps = gst_va_decoder_get_sinkpad_caps (va_decoder);
+
+  gst_object_unref (va_decoder);
 
   if (caps) {
     if (filter) {
@@ -108,19 +125,34 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
-      return gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
-          base->display);
+      GstVaDisplay *display = NULL;
+
+      gst_object_replace ((GstObject **) & display,
+          (GstObject *) base->display);
+
+      ret = gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
+          display);
+
+      gst_object_unref (display);
+      break;
     }
     case GST_QUERY_CAPS:{
       GstCaps *caps = NULL, *tmp, *filter = NULL;
+      GstVaDecoder *va_decoder = NULL;
       gboolean fixed_caps;
+
+      gst_object_replace ((GstObject **) & va_decoder,
+          (GstObject *) base->decoder);
 
       gst_query_parse_caps (query, &filter);
 
       fixed_caps = GST_PAD_IS_FIXED_CAPS (GST_VIDEO_DECODER_SRC_PAD (decoder));
 
-      if (!fixed_caps && base->decoder)
-        caps = gst_va_decoder_get_srcpad_caps (base->decoder);
+      if (!fixed_caps && va_decoder)
+        caps = gst_va_decoder_get_srcpad_caps (va_decoder);
+
+      gst_object_unref (va_decoder);
+
       if (caps) {
         if (filter) {
           tmp =
@@ -149,10 +181,18 @@ static gboolean
 gst_va_base_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  gboolean ret = FALSE;
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
-    return gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
-        base->display);
+    GstVaDisplay *display = NULL;
+
+    gst_object_replace ((GstObject **) & display, (GstObject *) base->display);
+
+    ret = gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
+        display);
+
+    gst_object_unref (display);
+    return ret;
   }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);

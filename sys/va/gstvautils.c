@@ -186,19 +186,20 @@ gst_va_ensure_element_data (gpointer element, const gchar * render_device_path,
   /*  1) Check if the element already has a context of the specific
    *     type.
    */
-  if (gst_va_display_found (element, *display_ptr))
+  if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
     goto done;
 
   _gst_context_query (element, "gst.va.display.handle");
 
   /* Neighbour found and it updated the display */
-  if (gst_va_display_found (element, *display_ptr))
+  if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
     goto done;
 
   /* If no neighbor, or application not interested, use drm */
   display = gst_va_display_drm_new_from_path (render_device_path);
 
-  *display_ptr = display;
+  gst_object_replace ((GstObject **) display_ptr, (GstObject *) display);
+  gst_object_unref (display);
 
   gst_va_element_propagate_display_context (element, display);
 
@@ -231,11 +232,9 @@ gst_va_handle_set_context (GstElement * element, GstContext * context,
   }
 
   if (display_replacement) {
-    GstVaDisplay *old = *display_ptr;
-    *display_ptr = display_replacement;
-
-    if (old)
-      gst_object_unref (old);
+    gst_object_replace ((GstObject **) display_ptr,
+        (GstObject *) display_replacement);
+    gst_object_unref (display_replacement);
   }
 
   return TRUE;
