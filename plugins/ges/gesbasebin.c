@@ -113,6 +113,9 @@ ges_base_bin_class_init (GESBaseBinClass * self_class)
 
   GST_DEBUG_CATEGORY_INIT (gesbasebin, "gesbasebin", 0, "ges bin element");
 
+  gst_tag_register ("is-ges-timeline", GST_TAG_FLAG_META, G_TYPE_BOOLEAN,
+      "is-ges-timeline", "The stream is a ges timeline.", NULL);
+
   gclass->get_property = ges_base_bin_get_property;
   gclass->set_property = ges_base_bin_set_property;
   gclass->dispose = ges_base_bin_dispose;
@@ -143,6 +146,8 @@ static void
 ges_base_bin_init (GESBaseBin * self)
 {
   GESBaseBinPrivate *priv = ges_base_bin_get_instance_private (self);
+
+  ges_init ();
 
   priv->flow_combiner = gst_flow_combiner_new ();
 }

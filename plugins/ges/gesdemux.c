@@ -204,8 +204,6 @@ ges_demux_class_init (GESDemuxClass * self_class)
 
   sinkpad_caps = ges_demux_get_sinkpad_caps ();
 
-  gst_tag_register ("is-ges-timeline", GST_TAG_FLAG_META, G_TYPE_BOOLEAN,
-      "is-ges-timeline", "The stream is a ges timeline.", NULL);
   gclass->get_property = ges_demux_get_property;
   gclass->set_property = ges_demux_set_property;
 
@@ -607,8 +605,6 @@ ges_demux_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 static void
 ges_demux_init (GESDemux * self)
 {
-  ges_init ();
-
   SUPRESS_UNUSED_WARNING (GES_DEMUX);
   SUPRESS_UNUSED_WARNING (GES_IS_DEMUX);
 #if defined(g_autoptr)
