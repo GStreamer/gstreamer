@@ -1176,16 +1176,17 @@ ges_launcher_parse_options (GESLauncher * self,
   gboolean owns_ctx = ctx == NULL;
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   gchar *prev_videosink = opts->videosink, *prev_audiosink = opts->audiosink;
+/*  *INDENT-OFF* */
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
-        "Do not use mixing elements to mix layers together.", NULL}
-    ,
+        "Do not use mixing elements to mix layers together.", NULL
+    },
     {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
           "Specify the track types to be created. "
           "When loading a project, only relevant tracks will be added to the "
           "timeline.",
-        "<track-types>"}
-    ,
+        "<track-types>"
+    },
     {
           "video-caps",
           0,
@@ -1193,8 +1194,7 @@ ges_launcher_parse_options (GESLauncher * self,
           G_OPTION_ARG_STRING,
           &opts->video_track_caps,
           "Specify the track restriction caps of the video track.",
-        }
-    ,
+    },
     {
           "audio-caps",
           0,
@@ -1202,8 +1202,7 @@ ges_launcher_parse_options (GESLauncher * self,
           G_OPTION_ARG_STRING,
           &opts->audio_track_caps,
           "Specify the track restriction caps of the audio track.",
-        }
-    ,
+    },
 #ifdef HAVE_GST_VALIDATE
     {"set-test-file", 0, 0, G_OPTION_ARG_STRING, &opts->testfile,
           "ges-launch-1.0 exposes gst-validate functionalities, such as test files and scenarios."
@@ -1213,8 +1212,8 @@ ges_launcher_parse_options (GESLauncher * self,
           "clips. "
           "See gst-validate-1.0 --help for more info about validate and "
           "scenarios, " "and --inspect-action-type.",
-        "</test/file/path>"}
-    ,
+        "</test/file/path>"
+    },
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &opts->scenario,
           "ges-launch-1.0 exposes gst-validate functionalities, such as scenarios."
           " Scenarios describe actions to execute, such as seeks or setting of "
@@ -1223,12 +1222,12 @@ ges_launcher_parse_options (GESLauncher * self,
           "clips. "
           "See gst-validate-1.0 --help for more info about validate and "
           "scenarios, " "and --inspect-action-type.",
-        "<scenario_name>"}
-    ,
+        "<scenario_name>"
+    },
     {"disable-validate", 'n', 0, G_OPTION_ARG_NONE, &opts->disable_validate,
           "Do not run inside GstValidate.",
-        "<scenario_name>"}
-    ,
+        "<scenario_name>"
+    },
 #endif
     {
           "embed-nesteds",
@@ -1237,14 +1236,14 @@ ges_launcher_parse_options (GESLauncher * self,
           G_OPTION_ARG_NONE,
           &opts->embed_nesteds,
           "Embed nested timelines when saving.",
-        }
-    ,
+    },
     {"no-interactive", 0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
           &opts->interactive,
-        "Disable interactive control via the keyboard", NULL}
-    ,
+        "Disable interactive control via the keyboard", NULL
+    },
     {NULL}
   };
+/*  *INDENT-ON* */
 
   if (owns_ctx) {
     opts->videosink = opts->audiosink = NULL;
