@@ -764,6 +764,7 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
       if (gst_structure_has_name (tmp->data, options[i].long_name)
           || (strlen (name) == 1 && *name == options[i].short_name)) {
         EXEC (((ActionFromStructureFunc) options[i].callback), tmp->data, &err);
+        break;
       }
     }
   }
