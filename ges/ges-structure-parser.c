@@ -151,6 +151,10 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
     ges_structure_parser_parse_string (self, "title, text=(string)", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "track", 5))
     ges_structure_parser_parse_string (self, "track, type=(string)", TRUE);
+  else if (!g_ascii_strncasecmp (symbol, "keyframes", 8)) {
+    ges_structure_parser_parse_string (self,
+        "keyframes, property-name=(string)", TRUE);
+  }
 }
 
 void

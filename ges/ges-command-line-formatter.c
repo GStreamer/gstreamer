@@ -53,6 +53,9 @@ _ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
 static gboolean
 _ges_command_line_formatter_add_track (GESTimeline * timeline,
     GstStructure * structure, GError ** error);
+static gboolean
+_ges_command_line_formatter_add_keyframes (GESTimeline * timeline,
+    GstStructure * structure, GError ** error);
 
 typedef struct
 {
@@ -267,6 +270,31 @@ static GESCommandLineOption options[] = {
     },
   },
   {
+    .long_name="keyframes",
+    .short_name='k',
+    .callback=(ActionFromStructureFunc) _ges_command_line_formatter_add_keyframes,
+    .synopsis="<property name>",
+    .description="Adds keyframes for the specified property in the form:\n\n",
+    .examples="    ges-launch-1.0 +test-clip blue d=1.0 +keyframes posx 0=0 1.0=1280 t=direct-absolute +k posy 0=0 1.0=720 t=direct-absolute\n\n"
+              "This add a testclip that will disappear in the bottom right corner",
+    .properties={
+      {"property-name", 0, 0, NULL, NULL},
+      {
+        "binding-type", "t", 0, NULL,
+        "The type of binding to use, eg. 'direct-absolute', 'direct'"
+      },
+      {
+        "interpolation-mode", "m", 0, NULL,
+        "The GstInterpolationMode to user."
+      },
+      {
+        "...", 0, 0, NULL,
+        "The list of keyframe_timestamp=value to be set."
+      },
+      {NULL, 0, 0, NULL, FALSE},
+    },
+  },
+  {
     .long_name="set-",
     .short_name=0,
     .callback=NULL,
@@ -297,6 +325,7 @@ typedef enum
   TEST_CLIP,
   TITLE,
   TRACK,
+  KEYFRAMES,
   SET,
 } GESCommandLineOptionType;
 
@@ -382,13 +411,19 @@ _cleanup_fields (const Property * field_names, GstStructure * structure,
     gboolean exists = FALSE;
 
     /* Move shortly named fields to longname variante */
-    if (gst_structure_has_field (structure, field_names[i].short_name)) {
+    if (field_names[i].short_name &&
+        gst_structure_has_field (structure, field_names[i].short_name)) {
       exists = TRUE;
 
       if (gst_structure_has_field (structure, field_names[i].long_name)) {
-        *error = g_error_new (GES_ERROR, 0, "Using short and long name"
-            " at the same time for property: %s, which one should I use?!",
-            field_names[i].long_name);
+        gchar *str_info = gst_structure_serialize (structure, 0);
+
+        *error =
+            g_error_new (GES_ERROR, 0,
+            "Using short (%s) and long name (%s)"
+            " at the same time s in %s, which one should I use?!",
+            field_names[i].short_name, field_names[i].long_name, str_info);
+        g_free (str_info);
 
         return FALSE;
       } else {
@@ -477,6 +512,19 @@ _ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
   GST_ERROR ("Structure: %" GST_PTR_FORMAT, structure);
 
   return _ges_add_clip_from_struct (timeline, structure, error);
+}
+
+static gboolean
+_ges_command_line_formatter_add_keyframes (GESTimeline * timeline,
+    GstStructure * structure, GError ** error)
+{
+  if (!_cleanup_fields (options[KEYFRAMES].properties, structure, error))
+    return FALSE;
+
+  if (!_ges_set_control_source_from_struct (timeline, structure, error))
+    return FALSE;
+
+  return _ges_add_remove_keyframe_from_struct (timeline, structure, error);
 }
 
 static gboolean
