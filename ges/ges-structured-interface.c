@@ -101,6 +101,21 @@ typedef struct
 } FieldsError;
 
 static gboolean
+enum_from_str (GType type, const gchar * str_enum, guint * enum_value)
+{
+  GValue value = G_VALUE_INIT;
+  g_value_init (&value, type);
+
+  if (!gst_value_deserialize (&value, str_enum))
+    return FALSE;
+
+  *enum_value = g_value_get_enum (&value);
+  g_value_unset (&value);
+
+  return TRUE;
+}
+
+static gboolean
 _check_field (GQuark field_id, const GValue * value, FieldsError * fields_error)
 {
   guint i;
@@ -237,6 +252,69 @@ _ges_save_timeline_if_needed (GESTimeline * timeline, GstStructure * structure,
   return res;
 }
 
+typedef struct
+{
+  GstTimedValueControlSource *source;
+  GstStructure *structure;
+  GError *error;
+  const gchar *property_name;
+  gboolean res;
+} SetKeyframesData;
+
+static gboolean
+un_set_keyframes_foreach (GQuark field_id, const GValue * value,
+    SetKeyframesData * d)
+{
+  GValue v = G_VALUE_INIT;
+  GError **error = &d->error;
+  gchar *tmp;
+  gint i;
+  const gchar *valid_fields[] = {
+    "element-name", "property-name", "value", "timestamp", "project-uri",
+    "binding-type", "source-type", "interpolation-mode", "interpolation-mode",
+    NULL
+  };
+  const gchar *field = g_quark_to_string (field_id);
+  gdouble ts;
+
+  for (i = 0; valid_fields[i]; i++) {
+    if (g_quark_from_string (valid_fields[i]) == field_id)
+      return TRUE;
+  }
+
+  errno = 0;
+  ts = g_strtod (field, &tmp);
+
+  REPORT_UNLESS (errno == 0 && field != tmp, err,
+      "Could not convert `%s` to GstClockTime (%s)", field, g_strerror (errno));
+
+  if (gst_structure_has_name (d->structure, "remove-keyframe")) {
+    REPORT_UNLESS (gst_timed_value_control_source_unset (d->source,
+            ts * GST_SECOND), err, "Could not unset keyframe at %f", ts);
+
+    return TRUE;
+  }
+
+  g_value_init (&v, G_TYPE_DOUBLE);
+  REPORT_UNLESS (g_value_transform (value, &v), err,
+      "Could not convert keyframe %f value %s to double", ts,
+      gst_value_serialize (value));
+
+  REPORT_UNLESS (gst_timed_value_control_source_set (d->source, ts * GST_SECOND,
+          g_value_get_double (&v)), err, "Could not set keyframe %f=%f", ts,
+      g_value_get_double (&v));
+
+  g_value_reset (&v);
+  return TRUE;
+
+err:
+  if (v.g_type)
+    g_value_reset (&v);
+  d->res = FALSE;
+  return FALSE;
+}
+
+
 gboolean
 _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
@@ -260,11 +338,15 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
 
   FieldsError fields_error = { valid_fields, NULL };
 
-  if (!_check_fields (structure, fields_error, error))
-    return FALSE;
-
-  GET_AND_CHECK ("property-name", G_TYPE_STRING, &property_name, done);
-  GET_AND_CHECK ("timestamp", GST_TYPE_CLOCK_TIME, &timestamp, done);
+  if (gst_structure_has_field (structure, "value")) {
+    if (!_check_fields (structure, fields_error, error))
+      return FALSE;
+    GET_AND_CHECK ("timestamp", GST_TYPE_CLOCK_TIME, &timestamp, done);
+  } else {
+    REPORT_UNLESS (!gst_structure_has_field (structure, "timestamp"), done,
+        "Doesn't have a `value` field in %" GST_PTR_FORMAT
+        " but has a `timestamp`" " that can't work!", structure);
+  }
 
   GET_AND_CHECK ("property-name", G_TYPE_STRING, &property_name, done);
   if (!(element =
@@ -285,6 +367,18 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
       "You can use add-keyframe"
       " only on GstTimedValueControlSource not %s",
       G_OBJECT_TYPE_NAME (source));
+
+  if (!gst_structure_has_field (structure, "value")) {
+    SetKeyframesData d = {
+      source, structure, NULL, property_name, TRUE,
+    };
+    gst_structure_foreach (structure,
+        (GstStructureForeachFunc) un_set_keyframes_foreach, &d);
+    if (!d.res)
+      g_propagate_error (error, d.error);
+
+    return d.res;
+  }
 
   g_object_get (binding, "absolute", &absolute, NULL);
   if (absolute) {
@@ -585,17 +679,11 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
 
     if (GES_IS_TEST_CLIP (clip)) {
       if (pattern) {
-        GEnumClass *enum_class =
-            G_ENUM_CLASS (g_type_class_ref (GES_VIDEO_TEST_PATTERN_TYPE));
-        GEnumValue *value = g_enum_get_value_by_nick (enum_class, pattern);
+        guint v;
 
-        if (!value) {
-          res = FALSE;
-          goto beach;
-        }
-
-        ges_test_clip_set_vpattern (GES_TEST_CLIP (clip), value->value);
-        g_type_class_unref (enum_class);
+        REPORT_UNLESS (enum_from_str (GES_VIDEO_TEST_PATTERN_TYPE, pattern, &v),
+            beach, "Invalid pattern: %s", pattern);
+        ges_test_clip_set_vpattern (GES_TEST_CLIP (clip), v);
       }
     }
 
@@ -917,6 +1005,75 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
 err:
   g_free (property_name);
   return FALSE;
+}
+
+gboolean
+_ges_set_control_source_from_struct (GESTimeline * timeline,
+    GstStructure * structure, GError ** error)
+{
+  guint mode;
+  gboolean res = FALSE;
+  GESTimelineElement *element = NULL;
+
+  GstControlSource *source = NULL;
+  gchar *property_name, *binding_type = NULL,
+      *source_type = NULL, *interpolation_mode = NULL;
+
+  GET_AND_CHECK ("property-name", G_TYPE_STRING, &property_name, beach);
+
+  if (!(element =
+          find_element_for_property (timeline, structure, &property_name, TRUE,
+              error)))
+    goto beach;
+
+  if (GES_IS_CLIP (element)) {
+    GList *tmp;
+    for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
+      if (ges_timeline_element_lookup_child (tmp->data, property_name, NULL,
+              NULL)) {
+        gst_object_replace ((GstObject **) & element, tmp->data);
+
+        break;
+      }
+    }
+  }
+
+  REPORT_UNLESS (GES_IS_TRACK_ELEMENT (element), beach,
+      "Could not find TrackElement from %" GST_PTR_FORMAT, structure);
+
+  TRY_GET ("binding-type", G_TYPE_STRING, &binding_type, NULL);
+  TRY_GET ("source-type", G_TYPE_STRING, &source_type, NULL);
+  TRY_GET ("interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL);
+
+  if (!binding_type)
+    binding_type = g_strdup ("direct");
+
+  REPORT_UNLESS (source_type == NULL
+      || !g_strcmp0 (source_type, "interpolation"), beach,
+      "Interpolation type %s not supported", source_type);
+  source = gst_interpolation_control_source_new ();
+
+  if (interpolation_mode)
+    REPORT_UNLESS (enum_from_str (GST_TYPE_INTERPOLATION_MODE,
+            interpolation_mode, &mode), beach,
+        "Wrong interpolation mode: %s", interpolation_mode);
+  else
+    mode = GST_INTERPOLATION_MODE_LINEAR;
+
+  g_object_set (source, "mode", mode, NULL);
+
+  res = ges_track_element_set_control_source (GES_TRACK_ELEMENT (element),
+      source, property_name, binding_type);
+
+beach:
+  gst_clear_object (&element);
+  gst_clear_object (&source);
+  g_free (property_name);
+  g_free (binding_type);
+  g_free (source_type);
+  g_free (interpolation_mode);
+
+  return res;
 }
 
 #undef GET_AND_CHECK
