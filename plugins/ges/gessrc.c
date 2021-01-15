@@ -82,8 +82,7 @@ ges_src_uri_get_uri (GstURIHandler * handler)
   GESSrc *self = GES_SRC (handler);
   GESTimeline *timeline = ges_base_bin_get_timeline (GES_BASE_BIN (self));
 
-  return timeline ? g_strdup_printf ("ges://%s",
-      GST_OBJECT_NAME (timeline)) : NULL;
+  return ges_command_line_formatter_get_timeline_uri (timeline);
 }
 
 static gboolean

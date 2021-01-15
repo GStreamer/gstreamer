@@ -46,4 +46,7 @@ struct _GESCommandLineFormatter
 GES_API
 gchar * ges_command_line_formatter_get_help (gint nargs, gchar ** commands);
 
+GES_API
+gchar * ges_command_line_formatter_get_timeline_uri (GESTimeline *timeline);
+
 G_END_DECLS

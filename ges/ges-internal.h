@@ -106,6 +106,11 @@ GstDebugCategory * _ges_debug (void);
       ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (element)), \
       GES_TIMELINE_ELEMENT_SET_SIMPLE)
 
+/************************
+ * Our property masks   *
+ ************************/
+#define GES_PARAM_NO_SERIALIZATION (1 << (G_PARAM_USER_SHIFT + 1))
+
 #define SUPRESS_UNUSED_WARNING(a) (void)a
 
 G_GNUC_INTERNAL void
@@ -416,6 +421,8 @@ G_GNUC_INTERNAL gboolean
 ges_util_structure_get_clocktime (GstStructure *structure, const gchar *name,
                                   GstClockTime *val, GESFrameNumber *frames);
 
+G_GNUC_INTERNAL gboolean /* From ges-xml-formatter.c */
+ges_util_can_serialize_spec (GParamSpec * spec);
 
 /****************************************************
  *              GESContainer                        *
@@ -577,11 +584,6 @@ G_GNUC_INTERNAL gboolean ges_test_clip_asset_get_natural_size (GESAsset *self,
                                                                gint *height);
 G_GNUC_INTERNAL gchar *ges_test_source_asset_check_id         (GType type, const gchar *id,
                                                                GError **error);
-
-/************************
- * Our property masks   *
- ************************/
-#define GES_PARAM_NO_SERIALIZATION (1 << (G_PARAM_USER_SHIFT + 1))
 
 /*******************************
  * GESMarkerList serialization *

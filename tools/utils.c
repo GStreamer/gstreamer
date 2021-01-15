@@ -436,12 +436,15 @@ describe_discoverer (GstDiscovererInfo * info)
 void
 print_timeline (GESTimeline * timeline)
 {
+  gchar *uri;
   GList *layer, *clip, *clips;
 
   if (!timeline->layers)
     return;
 
-  g_print ("\nTimeline description:\n");
+  uri = ges_command_line_formatter_get_timeline_uri (timeline);
+  g_print ("\nTimeline description: `%s`\n", &uri[5]);
+  g_free (uri);
   g_print ("====================\n\n");
   for (layer = timeline->layers; layer; layer = layer->next) {
     clips = ges_layer_get_clips (layer->data);

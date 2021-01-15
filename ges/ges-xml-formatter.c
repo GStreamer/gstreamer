@@ -1063,8 +1063,8 @@ append_escaped (GString * str, gchar * tmpstr, guint depth)
   g_free (tmpstr);
 }
 
-static inline gboolean
-_can_serialize_spec (GParamSpec * spec)
+gboolean
+ges_util_can_serialize_spec (GParamSpec * spec)
 {
   if (!(spec->flags & G_PARAM_WRITABLE)) {
     GST_LOG ("%s from %s is not writable",
@@ -1127,7 +1127,7 @@ _serialize_properties (GObject * object, gint * ret_n_props,
     GValue val = { 0 };
 
     spec = pspecs[j];
-    if (!_can_serialize_spec (spec))
+    if (!ges_util_can_serialize_spec (spec))
       continue;
 
     _init_value_from_spec_for_serialization (&val, spec);
@@ -1434,7 +1434,7 @@ _save_children_properties (GString * str, GESTimelineElement * element,
     GValue val = { 0 };
     spec = pspecs[i];
 
-    if (_can_serialize_spec (spec)) {
+    if (ges_util_can_serialize_spec (spec)) {
       gchar *spec_name =
           g_strdup_printf ("%s::%s", g_type_name (spec->owner_type),
           spec->name);

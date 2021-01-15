@@ -509,7 +509,6 @@ _ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESTitleClip", NULL);
   gst_structure_set (structure, "asset-id", G_TYPE_STRING, "GESTitleClip",
       NULL);
-  GST_ERROR ("Structure: %" GST_PTR_FORMAT, structure);
 
   return _ges_add_clip_from_struct (timeline, structure, error);
 }
@@ -808,4 +807,351 @@ ges_command_line_formatter_class_init (GESCommandLineFormatterClass * klass)
   formatter_klass->can_load_uri = _can_load;
   formatter_klass->load_from_uri = _load;
   formatter_klass->rank = GST_RANK_MARGINAL;
+}
+
+/* Copy of GST_ASCII_IS_STRING */
+#define ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
+    ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
+    ((c) == '.'))
+
+static void
+_sanitize_argument (const gchar * arg, GString * res)
+{
+  gboolean need_wrap = FALSE;
+  const gchar *tmp_string;
+
+  for (tmp_string = arg; *tmp_string != '\0'; tmp_string++) {
+    if (!ASCII_IS_STRING (*tmp_string) || (*tmp_string == '\n')) {
+      need_wrap = TRUE;
+      break;
+    }
+  }
+
+  if (!need_wrap) {
+    g_string_append (res, arg);
+    return;
+  }
+
+  g_string_append_c (res, '"');
+  while (*arg != '\0') {
+    if (*arg == '"' || *arg == '\\') {
+      g_string_append_c (res, '\\');
+    } else if (*arg == '\n') {
+      g_string_append (res, "\\n");
+      arg++;
+      continue;
+    }
+
+    g_string_append_c (res, *(arg++));
+  }
+  g_string_append_c (res, '"');
+}
+
+static gboolean
+_serialize_control_binding (GESTrackElement * e, const gchar * prop,
+    GString * res)
+{
+  GstInterpolationMode mode;
+  GstControlSource *source = NULL;
+  GList *timed_values, *tmp;
+  gboolean absolute = FALSE;
+  GstControlBinding *binding = ges_track_element_get_control_binding (e, prop);
+
+  if (!binding)
+    return FALSE;
+
+  if (!GST_IS_DIRECT_CONTROL_BINDING (binding)) {
+    g_warning ("Unsupported control binding type: %s",
+        G_OBJECT_TYPE_NAME (binding));
+    goto done;
+  }
+
+  g_object_get (binding, "control-source", &source,
+      "absolute", &absolute, NULL);
+
+  if (!GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
+    g_warning ("Unsupported control source type: %s",
+        G_OBJECT_TYPE_NAME (source));
+    goto done;
+  }
+
+  g_object_get (source, "mode", &mode, NULL);
+  g_string_append_printf (res, " +keyframes %s t=%s",
+      prop, absolute ? "direct-absolute" : "direct");
+
+  if (mode != GST_INTERPOLATION_MODE_LINEAR)
+    g_string_append_printf (res, " mode=%s",
+        g_enum_get_value (g_type_class_peek (GST_TYPE_INTERPOLATION_MODE),
+            mode)->value_nick);
+
+  timed_values =
+      gst_timed_value_control_source_get_all
+      (GST_TIMED_VALUE_CONTROL_SOURCE (source));
+  for (tmp = timed_values; tmp; tmp = tmp->next) {
+    gchar strbuf[G_ASCII_DTOSTR_BUF_SIZE];
+    GstTimedValue *value;
+
+    value = (GstTimedValue *) tmp->data;
+    g_string_append_printf (res, " %f=%s",
+        (gdouble) value->timestamp / (gdouble) GST_SECOND,
+        g_ascii_dtostr (strbuf, G_ASCII_DTOSTR_BUF_SIZE, value->value));
+  }
+  g_list_free (timed_values);
+
+done:
+  g_clear_object (&source);
+  return TRUE;
+}
+
+static void
+_serialize_object_properties (GObject * object, GESCommandLineOption * option,
+    gboolean children_props, GString * res)
+{
+  guint n_props, j;
+  GParamSpec *spec, **pspecs;
+  GObjectClass *class = G_OBJECT_GET_CLASS (object);
+  const gchar *ignored_props[] = {
+    "max-duration", "supported-formats", "priority", "video-direction",
+    "is-image", NULL,
+  };
+
+  if (!children_props)
+    pspecs = g_object_class_list_properties (class, &n_props);
+  else {
+    pspecs =
+        ges_timeline_element_list_children_properties (GES_TIMELINE_ELEMENT
+        (object), &n_props);
+    g_assert (GES_IS_TRACK_ELEMENT (object));
+  }
+
+  for (j = 0; j < n_props; j++) {
+    const gchar *name;
+    gchar *value_str = NULL;
+    GValue val = { 0 };
+    gint i;
+
+    spec = pspecs[j];
+    if (!ges_util_can_serialize_spec (spec))
+      continue;
+
+    g_value_init (&val, spec->value_type);
+    if (!children_props)
+      g_object_get_property (object, spec->name, &val);
+    else
+      ges_timeline_element_get_child_property_by_pspec (GES_TIMELINE_ELEMENT
+          (object), spec, &val);
+
+    if (gst_value_compare (g_param_spec_get_default_value (spec),
+            &val) == GST_VALUE_EQUAL) {
+      GST_INFO ("Ignoring %s as it is using the default value", spec->name);
+      goto next;
+    }
+
+    name = spec->name;
+    if (!children_props && !g_strcmp0 (name, "in-point"))
+      name = "inpoint";
+
+    for (i = 0; option->properties[i].long_name; i++) {
+      if (!g_strcmp0 (spec->name, option->properties[i].long_name)) {
+        if (children_props) {
+          name = NULL;
+        } else {
+          name = option->properties[i].short_name;
+          if (option->properties[i].type == GST_TYPE_CLOCK_TIME)
+            value_str =
+                g_strdup_printf ("%f",
+                (gdouble) (g_value_get_uint64 (&val) / GST_SECOND));
+        }
+        break;
+      } else if (!g_strcmp0 (spec->name, option->properties[0].long_name)) {
+        name = NULL;
+        break;
+      }
+    }
+
+    for (i = 0; i < G_N_ELEMENTS (ignored_props); i++) {
+      if (!g_strcmp0 (spec->name, ignored_props[i])) {
+        name = NULL;
+        break;
+      }
+    }
+
+    if (!name) {
+      g_free (value_str);
+      continue;
+    }
+
+    if (GES_IS_TRACK_ELEMENT (object) &&
+        _serialize_control_binding (GES_TRACK_ELEMENT (object), name, res)) {
+      g_free (value_str);
+      continue;
+    }
+
+    if (!value_str)
+      value_str = gst_value_serialize (&val);
+
+    g_string_append_printf (res, " %s%s%s",
+        children_props ? "set-" : "", name, children_props ? " " : "=");
+    _sanitize_argument (value_str, res);
+    g_free (value_str);
+
+  next:
+    g_value_unset (&val);
+  }
+  g_free (pspecs);
+}
+
+static void
+_serialize_clip_track_types (GESClip * clip, GESTrackType tt, GString * res)
+{
+  GValue v = G_VALUE_INIT;
+  gchar *ttype_str;
+
+  if (ges_clip_get_supported_formats (clip) == tt)
+    return;
+
+  g_value_init (&v, GES_TYPE_TRACK_TYPE);
+  g_value_set_flags (&v, ges_clip_get_supported_formats (clip));
+
+  ttype_str = gst_value_serialize (&v);
+
+  g_string_append_printf (res, " tt=%s", ttype_str);
+  g_value_reset (&v);
+  g_free (ttype_str);
+}
+
+static void
+_serialize_clip_effects (GESClip * clip, GString * res)
+{
+  GList *tmpeffect, *effects;
+
+  effects = ges_clip_get_top_effects (clip);
+  for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next) {
+    gchar *bin_desc;
+
+    g_object_get (tmpeffect->data, "bin-description", &bin_desc, NULL);
+
+    g_string_append_printf (res, " +effect %s", bin_desc);
+    g_free (bin_desc);
+  }
+  g_list_free_full (effects, gst_object_unref);
+
+}
+
+/**
+ * ges_command_line_formatter_get_timeline_uri:
+ * @timeline: A GESTimeline to serialize
+ *
+ * Since: 1.20
+ */
+gchar *
+ges_command_line_formatter_get_timeline_uri (GESTimeline * timeline)
+{
+  gchar *tmpstr;
+  GList *tmp;
+  gint i;
+  GString *res = g_string_new ("ges:");
+  GESTrackType tt = 0;
+
+  if (!timeline)
+    goto done;
+
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+    GstCaps *caps, *default_caps;
+    GESTrack *tmptrack, *track = tmp->data;
+
+    if (GES_IS_VIDEO_TRACK (track))
+      tmptrack = GES_TRACK (ges_video_track_new ());
+    else if (GES_IS_AUDIO_TRACK (track))
+      tmptrack = GES_TRACK (ges_audio_track_new ());
+    else {
+      g_warning ("Unhandled track type: %s", G_OBJECT_TYPE_NAME (track));
+      continue;
+    }
+
+    tt |= track->type;
+
+    g_string_append_printf (res, " +track %s",
+        (track->type == GES_TRACK_TYPE_VIDEO) ? "video" : "audio");
+
+    default_caps = ges_track_get_restriction_caps (tmptrack);
+    caps = ges_track_get_restriction_caps (track);
+    if (!gst_caps_is_equal (caps, default_caps)) {
+      tmpstr = gst_caps_serialize (caps, 0);
+
+      g_string_append (res, " restrictions=");
+      _sanitize_argument (tmpstr, res);
+      g_free (tmpstr);
+    }
+    gst_caps_unref (default_caps);
+    gst_caps_unref (caps);
+    gst_object_unref (tmptrack);
+  }
+
+  for (tmp = timeline->layers, i = 0; tmp; tmp = tmp->next, i++) {
+    GList *tmpclip, *clips = ges_layer_get_clips (tmp->data);
+    GList *tmptrackelem;
+
+    for (tmpclip = clips; tmpclip; tmpclip = tmpclip->next) {
+      GESClip *clip = tmpclip->data;
+      GESCommandLineOption *option = NULL;
+
+      if (GES_IS_TEST_CLIP (clip)) {
+        GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (clip));
+        const gchar *id = ges_asset_get_id (asset);
+
+        g_string_append (res, " +test-clip ");
+
+        _sanitize_argument (g_enum_get_value (g_type_class_peek
+                (GES_VIDEO_TEST_PATTERN_TYPE),
+                ges_test_clip_get_vpattern (GES_TEST_CLIP (clip)))->value_nick,
+            res);
+
+        if (g_strcmp0 (id, "GESTestClip")) {
+          g_string_append (res, " asset-id=");
+          _sanitize_argument (id, res);
+        }
+
+        option = &options[TEST_CLIP];
+      } else if (GES_IS_TITLE_CLIP (clip)) {
+        g_string_append (res, " +title ");
+        _sanitize_argument (ges_title_clip_get_text (GES_TITLE_CLIP (clip)),
+            res);
+        option = &options[TITLE];
+      } else if (GES_IS_URI_CLIP (clip)) {
+        g_string_append (res, " +clip ");
+
+        _sanitize_argument (ges_uri_clip_get_uri (GES_URI_CLIP (clip)), res);
+        option = &options[CLIP];
+      } else {
+        g_warning ("Unhandled clip type: %s", G_OBJECT_TYPE_NAME (clip));
+        continue;
+      }
+
+      _serialize_clip_track_types (clip, tt, res);
+
+      if (i)
+        g_string_append_printf (res, " layer=%d", i);
+
+      _serialize_object_properties (G_OBJECT (clip), option, FALSE, res);
+      _serialize_clip_effects (clip, res);
+
+      for (tmptrackelem = GES_CONTAINER_CHILDREN (clip); tmptrackelem;
+          tmptrackelem = tmptrackelem->next)
+        _serialize_object_properties (G_OBJECT (tmptrackelem->data), option,
+            TRUE, res);
+    }
+    g_list_free_full (clips, gst_object_unref);
+  }
+
+done:
+  return g_string_free (res, FALSE);
+  {
+    GstUri *uri = gst_uri_from_string (res->str);
+    gchar *uri_str = gst_uri_to_string (uri);
+
+    g_string_free (res, TRUE);
+
+    return uri_str;
+  }
 }
