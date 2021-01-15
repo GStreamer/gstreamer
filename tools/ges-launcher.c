@@ -477,13 +477,14 @@ _set_rendering_details (GESLauncher * self)
     return TRUE;
   }
 
+  proj =
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
+              priv->timeline)));
+
   /* Setup profile/encoding if needed */
   if (opts->outputuri) {
     GstEncodingProfile *prof = NULL;
     if (!opts->format) {
-      GESProject *proj =
-          GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->priv->
-                  timeline)));
       const GList *profiles = ges_project_list_encoding_profiles (proj);
 
       if (profiles) {
@@ -542,6 +543,8 @@ _set_rendering_details (GESLauncher * self)
           "");
       describe_encoding_profile (prof);
       g_print ("\n");
+
+      ges_project_add_encoding_profile (proj, prof);
     }
 
     opts->outputuri = ensure_uri (opts->outputuri);
