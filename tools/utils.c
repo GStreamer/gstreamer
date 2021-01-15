@@ -110,6 +110,12 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
     prev_arg = args[i];
   }
 
+  if (i == 1) {
+    g_free (string);
+
+    return NULL;
+  }
+
   if (strstr (string, "+track")) {
     gchar *res = g_strconcat ("ges:", string, NULL);
     g_free (string);

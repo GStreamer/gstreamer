@@ -183,6 +183,8 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
 
         ges_launcher_parse_options (launcher, &ges_options_full, NULL, NULL,
             NULL);
+        opts->sanitized_timeline =
+            sanitize_timeline_description (ges_options_full, opts);
         g_strfreev (ges_options_full);
         g_strfreev (ges_options);
       }

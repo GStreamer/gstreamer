@@ -469,6 +469,7 @@ _set_rendering_details (GESLauncher * self)
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   gboolean smart_profile = FALSE;
   GESPipelineFlags cmode = ges_pipeline_get_mode (self->priv->pipeline);
+  GESProject *proj;
 
   if (cmode & GES_PIPELINE_MODE_RENDER
       || cmode & GES_PIPELINE_MODE_SMART_RENDER) {
@@ -918,10 +919,21 @@ _run_pipeline (GESLauncher * self)
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
   if (!opts->load_path) {
+    g_clear_pointer (&opts->sanitized_timeline, &g_free);
     if (ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
             self, opts) == FALSE) {
       g_error ("Could not activate scenario %s", opts->scenario);
       return FALSE;
+    }
+
+    if (opts->sanitized_timeline) {
+      GESProject *project = ges_project_new (opts->sanitized_timeline);
+
+      if (!ges_project_load (project, self->priv->timeline, NULL)) {
+        ges_printerr ("Could not load timeline: %s\n",
+            opts->sanitized_timeline);
+        return FALSE;
+      }
     }
 
     if (!_timeline_set_user_options (self, self->priv->timeline, NULL)) {

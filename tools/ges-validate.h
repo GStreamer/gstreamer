@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <ges/ges.h>
 
+#include "utils.h"
 #include "ges-launcher.h"
 
 G_BEGIN_DECLS
