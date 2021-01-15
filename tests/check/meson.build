@@ -88,6 +88,7 @@ if gstvalidate_dep.found()
     'edit_while_seeked_with_stop': true,
     'complex_effect_bin_desc': true,
     'check_keyframes_in_compositor_two_sources': true,
+    'check-clip-positioning': true,
   }
 
   foreach scenario, is_validatetest: scenarios
