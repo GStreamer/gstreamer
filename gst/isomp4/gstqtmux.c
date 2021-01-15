@@ -4415,10 +4415,10 @@ flush:
       /* takes ownership */
       atom_moof_add_traf (moof, pad->traf);
       /* write the offset into the first 'trun'.  All other truns are assumed
-       * to follow on from this trun.  skip over the mdat header (+8) */
+       * to follow on from this trun.  Skip over the mdat header (+12) */
       atom_moof_copy_data (moof, &data, &size, &offset);
       first_trun = (AtomTRUN *) pad->traf->truns->data;
-      atom_trun_set_offset (first_trun, size + 8);
+      atom_trun_set_offset (first_trun, offset + 12);
       pad->traf = NULL;
       size = offset = 0;
       atom_moof_copy_data (moof, &data, &size, &offset);
