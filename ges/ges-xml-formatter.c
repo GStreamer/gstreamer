@@ -1867,6 +1867,7 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
 {
   gchar *tmpc;
   GstCaps *tmpcaps;
+  GstStructure *properties;
   const gchar *preset, *preset_name, *name, *description;
 
   append_escaped (str,
@@ -1901,25 +1902,18 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
 
   preset = gst_encoding_profile_get_preset (sprof);
   if (preset) {
-    GstElement *encoder;
-
     append_escaped (str, g_markup_printf_escaped ("preset='%s' ", preset),
         depth);
+  }
 
-    encoder = get_element_for_encoding_profile (sprof,
-        GST_ELEMENT_FACTORY_TYPE_ENCODER);
-    if (encoder) {
-      if (GST_IS_PRESET (encoder) &&
-          gst_preset_load_preset (GST_PRESET (encoder), preset)) {
+  properties = gst_encoding_profile_get_element_properties (sprof);
+  if (properties) {
+    gchar *props_str = gst_structure_to_string (properties);
 
-        gchar *settings =
-            _serialize_properties (G_OBJECT (encoder), NULL, NULL);
-        append_escaped (str, g_markup_printf_escaped ("preset-properties='%s' ",
-                settings), depth);
-        g_free (settings);
-      }
-      gst_object_unref (encoder);
-    }
+    append_escaped (str,
+        g_markup_printf_escaped ("preset-properties='%s' ", props_str), depth);
+    g_free (props_str);
+    gst_structure_free (properties);
   }
 
   preset_name = gst_encoding_profile_get_preset_name (sprof);
@@ -1953,6 +1947,7 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
     GESProject * project, guint depth)
 {
   GstCaps *profformat;
+  GstStructure *properties;
   const gchar *profname, *profdesc, *profpreset, *proftype, *profpresetname;
 
   const GList *tmp;
@@ -1974,32 +1969,19 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
             profname, profdesc, proftype), depth);
 
     if (profpreset) {
-      GstElement *element;
-
       append_escaped (str, g_markup_printf_escaped ("preset='%s' ",
               profpreset), depth);
+    }
 
-      if (GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
-        element = get_element_for_encoding_profile (prof,
-            GST_ELEMENT_FACTORY_TYPE_MUXER);
-      } else {
-        element = get_element_for_encoding_profile (prof,
-            GST_ELEMENT_FACTORY_TYPE_ENCODER);
-      }
+    properties = gst_encoding_profile_get_element_properties (prof);
+    if (properties) {
+      gchar *props_str = gst_structure_to_string (properties);
 
-      if (element) {
-        if (GST_IS_PRESET (element) &&
-            gst_preset_load_preset (GST_PRESET (element), profpreset)) {
-          gchar *settings =
-              _serialize_properties (G_OBJECT (element), NULL, NULL);
-          append_escaped (str,
-              g_markup_printf_escaped ("preset-properties='%s' ", settings),
-              depth);
-          g_free (settings);
-        }
-        gst_object_unref (element);
-      }
-
+      append_escaped (str,
+          g_markup_printf_escaped ("preset-properties='%s' ", props_str),
+          depth);
+      g_free (props_str);
+      gst_structure_free (properties);
     }
 
     if (profpresetname)

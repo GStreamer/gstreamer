@@ -813,36 +813,9 @@ _create_profile (GESBaseXmlFormatter * self,
     gst_encoding_profile_set_description (profile, description);
     gst_encoding_profile_set_preset_name (profile, preset_name);
   }
-
-  if (preset && preset_properties) {
-    GstElement *element;
-
-    if (!g_strcmp0 (type, "container")) {
-      element = get_element_for_encoding_profile (profile,
-          GST_ELEMENT_FACTORY_TYPE_MUXER);
-    } else {
-      element = get_element_for_encoding_profile (profile,
-          GST_ELEMENT_FACTORY_TYPE_ENCODER);
-    }
-
-    if (G_UNLIKELY (!element || !GST_IS_PRESET (element))) {
-      GST_WARNING_OBJECT (element, "Element is not a GstPreset");
-      goto done;
-    }
-
-    /* If the preset doesn't exist on the system, create it */
-    if (!gst_preset_load_preset (GST_PRESET (element), preset)) {
-      gst_structure_foreach (preset_properties,
-          (GstStructureForeachFunc) set_property_foreach, element);
-
-      if (!gst_preset_save_preset (GST_PRESET (element), preset)) {
-        GST_WARNING_OBJECT (element, "Could not save preset %s", preset);
-      }
-    }
-
-  done:
-    if (element)
-      gst_object_unref (element);
+  if (preset_properties) {
+    gst_encoding_profile_set_element_properties (profile,
+        gst_structure_copy (preset_properties));
   }
 
   return profile;
