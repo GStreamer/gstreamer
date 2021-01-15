@@ -660,24 +660,72 @@ _parse_structures (const gchar * string)
   return parser;
 }
 
+/* @uri: (transfer full): */
+static gchar *
+get_timeline_desc_from_uri (GstUri * uri)
+{
+  gchar *res, *path;
+
+  if (!uri)
+    return NULL;
+
+  /* Working around parser requiring a space to begin with */
+  path = gst_uri_get_path (uri);
+  res = g_strconcat (" ", path, NULL);
+  g_free (path);
+
+  gst_uri_unref (uri);
+
+  return res;
+}
+
 static gboolean
 _can_load (GESFormatter * dummy_formatter, const gchar * string,
     GError ** error)
 {
   gboolean res = FALSE;
+  GstUri *uri;
+  const gchar *scheme;
+  gchar *timeline_desc = NULL;
   GESStructureParser *parser;
 
-  if (string == NULL)
+  if (string == NULL) {
+    GST_ERROR ("No URI!");
     return FALSE;
+  }
 
-  parser = _parse_structures (string);
+  uri = gst_uri_from_string (string);
+  if (!uri) {
+    GST_INFO_OBJECT (dummy_formatter, "Wrong uri: %s", string);
+    return FALSE;
+  }
 
+  scheme = gst_uri_get_scheme (uri);
+  if (!g_strcmp0 (scheme, "ges:")) {
+    GST_INFO_OBJECT (dummy_formatter, "Wrong scheme: %s", string);
+    gst_uri_unref (uri);
+
+    return FALSE;
+  }
+
+  timeline_desc = get_timeline_desc_from_uri (uri);
+  parser = _parse_structures (timeline_desc);
   if (parser->structures)
     res = TRUE;
 
   gst_object_unref (parser);
+  g_free (timeline_desc);
 
   return res;
+}
+
+static gboolean
+_set_project_loaded (GESFormatter * self)
+{
+  ges_project_set_loaded (self->project, self, NULL);
+  gst_object_unref (self);
+
+  return FALSE;
 }
 
 static gboolean
@@ -687,7 +735,11 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
   guint i;
   GList *tmp;
   GError *err;
-  GESStructureParser *parser = _parse_structures (string);
+  gchar *timeline_desc =
+      get_timeline_desc_from_uri (gst_uri_from_string (string));
+  GESStructureParser *parser = _parse_structures (timeline_desc);
+
+  g_free (timeline_desc);
 
   err = ges_structure_parser_get_error (parser);
 
@@ -718,6 +770,8 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
   }
 
   gst_object_unref (parser);
+
+  ges_idle_add ((GSourceFunc) _set_project_loaded, g_object_ref (self), NULL);
 
   return TRUE;
 

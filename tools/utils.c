@@ -89,10 +89,12 @@ _sanitize_argument (gchar * arg, const gchar * prev_arg)
 }
 
 gchar *
-sanitize_timeline_description (gchar ** args)
+sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
 {
   gint i;
   gchar *prev_arg = NULL;
+  GString *track_def;
+  GString *timeline_str;
 
   gchar *string = g_strdup (" ");
 
@@ -108,7 +110,41 @@ sanitize_timeline_description (gchar ** args)
     prev_arg = args[i];
   }
 
-  return string;
+  if (strstr (string, "+track")) {
+    gchar *res = g_strconcat ("ges:", string, NULL);
+    g_free (string);
+
+    return res;
+  }
+
+  timeline_str = g_string_new (string);
+  g_free (string);
+
+  if (opts->track_types & GES_TRACK_TYPE_VIDEO) {
+    track_def = g_string_new (" +track video ");
+
+    if (opts->video_track_caps)
+      g_string_append_printf (track_def, " restrictions=[%s] ",
+          opts->video_track_caps);
+
+    g_string_prepend (timeline_str, track_def->str);
+    g_string_free (track_def, TRUE);
+  }
+
+  if (opts->track_types & GES_TRACK_TYPE_AUDIO) {
+    track_def = g_string_new (" +track audio ");
+
+    if (opts->audio_track_caps)
+      g_string_append_printf (track_def, " restrictions=[%s] ",
+          opts->audio_track_caps);
+
+    g_string_prepend (timeline_str, track_def->str);
+    g_string_free (track_def, TRUE);
+  }
+
+  g_string_prepend (timeline_str, "ges:");
+
+  return g_string_free (timeline_str, FALSE);
 }
 
 gboolean

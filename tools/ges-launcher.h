@@ -21,41 +21,14 @@
 
 #include <ges/ges.h>
 
+#include "utils.h"
+
 G_BEGIN_DECLS
 
 #define GES_TYPE_LAUNCHER ges_launcher_get_type()
 
 typedef struct _GESLauncherPrivate GESLauncherPrivate;
 G_DECLARE_FINAL_TYPE(GESLauncher, ges_launcher, GES, LAUNCHER, GApplication);
-
-typedef struct
-{
-  gboolean mute;
-  gboolean disable_mixing;
-  gchar *save_path;
-  gchar *save_only_path;
-  gchar *load_path;
-  GESTrackType track_types;
-  gboolean needs_set_state;
-  gboolean smartrender;
-  gchar *scenario;
-  gchar *testfile;
-  gchar *format;
-  gchar *outputuri;
-  gchar *encoding_profile;
-  gchar *videosink;
-  gchar *audiosink;
-  gboolean list_transitions;
-  gboolean inspect_action_type;
-  gchar *sanitized_timeline;
-  gchar *video_track_caps;
-  gchar *audio_track_caps;
-  gboolean embed_nesteds;
-  gboolean disable_validate;
-
-  gboolean ignore_eos;
-  gboolean interactive;
-} GESLauncherParsedOptions;
 
 struct _GESLauncher {
   GApplication parent;

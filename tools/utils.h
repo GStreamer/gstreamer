@@ -21,7 +21,38 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/pbutils/encoding-profile.h>
 
-gchar * sanitize_timeline_description (gchar **args);
+#pragma once
+
+typedef struct
+{
+  gboolean mute;
+  gboolean disable_mixing;
+  gchar *save_path;
+  gchar *save_only_path;
+  gchar *load_path;
+  GESTrackType track_types;
+  gboolean needs_set_state;
+  gboolean smartrender;
+  gchar *scenario;
+  gchar *testfile;
+  gchar *format;
+  gchar *outputuri;
+  gchar *encoding_profile;
+  gchar *videosink;
+  gchar *audiosink;
+  gboolean list_transitions;
+  gboolean inspect_action_type;
+  gchar *sanitized_timeline;
+  gchar *video_track_caps;
+  gchar *audio_track_caps;
+  gboolean embed_nesteds;
+  gboolean disable_validate;
+
+  gboolean ignore_eos;
+  gboolean interactive;
+} GESLauncherParsedOptions;
+
+gchar * sanitize_timeline_description (gchar **args, GESLauncherParsedOptions *opts);
 gboolean get_flags_from_string (GType type, const gchar * str_flags, guint *val);
 gchar * ensure_uri (const gchar * location);
 GstEncodingProfile * parse_encoding_profile (const gchar * format);
