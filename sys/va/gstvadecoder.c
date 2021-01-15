@@ -373,7 +373,7 @@ gst_va_decoder_get_srcpad_caps (GstVaDecoder * self)
 
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
 
-  if (self->srcpad_caps)
+  if (g_atomic_pointer_get (&self->srcpad_caps))
     return gst_caps_ref (self->srcpad_caps);
 
   if (_get_codec_caps (self))
@@ -396,7 +396,7 @@ gst_va_decoder_get_sinkpad_caps (GstVaDecoder * self)
 {
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
 
-  if (self->sinkpad_caps)
+  if (g_atomic_pointer_get (&self->sinkpad_caps))
     return gst_caps_ref (self->sinkpad_caps);
 
   if (_get_codec_caps (self))
