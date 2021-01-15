@@ -79,40 +79,43 @@ typedef struct
 
 /*  *INDENT-OFF* */
 static GESCommandLineOption options[] = {
-  {"clip", 'c', (ActionFromStructureFunc) _ges_command_line_formatter_add_clip,
-    "<clip uri>",
-    "Adds a clip in the timeline. "
-    "See documentation for the --track-types option to ges-launch-1.0, as it "
-    " will affect the result of this command.",
-    "    ges-launch-1.0 +clip /path/to/media\n\n"
-    "This will simply play the sample from its beginning to its end.\n\n"
-    "    ges-launch-1.0 +clip /path/to/media inpoint=4.0\n\n"
-    "Assuming 'media' is a 10 second long media sample, this will play the sample\n"
-    "from the 4th second to the 10th, resulting in a 6-seconds long playback.\n\n"
-    "    ges-launch-1.0 +clip /path/to/media inpoint=4.0 duration=2.0 start=4.0\n\n"
-    "Assuming \"media\" is an audio video sample longer than 6 seconds, this will play\n"
-    "a black frame and silence for 4 seconds, then the sample from its 4th second to\n"
-    "its sixth second, resulting in a 6-seconds long playback.\n\n"
-    "    ges-launch-1.0 --track-types=audio +clip /path/to/media\n\n"
-    "Assuming \"media\" is an audio video sample, this will only play the audio of the\n"
-    "sample in its entirety.\n\n"
-    "    ges-launch-1.0 +clip /path/to/media1 layer=1 set-alpha 0.9 +clip /path/to/media2 layer=0\n\n"
-    "Assume media1 and media2 both contain audio and video and last for 10 seconds.\n\n"
-    "This will first add media1 in a new layer of \"priority\" 1, thus implicitly\n"
-    "creating a layer of \"priority\" 0, the start of the clip will be 0 as no clip\n"
-    "had been added in that layer before.\n\n"
-    "It will then add media2 in the layer of \"priority\" 0 which was created\n"
-    "previously, the start of this new clip will also be 0 as no clip has been added\n"
-    "in this layer before.\n\n"
-    "Both clips will thus overlap on two layers for 10 seconds.\n\n"
-    "The \"alpha\" property of the second clip will finally be set to a value of 0.9.\n\n"
-    "All this will result in a 10 seconds playback, where media2 is barely visible\n"
-    "through media1, which is nearly opaque. If alpha was set to 0.5, both clips\n"
-    "would be equally visible, and if it was set to 0.0, media1 would be invisible\n"
-    "and media2 completely opaque.\n",
-    {
+  {
+    .long_name = "clip",
+    .short_name='c',
+    .callback=(ActionFromStructureFunc) _ges_command_line_formatter_add_clip,
+    .synopsis="<clip uri>",
+    .description="Adds a clip in the timeline. "
+                 "See documentation for the --track-types option to ges-launch-1.0, as it "
+                 " will affect the result of this command.",
+    .examples="    ges-launch-1.0 +clip /path/to/media\n\n"
+              "This will simply play the sample from its beginning to its end.\n\n"
+              "    ges-launch-1.0 +clip /path/to/media inpoint=4.0\n\n"
+              "Assuming 'media' is a 10 second long media sample, this will play the sample\n"
+              "from the 4th second to the 10th, resulting in a 6-seconds long playback.\n\n"
+              "    ges-launch-1.0 +clip /path/to/media inpoint=4.0 duration=2.0 start=4.0\n\n"
+              "Assuming \"media\" is an audio video sample longer than 6 seconds, this will play\n"
+              "a black frame and silence for 4 seconds, then the sample from its 4th second to\n"
+              "its sixth second, resulting in a 6-seconds long playback.\n\n"
+              "    ges-launch-1.0 --track-types=audio +clip /path/to/media\n\n"
+              "Assuming \"media\" is an audio video sample, this will only play the audio of the\n"
+              "sample in its entirety.\n\n"
+              "    ges-launch-1.0 +clip /path/to/media1 layer=1 set-alpha 0.9 +clip /path/to/media2 layer=0\n\n"
+              "Assume media1 and media2 both contain audio and video and last for 10 seconds.\n\n"
+              "This will first add media1 in a new layer of \"priority\" 1, thus implicitly\n"
+              "creating a layer of \"priority\" 0, the start of the clip will be 0 as no clip\n"
+              "had been added in that layer before.\n\n"
+              "It will then add media2 in the layer of \"priority\" 0 which was created\n"
+              "previously, the start of this new clip will also be 0 as no clip has been added\n"
+              "in this layer before.\n\n"
+              "Both clips will thus overlap on two layers for 10 seconds.\n\n"
+              "The \"alpha\" property of the second clip will finally be set to a value of 0.9.\n\n"
+              "All this will result in a 10 seconds playback, where media2 is barely visible\n"
+              "through media1, which is nearly opaque. If alpha was set to 0.5, both clips\n"
+              "would be equally visible, and if it was set to 0.0, media1 would be invisible\n"
+              "and media2 completely opaque.\n",
+    .properties={
       {
-        "uri", "u", 0, "asset-id",
+        "uri", 0, 0, "asset-id",
         "The URI of the media file."
       },
       {
@@ -120,7 +123,7 @@ static GESCommandLineOption options[] = {
         "The name of the clip, can be used as an ID later."
       },
       {
-        "start", "s",GST_TYPE_CLOCK_TIME, NULL,
+        "start", "s", GST_TYPE_CLOCK_TIME, NULL,
         "The starting position of the clip in the timeline."
       },
       {
@@ -142,13 +145,16 @@ static GESCommandLineOption options[] = {
       {NULL, 0, 0, NULL, FALSE},
     },
   },
-  {"effect", 'e', (ActionFromStructureFunc) _ges_command_line_formatter_add_effect,
-    "<effect bin description>",
-    "Adds an effect as specified by 'bin-description', similar to gst-launch-style"
-    " pipeline description, without setting properties (see `set-<property-name>` for information"
-    " about how to set properties).",
-    "    ges-launch-1.0 +clip /path/to/media +effect \"agingtv\"\n\n"
-    "This will apply the agingtv effect to \"media\" and play it back.",
+  {
+    .long_name="effect",
+    .short_name='e',
+    .callback=(ActionFromStructureFunc) _ges_command_line_formatter_add_effect,
+    .synopsis="<effect bin description>",
+    .description="Adds an effect as specified by 'bin-description', similar to gst-launch-style"
+                 " pipeline description, without setting properties (see `set-<property-name>` for information"
+                 " about how to set properties).",
+    .examples="    ges-launch-1.0 +clip /path/to/media +effect \"agingtv\"\n\n"
+              "This will apply the agingtv effect to \"media\" and play it back.",
     {
       {
         "bin-description", "d", 0, "asset-id",
@@ -170,12 +176,16 @@ static GESCommandLineOption options[] = {
       {NULL, NULL, 0, NULL, FALSE},
     },
   },
-  {"test-clip", 0, (ActionFromStructureFunc) _ges_command_line_formatter_add_test_clip,
-    "<test clip pattern>", "Add a test clip in the timeline.",
-    NULL,
-    {
+  {
+    .long_name="test-clip",
+    .short_name=0,
+    .callback=(ActionFromStructureFunc) _ges_command_line_formatter_add_test_clip,
+    .synopsis="<test clip pattern>",
+    .description="Add a test clip in the timeline.",
+    .examples=NULL,
+    .properties={
       {
-        "pattern", "p", 0, NULL,
+        "vpattern", "p", 0, NULL,
         "The testsource pattern name."
       },
       {
@@ -201,9 +211,14 @@ static GESCommandLineOption options[] = {
       {NULL, 0, 0, NULL, FALSE},
     },
   },
-  {"title", 'c', (ActionFromStructureFunc) _ges_command_line_formatter_add_title_clip,
-    "<title text>", "Adds a clip in the timeline.", NULL,
-    {
+  {
+    .long_name="title",
+    .short_name='c',
+    .callback=(ActionFromStructureFunc) _ges_command_line_formatter_add_title_clip,
+    .synopsis="<title text>",
+    .description="Adds a clip in the timeline.",
+    .examples=NULL,
+    .properties={
       {
         "text", "t", 0, NULL,
         "The text to be used as title."
@@ -235,9 +250,15 @@ static GESCommandLineOption options[] = {
       {NULL, 0, 0, NULL, FALSE},
     },
   },
-  {"track", 't', (ActionFromStructureFunc) _ges_command_line_formatter_add_track,
-    "<track type>", "Adds a track to the timeline.", NULL,
-    {
+  {
+    .long_name="track",
+    .short_name='t',
+    .callback=(ActionFromStructureFunc) _ges_command_line_formatter_add_track,
+    .synopsis="<track type>",
+    .description="Adds a track to the timeline.",
+    .examples=NULL,
+    .properties={
+      {"track-type", 0, 0, NULL, NULL},
       {
         "restrictions", "r", 0, NULL,
         "The restriction caps to set on the track."
@@ -246,20 +267,23 @@ static GESCommandLineOption options[] = {
     },
   },
   {
-    "set-", 0, NULL,
-    "<property name> <value>", "Set a property on the last added element."
-    " Any child property that exists on the previously added element"
-    " can be used as <property name>"
-    "By default, set-<property-name> will lookup the property on the last added"
-    "object.",
-    "    ges-launch-1.0 +clip /path/to/media set-alpha 0.3\n\n"
-    "This will set the alpha property on \"media\" then play it back, assuming \"media\""
-    "contains a video stream.\n\n"
-    "    ges-launch-1.0 +clip /path/to/media +effect \"agingtv\" set-dusts false\n\n"
-    "This will set the \"dusts\" property of the agingtv to false and play the\n"
-    "timeline back.",
-    {
-      {NULL, NULL, 0, NULL, FALSE},
+    .long_name="set-",
+    .short_name=0,
+    .callback=NULL,
+    .synopsis="<property name> <value>",
+    .description="Set a property on the last added element."
+                 " Any child property that exists on the previously added element"
+                 " can be used as <property name>"
+                 "By default, set-<property-name> will lookup the property on the last added"
+                  "object.",
+    .examples="    ges-launch-1.0 +clip /path/to/media set-alpha 0.3\n\n"
+              "This will set the alpha property on \"media\" then play it back, assuming \"media\""
+              "contains a video stream.\n\n"
+              "    ges-launch-1.0 +clip /path/to/media +effect \"agingtv\" set-dusts false\n\n"
+              "This will set the \"dusts\" property of the agingtv to false and play the\n"
+              "timeline back.",
+    .properties={
+      {NULL, 0, 0, NULL, FALSE},
     },
   },
 };
