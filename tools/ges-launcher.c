@@ -752,12 +752,10 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
   return TRUE;
 }
 
-typedef void (*sinkSettingFunction) (GESPipeline * pipeline,
-    GstElement * element);
+typedef void (*SetSinkFunc) (GESPipeline * pipeline, GstElement * element);
 
 static gboolean
-_set_sink (GESLauncher * self, const gchar * sink_desc,
-    sinkSettingFunction set_func)
+_set_sink (GESLauncher * self, const gchar * sink_desc, SetSinkFunc set_func)
 {
   if (sink_desc != NULL) {
     GError *err = NULL;
