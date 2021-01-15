@@ -3077,11 +3077,14 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       if (qtmux->fragment_mode == GST_QT_MUX_FRAGMENT_STREAMABLE)
         break;
       if (!qtmux->downstream_seekable) {
-        GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
-            "streamable=false. Will ignore that and create streamable output "
-            "instead");
-        qtmux->streamable = TRUE;
-        g_object_notify (G_OBJECT (qtmux), "streamable");
+        if (qtmux->fragment_mode == GST_QT_MUX_FRAGMENT_DASH_OR_MSS) {
+          GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
+              "streamable=false. Will ignore that and create streamable output "
+              "instead");
+          qtmux->streamable = TRUE;
+          g_object_notify (G_OBJECT (qtmux), "streamable");
+          qtmux->fragment_mode = GST_QT_MUX_FRAGMENT_STREAMABLE;
+        }
       }
       break;
     case GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL:
