@@ -162,14 +162,8 @@ gst_va_vpp_dispose (GObject * object)
     gst_clear_object (&self->sinkpad_pool);
   }
 
-  if (self->incaps) {
-    gst_caps_unref (self->incaps);
-    self->incaps = NULL;
-  }
-  if (self->outcaps) {
-    gst_caps_unref (self->outcaps);
-    self->outcaps = NULL;
-  }
+  gst_clear_caps (&self->incaps);
+  gst_clear_caps (&self->outcaps);
 
   gst_clear_object (&self->filter);
   gst_clear_object (&self->display);
