@@ -199,12 +199,13 @@ gst_va_ensure_element_data (gpointer element, const gchar * render_device_path,
   display = gst_va_display_drm_new_from_path (render_device_path);
 
   gst_object_replace ((GstObject **) display_ptr, (GstObject *) display);
-  gst_object_unref (display);
 
   gst_va_element_propagate_display_context (element, display);
 
+  gst_clear_object (&display);
+
 done:
-  return *display_ptr != NULL;
+  return g_atomic_pointer_get (display_ptr) != NULL;
 }
 
 gboolean

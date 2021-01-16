@@ -51,7 +51,7 @@ gst_va_base_dec_open (GstVideoDecoder * decoder)
 
     gst_object_replace ((GstObject **) (&base->decoder),
         (GstObject *) va_decoder);
-    gst_object_unref (va_decoder);
+    gst_clear_object (&va_decoder);
   } else {
     ret = TRUE;
   }
@@ -98,10 +98,10 @@ gst_va_base_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
 
   gst_object_replace ((GstObject **) & va_decoder, (GstObject *) base->decoder);
 
-  if (va_decoder)
+  if (va_decoder) {
     caps = gst_va_decoder_get_sinkpad_caps (va_decoder);
-
-  gst_object_unref (va_decoder);
+    gst_object_unref (va_decoder);
+  }
 
   if (caps) {
     if (filter) {
@@ -133,7 +133,7 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
       ret = gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
           display);
 
-      gst_object_unref (display);
+      gst_clear_object (&display);
       break;
     }
     case GST_QUERY_CAPS:{
@@ -151,7 +151,7 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
       if (!fixed_caps && va_decoder)
         caps = gst_va_decoder_get_srcpad_caps (va_decoder);
 
-      gst_object_unref (va_decoder);
+      gst_clear_object (&va_decoder);
 
       if (caps) {
         if (filter) {
@@ -191,7 +191,8 @@ gst_va_base_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
     ret = gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
         display);
 
-    gst_object_unref (display);
+    gst_clear_object (&display);
+
     return ret;
   }
 
