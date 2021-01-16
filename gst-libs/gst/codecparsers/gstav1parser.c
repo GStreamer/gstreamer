@@ -824,12 +824,16 @@ gst_av1_parser_identify_one_obu (GstAV1Parser * parser, const guint8 * data,
   GST_LOG ("identify obu type is %d", obu->obu_type);
 
   if (obu->header.obu_has_size_field) {
+    guint size_sz = gst_bit_reader_get_pos (&br) / 8;
+
     obu->obu_size = av1_bitstreamfn_leb128 (&br, &ret);
     if (ret != GST_AV1_PARSER_OK)
       goto error;
 
+    size_sz = gst_bit_reader_get_pos (&br) / 8 - size_sz;
     if (obu_length
-        && obu_length - 1 - obu->header.obu_extention_flag != obu->obu_size) {
+        && obu_length - 1 - obu->header.obu_extention_flag - size_sz !=
+        obu->obu_size) {
       /* If obu_size and obu_length are both present, but inconsistent,
          then the packed bitstream is deemed invalid. */
       ret = GST_AV1_PARSER_BITSTREAM_ERROR;
