@@ -2052,7 +2052,7 @@ gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
     case V4L2_COLORSPACE_SMPTE170M:
       cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT601;
       cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
       break;
     case V4L2_COLORSPACE_REC709:
@@ -2181,6 +2181,8 @@ gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
     case V4L2_XFER_FUNC_709:
       if (colorspace == V4L2_COLORSPACE_BT2020 && fmt->fmt.pix.height >= 2160)
         cinfo->transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else if (colorspace == V4L2_COLORSPACE_SMPTE170M)
+        cinfo->transfer = GST_VIDEO_TRANSFER_BT601;
       else
         cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
 
@@ -3577,6 +3579,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     case GST_VIDEO_TRANSFER_GAMMA10:
       transfer = V4L2_XFER_FUNC_NONE;
       break;
+    case GST_VIDEO_TRANSFER_BT601:
     case GST_VIDEO_TRANSFER_BT2020_12:
     case GST_VIDEO_TRANSFER_BT2020_10:
     case GST_VIDEO_TRANSFER_BT709:
