@@ -164,7 +164,7 @@ gst_d3d11_window_win32_constructed (GObject * object)
 
   g_mutex_lock (&self->lock);
   self->loop = g_main_loop_new (self->main_context, FALSE);
-  self->thread = g_thread_new ("GstD3D11WindowWin32Win32",
+  self->thread = g_thread_new ("GstD3D11WindowWin32",
       (GThreadFunc) gst_d3d11_window_win32_thread_func, self);
   while (!g_main_loop_is_running (self->loop))
     g_cond_wait (&self->cond, &self->lock);
