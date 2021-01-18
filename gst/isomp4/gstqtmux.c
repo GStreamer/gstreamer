@@ -5731,6 +5731,21 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
       return TRUE;
     } else if (g_strcmp0 (g_quark_to_string (field_id), "profile") == 0) {
       return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "chroma-format") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "bit-depth-luma") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id),
+            "bit-depth-chroma") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "colorimetry") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "width") == 0) {
+      /* TODO: this may require a separate track but gst, vlc, ffmpeg and
+       * browsers work with this so... */
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "height") == 0) {
+      return TRUE;
     }
   }
 
