@@ -405,7 +405,6 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
     IDXGISwapChain ** swap_chain)
 {
   GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
-  CoreWindowWinRTStorage *storage = self->storage;
   ComPtr<IDXGISwapChain1> new_swapchain;
   GstD3D11Device *device = window->device;
   DXGI_SWAP_CHAIN_DESC1 desc1 = { 0, };
@@ -487,8 +486,6 @@ gst_d3d11_window_core_window_unlock_stop (GstD3D11Window * window)
 static void
 gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window * window)
 {
-  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
-
   gst_d3d11_window_core_window_on_resize (window,
       window->surface_width, window->surface_height);
 

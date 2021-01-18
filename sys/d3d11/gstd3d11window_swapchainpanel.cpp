@@ -478,9 +478,6 @@ gst_d3d11_window_swap_chain_panel_unlock_stop (GstD3D11Window * window)
 static void
 gst_d3d11_window_swap_chain_panel_update_swap_chain (GstD3D11Window * window)
 {
-  GstD3D11WindowSwapChainPanel *self =
-      GST_D3D11_WINDOW_SWAP_CHAIN_PANEL (window);
-
   gst_d3d11_window_swap_chain_panel_on_resize (window, window->surface_width,
       window->surface_height);
 
