@@ -559,7 +559,7 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
 #if GST_D3D11_WINAPI_ONLY_APP
   if (window_type != GST_D3D11_WINDOW_NATIVE_TYPE_CORE_WINDOW &&
       window_type != GST_D3D11_WINDOW_NATIVE_TYPE_SWAP_CHAIN_PANEL) {
-    GST_ERROR_OBJECT (sink, "Overlay handle must be set before READY state");
+    GST_ERROR_OBJECT (self, "Overlay handle must be set before READY state");
     return FALSE;
   }
 #endif
