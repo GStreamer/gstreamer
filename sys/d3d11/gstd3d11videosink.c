@@ -25,10 +25,11 @@
 #include "gstd3d11videoprocessor.h"
 #include "gstd3d11pluginutils.h"
 
-#if GST_D3D11_WINAPI_ONLY_APP
+#if GST_D3D11_WINAPI_APP
 #include "gstd3d11window_corewindow.h"
 #include "gstd3d11window_swapchainpanel.h"
-#else
+#endif
+#if (!GST_D3D11_WINAPI_ONLY_APP)
 #include "gstd3d11window_win32.h"
 #endif
 
@@ -669,7 +670,8 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
     case GST_D3D11_WINDOW_NATIVE_TYPE_HWND:
       self->window = gst_d3d11_window_win32_new (self->device, self->window_id);
       break;
-#else
+#endif
+#if GST_D3D11_WINAPI_APP
     case GST_D3D11_WINDOW_NATIVE_TYPE_CORE_WINDOW:
       self->window = gst_d3d11_window_core_window_new (self->device,
           self->window_id);

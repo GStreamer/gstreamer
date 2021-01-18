@@ -25,7 +25,7 @@
 #include "gstd3d11window.h"
 #include "gstd3d11pluginutils.h"
 
-#if GST_D3D11_WINAPI_ONLY_APP
+#if GST_D3D11_WINAPI_APP
 /* workaround for GetCurrentTime collision */
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -40,7 +40,7 @@
 #include <sstream>
 #endif
 
-#if GST_D3D11_WINAPI_ONLY_APP || defined(HAVE_DIRECT_WRITE)
+#if GST_D3D11_WINAPI_APP || defined(HAVE_DIRECT_WRITE)
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
 using namespace Microsoft::WRL;
@@ -1259,7 +1259,8 @@ gst_d3d11_window_get_native_type_from_handle (guintptr handle)
 #if (!GST_D3D11_WINAPI_ONLY_APP)
   if (IsWindow ((HWND) handle))
     return GST_D3D11_WINDOW_NATIVE_TYPE_HWND;
-#else
+#endif
+#if GST_D3D11_WINAPI_ONLY_APP
   {
     ComPtr<IInspectable> window = reinterpret_cast<IInspectable*> (handle);
     ComPtr<ABI::Windows::UI::Core::ICoreWindow> core_window;

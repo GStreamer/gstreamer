@@ -65,11 +65,15 @@ if d3d11_winapi_only_app and (not d3dcompiler_lib.found() or not runtimeobject_l
   subdir_done()
 endif
 
-if d3d11_winapi_only_app
+# if build target is Windows 10 and WINAPI_PARTITION_APP is allowed,
+# we can build UWP only modules as well
+if d3d11_winapi_app
   d3d11_sources += ['gstd3d11window_corewindow.cpp',
                     'gstd3d11window_swapchainpanel.cpp']
   extra_dep += [runtimeobject_lib, d3dcompiler_lib]
-else
+endif
+
+if d3d11_winapi_desktop
   d3d11_sources += ['gstd3d11window_win32.cpp']
   if d3d11_conf.get('GST_D3D11_DXGI_HEADER_VERSION') >= 6
     # Desktop Duplication API is unavailable for UWP

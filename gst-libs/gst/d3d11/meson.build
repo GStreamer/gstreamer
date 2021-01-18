@@ -80,15 +80,15 @@ if not have_d3d11
   subdir_done()
 endif
 
-winapi_desktop = cxx.compiles('''#include <winapifamily.h>
+d3d11_winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
     #error "not win32"
     #endif''',
     dependencies: [d3d11_lib, dxgi_lib],
-    name: 'checking if building for Win32')
+    name: 'building for Win32')
 
 if runtimeobject_lib.found() and d3dcompiler_lib.found()
-  winapi_app = cxx.compiles('''#include <winapifamily.h>
+  d3d11_winapi_app = cxx.compiles('''#include <winapifamily.h>
       #include <windows.applicationmodel.core.h>
       #include <wrl.h>
       #include <wrl/wrappers/corewrappers.h>
@@ -96,17 +96,21 @@ if runtimeobject_lib.found() and d3dcompiler_lib.found()
       #include <dxgi1_2.h>
       #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
       #error "not winrt"
+      #endif
+      #if (WINVER < 0x0A00)
+      #error "Windows 10 API is not guaranteed"
       #endif''',
       dependencies: [d3d11_lib, dxgi_lib, runtimeobject_lib],
-      name: 'checking if building for WinRT')
+      name: 'building for WinRT')
 endif
 
-if not winapi_desktop and not winapi_app
+if not d3d11_winapi_desktop and not d3d11_winapi_app
   error('Neither Desktop partition nor App partition')
 endif
 
-d3d11_winapi_only_app = winapi_app and not winapi_desktop
+d3d11_winapi_only_app = d3d11_winapi_app and not d3d11_winapi_desktop
 d3d11_conf.set10('GST_D3D11_WINAPI_ONLY_APP', d3d11_winapi_only_app)
+d3d11_conf.set10('GST_D3D11_WINAPI_APP', d3d11_winapi_app)
 
 # for enabling debug layer
 # NOTE: Disable d3d11/dxgi debug layer in case of [UWP build + release CRT]
