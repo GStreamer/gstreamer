@@ -189,4 +189,4 @@ GType gst_mpeg2_decoder_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VP8_DECODER_H__ */
+#endif /* __GST_MPEG2_DECODER_H__ */
