@@ -527,9 +527,9 @@ gst_va_decoder_add_param_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
 }
 
 gboolean
-gst_va_decoder_add_slice_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
-    gpointer params_data, gsize params_size, gpointer slice_data,
-    gsize slice_size)
+gst_va_decoder_add_slice_buffer_with_n_params (GstVaDecoder * self,
+    GstVaDecodePicture * pic, gpointer params_data, gsize params_size,
+    guint params_num, gpointer slice_data, gsize slice_size)
 {
   VABufferID params_buffer, slice_buffer;
   VADisplay dpy;
@@ -543,7 +543,7 @@ gst_va_decoder_add_slice_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
   dpy = gst_va_display_get_va_dpy (self->display);
   gst_va_display_lock (self->display);
   status = vaCreateBuffer (dpy, self->context, VASliceParameterBufferType,
-      params_size, 1, params_data, &params_buffer);
+      params_size, params_num, params_data, &params_buffer);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
@@ -563,6 +563,15 @@ gst_va_decoder_add_slice_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
   g_array_append_val (pic->slices, slice_buffer);
 
   return TRUE;
+}
+
+gboolean
+gst_va_decoder_add_slice_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
+    gpointer params_data, gsize params_size, gpointer slice_data,
+    gsize slice_size)
+{
+  return gst_va_decoder_add_slice_buffer_with_n_params (self, pic, params_data,
+      params_size, 1, slice_data, slice_size);
 }
 
 gboolean

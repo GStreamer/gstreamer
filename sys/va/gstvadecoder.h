@@ -65,6 +65,14 @@ gboolean              gst_va_decoder_add_slice_buffer     (GstVaDecoder * self,
                                                            gsize params_size,
                                                            gpointer slice_data,
                                                            gsize slice_size);
+gboolean              gst_va_decoder_add_slice_buffer_with_n_params
+                                                          (GstVaDecoder * self,
+                                                           GstVaDecodePicture * pic,
+                                                           gpointer params_data,
+                                                           gsize params_size,
+                                                           guint params_num,
+                                                           gpointer slice_data,
+                                                           gsize slice_size);
 gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
 
