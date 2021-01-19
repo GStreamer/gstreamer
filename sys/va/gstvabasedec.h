@@ -26,6 +26,7 @@
 #include <gst/codecs/gstmpeg2decoder.h>
 #include <gst/codecs/gstvp8decoder.h>
 #include <gst/codecs/gstvp9decoder.h>
+#include <gst/codecs/gstav1decoder.h>
 
 #include "gstvadevice.h"
 #include "gstvadecoder.h"
@@ -50,6 +51,7 @@ struct _GstVaBaseDec
     GstMpeg2Decoder mpeg2;
     GstVp8Decoder vp8;
     GstVp9Decoder vp9;
+    GstAV1Decoder av1;
   } parent;
 
   GstDebugCategory *debug_category;
@@ -83,6 +85,7 @@ struct _GstVaBaseDecClass
     GstMpeg2DecoderClass mpeg2;
     GstVp8DecoderClass vp8;
     GstVp9DecoderClass vp9;
+    GstAV1DecoderClass av1;
   } parent_class;
 
   GstVaCodecs codec;

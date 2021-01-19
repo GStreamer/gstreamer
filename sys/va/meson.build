@@ -35,6 +35,12 @@ libgudev_dep = dependency('gudev-1.0', required: va_option)
 libdrm_dep = dependency('libdrm', required: false,
 			fallback: ['libdrm', 'ext_libdrm'])
 
+libva_av1_req = ['>= 1.8']
+libva_av1_dep = dependency('libva', version: libva_av1_req, required: va_option)
+if libva_av1_dep.found()
+  va_sources += 'gstvaav1dec.c'
+endif
+
 have_va = libva_dep.found() and libva_drm_dep.found()
 if not (have_va and libgudev_dep.found())
   if va_option.enabled()

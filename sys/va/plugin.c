@@ -35,6 +35,7 @@
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp9dec.h"
+#include "gstvaav1dec.h"
 #include "gstvavpp.h"
 
 #define GST_CAT_DEFAULT gstva_debug
@@ -128,6 +129,15 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
               device->render_device_path);
         }
         break;
+#if VA_CHECK_VERSION(1, 8, 0)
+      case AV1:
+        if (!gst_va_av1_dec_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE)) {
+          GST_WARNING ("Failed to register AV1 decoder: %s",
+              device->render_device_path);
+        }
+        break;
+#endif
       default:
         GST_DEBUG ("No decoder implementation for %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (codec));

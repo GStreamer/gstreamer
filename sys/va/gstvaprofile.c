@@ -87,8 +87,8 @@ static const struct ProfileMap
   P (HEVC, SccMain444, "video/x-h265",
       "profile = (string) screen-extended-main-444"),
 #if VA_CHECK_VERSION(1,7,0)
-  P (AV1, Profile0, "video/x-av1", NULL),
-  P (AV1, Profile1, "video/x-av1", NULL),
+  P (AV1, Profile0, "video/x-av1", "profile = (string) 0"),
+  P (AV1, Profile1, "video/x-av1", "profile = (string) 1"),
 #endif
 #if VA_CHECK_VERSION(1, 8, 0)
   P (HEVC, SccMain444_10, "video/x-h265",
