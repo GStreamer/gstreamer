@@ -28,36 +28,30 @@
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_upload_debug);
 #define GST_CAT_DEFAULT gst_d3d11_upload_debug
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
+static GstStaticCaps sink_template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_D3D11_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D11_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-            GST_D3D11_ALL_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY
-            "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D11_ALL_FORMATS))
-    );
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+        GST_D3D11_ALL_FORMATS) "; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+        GST_D3D11_ALL_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY
+        "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+        GST_D3D11_ALL_FORMATS));
 
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+static GstStaticCaps src_template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D11_ALL_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE (GST_D3D11_ALL_FORMATS) "; "
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            GST_D3D11_ALL_FORMATS))
-    );
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_ALL_FORMATS) "; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+        GST_D3D11_ALL_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE (GST_D3D11_ALL_FORMATS) "; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+        GST_D3D11_ALL_FORMATS));
 
 struct _GstD3D11Upload
 {
@@ -92,11 +86,19 @@ gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstD3D11BaseFilterClass *bfilter_class = GST_D3D11_BASE_FILTER_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_upload_dispose;
 
-  gst_element_class_add_static_pad_template (element_class, &sink_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
+  caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_d3d11_get_updated_template_caps (&src_template_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+  gst_caps_unref (caps);
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 uploader", "Filter/Video",

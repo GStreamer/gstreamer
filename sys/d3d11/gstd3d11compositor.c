@@ -1213,19 +1213,9 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   return gst_d3d11_color_converter_update_dest_rect (cpad->convert, &rect);
 }
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
-    GST_PAD_SINK,
-    GST_PAD_REQUEST,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ RGBA, BGRA }")
-    ));
-
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ RGBA, BGRA }")
-    ));
+static GstStaticCaps pad_template_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ RGBA, BGRA }"));
 
 enum
 {
@@ -1284,6 +1274,7 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAggregatorClass *aggregator_class = GST_AGGREGATOR_CLASS (klass);
   GstVideoAggregatorClass *vagg_class = GST_VIDEO_AGGREGATOR_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_compositor_dispose;
   gobject_class->set_property = gst_d3d11_compositor_set_property;
@@ -1326,10 +1317,15 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
   vagg_class->aggregate_frames =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_aggregate_frames);
 
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &src_template, GST_TYPE_AGGREGATOR_PAD);
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &sink_template, GST_TYPE_D3D11_COMPOSITOR_PAD);
+  caps = gst_d3d11_get_updated_template_caps (&pad_template_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new_with_gtype ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+          caps, GST_TYPE_D3D11_COMPOSITOR_PAD));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new_with_gtype ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          caps, GST_TYPE_AGGREGATOR_PAD));
+  gst_caps_unref (caps);
 
   gst_element_class_set_static_metadata (element_class, "Direct3D11 Compositor",
       "Filter/Editor/Video/Compositor",

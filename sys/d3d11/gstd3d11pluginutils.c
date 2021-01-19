@@ -30,6 +30,48 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
 #define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug
 
+/* Max Texture Dimension for feature level 11_0 ~ 12_1 */
+static guint _gst_d3d11_texture_max_dimension = 16384;
+
+void
+gst_d3d11_plugin_utils_init (D3D_FEATURE_LEVEL feature_level)
+{
+  static gsize _init_once = 0;
+
+  if (g_once_init_enter (&_init_once)) {
+    /* https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-devices-downlevel-intro */
+    if (feature_level >= D3D_FEATURE_LEVEL_11_0)
+      _gst_d3d11_texture_max_dimension = 16384;
+    else if (feature_level >= D3D_FEATURE_LEVEL_10_0)
+      _gst_d3d11_texture_max_dimension = 8192;
+    else
+      _gst_d3d11_texture_max_dimension = 4096;
+
+    g_once_init_leave (&_init_once, 1);
+  }
+}
+
+GstCaps *
+gst_d3d11_get_updated_template_caps (GstStaticCaps * template_caps)
+{
+  GstCaps *caps;
+
+  g_return_val_if_fail (template_caps != NULL, NULL);
+
+  caps = gst_static_caps_get (template_caps);
+  if (!caps) {
+    GST_ERROR ("Couldn't get caps from static caps");
+    return NULL;
+  }
+
+  caps = gst_caps_make_writable (caps);
+  gst_caps_set_simple (caps,
+      "width", GST_TYPE_INT_RANGE, 1, _gst_d3d11_texture_max_dimension,
+      "height", GST_TYPE_INT_RANGE, 1, _gst_d3d11_texture_max_dimension, NULL);
+
+  return caps;
+}
+
 gboolean
 gst_d3d11_is_windows_8_or_greater (void)
 {

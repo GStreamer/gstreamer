@@ -48,6 +48,10 @@ struct _GstDxgiColorSpace
   GstVideoColorPrimaries primaries;
 };
 
+void            gst_d3d11_plugin_utils_init         (D3D_FEATURE_LEVEL feature_level);
+
+GstCaps *       gst_d3d11_get_updated_template_caps (GstStaticCaps * template_caps);
+
 gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
 GstD3D11DeviceVendor gst_d3d11_get_device_vendor    (GstD3D11Device * device);

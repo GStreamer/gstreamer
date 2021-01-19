@@ -39,6 +39,7 @@
 
 #include "gstd3d11desktopdupsrc.h"
 #include "gstd3d11desktopdup.h"
+#include "gstd3d11pluginutils.h"
 
 #include <string.h>
 
@@ -59,12 +60,9 @@ static GParamSpec *properties[PROP_LAST];
 #define DEFAULT_MONITOR_INDEX -1
 #define DEFAULT_SHOW_CURSOR FALSE
 
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA")
-    ));
+static GstStaticCaps template_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA"));
 
 struct _GstD3D11DesktopDupSrc
 {
@@ -124,6 +122,7 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_desktop_dup_src_dispose;
   gobject_class->set_property = gst_d3d11_desktop_dup_src_set_property;
@@ -150,7 +149,10 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
       "Capture desktop image by using Desktop Duplication API",
       "Seungha Yang <seungha@centricular.com>");
 
-  gst_element_class_add_static_pad_template (element_class, &src_template);
+  caps = gst_d3d11_get_updated_template_caps (&template_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+  gst_caps_unref (caps);
 
   basesrc_class->get_caps =
       GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_get_caps);

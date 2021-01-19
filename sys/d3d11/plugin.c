@@ -68,8 +68,9 @@ GST_DEBUG_CATEGORY (gst_d3d11_desktop_dup_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstD3D11Device *device = NULL;
-  GstRank video_sink_rank = GST_RANK_NONE;
+  GstRank video_sink_rank = GST_RANK_PRIMARY;
+  D3D_FEATURE_LEVEL max_feature_level = D3D_FEATURE_LEVEL_9_3;
+  guint i;
 
   /**
    * plugin-d3d11:
@@ -97,53 +98,9 @@ plugin_init (GstPlugin * plugin)
     GST_WARNING ("Cannot initialize d3d11 shader");
     return TRUE;
   }
-
-  gst_element_register (plugin,
-      "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
-  gst_element_register (plugin,
-      "d3d11download", GST_RANK_NONE, GST_TYPE_D3D11_DOWNLOAD);
-  gst_element_register (plugin,
-      "d3d11convert", GST_RANK_NONE, GST_TYPE_D3D11_CONVERT);
-  gst_element_register (plugin,
-      "d3d11colorconvert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
-  gst_element_register (plugin,
-      "d3d11scale", GST_RANK_NONE, GST_TYPE_D3D11_SCALE);
-  gst_element_register (plugin,
-      "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
-
-  device = gst_d3d11_device_new (0, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
-
-  /* FIXME: Our shader code is not compatible with D3D_FEATURE_LEVEL_9_3
-   * or lower. So HLSL compiler cannot understand our shader code and
-   * therefore d3d11colorconverter cannot be configured.
-   *
-   * Known D3D_FEATURE_LEVEL_9_3 driver is
-   * "VirtualBox Graphics Adapter (WDDM)"
-   * ... and there might be some more old physical devices which don't support
-   * D3D_FEATURE_LEVEL_10_0.
-   */
-  if (device) {
-    D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_10_0;
-    ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
-
-    feature_level = ID3D11Device_GetFeatureLevel (device_handle);
-    if (feature_level >= D3D_FEATURE_LEVEL_10_0)
-      video_sink_rank = GST_RANK_PRIMARY;
-  }
-
-  gst_element_register (plugin,
-      "d3d11videosink", video_sink_rank, GST_TYPE_D3D11_VIDEO_SINK_BIN);
-
-  gst_element_register (plugin,
-      "d3d11compositorelement", GST_RANK_NONE, GST_TYPE_D3D11_COMPOSITOR);
-  gst_element_register (plugin,
-      "d3d11compositor", GST_RANK_SECONDARY, GST_TYPE_D3D11_COMPOSITOR_BIN);
-
 #ifdef HAVE_DXVA_H
   /* DXVA2 API is availble since Windows 8 */
   if (gst_d3d11_is_windows_8_or_greater ()) {
-    gint i = 0;
-
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h264_dec_debug,
         "d3d11h264dec", 0, "Direct3D11 H.264 Video Decoder");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_vp9_dec_debug,
@@ -152,25 +109,41 @@ plugin_init (GstPlugin * plugin)
         "d3d11h265dec", 0, "Direct3D11 H.265 Video Decoder");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_vp8_dec_debug,
         "d3d11vp8dec", 0, "Direct3D11 VP8 Decoder");
+  }
+#endif
 
-    do {
+  /* Enumerate devices to register decoders per device and to get the highest
+   * feature level */
+  /* AMD seems supporting up to 12 cards, and 8 for NVIDIA */
+  for (i = 0; i < 12; i++) {
+    GstD3D11Device *device = NULL;
+    ID3D11Device *device_handle;
+    D3D_FEATURE_LEVEL feature_level;
+
+    device = gst_d3d11_device_new (i, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
+    if (!device)
+      break;
+
+    device_handle = gst_d3d11_device_get_device_handle (device);
+    feature_level = ID3D11Device_GetFeatureLevel (device_handle);
+
+    if (feature_level > max_feature_level)
+      max_feature_level = feature_level;
+
+#ifdef HAVE_DXVA_H
+    /* DXVA2 API is availble since Windows 8 */
+    if (gst_d3d11_is_windows_8_or_greater ()) {
       GstD3D11Decoder *decoder = NULL;
       gboolean legacy;
       gboolean hardware;
 
-      if (!device)
-        device = gst_d3d11_device_new (i, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
-
-      if (!device)
-        break;
-
       g_object_get (device, "hardware", &hardware, NULL);
       if (!hardware)
-        goto clear;
+        goto done;
 
       decoder = gst_d3d11_decoder_new (device);
       if (!decoder)
-        goto clear;
+        goto done;
 
       legacy = gst_d3d11_decoder_util_is_legacy_device (device);
 
@@ -185,13 +158,48 @@ plugin_init (GstPlugin * plugin)
             GST_RANK_SECONDARY);
       }
 
-    clear:
-      gst_clear_object (&device);
+    done:
       gst_clear_object (&decoder);
-      i++;
-    } while (1);
-  }
+    }
 #endif
+
+    gst_object_unref (device);
+  }
+
+  /* FIXME: Our shader code is not compatible with D3D_FEATURE_LEVEL_9_3
+   * or lower. So HLSL compiler cannot understand our shader code and
+   * therefore d3d11colorconverter cannot be configured.
+   *
+   * Known D3D_FEATURE_LEVEL_9_3 driver is
+   * "VirtualBox Graphics Adapter (WDDM)"
+   * ... and there might be some more old physical devices which don't support
+   * D3D_FEATURE_LEVEL_10_0.
+   */
+  if (max_feature_level < D3D_FEATURE_LEVEL_10_0)
+    video_sink_rank = GST_RANK_NONE;
+
+  gst_d3d11_plugin_utils_init (max_feature_level);
+
+  gst_element_register (plugin,
+      "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
+  gst_element_register (plugin,
+      "d3d11download", GST_RANK_NONE, GST_TYPE_D3D11_DOWNLOAD);
+  gst_element_register (plugin,
+      "d3d11convert", GST_RANK_NONE, GST_TYPE_D3D11_CONVERT);
+  gst_element_register (plugin,
+      "d3d11colorconvert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
+  gst_element_register (plugin,
+      "d3d11scale", GST_RANK_NONE, GST_TYPE_D3D11_SCALE);
+  gst_element_register (plugin,
+      "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
+
+  gst_element_register (plugin,
+      "d3d11videosink", video_sink_rank, GST_TYPE_D3D11_VIDEO_SINK_BIN);
+
+  gst_element_register (plugin,
+      "d3d11compositorelement", GST_RANK_NONE, GST_TYPE_D3D11_COMPOSITOR);
+  gst_element_register (plugin,
+      "d3d11compositor", GST_RANK_SECONDARY, GST_TYPE_D3D11_COMPOSITOR_BIN);
 
 #ifdef HAVE_DXGI_DESKTOP_DUP
   if (gst_d3d11_is_windows_8_or_greater ()) {
@@ -201,8 +209,6 @@ plugin_init (GstPlugin * plugin)
         "d3d11desktopdupsrc", GST_RANK_NONE, GST_TYPE_D3D11_DESKTOP_DUP_SRC);
   }
 #endif
-
-  gst_clear_object (&device);
 
   return TRUE;
 }

@@ -26,6 +26,7 @@
 #include <gst/controller/gstproxycontrolbinding.h>
 #include "gstd3d11compositorbin.h"
 #include "gstd3d11compositor.h"
+#include "gstd3d11pluginutils.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_compositor_debug
@@ -441,21 +442,15 @@ gst_d3d11_compositor_bin_input_set_target (GstD3D11CompositorBinPad * pad,
  * GstD3D11CompositorBin *
  *************************/
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
-    GST_PAD_SINK,
-    GST_PAD_REQUEST,
+static GstStaticCaps sink_template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_SINK_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE (GST_D3D11_SINK_FORMATS)
-    ));
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_SINK_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE (GST_D3D11_SINK_FORMATS));
 
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+static GstStaticCaps src_template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_SRC_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE (GST_D3D11_SRC_FORMATS)
-    ));
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_SRC_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE (GST_D3D11_SRC_FORMATS));
 
 enum
 {
@@ -533,6 +528,7 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_compositor_bin_dispose;
   gobject_class->set_property = gst_d3d11_compositor_bin_set_property;
@@ -551,10 +547,17 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
       "Composite multiple video streams via D3D11 API",
       "Seungha Yang <seungha@centricular.com>");
 
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &sink_template, GST_TYPE_D3D11_COMPOSITOR_BIN_INPUT);
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &src_template, GST_TYPE_D3D11_COMPOSITOR_BIN_PAD);
+  caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new_with_gtype ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+          caps, GST_TYPE_D3D11_COMPOSITOR_BIN_INPUT));
+  gst_caps_unref (caps);
+
+  caps = gst_d3d11_get_updated_template_caps (&src_template_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new_with_gtype ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          caps, GST_TYPE_D3D11_COMPOSITOR_BIN_PAD));
+  gst_caps_unref (caps);
 
   g_object_class_install_property (gobject_class, PROP_MIXER,
       g_param_spec_object ("mixer", "D3D11 mixer element",
