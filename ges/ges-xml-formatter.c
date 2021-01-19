@@ -434,6 +434,8 @@ _parse_track (GMarkupParseContext * context, const gchar * element_name,
 
   if (properties) {
     props = gst_structure_from_string (properties, NULL);
+    if (!props)
+      goto wrong_properties;
   }
 
   ges_base_xml_formatter_add_track (GES_BASE_XML_FORMATTER (self), track_type,
@@ -458,6 +460,13 @@ convertion_failed:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Wrong property type, error: %s'", element_name,
       g_strerror (errno));
+  return;
+
+wrong_properties:
+  gst_clear_caps (&caps);
+  g_set_error (error, G_MARKUP_ERROR,
+      G_MARKUP_ERROR_INVALID_CONTENT,
+      "element '%s', Can not create properties: %s'", element_name, properties);
   return;
 
 }
