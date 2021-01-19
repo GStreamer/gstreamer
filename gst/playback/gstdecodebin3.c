@@ -1453,7 +1453,7 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
       }
 
       SELECTION_LOCK (dbin);
-      if (dbin->collection && collection != dbin->collection) {
+      if (dbin->collection) {
         /* Replace collection message, we most likely aggregated it */
         GstMessage *new_msg;
         new_msg =
