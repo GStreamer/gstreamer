@@ -1183,7 +1183,7 @@ ges_project_load (GESProject * project, GESTimeline * timeline, GError ** error)
 {
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
-  g_return_val_if_fail (ges_project_get_uri (project), FALSE);
+  g_return_val_if_fail (project->priv->uri, FALSE);
   g_return_val_if_fail (timeline->tracks == NULL, FALSE);
 
   if (!_load_project (project, timeline, error))
