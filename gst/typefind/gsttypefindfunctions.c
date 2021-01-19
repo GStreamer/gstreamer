@@ -3383,6 +3383,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
 {
   const guint8 *data;
   guint tip = 0;
+  guint atoms_in_a_row = 0;
+  gboolean have_moov = FALSE, have_mdat = FALSE;
   guint64 offset = 0;
   guint64 size;
   const gchar *variant = NULL;
@@ -3435,6 +3437,17 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       } else {
         tip = GST_TYPE_FIND_NEARLY_CERTAIN;
       }
+
+      if (STRNCMP (&data[4], "moov", 4) == 0)
+        have_moov = TRUE;
+      if (STRNCMP (&data[4], "mdat", 4) == 0)
+        have_mdat = TRUE;
+
+      atoms_in_a_row += 1;
+      if ((have_moov && have_mdat) || atoms_in_a_row >= 5) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        break;
+      }
     }
     /* other box/atom types, apparently quicktime specific */
     else if (STRNCMP (&data[4], "pnot", 4) == 0 ||
@@ -3444,7 +3457,10 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       tip = GST_TYPE_FIND_MAXIMUM;
       break;
     } else {
-      tip = 0;
+      if (atoms_in_a_row >= 3)
+        tip = GST_TYPE_FIND_LIKELY;
+      else
+        tip = 0;
       break;
     }
 
