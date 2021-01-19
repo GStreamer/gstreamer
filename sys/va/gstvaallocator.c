@@ -320,6 +320,19 @@ gst_va_drm_mod_quark (void)
   return drm_mod_quark;
 }
 
+static GQuark
+gst_va_buffer_aux_surface_quark (void)
+{
+  static gsize surface_quark = 0;
+
+  if (g_once_init_enter (&surface_quark)) {
+    GQuark quark = g_quark_from_string ("GstVaBufferAuxSurface");
+    g_once_init_leave (&surface_quark, quark);
+  }
+
+  return surface_quark;
+}
+
 /*========================= GstVaBufferSurface ===============================*/
 
 typedef struct _GstVaBufferSurface GstVaBufferSurface;
@@ -1604,4 +1617,105 @@ gst_va_buffer_get_surface (GstBuffer * buffer)
     return VA_INVALID_ID;
 
   return gst_va_memory_get_surface (mem);
+}
+
+gboolean
+gst_va_buffer_create_aux_surface (GstBuffer * buffer)
+{
+  GstMemory *mem;
+  VASurfaceID surface = VA_INVALID_ID;
+  GstVaDisplay *display = NULL;
+  GstVideoFormat format;
+  gint width, height;
+  GstVaBufferSurface *surface_buffer;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!mem)
+    return FALSE;
+
+  /* Already created it. */
+  surface_buffer = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_va_buffer_aux_surface_quark ());
+  if (surface_buffer)
+    return TRUE;
+
+  if (!mem->allocator)
+    return FALSE;
+
+  if (GST_IS_VA_DMABUF_ALLOCATOR (mem->allocator)) {
+    GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
+    guint32 fourcc, rt_format;
+
+    format = GST_VIDEO_INFO_FORMAT (&self->info);
+    fourcc = gst_va_fourcc_from_video_format (format);
+    rt_format = gst_va_chroma_from_video_format (format);
+    if (fourcc == 0 || rt_format == 0) {
+      GST_ERROR_OBJECT (self, "Unsupported format: %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&self->info)));
+      return FALSE;
+    }
+
+    display = self->display;
+    width = GST_VIDEO_INFO_WIDTH (&self->info);
+    height = GST_VIDEO_INFO_HEIGHT (&self->info);
+    if (!_create_surfaces (self->display, rt_format, fourcc,
+            GST_VIDEO_INFO_WIDTH (&self->info),
+            GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
+            &surface, 1))
+      return FALSE;
+  } else if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
+    GstVaAllocator *self = GST_VA_ALLOCATOR (mem->allocator);
+
+    if (self->fourcc == 0 || self->rt_format == 0) {
+      GST_ERROR_OBJECT (self, "Unknown fourcc or chroma format");
+      return FALSE;
+    }
+
+    display = self->display;
+    width = GST_VIDEO_INFO_WIDTH (&self->info);
+    height = GST_VIDEO_INFO_HEIGHT (&self->info);
+    format = GST_VIDEO_INFO_FORMAT (&self->info);
+    if (!_create_surfaces (self->display, self->rt_format, self->fourcc,
+            GST_VIDEO_INFO_WIDTH (&self->info),
+            GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
+            &surface, 1))
+      return FALSE;
+  } else {
+    g_assert_not_reached ();
+  }
+
+  if (!display || surface == VA_INVALID_ID)
+    return FALSE;
+
+  surface_buffer = gst_va_buffer_surface_new (surface, format, width, height);
+  surface_buffer->display = gst_object_ref (display);
+  g_atomic_int_add (&surface_buffer->ref_count, 1);
+
+  gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
+      gst_va_buffer_aux_surface_quark (), surface_buffer,
+      gst_va_buffer_surface_unref);
+
+  return TRUE;
+}
+
+VASurfaceID
+gst_va_buffer_get_aux_surface (GstBuffer * buffer)
+{
+  GstVaBufferSurface *surface_buffer;
+  GstMemory *mem;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!mem)
+    return VA_INVALID_ID;
+
+  surface_buffer = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_va_buffer_aux_surface_quark ());
+  if (!surface_buffer)
+    return VA_INVALID_ID;
+
+  /* No one increments it, and its lifetime is the same with the
+     gstmemory itself */
+  g_assert (g_atomic_int_get (&surface_buffer->ref_count) == 1);
+
+  return surface_buffer->surface;
 }

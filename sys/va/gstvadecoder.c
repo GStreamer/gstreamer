@@ -575,18 +575,23 @@ gst_va_decoder_add_slice_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
 }
 
 gboolean
-gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
+gst_va_decoder_decode_with_aux_surface (GstVaDecoder * self,
+    GstVaDecodePicture * pic, gboolean use_aux)
 {
   VADisplay dpy;
   VAStatus status;
-  VASurfaceID surface;
+  VASurfaceID surface = VA_INVALID_ID;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
   g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
   g_return_val_if_fail (pic, FALSE);
 
-  surface = gst_va_decode_picture_get_surface (pic);
+  if (use_aux) {
+    surface = gst_va_decode_picture_get_aux_surface (pic);
+  } else {
+    surface = gst_va_decode_picture_get_surface (pic);
+  }
   if (surface == VA_INVALID_ID) {
     GST_ERROR_OBJECT (self, "Decode picture without VASurfaceID");
     return FALSE;
@@ -646,6 +651,12 @@ fail_end_pic:
     gst_va_display_unlock (self->display);
     goto bail;
   }
+}
+
+gboolean
+gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
+{
+  return gst_va_decoder_decode_with_aux_surface (self, pic, FALSE);
 }
 
 static gboolean
@@ -714,6 +725,15 @@ gst_va_decode_picture_get_surface (GstVaDecodePicture * pic)
   g_return_val_if_fail (pic->gstbuffer, VA_INVALID_ID);
 
   return gst_va_buffer_get_surface (pic->gstbuffer);
+}
+
+VASurfaceID
+gst_va_decode_picture_get_aux_surface (GstVaDecodePicture * pic)
+{
+  g_return_val_if_fail (pic, VA_INVALID_ID);
+  g_return_val_if_fail (pic->gstbuffer, VA_INVALID_ID);
+
+  return gst_va_buffer_get_aux_surface (pic->gstbuffer);
 }
 
 void

@@ -77,4 +77,7 @@ gboolean              gst_va_allocator_get_format         (GstAllocator * alloca
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);
 
+gboolean              gst_va_buffer_create_aux_surface    (GstBuffer * buffer);
+VASurfaceID           gst_va_buffer_get_aux_surface       (GstBuffer * buffer);
+
 G_END_DECLS

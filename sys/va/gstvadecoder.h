@@ -75,10 +75,14 @@ gboolean              gst_va_decoder_add_slice_buffer_with_n_params
                                                            gsize slice_size);
 gboolean              gst_va_decoder_decode               (GstVaDecoder * self,
                                                            GstVaDecodePicture * pic);
+gboolean              gst_va_decoder_decode_with_aux_surface (GstVaDecoder * self,
+                                                              GstVaDecodePicture * pic,
+                                                              gboolean use_aux);
 
 GstVaDecodePicture *  gst_va_decode_picture_new           (GstVaDecoder * self,
                                                            GstBuffer * buffer);
 VASurfaceID           gst_va_decode_picture_get_surface   (GstVaDecodePicture * pic);
+VASurfaceID           gst_va_decode_picture_get_aux_surface (GstVaDecodePicture * pic);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
 GstVaDecodePicture *  gst_va_decode_picture_dup           (GstVaDecodePicture * pic);
 
