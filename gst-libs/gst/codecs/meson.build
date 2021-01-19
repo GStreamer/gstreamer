@@ -9,6 +9,8 @@ codecs_sources = files([
   'gstvp8picture.c',
   'gstmpeg2decoder.c',
   'gstmpeg2picture.c',
+  'gstav1decoder.c',
+  'gstav1picture.c',
 ])
 
 codecs_headers = [
@@ -22,6 +24,8 @@ codecs_headers = [
   'gstvp8picture.h',
   'gstmpeg2decoder.h',
   'gstmpeg2picture.h',
+  'gstav1decoder.h',
+  'gstav1picture.h',
 ]
 
 cp_args = [
