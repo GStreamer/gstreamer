@@ -921,9 +921,11 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       continue;
     }
 
-    if ((!strncmp (in_plugin->long_name, "raw ", 4))) {
-      GST_LOG ("Ignoring raw muxer %s", in_plugin->name);
-      continue;
+    if (in_plugin->long_name != NULL) {
+      if ((!strncmp (in_plugin->long_name, "raw ", 4))) {
+        GST_LOG ("Ignoring raw muxer %s", in_plugin->name);
+        continue;
+      }
     }
 
     if (gst_ffmpegmux_get_replacement (in_plugin->name))
