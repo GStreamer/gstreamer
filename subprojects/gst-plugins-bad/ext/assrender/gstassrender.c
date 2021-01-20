@@ -1572,6 +1572,10 @@ gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
   if (!buf || !structure)
     return;
 
+  filename = gst_structure_get_string (structure, "filename");
+  if (!filename)
+    return;
+
   valid_mimetype = FALSE;
   valid_extension = FALSE;
 
@@ -1584,10 +1588,6 @@ gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
       }
     }
   }
-
-  filename = gst_structure_get_string (structure, "filename");
-  if (!filename)
-    return;
 
   if (!valid_mimetype) {
     guint len = strlen (filename);
