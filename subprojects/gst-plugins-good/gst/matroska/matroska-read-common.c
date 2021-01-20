@@ -851,9 +851,11 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
     }
 
     /* Set filename and description in the info */
-    if (info == NULL)
-      info = gst_structure_new_empty ("GstTagImageInfo");
-
+    if (info == NULL) {
+      const gchar *structure_name = (image_type != GST_TAG_IMAGE_TYPE_NONE) ?
+          "GstTagImageInfo" : "GstTagAttachmentInfo";
+      info = gst_structure_new_empty (structure_name);
+    }
     gst_structure_set (info, "filename", G_TYPE_STRING, filename, NULL);
     if (description)
       gst_structure_set (info, "description", G_TYPE_STRING, description, NULL);
