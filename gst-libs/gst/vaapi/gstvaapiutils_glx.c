@@ -301,7 +301,15 @@ gl_create_context (Display * dpy, int screen, GLContextState * parent)
     GLX_RED_SIZE, 8,
     GLX_GREEN_SIZE, 8,
     GLX_BLUE_SIZE, 8,
+    GLX_ALPHA_SIZE, 8,
     None
+  };
+
+  const GLint rgba_colors[4] = {
+    GLX_RED_SIZE,
+    GLX_GREEN_SIZE,
+    GLX_BLUE_SIZE,
+    GLX_ALPHA_SIZE
   };
 
   cs = malloc (sizeof (*cs));
@@ -333,11 +341,38 @@ gl_create_context (Display * dpy, int screen, GLContextState * parent)
     if (!fbconfigs)
       goto error;
 
-    /* Find out a GLXFBConfig compatible with the parent context */
+    /* Find out a 8 bit GLXFBConfig compatible with the parent context */
     for (n = 0; n < n_fbconfigs; n++) {
+      gboolean sizes_correct = FALSE;
+      int cn;
+
       status = glXGetFBConfigAttrib (parent->display,
           fbconfigs[n], GLX_FBCONFIG_ID, &val);
-      if (status == Success && val == fbconfig_id)
+      if (status != Success)
+        goto error;
+      if (val != fbconfig_id)
+        continue;
+
+      /* Iterate over RGBA sizes in fbconfig */
+      for (cn = 0; cn < 4; cn++) {
+        int size = 0;
+
+        status = glXGetFBConfigAttrib (parent->display,
+            fbconfigs[n], rgba_colors[cn], &size);
+        if (status != Success)
+          goto error;
+
+        /* Last check is for alpha
+         * and alpha is optional */
+        if (cn == 3) {
+          if (size == 0 || size == 8) {
+            sizes_correct = TRUE;
+            break;
+          }
+        } else if (size != 8)
+          break;
+      }
+      if (sizes_correct)
         break;
     }
     if (n == n_fbconfigs)
@@ -809,6 +844,7 @@ gl_create_pixmap_object (Display * dpy, guint width, guint height)
     GLX_RED_SIZE, 8,
     GLX_GREEN_SIZE, 8,
     GLX_BLUE_SIZE, 8,
+    GLX_ALPHA_SIZE, 8,
     GL_NONE,
   };
 
