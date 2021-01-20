@@ -1343,6 +1343,7 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID &subtype,
   GValue *profiles = NULL;
   gboolean have_I420 = FALSE;
   gboolean have_NV12 = FALSE;
+  gboolean have_P010 = FALSE;
   gboolean d3d11_aware = FALSE;
   gchar *device_name = NULL;
   IMFActivate *activate;
@@ -1426,6 +1427,9 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID &subtype,
         break;
       case GST_VIDEO_FORMAT_NV12:
         have_NV12 = TRUE;
+        break;
+      case GST_VIDEO_FORMAT_P010_10LE:
+        have_P010 = TRUE;
         break;
       default:
         break;
@@ -1539,22 +1543,36 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID &subtype,
 
 #if GST_MF_HAVE_D3D11
   /* Check whether this MFT can support D3D11 */
-  if (d3d11_device && have_NV12) {
+  if (d3d11_device && (have_NV12 || have_P010)) {
     g_object_get (transform, "d3d11-aware", &d3d11_aware, NULL);
     GST_DEBUG_OBJECT (transform, "d3d11 aware %d", d3d11_aware);
   }
 
-   /* TODO: can we use non NV12 format for d3d11 with D3D11_BIND_VIDEO_ENCODER
-    * flag? */
-  if (d3d11_device && have_NV12 && d3d11_aware) {
+  if (d3d11_device && (have_NV12 || have_P010) && d3d11_aware) {
     guint adapter = 0;
+    GValue d3d11_formats = G_VALUE_INIT;
 
     g_object_get (d3d11_device, "adapter", &adapter, NULL);
 
     d3d11_caps = gst_caps_copy (sink_caps);
 
-    gst_caps_set_simple (d3d11_caps,
-        "format", G_TYPE_STRING, "NV12", NULL);
+    g_value_init (&d3d11_formats, GST_TYPE_LIST);
+    if (have_NV12) {
+      GValue val = G_VALUE_INIT;
+      g_value_init (&val, G_TYPE_STRING);
+      g_value_set_static_string (&val, "NV12");
+      gst_value_list_append_and_take_value (&d3d11_formats, &val);
+    }
+
+    if (have_P010) {
+      GValue val = G_VALUE_INIT;
+      g_value_init (&val, G_TYPE_STRING);
+      g_value_set_static_string (&val, "P010_10LE");
+      gst_value_list_append_and_take_value (&d3d11_formats, &val);
+    }
+
+    gst_caps_set_value (d3d11_caps, "format", &d3d11_formats);
+    g_value_unset (&d3d11_formats);
     gst_caps_set_features_simple (d3d11_caps,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
     device_caps->d3d11_aware = TRUE;
