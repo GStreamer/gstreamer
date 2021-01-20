@@ -1564,7 +1564,7 @@ gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
   const GstStructure *structure;
   gboolean valid_mimetype, valid_extension;
   guint i;
-  const gchar *filename;
+  const gchar *mimetype, *filename;
 
   buf = gst_sample_get_buffer (sample);
   structure = gst_sample_get_info (sample);
@@ -1575,10 +1575,13 @@ gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
   valid_mimetype = FALSE;
   valid_extension = FALSE;
 
-  for (i = 0; i < G_N_ELEMENTS (mimetypes); i++) {
-    if (gst_structure_has_name (structure, mimetypes[i])) {
-      valid_mimetype = TRUE;
-      break;
+  mimetype = gst_structure_get_string (structure, "mimetype");
+  if (mimetype) {
+    for (i = 0; i < G_N_ELEMENTS (mimetypes); i++) {
+      if (strcmp (mimetype, mimetypes[i]) == 0) {
+        valid_mimetype = TRUE;
+        break;
+      }
     }
   }
 
