@@ -857,6 +857,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
       info = gst_structure_new_empty (structure_name);
     }
     gst_structure_set (info, "filename", G_TYPE_STRING, filename, NULL);
+    gst_structure_set (info, "mimetype", G_TYPE_STRING, mimetype, NULL);
     if (description)
       gst_structure_set (info, "description", G_TYPE_STRING, description, NULL);
 
