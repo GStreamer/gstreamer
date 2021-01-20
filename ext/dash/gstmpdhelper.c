@@ -103,7 +103,6 @@ gst_mpd_helper_get_audio_codec_from_mime (GstCaps * caps)
   }
 
 done:
-  gst_caps_unref (caps);
   return codec_name;
 }
 
@@ -128,7 +127,6 @@ gst_mpd_helper_get_video_codec_from_mime (GstCaps * caps)
   }
 
 done:
-  gst_caps_unref (caps);
   return codec_name;
 }
 
