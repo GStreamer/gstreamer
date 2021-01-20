@@ -9,6 +9,7 @@ encoding_targets = [
                       'targets/file-extension/webm.gep',
                       'targets/file-extension/flv.gep',
                       'targets/file-extension/mp4.gep',
+                      'targets/file-extension/ts.gep',
                       'targets/file-extension/avi.gep',],
   ],
   ['online-services', ['targets/online-service/youtube.gep',]],
