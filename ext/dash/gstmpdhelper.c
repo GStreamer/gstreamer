@@ -122,6 +122,8 @@ gst_mpd_helper_get_video_codec_from_mime (GstCaps * caps)
   name = gst_structure_get_name (s);
   if (!g_strcmp0 (name, "video/x-h264")) {
     return "avc1";
+  } else if (!g_strcmp0 (name, "video/x-h265")) {
+    return "hvc1";
   } else {
     GST_DEBUG ("No codecs for this caps name %s", name);
   }
