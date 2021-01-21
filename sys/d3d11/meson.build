@@ -86,6 +86,12 @@ if d3d11_winapi_desktop
   endif
 endif
 
+# need dxgi1_5.h for HDR10 processing and d3d11_4.h for ID3D11VideoContext2 interface
+if d3d11_conf.get('GST_D3D11_DXGI_HEADER_VERSION') >= 5 and d3d11_conf.get('GST_D3D11_HEADER_VERSION') >= 4
+  d3d11_sources += ['gstd3d11deinterlace.cpp']
+  extra_c_args += ['-DHAVE_D3D11_VIDEO_PROC']
+endif
+
 # MinGW 32bits compiler seems to be complaining about redundant-decls
 # when ComPtr is in use. Let's just disable the warning
 if cc.get_id() != 'msvc'

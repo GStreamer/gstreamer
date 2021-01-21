@@ -41,6 +41,9 @@
 #ifdef HAVE_DXGI_DESKTOP_DUP
 #include "gstd3d11desktopdupsrc.h"
 #endif
+#ifdef HAVE_D3D11_VIDEO_PROC
+#include "gstd3d11deinterlace.h"
+#endif
 
 GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
@@ -63,6 +66,10 @@ GST_DEBUG_CATEGORY (gst_d3d11_mpeg2_dec_debug);
 
 #ifdef HAVE_DXGI_DESKTOP_DUP
 GST_DEBUG_CATEGORY (gst_d3d11_desktop_dup_debug);
+#endif
+
+#ifdef HAVE_D3D11_VIDEO_PROC
+GST_DEBUG_CATEGORY (gst_d3d11_deinterlace_debug);
 #endif
 
 #define GST_CAT_DEFAULT gst_d3d11_debug
@@ -116,6 +123,11 @@ plugin_init (GstPlugin * plugin)
   }
 #endif
 
+#ifdef HAVE_D3D11_VIDEO_PROC
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_deinterlace_debug,
+      "d3d11deinterlace", 0, "Direct3D11 Deinterlacer");
+#endif
+
   /* Enumerate devices to register decoders per device and to get the highest
    * feature level */
   /* AMD seems supporting up to 12 cards, and 8 for NVIDIA */
@@ -166,6 +178,17 @@ plugin_init (GstPlugin * plugin)
 
     done:
       gst_clear_object (&decoder);
+    }
+#endif
+
+#ifdef HAVE_D3D11_VIDEO_PROC
+    /* D3D11 video processor API is availble since Windows 8 */
+    if (gst_d3d11_is_windows_8_or_greater ()) {
+      gboolean hardware;
+
+      g_object_get (device, "hardware", &hardware, NULL);
+      if (hardware)
+        gst_d3d11_deinterlace_register (plugin, device, GST_RANK_MARGINAL);
     }
 #endif
 
