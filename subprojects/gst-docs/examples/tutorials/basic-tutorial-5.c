@@ -11,6 +11,10 @@
 #include <gdk/gdkwin32.h>
 #elif defined (GDK_WINDOWING_QUARTZ)
 #include <gdk/gdkquartz.h>
+#if GTK_CHECK_VERSION(3, 24, 10)
+#include <AppKit/AppKit.h>
+NSView *gdk_quartz_window_get_nsview (GdkWindow * window);
+#endif
 #endif
 
 /* Structure to contain all our information, so we can pass it around */
