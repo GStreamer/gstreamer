@@ -17013,6 +17013,36 @@
                 },
                 "rank": "none"
             },
+            "rtphdrextrfc6464": {
+                "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+                "author": "Guillaume Desmottes <guillaume.desmottes@collabora.com>",
+                "description": "Client-to-Mixer Audio Level Indication (RFC6464) RTP Header Extension",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionRfc6464",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "Client-to-Mixer Audio Level Indication (RFC6464) RTP Header Extension",
+                "properties": {
+                    "vad": {
+                        "blurb": "If the vad extension attribute is enabled or not",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": false
+                    }
+                },
+                "rank": "marginal"
+            },
             "rtphdrexttwcc": {
                 "RTP-Header-Extension-URI": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
                 "author": "Matthew Waters <matthew@centricular.com>",

@@ -35,6 +35,7 @@
 #include "gstrtpst2022-1-fecdec.h"
 #include "gstrtpst2022-1-fecenc.h"
 #include "gstrtphdrext-twcc.h"
+#include "gstrtphdrext-rfc6464.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -87,6 +88,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "rtphdrexttwcc", GST_RANK_MARGINAL,
           GST_TYPE_RTP_HEADER_EXTENSION_TWCC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtphdrextrfc6464", GST_RANK_MARGINAL,
+          GST_TYPE_RTP_HEADER_EXTENSION_RFC6464))
     return FALSE;
 
   return TRUE;
