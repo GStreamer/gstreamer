@@ -242,6 +242,7 @@ struct _GstBaseParsePrivate
   GstClockTime next_pts;
   GstClockTime next_dts;
   GstClockTime prev_pts;
+  GstClockTime prev_dts;
   gboolean prev_dts_from_pts;
   GstClockTime frame_duration;
   gboolean seen_keyframe;
@@ -1365,6 +1366,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
+      parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_dts_from_pts = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->seen_keyframe = FALSE;
@@ -2861,6 +2863,7 @@ gst_base_parse_start_fragment (GstBaseParse * parse)
   parse->priv->next_pts = GST_CLOCK_TIME_NONE;
   parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
   parse->priv->next_dts = GST_CLOCK_TIME_NONE;
+  parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
   parse->priv->prev_dts_from_pts = FALSE;
   /* prevent it hanging around stop all the time */
   parse->segment.position = GST_CLOCK_TIME_NONE;
@@ -3263,8 +3266,8 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       updated_prev_pts = TRUE;
     }
 
-    if (GST_CLOCK_TIME_IS_VALID (dts)) {
-      parse->priv->next_dts = dts;
+    if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
+      parse->priv->prev_dts = parse->priv->next_dts = dts;
       parse->priv->prev_dts_from_pts = FALSE;
     }
 
@@ -3274,9 +3277,10 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (parse->priv->infer_ts &&
         parse->priv->pts_interpolate &&
         !GST_CLOCK_TIME_IS_VALID (dts) &&
-        parse->priv->prev_dts_from_pts &&
-        updated_prev_pts && GST_CLOCK_TIME_IS_VALID (pts)) {
-      parse->priv->next_dts = pts;
+        (!GST_CLOCK_TIME_IS_VALID (parse->priv->prev_dts)
+            || (parse->priv->prev_dts_from_pts && updated_prev_pts))
+        && GST_CLOCK_TIME_IS_VALID (pts)) {
+      parse->priv->prev_dts = parse->priv->next_dts = pts;
       parse->priv->prev_dts_from_pts = TRUE;
     }
 
@@ -4979,8 +4983,8 @@ gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
   if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts))
     parse->priv->prev_pts = parse->priv->next_pts = pts;
 
-  if (GST_CLOCK_TIME_IS_VALID (dts)) {
-    parse->priv->next_dts = dts;
+  if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
+    parse->priv->prev_dts = parse->priv->next_dts = dts;
     parse->priv->prev_dts_from_pts = FALSE;
   }
 }
