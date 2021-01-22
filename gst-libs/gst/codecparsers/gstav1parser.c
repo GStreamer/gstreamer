@@ -2602,9 +2602,9 @@ gst_av1_parse_loop_restoration_params (GstAV1Parser * parser,
 
   if (frame_header->all_lossless || frame_header->allow_intrabc
       || !seq_header->enable_restoration) {
-    lr_params->frame_restoration_type[0] = GST_AV1_FRAME_RESTORE_NONE;
-    lr_params->frame_restoration_type[0] = GST_AV1_FRAME_RESTORE_NONE;
-    lr_params->frame_restoration_type[0] = GST_AV1_FRAME_RESTORE_NONE;
+    for (i = 0; i < GST_AV1_MAX_NUM_PLANES; i++)
+      lr_params->frame_restoration_type[i] = GST_AV1_FRAME_RESTORE_NONE;
+
     lr_params->uses_lr = 0;
     goto success;
   }
