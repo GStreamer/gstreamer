@@ -230,7 +230,7 @@ gst_rtp_header_extension_get_supported_flags (GstRTPHeaderExtension * ext)
  * both allocating the resulting data, and deciding how much payload data can
  * be generated.
  *
- * Implemntations should return as accurate a value as is possible using the
+ * Implementations should return as accurate a value as is possible using the
  * information given in the input @buffer.
  *
  * Returns: the maximum size of the data written by this extension
