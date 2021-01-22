@@ -586,8 +586,8 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
     else if (self->parser->subsampling_x == 0 &&
         self->parser->subsampling_y == 1)
       chroma_format = "4:4:0";
-    else if (self->parser->subsampling_x == 1 &&
-        self->parser->subsampling_y == 1)
+    else if (self->parser->subsampling_x == 0 &&
+        self->parser->subsampling_y == 0)
       chroma_format = "4:4:4";
 
     if (chroma_format)
