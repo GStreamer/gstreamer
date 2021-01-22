@@ -56,7 +56,7 @@ enum
 #define DEFAULT_NTSC_ONLY FALSE
 #define DEFAULT_MODE GST_LINE_21_DECODER_MODE_ADD
 
-#define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY, v210 }, interlace-mode=interleaved"
+#define CAPS "video/x-raw, format={ I420, YUY2, YVYU, UYVY, VYUY, v210 }"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -216,6 +216,8 @@ gst_line_21_decoder_class_init (GstLine21DecoderClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_line_21_decoder_debug, "line21decoder",
       0, "Line 21 CC Decoder");
   vbi_initialize_gst_debug ();
+
+  gst_type_mark_as_plugin_api (GST_TYPE_LINE_21_DECODER_MODE, 0);
 }
 
 static void
@@ -287,6 +289,12 @@ gst_line_21_decoder_set_info (GstVideoFilter * filter,
 
   /* Scan the next frame from the first line */
   self->line21_offset = -1;
+
+  if (!GST_VIDEO_INFO_IS_INTERLACED (in_info)) {
+    GST_DEBUG_OBJECT (filter, "Only interlaced formats are supported");
+    self->compatible_format = FALSE;
+    return TRUE;
+  }
 
   if (GST_VIDEO_INFO_WIDTH (in_info) != 720) {
     GST_DEBUG_OBJECT (filter, "Only 720 pixel wide formats are supported");
