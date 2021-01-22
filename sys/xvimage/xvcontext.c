@@ -1106,10 +1106,16 @@ gst_xwindow_set_title (GstXWindow * window, const gchar * title)
   if (window->internal && title) {
     XTextProperty xproperty;
     XClassHint *hint = XAllocClassHint ();
+    Atom _NET_WM_NAME = XInternAtom (context->disp, "_NET_WM_NAME", 0);
+    Atom UTF8_STRING = XInternAtom (context->disp, "UTF8_STRING", 0);
 
     if ((XStringListToTextProperty (((char **) &title), 1, &xproperty)) != 0) {
       XSetWMName (context->disp, window->win, &xproperty);
       XFree (xproperty.value);
+
+      XChangeProperty (context->disp, window->win, _NET_WM_NAME, UTF8_STRING, 8,
+          0, (unsigned char *) title, strlen (title));
+      XSync (context->disp, False);
 
       if (hint) {
         hint->res_name = (char *) title;

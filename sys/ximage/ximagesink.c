@@ -397,6 +397,15 @@ gst_x_image_sink_xwindow_set_title (GstXImageSink * ximagesink,
       if (title) {
         if ((XStringListToTextProperty (((char **) &title), 1,
                     &xproperty)) != 0) {
+          Atom _NET_WM_NAME =
+              XInternAtom (ximagesink->xcontext->disp, "_NET_WM_NAME", 0);
+          Atom UTF8_STRING =
+              XInternAtom (ximagesink->xcontext->disp, "UTF8_STRING", 0);
+          XChangeProperty (ximagesink->xcontext->disp, xwindow->win,
+              _NET_WM_NAME, UTF8_STRING, 8, 0, (unsigned char *) title,
+              strlen (title));
+          XSync (ximagesink->xcontext->disp, False);
+
           XSetWMName (ximagesink->xcontext->disp, xwindow->win, &xproperty);
           XFree (xproperty.value);
         }
