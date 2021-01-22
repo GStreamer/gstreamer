@@ -162,7 +162,15 @@ static GstStaticPadTemplate gst_openjpeg_enc_src_template =
         "alignment = (string) { frame, stripe }, "
         GST_JPEG2000_SAMPLING_LIST ","
         GST_JPEG2000_COLORSPACE_LIST "; "
-        "image/jp2, " "width = (int) [1, MAX], " "height = (int) [1, MAX]")
+        "image/jp2, " "width = (int) [1, MAX], "
+        "height = (int) [1, MAX] ;"
+        "image/x-jpc-striped, "
+        "width = (int) [1, MAX], "
+        "height = (int) [1, MAX], "
+        "num-components = (int) [1, 4], "
+        GST_JPEG2000_SAMPLING_LIST ", "
+        GST_JPEG2000_COLORSPACE_LIST ", "
+        "num-stripes = (int) [2, MAX], stripe-height = (int) [1 , MAX]")
     );
 
 #define parent_class gst_openjpeg_enc_parent_class
@@ -742,20 +750,46 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
 
-  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
-  allowed_caps = gst_caps_truncate (allowed_caps);
-  s = gst_caps_get_structure (allowed_caps, 0);
-  if (gst_structure_has_name (s, "image/jp2")) {
-    self->codec_format = OPJ_CODEC_JP2;
-    self->is_jp2c = FALSE;
-  } else if (gst_structure_has_name (s, "image/x-j2c")) {
+  if (stripe_mode) {
+    GstCaps *template_caps = gst_caps_new_empty_simple ("image/x-jpc-striped");
+    GstCaps *my_caps;
+
+    my_caps = gst_pad_query_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder),
+        template_caps);
+    gst_caps_unref (template_caps);
+
+    allowed_caps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder),
+        my_caps);
+    gst_caps_unref (my_caps);
+
+    if (gst_caps_is_empty (allowed_caps)) {
+      gst_caps_unref (allowed_caps);
+      GST_WARNING_OBJECT (self, "Striped JPEG 2000 not accepted downstream");
+      return FALSE;
+    }
+
     self->codec_format = OPJ_CODEC_J2K;
-    self->is_jp2c = TRUE;
-  } else if (gst_structure_has_name (s, "image/x-jpc")) {
-    self->codec_format = OPJ_CODEC_J2K;
     self->is_jp2c = FALSE;
+    allowed_caps = gst_caps_truncate (allowed_caps);
+    s = gst_caps_get_structure (allowed_caps, 0);
   } else {
-    g_return_val_if_reached (FALSE);
+    allowed_caps =
+        gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+    allowed_caps = gst_caps_truncate (allowed_caps);
+
+    s = gst_caps_get_structure (allowed_caps, 0);
+    if (gst_structure_has_name (s, "image/jp2")) {
+      self->codec_format = OPJ_CODEC_JP2;
+      self->is_jp2c = FALSE;
+    } else if (gst_structure_has_name (s, "image/x-j2c")) {
+      self->codec_format = OPJ_CODEC_J2K;
+      self->is_jp2c = TRUE;
+    } else if (gst_structure_has_name (s, "image/x-jpc")) {
+      self->codec_format = OPJ_CODEC_J2K;
+      self->is_jp2c = FALSE;
+    } else {
+      g_return_val_if_reached (FALSE);
+    }
   }
 
   switch (state->info.finfo->format) {
@@ -805,7 +839,6 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     default:
       g_assert_not_reached ();
   }
-
 
   /* sampling */
   /* note: encoder re-orders channels so that alpha channel is encoded as the last channel */
@@ -861,21 +894,24 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   } else
     g_return_val_if_reached (FALSE);
 
-  if (sampling != GST_JPEG2000_SAMPLING_NONE) {
-    caps = gst_caps_new_simple (gst_structure_get_name (s),
+  if (stripe_mode) {
+    caps = gst_caps_new_simple ("image/x-jpc-striped",
         "colorspace", G_TYPE_STRING, colorspace,
         "sampling", G_TYPE_STRING, gst_jpeg2000_sampling_to_string (sampling),
         "num-components", G_TYPE_INT, ncomps,
-        "alignment", G_TYPE_STRING,
-        stripe_mode ? "stripe" : "frame",
-        "num-stripes", G_TYPE_INT, self->num_stripes, NULL);
+        "num-stripes", G_TYPE_INT, self->num_stripes,
+        "stripe-height", G_TYPE_INT,
+        get_stripe_height (self, 0,
+            GST_VIDEO_INFO_COMP_HEIGHT (&state->info, 0)), NULL);
+  } else if (sampling != GST_JPEG2000_SAMPLING_NONE) {
+    caps = gst_caps_new_simple (gst_structure_get_name (s),
+        "colorspace", G_TYPE_STRING, colorspace,
+        "sampling", G_TYPE_STRING, gst_jpeg2000_sampling_to_string (sampling),
+        "num-components", G_TYPE_INT, ncomps, NULL);
   } else {
     caps = gst_caps_new_simple (gst_structure_get_name (s),
         "colorspace", G_TYPE_STRING, colorspace,
-        "num-components", G_TYPE_INT, ncomps,
-        "alignment", G_TYPE_STRING,
-        stripe_mode ? "stripe" : "frame",
-        "num-stripes", G_TYPE_INT, self->num_stripes, NULL);
+        "num-components", G_TYPE_INT, ncomps, NULL);
   }
   gst_caps_unref (allowed_caps);
 
@@ -1342,29 +1378,13 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame vframe;
-
-  GstCaps *current_caps;
-  GstStructure *s;
   gboolean subframe_mode =
       self->num_stripes != GST_OPENJPEG_ENC_DEFAULT_NUM_STRIPES;
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
-  current_caps = gst_pad_get_current_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
-  s = gst_caps_get_structure (current_caps, 0);
-
   if (subframe_mode) {
-    const gchar *str = gst_structure_get_string (s, "alignment");
     gint min_res;
-
-    if (g_strcmp0 (str, "stripe") != 0) {
-      GST_ERROR_OBJECT (self,
-          "Number of stripes set to %d, but alignment=stripe not supported downstream",
-          self->num_stripes);
-      gst_video_codec_frame_unref (frame);
-      ret = GST_FLOW_NOT_NEGOTIATED;
-      goto done;
-    }
 
     /* due to limitations in openjpeg library,
      * number of wavelet resolutions must not exceed floor(log(stripe height)) + 1 */
@@ -1387,9 +1407,7 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   }
   if (self->encode_frame (encoder, frame) != GST_FLOW_OK)
     goto error;
-done:
-  if (current_caps)
-    gst_caps_unref (current_caps);
+
   return ret;
 
 error:

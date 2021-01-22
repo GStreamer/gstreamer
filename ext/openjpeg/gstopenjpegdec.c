@@ -101,11 +101,11 @@ static GstStaticPadTemplate gst_openjpeg_dec_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-j2c, "
-        "alignment= (string){frame,stripe}, "
         GST_JPEG2000_SAMPLING_LIST "; "
         "image/x-jpc,"
-        "alignment=  (string){frame,stripe}, "
-        GST_JPEG2000_SAMPLING_LIST "; " "image/jp2")
+        GST_JPEG2000_SAMPLING_LIST "; image/jp2 ; "
+        "image/x-jpc-striped, "
+        "num-stripes = (int) [2, MAX], " GST_JPEG2000_SAMPLING_LIST)
     );
 
 static GstStaticPadTemplate gst_openjpeg_dec_src_template =
@@ -359,8 +359,6 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
 {
   GstOpenJPEGDec *self = GST_OPENJPEG_DEC (decoder);
   GstStructure *s;
-  gint caps_int = 0;
-  const gchar *caps_string = NULL;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -374,27 +372,22 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
   } else if (gst_structure_has_name (s, "image/x-j2c")) {
     self->codec_format = OPJ_CODEC_J2K;
     self->is_jp2c = TRUE;
-  } else if (gst_structure_has_name (s, "image/x-jpc")) {
+  } else if (gst_structure_has_name (s, "image/x-jpc") ||
+      gst_structure_has_name (s, "image/x-jpc-striped")) {
     self->codec_format = OPJ_CODEC_J2K;
     self->is_jp2c = FALSE;
   } else {
     g_return_val_if_reached (FALSE);
   }
 
-  self->num_stripes = 1;
-  caps_string = gst_structure_get_string (s, "alignment");
-  gst_structure_get_int (s, "num-stripes", &caps_int);
-  if (caps_int > 1) {
-    self->num_stripes = caps_int;
+  if (gst_structure_has_name (s, "image/x-jpc-striped")) {
+    gst_structure_get_int (s, "num-stripes", &self->num_stripes);
     gst_video_decoder_set_subframe_mode (decoder, TRUE);
   } else {
+    self->num_stripes = 1;
     gst_video_decoder_set_subframe_mode (decoder, FALSE);
-    if (g_strcmp0 (caps_string, "stripe") == 0) {
-      GST_ERROR_OBJECT (self,
-          "Alignment is set to stripe but num-stripes is missing");
-      return FALSE;
-    }
   }
+
   self->sampling =
       gst_jpeg2000_sampling_from_string (gst_structure_get_string (s,
           "sampling"));
