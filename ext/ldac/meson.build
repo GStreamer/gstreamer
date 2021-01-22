@@ -4,8 +4,9 @@ ldac_sources = [
 ]
 
 ldac_dep = cc.find_library('ldacBT_enc', required : get_option('ldac'))
+ldac_hdr = cc.has_header('ldac/ldacBT.h', required: get_option('ldac'))
 
-if ldac_dep.found()
+if ldac_dep.found() and ldac_hdr
   gstldac = library('gstldac',
     ldac_sources,
     c_args : gst_plugins_bad_args,
