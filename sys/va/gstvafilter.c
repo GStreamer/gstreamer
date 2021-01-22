@@ -150,7 +150,7 @@ gst_va_filter_init (GstVaFilter * self)
   self->min_height = 1;
   self->max_height = G_MAXINT;
   self->min_width = 1;
-  self->max_height = G_MAXINT;
+  self->max_width = G_MAXINT;
 }
 
 GstVaFilter *
