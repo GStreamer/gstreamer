@@ -447,8 +447,6 @@ find_compatible_view (GstVulkanImageView * view, VkImageViewCreateInfo * info)
       info->subresourceRange.baseMipLevel
       && view->create_info.subresourceRange.levelCount ==
       info->subresourceRange.levelCount
-      && view->create_info.subresourceRange.levelCount ==
-      info->subresourceRange.levelCount
       && view->create_info.subresourceRange.baseArrayLayer ==
       info->subresourceRange.baseArrayLayer
       && view->create_info.subresourceRange.layerCount ==
