@@ -1369,6 +1369,55 @@ pre_signal_accumulator (GSignalInvocationHint * ihint, GValue * return_accu,
   return TRUE;
 }
 
+/* The cleanup_transports function is called from handle_teardown_request() to
+ * remove any stream transports from the newly closed session that were added to
+ * priv->transports in handle_setup_request(). This is done to avoid forwarding
+ * data from the client on a channel that we just closed.
+ */
+static void
+cleanup_transports (GstRTSPClient * client, GPtrArray * transports)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GstRTSPStreamTransport *stream_transport;
+  const GstRTSPTransport *rtsp_transport;
+  guint i;
+
+  GST_LOG_OBJECT (client, "potentially removing %u transports",
+      transports->len);
+
+  for (i = 0; i < transports->len; i++) {
+    stream_transport = g_ptr_array_index (transports, i);
+    if (stream_transport == NULL) {
+      GST_LOG_OBJECT (client, "stream transport %u is NULL, continue", i);
+      continue;
+    }
+
+    rtsp_transport = gst_rtsp_stream_transport_get_transport (stream_transport);
+    if (rtsp_transport == NULL) {
+      GST_LOG_OBJECT (client, "RTSP transport %u is NULL, continue", i);
+      continue;
+    }
+
+    /* priv->transport only stores transports where RTP is tunneled over RTSP */
+    if (rtsp_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
+      if (!g_hash_table_remove (priv->transports,
+              GINT_TO_POINTER (rtsp_transport->interleaved.min))) {
+        GST_WARNING_OBJECT (client,
+            "failed removing transport with key '%d' from priv->transports",
+            rtsp_transport->interleaved.min);
+      }
+      if (!g_hash_table_remove (priv->transports,
+              GINT_TO_POINTER (rtsp_transport->interleaved.max))) {
+        GST_WARNING_OBJECT (client,
+            "failed removing transport with key '%d' from priv->transports",
+            rtsp_transport->interleaved.max);
+      }
+    } else {
+      GST_LOG_OBJECT (client, "transport %u not RTP/RTSP, skip it", i);
+    }
+  }
+}
+
 static gboolean
 handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
@@ -1382,6 +1431,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gint matched;
   gboolean keep_session;
   GstRTSPStatusCode sig_result;
+  GPtrArray *session_media_transports;
 
   if (!ctx->session)
     goto no_session;
@@ -1417,6 +1467,10 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto sig_failed;
   }
 
+  /* get a reference to the transports in the session media so we can clean up
+   * our priv->transports before returning */
+  session_media_transports = gst_rtsp_session_media_get_transports (sessmedia);
+
   /* we emit the signal before closing the connection */
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
       0, ctx);
@@ -1441,6 +1495,12 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   gst_rtsp_media_unlock (media);
   g_object_unref (media);
+
+  /* remove all transports that were present in the session media which we just
+   * unmanaged from the priv->transports array, so we do not try to handle data
+   * on channels that were just closed */
+  cleanup_transports (client, session_media_transports);
+  g_ptr_array_unref (session_media_transports);
 
   return TRUE;
 
