@@ -773,7 +773,7 @@ gst_va_h264_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
       caps = sinkcaps;
     }
     GST_LOG_OBJECT (base, "Returning caps %" GST_PTR_FORMAT, caps);
-  } else if (!caps) {
+  } else {
     caps = gst_video_decoder_proxy_getcaps (decoder, NULL, filter);
   }
 
