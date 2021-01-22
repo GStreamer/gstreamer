@@ -103,6 +103,7 @@ struct _GstAV1Parse
   gint height;
   gint subsampling_x;
   gint subsampling_y;
+  gboolean mono_chrome;
   guint8 bit_depth;
   gchar *colorimetry;
   GstAV1Profile profile;
@@ -271,6 +272,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->height = 0;
   self->subsampling_x = -1;
   self->subsampling_y = -1;
+  self->mono_chrome = FALSE;
   self->profile = GST_AV1_PROFILE_UNDEFINED;
   self->bit_depth = 0;
   self->align = GST_AV1_PARSE_ALIGN_NONE;
@@ -560,18 +562,22 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
     gst_base_parse_set_frame_rate (GST_BASE_PARSE (self), fps_n, fps_d, 0, 0);
   }
 
-  if (self->colorimetry
-      && g_strcmp0 (self->colorimetry, GST_VIDEO_COLORIMETRY_SRGB)) {
+  /* When not RGB, the chroma format is needed. */
+  if (self->colorimetry == NULL ||
+      (g_strcmp0 (self->colorimetry, GST_VIDEO_COLORIMETRY_SRGB) != 0)) {
     const gchar *chroma_format = NULL;
 
-    if (self->subsampling_x == 1 && self->subsampling_y == 1)
-      chroma_format = "4:2:0";
-    else if (self->subsampling_x == 1 && self->subsampling_y == 0)
+    if (self->subsampling_x == 1 && self->subsampling_y == 1) {
+      if (!self->mono_chrome) {
+        chroma_format = "4:2:0";
+      } else {
+        chroma_format = "4:0:0";
+      }
+    } else if (self->subsampling_x == 1 && self->subsampling_y == 0) {
       chroma_format = "4:2:2";
-    else if (self->subsampling_x == 0 && self->subsampling_y == 1)
-      chroma_format = "4:4:0";
-    else if (self->subsampling_x == 1 && self->subsampling_y == 1)
+    } else if (self->subsampling_x == 0 && self->subsampling_y == 0) {
       chroma_format = "4:4:4";
+    }
 
     if (chroma_format)
       gst_caps_set_simple (final_caps,
@@ -1010,16 +1016,19 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
     }
   }
 
-  if (g_strcmp0 (self->colorimetry, GST_VIDEO_COLORIMETRY_SRGB)) {
-    if (self->subsampling_x != seq_header.color_config.subsampling_x) {
-      self->subsampling_x = seq_header.color_config.subsampling_x;
-      self->update_caps = TRUE;
-    }
+  if (self->subsampling_x != seq_header.color_config.subsampling_x) {
+    self->subsampling_x = seq_header.color_config.subsampling_x;
+    self->update_caps = TRUE;
+  }
 
-    if (self->subsampling_y != seq_header.color_config.subsampling_y) {
-      self->subsampling_y = seq_header.color_config.subsampling_y;
-      self->update_caps = TRUE;
-    }
+  if (self->subsampling_y != seq_header.color_config.subsampling_y) {
+    self->subsampling_y = seq_header.color_config.subsampling_y;
+    self->update_caps = TRUE;
+  }
+
+  if (self->mono_chrome != seq_header.color_config.mono_chrome) {
+    self->mono_chrome = seq_header.color_config.mono_chrome;
+    self->update_caps = TRUE;
   }
 
   if (self->bit_depth != seq_header.bit_depth) {
