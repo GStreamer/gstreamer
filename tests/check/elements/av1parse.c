@@ -244,6 +244,117 @@ GST_START_TEST (test_annexb_to_frame)
 
 GST_END_TEST;
 
+GST_START_TEST (test_annexb_to_obu)
+{
+  GstHarness *h;
+  GstBuffer *in_buf, *out_buf = NULL;
+  GstMapInfo map;
+  GstFlowReturn ret;
+  gint i = 0;
+  guint offset;
+  guint output_buf_num;
+
+  h = gst_harness_new_parse ("av1parse");
+  fail_unless (h != NULL);
+
+  gst_harness_set_sink_caps_str (h, "video/x-av1,parsed=(boolean)true,"
+      "alignment=(string)obu");
+  gst_harness_set_src_caps_str (h, "video/x-av1,alignment=(string)tu,"
+      "stream-format=(string)annexb");
+
+  gst_harness_play (h);
+
+  output_buf_num = 0;
+  offset = 0;
+  for (i = 0; i < G_N_ELEMENTS (stream_annexb_av1_tu_len); i++) {
+    in_buf = gst_buffer_new_and_alloc (stream_annexb_av1_tu_len[i]);
+    gst_buffer_map (in_buf, &map, GST_MAP_WRITE);
+    memcpy (map.data, stream_annexb_av1 + offset, stream_annexb_av1_tu_len[i]);
+    gst_buffer_unmap (in_buf, &map);
+    offset += stream_annexb_av1_tu_len[i];
+
+    ret = gst_harness_push (h, in_buf);
+    fail_unless (ret == GST_FLOW_OK, "GstFlowReturn was %s",
+        gst_flow_get_name (ret));
+
+    gst_clear_buffer (&out_buf);
+    while ((out_buf = gst_harness_try_pull (h)) != NULL) {
+      if (output_buf_num == 0)
+        check_caps_event (h);
+
+      fail_unless (gst_buffer_get_size (out_buf) ==
+          stream_av1_obu_size[output_buf_num]);
+
+      gst_clear_buffer (&out_buf);
+      output_buf_num++;
+    }
+  }
+
+  fail_unless (output_buf_num == G_N_ELEMENTS (stream_av1_obu_size));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_byte_to_obu)
+{
+  GstHarness *h;
+  GstBuffer *in_buf, *out_buf = NULL;
+  GstMapInfo map;
+  GstFlowReturn ret;
+  gint i = 0;
+  guint offset;
+  guint len;
+  guint output_buf_num;
+
+  h = gst_harness_new_parse ("av1parse");
+  fail_unless (h != NULL);
+
+  gst_harness_set_sink_caps_str (h, "video/x-av1,parsed=(boolean)true,"
+      "alignment=(string)obu,stream-format=(string)obu-stream");
+  gst_harness_set_src_caps_str (h, "video/x-av1");
+
+  gst_harness_play (h);
+
+  output_buf_num = 0;
+  offset = 0;
+  len = stream_no_annexb_av1_len / 5;
+  for (i = 0; i < 5; i++) {
+    if (i == 4)
+      len = stream_no_annexb_av1_len - offset;
+
+    in_buf = gst_buffer_new_and_alloc (len);
+    gst_buffer_map (in_buf, &map, GST_MAP_WRITE);
+    memcpy (map.data, stream_no_annexb_av1 + offset, len);
+    gst_buffer_unmap (in_buf, &map);
+    offset += len;
+
+    ret = gst_harness_push (h, in_buf);
+    fail_unless (ret == GST_FLOW_OK, "GstFlowReturn was %s",
+        gst_flow_get_name (ret));
+
+    gst_clear_buffer (&out_buf);
+    while ((out_buf = gst_harness_try_pull (h)) != NULL) {
+      if (output_buf_num == 0)
+        check_caps_event (h);
+
+      fail_unless (gst_buffer_get_size (out_buf) ==
+          stream_av1_obu_size[output_buf_num]);
+
+      gst_clear_buffer (&out_buf);
+      output_buf_num++;
+    }
+  }
+
+  fail_unless (output_buf_num == G_N_ELEMENTS (stream_av1_obu_size));
+
+  gst_harness_teardown (h);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 av1parse_suite (void)
 {
@@ -258,6 +369,8 @@ av1parse_suite (void)
   tcase_add_test (tc_chain, test_byte_to_frame);
   tcase_add_test (tc_chain, test_byte_to_annexb);
   tcase_add_test (tc_chain, test_annexb_to_frame);
+  tcase_add_test (tc_chain, test_annexb_to_obu);
+  tcase_add_test (tc_chain, test_byte_to_obu);
 
   return s;
 }

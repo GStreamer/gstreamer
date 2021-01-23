@@ -1792,3 +1792,8 @@ static guint32 stream_no_annexb_av1_len = 10519;
 static gsize stream_av1_frame_size[] = {
   5454, 1331, 29, 24, 1473, 543, 5, 555, 5, 897, 82, 5, 91, 25
 };
+
+static gsize stream_av1_obu_size[] = {
+  2, 13, 5439, 2, 13, 1316, 2, 27, 24, 1473, 543, 2,
+  3, 2, 553, 2, 3, 2, 895, 82, 2, 3, 2, 89, 2, 23
+};
