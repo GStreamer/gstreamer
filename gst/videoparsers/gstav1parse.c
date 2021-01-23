@@ -770,18 +770,21 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 
 static GstFlowReturn
 gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
-    guint32 finish_sz)
+    guint32 finish_sz, gboolean frame_finished)
 {
   gsize sz;
   GstBuffer *buf;
   GstBuffer *buffer = frame->buffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  g_assert (self->align != self->in_align);
+  /* Need to generate the final TU annex-b format */
   if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
     guint8 size_data[GST_AV1_MAX_LEB_128_SIZE];
     guint size_len = 0;
     guint len;
+
+    /* When push a TU, it must also be a frame end. */
+    g_assert (frame_finished);
 
     /* Still some left in the frame cache */
     len = gst_adapter_available (self->frame_cache);
@@ -825,13 +828,16 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
       self->keyframe = FALSE;
     }
-    /* Always be a frame boundary. */
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
+
+    if (frame_finished)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
+
     gst_buffer_replace (&frame->out_buffer, buf);
     gst_buffer_unref (buf);
 
     gst_av1_parse_update_src_caps (self, NULL);
-    GST_LOG_OBJECT (self, "complete one frame with size %" G_GSSIZE_FORMAT, sz);
+    GST_LOG_OBJECT (self, "comsumed %d, output one buffer with size %"
+        G_GSSIZE_FORMAT, finish_sz, sz);
     ret = gst_base_parse_finish_frame (GST_BASE_PARSE (self), frame, finish_sz);
   }
 
@@ -965,6 +971,33 @@ gst_av1_parse_convert_from_annexb (GstAV1Parse * self, GstAV1OBU * obu)
   gst_adapter_push (self->cache_out, buf);
 
   gst_bit_writer_reset (&bs);
+}
+
+static void
+gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
+    guint8 * data, guint32 size, gboolean frame_complete)
+{
+  gboolean need_convert = FALSE;
+  GstBuffer *buf;
+
+  if (self->in_align != self->align
+      && (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B
+          || self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B))
+    need_convert = TRUE;
+
+  if (need_convert) {
+    if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
+      gst_av1_parse_convert_from_annexb (self, obu);
+    } else {
+      gst_av1_parse_convert_to_annexb (self, obu, frame_complete);
+    }
+  } else if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
+    g_assert (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B);
+    gst_av1_parse_convert_to_annexb (self, obu, frame_complete);
+  } else {
+    buf = gst_buffer_new_wrapped (g_memdup (data, size), size);
+    gst_adapter_push (self->cache_out, buf);
+  }
 }
 
 static GstAV1ParserResult
@@ -1276,18 +1309,12 @@ gst_av1_parse_handle_to_small_and_equal_align (GstBaseParse * parse,
   GstAV1ParserResult res;
   GstBuffer *buffer = gst_buffer_ref (frame->buffer);
   guint32 total_consumed, consumed;
-  gboolean need_convert = FALSE;
   gboolean frame_complete;
 
   if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (parse, "Couldn't map incoming buffer");
     return GST_FLOW_ERROR;
   }
-
-  if (self->in_align != self->align
-      && (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B
-          || self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B))
-    need_convert = TRUE;
 
   total_consumed = 0;
   frame_complete = FALSE;
@@ -1309,15 +1336,10 @@ again:
       break;
     }
 
-    total_consumed += consumed;
+    gst_av1_parse_cache_one_obu (self, &obu,
+        map_info.data + total_consumed, consumed, frame_complete);
 
-    if (need_convert) {
-      if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
-        gst_av1_parse_convert_from_annexb (self, &obu);
-      } else {
-        gst_av1_parse_convert_to_annexb (self, &obu, frame_complete);
-      }
-    }
+    total_consumed += consumed;
 
     if (self->align == GST_AV1_PARSE_ALIGN_FRAME && frame_complete)
       break;
@@ -1362,26 +1384,7 @@ again:
         gst_av1_parse_alignment_to_string (self->in_align));
   }
 
-  if (!need_convert) {
-    gst_av1_parse_update_src_caps (self, NULL);
-    if (self->discont) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-      self->discont = FALSE;
-    }
-    if (self->header) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
-      self->header = FALSE;
-    }
-    if (self->keyframe) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-      self->keyframe = FALSE;
-    }
-    /* Always be a frame boundary. */
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
-    ret = gst_base_parse_finish_frame (parse, frame, total_consumed);
-  } else {
-    ret = gst_av1_parse_push_data (self, frame, total_consumed);
-  }
+  ret = gst_av1_parse_push_data (self, frame, total_consumed, frame_complete);
 
 out:
   gst_buffer_unmap (buffer, &map_info);
@@ -1455,7 +1458,8 @@ again:
 
     /* push the left anyway if no error */
     if (res == GST_AV1_PARSER_OK)
-      ret = gst_av1_parse_push_data (self, frame, self->last_parsed_offset);
+      ret = gst_av1_parse_push_data (self, frame,
+          self->last_parsed_offset, TRUE);
 
     self->last_parsed_offset = 0;
 
