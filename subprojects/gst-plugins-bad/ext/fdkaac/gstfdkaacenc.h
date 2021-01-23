@@ -51,6 +51,8 @@ struct _GstFdkAacEnc {
   gboolean need_reorder;
   const GstAudioChannelPosition *aac_positions;
   gboolean is_drained;
+
+  gboolean afterburner;
 };
 
 struct _GstFdkAacEncClass {

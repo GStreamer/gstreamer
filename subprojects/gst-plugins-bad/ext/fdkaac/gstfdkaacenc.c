@@ -30,7 +30,7 @@
 
 /* TODO:
  * - Add support for other AOT / profiles
- * - Expose more properties, e.g. afterburner and vbr
+ * - Expose more properties, e.g. vbr
  * - Signal encoder delay
  * - LOAS / LATM support
  */
@@ -38,6 +38,7 @@
 enum
 {
   PROP_0,
+  PROP_AFTERBURNER,
   PROP_BITRATE
 };
 
@@ -109,6 +110,9 @@ gst_fdkaacenc_set_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       self->bitrate = g_value_get_int (value);
       break;
+    case PROP_AFTERBURNER:
+      self->afterburner = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -125,6 +129,9 @@ gst_fdkaacenc_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_BITRATE:
       g_value_set_int (value, self->bitrate);
+      break;
+    case PROP_AFTERBURNER:
+      g_value_set_boolean (value, self->afterburner);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -427,6 +434,16 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
+  if (self->afterburner) {
+    if ((err =
+            aacEncoder_SetParam (self->enc, AACENC_AFTERBURNER,
+                1)) != AACENC_OK) {
+      GST_ERROR_OBJECT (self, "Could not enable afterburner: %d", err);
+      return FALSE;
+    }
+
+    GST_INFO_OBJECT (self, "Afterburner enabled");
+  }
   if ((err = aacEncEncode (self->enc, NULL, NULL, NULL, NULL)) != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Unable to initialize encoder: %d", err);
     return FALSE;
@@ -613,6 +630,7 @@ gst_fdkaacenc_init (GstFdkAacEnc * self)
   self->bitrate = DEFAULT_BITRATE;
   self->enc = NULL;
   self->is_drained = TRUE;
+  self->afterburner = FALSE;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (self), TRUE);
 }
@@ -642,6 +660,17 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
           0, G_MAXINT, DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstFdkAacEnc:afterburner:
+   *
+   * Afterburner - Quality Parameter.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_AFTERBURNER,
+      g_param_spec_boolean ("afterburner", "Afterburner - Quality Parameter",
+          "Additional quality control parameter. Can cause workload increase.",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
