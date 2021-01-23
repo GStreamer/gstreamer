@@ -1191,7 +1191,7 @@ gst_av1_parse_handle_obu_to_obu (GstBaseParse * parse,
 
   total_consumed = 0;
 again:
-  while (TRUE) {
+  while (total_consumed < map_info.size) {
     frame_complete = FALSE;
     res = gst_av1_parser_identify_one_obu (self->parser,
         map_info.data + total_consumed, map_info.size - total_consumed,
@@ -1202,12 +1202,8 @@ again:
       break;
 
     total_consumed += consumed;
-
-    g_assert (total_consumed <= map_info.size);
-
-    if (total_consumed >= map_info.size)
-      break;
   }
+  g_assert (total_consumed <= map_info.size);
 
   if (total_consumed) {
     /* If we get something, always output it even already met some error.
@@ -1255,6 +1251,7 @@ again:
   } else if (res == GST_AV1_PARSER_DROP) {
     GST_DEBUG_OBJECT (parse, "Drop %d data", consumed);
     total_consumed += consumed;
+    res = GST_AV1_PARSER_OK;
     goto again;
   } else if (res != GST_AV1_PARSER_OK) {
     GST_ERROR_OBJECT (parse, "Parse obu get unexpect error %d", res);
@@ -1295,7 +1292,7 @@ gst_av1_parse_handle_to_small_and_equal_align (GstBaseParse * parse,
   total_consumed = 0;
   frame_complete = FALSE;
 again:
-  while (TRUE) {
+  while (total_consumed < map_info.size) {
     res = gst_av1_parser_identify_one_obu (self->parser,
         map_info.data + total_consumed, map_info.size - total_consumed,
         &obu, &consumed);
@@ -1324,11 +1321,8 @@ again:
 
     if (self->align == GST_AV1_PARSE_ALIGN_FRAME && frame_complete)
       break;
-
-    g_assert (total_consumed <= map_info.size);
-    if (total_consumed >= map_info.size)
-      break;
   }
+  g_assert (total_consumed <= map_info.size);
 
   if (res == GST_AV1_PARSER_BITSTREAM_ERROR) {
     /* Discard the whole frame */
@@ -1350,6 +1344,7 @@ again:
   } else if (res == GST_AV1_PARSER_DROP) {
     GST_DEBUG_OBJECT (parse, "Drop %d data", consumed);
     total_consumed += consumed;
+    res = GST_AV1_PARSER_OK;
     goto again;
   } else if (res != GST_AV1_PARSER_OK) {
     GST_ERROR_OBJECT (parse, "Parse obu get unexpect error %d", res);
@@ -1489,6 +1484,7 @@ again:
   } else if (res == GST_AV1_PARSER_DROP) {
     GST_DEBUG_OBJECT (parse, "Drop %d data", consumed);
     self->last_parsed_offset += consumed;
+    res = GST_AV1_PARSER_OK;
     goto again;
   } else if (res == GST_AV1_PARSER_OK) {
     /* Everything is correct but still not get a frame or tu,
@@ -1537,7 +1533,7 @@ gst_av1_parse_detect_alignment (GstBaseParse * parse,
   got_frame = FALSE;
   total_consumed = 0;
 again:
-  while (TRUE) {
+  while (total_consumed < map_info.size) {
     res = gst_av1_parser_identify_one_obu (self->parser,
         map_info.data + total_consumed, map_info.size - total_consumed,
         &obu, &consumed);
@@ -1557,9 +1553,6 @@ again:
 
     if (got_seq || got_frame)
       break;
-
-    if (total_consumed >= map_info.size)
-      break;
   }
 
   gst_av1_parser_reset (self->parser, FALSE);
@@ -1576,6 +1569,7 @@ again:
     goto out;
   } else if (res == GST_AV1_PARSER_DROP) {
     total_consumed += consumed;
+    res = GST_AV1_PARSER_OK;
     goto again;
   }
 
