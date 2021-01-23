@@ -1330,6 +1330,9 @@ again:
           " buffer, should not happen normally.",
           gst_av1_parse_alignment_to_string (self->in_align));
       frame_complete = TRUE;
+      if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B)
+        gst_av1_parser_reset_annex_b (self->parser);
+      /* Not include this TD obu, it should belong to the next TU or frame */
       break;
     }
 
