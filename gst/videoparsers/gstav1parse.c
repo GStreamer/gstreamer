@@ -28,10 +28,11 @@
  * alignment: byte, obu, frame, tu
  *
  * 1. Aligned to byte. The basic and default one for input.
- * 2. Aligned to obu(Open Bitstream Units). The default one for output.
- * 3. Aligned to frame. This ensures that each buffer contains only one
- *    frame or frame header with show_existing flag for the base or sub
- *    layer. It is useful for the decoder.
+ * 2. Aligned to obu(Open Bitstream Units).
+ * 3. Aligned to frame. The default one for output. This ensures that
+ *    each buffer contains only one frame or frame header with the
+ *    show_existing flag for the base or sub layer. It is useful for
+ *    the decoder.
  * 4. Aligned to tu(Temporal Unit). A temporal unit consists of all the
  *    OBUs that are associated with a specific, distinct time instant.
  *    When scalability is disabled, it contains just exact one showing
@@ -660,7 +661,7 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
 
   /* default */
   if (align == GST_AV1_PARSE_ALIGN_NONE)
-    align = GST_AV1_PARSE_ALIGN_OBU;
+    align = GST_AV1_PARSE_ALIGN_FRAME;
 
 done:
   self->align = align;
@@ -746,7 +747,7 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   /* default */
   if (align == GST_AV1_PARSE_ALIGN_NONE)
     gst_caps_set_simple (in_caps, "alignment", G_TYPE_STRING,
-        gst_av1_parse_alignment_to_string (GST_AV1_PARSE_ALIGN_OBU), NULL);
+        gst_av1_parse_alignment_to_string (GST_AV1_PARSE_ALIGN_BYTE), NULL);
 
   /* negotiate with downstream, set output align */
   gst_av1_parse_negotiate (self, in_caps);
