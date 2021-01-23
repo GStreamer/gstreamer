@@ -514,6 +514,9 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   gint fps_n = 0, fps_d = 0;
   const gchar *profile = NULL;
 
+  if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (self))))
+    self->update_caps = TRUE;
+
   if (!self->update_caps)
     return;
 
@@ -1213,7 +1216,7 @@ gst_av1_parse_handle_obu_to_obu (GstBaseParse * parse,
   GstFlowReturn ret = GST_FLOW_OK;
   GstAV1ParserResult res;
   GstBuffer *buffer = gst_buffer_ref (frame->buffer);
-  guint32 consumed, total_consumed;
+  guint32 consumed;
   gboolean frame_complete;
 
   if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
@@ -1222,42 +1225,14 @@ gst_av1_parse_handle_obu_to_obu (GstBaseParse * parse,
     return GST_FLOW_ERROR;
   }
 
-  total_consumed = 0;
-again:
-  while (total_consumed < map_info.size) {
-    frame_complete = FALSE;
-    res = gst_av1_parser_identify_one_obu (self->parser,
-        map_info.data + total_consumed, map_info.size - total_consumed,
-        &obu, &consumed);
-    if (res == GST_AV1_PARSER_OK)
-      res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete);
-    if (res != GST_AV1_PARSER_OK)
-      break;
+  consumed = 0;
+  frame_complete = FALSE;
+  res = gst_av1_parser_identify_one_obu (self->parser, map_info.data,
+      map_info.size, &obu, &consumed);
+  if (res == GST_AV1_PARSER_OK)
+    res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete);
 
-    total_consumed += consumed;
-  }
-  g_assert (total_consumed <= map_info.size);
-
-  if (total_consumed) {
-    /* If we get something, always output it even already met some error.
-       Next handle_frame loop will handle that error. */
-    gst_av1_parse_update_src_caps (self, NULL);
-    if (self->discont) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-      self->discont = FALSE;
-    }
-    if (self->header) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
-      self->header = FALSE;
-    }
-    /* happen to be a frame boundary */
-    if (frame_complete)
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
-
-    ret = gst_base_parse_finish_frame (parse, frame, total_consumed);
-    *skipsize = 0;
-    goto out;
-  }
+  g_assert (consumed <= map_info.size);
 
   if (res == GST_AV1_PARSER_BITSTREAM_ERROR) {
     if (consumed) {
@@ -1267,6 +1242,7 @@ again:
     }
     GST_WARNING_OBJECT (parse, "Parse obu error, discard %d.", *skipsize);
     ret = GST_FLOW_OK;
+    goto out;
   } else if (res == GST_AV1_PARSER_NO_MORE_DATA) {
     *skipsize = 0;
 
@@ -1281,16 +1257,37 @@ again:
           *skipsize);
     }
     ret = GST_FLOW_OK;
+    goto out;
   } else if (res == GST_AV1_PARSER_DROP) {
     GST_DEBUG_OBJECT (parse, "Drop %d data", consumed);
-    total_consumed += consumed;
-    res = GST_AV1_PARSER_OK;
-    goto again;
+    *skipsize = consumed;
+    ret = GST_FLOW_OK;
+    goto out;
   } else if (res != GST_AV1_PARSER_OK) {
     GST_ERROR_OBJECT (parse, "Parse obu get unexpect error %d", res);
     *skipsize = 0;
     ret = GST_FLOW_ERROR;
+    goto out;
   }
+
+  g_assert (consumed);
+
+  gst_av1_parse_update_src_caps (self, NULL);
+  if (self->discont) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    self->discont = FALSE;
+  }
+  if (self->header) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+    self->header = FALSE;
+  }
+  /* happen to be a frame boundary */
+  if (frame_complete)
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
+
+  GST_LOG_OBJECT (self, "Output one buffer with size %d", consumed);
+  ret = gst_base_parse_finish_frame (parse, frame, consumed);
+  *skipsize = 0;
 
 out:
   gst_buffer_unmap (buffer, &map_info);
@@ -1341,10 +1338,12 @@ again:
 
     total_consumed += consumed;
 
+    if (self->align == GST_AV1_PARSE_ALIGN_OBU)
+      break;
+
     if (self->align == GST_AV1_PARSE_ALIGN_FRAME && frame_complete)
       break;
   }
-  g_assert (total_consumed <= map_info.size);
 
   if (res == GST_AV1_PARSER_BITSTREAM_ERROR) {
     /* Discard the whole frame */
@@ -1375,7 +1374,9 @@ again:
     goto out;
   }
 
-  g_assert (total_consumed >= map_info.size || frame_complete);
+  g_assert (total_consumed >= map_info.size || frame_complete
+      || self->align == GST_AV1_PARSE_ALIGN_OBU);
+
   if (total_consumed >= map_info.size && !frame_complete
       && self->align == GST_AV1_PARSE_ALIGN_FRAME) {
     /* Warning and still consider this frame as complete */
