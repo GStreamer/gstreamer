@@ -46,6 +46,17 @@ enum {
   GST_VA_FILTER_PROP_LAST
 };
 
+typedef struct _GstVaSample GstVaSample;
+struct _GstVaSample
+{
+  GstBuffer *buffer;
+  guint32 flags;
+
+  /*< private >*/
+  VASurfaceID surface;
+  VARectangle rect;
+};
+
 GstVaFilter *         gst_va_filter_new                   (GstVaDisplay * display);
 gboolean              gst_va_filter_open                  (GstVaFilter * self);
 gboolean              gst_va_filter_close                 (GstVaFilter * self);
@@ -72,7 +83,7 @@ gboolean              gst_va_filter_add_filter_buffer     (GstVaFilter * self,
                                                            guint num);
 gboolean              gst_va_filter_drop_filter_buffers   (GstVaFilter * self);
 gboolean              gst_va_filter_convert_surface       (GstVaFilter * self,
-                                                           VASurfaceID in_surface,
-                                                           VASurfaceID out_surface);
+                                                           GstVaSample * src,
+                                                           GstVaSample * dest);
 
 G_END_DECLS

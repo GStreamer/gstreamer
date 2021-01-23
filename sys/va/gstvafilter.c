@@ -28,6 +28,7 @@
 
 #include <va/va_drmcommon.h>
 
+#include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvavideoformat.h"
 
@@ -1234,8 +1235,25 @@ gst_va_filter_drop_filter_buffers (GstVaFilter * self)
 }
 
 static gboolean
-_create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
-    VARectangle * src_rect, VARectangle * dst_rect, VABufferID * buffer)
+_fill_va_sample (GstVaFilter * self, GstVaSample * sample,
+    GstPadDirection direction)
+{
+  sample->surface = gst_va_buffer_get_surface (sample->buffer);
+  if (sample->surface == VA_INVALID_ID)
+    return FALSE;
+
+  /* TODO: handle GstVideoCropMeta */
+  GST_OBJECT_LOCK (self);
+  sample->rect = (direction == GST_PAD_SRC) ?
+      self->output_region : self->input_region;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
+static gboolean
+_create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
+    GstVaSample * dst, VABufferID * buffer)
 {
   VADisplay dpy;
   VAStatus status;
@@ -1252,16 +1270,18 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
   }
 
   params = (VAProcPipelineParameterBuffer) {
-    .surface = surface,
-    .surface_region = src_rect,
+    .surface = src->surface,
+    .surface_region = &src->rect,
     .surface_color_standard = self->input_color_standard,
-    .output_region = dst_rect,
+    .output_region = &dst->rect,
     .output_background_color = 0xff000000, /* ARGB black */
     .output_color_standard = self->output_color_standard,
     .filters = filters,
     .num_filters = num_filters,
     .rotation_state = self->rotation,
     .mirror_state = self->mirror,
+    .input_surface_flag = src->flags,
+    .output_surface_flag = dst->flags,
     .input_color_properties = self->input_color_properties,
     .output_color_properties = self->output_color_properties,
   };
@@ -1286,31 +1306,28 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
 }
 
 gboolean
-gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
-    VASurfaceID out_surface)
+gst_va_filter_convert_surface (GstVaFilter * self, GstVaSample * src,
+    GstVaSample * dst)
 {
-  VABufferID buffer;
+  VABufferID buffer, *filters = NULL;
   VADisplay dpy;
   VAProcPipelineCaps pipeline_caps = { 0, };
-  VARectangle src_rect;
-  VARectangle dst_rect;
   VAStatus status;
-  VABufferID *filters = NULL;
-  guint32 num_filters = 0;
   gboolean ret = FALSE;
+  guint32 num_filters = 0;
 
   g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
-  g_return_val_if_fail (in_surface != VA_INVALID_ID
-      && out_surface != VA_INVALID_ID, FALSE);
+  g_return_val_if_fail (src && GST_IS_BUFFER (src->buffer), FALSE);
+  g_return_val_if_fail (dst && GST_IS_BUFFER (dst->buffer), FALSE);
 
   if (!gst_va_filter_is_open (self))
     return FALSE;
 
-  GST_TRACE_OBJECT (self, "Processing %#x", in_surface);
+  if (!(_fill_va_sample (self, src, GST_PAD_SINK)
+          && _fill_va_sample (self, dst, GST_PAD_SRC)))
+    return FALSE;
 
   GST_OBJECT_LOCK (self);
-  src_rect = self->input_region;
-  dst_rect = self->output_region;
 
   if (self->filters) {
     g_array_ref (self->filters);
@@ -1331,12 +1348,11 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
     return FALSE;
   }
 
-  if (!_create_pipeline_buffer (self, in_surface, &src_rect, &dst_rect,
-          &buffer))
+  if (!_create_pipeline_buffer (self, src, dst, &buffer))
     return FALSE;
 
   gst_va_display_lock (self->display);
-  status = vaBeginPicture (dpy, self->context, out_surface);
+  status = vaBeginPicture (dpy, self->context, dst->surface);
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));

@@ -1235,7 +1235,7 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstVaVpp *self = GST_VA_VPP (trans);
   GstBuffer *buf = NULL;
   GstFlowReturn res = GST_FLOW_OK;
-  VASurfaceID in_surface, out_surface;
+  GstVaSample src, dst;
 
   if (G_UNLIKELY (!self->negotiated))
     goto unknown_format;
@@ -1244,10 +1244,17 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (res != GST_FLOW_OK)
     return res;
 
-  in_surface = gst_va_buffer_get_surface (buf);
-  out_surface = gst_va_buffer_get_surface (outbuf);
+  /* *INDENT-OFF* */
+  src = (GstVaSample) {
+    .buffer = buf,
+  };
 
-  if (!gst_va_filter_convert_surface (self->filter, in_surface, out_surface)) {
+  dst = (GstVaSample) {
+    .buffer = outbuf,
+  };
+  /* *INDENT-ON* */
+
+  if (!gst_va_filter_convert_surface (self->filter, &src, &dst)) {
     gst_buffer_set_flags (outbuf, GST_BUFFER_FLAG_CORRUPTED);
   }
 
