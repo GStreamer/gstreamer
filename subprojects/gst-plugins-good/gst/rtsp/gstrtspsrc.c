@@ -9322,68 +9322,227 @@ not_supported:
 
 /* RTP-Info is of the format:
  *
- * url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
+ * RTSP 1.0: url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
+ * RTSP 2.0: url="<URL>"<SP>ssrc=<SSRC>[:seq=<seqbase>;rtptime=<timebase>;key=value] [<SP>ssrc=...] [, url=...]
  *
  * rtptime corresponds to the timestamp for the NPT time given in the header
  * seqbase corresponds to the next sequence number we received. This number
  * indicates the first seqnum after the seek and should be used to discard
  * packets that are from before the seek.
+ *
+ * FIXME: We only make use of the first SSRC in case of RTSP 2.0!
  */
 static gboolean
 gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
 {
-  gchar **infos;
-  gint i, j;
+  gchar *rtpinfo_end;
 
   GST_DEBUG_OBJECT (src, "parsing RTP-Info %s", rtpinfo);
 
-  infos = g_strsplit (rtpinfo, ",", 0);
-  for (i = 0; infos[i]; i++) {
-    gchar **fields;
-    GstRTSPStream *stream;
-    gint32 seqbase;
-    gint64 timebase;
+  rtpinfo_end = rtpinfo + strlen (rtpinfo);
 
-    GST_DEBUG_OBJECT (src, "parsing info %s", infos[i]);
+  /* Check for an actual RTSP 2.0 RTP-Info in addition because gst-rtsp-server
+   * was outputting RTSP 1.0 RTP-Infos in the past for both versions */
+  if (src->version >= GST_RTSP_VERSION_2_0
+      && strstr (rtpinfo, "url=\"") != NULL) {
+    while (*rtpinfo) {
+      gchar *tmp1, *tmp2;
+      gchar *url;
+      GstRTSPStream *stream;
+      gint32 seqbase;
+      gint64 timebase;
 
-    /* init values, types of seqbase and timebase are bigger than needed so we
-     * can store -1 as uninitialized values */
-    stream = NULL;
-    seqbase = -1;
-    timebase = -1;
+      /* init values, types of seqbase and timebase are bigger than needed so we
+       * can store -1 as uninitialized values */
+      stream = NULL;
+      seqbase = -1;
+      timebase = -1;
 
-    /* parse url, find stream for url.
-     * parse seq and rtptime. The seq number should be configured in the rtp
-     * depayloader or session manager to detect gaps. Same for the rtptime, it
-     * should be used to create an initial time newsegment. */
-    fields = g_strsplit (infos[i], ";", 0);
-    for (j = 0; fields[j]; j++) {
-      GST_DEBUG_OBJECT (src, "parsing field %s", fields[j]);
-      /* remove leading whitespace */
-      fields[j] = g_strchug (fields[j]);
-      if (g_str_has_prefix (fields[j], "url=")) {
-        /* get the url and the stream */
-        stream =
-            find_stream (src, (fields[j] + 4), (gpointer) find_stream_by_setup);
-      } else if (g_str_has_prefix (fields[j], "seq=")) {
-        seqbase = atoi (fields[j] + 4);
-      } else if (g_str_has_prefix (fields[j], "rtptime=")) {
-        timebase = g_ascii_strtoll (fields[j] + 8, NULL, 10);
+      /* Find url=" */
+      tmp1 = strstr (rtpinfo, "url=\"");
+      if (!tmp1) {
+        return FALSE;
+      }
+
+      /* Right after the " */
+      tmp1 += sizeof ("url=\"") - 1;
+      tmp2 = tmp1;
+
+      while (*tmp2) {
+        if (tmp2[0] == '\\') {
+          if (tmp2[1] != '\0') {
+            tmp2 += 2;
+          } else {
+            return FALSE;
+          }
+        } else if (tmp2[0] == '"') {
+          break;
+        } else {
+          tmp2++;
+        }
+      }
+
+      url = g_strndup (tmp1, tmp2 - tmp1);
+      GST_DEBUG_OBJECT (src, "url=%s", url);
+      /* get the url and the stream */
+      stream = find_stream (src, url, (gpointer) find_stream_by_setup);
+      g_free (url);
+      url = NULL;
+
+      rtpinfo = tmp2 + 1;
+
+      /* At the start of the SSRCs, a space-separated list ending at the next
+       * URL which would start with a comma */
+      while (*rtpinfo && *rtpinfo != ',') {
+        tmp1 = rtpinfo;
+        if (tmp1[0] != ' ')
+          return FALSE;
+        tmp1++;
+
+        if (!g_str_has_prefix (tmp1, "ssrc="))
+          return FALSE;
+        tmp1 += sizeof ("ssrc=") - 1;
+
+        /* At the start of the first SSRC now, which is optionally followed by
+         * a colon and key=value pairs separated by semicolon. The values
+         * might be in quotes. */
+        if (rtpinfo_end - tmp1 <= 8)
+          return FALSE;
+        tmp1 += 8;
+
+        /* New SSRC following, or next URL */
+        rtpinfo = tmp1;
+        if (*rtpinfo != ':') {
+          continue;
+        }
+
+        rtpinfo++;
+
+        /* Key-value pairs following */
+        while (*rtpinfo && *rtpinfo != ' ' && *rtpinfo != ',') {
+          gchar *key, *value;
+          gboolean in_quotes = FALSE;
+
+          tmp1 = rtpinfo;
+          tmp2 = strchr (tmp1, '=');
+          if (!tmp2)
+            return FALSE;
+
+          key = g_strndup (tmp1, tmp2 - tmp1);
+          tmp2++;
+
+          /* Start of the value */
+          tmp1 = tmp2;
+          while (*tmp2) {
+            if (in_quotes && tmp2[0] == '"') {
+              in_quotes = FALSE;
+              tmp2++;
+            } else if (!in_quotes && tmp2[0] == '"') {
+              in_quotes = TRUE;
+              tmp2++;
+            } else if (in_quotes && tmp2[0] == '\\') {
+              if (tmp2[1] != '\0') {
+                tmp2 += 2;
+              } else {
+                g_free (key);
+                return FALSE;
+              }
+            } else if (in_quotes) {
+              tmp2++;
+            } else if (tmp2[0] == ';' || tmp2[0] == ' ' || tmp2[0] == ',') {
+              break;
+            } else {
+              tmp2++;
+            }
+          }
+
+          if (tmp1 == tmp2) {
+            g_free (key);
+            break;
+          }
+
+          value = g_strndup (tmp1, tmp2 - tmp1);
+
+          if (strcmp (key, "seq") == 0) {
+            seqbase = atoi (value);
+          } else if (strcmp (key, "rtptime") == 0) {
+            timebase = g_ascii_strtoll (value, NULL, 10);
+          }
+
+          g_free (key);
+          g_free (value);
+
+          rtpinfo = tmp2;
+          if (tmp2[0] != ';')
+            break;
+          rtpinfo += 1;
+        }
+      }
+
+      /* now we need to store the values for the caps of the stream */
+      if (stream != NULL) {
+        GST_DEBUG_OBJECT (src,
+            "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
+            stream, seqbase, timebase);
+
+        /* we have a stream, configure detected params */
+        stream->seqbase = seqbase;
+        stream->timebase = timebase;
       }
     }
-    g_strfreev (fields);
-    /* now we need to store the values for the caps of the stream */
-    if (stream != NULL) {
-      GST_DEBUG_OBJECT (src,
-          "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
-          stream, seqbase, timebase);
+  } else {
+    gchar **infos;
+    gint i, j;
 
-      /* we have a stream, configure detected params */
-      stream->seqbase = seqbase;
-      stream->timebase = timebase;
+    infos = g_strsplit (rtpinfo, ",", 0);
+    for (i = 0; infos[i]; i++) {
+      gchar **fields;
+      GstRTSPStream *stream;
+      gint32 seqbase;
+      gint64 timebase;
+
+      GST_DEBUG_OBJECT (src, "parsing info %s", infos[i]);
+
+      /* init values, types of seqbase and timebase are bigger than needed so we
+       * can store -1 as uninitialized values */
+      stream = NULL;
+      seqbase = -1;
+      timebase = -1;
+
+      /* parse url, find stream for url.
+       * parse seq and rtptime. The seq number should be configured in the rtp
+       * depayloader or session manager to detect gaps. Same for the rtptime, it
+       * should be used to create an initial time newsegment. */
+      fields = g_strsplit (infos[i], ";", 0);
+      for (j = 0; fields[j]; j++) {
+        GST_DEBUG_OBJECT (src, "parsing field %s", fields[j]);
+        /* remove leading whitespace */
+        fields[j] = g_strchug (fields[j]);
+        if (g_str_has_prefix (fields[j], "url=")) {
+          /* get the url and the stream */
+          stream =
+              find_stream (src, (fields[j] + 4),
+              (gpointer) find_stream_by_setup);
+        } else if (g_str_has_prefix (fields[j], "seq=")) {
+          seqbase = atoi (fields[j] + 4);
+        } else if (g_str_has_prefix (fields[j], "rtptime=")) {
+          timebase = g_ascii_strtoll (fields[j] + 8, NULL, 10);
+        }
+      }
+      g_strfreev (fields);
+      /* now we need to store the values for the caps of the stream */
+      if (stream != NULL) {
+        GST_DEBUG_OBJECT (src,
+            "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
+            stream, seqbase, timebase);
+
+        /* we have a stream, configure detected params */
+        stream->seqbase = seqbase;
+        stream->timebase = timebase;
+      }
     }
+    g_strfreev (infos);
   }
-  g_strfreev (infos);
 
   return TRUE;
 }
