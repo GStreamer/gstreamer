@@ -121,7 +121,7 @@ handle_message (CustomData * data, GstMessage * msg)
       data->terminate = TRUE;
       break;
     case GST_MESSAGE_EOS:
-      g_print ("End-Of-Stream reached.\n");
+      g_print ("\nEnd-Of-Stream reached.\n");
       data->terminate = TRUE;
       break;
     case GST_MESSAGE_DURATION:
