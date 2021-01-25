@@ -423,7 +423,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    *
    * Since: 1.20
    */
-  gst_rtp_base_payload_signals[SIGNAL_ADD_EXTENSION] =
+  gst_rtp_base_payload_signals[SIGNAL_CLEAR_EXTENSIONS] =
       g_signal_new_class_handler ("clear-extensions", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_rtp_base_payload_clear_extensions), NULL, NULL, NULL,
