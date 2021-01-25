@@ -95,7 +95,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_INT_RANGE value.
  */
-#define GST_VALUE_HOLDS_INT_RANGE(x)      ((x) != NULL && G_VALUE_TYPE(x) == _gst_int_range_type)
+#define GST_VALUE_HOLDS_INT_RANGE(x)      ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_int_range_type)
 
 /**
  * GST_VALUE_HOLDS_INT64_RANGE:
@@ -103,7 +103,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_INT64_RANGE value.
  */
-#define GST_VALUE_HOLDS_INT64_RANGE(x)    ((x) != NULL && G_VALUE_TYPE(x) == _gst_int64_range_type)
+#define GST_VALUE_HOLDS_INT64_RANGE(x)    ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_int64_range_type)
 
 /**
  * GST_VALUE_HOLDS_DOUBLE_RANGE:
@@ -111,7 +111,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_DOUBLE_RANGE value.
  */
-#define GST_VALUE_HOLDS_DOUBLE_RANGE(x)   ((x) != NULL && G_VALUE_TYPE(x) == _gst_double_range_type)
+#define GST_VALUE_HOLDS_DOUBLE_RANGE(x)   ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_double_range_type)
 
 /**
  * GST_VALUE_HOLDS_FRACTION_RANGE:
@@ -119,7 +119,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_FRACTION_RANGE value.
  */
-#define GST_VALUE_HOLDS_FRACTION_RANGE(x) ((x) != NULL && G_VALUE_TYPE(x) == _gst_fraction_range_type)
+#define GST_VALUE_HOLDS_FRACTION_RANGE(x) ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_fraction_range_type)
 
 /**
  * GST_VALUE_HOLDS_LIST:
@@ -127,7 +127,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_LIST value.
  */
-#define GST_VALUE_HOLDS_LIST(x)         ((x) != NULL && G_VALUE_TYPE(x) == _gst_value_list_type)
+#define GST_VALUE_HOLDS_LIST(x)         ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_value_list_type)
 
 /**
  * GST_VALUE_HOLDS_ARRAY:
@@ -135,7 +135,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_ARRAY value.
  */
-#define GST_VALUE_HOLDS_ARRAY(x)        ((x) != NULL && G_VALUE_TYPE(x) == _gst_value_array_type)
+#define GST_VALUE_HOLDS_ARRAY(x)        ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_value_array_type)
 
 /**
  * GST_VALUE_HOLDS_CAPS:
@@ -143,7 +143,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_CAPS value.
  */
-#define GST_VALUE_HOLDS_CAPS(x)         ((x) != NULL && G_VALUE_TYPE(x) == _gst_caps_type)
+#define GST_VALUE_HOLDS_CAPS(x)         ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_caps_type)
 
 /**
  * GST_VALUE_HOLDS_STRUCTURE:
@@ -151,7 +151,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_STRUCTURE value.
  */
-#define GST_VALUE_HOLDS_STRUCTURE(x)         ((x) != NULL && G_VALUE_TYPE(x) == _gst_structure_type)
+#define GST_VALUE_HOLDS_STRUCTURE(x)      ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_structure_type)
 
 /**
  * GST_VALUE_HOLDS_CAPS_FEATURES:
@@ -159,7 +159,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_CAPS_FEATURES value.
  */
-#define GST_VALUE_HOLDS_CAPS_FEATURES(x)         ((x) != NULL && G_VALUE_TYPE(x) == _gst_caps_features_type)
+#define GST_VALUE_HOLDS_CAPS_FEATURES(x)  ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_caps_features_type)
 
 /**
  * GST_VALUE_HOLDS_BUFFER:
@@ -167,7 +167,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_BUFFER value.
  */
-#define GST_VALUE_HOLDS_BUFFER(x)       ((x) != NULL && G_VALUE_TYPE(x) == _gst_buffer_type)
+#define GST_VALUE_HOLDS_BUFFER(x)       ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_buffer_type)
 
 /**
  * GST_VALUE_HOLDS_SAMPLE:
@@ -175,7 +175,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_SAMPLE value.
  */
-#define GST_VALUE_HOLDS_SAMPLE(x)       ((x) != NULL && G_VALUE_TYPE(x) == _gst_sample_type)
+#define GST_VALUE_HOLDS_SAMPLE(x)       ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_sample_type)
 
 /**
  * GST_VALUE_HOLDS_FRACTION:
@@ -183,7 +183,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_FRACTION value.
  */
-#define GST_VALUE_HOLDS_FRACTION(x)     ((x) != NULL && G_VALUE_TYPE(x) == _gst_fraction_type)
+#define GST_VALUE_HOLDS_FRACTION(x)     ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_fraction_type)
 
 /**
  * GST_VALUE_HOLDS_DATE_TIME:
@@ -191,7 +191,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_DATE_TIME value.
  */
-#define GST_VALUE_HOLDS_DATE_TIME(x)    ((x) != NULL && G_VALUE_TYPE(x) == _gst_date_time_type)
+#define GST_VALUE_HOLDS_DATE_TIME(x)    ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_date_time_type)
 
 /**
  * GST_VALUE_HOLDS_BITMASK:
@@ -199,7 +199,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_BITMASK value.
  */
-#define GST_VALUE_HOLDS_BITMASK(x)      ((x) != NULL && G_VALUE_TYPE(x) == _gst_bitmask_type)
+#define GST_VALUE_HOLDS_BITMASK(x)      ((gpointer)(x) != NULL && G_VALUE_TYPE(x) == _gst_bitmask_type)
 
 /**
  * GST_VALUE_HOLDS_FLAG_SET:
