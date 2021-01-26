@@ -64,7 +64,7 @@ static GstStaticPadTemplate ldac_enc_src_factory =
         "rate = (int) { 44100, 48000, 88200, 96000 }, "
         "channels = (int) 1, channel-mode = (string)mono; "
         "audio/x-ldac, "
-        "rate = (int) { 44100, 48000, 882000, 96000 }, "
+        "rate = (int) { 44100, 48000, 88200, 96000 }, "
         "channels = (int) 2, " "channel-mode = (string) { dual, stereo }"));
 
 enum
