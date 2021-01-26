@@ -9,7 +9,7 @@ if x11_dep.found()
 
   if have_cxx                                      # check for C++ support
     qt5_mod = import('qt5')
-    qt5widgets_dep = dependency('qt5', modules : ['Gui', 'Widgets'],
+    qt5widgets_dep = dependency('qt5', modules : ['Core', 'Gui', 'Widgets'],
                                 required: get_option('examples'))
 
     # FIXME Add a way to get that information out of the qt5 module
