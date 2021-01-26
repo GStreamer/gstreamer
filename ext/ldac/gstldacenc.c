@@ -51,21 +51,22 @@ GST_DEBUG_CATEGORY_STATIC (ldac_enc_debug);
 #define parent_class gst_ldac_enc_parent_class
 G_DEFINE_TYPE (GstLdacEnc, gst_ldac_enc, GST_TYPE_AUDIO_ENCODER);
 
+#define SAMPLE_RATES "44100, 48000, 88200, 96000"
+
 static GstStaticPadTemplate ldac_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS
     ("audio/x-raw, format=(string) { S16LE, S24LE, S32LE, F32LE }, "
-        "rate = (int) { 44100, 48000, 88200, 96000 }, "
-        "channels = (int) [ 1, 2 ] "));
+        "rate = (int) { " SAMPLE_RATES " }, channels = (int) [ 1, 2 ] "));
 
 static GstStaticPadTemplate ldac_enc_src_factory =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ldac, "
-        "rate = (int) { 44100, 48000, 88200, 96000 }, "
+        "rate = (int) { " SAMPLE_RATES " }, "
         "channels = (int) 1, channel-mode = (string)mono; "
         "audio/x-ldac, "
-        "rate = (int) { 44100, 48000, 88200, 96000 }, "
-        "channels = (int) 2, " "channel-mode = (string) { dual, stereo }"));
+        "rate = (int) { " SAMPLE_RATES " }, "
+        "channels = (int) 2, channel-mode = (string) { dual, stereo }"));
 
 enum
 {
