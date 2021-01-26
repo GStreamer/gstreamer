@@ -212,6 +212,13 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
     hr = ID3D11InfoQueue_GetMessage (priv->d3d11_info_queue, i, msg, &msg_len);
 
     level = d3d11_message_severity_to_gst (msg->Severity);
+    if (msg->Category == D3D11_MESSAGE_CATEGORY_STATE_CREATION &&
+        level > GST_LEVEL_ERROR) {
+      /* Do not warn for live object, since there would be live object
+       * when ReportLiveDeviceObjects was called */
+      level = GST_LEVEL_INFO;
+    }
+
     gst_debug_log (gst_d3d11_debug_layer_debug, level, file, function, line,
         G_OBJECT (device), "D3D11InfoQueue: %s", msg->pDescription);
   }
@@ -439,20 +446,20 @@ can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
   flags |= extra_flags;
 
   if (!is_windows_8_or_greater ()) {
-    GST_WARNING_OBJECT (self, "DXGI format %d needs Windows 8 or greater",
+    GST_INFO_OBJECT (self, "DXGI format %d needs Windows 8 or greater",
         (guint) format);
     return FALSE;
   }
 
   hr = ID3D11Device_CheckFormatSupport (handle, format, &supported);
-  if (!gst_d3d11_result (hr, NULL)) {
-    GST_WARNING_OBJECT (self, "DXGI format %d is not supported by device",
+  if (FAILED (hr)) {
+    GST_DEBUG_OBJECT (self, "DXGI format %d is not supported by device",
         (guint) format);
     return FALSE;
   }
 
   if ((supported & flags) != flags) {
-    GST_WARNING_OBJECT (self,
+    GST_DEBUG_OBJECT (self,
         "DXGI format %d doesn't support flag 0x%x (supported flag 0x%x)",
         (guint) format, (guint) supported, (guint) flags);
     return FALSE;
@@ -682,7 +689,7 @@ gst_d3d11_device_constructed (GObject * object)
 
   if (IDXGIFactory1_EnumAdapters1 (factory, priv->adapter,
           &adapter) == DXGI_ERROR_NOT_FOUND) {
-    GST_WARNING_OBJECT (self, "No adapter for index %d", priv->adapter);
+    GST_DEBUG_OBJECT (self, "No adapter for index %d", priv->adapter);
     goto error;
   } else {
     DXGI_ADAPTER_DESC1 desc;
@@ -971,7 +978,7 @@ gst_d3d11_device_new (guint adapter, guint flags)
   priv = device->priv;
 
   if (!priv->device || !priv->device_context) {
-    GST_WARNING ("Cannot create d3d11 device with adapter %d", adapter);
+    GST_DEBUG ("Cannot create d3d11 device with adapter %d", adapter);
     gst_clear_object (&device);
   } else {
     gst_object_ref_sink (device);

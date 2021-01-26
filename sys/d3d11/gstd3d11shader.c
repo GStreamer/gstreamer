@@ -137,7 +137,8 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
   if (error) {
     const gchar *err = ID3D10Blob_GetBufferPointer (error);
 
-    GST_WARNING ("HLSL compiler warnings:\n%s", GST_STR_NULL (err));
+    GST_DEBUG ("HLSL compiler warnings:\n%s\nShader code:\n%s",
+        GST_STR_NULL (err), GST_STR_NULL (shader_source));
     ID3D10Blob_Release (error);
   }
 
