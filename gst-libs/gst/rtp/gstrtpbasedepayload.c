@@ -55,6 +55,7 @@ struct _GstRTPBaseDepayloadPrivate
   guint32 last_rtptime;
   guint32 next_seqnum;
   gint max_reorder;
+  gboolean auto_hdr_ext;
 
   gboolean negotiated;
 
@@ -85,6 +86,7 @@ static guint gst_rtp_base_depayload_signals[LAST_SIGNAL] = { 0 };
 
 #define DEFAULT_SOURCE_INFO FALSE
 #define DEFAULT_MAX_REORDER 100
+#define DEFAULT_AUTO_HEADER_EXTENSION TRUE
 
 enum
 {
@@ -92,6 +94,7 @@ enum
   PROP_STATS,
   PROP_SOURCE_INFO,
   PROP_MAX_REORDER,
+  PROP_AUTO_HEADER_EXTENSION,
   PROP_LAST
 };
 
@@ -168,6 +171,45 @@ gst_rtp_base_depayload_get_instance_private (GstRTPBaseDepayload * self)
   return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
+static GstRTPHeaderExtension *
+gst_rtp_base_depayload_request_extension_default (GstRTPBaseDepayload *
+    depayload, guint ext_id, const gchar * uri)
+{
+  GstRTPHeaderExtension *ext = NULL;
+
+  if (!depayload->priv->auto_hdr_ext)
+    return NULL;
+
+  ext = gst_rtp_header_extension_create_from_uri (uri);
+  if (ext) {
+    GST_DEBUG_OBJECT (depayload,
+        "Automatically enabled extension %s for uri \'%s\'",
+        GST_ELEMENT_NAME (ext), uri);
+
+    gst_rtp_header_extension_set_id (ext, ext_id);
+  } else {
+    GST_DEBUG_OBJECT (depayload,
+        "Didn't find any extension implementing uri \'%s\'", uri);
+  }
+
+  return ext;
+}
+
+static gboolean
+extension_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer data)
+{
+  gpointer ext;
+
+  /* Call default handler if user callback didn't create the extension */
+  ext = g_value_get_object (handler_return);
+  if (!ext)
+    return TRUE;
+
+  g_value_set_object (return_accu, ext);
+  return FALSE;
+}
+
 static void
 gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
 {
@@ -238,6 +280,23 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
           0, G_MAXINT, DEFAULT_MAX_REORDER, G_PARAM_READWRITE));
 
   /**
+   * GstRTPBaseDepayload:auto-header-extension:
+   *
+   * If enabled, the depayloader will automatically try to enable all the
+   * RTP header extensions provided in the sink caps, saving the application
+   * the need to handle these extensions manually using the
+   * GstRTPBaseDepayload::request-extension: signal.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_AUTO_HEADER_EXTENSION, g_param_spec_boolean ("auto-header-extension",
+          "Automatic RTP header extension",
+          "Whether RTP header extensions should be automatically enabled, if an implementation is available",
+          DEFAULT_AUTO_HEADER_EXTENSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTPBaseDepayload::request-extension:
    * @object: the #GstRTPBaseDepayload
    * @ext_id: the extension id being requested
@@ -252,7 +311,9 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
    */
   gst_rtp_base_depayload_signals[SIGNAL_REQUEST_EXTENSION] =
       g_signal_new_class_handler ("request-extension",
-      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, NULL, NULL, NULL, NULL,
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_CALLBACK (gst_rtp_base_depayload_request_extension_default),
+      extension_accumulator, NULL, NULL,
       GST_TYPE_RTP_HEADER_EXTENSION, 2, G_TYPE_UINT, G_TYPE_STRING);
 
   /**
@@ -336,6 +397,7 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->duration = -1;
   priv->source_info = DEFAULT_SOURCE_INFO;
   priv->max_reorder = DEFAULT_MAX_REORDER;
+  priv->auto_hdr_ext = DEFAULT_AUTO_HEADER_EXTENSION;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 
@@ -533,6 +595,7 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
               "for id %" G_GUINT64_FORMAT " and uri %s", ext,
               ext ? GST_OBJECT_NAME (ext) : "", ext_id, uri);
 
+          /* We require the caller to set the appropriate extension if it's required */
           if (ext && gst_rtp_header_extension_get_id (ext) != ext_id) {
             g_warning ("\'request-extension\' signal provided an rtp header "
                 "extension for uri \'%s\' that does not match the requested "
@@ -551,8 +614,6 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
             goto ext_out;
           }
 
-          /* We don't create an extension implementation by default and require
-           * the caller to set the appropriate extension if it's required */
           if (ext)
             g_ptr_array_add (to_add, ext);
         }
@@ -1462,6 +1523,9 @@ gst_rtp_base_depayload_set_property (GObject * object, guint prop_id,
     case PROP_MAX_REORDER:
       priv->max_reorder = g_value_get_int (value);
       break;
+    case PROP_AUTO_HEADER_EXTENSION:
+      priv->auto_hdr_ext = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1489,6 +1553,9 @@ gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_REORDER:
       g_value_set_int (value, priv->max_reorder);
+      break;
+    case PROP_AUTO_HEADER_EXTENSION:
+      g_value_set_boolean (value, priv->auto_hdr_ext);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
