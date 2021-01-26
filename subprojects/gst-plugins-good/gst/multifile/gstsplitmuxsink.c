@@ -3576,6 +3576,9 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
   /* Remove the context from our consideration */
   splitmux->contexts = g_list_remove (splitmux->contexts, ctx);
 
+  ctx->is_releasing = TRUE;
+  GST_SPLITMUX_BROADCAST_INPUT (splitmux);
+
   GST_SPLITMUX_UNLOCK (splitmux);
 
   if (ctx->sink_pad_block_id) {
@@ -3586,10 +3589,10 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
   if (ctx->src_pad_block_id)
     gst_pad_remove_probe (ctx->srcpad, ctx->src_pad_block_id);
 
+  /* Wait for the pad to be free */
+  GST_PAD_STREAM_LOCK (pad);
   GST_SPLITMUX_LOCK (splitmux);
-
-  ctx->is_releasing = TRUE;
-  GST_SPLITMUX_BROADCAST_INPUT (splitmux);
+  GST_PAD_STREAM_UNLOCK (pad);
 
   /* Can release the context now */
   mq_stream_ctx_free (ctx);
