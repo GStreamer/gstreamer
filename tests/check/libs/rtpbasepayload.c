@@ -2150,15 +2150,19 @@ request_extension (GstRTPBasePayload * depayload, guint ext_id,
 GST_START_TEST (rtp_base_payload_caps_request)
 {
   GstRTPHeaderExtension *ext;
+  GstRTPDummyHdrExt *dummy;
   State *state;
 
   state =
       create_payloader ("application/x-rtp", &sinktmpl_with_extmap_str, NULL);
 
   ext = rtp_dummy_hdr_ext_new ();
+  dummy = GST_RTP_DUMMY_HDR_EXT (ext);
   gst_rtp_header_extension_set_id (ext, 4);
   g_signal_connect (state->element, "request-extension",
       G_CALLBACK (request_extension), ext);
+
+  fail_unless (dummy->set_attributes_count == 0);
 
   set_state (state, GST_STATE_PLAYING);
 
@@ -2175,6 +2179,7 @@ GST_START_TEST (rtp_base_payload_caps_request)
   validate_normal_start_events (0);
 
   fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+  fail_unless (dummy->set_attributes_count == 1);
 
   gst_object_unref (ext);
   destroy_payloader (state);

@@ -53,6 +53,7 @@ struct _GstRTPDummyHdrExt
   GstRTPHeaderExtensionFlags supported_flags;
   guint read_count;
   guint write_count;
+  guint set_attributes_count;
 
   gchar *direction;
   gchar *attributes;
@@ -244,6 +245,8 @@ gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   gchar *new_attrs = NULL, *new_direction = NULL;
   const gchar *ext_uri;
   const GValue *arr;
+
+  dummy->set_attributes_count++;
 
   if (!field_name)
     return FALSE;

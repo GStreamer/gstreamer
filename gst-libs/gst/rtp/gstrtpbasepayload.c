@@ -1388,8 +1388,17 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
                 "extension id %" G_GUINT64_FORMAT, uri, ext_id);
             gst_clear_object (&ext);
           }
-          /* it is the signal handler's responsibility to set attributes if
-           * required */
+
+          if (ext && !gst_rtp_header_extension_set_attributes_from_caps (ext,
+                  srccaps)) {
+            GST_WARNING_OBJECT (payload,
+                "Failed to configure rtp header " "extension %"
+                GST_PTR_FORMAT " attributes from caps %" GST_PTR_FORMAT,
+                ext, srccaps);
+            res = FALSE;
+            g_clear_object (&ext);
+            goto ext_out;
+          }
 
           /* We don't create an extension implementation by default and require
            * the caller to set the appropriate extension if it's required */
