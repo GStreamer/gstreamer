@@ -1645,12 +1645,14 @@ request_extension (GstRTPBaseDepayload * depayload, guint ext_id,
 GST_START_TEST (rtp_base_depayload_request_extension)
 {
   GstRTPHeaderExtension *ext;
+  GstRTPDummyHdrExt *dummy;
   State *state;
 
   state =
       create_depayloader ("application/x-rtp,extmap-3=(string)"
       DUMMY_HDR_EXT_URI, NULL);
   ext = rtp_dummy_hdr_ext_new ();
+  dummy = GST_RTP_DUMMY_HDR_EXT (ext);
   gst_rtp_header_extension_set_id (ext, 3);
 
   GST_RTP_DUMMY_DEPAY (state->element)->push_method =
@@ -1658,6 +1660,8 @@ GST_START_TEST (rtp_base_depayload_request_extension)
 
   g_signal_connect (state->element, "request-extension",
       G_CALLBACK (request_extension), ext);
+
+  fail_unless (dummy->set_attributes_count == 0);
 
   set_state (state, GST_STATE_PLAYING);
 
@@ -1672,6 +1676,7 @@ GST_START_TEST (rtp_base_depayload_request_extension)
   validate_buffer (0, "pts", 0 * GST_SECOND, "discont", FALSE, NULL);
 
   fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->read_count, 1);
+  fail_unless (dummy->set_attributes_count == 1);
 
   gst_object_unref (ext);
   destroy_depayloader (state);

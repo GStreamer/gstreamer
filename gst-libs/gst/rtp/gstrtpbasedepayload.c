@@ -539,8 +539,17 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
                 "extension id %" G_GUINT64_FORMAT, uri, ext_id);
             gst_clear_object (&ext);
           }
-          /* it is the signal handler's responsibility to set attributes if
-           * required */
+
+          if (ext && !gst_rtp_header_extension_set_attributes_from_caps (ext,
+                  caps)) {
+            GST_WARNING_OBJECT (filter,
+                "Failed to configure rtp header " "extension %"
+                GST_PTR_FORMAT " attributes from caps %" GST_PTR_FORMAT,
+                ext, caps);
+            res = FALSE;
+            g_clear_object (&ext);
+            goto ext_out;
+          }
 
           /* We don't create an extension implementation by default and require
            * the caller to set the appropriate extension if it's required */
