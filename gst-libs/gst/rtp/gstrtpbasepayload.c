@@ -56,6 +56,7 @@ struct _GstRTPBasePayloadPrivate
   guint64 base_rtime_hz;
   guint64 running_time;
   gboolean scale_rtptime;
+  gboolean auto_hdr_ext;
 
   gint64 prop_max_ptime;
   gint64 caps_max_ptime;
@@ -105,6 +106,7 @@ static guint gst_rtp_base_payload_signals[LAST_SIGNAL] = { 0 };
 #define DEFAULT_SOURCE_INFO             FALSE
 #define DEFAULT_ONVIF_NO_RATE_CONTROL   FALSE
 #define DEFAULT_SCALE_RTPTIME           TRUE
+#define DEFAULT_AUTO_HEADER_EXTENSION   TRUE
 
 #define RTP_HEADER_EXT_ONE_BYTE_MAX_SIZE 16
 #define RTP_HEADER_EXT_TWO_BYTE_MAX_SIZE 256
@@ -129,6 +131,7 @@ enum
   PROP_SOURCE_INFO,
   PROP_ONVIF_NO_RATE_CONTROL,
   PROP_SCALE_RTPTIME,
+  PROP_AUTO_HEADER_EXTENSION,
   PROP_LAST
 };
 
@@ -206,6 +209,45 @@ static inline GstRTPBasePayloadPrivate *
 gst_rtp_base_payload_get_instance_private (GstRTPBasePayload * self)
 {
   return (G_STRUCT_MEMBER_P (self, private_offset));
+}
+
+static GstRTPHeaderExtension *
+gst_rtp_base_payload_request_extension_default (GstRTPBasePayload * payload,
+    guint ext_id, const gchar * uri)
+{
+  GstRTPHeaderExtension *ext = NULL;
+
+  if (!payload->priv->auto_hdr_ext)
+    return NULL;
+
+  ext = gst_rtp_header_extension_create_from_uri (uri);
+  if (ext) {
+    GST_DEBUG_OBJECT (payload,
+        "Automatically enabled extension %s for uri \'%s\'",
+        GST_ELEMENT_NAME (ext), uri);
+
+    gst_rtp_header_extension_set_id (ext, ext_id);
+  } else {
+    GST_DEBUG_OBJECT (payload,
+        "Didn't find any extension implementing uri \'%s\'", uri);
+  }
+
+  return ext;
+}
+
+static gboolean
+extension_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer data)
+{
+  gpointer ext;
+
+  /* Call default handler if user callback didn't create the extension */
+  ext = g_value_get_object (handler_return);
+  if (!ext)
+    return TRUE;
+
+  g_value_set_object (return_accu, ext);
+  return FALSE;
 }
 
 static void
@@ -382,6 +424,23 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           DEFAULT_SCALE_RTPTIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTPBasePayload:auto-header-extension:
+   *
+   * If enabled, the payloader will automatically try to enable all the
+   * RTP header extensions provided in the src caps, saving the application
+   * the need to handle these extensions manually using the
+   * GstRTPBasePayload::request-extension: signal.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_AUTO_HEADER_EXTENSION, g_param_spec_boolean ("auto-header-extension",
+          "Automatic RTP header extension",
+          "Whether RTP header extensions should be automatically enabled, if an implementation is available",
+          DEFAULT_AUTO_HEADER_EXTENSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTPBasePayload::add-extension:
    * @object: the #GstRTPBasePayload
    * @ext: (transfer full): the #GstRTPHeaderExtension
@@ -412,7 +471,9 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    */
   gst_rtp_base_payload_signals[SIGNAL_REQUEST_EXTENSION] =
       g_signal_new_class_handler ("request-extension",
-      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, NULL, NULL, NULL, NULL,
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_CALLBACK (gst_rtp_base_payload_request_extension_default),
+      extension_accumulator, NULL, NULL,
       GST_TYPE_RTP_HEADER_EXTENSION, 2, G_TYPE_UINT, G_TYPE_STRING);
 
   /**
@@ -491,6 +552,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   rtpbasepayload->priv->base_rtime_hz = GST_BUFFER_OFFSET_NONE;
   rtpbasepayload->priv->onvif_no_rate_control = DEFAULT_ONVIF_NO_RATE_CONTROL;
   rtpbasepayload->priv->scale_rtptime = DEFAULT_SCALE_RTPTIME;
+  rtpbasepayload->priv->auto_hdr_ext = DEFAULT_AUTO_HEADER_EXTENSION;
 
   rtpbasepayload->media = NULL;
   rtpbasepayload->encoding_name = NULL;
@@ -1382,6 +1444,7 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
               "for id %" G_GUINT64_FORMAT " and uri %s", ext,
               ext ? GST_OBJECT_NAME (ext) : "", ext_id, uri);
 
+          /* We require caller to set the appropriate extension if it's required */
           if (ext && gst_rtp_header_extension_get_id (ext) != ext_id) {
             g_warning ("\'request-extension\' signal provided an rtp header "
                 "extension for uri \'%s\' that does not match the requested "
@@ -1400,8 +1463,6 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
             goto ext_out;
           }
 
-          /* We don't create an extension implementation by default and require
-           * the caller to set the appropriate extension if it's required */
           if (ext) {
             g_ptr_array_add (to_add, ext);
           }
@@ -2072,6 +2133,9 @@ gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     case PROP_SCALE_RTPTIME:
       priv->scale_rtptime = g_value_get_boolean (value);
       break;
+    case PROP_AUTO_HEADER_EXTENSION:
+      priv->auto_hdr_ext = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2144,6 +2208,9 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALE_RTPTIME:
       g_value_set_boolean (value, priv->scale_rtptime);
+      break;
+    case PROP_AUTO_HEADER_EXTENSION:
+      g_value_set_boolean (value, priv->auto_hdr_ext);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
