@@ -397,6 +397,40 @@ gst_vaapi_display_drm_new_with_device (gint device)
 }
 
 /**
+ * gst_vaapi_display_drm_new_with_va_display:
+ * @va_display: a VADisplay #va_display
+ * @fd: an open DRM device (file descriptor) #fd
+ *
+ * Creates a #GstVaapiDisplay based on the VADisplay @va_display and
+ * the open DRM device @fd.
+ * The caller still owns the device file descriptor and must call close()
+ * when all #GstVaapiDisplay references are released.
+ *
+ * Return value: a newly allocated #GstVaapiDisplay object
+ */
+
+GstVaapiDisplay *
+gst_vaapi_display_drm_new_with_va_display (VADisplay va_display, gint fd)
+{
+  GstVaapiDisplay *display;
+  GstVaapiDisplayInfo info = {
+    .va_display = va_display,
+    .native_display = GINT_TO_POINTER (fd),
+  };
+
+  g_return_val_if_fail (fd >= 0, NULL);
+
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_DRM, NULL);
+  if (!gst_vaapi_display_config (display,
+          GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info)) {
+    gst_object_unref (display);
+    return NULL;
+  }
+
+  return display;
+}
+
+/**
  * gst_vaapi_display_drm_get_device:
  * @display: a #GstVaapiDisplayDRM
  *

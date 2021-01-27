@@ -34,6 +34,9 @@
 #if USE_WAYLAND
 #include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
+#if USE_DRM
+#include <gst/vaapi/gstvaapidisplay_drm.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -114,6 +117,15 @@ gst_vaapi_video_context_get_display (GstContext * context, gboolean app_context,
           display =
               gst_vaapi_display_wayland_new_with_va_display (va_display,
               wl_display);
+        }
+      }
+#endif
+#if USE_DRM
+      if (!display) {
+        gint fd = -1;
+        if (gst_structure_get (structure, "drm-device-fd", G_TYPE_INT, &fd,
+                NULL)) {
+          display = gst_vaapi_display_drm_new_with_va_display (va_display, fd);
         }
       }
 #endif

@@ -39,6 +39,9 @@ gst_vaapi_display_drm_new (const gchar * device_path);
 GstVaapiDisplay *
 gst_vaapi_display_drm_new_with_device (gint device);
 
+GstVaapiDisplay *
+gst_vaapi_display_drm_new_with_va_display (VADisplay va_display, gint fd);
+
 gint
 gst_vaapi_display_drm_get_device (GstVaapiDisplayDRM * display);
 
