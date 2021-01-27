@@ -156,6 +156,9 @@ static gboolean gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
     GArray * ref_pic_list1);
 static gboolean gst_nv_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture);
+static guint
+gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
+    gboolean live);
 
 static void
 gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
@@ -194,6 +197,8 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_h264_dec_decode_slice);
   h264decoder_class->end_picture =
       GST_DEBUG_FUNCPTR (gst_nv_h264_dec_end_picture);
+  h264decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_nv_h264_dec_get_preferred_output_delay);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_dec_debug,
       "nvh264dec", 0, "Nvidia H.264 Decoder");
@@ -778,6 +783,18 @@ gst_nv_h264_dec_end_picture (GstH264Decoder * decoder, GstH264Picture * picture)
     GST_ERROR_OBJECT (self, "Failed to decode picture");
 
   return ret;
+}
+
+static guint
+gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
+    gboolean live)
+{
+  /* Prefer to zero latency for live pipeline */
+  if (live)
+    return 0;
+
+  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
+  return 4;
 }
 
 typedef struct
