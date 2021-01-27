@@ -27,6 +27,7 @@ variables:
   MANIFEST_TAG: '2020-10-22.0'
   TEST_MANIFEST_TAG: '2020-10-22.0'
   INDENT_TAG: '2020-10-22.0'
+  WINDOWS_TAG: "2021-02-24.0"
 
   GST_UPSTREAM_REPO: 'gstreamer/gst-ci'
 
@@ -36,6 +37,7 @@ variables:
   MANIFEST_AMD64_SUFFIX: 'amd64/build-manifest'
   TEST_MANIFEST_AMD64_SUFFIX: 'amd64/test-manifest'
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
+  WINDOWS_AMD64_SUFFIX: 'amd64/windows'
 
   FEDORA_IMAGE:   "$CI_REGISTRY_IMAGE/$FEDORA_AMD64_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
   FEDORA_DOCS_IMAGE: "registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2020-07-03.0-master"
@@ -44,11 +46,14 @@ variables:
   MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$MANIFEST_AMD64_SUFFIX:$MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
   TEST_MANIFEST_IMAGE: "$CI_REGISTRY_IMAGE/$TEST_MANIFEST_AMD64_SUFFIX:$TEST_MANIFEST_TAG-$GST_UPSTREAM_BRANCH"
   INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG-$GST_UPSTREAM_BRANCH"
-
-  WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v13-master'
+  WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+  WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
   # Can't use $CI_* variables since we use this template in all repos, not just gst-ci
   CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
+  # FIXME: fix the file path url to point to the upstram once merged
+  # WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/docker/windows/container.ps1"
+  WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/alatiera/gst-ci/raw/alatiera/windows-build-redux/docker/windows/container.ps1"
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
@@ -326,6 +331,36 @@ gst-indent amd64 docker:
     CONTEXT_DIR: "docker/indent/"
     DOCKERFILE: "docker/indent/Dockerfile"
   extends: .base
+
+windows amd64 docker:
+  stage: "build docker"
+  variables:
+    GIT_STRATEGY: fetch
+    REPO_SUFFIX: "$WINDOWS_AMD64_SUFFIX"
+    TAG: "$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+
+    # Unlike the buildah/linux jobs, this file
+    # needs to be relative to docker/windows/ subdir
+    # as it makes life easier in the powershell script
+    #
+    # We also don't need a CONTEXT_DIR var as its also
+    # hardcoded to be docker/windows/
+    DOCKERFILE: "Dockerfile"
+  tags:
+    - windows
+    - shell
+    - "1809"
+  script:
+    - $env:WINDOWS_CONTAINER_SCRIPT_PATH = "$env:CI_PROJECT_DIR\container.ps1"
+    - echo "Fetching $env:WINDOWS_CONTAINER_SCRIPT_URL"
+    - Invoke-WebRequest -Uri $env:WINDOWS_CONTAINER_SCRIPT_URL -OutFile $env:WINDOWS_CONTAINER_SCRIPT_PATH
+
+    - "& $env:WINDOWS_CONTAINER_SCRIPT_PATH $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_IMAGE $WINDOWS_UPSTREAM_IMAGE $DOCKERFILE"
+    - |
+      if (!($?)) {
+        echo "Failed to build the image"
+        Exit 1
+      }
 
 #
 # Job to create the manifest.xml to used for our builds
