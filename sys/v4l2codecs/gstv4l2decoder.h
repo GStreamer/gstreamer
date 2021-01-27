@@ -118,9 +118,7 @@ gboolean          gst_v4l2_request_queue (GstV4l2Request * request,
 gint              gst_v4l2_request_poll (GstV4l2Request * request,
                                          GstClockTime timeout);
 
-void              gst_v4l2_request_set_done (GstV4l2Request * request);
-
-gboolean          gst_v4l2_request_is_done (GstV4l2Request * request);
+gint              gst_v4l2_request_set_done (GstV4l2Request * request);
 
 gboolean          gst_v4l2_request_failed (GstV4l2Request * request);
 

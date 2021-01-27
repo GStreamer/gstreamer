@@ -836,10 +836,7 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
-  if (gst_v4l2_request_is_done (request))
-    goto finish_frame;
-
-  ret = gst_v4l2_request_poll (request, GST_SECOND);
+  ret = gst_v4l2_request_set_done (request);
   if (ret == 0) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
         ("Decoding frame %u took too long", picture->system_frame_number),
@@ -850,11 +847,8 @@ gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
         ("Decoding request failed: %s", g_strerror (errno)), (NULL));
     goto error;
   }
-
-  gst_v4l2_request_set_done (request);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
-finish_frame:
   if (gst_v4l2_request_failed (request)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
         ("Failed to decode frame %u", picture->system_frame_number), (NULL));

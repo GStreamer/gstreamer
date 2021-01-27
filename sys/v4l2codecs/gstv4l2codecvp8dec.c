@@ -653,11 +653,7 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
-  /* Unlikely, but it would not break this decoding flow */
-  if (gst_v4l2_request_is_done (request))
-    goto finish_frame;
-
-  ret = gst_v4l2_request_poll (request, GST_SECOND);
+  ret = gst_v4l2_request_set_done (request);
   if (ret == 0) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
         ("Decoding frame took too long"), (NULL));
@@ -668,10 +664,8 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
     goto error;
   }
 
-  gst_v4l2_request_set_done (request);
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
-finish_frame:
   if (gst_v4l2_request_failed (request)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
         ("Failed to decode frame %u", picture->system_frame_number), (NULL));

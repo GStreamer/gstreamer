@@ -1021,28 +1021,25 @@ gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
     GstV4l2Request *pending_req;
 
     pending_req = gst_queue_array_peek_head (decoder->pending_requests);
-    ret = gst_v4l2_request_poll (pending_req, GST_SECOND);
-    if (ret > 0)
-      gst_v4l2_request_set_done (pending_req);
+    gst_v4l2_request_set_done (pending_req);
   }
 
   return TRUE;
 }
 
 gint
-gst_v4l2_request_poll (GstV4l2Request * request, GstClockTime timeout)
-{
-  return gst_poll_wait (request->poll, timeout);
-}
-
-void
 gst_v4l2_request_set_done (GstV4l2Request * request)
 {
   GstV4l2Decoder *decoder = request->decoder;
   GstV4l2Request *pending_req = NULL;
+  gint ret;
 
   if (!request->pending)
-    return;
+    return 1;
+
+  ret = gst_poll_wait (request->poll, GST_SECOND);
+  if (ret <= 0)
+    return ret;
 
   while ((pending_req = gst_queue_array_pop_head (decoder->pending_requests))) {
     gst_v4l2_decoder_dequeue_sink (decoder);
@@ -1071,12 +1068,8 @@ gst_v4l2_request_set_done (GstV4l2Request * request)
 
   /* Pending request must be in the pending request list */
   g_assert (pending_req == request);
-}
 
-gboolean
-gst_v4l2_request_is_done (GstV4l2Request * request)
-{
-  return !request->pending;
+  return ret;
 }
 
 gboolean
