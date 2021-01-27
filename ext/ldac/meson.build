@@ -3,10 +3,9 @@ ldac_sources = [
   'gstldacenc.c',
 ]
 
-ldac_dep = cc.find_library('ldacBT_enc', required : get_option('ldac'))
-ldac_hdr = cc.has_header('ldac/ldacBT.h', required: get_option('ldac'))
+ldac_dep = dependency('ldacBT-enc', required : get_option('ldac'))
 
-if ldac_dep.found() and ldac_hdr
+if ldac_dep.found()
   gstldac = library('gstldac',
     ldac_sources,
     c_args : gst_plugins_bad_args,

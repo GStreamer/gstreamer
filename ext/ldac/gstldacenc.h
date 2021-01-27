@@ -19,7 +19,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-#include <ldac/ldacBT.h>
+#include <ldacBT.h>
 
 G_BEGIN_DECLS
 
