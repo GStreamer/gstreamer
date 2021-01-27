@@ -667,7 +667,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
         &self->info, 0, bind_flags);
 
     self->fallback_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
-        caps, d3d11_params, 0, 2);
+        caps, d3d11_params, 2, 0);
     gst_d3d11_allocation_params_free (d3d11_params);
   }
 
@@ -892,7 +892,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
         D3D11_BIND_SHADER_RESOURCE);
     pool = gst_d3d11_buffer_pool_new_with_options (self->device, caps,
-        d3d11_params, 0, 2);
+        d3d11_params, 2, 0);
     gst_d3d11_allocation_params_free (d3d11_params);
 
     if (!pool) {
@@ -903,8 +903,9 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
   }
 
-  /* We don't need more than two buffers */
-  gst_query_add_allocation_pool (query, pool, size, 0, 2);
+  /* We need at least 2 buffers because we hold on to the last one for redrawing
+   * on window-resize event */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
   if (pool)
     g_object_unref (pool);
 
