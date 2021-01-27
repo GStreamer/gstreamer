@@ -22,6 +22,9 @@
 
 #include "utils.h"
 #include <gst/transcoder/gsttranscoder.h>
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif
 
 static const gchar *HELP_SUMMARY =
     "gst-transcoder-1.0 transcodes a stream defined by its first <input-uri>\n"
@@ -64,6 +67,45 @@ typedef struct
   gchar *src_uri, *dest_uri, *encoding_format, *size;
   gchar *framerate;
 } Settings;
+
+#ifdef G_OS_UNIX
+static guint signal_watch_hup_id;
+static guint signal_watch_intr_id;
+
+static gboolean
+intr_handler (gpointer user_data)
+{
+  GstTranscoder *self = GST_TRANSCODER (user_data);
+  GstElement *pipeline = gst_transcoder_get_pipeline (self);
+
+  g_print ("handling interrupt.\n");
+
+  if (pipeline) {
+    gst_element_send_event (pipeline, gst_event_new_eos ());
+    g_object_unref (pipeline);
+  }
+
+  signal_watch_intr_id = 0;
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+hup_handler (gpointer user_data)
+{
+  GstTranscoder *self = GST_TRANSCODER (user_data);
+  GstElement *pipeline = gst_transcoder_get_pipeline (self);
+
+  g_print ("handling hang up.\n");
+
+  if (pipeline) {
+    gst_element_send_event (pipeline, gst_event_new_eos ());
+    g_object_unref (pipeline);
+  }
+
+  signal_watch_intr_id = 0;
+  return G_SOURCE_REMOVE;
+}
+#endif /* G_OS_UNIX */
 
 static void
 position_updated_cb (GstTranscoder * transcoder, GstClockTime pos)
@@ -385,11 +427,25 @@ main (int argc, char *argv[])
       transcoder);
 
 
+#ifdef G_OS_UNIX
+  signal_watch_intr_id =
+      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, transcoder);
+  signal_watch_hup_id =
+      g_unix_signal_add (SIGHUP, (GSourceFunc) hup_handler, transcoder);
+#endif
+
   ok ("Starting transcoding...");
   gst_transcoder_run (transcoder, &err);
   g_object_unref (signal_adapter);
   if (!err)
     ok ("\nDONE.");
+
+#ifdef G_OS_UNIX
+  if (signal_watch_intr_id > 0)
+    g_source_remove (signal_watch_intr_id);
+  if (signal_watch_hup_id > 0)
+    g_source_remove (signal_watch_hup_id);
+#endif
 
 done:
   g_free (settings.dest_uri);
