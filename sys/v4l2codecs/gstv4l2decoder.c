@@ -549,8 +549,7 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
 
 static gboolean
 gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
-    GstV4l2Request * request, GstMemory * mem, guint32 frame_num,
-    guint flags)
+    GstV4l2Request * request, GstMemory * mem, guint32 frame_num, guint flags)
 {
   gint ret;
   gsize bytesused = gst_memory_get_sizes (mem, NULL, NULL);
