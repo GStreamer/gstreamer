@@ -109,6 +109,8 @@
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #  include <valgrind/valgrind.h>
 #endif
+#endif /* GST_DISABLE_GST_DEBUG */
+
 #include <glib/gprintf.h>       /* g_sprintf */
 
 /* our own printf implementation with custom extensions to %p for caps etc. */
@@ -117,10 +119,6 @@
 
 static char *gst_info_printf_pointer_extension_func (const char *format,
     void *ptr);
-#else /* GST_DISABLE_GST_DEBUG */
-
-#include <glib/gprintf.h>
-#endif /* !GST_DISABLE_GST_DEBUG */
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>           /* getpid on UNIX */
@@ -2598,46 +2596,6 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
 #endif /* GST_REMOVE_DISABLED */
 #endif /* GST_DISABLE_GST_DEBUG */
 
-/* Need this for _gst_element_error_printf even if GST_REMOVE_DISABLED is set:
- * fallback function that cleans up the format string and replaces all pointer
- * extension formats with plain %p. */
-#ifdef GST_DISABLE_GST_DEBUG
-int
-__gst_info_fallback_vasprintf (char **result, char const *format, va_list args)
-{
-  gchar *clean_format, *c;
-  gsize len;
-
-  if (format == NULL)
-    return -1;
-
-  clean_format = g_strdup (format);
-  c = clean_format;
-  while ((c = strstr (c, "%p\a"))) {
-    if (c[3] < 'A' || c[3] > 'Z') {
-      c += 3;
-      continue;
-    }
-    len = strlen (c + 4);
-    memmove (c + 2, c + 4, len + 1);
-    c += 2;
-  }
-  while ((c = strstr (clean_format, "%P")))     /* old GST_PTR_FORMAT */
-    c[1] = 'p';
-  while ((c = strstr (clean_format, "%Q")))     /* old GST_SEGMENT_FORMAT */
-    c[1] = 'p';
-
-  len = g_vasprintf (result, clean_format, args);
-
-  g_free (clean_format);
-
-  if (*result == NULL)
-    return -1;
-
-  return len;
-}
-#endif
-
 /**
  * gst_info_vasprintf:
  * @result: (out): the resulting string
@@ -2661,9 +2619,6 @@ __gst_info_fallback_vasprintf (char **result, char const *format, va_list args)
 gint
 gst_info_vasprintf (gchar ** result, const gchar * format, va_list args)
 {
-  /* This will fallback to __gst_info_fallback_vasprintf() via a #define in
-   * gst_private.h if the debug system is disabled which will remove the gst
-   * specific printf format specifiers */
   return __gst_vasprintf (result, format, args);
 }
 
