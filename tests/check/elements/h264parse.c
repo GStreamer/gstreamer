@@ -1082,6 +1082,75 @@ GST_START_TEST (test_parse_sliced_nal_au)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_sliced_sps_pps_sps)
+{
+  GstHarness *h = gst_harness_new ("h264parse");
+  GstBuffer *buf;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h264,stream-format=byte-stream,alignment=nal,parsed=false,framerate=30/1",
+      "video/x-h264,stream-format=byte-stream,alignment=au,parsed=true");
+
+  buf = wrap_buffer (h264_slicing_sps, sizeof (h264_slicing_sps), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = wrap_buffer (h264_slicing_pps, sizeof (h264_slicing_pps), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = wrap_buffer (h264_idr_slice_1, sizeof (h264_idr_slice_1), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* no output yet, it will be pushed as soon as
+   * the parser recognizes the new AU */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  buf = wrap_buffer (h264_slicing_sps, sizeof (h264_slicing_sps), 200, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* no PP, just a SPS here is valid */
+
+  buf = wrap_buffer (h264_idr_slice_1, sizeof (h264_idr_slice_1), 200, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buf = wrap_buffer (h264_idr_slice_1, sizeof (h264_idr_slice_1), 300, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  {
+    GstMapInfo info;
+
+    buf = composite_buffer (100, 0, 4,
+        h264_aud, sizeof (h264_aud),
+        h264_slicing_sps, sizeof (h264_slicing_sps),
+        h264_slicing_pps, sizeof (h264_slicing_pps),
+        h264_idr_slice_1, sizeof (h264_idr_slice_1));
+    gst_buffer_map (buf, &info, GST_MAP_READ);
+
+    pull_and_check_full (h, info.data, info.size, 100, 0);
+
+    gst_buffer_unmap (buf, &info);
+    gst_buffer_unref (buf);
+
+    buf = composite_buffer (200, 0, 3,
+        h264_aud, sizeof (h264_aud),
+        h264_slicing_sps, sizeof (h264_slicing_sps),
+        h264_idr_slice_1, sizeof (h264_idr_slice_1));
+    gst_buffer_map (buf, &info, GST_MAP_READ);
+
+    pull_and_check_full (h, info.data, info.size, 200, 0);
+
+    gst_buffer_unmap (buf, &info);
+    gst_buffer_unref (buf);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 h264parse_sliced_suite (void)
@@ -1093,6 +1162,7 @@ h264parse_sliced_suite (void)
   tcase_add_test (tc_chain, test_parse_sliced_nal_nal);
   tcase_add_test (tc_chain, test_parse_sliced_au_nal);
   tcase_add_test (tc_chain, test_parse_sliced_nal_au);
+  tcase_add_test (tc_chain, test_parse_sliced_sps_pps_sps);
 
   return s;
 }
