@@ -90,6 +90,8 @@ static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegviddec_get_buffer2 (AVCodecContext * context,
     AVFrame * picture, int flags);
+static gboolean gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec *
+    ffmpegdec);
 
 static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_ffmpegviddec_drain (GstVideoDecoder * decoder);
@@ -735,7 +737,10 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
   GstStructure *config;
   guint i;
 
+  format = gst_ffmpeg_pixfmt_to_videoformat (picture->format);
+
   if (ffmpegdec->internal_pool != NULL &&
+      GST_VIDEO_INFO_FORMAT (&ffmpegdec->pool_info) == format &&
       ffmpegdec->pool_width == picture->width &&
       ffmpegdec->pool_height == picture->height &&
       ffmpegdec->pool_format == picture->format)
@@ -743,6 +748,11 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
 
   GST_DEBUG_OBJECT (ffmpegdec, "Updating internal pool (%i, %i)",
       picture->width, picture->height);
+
+  /* if we are negotiating from get_buffer, then renegotiate later in order
+   * to potentially use a downstream pool */
+  if (gst_ffmpegviddec_can_direct_render (ffmpegdec))
+    gst_pad_mark_reconfigure (GST_VIDEO_DECODER_SRC_PAD (ffmpegdec));
 
   format = gst_ffmpeg_pixfmt_to_videoformat (picture->format);
 
@@ -2195,6 +2205,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
           if (ffmpegdec->internal_pool)
             gst_object_unref (ffmpegdec->internal_pool);
           ffmpegdec->internal_pool = gst_object_ref (pool);
+          ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&state->info);
+          ffmpegdec->pool_height = GST_VIDEO_INFO_HEIGHT (&state->info);
           ffmpegdec->pool_info = state->info;
           gst_structure_free (config);
           goto done;
@@ -2204,6 +2216,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   if (have_videometa && ffmpegdec->internal_pool
+      && gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->pool_format) ==
+      GST_VIDEO_INFO_FORMAT (&state->info)
       && ffmpegdec->pool_width == state->info.width
       && ffmpegdec->pool_height == state->info.height) {
     update_pool = TRUE;
