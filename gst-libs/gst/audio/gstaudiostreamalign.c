@@ -172,7 +172,7 @@ gst_audio_stream_align_set_rate (GstAudioStreamAlign * align, gint rate)
  * Since: 1.14
  */
 gint
-gst_audio_stream_align_get_rate (GstAudioStreamAlign * align)
+gst_audio_stream_align_get_rate (const GstAudioStreamAlign * align)
 {
   g_return_val_if_fail (align != NULL, 0);
 
@@ -208,7 +208,8 @@ gst_audio_stream_align_set_alignment_threshold (GstAudioStreamAlign *
  * Since: 1.14
  */
 GstClockTime
-gst_audio_stream_align_get_alignment_threshold (GstAudioStreamAlign * align)
+gst_audio_stream_align_get_alignment_threshold (const GstAudioStreamAlign *
+    align)
 {
   g_return_val_if_fail (align != NULL, 0);
 
@@ -244,7 +245,7 @@ gst_audio_stream_align_set_discont_wait (GstAudioStreamAlign * align,
  * Since: 1.14
  */
 GstClockTime
-gst_audio_stream_align_get_discont_wait (GstAudioStreamAlign * align)
+gst_audio_stream_align_get_discont_wait (const GstAudioStreamAlign * align)
 {
   g_return_val_if_fail (align != NULL, 0);
 
@@ -280,7 +281,8 @@ gst_audio_stream_align_mark_discont (GstAudioStreamAlign * align)
  * Since: 1.14
  */
 GstClockTime
-gst_audio_stream_align_get_timestamp_at_discont (GstAudioStreamAlign * align)
+gst_audio_stream_align_get_timestamp_at_discont (const GstAudioStreamAlign *
+    align)
 {
   g_return_val_if_fail (align != NULL, GST_CLOCK_TIME_NONE);
 
@@ -299,7 +301,8 @@ gst_audio_stream_align_get_timestamp_at_discont (GstAudioStreamAlign * align)
  * Since: 1.14
  */
 guint64
-gst_audio_stream_align_get_samples_since_discont (GstAudioStreamAlign * align)
+gst_audio_stream_align_get_samples_since_discont (const GstAudioStreamAlign *
+    align)
 {
   g_return_val_if_fail (align != NULL, 0);
 
