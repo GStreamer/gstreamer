@@ -108,6 +108,12 @@ GstV4l2Request   *gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
                                                       GstV4l2Request * prev_request,
                                                       GstMemory *bitstream);
 
+void              gst_v4l2_decoder_set_render_delay (GstV4l2Decoder * self,
+                                                     guint delay);
+
+guint             gst_v4l2_decoder_get_render_delay (GstV4l2Decoder * self);
+
+
 GstV4l2Request *  gst_v4l2_request_ref (GstV4l2Request * request);
 
 void              gst_v4l2_request_unref (GstV4l2Request * request);

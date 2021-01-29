@@ -82,6 +82,7 @@ struct _GstV4l2Decoder
   /* properties */
   gchar *media_device;
   gchar *video_device;
+  guint render_delay;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstV4l2Decoder, gst_v4l2_decoder, GST_TYPE_OBJECT,
@@ -914,6 +915,38 @@ gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
   return request;
 }
 
+/**
+ * gst_v4l2_decoder_set_render_delay:
+ * @self a #GstV4l2Decoder pointer
+ * @delay The expected render delay
+ *
+ * The decoder will adjust the number of allowed concurrent request in order
+ * to allow this delay. The same number of concurrent bitstream buffer will be
+ * used, so make sure to adjust the number of bitstream buffer.
+ *
+ * For per-slice decoder, this is the maximum number of pending slice, so the
+ * render backlog in frame may be less then the render delay.
+ */
+void
+gst_v4l2_decoder_set_render_delay (GstV4l2Decoder * self, guint delay)
+{
+  self->render_delay = delay;
+}
+
+/**
+ * gst_v4l2_decoder_get_render_delay:
+ * @self a #GstV4l2Decoder pointer
+ *
+ * This function is used to avoid storing the render delay in multiple places.
+ *
+ * Returns: The currently configured render delay.
+ */
+guint
+gst_v4l2_decoder_get_render_delay (GstV4l2Decoder * self)
+{
+  return self->render_delay;
+}
+
 GstV4l2Request *
 gst_v4l2_request_ref (GstV4l2Request * request)
 {
@@ -985,6 +1018,7 @@ gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
 {
   GstV4l2Decoder *decoder = request->decoder;
   gint ret;
+  guint max_pending;
 
   GST_TRACE_OBJECT (decoder, "Queuing request %p.", request);
 
@@ -1014,9 +1048,9 @@ gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
   gst_queue_array_push_tail (decoder->pending_requests,
       gst_v4l2_request_ref (request));
 
-  /* FIXME to support more then one pending requests, we need the request to
-   * be refcounted */
-  if (gst_queue_array_get_length (decoder->pending_requests) > 6) {
+  max_pending = MAX (1, decoder->render_delay);
+
+  if (gst_queue_array_get_length (decoder->pending_requests) > max_pending) {
     GstV4l2Request *pending_req;
 
     pending_req = gst_queue_array_peek_head (decoder->pending_requests);
