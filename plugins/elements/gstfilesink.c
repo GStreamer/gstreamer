@@ -41,6 +41,7 @@
 #include "../../gst/gst-i18n-lib.h"
 
 #include <gst/gst.h>
+#include <glib/gstdio.h>
 #include <stdio.h>              /* for fseeko() */
 #ifdef HAVE_STDIO_EXT_H
 #include <stdio_ext.h>          /* for __fbufsize, for debugging */
@@ -131,35 +132,15 @@ gst_fopen (const gchar * filename, const gchar * mode, gboolean o_sync)
 {
   FILE *retval;
 #ifdef G_OS_WIN32
-  wchar_t *wfilename = g_utf8_to_utf16 (filename, -1, NULL, NULL, NULL);
-  wchar_t *wmode;
-  int save_errno;
-
-  if (wfilename == NULL) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  wmode = g_utf8_to_utf16 (mode, -1, NULL, NULL, NULL);
-
-  if (wmode == NULL) {
-    g_free (wfilename);
-    errno = EINVAL;
-    return NULL;
-  }
-
-  retval = _wfopen (wfilename, wmode);
-  save_errno = errno;
-
-  g_free (wfilename);
-  g_free (wmode);
-
-  errno = save_errno;
+  retval = g_fopen (filename, mode);
   return retval;
 #else
   int fd;
   int flags = O_CREAT | O_WRONLY;
 
+  /* NOTE: below code is for handing spurious EACCES return on write
+   * See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/143
+   */
   if (strcmp (mode, "wb") == 0)
     flags |= O_TRUNC;
   else if (strcmp (mode, "ab") == 0)

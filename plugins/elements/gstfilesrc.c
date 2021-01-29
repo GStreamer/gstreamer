@@ -38,6 +38,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <glib/gstdio.h>
 #include "gstfilesrc.h"
 #include "gstcoreelementselements.h"
 
@@ -97,36 +98,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 #ifndef O_BINARY
 #define O_BINARY (0)
 #endif
-
-/* Copy of glib's g_open due to win32 libc/cross-DLL brokenness: we can't
- * use the 'file descriptor' opened in glib (and returned from this function)
- * in this library, as they may have unrelated C runtimes. */
-static int
-gst_open (const gchar * filename, int flags, int mode)
-{
-#ifdef G_OS_WIN32
-  wchar_t *wfilename = g_utf8_to_utf16 (filename, -1, NULL, NULL, NULL);
-  int retval;
-  int save_errno;
-
-  if (wfilename == NULL) {
-    errno = EINVAL;
-    return -1;
-  }
-
-  retval = _wopen (wfilename, flags, mode);
-  save_errno = errno;
-
-  g_free (wfilename);
-
-  errno = save_errno;
-  return retval;
-#elif defined (__BIONIC__)
-  return open (filename, flags | O_LARGEFILE, mode);
-#else
-  return open (filename, flags, mode);
-#endif
-}
 
 GST_DEBUG_CATEGORY_STATIC (gst_file_src_debug);
 #define GST_CAT_DEFAULT gst_file_src_debug
@@ -483,6 +454,10 @@ static gboolean
 gst_file_src_start (GstBaseSrc * basesrc)
 {
   GstFileSrc *src = GST_FILE_SRC (basesrc);
+  int flags = O_RDONLY | O_BINARY;
+#if defined (__BIONIC__)
+  flags |= O_LARGEFILE;
+#endif
 
   if (src->filename == NULL || src->filename[0] == '\0')
     goto no_filename;
@@ -490,7 +465,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
   GST_INFO_OBJECT (src, "opening file %s", src->filename);
 
   /* open the file */
-  src->fd = gst_open (src->filename, O_RDONLY | O_BINARY, 0);
+  src->fd = g_open (src->filename, flags, 0);
 
   if (src->fd < 0)
     goto open_failed;
@@ -626,7 +601,7 @@ gst_file_src_stop (GstBaseSrc * basesrc)
   GstFileSrc *src = GST_FILE_SRC (basesrc);
 
   /* close the file */
-  close (src->fd);
+  g_close (src->fd, NULL);
 
   /* zero out a lot of our state */
   src->fd = 0;
