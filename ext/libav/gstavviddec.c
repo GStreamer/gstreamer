@@ -85,7 +85,7 @@ static void gst_ffmpegviddec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    AVCodecContext * context, AVFrame * picture);
+    AVCodecContext * context, AVFrame * picture, GstBufferFlags flags);
 
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegviddec_get_buffer2 (AVCodecContext * context,
@@ -167,6 +167,22 @@ gst_ffmpegviddec_thread_type_get_type (void)
   return ffmpegdec_thread_type_type;
 }
 
+static GstCaps *
+dup_caps_with_alternate (GstCaps * caps)
+{
+  GstCaps *with_alternate;
+  GstCapsFeatures *features;
+
+  with_alternate = gst_caps_copy (caps);
+  features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+  gst_caps_set_features_simple (with_alternate, features);
+
+  gst_caps_set_simple (with_alternate, "interlace-mode", G_TYPE_STRING,
+      "alternate", NULL);
+
+  return with_alternate;
+}
+
 static void
 gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
 {
@@ -204,6 +220,7 @@ gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
     GST_DEBUG ("Couldn't get source caps for decoder '%s'", in_plugin->name);
     srccaps = gst_caps_from_string ("video/x-raw");
   }
+  gst_caps_append (srccaps, dup_caps_with_alternate (srccaps));
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
@@ -709,7 +726,7 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
 
 static void
 gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
-    AVFrame * picture)
+    AVFrame * picture, GstVideoInterlaceMode interlace_mode)
 {
   GstAllocationParams params = DEFAULT_ALLOC_PARAM;
   GstVideoInfo info;
@@ -728,7 +745,13 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
       picture->width, picture->height);
 
   format = gst_ffmpeg_pixfmt_to_videoformat (picture->format);
-  gst_video_info_set_format (&info, format, picture->width, picture->height);
+
+  if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
+    gst_video_info_set_interlaced_format (&info, format, interlace_mode,
+        picture->width, 2 * picture->height);
+  } else {
+    gst_video_info_set_format (&info, format, picture->width, picture->height);
+  }
 
   /* If we have not yet been negotiated, a NONE format here would
    * result in invalid initial dimension alignments, and potential
@@ -829,7 +852,10 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   if (!gst_ffmpegviddec_can_direct_render (ffmpegdec))
     goto no_dr;
 
-  gst_ffmpegviddec_ensure_internal_pool (ffmpegdec, picture);
+  gst_ffmpegviddec_ensure_internal_pool (ffmpegdec, picture,
+      GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
+          GST_VIDEO_BUFFER_FLAG_ONEFIELD) ? GST_VIDEO_INTERLACE_MODE_ALTERNATE :
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE);
 
   ret = gst_buffer_pool_acquire_buffer (ffmpegdec->internal_pool,
       &frame->output_buffer, NULL);
@@ -1174,7 +1200,7 @@ content_light_metadata_av_to_gst (AVContentLightMetadata * av,
 
 static gboolean
 gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    AVCodecContext * context, AVFrame * picture)
+    AVCodecContext * context, AVFrame * picture, GstBufferFlags flags)
 {
   GstVideoFormat fmt;
   GstVideoInfo *in_info, *out_info;
@@ -1182,17 +1208,53 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   gint fps_n, fps_d;
   GstClockTime latency;
   GstStructure *in_s;
+  GstVideoInterlaceMode interlace_mode;
+  gint caps_height;
 
   if (!update_video_context (ffmpegdec, context, picture))
     return TRUE;
+
+  caps_height = ffmpegdec->pic_height;
 
   fmt = gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->pic_pix_fmt);
   if (G_UNLIKELY (fmt == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
 
-  output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (ffmpegdec), fmt,
-      ffmpegdec->pic_width, ffmpegdec->pic_height, ffmpegdec->input_state);
+  /* set the interlaced flag */
+  in_s = gst_caps_get_structure (ffmpegdec->input_state->caps, 0);
+  if (flags & GST_VIDEO_BUFFER_FLAG_ONEFIELD) {
+    /* TODO: we don't get that information from ffmpeg, so copy it from
+     * the parser */
+    interlace_mode = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+    caps_height = 2 * caps_height;
+  } else if (!gst_structure_has_field (in_s, "interlace-mode")) {
+    if (ffmpegdec->pic_interlaced) {
+      if (ffmpegdec->pic_field_order_changed ||
+          (ffmpegdec->pic_field_order & GST_VIDEO_BUFFER_FLAG_RFF)) {
+        interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+      } else {
+        interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      }
+    } else {
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+    }
+  } else {
+    GstVideoInfo info;
+
+    gst_video_info_from_caps (&info, ffmpegdec->input_state->caps);
+    interlace_mode = info.interlace_mode;
+  }
+
+  if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+    output_state =
+        gst_video_decoder_set_interlaced_output_state (GST_VIDEO_DECODER
+        (ffmpegdec), fmt, interlace_mode, ffmpegdec->pic_width, caps_height,
+        ffmpegdec->input_state);
+  else
+    output_state =
+        gst_video_decoder_set_output_state (GST_VIDEO_DECODER
+        (ffmpegdec), fmt, ffmpegdec->pic_width, caps_height,
+        ffmpegdec->input_state);
   if (ffmpegdec->output_state)
     gst_video_codec_state_unref (ffmpegdec->output_state);
   ffmpegdec->output_state = output_state;
@@ -1200,26 +1262,15 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   in_info = &ffmpegdec->input_state->info;
   out_info = &ffmpegdec->output_state->info;
 
-  /* set the interlaced flag */
-  in_s = gst_caps_get_structure (ffmpegdec->input_state->caps, 0);
-
-  if (!gst_structure_has_field (in_s, "interlace-mode")) {
-    if (ffmpegdec->pic_interlaced) {
-      if (ffmpegdec->pic_field_order_changed ||
-          (ffmpegdec->pic_field_order & GST_VIDEO_BUFFER_FLAG_RFF)) {
-        out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
-      } else {
-        out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
-        if ((ffmpegdec->pic_field_order & GST_VIDEO_BUFFER_FLAG_TFF))
-          GST_VIDEO_INFO_FIELD_ORDER (out_info) =
-              GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
-        else
-          GST_VIDEO_INFO_FIELD_ORDER (out_info) =
-              GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
-      }
-    } else {
-      out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-    }
+  out_info->interlace_mode = interlace_mode;
+  if (!gst_structure_has_field (in_s, "interlace-mode")
+      && interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
+    if ((ffmpegdec->pic_field_order & GST_VIDEO_BUFFER_FLAG_TFF))
+      GST_VIDEO_INFO_FIELD_ORDER (out_info) =
+          GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+    else
+      GST_VIDEO_INFO_FIELD_ORDER (out_info) =
+          GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
   }
 
   if (!gst_structure_has_field (in_s, "chroma-site")) {
@@ -1308,6 +1359,13 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     output_state->caps = gst_video_info_to_caps (out_info);
   } else {
     output_state->caps = gst_caps_make_writable (output_state->caps);
+  }
+
+  if (flags & GST_VIDEO_BUFFER_FLAG_ONEFIELD) {
+    /* TODO: we don't get that information from ffmpeg, so copy it from
+     * the parser */
+    gst_caps_features_add (gst_caps_get_features (ffmpegdec->output_state->caps,
+            0), GST_CAPS_FEATURE_FORMAT_INTERLACED);
   }
 
   if (!gst_structure_has_field (in_s, "mastering-display-info")) {
@@ -1645,7 +1703,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       ! !(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
 
   if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context,
-          ffmpegdec->picture))
+          ffmpegdec->picture, GST_BUFFER_FLAGS (out_frame->input_buffer)))
     goto negotiation_error;
 
   pool = gst_video_decoder_get_buffer_pool (GST_VIDEO_DECODER (ffmpegdec));
@@ -1751,6 +1809,15 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* FIXME: Ideally we would remap the buffer read-only now before pushing but
    * libav might still have a reference to it!
    */
+  if (GST_BUFFER_FLAG_IS_SET (out_frame->input_buffer,
+          GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
+    GST_BUFFER_FLAG_SET (out_frame->output_buffer,
+        GST_VIDEO_BUFFER_FLAG_ONEFIELD);
+    if (GST_BUFFER_FLAG_IS_SET (out_frame->input_buffer,
+            GST_VIDEO_BUFFER_FLAG_TFF)) {
+      GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+    }
+  }
   *ret =
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
 
