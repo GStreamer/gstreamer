@@ -661,7 +661,8 @@ gst_decklink_caps_get_pixel_format (GstCaps * caps, BMDPixelFormat * format)
   }
 
   f = vinfo.finfo->format;
-  return gst_decklink_type_from_video_format (f);
+  *format = gst_decklink_pixel_format_from_type(gst_decklink_type_from_video_format (f));
+  return TRUE;
 }
 
 static GstStructure *
