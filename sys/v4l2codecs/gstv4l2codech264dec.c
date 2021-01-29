@@ -323,7 +323,7 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
-  guint min = 0;
+  guint min = 0, num_bitstream;
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
@@ -336,8 +336,11 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
 
   min = MAX (2, min);
 
+  num_bitstream = 1 +
+      MAX (1, gst_v4l2_decoder_get_render_delay (self->decoder));
+
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SINK, 2);
+      GST_PAD_SINK, num_bitstream);
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SRC, self->min_pool_size + min + 4);
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
@@ -1066,6 +1069,24 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
   return gst_v4l2_codec_h264_dec_submit_bitstream (self, picture, 0);
 }
 
+static guint
+gst_v4l2_codec_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
+    gboolean live)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  guint delay;
+
+  if (live)
+    delay = 0;
+  else
+    /* Just one for now, perhaps we can make this configurable in the future. */
+    delay = 1;
+
+  gst_v4l2_decoder_set_render_delay (self->decoder, delay);
+
+  return delay;
+}
+
 static void
 gst_v4l2_codec_h264_dec_set_flushing (GstV4l2CodecH264Dec * self,
     gboolean flushing)
@@ -1222,6 +1243,8 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_decode_slice);
   h264decoder_class->end_picture =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_end_picture);
+  h264decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_get_preferred_output_delay);
 
   klass->device = device;
   gst_v4l2_decoder_install_properties (gobject_class, PROP_LAST, device);
