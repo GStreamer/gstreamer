@@ -1450,9 +1450,6 @@ _startup (GApplication * application)
   if (!_set_playback_details (self))
     goto failure;
 
-  if (!_set_rendering_details (self))
-    goto failure;
-
   if (!_run_pipeline (self))
     goto failure;
 
