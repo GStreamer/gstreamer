@@ -335,8 +335,8 @@ get_line (LinesGetter * lg, gint field_offset, guint plane, gint line,
 
   /* Now frame already refers to the field we want, the correct one is taken
    * from the history */
-  if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_TOP_FIELD) ||
-      GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_BOTTOM_FIELD)) {
+  if (GST_VIDEO_INFO_INTERLACE_MODE (&frame->info) ==
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
     /* Alternate frame containing a single field, adjust the line index */
     line /= 2;
     switch (line_offset) {
