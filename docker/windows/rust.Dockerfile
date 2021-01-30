@@ -1,6 +1,9 @@
 # escape=`
 
-FROM 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v16-master'
+# Expect this to be set when calling docker build with
+# --build-arg BASE_IMAGE="" and make it fail if not set.
+ARG BASE_IMAGE="inavlid.gstreamer.freedesktop.org/invalid"
+FROM $BASE_IMAGE
 
 ARG DEFAULT_BRANCH="master"
 ARG RUST_VERSION="1.52.1"
