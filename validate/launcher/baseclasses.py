@@ -2091,7 +2091,8 @@ class _TestsLauncher(Loggable):
             else:
                 alone_tests.append(test)
 
-        max_num_jobs = min(self.options.num_jobs, len(tests))
+        # use max to defend against the case where all tests are alone_tests
+        max_num_jobs = max(min(self.options.num_jobs, len(tests)), 1)
         jobs_running = 0
 
         if self.options.forever and len(tests) < self.options.num_jobs and len(tests):

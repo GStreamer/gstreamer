@@ -372,6 +372,7 @@ class GstCheckTestsManager(MesonTestsManager):
             to_inspect.append(test)
 
         if to_inspect:
+            assert self.options.num_jobs >= 0
             executor = conc.ThreadPoolExecutor(
                 max_workers=self.options.num_jobs)
             tmp = []

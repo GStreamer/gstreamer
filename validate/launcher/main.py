@@ -181,6 +181,13 @@ class PrintUsage(argparse.Action):
         parser.exit()
 
 
+def _positive_integer_type(value):
+    cast = int(value)
+    if cast <= 0:
+        raise argparse.ArgumentTypeError(f'`{value}\' is not a positive integer')
+    return cast
+
+
 class LauncherConfig(Loggable):
 
     def __init__(self):
@@ -210,7 +217,7 @@ class LauncherConfig(Loggable):
         self.logsdir = None
         self.privatedir = None
         self.redirect_logs = False
-        self.num_jobs = int(multiprocessing.cpu_count() / 2)
+        self.num_jobs = max(multiprocessing.cpu_count(), 1)
         self.dest = None
         self._using_default_paths = False
         # paths passed with --media-path, and not defined by a testsuite
@@ -543,8 +550,8 @@ class LauncherConfig(Loggable):
                                help="Redirect logs to stdout.")
         dir_group.add_argument("-j", "--jobs", dest="num_jobs",
                                help="Number of tests to execute simultaneously"
-                               " (Defaults to number of cores of the processor)",
-                               type=int)
+                               " (Defaults to the number of cores of the processor)",
+                               type=_positive_integer_type)
         dir_group.add_argument("--ignore-numfailures", dest="ignore_numfailures",
                                help="Ignore the number of failed test in exit code",
                                default=False, action='store_true')
