@@ -1029,7 +1029,8 @@ gst_deinterlace_get_buffer_state (GstDeinterlace * self, GstVideoFrame * frame,
     interlacing_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
 
   if (state) {
-    if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED) {
+    if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED ||
+        interlacing_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
       if (GST_VIDEO_FRAME_IS_RFF (frame)) {
         *state = GST_DEINTERLACE_BUFFER_STATE_RFF;
       } else if (GST_VIDEO_FRAME_IS_ONEFIELD (frame)) {
