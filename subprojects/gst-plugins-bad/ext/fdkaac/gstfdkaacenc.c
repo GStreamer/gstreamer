@@ -39,10 +39,12 @@ enum
 {
   PROP_0,
   PROP_AFTERBURNER,
-  PROP_BITRATE
+  PROP_BITRATE,
+  PROP_PEAK_BITRATE
 };
 
 #define DEFAULT_BITRATE (0)
+#define DEFAULT_PEAK_BITRATE (0)
 
 #define SAMPLE_RATES " 8000, " \
                     "11025, " \
@@ -113,6 +115,9 @@ gst_fdkaacenc_set_property (GObject * object, guint prop_id,
     case PROP_AFTERBURNER:
       self->afterburner = g_value_get_boolean (value);
       break;
+    case PROP_PEAK_BITRATE:
+      self->peak_bitrate = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -132,6 +137,9 @@ gst_fdkaacenc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AFTERBURNER:
       g_value_set_boolean (value, self->afterburner);
+      break;
+    case PROP_PEAK_BITRATE:
+      g_value_set_int (value, self->peak_bitrate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -434,6 +442,17 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
+  if (self->peak_bitrate) {
+    if ((err = aacEncoder_SetParam (self->enc, AACENC_PEAK_BITRATE,
+                self->peak_bitrate)) != AACENC_OK) {
+      GST_ERROR_OBJECT (self, "Unable to set peak bitrate %d: %d",
+          self->peak_bitrate, err);
+      return FALSE;
+    }
+
+    GST_INFO_OBJECT (self, "Setting peak bitrate to %d", self->peak_bitrate);
+  }
+
   if (self->afterburner) {
     if ((err =
             aacEncoder_SetParam (self->enc, AACENC_AFTERBURNER,
@@ -631,6 +650,7 @@ gst_fdkaacenc_init (GstFdkAacEnc * self)
   self->enc = NULL;
   self->is_drained = TRUE;
   self->afterburner = FALSE;
+  self->peak_bitrate = DEFAULT_PEAK_BITRATE;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (self), TRUE);
 }
@@ -658,6 +678,21 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
           "Target Audio Bitrate (0 = fixed value based on "
           " sample rate and channel count)",
           0, G_MAXINT, DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstFdkAacEnc:peak-bitrate:
+   *
+   * Peak Bitrate to adjust maximum bits per audio frame.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_PEAK_BITRATE,
+      g_param_spec_int ("peak-bitrate",
+          "Peak Bitrate",
+          "Peak Bitrate to adjust maximum bits per audio frame. "
+          "Bitrate is in bits/second. (0 = Not set)",
+          0, G_MAXINT, DEFAULT_PEAK_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**

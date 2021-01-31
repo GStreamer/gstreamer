@@ -52,6 +52,7 @@ struct _GstFdkAacEnc {
   const GstAudioChannelPosition *aac_positions;
   gboolean is_drained;
 
+  guint peak_bitrate;
   gboolean afterburner;
 };
 
