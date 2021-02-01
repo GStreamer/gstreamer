@@ -33,6 +33,8 @@
     } else {                                                                     \
       fail_unless_equals_int (GST_READ_UINT16_BE (gst_rtp_buffer_get_payload     \
               (&_rtp)), expected_seqnum);                                        \
+      fail_unless (GST_BUFFER_FLAG_IS_SET (buf,                                  \
+          GST_RTP_BUFFER_FLAG_RETRANSMISSION));                                  \
     }                                                                            \
     gst_rtp_buffer_unmap (&_rtp);                                                \
   } G_STMT_END
