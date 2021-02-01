@@ -915,10 +915,10 @@ gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
   return request;
 }
 
-/*
+/**
  * gst_v4l2_decoder_set_render_delay:
- * @self a #GstV4l2Decoder pointer
- * @delay The expected render delay
+ * @self: a #GstV4l2Decoder pointer
+ * @delay: The expected render delay
  *
  * The decoder will adjust the number of allowed concurrent request in order
  * to allow this delay. The same number of concurrent bitstream buffer will be
@@ -933,9 +933,9 @@ gst_v4l2_decoder_set_render_delay (GstV4l2Decoder * self, guint delay)
   self->render_delay = delay;
 }
 
-/*
+/**
  * gst_v4l2_decoder_get_render_delay:
- * @self a #GstV4l2Decoder pointer
+ * @self: a #GstV4l2Decoder pointer
  *
  * This function is used to avoid storing the render delay in multiple places.
  *
