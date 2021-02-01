@@ -598,6 +598,34 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
       query);
 }
 
+static gboolean
+gst_va_vpp_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
+{
+  GstVaVpp *self = GST_VA_VPP (trans);
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+    {
+      GstVaDisplay *display = NULL;
+
+      gst_object_replace ((GstObject **) & display,
+          (GstObject *) self->display);
+      ret = gst_va_handle_context_query (GST_ELEMENT_CAST (self), query,
+          display);
+      gst_clear_object (&display);
+      break;
+    }
+    default:
+      ret = GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
+      break;
+  }
+
+  return ret;
+}
+
 /* our output size only depends on the caps, not on the input caps */
 static gboolean
 gst_va_vpp_transform_size (GstBaseTransform * trans,
@@ -2147,6 +2175,7 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_vpp_propose_allocation);
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_va_vpp_decide_allocation);
+  trans_class->query = GST_DEBUG_FUNCPTR (gst_va_vpp_query);
   trans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_caps);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_va_vpp_fixate_caps);
   trans_class->transform_size = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_size);
