@@ -1115,7 +1115,7 @@ documentation:
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-  - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc@28ad9aa59daa49d6b3fd1bc6b144df52af39475b
+  - pip3 install --upgrade hotdoc
 
   # FIXME: remove this once the docs image is updated
   - pip3 install -U meson==0.56.2
