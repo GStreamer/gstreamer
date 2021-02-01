@@ -661,14 +661,16 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_structure_get_int (s, "clock-rate", &data->clock_rate);
 
-      /* The session might need to know the RTX ssrc */
       caps = gst_caps_copy (caps);
-      gst_caps_set_simple (caps, "rtx-ssrc", G_TYPE_UINT, data->rtx_ssrc,
-          "rtx-seqnum-offset", G_TYPE_UINT, data->seqnum_base, NULL);
 
-      if (GPOINTER_TO_INT (rtx_payload) != -1)
+      /* The session might need to know the RTX ssrc */
+      if (GPOINTER_TO_INT (rtx_payload) != -1) {
+        gst_caps_set_simple (caps, "rtx-ssrc", G_TYPE_UINT, data->rtx_ssrc,
+            "rtx-seqnum-offset", G_TYPE_UINT, data->seqnum_base, NULL);
+
         gst_caps_set_simple (caps, "rtx-payload", G_TYPE_INT,
             GPOINTER_TO_INT (rtx_payload), NULL);
+      }
 
       GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d for ssrc: %u",
           data->clock_rate, ssrc);
