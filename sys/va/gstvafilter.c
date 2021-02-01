@@ -307,6 +307,7 @@ gst_va_filter_ensure_pipeline_caps (GstVaFilter * self)
   return TRUE;
 }
 
+/* Not thread-safe API */
 gboolean
 gst_va_filter_open (GstVaFilter * self)
 {
@@ -366,6 +367,7 @@ bail:
   }
 }
 
+/* Not thread-safe API */
 gboolean
 gst_va_filter_close (GstVaFilter * self)
 {
@@ -395,11 +397,10 @@ gst_va_filter_close (GstVaFilter * self)
     return FALSE;
   }
 
-  GST_OBJECT_LOCK (self);
   g_clear_pointer (&self->available_filters, g_array_unref);
   g_clear_pointer (&self->filters, g_array_unref);
+
   gst_va_filter_init (self);
-  GST_OBJECT_UNLOCK (self);
 
   return TRUE;
 }
@@ -683,8 +684,10 @@ gst_va_filter_get_filter_caps (GstVaFilter * self, VAProcFilterType type,
   if (!gst_va_filter_ensure_filters (self))
     return FALSE;
 
+  GST_OBJECT_LOCK (self);
   for (i = 0; i < self->available_filters->len; i++) {
     filter = &g_array_index (self->available_filters, struct VaFilter, i);
+
     if (filter->type == type) {
       if (filter->num_caps > 0)
         ret = &filter->caps;
@@ -696,6 +699,7 @@ gst_va_filter_get_filter_caps (GstVaFilter * self, VAProcFilterType type,
 
   if (ret && filter && num_caps)
     *num_caps = filter->num_caps;
+  GST_OBJECT_UNLOCK (self);
 
   return ret;
 }
@@ -703,17 +707,29 @@ gst_va_filter_get_filter_caps (GstVaFilter * self, VAProcFilterType type,
 guint32
 gst_va_filter_get_mem_types (GstVaFilter * self)
 {
+  guint32 ret;
+
   g_return_val_if_fail (GST_IS_VA_FILTER (self), 0);
 
-  return self->mem_types;
+  GST_OBJECT_LOCK (self);
+  ret = self->mem_types;
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
 }
 
 GArray *
 gst_va_filter_get_surface_formats (GstVaFilter * self)
 {
+  GArray *ret;
+
   g_return_val_if_fail (GST_IS_VA_FILTER (self), NULL);
 
-  return self->surface_formats ? g_array_ref (self->surface_formats) : NULL;
+  GST_OBJECT_LOCK (self);
+  ret = self->surface_formats ? g_array_ref (self->surface_formats) : NULL;
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
 }
 
 static gboolean
@@ -766,15 +782,23 @@ gst_va_filter_set_orientation (GstVaFilter * self,
     GstVideoOrientationMethod orientation)
 {
   guint32 mirror = VA_MIRROR_NONE, rotation = VA_ROTATION_NONE;
+  guint32 mirror_flags, rotation_flags;
 
   if (!_from_video_orientation_method (orientation, &mirror, &rotation))
     return FALSE;
 
-  if (mirror != VA_MIRROR_NONE && !(self->pipeline_caps.mirror_flags & mirror))
+  GST_OBJECT_LOCK (self);
+  mirror_flags = self->pipeline_caps.mirror_flags;
+  GST_OBJECT_UNLOCK (self);
+
+  if (mirror != VA_MIRROR_NONE && !(mirror_flags & mirror))
     return FALSE;
 
-  if (rotation != VA_ROTATION_NONE
-      && !(self->pipeline_caps.rotation_flags & (1 << rotation)))
+  GST_OBJECT_LOCK (self);
+  rotation_flags = self->pipeline_caps.rotation_flags;
+  GST_OBJECT_UNLOCK (self);
+
+  if (rotation != VA_ROTATION_NONE && !(rotation_flags & (1 << rotation)))
     return FALSE;
 
   GST_OBJECT_LOCK (self);
@@ -789,7 +813,13 @@ gst_va_filter_set_orientation (GstVaFilter * self,
 GstVideoOrientationMethod
 gst_va_filter_get_orientation (GstVaFilter * self)
 {
-  return self->orientation;
+  GstVideoOrientationMethod ret;
+
+  GST_OBJECT_LOCK (self);
+  ret = self->orientation;
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
 }
 
 static inline GstCaps *
@@ -806,31 +836,39 @@ _create_base_caps (GstVaFilter * self)
 GstCaps *
 gst_va_filter_get_caps (GstVaFilter * self)
 {
+  GArray *surface_formats = NULL, *image_formats = NULL;
   GstCaps *caps, *base_caps, *feature_caps;
   GstCapsFeatures *features;
+  guint32 mem_types;
 
   g_return_val_if_fail (GST_IS_VA_FILTER (self), NULL);
 
   if (!gst_va_filter_is_open (self))
     return NULL;
 
+  surface_formats = gst_va_filter_get_surface_formats (self);
+  if (!surface_formats)
+    return NULL;
+
   base_caps = _create_base_caps (self);
 
-  if (!gst_caps_set_format_array (base_caps, self->surface_formats)) {
-    gst_caps_unref (base_caps);
-    return NULL;
-  }
+  if (!gst_caps_set_format_array (base_caps, surface_formats))
+    goto fail;
+
+  g_array_unref (surface_formats);
 
   caps = gst_caps_new_empty ();
 
-  if (self->mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_VA) {
+  mem_types = gst_va_filter_get_mem_types (self);
+
+  if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_VA) {
     feature_caps = gst_caps_copy (base_caps);
     features = gst_caps_features_from_string ("memory:VAMemory");
     gst_caps_set_features_simple (feature_caps, features);
     caps = gst_caps_merge (caps, feature_caps);
   }
-  if (self->mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
-      || self->mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2) {
+  if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
+      || mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2) {
     feature_caps = gst_caps_copy (base_caps);
     features = gst_caps_features_from_string ("memory:DMABuf");
     gst_caps_set_features_simple (feature_caps, features);
@@ -841,12 +879,26 @@ gst_va_filter_get_caps (GstVaFilter * self)
 
   base_caps = _create_base_caps (self);
 
-  if (!gst_caps_set_format_array (base_caps, self->image_formats)) {
-    gst_caps_unref (base_caps);
-    return NULL;
+  GST_OBJECT_LOCK (self);
+  image_formats =
+      self->image_formats ? g_array_ref (self->image_formats) : NULL;
+  GST_OBJECT_UNLOCK (self);
+
+  if (image_formats) {
+    if (!gst_caps_set_format_array (base_caps, image_formats))
+      goto fail;
+    g_array_unref (image_formats);
   }
 
   return gst_caps_merge (caps, base_caps);
+
+fail:
+  {
+    g_clear_pointer (&surface_formats, g_array_unref);
+    g_clear_pointer (&image_formats, g_array_unref);
+    gst_caps_unref (base_caps);
+    return NULL;
+  }
 }
 
 static gboolean
@@ -865,8 +917,10 @@ _destroy_filters (GstVaFilter * self)
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
+  GST_OBJECT_LOCK (self);
   for (i = 0; i < self->filters->len; i++) {
     buffer = g_array_index (self->filters, VABufferID, i);
+
     gst_va_display_lock (self->display);
     status = vaDestroyBuffer (dpy, buffer);
     gst_va_display_unlock (self->display);
@@ -877,6 +931,7 @@ _destroy_filters (GstVaFilter * self)
   }
 
   self->filters = g_array_set_size (self->filters, 0);
+  GST_OBJECT_UNLOCK (self);
 
   return ret;
 }
@@ -905,11 +960,13 @@ gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     return FALSE;
   }
 
-  /* leazy creation */
+  /* lazy creation */
+  GST_OBJECT_LOCK (self);
   if (!self->filters)
     self->filters = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 16);
 
   g_array_append_val (self->filters, buffer);
+  GST_OBJECT_UNLOCK (self);
 
   return TRUE;
 }
@@ -920,12 +977,19 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
 {
   VADisplay dpy;
   VAStatus status;
-  VABufferID *filters = (self->filters && self->filters->len > 0) ?
-      (VABufferID *) self->filters->data : NULL;
-  guint32 num_filters = self->filters ? self->filters->len : 0;
+  VABufferID *filters = NULL;
+  VAProcPipelineParameterBuffer params;
+  guint32 num_filters = 0;
+
+  GST_OBJECT_LOCK (self);
+  if (self->filters) {
+    num_filters = self->filters->len;
+    filters = (num_filters > 0) ? (VABufferID *) self->filters->data : NULL;
+  }
+  GST_OBJECT_UNLOCK (self);
 
   /* *INDENT-OFF* */
-  VAProcPipelineParameterBuffer params = {
+  params = (VAProcPipelineParameterBuffer) {
     .surface = surface,
     .surface_region = src_rect,
     .surface_color_standard = VAProcColorStandardNone,
@@ -962,8 +1026,8 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
   VARectangle src_rect;
   VARectangle dst_rect;
   VAStatus status;
-  VABufferID *filters;
-  guint32 num_filters;
+  VABufferID *filters = NULL;
+  guint32 num_filters = 0;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
@@ -987,9 +1051,13 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
   };
   /* *INDENT-ON* */
 
-  num_filters = (self->filters) ? self->filters->len : 0;
-  filters = (self->filters && num_filters > 0) ?
-      (VABufferID *) self->filters->data : NULL;
+  GST_OBJECT_LOCK (self);
+  if (self->filters) {
+    g_array_ref (self->filters);
+    num_filters = self->filters->len;
+    filters = (num_filters > 0) ? (VABufferID *) self->filters->data : NULL;
+  }
+  GST_OBJECT_UNLOCK (self);
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
@@ -1041,6 +1109,11 @@ bail:
     ret = FALSE;
     GST_WARNING ("Failed to destroy filter buffer: %s", vaErrorStr (status));
   }
+
+  GST_OBJECT_LOCK (self);
+  if (self->filters)
+    g_array_unref (self->filters);
+  GST_OBJECT_UNLOCK (self);
 
   if (!_destroy_filters (self))
     return FALSE;
