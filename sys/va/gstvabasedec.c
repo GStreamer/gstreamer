@@ -118,6 +118,19 @@ gst_va_base_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
 }
 
 static gboolean
+_query_context (GstVaBaseDec * self, GstQuery * query)
+{
+  GstVaDisplay *display = NULL;
+  gboolean ret;
+
+  gst_object_replace ((GstObject **) & display, (GstObject *) self->display);
+  ret = gst_va_handle_context_query (GST_ELEMENT_CAST (self), query, display);
+  gst_clear_object (&display);
+
+  return ret;
+}
+
+static gboolean
 gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
@@ -125,15 +138,7 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
-      GstVaDisplay *display = NULL;
-
-      gst_object_replace ((GstObject **) & display,
-          (GstObject *) base->display);
-
-      ret = gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
-          display);
-
-      gst_clear_object (&display);
+      ret = _query_context (base, query);
       break;
     }
     case GST_QUERY_CAPS:{
@@ -180,22 +185,8 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 static gboolean
 gst_va_base_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
 {
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  gboolean ret = FALSE;
-
-  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
-    GstVaDisplay *display = NULL;
-
-    gst_object_replace ((GstObject **) & display, (GstObject *) base->display);
-
-    ret = gst_va_handle_context_query (GST_ELEMENT_CAST (decoder), query,
-        display);
-
-    gst_clear_object (&display);
-
-    return ret;
-  }
-
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT)
+    return _query_context (GST_VA_BASE_DEC (decoder), query);
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
 }
 
