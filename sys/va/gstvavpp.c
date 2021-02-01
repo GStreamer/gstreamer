@@ -151,6 +151,12 @@ static const gchar *caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemo
 
 #define META_TAG_COLORSPACE meta_tag_colorspace_quark
 static GQuark meta_tag_colorspace_quark;
+#define META_TAG_SIZE meta_tag_size_quark
+static GQuark meta_tag_size_quark;
+#define META_TAG_ORIENTATION meta_tag_orientation_quark
+static GQuark meta_tag_orientation_quark;
+#define META_TAG_VIDEO meta_tag_video_quark
+static GQuark meta_tag_video_quark;
 
 static void
 gst_va_vpp_dispose (GObject * object)
@@ -1093,15 +1099,24 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
 
   tags = gst_meta_api_type_get_tags (info->api);
 
-  if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && (self->op_flags & VPP_CONVERT_FORMAT)
-          && gst_meta_api_type_has_tag (info->api, META_TAG_COLORSPACE))) {
-    /* don't copy colorspace specific metadata, FIXME, we need a MetaTransform
-     * for the colorspace metadata. */
-    return FALSE;
-  }
+  if (!tags)
+    return TRUE;
 
-  return TRUE;
+  /* don't copy colorspace/size/orientation specific metadata */
+  if ((self->op_flags & VPP_CONVERT_FORMAT)
+      && gst_meta_api_type_has_tag (info->api, META_TAG_COLORSPACE))
+    return FALSE;
+  else if ((self->op_flags & VPP_CONVERT_SIZE)
+      && gst_meta_api_type_has_tag (info->api, META_TAG_SIZE))
+    return FALSE;
+  else if ((self->op_flags & VPP_CONVERT_DIRECTION)
+      && gst_meta_api_type_has_tag (info->api, META_TAG_ORIENTATION))
+    return FALSE;
+  else if (gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))
+    return TRUE;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
+      meta, inbuf);
 }
 
 static GstCaps *
@@ -2212,7 +2227,14 @@ _register_debug_category (gpointer data)
   GST_DEBUG_CATEGORY_INIT (gst_va_vpp_debug, "vavpp", 0,
       "VA Video Postprocessor");
 
-  meta_tag_colorspace_quark = g_quark_from_static_string ("colorspace");;
+#define D(type) \
+  G_PASTE (META_TAG_, type) = \
+    g_quark_from_static_string (G_PASTE (G_PASTE (GST_META_TAG_VIDEO_, type), _STR))
+  D (COLORSPACE);
+  D (SIZE);
+  D (ORIENTATION);
+#undef D
+  META_TAG_VIDEO = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 
   return NULL;
 }
