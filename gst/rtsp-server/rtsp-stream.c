@@ -2702,11 +2702,10 @@ static gpointer
 send_func (GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
-  gboolean cont = TRUE;
 
   g_mutex_lock (&priv->send_lock);
 
-  while (cont) {
+  while (priv->continue_sending) {
     int i;
     int idx = -1;
     guint cookie;
@@ -2732,10 +2731,9 @@ send_func (GstRTSPStream * stream)
     g_mutex_unlock (&priv->lock);
 
     g_mutex_lock (&priv->send_lock);
-    while (cookie == priv->send_cookie) {
+    while (cookie == priv->send_cookie && priv->continue_sending) {
       g_cond_wait (&priv->send_cond, &priv->send_lock);
     }
-    cont = priv->continue_sending;
   }
 
   g_mutex_unlock (&priv->send_lock);
