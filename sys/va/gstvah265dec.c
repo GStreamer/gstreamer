@@ -818,7 +818,7 @@ _complete_sink_caps (GstCaps * sinkcaps)
 {
   GstCaps *caps = gst_caps_copy (sinkcaps);
   GValue val = G_VALUE_INIT;
-  const gchar *streamformat[] = { "hvc", "hev1", "byte-stream" };
+  const gchar *streamformat[] = { "hvc1", "hev1", "byte-stream" };
   gint i;
 
   g_value_init (&val, G_TYPE_STRING);
