@@ -111,6 +111,9 @@ static gboolean gst_video_convert_set_info (GstVideoFilter * filter,
 static GstFlowReturn gst_video_convert_transform_frame (GstVideoFilter * filter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
+static GstCapsFeatures *features_format_interlaced,
+    *features_format_interlaced_sysmem;
+
 /* copies the given caps */
 static GstCaps *
 gst_video_convert_caps_remove_format_info (GstCaps * caps)
@@ -135,10 +138,14 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
     st = gst_structure_copy (st);
     /* Only remove format info for the cases when we can actually convert */
     if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+        && (gst_caps_features_is_equal (f,
+                GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+            || gst_caps_features_is_equal (f, features_format_interlaced)
+            || gst_caps_features_is_equal (f,
+                features_format_interlaced_sysmem))) {
       gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
           NULL);
+    }
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
@@ -742,6 +749,13 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   _colorspace_quark = g_quark_from_static_string ("colorspace");
+
+  features_format_interlaced =
+      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+  features_format_interlaced_sysmem =
+      gst_caps_features_copy (features_format_interlaced);
+  gst_caps_features_add (features_format_interlaced_sysmem,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
 
   return gst_element_register (plugin, "videoconvert",
       GST_RANK_NONE, GST_TYPE_VIDEO_CONVERT);

@@ -1611,10 +1611,12 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
-  if (GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info)) {
+  if (GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&convert->in_info) !=
+          GST_VIDEO_INTERLACE_MODE_ALTERNATE)) {
     convert->v_scaler_i[idx] =
-        gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_INTERLACED,
-        taps, convert->in_height, convert->out_height, convert->config);
+        gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_INTERLACED, taps,
+        convert->in_height, convert->out_height, convert->config);
 
     gst_video_scaler_get_coeff (convert->v_scaler_i[idx], 0, NULL, &taps_i);
     backlog = taps_i;
@@ -2281,9 +2283,9 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
     gst_video_converter_set_config (convert, config);
 
   convert->in_maxwidth = GST_VIDEO_INFO_WIDTH (in_info);
-  convert->in_maxheight = GST_VIDEO_INFO_HEIGHT (in_info);
+  convert->in_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (in_info);
   convert->out_maxwidth = GST_VIDEO_INFO_WIDTH (out_info);
-  convert->out_maxheight = GST_VIDEO_INFO_HEIGHT (out_info);
+  convert->out_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (out_info);
 
   convert->in_x = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_SRC_X, 0);
   convert->in_y = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_SRC_Y, 0);
@@ -2694,7 +2696,7 @@ gst_video_converter_frame (GstVideoConverter * convert,
           GST_VIDEO_FRAME_FORMAT (src)
           || GST_VIDEO_INFO_WIDTH (&convert->in_info) >
           GST_VIDEO_FRAME_WIDTH (src)
-          || GST_VIDEO_INFO_HEIGHT (&convert->in_info) >
+          || GST_VIDEO_INFO_FIELD_HEIGHT (&convert->in_info) >
           GST_VIDEO_FRAME_HEIGHT (src))) {
     g_critical ("Input video frame does not match configuration");
     return;
@@ -2703,7 +2705,7 @@ gst_video_converter_frame (GstVideoConverter * convert,
           GST_VIDEO_FRAME_FORMAT (dest)
           || GST_VIDEO_INFO_WIDTH (&convert->out_info) >
           GST_VIDEO_FRAME_WIDTH (dest)
-          || GST_VIDEO_INFO_HEIGHT (&convert->out_info) >
+          || GST_VIDEO_INFO_FIELD_HEIGHT (&convert->out_info) >
           GST_VIDEO_FRAME_HEIGHT (dest))) {
     g_critical ("Output video frame does not match configuration");
     return;
@@ -2753,7 +2755,9 @@ video_converter_compute_resample (GstVideoConverter * convert, gint idx)
       in_info->chroma_site != out_info->chroma_site ||
       in_info->width != out_info->width ||
       in_info->height != out_info->height) {
-    if (GST_VIDEO_INFO_IS_INTERLACED (in_info)) {
+    if (GST_VIDEO_INFO_IS_INTERLACED (in_info)
+        && GST_VIDEO_INFO_INTERLACE_MODE (in_info) !=
+        GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
       if (!CHECK_CHROMA_DOWNSAMPLE (convert))
         convert->upsample_i[idx] = gst_video_chroma_resample_new (0,
             in_info->chroma_site, GST_VIDEO_CHROMA_FLAG_INTERLACED,
@@ -3309,7 +3313,9 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   int i;
   gint width = convert->in_width;
   gint height = convert->in_height;
-  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
   gint h2;
   FConvertTask *tasks;
   FConvertTask **tasks_p;
@@ -3382,7 +3388,9 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   int i;
   gint width = convert->in_width;
   gint height = convert->in_height;
-  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
   gint h2;
   FConvertTask *tasks;
   FConvertTask **tasks_p;
@@ -3455,7 +3463,9 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   int i;
   gint width = convert->in_width;
   gint height = convert->in_height;
-  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
   guint8 alpha = MIN (convert->alpha_value, 255);
   gint h2;
   FConvertTask *tasks;
@@ -3533,7 +3543,9 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   int i;
   gint width = convert->in_width;
   gint height = convert->in_height;
-  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
   gint h2;
   FConvertTask *tasks;
   FConvertTask **tasks_p;
@@ -3692,7 +3704,9 @@ convert_v210_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   int i;
   gint width = convert->in_width;
   gint height = convert->in_height;
-  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
   gint h2;
   FConvertTask *tasks;
   FConvertTask **tasks_p;
@@ -4075,7 +4089,9 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   int i;
   gint width = convert->in_width;
   gint height = convert->in_height;
-  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
   gint h2;
   FConvertTask *tasks;
   FConvertTask **tasks_p;
@@ -6519,7 +6535,9 @@ setup_scale (GstVideoConverter * convert)
 
   n_planes = GST_VIDEO_INFO_N_PLANES (out_info);
 
-  interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info);
+  interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info)
+      && GST_VIDEO_INFO_INTERLACE_MODE (&convert->in_info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE;
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
   if (method == GST_VIDEO_RESAMPLER_METHOD_NEAREST)
@@ -7247,7 +7265,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   guint in_bpp, out_bpp;
 
   width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
-  height = GST_VIDEO_INFO_HEIGHT (&convert->in_info);
+  height = GST_VIDEO_INFO_FIELD_HEIGHT (&convert->in_info);
 
   if (GET_OPT_DITHER_QUANTIZATION (convert) != 1)
     return FALSE;
