@@ -24,6 +24,9 @@
  * @title: GstAllocator
  * @short_description: allocate memory blocks
  * @see_also: #GstMemory
+ * @auto-sort: false
+ * @symbols:
+ * - GstAllocator
  *
  * Memory is usually created by allocators with a gst_allocator_alloc()
  * method call. When %NULL is used as the allocator, the default allocator will
