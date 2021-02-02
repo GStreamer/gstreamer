@@ -162,10 +162,7 @@ gst_allocation_params_init (GstAllocationParams * params)
  *
  * Create a copy of @params.
  *
- * Free-function: gst_allocation_params_free
- *
- * Returns: (transfer full) (nullable): a new ##GstAllocationParams, free with
- * gst_allocation_params_free().
+ * Returns: (transfer full) (nullable): a new #GstAllocationParams.
  */
 GstAllocationParams *
 gst_allocation_params_copy (const GstAllocationParams * params)
@@ -197,8 +194,7 @@ gst_allocation_params_free (GstAllocationParams * params)
  * @name: the name of the allocator
  * @allocator: (transfer full): #GstAllocator
  *
- * Registers the memory @allocator with @name. This function takes ownership of
- * @allocator.
+ * Registers the memory @allocator with @name.
  */
 void
 gst_allocator_register (const gchar * name, GstAllocator * allocator)
@@ -224,8 +220,7 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
  * default allocator will be returned.
  *
  * Returns: (transfer full) (nullable): a #GstAllocator or %NULL when
- * the allocator with @name was not registered. Use gst_object_unref()
- * to release the allocator after usage.
+ * the allocator with @name was not registered.
  */
 GstAllocator *
 gst_allocator_find (const gchar * name)
@@ -249,7 +244,7 @@ gst_allocator_find (const gchar * name)
  * gst_allocator_set_default:
  * @allocator: (transfer full): a #GstAllocator
  *
- * Set the default allocator. This function takes ownership of @allocator.
+ * Set the default allocator.
  */
 void
 gst_allocator_set_default (GstAllocator * allocator)
