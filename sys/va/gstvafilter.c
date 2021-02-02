@@ -902,7 +902,7 @@ fail:
 }
 
 static gboolean
-_destroy_filters (GstVaFilter * self)
+_destroy_filters_unlocked (GstVaFilter * self)
 {
   VABufferID buffer;
   VADisplay dpy;
@@ -910,14 +910,10 @@ _destroy_filters (GstVaFilter * self)
   gboolean ret = TRUE;
   guint i;
 
-  if (!self->filters)
-    return TRUE;
-
   GST_TRACE_OBJECT (self, "Destroy filter buffers");
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  GST_OBJECT_LOCK (self);
   for (i = 0; i < self->filters->len; i++) {
     buffer = g_array_index (self->filters, VABufferID, i);
 
@@ -926,12 +922,12 @@ _destroy_filters (GstVaFilter * self)
     gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS) {
       ret = FALSE;
-      GST_WARNING ("Failed to destroy filter buffer: %s", vaErrorStr (status));
+      GST_WARNING_OBJECT (self, "Failed to destroy filter buffer: %s",
+          vaErrorStr (status));
     }
   }
 
   self->filters = g_array_set_size (self->filters, 0);
-  GST_OBJECT_UNLOCK (self);
 
   return ret;
 }
@@ -1102,21 +1098,12 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
   ret = TRUE;
 
 bail:
-  gst_va_display_lock (self->display);
-  status = vaDestroyBuffer (dpy, buffer);
-  gst_va_display_unlock (self->display);
-  if (status != VA_STATUS_SUCCESS) {
-    ret = FALSE;
-    GST_WARNING ("Failed to destroy filter buffer: %s", vaErrorStr (status));
-  }
-
   GST_OBJECT_LOCK (self);
-  if (self->filters)
+  if (self->filters) {
     g_array_unref (self->filters);
+    _destroy_filters_unlocked (self);
+  }
   GST_OBJECT_UNLOCK (self);
-
-  if (!_destroy_filters (self))
-    return FALSE;
 
   return ret;
 
