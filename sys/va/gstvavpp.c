@@ -1052,6 +1052,11 @@ gst_va_vpp_import_input_buffer (GstVaVpp * self, GstBuffer * inbuf,
   if (!copied)
     goto invalid_buffer;
 
+  /* strictly speaking this is not needed but let's play safe */
+  if (!gst_buffer_copy_into (buffer, inbuf, GST_BUFFER_COPY_FLAGS |
+          GST_BUFFER_COPY_TIMESTAMPS, 0, -1))
+    return GST_FLOW_ERROR;
+
   *buf = buffer;
 
   return GST_FLOW_OK;
