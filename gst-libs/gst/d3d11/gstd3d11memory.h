@@ -169,6 +169,11 @@ GstMemory *         gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * alloc
                                                        gint * stride);
 
 GST_D3D11_API
+gboolean            gst_d3d11_allocator_get_texture_array_size (GstD3D11Allocator * allocator,
+                                                                guint * array_size,
+                                                                guint * num_texture_in_use);
+
+GST_D3D11_API
 void                gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
                                                       gboolean flushing);
 

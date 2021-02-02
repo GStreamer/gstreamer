@@ -280,6 +280,10 @@ struct _GstD3D11AllocatorPrivate
   GArray *decoder_output_view_array;
   GArray *processor_input_view_array;
 
+  /* Count the number of array textures in use */
+  guint num_array_textures_in_use;
+  guint array_texture_size;
+
   GMutex lock;
   GCond cond;
 
@@ -551,6 +555,7 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
     GST_D3D11_ALLOCATOR_LOCK (self);
     g_array_index (priv->array_in_use,
         guint8, dmem_priv->subresource_index) = 0;
+    priv->num_array_textures_in_use--;
     g_cond_broadcast (&priv->cond);
     GST_D3D11_ALLOCATOR_UNLOCK (self);
   }
@@ -650,6 +655,7 @@ gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
   priv = gst_d3d11_allocator_get_instance_private (allocator);
   g_mutex_init (&priv->lock);
   g_cond_init (&priv->cond);
+  priv->array_texture_size = 1;
 
   allocator->priv = priv;
 }
@@ -964,6 +970,8 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
           TRUE, sizeof (guint8), desc->ArraySize);
       g_array_set_size (priv->array_in_use, desc->ArraySize);
 
+      priv->array_texture_size = desc->ArraySize;
+
       if ((desc->BindFlags & D3D11_BIND_DECODER) == D3D11_BIND_DECODER &&
           !priv->decoder_output_view_array) {
         priv->decoder_output_view_array = g_array_sized_new (FALSE,
@@ -997,6 +1005,7 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     }
 
     g_array_index (priv->array_in_use, guint8, index_to_use) = 1;
+    priv->num_array_textures_in_use++;
 
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
 
@@ -1131,6 +1140,45 @@ gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
   priv->flushing = flushing;
   g_cond_broadcast (&priv->cond);
   GST_D3D11_ALLOCATOR_UNLOCK (allocator);
+}
+
+/**
+ * gst_d3d11_allocator_get_texture_array_size:
+ * @allocator: a #GstD3D11Allocator
+ * @array_size: (out) (optional): the size of texture array
+ * @num_texture_in_use: (out) (optional): the number of textures in use
+ *
+ * Returns: %TRUE if the size of texture array is known
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_d3d11_allocator_get_texture_array_size (GstD3D11Allocator * allocator,
+    guint * array_size, guint * num_texture_in_use)
+{
+  GstD3D11AllocatorPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), FALSE);
+
+  priv = allocator->priv;
+
+  /* For non-array-texture memory, the size is 1 */
+  if (array_size)
+    *array_size = 1;
+  if (num_texture_in_use)
+    *num_texture_in_use = priv->array_texture_size;
+
+  /* size == 1 means we are not texture pool allocator */
+  if (priv->array_texture_size == 1)
+    return TRUE;
+
+  if (num_texture_in_use) {
+    GST_D3D11_ALLOCATOR_LOCK (allocator);
+    *num_texture_in_use = priv->array_texture_size;
+    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
+  }
+
+  return TRUE;
 }
 
 /**
