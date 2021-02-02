@@ -425,6 +425,9 @@ _create_sinkpad_bufferpool (GstCaps * caps, guint size, guint min_buffers,
       max_buffers);
   gst_buffer_pool_config_set_va_allocation_params (config, usage_hint);
   gst_buffer_pool_config_set_allocator (config, allocator, alloc_params);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
   if (!gst_buffer_pool_set_config (pool, config))
     gst_clear_object (&pool);
