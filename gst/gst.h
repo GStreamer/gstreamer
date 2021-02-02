@@ -102,7 +102,7 @@ void		gst_init			(int *argc, char **argv[]);
 
 GST_API
 gboolean	gst_init_check			(int *argc, char **argv[],
-						 GError ** err);
+						 GError ** error);
 GST_API
 gboolean        gst_is_initialized              (void);
 

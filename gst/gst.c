@@ -27,40 +27,46 @@
  *                     graphs.
  *
  * GStreamer is a framework for constructing graphs of various filters
- * (termed elements here) that will handle streaming media.  Any discrete
- * (packetizable) media type is supported, with provisions for automatically
- * determining source type.  Formatting/framing information is provided with
- * a powerful negotiation framework.  Plugins are heavily used to provide for
- * all elements, allowing one to construct plugins outside of the GST
- * library, even released binary-only if license require (please don't).
+ * (termed elements here) that will handle streaming media.
+ *
+ * Any discrete (packetizable) media type is supported, with provisions for
+ * automatically determining source type.
+ *
+ * Formatting/framing information is provided with a powerful negotiation
+ * framework.
+ *
+ * Plugins are heavily used to provide for all elements, allowing one to
+ * construct plugins outside of the GST library, even released binary-only if
+ * license require (please don't).
+ *
  * GStreamer covers a wide range of use cases including: playback, recording,
  * editing, serving streams, voice over ip and video calls.
  *
  * The `GStreamer` library should be initialized with
- * gst_init() before it can be used. You should pass pointers to the main argc
- * and argv variables so that GStreamer can process its own command line
+ * gst_init() before it can be used. You should pass pointers to the main `argc`
+ * and `argv` variables so that GStreamer can process its own command line
  * options, as shown in the following example.
  *
  * ## Initializing the gstreamer library
  *
- * |[ <!-- language="C" -->
- * int
- * main (int argc, char *argv[])
+ * ``` C
+ * int main (int argc, char *argv[])
  * {
  *   // initialize the GStreamer library
- *   gst_init (&amp;argc, &amp;argv);
+ *   gst_init (&argc, &argv);
  *   ...
  * }
- * ]|
+ * ```
  *
  * It's allowed to pass two %NULL pointers to gst_init() in case you don't want
  * to pass the command line args to GStreamer.
  *
- * You can also use GOption to initialize your own parameters as shown in
+ * You can also use #GOptionContext to initialize your own parameters as shown in
  * the next code fragment:
  *
- * ## Initializing own parameters when initializing gstreamer
- * |[ <!-- language="C" -->
+ * ## Initializing own parameters when initializing GStreamer
+ *
+ * ``` C
  * static gboolean stats = FALSE;
  * ...
  * int
@@ -74,14 +80,14 @@
  *  ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
  *  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
  *  g_option_context_add_group (ctx, gst_init_get_option_group ());
- *  if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
- *    g_print ("Error initializing: &percnt;s\n", GST_STR_NULL (err->message));
+ *  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+ *    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
  *    exit (1);
  *  }
  *  g_option_context_free (ctx);
  * ...
  * }
- * ]|
+ * ```
  *
  * Use gst_version() to query the library version at runtime or use the
  * GST_VERSION_* macros to find the version at compile time. Optionally
@@ -390,7 +396,7 @@ gst_get_main_executable_path (void)
  * gst_init_check:
  * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
- * @err: pointer to a #GError to which a message will be posted on error
+ * @error: pointer to a #GError to which a message will be posted on error
  *
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
@@ -402,7 +408,7 @@ gst_get_main_executable_path (void)
  * Returns: %TRUE if GStreamer could be initialized.
  */
 gboolean
-gst_init_check (int *argc, char **argv[], GError ** err)
+gst_init_check (int *argc, char **argv[], GError ** error)
 {
   static GMutex init_lock;
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -424,7 +430,7 @@ gst_init_check (int *argc, char **argv[], GError ** err)
   g_option_context_set_help_enabled (ctx, FALSE);
   group = gst_init_get_option_group ();
   g_option_context_add_group (ctx, group);
-  res = g_option_context_parse (ctx, argc, argv, err);
+  res = g_option_context_parse (ctx, argc, argv, error);
   g_option_context_free (ctx);
 #else
   init_pre (NULL, NULL, NULL, NULL);
@@ -454,9 +460,9 @@ gst_init_check (int *argc, char **argv[], GError ** err)
  * <link linkend="gst-running">Running GStreamer Applications</link>
  * for how to disable automatic registry updates.
  *
- * > This function will terminate your program if it was unable to initialize
- * > GStreamer for some reason.  If you want your program to fall back,
- * > use gst_init_check() instead.
+ * WARNING: This function will terminate your program if it was unable to
+ * initialize GStreamer for some reason. If you want your program to fall back,
+ * use gst_init_check() instead.
  *
  * WARNING: This function does not work in the same way as corresponding
  * functions in other glib-style libraries, such as gtk_init\(\). In
