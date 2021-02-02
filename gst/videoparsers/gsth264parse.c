@@ -3134,7 +3134,14 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 #endif
 
-  if (!gst_buffer_get_video_time_code_meta (buffer)) {
+  if (frame->out_buffer) {
+    parse_buffer = frame->out_buffer =
+        gst_buffer_make_writable (frame->out_buffer);
+  } else {
+    parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
+  }
+
+  if (!gst_buffer_get_video_time_code_meta (parse_buffer)) {
     guint i = 0;
 
     for (i = 0; i < 3 && h264parse->num_clock_timestamp; i++) {
@@ -3197,7 +3204,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           "Add time code meta %02u:%02u:%02u:%02u",
           tim->hours_value, tim->minutes_value, tim->seconds_value, n_frames);
 
-      gst_buffer_add_video_time_code_meta_full (buffer,
+      gst_buffer_add_video_time_code_meta_full (parse_buffer,
           h264parse->parsed_fps_n,
           h264parse->parsed_fps_d,
           NULL,
@@ -3208,13 +3215,6 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
 
     h264parse->num_clock_timestamp = 0;
-  }
-
-  if (frame->out_buffer) {
-    parse_buffer = frame->out_buffer =
-        gst_buffer_make_writable (frame->out_buffer);
-  } else {
-    parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
   }
 
   if (is_interlaced) {

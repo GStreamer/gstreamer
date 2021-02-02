@@ -2748,6 +2748,13 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
+  if (frame->out_buffer) {
+    parse_buffer = frame->out_buffer =
+        gst_buffer_make_writable (frame->out_buffer);
+  } else {
+    parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
+  }
+
   {
     guint i = 0;
 
@@ -2809,7 +2816,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           gst_util_uint64_scale_int (h265parse->time_code.n_frames[i], 1,
           2 - h265parse->time_code.units_field_based_flag[i]);
 
-      gst_buffer_add_video_time_code_meta_full (buffer,
+      gst_buffer_add_video_time_code_meta_full (parse_buffer,
           h265parse->parsed_fps_n,
           h265parse->parsed_fps_d,
           NULL,
@@ -2821,13 +2828,6 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
           seconds_value[i] : 0, n_frames, field_count);
     }
-  }
-
-  if (frame->out_buffer) {
-    parse_buffer = frame->out_buffer =
-        gst_buffer_make_writable (frame->out_buffer);
-  } else {
-    parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
   }
 
   if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME) {
