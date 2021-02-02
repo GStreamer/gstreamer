@@ -30,16 +30,25 @@
  * Note: sampling extensions that are not listed in the RFC are signified by an _EXT at the end of the enum
  *
  * @GST_JPEG2000_SAMPLING_NONE: no sampling
- * @GST_JPEG2000_SAMPLING_RGB:  standard Red, Green, Blue color space.
- * @GST_JPEG2000_SAMPLING_BGR:  standard Blue, Green, Red color space.
- * @GST_JPEG2000_SAMPLING_RGBA:  standard Red, Green, Blue, Alpha color space.
- * @GST_JPEG2000_SAMPLING_BGRA:  standard Blue, Green, Red, Alpha color space.
- * @GST_JPEG2000_SAMPLING_YCbCr-4:4:4:  standard YCbCr color space; no subsampling.
- * @GST_JPEG2000_SAMPLING_YCbCr-4:2:2:  standard YCbCr color space; Cb and Cr are subsampled horizontally by 1/2.
- * @GST_JPEG2000_SAMPLING_YCbCr-4:2:0:  standard YCbCr color space; Cb and Cr are subsampled horizontally and vertically by 1/2.
- * @GST_JPEG2000_SAMPLING_YCbCr-4:1:1:  standard YCbCr color space; Cb and Cr are subsampled vertically by 1/4.
+ * @GST_JPEG2000_SAMPLING_RGB: standard Red, Green, Blue color space.
+ * @GST_JPEG2000_SAMPLING_BGR: standard Blue, Green, Red color space.
+ * @GST_JPEG2000_SAMPLING_RGBA: standard Red, Green, Blue, Alpha color space.
+ * @GST_JPEG2000_SAMPLING_BGRA: standard Blue, Green, Red, Alpha color space.
+ * @GST_JPEG2000_SAMPLING_YBR444: standard YCbCr color space; no subsampling.
+ * @GST_JPEG2000_SAMPLING_YBR422: standard YCbCr color space; Cb and Cr are subsampled horizontally by 1/2.
+ * @GST_JPEG2000_SAMPLING_YBR420: standard YCbCr color space; Cb and Cr are subsampled horizontally and vertically by 1/2.
+ * @GST_JPEG2000_SAMPLING_YBR411: standard YCbCr color space; Cb and Cr are subsampled vertically by 1/4 (Since: 1.20).
+ * @GST_JPEG2000_SAMPLING_YBR410: standard YCbCr color space; Cb and Cr are subsampled vertically by 1/4 alternating the Cb and Cr component.
  * @GST_JPEG2000_SAMPLING_GRAYSCALE:  basically, a single component image of just multilevels of grey.
  * @GST_JPEG2000_SAMPLING_YBRA4444_EXT: standard YCbCr color space, alpha channel, no subsampling,
+ */
+
+/**
+ * GST_JPEG2000_SAMPLING_YBR411:
+ *
+ * standard YCbCr color space; Cb and Cr are subsampled vertically by 1/4
+ *
+ * Since: 1.20
  */
 typedef enum
 {
@@ -53,11 +62,12 @@ typedef enum
   GST_JPEG2000_SAMPLING_YBR420,
   GST_JPEG2000_SAMPLING_YBR410,
   GST_JPEG2000_SAMPLING_GRAYSCALE,
-  GST_JPEG2000_SAMPLING_YBRA4444_EXT
+  GST_JPEG2000_SAMPLING_YBRA4444_EXT,
+  GST_JPEG2000_SAMPLING_YBR411
 } GstJPEG2000Sampling;
 
 /* GST_JPEG2000_SAMPLING_LIST: sampling strings in list form, for use in caps */
-#define GST_JPEG2000_SAMPLING_LIST "sampling = (string) {\"RGB\", \"BGR\", \"RGBA\", \"BGRA\", \"YCbCr-4:4:4\", \"YCbCr-4:2:2\", \"YCbCr-4:2:0\", \"YCbCr-4:1:1\", \"GRAYSCALE\" , \"YCbCrA-4:4:4:4\"}"
+#define GST_JPEG2000_SAMPLING_LIST "sampling = (string) {\"RGB\", \"BGR\", \"RGBA\", \"BGRA\", \"YCbCr-4:4:4\", \"YCbCr-4:2:2\", \"YCbCr-4:2:0\", \"YCbCr-4:1:1\", \"YCbCr-4:1:0\", \"GRAYSCALE\" , \"YCbCrA-4:4:4:4\"}"
 
 GST_CODEC_PARSERS_API
 const gchar *gst_jpeg2000_sampling_to_string (GstJPEG2000Sampling sampling);

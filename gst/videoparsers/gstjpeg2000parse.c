@@ -69,9 +69,12 @@ gst_jpeg2000_parse_get_subsampling (guint16 compno,
     } else if (sampling == GST_JPEG2000_SAMPLING_YBR420) {
       *dx = 2;
       *dy = 2;
+    } else if (sampling == GST_JPEG2000_SAMPLING_YBR411) {
+      *dx = 4;
+      *dy = 1;
     } else if (sampling == GST_JPEG2000_SAMPLING_YBR410) {
       *dx = 4;
-      *dy = 2;
+      *dy = 4;
     }
   }
 }
@@ -648,7 +651,9 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
           parsed_sampling = GST_JPEG2000_SAMPLING_YBR444;
         } else if (dx[1] == 2 && dy[1] == 2) {
           parsed_sampling = GST_JPEG2000_SAMPLING_YBR420;
-        } else if (dx[1] == 4 && dy[1] == 2) {
+        } else if (dx[1] == 4 && dy[1] == 1) {
+          parsed_sampling = GST_JPEG2000_SAMPLING_YBR411;
+        } else if (dx[1] == 4 && dy[1] == 4) {
           parsed_sampling = GST_JPEG2000_SAMPLING_YBR410;
         } else if (dx[1] == 2 && dy[1] == 1) {
           parsed_sampling = GST_JPEG2000_SAMPLING_YBR422;

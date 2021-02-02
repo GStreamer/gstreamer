@@ -42,6 +42,7 @@ static const gchar *gst_jpeg2000_sampling_strings[] = {
   "YCbCr-4:1:0",
   "GRAYSCALE",
   "YCbCrA-4:4:4:4",
+  "YCbCr-4:1:1",
 };
 
 /* convert string to GstJPEG2000Sampling enum */
@@ -86,8 +87,9 @@ gst_jpeg2000_sampling_is_yuv (GstJPEG2000Sampling sampling)
   return sampling == GST_JPEG2000_SAMPLING_YBRA4444_EXT ||
       sampling == GST_JPEG2000_SAMPLING_YBR444 ||
       sampling == GST_JPEG2000_SAMPLING_YBR422 ||
-      sampling == GST_JPEG2000_SAMPLING_YBR420
-      || sampling == GST_JPEG2000_SAMPLING_YBR410;
+      sampling == GST_JPEG2000_SAMPLING_YBR420 ||
+      sampling == GST_JPEG2000_SAMPLING_YBR411 ||
+      sampling == GST_JPEG2000_SAMPLING_YBR410;
 }
 
 /* check if @sampling is in GRAYSCALE color space */

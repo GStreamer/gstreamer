@@ -722,6 +722,9 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     case GST_VIDEO_FORMAT_YUV9:
       sampling = GST_JPEG2000_SAMPLING_YBR410;
       break;
+    case GST_VIDEO_FORMAT_Y41B:
+      sampling = GST_JPEG2000_SAMPLING_YBR411;
+      break;
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_10BE:
     case GST_VIDEO_FORMAT_I420:
