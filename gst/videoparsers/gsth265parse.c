@@ -2102,6 +2102,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
           "height", G_TYPE_INT, height, NULL);
 
+      h265parse->parsed_framerate = FALSE;
       /* upstream overrides */
       if (s && gst_structure_has_field (s, "framerate"))
         gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
@@ -2121,6 +2122,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             fps_num, fps_den, 0, 0);
         val = sps->profile_tier_level.interlaced_source_flag ? GST_SECOND / 2 :
             GST_SECOND;
+        h265parse->parsed_framerate = TRUE;
 
         /* If we know the frame duration, and if we are not in one of the zero
          * latency pattern, add one frame of latency */
@@ -2199,10 +2201,6 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       profile = gst_h265_profile_to_string (p);
       if (profile != NULL)
         gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
-
-      if (sps->profile_tier_level.interlaced_source_flag)
-        gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
-            "interleaved", NULL);
 
       tier = get_tier_string (sps->profile_tier_level.tier_flag);
       if (tier != NULL)
@@ -2753,6 +2751,38 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         gst_buffer_make_writable (frame->out_buffer);
   } else {
     parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
+  }
+
+  if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME) {
+    if (h265parse->parsed_framerate) {
+      /* If the frame rate doesn't come from upstream (e.g. a muxer), it means
+       * we must double it, because it's now fields per second */
+      gint new_fps_n, new_fps_d;
+
+      gst_util_fraction_multiply (h265parse->fps_num, h265parse->fps_den, 2, 1,
+          &new_fps_n, &new_fps_d);
+      h265parse->fps_num = new_fps_n;
+      h265parse->fps_den = new_fps_d;
+      h265parse->parsed_framerate = FALSE;
+      /* We need to fix the duration of the first frame */
+      GST_BUFFER_DURATION (parse_buffer) /= 2;
+    }
+    GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+    /* h265 doesn't support interleaved */
+    switch (h265parse->sei_pic_struct) {
+      case GST_H265_SEI_PIC_STRUCT_TOP_FIELD:
+      case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM:
+      case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM:
+        GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
+        break;
+      case GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD:
+      case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP:
+      case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP:
+        GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
+        break;
+      default:
+        break;
+    }
   }
 
   {

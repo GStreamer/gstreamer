@@ -110,6 +110,7 @@ struct _GstH265Parse
   gboolean predicted;
   gboolean bidirectional;
   gboolean header;
+  gboolean parsed_framerate;
   /* AU state */
   gboolean picture_start;
 
