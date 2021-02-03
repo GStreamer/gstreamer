@@ -1577,15 +1577,49 @@ gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
 }
 
 gboolean
-gst_d3d11_decoder_supports_direct_rendering (GstD3D11Decoder * decoder)
+gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
+    GstBuffer * view_buffer, GstMiniObject * picture)
 {
   GstD3D11DecoderPrivate *priv;
+  GstMemory *mem;
+  GstD3D11Allocator *alloc;
+  guint array_size, num_texture_in_use;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (view_buffer), FALSE);
+  g_return_val_if_fail (picture != NULL, FALSE);
 
   priv = decoder->priv;
 
-  return priv->can_direct_rendering;
+  if (!priv->can_direct_rendering)
+    return FALSE;
+
+  /* XXX: Not a thread-safe way, but should not be a problem.
+   * This object must be protected by videodecoder stream lock
+   * and codec base classes are working on upstream streaming thread
+   * (i.g., single threaded) */
+
+  /* Baseclass is not holding this picture. So we can wait for this memory
+   * to be consumed by downstream as it will be relased once it's processed
+   * by downstream */
+  if (GST_MINI_OBJECT_REFCOUNT (picture) == 1)
+    return TRUE;
+
+  mem = gst_buffer_peek_memory (view_buffer, 0);
+  alloc = GST_D3D11_ALLOCATOR_CAST (mem->allocator);
+
+  /* something went wrong */
+  if (!gst_d3d11_allocator_get_texture_array_size (alloc, &array_size,
+          &num_texture_in_use)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't query size of texture array");
+    return FALSE;
+  }
+
+  /* DPB pool is full now */
+  if (num_texture_in_use >= array_size)
+    return FALSE;
+
+  return TRUE;
 }
 
 /* Keep sync with chromium and keep in sorted order.

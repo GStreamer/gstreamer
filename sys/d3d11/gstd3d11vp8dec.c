@@ -364,6 +364,7 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
+  gboolean direct_rendering = FALSE;
 
   g_assert (picture->frame_hdr.show_frame);
 
@@ -380,9 +381,14 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
    * expose our decoder view without copy. In case of reverse playback, however,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
-  if (self->use_d3d11_output &&
-      gst_d3d11_decoder_supports_direct_rendering (self->d3d11_decoder) &&
-      vdec->input_segment.rate > 0) {
+  if (self->use_d3d11_output
+      && GST_VIDEO_DECODER (self)->input_segment.rate > 0
+      && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
+          GST_MINI_OBJECT_CAST (picture))) {
+    direct_rendering = TRUE;
+  }
+
+  if (direct_rendering) {
     GstMemory *mem;
 
     output_buffer = gst_buffer_ref (view_buffer);
