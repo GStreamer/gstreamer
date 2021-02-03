@@ -305,6 +305,7 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
   /**
    * GstSRTSink::caller-added:
    * @gstsrtsink: the srtsink element that emitted this signal
+   * @unused: always zero (for ABI compatibility with previous versions)
    * @addr: the #GSocketAddress of the new caller
    * 
    * A new caller has connected to @gstsrtsink.
@@ -312,11 +313,12 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
   signals[SIG_CALLER_ADDED] =
       g_signal_new ("caller-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSinkClass, caller_added),
-      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_SOCKET_ADDRESS);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSink::caller-removed:
    * @gstsrtsink: the srtsink element that emitted this signal
+   * @unused: always zero (for ABI compatibility with previous versions)
    * @addr: the #GSocketAddress of the caller
    *
    * The given caller has disconnected.
@@ -325,7 +327,7 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
       g_signal_new ("caller-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSinkClass,
           caller_added), NULL, NULL, NULL, G_TYPE_NONE,
-      1, G_TYPE_SOCKET_ADDRESS);
+      2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSink::caller-rejected:

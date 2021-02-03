@@ -362,6 +362,7 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
   /**
    * GstSRTSrc::caller-added:
    * @gstsrtsrc: the srtsrc element that emitted this signal
+   * @unused: always zero (for ABI compatibility with previous versions)
    * @addr: the #GSocketAddress of the new caller
    * 
    * A new caller has connected to srtsrc.
@@ -369,11 +370,12 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
   signals[SIG_CALLER_ADDED] =
       g_signal_new ("caller-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSrcClass, caller_added),
-      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_SOCKET_ADDRESS);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSrc::caller-removed:
    * @gstsrtsrc: the srtsrc element that emitted this signal
+   * @unused: always zero (for ABI compatibility with previous versions)
    * @addr: the #GSocketAddress of the caller
    *
    * The given caller has disconnected.
@@ -382,7 +384,7 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
       g_signal_new ("caller-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSrcClass,
           caller_added), NULL, NULL, NULL, G_TYPE_NONE,
-      1, G_TYPE_SOCKET_ADDRESS);
+      2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSrc::caller-rejected:
