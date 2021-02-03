@@ -96,7 +96,7 @@ cerbero_before_script() {
     if ! [[ -d ${CERBERO_SOURCES} ]]; then
         time cp -a "${CERBERO_HOST_DIR}/${CERBERO_SOURCES}" .
     fi
-    du -sch "${CERBERO_SOURCES}"
+    du -sch "${CERBERO_SOURCES}" || true
 
     echo "home_dir = \"$(pwd_native)/${CERBERO_HOME}\"" > localconf.cbc
     echo "local_sources = \"$(pwd_native)/${CERBERO_SOURCES}\"" >> localconf.cbc
@@ -122,7 +122,7 @@ cerbero_script() {
     $CERBERO $CERBERO_ARGS show-config
     $CERBERO $CERBERO_ARGS fetch-bootstrap
     $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
-    du -sch "${CERBERO_SOURCES}"
+    du -sch "${CERBERO_SOURCES}" || true
 
     $CERBERO $CERBERO_ARGS fetch-cache --branch "${GST_UPSTREAM_BRANCH}"
 
