@@ -73,12 +73,25 @@ enum
   PROP_DROP_ORPHANS
 };
 
+/* P is progressive, meaning the top and bottom fields belong to
+ * the same frame, i.e. they were sampled at the same time */
 #define GST_DEINTERLACE_BUFFER_STATE_P    (1<<0)
+/* I is interlaced meaning that the two fields were sampled at
+ * different times, usually equidistant in time so one at 1/60,
+ * the other at 2/60 */
 #define GST_DEINTERLACE_BUFFER_STATE_I    (1<<1)
+/* TC is telecine, B means bottom, T means top */
 #define GST_DEINTERLACE_BUFFER_STATE_TC_B (1<<2)
 #define GST_DEINTERLACE_BUFFER_STATE_TC_T (1<<3)
+/* TC_P means telecine progressive meaning that the two fields
+ * in the frame were sampled at the same time */
 #define GST_DEINTERLACE_BUFFER_STATE_TC_P (1<<4)
+/* TC_M i think means telecine mixed, meaning that the two fields
+ * are sampled at different times so you need to find the other field
+ * in the previous or next frame */
 #define GST_DEINTERLACE_BUFFER_STATE_TC_M (1<<5)
+/* RFF means repeat field flag and indicates a field that has
+ * previously been seen */
 #define GST_DEINTERLACE_BUFFER_STATE_RFF  (1<<6)
 
 #define GST_ONE \
