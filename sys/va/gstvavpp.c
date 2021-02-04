@@ -626,42 +626,14 @@ gst_va_vpp_query (GstBaseTransform * trans, GstPadDirection direction,
   return ret;
 }
 
-/* our output size only depends on the caps, not on the input caps */
+/* output buffers must be from our VA-based pool, they cannot be
+ * system-allocated */
 static gboolean
 gst_va_vpp_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, gsize size,
     GstCaps * othercaps, gsize * othersize)
 {
-  gboolean ret = TRUE;
-  GstVideoInfo info;
-
-  g_assert (size);
-
-  ret = gst_video_info_from_caps (&info, othercaps);
-  if (ret)
-    *othersize = info.size;
-
-  return ret;
-}
-
-static gboolean
-gst_va_vpp_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    gsize * size)
-{
-  GstVaVpp *self = GST_VA_VPP (trans);
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_WARNING_OBJECT (self, "Failed to parse caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  *size = info.size;
-
-  GST_DEBUG_OBJECT (self, "Returning size %" G_GSIZE_FORMAT " bytes"
-      "for caps %" GST_PTR_FORMAT, *size, caps);
-
-  return TRUE;
+  return FALSE;
 }
 
 static gboolean
@@ -2184,7 +2156,6 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   trans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_caps);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_va_vpp_fixate_caps);
   trans_class->transform_size = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_size);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_va_vpp_get_unit_size);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_va_vpp_set_caps);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_va_vpp_before_transform);
