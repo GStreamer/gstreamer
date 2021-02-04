@@ -41,15 +41,18 @@ G_BEGIN_DECLS
 #define GST_V4L2_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
 #define GST_V4L2_BUFFER_POOL_CAST(obj) ((GstV4l2BufferPool*)(obj))
 
-/* This flow return is used to indicated that the last buffer of a
- * drain or a resoltuion change has been found. This should normally
- * only occur for mem-2-mem devices. */
+/* This flow return is used to indicate that the last buffer has been dequeued
+ * during draining. This should normally only occur for mem-2-mem devices. */
 #define GST_V4L2_FLOW_LAST_BUFFER GST_FLOW_CUSTOM_SUCCESS
 
 /* This flow return is used to indicated that the returned buffer was marked
  * with the error flag and had no payload. This error should be recovered by
  * simply waiting for next buffer. */
 #define GST_V4L2_FLOW_CORRUPTED_BUFFER GST_FLOW_CUSTOM_SUCCESS_1
+
+/* This flow return is used to indicate that a SOURCE_CHANGE event with the
+ * resolution change flag set was received. */
+#define GST_V4L2_FLOW_RESOLUTION_CHANGE GST_FLOW_CUSTOM_SUCCESS_2
 
 struct _GstV4l2BufferPool
 {
@@ -113,6 +116,8 @@ void                gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * 
 gboolean            gst_v4l2_buffer_pool_flush   (GstBufferPool *pool);
 
 gboolean            gst_v4l2_buffer_pool_orphan  (GstBufferPool ** pool);
+
+void                gst_v4l2_buffer_pool_enable_resolution_change (GstV4l2BufferPool *self);
 
 G_END_DECLS
 

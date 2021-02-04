@@ -1115,6 +1115,22 @@ again:
   if (gst_poll_fd_has_error (pool->poll, &pool->pollfd))
     goto select_error;
 
+  /* PRI is used to signal that events are available */
+  if (gst_poll_fd_has_pri (pool->poll, &pool->pollfd)) {
+    struct v4l2_event event = { 0, };
+
+    if (!gst_v4l2_dequeue_event (pool->obj, &event))
+      goto dqevent_failed;
+
+    if (event.type != V4L2_EVENT_SOURCE_CHANGE ||
+        (event.u.src_change.changes & V4L2_EVENT_SRC_CH_RESOLUTION) == 0) {
+      GST_INFO_OBJECT (pool, "Received unhandled event, ignoring.");
+      goto again;
+    }
+
+    return GST_V4L2_FLOW_RESOLUTION_CHANGE;
+  }
+
   if (ret == 0)
     goto no_buffers;
 
@@ -1134,7 +1150,15 @@ select_error:
     return GST_FLOW_ERROR;
   }
 no_buffers:
-  return GST_V4L2_FLOW_LAST_BUFFER;
+  {
+    return GST_V4L2_FLOW_LAST_BUFFER;
+  }
+dqevent_failed:
+  {
+    GST_ELEMENT_ERROR (pool->obj->element, RESOURCE, READ, (NULL),
+        ("dqevent error: %s (%d)", g_strerror (errno), errno));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -1238,6 +1262,11 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
 
   if (res == GST_V4L2_FLOW_LAST_BUFFER) {
     GST_LOG_OBJECT (pool, "nothing to dequeue");
+    goto done;
+  }
+
+  if (res == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
+    GST_INFO_OBJECT (pool, "Resolution change detected.");
     goto done;
   }
 
@@ -2158,4 +2187,22 @@ gst_v4l2_buffer_pool_flush (GstBufferPool * bpool)
     ret = gst_v4l2_buffer_pool_streamon (pool);
 
   return ret;
+}
+
+/**
+ * gst_v4l2_buffer_pool_enable_resolution_change:
+ * @pool: a #GstBufferPool
+ *
+ * When this is called, the pool will subscribe to the
+ * %V4L2_EVENT_SOURCE_CHANGE. Upon receiving this event, it will notify
+ * the element acquiring buffer with the special flow return
+ * %GST_V4L2_FLOW_RESOLUTION_CHANGE.
+ */
+void
+gst_v4l2_buffer_pool_enable_resolution_change (GstV4l2BufferPool * pool)
+{
+  g_return_if_fail (!gst_buffer_pool_is_active (GST_BUFFER_POOL (pool)));
+
+  if (gst_v4l2_subscribe_event (pool->obj, V4L2_EVENT_SOURCE_CHANGE))
+    gst_poll_fd_ctl_pri (pool->poll, &pool->pollfd, TRUE);
 }
