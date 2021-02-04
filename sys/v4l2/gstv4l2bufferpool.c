@@ -1134,7 +1134,7 @@ select_error:
     return GST_FLOW_ERROR;
   }
 no_buffers:
-  return GST_FLOW_CUSTOM_SUCCESS;
+  return GST_V4L2_FLOW_LAST_BUFFER;
 }
 
 static GstFlowReturn
@@ -1236,7 +1236,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
   if ((res = gst_v4l2_buffer_pool_poll (pool, wait)) < GST_FLOW_OK)
     goto poll_failed;
 
-  if (res == GST_FLOW_CUSTOM_SUCCESS) {
+  if (res == GST_V4L2_FLOW_LAST_BUFFER) {
     GST_LOG_OBJECT (pool, "nothing to dequeue");
     goto done;
   }
