@@ -211,6 +211,9 @@ static void gst_video_scale_get_property (GObject * object, guint prop_id,
 #define gst_video_scale_parent_class parent_class
 G_DEFINE_TYPE (GstVideoScale, gst_video_scale, GST_TYPE_VIDEO_FILTER);
 
+static GstCapsFeatures *features_format_interlaced,
+    *features_format_interlaced_sysmem;
+
 static void
 gst_video_scale_class_init (GstVideoScaleClass * klass)
 {
@@ -470,8 +473,11 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 
     /* If the features are non-sysmem we can only do passthrough */
     if (!gst_caps_features_is_any (features)
-        && gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+        && (gst_caps_features_is_equal (features,
+                GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+            || gst_caps_features_is_equal (features, features_format_interlaced)
+            || gst_caps_features_is_equal (features,
+                features_format_interlaced_sysmem))) {
       gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
@@ -1221,15 +1227,19 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE,
-          GST_TYPE_VIDEO_SCALE))
-    return FALSE;
+  features_format_interlaced =
+      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+  features_format_interlaced_sysmem =
+      gst_caps_features_copy (features_format_interlaced);
+  gst_caps_features_add (features_format_interlaced_sysmem,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
 
   GST_DEBUG_CATEGORY_INIT (video_scale_debug, "videoscale", 0,
       "videoscale element");
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
-  return TRUE;
+  return gst_element_register (plugin, "videoscale", GST_RANK_NONE,
+      GST_TYPE_VIDEO_SCALE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
