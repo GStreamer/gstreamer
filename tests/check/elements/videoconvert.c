@@ -28,6 +28,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/video/video.h>
 
 static guint
@@ -117,6 +118,47 @@ GST_START_TEST (test_template_formats)
 
 GST_END_TEST;
 
+GST_START_TEST (test_negotiate_alternate)
+{
+  GstHarness *h;
+  GstBuffer *buffer;
+  GstMapInfo map;
+
+  h = gst_harness_new ("videoconvert");
+
+  buffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  map.data[0] = 0x0;
+  map.data[1] = 0x0;
+  map.data[2] = 0x0;
+  map.data[3] = 0x0;
+  gst_buffer_unmap (buffer, &map);
+
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,interlace-mode=alternate,width=1,height=1,format=AYUV");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw(format:Interlaced),interlace-mode=alternate,width=1,height=1,format=ARGB");
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buffer)),
+      GST_FLOW_NOT_NEGOTIATED);
+
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw(format:Interlaced),interlace-mode=alternate,width=1,height=1,format=AYUV");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,interlace-mode=alternate,width=1,height=1,format=ARGB");
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buffer)),
+      GST_FLOW_NOT_NEGOTIATED);
+
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw(format:Interlaced),interlace-mode=alternate,width=1,height=1,format=AYUV");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw(format:Interlaced),interlace-mode=alternate,width=1,height=1,format=ARGB");
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 videoconvert_suite (void)
 {
@@ -126,6 +168,7 @@ videoconvert_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_template_formats);
+  tcase_add_test (tc_chain, test_negotiate_alternate);
 
   return s;
 }
