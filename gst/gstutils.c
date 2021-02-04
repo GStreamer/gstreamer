@@ -2716,7 +2716,7 @@ gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)
  * @element_1: (transfer none): the first #GstElement to remove from the bin
  * @...: (transfer none): %NULL-terminated list of elements to remove from the bin
  *
- * Remove a list of elements from a bin. This function is equivalent
+ * Removes a list of elements from a bin. This function is equivalent
  * to calling gst_bin_remove() with each member of the list.
  */
 void
@@ -3295,7 +3295,7 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
  * pad when it is not needed any longer.
  *
  * Returns: (transfer full) (nullable): unlinked pad of the given
- * direction, %NULL.
+ * direction.
  */
 GstPad *
 gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)

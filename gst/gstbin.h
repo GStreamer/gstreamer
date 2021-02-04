@@ -40,22 +40,41 @@ G_BEGIN_DECLS
 
 /**
  * GstBinFlags:
- * @GST_BIN_FLAG_NO_RESYNC: don't resync a state change when elements are
- *             added or linked in the bin (Since: 1.0.5)
- * @GST_BIN_FLAG_STREAMS_AWARE: Indicates whether the bin can handle elements
- *             that add/remove source pads at any point in time without
- *             first posting a no-more-pads signal (Since: 1.10)
  * @GST_BIN_FLAG_LAST: the last enum in the series of flags for bins.
  * Derived classes can use this as first value in a list of flags.
  *
  * GstBinFlags are a set of flags specific to bins. Most are set/used
- * internally. They can be checked using the GST_OBJECT_FLAG_IS_SET () macro,
- * and (un)set using GST_OBJECT_FLAG_SET () and GST_OBJECT_FLAG_UNSET ().
+ * internally. They can be checked using the GST_OBJECT_FLAG_IS_SET() macro,
+ * and (un)set using GST_OBJECT_FLAG_SET() and GST_OBJECT_FLAG_UNSET().
  */
 typedef enum {
+  /**
+   * GST_BIN_FLAG_NO_RESYNC:
+   *
+   * Don't resync a state change when elements are added or linked in the bin
+   *
+   * Since: 1.0.5
+   */
   GST_BIN_FLAG_NO_RESYNC	= (GST_ELEMENT_FLAG_LAST << 0),
+
+  /**
+   * GST_BIN_FLAG_STREAMS_AWARE:
+   *
+   * Indicates whether the bin can handle elements that add/remove source pads
+   * at any point in time without first posting a no-more-pads signal.
+   *
+   * Since: 1.10
+   */
   GST_BIN_FLAG_STREAMS_AWARE	= (GST_ELEMENT_FLAG_LAST << 1),
+
   /* padding */
+
+  /**
+   * GST_BIN_FLAG_LAST:
+   *
+   * The last enum in the series of flags for bins. Derived classes can use this
+   * as first value in a list of flags.
+   */
   GST_BIN_FLAG_LAST		= (GST_ELEMENT_FLAG_LAST << 5)
 } GstBinFlags;
 
@@ -85,7 +104,7 @@ typedef struct _GstBinPrivate GstBinPrivate;
  * GST_BIN_CHILDREN:
  * @bin: a #GstBin
  *
- * Gets the list with children in a bin.
+ * Gets the list of children in a bin.
  */
 #define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children)
 /**
@@ -141,22 +160,15 @@ struct _GstBin {
 /**
  * GstBinClass:
  * @parent_class: bin parent class
- * @add_element: method to add an element to a bin
- * @remove_element: method to remove an element from a bin
- * @handle_message: method to handle a message from the children
- * @deep_element_added: method called when an element was added somewhere
- *     in the bin hierarchy
- * @deep_element_removed: method called when an element was removed somewhere
- *     in the bin hierarchy
  *
- * Subclasses can override the @add_element and @remove_element to
- * update the list of children in the bin.
+ * Subclasses can override #GstBinClass::add_element and #GstBinClass::remove_element
+ * to update the list of children in the bin.
  *
- * The @handle_message method can be overridden to implement custom
- * message handling.  @handle_message takes ownership of the message, just like
- * #gst_element_post_message.
+ * The #GstBinClass::handle_message method can be overridden to implement custom
+ * message handling. handle_message takes ownership of the message, just like
+ * gst_element_post_message().
  *
- * The @deep_element_added vfunc will be called when a new element has been
+ * #GstBinClass::deep_element_added will be called when a new element has been
  * added to any bin inside this bin, so it will also be called if a new child
  * was added to a sub-bin of this bin. #GstBin implementations that override
  * this message should chain up to the parent class implementation so the
@@ -169,14 +181,57 @@ struct _GstBinClass {
   GThreadPool  *pool; /* deprecated */
 
   /* signals */
+
+  /**
+   * GstBinClass::element_added:
+   * @bin: the #GstBin
+   * @child: the element that was added
+   *
+   * Method called when an element was added to the bin.
+   */
   void		(*element_added)	(GstBin *bin, GstElement *child);
+
+  /**
+   * GstBinClass::element_removed:
+   * @bin: the #GstBin
+   * @child: the element that was removed
+   *
+   * Method called when an element was removed from the bin.
+   */
   void		(*element_removed)	(GstBin *bin, GstElement *child);
 
   /*< public >*/
   /* virtual methods for subclasses */
+
+  /**
+   * GstBinClass::add_element:
+   * @bin: the #GstBin
+   * @element: the element to be added
+   *
+   * Method to add an element to the bin.
+   *
+   * Returns: %TRUE if the @element was added
+   */
   gboolean	(*add_element)		(GstBin *bin, GstElement *element);
+
+  /**
+   * GstBinClass::remove_element:
+   * @bin: the #GstBin
+   * @element: the element to be removed
+   *
+   * Method to remove an element from the bin.
+   *
+   * Returns: %TRUE if the @element was removed
+   */
   gboolean	(*remove_element)	(GstBin *bin, GstElement *element);
 
+  /**
+   * GstBinClass::handle_message:
+   * @bin: the #GstBin
+   * @message: the message to be handled
+   *
+   * Method to handle a message from the children.
+   */
   void		(*handle_message)	(GstBin *bin, GstMessage *message);
 
   /*< private >*/
@@ -185,7 +240,25 @@ struct _GstBinClass {
 
   /*< public >*/
   /* signal */
+
+  /**
+   * GstBinClass::deep_element_added:
+   * @bin: the top level #GstBin
+   * @sub_bin: the #GstBin to which the element was added
+   * @child: the element that was added
+   *
+   * Method called when an element was added somewhere in the bin hierarchy.
+   */
   void          (*deep_element_added)   (GstBin *bin, GstBin *sub_bin, GstElement *child);
+
+  /**
+   * GstBinClass::deep_element_removed:
+   * @bin: the top level #GstBin
+   * @sub_bin: the #GstBin from which the element was removed
+   * @child: the element that was removed
+   *
+   * Method called when an element was removed somewhere in the bin hierarchy.
+   */
   void          (*deep_element_removed) (GstBin *bin, GstBin *sub_bin, GstElement *child);
 
   /*< private >*/
