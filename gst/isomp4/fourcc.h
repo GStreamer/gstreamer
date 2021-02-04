@@ -402,6 +402,7 @@ G_BEGIN_DECLS
 #define FOURCC_pssh     GST_MAKE_FOURCC('p','s','s','h')
 #define FOURCC_tenc     GST_MAKE_FOURCC('t','e','n','c')
 #define FOURCC_cenc     GST_MAKE_FOURCC('c','e','n','c')
+#define FOURCC_cbcs     GST_MAKE_FOURCC('c','b','c','s')
 
 /* Audible AAX encrypted audio */
 #define FOURCC_aavd     GST_MAKE_FOURCC('a','a','v','d')
