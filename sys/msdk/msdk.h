@@ -47,6 +47,8 @@
 #if (MFX_VERSION < 2000)
 #include <mfxplugin.h>
 #else
+#include <mfxdispatcher.h>
+
 #define mfxPluginUID char
 static const char MFX_PLUGINID_HEVCD_SW;
 static const char MFX_PLUGINID_HEVCD_HW;
@@ -75,8 +77,23 @@ G_BEGIN_DECLS
   GST_MSDK_CAPS_MAKE (format) "; " \
   GST_MSDK_CAPS_MAKE_WITH_DMABUF_FEATURE (dmaformat)
 
-mfxSession msdk_open_session (mfxIMPL impl);
-void msdk_close_session (mfxSession session);
+#if (MFX_VERSION < 2000)
+typedef void * mfxLoader;
+
+void MFXUnload (mfxLoader loader);
+#endif
+
+typedef struct _MsdkSession MsdkSession;
+
+struct _MsdkSession
+{
+  mfxSession session;
+  mfxLoader loader;
+};
+
+MsdkSession msdk_open_session (mfxIMPL impl);
+void msdk_close_mfx_session (mfxSession session);
+void msdk_close_session (MsdkSession * session);
 
 gboolean msdk_is_available (void);
 
@@ -118,6 +135,10 @@ gst_msdk_load_plugin (mfxSession session, const mfxPluginUID * uid,
 
 mfxU16
 msdk_get_platform_codename (mfxSession session);
+
+mfxStatus
+msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
+    MsdkSession * msdk_session);
 
 G_END_DECLS
 

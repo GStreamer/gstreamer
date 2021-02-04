@@ -174,8 +174,149 @@ msdk_get_platform_codename (mfxSession session)
   return codename;
 }
 
+#if (MFX_VERSION >= 2000)
+
+mfxStatus
+msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
+    MsdkSession * msdk_session)
+{
+  mfxStatus sts = MFX_ERR_NONE;
+  mfxLoader loader = NULL;
+  mfxSession session = NULL;
+  uint32_t impl_idx = 0;
+  mfxConfig cfg;
+  mfxVariant impl_value;
+
+  loader = msdk_session->loader;
+
+  if (!loader) {
+    loader = MFXLoad ();
+
+    GST_INFO ("Use the Intel oneVPL SDK to create MFX session");
+
+    if (!loader) {
+      GST_ERROR ("Failed to create a MFX loader");
+      return MFX_ERR_UNKNOWN;
+    }
+
+    /* Create configurations for implementation */
+    cfg = MFXCreateConfig (loader);
+
+    if (!cfg) {
+      GST_ERROR ("Failed to create a MFX configuration");
+      MFXUnload (loader);
+      return MFX_ERR_UNKNOWN;
+    }
+
+    impl_value.Type = MFX_VARIANT_TYPE_U32;
+    impl_value.Data.U32 =
+        (impl ==
+        MFX_IMPL_SOFTWARE) ? MFX_IMPL_TYPE_SOFTWARE : MFX_IMPL_TYPE_HARDWARE;
+    sts =
+        MFXSetConfigFilterProperty (cfg,
+        (const mfxU8 *) "mfxImplDescription.Impl", impl_value);
+
+    if (sts != MFX_ERR_NONE) {
+      GST_ERROR ("Failed to add an additional MFX configuration (%s)",
+          msdk_status_to_string (sts));
+      MFXUnload (loader);
+      return sts;
+    }
+
+    impl_value.Type = MFX_VARIANT_TYPE_U32;
+    impl_value.Data.U32 = pver->Version;
+    sts =
+        MFXSetConfigFilterProperty (cfg,
+        (const mfxU8 *) "mfxImplDescription.ApiVersion.Version", impl_value);
+
+    if (sts != MFX_ERR_NONE) {
+      GST_ERROR ("Failed to add an additional MFX configuration (%s)",
+          msdk_status_to_string (sts));
+      MFXUnload (loader);
+      return sts;
+    }
+  }
+
+  while (1) {
+    /* Enumerate all implementations */
+    mfxImplDescription *impl_desc;
+
+    sts = MFXEnumImplementations (loader, impl_idx,
+        MFX_IMPLCAPS_IMPLDESCSTRUCTURE, (mfxHDL *) & impl_desc);
+
+    /* Failed to find an available implementation */
+    if (sts == MFX_ERR_NOT_FOUND)
+      break;
+    else if (sts != MFX_ERR_NONE) {
+      impl_idx++;
+      continue;
+    }
+
+    sts = MFXCreateSession (loader, impl_idx, &session);
+    MFXDispReleaseImplDescription (loader, impl_desc);
+
+    if (sts == MFX_ERR_NONE)
+      break;
+
+    impl_idx++;
+  }
+
+  if (sts != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to create a MFX session (%s)",
+        msdk_status_to_string (sts));
+
+    if (!msdk_session->loader)
+      MFXUnload (loader);
+
+    return sts;
+  }
+
+  msdk_session->session = session;
+  msdk_session->loader = loader;
+
+  return MFX_ERR_NONE;
+}
+
+#else
+
+mfxStatus
+msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
+    MsdkSession * msdk_session)
+{
+  mfxStatus status;
+  mfxSession session = NULL;
+  mfxInitParam init_par = { impl, *pver };
+
+  GST_INFO ("Use the Intel Media SDK to create MFX session");
+
+#if (MFX_VERSION >= 1025)
+  init_par.GPUCopy = 1;
+#endif
+
+  status = MFXInitEx (init_par, &session);
+
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to initialize a MFX session (%s)",
+        msdk_status_to_string (status));
+    return status;
+  }
+
+  msdk_session->session = session;
+  msdk_session->loader = NULL;
+
+  return MFX_ERR_NONE;
+}
+
 void
-msdk_close_session (mfxSession session)
+MFXUnload (mfxLoader loader)
+{
+  g_assert (loader == NULL);
+}
+
+#endif
+
+void
+msdk_close_mfx_session (mfxSession session)
 {
   mfxStatus status;
 
@@ -187,31 +328,36 @@ msdk_close_session (mfxSession session)
     GST_ERROR ("Close failed (%s)", msdk_status_to_string (status));
 }
 
-mfxSession
+void
+msdk_close_session (MsdkSession * msdk_session)
+{
+  msdk_close_mfx_session (msdk_session->session);
+  MFXUnload (msdk_session->loader);
+}
+
+MsdkSession
 msdk_open_session (mfxIMPL impl)
 {
   mfxSession session = NULL;
   mfxVersion version = { {1, 1}
   };
-  mfxInitParam init_par = { impl, version };
   mfxIMPL implementation;
   mfxStatus status;
+  MsdkSession msdk_session;
 
   static const gchar *implementation_names[] = {
     "AUTO", "SOFTWARE", "HARDWARE", "AUTO_ANY", "HARDWARE_ANY", "HARDWARE2",
     "HARDWARE3", "HARDWARE4", "RUNTIME"
   };
 
-#if (MFX_VERSION >= 1025)
-  init_par.GPUCopy = 1;
-#endif
+  msdk_session.session = NULL;
+  msdk_session.loader = NULL;
+  status = msdk_init_msdk_session (impl, &version, &msdk_session);
 
-  status = MFXInitEx (init_par, &session);
-  if (status != MFX_ERR_NONE) {
-    GST_ERROR ("Intel Media SDK not available (%s)",
-        msdk_status_to_string (status));
-    goto failed;
-  }
+  if (status != MFX_ERR_NONE)
+    return msdk_session;
+  else
+    session = msdk_session.session;
 
   status = MFXQueryIMPL (session, &implementation);
   if (status != MFX_ERR_NONE) {
@@ -230,11 +376,13 @@ msdk_open_session (mfxIMPL impl)
       implementation_names[MFX_IMPL_BASETYPE (implementation)]);
   GST_INFO ("MFX version: %d.%d", version.Major, version.Minor);
 
-  return session;
+  return msdk_session;
 
 failed:
-  msdk_close_session (session);
-  return NULL;
+  msdk_close_session (&msdk_session);
+  msdk_session.session = NULL;
+  msdk_session.loader = NULL;
+  return msdk_session;
 }
 
 gboolean

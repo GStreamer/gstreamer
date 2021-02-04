@@ -44,7 +44,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_msdkcontext);
 
 struct _GstMsdkContextPrivate
 {
-  mfxSession session;
+  MsdkSession session;
   GList *cached_alloc_responses;
   gboolean hardware;
   gboolean is_joined;
@@ -178,7 +178,7 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
     goto failed;
   }
 
-  status = MFXVideoCORE_SetHandle (priv->session, MFX_HANDLE_VA_DISPLAY,
+  status = MFXVideoCORE_SetHandle (priv->session.session, MFX_HANDLE_VA_DISPLAY,
       (mfxHDL) va_dpy);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Setting VAAPI handle failed (%s)",
@@ -205,12 +205,15 @@ gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
 {
   mfxU16 codename;
   GstMsdkContextPrivate *priv = context->priv;
+  MsdkSession msdk_session;
 
   priv->job_type = job_type;
   priv->hardware = hardware;
-  priv->session =
+
+  msdk_session =
       msdk_open_session (hardware ? MFX_IMPL_HARDWARE_ANY : MFX_IMPL_SOFTWARE);
-  if (!priv->session)
+  priv->session = msdk_session;
+  if (!priv->session.session)
     goto failed;
 
 #ifndef _WIN32
@@ -222,7 +225,7 @@ gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
   }
 #endif
 
-  codename = msdk_get_platform_codename (priv->session);
+  codename = msdk_get_platform_codename (priv->session.session);
 
   if (codename != MFX_PLATFORM_UNKNOWN)
     GST_INFO ("Detected MFX platform with device code %d", codename);
@@ -254,7 +257,7 @@ release_child_session (gpointer session)
   status = MFXDisjoinSession (_session);
   if (status != MFX_ERR_NONE)
     GST_WARNING ("failed to disjoin (%s)", msdk_status_to_string (status));
-  msdk_close_session (_session);
+  msdk_close_mfx_session (_session);
 }
 
 static void
@@ -269,7 +272,7 @@ gst_msdk_context_finalize (GObject * obj)
   else
     g_list_free_full (priv->child_session_list, release_child_session);
 
-  msdk_close_session (priv->session);
+  msdk_close_session (&priv->session);
   g_mutex_clear (&priv->mutex);
 
 #ifndef _WIN32
@@ -313,24 +316,28 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   GstMsdkContextPrivate *priv = obj->priv;
   GstMsdkContextPrivate *parent_priv = parent->priv;
 
-  status = MFXCloneSession (parent_priv->session, &priv->session);
+  status =
+      MFXCloneSession (parent_priv->session.session, &priv->session.session);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Failed to clone mfx session");
     g_object_unref (obj);
     return NULL;
   }
 
+  /* Set loader to NULL for child session */
+  priv->session.loader = NULL;
   priv->is_joined = TRUE;
   priv->hardware = parent_priv->hardware;
   priv->job_type = parent_priv->job_type;
   parent_priv->child_session_list =
-      g_list_prepend (parent_priv->child_session_list, priv->session);
+      g_list_prepend (parent_priv->child_session_list, priv->session.session);
 #ifndef _WIN32
   priv->dpy = parent_priv->dpy;
   priv->fd = parent_priv->fd;
 
   if (priv->hardware) {
-    status = MFXVideoCORE_SetHandle (priv->session, MFX_HANDLE_VA_DISPLAY,
+    status =
+        MFXVideoCORE_SetHandle (priv->session.session, MFX_HANDLE_VA_DISPLAY,
         (mfxHDL) parent_priv->dpy);
 
     if (status != MFX_ERR_NONE) {
@@ -349,7 +356,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
 mfxSession
 gst_msdk_context_get_session (GstMsdkContext * context)
 {
-  return context->priv->session;
+  return context->priv->session.session;
 }
 
 gpointer
@@ -658,7 +665,7 @@ gst_msdk_context_set_frame_allocator (GstMsdkContext * context,
   if (!priv->has_frame_allocator) {
     mfxStatus status;
 
-    status = MFXVideoCORE_SetFrameAllocator (priv->session, allocator);
+    status = MFXVideoCORE_SetFrameAllocator (priv->session.session, allocator);
 
     if (status != MFX_ERR_NONE)
       GST_ERROR ("Failed to set frame allocator");
