@@ -341,6 +341,11 @@ gboolean     gst_v4l2_set_attribute   (GstV4l2Object * v4l2object, int attribute
 gboolean     gst_v4l2_set_string_attribute (GstV4l2Object * v4l2object, int attribute_num, const char *value);
 gboolean     gst_v4l2_set_controls    (GstV4l2Object * v4l2object, GstStructure * controls);
 
+
+/* events */
+gboolean     gst_v4l2_subscribe_event (GstV4l2Object * v4l2object, guint32 event);
+gboolean     gst_v4l2_dequeue_event   (GstV4l2Object * v4l2object, struct v4l2_event *event);
+
 G_END_DECLS
 
 #endif /* __GST_V4L2_OBJECT_H__ */

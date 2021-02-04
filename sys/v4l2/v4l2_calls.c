@@ -1195,3 +1195,79 @@ output_failed:
   }
   return FALSE;
 }
+
+static const gchar *
+gst_v4l2_event_to_string (guint32 event)
+{
+  switch (event) {
+    case V4L2_EVENT_ALL:
+      return "ALL";
+    case V4L2_EVENT_VSYNC:
+      return "VSYNC";
+    case V4L2_EVENT_EOS:
+      return "EOS";
+    case V4L2_EVENT_CTRL:
+      return "CTRL";
+    case V4L2_EVENT_FRAME_SYNC:
+      return "FRAME_SYNC";
+    case V4L2_EVENT_SOURCE_CHANGE:
+      return "SOURCE_CHANGE";
+    case V4L2_EVENT_MOTION_DET:
+      return "MOTION_DET";
+    default:
+      break;
+  }
+
+  return "UNKNOWN";
+}
+
+gboolean
+gst_v4l2_subscribe_event (GstV4l2Object * v4l2object, guint32 event)
+{
+  struct v4l2_event_subscription sub = {.type = event, };
+  gint ret;
+
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Subscribing to '%s' event",
+      gst_v4l2_event_to_string (event));
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  ret = v4l2object->ioctl (v4l2object->video_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
+  if (ret < 0)
+    goto failed;
+
+  return TRUE;
+
+  /* ERRORS */
+failed:
+  {
+    if (errno != ENOTTY)
+      GST_ERROR_OBJECT (v4l2object->dbg_obj,
+          "Cannot subscribe to '%s' event: %s",
+          gst_v4l2_event_to_string (event), g_strerror (errno));
+    return FALSE;
+  }
+}
+
+gboolean
+gst_v4l2_dequeue_event (GstV4l2Object * v4l2object, struct v4l2_event * event)
+{
+  gint ret;
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  ret = v4l2object->ioctl (v4l2object->video_fd, VIDIOC_DQEVENT, event);
+
+  if (ret < 0) {
+    GST_ERROR_OBJECT (v4l2object->dbg_obj, "DQEVENT failed: %s",
+        g_strerror (errno));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Dequeued a '%s' event.",
+      gst_v4l2_event_to_string (event->type));
+
+  return TRUE;
+}
