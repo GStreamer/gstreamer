@@ -1801,6 +1801,13 @@ gst_vaapipostproc_propose_allocation (GstBaseTransform * trans,
   gint allocation_width, allocation_height;
   gint negotiated_width, negotiated_height;
 
+  /* passthrough query, we just bypass to the peer */
+  if (decide_query == NULL) {
+    return GST_BASE_TRANSFORM_CLASS
+        (gst_vaapipostproc_parent_class)->propose_allocation (trans,
+        decide_query, query);
+  }
+
   /* advertise to upstream that we can handle crop meta */
   if (decide_query)
     gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
