@@ -395,6 +395,49 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
 }
 
 /**
+ * gst_rtp_header_extension_wants_update_non_rtp_src_caps:
+ * @ext: a #GstRTPHeaderExtension
+ *
+ * Call this function after gst_rtp_header_extension_read() to check if
+ * the depayloader's src caps need updating with data received in the last RTP
+ * packet.
+ *
+ * Returns: Whether @ext wants to update depayloader's src caps.
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_rtp_header_extension_wants_update_non_rtp_src_caps (GstRTPHeaderExtension *
+    ext)
+{
+  g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
+
+  return ext->wants_update_non_rtp_src_caps;
+}
+
+/**
+ * gst_rtp_header_extension_set_wants_update_non_rtp_src_caps:
+ * @ext: a #GstRTPHeaderExtension
+ * @state: TRUE if caps update is needed
+ *
+ * Call this function in a subclass from #GstRTPHeaderExtensionClass::read to
+ * tell the depayloader whether the data just parsed from RTP packet require
+ * updating its src (non-RTP) caps. If @state is TRUE, #GstRTPBaseDepayload will
+ * eventually invoke gst_rtp_header_extension_update_non_rtp_src_caps() to
+ * have the caps update applied. Applying the update also flips the internal
+ * "wants update" flag back to FALSE.
+ *
+ * Since: 1.20
+ */
+void gst_rtp_header_extension_set_wants_update_non_rtp_src_caps
+    (GstRTPHeaderExtension * ext, gboolean state)
+{
+  g_return_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext));
+
+  ext->wants_update_non_rtp_src_caps = state;
+}
+
+/**
  * gst_rtp_header_extension_set_non_rtp_sink_caps:
  * @ext: a #GstRTPHeaderExtension
  * @caps: sink #GstCaps
@@ -419,6 +462,39 @@ gst_rtp_header_extension_set_non_rtp_sink_caps (GstRTPHeaderExtension * ext,
 
   if (klass->set_non_rtp_sink_caps) {
     return klass->set_non_rtp_sink_caps (ext, caps);
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_rtp_header_extension_update_non_rtp_src_caps:
+ * @ext: a #GstRTPHeaderExtension
+ * @caps: src #GstCaps to modify
+ *
+ * Updates depayloader src caps based on the information received in RTP header.
+ * @caps must be writable as this function may modify them.
+ *
+ * Returns: whether @caps were modified successfully
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_rtp_header_extension_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
+    GstCaps * caps)
+{
+  GstRTPHeaderExtensionClass *klass;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (gst_caps_is_writable (caps), FALSE);
+  g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
+  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
+
+  ext->wants_update_non_rtp_src_caps = FALSE;
+
+  if (klass->update_non_rtp_src_caps) {
+    return klass->update_non_rtp_src_caps (ext, caps);
   }
 
   return TRUE;

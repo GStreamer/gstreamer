@@ -60,6 +60,8 @@ struct _GstRTPBaseDepayloadPrivate
   gboolean negotiated;
 
   GstCaps *last_caps;
+  gboolean needs_src_caps_update;
+
   GstEvent *segment_event;
   guint32 segment_seqnum;       /* Note: this is a GstEvent seqnum */
 
@@ -1241,6 +1243,10 @@ read_rtp_header_extensions (GstRTPBaseDepayload * depayload,
           goto out;
         }
 
+        if (gst_rtp_header_extension_wants_update_non_rtp_src_caps (ext)) {
+          depayload->priv->needs_src_caps_update = TRUE;
+        }
+
         gst_object_unref (ext);
       }
       GST_OBJECT_UNLOCK (depayload);
@@ -1305,6 +1311,46 @@ gst_rtp_base_depayload_prepare_push (GstRTPBaseDepayload * filter,
   } else {
     GstBuffer **buf = obj;
     set_headers (buf, 0, filter);
+  }
+
+  /* header extensions may want to update src caps */
+  if (G_UNLIKELY (filter->priv->needs_src_caps_update)) {
+    GstCaps *src_caps = gst_pad_get_current_caps (filter->srcpad);
+
+    if (src_caps) {
+      GstCaps *new_caps;
+      gboolean update_ok = TRUE;
+      gint i;
+
+      new_caps = gst_caps_copy (src_caps);
+      for (i = 0; i < filter->priv->header_exts->len; i++) {
+        GstRTPHeaderExtension *ext;
+
+        ext = g_ptr_array_index (filter->priv->header_exts, i);
+        update_ok =
+            gst_rtp_header_extension_update_non_rtp_src_caps (ext, new_caps);
+
+        if (!update_ok) {
+          GST_ELEMENT_ERROR (filter, STREAM, DECODE,
+              ("RTP header extension (%s) could not update src caps",
+                  GST_OBJECT_NAME (ext)), (NULL));
+          break;
+        }
+      }
+
+      if (G_UNLIKELY (update_ok && !gst_caps_is_equal (src_caps, new_caps))) {
+        gst_pad_set_caps (filter->srcpad, new_caps);
+      }
+
+      gst_caps_unref (src_caps);
+      gst_caps_unref (new_caps);
+
+      if (!update_ok) {
+        return GST_FLOW_ERROR;
+      }
+    }
+
+    filter->priv->needs_src_caps_update = FALSE;
   }
 
   /* if this is the first buffer send a NEWSEGMENT */

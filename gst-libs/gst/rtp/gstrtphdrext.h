@@ -117,6 +117,7 @@ struct _GstRTPHeaderExtension
   GstElement parent;
 
   guint ext_id;
+  gboolean wants_update_non_rtp_src_caps;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -140,6 +141,8 @@ struct _GstRTPHeaderExtension
  *     information, optionally adding some meta onto the output buffer.
  * @set_non_rtp_sink_caps: read any information from sink caps that the header
  *     extension needs for its function.
+ * @update_non_rtp_src_caps: update depayloader non-RTP (depayloaded) caps with
+ *     the information parsed from RTP header.
  * @set_attributes_from_caps: read the caps information to set the necessary
  *     attributes that may be signaled e.g. with an SDP.
  * @set_caps_from_attributes: write the necessary caps field/s for the configured
@@ -173,6 +176,8 @@ struct _GstRTPHeaderExtensionClass
                                                      GstBuffer * buffer);
   gboolean              (*set_non_rtp_sink_caps)    (GstRTPHeaderExtension * ext,
                                                      const GstCaps * caps);
+  gboolean              (*update_non_rtp_src_caps)  (GstRTPHeaderExtension * ext,
+                                                     GstCaps * caps);
   gboolean              (*set_attributes_from_caps) (GstRTPHeaderExtension * ext,
                                                      const GstCaps * caps);
   gboolean              (*set_caps_from_attributes) (GstRTPHeaderExtension * ext,
@@ -223,6 +228,14 @@ gboolean            gst_rtp_header_extension_read               (GstRTPHeaderExt
 GST_RTP_API
 gboolean            gst_rtp_header_extension_set_non_rtp_sink_caps (GstRTPHeaderExtension * ext,
                                                                     const GstCaps * caps);
+GST_RTP_API
+gboolean            gst_rtp_header_extension_wants_update_non_rtp_src_caps (GstRTPHeaderExtension * ext);
+GST_RTP_API
+void                gst_rtp_header_extension_set_wants_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
+                                                                                gboolean state);
+GST_RTP_API
+gboolean            gst_rtp_header_extension_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
+                                                                      GstCaps * caps);
 GST_RTP_API
 gboolean            gst_rtp_header_extension_set_caps_from_attributes (GstRTPHeaderExtension * ext,
                                                                        GstCaps * caps);
