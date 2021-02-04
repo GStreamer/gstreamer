@@ -606,8 +606,14 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     GstV4l2Error error = GST_V4L2_ERROR_INIT;
 
     caps = gst_caps_make_writable (caps);
-    if (!(ret = gst_v4l2src_set_format (src, caps, &error)))
+
+    ret = gst_v4l2src_set_format (src, caps, &error);
+    if (ret) {
+      GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (src->v4l2object->pool);
+      gst_v4l2_buffer_pool_enable_resolution_change (pool);
+    } else {
       gst_v4l2_error (src, &error);
+    }
 
     gst_caps_unref (caps);
     src->pending_set_fmt = FALSE;
@@ -829,7 +835,6 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstV4l2Object *obj = v4l2src->v4l2object;
-  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL_CAST (obj->pool);
   GstFlowReturn ret;
   GstClock *clock;
   GstClockTime abs_time, base_time, timestamp, duration;
@@ -838,15 +843,24 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   gboolean half_frame;
 
   do {
+    GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL_CAST (obj->pool);
+
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
         obj->info.size, buf);
 
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
+        GST_INFO_OBJECT (v4l2src, "Resolution change detected.");
+        gst_base_src_negotiate (GST_BASE_SRC (src));
+        continue;
+      }
       goto alloc_failed;
+    }
 
     ret = gst_v4l2_buffer_pool_process (pool, buf, NULL);
 
-  } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
+  } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER ||
+      ret == GST_V4L2_FLOW_RESOLUTION_CHANGE);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto error;
