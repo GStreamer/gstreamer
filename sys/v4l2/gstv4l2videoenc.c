@@ -748,7 +748,8 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2output->pool);
 
-    /* It possible that the processing thread stopped due to an error */
+    /* It is possible that the processing thread stopped due to an error or
+     * when the last buffer has been met during the draining process. */
     if (self->output_flow != GST_FLOW_OK &&
         self->output_flow != GST_FLOW_FLUSHING &&
         self->output_flow != GST_V4L2_FLOW_LAST_BUFFER) {
