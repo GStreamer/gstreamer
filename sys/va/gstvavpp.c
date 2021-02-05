@@ -103,6 +103,7 @@ struct _GstVaVpp
   gboolean negotiated;
 
   GstBufferPool *sinkpad_pool;
+  GstVideoInfo sinkpad_info;
 
   guint op_flags;
 
@@ -947,6 +948,7 @@ _get_sinkpad_pool (GstVaVpp * self)
 {
   GstAllocator *allocator;
   GstAllocationParams params;
+  GstVideoInfo alloc_info;
   guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
 
   if (self->sinkpad_pool)
@@ -961,10 +963,20 @@ _get_sinkpad_pool (GstVaVpp * self)
   self->sinkpad_pool = _create_sinkpad_bufferpool (self->incaps, size, 0, 0,
       usage_hint, allocator, &params);
 
+  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
+    if (!gst_va_dmabuf_allocator_get_format (allocator, &alloc_info, NULL))
+      alloc_info = self->in_info;
+  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
+    if (!gst_va_allocator_get_format (allocator, &alloc_info, NULL))
+      alloc_info = self->in_info;
+  }
+
   gst_object_unref (allocator);
 
-  if (self->sinkpad_pool)
+  if (self->sinkpad_pool) {
+    self->sinkpad_info = alloc_info;
     gst_buffer_pool_set_active (self->sinkpad_pool, TRUE);
+  }
 
   return self->sinkpad_pool;
 }
@@ -1014,12 +1026,13 @@ gst_va_vpp_import_input_buffer (GstVaVpp * self, GstBuffer * inbuf,
   if (!gst_video_frame_map (&in_frame, &self->in_info, inbuf, GST_MAP_READ))
     goto invalid_buffer;
 
-  if (!gst_video_frame_map (&out_frame, &self->in_info, buffer, GST_MAP_WRITE)) {
+  if (!gst_video_frame_map (&out_frame, &self->sinkpad_info, buffer,
+          GST_MAP_WRITE)) {
     gst_video_frame_unmap (&in_frame);
     goto invalid_buffer;
   }
 
-  copied = gst_video_frame_copy (&in_frame, &out_frame);
+  copied = gst_video_frame_copy (&out_frame, &in_frame);
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
