@@ -751,7 +751,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
     /* It possible that the processing thread stopped due to an error */
     if (self->output_flow != GST_FLOW_OK &&
         self->output_flow != GST_FLOW_FLUSHING &&
-        self->output_flow != GST_FLOW_CUSTOM_SUCCESS) {
+        self->output_flow != GST_V4L2_FLOW_LAST_BUFFER) {
       GST_DEBUG_OBJECT (self, "Processing loop stopped with error: %s, leaving",
           gst_flow_get_name (self->output_flow));
       ret = self->output_flow;
