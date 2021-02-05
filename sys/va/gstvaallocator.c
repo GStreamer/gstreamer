@@ -599,7 +599,8 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   GstMemory *mem = GST_MEMORY_CAST (mini_object);
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
 
-  GST_LOG ("releasing %p", mem);
+  GST_LOG ("releasing %p: dmabuf %d, va surface %#x", mem,
+      gst_dmabuf_memory_get_fd (mem), gst_va_memory_get_surface (mem));
   gst_va_memory_pool_push (&self->pool, mem);
 
   /* Keep last in case we are holding on the last allocator ref */
@@ -766,6 +767,9 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
   for (j = idx - 1; j >= 0; j--) {
     gst_object_ref (mem[j]->allocator);
     gst_buffer_append_memory (buffer, mem[j]);
+
+    GST_LOG ("bufer: %p: memory %p - dmabuf %d / surface %#x", buffer, mem[j],
+        gst_dmabuf_memory_get_fd (mem[j]), gst_va_memory_get_surface (mem[j]));
   }
 
   return surface;
@@ -781,11 +785,6 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
   GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-
-  if (surface != VA_INVALID_ID) {
-    GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
-        buffer);
-  }
 
   return (surface != VA_INVALID_ID);
 }
@@ -804,11 +803,6 @@ gst_va_dmabuf_allocator_wait_for_memory (GstAllocator * allocator,
   }
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
   GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-
-  if (surface != VA_INVALID_ID) {
-    GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
-        buffer);
-  }
 
   return (surface != VA_INVALID_ID);
 }
@@ -1333,7 +1327,8 @@ gst_va_memory_release (GstMiniObject * mini_object)
   GstMemory *mem = GST_MEMORY_CAST (mini_object);
   GstVaAllocator *self = GST_VA_ALLOCATOR (mem->allocator);
 
-  GST_LOG ("releasing %p", mem);
+  GST_LOG ("releasing %p: surface %#x", mem, gst_va_memory_get_surface (mem));
+
   gst_va_memory_pool_push (&self->pool, mem);
 
   /* Keep last in case we are holding on the last allocator ref */
@@ -1408,6 +1403,8 @@ gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
   surface = gst_va_memory_get_surface (mem);
   gst_buffer_append_memory (buffer, mem);
 
+  GST_LOG ("buffer %p: memory %p - surface %#x", buffer, mem, surface);
+
   return surface;
 }
 
@@ -1420,11 +1417,6 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
   GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-
-  if (surface != VA_INVALID_ID) {
-    GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
-        buffer);
-  }
 
   return (surface != VA_INVALID_ID);
 }
@@ -1442,11 +1434,6 @@ gst_va_allocator_wait_for_memory (GstAllocator * allocator, GstBuffer * buffer)
   }
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
   GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-
-  if (surface != VA_INVALID_ID) {
-    GST_TRACE_OBJECT (self, "Prepared surface %#x in buffer %p", surface,
-        buffer);
-  }
 
   return (surface != VA_INVALID_ID);
 }
