@@ -1,0 +1,2 @@
+option('aja-sdk-dir', type : 'string', value : 'ntv2sdklinux_16.0.0.4',
+  description : 'Directory with AJA SDK, e.g. ntv2sdklinux_16.0.0.4')
