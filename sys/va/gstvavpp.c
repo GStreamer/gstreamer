@@ -808,7 +808,7 @@ _add_filter_cb_buffer (GstVaVpp * self,
     return gst_va_filter_add_filter_buffer (self->filter, param,
         sizeof (*param), c);
   }
-  return TRUE;
+  return FALSE;
 }
 
 static void
