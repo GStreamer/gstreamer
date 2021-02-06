@@ -1431,7 +1431,10 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
     GstVideoCodecState ** output_state, gboolean * downstream_supports_d3d11)
 {
   GstCaps *peer_caps;
-  GstVideoCodecState *state;
+  GstVideoCodecState *state = NULL;
+  gboolean alternate_interlaced;
+  gboolean alternate_supported = FALSE;
+  gboolean d3d11_supported = FALSE;
 
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
   g_return_val_if_fail (input_state != NULL, FALSE);
@@ -1441,20 +1444,10 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
   g_return_val_if_fail (output_state != NULL, FALSE);
   g_return_val_if_fail (downstream_supports_d3d11 != NULL, FALSE);
 
-  state = gst_video_decoder_set_output_state (decoder,
-      format, width, height, input_state);
-  if (interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
-    state->info.interlace_mode = interlace_mode;
-  state->caps = gst_video_info_to_caps (&state->info);
-
-  if (*output_state)
-    gst_video_codec_state_unref (*output_state);
-  *output_state = state;
+  alternate_interlaced = (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE);
 
   peer_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
   GST_DEBUG_OBJECT (decoder, "Allowed caps %" GST_PTR_FORMAT, peer_caps);
-
-  *downstream_supports_d3d11 = FALSE;
 
   if (!peer_caps || gst_caps_is_any (peer_caps)) {
     GST_DEBUG_OBJECT (decoder,
@@ -1466,18 +1459,78 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
 
     for (i = 0; i < size; i++) {
       features = gst_caps_get_features (peer_caps, i);
-      if (features && gst_caps_features_contains (features,
-              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-        GST_DEBUG_OBJECT (decoder, "found D3D11 memory feature");
-        gst_caps_set_features (state->caps, 0,
-            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
 
-        *downstream_supports_d3d11 = TRUE;
-        break;
+      if (!features)
+        continue;
+
+      if (gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+        d3d11_supported = TRUE;
+      }
+
+      /* FIXME: software deinterlace element will not return interlaced caps
+       * feature... We should fix it */
+      if (gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_FORMAT_INTERLACED)) {
+        alternate_supported = TRUE;
       }
     }
   }
   gst_clear_caps (&peer_caps);
+
+  GST_DEBUG_OBJECT (decoder,
+      "Downstream feature support, D3D11 memory: %d, interlaced format %d",
+      d3d11_supported, alternate_supported);
+
+  if (alternate_interlaced) {
+    /* FIXME: D3D11 cannot support alternating interlaced stream yet */
+    GST_FIXME_OBJECT (decoder,
+        "Implement alternating interlaced stream for D3D11");
+
+    if (alternate_supported) {
+      /* Set caps resolution with display size, that's how we designed
+       * for alternating interlaced stream */
+      height = 2 * height;
+      state = gst_video_decoder_set_interlaced_output_state (decoder,
+          format, interlace_mode, width, height, input_state);
+    } else {
+      GST_WARNING_OBJECT (decoder,
+          "Downstream doesn't support alternating interlaced stream");
+
+      state = gst_video_decoder_set_output_state (decoder,
+          format, width, height, input_state);
+
+      /* XXX: adjust PAR, this would produce output similar to that of
+       * "line doubling" (so called bob deinterlacing) processing.
+       * apart from missing anchor line (top-field or bottom-field) information.
+       * Potentially flickering could happen. So this might not be correct.
+       * But it would be better than negotiation error of half-height squeezed
+       * image */
+      state->info.par_d *= 2;
+      state->info.fps_n *= 2;
+    }
+  } else {
+    state = gst_video_decoder_set_interlaced_output_state (decoder,
+        format, interlace_mode, width, height, input_state);
+  }
+
+  if (!state) {
+    GST_ERROR_OBJECT (decoder, "Couldn't set output state");
+    return FALSE;
+  }
+
+  state->caps = gst_video_info_to_caps (&state->info);
+
+  if (*output_state)
+    gst_video_codec_state_unref (*output_state);
+  *output_state = state;
+
+  if (d3d11_supported) {
+    gst_caps_set_features (state->caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
+  }
+
+  *downstream_supports_d3d11 = d3d11_supported;
 
   return TRUE;
 }

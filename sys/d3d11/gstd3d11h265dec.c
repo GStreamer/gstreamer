@@ -64,6 +64,7 @@ typedef struct _GstD3D11H265Dec
   guint bitdepth;
   guint chroma_format_idc;
   GstVideoFormat out_format;
+  GstVideoInterlaceMode interlace_mode;
 
   /* Array of DXVA_Slice_HEVC_Short */
   GArray *slice_list;
@@ -309,9 +310,9 @@ gst_d3d11_h265_dec_negotiate (GstVideoDecoder * decoder)
 
   if (!gst_d3d11_decoder_negotiate (decoder, h265dec->input_state,
           self->out_format, self->width, self->height,
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
-          &self->output_state, &self->use_d3d11_output))
+          self->interlace_mode, &self->output_state, &self->use_d3d11_output)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -359,6 +360,7 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
   static const GUID *main_10_guid =
       &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10;
   static const GUID *main_guid = &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN;
+  GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   GST_LOG_OBJECT (self, "new sequence");
 
@@ -384,6 +386,25 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
   if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
     GST_INFO_OBJECT (self, "bitdepth changed");
     self->bitdepth = sps->bit_depth_luma_minus8 + 8;
+    modified = TRUE;
+  }
+
+  if (sps->vui_parameters_present_flag && sps->vui_params.field_seq_flag) {
+    interlace_mode = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+  } else {
+    /* 7.4.4 Profile, tier and level sementics */
+    if (sps->profile_tier_level.progressive_source_flag &&
+        !sps->profile_tier_level.interlaced_source_flag) {
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+    } else {
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+    }
+  }
+
+  if (self->interlace_mode != interlace_mode) {
+    GST_INFO_OBJECT (self, "Interlace mode change %d -> %d",
+        self->interlace_mode, interlace_mode);
+    self->interlace_mode = interlace_mode;
     modified = TRUE;
   }
 
@@ -775,8 +796,9 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
   GstBuffer *view_buffer;
   gboolean direct_rendering = FALSE;
 
-  GST_LOG_OBJECT (self,
-      "Outputting picture %p, poc %d", picture, picture->pic_order_cnt);
+  GST_LOG_OBJECT (self, "Outputting picture %p, poc %d, picture_struct %d, "
+      "buffer flags 0x%x", picture, picture->pic_order_cnt, picture->pic_struct,
+      picture->buffer_flags);
 
   view_buffer = (GstBuffer *) gst_h265_picture_get_user_data (picture);
 
@@ -824,6 +846,7 @@ gst_d3d11_h265_dec_output_picture (GstH265Decoder * decoder,
     goto error;
   }
 
+  GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
   gst_h265_picture_unref (picture);
 
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
@@ -1384,6 +1407,9 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   };
   GstCaps *sink_caps = NULL;
   GstCaps *src_caps = NULL;
+  GstCaps *src_caps_copy;
+  GstCaps *tmp;
+  GstCapsFeatures *caps_features;
   guint max_width = 0;
   guint max_height = 0;
   guint resolution;
@@ -1450,8 +1476,7 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   sink_caps = gst_caps_from_string ("video/x-h265, "
       "stream-format=(string) { hev1, hvc1, byte-stream }, "
       "alignment= (string) au");
-  src_caps = gst_caps_from_string ("video/x-raw("
-      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "); video/x-raw");
+  src_caps = gst_caps_new_empty_simple ("video/x-raw");
 
   if (have_main10) {
     /* main10 profile covers main and main10 */
@@ -1498,6 +1523,38 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gst_caps_set_simple (src_caps,
       "width", GST_TYPE_INT_RANGE, 64, resolution,
       "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+
+  /* Copy src caps to append other capsfeatures */
+  src_caps_copy = gst_caps_copy (src_caps);
+
+  /* System memory with alternate interlace-mode */
+  tmp = gst_caps_copy (src_caps_copy);
+  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      NULL);
+  gst_caps_set_features_simple (tmp, caps_features);
+  gst_caps_set_simple (tmp, "interlace-mode", G_TYPE_STRING, "alternate", NULL);
+  gst_caps_append (src_caps, tmp);
+
+  /* D3D11 memory feature */
+  tmp = gst_caps_copy (src_caps_copy);
+  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      NULL);
+  gst_caps_set_features_simple (tmp, caps_features);
+  gst_caps_append (src_caps, tmp);
+
+  /* FIXME: D3D11 deinterlace element is not prepared, so this D3D11 with
+   * interlaced caps feature is pointless at the moment */
+#if 0
+  /* D3D11 memory with alternate interlace-mode */
+  tmp = gst_caps_copy (src_caps_copy);
+  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+  gst_caps_set_features_simple (tmp, caps_features);
+  gst_caps_set_simple (tmp, "interlace-mode", G_TYPE_STRING, "alternate", NULL);
+  gst_caps_append (src_caps, tmp);
+#endif
+
+  gst_caps_unref (src_caps_copy);
 
   type_info.class_data =
       gst_d3d11_decoder_class_data_new (device, sink_caps, src_caps);
