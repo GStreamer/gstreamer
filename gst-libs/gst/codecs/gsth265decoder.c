@@ -65,6 +65,18 @@ struct _GstH265DecoderPrivate
   GstH265Dpb *dpb;
   GstFlowReturn last_ret;
 
+  /* 0: frame or field-pair interlaced stream
+   * 1: alternating, single field interlaced stream.
+   * When equal to 1, picture timing SEI shall be present in every AU */
+  guint8 field_seq_flag;
+  guint8 progressive_source_flag;
+  guint8 interlaced_source_flag;
+
+  /* Updated/cleared per handle_frame() by using picture timeing SEI */
+  GstH265SEIPicStructType cur_pic_struct;
+  guint8 cur_source_scan_type;
+  guint8 cur_duplicate_flag;
+
   /* vps/sps/pps of the current slice */
   const GstH265VPS *active_vps;
   const GstH265SPS *active_sps;
@@ -251,6 +263,9 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
   gint MaxLumaPS;
   const gint MaxDpbPicBuf = 6;
   gint PicSizeInSamplesY;
+  guint8 field_seq_flag = 0;
+  guint8 progressive_source_flag = 0;
+  guint8 interlaced_source_flag = 0;
 
   /* A.4.1 */
   MaxLumaPS = 35651584;
@@ -266,15 +281,28 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 
   max_dpb_size = MIN (max_dpb_size, 16);
 
+  if (sps->vui_parameters_present_flag)
+    field_seq_flag = sps->vui_params.field_seq_flag;
+
+  progressive_source_flag = sps->profile_tier_level.progressive_source_flag;
+  interlaced_source_flag = sps->profile_tier_level.interlaced_source_flag;
+
   prev_max_dpb_size = gst_h265_dpb_get_max_num_pics (priv->dpb);
   if (priv->width != sps->width || priv->height != sps->height ||
-      prev_max_dpb_size != max_dpb_size) {
+      prev_max_dpb_size != max_dpb_size ||
+      priv->field_seq_flag != field_seq_flag ||
+      priv->progressive_source_flag != progressive_source_flag ||
+      priv->interlaced_source_flag != interlaced_source_flag) {
     GstH265DecoderClass *klass = GST_H265_DECODER_GET_CLASS (self);
 
     GST_DEBUG_OBJECT (self,
-        "SPS updated, resolution: %dx%d -> %dx%d, dpb size: %d -> %d",
+        "SPS updated, resolution: %dx%d -> %dx%d, dpb size: %d -> %d, "
+        "field_seq_flag: %d -> %d, progressive_source_flag: %d -> %d, "
+        "interlaced_source_flag: %d -> %d",
         priv->width, priv->height, sps->width, sps->height,
-        prev_max_dpb_size, max_dpb_size);
+        prev_max_dpb_size, max_dpb_size, priv->field_seq_flag, field_seq_flag,
+        priv->progressive_source_flag, progressive_source_flag,
+        priv->interlaced_source_flag, interlaced_source_flag);
 
     g_assert (klass->new_sequence);
 
@@ -285,6 +313,9 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 
     priv->width = sps->width;
     priv->height = sps->height;
+    priv->field_seq_flag = field_seq_flag;
+    priv->progressive_source_flag = progressive_source_flag;
+    priv->interlaced_source_flag = interlaced_source_flag;
 
     gst_h265_dpb_set_max_num_pics (priv->dpb, max_dpb_size);
   }
@@ -342,6 +373,48 @@ gst_h265_decoder_parse_pps (GstH265Decoder * self, GstH265NalUnit * nalu)
   }
 
   GST_LOG_OBJECT (self, "PPS parsed");
+
+  return TRUE;
+}
+
+static gboolean
+gst_h265_decoder_parse_sei (GstH265Decoder * self, GstH265NalUnit * nalu)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  GstH265ParserResult pres;
+  GArray *messages;
+  guint i;
+
+  pres = gst_h265_parser_parse_sei (priv->parser, nalu, &messages);
+  if (pres != GST_H265_PARSER_OK) {
+    GST_WARNING_OBJECT (self, "Failed to parse SEI, result %d", pres);
+
+    /* XXX: Ignore error from SEI parsing, it might be malformed bitstream,
+     * or our fault. But shouldn't be critical  */
+    return TRUE;
+  }
+
+  for (i = 0; i < messages->len; i++) {
+    GstH265SEIMessage *sei = &g_array_index (messages, GstH265SEIMessage, i);
+
+    switch (sei->payloadType) {
+      case GST_H265_SEI_PIC_TIMING:
+        priv->cur_pic_struct = sei->payload.pic_timing.pic_struct;
+        priv->cur_source_scan_type = sei->payload.pic_timing.source_scan_type;
+        priv->cur_duplicate_flag = sei->payload.pic_timing.duplicate_flag;
+
+        GST_TRACE_OBJECT (self,
+            "Picture Timing SEI, pic_struct: %d, source_scan_type: %d, "
+            "duplicate_flag: %d", priv->cur_pic_struct,
+            priv->cur_source_scan_type, priv->cur_duplicate_flag);
+        break;
+      default:
+        break;
+    }
+  }
+
+  g_array_free (messages, TRUE);
+  GST_LOG_OBJECT (self, "SEI parsed");
 
   return TRUE;
 }
@@ -610,6 +683,10 @@ gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu,
       break;
     case GST_H265_NAL_PPS:
       ret = gst_h265_decoder_parse_pps (self, nalu);
+      break;
+    case GST_H265_NAL_PREFIX_SEI:
+    case GST_H265_NAL_SUFFIX_SEI:
+      ret = gst_h265_decoder_parse_sei (self, nalu);
       break;
     case GST_H265_NAL_SLICE_TRAIL_N:
     case GST_H265_NAL_SLICE_TRAIL_R:
@@ -888,9 +965,6 @@ gst_h265_decoder_fill_picture_from_slice (GstH265Decoder * self,
       nalu->type <= GST_H265_NAL_SLICE_CRA_NUT)
     picture->RapPicFlag = TRUE;
 
-  /* FIXME: Use SEI header values */
-  picture->field = GST_H265_PICTURE_FIELD_FRAME;
-
   /* NoRaslOutputFlag == 1 if the current picture is
    * 1) an IDR picture
    * 2) a BLA picture
@@ -1018,6 +1092,61 @@ gst_h265_decoder_calculate_poc (GstH265Decoder * self,
 }
 
 static gboolean
+gst_h265_decoder_set_buffer_flags (GstH265Decoder * self,
+    GstH265Picture * picture)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+
+  switch (picture->pic_struct) {
+    case GST_H265_SEI_PIC_STRUCT_FRAME:
+      break;
+    case GST_H265_SEI_PIC_STRUCT_TOP_FIELD:
+    case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM:
+    case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM:
+      if (!priv->field_seq_flag) {
+        GST_FIXME_OBJECT (self,
+            "top-field with field_seq_flag == 0, what does it mean?");
+      } else {
+        picture->buffer_flags = GST_VIDEO_BUFFER_FLAG_TOP_FIELD;
+      }
+      break;
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP:
+      if (!priv->field_seq_flag) {
+        GST_FIXME_OBJECT (self,
+            "bottom-field with field_seq_flag == 0, what does it mean?");
+      } else {
+        picture->buffer_flags = GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD;
+      }
+      break;
+    case GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM:
+      if (priv->field_seq_flag) {
+        GST_FIXME_OBJECT (self,
+            "TFF with field_seq_flag == 1, what does it mean?");
+      } else {
+        picture->buffer_flags =
+            GST_VIDEO_BUFFER_FLAG_INTERLACED | GST_VIDEO_BUFFER_FLAG_TFF;
+      }
+      break;
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP:
+      if (priv->field_seq_flag) {
+        GST_FIXME_OBJECT (self,
+            "BFF with field_seq_flag == 1, what does it mean?");
+      } else {
+        picture->buffer_flags = GST_VIDEO_BUFFER_FLAG_INTERLACED;
+      }
+      break;
+    default:
+      GST_FIXME_OBJECT (self, "Unhandled picture time SEI pic_struct %d",
+          picture->pic_struct);
+      break;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_h265_decoder_init_current_picture (GstH265Decoder * self)
 {
   GstH265DecoderPrivate *priv = self->priv;
@@ -1030,6 +1159,12 @@ gst_h265_decoder_init_current_picture (GstH265Decoder * self)
   if (!gst_h265_decoder_calculate_poc (self,
           &priv->current_slice, priv->current_picture))
     return FALSE;
+
+  /* Use picture struct parsed from picture timing SEI */
+  priv->current_picture->pic_struct = priv->cur_pic_struct;
+  priv->current_picture->source_scan_type = priv->cur_source_scan_type;
+  priv->current_picture->duplicate_flag = priv->cur_duplicate_flag;
+  gst_h265_decoder_set_buffer_flags (self, priv->current_picture);
 
   return TRUE;
 }
@@ -1530,6 +1665,17 @@ gst_h265_decoder_finish_current_picture (GstH265Decoder * self)
   return TRUE;
 }
 
+static void
+gst_h265_decoder_reset_frame_state (GstH265Decoder * self)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+
+  /* Clear picture struct information */
+  priv->cur_pic_struct = GST_H265_SEI_PIC_STRUCT_FRAME;
+  priv->cur_source_scan_type = 2;
+  priv->cur_duplicate_flag = 0;
+}
+
 static GstFlowReturn
 gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
@@ -1549,6 +1695,8 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
 
   priv->current_frame = frame;
   priv->last_ret = GST_FLOW_OK;
+
+  gst_h265_decoder_reset_frame_state (self);
 
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (self, RESOURCE, READ,

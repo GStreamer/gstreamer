@@ -27,8 +27,8 @@
 
 #include <gst/gst.h>
 #include <gst/codecs/codecs-prelude.h>
-
 #include <gst/codecparsers/gsth265parser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -49,13 +49,6 @@ struct _GstH265Slice
   /* parsed nal unit (doesn't take ownership of raw data) */
   GstH265NalUnit nalu;
 };
-
-typedef enum
-{
-  GST_H265_PICTURE_FIELD_FRAME,
-  GST_H265_PICTURE_FILED_TOP_FIELD,
-  GST_H265_PICTURE_FIELD_BOTTOM_FIELD,
-} GstH265PictureField;
 
 struct _GstH265Picture
 {
@@ -84,7 +77,12 @@ struct _GstH265Picture
   gboolean long_term;
   gboolean needed_for_output;
 
-  GstH265PictureField field;
+  /* from picture timing SEI */
+  GstH265SEIPicStructType pic_struct;
+  guint8 source_scan_type;
+  guint8 duplicate_flag;
+
+  GstVideoBufferFlags buffer_flags;
 
   gpointer user_data;
   GDestroyNotify notify;

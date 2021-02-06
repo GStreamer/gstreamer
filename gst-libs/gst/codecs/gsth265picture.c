@@ -52,7 +52,11 @@ gst_h265_picture_new (void)
   pic = g_new0 (GstH265Picture, 1);
 
   pic->pts = GST_CLOCK_TIME_NONE;
-  pic->field = GST_H265_PICTURE_FIELD_FRAME;
+  pic->pic_struct = GST_H265_SEI_PIC_STRUCT_FRAME;
+  /* 0: interlaced, 1: progressive, 2: unspecified, 3: reserved, can be
+   * interpreted as 2 */
+  pic->source_scan_type = 2;
+  pic->duplicate_flag = 0;
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (pic), 0,
       GST_TYPE_H265_PICTURE, NULL, NULL,
