@@ -721,12 +721,6 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   params->PicWidthInMbs = sps->pic_width_in_luma_samples / 16;
   params->FrameHeightInMbs = sps->pic_height_in_luma_samples / 16;
   params->CurrPicIdx = frame->index;
-  /* TODO: verifiy interlaced */
-  params->field_pic_flag = picture->field != GST_H265_PICTURE_FIELD_FRAME;
-  params->bottom_field_flag =
-      picture->field == GST_H265_PICTURE_FIELD_BOTTOM_FIELD;
-  /* TODO: set second_field here */
-  params->second_field = 0;
 
   /* nBitstreamDataLen, pBitstreamData, nNumSlices and pSliceDataOffsets
    * will be set later */
