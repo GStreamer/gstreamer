@@ -64,6 +64,8 @@ G_DECLARE_FINAL_TYPE (GstVaAllocator, gst_va_allocator, GST, VA_ALLOCATOR, GstAl
 GstAllocator *        gst_va_allocator_new                (GstVaDisplay * display,
                                                            GArray * surface_formats);
 GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator);
+gboolean              gst_va_allocator_setup_buffer       (GstAllocator * allocator,
+                                                           GstBuffer * buffer);
 gboolean              gst_va_allocator_prepare_buffer     (GstAllocator * allocator,
                                                            GstBuffer * buffer);
 gboolean              gst_va_allocator_wait_for_memory    (GstAllocator * allocator,

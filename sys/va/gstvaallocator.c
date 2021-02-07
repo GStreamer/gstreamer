@@ -1389,6 +1389,17 @@ gst_va_allocator_new (GstVaDisplay * display, GArray * surface_formats)
   return GST_ALLOCATOR (self);
 }
 
+gboolean
+gst_va_allocator_setup_buffer (GstAllocator * allocator, GstBuffer * buffer)
+{
+  GstMemory *mem = gst_va_allocator_alloc (allocator);
+  if (!mem)
+    return FALSE;
+
+  gst_buffer_append_memory (buffer, mem);
+  return TRUE;
+}
+
 static VASurfaceID
 gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
     GstBuffer * buffer)

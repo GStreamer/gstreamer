@@ -228,13 +228,21 @@ gst_va_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   buf = gst_buffer_new ();
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (vpool->allocator)) {
-    if (!gst_va_dmabuf_allocator_setup_buffer (vpool->allocator, buf))
-      goto no_memory;
+    if (vpool->starting) {
+      if (!gst_va_dmabuf_allocator_setup_buffer (vpool->allocator, buf))
+        goto no_memory;
+    } else if (!gst_va_dmabuf_allocator_prepare_buffer (vpool->allocator, buf)) {
+      if (!gst_va_dmabuf_allocator_setup_buffer (vpool->allocator, buf))
+        goto no_memory;
+    }
   } else if (GST_IS_VA_ALLOCATOR (vpool->allocator)) {
-    GstMemory *mem = gst_va_allocator_alloc (vpool->allocator);
-    if (!mem)
-      goto no_memory;
-    gst_buffer_append_memory (buf, mem);
+    if (vpool->starting) {
+      if (!gst_va_allocator_setup_buffer (vpool->allocator, buf))
+        goto no_memory;
+    } else if (!gst_va_allocator_prepare_buffer (vpool->allocator, buf)) {
+      if (!gst_va_allocator_setup_buffer (vpool->allocator, buf))
+        goto no_memory;
+    }
   } else
     goto no_memory;
 
