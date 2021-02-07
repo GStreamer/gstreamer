@@ -879,7 +879,7 @@ _get_plane_data_size (GstVideoInfo * info, guint plane)
 }
 
 static gboolean
-_try_import_dmabuf (GstVaVpp * self, GstBuffer * inbuf)
+_try_import_dmabuf_unlocked (GstVaVpp * self, GstBuffer * inbuf)
 {
   GstVideoMeta *meta;
   GstVideoInfo in_info = self->in_info;
@@ -982,15 +982,20 @@ _get_sinkpad_pool (GstVaVpp * self)
 }
 
 static gboolean
-_try_import_buffer_unlocked (GstVaVpp * self, GstBuffer * inbuf)
+_try_import_buffer (GstVaVpp * self, GstBuffer * inbuf)
 {
   VASurfaceID surface;
+  gboolean ret;
 
   surface = gst_va_buffer_get_surface (inbuf);
   if (surface != VA_INVALID_ID)
     return TRUE;
 
-  return _try_import_dmabuf (self, inbuf);
+  g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
+  ret = _try_import_dmabuf_unlocked (self, inbuf);
+  g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1003,9 +1008,7 @@ gst_va_vpp_import_input_buffer (GstVaVpp * self, GstBuffer * inbuf,
   GstVideoFrame in_frame, out_frame;
   gboolean imported, copied;
 
-  g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
-  imported = _try_import_buffer_unlocked (self, inbuf);
-  g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
+  imported = _try_import_buffer (self, inbuf);
   if (imported) {
     *buf = gst_buffer_ref (inbuf);
     return GST_FLOW_OK;
