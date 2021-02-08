@@ -82,6 +82,8 @@ gstaja = library('gstaja',
    'gstajacommon.cpp',
    'gstajasink.cpp',
    'gstajasinkcombiner.cpp',
+   'gstajasrc.cpp',
+   'gstajasrcdemux.cpp',
   ],
   cpp_args : [
             aja_includedirs,

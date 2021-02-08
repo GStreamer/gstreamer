@@ -471,6 +471,67 @@ GType gst_aja_reference_source_get_type(void) {
   return (GType)id;
 }
 
+GType gst_aja_input_source_get_type(void) {
+  static gsize id = 0;
+  static const GEnumValue modes[] = {
+      {GST_AJA_INPUT_SOURCE_AUTO, "auto", "Auto (based on selected channel)"},
+      {GST_AJA_INPUT_SOURCE_ANALOG1, "analog-1", "Analog Input 1"},
+      {GST_AJA_INPUT_SOURCE_SDI1, "sdi-1", "SDI Input 1"},
+      {GST_AJA_INPUT_SOURCE_SDI2, "sdi-2", "SDI Input 2"},
+      {GST_AJA_INPUT_SOURCE_SDI3, "sdi-3", "SDI Input 3"},
+      {GST_AJA_INPUT_SOURCE_SDI4, "sdi-4", "SDI Input 4"},
+      {GST_AJA_INPUT_SOURCE_SDI5, "sdi-5", "SDI Input 5"},
+      {GST_AJA_INPUT_SOURCE_SDI6, "sdi-6", "SDI Input 6"},
+      {GST_AJA_INPUT_SOURCE_SDI7, "sdi-7", "SDI Input 7"},
+      {GST_AJA_INPUT_SOURCE_SDI8, "sdi-8", "SDI Input 8"},
+      {GST_AJA_INPUT_SOURCE_HDMI1, "hdmi-1", "HDMI Input 1"},
+      {GST_AJA_INPUT_SOURCE_HDMI2, "hdmi-2", "HDMI Input 2"},
+      {GST_AJA_INPUT_SOURCE_HDMI3, "hdmi-3", "HDMI Input 3"},
+      {GST_AJA_INPUT_SOURCE_HDMI4, "hdmi-4", "HDMI Input 4"},
+      {0, NULL, NULL}};
+
+  if (g_once_init_enter(&id)) {
+    GType tmp = g_enum_register_static("GstAjaInputSource", modes);
+    g_once_init_leave(&id, tmp);
+  }
+
+  return (GType)id;
+}
+
+GType gst_aja_video_format_get_type(void) {
+  static gsize id = 0;
+  static const GEnumValue modes[] = {
+      // TODO: Implement: {GST_AJA_VIDEO_FORMAT_AUTO, "auto", "Autodetect"},
+      {GST_AJA_VIDEO_FORMAT_1080i_5000, "1080i-5000", "1080i 5000"},
+      {GST_AJA_VIDEO_FORMAT_1080i_5994, "1080i-5994", "1080i 5994"},
+      {GST_AJA_VIDEO_FORMAT_1080i_6000, "1080i-6000", "1080i 6000"},
+      {GST_AJA_VIDEO_FORMAT_720p_5994, "720p-5994", "720p 5994"},
+      {GST_AJA_VIDEO_FORMAT_720p_6000, "720p-6000", "720p 6000"},
+      {GST_AJA_VIDEO_FORMAT_1080p_2997, "1080p-2997", "1080p 2997"},
+      {GST_AJA_VIDEO_FORMAT_1080p_3000, "1080p-3000", "1080p 3000"},
+      {GST_AJA_VIDEO_FORMAT_1080p_2500, "1080p-2500", "1080p 2500"},
+      {GST_AJA_VIDEO_FORMAT_1080p_2398, "1080p-2398", "1080p 2398"},
+      {GST_AJA_VIDEO_FORMAT_1080p_2400, "1080p-2400", "1080p 2400"},
+      {GST_AJA_VIDEO_FORMAT_720p_5000, "720p-5000", "720p 5000"},
+      {GST_AJA_VIDEO_FORMAT_720p_2398, "720p-2398", "720p 2398"},
+      {GST_AJA_VIDEO_FORMAT_720p_2500, "720p-2500", "720p 2500"},
+      {GST_AJA_VIDEO_FORMAT_1080p_5000_A, "1080p-5000-a", "1080p 5000 A"},
+      {GST_AJA_VIDEO_FORMAT_1080p_5994_A, "1080p-5994-a", "1080p 5994 A"},
+      {GST_AJA_VIDEO_FORMAT_1080p_6000_A, "1080p-6000-a", "1080p 6000 A"},
+      {GST_AJA_VIDEO_FORMAT_625_5000, "625-5000", "625 5000"},
+      {GST_AJA_VIDEO_FORMAT_525_5994, "525-5994", "525 5994"},
+      {GST_AJA_VIDEO_FORMAT_525_2398, "525-2398", "525 2398"},
+      {GST_AJA_VIDEO_FORMAT_525_2400, "525-2400", "525 2400"},
+      {0, NULL, NULL}};
+
+  if (g_once_init_enter(&id)) {
+    GType tmp = g_enum_register_static("GstAjaVideoFormat", modes);
+    g_once_init_leave(&id, tmp);
+  }
+
+  return (GType)id;
+}
+
 void gst_aja_common_init(void) {
   GST_DEBUG_CATEGORY_INIT(gst_aja_debug, "aja", 0,
                           "Debug category for AJA plugin");

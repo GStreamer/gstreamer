@@ -17,15 +17,23 @@
  * Boston, MA 02110-1335, USA.
  */
 
+#include <ajabase/system/debug.h>
 #include <gst/gst.h>
 
 #include "gstajacommon.h"
 #include "gstajasink.h"
 #include "gstajasinkcombiner.h"
+#include "gstajasrc.h"
+#include "gstajasrcdemux.h"
 
 static gboolean plugin_init(GstPlugin* plugin) {
+  AJADebug::Open();
+
   gst_aja_common_init();
 
+  gst_element_register(plugin, "ajasrc", GST_RANK_NONE, GST_TYPE_AJA_SRC);
+  gst_element_register(plugin, "ajasrcdemux", GST_RANK_NONE,
+                       GST_TYPE_AJA_SRC_DEMUX);
   gst_element_register(plugin, "ajasink", GST_RANK_NONE, GST_TYPE_AJA_SINK);
   gst_element_register(plugin, "ajasinkcombiner", GST_RANK_NONE,
                        GST_TYPE_AJA_SINK_COMBINER);
