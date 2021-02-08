@@ -327,8 +327,13 @@ gst_dtls_srtp_enc_get_property (GObject * object,
       }
       break;
     case PROP_CONNECTION_STATE:
-      g_object_get_property (G_OBJECT (self->bin.dtls_element),
-          "connection-state", value);
+      if (self->bin.dtls_element) {
+        g_object_get_property (G_OBJECT (self->bin.dtls_element),
+            "connection-state", value);
+      } else {
+        GST_WARNING_OBJECT (self,
+            "tried to get connection-state after disabling DTLS");
+      }
       break;
     case PROP_RTP_SYNC:
       g_value_set_boolean (value, self->rtp_sync);

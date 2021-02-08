@@ -288,8 +288,13 @@ gst_dtls_srtp_dec_get_property (GObject * object,
       }
       break;
     case PROP_CONNECTION_STATE:
-      g_object_get_property (G_OBJECT (self->bin.dtls_element),
-          "connection-state", value);
+      if (self->bin.dtls_element) {
+        g_object_get_property (G_OBJECT (self->bin.dtls_element),
+            "connection-state", value);
+      } else {
+        GST_WARNING_OBJECT (self,
+            "tried to get connection-state after disabling DTLS");
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);

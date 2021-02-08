@@ -218,7 +218,8 @@ gst_dtls_srtp_bin_get_property (GObject * object,
         g_object_get_property (G_OBJECT (self->dtls_element), "connection-id",
             value);
       } else {
-        g_warning ("tried to get connection-id after disabling DTLS");
+        GST_WARNING_OBJECT (self,
+            "tried to get connection-id after disabling DTLS");
       }
       break;
     case PROP_KEY:
