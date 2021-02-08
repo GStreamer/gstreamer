@@ -703,6 +703,11 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
     if (G_UNLIKELY (info))
       GST_VIDEO_INFO_SIZE (info) += size;
+
+    GST_LOG_OBJECT (self, "buffer %p: new dmabuf %d / surface %#x [%dx%d] "
+        "size %" G_GSIZE_FORMAT, buffer, fd, surface,
+        GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info),
+        GST_VIDEO_INFO_SIZE (&self->info));
   }
 
   if (G_UNLIKELY (info)) {
@@ -714,10 +719,6 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   } else {
     gst_va_memory_pool_surface_inc (&self->pool);
   }
-
-  GST_LOG_OBJECT (self, "Created surface %#x [%dx%d] size %" G_GSIZE_FORMAT,
-      buf->surface, GST_VIDEO_INFO_WIDTH (&self->info),
-      GST_VIDEO_INFO_HEIGHT (&self->info), GST_VIDEO_INFO_SIZE (&self->info));
 
   return TRUE;
 
@@ -768,7 +769,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
     gst_object_ref (mem[j]->allocator);
     gst_buffer_append_memory (buffer, mem[j]);
 
-    GST_LOG ("bufer: %p: memory %p - dmabuf %d / surface %#x", buffer, mem[j],
+    GST_LOG ("bufer %p: memory %p - dmabuf %d / surface %#x", buffer, mem[j],
         gst_dmabuf_memory_get_fd (mem[j]), gst_va_memory_get_surface (mem[j]));
   }
 
