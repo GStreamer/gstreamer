@@ -500,6 +500,13 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
 }
 
 static GstStructure *
+gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src)
+{
+  GST_FIXME_OBJECT (v4l2src, "query dv_timings not implements");
+  return NULL;
+}
+
+static GstStructure *
 gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src)
 {
   struct v4l2_input in = { 0, };
@@ -526,6 +533,15 @@ gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src)
           ("Signal recovered"), ("Input source detected"));
     v4l2src->no_signal = FALSE;
   }
+
+  if (in.capabilities & V4L2_IN_CAP_NATIVE_SIZE) {
+    GST_FIXME_OBJECT (v4l2src, "missing support for native video size");
+  } else if (in.capabilities & V4L2_IN_CAP_DV_TIMINGS) {
+    return gst_v4l2src_query_preferred_dv_timings (v4l2src);
+  } else if (in.capabilities & V4L2_IN_CAP_STD) {
+    GST_FIXME_OBJECT (v4l2src, "missing support for video standards");
+  }
+
   return pref;
 }
 
@@ -585,7 +601,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
         goto done;
       }
 
-      GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
+      GST_INFO_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
 
       if (gst_caps_is_any (caps)) {
         /* hmm, still anything, so element can do anything and
@@ -607,7 +623,7 @@ done:
 
 no_nego_needed:
   {
-    GST_DEBUG_OBJECT (basesrc, "no negotiation needed");
+    GST_INFO_OBJECT (basesrc, "no negotiation needed");
     if (thiscaps)
       gst_caps_unref (thiscaps);
     return TRUE;
