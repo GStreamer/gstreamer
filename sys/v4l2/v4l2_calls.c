@@ -1083,9 +1083,9 @@ gst_v4l2_set_controls (GstV4l2Object * v4l2object, GstStructure * controls)
 }
 
 gboolean
-gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
+gst_v4l2_get_input (GstV4l2Object * v4l2object, guint32 * input)
 {
-  gint n;
+  guint32 n;
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to get input");
 
@@ -1097,7 +1097,7 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
 
   *input = n;
 
-  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "input: %d", n);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "input: %u", n);
 
   return TRUE;
 
@@ -1114,9 +1114,9 @@ input_failed:
 }
 
 gboolean
-gst_v4l2_set_input (GstV4l2Object * v4l2object, gint input)
+gst_v4l2_set_input (GstV4l2Object * v4l2object, guint32 input)
 {
-  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set input to %d", input);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set input to %u", input);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -1133,16 +1133,16 @@ input_failed:
      * support
      */
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set input %d on device %s."),
+        (_("Failed to set input %u on device %s."),
             input, v4l2object->videodev), GST_ERROR_SYSTEM);
   }
   return FALSE;
 }
 
 gboolean
-gst_v4l2_get_output (GstV4l2Object * v4l2object, gint * output)
+gst_v4l2_get_output (GstV4l2Object * v4l2object, guint32 * output)
 {
-  gint n;
+  guint32 n;
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to get output");
 
@@ -1154,7 +1154,7 @@ gst_v4l2_get_output (GstV4l2Object * v4l2object, gint * output)
 
   *output = n;
 
-  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "output: %d", n);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "output: %u", n);
 
   return TRUE;
 
@@ -1171,9 +1171,9 @@ output_failed:
 }
 
 gboolean
-gst_v4l2_set_output (GstV4l2Object * v4l2object, gint output)
+gst_v4l2_set_output (GstV4l2Object * v4l2object, guint32 output)
 {
-  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set output to %d", output);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set output to %u", output);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -1190,7 +1190,7 @@ output_failed:
      * support
      */
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set output %d on device %s."),
+        (_("Failed to set output %u on device %s."),
             output, v4l2object->videodev), GST_ERROR_SYSTEM);
   }
   return FALSE;

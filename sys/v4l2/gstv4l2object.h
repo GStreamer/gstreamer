@@ -68,8 +68,8 @@ typedef enum {
   GST_V4L2_IO_DMABUF_IMPORT = 5
 } GstV4l2IOMode;
 
-typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint * input);
-typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
+typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, guint32 * input);
+typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, guint32 input);
 typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
 /* On Android NDK r18b the ioctl() signature uses 'unsigned' instead of
@@ -325,10 +325,10 @@ gboolean     gst_v4l2_close          (GstV4l2Object * v4l2object);
 /* norm/input/output */
 gboolean     gst_v4l2_get_norm       (GstV4l2Object * v4l2object, v4l2_std_id * norm);
 gboolean     gst_v4l2_set_norm       (GstV4l2Object * v4l2object, v4l2_std_id norm);
-gboolean     gst_v4l2_get_input      (GstV4l2Object * v4l2object, gint * input);
-gboolean     gst_v4l2_set_input      (GstV4l2Object * v4l2object, gint input);
-gboolean     gst_v4l2_get_output     (GstV4l2Object * v4l2object, gint * output);
-gboolean     gst_v4l2_set_output     (GstV4l2Object * v4l2object, gint output);
+gboolean     gst_v4l2_get_input      (GstV4l2Object * v4l2object, guint32 * input);
+gboolean     gst_v4l2_set_input      (GstV4l2Object * v4l2object, guint32 input);
+gboolean     gst_v4l2_get_output     (GstV4l2Object * v4l2object, guint32 * output);
+gboolean     gst_v4l2_set_output     (GstV4l2Object * v4l2object, guint32 output);
 
 /* frequency control */
 gboolean     gst_v4l2_get_frequency   (GstV4l2Object * v4l2object, gint tunernum, gulong * frequency);

@@ -161,7 +161,7 @@ not_a_tuner:
 }
 
 static gboolean
-gst_v4l2radio_get_input (GstV4l2Object * v4l2object, gint * input)
+gst_v4l2radio_get_input (GstV4l2Object * v4l2object, guint32 * input)
 {
   GST_DEBUG_OBJECT (v4l2object->element, "trying to get radio input");
 
@@ -188,7 +188,7 @@ input_failed:
 }
 
 static gboolean
-gst_v4l2radio_set_input (GstV4l2Object * v4l2object, gint input)
+gst_v4l2radio_set_input (GstV4l2Object * v4l2object, guint32 input)
 {
   GST_DEBUG_OBJECT (v4l2object->element, "trying to set input to %d", input);
 
