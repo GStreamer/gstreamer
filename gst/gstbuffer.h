@@ -496,7 +496,7 @@ typedef enum {
   GST_BUFFER_COPY_MERGE          = (1 << 4),
 
   /**
-   * @GST_BUFFER_COPY_DEEP:
+   * GST_BUFFER_COPY_DEEP:
    *
    * flag indicating that memory should always be copied instead of reffed
    *
