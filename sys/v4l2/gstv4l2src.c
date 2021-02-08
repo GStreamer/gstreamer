@@ -405,9 +405,6 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
 
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
 
-  /* We consider the first structure from peercaps to be a preference. This is
-   * useful for matching a reported native display, or simply to avoid
-   * transformation to happen downstream. */
   if (pref_s) {
     pref_s = gst_structure_copy (pref_s);
     gst_v4l2_src_fixate_struct_with_preference (pref_s, &pref);
@@ -502,6 +499,36 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
   return fcaps;
 }
 
+static GstStructure *
+gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src)
+{
+  struct v4l2_input in = { 0, };
+  GstStructure *pref = NULL;
+
+  if (!gst_v4l2_get_input (v4l2src->v4l2object, &in.index))
+    return NULL;
+
+  if (!gst_v4l2_query_input (v4l2src->v4l2object, &in))
+    return NULL;
+
+  GST_INFO_OBJECT (v4l2src, "Detect input %u as `%s`", in.index, in.name);
+
+  /* Notify signal status using WARNING/INFO messages */
+  if (in.status & (V4L2_IN_ST_NO_POWER | V4L2_IN_ST_NO_SIGNAL)) {
+    if (!v4l2src->no_signal)
+      /* note: taken from decklinksrc element */
+      GST_ELEMENT_WARNING (v4l2src, RESOURCE, READ, ("Signal lost"),
+          ("No input source was detected - video frames invalid"));
+    v4l2src->no_signal = TRUE;
+  } else if (v4l2src->no_signal) {
+    if (v4l2src->no_signal)
+      GST_ELEMENT_INFO (v4l2src, RESOURCE, READ,
+          ("Signal recovered"), ("Input source detected"));
+    v4l2src->no_signal = FALSE;
+  }
+  return pref;
+}
+
 static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 {
@@ -539,10 +566,18 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
     if (!gst_caps_is_empty (caps)) {
       GstStructure *pref = NULL;
 
-      if (peercaps && !gst_caps_is_any (peercaps))
-        pref = gst_caps_get_structure (peercaps, 0);
+      /* For drivers that has DV timings or other default size query
+       * capabilities, we will prefer that resolution. */
+      pref = gst_v4l2src_query_preferred_size (GST_V4L2SRC (basesrc));
+
+      /* otherwise consider the first structure from peercaps to be a
+       * preference. This is useful for matching a reported native display,
+       * or simply to avoid transformation to happen downstream. */
+      if (!pref && peercaps && !gst_caps_is_any (peercaps))
+        pref = gst_structure_copy (gst_caps_get_structure (peercaps, 0));
 
       caps = gst_v4l2src_fixate (basesrc, caps, pref);
+      gst_structure_free (pref);
 
       /* Fixating may fail as we now set the selected format */
       if (!caps) {
