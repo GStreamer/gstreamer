@@ -1140,6 +1140,21 @@ input_failed:
 }
 
 gboolean
+gst_v4l2_query_input (GstV4l2Object * obj, struct v4l2_input * input)
+{
+  gint ret;
+
+  ret = obj->ioctl (obj->video_fd, VIDIOC_ENUMINPUT, input);
+  if (ret < 0) {
+    GST_WARNING_OBJECT (obj->dbg_obj, "Failed to read input state: %s (%i)",
+        g_strerror (errno), errno);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
 gst_v4l2_get_output (GstV4l2Object * v4l2object, guint32 * output)
 {
   guint32 n;

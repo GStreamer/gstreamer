@@ -327,6 +327,7 @@ gboolean     gst_v4l2_get_norm       (GstV4l2Object * v4l2object, v4l2_std_id * 
 gboolean     gst_v4l2_set_norm       (GstV4l2Object * v4l2object, v4l2_std_id norm);
 gboolean     gst_v4l2_get_input      (GstV4l2Object * v4l2object, guint32 * input);
 gboolean     gst_v4l2_set_input      (GstV4l2Object * v4l2object, guint32 input);
+gboolean     gst_v4l2_query_input    (GstV4l2Object * v4l2object, struct v4l2_input * input);
 gboolean     gst_v4l2_get_output     (GstV4l2Object * v4l2object, guint32 * output);
 gboolean     gst_v4l2_set_output     (GstV4l2Object * v4l2object, guint32 output);
 
@@ -340,7 +341,6 @@ gboolean     gst_v4l2_get_attribute   (GstV4l2Object * v4l2object, int attribute
 gboolean     gst_v4l2_set_attribute   (GstV4l2Object * v4l2object, int attribute, const int value);
 gboolean     gst_v4l2_set_string_attribute (GstV4l2Object * v4l2object, int attribute_num, const char *value);
 gboolean     gst_v4l2_set_controls    (GstV4l2Object * v4l2object, GstStructure * controls);
-
 
 /* events */
 gboolean     gst_v4l2_subscribe_event (GstV4l2Object * v4l2object, guint32 event);
