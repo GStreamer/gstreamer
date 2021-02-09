@@ -288,9 +288,7 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
   app_state = PEER_CALL_NEGOTIATING;
 
   if (remote_is_offerer || our_id) {
-    gchar *msg = g_strdup_printf ("OFFER_REQUEST");
-    soup_websocket_connection_send_text (ws_conn, msg);
-    g_free (msg);
+    soup_websocket_connection_send_text (ws_conn, "OFFER_REQUEST");
   } else {
     GstPromise *promise;
     promise =
