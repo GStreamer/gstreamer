@@ -573,6 +573,8 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
         break;
     }
 
+    self->configured_input_source = input_source;
+
     // Need to remove old routes for the output and framebuffer we're going to
     // use
     NTV2ActualConnections connections = router.GetConnections();
@@ -1088,6 +1090,8 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   GstAjaSrc *self = GST_AJA_SRC(data);
   GstClock *clock = NULL;
   AUTOCIRCULATE_TRANSFER transfer;
+  guint64 frames_dropped_last = G_MAXUINT64;
+  gboolean have_signal = TRUE;
 
   if (self->capture_cpu_core != G_MAXUINT) {
     cpu_set_t mask;
@@ -1147,8 +1151,50 @@ restart:
   gst_clear_object(&clock);
   clock = gst_element_get_clock(GST_ELEMENT_CAST(self));
 
+  frames_dropped_last = G_MAXUINT64;
+  have_signal = TRUE;
+
   g_mutex_lock(&self->queue_lock);
   while (self->playing && !self->shutdown) {
+    // Check for valid signal first
+    NTV2VideoFormat current_video_format =
+        self->device->device->GetInputVideoFormat(
+            self->configured_input_source);
+    if (current_video_format == ::NTV2_FORMAT_UNKNOWN) {
+      GST_DEBUG_OBJECT(self, "No signal, waiting");
+      g_mutex_unlock(&self->queue_lock);
+      self->device->device->WaitForInputVerticalInterrupt(self->channel);
+      frames_dropped_last = G_MAXUINT64;
+      if (have_signal) {
+        GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+                            ("No input source was detected"));
+        have_signal = FALSE;
+      }
+      g_mutex_lock(&self->queue_lock);
+      continue;
+    } else if (current_video_format != self->video_format) {
+      // TODO: Handle GST_AJA_VIDEO_FORMAT_AUTO here
+      GST_DEBUG_OBJECT(self,
+                       "Different input format %u than configured %u, waiting",
+                       current_video_format, self->video_format);
+      g_mutex_unlock(&self->queue_lock);
+      self->device->device->WaitForInputVerticalInterrupt(self->channel);
+      frames_dropped_last = G_MAXUINT64;
+      if (have_signal) {
+        GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+                            ("Different input source was detected"));
+        have_signal = FALSE;
+      }
+      g_mutex_lock(&self->queue_lock);
+      continue;
+    }
+
+    if (!have_signal) {
+      GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
+                       ("Input source detected"));
+      have_signal = TRUE;
+    }
+
     AUTOCIRCULATE_STATUS status;
 
     self->device->device->AutoCirculateGetStatus(self->channel, status);
@@ -1169,8 +1215,27 @@ restart:
                      status.acRDTSCCurrentTime, status.acFramesProcessed,
                      status.acFramesDropped, status.acBufferLevel);
 
-    // TODO: Drop detection
-    // TODO: Signal loss detection
+    if (frames_dropped_last == G_MAXUINT64) {
+      frames_dropped_last = status.acFramesDropped;
+    } else if (frames_dropped_last < status.acFramesDropped) {
+      GST_WARNING_OBJECT(self, "Dropped %" G_GUINT64_FORMAT " frames",
+                         status.acFramesDropped - frames_dropped_last);
+
+      GstClockTime timestamp =
+          gst_util_uint64_scale(status.acFramesProcessed + frames_dropped_last,
+                                self->configured_info.fps_n,
+                                self->configured_info.fps_d * GST_SECOND);
+      GstClockTime timestamp_end = gst_util_uint64_scale(
+          status.acFramesProcessed + status.acFramesDropped,
+          self->configured_info.fps_n,
+          self->configured_info.fps_d * GST_SECOND);
+      GstMessage *msg = gst_message_new_qos(
+          GST_OBJECT_CAST(self), TRUE, GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE,
+          timestamp, timestamp_end - timestamp);
+      gst_element_post_message(GST_ELEMENT_CAST(self), msg);
+
+      frames_dropped_last = status.acFramesDropped;
+    }
 
     if (status.IsRunning() && status.acBufferLevel > 1) {
       GstBuffer *video_buffer = NULL;

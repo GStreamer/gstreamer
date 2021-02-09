@@ -73,6 +73,7 @@ struct _GstAjaSrc {
 
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
+  NTV2InputSource configured_input_source;
   guint32 f2_start_line;
   NTV2TCIndex tc_index;
 

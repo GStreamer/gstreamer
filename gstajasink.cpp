@@ -1173,8 +1173,8 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 static void output_thread_func(AJAThread *thread, void *data) {
   GstAjaSink *self = GST_AJA_SINK(data);
   GstClock *clock = NULL;
-  guint64 frames_renderded_start = G_MAXUINT64;
-  GstClockTime frames_renderded_start_time = GST_CLOCK_TIME_NONE;
+  guint64 frames_rendered_start = G_MAXUINT64;
+  GstClockTime frames_rendered_start_time = GST_CLOCK_TIME_NONE;
   guint64 frames_dropped_last = G_MAXUINT64;
   AUTOCIRCULATE_TRANSFER transfer;
 
@@ -1236,8 +1236,8 @@ restart:
 
   gst_clear_object(&clock);
   clock = gst_element_get_clock(GST_ELEMENT_CAST(self));
-  frames_renderded_start = G_MAXUINT64;
-  frames_renderded_start_time = GST_CLOCK_TIME_NONE;
+  frames_rendered_start = G_MAXUINT64;
+  frames_rendered_start_time = GST_CLOCK_TIME_NONE;
   frames_dropped_last = G_MAXUINT64;
 
   transfer.acANCBuffer.Allocate(2048);
@@ -1410,14 +1410,14 @@ restart:
       // a ringbuffer and calculate a linear regression over them
       // FIXME: Add some compensation by dropping/duplicating frames as needed
       // but make this configurable
-      if (frames_renderded_start_time == GST_CLOCK_TIME_NONE &&
+      if (frames_rendered_start_time == GST_CLOCK_TIME_NONE &&
           transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime != 0 &&
           transfer.acTransferStatus.acFramesProcessed +
                   transfer.acTransferStatus.acFramesDropped >
               self->queue_size &&
           clock) {
-        frames_renderded_start = transfer.acTransferStatus.acFramesProcessed +
-                                 transfer.acTransferStatus.acFramesDropped;
+        frames_rendered_start = transfer.acTransferStatus.acFramesProcessed +
+                                transfer.acTransferStatus.acFramesDropped;
 
         GstClockTime now_gst = gst_clock_get_time(clock);
         GstClockTime now_sys = g_get_real_time() * 1000;
@@ -1425,11 +1425,11 @@ restart:
             transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100;
 
         if (render_time < now_sys) {
-          frames_renderded_start_time = now_gst - (now_sys - render_time);
+          frames_rendered_start_time = now_gst - (now_sys - render_time);
         }
       }
 
-      if (clock && frames_renderded_start_time != GST_CLOCK_TIME_NONE) {
+      if (clock && frames_rendered_start_time != GST_CLOCK_TIME_NONE) {
         GstClockTime now_gst = gst_clock_get_time(clock);
         GstClockTime now_sys = g_get_real_time() * 1000;
         GstClockTime render_time =
@@ -1442,12 +1442,12 @@ restart:
           sys_diff = 0;
         }
 
-        GstClockTime diff = now_gst - frames_renderded_start_time;
+        GstClockTime diff = now_gst - frames_rendered_start_time;
         if (sys_diff < diff) diff -= sys_diff;
 
         guint64 frames_rendered = (transfer.acTransferStatus.acFramesProcessed +
                                    transfer.acTransferStatus.acFramesDropped) -
-                                  frames_renderded_start;
+                                  frames_rendered_start;
         guint64 frames_produced =
             gst_util_uint64_scale(diff, self->configured_info.fps_n,
                                   self->configured_info.fps_d * GST_SECOND);
