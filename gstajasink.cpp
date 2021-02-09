@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_CHANNEL (::NTV2_CHANNEL1)
 #define DEFAULT_AUDIO_SYSTEM (GST_AJA_AUDIO_SYSTEM_AUTO)
 #define DEFAULT_OUTPUT_DESTINATION (GST_AJA_OUTPUT_DESTINATION_AUTO)
-#define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_AUTO)
+#define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_AUTO)
 #define DEFAULT_QUEUE_SIZE (16)
 #define DEFAULT_OUTPUT_CPU_CORE (G_MAXUINT)
@@ -420,6 +420,11 @@ static gboolean gst_aja_sink_stop(GstAjaSink *self) {
     gst_clear_object(&self->audio_buffer_pool);
   }
 
+  if (self->tc_indexes) {
+    delete self->tc_indexes;
+    self->tc_indexes = NULL;
+  }
+
   GST_DEBUG_OBJECT(self, "Stopped");
 
   return TRUE;
@@ -689,33 +694,66 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
   NTV2OutputCrosspointID framebuffer_id =
       ::GetFrameBufferOutputXptFromChannel(self->channel, false, false);
 
+  NTV2TCIndex tc_indexes_vitc[2] = {::NTV2_TCINDEX_INVALID,
+                                    ::NTV2_TCINDEX_INVALID};
+  NTV2TCIndex tc_index_atc_ltc = ::NTV2_TCINDEX_INVALID;
   NTV2InputCrosspointID output_destination_id;
   switch (self->output_destination) {
     case GST_AJA_OUTPUT_DESTINATION_AUTO:
+      tc_indexes_vitc[0] =
+          ::NTV2ChannelToTimecodeIndex(self->channel, false, false);
+      tc_indexes_vitc[1] =
+          ::NTV2ChannelToTimecodeIndex(self->channel, false, true);
+      tc_index_atc_ltc =
+          ::NTV2ChannelToTimecodeIndex(self->channel, false, true);
       output_destination_id = ::GetSDIOutputInputXpt(self->channel, false);
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI1:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI1;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI1_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI1_LTC;
       output_destination_id = ::NTV2_XptSDIOut1Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI2:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI2;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI2_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI2_LTC;
       output_destination_id = ::NTV2_XptSDIOut2Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI3:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI3;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI3_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI3_LTC;
       output_destination_id = ::NTV2_XptSDIOut3Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI4:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI4;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI4_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI4_LTC;
       output_destination_id = ::NTV2_XptSDIOut4Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI5:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI5;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI5_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI5_LTC;
       output_destination_id = ::NTV2_XptSDIOut5Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI6:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI6;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI6_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI6_LTC;
       output_destination_id = ::NTV2_XptSDIOut6Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI7:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI7;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI7_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI7_LTC;
       output_destination_id = ::NTV2_XptSDIOut7Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI8:
+      tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI8;
+      tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI8_2;
+      tc_index_atc_ltc = ::NTV2_TCINDEX_SDI8_LTC;
       output_destination_id = ::NTV2_XptSDIOut8Input;
       break;
     case GST_AJA_OUTPUT_DESTINATION_ANALOG:
@@ -723,6 +761,29 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
       break;
     case GST_AJA_OUTPUT_DESTINATION_HDMI:
       output_destination_id = ::NTV2_XptHDMIOutInput;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+
+  if (!self->tc_indexes) self->tc_indexes = new NTV2TCIndexes;
+
+  switch (self->timecode_index) {
+    case GST_AJA_TIMECODE_INDEX_VITC:
+      self->tc_indexes->insert(tc_indexes_vitc[0]);
+      if (self->configured_info.interlace_mode !=
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+        self->tc_indexes->insert(tc_indexes_vitc[1]);
+      break;
+    case GST_AJA_TIMECODE_INDEX_ATC_LTC:
+      self->tc_indexes->insert(tc_index_atc_ltc);
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC1:
+      self->tc_indexes->insert(::NTV2_TCINDEX_LTC1);
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC2:
+      self->tc_indexes->insert(::NTV2_TCINDEX_LTC2);
       break;
     default:
       g_assert_not_reached();
@@ -1154,75 +1215,6 @@ restart:
   GST_DEBUG_OBJECT(self, "Starting playing");
   g_mutex_unlock(&self->queue_lock);
 
-  NTV2TCIndexes tc_indexes;
-  switch (self->timecode_index) {
-    case GST_AJA_TIMECODE_INDEX_AUTO:
-      tc_indexes.insert(::NTV2ChannelToTimecodeIndex(self->channel, false));
-      tc_indexes.insert(::NTV2ChannelToTimecodeIndex(self->channel, true));
-      if (self->configured_info.interlace_mode !=
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
-        tc_indexes.insert(
-            ::NTV2ChannelToTimecodeIndex(self->channel, false, true));
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI1:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI1);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI2:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI2);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI3:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI3);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI4:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI4);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI5:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI5);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI6:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI6);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI7:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI7);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI8:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI8);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI1_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI1_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI2_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI2_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI3_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI3_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI4_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI4_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI5_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI5_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI6_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI6_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI7_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI7_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_SDI8_LTC:
-      tc_indexes.insert(::NTV2_TCINDEX_SDI8_LTC);
-      break;
-    case GST_AJA_TIMECODE_INDEX_LTC1:
-      tc_indexes.insert(::NTV2_TCINDEX_LTC1);
-      break;
-    case GST_AJA_TIMECODE_INDEX_LTC2:
-      tc_indexes.insert(::NTV2_TCINDEX_LTC2);
-      break;
-    default:
-      g_assert_not_reached();
-      break;
-  }
-
   {
     // Make sure to globally lock here as the routing settings and others are
     // global shared state
@@ -1347,10 +1339,10 @@ restart:
                        item.audio_buffer ? item.audio_map.size : 0);
 
       // Set timecodes if provided by upstream
-      if (item.tc.IsValid() && item.tc.fDBB != 0xffffffff) {
+      if (item.tc.IsValid() && item.tc.fDBB != 0xffffffff && self->tc_indexes) {
         NTV2TimeCodes timecodes;
 
-        for (const auto &tc_index : tc_indexes) {
+        for (const auto &tc_index : *self->tc_indexes) {
           timecodes[tc_index] = item.tc;
         }
         transfer.SetOutputTimeCodes(timecodes);

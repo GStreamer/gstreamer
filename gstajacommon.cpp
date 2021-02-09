@@ -550,50 +550,13 @@ GType gst_aja_audio_source_get_type(void) {
   return (GType)id;
 }
 
-GType gst_aja_embedded_audio_input_get_type(void) {
-  static gsize id = 0;
-  static const GEnumValue modes[] = {
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO, "auto", "Auto"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_1, "video-1", "Video 1"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_2, "video-2", "Video 2"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_3, "video-3", "Video 3"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_4, "video-4", "Video 4"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_5, "video-5", "Video 5"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_6, "video-6", "Video 6"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_7, "video-7", "Video 7"},
-      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_8, "video-8", "Video 8"},
-      {0, NULL, NULL}};
-
-  if (g_once_init_enter(&id)) {
-    GType tmp = g_enum_register_static("GstAjaEmbeddedAudioInput", modes);
-    g_once_init_leave(&id, tmp);
-  }
-
-  return (GType)id;
-}
-
 GType gst_aja_timecode_index_get_type(void) {
   static gsize id = 0;
   static const GEnumValue modes[] = {
-      {GST_AJA_TIMECODE_INDEX_AUTO, "auto", "Auto"},
-      {GST_AJA_TIMECODE_INDEX_SDI1, "sdi-1", "SDI 1"},
-      {GST_AJA_TIMECODE_INDEX_SDI2, "sdi-2", "SDI 2"},
-      {GST_AJA_TIMECODE_INDEX_SDI3, "sdi-3", "SDI 3"},
-      {GST_AJA_TIMECODE_INDEX_SDI4, "sdi-4", "SDI 4"},
-      {GST_AJA_TIMECODE_INDEX_SDI5, "sdi-5", "SDI 5"},
-      {GST_AJA_TIMECODE_INDEX_SDI6, "sdi-6", "SDI 6"},
-      {GST_AJA_TIMECODE_INDEX_SDI7, "sdi-7", "SDI 7"},
-      {GST_AJA_TIMECODE_INDEX_SDI8, "sdi-8", "SDI 8"},
-      {GST_AJA_TIMECODE_INDEX_SDI1_LTC, "sdi-1-ltc", "SDI 1 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI2_LTC, "sdi-2-ltc", "SDI 2 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI3_LTC, "sdi-3-ltc", "SDI 3 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI4_LTC, "sdi-4-ltc", "SDI 4 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI5_LTC, "sdi-5-ltc", "SDI 5 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI6_LTC, "sdi-6-ltc", "SDI 6 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI7_LTC, "sdi-7-ltc", "SDI 7 LTC"},
-      {GST_AJA_TIMECODE_INDEX_SDI8_LTC, "sdi-8-ltc", "SDI 8 LTC"},
-      {GST_AJA_TIMECODE_INDEX_LTC1, "ltc-1", "LTC 1"},
-      {GST_AJA_TIMECODE_INDEX_LTC2, "ltc-2", "LTC 2"},
+      {GST_AJA_TIMECODE_INDEX_VITC, "vitc", "Embedded SDI VITC"},
+      {GST_AJA_TIMECODE_INDEX_VITC, "atc-ltc", "Embedded SDI ATC LTC"},
+      {GST_AJA_TIMECODE_INDEX_LTC1, "ltc-1", "Analog LTC 1"},
+      {GST_AJA_TIMECODE_INDEX_LTC2, "ltc-2", "Analog LTC 2"},
       {0, NULL, NULL}};
 
   if (g_once_init_enter(&id)) {

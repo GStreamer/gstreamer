@@ -66,7 +66,6 @@ struct _GstAjaSrc {
   GstAjaVideoFormat video_format_setting;
   GstAjaInputSource input_source;
   GstAjaAudioSource audio_source;
-  GstAjaEmbeddedAudioInput embedded_audio_input;
   GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
   guint queue_size;
@@ -75,6 +74,7 @@ struct _GstAjaSrc {
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
   guint32 f2_start_line;
+  NTV2TCIndex tc_index;
 
   GstCaps *configured_caps;
   GstVideoInfo configured_info;

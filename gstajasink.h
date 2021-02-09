@@ -78,6 +78,7 @@ struct _GstAjaSink {
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
   guint32 f2_start_line;
+  NTV2TCIndexes *tc_indexes;
 
   GstCaps *configured_caps;
   GstVideoInfo configured_info;
