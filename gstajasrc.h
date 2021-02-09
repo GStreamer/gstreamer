@@ -65,6 +65,9 @@ struct _GstAjaSrc {
   GstAjaAudioSystem audio_system_setting;
   GstAjaVideoFormat video_format_setting;
   GstAjaInputSource input_source;
+  GstAjaAudioSource audio_source;
+  GstAjaEmbeddedAudioInput embedded_audio_input;
+  GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
   guint queue_size;
   guint capture_cpu_core;

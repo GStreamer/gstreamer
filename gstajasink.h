@@ -72,6 +72,7 @@ struct _GstAjaSink {
 
   GstAjaAudioSystem audio_system_setting;
   GstAjaOutputDestination output_destination;
+  GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
 
   NTV2AudioSystem audio_system;

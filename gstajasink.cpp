@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_CHANNEL (::NTV2_CHANNEL1)
 #define DEFAULT_AUDIO_SYSTEM (GST_AJA_AUDIO_SYSTEM_AUTO)
 #define DEFAULT_OUTPUT_DESTINATION (GST_AJA_OUTPUT_DESTINATION_AUTO)
+#define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_AUTO)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_AUTO)
 #define DEFAULT_QUEUE_SIZE (16)
 #define DEFAULT_OUTPUT_CPU_CORE (G_MAXUINT)
@@ -45,6 +46,7 @@ enum {
   PROP_CHANNEL,
   PROP_AUDIO_SYSTEM,
   PROP_OUTPUT_DESTINATION,
+  PROP_TIMECODE_INDEX,
   PROP_REFERENCE_SOURCE,
   PROP_QUEUE_SIZE,
   PROP_OUTPUT_CPU_CORE,
@@ -145,6 +147,14 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
                         G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property(
+      gobject_class, PROP_TIMECODE_INDEX,
+      g_param_spec_enum(
+          "timecode-index", "Timecode Index", "Timecode index to use",
+          GST_TYPE_AJA_TIMECODE_INDEX, DEFAULT_TIMECODE_INDEX,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
       gobject_class, PROP_REFERENCE_SOURCE,
       g_param_spec_enum(
           "reference-source", "Reference Source", "Reference source to use",
@@ -195,6 +205,7 @@ static void gst_aja_sink_init(GstAjaSink *self) {
   self->queue_size = DEFAULT_QUEUE_SIZE;
   self->audio_system_setting = DEFAULT_AUDIO_SYSTEM;
   self->output_destination = DEFAULT_OUTPUT_DESTINATION;
+  self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->output_cpu_core = DEFAULT_OUTPUT_CPU_CORE;
 
@@ -225,6 +236,9 @@ void gst_aja_sink_set_property(GObject *object, guint property_id,
     case PROP_OUTPUT_DESTINATION:
       self->output_destination =
           (GstAjaOutputDestination)g_value_get_enum(value);
+      break;
+    case PROP_TIMECODE_INDEX:
+      self->timecode_index = (GstAjaTimecodeIndex)g_value_get_enum(value);
       break;
     case PROP_REFERENCE_SOURCE:
       self->reference_source = (GstAjaReferenceSource)g_value_get_enum(value);
@@ -257,6 +271,9 @@ void gst_aja_sink_get_property(GObject *object, guint property_id,
       break;
     case PROP_OUTPUT_DESTINATION:
       g_value_set_enum(value, self->output_destination);
+      break;
+    case PROP_TIMECODE_INDEX:
+      g_value_set_enum(value, self->timecode_index);
       break;
     case PROP_REFERENCE_SOURCE:
       g_value_set_enum(value, self->reference_source);
@@ -1137,6 +1154,75 @@ restart:
   GST_DEBUG_OBJECT(self, "Starting playing");
   g_mutex_unlock(&self->queue_lock);
 
+  NTV2TCIndexes tc_indexes;
+  switch (self->timecode_index) {
+    case GST_AJA_TIMECODE_INDEX_AUTO:
+      tc_indexes.insert(::NTV2ChannelToTimecodeIndex(self->channel, false));
+      tc_indexes.insert(::NTV2ChannelToTimecodeIndex(self->channel, true));
+      if (self->configured_info.interlace_mode !=
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+        tc_indexes.insert(
+            ::NTV2ChannelToTimecodeIndex(self->channel, false, true));
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI1:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI1);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI2:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI2);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI3:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI3);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI4:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI4);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI5:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI5);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI6:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI6);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI7:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI7);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI8:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI8);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI1_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI1_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI2_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI2_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI3_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI3_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI4_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI4_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI5_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI5_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI6_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI6_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI7_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI7_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI8_LTC:
+      tc_indexes.insert(::NTV2_TCINDEX_SDI8_LTC);
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC1:
+      tc_indexes.insert(::NTV2_TCINDEX_LTC1);
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC2:
+      tc_indexes.insert(::NTV2_TCINDEX_LTC2);
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+
   {
     // Make sure to globally lock here as the routing settings and others are
     // global shared state
@@ -1299,12 +1385,9 @@ restart:
       if (item.tc.IsValid() && item.tc.fDBB != 0xffffffff) {
         NTV2TimeCodes timecodes;
 
-        timecodes[::NTV2ChannelToTimecodeIndex(self->channel, false)] = item.tc;
-        timecodes[::NTV2ChannelToTimecodeIndex(self->channel, true)] = item.tc;
-        if (self->configured_info.interlace_mode !=
-            GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
-          timecodes[::NTV2ChannelToTimecodeIndex(self->channel, false, true)] =
-              item.tc;
+        for (const auto &tc_index : tc_indexes) {
+          timecodes[tc_index] = item.tc;
+        }
         transfer.SetOutputTimeCodes(timecodes);
       }
 

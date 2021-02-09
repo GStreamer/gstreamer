@@ -37,6 +37,9 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_VIDEO_FORMAT (GST_AJA_VIDEO_FORMAT_1080i_5000)
 #define DEFAULT_AUDIO_SYSTEM (GST_AJA_AUDIO_SYSTEM_AUTO)
 #define DEFAULT_INPUT_SOURCE (GST_AJA_INPUT_SOURCE_AUTO)
+#define DEFAULT_AUDIO_SOURCE (GST_AJA_AUDIO_SOURCE_EMBEDDED)
+#define DEFAULT_EMBEDDED_AUDIO_INPUT (GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO)
+#define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_AUTO)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_FREERUN)
 #define DEFAULT_QUEUE_SIZE (16)
 #define DEFAULT_CAPTURE_CPU_CORE (G_MAXUINT)
@@ -48,6 +51,9 @@ enum {
   PROP_VIDEO_FORMAT,
   PROP_AUDIO_SYSTEM,
   PROP_INPUT_SOURCE,
+  PROP_AUDIO_SOURCE,
+  PROP_EMBEDDED_AUDIO_INPUT,
+  PROP_TIMECODE_INDEX,
   PROP_REFERENCE_SOURCE,
   PROP_QUEUE_SIZE,
   PROP_CAPTURE_CPU_CORE,
@@ -156,6 +162,31 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
                         G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property(
+      gobject_class, PROP_AUDIO_SOURCE,
+      g_param_spec_enum(
+          "audio-source", "Audio Source", "Audio source to use",
+          GST_TYPE_AJA_AUDIO_SOURCE, DEFAULT_AUDIO_SOURCE,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
+      gobject_class, PROP_EMBEDDED_AUDIO_INPUT,
+      g_param_spec_enum(
+          "embedded-audio-input", "Embedded Audio Input",
+          "Embedded audio input to use", GST_TYPE_AJA_EMBEDDED_AUDIO_INPUT,
+          DEFAULT_EMBEDDED_AUDIO_INPUT,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
+      gobject_class, PROP_TIMECODE_INDEX,
+      g_param_spec_enum(
+          "timecode-index", "Timecode Index", "Timecode index to use",
+          GST_TYPE_AJA_TIMECODE_INDEX, DEFAULT_TIMECODE_INDEX,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
       gobject_class, PROP_REFERENCE_SOURCE,
       g_param_spec_enum(
           "reference-source", "Reference Source", "Reference source to use",
@@ -207,6 +238,9 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->video_format_setting = DEFAULT_VIDEO_FORMAT;
   self->audio_system_setting = DEFAULT_AUDIO_SYSTEM;
   self->input_source = DEFAULT_INPUT_SOURCE;
+  self->audio_source = DEFAULT_AUDIO_SOURCE;
+  self->embedded_audio_input = DEFAULT_EMBEDDED_AUDIO_INPUT;
+  self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->capture_cpu_core = DEFAULT_CAPTURE_CPU_CORE;
 
@@ -239,6 +273,16 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
       break;
     case PROP_INPUT_SOURCE:
       self->input_source = (GstAjaInputSource)g_value_get_enum(value);
+      break;
+    case PROP_AUDIO_SOURCE:
+      self->audio_source = (GstAjaAudioSource)g_value_get_enum(value);
+      break;
+    case PROP_EMBEDDED_AUDIO_INPUT:
+      self->embedded_audio_input =
+          (GstAjaEmbeddedAudioInput)g_value_get_enum(value);
+      break;
+    case PROP_TIMECODE_INDEX:
+      self->timecode_index = (GstAjaTimecodeIndex)g_value_get_enum(value);
       break;
     case PROP_REFERENCE_SOURCE:
       self->reference_source = (GstAjaReferenceSource)g_value_get_enum(value);
@@ -274,6 +318,15 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
       break;
     case PROP_INPUT_SOURCE:
       g_value_set_enum(value, self->input_source);
+      break;
+    case PROP_AUDIO_SOURCE:
+      g_value_set_enum(value, self->audio_source);
+      break;
+    case PROP_EMBEDDED_AUDIO_INPUT:
+      g_value_set_enum(value, self->embedded_audio_input);
+      break;
+    case PROP_TIMECODE_INDEX:
+      g_value_set_enum(value, self->timecode_index);
       break;
     case PROP_REFERENCE_SOURCE:
       g_value_set_enum(value, self->reference_source);
@@ -608,12 +661,65 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
 
     GST_DEBUG_OBJECT(self, "Using audio system %d", self->audio_system);
 
-    // TODO: make configurable
+    NTV2AudioSource audio_source;
+    switch (self->audio_source) {
+      case GST_AJA_AUDIO_SOURCE_EMBEDDED:
+        audio_source = ::NTV2_AUDIO_EMBEDDED;
+        break;
+      case GST_AJA_AUDIO_SOURCE_AES:
+        audio_source = ::NTV2_AUDIO_AES;
+        break;
+      case GST_AJA_AUDIO_SOURCE_ANALOG:
+        audio_source = ::NTV2_AUDIO_ANALOG;
+        break;
+      case GST_AJA_AUDIO_SOURCE_HDMI:
+        audio_source = ::NTV2_AUDIO_HDMI;
+        break;
+      case GST_AJA_AUDIO_SOURCE_MIC:
+        audio_source = ::NTV2_AUDIO_MIC;
+        break;
+      default:
+        g_assert_not_reached();
+        break;
+    }
+
+    NTV2EmbeddedAudioInput embedded_audio_input;
+    switch (self->embedded_audio_input) {
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO:
+        embedded_audio_input =
+            ::NTV2InputSourceToEmbeddedAudioInput(input_source);
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_1:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_1;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_2:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_2;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_3:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_3;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_4:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_4;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_5:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_5;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_6:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_6;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_7:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_7;
+        break;
+      case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO_8:
+        embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_8;
+        break;
+      default:
+        g_assert_not_reached();
+        break;
+    }
+
     self->device->device->SetAudioSystemInputSource(
-        self->audio_system, NTV2_AUDIO_EMBEDDED,
-        ::NTV2InputSourceToEmbeddedAudioInput(input_source));
-    self->device->device->SetEmbeddedAudioInput(
-        ::NTV2ChannelToEmbeddedAudioInput(self->channel), self->audio_system);
+        self->audio_system, audio_source, embedded_audio_input);
     self->configured_audio_channels =
         ::NTV2DeviceGetMaxAudioChannels(self->device_id);
     self->device->device->SetNumberAudioChannels(
@@ -1076,6 +1182,70 @@ restart:
   gst_clear_object(&clock);
   clock = gst_element_get_clock(GST_ELEMENT_CAST(self));
 
+  NTV2TCIndex tc_index;
+  switch (self->timecode_index) {
+    case GST_AJA_TIMECODE_INDEX_AUTO:
+      tc_index = ::NTV2ChannelToTimecodeIndex(self->channel, false);
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI1:
+      tc_index = ::NTV2_TCINDEX_SDI1;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI2:
+      tc_index = ::NTV2_TCINDEX_SDI2;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI3:
+      tc_index = ::NTV2_TCINDEX_SDI3;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI4:
+      tc_index = ::NTV2_TCINDEX_SDI4;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI5:
+      tc_index = ::NTV2_TCINDEX_SDI5;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI6:
+      tc_index = ::NTV2_TCINDEX_SDI6;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI7:
+      tc_index = ::NTV2_TCINDEX_SDI7;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI8:
+      tc_index = ::NTV2_TCINDEX_SDI8;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI1_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI1_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI2_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI2_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI3_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI3_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI4_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI4_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI5_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI5_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI6_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI6_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI7_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI7_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_SDI8_LTC:
+      tc_index = ::NTV2_TCINDEX_SDI8_LTC;
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC1:
+      tc_index = ::NTV2_TCINDEX_LTC1;
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC2:
+      tc_index = ::NTV2_TCINDEX_LTC2;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+
   g_mutex_lock(&self->queue_lock);
   while (self->playing && !self->shutdown) {
     AUTOCIRCULATE_STATUS status;
@@ -1192,8 +1362,8 @@ restart:
                             transfer.GetCapturedAncByteCount(true));
 
       NTV2_RP188 time_code;
-      transfer.acTransferStatus.acFrameStamp.GetInputTimeCode(
-          time_code, ::NTV2ChannelToTimecodeIndex(self->channel, false));
+      transfer.acTransferStatus.acFrameStamp.GetInputTimeCode(time_code,
+                                                              tc_index);
 
       gint64 frame_time = transfer.acTransferStatus.acFrameStamp.acFrameTime;
       gint64 now_sys = g_get_real_time();
