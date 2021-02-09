@@ -1729,9 +1729,6 @@ probe_remove_self_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   gst_pad_remove_probe (pad, info->id);
 
-  fail_unless (pad->num_probes == 0);
-  fail_unless (pad->num_blocked == 0);
-
   return GST_PAD_PROBE_REMOVE;
 }
 
@@ -1768,6 +1765,52 @@ GST_START_TEST (test_pad_probe_remove)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_pad_disjoint_blocks_probe_remove)
+{
+  GstPad *pad;
+
+  /* Test that installing 2 separate blocking probes - one on events
+   * and one on buffers, and then removing the blocking event probe
+   * releases the dataflow until a buffer is caught
+   *
+   * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/658
+   */
+  pad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (pad != NULL);
+
+  gst_pad_set_active (pad, TRUE);
+  fail_unless (pad->num_probes == 0);
+  fail_unless (pad->num_blocked == 0);
+  gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      probe_remove_self_cb, NULL, probe_remove_notify_cb);
+  fail_unless (pad->num_probes == 1);
+  fail_unless (pad->num_blocked == 1);
+
+  gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
+      probe_remove_self_cb, NULL, probe_remove_notify_cb);
+  fail_unless (pad->num_probes == 2);
+  fail_unless (pad->num_blocked == 2);
+
+  pad_probe_remove_notifiy_called = FALSE;
+  gst_pad_push_event (pad, gst_event_new_stream_start ("asda"));
+
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
+  pad_probe_remove_notifiy_called = FALSE;
+  gst_pad_push (pad, gst_buffer_new ());
+
+  fail_unless (pad->num_probes == 0);
+  fail_unless (pad->num_blocked == 0);
+
+  gst_object_unref (pad);
+}
+
+GST_END_TEST;
+
 
 typedef struct
 {
@@ -3352,6 +3395,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_probe_pull_idle);
   tcase_add_test (tc_chain, test_pad_probe_pull_buffer);
   tcase_add_test (tc_chain, test_pad_probe_remove);
+  tcase_add_test (tc_chain, test_pad_disjoint_blocks_probe_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_add_remove);
   tcase_add_test (tc_chain, test_pad_probe_block_and_drop_buffer);
   tcase_add_test (tc_chain, test_pad_probe_flush_events);
