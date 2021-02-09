@@ -193,20 +193,6 @@ _fill_vaapi_pic (GstH265Decoder * decoder, VAPictureHEVC * va_picture,
     va_picture->flags |= VA_PICTURE_HEVC_LONG_TERM_REFERENCE;
 
   va_picture->flags |= _find_frame_rps_type (decoder, picture);
-
-  switch (picture->field) {
-    case GST_H265_PICTURE_FIELD_FRAME:
-      break;
-    case GST_H265_PICTURE_FILED_TOP_FIELD:
-      va_picture->flags |= VA_PICTURE_HEVC_FIELD_PIC;
-      break;
-    case GST_H265_PICTURE_FIELD_BOTTOM_FIELD:
-      va_picture->flags |= VA_PICTURE_HEVC_FIELD_PIC;
-      va_picture->flags |= VA_PICTURE_HEVC_BOTTOM_FIELD;
-      break;
-    default:
-      break;
-  }
 }
 
 static guint8
