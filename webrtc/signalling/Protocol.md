@@ -35,7 +35,8 @@ This protocol builds upon https://github.com/shanet/WebRTC-Example/
 
 * To connect to a single peer, send `SESSION <uid>` where `<uid>` identifies the peer to connect to, and receive `SESSION_OK`
 * All further messages will be forwarded to the peer
-* The call negotiation with the peer can be started by sending JSON encoded SDP and ICE
+* The call negotiation with the peer can be started by sending JSON encoded SDP (the offer) and ICE
+* You can also ask the peer to send the SDP offer and begin sending ICE candidates. After `SESSION_OK` if you send `OFFER_REQUEST`, the peer will take over. (NEW in 1.19, not all clients support this)
 
 * Closure of the server connection means the call has ended; either because the other peer ended it or went away
 * To end the call, disconnect from the server. You may reconnect again whenever you wish.
