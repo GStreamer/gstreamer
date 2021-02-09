@@ -25,7 +25,16 @@ var ws_conn;
 // Promise for local stream after constraints are approved by the user
 var local_stream_promise;
 
+function setConnectButtonState(value) {
+    document.getElementById("peer-connect-button").value = value;
+}
+
 function onConnectClicked() {
+    if (document.getElementById("peer-connect-button").value == "Disconnect") {
+        resetState();
+        return;
+    }
+
     var id = document.getElementById("peer-connect").value;
     if (id == "") {
         alert("Peer id must be filled out");
@@ -33,6 +42,7 @@ function onConnectClicked() {
     }
 
     ws_conn.send("SESSION " + id);
+    setConnectButtonState("Disconnect");
 }
 
 function getOurId() {
@@ -237,6 +247,7 @@ function websocketServerConnect() {
         document.getElementById("peer-id").textContent = peer_id;
         ws_conn.send('HELLO ' + peer_id);
         setStatus("Registering with server");
+        setConnectButtonState("Connect");
     });
     ws_conn.addEventListener('error', onServerError);
     ws_conn.addEventListener('message', onServerMessage);
@@ -327,5 +338,6 @@ function createCall(msg) {
     if (msg != null)
         setStatus("Created peer connection for call, waiting for SDP");
 
+    setConnectButtonState("Disconnect");
     return local_stream_promise;
 }
