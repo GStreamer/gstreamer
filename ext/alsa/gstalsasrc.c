@@ -415,7 +415,29 @@ set_hwparams (GstAlsaSrc * alsa)
     GST_DEBUG_OBJECT (alsa, "periods min %u, max %u", min, max);
   }
 #endif
-
+  /* Following pulseaudio's approach in
+   * https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/commit/557c4295107dc7374c850b0bd5331dd35e8fdd0f
+   * we'll try various configuration to set the buffer time and period time as some
+   * driver can be picky on the order of the calls.
+   */
+  if (alsa->period_time != -1 && alsa->buffer_time != -1) {
+    if ((snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
+                &alsa->buffer_time, NULL) >= 0)
+        && (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
+                &alsa->period_time, NULL) >= 0)) {
+      GST_DEBUG_OBJECT (alsa, "buffer time %u period time %u set correctly",
+          alsa->buffer_time, alsa->period_time);
+      goto buffer_period_set;
+    }
+    if ((snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
+                &alsa->period_time, NULL) >= 0)
+        && (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
+                &alsa->buffer_time, NULL) >= 0)) {
+      GST_DEBUG_OBJECT (alsa, "period time %u buffer time %u set correctly",
+          alsa->period_time, alsa->buffer_time);
+      goto buffer_period_set;
+    }
+  }
   if (alsa->buffer_time != -1) {
     /* set the buffer time */
     CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
@@ -429,6 +451,7 @@ set_hwparams (GstAlsaSrc * alsa)
     GST_DEBUG_OBJECT (alsa, "period time %u", alsa->period_time);
   }
 
+buffer_period_set:
   /* write the parameters to device */
   CHECK (snd_pcm_hw_params (alsa->handle, params), set_hw_params);
 
