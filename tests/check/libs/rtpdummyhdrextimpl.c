@@ -54,6 +54,7 @@ struct _GstRTPDummyHdrExt
   guint read_count;
   guint write_count;
   guint set_attributes_count;
+  guint caps_field_value;
 
   gchar *direction;
   gchar *attributes;
@@ -85,6 +86,9 @@ gst_rtp_dummy_hdr_ext_set_caps_from_attributes (GstRTPHeaderExtension * ext,
 static gboolean
 gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
     const GstCaps * caps);
+static gboolean
+gst_rtp_dummy_hdr_ext_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
+    GstCaps * caps);
 
 static void gst_rtp_dummy_hdr_ext_finalize (GObject * object);
 
@@ -109,6 +113,8 @@ gst_rtp_dummy_hdr_ext_class_init (GstRTPDummyHdrExtClass * klass)
       gst_rtp_dummy_hdr_ext_set_attributes_from_caps;
   gstrtpheaderextension_class->set_caps_from_attributes =
       gst_rtp_dummy_hdr_ext_set_caps_from_attributes;
+  gstrtpheaderextension_class->update_non_rtp_src_caps =
+      gst_rtp_dummy_hdr_ext_update_non_rtp_src_caps;
 
   gobject_class->finalize = gst_rtp_dummy_hdr_ext_finalize;
 
@@ -188,6 +194,11 @@ gst_rtp_dummy_hdr_ext_read (GstRTPHeaderExtension * ext,
   fail_unless_equals_int (data[0], TEST_DATA_BYTE);
 
   dummy->read_count++;
+
+  if (dummy->read_count % 5 == 1) {
+    /* Every fifth buffer triggers caps change. */
+    gst_rtp_header_extension_set_wants_update_non_rtp_src_caps (ext, TRUE);
+  }
 
   return TRUE;
 }
@@ -295,4 +306,16 @@ error:
   g_free (new_direction);
   g_free (new_attrs);
   return FALSE;
+}
+
+static gboolean
+gst_rtp_dummy_hdr_ext_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
+    GstCaps * caps)
+{
+  GstRTPDummyHdrExt *dummy = GST_RTP_DUMMY_HDR_EXT (ext);
+
+  gst_caps_set_simple (caps, "dummy-hdrext-val", G_TYPE_UINT,
+      ++dummy->caps_field_value, NULL);
+
+  return TRUE;
 }
