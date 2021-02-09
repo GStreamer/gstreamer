@@ -290,9 +290,8 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
   if (remote_is_offerer || our_id) {
     soup_websocket_connection_send_text (ws_conn, "OFFER_REQUEST");
   } else {
-    GstPromise *promise;
-    promise =
-        gst_promise_new_with_change_func (on_offer_created, user_data, NULL);;
+    GstPromise *promise =
+        gst_promise_new_with_change_func (on_offer_created, NULL, NULL);
     g_signal_emit_by_name (webrtc1, "create-offer", NULL, promise);
   }
 }
@@ -573,8 +572,8 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       g_assert_not_reached ();
   }
 
-  /* Server has accepted our registration, we are ready to send commands */
   if (g_strcmp0 (text, "HELLO") == 0) {
+    /* Server has accepted our registration, we are ready to send commands */
     if (app_state != SERVER_REGISTERING) {
       cleanup_and_quit_loop ("ERROR: Received HELLO when not registering",
           APP_STATE_ERROR);
@@ -591,8 +590,9 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     } else {
       gst_println ("Waiting for connection from peer (our-id: %s)", our_id);
     }
-    /* Call has been setup by the server, now we can start negotiation */
   } else if (g_strcmp0 (text, "SESSION_OK") == 0) {
+    /* The call initiated by us has been setup by the server; now we can start
+     * negotiation */
     if (app_state != PEER_CONNECTING) {
       cleanup_and_quit_loop ("ERROR: Received SESSION_OK when not calling",
           PEER_CONNECTION_ERROR);
@@ -604,8 +604,8 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     if (!start_pipeline ())
       cleanup_and_quit_loop ("ERROR: failed to start pipeline",
           PEER_CALL_ERROR);
-    /* Handle errors */
   } else if (g_str_has_prefix (text, "ERROR")) {
+    /* Handle errors */
     switch (app_state) {
       case SERVER_CONNECTING:
         app_state = SERVER_CONNECTION_ERROR;
@@ -624,20 +624,20 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         app_state = APP_STATE_ERROR;
     }
     cleanup_and_quit_loop (text, 0);
-    /* Look for JSON messages containing SDP and ICE candidates */
   } else {
+    /* Look for JSON messages containing SDP and ICE candidates */
     JsonNode *root;
     JsonObject *object, *child;
     JsonParser *parser = json_parser_new ();
     if (!json_parser_load_from_data (parser, text, -1, NULL)) {
-      gst_printerr ("Unknown message '%s', ignoring", text);
+      gst_printerr ("Unknown message '%s', ignoring\n", text);
       g_object_unref (parser);
       goto out;
     }
 
     root = json_parser_get_root (parser);
     if (!JSON_NODE_HOLDS_OBJECT (root)) {
-      gst_printerr ("Unknown json message '%s', ignoring", text);
+      gst_printerr ("Unknown json message '%s', ignoring\n", text);
       g_object_unref (parser);
       goto out;
     }
