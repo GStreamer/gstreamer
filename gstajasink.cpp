@@ -1276,41 +1276,6 @@ restart:
                      status.acRDTSCCurrentTime, status.acFramesProcessed,
                      status.acFramesDropped, status.acBufferLevel);
 
-    // Trivial drift calculation
-    //
-    // TODO: Should probably take averages over a timespan (say 1 minute) into a
-    // ringbuffer and calculate a linear regression over them
-    // FIXME: Add some compensation by dropping/duplicating frames as needed
-    // but make this configurable
-    // FIXME: Should use transfer.acTransferStatus.acFrameStamp after
-    // AutoCirculateTransfer()
-    if (frames_renderded_start_time == GST_CLOCK_TIME_NONE &&
-        status.acRDTSCStartTime != 0 &&
-        status.acFramesProcessed + status.acFramesDropped > self->queue_size &&
-        clock) {
-      frames_renderded_start =
-          status.acFramesProcessed + status.acFramesDropped;
-      frames_renderded_start_time = gst_clock_get_time(clock);
-    }
-
-    if (clock && frames_renderded_start_time != GST_CLOCK_TIME_NONE) {
-      GstClockTime now = gst_clock_get_time(clock);
-      GstClockTime diff = now - frames_renderded_start_time;
-      guint64 frames_rendered =
-          (status.acFramesProcessed + status.acFramesDropped) -
-          frames_renderded_start;
-      guint64 frames_produced =
-          gst_util_uint64_scale(diff, self->configured_info.fps_n,
-                                self->configured_info.fps_d * GST_SECOND);
-      gdouble fps_rendered = ((gdouble)frames_rendered * GST_SECOND) / diff;
-
-      GST_TRACE_OBJECT(self,
-                       "Frames rendered %" G_GUINT64_FORMAT
-                       ", frames produced %" G_GUINT64_FORMAT
-                       ", FPS rendered %lf",
-                       frames_rendered, frames_produced, fps_rendered);
-    }
-
     // Detect if we were too slow with providing frames and report if that was
     // the case together with the amount of frames dropped
     if (frames_dropped_last == G_MAXUINT64) {
@@ -1425,6 +1390,82 @@ restart:
 
       if (item.anc_packet_list) {
         delete item.anc_packet_list;
+      }
+
+      GST_TRACE_OBJECT(
+          self,
+          "Transferred frame. "
+          "frame time %" GST_TIME_FORMAT
+          " "
+          "current frame %u "
+          "current frame time %" GST_TIME_FORMAT
+          " "
+          "frames processed %u "
+          "frames dropped %u "
+          "buffer level %u",
+          GST_TIME_ARGS(transfer.acTransferStatus.acFrameStamp.acFrameTime *
+                        100),
+          transfer.acTransferStatus.acFrameStamp.acCurrentFrame,
+          GST_TIME_ARGS(
+              transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100),
+          transfer.acTransferStatus.acFramesProcessed,
+          transfer.acTransferStatus.acFramesDropped,
+          transfer.acTransferStatus.acBufferLevel);
+
+      // Trivial drift calculation
+      //
+      // TODO: Should probably take averages over a timespan (say 1 minute) into
+      // a ringbuffer and calculate a linear regression over them
+      // FIXME: Add some compensation by dropping/duplicating frames as needed
+      // but make this configurable
+      if (frames_renderded_start_time == GST_CLOCK_TIME_NONE &&
+          transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime != 0 &&
+          transfer.acTransferStatus.acFramesProcessed +
+                  transfer.acTransferStatus.acFramesDropped >
+              self->queue_size &&
+          clock) {
+        frames_renderded_start = transfer.acTransferStatus.acFramesProcessed +
+                                 transfer.acTransferStatus.acFramesDropped;
+
+        GstClockTime now_gst = gst_clock_get_time(clock);
+        GstClockTime now_sys = g_get_real_time() * 1000;
+        GstClockTime render_time =
+            transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100;
+
+        if (render_time < now_sys) {
+          frames_renderded_start_time = now_gst - (now_sys - render_time);
+        }
+      }
+
+      if (clock && frames_renderded_start_time != GST_CLOCK_TIME_NONE) {
+        GstClockTime now_gst = gst_clock_get_time(clock);
+        GstClockTime now_sys = g_get_real_time() * 1000;
+        GstClockTime render_time =
+            transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100;
+
+        GstClockTime sys_diff;
+        if (now_sys > render_time) {
+          sys_diff = now_sys - render_time;
+        } else {
+          sys_diff = 0;
+        }
+
+        GstClockTime diff = now_gst - frames_renderded_start_time;
+        if (sys_diff < diff) diff -= sys_diff;
+
+        guint64 frames_rendered = (transfer.acTransferStatus.acFramesProcessed +
+                                   transfer.acTransferStatus.acFramesDropped) -
+                                  frames_renderded_start;
+        guint64 frames_produced =
+            gst_util_uint64_scale(diff, self->configured_info.fps_n,
+                                  self->configured_info.fps_d * GST_SECOND);
+        gdouble fps_rendered = ((gdouble)frames_rendered * GST_SECOND) / diff;
+
+        GST_TRACE_OBJECT(self,
+                         "Frames rendered %" G_GUINT64_FORMAT
+                         ", frames produced %" G_GUINT64_FORMAT
+                         ", FPS rendered %lf",
+                         frames_rendered, frames_produced, fps_rendered);
       }
 
       g_mutex_lock(&self->queue_lock);
