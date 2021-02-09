@@ -31,6 +31,9 @@
       <label for="peer-connect">Enter peer id</label>
       <input id="peer-connect" type="text" name="text">
       <input id="peer-connect-button" onclick="onConnectClicked();" type="button" value="Connect">
+      <!-- Request the peer to send the offer by sending the OFFER_REQUEST message.
+        Same as the -​-remote-offerer flag in the sendrecv C example -->
+      <input id="remote-offerer" type="checkbox" autocomplete="off"><span>Remote offerer</span>
     </div>
 
     <div>Our id is <b id="peer-id">unknown</b></div>

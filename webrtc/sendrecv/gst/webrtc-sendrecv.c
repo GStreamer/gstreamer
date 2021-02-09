@@ -285,11 +285,12 @@ on_offer_created (GstPromise * promise, gpointer user_data)
 static void
 on_negotiation_needed (GstElement * element, gpointer user_data)
 {
+  gboolean create_offer = GPOINTER_TO_INT (user_data);
   app_state = PEER_CALL_NEGOTIATING;
 
-  if (remote_is_offerer || our_id) {
+  if (remote_is_offerer) {
     soup_websocket_connection_send_text (ws_conn, "OFFER_REQUEST");
-  } else {
+  } else if (create_offer) {
     GstPromise *promise =
         gst_promise_new_with_change_func (on_offer_created, NULL, NULL);
     g_signal_emit_by_name (webrtc1, "create-offer", NULL, promise);
@@ -372,7 +373,7 @@ on_ice_gathering_state_notify (GstElement * webrtcbin, GParamSpec * pspec,
 }
 
 static gboolean
-start_pipeline (void)
+start_pipeline (gboolean create_offer)
 {
   GstStateChangeReturn ret;
   GError *error = NULL;
@@ -397,7 +398,7 @@ start_pipeline (void)
   /* This is the gstwebrtc entry point where we create the offer and so on. It
    * will be called when the pipeline goes to PLAYING. */
   g_signal_connect (webrtc1, "on-negotiation-needed",
-      G_CALLBACK (on_negotiation_needed), NULL);
+      G_CALLBACK (on_negotiation_needed), GINT_TO_POINTER (create_offer));
   /* We need to transmit this ICE candidate to the browser via the websockets
    * signalling server. Incoming ice candidates from the browser need to be
    * added by us too, see on_server_message() */
@@ -601,7 +602,17 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
 
     app_state = PEER_CONNECTED;
     /* Start negotiation (exchange SDP and ICE candidates) */
-    if (!start_pipeline ())
+    if (!start_pipeline (TRUE))
+      cleanup_and_quit_loop ("ERROR: failed to start pipeline",
+          PEER_CALL_ERROR);
+  } else if (g_strcmp0 (text, "OFFER_REQUEST") == 0) {
+    if (app_state != SERVER_REGISTERED) {
+      gst_printerr ("Received OFFER_REQUEST at a strange time, ignoring\n");
+      goto out;
+    }
+    gst_print ("Received OFFER_REQUEST, sending offer\n");
+    /* Peer wants us to start negotiation (exchange SDP and ICE candidates) */
+    if (!start_pipeline (TRUE))
       cleanup_and_quit_loop ("ERROR: failed to start pipeline",
           PEER_CALL_ERROR);
   } else if (g_str_has_prefix (text, "ERROR")) {
@@ -645,7 +656,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     /* If peer connection wasn't made yet and we are expecting peer will
      * connect to us, launch pipeline at this moment */
     if (!webrtc1 && our_id) {
-      if (!start_pipeline ()) {
+      if (!start_pipeline (FALSE)) {
         cleanup_and_quit_loop ("ERROR: failed to start pipeline",
             PEER_CALL_ERROR);
       }

@@ -29,6 +29,10 @@ function setConnectButtonState(value) {
     document.getElementById("peer-connect-button").value = value;
 }
 
+function wantRemoteOfferer() {
+   return document.getElementById("remote-offerer").checked;
+}
+
 function onConnectClicked() {
     if (document.getElementById("peer-connect-button").value == "Disconnect") {
         resetState();
@@ -137,6 +141,11 @@ function onServerMessage(event) {
             return;
         case "SESSION_OK":
             setStatus("Starting negotiation");
+            if (wantRemoteOfferer()) {
+                ws_conn.send("OFFER_REQUEST");
+                setStatus("Sent OFFER_REQUEST, waiting for offer");
+                return;
+            }
             if (!peer_connection)
                 createCall(null).then (generateOffer);
             return;
