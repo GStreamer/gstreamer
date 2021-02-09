@@ -50,7 +50,7 @@ G_DEFINE_TYPE (GstDiscovererStreamInfo, gst_discoverer_stream_info,
 static void
 gst_discoverer_stream_info_init (GstDiscovererStreamInfo * info)
 {
-  /* Nothing needs initialization */
+  info->stream_number = -1;
 }
 
 static void
@@ -142,6 +142,8 @@ gst_discoverer_info_copy_int (GstDiscovererStreamInfo * info,
 
   if (stream_map)
     g_hash_table_insert (stream_map, info, ret);
+
+  ret->stream_number = info->stream_number;
 
   return ret;
 }
@@ -717,6 +719,23 @@ gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
   return info->misc;
 }
 #endif
+
+/**
+ * gst_discoverer_stream_info_get_stream_number:
+ * @info: a #GstDiscovererStreamInfo
+ *
+ * Returns: the stream number, -1 if no index could be determined. This property
+ * acts as a unique identifier as a 'int' for the stream.
+ *
+ * Since: 1.20
+ */
+gint
+gst_discoverer_stream_info_get_stream_number (GstDiscovererStreamInfo * info)
+{
+  g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (info), -1);
+
+  return info->stream_number;
+}
 
 /* GstDiscovererContainerInfo */
 

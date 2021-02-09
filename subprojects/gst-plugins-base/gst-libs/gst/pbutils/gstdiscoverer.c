@@ -1284,6 +1284,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     }
 
     if (add_to_list) {
+      res->stream_number = dc->priv->current_info->stream_count++;
       dc->priv->current_info->stream_list =
           g_list_append (dc->priv->current_info->stream_list, res);
     } else {
@@ -1476,9 +1477,13 @@ discoverer_collect (GstDiscoverer * dc)
     else
       dc->priv->current_info->live = TRUE;
 
-    if (dc->priv->current_topology)
+    if (dc->priv->current_topology) {
+      dc->priv->current_info->stream_count = 1;
       dc->priv->current_info->stream_info = parse_stream_topology (dc,
           dc->priv->current_topology, NULL);
+      if (dc->priv->current_info->stream_info)
+        dc->priv->current_info->stream_info->stream_number = 0;
+    }
 
     /*
      * Images need some special handling. They do not have a duration, have
@@ -2385,8 +2390,9 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
   _parse_common_stream_info (sinfo, g_variant_get_child_value (common, 0),
       info);
 
-  if (!GST_IS_DISCOVERER_CONTAINER_INFO (sinfo))
+  if (!GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
     info->stream_list = g_list_append (info->stream_list, sinfo);
+  }
 
   if (!info->stream_info) {
     info->stream_info = sinfo;

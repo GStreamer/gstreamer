@@ -31,6 +31,7 @@ struct _GstDiscovererStreamInfo {
   GstToc                *toc;
   gchar                 *stream_id;
   GstStructure          *misc;
+  gint                  stream_number;
 };
 
 struct _GstDiscovererContainerInfo {
@@ -96,6 +97,8 @@ struct _GstDiscovererInfo {
   gboolean live;
   gboolean seekable;
   GPtrArray *missing_elements_details;
+
+  gint stream_count;
 
   gchar *cachefile;
   gpointer from_cache;

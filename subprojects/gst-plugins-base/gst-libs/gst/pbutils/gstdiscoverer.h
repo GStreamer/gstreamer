@@ -84,6 +84,9 @@ const GstStructure*      gst_discoverer_stream_info_get_misc(GstDiscovererStream
 GST_PBUTILS_API
 const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDiscovererStreamInfo* info);
 
+GST_PBUTILS_API
+gint                     gst_discoverer_stream_info_get_stream_number(GstDiscovererStreamInfo *info);
+
 /**
  * GstDiscovererContainerInfo:
  *

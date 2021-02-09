@@ -367,9 +367,9 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
     gst_caps_unref (caps);
   }
 
-  g_print ("%*s%s: %s\n", 2 * GPOINTER_TO_INT (depth), " ",
+  g_print ("%*s%s #%d: %s\n", 2 * GPOINTER_TO_INT (depth), " ",
       gst_discoverer_stream_info_get_stream_type_nick (info),
-      GST_STR_NULL (desc));
+      gst_discoverer_stream_info_get_stream_number (info), GST_STR_NULL (desc));
 
   if (desc) {
     g_free (desc);
