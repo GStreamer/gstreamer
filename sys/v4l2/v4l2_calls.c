@@ -1237,9 +1237,9 @@ gst_v4l2_event_to_string (guint32 event)
 }
 
 gboolean
-gst_v4l2_subscribe_event (GstV4l2Object * v4l2object, guint32 event)
+gst_v4l2_subscribe_event (GstV4l2Object * v4l2object, guint32 event, guint32 id)
 {
-  struct v4l2_event_subscription sub = {.type = event, };
+  struct v4l2_event_subscription sub = {.type = event,.id = id, };
   gint ret;
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Subscribing to '%s' event",
