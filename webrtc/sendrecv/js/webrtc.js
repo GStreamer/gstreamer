@@ -130,40 +130,38 @@ function onServerMessage(event) {
             if (!peer_connection)
                 createCall(null).then (generateOffer);
             return;
+        case "OFFER_REQUEST":
+            // The peer wants us to set up and then send an offer
+            if (!peer_connection)
+                createCall(null).then (generateOffer);
+            return;
         default:
             if (event.data.startsWith("ERROR")) {
                 handleIncomingError(event.data);
                 return;
             }
-            if (event.data.startsWith("OFFER_REQUEST")) {
-            // The peer wants us to set up and then send an offer
-                if (!peer_connection)
-                    createCall(null).then (generateOffer);
-            }
-            else {
-                // Handle incoming JSON SDP and ICE messages
-                try {
-                    msg = JSON.parse(event.data);
-                } catch (e) {
-                    if (e instanceof SyntaxError) {
-                        handleIncomingError("Error parsing incoming JSON: " + event.data);
-                    } else {
-                        handleIncomingError("Unknown error parsing response: " + event.data);
-                    }
-                    return;
-                }
-
-                // Incoming JSON signals the beginning of a call
-                if (!peer_connection)
-                    createCall(msg);
-
-                if (msg.sdp != null) {
-                    onIncomingSDP(msg.sdp);
-                } else if (msg.ice != null) {
-                    onIncomingICE(msg.ice);
+            // Handle incoming JSON SDP and ICE messages
+            try {
+                msg = JSON.parse(event.data);
+            } catch (e) {
+                if (e instanceof SyntaxError) {
+                    handleIncomingError("Error parsing incoming JSON: " + event.data);
                 } else {
-                    handleIncomingError("Unknown incoming JSON: " + msg);
+                    handleIncomingError("Unknown error parsing response: " + event.data);
                 }
+                return;
+            }
+
+            // Incoming JSON signals the beginning of a call
+            if (!peer_connection)
+                createCall(msg);
+
+            if (msg.sdp != null) {
+                onIncomingSDP(msg.sdp);
+            } else if (msg.ice != null) {
+                onIncomingICE(msg.ice);
+            } else {
+                handleIncomingError("Unknown incoming JSON: " + msg);
             }
     }
 }
