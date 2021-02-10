@@ -491,8 +491,22 @@ static gboolean
 gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src,
     struct PreferredCapsInfo *pref)
 {
-  GST_FIXME_OBJECT (v4l2src, "query dv_timings not implements");
-  return NULL;
+  GstV4l2Object *obj = v4l2src->v4l2object;
+  struct v4l2_dv_timings dv_timings = { 0, };
+
+  if (!gst_v4l2_query_dv_timings (obj, &dv_timings))
+    return FALSE;
+
+  pref->width = dv_timings.bt.width;
+  pref->height = dv_timings.bt.height;
+  /* FIXME calculate frame rate */
+
+  /* If are are not streaming (e.g. we received source-change event), lock the
+   * new timing immediatly so that TRY_FMT can properly work */
+  if (!obj->pool || !GST_V4L2_BUFFER_POOL_IS_STREAMING (obj->pool))
+    gst_v4l2_set_dv_timings (obj, &dv_timings);
+
+  return TRUE;
 }
 
 static gboolean

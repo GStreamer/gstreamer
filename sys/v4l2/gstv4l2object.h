@@ -330,6 +330,10 @@ gboolean     gst_v4l2_query_input    (GstV4l2Object * v4l2object, struct v4l2_in
 gboolean     gst_v4l2_get_output     (GstV4l2Object * v4l2object, guint32 * output);
 gboolean     gst_v4l2_set_output     (GstV4l2Object * v4l2object, guint32 output);
 
+/* dv timings */
+gboolean     gst_v4l2_set_dv_timings   (GstV4l2Object * v4l2object, struct v4l2_dv_timings *timings);
+gboolean     gst_v4l2_query_dv_timings (GstV4l2Object * v4l2object, struct v4l2_dv_timings *timings);
+
 /* frequency control */
 gboolean     gst_v4l2_get_frequency   (GstV4l2Object * v4l2object, gint tunernum, gulong * frequency);
 gboolean     gst_v4l2_set_frequency   (GstV4l2Object * v4l2object, gint tunernum, gulong frequency);

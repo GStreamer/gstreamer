@@ -41,6 +41,10 @@ G_BEGIN_DECLS
 #define GST_V4L2_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_BUFFER_POOL, GstV4l2BufferPool))
 #define GST_V4L2_BUFFER_POOL_CAST(obj) ((GstV4l2BufferPool*)(obj))
 
+/* Returns true if the pool is streaming. Must be called with stream lock
+ * held. */
+#define GST_V4L2_BUFFER_POOL_IS_STREAMING(obj) (GST_V4L2_BUFFER_POOL (obj)->streaming)
+
 /* This flow return is used to indicate that the last buffer has been dequeued
  * during draining. This should normally only occur for mem-2-mem devices. */
 #define GST_V4L2_FLOW_LAST_BUFFER GST_FLOW_CUSTOM_SUCCESS

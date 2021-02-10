@@ -1286,3 +1286,74 @@ gst_v4l2_dequeue_event (GstV4l2Object * v4l2object, struct v4l2_event * event)
 
   return TRUE;
 }
+
+gboolean
+gst_v4l2_set_dv_timings (GstV4l2Object * v4l2object,
+    struct v4l2_dv_timings * timings)
+{
+  gint ret;
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  ret = v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_DV_TIMINGS, timings);
+
+  if (ret < 0) {
+    GST_ERROR_OBJECT (v4l2object->dbg_obj, "S_DV_TIMINGS failed: %s (%i)",
+        g_strerror (errno), errno);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_query_dv_timings (GstV4l2Object * v4l2object,
+    struct v4l2_dv_timings * timings)
+{
+  gint ret;
+
+  if (!GST_V4L2_IS_OPEN (v4l2object))
+    return FALSE;
+
+  ret = v4l2object->ioctl (v4l2object->video_fd, VIDIOC_QUERY_DV_TIMINGS,
+      timings);
+
+  if (ret < 0) {
+    switch (errno) {
+      case ENODATA:
+        GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+            "QUERY_DV_TIMINGS not supported for this input/output");
+        break;
+      case ENOLINK:
+        GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+            "No timings could be detected because no signal was found.");
+        break;
+      case ENOLCK:
+        GST_INFO_OBJECT (v4l2object->dbg_obj,
+            "The signal was unstable and the hardware could not lock on to it.");
+        break;
+      case ERANGE:
+        GST_INFO_OBJECT (v4l2object->dbg_obj,
+            "Timings were found, but they are out of range of the hardware capabilities.");
+        break;
+      default:
+        GST_ERROR_OBJECT (v4l2object->dbg_obj,
+            "QUERY_DV_TIMINGS failed: %s (%i)", g_strerror (errno), errno);
+        break;
+    }
+
+    return FALSE;
+  }
+
+  if (timings->type != V4L2_DV_BT_656_1120) {
+    GST_FIXME_OBJECT (v4l2object->dbg_obj, "Unsupported DV Timings type (%i)",
+        timings->type);
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT (v4l2object->dbg_obj, "Detected DV Timings (%i x %i)",
+      timings->bt.width, timings->bt.height);
+
+  return TRUE;
+}
