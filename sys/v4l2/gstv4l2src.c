@@ -99,6 +99,14 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Src, gst_v4l2src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
         gst_v4l2src_video_orientation_interface_init));
 
+struct PreferredCapsInfo
+{
+  gint width;
+  gint height;
+  gint fps_n;
+  gint fps_d;
+};
+
 static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
 
 /* element methods */
@@ -116,7 +124,7 @@ static gboolean gst_v4l2src_decide_allocation (GstBaseSrc * src,
     GstQuery * query);
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 static GstCaps *gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps,
-    GstStructure * pref_s);
+    struct PreferredCapsInfo *pref);
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
 
 static void gst_v4l2src_set_property (GObject * object, guint prop_id,
@@ -248,14 +256,6 @@ gst_v4l2src_get_property (GObject * object,
   }
 }
 
-struct PreferedCapsInfo
-{
-  gint width;
-  gint height;
-  gint fps_n;
-  gint fps_d;
-};
-
 static gboolean
 gst_vl42_src_fixate_fields (GQuark field_id, GValue * value, gpointer user_data)
 {
@@ -274,7 +274,7 @@ gst_vl42_src_fixate_fields (GQuark field_id, GValue * value, gpointer user_data)
 
 static void
 gst_v4l2_src_fixate_struct_with_preference (GstStructure * s,
-    struct PreferedCapsInfo *pref)
+    struct PreferredCapsInfo *pref)
 {
   if (gst_structure_has_field (s, "width"))
     gst_structure_fixate_field_nearest_int (s, "width", pref->width);
@@ -308,7 +308,7 @@ gst_v4l2_src_parse_fixed_struct (GstStructure * s,
 /* TODO Consider framerate */
 static gint
 gst_v4l2src_fixed_caps_compare (GstCaps * caps_a, GstCaps * caps_b,
-    struct PreferedCapsInfo *pref)
+    struct PreferredCapsInfo *pref)
 {
   GstStructure *a, *b;
   gint aw = G_MAXINT, ah = G_MAXINT, ad = G_MAXINT;
@@ -389,12 +389,9 @@ gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps,
 }
 
 static GstCaps *
-gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
+gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps,
+    struct PreferredCapsInfo *pref)
 {
-  /* Let's prefer a good resolutiion as of today's standard. */
-  struct PreferedCapsInfo pref = {
-    3840, 2160, 120, 1
-  };
   GstV4l2Src *v4l2src = GST_V4L2SRC (basesrc);
   GstV4l2Object *obj = v4l2src->v4l2object;
   GList *caps_list = NULL;
@@ -403,17 +400,8 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstCaps *fcaps = NULL;
 
-  GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
-
-  if (pref_s) {
-    pref_s = gst_structure_copy (pref_s);
-    gst_v4l2_src_fixate_struct_with_preference (pref_s, &pref);
-    gst_v4l2_src_parse_fixed_struct (pref_s, &pref.width, &pref.height,
-        &pref.fps_n, &pref.fps_d);
-    gst_structure_free (pref_s);
-  }
-
-  GST_DEBUG_OBJECT (basesrc, "Preferred size %ix%i", pref.width, pref.height);
+  GST_DEBUG_OBJECT (basesrc, "Fixating caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (basesrc, "Preferred size %ix%i", pref->width, pref->height);
 
   /* Sort the structures to get the caps that is nearest to our preferences,
    * first. Use single struct caps for sorting so we preserve the features.  */
@@ -421,10 +409,10 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
     GstCaps *tmp = gst_caps_copy_nth (caps, i);
 
     s = gst_caps_get_structure (tmp, 0);
-    gst_v4l2_src_fixate_struct_with_preference (s, &pref);
+    gst_v4l2_src_fixate_struct_with_preference (s, pref);
 
     caps_list = g_list_insert_sorted_with_data (caps_list, tmp,
-        (GCompareDataFunc) gst_v4l2src_fixed_caps_compare, &pref);
+        (GCompareDataFunc) gst_v4l2src_fixed_caps_compare, pref);
   }
 
   gst_caps_unref (caps);
@@ -499,24 +487,25 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
   return fcaps;
 }
 
-static GstStructure *
-gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src)
+static gboolean
+gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src,
+    struct PreferredCapsInfo *pref)
 {
   GST_FIXME_OBJECT (v4l2src, "query dv_timings not implements");
   return NULL;
 }
 
-static GstStructure *
-gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src)
+static gboolean
+gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src,
+    struct PreferredCapsInfo *pref)
 {
   struct v4l2_input in = { 0, };
-  GstStructure *pref = NULL;
 
   if (!gst_v4l2_get_input (v4l2src->v4l2object, &in.index))
-    return NULL;
+    return FALSE;
 
   if (!gst_v4l2_query_input (v4l2src->v4l2object, &in))
-    return NULL;
+    return FALSE;
 
   GST_INFO_OBJECT (v4l2src, "Detect input %u as `%s`", in.index, in.name);
 
@@ -536,18 +525,21 @@ gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src)
 
   if (in.capabilities & V4L2_IN_CAP_NATIVE_SIZE) {
     GST_FIXME_OBJECT (v4l2src, "missing support for native video size");
+    return FALSE;
   } else if (in.capabilities & V4L2_IN_CAP_DV_TIMINGS) {
-    return gst_v4l2src_query_preferred_dv_timings (v4l2src);
+    return gst_v4l2src_query_preferred_dv_timings (v4l2src, pref);
   } else if (in.capabilities & V4L2_IN_CAP_STD) {
     GST_FIXME_OBJECT (v4l2src, "missing support for video standards");
+    return FALSE;
   }
 
-  return pref;
+  return FALSE;
 }
 
 static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 {
+  GstV4l2Src *v4l2src = GST_V4L2SRC (basesrc);
   GstCaps *thiscaps;
   GstCaps *caps = NULL;
   GstCaps *peercaps = NULL;
@@ -580,20 +572,29 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   if (caps) {
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      GstStructure *pref = NULL;
+      /* Let's prefer a good resolution as of today's standard. */
+      struct PreferredCapsInfo pref = {
+        3840, 2160, 120, 1
+      };
+      gboolean have_pref;
 
       /* For drivers that has DV timings or other default size query
        * capabilities, we will prefer that resolution. */
-      pref = gst_v4l2src_query_preferred_size (GST_V4L2SRC (basesrc));
+      have_pref = gst_v4l2src_query_preferred_size (v4l2src, &pref);
 
       /* otherwise consider the first structure from peercaps to be a
        * preference. This is useful for matching a reported native display,
        * or simply to avoid transformation to happen downstream. */
-      if (!pref && peercaps && !gst_caps_is_any (peercaps))
-        pref = gst_structure_copy (gst_caps_get_structure (peercaps, 0));
+      if (!have_pref && peercaps && !gst_caps_is_any (peercaps)) {
+        GstStructure *pref_s = gst_caps_get_structure (peercaps, 0);
+        pref_s = gst_structure_copy (pref_s);
+        gst_v4l2_src_fixate_struct_with_preference (pref_s, &pref);
+        gst_v4l2_src_parse_fixed_struct (pref_s, &pref.width, &pref.height,
+            &pref.fps_n, &pref.fps_d);
+        gst_structure_free (pref_s);
+      }
 
-      caps = gst_v4l2src_fixate (basesrc, caps, pref);
-      gst_structure_free (pref);
+      caps = gst_v4l2src_fixate (basesrc, caps, &pref);
 
       /* Fixating may fail as we now set the selected format */
       if (!caps) {
