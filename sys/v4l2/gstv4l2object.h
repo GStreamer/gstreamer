@@ -136,7 +136,6 @@ struct _GstV4l2Object {
   GstV4l2IOMode mode;
 
   gboolean active;
-  gboolean streaming;
 
   /* the current format */
   struct v4l2_fmtdesc *fmtdesc;
