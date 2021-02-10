@@ -55,23 +55,25 @@ typedef enum {
  *
  * Modes of caps intersection
  *
- * @GST_CAPS_INTERSECT_ZIG_ZAG tries to preserve overall order of both caps
+ * %GST_CAPS_INTERSECT_ZIG_ZAG tries to preserve overall order of both caps
  * by iterating on the caps' structures as the following matrix shows:
- * |[
+ *
+ * ```
  *          caps1
  *       +-------------
  *       | 1  2  4  7
  * caps2 | 3  5  8 10
  *       | 6  9 11 12
- * ]|
+ * ```
+ *
  * Used when there is no explicit precedence of one caps over the other. e.g.
  * tee's sink pad getcaps function, it will probe its src pad peers' for their
  * caps and intersect them with this mode.
  *
- * @GST_CAPS_INTERSECT_FIRST is useful when an element wants to preserve
+ * %GST_CAPS_INTERSECT_FIRST is useful when an element wants to preserve
  * another element's caps priority order when intersecting with its own caps.
- * Example: If caps1 is [A, B, C] and caps2 is [E, B, D, A], the result
- * would be [A, B], maintaining the first caps priority on the intersection.
+ * Example: If caps1 is `[A, B, C]` and caps2 is `[E, B, D, A]`, the result
+ * would be `[A, B]`, maintaining the first caps priority on the intersection.
  */
 typedef enum {
   GST_CAPS_INTERSECT_ZIG_ZAG            =  0,
@@ -114,8 +116,7 @@ typedef enum {
  * GST_CAPS_IS_SIMPLE:
  * @caps: the #GstCaps instance to check
  *
- * Convenience macro that checks if the number of structures in the given caps
- * is exactly one.
+ * Checks if the number of structures in the given caps is exactly one.
  */
 #define GST_CAPS_IS_SIMPLE(caps) (gst_caps_get_size(caps) == 1)
 
@@ -143,7 +144,7 @@ GST_API GstCaps * _gst_caps_none;
  * GST_CAPS_FLAGS:
  * @caps: a #GstCaps.
  *
- * A flags word containing #GstCapsFlags flags set on this caps.
+ * Gets a flags word containing #GstCapsFlags flags set on this caps.
  */
 #define GST_CAPS_FLAGS(caps)                    GST_MINI_OBJECT_FLAGS(caps)
 
@@ -152,14 +153,14 @@ GST_API GstCaps * _gst_caps_none;
  * GST_CAPS_REFCOUNT:
  * @caps: a #GstCaps
  *
- * Get access to the reference count field of the caps
+ * Gives access to the reference count field of the caps
  */
 #define GST_CAPS_REFCOUNT(caps)                 GST_MINI_OBJECT_REFCOUNT(caps)
 /**
  * GST_CAPS_REFCOUNT_VALUE:
  * @caps: a #GstCaps
  *
- * Get the reference count value of the caps.
+ * Gets the reference count value of the caps.
  */
 #define GST_CAPS_REFCOUNT_VALUE(caps)           GST_MINI_OBJECT_REFCOUNT_VALUE(caps)
 
@@ -291,7 +292,7 @@ struct _GstCaps {
  * @caps: the cached #GstCaps
  * @string: a string describing a caps
  *
- * Datastructure to initialize #GstCaps from a string description usually
+ * Data structure to initialize #GstCaps from a string description usually
  * used in conjunction with GST_STATIC_CAPS() and gst_static_caps_get() to
  * instantiate a #GstCaps.
  */
