@@ -493,18 +493,38 @@ gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src,
 {
   GstV4l2Object *obj = v4l2src->v4l2object;
   struct v4l2_dv_timings dv_timings = { 0, };
+  const struct v4l2_bt_timings *bt = &dv_timings.bt;
+  gint tot_width, tot_height;
+  gint gcd;
 
   if (!gst_v4l2_query_dv_timings (obj, &dv_timings))
     return FALSE;
 
-  pref->width = dv_timings.bt.width;
-  pref->height = dv_timings.bt.height;
-  /* FIXME calculate frame rate */
+  pref->width = bt->width;
+  pref->height = bt->height;
+
+  tot_height = bt->height +
+      bt->vfrontporch + bt->vsync + bt->vbackporch +
+      bt->il_vfrontporch + bt->il_vsync + bt->il_vbackporch;
+  tot_width = bt->width + bt->hfrontporch + bt->hsync + bt->hbackporch;
+
+  pref->fps_n = bt->pixelclock;
+  pref->fps_d = tot_width * tot_height;
+
+  if (bt->interlaced)
+    pref->fps_d /= 2;
+
+  gcd = gst_util_greatest_common_divisor (pref->fps_n, pref->fps_d);
+  pref->fps_n /= gcd;
+  pref->fps_d /= gcd;
 
   /* If are are not streaming (e.g. we received source-change event), lock the
    * new timing immediatly so that TRY_FMT can properly work */
   if (!obj->pool || !GST_V4L2_BUFFER_POOL_IS_STREAMING (obj->pool))
     gst_v4l2_set_dv_timings (obj, &dv_timings);
+
+  GST_INFO_OBJECT (v4l2src, "Using DV Timings: %i x %i (%i/%i fps)",
+      pref->width, pref->height, pref->fps_n, pref->fps_d);
 
   return TRUE;
 }
@@ -922,6 +942,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
          * streamoff in order to allow locking a new DV_TIMING which will
          * influence the output of TRY_FMT */
         gst_v4l2src_stop (GST_BASE_SRC (src));
+        gst_caps_replace (&obj->probed_caps, NULL);
 
         /* Force renegotiation */
         v4l2src->renegotiation_adjust = v4l2src->offset + 1;

@@ -1352,7 +1352,7 @@ gst_v4l2_query_dv_timings (GstV4l2Object * v4l2object,
     return FALSE;
   }
 
-  GST_INFO_OBJECT (v4l2object->dbg_obj, "Detected DV Timings (%i x %i)",
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Detected DV Timings (%i x %i)",
       timings->bt.width, timings->bt.height);
 
   return TRUE;
