@@ -903,7 +903,21 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
         GST_INFO_OBJECT (v4l2src, "Resolution change detected.");
-        gst_base_src_negotiate (GST_BASE_SRC (src));
+
+        /* It is required to always cycle through streamoff, we also need to
+         * streamoff in order to allow locking a new DV_TIMING which will
+         * influence the output of TRY_FMT */
+        gst_v4l2src_stop (GST_BASE_SRC (src));
+
+        /* Force renegotiation */
+        v4l2src->renegotiation_adjust = v4l2src->offset + 1;
+        v4l2src->pending_set_fmt = TRUE;
+
+        if (!gst_base_src_negotiate (GST_BASE_SRC (src))) {
+          ret = GST_FLOW_NOT_NEGOTIATED;
+          goto error;
+        }
+
         continue;
       }
       goto alloc_failed;
