@@ -29,6 +29,9 @@ GST_DEBUG_CATEGORY_EXTERN (rtp_session_debug);
 #define DELTA_UNIT (250 * GST_USECOND)
 #define MAX_TS_DELTA (0xff * DELTA_UNIT)
 
+#define STATUS_VECTOR_MAX_CAPACITY 14
+#define STATUS_VECTOR_TWO_BIT_MAX_CAPACITY 7
+
 typedef enum
 {
   RTP_TWCC_CHUNK_TYPE_RUN_LENGTH = 0,
@@ -83,6 +86,7 @@ struct _RTPTWCCManager
   guint64 recv_media_ssrc;
 
   guint16 expected_recv_seqnum;
+  guint16 packet_count_no_marker;
 
   gboolean first_fci_parse;
   guint16 expected_parsed_seqnum;
@@ -216,7 +220,7 @@ rtp_twcc_write_run_length_chunk (GArray * packet_chunks,
     guint16 data = 0;
     guint len = MIN (run_length - written, 8191);
 
-    GST_LOG ("Writing a run-lenght of %u with status %u", len, status);
+    GST_LOG ("Writing a run-length of %u with status %u", len, status);
 
     gst_bit_writer_init_with_data (&writer, (guint8 *) & data, 2, FALSE);
     gst_bit_writer_put_bits_uint8 (&writer, RTP_TWCC_CHUNK_TYPE_RUN_LENGTH, 1);
@@ -276,7 +280,7 @@ chunk_bit_writer_get_available_slots (ChunkBitWriter * writer)
 static guint
 chunk_bit_writer_get_total_slots (ChunkBitWriter * writer)
 {
-  return 14 / writer->symbol_size;
+  return STATUS_VECTOR_MAX_CAPACITY / writer->symbol_size;
 }
 
 static void
@@ -359,13 +363,43 @@ run_lenght_helper_update (RunLengthHelper * rlh, RecvPacket * pkt)
   }
 }
 
+static guint
+_get_max_packets_capacity (guint symbol_size)
+{
+  if (symbol_size == 2)
+    return STATUS_VECTOR_TWO_BIT_MAX_CAPACITY;
+
+  return STATUS_VECTOR_MAX_CAPACITY;
+}
+
+static gboolean
+_pkt_fits_run_length_chunk (RecvPacket * pkt, guint packets_per_chunks,
+    guint remaining_packets)
+{
+  if (pkt->missing_run == 0) {
+    /* we have more or the same equal packets than the ones we can write in to a status chunk */
+    if (pkt->equal_run >= packets_per_chunks)
+      return TRUE;
+
+    /* we have more than one equal and not enough space for the remainings */
+    if (pkt->equal_run > 1 && remaining_packets > STATUS_VECTOR_MAX_CAPACITY)
+      return TRUE;
+
+    /* we have all equal packets for the remaining to write */
+    if (pkt->equal_run == remaining_packets)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 rtp_twcc_write_chunks (GArray * packet_chunks,
     GArray * twcc_packets, guint symbol_size)
 {
   ChunkBitWriter writer;
   guint i;
-  guint bits_per_chunks = 7 * symbol_size;
+  guint packets_per_chunks = _get_max_packets_capacity (symbol_size);
 
   chunk_bit_writer_init (&writer, packet_chunks, symbol_size);
 
@@ -373,21 +407,26 @@ rtp_twcc_write_chunks (GArray * packet_chunks,
     RecvPacket *pkt = &g_array_index (twcc_packets, RecvPacket, i);
     guint remaining_packets = twcc_packets->len - i;
 
+    GST_LOG
+        ("About to write pkt: #%u missing_run: %u equal_run: %u status: %u, remaining_packets: %u",
+        pkt->seqnum, pkt->missing_run, pkt->equal_run, pkt->status,
+        remaining_packets);
+
     /* we can only start a run-length chunk if the status-chunk is
        completed */
     if (chunk_bit_writer_is_empty (&writer)) {
       /* first write in any preceeding gaps, we use run-length
          if it would take up more than one chunk (14/7) */
-      if (pkt->missing_run > bits_per_chunks) {
+      if (pkt->missing_run > packets_per_chunks) {
         rtp_twcc_write_run_length_chunk (packet_chunks,
             RTP_TWCC_PACKET_STATUS_NOT_RECV, pkt->missing_run);
       }
 
       /* we have a run of the same status, write a run-length chunk and skip
          to the next point */
-      if (pkt->missing_run == 0 &&
-          (pkt->equal_run > bits_per_chunks ||
-              pkt->equal_run == remaining_packets)) {
+      if (_pkt_fits_run_length_chunk (pkt, packets_per_chunks,
+              remaining_packets)) {
+
         rtp_twcc_write_run_length_chunk (packet_chunks,
             pkt->status, pkt->equal_run);
         i += pkt->equal_run - 1;
@@ -546,24 +585,7 @@ rtp_twcc_manager_create_feedback (RTPTWCCManager * twcc)
 static gboolean
 _exceeds_max_packets (RTPTWCCManager * twcc, guint16 seqnum)
 {
-  RecvPacket *first, *last;
-  guint16 packet_count;
-
-  if (twcc->recv_packets->len == 0)
-    return FALSE;
-
-  /* find the delta betwen first stored packet and this seqnum */
-  first = &g_array_index (twcc->recv_packets, RecvPacket, 0);
-  packet_count = seqnum - first->seqnum + 1;
-  if (packet_count > twcc->max_packets_per_rtcp)
-    return TRUE;
-
-  /* then find the delta between last stored packet and this seqnum */
-  last =
-      &g_array_index (twcc->recv_packets, RecvPacket,
-      twcc->recv_packets->len - 1);
-  packet_count = seqnum - (last->seqnum + 1);
-  if (packet_count > twcc->max_packets_per_rtcp)
+  if (twcc->recv_packets->len + 1 > twcc->max_packets_per_rtcp)
     return TRUE;
 
   return FALSE;
@@ -578,13 +600,20 @@ _many_packets_some_lost (RTPTWCCManager * twcc, guint16 seqnum)
   RecvPacket *first;
   guint16 packet_count;
   guint received_packets = twcc->recv_packets->len;
+  guint lost_packets;
   if (received_packets == 0)
     return FALSE;
 
   first = &g_array_index (twcc->recv_packets, RecvPacket, 0);
   packet_count = seqnum - first->seqnum + 1;
-  /* packet-count larger than recevied-packets means we have lost packets */
-  if (packet_count >= 30 && packet_count > received_packets)
+
+  /* check if we lost half of the threshold */
+  lost_packets = packet_count - received_packets;
+  if (received_packets >= 30 && lost_packets >= 60)
+    return TRUE;
+
+  /* we have lost the marker bit for some and lost some */
+  if (twcc->packet_count_no_marker >= 10 && lost_packets >= 60)
     return TRUE;
 
   return FALSE;
@@ -621,12 +650,26 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
     return FALSE;
   }
 
+  if (twcc->recv_packets->len > 0) {
+    RecvPacket *last = &g_array_index (twcc->recv_packets, RecvPacket,
+        twcc->recv_packets->len - 1);
+
+    diff = gst_rtp_buffer_compare_seqnum (last->seqnum, seqnum);
+    if (diff == 0) {
+      GST_INFO ("Received duplicate packet (%u), dropping", seqnum);
+      return FALSE;
+    }
+  }
+
   /* store the packet for Transport-wide RTCP feedback message */
   recv_packet_init (&packet, seqnum, pinfo);
   g_array_append_val (twcc->recv_packets, packet);
   twcc->last_seqnum = seqnum;
   GST_LOG ("Receive: twcc-seqnum: %u, marker: %d, ts: %" GST_TIME_FORMAT,
       seqnum, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
+
+  if (!pinfo->marker)
+    twcc->packet_count_no_marker++;
 
   /* are we sending on an interval, or based on marker bit */
   if (GST_CLOCK_TIME_IS_VALID (twcc->feedback_interval)) {
@@ -644,6 +687,8 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
   } else if (pinfo->marker || _many_packets_some_lost (twcc, seqnum)) {
     rtp_twcc_manager_create_feedback (twcc);
     send_feedback = TRUE;
+
+    twcc->packet_count_no_marker = 0;
   }
 
   return send_feedback;
