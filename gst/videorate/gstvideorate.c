@@ -172,6 +172,8 @@ static GParamSpec *pspec_duplicate = NULL;
 
 #define gst_video_rate_parent_class parent_class
 G_DEFINE_TYPE (GstVideoRate, gst_video_rate, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (videorate, "videorate",
+    GST_RANK_NONE, GST_TYPE_VIDEO_RATE);
 
 static void
 gst_video_rate_class_init (GstVideoRateClass * klass)
@@ -1906,8 +1908,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (video_rate_debug, "videorate", 0,
       "VideoRate stream fixer");
 
-  return gst_element_register (plugin, "videorate", GST_RANK_NONE,
-      GST_TYPE_VIDEO_RATE);
+  return GST_ELEMENT_REGISTER (videorate, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

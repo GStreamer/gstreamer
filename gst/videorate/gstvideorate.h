@@ -75,5 +75,7 @@ struct _GstVideoRate
   gdouble pending_rate;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (videorate);
+
 G_END_DECLS
 #endif /* __GST_VIDEO_RATE_H__ */
