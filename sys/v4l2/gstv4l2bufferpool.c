@@ -1122,9 +1122,14 @@ again:
     if (!gst_v4l2_dequeue_event (pool->obj, &event))
       goto dqevent_failed;
 
-    if (event.type != V4L2_EVENT_SOURCE_CHANGE ||
-        (event.u.src_change.changes & V4L2_EVENT_SRC_CH_RESOLUTION) == 0) {
+    if (event.type != V4L2_EVENT_SOURCE_CHANGE) {
       GST_INFO_OBJECT (pool, "Received unhandled event, ignoring.");
+      goto again;
+    }
+
+    if ((event.u.src_change.changes & V4L2_EVENT_SRC_CH_RESOLUTION) == 0) {
+      GST_DEBUG_OBJECT (pool,
+          "Received non-resolution source-change, ignoring.");
       goto again;
     }
 
