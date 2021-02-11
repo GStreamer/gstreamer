@@ -520,8 +520,11 @@ gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src,
 
   /* If are are not streaming (e.g. we received source-change event), lock the
    * new timing immediatly so that TRY_FMT can properly work */
-  if (!obj->pool || !GST_V4L2_BUFFER_POOL_IS_STREAMING (obj->pool))
+  if (!obj->pool || !GST_V4L2_BUFFER_POOL_IS_STREAMING (obj->pool)) {
     gst_v4l2_set_dv_timings (obj, &dv_timings);
+    /* Setting a new DV timings invalidates the probed caps. */
+    gst_caps_replace (&obj->probed_caps, NULL);
+  }
 
   GST_INFO_OBJECT (v4l2src, "Using DV Timings: %i x %i (%i/%i fps)",
       pref->width, pref->height, pref->fps_n, pref->fps_d);
@@ -578,6 +581,17 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   GstCaps *caps = NULL;
   GstCaps *peercaps = NULL;
   gboolean result = FALSE;
+  /* Let's prefer a good resolution as of today's standard. */
+  struct PreferredCapsInfo pref = {
+    3840, 2160, 120, 1
+  };
+  gboolean have_pref;
+
+  /* For drivers that has DV timings or other default size query
+   * capabilities, we will prefer that resolution. This must happen before we
+   * probe the caps, as locking DV Timings or standards will change result of
+   * the caps enumeration. */
+  have_pref = gst_v4l2src_query_preferred_size (v4l2src, &pref);
 
   /* first see what is possible on our source pad */
   thiscaps = gst_pad_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
@@ -606,15 +620,6 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   if (caps) {
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      /* Let's prefer a good resolution as of today's standard. */
-      struct PreferredCapsInfo pref = {
-        3840, 2160, 120, 1
-      };
-      gboolean have_pref;
-
-      /* For drivers that has DV timings or other default size query
-       * capabilities, we will prefer that resolution. */
-      have_pref = gst_v4l2src_query_preferred_size (v4l2src, &pref);
 
       /* otherwise consider the first structure from peercaps to be a
        * preference. This is useful for matching a reported native display,
@@ -942,7 +947,6 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
          * streamoff in order to allow locking a new DV_TIMING which will
          * influence the output of TRY_FMT */
         gst_v4l2src_stop (GST_BASE_SRC (src));
-        gst_caps_replace (&obj->probed_caps, NULL);
 
         /* Force renegotiation */
         v4l2src->renegotiation_adjust = v4l2src->offset + 1;
