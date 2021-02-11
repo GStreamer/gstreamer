@@ -59,6 +59,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_cd_paranoia_src_debug);
 
 #define gst_cd_paranoia_src_parent_class parent_class
 G_DEFINE_TYPE (GstCdParanoiaSrc, gst_cd_paranoia_src, GST_TYPE_AUDIO_CD_SRC);
+GST_ELEMENT_REGISTER_DEFINE (cdparanoiasrc, "cdparanoiasrc", GST_RANK_SECONDARY,
+    GST_TYPE_CD_PARANOIA_SRC);
 
 static void gst_cd_paranoia_src_finalize (GObject * obj);
 static void gst_cd_paranoia_src_get_property (GObject * object, guint prop_id,
@@ -511,12 +513,12 @@ gst_cd_paranoia_src_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean ret = FALSE;
+
   GST_DEBUG_CATEGORY_INIT (gst_cd_paranoia_src_debug, "cdparanoiasrc", 0,
       "CD Paranoia Source");
 
-  if (!gst_element_register (plugin, "cdparanoiasrc", GST_RANK_SECONDARY,
-          GST_TYPE_CD_PARANOIA_SRC))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (cdparanoiasrc, plugin);
 
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
@@ -525,7 +527,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

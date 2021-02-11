@@ -94,6 +94,8 @@ struct _GstCdParanoiaSrcClass {
   void (*uncorrected_error)	(GstCdParanoiaSrc * src, gint sector);
 };
 
+GST_ELEMENT_REGISTER_DECLARE (cdparanoiasrc);
+
 GType    gst_cd_paranoia_src_get_type (void);
 
 G_END_DECLS
