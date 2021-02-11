@@ -1053,8 +1053,6 @@ gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * decoder,
       GST_TIME_ARGS (frame->pts));
   ret = klass->output_picture (decoder, frame, to_output);
 
-  gst_video_codec_frame_unref (frame);
-
   return ret;
 }
 
@@ -1159,6 +1157,7 @@ gst_mpeg2_decoder_handle_frame (GstVideoDecoder * decoder,
   ret = gst_mpeg2_decoder_output_current_picture (self);
   gst_mpeg2_picture_clear (&priv->current_picture);
   gst_mpeg2_picture_clear (&priv->first_field);
+  gst_video_codec_frame_unref (priv->current_frame);
   priv->current_frame = NULL;
   return ret;
 
