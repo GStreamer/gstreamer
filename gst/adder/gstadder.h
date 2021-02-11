@@ -69,6 +69,8 @@ struct _GstAdder {
   gboolean send_caps;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (adder);
+
 #define GST_TYPE_ADDER_PAD (gst_adder_pad_get_type())
 G_DECLARE_FINAL_TYPE (GstAdderPad, gst_adder_pad, GST, ADDER_PAD, GstPad)
 
