@@ -1,5 +1,6 @@
 dv_sources = [
   'gstdv.c',
+  'gstdvelement.c',
   'gstdvdec.c',
   'gstdvdemux.c',
   'gstsmptetimecode.c',

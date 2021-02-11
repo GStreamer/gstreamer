@@ -45,6 +45,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
+#include "gstdvelements.h"
 #include "gstdvdec.h"
 
 /* sizes of one input buffer */
@@ -131,6 +132,8 @@ gst_dvdec_quality_get_type (void)
 
 #define gst_dvdec_parent_class parent_class
 G_DEFINE_TYPE (GstDVDec, gst_dvdec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dvdec, "dvdec", GST_RANK_MARGINAL,
+    GST_TYPE_DVDEC, dv_element_init (plugin));
 
 static GstFlowReturn gst_dvdec_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);

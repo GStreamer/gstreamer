@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *               <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Julian Bouzas <julian.bouzas@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,25 +19,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include "gstdvelements.h"
+#ifndef __GST_DV_ELEMENTS_H__
+#define __GST_DV_ELEMENTS_H__
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (dvdemux, plugin);
-  ret |= GST_ELEMENT_REGISTER (dvdec, plugin);
+#include <gst/gst.h>
+#include <gst/video/video.h>
 
-  return ret;
-}
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    dv,
-    "DV demuxer and decoder based on libdv (libdv.sf.net)",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+G_BEGIN_DECLS
+
+void dv_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (dvdemux);
+GST_ELEMENT_REGISTER_DECLARE (dvdec);
+
+
+G_END_DECLS
+
+
+#endif /* __GST_DV_ELEMENTS_H__ */

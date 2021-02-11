@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include <gst/audio/audio.h>
+#include "gstdvelements.h"
 #include "gstdvdemux.h"
 #include "gstsmptetimecode.h"
 
@@ -130,6 +131,8 @@ static GstStaticPadTemplate audio_src_temp = GST_STATIC_PAD_TEMPLATE ("audio",
 
 #define gst_dvdemux_parent_class parent_class
 G_DEFINE_TYPE (GstDVDemux, gst_dvdemux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dvdemux, "dvdemux", GST_RANK_PRIMARY,
+    GST_TYPE_DVDEMUX, dv_element_init (plugin));
 
 static void gst_dvdemux_finalize (GObject * object);
 

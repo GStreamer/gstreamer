@@ -22,21 +22,15 @@
 #include "config.h"
 #endif
 
+#include <libdv/dv.h>
 #include "gstdvelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+dv_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (dvdemux, plugin);
-  ret |= GST_ELEMENT_REGISTER (dvdec, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    dv_init (0, 0);
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    dv,
-    "DV demuxer and decoder based on libdv (libdv.sf.net)",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
