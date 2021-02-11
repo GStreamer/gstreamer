@@ -109,6 +109,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_video_test_src_parent_class parent_class
 G_DEFINE_TYPE (GstVideoTestSrc, gst_video_test_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE (videotestsrc, "videotestsrc",
+    GST_RANK_NONE, GST_TYPE_VIDEO_TEST_SRC);
 
 static void gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     int pattern_type);
@@ -1269,8 +1271,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (video_test_src_debug, "videotestsrc", 0,
       "Video Test Source");
 
-  return gst_element_register (plugin, "videotestsrc", GST_RANK_NONE,
-      GST_TYPE_VIDEO_TEST_SRC);
+  return GST_ELEMENT_REGISTER (videotestsrc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

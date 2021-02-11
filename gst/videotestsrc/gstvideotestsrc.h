@@ -198,6 +198,8 @@ struct _GstVideoTestSrc {
   gpointer *lines;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (videotestsrc);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_TEST_SRC_H__ */
