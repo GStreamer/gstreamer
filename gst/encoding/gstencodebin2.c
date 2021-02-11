@@ -23,8 +23,10 @@
 #endif
 
 #include <string.h>
+#include "gstencodingelements.h"
 #include "gstencodebasebin.h"
 #include "gstencodebin2.h"
+
 
 /**
  * SECTION:element-encodebin2
@@ -57,6 +59,8 @@ struct _GstEncodeBin2
 };
 
 G_DEFINE_TYPE (GstEncodeBin2, gst_encode_bin2, GST_TYPE_ENCODE_BASE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (encodebin2, "encodebin2", GST_RANK_NONE,
+    gst_encode_bin2_get_type (), encoding_element_init (plugin));
 
 static void
 gst_encode_bin2_class_init (GstEncodeBin2Class * klass)

@@ -6,6 +6,7 @@ encoding_sources = [
   'gststreamcombiner.c',
   'gststreamsplitter.c',
   'plugin.c',
+  'gstencodingelements.c',
 ]
 
 gstencoding = library('gstencoding',

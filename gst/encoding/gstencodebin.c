@@ -83,6 +83,7 @@
  *
  */
 
+#include "gstencodingelements.h"
 #include "gstencodebin.h"
 
 struct _GstEncodeBin
@@ -91,6 +92,8 @@ struct _GstEncodeBin
 };
 
 G_DEFINE_TYPE (GstEncodeBin, gst_encode_bin, GST_TYPE_ENCODE_BASE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (encodebin, "encodebin", GST_RANK_NONE,
+    gst_encode_bin_get_type (), encoding_element_init (plugin));
 
 static GstStaticPadTemplate muxer_src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,

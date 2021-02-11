@@ -19,27 +19,28 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <gst/gst.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include "gstencodingelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+encoding_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (encodebin, plugin);
-  ret |= GST_ELEMENT_REGISTER (encodebin2, plugin);
-
-  return ret;
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    encoding,
-    "various encoding-related elements", plugin_init, VERSION, GST_LICENSE,
-    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

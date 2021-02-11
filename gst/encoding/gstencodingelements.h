@@ -19,27 +19,18 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __ENCODING_ELEMENTS_H__
+#define __ENCODING_ELEMENTS_H__
 
 #include <gst/gst.h>
 
-#include "gstencodingelements.h"
+G_BEGIN_DECLS
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+G_GNUC_INTERNAL void encoding_element_init (GstPlugin * plugin);
 
-  ret |= GST_ELEMENT_REGISTER (encodebin, plugin);
-  ret |= GST_ELEMENT_REGISTER (encodebin2, plugin);
+GST_ELEMENT_REGISTER_DECLARE (encodebin);
+GST_ELEMENT_REGISTER_DECLARE (encodebin2);
 
-  return ret;
-}
+G_END_DECLS
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    encoding,
-    "various encoding-related elements", plugin_init, VERSION, GST_LICENSE,
-    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif //__ENCODING_ELEMENTS_H__
