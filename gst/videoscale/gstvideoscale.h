@@ -86,6 +86,8 @@ struct _GstVideoScale {
   gint borders_w;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (videoscale);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_SCALE_H__ */

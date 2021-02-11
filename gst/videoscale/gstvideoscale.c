@@ -210,6 +210,8 @@ static void gst_video_scale_get_property (GObject * object, guint prop_id,
 
 #define gst_video_scale_parent_class parent_class
 G_DEFINE_TYPE (GstVideoScale, gst_video_scale, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (videoscale, "videoscale",
+    GST_RANK_NONE, GST_TYPE_VIDEO_SCALE);
 
 static GstCapsFeatures *features_format_interlaced,
     *features_format_interlaced_sysmem;
@@ -1238,8 +1240,7 @@ plugin_init (GstPlugin * plugin)
       "videoscale element");
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
-  return gst_element_register (plugin, "videoscale", GST_RANK_NONE,
-      GST_TYPE_VIDEO_SCALE);
+  return GST_ELEMENT_REGISTER (videoscale, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
