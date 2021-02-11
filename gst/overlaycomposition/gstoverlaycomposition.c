@@ -84,6 +84,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define parent_class gst_overlay_composition_parent_class
 G_DEFINE_TYPE (GstOverlayComposition, gst_overlay_composition,
     GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (overlaycomposition, "overlaycomposition",
+    GST_RANK_NONE, GST_TYPE_OVERLAY_COMPOSITION);
 
 static GstFlowReturn gst_overlay_composition_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
@@ -774,8 +776,7 @@ map_failed:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "overlaycomposition", GST_RANK_NONE,
-      GST_TYPE_OVERLAY_COMPOSITION);
+  return GST_ELEMENT_REGISTER (overlaycomposition, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

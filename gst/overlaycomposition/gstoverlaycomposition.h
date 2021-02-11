@@ -43,6 +43,8 @@ struct _GstOverlayComposition {
   gboolean attach_compo_to_buffer;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (overlaycomposition);
+
 G_END_DECLS
 
 #endif /* __GST_OVERLAY_COMPOSITION_H__ */
