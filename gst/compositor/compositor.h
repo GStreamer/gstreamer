@@ -149,5 +149,7 @@ struct _GstCompositorPad
   GstCompositorOperator op;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (compositor);
+
 G_END_DECLS
 #endif /* __GST_COMPOSITOR_H__ */

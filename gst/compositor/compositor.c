@@ -610,6 +610,8 @@ gst_compositor_set_property (GObject * object,
 G_DEFINE_TYPE_WITH_CODE (GstCompositor, gst_compositor,
     GST_TYPE_VIDEO_AGGREGATOR, G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_compositor_child_proxy_init));
+GST_ELEMENT_REGISTER_DEFINE (compositor, "compositor", GST_RANK_PRIMARY + 1,
+    GST_TYPE_COMPOSITOR);
 
 static gboolean
 set_functions (GstCompositor * self, const GstVideoInfo * info)
@@ -1497,8 +1499,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_compositor_init_blend ();
 
-  return gst_element_register (plugin, "compositor", GST_RANK_PRIMARY + 1,
-      GST_TYPE_COMPOSITOR);
+  return GST_ELEMENT_REGISTER (compositor, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
