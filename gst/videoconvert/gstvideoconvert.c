@@ -56,6 +56,8 @@ static GQuark _colorspace_quark;
 
 #define gst_video_convert_parent_class parent_class
 G_DEFINE_TYPE (GstVideoConvert, gst_video_convert, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (videoconvert, "videoconvert",
+    GST_RANK_NONE, GST_TYPE_VIDEO_CONVERT);
 
 #define DEFAULT_PROP_DITHER      GST_VIDEO_DITHER_BAYER
 #define DEFAULT_PROP_DITHER_QUANTIZATION 1
@@ -859,8 +861,7 @@ plugin_init (GstPlugin * plugin)
   gst_caps_features_add (features_format_interlaced_sysmem,
       GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
 
-  return gst_element_register (plugin, "videoconvert",
-      GST_RANK_NONE, GST_TYPE_VIDEO_CONVERT);
+  return GST_ELEMENT_REGISTER (videoconvert, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

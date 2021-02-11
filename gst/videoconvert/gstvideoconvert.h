@@ -54,6 +54,8 @@ struct _GstVideoConvert {
   gint n_threads;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (videoconvert);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEOCONVERT_H__ */
