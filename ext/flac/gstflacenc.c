@@ -55,6 +55,8 @@
 #include <gst/tag/tag.h>
 #include <gst/gsttagsetter.h>
 
+#include "gstflacelements.h"
+
 /* Taken from http://flac.sourceforge.net/format.html#frame_header */
 static const GstAudioChannelPosition channel_positions[8][8] = {
   {GST_AUDIO_CHANNEL_POSITION_MONO},
@@ -131,6 +133,8 @@ G_DEFINE_TYPE_WITH_CODE (GstFlacEnc, gst_flac_enc, GST_TYPE_AUDIO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL)
     G_IMPLEMENT_INTERFACE (GST_TYPE_TOC_SETTER, NULL)
     );
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flacenc, "flacenc", GST_RANK_PRIMARY,
+    GST_TYPE_FLAC_ENC, flac_element_init (plugin));
 
 static gboolean gst_flac_enc_start (GstAudioEncoder * enc);
 static gboolean gst_flac_enc_stop (GstAudioEncoder * enc);

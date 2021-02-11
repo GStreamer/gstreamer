@@ -1,5 +1,6 @@
 flac_sources = [
   'gstflac.c',
+  'gstflacelement.c',
   'gstflacdec.c',
   'gstflacenc.c',
   'gstflactag.c',

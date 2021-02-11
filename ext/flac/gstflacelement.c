@@ -23,20 +23,21 @@
 
 #include "gstflacelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+#include <gst/tag/tag.h>
+#include <gst/gst-i18n-plugin.h>
+
+void
+flac_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (flacdec, plugin);
-  ret |= GST_ELEMENT_REGISTER (flacenc, plugin);
-  ret |= GST_ELEMENT_REGISTER (flactag, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif
+    gst_tag_register_musicbrainz_tags ();
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    flac,
-    "The FLAC Lossless compressor Codec",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

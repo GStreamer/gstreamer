@@ -47,6 +47,8 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/tag/tag.h>
 
+#include "gstflacelements.h"
+
 /* Taken from http://flac.sourceforge.net/format.html#frame_header */
 static const GstAudioChannelPosition channel_positions[8][8] = {
   {GST_AUDIO_CHANNEL_POSITION_MONO},
@@ -114,6 +116,9 @@ static GstFlowReturn gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec,
     GstBuffer * buf);
 
 G_DEFINE_TYPE (GstFlacDec, gst_flac_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flacdec, "flacdec", GST_RANK_PRIMARY,
+    GST_TYPE_FLAC_DEC, flac_element_init (plugin));
+
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define FORMATS "{ S8, S16LE, S24_32LE, S32LE } "
