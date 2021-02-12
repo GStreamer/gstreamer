@@ -84,6 +84,7 @@
 #include "config.h"
 #endif
 
+#include "gstgdkpixbufelements.h"
 #include "gstgdkpixbufsink.h"
 
 #include <gst/video/video.h>
@@ -101,6 +102,8 @@ enum
 
 
 G_DEFINE_TYPE (GstGdkPixbufSink, gst_gdk_pixbuf_sink, GST_TYPE_VIDEO_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gdkpixbufsink, "gdkpixbufsink",
+    GST_RANK_NONE, GST_TYPE_GDK_PIXBUF_SINK, gdk_pixbuf_element_init (plugin));
 
 static void gst_gdk_pixbuf_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

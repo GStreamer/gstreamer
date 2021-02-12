@@ -1,6 +1,7 @@
 pixbuf_sources = [
   'gstgdkpixbufdec.c',
   'gstgdkpixbufoverlay.c',
+  'gstgdkpixbufelement.c',
   'gstgdkpixbufplugin.c',
   'gstgdkpixbufsink.c',
 ]

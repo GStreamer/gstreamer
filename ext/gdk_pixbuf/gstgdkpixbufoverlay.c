@@ -49,6 +49,7 @@
 #include <gst/gst.h>
 #include "gstgdkpixbufoverlay.h"
 
+#include "gstgdkpixbufelements.h"
 #include <gst/video/gstvideometa.h>
 
 GST_DEBUG_CATEGORY_STATIC (gdkpixbufoverlay_debug);
@@ -113,6 +114,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE (GstGdkPixbufOverlay, gst_gdk_pixbuf_overlay,
     GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gdkpixbufoverlay, "gdkpixbufoverlay",
+    GST_RANK_NONE, GST_TYPE_GDK_PIXBUF_OVERLAY,
+    gdk_pixbuf_element_init (plugin));
 
 #define GST_TYPE_GDK_PIXBUF_POSITIONING_MODE \
     (gst_gdk_pixbuf_positioning_mode_get_type())
