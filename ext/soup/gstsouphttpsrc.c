@@ -78,6 +78,7 @@
 #include <gst/gstelement.h>
 #include <gst/gst-i18n-plugin.h>
 #include <libsoup/soup.h>
+#include "gstsoupelements.h"
 #include "gstsouphttpsrc.h"
 #include "gstsouputils.h"
 
@@ -192,6 +193,8 @@ static void gst_soup_http_src_authenticate_cb (SoupSession * session,
 G_DEFINE_TYPE_WITH_CODE (GstSoupHTTPSrc, gst_soup_http_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_soup_http_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (souphttpsrc, "souphttpsrc",
+    GST_RANK_PRIMARY, GST_TYPE_SOUP_HTTP_SRC, soup_element_init (plugin));
 
 static void
 gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)

@@ -18,43 +18,17 @@
 
 #include <gst/gst-i18n-plugin.h>
 
-#include "gstsouphttpsrc.h"
-#include "gstsouphttpclientsink.h"
-#include "gstsouputils.h"
-
-GST_DEBUG_CATEGORY (soup_utils_debug);
+#include "gstsoupelements.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif
+  gboolean ret = FALSE;
 
-  /* see https://bugzilla.gnome.org/show_bug.cgi?id=674885 */
-  g_type_ensure (G_TYPE_SOCKET);
-  g_type_ensure (G_TYPE_SOCKET_ADDRESS);
-  g_type_ensure (G_TYPE_SOCKET_SERVICE);
-  g_type_ensure (G_TYPE_SOCKET_FAMILY);
-  g_type_ensure (G_TYPE_SOCKET_CLIENT);
-  g_type_ensure (G_TYPE_RESOLVER);
-  g_type_ensure (G_TYPE_PROXY_RESOLVER);
-  g_type_ensure (G_TYPE_PROXY_ADDRESS);
-  g_type_ensure (G_TYPE_TLS_CERTIFICATE);
-  g_type_ensure (G_TYPE_TLS_CONNECTION);
-  g_type_ensure (G_TYPE_TLS_DATABASE);
-  g_type_ensure (G_TYPE_TLS_INTERACTION);
+  ret |= GST_ELEMENT_REGISTER (souphttpsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (souphttpclientsink, plugin);
 
-  gst_element_register (plugin, "souphttpsrc", GST_RANK_PRIMARY,
-      GST_TYPE_SOUP_HTTP_SRC);
-  gst_element_register (plugin, "souphttpclientsink", GST_RANK_NONE,
-      GST_TYPE_SOUP_HTTP_CLIENT_SINK);
-  GST_DEBUG_CATEGORY_INIT (soup_utils_debug, "souputils", 0, "Soup utils");
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

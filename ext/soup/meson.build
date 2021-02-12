@@ -2,6 +2,7 @@ soup_sources = [
   'gstsouphttpsrc.c',
   'gstsouphttpclientsink.c',
   'gstsouputils.c',
+  'gstsoupelement.c',
   'gstsoup.c',
 ]
 
