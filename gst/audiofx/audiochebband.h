@@ -60,5 +60,7 @@ struct _GstAudioChebBandClass
 
 GType gst_audio_cheb_band_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiochebband);
+
 G_END_DECLS
 #endif /* __GST_AUDIO_CHEB_BAND_H__ */

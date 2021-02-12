@@ -75,6 +75,8 @@ struct _GstAudioWSincLimitClass {
 
 GType gst_audio_wsinclimit_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiowsinclimit);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_WSINC_LIMIT_H__ */

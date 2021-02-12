@@ -78,6 +78,8 @@ enum
     " layout=(string) interleaved"
 
 G_DEFINE_TYPE (GstAudioKaraoke, gst_audio_karaoke, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audiokaraoke, "audiokaraoke",
+    GST_RANK_NONE, GST_TYPE_AUDIO_KARAOKE);
 
 static void gst_audio_karaoke_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -56,5 +56,7 @@ struct _GstAudioInvertClass
 
 GType gst_audio_invert_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audioinvert);
+
 G_END_DECLS
 #endif /* __GST_AUDIO_INVERT_H__ */

@@ -85,6 +85,8 @@ enum
 
 #define gst_audio_echo_parent_class parent_class
 G_DEFINE_TYPE (GstAudioEcho, gst_audio_echo, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audioecho, "audioecho",
+    GST_RANK_NONE, GST_TYPE_AUDIO_ECHO);
 
 static void gst_audio_echo_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

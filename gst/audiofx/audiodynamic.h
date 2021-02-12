@@ -58,6 +58,8 @@ struct _GstAudioDynamicClass
 
 GType gst_audio_dynamic_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiodynamic);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_DYNAMIC_H__ */

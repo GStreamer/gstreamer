@@ -141,6 +141,8 @@ gst_audio_wsinclimit_window_get_type (void)
 #define gst_audio_wsinclimit_parent_class parent_class
 G_DEFINE_TYPE (GstAudioWSincLimit, gst_audio_wsinclimit,
     GST_TYPE_AUDIO_FX_BASE_FIR_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audiowsinclimit, "audiowsinclimit",
+    GST_RANK_NONE, GST_TYPE_AUDIO_WSINC_LIMIT);
 
 static void gst_audio_wsinclimit_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -73,6 +73,7 @@ static GstFlowReturn gst_stereo_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
 
 G_DEFINE_TYPE (GstStereo, gst_stereo, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (stereo, "stereo", GST_RANK_NONE, GST_TYPE_STEREO);
 
 static void
 gst_stereo_class_init (GstStereoClass * klass)

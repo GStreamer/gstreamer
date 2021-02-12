@@ -142,6 +142,8 @@ gst_gst_audio_wsincband_window_get_type (void)
 #define gst_audio_wsincband_parent_class parent_class
 G_DEFINE_TYPE (GstAudioWSincBand, gst_audio_wsincband,
     GST_TYPE_AUDIO_FX_BASE_FIR_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audiowsincband, "audiowsincband",
+    GST_RANK_NONE, GST_TYPE_AUDIO_WSINC_BAND);
 
 static void gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

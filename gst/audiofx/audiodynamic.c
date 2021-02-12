@@ -76,6 +76,8 @@ enum
     " layout=(string) {interleaved, non-interleaved}"
 
 G_DEFINE_TYPE (GstAudioDynamic, gst_audio_dynamic, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audiodynamic, "audiodynamic",
+    GST_RANK_NONE, GST_TYPE_AUDIO_DYNAMIC);
 
 static void gst_audio_dynamic_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

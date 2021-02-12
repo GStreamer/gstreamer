@@ -68,6 +68,8 @@ struct _GstAudioEchoClass
 
 GType gst_audio_echo_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audioecho);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_ECHO_H__ */

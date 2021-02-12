@@ -75,6 +75,8 @@ struct _GstAudioWSincBandClass {
 
 GType gst_audio_wsincband_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiowsincband);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_WSINC_BAND_H__ */

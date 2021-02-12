@@ -61,6 +61,8 @@ struct _GstAudioChebLimitClass
 
 GType gst_audio_cheb_limit_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiocheblimit);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_CHEB_LIMIT_H__ */

@@ -63,5 +63,7 @@ struct _GstAudioKaraokeClass
 
 GType gst_audio_karaoke_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiokaraoke);
+
 G_END_DECLS
 #endif /* __GST_AUDIO_KARAOKE_H__ */

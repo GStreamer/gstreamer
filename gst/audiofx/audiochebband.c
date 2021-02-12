@@ -100,6 +100,8 @@ enum
 #define gst_audio_cheb_band_parent_class parent_class
 G_DEFINE_TYPE (GstAudioChebBand, gst_audio_cheb_band,
     GST_TYPE_AUDIO_FX_BASE_IIR_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audiochebband, "audiochebband",
+    GST_RANK_NONE, GST_TYPE_AUDIO_CHEB_BAND);
 
 static void gst_audio_cheb_band_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);

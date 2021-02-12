@@ -103,6 +103,8 @@ gst_audio_amplify_clipping_method_get_type (void)
     " layout=(string) {interleaved, non-interleaved}"
 
 G_DEFINE_TYPE (GstAudioAmplify, gst_audio_amplify, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audioamplify, "audioamplify",
+    GST_RANK_NONE, GST_TYPE_AUDIO_AMPLIFY);
 
 static gboolean gst_audio_amplify_set_process_function (GstAudioAmplify *
     filter, gint clipping, GstAudioFormat format);

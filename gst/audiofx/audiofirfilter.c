@@ -84,6 +84,8 @@ static guint gst_audio_fir_filter_signals[LAST_SIGNAL] = { 0, };
 #define gst_audio_fir_filter_parent_class parent_class
 G_DEFINE_TYPE (GstAudioFIRFilter, gst_audio_fir_filter,
     GST_TYPE_AUDIO_FX_BASE_FIR_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (audiofirfilter, "audiofirfilter",
+    GST_RANK_NONE, GST_TYPE_AUDIO_FIR_FILTER);
 
 static void gst_audio_fir_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

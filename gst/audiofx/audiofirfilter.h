@@ -66,6 +66,8 @@ struct _GstAudioFIRFilterClass {
 
 GType gst_audio_fir_filter_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiofirfilter);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_FIR_FILTER_H__ */

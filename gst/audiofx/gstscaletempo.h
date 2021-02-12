@@ -95,5 +95,7 @@ struct _GstScaletempoClass
 
 GType gst_scaletempo_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (scaletempo);
+
 G_END_DECLS
 #endif /* __GST_SCALETEMPO_H__ */

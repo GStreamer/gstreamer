@@ -112,6 +112,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_scaletempo_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstScaletempo, gst_scaletempo,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT (0));
+GST_ELEMENT_REGISTER_DEFINE (scaletempo, "scaletempo",
+    GST_RANK_NONE, GST_TYPE_SCALETEMPO);
 
 #define CREATE_BEST_OVERLAP_OFFSET_FLOAT_FUNC(type) \
 static guint \
