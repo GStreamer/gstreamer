@@ -62,6 +62,8 @@ static gboolean gst_pngdec_sink_event (GstVideoDecoder * bdec,
 
 #define parent_class gst_pngdec_parent_class
 G_DEFINE_TYPE (GstPngDec, gst_pngdec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (pngdec, "pngdec", GST_RANK_PRIMARY,
+    GST_TYPE_PNGDEC);
 
 static GstStaticPadTemplate gst_pngdec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",

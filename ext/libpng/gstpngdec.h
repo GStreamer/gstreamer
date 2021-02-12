@@ -53,6 +53,8 @@ struct _GstPngDec
   gsize read_data;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (pngdec);
+
 G_END_DECLS
 
 #endif /* __GST_PNGDEC_H__ */

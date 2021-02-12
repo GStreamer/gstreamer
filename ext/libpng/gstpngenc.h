@@ -50,6 +50,8 @@ struct _GstPngEnc
   gboolean newmedia;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (pngenc);
+
 G_END_DECLS
 
 #endif /* __GST_PNGENC_H__ */

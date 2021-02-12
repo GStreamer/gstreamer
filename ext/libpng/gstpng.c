@@ -29,15 +29,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "pngdec", GST_RANK_PRIMARY,
-          GST_TYPE_PNGDEC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "pngenc", GST_RANK_PRIMARY,
-          GST_TYPE_PNGENC))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (pngdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (pngenc, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
