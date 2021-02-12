@@ -191,7 +191,19 @@ static void gst_lamemp3enc_get_property (GObject * object, guint prop_id,
 static gboolean gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags);
 
 #define gst_lamemp3enc_parent_class parent_class
-G_DEFINE_TYPE (GstLameMP3Enc, gst_lamemp3enc, GST_TYPE_AUDIO_ENCODER);
+#ifdef ENABLE_NLS
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (debug, "lamemp3enc", 0, "lame mp3 encoder");\
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);\
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#else /* ENABLE_NLS */
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (debug, "lamemp3enc", 0, "lame mp3 encoder");
+#endif
+G_DEFINE_TYPE_WITH_CODE (GstLameMP3Enc, gst_lamemp3enc, GST_TYPE_AUDIO_ENCODER,
+    _do_init);
+GST_ELEMENT_REGISTER_DEFINE (lamemp3enc, "lamemp3enc", GST_RANK_PRIMARY,
+    GST_TYPE_LAMEMP3ENC);
 
 static void
 gst_lamemp3enc_release_memory (GstLameMP3Enc * lame)
@@ -919,16 +931,4 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags)
   GST_DEBUG_OBJECT (lame, "done with setup");
   return res;
 #undef CHECK_ERROR
-}
-
-gboolean
-gst_lamemp3enc_register (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (debug, "lamemp3enc", 0, "lame mp3 encoder");
-
-  if (!gst_element_register (plugin, "lamemp3enc", GST_RANK_PRIMARY,
-          GST_TYPE_LAMEMP3ENC))
-    return FALSE;
-
-  return TRUE;
 }

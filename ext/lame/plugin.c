@@ -29,12 +29,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#ifdef ENABLE_NLS
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
-
-  return gst_lamemp3enc_register (plugin);
+  return GST_ELEMENT_REGISTER (lamemp3enc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

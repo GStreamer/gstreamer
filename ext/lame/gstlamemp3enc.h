@@ -61,7 +61,7 @@ struct _GstLameMP3Enc {
   GstAdapter *adapter;
 };
 
-gboolean gst_lamemp3enc_register (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (lamemp3enc);
 
 G_END_DECLS
 
