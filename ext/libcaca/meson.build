@@ -1,7 +1,7 @@
 libcaca_dep = dependency('caca', required : get_option('libcaca'))
 
 if libcaca_dep.found()
-  caca = library('gstcacasink', ['gstcacasink.c','gstcacatv.c'],
+  caca = library('gstcacasink', ['gstcacaplugin.c', 'gstcacasink.c','gstcacatv.c'],
     c_args : gst_plugins_good_args,
     link_args : noseh_link_args,
     include_directories : [configinc],

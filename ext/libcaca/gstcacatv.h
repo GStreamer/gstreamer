@@ -52,6 +52,8 @@ struct _GstCACATv {
   caca_font_t *font;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (cacatv);
+
 G_END_DECLS
 
 #endif /* __GST_CACATV_H__ */

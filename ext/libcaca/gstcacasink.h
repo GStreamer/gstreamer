@@ -47,6 +47,8 @@ struct _GstCACASink {
   struct caca_bitmap *bitmap;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (cacasink);
+
 G_END_DECLS
 
 #endif /* __GST_CACASINK_H__ */

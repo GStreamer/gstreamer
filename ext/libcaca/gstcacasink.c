@@ -40,8 +40,6 @@
 
 #include <string.h>
 #include "gstcacasink.h"
-#include "gstcacatv.h"
-
 
 //#define GST_CACA_DEFAULT_RED_MASK R_MASK_32_REVERSE_INT
 //#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32_REVERSE_INT
@@ -90,6 +88,8 @@ static GstStateChangeReturn gst_cacasink_change_state (GstElement * element,
 
 #define gst_cacasink_parent_class parent_class
 G_DEFINE_TYPE (GstCACASink, gst_cacasink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE (cacasink, "cacasink", GST_RANK_NONE,
+    GST_TYPE_CACASINK);
 
 #define GST_TYPE_CACADITHER (gst_cacasink_dither_get_type())
 static GType
@@ -404,23 +404,3 @@ gst_cacasink_change_state (GstElement * element, GstStateChange transition)
   }
   return ret;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-
-  if (!gst_element_register (plugin, "cacatv", GST_RANK_NONE, GST_TYPE_CACATV))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "cacasink", GST_RANK_NONE,
-          GST_TYPE_CACASINK))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    cacasink,
-    "Colored ASCII Art video sink & filter",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

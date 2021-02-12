@@ -33,6 +33,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include "gstcacasink.h"
 #include "gstcacatv.h"
 
 /* cacatv signals and args */
@@ -97,6 +98,7 @@ static void gst_cacatv_get_property (GObject * object, guint prop_id,
 
 #define gst_cacatv_parent_class parent_class
 G_DEFINE_TYPE (GstCACATv, gst_cacatv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (cacatv, "cacatv", GST_RANK_NONE, GST_TYPE_CACATV);
 
 #define GST_TYPE_CACADITHER (gst_cacatv_dither_get_type())
 static GType
