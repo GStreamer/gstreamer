@@ -42,6 +42,8 @@ struct _GstMpg123AudioDec
   off_t frame_offset;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (mpg123audiodec);
+
 G_END_DECLS
 
 #endif
