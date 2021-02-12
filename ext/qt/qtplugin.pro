@@ -79,6 +79,7 @@ versionAtLeast(QT_VERSION, "5.5") {
 
 SOURCES += \
     gstplugin.cc \
+    gstqtelement.cc \
     gstqtglutility.cc \
     gstqsgtexture.cc \
     gstqtoverlay.cc \
@@ -89,6 +90,7 @@ SOURCES += \
     qtitem.cc
 
 HEADERS += \
+	gstqtelements.h \
     gstqsgtexture.h \
     gstqtgl.h \
     gstqtglutility.h \

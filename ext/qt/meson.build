@@ -1,5 +1,6 @@
 sources = [
   'gstplugin.cc',
+  'gstqtelement.cc',
   'gstqsgtexture.cc',
   'gstqtglutility.cc',
   'gstqtoverlay.cc',

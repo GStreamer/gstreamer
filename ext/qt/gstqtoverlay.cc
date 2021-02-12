@@ -79,6 +79,7 @@
 #include "config.h"
 #endif
 
+#include "gstqtelements.h"
 #include "gstqtoverlay.h"
 #include "qtglrenderer.h"
 #include "gstqtglutility.h"
@@ -131,6 +132,10 @@ static guint gst_qt_overlay_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE_WITH_CODE (GstQtOverlay, gst_qt_overlay,
     GST_TYPE_GL_FILTER, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
         "qtoverlay", 0, "Qt Video Overlay"));
+#define _do_init \
+    ret |= qt5_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (qmlgloverlay, "qmlgloverlay",
+    GST_RANK_NONE, GST_TYPE_QT_OVERLAY, _do_init);
 
 static void
 gst_qt_overlay_class_init (GstQtOverlayClass * klass)

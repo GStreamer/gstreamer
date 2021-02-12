@@ -72,6 +72,7 @@
 #include "config.h"
 #endif
 
+#include "gstqtelements.h"
 #include "gstqtsink.h"
 #include <QtGui/QGuiApplication>
 
@@ -134,6 +135,10 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstQtSink, gst_qt_sink,
     GST_TYPE_VIDEO_SINK, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
         "qtsink", 0, "Qt Video Sink"));
+#define _do_init \
+    ret |= qt5_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (qmlglsink, "qmlglsink",
+    GST_RANK_NONE, GST_TYPE_QT_SINK, _do_init);
 
 static void
 gst_qt_sink_class_init (GstQtSinkClass * klass)
