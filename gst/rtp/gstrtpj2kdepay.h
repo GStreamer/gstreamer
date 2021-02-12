@@ -66,7 +66,6 @@ struct _GstRtpJ2KDepayClass
 
 GType gst_rtp_j2k_depay_get_type (void);
 
-gboolean gst_rtp_j2k_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* __GST_RTP_J2K_DEPAY_H__ */

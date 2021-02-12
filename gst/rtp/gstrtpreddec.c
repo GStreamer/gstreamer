@@ -48,6 +48,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpelements.h"
 #include "rtpredcommon.h"
 #include "gstrtpreddec.h"
 #include "rtpulpfeccommon.h"
@@ -82,6 +83,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_red_dec_debug);
 #define GST_CAT_DEFAULT gst_rtp_red_dec_debug
 
 G_DEFINE_TYPE (GstRtpRedDec, gst_rtp_red_dec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpreddec, "rtpreddec", GST_RANK_NONE,
+    GST_TYPE_RTP_RED_DEC, rtp_element_init (plugin));
 
 enum
 {

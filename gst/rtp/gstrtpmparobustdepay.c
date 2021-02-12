@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "gstrtpelements.h"
 #include "gstrtpmparobustdepay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmparobustdepay_debug);
@@ -70,6 +71,9 @@ typedef struct _GstADUFrame
 #define gst_rtp_mpa_robust_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpMPARobustDepay, gst_rtp_mpa_robust_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpmparobustdepay, "rtpmparobustdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_MPA_ROBUST_DEPAY,
+    rtp_element_init (plugin));
 
 static GstStateChangeReturn gst_rtp_mpa_robust_change_state (GstElement *
     element, GstStateChange transition);
@@ -801,11 +805,4 @@ gst_rtp_mpa_robust_change_state (GstElement * element,
   }
 
   return ret;
-}
-
-gboolean
-gst_rtp_mpa_robust_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpmparobustdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_MPA_ROBUST_DEPAY);
 }

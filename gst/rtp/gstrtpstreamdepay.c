@@ -36,6 +36,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtpelements.h"
 #include "gstrtpstreamdepay.h"
 
 GST_DEBUG_CATEGORY (gst_rtp_stream_depay_debug);
@@ -57,6 +58,8 @@ static GstStaticPadTemplate sink_template =
 
 #define parent_class gst_rtp_stream_depay_parent_class
 G_DEFINE_TYPE (GstRtpStreamDepay, gst_rtp_stream_depay, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpstreamdepay, "rtpstreamdepay",
+    GST_RANK_NONE, GST_TYPE_RTP_STREAM_DEPAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_stream_depay_set_sink_caps (GstBaseParse * parse,
     GstCaps * caps);
@@ -222,11 +225,4 @@ static gboolean
 gst_rtp_stream_depay_sink_activate (GstPad * pad, GstObject * parent)
 {
   return gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
-}
-
-gboolean
-gst_rtp_stream_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpstreamdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_STREAM_DEPAY);
 }

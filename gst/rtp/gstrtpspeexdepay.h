@@ -46,8 +46,6 @@ struct _GstRtpSPEEXDepayClass
 
 GType gst_rtp_speex_depay_get_type (void);
 
-gboolean gst_rtp_speex_depay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_SPEEX_DEPAY_H__ */

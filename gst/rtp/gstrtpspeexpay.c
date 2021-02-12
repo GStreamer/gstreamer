@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpspeexpay.h"
 #include "gstrtputils.h"
 
@@ -64,6 +65,8 @@ static GstFlowReturn gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload *
 
 #define gst_rtp_speex_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSPEEXPay, gst_rtp_speex_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpspeexpay, "rtpspeexpay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_SPEEX_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
@@ -340,11 +343,4 @@ gst_rtp_speex_pay_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_speex_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpspeexpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_SPEEX_PAY);
 }

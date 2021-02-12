@@ -22,6 +22,7 @@
 # include "config.h"
 #endif
 
+#include "gstrtpelements.h"
 #include "gstrtpvp8depay.h"
 #include "gstrtputils.h"
 
@@ -47,6 +48,8 @@ static gboolean gst_rtp_vp8_depay_packet_lost (GstRTPBaseDepayload * depay,
     GstEvent * event);
 
 G_DEFINE_TYPE (GstRtpVP8Depay, gst_rtp_vp8_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpvp8depay, "rtpvp8depay",
+    GST_RANK_MARGINAL, GST_TYPE_RTP_VP8_DEPAY, rtp_element_init (plugin));
 
 static GstStaticPadTemplate gst_rtp_vp8_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -557,11 +560,4 @@ gst_rtp_vp8_depay_packet_lost (GstRTPBaseDepayload * depay, GstEvent * event)
     gst_event_unref (event);
 
   return ret;
-}
-
-gboolean
-gst_rtp_vp8_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpvp8depay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_VP8_DEPAY);
 }

@@ -58,8 +58,6 @@ struct _GstRtpL8DepayClass
 
 GType gst_rtp_L8_depay_get_type (void);
 
-gboolean gst_rtp_L8_depay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_L8_DEPAY_H__ */

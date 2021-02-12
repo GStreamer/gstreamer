@@ -82,8 +82,6 @@ struct _GstRtpMP4GDepayClass
 
 GType gst_rtp_mp4g_depay_get_type (void);
 
-gboolean gst_rtp_mp4g_depay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_MP4G_DEPAY_H__ */

@@ -44,6 +44,7 @@
 #endif
 
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtpldacpay.h"
 #include "gstrtputils.h"
 
@@ -56,6 +57,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_ldac_pay_debug);
 
 #define parent_class gst_rtp_ldac_pay_parent_class
 G_DEFINE_TYPE (GstRtpLdacPay, gst_rtp_ldac_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpldacpay, "rtpldacpay", GST_RANK_NONE,
+    GST_TYPE_RTP_LDAC_PAY, rtp_element_init (plugin));
 
 static GstStaticPadTemplate gst_rtp_ldac_pay_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -165,11 +168,4 @@ gst_rtp_ldac_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
 
   return gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (ldacpay), outbuf);
-}
-
-gboolean
-gst_rtp_ldac_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpldacpay", GST_RANK_NONE,
-      GST_TYPE_RTP_LDAC_PAY);
 }

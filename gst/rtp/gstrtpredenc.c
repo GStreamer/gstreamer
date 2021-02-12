@@ -52,6 +52,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "gstrtpelements.h"
 #include "rtpredcommon.h"
 #include "gstrtpredenc.h"
 
@@ -78,8 +79,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_red_enc_debug);
 #define GST_CAT_DEFAULT (gst_rtp_red_enc_debug)
-
 G_DEFINE_TYPE (GstRtpRedEnc, gst_rtp_red_enc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpredenc, "rtpredenc", GST_RANK_NONE,
+    GST_TYPE_RTP_RED_ENC, rtp_element_init (plugin));
 
 enum
 {

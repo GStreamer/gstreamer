@@ -26,6 +26,7 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtppcmadepay.h"
 #include "gstrtputils.h"
 
@@ -69,6 +70,8 @@ static gboolean gst_rtp_pcma_depay_setcaps (GstRTPBaseDepayload * depayload,
 #define gst_rtp_pcma_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpPcmaDepay, gst_rtp_pcma_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtppcmadepay, "rtppcmadepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_PCMA_DEPAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_pcma_depay_class_init (GstRtpPcmaDepayClass * klass)
@@ -154,11 +157,4 @@ gst_rtp_pcma_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   }
 
   return outbuf;
-}
-
-gboolean
-gst_rtp_pcma_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtppcmadepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_PCMA_DEPAY);
 }

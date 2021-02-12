@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpvrawpay.h"
 #include "gstrtputils.h"
 
@@ -85,6 +86,8 @@ static void gst_rtp_vraw_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpvrawpay, "rtpvrawpay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_VRAW_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
@@ -655,11 +658,4 @@ gst_rtp_vraw_pay_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_rtp_vraw_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpvrawpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_VRAW_PAY);
 }

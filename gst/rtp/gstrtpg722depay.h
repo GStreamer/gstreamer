@@ -57,8 +57,6 @@ struct _GstRtpG722DepayClass
 
 GType gst_rtp_g722_depay_get_type (void);
 
-gboolean gst_rtp_g722_depay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_G722_DEPAY_H__ */

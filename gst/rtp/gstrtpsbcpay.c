@@ -24,6 +24,7 @@
 #endif
 
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtpsbcpay.h"
 #include <math.h>
 #include <string.h>
@@ -80,6 +81,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_sbc_pay_debug);
 
 #define parent_class gst_rtp_sbc_pay_parent_class
 G_DEFINE_TYPE (GstRtpSBCPay, gst_rtp_sbc_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpsbcpay, "rtpsbcpay", GST_RANK_NONE,
+    GST_TYPE_RTP_SBC_PAY, rtp_element_init (plugin));
 
 static GstStaticPadTemplate gst_rtp_sbc_pay_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -375,11 +378,4 @@ gst_rtp_sbc_pay_init (GstRtpSBCPay * self)
   self->last_timestamp = GST_CLOCK_TIME_NONE;
 
   self->min_frames = DEFAULT_MIN_FRAMES;
-}
-
-gboolean
-gst_rtp_sbc_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpsbcpay", GST_RANK_NONE,
-      GST_TYPE_RTP_SBC_PAY);
 }

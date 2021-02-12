@@ -26,6 +26,7 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpdvpay.h"
 #include "gstrtputils.h"
 
@@ -97,6 +98,8 @@ static void gst_dv_pay_get_property (GObject * object,
 
 #define gst_rtp_dv_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRTPDVPay, gst_rtp_dv_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpdvpay, "rtpdvpay", GST_RANK_SECONDARY,
+    GST_TYPE_RTP_DV_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_dv_pay_class_init (GstRTPDVPayClass * klass)
@@ -391,11 +394,4 @@ beach:
   gst_buffer_unref (buffer);
 
   return ret;
-}
-
-gboolean
-gst_rtp_dv_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpdvpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_DV_PAY);
 }

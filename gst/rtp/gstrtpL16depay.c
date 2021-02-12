@@ -42,6 +42,7 @@
 
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpL16depay.h"
 #include "gstrtpchannels.h"
 #include "gstrtputils.h"
@@ -81,6 +82,8 @@ static GstStaticPadTemplate gst_rtp_L16_depay_sink_template =
 
 #define gst_rtp_L16_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpL16Depay, gst_rtp_L16_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpL16depay, "rtpL16depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_L16_DEPAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_L16_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
@@ -290,11 +293,4 @@ reorder_failed:
     gst_buffer_unref (outbuf);
     return NULL;
   }
-}
-
-gboolean
-gst_rtp_L16_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpL16depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_L16_DEPAY);
 }

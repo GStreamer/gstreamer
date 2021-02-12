@@ -409,7 +409,5 @@ struct _GstRtpH263PayPackage
 
 GType gst_rtp_h263_pay_get_type (void);
 
-gboolean gst_rtp_h263_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 #endif /* __GST_RTP_H263_PAY_H__ */

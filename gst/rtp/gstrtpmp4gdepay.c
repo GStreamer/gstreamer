@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpmp4gdepay.h"
 #include "gstrtputils.h"
 
@@ -129,6 +130,8 @@ gst_bs_parse_read (GstBsParse * bs, guint n)
 #define gst_rtp_mp4g_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpMP4GDepay, gst_rtp_mp4g_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpmp4gdepay, "rtpmp4gdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_MP4G_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_mp4g_depay_finalize (GObject * object);
 
@@ -805,11 +808,4 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_mp4g_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpmp4gdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4G_DEPAY);
 }

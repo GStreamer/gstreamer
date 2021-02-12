@@ -46,6 +46,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
+#include "gstrtpelements.h"
 #include "gstrtph261depay.h"
 #include "gstrtph261pay.h"      /* GstRtpH261PayHeader */
 #include "gstrtputils.h"
@@ -75,10 +76,11 @@ static GstStaticPadTemplate gst_rtp_h261_depay_sink_template =
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H261\"")
     );
-
+#define parent_class gst_rtp_h261_depay_parent_class
 G_DEFINE_TYPE (GstRtpH261Depay, gst_rtp_h261_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
-#define parent_class gst_rtp_h261_depay_parent_class
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtph261depay, "rtph261depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_H261_DEPAY, rtp_element_init (plugin));
 
 static GstBuffer *
 gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
@@ -284,11 +286,4 @@ gst_rtp_h261_depay_init (GstRtpH261Depay * depay)
 {
   depay->adapter = gst_adapter_new ();
   depay->leftover = NO_LEFTOVER;
-}
-
-gboolean
-gst_rtp_h261_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtph261depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_H261_DEPAY);
 }

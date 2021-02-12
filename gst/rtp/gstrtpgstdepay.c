@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpgstdepay.h"
 #include "gstrtputils.h"
 
@@ -49,6 +50,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_gst_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpGSTDepay, gst_rtp_gst_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpgstdepay, "rtpgstdepay",
+    GST_RANK_MARGINAL, GST_TYPE_RTP_GST_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_gst_depay_finalize (GObject * object);
 
@@ -601,12 +604,4 @@ gst_rtp_gst_depay_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
-}
-
-
-gboolean
-gst_rtp_gst_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpgstdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_GST_DEPAY);
 }

@@ -63,8 +63,6 @@ struct _GstRtpH263PPayClass
 
 GType gst_rtp_h263p_pay_get_type (void);
 
-gboolean gst_rtp_h263p_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_H263P_PAY_H__ */

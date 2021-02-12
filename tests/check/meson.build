@@ -84,6 +84,8 @@ good_tests = [
   [ 'elements/rtprtx' ],
   [ 'elements/rtpsession' ],
   [ 'elements/rtpstorage', false, [],  ['../../gst/rtp/gstrtpstorage.c',
+					'../../gst/rtp/gstrtpelement.c',
+					'../../gst/rtp/gstrtputils.c',
 					'../../gst/rtp/rtpstorage.c',
 					'../../gst/rtp/rtpstoragestream.c']],
   [ 'elements/rtpred' ],

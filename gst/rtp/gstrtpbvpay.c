@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include "gstrtpelements.h"
 #include "gstrtpbvpay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpbvpay_debug);
@@ -69,6 +70,8 @@ static gboolean gst_rtp_bv_pay_sink_setcaps (GstRTPBasePayload * payload,
 
 #define gst_rtp_bv_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRTPBVPay, gst_rtp_bv_pay, GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpbvpay, "rtpbvpay", GST_RANK_SECONDARY,
+    GST_TYPE_RTP_BV_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_bv_pay_class_init (GstRTPBVPayClass * klass)
@@ -230,11 +233,4 @@ gst_rtp_bv_pay_sink_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
   }
 
   return caps;
-}
-
-gboolean
-gst_rtp_bv_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpbvpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_BV_PAY);
 }

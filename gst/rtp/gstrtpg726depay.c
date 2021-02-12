@@ -30,6 +30,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpg726depay.h"
 #include "gstrtputils.h"
 
@@ -91,6 +92,8 @@ static gboolean gst_rtp_g726_depay_setcaps (GstRTPBaseDepayload * depayload,
 #define gst_rtp_g726_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG726Depay, gst_rtp_g726_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpg726depay, "rtpg726depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_G726_DEPAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_g726_depay_class_init (GstRtpG726DepayClass * klass)
@@ -383,11 +386,4 @@ gst_rtp_g726_depay_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_rtp_g726_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpg726depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_G726_DEPAY);
 }

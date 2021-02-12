@@ -48,6 +48,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "gstrtpelements.h"
 #include "gstrtpamrdepay.h"
 #include "gstrtputils.h"
 
@@ -130,6 +131,8 @@ static GstBuffer *gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload,
 
 #define gst_rtp_amr_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpAMRDepay, gst_rtp_amr_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpamrdepay, "rtpamrdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_AMR_DEPAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
@@ -468,11 +471,4 @@ bad_packet:
     /* no fatal error */
     return NULL;
   }
-}
-
-gboolean
-gst_rtp_amr_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpamrdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_AMR_DEPAY);
 }

@@ -88,6 +88,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <string.h>
 
+#include "gstrtpelements.h"
 #include "rtpulpfeccommon.h"
 #include "gstrtpulpfecenc.h"
 
@@ -114,6 +115,8 @@ GST_DEBUG_CATEGORY (gst_rtp_ulpfec_enc_debug);
 #define GST_CAT_DEFAULT (gst_rtp_ulpfec_enc_debug)
 
 G_DEFINE_TYPE (GstRtpUlpFecEnc, gst_rtp_ulpfec_enc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpulpfecenc, "rtpulpfecenc",
+    GST_RANK_NONE, GST_TYPE_RTP_ULPFEC_ENC, rtp_element_init (plugin));
 
 enum
 {

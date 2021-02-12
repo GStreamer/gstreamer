@@ -70,8 +70,6 @@ struct _GstRtpVP8Pay
 
 GType gst_rtp_vp8_pay_get_type (void);
 
-gboolean gst_rtp_vp8_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* #ifndef __GST_RTP_VP8_PAY_H__ */

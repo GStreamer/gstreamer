@@ -25,6 +25,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
+#include "gstrtpelements.h"
 #include "gstrtpsv3vdepay.h"
 #include "gstrtputils.h"
 
@@ -51,6 +52,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 #define gst_rtp_sv3v_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSV3VDepay, gst_rtp_sv3v_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpsv3vdepay, "rtpsv3vdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_SV3V_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_sv3v_depay_finalize (GObject * object);
 
@@ -309,14 +312,4 @@ gst_rtp_sv3v_depay_change_state (GstElement * element,
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (rtpsv3vdepay_debug, "rtpsv3vdepay", 0,
-      "RTP SV3V depayloader");
-
-  return gst_element_register (plugin, "rtpsv3vdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_SV3V_DEPAY);
 }

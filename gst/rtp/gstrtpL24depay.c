@@ -42,6 +42,7 @@
 
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpL24depay.h"
 #include "gstrtpchannels.h"
 #include "gstrtputils.h"
@@ -70,6 +71,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_L24_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpL24Depay, gst_rtp_L24_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpL24depay, "rtpL24depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_L24_DEPAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_L24_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
@@ -255,11 +258,4 @@ reorder_failed:
         ("Channel reordering failed."), (NULL));
     return NULL;
   }
-}
-
-gboolean
-gst_rtp_L24_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpL24depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_L24_DEPAY);
 }

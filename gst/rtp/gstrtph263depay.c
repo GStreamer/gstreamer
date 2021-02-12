@@ -31,6 +31,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
+#include "gstrtpelements.h"
 #include "gstrtph263depay.h"
 #include "gstrtputils.h"
 
@@ -72,6 +73,8 @@ static GstStaticPadTemplate gst_rtp_h263_depay_sink_template =
 #define gst_rtp_h263_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH263Depay, gst_rtp_h263_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtph263depay, "rtph263depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_H263_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_h263_depay_finalize (GObject * object);
 
@@ -437,11 +440,4 @@ gst_rtp_h263_depay_change_state (GstElement * element,
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_h263_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtph263depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_H263_DEPAY);
 }

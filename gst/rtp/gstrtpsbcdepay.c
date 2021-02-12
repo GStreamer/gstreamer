@@ -26,6 +26,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtpsbcdepay.h"
 #include "gstrtputils.h"
 
@@ -64,6 +65,8 @@ enum
 
 #define gst_rtp_sbc_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSbcDepay, gst_rtp_sbc_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpsbcdepay, "rtpsbcdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_SBC_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_sbc_depay_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -385,11 +388,4 @@ bad_packet:
   GST_ELEMENT_WARNING (depay, STREAM, DECODE,
       ("Received invalid RTP payload, dropping"), (NULL));
   goto out;
-}
-
-gboolean
-gst_rtp_sbc_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpsbcdepay", GST_RANK_SECONDARY,
-      GST_TYPE_RTP_SBC_DEPAY);
 }

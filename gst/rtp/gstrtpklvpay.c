@@ -37,6 +37,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtpelements.h"
 #include "gstrtpklvpay.h"
 #include "gstrtputils.h"
 
@@ -60,6 +61,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_klv_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpKlvPay, gst_rtp_klv_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpklvpay, "rtpklvpay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_KLV_PAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_klv_pay_setcaps (GstRTPBasePayload * pay,
     GstCaps * caps);
@@ -194,11 +197,4 @@ bad_input:
     GST_ERROR_OBJECT (pay, "Input doesn't look like a KLV packet, ignoring");
     goto done;
   }
-}
-
-gboolean
-gst_rtp_klv_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpklvpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_KLV_PAY);
 }

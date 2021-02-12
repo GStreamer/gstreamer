@@ -57,8 +57,6 @@ struct _GstRTPG723PayClass
 
 GType gst_rtp_g723_pay_get_type (void);
 
-gboolean gst_rtp_g723_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_G723_PAY_H__ */

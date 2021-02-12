@@ -26,6 +26,7 @@
 #include <gst/audio/audio.h>
 
 #include <string.h>
+#include "gstrtpelements.h"
 #include "gstrtpvorbisdepay.h"
 #include "gstrtputils.h"
 
@@ -61,6 +62,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_rtp_vorbis_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpVorbisDepay, gst_rtp_vorbis_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpvorbisdepay, "rtpvorbisdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_VORBIS_DEPAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_vorbis_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
@@ -701,11 +704,4 @@ gst_rtp_vorbis_depay_change_state (GstElement * element,
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_vorbis_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpvorbisdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_VORBIS_DEPAY);
 }

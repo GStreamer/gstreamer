@@ -27,6 +27,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpgsmpay.h"
 #include "gstrtputils.h"
 
@@ -61,6 +62,8 @@ static GstFlowReturn gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * payload,
 
 #define gst_rtp_gsm_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRTPGSMPay, gst_rtp_gsm_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpgsmpay, "rtpgsmpay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_GSM_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_gsm_pay_class_init (GstRTPGSMPayClass * klass)
@@ -171,11 +174,4 @@ too_big:
             GST_RTP_BASE_PAYLOAD_MTU (rtpgsmpay)));
     return GST_FLOW_ERROR;
   }
-}
-
-gboolean
-gst_rtp_gsm_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpgsmpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_GSM_PAY);
 }

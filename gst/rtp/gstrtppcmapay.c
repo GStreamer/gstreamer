@@ -27,6 +27,7 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpelements.h"
 #include "gstrtppcmapay.h"
 
 static GstStaticPadTemplate gst_rtp_pcma_pay_sink_template =
@@ -56,6 +57,8 @@ static gboolean gst_rtp_pcma_pay_setcaps (GstRTPBasePayload * payload,
 #define gst_rtp_pcma_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpPcmaPay, gst_rtp_pcma_pay,
     GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtppcmapay, "rtppcmapay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_PCMA_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_pcma_pay_class_init (GstRtpPcmaPayClass * klass)
@@ -106,11 +109,4 @@ gst_rtp_pcma_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
-}
-
-gboolean
-gst_rtp_pcma_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtppcmapay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_PCMA_PAY);
 }

@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpmpvpay.h"
 #include "gstrtputils.h"
 
@@ -69,6 +70,8 @@ static gboolean gst_rtp_mpv_pay_sink_event (GstRTPBasePayload * payload,
 
 #define gst_rtp_mpv_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRTPMPVPay, gst_rtp_mpv_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpmpvpay, "rtpmpvpay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_MPV_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_mpv_pay_class_init (GstRTPMPVPayClass * klass)
@@ -326,12 +329,4 @@ gst_rtp_mpv_pay_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
-}
-
-
-gboolean
-gst_rtp_mpv_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpmpvpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_MPV_PAY);
 }

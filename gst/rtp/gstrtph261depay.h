@@ -54,7 +54,5 @@ struct _GstRtpH261DepayClass
 
 GType gst_rtp_h261_depay_get_type (void);
 
-gboolean gst_rtp_h261_depay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 #endif /* __GST_RTP_H261_DEPAY_H__ */

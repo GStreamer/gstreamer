@@ -42,6 +42,7 @@
 #include <gst/audio/audio.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpL16pay.h"
 #include "gstrtpchannels.h"
 
@@ -90,6 +91,8 @@ gst_rtp_L16_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
 #define gst_rtp_L16_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpL16Pay, gst_rtp_L16_pay, GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpL16pay, "rtpL16pay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_L16_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_L16_pay_class_init (GstRtpL16PayClass * klass)
@@ -253,11 +256,4 @@ gst_rtp_L16_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->handle_buffer (basepayload,
       buffer);
-}
-
-gboolean
-gst_rtp_L16_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpL16pay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_L16_PAY);
 }

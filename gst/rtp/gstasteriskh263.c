@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include "gstrtpelements.h"
 #include "gstasteriskh263.h"
 
 #define GST_ASTERISKH263_HEADER_LEN 6
@@ -64,6 +65,8 @@ static GstStateChangeReturn gst_asteriskh263_change_state (GstElement *
 
 #define gst_asteriskh263_parent_class parent_class
 G_DEFINE_TYPE (GstAsteriskh263, gst_asteriskh263, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (asteriskh263, "asteriskh263",
+    GST_RANK_NONE, GST_TYPE_ASTERISK_H263, rtp_element_init (plugin));
 
 static void
 gst_asteriskh263_class_init (GstAsteriskh263Class * klass)
@@ -220,11 +223,4 @@ gst_asteriskh263_change_state (GstElement * element, GstStateChange transition)
      }
    */
   return ret;
-}
-
-gboolean
-gst_asteriskh263_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "asteriskh263",
-      GST_RANK_NONE, GST_TYPE_ASTERISK_H263);
 }

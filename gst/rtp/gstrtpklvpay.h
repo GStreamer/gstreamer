@@ -53,8 +53,6 @@ struct _GstRtpKlvPayClass
 
 G_GNUC_INTERNAL  GType     gst_rtp_klv_pay_get_type (void);
 
-G_GNUC_INTERNAL  gboolean  gst_rtp_klv_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_KLV_PAY_H__ */

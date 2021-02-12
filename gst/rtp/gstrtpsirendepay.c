@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtpsirendepay.h"
 #include "gstrtputils.h"
 
@@ -55,6 +56,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstRTPSirenDepay, gst_rtp_siren_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpsirendepay, "rtpsirendepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_SIREN_DEPAY, rtp_element_init (plugin));
 
      static void gst_rtp_siren_depay_class_init (GstRTPSirenDepayClass * klass)
 {
@@ -115,11 +118,4 @@ gst_rtp_siren_depay_process (GstRTPBaseDepayload * depayload,
   }
 
   return outbuf;
-}
-
-gboolean
-gst_rtp_siren_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpsirendepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_SIREN_DEPAY);
 }

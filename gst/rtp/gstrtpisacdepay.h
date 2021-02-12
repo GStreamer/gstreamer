@@ -27,7 +27,5 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstRtpIsacDepay, gst_rtp_isac_depay, GST, RTP_ISAC_DEPAY,
     GstRTPBaseDepayload);
 
-gboolean gst_rtp_isac_depay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 #endif /* __GST_RTP_ISAC_DEPAY_H__ */

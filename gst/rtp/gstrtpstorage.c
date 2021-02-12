@@ -53,6 +53,7 @@
  * Since: 1.14
  */
 
+#include "gstrtpelements.h"
 #include "gstrtpstorage.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -83,6 +84,8 @@ GST_DEBUG_CATEGORY (gst_rtp_storage_debug);
 #define GST_CAT_DEFAULT (gst_rtp_storage_debug)
 
 G_DEFINE_TYPE (GstRtpStorage, gst_rtp_storage, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpstorage, "rtpstorage", GST_RANK_NONE,
+    GST_TYPE_RTP_STORAGE, rtp_element_init (plugin));
 
 static GstFlowReturn
 gst_rtp_storage_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)

@@ -41,6 +41,7 @@
 #include <gst/audio/audio.h>
 
 #include <string.h>
+#include "gstrtpelements.h"
 #include "gstrtpac3depay.h"
 #include "gstrtputils.h"
 
@@ -65,6 +66,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 G_DEFINE_TYPE (GstRtpAC3Depay, gst_rtp_ac3_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpac3depay, "rtpac3depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_AC3_DEPAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_ac3_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
@@ -170,11 +173,4 @@ empty_packet:
         ("Empty Payload."), (NULL));
     return NULL;
   }
-}
-
-gboolean
-gst_rtp_ac3_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpac3depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_AC3_DEPAY);
 }

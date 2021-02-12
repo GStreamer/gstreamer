@@ -37,6 +37,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtpelements.h"
 #include "gstrtpstreampay.h"
 
 #define GST_CAT_DEFAULT gst_rtp_stream_pay_debug
@@ -58,6 +59,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_rtp_stream_pay_parent_class
 G_DEFINE_TYPE (GstRtpStreamPay, gst_rtp_stream_pay, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpstreampay, "rtpstreampay",
+    GST_RANK_NONE, GST_TYPE_RTP_STREAM_PAY, rtp_element_init (plugin));
 
 static gboolean gst_rtp_stream_pay_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -276,11 +279,4 @@ gst_rtp_stream_pay_sink_chain (GstPad * pad, GstObject * parent,
   gst_buffer_unref (inbuf);
 
   return gst_pad_push (self->srcpad, outbuf);
-}
-
-gboolean
-gst_rtp_stream_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpstreampay",
-      GST_RANK_NONE, GST_TYPE_RTP_STREAM_PAY);
 }

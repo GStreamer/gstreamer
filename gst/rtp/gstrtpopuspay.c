@@ -51,6 +51,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpopuspay.h"
 #include "gstrtputils.h"
 
@@ -86,6 +87,8 @@ static GstFlowReturn gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
 G_DEFINE_TYPE (GstRtpOPUSPay, gst_rtp_opus_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpopuspay, "rtpopuspay",
+    GST_RANK_PRIMARY, GST_TYPE_RTP_OPUS_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
@@ -311,11 +314,4 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
 
   GST_DEBUG_OBJECT (payload, "Returning caps: %" GST_PTR_FORMAT, caps);
   return caps;
-}
-
-gboolean
-gst_rtp_opus_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpopuspay",
-      GST_RANK_PRIMARY, GST_TYPE_RTP_OPUS_PAY);
 }

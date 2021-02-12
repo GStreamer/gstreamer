@@ -63,8 +63,6 @@ struct _GstRtpAMRPayClass
 
 GType gst_rtp_amr_pay_get_type (void);
 
-gboolean gst_rtp_amr_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_AMR_PAY_H__ */

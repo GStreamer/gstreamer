@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpspeexdepay.h"
 #include "gstrtputils.h"
 
@@ -66,6 +67,8 @@ static gboolean gst_rtp_speex_depay_setcaps (GstRTPBaseDepayload * depayload,
 
 G_DEFINE_TYPE (GstRtpSPEEXDepay, gst_rtp_speex_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpspeexdepay, "rtpspeexdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_SPEEX_DEPAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_speex_depay_class_init (GstRtpSPEEXDepayClass * klass)
@@ -216,11 +219,4 @@ gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload,
   }
 
   return outbuf;
-}
-
-gboolean
-gst_rtp_speex_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpspeexdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_SPEEX_DEPAY);
 }

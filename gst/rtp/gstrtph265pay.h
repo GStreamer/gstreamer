@@ -87,7 +87,5 @@ struct _GstRtpH265PayClass
 
 GType gst_rtp_h265_pay_get_type (void);
 
-gboolean gst_rtp_h265_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 #endif /* __GST_RTP_H265_PAY_H__ */

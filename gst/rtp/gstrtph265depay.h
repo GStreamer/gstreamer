@@ -108,8 +108,6 @@ typedef struct
 
 GType gst_rtp_h265_depay_get_type (void);
 
-gboolean gst_rtp_h265_depay_plugin_init (GstPlugin * plugin);
-
 gboolean gst_rtp_h265_add_vps_sps_pps (GstElement * rtph265, GPtrArray * vps,
     GPtrArray * sps, GPtrArray * pps, GstBuffer * nal);
 

@@ -32,6 +32,7 @@
 /* Included to not duplicate gst_rtp_h265_add_vps_sps_pps () */
 #include "gstrtph265depay.h"
 
+#include "gstrtpelements.h"
 #include "gstrtph265pay.h"
 #include "gstrtputils.h"
 #include "gstbuffermemory.h"
@@ -166,6 +167,8 @@ static void gst_rtp_h265_pay_reset_bundle (GstRtpH265Pay * rtph265pay);
 
 #define gst_rtp_h265_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH265Pay, gst_rtp_h265_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtph265pay, "rtph265pay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_H265_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_h265_pay_class_init (GstRtpH265PayClass * klass)
@@ -1820,11 +1823,4 @@ gst_rtp_h265_pay_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_rtp_h265_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtph265pay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_H265_PAY);
 }

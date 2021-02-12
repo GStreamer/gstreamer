@@ -67,8 +67,6 @@ struct _GstRtpMP4VPayClass
 
 GType gst_rtp_mp4v_pay_get_type (void);
 
-gboolean gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_RTP_MP4V_PAY_H__ */

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtpilbcdepay.h"
 #include "gstrtputils.h"
 
@@ -74,6 +75,8 @@ static gboolean gst_rtp_ilbc_depay_setcaps (GstRTPBaseDepayload * depayload,
 #define gst_rtp_ilbc_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRTPiLBCDepay, gst_rtp_ilbc_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpilbcdepay, "rtpilbcdepay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_ILBC_DEPAY, rtp_element_init (plugin));
 
 #define GST_TYPE_ILBC_MODE (gst_ilbc_mode_get_type())
 static GType
@@ -229,11 +232,4 @@ gst_ilbc_depay_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_rtp_ilbc_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpilbcdepay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_ILBC_DEPAY);
 }

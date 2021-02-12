@@ -28,6 +28,7 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
+#include "gstrtpelements.h"
 #include "gstrtph265depay.h"
 #include "gstrtputils.h"
 
@@ -97,6 +98,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 #define gst_rtp_h265_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH265Depay, gst_rtp_h265_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtph265depay, "rtph265depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_H265_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_h265_depay_finalize (GObject * object);
 
@@ -460,7 +463,6 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     gst_rtp_read_golomb (&br, &chroma_format_idc);      /* chroma_format_idc */
 
     if (chroma_format_idc == 3)
-
       gst_bit_reader_get_bits_uint8 (&br, &tmp8, 1);    /* separate_colour_plane_flag */
 
     gst_rtp_read_golomb (&br, &tmp);    /* pic_width_in_luma_samples */
@@ -1660,14 +1662,4 @@ gst_rtp_h265_depay_change_state (GstElement * element,
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_h265_depay_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (rtph265depay_debug, "rtph265depay", 0,
-      "H265 Video RTP Depayloader");
-
-  return gst_element_register (plugin, "rtph265depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_H265_DEPAY);
 }

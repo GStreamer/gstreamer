@@ -48,6 +48,7 @@
 #  include "config.h"
 #endif
 
+#include "gstrtpelements.h"
 #include "gstrtph261pay.h"
 #include "gstrtputils.h"
 #include <gst/rtp/gstrtpbuffer.h>
@@ -82,8 +83,10 @@ static GstStaticPadTemplate gst_rtp_h261_pay_src_template =
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H261\"")
     );
 
-G_DEFINE_TYPE (GstRtpH261Pay, gst_rtp_h261_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 #define parent_class gst_rtp_h261_pay_parent_class
+G_DEFINE_TYPE (GstRtpH261Pay, gst_rtp_h261_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtph261pay, "rtph261pay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_H261_PAY, rtp_element_init (plugin));
 
 typedef struct
 {
@@ -1062,11 +1065,4 @@ gst_rtp_h261_pay_class_init (GstRtpH261PayClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (rtph261pay_debug, "rtph261pay", 0,
       "H261 RTP Payloader");
-}
-
-gboolean
-gst_rtp_h261_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtph261pay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_H261_PAY);
 }

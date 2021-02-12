@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "gstrtpelements.h"
 #include "gstrtpg723depay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpg723depay_debug);
@@ -80,6 +81,8 @@ static GstBuffer *gst_rtp_g723_depay_process (GstRTPBaseDepayload * depayload,
 #define gst_rtp_g723_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG723Depay, gst_rtp_g723_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpg723depay, "rtpg723depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_G723_DEPAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_g723_depay_class_init (GstRtpG723DepayClass * klass)
@@ -213,11 +216,4 @@ bad_packet:
     /* no fatal error */
     return NULL;
   }
-}
-
-gboolean
-gst_rtp_g723_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpg723depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_G723_DEPAY);
 }

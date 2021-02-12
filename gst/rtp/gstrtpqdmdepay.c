@@ -25,6 +25,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
+#include "gstrtpelements.h"
 #include "gstrtpqdmdepay.h"
 #include "gstrtputils.h"
 
@@ -49,6 +50,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 #define gst_rtp_qdm2_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpQDM2Depay, gst_rtp_qdm2_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (rtpqdm2depay_debug, "rtpqdm2depay", 0, \
+      "RTP QDM2 depayloader"); \
+  rtp_element_init (plugin)
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpqdm2depay, "rtpqdm2depay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_QDM2_DEPAY, _do_init);
 
 static const guint8 headheader[20] = {
   0x0, 0x0, 0x0, 0xc, 0x66, 0x72, 0x6d, 0x61,
@@ -401,14 +408,4 @@ gst_rtp_qdm2_depay_change_state (GstElement * element,
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rtp_qdm2_depay_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (rtpqdm2depay_debug, "rtpqdm2depay", 0,
-      "RTP QDM2 depayloader");
-
-  return gst_element_register (plugin, "rtpqdm2depay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_QDM2_DEPAY);
 }

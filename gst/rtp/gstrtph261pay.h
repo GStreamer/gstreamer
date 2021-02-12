@@ -94,7 +94,5 @@ typedef struct _GstRtpH261PayHeader
 
 GType gst_rtp_h261_pay_get_type (void);
 
-gboolean gst_rtp_h261_pay_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 #endif /* __GST_RTP_H261_PAY_H__ */

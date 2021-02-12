@@ -55,6 +55,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 
+#include "gstrtpelements.h"
 #include "gstrtpamrpay.h"
 #include "gstrtputils.h"
 
@@ -113,6 +114,8 @@ gst_rtp_amr_pay_change_state (GstElement * element, GstStateChange transition);
 
 #define gst_rtp_amr_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpAMRPay, gst_rtp_amr_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpamrpay, "rtpamrpay",
+    GST_RANK_SECONDARY, GST_TYPE_RTP_AMR_PAY, rtp_element_init (plugin));
 
 static void
 gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
@@ -455,11 +458,4 @@ gst_rtp_amr_pay_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_rtp_amr_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpamrpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_AMR_PAY);
 }

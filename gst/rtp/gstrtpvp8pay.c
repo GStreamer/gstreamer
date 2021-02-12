@@ -31,6 +31,7 @@
 #include <gst/rtp/gstrtppayloads.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
+#include "gstrtpelements.h"
 #include "dboolhuff.h"
 #include "gstrtpvp8pay.h"
 #include "gstrtputils.h"
@@ -79,6 +80,8 @@ static gboolean gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload,
     GstCaps * caps);
 
 G_DEFINE_TYPE (GstRtpVP8Pay, gst_rtp_vp8_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpvp8pay, "rtpvp8pay",
+    GST_RANK_MARGINAL, GST_TYPE_RTP_VP8_PAY, rtp_element_init (plugin));
 
 static GstStaticPadTemplate gst_rtp_vp8_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -721,11 +724,4 @@ gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
       encoding_name, 90000);
 
   return gst_rtp_base_payload_set_outcaps (payload, NULL);
-}
-
-gboolean
-gst_rtp_vp8_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpvp8pay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_VP8_PAY);
 }
