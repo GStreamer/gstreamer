@@ -368,9 +368,6 @@ struct _GstVaMemoryPool
   gint surface_count;
 
   GMutex lock;
-  GCond cond;
-
-  gboolean flushing;
 };
 
 #define GST_VA_MEMORY_POOL_CAST(obj) ((GstVaMemoryPool *)obj)
@@ -383,9 +380,7 @@ gst_va_memory_pool_init (GstVaMemoryPool * self)
   self->queue = gst_atomic_queue_new (2);
 
   g_mutex_init (&self->lock);
-  g_cond_init (&self->cond);
 
-  self->flushing = FALSE;
   self->surface_count = 0;
 }
 
@@ -393,7 +388,6 @@ static void
 gst_va_memory_pool_finalize (GstVaMemoryPool * self)
 {
   g_mutex_clear (&self->lock);
-  g_cond_clear (&self->cond);
 
   gst_atomic_queue_unref (self->queue);
 }
@@ -433,25 +427,14 @@ static void
 gst_va_memory_pool_flush (GstVaMemoryPool * self, GstVaDisplay * display)
 {
   GST_VA_MEMORY_POOL_LOCK (self);
-
-  self->flushing = TRUE;
   gst_va_memory_pool_flush_unlocked (self, display);
-  self->flushing = FALSE;
-
-  g_cond_broadcast (&self->cond);
-
   GST_VA_MEMORY_POOL_UNLOCK (self);
 }
 
 static inline void
 gst_va_memory_pool_push (GstVaMemoryPool * self, GstMemory * mem)
 {
-  GST_VA_MEMORY_POOL_LOCK (self);
-
   gst_atomic_queue_push (self->queue, gst_memory_ref (mem));
-  g_cond_signal (&self->cond);
-
-  GST_VA_MEMORY_POOL_UNLOCK (self);
 }
 
 static inline GstMemory *
@@ -464,15 +447,6 @@ static inline GstMemory *
 gst_va_memory_pool_peek (GstVaMemoryPool * self)
 {
   return gst_atomic_queue_peek (self->queue);
-}
-
-static gboolean
-gst_va_memory_pool_wait_unlocked (GstVaMemoryPool * self)
-{
-  while (gst_atomic_queue_length (self->queue) == 0 && !self->flushing)
-    g_cond_wait (&self->cond, &self->lock);
-
-  return !self->flushing;
 }
 
 static inline guint
@@ -784,24 +758,6 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
   VASurfaceID surface;
 
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
-  surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
-  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-
-  return (surface != VA_INVALID_ID);
-}
-
-gboolean
-gst_va_dmabuf_allocator_wait_for_memory (GstAllocator * allocator,
-    GstBuffer * buffer)
-{
-  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
-  VASurfaceID surface;
-
-  GST_VA_MEMORY_POOL_LOCK (&self->pool);
-  if (!gst_va_memory_pool_wait_unlocked (&self->pool)) {
-    GST_VA_MEMORY_POOL_LOCK (&self->pool);
-    return FALSE;
-  }
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
   GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
@@ -1427,23 +1383,6 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   VASurfaceID surface;
 
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
-  surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
-  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-
-  return (surface != VA_INVALID_ID);
-}
-
-gboolean
-gst_va_allocator_wait_for_memory (GstAllocator * allocator, GstBuffer * buffer)
-{
-  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
-  VASurfaceID surface;
-
-  GST_VA_MEMORY_POOL_LOCK (&self->pool);
-  if (!gst_va_memory_pool_wait_unlocked (&self->pool)) {
-    GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
-    return FALSE;
-  }
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
   GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
