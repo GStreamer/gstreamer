@@ -30,18 +30,15 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "gtksink",
-          GST_RANK_NONE, GST_TYPE_GTK_SINK)) {
-    return FALSE;
-  }
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (gtksink, plugin);
+
 #if defined(HAVE_GTK3_GL)
-  if (!gst_element_register (plugin, "gtkglsink",
-          GST_RANK_NONE, GST_TYPE_GTK_GL_SINK)) {
-    return FALSE;
-  }
+  ret |= GST_ELEMENT_REGISTER (gtkglsink, plugin);
 #endif
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

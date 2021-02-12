@@ -44,6 +44,8 @@ struct _GstGtkSink
   GstGtkBaseSink       parent;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (gtksink);
+
 G_END_DECLS
 
 #endif /* __GST_GTK_SINK_H__ */

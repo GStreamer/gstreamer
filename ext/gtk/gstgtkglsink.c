@@ -59,6 +59,9 @@ static GstStaticPadTemplate gst_gtk_gl_sink_template =
 G_DEFINE_TYPE_WITH_CODE (GstGtkGLSink, gst_gtk_gl_sink,
     GST_TYPE_GTK_BASE_SINK, GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_gl_sink,
         "gtkglsink", 0, "Gtk GL Video Sink"));
+GST_ELEMENT_REGISTER_DEFINE (gtkglsink, "gtkglsink", GST_RANK_NONE,
+    GST_TYPE_GTK_GL_SINK);
+
 
 static void
 gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)

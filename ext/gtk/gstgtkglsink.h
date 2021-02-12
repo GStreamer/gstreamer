@@ -61,6 +61,8 @@ struct _GstGtkGLSink
   gulong                widget_destroy_sig_handler;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (gtkglsink);
+
 G_END_DECLS
 
 #endif /* __GST_GTK_GL_SINK_H__ */
