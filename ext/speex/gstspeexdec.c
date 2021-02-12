@@ -39,6 +39,7 @@
 #  include "config.h"
 #endif
 
+#include "gstspeexelements.h"
 #include "gstspeexdec.h"
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +78,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_speex_dec_parent_class parent_class
 G_DEFINE_TYPE (GstSpeexDec, gst_speex_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (speexdec, "speexdec",
+    GST_RANK_PRIMARY, GST_TYPE_SPEEX_DEC, speex_element_init (plugin));
 
 static gboolean gst_speex_dec_start (GstAudioDecoder * dec);
 static gboolean gst_speex_dec_stop (GstAudioDecoder * dec);

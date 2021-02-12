@@ -46,6 +46,7 @@
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
+#include "gstspeexelements.h"
 #include "gstspeexenc.h"
 
 GST_DEBUG_CATEGORY_STATIC (speexenc_debug);
@@ -143,6 +144,8 @@ static gboolean gst_speex_enc_sink_event (GstAudioEncoder * enc,
 G_DEFINE_TYPE_WITH_CODE (GstSpeexEnc, gst_speex_enc, GST_TYPE_AUDIO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (speexenc, "speexenc",
+    GST_RANK_PRIMARY, GST_TYPE_SPEEX_ENC, speex_element_init (plugin));
 
 static void
 gst_speex_enc_class_init (GstSpeexEncClass * klass)

@@ -1,4 +1,5 @@
 speex_sources = [
+  'gstspeexelement.c',
   'gstspeex.c',
   'gstspeexdec.c',
   'gstspeexenc.c',
