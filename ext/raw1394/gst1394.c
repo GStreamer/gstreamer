@@ -32,16 +32,15 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "dv1394src", GST_RANK_NONE,
-          GST_TYPE_DV1394SRC))
-    return FALSE;
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (dv1394src, plugin);
+
 #ifdef HAVE_LIBIEC61883
-  if (!gst_element_register (plugin, "hdv1394src", GST_RANK_NONE,
-          GST_TYPE_HDV1394SRC))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (hdv1394src, plugin);
 #endif
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

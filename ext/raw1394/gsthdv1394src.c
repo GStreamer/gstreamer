@@ -119,6 +119,8 @@ static void gst_hdv1394src_update_device_name (GstHDV1394Src * src);
 G_DEFINE_TYPE_WITH_CODE (GstHDV1394Src, gst_hdv1394src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_hdv1394src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (hdv1394src, "hdv1394src", GST_RANK_NONE,
+    GST_TYPE_HDV1394SRC);
 
 static void
 gst_hdv1394src_class_init (GstHDV1394SrcClass * klass)

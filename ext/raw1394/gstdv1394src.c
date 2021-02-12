@@ -146,6 +146,8 @@ static void gst_dv1394src_update_device_name (GstDV1394Src * src);
 G_DEFINE_TYPE_WITH_CODE (GstDV1394Src, gst_dv1394src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_dv1394src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (dv1394src, "dv1394src", GST_RANK_NONE,
+    GST_TYPE_DV1394SRC);
 
 static guint gst_dv1394src_signals[LAST_SIGNAL] = { 0 };
 

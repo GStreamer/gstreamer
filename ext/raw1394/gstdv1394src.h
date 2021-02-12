@@ -76,6 +76,8 @@ struct _GstDV1394Src {
   Gst1394Clock *provided_clock;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (dv1394src);
+
 G_END_DECLS
 
 #endif /* __GST_GST1394_H__ */

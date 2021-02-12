@@ -64,6 +64,8 @@ struct _GstHDV1394Src {
   iec61883_mpeg2_t iec61883mpeg2;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (hdv1394src);
+
 G_END_DECLS
 
 #endif /* __GST_GST1394_H__ */
