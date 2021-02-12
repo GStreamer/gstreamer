@@ -1,4 +1,5 @@
 pulse_sources = [
+  'gstpulseelement.c',
   'plugin.c',
   'pulsesink.c',
   'pulsesrc.c',

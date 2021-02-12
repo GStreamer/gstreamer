@@ -23,23 +23,31 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstpulseelements.h"
+#include "pulsedeviceprovider.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+GST_DEBUG_CATEGORY (pulse_debug);
+
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (pulsedeviceprovider, "pulsedeviceprovider",
+    GST_RANK_PRIMARY, GST_TYPE_PULSE_DEVICE_PROVIDER);
+
+void
+pulse_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (pulsesink, plugin);
-  ret |= GST_ELEMENT_REGISTER (pulsesrc, plugin);
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif
 
-  ret |= GST_DEVICE_PROVIDER_REGISTER (pulsedeviceprovider, plugin);
+    GST_DEBUG_CATEGORY_INIT (pulse_debug, "pulse", 0, "PulseAudio elements");
 
-  return ret;
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    pulseaudio,
-    "PulseAudio plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

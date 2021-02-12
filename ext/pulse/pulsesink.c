@@ -59,6 +59,7 @@
 
 #include <gst/glib-compat-private.h>
 
+#include "gstpulseelements.h"
 #include "pulsesink.h"
 #include "pulseutil.h"
 
@@ -1820,6 +1821,8 @@ G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_AUDIO_BASE_SINK,
     gst_pulsesink_init_contexts ();
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL)
     );
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (pulsesink, "pulsesink",
+    GST_RANK_PRIMARY + 10, GST_TYPE_PULSESINK, pulse_element_init (plugin));
 
 static GstAudioRingBuffer *
 gst_pulsesink_create_ringbuffer (GstAudioBaseSink * sink)

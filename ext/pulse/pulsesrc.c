@@ -45,6 +45,7 @@
 #include <gst/gsttaglist.h>
 #include <gst/audio/audio.h>
 
+#include "gstpulseelements.h"
 #include "pulsesrc.h"
 #include "pulseutil.h"
 
@@ -115,6 +116,8 @@ static GstClockTime gst_pulsesrc_get_time (GstClock * clock, GstPulseSrc * src);
 #define gst_pulsesrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (pulsesrc, "pulsesrc",
+    GST_RANK_PRIMARY + 10, GST_TYPE_PULSESRC, pulse_element_init (plugin));
 
 static void
 gst_pulsesrc_class_init (GstPulseSrcClass * klass)
