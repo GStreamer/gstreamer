@@ -1,4 +1,5 @@
 wavpack_sources = [
+  'gstwavpackelement.c',
   'gstwavpack.c',
   'gstwavpackcommon.c',
   'gstwavpackdec.c',

@@ -54,6 +54,7 @@
 #include <wavpack/wavpack.h>
 #include "gstwavpackenc.h"
 #include "gstwavpackcommon.h"
+#include "gstwavpackelements.h"
 
 static gboolean gst_wavpack_enc_start (GstAudioEncoder * enc);
 static gboolean gst_wavpack_enc_stop (GstAudioEncoder * enc);
@@ -200,6 +201,12 @@ gst_wavpack_enc_joint_stereo_mode_get_type (void)
 
 #define gst_wavpack_enc_parent_class parent_class
 G_DEFINE_TYPE (GstWavpackEnc, gst_wavpack_enc, GST_TYPE_AUDIO_ENCODER);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_enc_debug, "wavpackenc", 0, \
+      "Wavpack encoder"); \
+  wavpack_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (wavpackenc, "wavpackenc", GST_RANK_NONE,
+    GST_TYPE_WAVPACK_ENC, _do_init);
 
 static void
 gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
@@ -993,17 +1000,4 @@ gst_wavpack_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_wavpack_enc_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "wavpackenc",
-          GST_RANK_NONE, GST_TYPE_WAVPACK_ENC))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_wavpack_enc_debug, "wavpackenc", 0,
-      "Wavpack encoder");
-
-  return TRUE;
 }

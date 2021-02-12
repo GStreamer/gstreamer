@@ -49,6 +49,7 @@
 #include <string.h>
 
 #include <wavpack/wavpack.h>
+#include "gstwavpackelements.h"
 #include "gstwavpackdec.h"
 #include "gstwavpackcommon.h"
 #include "gstwavpackstreamreader.h"
@@ -101,6 +102,12 @@ static void gst_wavpack_dec_post_tags (GstWavpackDec * dec);
 
 #define gst_wavpack_dec_parent_class parent_class
 G_DEFINE_TYPE (GstWavpackDec, gst_wavpack_dec, GST_TYPE_AUDIO_DECODER);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_dec_debug, "wavpackdec", 0, \
+      "Wavpack decoder"); \
+  wavpack_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (wavpackdec, "wavpackdec",
+    GST_RANK_PRIMARY, GST_TYPE_WAVPACK_DEC, _do_init);
 
 static void
 gst_wavpack_dec_class_init (GstWavpackDecClass * klass)
@@ -472,15 +479,4 @@ decode_error:
       gst_audio_decoder_finish_frame (bdec, NULL, 1);
     goto out;
   }
-}
-
-gboolean
-gst_wavpack_dec_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "wavpackdec",
-          GST_RANK_PRIMARY, GST_TYPE_WAVPACK_DEC))
-    return FALSE;
-  GST_DEBUG_CATEGORY_INIT (gst_wavpack_dec_debug, "wavpackdec", 0,
-      "Wavpack decoder");
-  return TRUE;
 }
