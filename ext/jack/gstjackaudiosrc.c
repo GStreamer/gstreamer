@@ -715,6 +715,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_jack_audio_src_parent_class parent_class
 G_DEFINE_TYPE (GstJackAudioSrc, gst_jack_audio_src, GST_TYPE_AUDIO_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE (jackaudiosrc, "jackaudiosrc",
+    GST_RANK_PRIMARY, GST_TYPE_JACK_AUDIO_SRC);
 
 static void gst_jack_audio_src_dispose (GObject * object);
 static void gst_jack_audio_src_set_property (GObject * object, guint prop_id,

@@ -25,6 +25,9 @@
 #include <jack/jack.h>
 #include <gst/audio/audio.h>
 
+GST_ELEMENT_REGISTER_DECLARE (jackaudiosrc);
+GST_ELEMENT_REGISTER_DECLARE (jackaudiosink);
+
 /**
  * GstJackConnect:
  * @GST_JACK_CONNECT_NONE: Don't automatically connect to physical ports.

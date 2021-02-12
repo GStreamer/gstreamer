@@ -700,6 +700,8 @@ enum
 
 #define gst_jack_audio_sink_parent_class parent_class
 G_DEFINE_TYPE (GstJackAudioSink, gst_jack_audio_sink, GST_TYPE_AUDIO_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE (jackaudiosink, "jackaudiosink",
+    GST_RANK_PRIMARY, GST_TYPE_JACK_AUDIO_SINK);
 
 static void gst_jack_audio_sink_dispose (GObject * object);
 static void gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
