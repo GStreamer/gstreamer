@@ -92,6 +92,8 @@ struct _GstAlpha
   guint noise_level2;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (alpha);
+
 G_END_DECLS
 
 #endif /* __GST_ALPHA_H__ */

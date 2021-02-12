@@ -184,6 +184,7 @@ static void gst_alpha_finalize (GObject * object);
 
 #define gst_alpha_parent_class parent_class
 G_DEFINE_TYPE (GstAlpha, gst_alpha, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (alpha, "alpha", GST_RANK_NONE, GST_TYPE_ALPHA);
 
 #define GST_TYPE_ALPHA_METHOD (gst_alpha_method_get_type())
 static GType
@@ -2606,7 +2607,7 @@ not_negotiated:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "alpha", GST_RANK_NONE, GST_TYPE_ALPHA);
+  return GST_ELEMENT_REGISTER (alpha, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
