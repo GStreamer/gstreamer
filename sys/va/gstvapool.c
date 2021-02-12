@@ -180,11 +180,8 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
     }
   }
 
-  /* with pooled allocators bufferpool->release_buffer() is cheated
-   * because the memories are removed from the buffer at
-   * reset_buffer(), then buffer is an empty holder with size 0 while
-   * releasing. */
-  gst_buffer_pool_config_set_params (config, caps, 0, min_buffers, max_buffers);
+  gst_buffer_pool_config_set_params (config, caps,
+      GST_VIDEO_INFO_SIZE (&alloc_info), min_buffers, max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
@@ -274,76 +271,6 @@ no_memory:
 }
 
 static void
-gst_va_pool_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
-{
-  /* Clears all the memories and only pool the GstBuffer objects */
-  gst_buffer_remove_all_memory (buffer);
-
-  GST_BUFFER_POOL_CLASS (parent_class)->reset_buffer (pool, buffer);
-
-  GST_BUFFER_FLAGS (buffer) = 0;
-}
-
-static void
-gst_va_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
-{
-  GstVaPool *vpool = GST_VA_POOL (pool);
-
-  /* Clears all the memories and only pool the GstBuffer objects */
-  if (G_UNLIKELY (vpool->starting)) {
-    gst_buffer_remove_all_memory (buffer);
-    GST_BUFFER_FLAGS (buffer) = 0;
-  }
-
-  GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
-}
-
-static GstFlowReturn
-gst_va_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolAcquireParams * params)
-{
-  GstFlowReturn ret;
-  GstVaPool *vpool = GST_VA_POOL (pool);
-
-  ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool, buffer,
-      params);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  /* if buffer is new, return it */
-  if (gst_buffer_n_memory (*buffer) > 0)
-    return GST_FLOW_OK;
-
-  if (GST_IS_VA_DMABUF_ALLOCATOR (vpool->allocator)) {
-    if (gst_va_dmabuf_allocator_prepare_buffer (vpool->allocator, *buffer))
-      return GST_FLOW_OK;
-
-    if (params && (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT))
-      return GST_FLOW_EOS;
-    if (!gst_va_dmabuf_allocator_wait_for_memory (vpool->allocator, *buffer))
-      goto flushing;
-
-    return GST_FLOW_OK;
-  } else if (GST_IS_VA_ALLOCATOR (vpool->allocator)) {
-    if (gst_va_allocator_prepare_buffer (vpool->allocator, *buffer))
-      return GST_FLOW_OK;
-
-    if (params && (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT))
-      return GST_FLOW_EOS;
-    if (!gst_va_allocator_wait_for_memory (vpool->allocator, *buffer))
-      goto flushing;
-
-    return GST_FLOW_OK;
-  }
-
-  return GST_FLOW_ERROR;
-
-flushing:
-  gst_buffer_replace (buffer, NULL);
-  return GST_FLOW_FLUSHING;
-}
-
-static void
 gst_va_pool_flush_start (GstBufferPool * pool)
 {
   GstVaPool *vpool = GST_VA_POOL (pool);
@@ -390,9 +317,6 @@ gst_va_pool_class_init (GstVaPoolClass * klass)
   gstbufferpool_class->get_options = gst_va_pool_get_options;
   gstbufferpool_class->set_config = gst_va_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_va_pool_alloc;
-  gstbufferpool_class->reset_buffer = gst_va_pool_reset_buffer;
-  gstbufferpool_class->release_buffer = gst_va_pool_release_buffer;
-  gstbufferpool_class->acquire_buffer = gst_va_pool_acquire_buffer;
   gstbufferpool_class->flush_start = gst_va_pool_flush_start;
   gstbufferpool_class->start = gst_va_pool_start;
 }
