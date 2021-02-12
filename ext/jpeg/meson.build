@@ -1,5 +1,6 @@
 jpeg_sources = [
   'gstjpeg.c',
+  'gstjpegplugin.c',
   'gstjpegenc.c',
   'gstjpegdec.c',
 ]

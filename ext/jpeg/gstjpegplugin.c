@@ -1,3 +1,4 @@
+
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
@@ -26,21 +27,26 @@
 #include <jpeglib.h>
 #include <gst/gst.h>
 
-#include "gstjpeg.h"
+#include "gstjpegelements.h"
 
-GType
-gst_idct_method_get_type (void)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-  static GType idct_method_type = 0;
-  static const GEnumValue idct_method[] = {
-    {JDCT_ISLOW, "Slow but accurate integer algorithm", "islow"},
-    {JDCT_IFAST, "Faster, less accurate integer method", "ifast"},
-    {JDCT_FLOAT, "Floating-point: accurate, fast on fast HW", "float"},
-    {0, NULL, NULL},
-  };
+  gboolean ret = FALSE;
 
-  if (!idct_method_type) {
-    idct_method_type = g_enum_register_static ("GstIDCTMethod", idct_method);
-  }
-  return idct_method_type;
+  ret |= GST_ELEMENT_REGISTER (jpegenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (jpegdec, plugin);
+
+#if 0
+  ret |= GST_ELEMENT_REGISTER (smokeenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (smokedec, plugin);
+#endif
+
+  return ret;
 }
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    jpeg,
+    "JPeg plugin library",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

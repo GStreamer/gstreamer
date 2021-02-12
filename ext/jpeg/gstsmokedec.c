@@ -86,6 +86,9 @@ gst_smokedec_get_type (void)
   return smokedec_type;
 }
 
+GST_ELEMENT_REGISTER_DEFINE (smokedec, "smokedec", GST_RANK_PRIMARY,
+    GST_TYPE_SMOKEDEC);
+
 static GstStaticPadTemplate gst_smokedec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

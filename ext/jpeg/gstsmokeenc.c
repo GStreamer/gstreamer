@@ -103,6 +103,9 @@ gst_smokeenc_get_type (void)
   return smokeenc_type;
 }
 
+GST_ELEMENT_REGISTER_DEFINE (smokeenc, "smokeenc", GST_RANK_PRIMARY,
+    GST_TYPE_SMOKEENC);
+
 static GstStaticPadTemplate gst_smokeenc_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

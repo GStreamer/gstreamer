@@ -38,8 +38,9 @@
 #endif
 #include <string.h>
 
-#include "gstjpegdec.h"
 #include "gstjpeg.h"
+#include "gstjpegdec.h"
+#include "gstjpegelements.h"
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
@@ -109,6 +110,8 @@ static gboolean gst_jpeg_dec_sink_event (GstVideoDecoder * bdec,
 
 #define gst_jpeg_dec_parent_class parent_class
 G_DEFINE_TYPE (GstJpegDec, gst_jpeg_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (jpegdec, "jpegdec", GST_RANK_PRIMARY,
+    GST_TYPE_JPEG_DEC);
 
 static void
 gst_jpeg_dec_finalize (GObject * object)

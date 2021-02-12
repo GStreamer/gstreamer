@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <scerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,31 +18,20 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+
+
+#ifndef __GST_JPEG_ELEMENTS_H__
+#define __GST_JPEG_ELEMENTS_H__
+
+G_BEGIN_DECLS
+
+GST_ELEMENT_REGISTER_DECLARE (jpegenc);
+GST_ELEMENT_REGISTER_DECLARE (jpegdec);
+#if 0
+GST_ELEMENT_REGISTER_DECLARE (smokeenc);
+GST_ELEMENT_REGISTER_DECLARE (smokedec);
 #endif
 
-#include <string.h>
-#include <stdio.h>
+G_END_DECLS
 
-#include <jpeglib.h>
-#include <gst/gst.h>
-
-#include "gstjpeg.h"
-
-GType
-gst_idct_method_get_type (void)
-{
-  static GType idct_method_type = 0;
-  static const GEnumValue idct_method[] = {
-    {JDCT_ISLOW, "Slow but accurate integer algorithm", "islow"},
-    {JDCT_IFAST, "Faster, less accurate integer method", "ifast"},
-    {JDCT_FLOAT, "Floating-point: accurate, fast on fast HW", "float"},
-    {0, NULL, NULL},
-  };
-
-  if (!idct_method_type) {
-    idct_method_type = g_enum_register_static ("GstIDCTMethod", idct_method);
-  }
-  return idct_method_type;
-}
+#endif /* __GST_JPEG_ELEMENTS_H__ */
