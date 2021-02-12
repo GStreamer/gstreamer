@@ -327,7 +327,10 @@ struct _GstVaBufferSurface
 {
   GstVaDisplay *display;
   VASurfaceID surface;
+  guint n_mems;
+  GstMemory *mems[GST_VIDEO_MAX_PLANES];
   volatile gint ref_count;
+  volatile gint ref_mems_count;
 };
 
 static void
@@ -352,8 +355,10 @@ gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
   GstVaBufferSurface *buf = g_slice_new (GstVaBufferSurface);
 
   g_atomic_int_set (&buf->ref_count, 0);
+  g_atomic_int_set (&buf->ref_mems_count, 0);
   buf->surface = surface;
   buf->display = NULL;
+  buf->n_mems = 0;
 
   return buf;
 }
@@ -571,11 +576,31 @@ static gboolean
 gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
 {
   GstMemory *mem = GST_MEMORY_CAST (mini_object);
+  GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
+  guint i;
 
-  GST_LOG ("releasing %p: dmabuf %d, va surface %#x", mem,
-      gst_dmabuf_memory_get_fd (mem), gst_va_memory_get_surface (mem));
-  gst_va_memory_pool_push (&self->pool, mem);
+  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_va_buffer_surface_quark ());
+  if (!buf)
+    return TRUE;                /* free this unknown buffer */
+
+  /* if this is the last reference to the GstVaBufferSurface, iterates
+   * its array of memories to push them into the queue with thread
+   * safetly. */
+  GST_VA_MEMORY_POOL_LOCK (&self->pool);
+  if (g_atomic_int_dec_and_test (&buf->ref_mems_count)) {
+    for (i = 0; i < buf->n_mems; i++) {
+      GST_LOG_OBJECT (self, "releasing %p: dmabuf %d, va surface %#x",
+          buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]), buf->surface);
+      gst_va_memory_pool_push (&self->pool, buf->mems[i]);
+    }
+  }
+  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
+
+  /* note: if ref_mem_count doesn't reach zero, that memory will
+   * "float" until it's pushed back into the pool by the last va
+   * buffer surface ref */
 
   /* Keep last in case we are holding on the last allocator ref */
   gst_object_unref (mem->allocator);
@@ -649,6 +674,8 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     GST_VIDEO_INFO_SIZE (info) = 0;
   }
 
+  buf->n_mems = desc.num_objects;
+
   for (i = 0; i < desc.num_objects; i++) {
     gint fd = desc.objects[i].fd;
     gsize size = desc.objects[i].size > 0 ?
@@ -657,9 +684,11 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     guint64 *drm_mod = g_new (guint64, 1);
 
     gst_buffer_append_memory (buffer, mem);
+    buf->mems[i] = mem;
 
     if (G_LIKELY (!info)) {
       GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
+      g_atomic_int_add (&buf->ref_mems_count, 1);
     } else {
       /* if no @info, surface will be destroyed as soon as buffer is
        * destroyed (e.g. gst_va_dmabuf_allocator_try()) */
@@ -714,40 +743,82 @@ static VASurfaceID
 gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
     GstBuffer * buffer)
 {
-  GstMemory *mem[GST_VIDEO_MAX_PLANES] = { 0, };
-  VASurfaceID surface;
-  gint j, idx = 1;
+  GstMemory *mems[GST_VIDEO_MAX_PLANES] = { 0, };
+  GstVaBufferSurface *buf;
+  gint i, j, idx;
 
-  mem[0] = gst_va_memory_pool_pop (&self->pool);
-  if (!mem[0])
+  mems[0] = gst_va_memory_pool_pop (&self->pool);
+  if (!mems[0])
     return VA_INVALID_ID;
 
-  surface = gst_va_memory_get_surface (mem[0]);
-  while (surface != VA_INVALID_ID) {
-    GstMemory *pmem;
-    VASurfaceID psurface;
+  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mems[0]),
+      gst_va_buffer_surface_quark ());
+  if (!buf)
+    return VA_INVALID_ID;
 
-    pmem = gst_va_memory_pool_peek (&self->pool);
-    if (!pmem)
-      break;
+  if (buf->surface == VA_INVALID_ID)
+    return VA_INVALID_ID;
 
-    psurface = gst_va_memory_get_surface (pmem);
-    if (psurface != surface)
-      break;
+  for (idx = 1; idx < buf->n_mems; idx++) {
+    /* grab next memory from queue */
+    {
+      GstMemory *mem;
+      GstVaBufferSurface *pbuf;
 
-    mem[idx++] = gst_va_memory_pool_pop (&self->pool);
+      mem = gst_va_memory_pool_peek (&self->pool);
+      if (!mem)
+        return VA_INVALID_ID;
+
+      pbuf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+          gst_va_buffer_surface_quark ());
+      if (!pbuf)
+        return VA_INVALID_ID;
+
+      if (pbuf->surface != buf->surface) {
+        GST_WARNING_OBJECT (self,
+            "expecting memory with surface %#x but got %#x: "
+            "possible memory interweaving", buf->surface, pbuf->surface);
+        return VA_INVALID_ID;
+      }
+    }
+
+    mems[idx] = gst_va_memory_pool_pop (&self->pool);
   };
 
-  /* append them in reverse order */
-  for (j = idx - 1; j >= 0; j--) {
-    gst_object_ref (mem[j]->allocator);
-    gst_buffer_append_memory (buffer, mem[j]);
+  /* append memories */
+  for (i = 0; i < buf->n_mems; i++) {
+    gboolean found = FALSE;
 
-    GST_LOG ("bufer %p: memory %p - dmabuf %d / surface %#x", buffer, mem[j],
-        gst_dmabuf_memory_get_fd (mem[j]), gst_va_memory_get_surface (mem[j]));
+    /* find next memory to append */
+    for (j = 0; j < idx; j++) {
+      if (buf->mems[i] == mems[j]) {
+        found = TRUE;
+        break;
+      }
+    }
+
+    /* if not found, free all the popped memories and bail */
+    if (!found) {
+      if (!buf->display)
+        buf->display = gst_object_ref (self->display);
+      for (j = 0; j < idx; j++) {
+        gst_object_ref (buf->mems[j]->allocator);
+        GST_MINI_OBJECT (mems[j])->dispose = NULL;
+        gst_memory_unref (mems[j]);
+      }
+      return VA_INVALID_ID;
+    }
+
+    g_atomic_int_add (&buf->ref_mems_count, 1);
+    gst_object_ref (buf->mems[i]->allocator);
+    gst_buffer_append_memory (buffer, buf->mems[i]);
+
+    GST_LOG ("bufer %p: memory %p - dmabuf %d / surface %#x", buffer,
+        buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]),
+        gst_va_memory_get_surface (buf->mems[i]));
   }
 
-  return surface;
+  return buf->surface;
 }
 
 gboolean
@@ -865,6 +936,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
+  g_return_val_if_fail (n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
 
   format = GST_VIDEO_INFO_FORMAT (info);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
@@ -880,7 +952,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
 
   ext_buf.pixel_format = fourcc;
 
-  for (i = 0; i < MIN (n_planes, 4); i++) {
+  for (i = 0; i < n_planes; i++) {
     ext_buf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
     ext_buf.offsets[i] = offset[i];
   }
@@ -896,6 +968,8 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   buf = gst_va_buffer_surface_new (surface, rt_format, ext_buf.width,
       ext_buf.height);
   buf->display = gst_object_ref (display);
+  buf->n_mems = n_planes;
+  memcpy (buf->mems, mem, sizeof (buf->mems));
 
   for (i = 0; i < n_planes; i++) {
     g_atomic_int_add (&buf->ref_count, 1);
