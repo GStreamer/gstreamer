@@ -47,6 +47,7 @@
 #include <config.h>
 #endif
 
+#include "gsttaglibelements.h"
 #include "gstid3v2mux.h"
 
 #include <string.h>
@@ -77,6 +78,10 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("ANY"));
 
 G_DEFINE_TYPE (GstId3v2Mux, gst_id3v2_mux, GST_TYPE_TAG_MUX);
+#define _do_init \
+  taglib_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (id3v2mux, "id3v2mux",
+    GST_RANK_NONE, GST_TYPE_ID3V2_MUX, _do_init);
 
 static GstBuffer *gst_id3v2_mux_render_tag (GstTagMux * mux,
     const GstTagList * taglist);

@@ -1,6 +1,7 @@
 taglib_sources = [
   'gstapev2mux.cc',
   'gstid3v2mux.cc',
+  'gsttaglibelement.c',
   'gsttaglibplugin.c',
 ]
 

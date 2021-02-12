@@ -27,19 +27,12 @@
 
 #include <gst/tag/tag.h>
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+taglib_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (id3v2mux, plugin);
-  ret |= GST_ELEMENT_REGISTER (apev2mux, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    gst_tag_register_musicbrainz_tags ();
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    taglib,
-    "Tag writing plug-in based on taglib",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
