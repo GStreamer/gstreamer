@@ -3271,7 +3271,7 @@ _gst_audio_decoder_error (GstAudioDecoder * dec, gint weight,
  * gst_audio_decoder_get_audio_info:
  * @dec: a #GstAudioDecoder
  *
- * Returns: a #GstAudioInfo describing the input audio format
+ * Returns: (transfer none): a #GstAudioInfo describing the input audio format
  */
 GstAudioInfo *
 gst_audio_decoder_get_audio_info (GstAudioDecoder * dec)
