@@ -1,7 +1,7 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 
 $msvc_2017_url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
-$msys2_url = 'https://github.com/msys2/msys2-installer/releases/download/2020-05-22/msys2-base-x86_64-20200522.tar.xz'
+$msys2_url = 'https://github.com/msys2/msys2-installer/releases/download/2021-02-15/msys2-base-x86_64-20210215.tar.xz'
 $msys_mingw_get_url = 'https://dotsrc.dl.osdn.net/osdn/mingw/68260/mingw-get-0.6.3-mingw32-pre-20170905-1-bin.tar.xz'
 
 Write-Host "Installing VisualStudio"
