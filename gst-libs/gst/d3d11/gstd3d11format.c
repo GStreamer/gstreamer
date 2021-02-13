@@ -150,3 +150,44 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
 
   return TRUE;
 }
+
+/**
+ * gst_d3d11_dxgi_format_to_gst:
+ * @format: a DXGI_FORMAT
+ *
+ * Converts the @format to its #GstVideoFormat representation.
+ *
+ * Returns: a #GstVideoFormat equivalent to @format
+ *
+ * Since: 1.20
+ */
+GstVideoFormat
+gst_d3d11_dxgi_format_to_gst (DXGI_FORMAT format)
+{
+  switch (format) {
+    case DXGI_FORMAT_B8G8R8A8_UNORM:
+      return GST_VIDEO_FORMAT_BGRA;
+    case DXGI_FORMAT_R8G8B8A8_UNORM:
+      return GST_VIDEO_FORMAT_RGBA;
+    case DXGI_FORMAT_R10G10B10A2_UNORM:
+      return GST_VIDEO_FORMAT_RGB10A2_LE;
+    case DXGI_FORMAT_AYUV:
+      return GST_VIDEO_FORMAT_VUYA;
+    case DXGI_FORMAT_YUY2:
+      return GST_VIDEO_FORMAT_YUY2;
+    case DXGI_FORMAT_Y210:
+      return GST_VIDEO_FORMAT_Y210;
+    case DXGI_FORMAT_Y410:
+      return GST_VIDEO_FORMAT_Y410;
+    case DXGI_FORMAT_NV12:
+      return GST_VIDEO_FORMAT_NV12;
+    case DXGI_FORMAT_P010:
+      return GST_VIDEO_FORMAT_P010_10LE;
+    case DXGI_FORMAT_P016:
+      return GST_VIDEO_FORMAT_P016_LE;
+    default:
+      break;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
