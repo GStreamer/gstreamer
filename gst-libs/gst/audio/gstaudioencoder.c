@@ -2150,7 +2150,7 @@ gst_audio_encoder_sink_activate_mode (GstPad * pad, GstObject * parent,
  * gst_audio_encoder_get_audio_info:
  * @enc: a #GstAudioEncoder
  *
- * Returns: a #GstAudioInfo describing the input audio format
+ * Returns: (transfer none): a #GstAudioInfo describing the input audio format
  */
 GstAudioInfo *
 gst_audio_encoder_get_audio_info (GstAudioEncoder * enc)
