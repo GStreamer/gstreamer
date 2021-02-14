@@ -372,7 +372,7 @@ gst_d3d11_h264_dec_decide_allocation (GstVideoDecoder * decoder,
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
 
   if (!gst_d3d11_decoder_decide_allocation (decoder, query, self->device,
-          GST_D3D11_CODEC_H264, self->use_d3d11_output))
+          GST_D3D11_CODEC_H264, self->use_d3d11_output, self->d3d11_decoder))
     return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
@@ -765,7 +765,8 @@ gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstBuffer *view_buffer;
 
-  view_buffer = gst_d3d11_decoder_get_output_view_buffer (self->d3d11_decoder);
+  view_buffer = gst_d3d11_decoder_get_output_view_buffer (self->d3d11_decoder,
+      GST_VIDEO_DECODER (decoder));
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "No available output view buffer");
     return FALSE;

@@ -74,14 +74,18 @@ struct _GstD3D11DecoderPrivate
 
   ID3D11VideoDecoder *decoder;
 
-  GstBufferPool *internal_pool;
+  GstVideoInfo info;
 
   gint display_width;
   gint display_height;
 
+  GstBufferPool *internal_pool;
+  /* Internal pool params */
+  guint aligned_width;
+  guint aligned_height;
   gboolean use_array_of_texture;
-  guint pool_size;
-  guint8 next_view_id;
+  guint dpb_size;
+  guint downstream_min_buffers;
 
   /* for staging */
   ID3D11Texture2D *staging;
@@ -295,6 +299,9 @@ gst_d3d11_decoder_reset_unlocked (GstD3D11Decoder * decoder)
     priv->fallback_shader_output_texture = NULL;
   }
 
+  priv->dpb_size = 0;
+  priv->downstream_min_buffers = 0;
+
   decoder->opened = FALSE;
 }
 
@@ -364,11 +371,8 @@ gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
   return TRUE;
 }
 
-/* Must be called from D3D11Device thread */
 static gboolean
-gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
-    GstVideoInfo * info, guint coded_width, guint coded_height,
-    guint pool_size, const GUID * decoder_profile)
+gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11AllocationParams *alloc_params = NULL;
@@ -377,6 +381,8 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
   GstVideoAlignment align;
   GstD3D11AllocationFlags alloc_flags = 0;
   gint bind_flags = D3D11_BIND_DECODER;
+  GstVideoInfo *info = &priv->info;
+  guint pool_size;
 
   gst_clear_object (&priv->internal_pool);
 
@@ -395,12 +401,18 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
     goto error;
   }
 
+  pool_size = priv->dpb_size + priv->downstream_min_buffers;
+  GST_DEBUG_OBJECT (self,
+      "Configuring internal pool with size %d "
+      "(dpb size: %d, downstream min buffers: %d)", pool_size, priv->dpb_size,
+      priv->downstream_min_buffers);
+
   if (!priv->use_array_of_texture)
     alloc_params->desc[0].ArraySize = pool_size;
   gst_video_alignment_reset (&align);
 
-  align.padding_right = coded_width - GST_VIDEO_INFO_WIDTH (info);
-  align.padding_bottom = coded_height - GST_VIDEO_INFO_HEIGHT (info);
+  align.padding_right = priv->aligned_width - GST_VIDEO_INFO_WIDTH (info);
+  align.padding_bottom = priv->aligned_height - GST_VIDEO_INFO_HEIGHT (info);
   if (!gst_d3d11_allocation_params_alignment (alloc_params, &align)) {
     GST_ERROR_OBJECT (self, "Cannot set alignment");
     goto error;
@@ -428,7 +440,6 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
   }
 
   priv->internal_pool = pool;
-  priv->pool_size = pool_size;
 
   return TRUE;
 
@@ -538,7 +549,7 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
 gboolean
 gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     GstVideoInfo * info, guint coded_width, guint coded_height,
-    guint pool_size, const GUID ** decoder_profiles, guint profile_size)
+    guint dpb_size, const GUID ** decoder_profiles, guint profile_size)
 {
   GstD3D11DecoderPrivate *priv;
   const GstD3D11Format *d3d11_format;
@@ -562,7 +573,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
   g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
-  g_return_val_if_fail (pool_size > 0, FALSE);
+  g_return_val_if_fail (dpb_size > 0, FALSE);
   g_return_val_if_fail (decoder_profiles != NULL, FALSE);
   g_return_val_if_fail (profile_size > 0, FALSE);
 
@@ -714,12 +725,6 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   }
 #endif
 
-  if (!gst_d3d11_decoder_prepare_output_view_pool (decoder,
-          info, aligned_width, aligned_height, pool_size, &selected_profile)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't prepare output view pool");
-    goto error;
-  }
-
   hr = ID3D11VideoDevice_CreateVideoDecoder (priv->video_device,
       &decoder_desc, best_config, &priv->decoder);
   if (!gst_d3d11_result (hr, priv->device) || !priv->decoder) {
@@ -756,6 +761,17 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
       0, sizeof (priv->stating_texture_stride));
 
   priv->decoder_profile = selected_profile;
+
+  /* Store pool related information here, then we will setup internal pool
+   * later once the number of min buffer size required by downstream is known.
+   * Actual buffer pool size will be "dpb_size + downstream_min_buffers"
+   */
+  priv->info = *info;
+  priv->dpb_size = dpb_size;
+  priv->aligned_width = aligned_width;
+  priv->aligned_height = aligned_height;
+  priv->downstream_min_buffers = 0;
+
   decoder->opened = TRUE;
 
   /* VP9 codec allows internal frame resizing. To handle that case, we need to
@@ -1039,7 +1055,8 @@ gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * decoder,
 }
 
 GstBuffer *
-gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder)
+gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
+    GstVideoDecoder * videodec)
 {
   GstD3D11DecoderPrivate *priv;
   GstBuffer *buf = NULL;
@@ -1048,17 +1065,35 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder)
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
   priv = decoder->priv;
+  if (!priv->internal_pool) {
+    /* Replicate gst_video_decoder_allocate_output_buffer().
+     * In case of zero-copy playback, this is the last chance for querying
+     * required min-buffer size by downstream and take account of
+     * the min-buffer size into our internel pool size */
+    GST_VIDEO_DECODER_STREAM_LOCK (videodec);
+    if (gst_pad_check_reconfigure (GST_VIDEO_DECODER_SRC_PAD (videodec))) {
+      GST_DEBUG_OBJECT (videodec,
+          "Downstream was reconfigured, negotiating again");
+      gst_video_decoder_negotiate (videodec);
+    }
+    GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
+
+    if (!gst_d3d11_decoder_prepare_output_view_pool (decoder)) {
+      GST_ERROR_OBJECT (videodec, "Failed to setup internal pool");
+      return NULL;
+    }
+  }
 
   ret = gst_buffer_pool_acquire_buffer (priv->internal_pool, &buf, NULL);
 
   if (ret != GST_FLOW_OK || !buf) {
-    GST_ERROR_OBJECT (decoder, "Couldn't get buffer from pool, ret %s",
+    GST_ERROR_OBJECT (videodec, "Couldn't get buffer from pool, ret %s",
         gst_flow_get_name (ret));
     return NULL;
   }
 
   if (!gst_d3d11_decoder_ensure_output_view (decoder, buf)) {
-    GST_ERROR_OBJECT (decoder, "Output view unavailable");
+    GST_ERROR_OBJECT (videodec, "Output view unavailable");
     gst_buffer_unref (buf);
 
     return NULL;
@@ -1538,11 +1573,11 @@ gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
 gboolean
 gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query, GstD3D11Device * device, GstD3D11Codec codec,
-    gboolean use_d3d11_pool)
+    gboolean use_d3d11_pool, GstD3D11Decoder * d3d11_decoder)
 {
   GstCaps *outcaps;
   GstBufferPool *pool = NULL;
-  guint n, size, min, max;
+  guint n, size, min = 0, max = 0;
   GstVideoInfo vinfo = { 0, };
   GstStructure *config;
   GstD3D11AllocationParams *d3d11_params;
@@ -1614,6 +1649,13 @@ gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
+
+    /* Store min buffer size. We need to take account of the amount of buffers
+     * which might be held by downstream in case of zero-copy playback */
+    /* XXX: hardcoded bound 16, to avoid too large pool size */
+    d3d11_decoder->priv->downstream_min_buffers = MIN (min, 16);
+
+    GST_DEBUG_OBJECT (decoder, "Downstream min buffres: %d", min);
   }
 
   gst_buffer_pool_set_config (pool, config);

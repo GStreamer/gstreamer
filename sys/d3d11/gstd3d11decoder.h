@@ -74,7 +74,7 @@ gboolean          gst_d3d11_decoder_open (GstD3D11Decoder * decoder,
                                           GstVideoInfo * info,
                                           guint codec_width,
                                           guint codec_height,
-                                          guint pool_size,
+                                          guint dpb_size,
                                           const GUID ** decoder_profiles,
                                           guint profile_size);
 
@@ -99,7 +99,8 @@ gboolean          gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * de
                                                             guint buffer_count,
                                                             const D3D11_VIDEO_DECODER_BUFFER_DESC * buffers);
 
-GstBuffer *       gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder);
+GstBuffer *       gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
+                                                            GstVideoDecoder * videodec);
 
 ID3D11VideoDecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
                                                                               GstBuffer * buffer);
@@ -126,7 +127,8 @@ gboolean          gst_d3d11_decoder_decide_allocation   (GstVideoDecoder * decod
                                                          GstQuery * query,
                                                          GstD3D11Device * device,
                                                          GstD3D11Codec codec,
-                                                         gboolean use_d3d11_pool);
+                                                         gboolean use_d3d11_pool,
+                                                         GstD3D11Decoder * d3d11_decoder);
 
 gboolean          gst_d3d11_decoder_can_direct_render   (GstD3D11Decoder * decoder,
                                                          GstBuffer * view_buffer,
