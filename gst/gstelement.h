@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-
 /**
  * _GST_ELEMENT_REGISTER_DEFINE_BEGIN: (attributes doc.skip=true)
  */
@@ -37,14 +36,12 @@ G_BEGIN_DECLS \
 gboolean G_PASTE (gst_element_register_, element) (GstPlugin * plugin) \
 { \
   gboolean ret = FALSE; \
-  {\
-G_END_DECLS
+  {
 
 /**
  * _GST_ELEMENT_REGISTER_DEFINE_END: (attributes doc.skip=true)
  */
 #define _GST_ELEMENT_REGISTER_DEFINE_END(element_name, rank, type) \
-G_BEGIN_DECLS \
   } \
   ret |= gst_element_register (plugin, element_name, rank, type); \
   return ret; \
@@ -143,7 +140,7 @@ G_END_DECLS
  */
 #define GST_ELEMENT_REGISTER_DECLARE(element) \
 G_BEGIN_DECLS \
-gboolean G_PASTE(gst_element_register_, element) (GstPlugin * plugin) \
+gboolean G_PASTE(gst_element_register_, element) (GstPlugin * plugin); \
 G_END_DECLS
 
 /**
