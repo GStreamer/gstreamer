@@ -337,6 +337,20 @@ gst_video_convert_fixate_format (GstBaseTransform * base, GstCaps * caps,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
 }
 
+/* If a field is missing from `result` but present in `caps`, copy the field to `caps` */
+static void
+transfer_field_from_upstream_caps (GstCaps * result, GstCaps * caps,
+    const gchar * field_name)
+{
+  GstStructure *result_s = gst_caps_get_structure (result, 0);
+  GstStructure *caps_s = gst_caps_get_structure (caps, 0);
+
+  const GValue *result_field = gst_structure_get_value (result_s, field_name);
+  const GValue *caps_field = gst_structure_get_value (caps_s, field_name);
+
+  if (result_field == NULL && caps_field != NULL)
+    gst_structure_set_value (result_s, field_name, caps_field);
+}
 
 static GstCaps *
 gst_video_convert_fixate_caps (GstBaseTransform * trans,
@@ -366,6 +380,10 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
   if (direction == GST_PAD_SINK) {
     if (gst_caps_is_subset (caps, result)) {
       gst_caps_replace (&result, caps);
+    } else {
+      /* Transfer colorimetry and chroma-site from input caps if downstream had no preference */
+      transfer_field_from_upstream_caps (result, caps, "colorimetry");
+      transfer_field_from_upstream_caps (result, caps, "chroma-site");
     }
   }
 
