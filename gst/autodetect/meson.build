@@ -2,6 +2,8 @@ autodetect_sources = [
   'gstautoaudiosink.c',
   'gstautoaudiosrc.c',
   'gstautodetect.c',
+  'gstautodetectplugin.c',
+  'gstautodetectelement.c',
   'gstautovideosink.c',
   'gstautovideosrc.c',
 ]

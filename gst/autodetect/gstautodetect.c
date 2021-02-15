@@ -27,12 +27,6 @@
 #include <gst/gst.h>
 
 #include "gstautodetect.h"
-#include "gstautoaudiosink.h"
-#include "gstautoaudiosrc.h"
-#include "gstautovideosink.h"
-#include "gstautovideosrc.h"
-
-GST_DEBUG_CATEGORY (autodetect_debug);
 
 #define DEFAULT_SYNC                TRUE
 
@@ -486,25 +480,3 @@ gst_auto_detect_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (autodetect_debug, "autodetect", 0,
-      "Autodetection audio/video output wrapper elements");
-
-  return gst_element_register (plugin, "autovideosink",
-      GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_SINK) &&
-      gst_element_register (plugin, "autovideosrc",
-      GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_SRC) &&
-      gst_element_register (plugin, "autoaudiosink",
-      GST_RANK_NONE, GST_TYPE_AUTO_AUDIO_SINK) &&
-      gst_element_register (plugin, "autoaudiosrc",
-      GST_RANK_NONE, GST_TYPE_AUTO_AUDIO_SRC);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    autodetect,
-    "Plugin contains auto-detection plugins for video/audio in- and outputs",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -39,6 +39,8 @@
 #include "config.h"
 #endif
 
+#include "gstautodetectelements.h"
+#include "gstautodetect.h"
 #include "gstautovideosink.h"
 
 #define DEFAULT_TS_OFFSET           0
@@ -58,6 +60,8 @@ static void gst_auto_video_sink_configure (GstAutoDetect * autodetect,
     GstElement * kid);
 
 G_DEFINE_TYPE (GstAutoVideoSink, gst_auto_video_sink, GST_TYPE_AUTO_DETECT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (autovideosink, "autovideosink",
+    GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_SINK, autodetect_element_init (plugin));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

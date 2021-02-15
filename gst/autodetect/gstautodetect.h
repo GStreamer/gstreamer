@@ -20,10 +20,9 @@
 #ifndef __GST_AUTO_DETECT_H__
 #define __GST_AUTO_DETECT_H__
 
-G_BEGIN_DECLS
+#include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_EXTERN (autodetect_debug);
-#define GST_CAT_DEFAULT autodetect_debug
+G_BEGIN_DECLS
 
 #define GST_TYPE_AUTO_DETECT (gst_auto_detect_get_type ())
 #define GST_AUTO_DETECT(obj) \

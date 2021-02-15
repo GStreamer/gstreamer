@@ -40,9 +40,13 @@
 #include "config.h"
 #endif
 
+#include "gstautodetectelements.h"
+#include "gstautodetect.h"
 #include "gstautovideosrc.h"
 
 G_DEFINE_TYPE (GstAutoVideoSrc, gst_auto_video_src, GST_TYPE_AUTO_DETECT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (autovideosrc, "autovideosrc",
+    GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_SRC, autodetect_element_init (plugin));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
