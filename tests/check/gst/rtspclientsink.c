@@ -214,6 +214,7 @@ GST_START_TEST (test_record)
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_object_unref (pipeline);
+    gst_object_unref (bus);
   }
 
   iterate ();
@@ -227,9 +228,12 @@ GST_START_TEST (test_record)
 
     g_signal_emit_by_name (G_OBJECT (server_sink), "pull-sample", &sample);
     GST_INFO ("%2d recv sample: %p", i, sample);
-    if (sample)
+    if (sample) {
       gst_sample_unref (sample);
+      sample = NULL;
+    }
   }
+  gst_object_unref (server_sink);
 
   /* clean up and iterate so the clean-up can finish */
   stop_server ();
