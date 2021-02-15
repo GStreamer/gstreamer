@@ -1100,6 +1100,9 @@ gst_uri_decode_bin3_change_state (GstElement * element,
   GstURIDecodeBin3 *uridecodebin = (GstURIDecodeBin3 *) element;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      g_object_set (uridecodebin->decodebin, "caps", uridecodebin->caps, NULL);
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = activate_next_play_item (uridecodebin);
       if (ret == GST_STATE_CHANGE_FAILURE)
