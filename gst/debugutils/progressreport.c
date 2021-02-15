@@ -73,6 +73,7 @@
 #include <math.h>
 #include <time.h>
 
+#include "gstdebugutilselements.h"
 #include "progressreport.h"
 
 
@@ -117,6 +118,8 @@ static gboolean gst_progress_report_stop (GstBaseTransform * trans);
 
 #define gst_progress_report_parent_class parent_class
 G_DEFINE_TYPE (GstProgressReport, gst_progress_report, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (progressreport, "progressreport",
+    GST_RANK_NONE, gst_progress_report_get_type ());
 
 static void
 gst_progress_report_finalize (GObject * obj)

@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/gst.h>
+#include "gstdebugutilselements.h"
 #include "gstcapsdebug.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_caps_debug_debug);
@@ -63,6 +64,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_caps_debug_parent_class parent_class
 G_DEFINE_TYPE (GstCapsDebug, gst_caps_debug, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (capsdebug, "capsdebug",
+    GST_RANK_PRIMARY, gst_caps_debug_get_type ());
 
 static void
 gst_caps_debug_class_init (GstCapsDebugClass * klass)

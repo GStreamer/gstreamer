@@ -26,6 +26,7 @@
 #include <math.h>
 #include <time.h>
 
+#include "gstdebugutilselements.h"
 #include "cpureport.h"
 
 
@@ -52,6 +53,8 @@ static gboolean gst_cpu_report_stop (GstBaseTransform * trans);
 
 #define gst_cpu_report_parent_class parent_class
 G_DEFINE_TYPE (GstCpuReport, gst_cpu_report, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (cpureport, "cpureport",
+    GST_RANK_NONE, gst_cpu_report_get_type ());
 
 static void
 gst_cpu_report_finalize (GObject * obj)

@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2004 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <stephane.cerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,50 +25,27 @@
 
 #include <gst/gst.h>
 
-GType gst_break_my_data_get_type (void);
-//GType gst_caps_debug_get_type (void);
-GType gst_caps_setter_get_type (void);
-GType gst_rnd_buffer_size_get_type (void);
-GType gst_navseek_get_type (void);
-GType gst_progress_report_get_type (void);
-GType gst_tag_inject_get_type (void);
-GType gst_test_get_type (void);
-GType gst_push_file_src_get_type (void);
-/*
-GType gst_gst_negotiation_get_type (void);
-*/
-GType gst_cpu_report_get_type (void);
+#include "gstdebugutilselements.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
-          gst_break_my_data_get_type ())
-      || !gst_element_register (plugin, "capssetter", GST_RANK_NONE,
-          gst_caps_setter_get_type ())
-      || !gst_element_register (plugin, "rndbuffersize", GST_RANK_NONE,
-          gst_rnd_buffer_size_get_type ())
-      || !gst_element_register (plugin, "navseek", GST_RANK_NONE,
-          gst_navseek_get_type ())
-      || !gst_element_register (plugin, "pushfilesrc", GST_RANK_NONE,
-          gst_push_file_src_get_type ()) ||
-/*    !gst_element_register (plugin, "negotiation", GST_RANK_NONE, gst_gst_negotiation_get_type ()) || */
-      !gst_element_register (plugin, "progressreport", GST_RANK_NONE,
-          gst_progress_report_get_type ())
-      || !gst_element_register (plugin, "taginject", GST_RANK_NONE,
-          gst_tag_inject_get_type ())
-      || !gst_element_register (plugin, "testsink", GST_RANK_NONE,
-          gst_test_get_type ())
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (breakmydata, plugin);
+  ret |= GST_ELEMENT_REGISTER (capssetter, plugin);
+  ret |= GST_ELEMENT_REGISTER (rndbuffersize, plugin);
+  ret |= GST_ELEMENT_REGISTER (navseek, plugin);
+  ret |= GST_ELEMENT_REGISTER (pushfilesrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (progressreport, plugin);
+  ret |= GST_ELEMENT_REGISTER (taginject, plugin);
+  ret |= GST_ELEMENT_REGISTER (testsink, plugin);
 #if 0
-      || !gst_element_register (plugin, "capsdebug", GST_RANK_NONE,
-          gst_caps_debug_get_type ())
+  ret |= GST_ELEMENT_REGISTER (capsdebug, plugin);
 #endif
-      || !gst_element_register (plugin, "cpureport", GST_RANK_NONE,
-          gst_cpu_report_get_type ()))
+  ret |= GST_ELEMENT_REGISTER (cpureport, plugin);
 
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

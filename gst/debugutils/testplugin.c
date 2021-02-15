@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
+#include "gstdebugutilselements.h"
 #include "tests.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_test_debug);
@@ -83,7 +84,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GType gst_test_get_type (void);
 #define gst_test_parent_class parent_class
 G_DEFINE_TYPE (GstTest, gst_test, GST_TYPE_BASE_SINK);
-
+GST_ELEMENT_REGISTER_DEFINE (testsink, "testsink",
+    GST_RANK_NONE, gst_test_get_type ());
 
 static void
 gst_test_class_init (GstTestClass * klass)

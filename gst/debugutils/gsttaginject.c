@@ -41,6 +41,7 @@
 
 #include <stdlib.h>
 
+#include "gstdebugutilselements.h"
 #include "gsttaginject.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -64,6 +65,8 @@ enum
 
 #define gst_tag_inject_parent_class parent_class
 G_DEFINE_TYPE (GstTagInject, gst_tag_inject, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (taginject, "taginject",
+    GST_RANK_NONE, gst_tag_inject_get_type ());
 
 static void gst_tag_inject_finalize (GObject * object);
 static void gst_tag_inject_set_property (GObject * object, guint prop_id,

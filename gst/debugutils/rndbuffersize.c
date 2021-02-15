@@ -30,6 +30,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
+#include "gstdebugutilselements.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_rnd_buffer_size_debug);
 #define GST_CAT_DEFAULT gst_rnd_buffer_size_debug
 
@@ -107,6 +109,8 @@ static GstFlowReturn gst_rnd_buffer_size_chain (GstPad * pad,
 GType gst_rnd_buffer_size_get_type (void);
 #define gst_rnd_buffer_size_parent_class parent_class
 G_DEFINE_TYPE (GstRndBufferSize, gst_rnd_buffer_size, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rndbuffersize, "rndbuffersize",
+    GST_RANK_NONE, gst_rnd_buffer_size_get_type ());
 
 static void
 gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)

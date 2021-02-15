@@ -32,6 +32,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
+#include "gstdebugutilselements.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_break_my_data_debug);
 #define GST_CAT_DEFAULT gst_break_my_data_debug
 
@@ -100,7 +102,8 @@ GstStaticPadTemplate bmd_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_break_my_data_parent_class parent_class
 G_DEFINE_TYPE (GstBreakMyData, gst_break_my_data, GST_TYPE_BASE_TRANSFORM);
-
+GST_ELEMENT_REGISTER_DEFINE (breakmydata, "breakmydata",
+    GST_RANK_NONE, gst_break_my_data_get_type ());
 
 static void
 gst_break_my_data_class_init (GstBreakMyDataClass * klass)

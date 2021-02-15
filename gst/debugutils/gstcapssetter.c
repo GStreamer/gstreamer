@@ -46,6 +46,7 @@
 #include "config.h"
 #endif
 
+#include "gstdebugutilselements.h"
 #include "gstcapssetter.h"
 
 #include <string.h>
@@ -104,6 +105,8 @@ static void gst_caps_setter_get_property (GObject * object, guint prop_id,
 
 #define gst_caps_setter_parent_class parent_class
 G_DEFINE_TYPE (GstCapsSetter, gst_caps_setter, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (capssetter, "capssetter",
+    GST_RANK_NONE, gst_caps_setter_get_type ());
 
 static void
 gst_caps_setter_class_init (GstCapsSetterClass * g_class)

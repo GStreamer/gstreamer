@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include "gstdebugutilselements.h"
 #include "gstnavseek.h"
 #include <string.h>
 #include <math.h>
@@ -65,6 +66,8 @@ static void gst_navseek_get_property (GObject * object, guint prop_id,
 GType gst_navseek_get_type (void);
 #define gst_navseek_parent_class parent_class
 G_DEFINE_TYPE (GstNavSeek, gst_navseek, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (navseek, "navseek",
+    GST_RANK_NONE, gst_navseek_get_type ());
 
 static void
 gst_navseek_class_init (GstNavSeekClass * klass)

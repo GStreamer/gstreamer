@@ -41,6 +41,7 @@
 #include "config.h"
 #endif
 
+#include "gstdebugutilselements.h"
 #include "gstpushfilesrc.h"
 
 #include <gst/gst.h>
@@ -84,6 +85,8 @@ static void gst_push_file_src_uri_handler_init (gpointer g_iface,
 G_DEFINE_TYPE_WITH_CODE (GstPushFileSrc, gst_push_file_src, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_push_file_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (pushfilesrc, "pushfilesrc",
+    GST_RANK_NONE, gst_push_file_src_get_type ());
 
 static void
 gst_push_file_src_dispose (GObject * obj)

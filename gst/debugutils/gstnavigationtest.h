@@ -61,5 +61,7 @@ struct _GstNavigationtestClass
 
 GType gst_navigationtest_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (navigationtest);
+
 G_END_DECLS
 #endif /* __GST_NAVIGATIONTEST_H__ */
