@@ -644,9 +644,10 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
           &surface, 1))
     return FALSE;
 
-  /* FIXME(victor): find a better way since this is just a hack for
-   * i965 driver */
-  if (fourcc == VA_FOURCC_YUY2 || fourcc == VA_FOURCC_UYVY) {
+  /* workaround for missing layered dmabuf formats in i965 */
+  if (gst_va_display_is_implementation (self->display,
+          GST_VA_IMPLEMENTATION_INTEL_I965)
+      && (fourcc == VA_FOURCC_YUY2 || fourcc == VA_FOURCC_UYVY)) {
     /* These are not representable as separate planes */
     export_flags = VA_EXPORT_SURFACE_COMPOSED_LAYERS;
   } else {
