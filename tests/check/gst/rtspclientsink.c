@@ -238,6 +238,52 @@ GST_START_TEST (test_record)
 
 GST_END_TEST;
 
+/* Make sure we can shut down rtspclientsink while it's still waiting for
+ * the initial preroll data */
+GST_START_TEST (test_record_no_data)
+{
+
+  start_record_server ("( rtppcmadepay name=depay0 ! fakesink )");
+
+  /* Create an rtspclientsink and send some data */
+  {
+    gchar *uri = get_server_uri (test_port, TEST_MOUNT_POINT);
+    gchar *pipe_str;
+    GstMessage *msg;
+    GstElement *pipeline;
+    GstBus *bus;
+
+    pipe_str = g_strdup_printf ("appsrc caps=audio/x-alaw,rate=8000,channels=1"
+        " ! rtspclientsink name=sink location=%s", uri);
+    g_free (uri);
+
+    pipeline = gst_parse_launch (pipe_str, NULL);
+    g_free (pipe_str);
+
+    fail_unless (pipeline != NULL);
+
+    bus = gst_element_get_bus (pipeline);
+    fail_if (bus == NULL);
+
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+    /* wait for a bit */
+    msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR,
+        500 * GST_MSECOND);
+    fail_unless (msg == NULL);
+
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+    gst_object_unref (bus);
+  }
+
+  /* clean up and iterate so the clean-up can finish */
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspclientsink_suite (void)
 {
@@ -248,6 +294,7 @@ rtspclientsink_suite (void)
   tcase_add_checked_fixture (tc, setup, teardown);
   tcase_set_timeout (tc, 120);
   tcase_add_test (tc, test_record);
+  tcase_add_test (tc, test_record_no_data);
   return s;
 }
 
