@@ -1,8 +1,10 @@
 eq_sources = [
   'gstiirequalizer.c',
+  'gstiirequalizerplugin.c',
   'gstiirequalizernbands.c',
   'gstiirequalizer3bands.c',
   'gstiirequalizer10bands.c',
+  'gstiirequalizerplugin.c',
 ]
 
 gstequalizer = library('gstequalizer',
