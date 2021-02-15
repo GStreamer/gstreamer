@@ -1071,6 +1071,8 @@ gst_rtsp_client_sink_get_all_payloaders_caps (void)
         goto out;
     }
 
+    GST_MINI_OBJECT_FLAG_SET (caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
   out:
     g_once_init_leave (&ret, caps);
   }
