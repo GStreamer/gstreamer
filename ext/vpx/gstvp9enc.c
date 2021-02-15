@@ -62,6 +62,7 @@
 #include <gst/video/video.h>
 #include <string.h>
 
+#include "gstvpxelements.h"
 #include "gstvp8utils.h"
 #include "gstvp9enc.h"
 
@@ -99,6 +100,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_vp9_enc_parent_class
 G_DEFINE_TYPE (GstVP9Enc, gst_vp9_enc, GST_TYPE_VPX_ENC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vp9enc, "vp9enc", GST_RANK_PRIMARY,
+    gst_vp9_enc_get_type (), vpx_element_init (plugin));
 
 static vpx_codec_iface_t *gst_vp9_enc_get_algo (GstVPXEnc * enc);
 static gboolean gst_vp9_enc_enable_scaling (GstVPXEnc * enc);

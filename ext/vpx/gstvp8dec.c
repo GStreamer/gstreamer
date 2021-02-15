@@ -44,6 +44,7 @@
 
 #include <string.h>
 
+#include "gstvpxelements.h"
 #include "gstvp8dec.h"
 #include "gstvp8utils.h"
 
@@ -77,6 +78,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_vp8_dec_parent_class
 G_DEFINE_TYPE (GstVP8Dec, gst_vp8_dec, GST_TYPE_VPX_DEC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vp8dec, "vp8dec", GST_RANK_PRIMARY,
+    gst_vp8_dec_get_type (), vpx_element_init (plugin));
 
 static void
 gst_vp8_dec_class_init (GstVP8DecClass * klass)

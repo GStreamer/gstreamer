@@ -6,6 +6,7 @@ vpx_sources = [
   'gstvp9enc.c',
   'gstvpxdec.c',
   'gstvpxenc.c',
+  'gstvpxelement.c',
   'plugin.c',
 ]
 

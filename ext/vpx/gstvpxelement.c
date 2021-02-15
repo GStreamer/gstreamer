@@ -1,4 +1,4 @@
-/* VP8
+/* VPX
  * Copyright (C) 2006 David Schleef <ds@schleef.org>
  * Copyright (C) 2010 Entropy Wave Inc
  *
@@ -20,39 +20,20 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif
-
-#include <gst/gst.h>
 
 #include "gstvpxelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+#include <gst/tag/tag.h>
+
+void
+vpx_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-#ifdef HAVE_VP8_DECODER
-  ret |= GST_ELEMENT_REGISTER (vp8dec, plugin);
-#endif
-
-#ifdef HAVE_VP8_ENCODER
-  ret |= GST_ELEMENT_REGISTER (vp8enc, plugin);
-#endif
-
-#ifdef HAVE_VP9_DECODER
-  ret |= GST_ELEMENT_REGISTER (vp9dec, plugin);
-#endif
-
-#ifdef HAVE_VP9_ENCODER
-  ret |= GST_ELEMENT_REGISTER (vp9enc, plugin);
-#endif
-
-  return ret;
+  static gsize res = FALSE;
+  static const gchar *tags[] = { NULL };
+  if (g_once_init_enter (&res)) {
+    gst_meta_register_custom ("GstVP8Meta", tags, NULL, NULL, NULL);
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    vpx,
-    "VP8 plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
