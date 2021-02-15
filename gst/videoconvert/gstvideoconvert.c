@@ -337,19 +337,76 @@ gst_video_convert_fixate_format (GstBaseTransform * base, GstCaps * caps,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
 }
 
-/* If a field is missing from `result` but present in `caps`, copy the field to `caps` */
 static void
-transfer_field_from_upstream_caps (GstCaps * result, GstCaps * caps,
-    const gchar * field_name)
+transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
+    GstCaps * out_caps)
 {
-  GstStructure *result_s = gst_caps_get_structure (result, 0);
-  GstStructure *caps_s = gst_caps_get_structure (caps, 0);
+  GstStructure *out_caps_s = gst_caps_get_structure (out_caps, 0);
+  GstStructure *in_caps_s = gst_caps_get_structure (in_caps, 0);
+  gboolean have_colorimetry =
+      gst_structure_has_field (out_caps_s, "colorimetry");
+  gboolean have_chroma_site =
+      gst_structure_has_field (out_caps_s, "chroma-site");
 
-  const GValue *result_field = gst_structure_get_value (result_s, field_name);
-  const GValue *caps_field = gst_structure_get_value (caps_s, field_name);
+  /* If the output already has colorimetry and chroma-site, stop,
+   * otherwise try and transfer what we can from the input caps */
+  if (have_colorimetry && have_chroma_site)
+    return;
 
-  if (result_field == NULL && caps_field != NULL)
-    gst_structure_set_value (result_s, field_name, caps_field);
+  {
+    GstVideoInfo in_info, out_info;
+    const GValue *in_colorimetry =
+        gst_structure_get_value (in_caps_s, "colorimetry");
+
+    if (!gst_video_info_from_caps (&in_info, in_caps)) {
+      GST_WARNING_OBJECT (trans,
+          "Failed to convert sink pad caps to video info");
+      return;
+    }
+    if (!gst_video_info_from_caps (&out_info, out_caps)) {
+      GST_WARNING_OBJECT (trans,
+          "Failed to convert src pad caps to video info");
+      return;
+    }
+
+    if (!have_colorimetry && in_colorimetry != NULL) {
+      if ((GST_VIDEO_INFO_IS_YUV (&out_info)
+              && GST_VIDEO_INFO_IS_YUV (&in_info))
+          || (GST_VIDEO_INFO_IS_RGB (&out_info)
+              && GST_VIDEO_INFO_IS_RGB (&in_info))
+          || (GST_VIDEO_INFO_IS_GRAY (&out_info)
+              && GST_VIDEO_INFO_IS_GRAY (&in_info))) {
+        /* Can transfer the colorimetry intact from the input if it has it */
+        gst_structure_set_value (out_caps_s, "colorimetry", in_colorimetry);
+      } else {
+        gchar *colorimetry_str;
+
+        /* Changing between YUV/RGB - forward primaries and transfer function, but use
+         * default range and matrix.
+         * the primaries is used for conversion between RGB and XYZ (CIE 1931 coordinate).
+         * the transfer function could be another reference (e.g., HDR)
+         */
+        out_info.colorimetry.primaries = in_info.colorimetry.primaries;
+        out_info.colorimetry.transfer = in_info.colorimetry.transfer;
+
+        colorimetry_str =
+            gst_video_colorimetry_to_string (&out_info.colorimetry);
+        gst_caps_set_simple (out_caps, "colorimetry", G_TYPE_STRING,
+            colorimetry_str, NULL);
+        g_free (colorimetry_str);
+      }
+    }
+
+    /* Only YUV output needs chroma-site. If the input was also YUV, transfer the siting */
+    if (!have_chroma_site && GST_VIDEO_INFO_IS_YUV (&out_info)) {
+      if (GST_VIDEO_INFO_IS_YUV (&in_info)) {
+        const GValue *in_chroma_site =
+            gst_structure_get_value (in_caps_s, "chroma-site");
+        if (in_chroma_site != NULL)
+          gst_structure_set_value (out_caps_s, "chroma-site", in_chroma_site);
+      }
+    }
+  }
 }
 
 static GstCaps *
@@ -381,9 +438,8 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
     if (gst_caps_is_subset (caps, result)) {
       gst_caps_replace (&result, caps);
     } else {
-      /* Transfer colorimetry and chroma-site from input caps if downstream had no preference */
-      transfer_field_from_upstream_caps (result, caps, "colorimetry");
-      transfer_field_from_upstream_caps (result, caps, "chroma-site");
+      /* Try and preserve input colorimetry / chroma information */
+      transfer_colorimetry_from_input (trans, caps, result);
     }
   }
 
