@@ -45,6 +45,7 @@
 
 #include <string.h>
 
+#include "gstaudioparserselements.h"
 #include "gstac3parse.h"
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
@@ -173,6 +174,8 @@ static gboolean gst_ac3_parse_set_sink_caps (GstBaseParse * parse,
 
 #define gst_ac3_parse_parent_class parent_class
 G_DEFINE_TYPE (GstAc3Parse, gst_ac3_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (ac3parse, "ac3parse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_AC3_PARSE);
 
 static void
 gst_ac3_parse_class_init (GstAc3ParseClass * klass)

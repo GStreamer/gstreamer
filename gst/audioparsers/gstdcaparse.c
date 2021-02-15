@@ -47,6 +47,7 @@
 
 #include <string.h>
 
+#include "gstaudioparserselements.h"
 #include "gstdcaparse.h"
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
@@ -85,6 +86,8 @@ static gboolean gst_dca_parse_set_sink_caps (GstBaseParse * parse,
 
 #define gst_dca_parse_parent_class parent_class
 G_DEFINE_TYPE (GstDcaParse, gst_dca_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (dcaparse, "dcaparse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_DCA_PARSE);
 
 static void
 gst_dca_parse_class_init (GstDcaParseClass * klass)

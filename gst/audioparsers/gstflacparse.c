@@ -52,6 +52,7 @@
 #include "config.h"
 #endif
 
+#include "gstaudioparserselements.h"
 #include "gstflacparse.h"
 
 #include <string.h>
@@ -216,6 +217,8 @@ static gboolean gst_flac_parse_set_sink_caps (GstBaseParse * parse,
 
 #define gst_flac_parse_parent_class parent_class
 G_DEFINE_TYPE (GstFlacParse, gst_flac_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (flacparse, "flacparse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_FLAC_PARSE);
 
 static void
 gst_flac_parse_class_init (GstFlacParseClass * klass)

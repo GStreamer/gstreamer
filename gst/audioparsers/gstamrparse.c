@@ -42,6 +42,7 @@
 
 #include <string.h>
 
+#include "gstaudioparserselements.h"
 #include "gstamrparse.h"
 #include <gst/pbutils/pbutils.h>
 
@@ -85,6 +86,8 @@ static GstFlowReturn gst_amr_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
 G_DEFINE_TYPE (GstAmrParse, gst_amr_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (amrparse, "amrparse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_AMR_PARSE);
 
 /**
  * gst_amr_parse_class_init:

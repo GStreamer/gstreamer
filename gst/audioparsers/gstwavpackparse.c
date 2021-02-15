@@ -39,6 +39,7 @@
 
 #include <string.h>
 
+#include "gstaudioparserselements.h"
 #include "gstwavpackparse.h"
 
 #include <gst/base/base.h>
@@ -76,6 +77,8 @@ static GstFlowReturn gst_wavpack_parse_pre_push_frame (GstBaseParse * parse,
 
 #define gst_wavpack_parse_parent_class parent_class
 G_DEFINE_TYPE (GstWavpackParse, gst_wavpack_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (wavpackparse, "wavpackparse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_WAVPACK_PARSE);
 
 static void
 gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
