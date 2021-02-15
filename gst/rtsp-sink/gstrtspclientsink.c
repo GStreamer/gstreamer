@@ -4340,6 +4340,18 @@ done:
   return res;
 }
 
+static gboolean
+gst_rtsp_client_sink_is_stopping (GstRTSPClientSink * sink)
+{
+  gboolean is_stopping;
+
+  GST_OBJECT_LOCK (sink);
+  is_stopping = sink->task == NULL;
+  GST_OBJECT_UNLOCK (sink);
+
+  return is_stopping;
+}
+
 static GstRTSPResult
 gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
 {
@@ -4374,13 +4386,24 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
    * parts yet. */
   gst_rtsp_client_sink_collect_streams (sink);
 
+  if (gst_rtsp_client_sink_is_stopping (sink)) {
+    GST_INFO_OBJECT (sink, "task stopped, shutting down");
+    return GST_RTSP_EINTR;
+  }
+
   g_mutex_lock (&sink->block_streams_lock);
   /* Wait for streams to be blocked */
-  while (sink->n_streams_blocked < g_list_length (sink->contexts)) {
+  while (sink->n_streams_blocked < g_list_length (sink->contexts)
+      && !gst_rtsp_client_sink_is_stopping (sink)) {
     GST_DEBUG_OBJECT (sink, "waiting for streams to be blocked");
     g_cond_wait (&sink->block_streams_cond, &sink->block_streams_lock);
   }
   g_mutex_unlock (&sink->block_streams_lock);
+
+  if (gst_rtsp_client_sink_is_stopping (sink)) {
+    GST_INFO_OBJECT (sink, "task stopped, shutting down");
+    return GST_RTSP_EINTR;
+  }
 
   /* Send announce, then setup for all streams */
   gst_sdp_message_init (&sink->cursdp);
@@ -4920,6 +4943,10 @@ gst_rtsp_client_sink_stop (GstRTSPClientSink * sink)
     GST_OBJECT_UNLOCK (sink);
 
     gst_task_stop (task);
+
+    g_mutex_lock (&sink->block_streams_lock);
+    g_cond_broadcast (&sink->block_streams_cond);
+    g_mutex_unlock (&sink->block_streams_lock);
 
     /* make sure it is not running */
     GST_RTSP_STREAM_LOCK (sink);
