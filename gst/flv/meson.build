@@ -1,5 +1,5 @@
 gstflv = library('gstflv',
-  'gstflvdemux.c', 'gstflvmux.c',
+  'gstflvdemux.c', 'gstflvmux.c', 'gstflvplugin.c','gstflvelement.c',
   c_args : gst_plugins_good_args,
   include_directories : [configinc, libsinc],
   dependencies : [gstpbutils_dep, gstvideo_dep, gsttag_dep, gstaudio_dep],

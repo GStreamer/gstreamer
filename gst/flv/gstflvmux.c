@@ -43,6 +43,7 @@
 
 #include <gst/audio/audio.h>
 
+#include "gstflvelements.h"
 #include "gstflvmux.h"
 #include "amfdefs.h"
 
@@ -97,6 +98,8 @@ G_DEFINE_TYPE (GstFlvMuxPad, gst_flv_mux_pad, GST_TYPE_AGGREGATOR_PAD);
 #define gst_flv_mux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFlvMux, gst_flv_mux, GST_TYPE_AGGREGATOR,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flvmux, "flvmux",
+    GST_RANK_PRIMARY, GST_TYPE_FLV_MUX, flv_element_init (plugin));
 
 static GstFlowReturn
 gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout);

@@ -34,6 +34,7 @@
 #include "config.h"
 #endif
 
+#include "gstflvelements.h"
 #include "gstflvdemux.h"
 #include "gstflvmux.h"
 
@@ -85,11 +86,10 @@ static GstStaticPadTemplate video_src_template =
         "video/x-h264, stream-format=avc;")
     );
 
-GST_DEBUG_CATEGORY_STATIC (flvdemux_debug);
-#define GST_CAT_DEFAULT flvdemux_debug
-
 #define gst_flv_demux_parent_class parent_class
 G_DEFINE_TYPE (GstFlvDemux, gst_flv_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flvdemux, "flvdemux",
+    GST_RANK_PRIMARY, GST_TYPE_FLV_DEMUX, flv_element_init (plugin));
 
 /* 9 bytes of header + 4 bytes of first previous tag size */
 #define FLV_HEADER_SIZE 13
@@ -3777,21 +3777,3 @@ gst_flv_demux_init (GstFlvDemux * demux)
 
   gst_flv_demux_cleanup (demux);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (flvdemux_debug, "flvdemux", 0, "FLV demuxer");
-
-  if (!gst_element_register (plugin, "flvdemux", GST_RANK_PRIMARY,
-          gst_flv_demux_get_type ()) ||
-      !gst_element_register (plugin, "flvmux", GST_RANK_PRIMARY,
-          gst_flv_mux_get_type ()))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    flv, "FLV muxing and demuxing plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
