@@ -270,17 +270,6 @@ no_memory:
   }
 }
 
-static void
-gst_va_pool_flush_start (GstBufferPool * pool)
-{
-  GstVaPool *vpool = GST_VA_POOL (pool);
-
-  if (GST_IS_VA_DMABUF_ALLOCATOR (vpool->allocator))
-    gst_va_dmabuf_allocator_flush (vpool->allocator);
-  else if (GST_IS_VA_ALLOCATOR (vpool->allocator))
-    gst_va_allocator_flush (vpool->allocator);
-}
-
 static gboolean
 gst_va_pool_start (GstBufferPool * pool)
 {
@@ -290,6 +279,22 @@ gst_va_pool_start (GstBufferPool * pool)
   vpool->starting = TRUE;
   ret = GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
   vpool->starting = FALSE;
+
+  return ret;
+}
+
+static gboolean
+gst_va_pool_stop (GstBufferPool * pool)
+{
+  GstVaPool *vpool = GST_VA_POOL (pool);
+  gboolean ret;
+
+  ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
+
+  if (GST_IS_VA_DMABUF_ALLOCATOR (vpool->allocator))
+    gst_va_dmabuf_allocator_flush (vpool->allocator);
+  else if (GST_IS_VA_ALLOCATOR (vpool->allocator))
+    gst_va_allocator_flush (vpool->allocator);
 
   return ret;
 }
@@ -317,8 +322,8 @@ gst_va_pool_class_init (GstVaPoolClass * klass)
   gstbufferpool_class->get_options = gst_va_pool_get_options;
   gstbufferpool_class->set_config = gst_va_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_va_pool_alloc;
-  gstbufferpool_class->flush_start = gst_va_pool_flush_start;
   gstbufferpool_class->start = gst_va_pool_start;
+  gstbufferpool_class->stop = gst_va_pool_stop;
 }
 
 static void
