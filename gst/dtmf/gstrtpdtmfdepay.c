@@ -155,6 +155,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstRtpDTMFDepay, gst_rtp_dtmf_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE (rtpdtmfdepay, "rtpdtmfdepay", GST_RANK_MARGINAL,
+    GST_TYPE_RTP_DTMF_DEPAY);
 
 static void gst_rtp_dtmf_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -488,11 +490,4 @@ bad_packet:
     gst_rtp_buffer_unmap (&rtpbuffer);
 
   return NULL;
-}
-
-gboolean
-gst_rtp_dtmf_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpdtmfdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_DTMF_DEPAY);
 }

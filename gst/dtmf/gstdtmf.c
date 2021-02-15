@@ -27,16 +27,13 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_dtmf_src_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_rtp_dtmf_src_plugin_init (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (dtmfsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpdtmfsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpdtmfdepay, plugin);
 
-  if (!gst_rtp_dtmf_depay_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

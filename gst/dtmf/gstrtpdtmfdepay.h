@@ -62,7 +62,7 @@ struct _GstRtpDTMFDepayClass
 
 GType gst_rtp_dtmf_depay_get_type (void);
 
-gboolean gst_rtp_dtmf_depay_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (rtpdtmfdepay);
 
 G_END_DECLS
 #endif /* __GST_RTP_DTMF_DEPAY_H__ */

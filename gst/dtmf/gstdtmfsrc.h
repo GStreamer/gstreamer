@@ -95,7 +95,7 @@ struct _GstDTMFSrcClass
 
 GType gst_dtmf_src_get_type (void);
 
-gboolean gst_dtmf_src_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (dtmfsrc);
 
 G_END_DECLS
 #endif /* __GST_DTMF_SRC_H__ */

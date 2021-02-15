@@ -135,6 +135,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 
 G_DEFINE_TYPE (GstRTPDTMFSrc, gst_rtp_dtmf_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE (rtpdtmfsrc, "rtpdtmfsrc", GST_RANK_NONE,
+    GST_TYPE_RTP_DTMF_SRC);
 
 static void gst_rtp_dtmf_src_finalize (GObject * object);
 
@@ -1136,11 +1138,4 @@ gst_rtp_dtmf_src_unlock_stop (GstBaseSrc * src)
   GST_OBJECT_UNLOCK (dtmfsrc);
 
   return TRUE;
-}
-
-gboolean
-gst_rtp_dtmf_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpdtmfsrc",
-      GST_RANK_NONE, GST_TYPE_RTP_DTMF_SRC);
 }

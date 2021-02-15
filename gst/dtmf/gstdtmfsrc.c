@@ -173,6 +173,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_dtmf_src_parent_class
 G_DEFINE_TYPE (GstDTMFSrc, gst_dtmf_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE (dtmfsrc, "dtmfsrc", GST_RANK_NONE,
+    GST_TYPE_DTMF_SRC);
 
 static void gst_dtmf_src_finalize (GObject * object);
 
@@ -948,11 +950,4 @@ failure:
     GST_ERROR_OBJECT (dtmfsrc, "parent failed state change");
     return result;
   }
-}
-
-gboolean
-gst_dtmf_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "dtmfsrc",
-      GST_RANK_NONE, GST_TYPE_DTMF_SRC);
 }
