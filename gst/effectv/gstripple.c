@@ -83,6 +83,8 @@ gst_rippletv_mode_get_type (void)
 
 #define gst_rippletv_parent_class parent_class
 G_DEFINE_TYPE (GstRippleTV, gst_rippletv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (rippletv, "rippletv", GST_RANK_NONE,
+    GST_TYPE_RIPPLETV);
 
 static GstStaticPadTemplate gst_rippletv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

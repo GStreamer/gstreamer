@@ -135,6 +135,8 @@ static const gint swap_tab[] = { 2, 1, 0, 3 };
 
 #define gst_radioactv_parent_class parent_class
 G_DEFINE_TYPE (GstRadioacTV, gst_radioactv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (radioactv, "radioactv", GST_RANK_NONE,
+    GST_TYPE_RADIOACTV);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ RGBx, BGRx }")

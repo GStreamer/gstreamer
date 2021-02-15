@@ -60,6 +60,8 @@ enum
 
 #define gst_quarktv_parent_class parent_class
 G_DEFINE_TYPE (GstQuarkTV, gst_quarktv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (quarktv, "quarktv", GST_RANK_NONE,
+    GST_TYPE_QUARKTV);
 
 static void gst_quarktv_planetable_clear (GstQuarkTV * filter);
 

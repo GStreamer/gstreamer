@@ -86,6 +86,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 G_DEFINE_TYPE (GstAgingTV, gst_agingtv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (agingtv, "agingtv", GST_RANK_NONE,
+    GST_TYPE_AGINGTV);
 
 static void
 coloraging (guint32 * src, guint32 * dest, gint video_area, gint * c)

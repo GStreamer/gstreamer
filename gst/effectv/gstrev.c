@@ -62,6 +62,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "gsteffectv.h"
 #include "gstrev.h"
 
 #define THE_COLOR 0xffffffff
@@ -76,6 +77,8 @@ enum
 
 #define gst_revtv_parent_class parent_class
 G_DEFINE_TYPE (GstRevTV, gst_revtv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (revtv, "revtv", GST_RANK_NONE,
+    gst_revtv_get_type ());
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx }")

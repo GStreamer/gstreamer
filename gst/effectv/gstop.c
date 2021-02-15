@@ -96,6 +96,7 @@ static guint32 palette[256];
 
 #define gst_optv_parent_class parent_class
 G_DEFINE_TYPE (GstOpTV, gst_optv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (optv, "optv", GST_RANK_NONE, gst_optv_get_type ());
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ BGRx, RGBx }")

@@ -51,6 +51,8 @@
 
 #define gst_shagadelictv_parent_class parent_class
 G_DEFINE_TYPE (GstShagadelicTV, gst_shagadelictv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (shagadelictv, "shagadelictv",
+    GST_RANK_NONE, GST_TYPE_SHAGADELICTV);
 
 static void gst_shagadelic_initialize (GstShagadelicTV * filter,
     GstVideoInfo * in_info);

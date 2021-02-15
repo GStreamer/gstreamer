@@ -41,10 +41,13 @@
 #include <math.h>
 #include <string.h>
 
+#include "gsteffectv.h"
 #include "gstvertigo.h"
 
 #define gst_vertigotv_parent_class parent_class
 G_DEFINE_TYPE (GstVertigoTV, gst_vertigotv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (vertigotv, "vertigotv", GST_RANK_NONE,
+    GST_TYPE_VERTIGOTV);
 
 /* Filter signals and args */
 enum

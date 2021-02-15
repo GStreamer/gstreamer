@@ -39,41 +39,25 @@
 #include "gststreak.h"
 #include "gstripple.h"
 
-struct _elements_entry
-{
-  const gchar *name;
-    GType (*type) (void);
-};
-
-static const struct _elements_entry _elements[] = {
-  {"edgetv", gst_edgetv_get_type},
-  {"agingtv", gst_agingtv_get_type},
-  {"dicetv", gst_dicetv_get_type},
-  {"warptv", gst_warptv_get_type},
-  {"shagadelictv", gst_shagadelictv_get_type},
-  {"vertigotv", gst_vertigotv_get_type},
-  {"revtv", gst_revtv_get_type},
-  {"quarktv", gst_quarktv_get_type},
-  {"optv", gst_optv_get_type},
-  {"radioactv", gst_radioactv_get_type},
-  {"streaktv", gst_streaktv_get_type},
-  {"rippletv", gst_rippletv_get_type},
-  {NULL, 0},
-};
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gint i = 0;
+  gboolean ret = FALSE;
 
-  while (_elements[i].name) {
-    if (!gst_element_register (plugin, _elements[i].name,
-            GST_RANK_NONE, (_elements[i].type) ()))
-      return FALSE;
-    i++;
-  }
+  ret |= GST_ELEMENT_REGISTER (edgetv, plugin);
+  ret |= GST_ELEMENT_REGISTER (agingtv, plugin);
+  ret |= GST_ELEMENT_REGISTER (dicetv, plugin);
+  ret |= GST_ELEMENT_REGISTER (warptv, plugin);
+  ret |= GST_ELEMENT_REGISTER (shagadelictv, plugin);
+  ret |= GST_ELEMENT_REGISTER (vertigotv, plugin);
+  ret |= GST_ELEMENT_REGISTER (revtv, plugin);
+  ret |= GST_ELEMENT_REGISTER (quarktv, plugin);
+  ret |= GST_ELEMENT_REGISTER (optv, plugin);
+  ret |= GST_ELEMENT_REGISTER (radioactv, plugin);
+  ret |= GST_ELEMENT_REGISTER (streaktv, plugin);
+  ret |= GST_ELEMENT_REGISTER (rippletv, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

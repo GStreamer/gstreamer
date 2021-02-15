@@ -45,9 +45,11 @@
 #include <string.h>
 
 #include "gstedge.h"
+#include "gsteffectv.h"
 
 #define gst_edgetv_parent_class parent_class
 G_DEFINE_TYPE (GstEdgeTV, gst_edgetv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (edgetv, "edgetv", GST_RANK_NONE, GST_TYPE_EDGETV);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  BGRx, RGBx }")

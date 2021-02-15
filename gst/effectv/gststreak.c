@@ -61,6 +61,8 @@ enum
 
 #define gst_streaktv_parent_class parent_class
 G_DEFINE_TYPE (GstStreakTV, gst_streaktv, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (streaktv, "streaktv", GST_RANK_NONE,
+    GST_TYPE_STREAKTV);
 
 static GstStaticPadTemplate gst_streaktv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
