@@ -73,6 +73,8 @@ static GstTagDemuxResult gst_ape_demux_parse_tag (GstTagDemux * demux,
     GstTagList ** tags);
 
 G_DEFINE_TYPE (GstApeDemux, gst_ape_demux, GST_TYPE_TAG_DEMUX);
+GST_ELEMENT_REGISTER_DEFINE (apedemux, "apedemux", GST_RANK_PRIMARY,
+    GST_TYPE_APE_DEMUX);
 
 static void
 gst_ape_demux_class_init (GstApeDemuxClass * klass)
@@ -434,8 +436,7 @@ gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "apedemux",
-      GST_RANK_PRIMARY, GST_TYPE_APE_DEMUX);
+  return GST_ELEMENT_REGISTER (apedemux, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

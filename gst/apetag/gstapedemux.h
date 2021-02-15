@@ -46,6 +46,8 @@ struct _GstApeDemuxClass
 
 GType gst_ape_demux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (apedemux);
+
 G_END_DECLS
 
 #endif /* __GST_APE_DEMUX_H__ */
