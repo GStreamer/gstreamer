@@ -1,4 +1,5 @@
 avi_sources = [
+  'gstavielement.c',
   'gstavi.c',
   'gstavimux.c',
   'gstavidemux.c',

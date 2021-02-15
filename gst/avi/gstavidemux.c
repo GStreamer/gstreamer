@@ -47,6 +47,7 @@
 #include <stdio.h>
 
 #include "gst/riff/riff-media.h"
+#include "gstavielements.h"
 #include "gstavidemux.h"
 #include "avi-ids.h"
 #include <gst/gst-i18n-plugin.h>
@@ -132,6 +133,8 @@ static void parse_tag_value (GstAviDemux * avi, GstTagList * taglist,
 
 #define gst_avi_demux_parent_class parent_class
 G_DEFINE_TYPE (GstAviDemux, gst_avi_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avidemux, "avidemux", GST_RANK_PRIMARY,
+    GST_TYPE_AVI_DEMUX, avi_element_init (plugin));
 
 static void
 gst_avi_demux_class_init (GstAviDemuxClass * klass)

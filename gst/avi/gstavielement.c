@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@temple-baptist.com>
- *
- * gstavi.c: plugin registering
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <stephane.cerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,22 +23,22 @@
 #include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+#include "gst/riff/riff-read.h"
+
 #include "gstavielements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+avi_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    gst_riff_init ();
 
-  ret |= GST_ELEMENT_REGISTER (avidemux, plugin);
-  ret |= GST_ELEMENT_REGISTER (avimux, plugin);
-  ret |= GST_ELEMENT_REGISTER (avisubtitle, plugin);
-
-  return ret;
+#ifdef ENABLE_NLS
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    avi,
-    "AVI stream handling",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -69,6 +69,7 @@
 #include <gst/audio/audio.h>
 #include <gst/base/gstbytewriter.h>
 
+#include "gstavielements.h"
 #include "gstavimux.h"
 
 GST_DEBUG_CATEGORY_STATIC (avimux_debug);
@@ -202,6 +203,8 @@ static GstStateChangeReturn gst_avi_mux_change_state (GstElement * element,
 #define gst_avi_mux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAviMux, gst_avi_mux, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avimux, "avimux", GST_RANK_PRIMARY,
+    GST_TYPE_AVI_MUX, avi_element_init (plugin));
 
 static void
 gst_avi_mux_finalize (GObject * object)
