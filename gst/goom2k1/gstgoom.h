@@ -60,7 +60,7 @@ struct _GstGoom2k1Class
 };
 
 GType gst_goom2k1_get_type (void);
-gboolean gst_goom2k1_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (goom2k1);
 
 G_END_DECLS
 

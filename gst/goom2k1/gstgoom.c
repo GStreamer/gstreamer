@@ -86,7 +86,8 @@ static gboolean gst_goom2k1_render (GstAudioVisualizer * base,
 
 
 G_DEFINE_TYPE (GstGoom2k1, gst_goom2k1, GST_TYPE_AUDIO_VISUALIZER);
-
+GST_ELEMENT_REGISTER_DEFINE (goom2k1, "goom2k1", GST_RANK_NONE,
+    GST_TYPE_GOOM2K1);
 static void
 gst_goom2k1_class_init (GstGoom2k1Class * klass)
 {
@@ -182,8 +183,7 @@ gst_goom2k1_render (GstAudioVisualizer * base, GstBuffer * audio,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "goom2k1", GST_RANK_NONE,
-      GST_TYPE_GOOM2K1);
+  return GST_ELEMENT_REGISTER (goom2k1, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
