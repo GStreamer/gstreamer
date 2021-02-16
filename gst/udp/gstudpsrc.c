@@ -114,6 +114,7 @@
 #endif
 
 #include <string.h>
+#include "gstudpelements.h"
 #include "gstudpsrc.h"
 
 #include <gst/net/gstnetaddressmeta.h>
@@ -615,6 +616,8 @@ static GstStateChangeReturn gst_udpsrc_change_state (GstElement * element,
 #define gst_udpsrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstUDPSrc, gst_udpsrc, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_udpsrc_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (udpsrc, "udpsrc", GST_RANK_NONE,
+    GST_TYPE_UDPSRC, udp_element_init (plugin));
 
 static void
 gst_udpsrc_class_init (GstUDPSrcClass * klass)

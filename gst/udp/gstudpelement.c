@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Julian Bouzas <julian.bouzas@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,24 +23,25 @@
 #include "config.h"
 #endif
 
+#include <gst/net/gstnetaddressmeta.h>
+
 #include "gstudpelements.h"
 
-
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+udp_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    /* not using GLIB_CHECK_VERSION on purpose, run-time version matters */
+    if (glib_check_version (2, 36, 0) != NULL) {
+      GST_WARNING ("Your GLib version is < 2.36, UDP multicasting support may "
+          "be broken, see https://bugzilla.gnome.org/show_bug.cgi?id=688378");
+    }
 
-  ret |= GST_ELEMENT_REGISTER (udpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (multiudpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (dynudpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (udpsrc, plugin);
-
-  return ret;
+    /* register info of the netaddress metadata so that we can use it from
+     * multiple threads right away. Note that the plugin loading is always
+     * serialized */
+    gst_net_address_meta_get_info ();
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    udp,
-    "transfer data via UDP",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

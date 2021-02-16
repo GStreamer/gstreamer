@@ -1,5 +1,6 @@
 udp_sources = [
   'gstudp.c',
+  'gstudpelement.c',
   'gstudpsrc.c',
   'gstudpsink.c',
   'gstmultiudpsink.c',

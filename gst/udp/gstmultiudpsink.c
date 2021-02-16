@@ -33,6 +33,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include "gstudpelements.h"
 #include "gstmultiudpsink.h"
 
 #include <string.h>
@@ -140,6 +141,8 @@ static guint gst_multiudpsink_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_multiudpsink_parent_class parent_class
 G_DEFINE_TYPE (GstMultiUDPSink, gst_multiudpsink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (multiudpsink, "multiudpsink",
+    GST_RANK_NONE, GST_TYPE_MULTIUDPSINK, udp_element_init (plugin));
 
 static void
 gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
