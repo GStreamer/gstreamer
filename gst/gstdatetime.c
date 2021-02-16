@@ -37,9 +37,11 @@
  * Struct to store date, time and timezone information altogether.
  * #GstDateTime is refcounted and immutable.
  *
- * Date information is handled using the proleptic Gregorian calendar.
+ * Date information is handled using the [proleptic Gregorian calendar].
  *
  * Provides basic creation functions and accessor functions to its fields.
+ *
+ * [proleptic Gregorian calendar]: https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar
  */
 
 typedef enum
@@ -70,11 +72,9 @@ static void gst_date_time_free (GstDateTime * datetime);
 
 /**
  * gst_date_time_new_from_g_date_time:
- * @dt: (transfer full) (nullable): the #GDateTime. The new #GstDateTime takes ownership.
+ * @dt: (transfer full) (nullable): the #GDateTime.
  *
  * Creates a new #GstDateTime from a #GDateTime object.
- *
- * Free-function: gst_date_time_unref
  *
  * Returns: (transfer full) (nullable): a newly created #GstDateTime,
  * or %NULL if @dt is %NULL.
@@ -102,8 +102,6 @@ gst_date_time_new_from_g_date_time (GDateTime * dt)
  * @datetime: GstDateTime.
  *
  * Creates a new #GDateTime from a fully defined #GstDateTime object.
- *
- * Free-function: g_date_time_unref
  *
  * Returns: (transfer full) (nullable): a newly created #GDateTime, or
  * %NULL on error or if @datetime does not have a year, month, day, hour,
@@ -196,7 +194,7 @@ gst_date_time_has_second (const GstDateTime * datetime)
  * gst_date_time_get_year:
  * @datetime: a #GstDateTime
  *
- * Returns the year of this #GstDateTime
+ * Returns the year of this #GstDateTime.
  * Call gst_date_time_has_year() before, to avoid warnings.
  *
  * Return value: The year of this #GstDateTime
@@ -359,8 +357,6 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
  *
  * @year should be from 1 to 9999.
  *
- * Free-function: gst_date_time_unref
- *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
  */
@@ -382,8 +378,6 @@ gst_date_time_new_y (gint year)
  *
  * If value is -1 then all over value will be ignored. For example
  * if @month == -1, then #GstDateTime will created only for @year.
- *
- * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
@@ -411,8 +405,6 @@ gst_date_time_new_ym (gint year, gint month)
  * @day == -1, then #GstDateTime will created for @year and @month and
  * so on.
  *
- * Free-function: gst_date_time_unref
- *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
  */
@@ -428,8 +420,6 @@ gst_date_time_new_ymd (gint year, gint month, gint day)
  *
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the local timezone.
- *
- * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
@@ -452,8 +442,6 @@ gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
  *
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the UTC timezone.
- *
- * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
@@ -577,8 +565,6 @@ gst_date_time_check_fields (gint * year, gint * month, gint * day,
  * @month and @day, and the time fields will be considered not set. In this
  * case @minute and @seconds should also be -1.
  *
- * Free-function: gst_date_time_unref
- *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
  */
@@ -628,8 +614,6 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
  *
  * Creates a new #GstDateTime representing the current date and time.
  *
- * Free-function: gst_date_time_unref
- *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime which should
  *     be freed with gst_date_time_unref(), or %NULL on error.
  */
@@ -650,8 +634,6 @@ gst_date_time_new_now_local_time (void)
  *
  * Creates a new #GstDateTime that represents the current instant at Universal
  * coordinated time.
- *
- * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime which should
  *   be freed with gst_date_time_unref(), or %NULL on error.
@@ -712,11 +694,9 @@ __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
  * representing it in hours for most timezones.
  *
  * If value is -1 then all over value will be ignored. For example
- * if @month == -1, then #GstDateTime will created only for @year. If
- * @day == -1, then #GstDateTime will created for @year and @month and
+ * if @month == -1, then #GstDateTime will be created only for @year. If
+ * @day == -1, then #GstDateTime will be created for @year and @month and
  * so on.
- *
- * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full) (nullable): the newly created #GstDateTime,
  * or %NULL on error.
@@ -859,16 +839,15 @@ done:
 
 /**
  * gst_date_time_to_iso8601_string:
- * @datetime: GstDateTime.
+ * @datetime: a #GstDateTime.
  *
  * Create a minimal string compatible with ISO-8601. Possible output formats
- * are (for example): 2012, 2012-06, 2012-06-23, 2012-06-23T23:30Z,
- * 2012-06-23T23:30+0100, 2012-06-23T23:30:59Z, 2012-06-23T23:30:59+0100
+ * are (for example): `2012`, `2012-06`, `2012-06-23`, `2012-06-23T23:30Z`,
+ * `2012-06-23T23:30+0100`, `2012-06-23T23:30:59Z`, `2012-06-23T23:30:59+0100`
  *
  * Returns: (nullable): a newly allocated string formatted according
  *     to ISO 8601 and only including the datetime fields that are
- *     valid, or %NULL in case there was an error. The string should
- *     be freed with g_free().
+ *     valid, or %NULL in case there was an error.
  */
 gchar *
 gst_date_time_to_iso8601_string (GstDateTime * datetime)
@@ -887,14 +866,12 @@ gst_date_time_to_iso8601_string (GstDateTime * datetime)
  *
  * Tries to parse common variants of ISO-8601 datetime strings into a
  * #GstDateTime. Possible input formats are (for example):
- * 2012-06-30T22:46:43Z, 2012, 2012-06, 2012-06-30, 2012-06-30T22:46:43-0430,
- * 2012-06-30T22:46Z, 2012-06-30T22:46-0430, 2012-06-30 22:46,
- * 2012-06-30 22:46:43, 2012-06-00, 2012-00-00, 2012-00-30, 22:46:43Z, 22:46Z,
- * 22:46:43-0430, 22:46-0430, 22:46:30, 22:46
+ * `2012-06-30T22:46:43Z`, `2012`, `2012-06`, `2012-06-30`, `2012-06-30T22:46:43-0430`,
+ * `2012-06-30T22:46Z`, `2012-06-30T22:46-0430`, `2012-06-30 22:46`,
+ * `2012-06-30 22:46:43`, `2012-06-00`, `2012-00-00`, `2012-00-30`, `22:46:43Z`, `22:46Z`,
+ * `22:46:43-0430`, `22:46-0430`, `22:46:30`, `22:46`
  * If no date is provided, it is assumed to be "today" in the timezone
  * provided (if any), otherwise UTC.
- *
- * Free-function: gst_date_time_unref
  *
  * Returns: (transfer full) (nullable): a newly created #GstDateTime,
  * or %NULL on error
