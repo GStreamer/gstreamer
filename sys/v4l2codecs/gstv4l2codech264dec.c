@@ -75,6 +75,7 @@ struct _GstV4l2CodecH264Dec
   gint min_pool_size;
   gboolean has_videometa;
   gboolean need_negotiation;
+  gboolean interlaced;
   gboolean need_sequence;
   gboolean copy_frames;
   gboolean scaling_matrix_present;
@@ -371,6 +372,9 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
       self->vinfo.finfo->format, self->display_width,
       self->display_height, h264dec->input_state);
+
+  if (self->interlaced)
+    self->output_state->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
 
   self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
 
@@ -715,7 +719,10 @@ gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
     GArray * ref_pic_list0, GArray * ref_pic_list1)
 {
   struct v4l2_ctrl_h264_slice_params *slice_params;
-  gint i;
+  gint i, fields = V4L2_H264_FRAME_REF;
+
+  if (self->interlaced)
+    fields = 0;
 
   slice_params = &g_array_index (self->slice_params,
       struct v4l2_ctrl_h264_slice_params, 0);
@@ -730,7 +737,7 @@ gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
         g_array_index (ref_pic_list0, GstH264Picture *, i);
     slice_params->ref_pic_list0[i].index =
         lookup_dpb_index (self->decode_params.dpb, ref_pic);
-    slice_params->ref_pic_list0[i].fields = 0;
+    slice_params->ref_pic_list0[i].fields = fields;
   }
 
   for (i = 0; i < ref_pic_list1->len; i++) {
@@ -738,7 +745,7 @@ gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
         g_array_index (ref_pic_list1, GstH264Picture *, i);
     slice_params->ref_pic_list1[i].index =
         lookup_dpb_index (self->decode_params.dpb, ref_pic);
-    slice_params->ref_pic_list1[i].fields = 0;
+    slice_params->ref_pic_list1[i].fields = fields;
   }
 }
 
@@ -750,6 +757,7 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
   gint crop_width = sps->width;
   gint crop_height = sps->height;
   gboolean negotiation_needed = FALSE;
+  gboolean interlaced;
 
   if (self->vinfo.finfo->format == GST_VIDEO_FORMAT_UNKNOWN)
     negotiation_needed = TRUE;
@@ -776,6 +784,14 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
     GST_INFO_OBJECT (self, "Resolution changed to %dx%d (%ix%i)",
         self->display_width, self->display_height,
         self->coded_width, self->coded_height);
+  }
+
+  interlaced = !sps->frame_mbs_only_flag;
+  if (self->interlaced != interlaced) {
+    self->interlaced = interlaced;
+
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Interlaced mode changed to %d", interlaced);
   }
 
   if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
