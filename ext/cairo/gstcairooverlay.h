@@ -43,6 +43,8 @@ struct _GstCairoOverlay {
   gboolean attach_compo_to_buffer;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (cairooverlay);
+
 G_END_DECLS
 
 #endif /* __GST_CAIRO_OVERLAY_H__ */

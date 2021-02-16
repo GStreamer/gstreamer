@@ -104,6 +104,8 @@
 #define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ xRGB, ARGB, RGB16 }")
 #endif
 
+GST_DEBUG_CATEGORY (cairo_debug);
+
 static GstStaticPadTemplate gst_cairo_overlay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -119,7 +121,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 G_DEFINE_TYPE (GstCairoOverlay, gst_cairo_overlay, GST_TYPE_BASE_TRANSFORM);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (cairooverlay, "cairooverlay",
+    GST_RANK_NONE, GST_TYPE_CAIRO_OVERLAY, GST_DEBUG_CATEGORY_INIT (cairo_debug,
+        "cairo", 0, "Cairo elements"););
 enum
 {
   PROP_0,

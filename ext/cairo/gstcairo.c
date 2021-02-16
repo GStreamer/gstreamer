@@ -27,17 +27,11 @@
 #include <string.h>
 #include <math.h>
 
-GST_DEBUG_CATEGORY (cairo_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "cairooverlay", GST_RANK_NONE,
-      GST_TYPE_CAIRO_OVERLAY);
-
-  GST_DEBUG_CATEGORY_INIT (cairo_debug, "cairo", 0, "Cairo elements");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (cairooverlay, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, cairo,
