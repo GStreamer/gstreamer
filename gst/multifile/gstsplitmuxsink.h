@@ -34,7 +34,6 @@ typedef struct _GstSplitMuxSink GstSplitMuxSink;
 typedef struct _GstSplitMuxSinkClass GstSplitMuxSinkClass;
 
 GType gst_splitmux_sink_get_type (void);
-gboolean register_splitmuxsink (GstPlugin * plugin);
 
 typedef enum _SplitMuxInputState
 {
@@ -219,6 +218,8 @@ struct _GstSplitMuxSinkClass
   void     (*split_after) (GstSplitMuxSink * splitmux);
   void     (*split_at_running_time)   (GstSplitMuxSink * splitmux, GstClockTime split_time);
 };
+
+GST_ELEMENT_REGISTER_DECLARE (splitmuxsink);
 
 G_END_DECLS
 #endif /* __GST_SPLITMUXSINK_H__ */

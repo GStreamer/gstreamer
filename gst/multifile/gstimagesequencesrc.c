@@ -229,6 +229,8 @@ gst_image_sequence_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
       0, "imagesequencesrc element");
 G_DEFINE_TYPE_WITH_CODE (GstImageSequenceSrc, gst_image_sequence_src,
     GST_TYPE_PUSH_SRC, _do_init);
+GST_ELEMENT_REGISTER_DEFINE (imagesequencesrc, "imagesequencesrc",
+    GST_RANK_NONE, gst_image_sequence_src_get_type ());
 
 static gboolean
 is_seekable (GstBaseSrc * src)

@@ -113,6 +113,8 @@ struct _GstMultiFileSinkClass
 
 GType gst_multi_file_sink_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (multifilesink);
+
 G_END_DECLS
 
 #endif /* __GST_MULTIFILESINK_H__ */

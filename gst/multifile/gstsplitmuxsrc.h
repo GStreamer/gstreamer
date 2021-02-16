@@ -104,7 +104,6 @@ struct _SplitMuxSrcPadClass
 };
 
 GType gst_splitmux_src_get_type (void);
-gboolean register_splitmuxsrc (GstPlugin * plugin);
 
 #define SPLITMUX_SRC_LOCK(s) g_mutex_lock(&(s)->lock)
 #define SPLITMUX_SRC_UNLOCK(s) g_mutex_unlock(&(s)->lock)
@@ -116,6 +115,8 @@ gboolean register_splitmuxsrc (GstPlugin * plugin);
 #define SPLITMUX_SRC_PADS_WUNLOCK(s) g_rw_lock_writer_unlock(&(s)->pads_rwlock)
 #define SPLITMUX_SRC_PADS_RLOCK(s) g_rw_lock_reader_lock(&(s)->pads_rwlock)
 #define SPLITMUX_SRC_PADS_RUNLOCK(s) g_rw_lock_reader_unlock(&(s)->pads_rwlock)
+
+GST_ELEMENT_REGISTER_DECLARE (splitmuxsrc);
 
 G_END_DECLS
 

@@ -90,7 +90,8 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstMultiFileSrc, gst_multi_file_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_multi_file_src_uri_handler_init));
-
+GST_ELEMENT_REGISTER_DEFINE (multifilesrc, "multifilesrc", GST_RANK_NONE,
+    gst_multi_file_src_get_type ());
 
 static gboolean
 is_seekable (GstBaseSrc * src)

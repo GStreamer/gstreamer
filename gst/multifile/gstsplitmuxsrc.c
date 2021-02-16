@@ -125,11 +125,14 @@ static gboolean gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux,
     guint part, GstSeekFlags extra_flags);
 
 #define _do_init \
-    G_IMPLEMENT_INTERFACE(GST_TYPE_URI_HANDLER, splitmux_src_uri_handler_init);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_URI_HANDLER, splitmux_src_uri_handler_init); \
+    GST_DEBUG_CATEGORY_INIT (splitmux_debug, "splitmuxsrc", 0, "Split File Demuxing Source");
 #define gst_splitmux_src_parent_class parent_class
 
 G_DEFINE_TYPE_EXTENDED (GstSplitMuxSrc, gst_splitmux_src, GST_TYPE_BIN, 0,
     _do_init);
+GST_ELEMENT_REGISTER_DEFINE (splitmuxsrc, "splitmuxsrc", GST_RANK_NONE,
+    GST_TYPE_SPLITMUX_SRC);
 
 static GstURIType
 splitmux_src_uri_get_type (GType type)
@@ -1538,15 +1541,4 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
   }
   return ret;
-}
-
-
-gboolean
-register_splitmuxsrc (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (splitmux_debug, "splitmuxsrc", 0,
-      "Split File Demuxing Source");
-
-  return gst_element_register (plugin, "splitmuxsrc", GST_RANK_NONE,
-      GST_TYPE_SPLITMUX_SRC);
 }

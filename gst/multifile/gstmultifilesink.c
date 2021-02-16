@@ -160,6 +160,8 @@ gst_multi_file_sink_next_get_type (void)
 
 #define gst_multi_file_sink_parent_class parent_class
 G_DEFINE_TYPE (GstMultiFileSink, gst_multi_file_sink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE (multifilesink, "multifilesink", GST_RANK_NONE,
+    gst_multi_file_sink_get_type ());
 
 static void
 gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)

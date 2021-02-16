@@ -67,6 +67,8 @@ struct _GstMultiFileSrcClass
 
 GType gst_multi_file_src_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (multifilesrc);
+
 G_END_DECLS
 
 #endif /* __GST_MULTIFILESRC_H__ */

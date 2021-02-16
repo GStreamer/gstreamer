@@ -69,6 +69,8 @@ struct _GstSplitFileSrcClass
 
 GType gst_split_file_src_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (splitfilesrc);
+
 G_END_DECLS
 
 #endif /* __GST_SPLIT_FILE_SRC_H__ */

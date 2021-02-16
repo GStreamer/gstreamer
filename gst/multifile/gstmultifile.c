@@ -34,26 +34,19 @@
 #include "gstsplitmuxsink.h"
 #include "gstsplitmuxsrc.h"
 #include "gstimagesequencesrc.h"
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "multifilesrc", GST_RANK_NONE,
-      gst_multi_file_src_get_type ());
-  gst_element_register (plugin, "multifilesink", GST_RANK_NONE,
-      gst_multi_file_sink_get_type ());
-  gst_element_register (plugin, "splitfilesrc", GST_RANK_NONE,
-      gst_split_file_src_get_type ());
-  gst_element_register (plugin, "imagesequencesrc", GST_RANK_NONE,
-      gst_image_sequence_src_get_type ());
+  gboolean ret = FALSE;
 
-  if (!register_splitmuxsink (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (multifilesrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (multifilesink, plugin);
+  ret |= GST_ELEMENT_REGISTER (splitfilesrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (imagesequencesrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (splitmuxsink, plugin);
+  ret |= GST_ELEMENT_REGISTER (splitmuxsrc, plugin);
 
-  if (!register_splitmuxsrc (plugin))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

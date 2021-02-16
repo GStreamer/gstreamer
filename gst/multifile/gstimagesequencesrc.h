@@ -49,6 +49,7 @@ struct _GstImageSequenceSrc
   gint fps_n, fps_d;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (imagesequencesrc);
 
 G_END_DECLS
 

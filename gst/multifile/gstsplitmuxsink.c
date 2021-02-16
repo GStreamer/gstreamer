@@ -206,11 +206,15 @@ _do_init (void)
   PAD_CONTEXT = g_quark_from_static_string ("pad-context");
   EOS_FROM_US = g_quark_from_static_string ("eos-from-us");
   RUNNING_TIME = g_quark_from_static_string ("running-time");
+  GST_DEBUG_CATEGORY_INIT (splitmux_debug, "splitmuxsink", 0,
+      "Split File Muxing Sink");
 }
 
 #define gst_splitmux_sink_parent_class parent_class
 G_DEFINE_TYPE_EXTENDED (GstSplitMuxSink, gst_splitmux_sink, GST_TYPE_BIN, 0,
     _do_init ());
+GST_ELEMENT_REGISTER_DEFINE (splitmuxsink, "splitmuxsink", GST_RANK_NONE,
+    GST_TYPE_SPLITMUX_SINK);
 
 static gboolean create_muxer (GstSplitMuxSink * splitmux);
 static gboolean create_sink (GstSplitMuxSink * splitmux);
@@ -3686,16 +3690,6 @@ beach:
     GST_SPLITMUX_UNLOCK (splitmux);
   }
   return ret;
-}
-
-gboolean
-register_splitmuxsink (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (splitmux_debug, "splitmuxsink", 0,
-      "Split File Muxing Sink");
-
-  return gst_element_register (plugin, "splitmuxsink", GST_RANK_NONE,
-      GST_TYPE_SPLITMUX_SINK);
 }
 
 static void

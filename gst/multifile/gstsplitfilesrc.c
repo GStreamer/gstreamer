@@ -85,6 +85,8 @@ GST_DEBUG_CATEGORY_STATIC (splitfilesrc_debug);
 G_DEFINE_TYPE_WITH_CODE (GstSplitFileSrc, gst_split_file_src, GST_TYPE_BASE_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_split_file_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (splitfilesrc, "splitfilesrc", GST_RANK_NONE,
+    gst_split_file_src_get_type ());
 
 #ifdef G_OS_WIN32
 #define WIN32_BLURB " Location string must be in UTF-8 encoding (on Windows)."
