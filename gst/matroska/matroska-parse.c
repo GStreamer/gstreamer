@@ -63,6 +63,7 @@
 
 #include <gst/pbutils/pbutils.h>
 
+#include "gstmatroskaelements.h"
 #include "matroska-parse.h"
 #include "matroska-ids.h"
 
@@ -141,6 +142,11 @@ static GstCaps *gst_matroska_parse_forge_caps (gboolean is_webm,
 GType gst_matroska_parse_get_type (void);
 #define parent_class gst_matroska_parse_parent_class
 G_DEFINE_TYPE (GstMatroskaParse, gst_matroska_parse, GST_TYPE_ELEMENT);
+#define _do_init \
+  gst_riff_init (); \
+  matroska_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (matroskaparse, "matroskaparse",
+    GST_RANK_NONE, GST_TYPE_MATROSKA_PARSE, _do_init);
 
 static void
 gst_matroska_parse_finalize (GObject * object)
@@ -3263,17 +3269,4 @@ gst_matroska_parse_change_state (GstElement * element,
   }
 
   return ret;
-}
-
-gboolean
-gst_matroska_parse_plugin_init (GstPlugin * plugin)
-{
-  gst_riff_init ();
-
-  /* create an elementfactory for the matroska_parse element */
-  if (!gst_element_register (plugin, "matroskaparse",
-          GST_RANK_NONE, GST_TYPE_MATROSKA_PARSE))
-    return FALSE;
-
-  return TRUE;
 }

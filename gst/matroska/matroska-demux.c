@@ -66,6 +66,7 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
 
+#include "gstmatroskaelements.h"
 #include "matroska-demux.h"
 #include "matroska-ids.h"
 
@@ -195,6 +196,13 @@ static void gst_matroska_demux_get_property (GObject * object,
 GType gst_matroska_demux_get_type (void);
 #define parent_class gst_matroska_demux_parent_class
 G_DEFINE_TYPE (GstMatroskaDemux, gst_matroska_demux, GST_TYPE_ELEMENT);
+#define _do_init \
+  gst_riff_init (); \
+  matroska_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread", 0, "EBML stream helper class");
+
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (matroskademux, "matroskademux",
+    GST_RANK_PRIMARY, GST_TYPE_MATROSKA_DEMUX, _do_init);
 
 static void
 gst_matroska_demux_finalize (GObject * object)
@@ -7302,21 +7310,4 @@ gst_matroska_track_encoding_scope_name (gint val)
 
   en = g_enum_get_value (G_ENUM_CLASS (enum_class), val);
   return en ? en->value_nick : NULL;
-}
-
-gboolean
-gst_matroska_demux_plugin_init (GstPlugin * plugin)
-{
-  gst_riff_init ();
-
-  /* parser helper separate debug */
-  GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread",
-      0, "EBML stream helper class");
-
-  /* create an elementfactory for the matroska_demux element */
-  if (!gst_element_register (plugin, "matroskademux",
-          GST_RANK_PRIMARY, GST_TYPE_MATROSKA_DEMUX))
-    return FALSE;
-
-  return TRUE;
 }

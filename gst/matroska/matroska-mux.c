@@ -55,6 +55,7 @@
 #include <gst/tag/tag.h>
 #include <gst/pbutils/codec-utils.h>
 
+#include "gstmatroskaelements.h"
 #include "matroska-mux.h"
 #include "matroska-ids.h"
 
@@ -298,6 +299,9 @@ gst_matroska_mux_get_type (void)
 
   return object_type;
 }
+
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (matroskamux, "matroskamux",
+    GST_RANK_PRIMARY, GST_TYPE_MATROSKA_MUX, matroska_element_init (plugin));
 
 static void
 gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)

@@ -1,6 +1,7 @@
 matroska_sources = [
   'ebml-read.c',
   'ebml-write.c',
+  'gstmatroskaelement.c',
   'matroska.c',
   'matroska-demux.c',
   'matroska-parse.c',

@@ -135,8 +135,6 @@ typedef struct _GstMatroskaDemuxClass {
   GstElementClass parent;
 } GstMatroskaDemuxClass;
 
-gboolean gst_matroska_demux_plugin_init (GstPlugin *plugin);
-
 G_END_DECLS
 
 #endif /* __GST_MATROSKA_DEMUX_H__ */

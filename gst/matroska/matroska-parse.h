@@ -98,8 +98,6 @@ typedef struct _GstMatroskaParseClass {
   GstElementClass parent;
 } GstMatroskaParseClass;
 
-gboolean gst_matroska_parse_plugin_init (GstPlugin *plugin);
-
 G_END_DECLS
 
 #endif /* __GST_MATROSKA_PARSE_H__ */
