@@ -145,7 +145,7 @@ static GstPadProbeReturn gst_switch_bin_blocking_pad_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data);
 
 static GstCaps *gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
-    gchar const *pad_name, GstCaps * filter);
+    GstPad * switch_bin_pad, gchar const *pad_name, GstCaps * filter);
 static gboolean gst_switch_bin_are_caps_acceptable (GstSwitchBin *
     switch_bin, GstCaps const *caps);
 
@@ -463,7 +463,8 @@ gst_switch_bin_handle_query (GstPad * pad, GstObject * parent, GstQuery * query,
           || (switch_bin->current_path->element == NULL)) {
         /* Paths exist, but there is no current path (or the path is a dropping path,
          * so no element exists) - just return all allowed caps */
-        caps = gst_switch_bin_get_allowed_caps (switch_bin, pad_name, filter);
+        caps =
+            gst_switch_bin_get_allowed_caps (switch_bin, pad, pad_name, filter);
       } else {
         /* Paths exist and there is a current path
          * Forward the query to its element */
@@ -817,7 +818,7 @@ gst_switch_bin_find_matching_path (GstSwitchBin * switch_bin,
 
 static GstCaps *
 gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
-    G_GNUC_UNUSED gchar const *pad_name, GstCaps * filter)
+    GstPad * switch_bin_pad, gchar const *pad_name, GstCaps * filter)
 {
   /* must be called with path lock held */
 
@@ -849,7 +850,7 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
   for (i = 0; i < switch_bin->num_paths; ++i) {
     GstSwitchBinPath *path = switch_bin->paths[i];
 
-    if ((path->element != NULL) && (path == switch_bin->current_path)) {
+    if (path->element != NULL) {
       GstPad *pad;
       GstCaps *caps, *intersected_caps;
       GstQuery *caps_query = NULL;
@@ -870,10 +871,13 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
       gst_object_unref (GST_OBJECT (pad));
       gst_query_unref (caps_query);
     } else {
-      /* Either this is the current path and it has no element (= is a dropping path),
-       * or it is not the current path. In both cases, no caps query can be performed.
-       * Just append the path caps then. */
-      gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
+      /* This is a path with no element (= is a dropping path),
+       * If querying the sink caps, append the path
+       * input caps, otherwise the output caps can be ANY */
+      if (gst_pad_get_direction (switch_bin_pad) == GST_PAD_SINK)
+        gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
+      else
+        gst_caps_append (total_path_caps, gst_caps_new_any ());
     }
   }
 
