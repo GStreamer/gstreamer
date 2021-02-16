@@ -153,6 +153,9 @@ static GstCaps *gst_smpte_alpha_transform_caps (GstBaseTransform * trans,
 
 #define gst_smpte_alpha_parent_class parent_class
 G_DEFINE_TYPE (GstSMPTEAlpha, gst_smpte_alpha, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (smptealpha, "smptealpha", GST_RANK_NONE,
+    GST_TYPE_SMPTE_ALPHA, GST_DEBUG_CATEGORY_INIT (gst_smpte_alpha_debug,
+        "smptealpha", 0, "SMPTE alpha effect"));
 
 static void
 gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
@@ -799,14 +802,4 @@ gst_smpte_alpha_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_smpte_alpha_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_smpte_alpha_debug, "smptealpha", 0,
-      "SMPTE alpha effect");
-
-  return gst_element_register (plugin, "smptealpha", GST_RANK_NONE,
-      GST_TYPE_SMPTE_ALPHA);
 }

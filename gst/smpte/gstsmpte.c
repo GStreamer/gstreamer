@@ -149,6 +149,9 @@ static GstStateChangeReturn gst_smpte_change_state (GstElement * element,
 
 #define gst_smpte_parent_class parent_class
 G_DEFINE_TYPE (GstSMPTE, gst_smpte, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (smpte, "smpte", GST_RANK_NONE,
+    GST_TYPE_SMPTE, GST_DEBUG_CATEGORY_INIT (gst_smpte_debug, "smpte", 0,
+        "SMPTE transition effect"));
 
 static void
 gst_smpte_class_init (GstSMPTEClass * klass)
@@ -661,13 +664,4 @@ gst_smpte_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
-}
-
-gboolean
-gst_smpte_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_smpte_debug, "smpte", 0,
-      "SMPTE transition effect");
-
-  return gst_element_register (plugin, "smpte", GST_RANK_NONE, GST_TYPE_SMPTE);
 }

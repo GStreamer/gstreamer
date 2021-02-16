@@ -27,13 +27,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_smpte_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_smpte_alpha_plugin_init (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (smpte, plugin);
+  ret |= GST_ELEMENT_REGISTER (smptealpha, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

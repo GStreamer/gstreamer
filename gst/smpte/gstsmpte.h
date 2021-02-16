@@ -79,7 +79,8 @@ struct _GstSMPTEClass {
 };
 
 GType gst_smpte_get_type (void);
-gboolean gst_smpte_plugin_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (smpte);
 
 G_END_DECLS
 #endif /* __GST_SMPTE_H__ */
