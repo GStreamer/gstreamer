@@ -78,6 +78,8 @@ struct _GstMonoscopeClass
 
 GType gst_monoscope_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (monoscope);
+
 G_END_DECLS
 
 #endif /* __GST_MONOSCOPE__ */
