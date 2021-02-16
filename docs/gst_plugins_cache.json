@@ -25389,6 +25389,32 @@
                     }
                 },
                 "properties": {
+                    "aq-mode": {
+                        "blurb": "Which adaptive quantization mode should be used",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "off (0)",
+                        "max": "4",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVPXAQ",
+                        "writable": true
+                    },
+                    "frame-parallel-decoding": {
+                        "blurb": "Whether encoded bitstream should allow parallel processing of video frames in the decoder (default is on)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "row-mt": {
                         "blurb": "Whether each row should be encoded using multiple threads",
                         "conditionally-available": false,
@@ -25436,6 +25462,51 @@
         "filename": "gstvpx",
         "license": "LGPL",
         "other-types": {
+            "GstVPXAQ": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "GST_VPX_AQ_OFF",
+                        "name": "off",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_VARIANCE",
+                        "name": "variance",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_COMPLEXITY",
+                        "name": "complexity",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_CYCLIC_REFRESH",
+                        "name": "cyclic-refresh",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_EQUATOR360",
+                        "name": "equator360",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_PERCEPTUAL",
+                        "name": "perceptual",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_PSNR",
+                        "name": "psnr",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "GST_VPX_AQ_LOOKAHEAD",
+                        "name": "lookahead",
+                        "value": "7"
+                    }
+                ]
+            },
             "GstVPXDec": {
                 "hierarchy": [
                     "GstVPXDec",
