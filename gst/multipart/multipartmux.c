@@ -97,6 +97,10 @@ static void gst_multipart_mux_get_property (GObject * object, guint prop_id,
 
 #define gst_multipart_mux_parent_class parent_class
 G_DEFINE_TYPE (GstMultipartMux, gst_multipart_mux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (multipartmux, "multipartmux",
+    GST_RANK_NONE, GST_TYPE_MULTIPART_MUX,
+    GST_DEBUG_CATEGORY_INIT (gst_multipart_mux_debug, "multipartmux", 0,
+        "multipart muxer"));
 
 static void
 gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
@@ -682,14 +686,4 @@ gst_multipart_mux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_multipart_mux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_multipart_mux_debug, "multipartmux", 0,
-      "multipart muxer");
-
-  return gst_element_register (plugin, "multipartmux", GST_RANK_NONE,
-      GST_TYPE_MULTIPART_MUX);
 }

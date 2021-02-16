@@ -122,6 +122,10 @@ static void gst_multipart_demux_dispose (GObject * object);
 
 #define gst_multipart_demux_parent_class parent_class
 G_DEFINE_TYPE (GstMultipartDemux, gst_multipart_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (multipartdemux, "multipartdemux",
+    GST_RANK_PRIMARY, GST_TYPE_MULTIPART_DEMUX,
+    GST_DEBUG_CATEGORY_INIT (gst_multipart_demux_debug, "multipartdemux", 0,
+        "multipart demuxer"));
 
 static void
 gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
@@ -795,16 +799,4 @@ gst_multipart_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-
-
-gboolean
-gst_multipart_demux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_multipart_demux_debug,
-      "multipartdemux", 0, "multipart demuxer");
-
-  return gst_element_register (plugin, "multipartdemux", GST_RANK_PRIMARY,
-      GST_TYPE_MULTIPART_DEMUX);
 }

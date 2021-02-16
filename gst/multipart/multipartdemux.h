@@ -102,7 +102,7 @@ struct _GstMultipartDemuxClass
 
 GType gst_multipart_demux_get_type (void);
 
-gboolean gst_multipart_demux_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (multipartdemux);
 
 G_END_DECLS
 

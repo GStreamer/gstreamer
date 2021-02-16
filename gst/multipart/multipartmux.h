@@ -90,7 +90,7 @@ struct _GstMultipartMuxClass
 
 GType gst_multipart_mux_get_type (void);
 
-gboolean gst_multipart_mux_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (multipartmux);
 
 G_END_DECLS
 
