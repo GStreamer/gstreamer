@@ -84,7 +84,8 @@ static gboolean gst_y4m_encode_set_format (GstVideoEncoder * encoder,
 
 #define gst_y4m_encode_parent_class parent_class
 G_DEFINE_TYPE (GstY4mEncode, gst_y4m_encode, GST_TYPE_VIDEO_ENCODER);
-
+GST_ELEMENT_REGISTER_DEFINE (y4menc, "y4menc", GST_RANK_PRIMARY,
+    GST_TYPE_Y4M_ENCODE);
 
 static void
 gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
@@ -301,8 +302,7 @@ gst_y4m_encode_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "y4menc", GST_RANK_PRIMARY,
-      GST_TYPE_Y4M_ENCODE);
+  return GST_ELEMENT_REGISTER (y4menc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
