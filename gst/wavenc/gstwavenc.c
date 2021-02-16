@@ -546,6 +546,7 @@ gst_wavparse_tags_foreach (const GstTagList * tags, const gchar * tag,
     0, NULL}
   };
   gint n;
+  size_t size;
   gchar *str = NULL;
   GstByteWriter *bw = data;
   for (n = 0; rifftags[n].fcc != 0; n++) {
@@ -563,9 +564,15 @@ gst_wavparse_tags_foreach (const GstTagList * tags, const gchar * tag,
         gst_tag_list_get_string (tags, tag, &str);
       }
       if (str) {
+        /* get string length including null termination */
+        size = strlen (str) + 1;
         gst_byte_writer_put_uint32_le (bw, rifftags[n].fcc);
-        gst_byte_writer_put_uint32_le (bw, GST_ROUND_UP_2 (strlen (str)));
-        gst_byte_writer_put_string (bw, str);
+        gst_byte_writer_put_uint32_le (bw, GST_ROUND_UP_2 (size));
+        gst_byte_writer_put_data (bw, (const guint8 *) str, size);
+        /* add padding if needed */
+        if (GST_ROUND_UP_2 (size) > size) {
+          gst_byte_writer_put_uint8 (bw, 0);
+        }
         g_free (str);
         str = NULL;
         break;
