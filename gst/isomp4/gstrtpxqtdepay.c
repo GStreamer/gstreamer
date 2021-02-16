@@ -27,6 +27,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
+#include "gstisomp4elements.h"
 #include "gstrtpxqtdepay.h"
 
 #define MAKE_TLV(a,b)  (((a)<<8)|(b))
@@ -94,6 +95,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_xqt_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpXQTDepay, gst_rtp_xqt_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpxqtdepay, "rtpxqtdepay",
+    GST_RANK_MARGINAL, GST_TYPE_RTP_XQT_DEPAY, isomp4_element_init (plugin));
 
 static void gst_rtp_xqt_depay_finalize (GObject * object);
 

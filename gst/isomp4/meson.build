@@ -1,5 +1,6 @@
 mp4_sources = [
   'isomp4-plugin.c',
+  'gstisomp4element.c',
   'gstrtpxqtdepay.c',
   'qtdemux.c',
   'qtdemux_types.c',

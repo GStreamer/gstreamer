@@ -23,25 +23,33 @@
 #include "config.h"
 #endif
 #include "gst/gst-i18n-plugin.h"
+#include <gst/pbutils/pbutils.h>
 
 #include "gstisomp4elements.h"
+#include "qtdemux.h"
 
-
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+isomp4_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (qtdemux, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpxqtdepay, plugin);
-  ret |= GST_ELEMENT_REGISTER (qtmux, plugin);
-  ret |= GST_ELEMENT_REGISTER (qtmoovrecover, plugin);
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
 
-  return ret;
+    gst_pb_utils_init ();
+
+    /* ensure private tag is registered */
+    gst_tag_register (GST_QT_DEMUX_PRIVATE_TAG, GST_TAG_FLAG_META,
+        GST_TYPE_SAMPLE, "QT atom", "unparsed QT tag atom",
+        gst_tag_merge_use_first);
+
+    gst_tag_register (GST_QT_DEMUX_CLASSIFICATION_TAG, GST_TAG_FLAG_META,
+        G_TYPE_STRING, GST_QT_DEMUX_CLASSIFICATION_TAG,
+        "content classification", gst_tag_merge_use_first);
+
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    isomp4,
-    "ISO base media file format support (mp4, 3gpp, qt, mj2)",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

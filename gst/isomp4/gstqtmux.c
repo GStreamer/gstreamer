@@ -86,6 +86,7 @@
 #  include <unistd.h>
 #endif
 
+#include "gstisomp4elements.h"
 #include "gstqtmux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
@@ -7454,7 +7455,11 @@ gst_qt_mux_register (GstPlugin * plugin)
       G_TYPE_STRING, GST_TAG_3GP_CLASSIFICATION, "content classification",
       gst_tag_merge_use_first);
 
+  isomp4_element_init (plugin);
+
   GST_LOG ("Finished registering tags");
 
   return TRUE;
 }
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (qtmux, gst_qt_mux_register);
