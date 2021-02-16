@@ -33,8 +33,11 @@ if not cc.has_header('bcm_host.h', args: rpi_inc_args)
   endif
 endif
 
-mmal_deps = []
-foreach rpi_lib : ['mmal_core', 'mmal_util', 'mmal_vc_client', 'vcos', 'vchostif', 'bcm_host']
+thread_dep = dependency('threads')
+rt_dep = cxx.find_library('rt', required : false)
+
+mmal_deps = [thread_dep, rt_dep]
+foreach rpi_lib : ['mmal_core', 'mmal_util', 'mmal_vc_client', 'vcos', 'vchostif', 'vchiq_arm', 'bcm_host']
   l = cc.find_library(rpi_lib, dirs: rpi_lib_path, required: false)
   if not l.found()
     if get_option('rpicamsrc').enabled()
