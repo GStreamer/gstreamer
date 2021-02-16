@@ -82,6 +82,8 @@ struct _GstFlxDecClass {
 /* Standard function returning type information. */
 GType gst_flxdec_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (flxdec);
+
 G_END_DECLS
 
 #endif /* __GST_FLX_DECODER_H__ */
