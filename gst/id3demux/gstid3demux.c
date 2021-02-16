@@ -91,6 +91,12 @@ static void gst_id3demux_get_property (GObject * object, guint prop_id,
 
 #define gst_id3demux_parent_class parent_class
 G_DEFINE_TYPE (GstID3Demux, gst_id3demux, GST_TYPE_TAG_DEMUX);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (id3demux_debug, "id3demux", 0, \
+      "GStreamer ID3 tag demuxer"); \
+  gst_tag_register_musicbrainz_tags ();
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (id3demux, "id3demux",
+    GST_RANK_PRIMARY, GST_TYPE_ID3DEMUX, _do_init);
 
 static void
 gst_id3demux_class_init (GstID3DemuxClass * klass)
@@ -273,13 +279,10 @@ gst_id3demux_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (id3demux_debug, "id3demux", 0,
-      "GStreamer ID3 tag demuxer");
 
-  gst_tag_register_musicbrainz_tags ();
+  return GST_ELEMENT_REGISTER (id3demux, plugin);
 
-  return gst_element_register (plugin, "id3demux",
-      GST_RANK_PRIMARY, GST_TYPE_ID3DEMUX);
+
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

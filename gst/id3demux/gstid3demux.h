@@ -53,6 +53,8 @@ struct _GstID3DemuxClass
 
 GType gst_id3demux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (id3demux);
+
 G_END_DECLS
 
 #endif /* __GST_ID3DEMUX_H__ */
