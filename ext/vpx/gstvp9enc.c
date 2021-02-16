@@ -73,6 +73,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vp9enc_debug);
 #define DEFAULT_TILE_ROWS 0
 #define DEFAULT_ROW_MT 0
 #define DEFAULT_AQ_MODE 0
+#define DEFAULT_FRAME_PARALLEL_DECODING TRUE
 
 enum
 {
@@ -81,6 +82,7 @@ enum
   PROP_TILE_ROWS,
   PROP_ROW_MT,
   PROP_AQ_MODE,
+  PROP_FRAME_PARALLEL_DECODING,
 };
 
 /* FIXME: Y42B do not work yet it seems */
@@ -192,6 +194,20 @@ gst_vp9_enc_class_init (GstVP9EncClass * klass)
           0, 4, DEFAULT_AQ_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstVP9Enc:frame-parallel-decoding:
+   *
+   * Whether encoded bitstream should allow parallel processing of video frames in the decoder
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_FRAME_PARALLEL_DECODING,
+      g_param_spec_boolean ("frame-parallel-decoding",
+          "Frame Parallel Decoding",
+          "Whether encoded bitstream should allow parallel processing of video frames in the decoder "
+          "(default is on)", DEFAULT_FRAME_PARALLEL_DECODING,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_vp9_enc_src_template);
   gst_element_class_add_static_pad_template (element_class,
@@ -241,6 +257,7 @@ gst_vp9_enc_init (GstVP9Enc * gst_vp9_enc)
   gst_vp9_enc->tile_rows = DEFAULT_TILE_ROWS;
   gst_vp9_enc->row_mt = DEFAULT_ROW_MT;
   gst_vp9_enc->aq_mode = DEFAULT_AQ_MODE;
+  gst_vp9_enc->frame_parallel_decoding = DEFAULT_FRAME_PARALLEL_DECODING;
 }
 
 static void
@@ -304,6 +321,19 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
         }
       }
       break;
+    case PROP_FRAME_PARALLEL_DECODING:
+      gst_vp9_enc->frame_parallel_decoding = g_value_get_boolean (value);
+      if (gst_vpx_enc->inited) {
+        status = vpx_codec_control (&gst_vpx_enc->encoder,
+            VP9E_SET_FRAME_PARALLEL_DECODING,
+            gst_vp9_enc->frame_parallel_decoding ? 1 : 0);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vpx_enc,
+              "Failed to set VP9E_SET_FRAME_PARALLEL_DECODING: %s",
+              gst_vpx_error_name (status));
+        }
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -333,6 +363,9 @@ gst_vp9_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_AQ_MODE:
       g_value_set_int (value, gst_vp9_enc->aq_mode);
+      break;
+    case PROP_FRAME_PARALLEL_DECODING:
+      g_value_set_boolean (value, gst_vp9_enc->frame_parallel_decoding);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -459,6 +492,14 @@ gst_vp9_enc_configure_encoder (GstVPXEnc * encoder, GstVideoCodecState * state)
   if (status != VPX_CODEC_OK) {
     GST_WARNING_OBJECT (encoder,
         "Failed to set VP9E_SET_AQ_MODE: %s", gst_vpx_error_name (status));
+  }
+  status =
+      vpx_codec_control (&encoder->encoder, VP9E_SET_FRAME_PARALLEL_DECODING,
+      vp9enc->frame_parallel_decoding ? 1 : 0);
+  if (status != VPX_CODEC_OK) {
+    GST_WARNING_OBJECT (encoder,
+        "Failed to set VP9E_SET_FRAME_PARALLEL_DECODING: %s",
+        gst_vpx_error_name (status));
   }
 
   return TRUE;

@@ -51,6 +51,7 @@ struct _GstVP9Enc
   gboolean row_mt;
 #endif
   guint aq_mode;
+  gboolean frame_parallel_decoding;
 };
 
 G_END_DECLS
