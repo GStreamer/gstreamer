@@ -118,6 +118,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_rg_volume_parent_class parent_class
 G_DEFINE_TYPE (GstRgVolume, gst_rg_volume, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (rgvolume, "rgvolume", GST_RANK_NONE,
+    GST_TYPE_RG_VOLUME);
 
 static void gst_rg_volume_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

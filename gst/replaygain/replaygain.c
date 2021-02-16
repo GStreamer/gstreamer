@@ -33,19 +33,13 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "rganalysis", GST_RANK_NONE,
-          GST_TYPE_RG_ANALYSIS))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "rglimiter", GST_RANK_NONE,
-          GST_TYPE_RG_LIMITER))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (rganalysis, plugin);
+  ret |= GST_ELEMENT_REGISTER (rglimiter, plugin);
+  ret |= GST_ELEMENT_REGISTER (rgvolume, plugin);
 
-  if (!gst_element_register (plugin, "rgvolume", GST_RANK_NONE,
-          GST_TYPE_RG_VOLUME))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, replaygain,

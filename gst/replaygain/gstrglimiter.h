@@ -61,4 +61,6 @@ struct _GstRgLimiterClass
 
 GType gst_rg_limiter_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rglimiter);
+
 #endif /* __GST_RG_LIMITER_H__ */

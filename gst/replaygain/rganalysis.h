@@ -58,6 +58,8 @@ void rg_analysis_reset_album (RgAnalysisCtx * ctx);
 void rg_analysis_reset (RgAnalysisCtx * ctx);
 void rg_analysis_destroy (RgAnalysisCtx * ctx);
 
+GST_ELEMENT_REGISTER_DECLARE (rganalysis);
+
 G_END_DECLS
 
 #endif /* __RG_ANALYSIS_H__ */

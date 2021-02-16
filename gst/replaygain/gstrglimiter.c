@@ -76,6 +76,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_rg_limiter_parent_class parent_class
 G_DEFINE_TYPE (GstRgLimiter, gst_rg_limiter, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (rglimiter, "rglimiter", GST_RANK_NONE,
+    GST_TYPE_RG_LIMITER);
 
 static void gst_rg_limiter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -125,6 +125,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_rg_analysis_parent_class parent_class
 G_DEFINE_TYPE (GstRgAnalysis, gst_rg_analysis, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (rganalysis, "rganalysis", GST_RANK_NONE,
+    GST_TYPE_RG_ANALYSIS);
 
 static void gst_rg_analysis_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

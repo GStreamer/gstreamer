@@ -83,6 +83,8 @@ struct _GstRgVolumeClass
 
 GType gst_rg_volume_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rgvolume);
+
 G_END_DECLS
 
 #endif /* __GST_RG_VOLUME_H__ */
