@@ -119,8 +119,8 @@ the callback will be called immediately from the current thread. Otherwise,
 the callback will be called as soon as the pad becomes idle in the streaming
 thread.
 
-The `IDLE` probe is useful to perform dynamic linking, allowing for a sufficinet 
-wait for a safe moment when an unlink/link operation can be done. Since the probe is a
+The `IDLE` probe is useful in performing dynamic linking, allowing the application
+to wait to correctly execute an unlink/link operation. Since the probe is a
 blocking probe, it will also make sure that the pad stays idle until the probe
 is removed.
 
