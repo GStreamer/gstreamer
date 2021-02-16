@@ -49,6 +49,8 @@ struct _GstALawDecClass {
 
 GType gst_alaw_dec_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (alawdec);
+
 G_END_DECLS
 
 #endif /* __GST_ALAW_DECODE_H__ */

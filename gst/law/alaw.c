@@ -25,48 +25,15 @@
 #include "alaw-encode.h"
 #include "alaw-decode.h"
 
-GstStaticPadTemplate alaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (S16) ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
-    );
-
-GstStaticPadTemplate alaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-alaw, "
-        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
-    );
-
-GstStaticPadTemplate alaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " GST_AUDIO_NE (S16) ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
-    );
-
-GstStaticPadTemplate alaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-alaw, "
-        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
-    );
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "alawenc",
-          GST_RANK_PRIMARY, GST_TYPE_ALAW_ENC) ||
-      !gst_element_register (plugin, "alawdec",
-          GST_RANK_PRIMARY, GST_TYPE_ALAW_DEC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (alawenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (alawdec, plugin);
+
+  return ret;
 }
 
 /* FIXME 0.11: merge alaw and mulaw into one plugin? */

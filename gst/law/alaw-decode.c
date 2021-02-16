@@ -41,6 +41,8 @@ static GstFlowReturn gst_alaw_dec_handle_frame (GstAudioDecoder * dec,
 
 #define gst_alaw_dec_parent_class parent_class
 G_DEFINE_TYPE (GstALawDec, gst_alaw_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (alawdec, "alawdec", GST_RANK_PRIMARY,
+    GST_TYPE_ALAW_DEC);
 
 /* some day we might have defines in gstconfig.h that tell us about the
  * desired cpu/memory/binary size trade-offs */
@@ -110,6 +112,22 @@ alaw_to_s16 (guint8 a_val)
 }
 
 #endif /* GST_ALAW_DEC_USE_TABLE */
+
+GstStaticPadTemplate alaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
+    );
+
+GstStaticPadTemplate alaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-alaw, "
+        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
+    );
 
 static gboolean
 gst_alaw_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)

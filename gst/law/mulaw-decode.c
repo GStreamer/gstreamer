@@ -51,8 +51,32 @@ enum
   PROP_0
 };
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define INT_FORMAT "S16LE"
+#else
+#define INT_FORMAT "S16BE"
+#endif
+
+GstStaticPadTemplate mulaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " INT_FORMAT ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
+    );
+
+GstStaticPadTemplate mulaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-mulaw, "
+        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
+    );
+
 #define gst_mulawdec_parent_class parent_class
 G_DEFINE_TYPE (GstMuLawDec, gst_mulawdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (mulawdec, "mulawdec", GST_RANK_PRIMARY,
+    GST_TYPE_MULAWDEC);
 
 static gboolean
 gst_mulawdec_set_format (GstAudioDecoder * dec, GstCaps * caps)

@@ -28,6 +28,7 @@
 #endif
 
 #include <gst/audio/audio.h>
+
 #include "alaw-encode.h"
 
 GST_DEBUG_CATEGORY_STATIC (alaw_enc_debug);
@@ -37,6 +38,8 @@ extern GstStaticPadTemplate alaw_enc_src_factory;
 extern GstStaticPadTemplate alaw_enc_sink_factory;
 
 G_DEFINE_TYPE (GstALawEnc, gst_alaw_enc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (alawenc, "alawenc", GST_RANK_PRIMARY,
+    GST_TYPE_ALAW_ENC);
 
 static gboolean gst_alaw_enc_start (GstAudioEncoder * audioenc);
 static gboolean gst_alaw_enc_set_format (GstAudioEncoder * enc,
@@ -301,6 +304,22 @@ s16_to_alaw (gint pcm_val)
 }
 
 #endif /* GST_ALAW_ENC_USE_TABLE */
+
+GstStaticPadTemplate alaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
+    );
+
+GstStaticPadTemplate alaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-alaw, "
+        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
+    );
 
 static gboolean
 gst_alaw_enc_start (GstAudioEncoder * audioenc)

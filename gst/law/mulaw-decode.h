@@ -49,6 +49,7 @@ struct _GstMuLawDecClass
 };
 
 GType gst_mulawdec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (mulawdec);
 
 G_END_DECLS
 #endif /* __GST_STEREO_H__ */

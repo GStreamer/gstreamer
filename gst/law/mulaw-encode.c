@@ -35,6 +35,27 @@
 extern GstStaticPadTemplate mulaw_enc_src_factory;
 extern GstStaticPadTemplate mulaw_enc_sink_factory;
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define INT_FORMAT "S16LE"
+#else
+#define INT_FORMAT "S16BE"
+#endif
+
+GstStaticPadTemplate mulaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " INT_FORMAT ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
+    );
+
+GstStaticPadTemplate mulaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-mulaw, "
+        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
+    );
 /* Stereo signals and args */
 enum
 {
@@ -57,6 +78,8 @@ static void gst_mulawenc_set_tags (GstMuLawEnc * mulawenc);
 
 #define gst_mulawenc_parent_class parent_class
 G_DEFINE_TYPE (GstMuLawEnc, gst_mulawenc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (mulawenc, "mulawenc", GST_RANK_PRIMARY,
+    GST_TYPE_MULAWENC);
 
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 

@@ -53,5 +53,7 @@ struct _GstMuLawEncClass
 
 GType gst_mulawenc_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (mulawenc);
+
 G_END_DECLS
 #endif /* __GST_STEREO_H__ */

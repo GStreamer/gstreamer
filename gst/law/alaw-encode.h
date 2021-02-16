@@ -52,6 +52,8 @@ struct _GstALawEncClass {
 
 GType gst_alaw_enc_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (alawenc);
+
 G_END_DECLS
 
 #endif /* __GST_ALAW_ENCODE_H__ */

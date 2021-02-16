@@ -28,48 +28,15 @@
 #define INT_FORMAT "S16BE"
 #endif
 
-GstStaticPadTemplate mulaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " INT_FORMAT ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
-    );
-
-GstStaticPadTemplate mulaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mulaw, "
-        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
-    );
-
-GstStaticPadTemplate mulaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " INT_FORMAT ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
-    );
-
-GstStaticPadTemplate mulaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mulaw, "
-        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
-    );
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mulawenc",
-          GST_RANK_PRIMARY, GST_TYPE_MULAWENC) ||
-      !gst_element_register (plugin, "mulawdec",
-          GST_RANK_PRIMARY, GST_TYPE_MULAWDEC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (mulawenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (mulawdec, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
