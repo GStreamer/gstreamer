@@ -23,17 +23,17 @@
 #include "config.h"
 #endif
 
-#include "plugin.h"
+#include "gstinterleaveelements.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "interleave",
-          GST_RANK_NONE, gst_interleave_get_type ()) ||
-      !gst_element_register (plugin, "deinterleave",
-          GST_RANK_NONE, gst_deinterleave_get_type ()))
-    return FALSE;
-  return TRUE;
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (interleave, plugin);
+  ret |= GST_ELEMENT_REGISTER (deinterleave, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

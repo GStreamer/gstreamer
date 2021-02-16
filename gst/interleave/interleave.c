@@ -70,6 +70,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include "gstinterleaveelements.h"
 #include "interleave.h"
 
 #include <gst/audio/audio.h>
@@ -192,6 +193,8 @@ gst_interleave_pad_class_init (GstPadClass * klass)
 
 #define gst_interleave_parent_class parent_class
 G_DEFINE_TYPE (GstInterleave, gst_interleave, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (interleave, "interleave",
+    GST_RANK_NONE, gst_interleave_get_type ());
 
 enum
 {

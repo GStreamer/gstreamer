@@ -64,6 +64,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include "gstinterleaveelements.h"
 #include "deinterleave.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_deinterleave_debug);
@@ -116,6 +117,8 @@ deinterleave_24 (guint8 * out, guint8 * in, guint stride, guint nframes)
 
 #define gst_deinterleave_parent_class parent_class
 G_DEFINE_TYPE (GstDeinterleave, gst_deinterleave, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (deinterleave, "deinterleave",
+    GST_RANK_NONE, gst_deinterleave_get_type ());
 
 enum
 {

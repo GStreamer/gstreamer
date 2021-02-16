@@ -20,12 +20,15 @@
  */
 
 
-#ifndef __GST_PLUGIN_INTERLEAVE_H__
-#define __GST_PLUGIN_INTERLEAVE_H__
+#ifndef __GST_INTERLEAVE_ELEMENTS_H__
+#define __GST_INTERLEAVE_ELEMENTS_H__
 
 
 #include <gst/gst.h>
 #include "interleave.h"
 #include "deinterleave.h"
 
-#endif /* __GST_PLUGIN_INTERLEAVE_H__ */
+GST_ELEMENT_REGISTER_DECLARE (interleave);
+GST_ELEMENT_REGISTER_DECLARE (deinterleave);
+
+#endif /* __GST_INTERLEAVE_ELEMENTS_H__ */
