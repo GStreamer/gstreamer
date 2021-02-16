@@ -18,7 +18,7 @@ if have_oss4
   message('Required headers found, building Open Sound System 4 plugin.')
 
   plugins += [library('gstoss4',
-    'oss4-audio.c', 'oss4-property-probe.c', 'oss4-sink.c', 'oss4-source.c',
+    'gstoss4audioplugin.c', 'oss4-audio.c', 'oss4-property-probe.c', 'oss4-sink.c', 'oss4-source.c',
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, gstbase_dep],

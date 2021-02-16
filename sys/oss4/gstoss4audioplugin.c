@@ -17,29 +17,31 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef GST_OSS4_AUDIO_H
-#define GST_OSS4_AUDIO_H
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
-#include <gst/gst.h>
-#include <gst/audio/audio.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-G_GNUC_INTERNAL void oss4_element_init (GstPlugin * plugin);
-
-/* This is the minimum version we require */
-#define GST_MIN_OSS4_VERSION  0x040003
-
-int       gst_oss4_audio_get_version (GstObject * obj, int fd);
-
-gboolean  gst_oss4_audio_check_version (GstObject * obj, int fd);
-
-GstCaps * gst_oss4_audio_probe_caps  (GstObject * obj, int fd);
-
-gboolean  gst_oss4_audio_set_format  (GstObject * obj, int fd, GstAudioRingBufferSpec * spec);
-
-GstCaps * gst_oss4_audio_get_template_caps (void);
-
-gchar   * gst_oss4_audio_find_device (GstObject * oss);
-
-#endif /* GST_OSS4_AUDIO_H */
+#include "oss4-sink.h"
+#include "oss4-source.h"
 
 
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (oss4sink, plugin);
+  ret |= GST_ELEMENT_REGISTER (oss4src, plugin);
+
+  return ret;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    oss4,
+    "Open Sound System (OSS) version 4 support for GStreamer",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

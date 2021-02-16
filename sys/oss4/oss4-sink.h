@@ -54,6 +54,7 @@ struct _GstOss4SinkClass {
 };
 
 GType  gst_oss4_sink_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (oss4sink);
 
 G_END_DECLS
 

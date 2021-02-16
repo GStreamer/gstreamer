@@ -746,36 +746,22 @@ gst_oss4_audio_find_device (GstObject * oss)
   return ret;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+oss4_element_init (GstPlugin * plugin)
 {
-  gint rank;
-
-  GST_DEBUG_CATEGORY_INIT (oss4sink_debug, "oss4sink", 0, "OSS4 audio sink");
-  GST_DEBUG_CATEGORY_INIT (oss4src_debug, "oss4src", 0, "OSS4 audio src");
-  GST_DEBUG_CATEGORY_INIT (oss4mixer_debug, "oss4mixer", 0, "OSS4 mixer");
-  GST_DEBUG_CATEGORY_INIT (oss4_debug, "oss4", 0, "OSS4 plugin");
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (oss4sink_debug, "oss4sink", 0, "OSS4 audio sink");
+    GST_DEBUG_CATEGORY_INIT (oss4src_debug, "oss4src", 0, "OSS4 audio src");
+    GST_DEBUG_CATEGORY_INIT (oss4mixer_debug, "oss4mixer", 0, "OSS4 mixer");
+    GST_DEBUG_CATEGORY_INIT (oss4_debug, "oss4", 0, "OSS4 plugin");
 
 #ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
-
-  /* we want a higher rank than the legacy OSS elements have now */
-  rank = GST_RANK_SECONDARY + 1;
-
-  if (!gst_element_register (plugin, "oss4sink", rank, GST_TYPE_OSS4_SINK) ||
-      !gst_element_register (plugin, "oss4src", rank, GST_TYPE_OSS4_SOURCE)) {
-    return FALSE;
+    g_once_init_leave (&res, TRUE);
   }
-
-  return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    oss4,
-    "Open Sound System (OSS) version 4 support for GStreamer",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
