@@ -98,6 +98,8 @@ enum
 
 #define gst_spectrum_parent_class parent_class
 G_DEFINE_TYPE (GstSpectrum, gst_spectrum, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (spectrum, "spectrum", GST_RANK_NONE,
+    GST_TYPE_SPECTRUM);
 
 static void gst_spectrum_finalize (GObject * object);
 static void gst_spectrum_set_property (GObject * object, guint prop_id,
@@ -953,8 +955,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "spectrum", GST_RANK_NONE,
-      GST_TYPE_SPECTRUM);
+
+  return GST_ELEMENT_REGISTER (spectrum, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
