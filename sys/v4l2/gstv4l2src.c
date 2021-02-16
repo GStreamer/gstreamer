@@ -54,6 +54,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
+#include "gstv4l2elements.h"
 #include "gstv4l2src.h"
 
 #include "gstv4l2colorbalance.h"
@@ -98,6 +99,8 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Src, gst_v4l2src, GST_TYPE_PUSH_SRC,
         gst_v4l2src_color_balance_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
         gst_v4l2src_video_orientation_interface_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (v4l2src,
+    "v4l2src", GST_RANK_PRIMARY, GST_TYPE_V4L2SRC, v4l2_element_init (plugin));
 
 struct PreferredCapsInfo
 {

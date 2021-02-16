@@ -44,6 +44,7 @@
 
 #include "gst/gst-i18n-plugin.h"
 
+#include "gstv4l2elements.h"
 #include "gstv4l2object.h"
 #include "gstv4l2tuner.h"
 #include "gstv4l2radio.h"
@@ -273,6 +274,8 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Radio, gst_v4l2radio, GST_TYPE_ELEMENT,
         gst_v4l2radio_uri_handler_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER,
         gst_v4l2radio_tuner_interface_reinit));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (v4l2radio,
+    "v4l2radio", GST_RANK_NONE, GST_TYPE_V4L2RADIO, v4l2_element_init (plugin));
 
 static void gst_v4l2radio_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

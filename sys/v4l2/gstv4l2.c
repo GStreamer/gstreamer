@@ -40,6 +40,7 @@
 #include <unistd.h>
 
 #include "ext/videodev2.h"
+#include "gstv4l2elements.h"
 #include "v4l2-utils.h"
 
 #include "gstv4l2object.h"
@@ -55,12 +56,7 @@
 #include "gstv4l2mpeg4enc.h"
 #include "gstv4l2vp8enc.h"
 #include "gstv4l2vp9enc.h"
-#include "gstv4l2deviceprovider.h"
 #include "gstv4l2transform.h"
-
-/* used in gstv4l2object.c and v4l2_calls.c */
-GST_DEBUG_CATEGORY (v4l2_debug);
-#define GST_CAT_DEFAULT v4l2_debug
 
 #ifdef GST_V4L2_ENABLE_PROBE
 /* This is a minimalist probe, for speed, we only enumerate formats */
@@ -248,37 +244,25 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean ret = FALSE;
   const gchar *paths[] = { "/dev", "/dev/v4l2", NULL };
   const gchar *names[] = { "video", NULL };
-
-  GST_DEBUG_CATEGORY_INIT (v4l2_debug, "v4l2", 0, "V4L2 API calls");
 
   /* Add some dependency, so the dynamic features get updated upon changes in
    * /dev/video* */
   gst_plugin_add_dependency (plugin,
       NULL, paths, names, GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);
 
-  if (!gst_element_register (plugin, "v4l2src", GST_RANK_PRIMARY,
-          GST_TYPE_V4L2SRC) ||
-      !gst_element_register (plugin, "v4l2sink", GST_RANK_NONE,
-          GST_TYPE_V4L2SINK) ||
-      !gst_element_register (plugin, "v4l2radio", GST_RANK_NONE,
-          GST_TYPE_V4L2RADIO) ||
-      !gst_device_provider_register (plugin, "v4l2deviceprovider",
-          GST_RANK_PRIMARY, GST_TYPE_V4L2_DEVICE_PROVIDER)
-      /* etc. */
 #ifdef GST_V4L2_ENABLE_PROBE
-      || !gst_v4l2_probe_and_register (plugin)
+  ret |= gst_v4l2_probe_and_register (plugin);
 #endif
-      )
-    return FALSE;
 
-#ifdef ENABLE_NLS
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
+  ret |= GST_ELEMENT_REGISTER (v4l2src, plugin);
+  ret |= GST_ELEMENT_REGISTER (v4l2sink, plugin);
+  ret |= GST_ELEMENT_REGISTER (v4l2radio, plugin);
+  ret |= GST_DEVICE_PROVIDER_REGISTER (v4l2deviceprovider, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

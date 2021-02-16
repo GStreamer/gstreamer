@@ -59,6 +59,7 @@
 #include "gstv4l2tuner.h"
 #include "gstv4l2vidorient.h"
 
+#include "gstv4l2elements.h"
 #include "gstv4l2sink.h"
 #include "gst/gst-i18n-plugin.h"
 
@@ -95,7 +96,8 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Sink, gst_v4l2sink, GST_TYPE_VIDEO_SINK,
         gst_v4l2sink_color_balance_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
         gst_v4l2sink_video_orientation_interface_init));
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (v4l2sink,
+    "v4l2sink", GST_RANK_NONE, GST_TYPE_V4L2SINK, v4l2_element_init (plugin));
 
 static void gst_v4l2sink_finalize (GstV4l2Sink * v4l2sink);
 
