@@ -127,6 +127,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_shape_wipe_debug);
 
 #define gst_shape_wipe_parent_class parent_class
 G_DEFINE_TYPE (GstShapeWipe, gst_shape_wipe, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (shapewipe, "shapewipe", GST_RANK_NONE,
+    GST_TYPE_SHAPE_WIPE, GST_DEBUG_CATEGORY_INIT (gst_shape_wipe_debug,
+        "shapewipe", 0, "shapewipe element"););
 
 static void
 gst_shape_wipe_class_init (GstShapeWipeClass * klass)
@@ -1133,14 +1136,7 @@ gst_shape_wipe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_shape_wipe_debug, "shapewipe", 0,
-      "shapewipe element");
-
-  if (!gst_element_register (plugin, "shapewipe", GST_RANK_NONE,
-          GST_TYPE_SHAPE_WIPE))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (shapewipe, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

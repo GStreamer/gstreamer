@@ -76,6 +76,8 @@ struct _GstShapeWipeClass
 
 GType gst_shape_wipe_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (shapewipe);
+
 G_END_DECLS
 
 #endif /* __GST_SHAPE_WIPE_H__ */
