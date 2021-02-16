@@ -115,6 +115,10 @@ static GstStaticPadTemplate sink_template_factory =
 G_DEFINE_TYPE_WITH_CODE (GstWavParse, gst_wavparse, GST_TYPE_ELEMENT,
     DEBUG_INIT);
 
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (wavparse, "wavparse", GST_RANK_PRIMARY,
+    GST_TYPE_WAVPARSE, gst_riff_init ();
+    );
+
 typedef struct
 {
   /* Offset Size    Description   Value
@@ -2990,10 +2994,7 @@ gst_wavparse_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_riff_init ();
-
-  return gst_element_register (plugin, "wavparse", GST_RANK_PRIMARY,
-      GST_TYPE_WAVPARSE);
+  return GST_ELEMENT_REGISTER (wavparse, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
