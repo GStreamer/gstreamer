@@ -104,6 +104,7 @@ enum
 
 #define gst_level_parent_class parent_class
 G_DEFINE_TYPE (GstLevel, gst_level, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (level, "level", GST_RANK_NONE, GST_TYPE_LEVEL);
 
 static void gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -790,7 +791,7 @@ gst_level_sink_event (GstBaseTransform * trans, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "level", GST_RANK_NONE, GST_TYPE_LEVEL);
+  return GST_ELEMENT_REGISTER (level, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

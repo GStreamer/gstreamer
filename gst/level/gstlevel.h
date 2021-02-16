@@ -86,6 +86,7 @@ struct _GstLevelClass {
 
 GType gst_level_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (level);
 
 G_END_DECLS
 
