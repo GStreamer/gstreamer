@@ -75,6 +75,8 @@ struct _GstCutterClass
 
 GType gst_cutter_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (cutter);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

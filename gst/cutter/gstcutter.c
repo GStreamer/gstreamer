@@ -84,6 +84,7 @@ enum
 
 #define gst_cutter_parent_class parent_class
 G_DEFINE_TYPE (GstCutter, gst_cutter, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (cutter, "cutter", GST_RANK_NONE, GST_TYPE_CUTTER);
 
 static GstStateChangeReturn
 gst_cutter_change_state (GstElement * element, GstStateChange transition);
@@ -487,10 +488,7 @@ gst_cutter_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "cutter", GST_RANK_NONE, GST_TYPE_CUTTER))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (cutter, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
