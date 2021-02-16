@@ -41,6 +41,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#include "gstvideocrop.h"
+#include "gstvideocropelements.h"
 #include "gstaspectratiocrop.h"
 
 #include "gst/glib-compat-private.h"
@@ -75,6 +77,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_aspect_ratio_crop_parent_class parent_class
 G_DEFINE_TYPE (GstAspectRatioCrop, gst_aspect_ratio_crop, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (aspectratiocrop, "aspectratiocrop",
+    GST_RANK_NONE, GST_TYPE_ASPECT_RATIO_CROP, videocrop_element_init (plugin));
 
 static void gst_aspect_ratio_crop_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
