@@ -70,6 +70,8 @@ struct _GstGammaClass
 
 GType gst_gamma_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (gamma);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_GAMMA_H__ */

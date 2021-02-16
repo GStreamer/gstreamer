@@ -101,6 +101,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVideoBalance, gst_video_balance,
     GST_TYPE_VIDEO_FILTER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_video_balance_colorbalance_init));
+GST_ELEMENT_REGISTER_DEFINE (videobalance, "videobalance",
+    GST_RANK_NONE, GST_TYPE_VIDEO_BALANCE);
 
 /*
  * look-up tables (LUT).

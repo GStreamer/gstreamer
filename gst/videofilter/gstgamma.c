@@ -102,6 +102,7 @@ static void gst_gamma_before_transform (GstBaseTransform * transform,
 static void gst_gamma_calculate_tables (GstGamma * gamma);
 
 G_DEFINE_TYPE (GstGamma, gst_gamma, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (gamma, "gamma", GST_RANK_NONE, GST_TYPE_GAMMA);
 
 static void
 gst_gamma_class_init (GstGammaClass * g_class)

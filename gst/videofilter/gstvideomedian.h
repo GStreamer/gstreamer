@@ -61,6 +61,8 @@ struct _GstVideoMedianClass {
 
 GType gst_video_median_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (videomedian);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_MEDIAN_H__ */

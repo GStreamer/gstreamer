@@ -124,6 +124,8 @@ gst_video_flip_video_direction_interface_init (GstVideoDirectionInterface *
 G_DEFINE_TYPE_WITH_CODE (GstVideoFlip, gst_video_flip, GST_TYPE_VIDEO_FILTER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
         gst_video_flip_video_direction_interface_init));
+GST_ELEMENT_REGISTER_DEFINE (videoflip, "videoflip", GST_RANK_NONE,
+    GST_TYPE_VIDEO_FLIP);
 
 static GstCaps *
 gst_video_flip_transform_caps (GstBaseTransform * trans,

@@ -92,6 +92,8 @@ struct _GstVideoFlipClass {
 
 GType gst_video_flip_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (videoflip);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_FLIP_H__ */
