@@ -66,6 +66,7 @@
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include "common.h"
+#include "gstossaudioelements.h"
 #include "gstosssink.h"
 
 #include <gst/gst-i18n-plugin.h>
@@ -128,6 +129,8 @@ static GstStaticPadTemplate osssink_sink_factory =
 
 #define gst_oss_sink_parent_class parent_class
 G_DEFINE_TYPE (GstOssSink, gst_oss_sink, GST_TYPE_AUDIO_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (osssink, "osssink", GST_RANK_SECONDARY,
+    GST_TYPE_OSSSINK, oss_element_init (plugin));
 
 static void
 gst_oss_sink_dispose (GObject * object)

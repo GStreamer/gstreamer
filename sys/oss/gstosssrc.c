@@ -60,6 +60,7 @@
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include "common.h"
+#include "gstossaudioelements.h"
 #include "gstosssrc.h"
 
 #include <gst/gst-i18n-plugin.h>
@@ -79,6 +80,8 @@ enum
 
 #define gst_oss_src_parent_class parent_class
 G_DEFINE_TYPE (GstOssSrc, gst_oss_src, GST_TYPE_AUDIO_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (osssrc, "osssrc", GST_RANK_SECONDARY,
+    GST_TYPE_OSS_SRC, oss_element_init (plugin));
 
 static void gst_oss_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);

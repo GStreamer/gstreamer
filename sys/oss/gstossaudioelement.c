@@ -25,23 +25,23 @@
 
 #include "common.h"
 #include "gstossaudioelements.h"
-#include "gstosssink.h"
-#include "gstosssrc.h"
 
+GST_DEBUG_CATEGORY (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+oss_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (oss_debug, "oss", 0, "OSS elements");
 
-  ret |= GST_ELEMENT_REGISTER (osssrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (osssink, plugin);
-
-  return TRUE;
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    ossaudio,
-    "OSS (Open Sound System) support for GStreamer",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
