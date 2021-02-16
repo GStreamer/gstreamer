@@ -100,7 +100,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_image_freeze_debug);
 
 #define gst_image_freeze_parent_class parent_class
 G_DEFINE_TYPE (GstImageFreeze, gst_image_freeze, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (imagefreeze, "imagefreeze",
+    GST_RANK_NONE, GST_TYPE_IMAGE_FREEZE,
+    GST_DEBUG_CATEGORY_INIT (gst_image_freeze_debug, "imagefreeze", 0,
+        "imagefreeze element");
+    );
 
 static void
 gst_image_freeze_class_init (GstImageFreezeClass * klass)
@@ -1237,14 +1241,7 @@ gst_image_freeze_provide_clock (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_image_freeze_debug, "imagefreeze", 0,
-      "imagefreeze element");
-
-  if (!gst_element_register (plugin, "imagefreeze", GST_RANK_NONE,
-          GST_TYPE_IMAGE_FREEZE))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (imagefreeze, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

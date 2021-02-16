@@ -80,6 +80,8 @@ struct _GstImageFreezeClass
 
 GType gst_image_freeze_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (imagefreeze);
+
 G_END_DECLS
 
 #endif /* __GST_IMAGE_FREEZE_H__ */
