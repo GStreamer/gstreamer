@@ -56,6 +56,7 @@
 #include <gst/rtp/gstrtcpbuffer.h>
 #endif
 
+#include "gstrtspelements.h"
 #include "gstrtpdec.h"
 #include <stdio.h>
 
@@ -196,6 +197,8 @@ static guint gst_rtp_dec_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_rtp_dec_parent_class parent_class
 G_DEFINE_TYPE (GstRTPDec, gst_rtp_dec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpdec, "rtpdec", GST_RANK_NONE,
+    GST_TYPE_RTP_DEC, rtsp_element_init (plugin));
 
 static void
 gst_rtp_dec_class_init (GstRTPDecClass * g_class)

@@ -1,4 +1,5 @@
 rtsp_sources = [
+  'gstrtspelement.c',
   'gstrtsp.c',
   'gstrtspsrc.c',
   'gstrtpdec.c',

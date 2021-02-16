@@ -41,13 +41,22 @@
  * SOFTWARE.
  */
 
-#ifndef __GST_RTSP_H__
-#define __GST_RTSP_H__
+#ifndef __GST_RTSP_ELEMENTS_H__
+#define __GST_RTSP_ELEMENTS_H__
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
+void rtsp_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (rtspsrc);
+GST_ELEMENT_REGISTER_DECLARE (rtpdec);
 
 G_END_DECLS
 
-#endif /* __GST_RTSP_H__ */
-
+#endif /* __GST_RTSP_ELEMENTS_H__ */

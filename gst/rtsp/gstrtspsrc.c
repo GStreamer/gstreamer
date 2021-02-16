@@ -114,6 +114,7 @@
 
 #include "gst/gst-i18n-plugin.h"
 
+#include "gstrtspelements.h"
 #include "gstrtspsrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
@@ -479,6 +480,8 @@ static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 };
 #define gst_rtspsrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRTSPSrc, gst_rtspsrc, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtspsrc_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtspsrc, "rtspsrc", GST_RANK_NONE,
+    GST_TYPE_RTSPSRC, rtsp_element_init (plugin));
 
 #ifndef GST_DISABLE_GST_DEBUG
 static inline const char *

@@ -1,6 +1,8 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2020 Huawei Technologies Co., Ltd.
+ *   @Author: Stéphane Cerveau <stephane.cerveau@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,21 +47,19 @@
 #include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "gstrtspelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+rtsp_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (rtspsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpdec, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    rtsp,
-    "transfer data via RTSP",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
