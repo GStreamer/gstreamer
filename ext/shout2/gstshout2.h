@@ -74,6 +74,8 @@ struct _GstShout2send {
   GstTagList* tags;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (shout2send);
+
 G_END_DECLS
 
 #endif /* __GST_SHOUT2SEND_H__ */

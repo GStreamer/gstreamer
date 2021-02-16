@@ -151,6 +151,15 @@ gst_shout2send_protocol_get_type (void)
 #define gst_shout2send_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstShout2send, gst_shout2send, GST_TYPE_BASE_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+#ifdef ENABLE_NLS
+#define _do_init \
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);\
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#else /* ENABLE_NLS */
+#define _do_init
+#endif
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (shout2send, "shout2send", GST_RANK_NONE,
+    GST_TYPE_SHOUT2SEND, _do_init);
 
 static void
 gst_shout2send_class_init (GstShout2sendClass * klass)
@@ -949,13 +958,7 @@ gst_shout2send_setcaps (GstBaseSink * basesink, GstCaps * caps)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#ifdef ENABLE_NLS
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
-
-  return gst_element_register (plugin, "shout2send", GST_RANK_NONE,
-      GST_TYPE_SHOUT2SEND);
+  return GST_ELEMENT_REGISTER (shout2send, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
