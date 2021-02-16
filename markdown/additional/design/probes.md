@@ -106,7 +106,7 @@ currently being probed. `GST_PAD_PROBE_REMOVE`: remove the currently executing p
 list of probes.
 
 `GST_PAD_PROBE_PASS` is relevant for blocking probes and will temporarily unblock the
-pad and let the item trough, it will then block again on the next item.
+pad and let the item through, it will then block again on the next item.
 
 ## Blocking probes
 
@@ -119,8 +119,8 @@ the callback will be called immediately from the current thread. Otherwise,
 the callback will be called as soon as the pad becomes idle in the streaming
 thread.
 
-The `IDLE` probe is useful to perform dynamic linking, it allows to wait for for
-a safe moment when an unlink/link operation can be done. Since the probe is a
+The `IDLE` probe is useful to perform dynamic linking, allowing for a sufficinet 
+wait for a safe moment when an unlink/link operation can be done. Since the probe is a
 blocking probe, it will also make sure that the pad stays idle until the probe
 is removed.
 
@@ -135,7 +135,7 @@ blocking probe on the pad, the pad is unblocked and dataflow can continue.
 ## Non-Blocking probes
 
 Non-blocking probes or DATA probes are probes triggered when data is flowing
-over the pad. The are called after the blocking probes are run and always with
+over the pad. They are called after the blocking probes are run and always with
 data.
 
 ## Push dataflow
@@ -312,7 +312,7 @@ not yet connect them to a sink and without losing any data.
 To do this, the source pads of the decoders is blocked so that no events
 or buffers can escape and we don’t interrupt the stream.
 
-When all of the dynamic pad are created (no-more-pads emitted by the
+When all of the dynamic pads are created (no-more-pads emitted by the
 branching point, ie, the demuxer or the queues filled) and the pads are
 blocked (blocked callback received) the pipeline is completely
 prerolled.
