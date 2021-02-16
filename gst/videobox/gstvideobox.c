@@ -2409,6 +2409,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_video_box_parent_class parent_class
 G_DEFINE_TYPE (GstVideoBox, gst_video_box, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (videobox, "videobox", GST_RANK_NONE,
+    GST_TYPE_VIDEO_BOX, GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
+        "Resizes a video by adding borders or cropping"));
 
 static void gst_video_box_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -3336,11 +3339,7 @@ gst_video_box_transform_frame (GstVideoFilter * vfilter,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
-      "Resizes a video by adding borders or cropping");
-
-  return gst_element_register (plugin, "videobox", GST_RANK_NONE,
-      GST_TYPE_VIDEO_BOX);
+  return GST_ELEMENT_REGISTER (videobox, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

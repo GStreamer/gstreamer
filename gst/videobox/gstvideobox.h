@@ -89,4 +89,6 @@ struct _GstVideoBoxClass
 
 GType gst_video_box_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (videobox);
+
 #endif /* __GST_VIDEO_BOX_H__ */
