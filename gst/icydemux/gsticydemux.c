@@ -87,7 +87,11 @@ static gboolean gst_icydemux_send_tag_event (GstICYDemux * icydemux,
 
 #define gst_icydemux_parent_class parent_class
 G_DEFINE_TYPE (GstICYDemux, gst_icydemux, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (icydemux, "icydemux",
+    GST_RANK_PRIMARY, GST_TYPE_ICYDEMUX,
+    GST_DEBUG_CATEGORY_INIT (icydemux_debug, "icydemux", 0,
+        "GStreamer ICY tag demuxer");
+    );
 static void
 gst_icydemux_class_init (GstICYDemuxClass * klass)
 {
@@ -662,11 +666,8 @@ gst_icydemux_send_tag_event (GstICYDemux * icydemux, GstTagList * tags)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (icydemux_debug, "icydemux", 0,
-      "GStreamer ICY tag demuxer");
+  return GST_ELEMENT_REGISTER (icydemux, plugin);
 
-  return gst_element_register (plugin, "icydemux",
-      GST_RANK_PRIMARY, GST_TYPE_ICYDEMUX);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
