@@ -342,6 +342,7 @@ static void gst_deinterlace_update_qos (GstDeinterlace * self,
 static void gst_deinterlace_reset_qos (GstDeinterlace * self);
 static void gst_deinterlace_read_qos (GstDeinterlace * self,
     gdouble * proportion, GstClockTime * time);
+static gboolean deinterlace_element_init (GstPlugin * plugin);
 
 #define IS_TELECINE(m) ((m) == GST_VIDEO_INTERLACE_MODE_MIXED && self->pattern > 1)
 
@@ -365,9 +366,9 @@ _do_init (GType object_type)
 }
 #endif
 
-G_DEFINE_TYPE (GstDeinterlace, gst_deinterlace, GST_TYPE_ELEMENT);
-
 #define parent_class gst_deinterlace_parent_class
+G_DEFINE_TYPE (GstDeinterlace, gst_deinterlace, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (deinterlace, deinterlace_element_init);
 
 static const struct
 {
@@ -3314,8 +3315,9 @@ gst_deinterlace_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return res;
 }
 
+
 static gboolean
-plugin_init (GstPlugin * plugin)
+deinterlace_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (deinterlace_debug, "deinterlace", 0, "Deinterlacer");
 
@@ -3323,12 +3325,14 @@ plugin_init (GstPlugin * plugin)
   orc_init ();
 #endif
 
-  if (!gst_element_register (plugin, "deinterlace", GST_RANK_NONE,
-          GST_TYPE_DEINTERLACE)) {
-    return FALSE;
-  }
+  return gst_element_register (plugin, "deinterlace", GST_RANK_NONE,
+      GST_TYPE_DEINTERLACE);
+}
 
-  return TRUE;
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (deinterlace, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

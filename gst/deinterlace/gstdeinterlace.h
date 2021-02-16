@@ -206,6 +206,8 @@ struct _GstDeinterlaceClass
 
 GType gst_deinterlace_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (deinterlace);
+
 G_END_DECLS
 
 #endif /* __GST_DEINTERLACE_H__ */
