@@ -78,6 +78,8 @@ struct _GstWavEncClass {
 
 GType gst_wavenc_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (wavenc);
+
 G_END_DECLS
 
 #endif /* __GST_WAV_ENC_H__ */

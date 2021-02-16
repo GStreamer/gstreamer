@@ -116,6 +116,8 @@ G_DEFINE_TYPE_WITH_CODE (GstWavEnc, gst_wavenc, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL)
     G_IMPLEMENT_INTERFACE (GST_TYPE_TOC_SETTER, NULL)
     );
+GST_ELEMENT_REGISTER_DEFINE (wavenc, "wavenc", GST_RANK_PRIMARY,
+    GST_TYPE_WAVENC);
 
 static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
@@ -1140,8 +1142,7 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "wavenc", GST_RANK_PRIMARY,
-      GST_TYPE_WAVENC);
+  return GST_ELEMENT_REGISTER (wavenc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
