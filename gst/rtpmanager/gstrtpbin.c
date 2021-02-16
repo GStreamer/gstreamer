@@ -2000,6 +2000,7 @@ static void gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message);
 
 #define gst_rtp_bin_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstRtpBin, gst_rtp_bin, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (rtpbin, "rtpbin", GST_RANK_NONE, GST_TYPE_RTP_BIN);
 
 static gboolean
 _gst_element_accumulator (GSignalInvocationHint * ihint,

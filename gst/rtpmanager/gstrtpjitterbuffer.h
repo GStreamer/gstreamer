@@ -82,6 +82,8 @@ struct _GstRtpJitterBufferClass
 
 GType gst_rtp_jitter_buffer_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpjitterbuffer);
+
 G_END_DECLS
 
 #endif /* __GST_RTP_JITTER_BUFFER_H__ */

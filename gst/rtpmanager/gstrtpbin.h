@@ -150,4 +150,6 @@ struct _GstRtpBinClass {
 
 GType gst_rtp_bin_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpbin);
+
 #endif /* __GST_RTP_BIN_H__ */

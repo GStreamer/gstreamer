@@ -32,6 +32,8 @@ typedef struct _GstRTPST_2022_1_FecDec GstRTPST_2022_1_FecDec;
 
 GType gst_rtpst_2022_1_fecdec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpst2022_1_fecdec);
+
 G_END_DECLS
 
 #endif /* __GST_RTPST_2022_1_FECDEC_H__ */

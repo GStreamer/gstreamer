@@ -76,6 +76,8 @@ struct _GstRTPHeaderExtensionTWCCClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_ELEMENT_REGISTER_DECLARE (rtphdrexttwcc);
+
 G_END_DECLS
 
 #endif /* __GST_RTPHDREXT_TWCC_H__ */

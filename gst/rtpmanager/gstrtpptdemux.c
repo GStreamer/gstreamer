@@ -122,6 +122,8 @@ enum
 
 #define gst_rtp_pt_demux_parent_class parent_class
 G_DEFINE_TYPE (GstRtpPtDemux, gst_rtp_pt_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtpptdemux, "rtpptdemux", GST_RANK_NONE,
+    GST_TYPE_RTP_PT_DEMUX);
 
 static void gst_rtp_pt_demux_finalize (GObject * object);
 

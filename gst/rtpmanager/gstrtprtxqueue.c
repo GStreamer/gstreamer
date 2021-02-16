@@ -122,7 +122,11 @@ static void gst_rtp_rtx_queue_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_rtx_queue_finalize (GObject * object);
 
-G_DEFINE_TYPE (GstRTPRtxQueue, gst_rtp_rtx_queue, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstRTPRtxQueue, gst_rtp_rtx_queue, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_queue_debug, "rtprtxqueue", 0,
+        "rtp retransmission queue"));
+GST_ELEMENT_REGISTER_DEFINE (rtprtxqueue, "rtprtxqueue", GST_RANK_NONE,
+    GST_TYPE_RTP_RTX_QUEUE);
 
 static void
 gst_rtp_rtx_queue_class_init (GstRTPRtxQueueClass * klass)
@@ -513,14 +517,4 @@ gst_rtp_rtx_queue_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_rtp_rtx_queue_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_queue_debug, "rtprtxqueue", 0,
-      "rtp retransmission queue");
-
-  return gst_element_register (plugin, "rtprtxqueue", GST_RANK_NONE,
-      GST_TYPE_RTP_RTX_QUEUE);
 }

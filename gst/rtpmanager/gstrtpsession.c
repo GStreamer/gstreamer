@@ -491,6 +491,8 @@ on_notify_stats (RTPSession * session, GParamSpec * spec,
 
 #define gst_rtp_session_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstRtpSession, gst_rtp_session, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtpsession, "rtpsession", GST_RANK_NONE,
+    GST_TYPE_RTP_SESSION);
 
 static void
 gst_rtp_session_class_init (GstRtpSessionClass * klass)

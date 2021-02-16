@@ -35,6 +35,8 @@ typedef struct _GstRtpFunnel GstRtpFunnel;
 
 GType gst_rtp_funnel_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpfunnel);
+
 typedef struct _GstRtpFunnelPadClass GstRtpFunnelPadClass;
 typedef struct _GstRtpFunnelPad GstRtpFunnelPad;
 

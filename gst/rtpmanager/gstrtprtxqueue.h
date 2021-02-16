@@ -72,9 +72,9 @@ struct _GstRTPRtxQueueClass
   GstElementClass parent_class;
 };
 
-
 GType gst_rtp_rtx_queue_get_type (void);
-gboolean gst_rtp_rtx_queue_plugin_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (rtprtxqueue);
 
 G_END_DECLS
 #endif /* __GST_RTP_RTX_QUEUE_H__ */

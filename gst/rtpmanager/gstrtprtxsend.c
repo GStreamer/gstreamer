@@ -103,7 +103,11 @@ static void gst_rtp_rtx_send_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_rtx_send_finalize (GObject * object);
 
-G_DEFINE_TYPE (GstRtpRtxSend, gst_rtp_rtx_send, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstRtpRtxSend, gst_rtp_rtx_send, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_send_debug, "rtprtxsend", 0,
+        "rtp retransmission sender"));
+GST_ELEMENT_REGISTER_DEFINE (rtprtxsend, "rtprtxsend", GST_RANK_NONE,
+    GST_TYPE_RTP_RTX_SEND);
 
 typedef struct
 {
@@ -993,14 +997,4 @@ gst_rtp_rtx_send_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_rtp_rtx_send_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_send_debug, "rtprtxsend", 0,
-      "rtp retransmission sender");
-
-  return gst_element_register (plugin, "rtprtxsend", GST_RANK_NONE,
-      GST_TYPE_RTP_RTX_SEND);
 }

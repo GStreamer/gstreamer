@@ -453,6 +453,8 @@ static guint gst_rtp_jitter_buffer_signals[LAST_SIGNAL] = { 0 };
 #define gst_rtp_jitter_buffer_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstRtpJitterBuffer, gst_rtp_jitter_buffer,
     GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtpjitterbuffer, "rtpjitterbuffer", GST_RANK_NONE,
+    GST_TYPE_RTP_JITTER_BUFFER);
 
 /* object overrides */
 static void gst_rtp_jitter_buffer_set_property (GObject * object,

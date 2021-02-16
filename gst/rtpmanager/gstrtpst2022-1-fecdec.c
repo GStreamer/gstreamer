@@ -192,6 +192,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_rtpst_2022_1_fecdec_parent_class parent_class
 G_DEFINE_TYPE (GstRTPST_2022_1_FecDec, gst_rtpst_2022_1_fecdec,
     GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtpst2022_1_fecdec, "rtpst2022-1-fecdec",
+    GST_RANK_NONE, GST_TYPE_RTPST_2022_1_FECDEC);
 
 static void
 trim_items (GstRTPST_2022_1_FecDec * dec)

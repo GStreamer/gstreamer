@@ -107,6 +107,8 @@ enum
 
 #define gst_rtp_ssrc_demux_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSsrcDemux, gst_rtp_ssrc_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtpssrcdemux, "rtpssrcdemux", GST_RANK_NONE,
+    GST_TYPE_RTP_SSRC_DEMUX);
 
 /* GObject vmethods */
 static void gst_rtp_ssrc_demux_dispose (GObject * object);

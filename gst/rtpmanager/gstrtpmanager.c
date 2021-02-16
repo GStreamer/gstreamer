@@ -40,65 +40,27 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "rtpbin", GST_RANK_NONE, GST_TYPE_RTP_BIN))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "rtpjitterbuffer", GST_RANK_NONE,
-          GST_TYPE_RTP_JITTER_BUFFER))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (rtpbin, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpjitterbuffer, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpptdemux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpsession, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtprtxqueue, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtprtxreceive, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtprtxsend, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpssrcdemux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpmux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpdtmfmux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpfunnel, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpst2022_1_fecdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpst2022_1_fecenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtphdrexttwcc, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtphdrextrfc6464, plugin);
 
-  if (!gst_element_register (plugin, "rtpptdemux", GST_RANK_NONE,
-          GST_TYPE_RTP_PT_DEMUX))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpsession", GST_RANK_NONE,
-          GST_TYPE_RTP_SESSION))
-    return FALSE;
-
-  if (!gst_rtp_rtx_queue_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rtp_rtx_receive_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rtp_rtx_send_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpssrcdemux", GST_RANK_NONE,
-          GST_TYPE_RTP_SSRC_DEMUX))
-    return FALSE;
-
-  if (!gst_rtp_mux_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rtp_dtmf_mux_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpfunnel", GST_RANK_NONE,
-          GST_TYPE_RTP_FUNNEL))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpst2022-1-fecdec", GST_RANK_NONE,
-          GST_TYPE_RTPST_2022_1_FECDEC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtpst2022-1-fecenc", GST_RANK_NONE,
-          GST_TYPE_RTPST_2022_1_FECENC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtphdrexttwcc", GST_RANK_MARGINAL,
-          GST_TYPE_RTP_HEADER_EXTENSION_TWCC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rtphdrextrfc6464", GST_RANK_MARGINAL,
-          GST_TYPE_RTP_HEADER_EXTENSION_RFC6464))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    rtpmanager,
-    "RTP session management plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, rtpmanager,
+    "RTP session management plugin library", plugin_init, VERSION, "LGPL",
+    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

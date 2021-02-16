@@ -58,4 +58,6 @@ struct _GstRtpSsrcDemuxClass
 
 GType gst_rtp_ssrc_demux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpssrcdemux);
+
 #endif /* __GST_RTP_SSRC_DEMUX_H__ */

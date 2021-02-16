@@ -89,6 +89,8 @@ struct _GstRtpFunnelPad
 };
 
 G_DEFINE_TYPE (GstRtpFunnelPad, gst_rtp_funnel_pad, GST_TYPE_PAD);
+GST_ELEMENT_REGISTER_DEFINE (rtpfunnel, "rtpfunnel", GST_RANK_NONE,
+    GST_TYPE_RTP_FUNNEL);
 
 static void
 gst_rtp_funnel_pad_class_init (G_GNUC_UNUSED GstRtpFunnelPadClass * klass)

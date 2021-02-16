@@ -212,6 +212,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_rtpst_2022_1_fecenc_parent_class parent_class
 G_DEFINE_TYPE (GstRTPST_2022_1_FecEnc, gst_rtpst_2022_1_fecenc,
     GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtpst2022_1_fecenc, "rtpst2022-1-fecenc",
+    GST_RANK_NONE, GST_TYPE_RTPST_2022_1_FECENC);
 
 static void
 free_item (Item * item)

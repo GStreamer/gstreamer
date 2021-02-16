@@ -112,8 +112,9 @@ static void gst_rtp_mux_dispose (GObject * object);
 static gboolean gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux,
     GstEvent * event);
 
-G_DEFINE_TYPE (GstRTPMux, gst_rtp_mux, GST_TYPE_ELEMENT);
-
+G_DEFINE_TYPE_WITH_CODE (GstRTPMux, gst_rtp_mux, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_rtp_mux_debug, "rtpmux", 0, "rtp muxer"));
+GST_ELEMENT_REGISTER_DEFINE (rtpmux, "rtpmux", GST_RANK_NONE, GST_TYPE_RTP_MUX);
 
 static void
 gst_rtp_mux_class_init (GstRTPMuxClass * klass)
@@ -1012,13 +1013,4 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_rtp_mux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rtp_mux_debug, "rtpmux", 0, "rtp muxer");
-
-  return gst_element_register (plugin, "rtpmux", GST_RANK_NONE,
-      GST_TYPE_RTP_MUX);
 }

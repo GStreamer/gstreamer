@@ -191,7 +191,11 @@ static void gst_rtp_rtx_receive_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_rtx_receive_finalize (GObject * object);
 
-G_DEFINE_TYPE (GstRtpRtxReceive, gst_rtp_rtx_receive, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstRtpRtxReceive, gst_rtp_rtx_receive,
+    GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_receive_debug,
+        "rtprtxreceive", 0, "rtp retransmission receiver"));
+GST_ELEMENT_REGISTER_DEFINE (rtprtxreceive, "rtprtxreceive", GST_RANK_NONE,
+    GST_TYPE_RTP_RTX_RECEIVE);
 
 static void
 gst_rtp_rtx_receive_class_init (GstRtpRtxReceiveClass * klass)
@@ -784,14 +788,4 @@ gst_rtp_rtx_receive_change_state (GstElement * element,
   }
 
   return ret;
-}
-
-gboolean
-gst_rtp_rtx_receive_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_receive_debug, "rtprtxreceive", 0,
-      "rtp retransmission receiver");
-
-  return gst_element_register (plugin, "rtprtxreceive", GST_RANK_NONE,
-      GST_TYPE_RTP_RTX_RECEIVE);
 }

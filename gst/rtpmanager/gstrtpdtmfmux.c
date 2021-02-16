@@ -68,7 +68,11 @@ static gboolean gst_rtp_dtmf_mux_accept_buffer_locked (GstRTPMux * rtp_mux,
 static gboolean gst_rtp_dtmf_mux_src_event (GstRTPMux * rtp_mux,
     GstEvent * event);
 
-G_DEFINE_TYPE (GstRTPDTMFMux, gst_rtp_dtmf_mux, GST_TYPE_RTP_MUX);
+G_DEFINE_TYPE_WITH_CODE (GstRTPDTMFMux, gst_rtp_dtmf_mux, GST_TYPE_RTP_MUX,
+    GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_mux_debug, "rtpdtmfmux", 0,
+        "rtp dtmf muxer"););
+GST_ELEMENT_REGISTER_DEFINE (rtpdtmfmux, "rtpdtmfmux", GST_RANK_NONE,
+    GST_TYPE_RTP_DTMF_MUX);
 
 static void
 gst_rtp_dtmf_mux_init (GstRTPDTMFMux * mux)
@@ -221,14 +225,4 @@ gst_rtp_dtmf_mux_change_state (GstElement * element, GstStateChange transition)
       transition);
 
   return ret;
-}
-
-gboolean
-gst_rtp_dtmf_mux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_mux_debug, "rtpdtmfmux", 0,
-      "rtp dtmf muxer");
-
-  return gst_element_register (plugin, "rtpdtmfmux", GST_RANK_NONE,
-      GST_TYPE_RTP_DTMF_MUX);
 }

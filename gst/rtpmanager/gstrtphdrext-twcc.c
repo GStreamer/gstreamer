@@ -43,6 +43,8 @@ G_DEFINE_TYPE_WITH_CODE (GstRTPHeaderExtensionTWCC,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "rtphdrexttwcc", 0,
         "RTP TWCC Header Extensions");
     );
+GST_ELEMENT_REGISTER_DEFINE (rtphdrexttwcc, "rtphdrexttwcc", GST_RANK_MARGINAL,
+    GST_TYPE_RTP_HEADER_EXTENSION_TWCC);
 
 #define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
 

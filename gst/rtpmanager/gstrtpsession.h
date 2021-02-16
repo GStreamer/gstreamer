@@ -80,6 +80,8 @@ struct _GstRtpSessionClass {
 
 GType gst_rtp_session_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpsession);
+
 typedef enum {
   GST_RTP_NTP_TIME_SOURCE_NTP,
   GST_RTP_NTP_TIME_SOURCE_UNIX,

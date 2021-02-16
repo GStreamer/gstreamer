@@ -58,10 +58,12 @@ struct _GstRTPHeaderExtensionRfc6464
 G_DEFINE_TYPE_WITH_CODE (GstRTPHeaderExtensionRfc6464,
     gst_rtp_header_extension_rfc6464, GST_TYPE_RTP_HEADER_EXTENSION,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "rtphdrextrfc6464", 0,
-        "RTP RFC 6464 Header Extensions");
-    )
-     static void
-         gst_rtp_header_extension_rfc6464_get_property (GObject * object,
+        "RTP RFC 6464 Header Extensions"););
+GST_ELEMENT_REGISTER_DEFINE (rtphdrextrfc6464, "rtphdrextrfc6464",
+    GST_RANK_MARGINAL, GST_TYPE_RTP_HEADER_EXTENSION_RFC6464);
+
+static void
+gst_rtp_header_extension_rfc6464_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstRTPHeaderExtensionRfc6464 *self =

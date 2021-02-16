@@ -74,7 +74,8 @@ struct _GstRtpRtxReceiveClass
 
 
 GType gst_rtp_rtx_receive_get_type (void);
-gboolean gst_rtp_rtx_receive_plugin_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (rtprtxreceive);
 
 G_END_DECLS
 #endif /* __GST_RTP_RTX_RECEIVE_H__ */

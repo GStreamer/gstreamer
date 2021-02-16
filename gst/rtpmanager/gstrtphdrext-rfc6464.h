@@ -25,6 +25,8 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GstRTPHeaderExtensionRfc6464, gst_rtp_header_extension_rfc6464, GST, RTP_HEADER_EXTENSION_RFC6464, GstRTPHeaderExtension)
 
+GST_ELEMENT_REGISTER_DECLARE (rtphdrextrfc6464);
+
 G_END_DECLS
 
 #endif /* __GST_RTPHDREXT_RFC6464_H__ */

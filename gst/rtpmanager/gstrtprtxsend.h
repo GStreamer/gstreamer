@@ -81,9 +81,9 @@ struct _GstRtpRtxSendClass
   GstElementClass parent_class;
 };
 
-
 GType gst_rtp_rtx_send_get_type (void);
-gboolean gst_rtp_rtx_send_plugin_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (rtprtxsend);
 
 G_END_DECLS
 #endif /* __GST_RTP_RTX_SEND_H__ */

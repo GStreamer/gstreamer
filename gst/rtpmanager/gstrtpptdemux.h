@@ -60,4 +60,6 @@ struct _GstRtpPtDemuxClass
 
 GType gst_rtp_pt_demux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rtpptdemux);
+
 #endif /* __GST_RTP_PT_DEMUX_H__ */
