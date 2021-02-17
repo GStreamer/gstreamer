@@ -512,8 +512,12 @@ G_DEFINE_TYPE_WITH_CODE (GstDfbVideoSink, gst_dfbvideosink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_dfbvideosink_navigation_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
-        gst_dfbvideosink_colorbalance_init));
-
+        gst_dfbvideosink_colorbalance_init);
+    GST_DEBUG_CATEGORY_INIT (dfbvideosink_debug, "dfbvideosink", 0,
+        "DirectFB video sink element");
+    );
+GST_ELEMENT_REGISTER_DEFINE (dfbvideosink, "dfbvideosink", GST_RANK_MARGINAL,
+    GST_TYPE_DFBVIDEOSINK);
 #ifndef GST_DISABLE_GST_DEBUG
 static const char *
 gst_dfbvideosink_get_format_name (DFBSurfacePixelFormat format)
@@ -2460,14 +2464,7 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "dfbvideosink", GST_RANK_MARGINAL,
-          GST_TYPE_DFBVIDEOSINK))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (dfbvideosink_debug, "dfbvideosink", 0,
-      "DirectFB video sink element");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (dfbvideosink, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
