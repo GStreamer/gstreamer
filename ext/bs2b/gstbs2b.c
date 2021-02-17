@@ -101,6 +101,7 @@ static void gst_preset_interface_init (gpointer g_iface, gpointer iface_data);
 
 G_DEFINE_TYPE_WITH_CODE (GstBs2b, gst_bs2b, GST_TYPE_AUDIO_FILTER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, gst_preset_interface_init));
+GST_ELEMENT_REGISTER_DEFINE (bs2b, "bs2b", GST_RANK_NONE, GST_TYPE_BS2B);
 
 static void gst_bs2b_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -410,7 +411,7 @@ gst_bs2b_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "bs2b", GST_RANK_NONE, GST_TYPE_BS2B);
+  return GST_ELEMENT_REGISTER (bs2b, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

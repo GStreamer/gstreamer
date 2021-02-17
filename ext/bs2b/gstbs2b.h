@@ -59,5 +59,7 @@ struct _GstBs2bClass
 
 GType gst_bs2b_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (bs2b);
+
 G_END_DECLS
 #endif /* __GST_BS2B_H__ */
