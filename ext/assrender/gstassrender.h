@@ -94,6 +94,8 @@ struct _GstAssRenderClass
 
 GType gst_ass_render_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (assrender);
+
 G_END_DECLS
 
 #endif

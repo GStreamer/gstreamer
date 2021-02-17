@@ -113,6 +113,13 @@ static GstStateChangeReturn gst_ass_render_change_state (GstElement * element,
 
 #define gst_ass_render_parent_class parent_class
 G_DEFINE_TYPE (GstAssRender, gst_ass_render, GST_TYPE_ELEMENT);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (gst_ass_render_debug, "assrender", \
+      0, "ASS/SSA subtitle renderer");\
+  GST_DEBUG_CATEGORY_INIT (gst_ass_render_lib_debug, "assrender_library",\
+      0, "ASS/SSA subtitle renderer library");
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (assrender, "assrender",
+    GST_RANK_PRIMARY, GST_TYPE_ASS_RENDER, _do_init);
 
 static GstCaps *gst_ass_render_get_videosink_caps (GstPad * pad,
     GstAssRender * render, GstCaps * filter);
@@ -1873,13 +1880,7 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_ass_render_debug, "assrender",
-      0, "ASS/SSA subtitle renderer");
-  GST_DEBUG_CATEGORY_INIT (gst_ass_render_lib_debug, "assrender_library",
-      0, "ASS/SSA subtitle renderer library");
-
-  return gst_element_register (plugin, "assrender",
-      GST_RANK_PRIMARY, GST_TYPE_ASS_RENDER);
+  return GST_ELEMENT_REGISTER (assrender, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
