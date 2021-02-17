@@ -258,6 +258,12 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
  * the necessary amount of samples from the end and @trim number of samples
  * from the beginning.
  *
+ * This function does not know the audio rate, therefore the caller is
+ * responsible for re-setting the correct timestamp and duration to the
+ * buffer. However, timestamp will be preserved if trim == 0, and duration
+ * will also be preserved if there is no trimming to be done. Offset and
+ * offset end will be preserved / updated.
+ *
  * After calling this function the caller does not own a reference to
  * @buffer anymore.
  *
@@ -274,11 +280,14 @@ gst_audio_buffer_truncate (GstBuffer * buffer, gint bpf, gsize trim,
   GstBuffer *ret = NULL;
   gsize orig_samples;
   gint i;
+  GstClockTime orig_ts, orig_offset;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
   meta = gst_buffer_get_audio_meta (buffer);
   orig_samples = meta ? meta->samples : gst_buffer_get_size (buffer) / bpf;
+  orig_ts = GST_BUFFER_PTS (buffer);
+  orig_offset = GST_BUFFER_OFFSET (buffer);
 
   g_return_val_if_fail (trim < orig_samples, NULL);
   g_return_val_if_fail (samples == -1 || trim + samples <= orig_samples, NULL);
@@ -310,6 +319,23 @@ gst_audio_buffer_truncate (GstBuffer * buffer, gint bpf, gsize trim,
     for (i = 0; i < meta->info.channels; i++) {
       meta->offsets[i] += trim * bpf / meta->info.channels;
     }
+  }
+
+  GST_BUFFER_DTS (ret) = GST_CLOCK_TIME_NONE;
+  if (GST_CLOCK_TIME_IS_VALID (orig_ts) && trim == 0) {
+    GST_BUFFER_PTS (ret) = orig_ts;
+  } else {
+    GST_BUFFER_PTS (ret) = GST_CLOCK_TIME_NONE;
+  }
+  /* If duration was the same, it would have meant there's no trimming to be
+   * done, so we have an early return further up */
+  GST_BUFFER_DURATION (ret) = GST_CLOCK_TIME_NONE;
+  if (orig_offset != GST_BUFFER_OFFSET_NONE) {
+    GST_BUFFER_OFFSET (ret) = orig_offset + trim;
+    GST_BUFFER_OFFSET_END (ret) = GST_BUFFER_OFFSET (ret) + samples;
+  } else {
+    GST_BUFFER_OFFSET (ret) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (ret) = GST_BUFFER_OFFSET_NONE;
   }
 
   return ret;
