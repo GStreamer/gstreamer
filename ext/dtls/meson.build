@@ -9,6 +9,7 @@ dtls_sources = [
   'gstdtlssrtpdemux.c',
   'gstdtlssrtpenc.c',
   'plugin.c',
+  'gstdtlselement.c',
 ]
 
 openssl_dep = dependency('openssl', version : '>= 1.0.1', required : get_option('dtls'))

@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include "gstdtlselements.h"
 #include "gstdtlsdec.h"
 
 #include "gstdtlscertificate.h"
@@ -48,6 +49,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_dtls_dec_debug);
 #define gst_dtls_dec_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDtlsDec, gst_dtls_dec, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_dtls_dec_debug, "dtlsdec", 0, "DTLS Decoder"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dtlsdec, "dtlsdec", GST_RANK_NONE,
+    GST_TYPE_DTLS_DEC, dtls_element_init (plugin));
 
 enum
 {

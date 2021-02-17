@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include "gstdtlselements.h"
 #include "gstdtlssrtpdec.h"
 #include "gstdtlsconnection.h"
 
@@ -62,6 +63,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_dtls_srtp_dec_debug);
 G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpDec, gst_dtls_srtp_dec,
     GST_TYPE_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (gst_dtls_srtp_dec_debug,
         "dtlssrtpdec", 0, "DTLS Decoder"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dtlssrtpdec, "dtlssrtpdec",
+    GST_RANK_NONE, GST_TYPE_DTLS_SRTP_DEC, dtls_element_init (plugin));
 
 enum
 {

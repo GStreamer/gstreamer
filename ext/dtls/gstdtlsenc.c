@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include "gstdtlselements.h"
 #include "gstdtlsenc.h"
 
 #include "gstdtlsdec.h"
@@ -48,6 +49,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_dtls_enc_debug);
 #define gst_dtls_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDtlsEnc, gst_dtls_enc, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_dtls_enc_debug, "dtlsenc", 0, "DTLS Encoder"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dtlsenc, "dtlsenc", GST_RANK_NONE,
+    GST_TYPE_DTLS_ENC, dtls_element_init (plugin));
 
 enum
 {

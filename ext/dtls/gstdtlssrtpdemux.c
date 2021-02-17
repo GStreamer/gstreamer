@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include "gstdtlselements.h"
 #include "gstdtlssrtpdemux.h"
 
 #define PACKET_IS_DTLS(b) (b > 0x13 && b < 0x40)
@@ -59,6 +60,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_gst_dtls_srtp_demux_debug);
 G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpDemux, gst_dtls_srtp_demux,
     GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (gst_gst_dtls_srtp_demux_debug,
         "dtlssrtpdemux", 0, "DTLS SRTP Demultiplexer"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dtlssrtpdemux, "dtlssrtpdemux",
+    GST_RANK_NONE, GST_TYPE_DTLS_SRTP_DEMUX, dtls_element_init (plugin));
+
 
 static GstFlowReturn sink_chain (GstPad *, GstObject * self, GstBuffer *);
 
