@@ -99,6 +99,7 @@ static void gst_fluid_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fluid_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean fluiddec_element_init (GstPlugin * plugin);
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -116,6 +117,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_fluid_dec_parent_class
 G_DEFINE_TYPE (GstFluidDec, gst_fluid_dec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (fluiddec, fluiddec_element_init);
 
 /* initialize the plugin's class */
 static void
@@ -707,7 +709,7 @@ gst_fluid_synth_debug_log_function (int level, const char *message, void *data)
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+fluiddec_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_fluid_dec_debug, "fluiddec",
       0, "Fluidsynth MIDI decoder plugin");
@@ -744,9 +746,14 @@ plugin_init (GstPlugin * plugin)
     }
   }
 #endif
-
   return gst_element_register (plugin, "fluiddec",
       GST_RANK_SECONDARY, GST_TYPE_FLUID_DEC);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (fluiddec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
