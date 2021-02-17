@@ -1166,7 +1166,7 @@ plugin_init (GstPlugin * plugin)
 #define PACKAGE_NAME "SVT-AV1 Encoder plugin for GStreamer"
 #endif
 #ifndef GST_PACKAGE_ORIGIN
-#define GST_PACKAGE_ORIGIN "https://github.com/AOMediaCodec"
+#define GST_PACKAGE_ORIGIN "https://gitlab.com/AOMediaCodec"
 #endif
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
