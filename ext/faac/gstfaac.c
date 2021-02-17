@@ -135,6 +135,7 @@ GST_DEBUG_CATEGORY_STATIC (faac_debug);
 
 #define gst_faac_parent_class parent_class
 G_DEFINE_TYPE (GstFaac, gst_faac, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (faac, "faac", GST_RANK_SECONDARY, GST_TYPE_FAAC);
 
 #define GST_TYPE_FAAC_RATE_CONTROL (gst_faac_brtype_get_type ())
 static GType
@@ -781,8 +782,7 @@ gst_faac_get_property (GObject * object,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "faac", GST_RANK_SECONDARY,
-      GST_TYPE_FAAC);
+  return GST_ELEMENT_REGISTER (faac, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
