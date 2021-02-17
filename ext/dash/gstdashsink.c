@@ -277,7 +277,10 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
     GST_STATIC_CAPS_ANY);
 
 #define gst_dash_sink_parent_class parent_class
-G_DEFINE_TYPE (GstDashSink, gst_dash_sink, GST_TYPE_BIN);
+G_DEFINE_TYPE_WITH_CODE (GstDashSink, gst_dash_sink, GST_TYPE_BIN,
+    GST_DEBUG_CATEGORY_INIT (gst_dash_sink_debug, "dashsink", 0, "DashSink"););
+GST_ELEMENT_REGISTER_DEFINE (dashsink, "dashsink", GST_RANK_NONE,
+    gst_dash_sink_get_type ());
 
 static void gst_dash_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -980,12 +983,4 @@ gst_dash_sink_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_dash_sink_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_dash_sink_debug, "dashsink", 0, "DashSink");
-  return gst_element_register (plugin, "dashsink", GST_RANK_NONE,
-      gst_dash_sink_get_type ());
 }

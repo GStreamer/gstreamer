@@ -443,6 +443,8 @@ G_DEFINE_TYPE_WITH_CODE (GstDashDemux, gst_dash_demux, GST_TYPE_ADAPTIVE_DEMUX,
     GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "dashdemux", 0,
         "dashdemux element")
     );
+GST_ELEMENT_REGISTER_DEFINE (dashdemux, "dashdemux", GST_RANK_PRIMARY,
+    GST_TYPE_DASH_DEMUX);
 
 static void
 gst_dash_demux_dispose (GObject * obj)

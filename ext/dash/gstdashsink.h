@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_DASH_SINK  gst_dash_sink_get_type ()
 G_DECLARE_FINAL_TYPE (GstDashSink, gst_dash_sink, GST, DASH_SINK, GstBin)
 
-gboolean gst_dash_sink_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (dashsink);
 
 G_END_DECLS
 

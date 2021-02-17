@@ -155,6 +155,8 @@ struct _GstDashDemuxClass
 
 GType gst_dash_demux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (dashdemux);
+
 G_END_DECLS
 #endif /* __GST_DASH_DEMUX_H__ */
 
