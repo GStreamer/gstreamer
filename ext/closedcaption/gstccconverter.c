@@ -69,8 +69,10 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (CC_CAPS));
 
-G_DEFINE_TYPE (GstCCConverter, gst_cc_converter, GST_TYPE_BASE_TRANSFORM);
 #define parent_class gst_cc_converter_parent_class
+G_DEFINE_TYPE (GstCCConverter, gst_cc_converter, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (ccconverter, "ccconverter",
+    GST_RANK_NONE, GST_TYPE_CCCONVERTER);
 
 #define GST_TYPE_CC_CONVERTER_CDP_MODE (gst_cc_converter_cdp_mode_get_type())
 static GType

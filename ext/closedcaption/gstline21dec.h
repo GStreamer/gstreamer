@@ -69,5 +69,7 @@ struct _GstLine21DecoderClass
 
 GType gst_line_21_decoder_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (line21decoder);
+
 G_END_DECLS
 #endif /* __GST_LINE21DECODER_H__ */

@@ -132,5 +132,7 @@ struct _GstCeaCcOverlayClass
 
 GType gst_cea_cc_overlay_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (cc708overlay);
+
 G_END_DECLS
 #endif /* __GST_CEA_CC_OVERLAY_H__ */

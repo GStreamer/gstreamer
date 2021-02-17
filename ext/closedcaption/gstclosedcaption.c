@@ -35,25 +35,14 @@
 static gboolean
 closedcaption_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  ret = gst_element_register (plugin, "cccombiner", GST_RANK_NONE,
-      GST_TYPE_CCCOMBINER);
-
-  ret &= gst_element_register (plugin, "ccconverter", GST_RANK_NONE,
-      GST_TYPE_CCCONVERTER);
-
-  ret &= gst_element_register (plugin, "ccextractor", GST_RANK_NONE,
-      GST_TYPE_CCEXTRACTOR);
-
-  ret &= gst_element_register (plugin, "line21decoder", GST_RANK_NONE,
-      GST_TYPE_LINE21DECODER);
-
-  ret &= gst_element_register (plugin, "cc708overlay", GST_RANK_PRIMARY,
-      GST_TYPE_CEA_CC_OVERLAY);
-
-  ret &= gst_element_register (plugin, "line21encoder", GST_RANK_NONE,
-      GST_TYPE_LINE21ENCODER);
+  ret |= GST_ELEMENT_REGISTER (cccombiner, plugin);
+  ret |= GST_ELEMENT_REGISTER (ccconverter, plugin);
+  ret |= GST_ELEMENT_REGISTER (ccextractor, plugin);
+  ret |= GST_ELEMENT_REGISTER (line21decoder, plugin);
+  ret |= GST_ELEMENT_REGISTER (cc708overlay, plugin);
+  ret |= GST_ELEMENT_REGISTER (line21encoder, plugin);
 
   return ret;
 }

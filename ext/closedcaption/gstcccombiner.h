@@ -81,5 +81,7 @@ struct _GstCCCombinerClass
 
 GType gst_cc_combiner_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (cccombiner);
+
 G_END_DECLS
 #endif /* __GST_CCCOMBINER_H__ */

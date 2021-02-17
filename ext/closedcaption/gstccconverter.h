@@ -88,5 +88,7 @@ struct _GstCCConverterClass
 
 GType gst_cc_converter_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (ccconverter);
+
 G_END_DECLS
 #endif /* __GST_CCCONVERTER_H__ */

@@ -195,6 +195,9 @@ gst_cea_cc_overlay_get_type (void)
   return type;
 }
 
+GST_ELEMENT_REGISTER_DEFINE (cc708overlay, "cc708overlay",
+    GST_RANK_PRIMARY, GST_TYPE_CEA_CC_OVERLAY);
+
 static void
 gst_base_cea_cc_overlay_base_init (gpointer g_class)
 {

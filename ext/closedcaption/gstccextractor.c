@@ -65,8 +65,10 @@ static GstStaticPadTemplate captiontemplate =
     ("closedcaption/x-cea-608,format={ (string) raw, (string) s334-1a}; "
         "closedcaption/x-cea-708,format={ (string) cc_data, (string) cdp }"));
 
-G_DEFINE_TYPE (GstCCExtractor, gst_cc_extractor, GST_TYPE_ELEMENT);
 #define parent_class gst_cc_extractor_parent_class
+G_DEFINE_TYPE (GstCCExtractor, gst_cc_extractor, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (ccextractor, "ccextractor",
+    GST_RANK_NONE, GST_TYPE_CCEXTRACTOR);
 
 static gboolean gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);

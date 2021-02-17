@@ -49,8 +49,10 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (CAPS));
 
-G_DEFINE_TYPE (GstLine21Decoder, gst_line_21_decoder, GST_TYPE_VIDEO_FILTER);
 #define parent_class gst_line_21_decoder_parent_class
+G_DEFINE_TYPE (GstLine21Decoder, gst_line_21_decoder, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (line21decoder, "line21decoder",
+    GST_RANK_NONE, GST_TYPE_LINE21DECODER);
 
 static void gst_line_21_decoder_finalize (GObject * self);
 static gboolean gst_line_21_decoder_stop (GstBaseTransform * btrans);

@@ -51,8 +51,10 @@ static GstStaticPadTemplate captiontemplate =
     ("closedcaption/x-cea-608,format={ (string) raw, (string) s334-1a}; "
         "closedcaption/x-cea-708,format={ (string) cc_data, (string) cdp }"));
 
-G_DEFINE_TYPE (GstCCCombiner, gst_cc_combiner, GST_TYPE_AGGREGATOR);
 #define parent_class gst_cc_combiner_parent_class
+G_DEFINE_TYPE (GstCCCombiner, gst_cc_combiner, GST_TYPE_AGGREGATOR);
+GST_ELEMENT_REGISTER_DEFINE (cccombiner, "cccombiner",
+    GST_RANK_NONE, GST_TYPE_CCCOMBINER);
 
 enum
 {

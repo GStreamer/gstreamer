@@ -60,6 +60,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE (GstLine21Encoder, gst_line_21_encoder, GST_TYPE_VIDEO_FILTER);
 #define parent_class gst_line_21_encoder_parent_class
+GST_ELEMENT_REGISTER_DEFINE (line21encoder, "line21encoder",
+    GST_RANK_NONE, GST_TYPE_LINE21ENCODER);
 
 static gboolean gst_line_21_encoder_set_info (GstVideoFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info,
