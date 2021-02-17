@@ -87,7 +87,11 @@ gst_dc1394_iso_speed_get_type (void)
 
 
 #define gst_dc1394_src_parent_class parent_class
-G_DEFINE_TYPE (GstDC1394Src, gst_dc1394_src, GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE_WITH_CODE (GstDC1394Src, gst_dc1394_src, GST_TYPE_PUSH_SRC,
+    GST_DEBUG_CATEGORY_INIT (dc1394_debug, "dc1394", 0, "DC1394 interface");
+    );
+GST_ELEMENT_REGISTER_DEFINE (dc1394src, "dc1394src", GST_RANK_NONE,
+    GST_TYPE_DC1394_SRC);
 
 static void gst_dc1394_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -1229,12 +1233,8 @@ error:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (dc1394_debug, "dc1394", 0, "DC1394 interface");
-
-  return gst_element_register (plugin, "dc1394src", GST_RANK_NONE,
-      GST_TYPE_DC1394_SRC);
+  return GST_ELEMENT_REGISTER (dc1394src, plugin);
 }
-
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,

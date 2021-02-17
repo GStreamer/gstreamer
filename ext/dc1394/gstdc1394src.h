@@ -55,6 +55,8 @@ struct _GstDC1394SrcClass {
 
 GType gst_dc1394_src_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (dc1394src);
+
 G_END_DECLS
 
 #endif /* __GST_DC1394_H__ */
