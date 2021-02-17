@@ -175,7 +175,10 @@ gst_iqa_mode_flags_get_type (void)
 /* GstIqa */
 #define gst_iqa_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIqa, gst_iqa, GST_TYPE_VIDEO_AGGREGATOR,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY, gst_iqa_child_proxy_init));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY, gst_iqa_child_proxy_init);
+    GST_DEBUG_CATEGORY_INIT (gst_iqa_debug, "iqa", 0, "iqa");
+    );
+GST_ELEMENT_REGISTER_DEFINE (iqa, "iqa", GST_RANK_PRIMARY, GST_TYPE_IQA);
 
 #ifdef HAVE_DSSIM
 inline static unsigned char
@@ -510,9 +513,7 @@ gst_iqa_init (GstIqa * self)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_iqa_debug, "iqa", 0, "iqa");
-
-  return gst_element_register (plugin, "iqa", GST_RANK_PRIMARY, GST_TYPE_IQA);
+  return GST_ELEMENT_REGISTER (iqa, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
