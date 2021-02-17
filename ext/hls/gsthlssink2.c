@@ -44,6 +44,7 @@
 #include "config.h"
 #endif
 
+#include "gsthlselements.h"
 #include "gsthlssink2.h"
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
@@ -97,6 +98,8 @@ static GstStaticPadTemplate audio_template = GST_STATIC_PAD_TEMPLATE ("audio",
 
 #define gst_hls_sink2_parent_class parent_class
 G_DEFINE_TYPE (GstHlsSink2, gst_hls_sink2, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (hlssink2, "hlssink2", GST_RANK_NONE,
+    GST_TYPE_HLS_SINK2, hls_element_init (plugin));
 
 static void gst_hls_sink2_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -682,12 +685,4 @@ gst_hls_sink2_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_hls_sink2_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_hls_sink2_debug, "hlssink2", 0, "HlsSink2");
-  return gst_element_register (plugin, "hlssink2", GST_RANK_NONE,
-      gst_hls_sink2_get_type ());
 }

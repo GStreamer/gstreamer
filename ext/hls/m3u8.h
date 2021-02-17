@@ -24,7 +24,7 @@
 #ifndef __M3U8_H__
 #define __M3U8_H__
 
-#include <glib.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 

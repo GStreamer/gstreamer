@@ -1,6 +1,7 @@
 hls_sources = [
   'gsthlsdemux.c',
   'gsthlsdemux-util.c',
+  'gsthlselement.c',
   'gsthlsplugin.c',
   'gsthlssink.c',
   'gsthlssink2.c',

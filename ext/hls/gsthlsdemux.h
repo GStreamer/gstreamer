@@ -27,7 +27,6 @@
 
 #include <gst/gst.h>
 #include "m3u8.h"
-#include "gsthls.h"
 #include <gst/adaptivedemux/gstadaptivedemux.h>
 #if defined(HAVE_OPENSSL)
 #include <openssl/evp.h>

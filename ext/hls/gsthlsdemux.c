@@ -43,6 +43,7 @@
 
 #include <string.h>
 #include <gst/base/gsttypefindhelper.h>
+#include "gsthlselements.h"
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
@@ -119,6 +120,8 @@ static void gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
 
 #define gst_hls_demux_parent_class parent_class
 G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_ADAPTIVE_DEMUX);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (hlsdemux, "hlsdemux", GST_RANK_PRIMARY,
+    GST_TYPE_HLS_DEMUX, hls_element_init (plugin));
 
 static void
 gst_hls_demux_finalize (GObject * obj)

@@ -26,8 +26,8 @@
 #include <glib.h>
 #include <string.h>
 
-#include "gsthls.h"
 #include "m3u8.h"
+#include "gsthlselements.h"
 
 #define GST_CAT_DEFAULT hls_debug
 

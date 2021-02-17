@@ -33,6 +33,7 @@
 #include "config.h"
 #endif
 
+#include "gsthlselements.h"
 #include "gsthlssink.h"
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
@@ -70,6 +71,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_hls_sink_parent_class parent_class
 G_DEFINE_TYPE (GstHlsSink, gst_hls_sink, GST_TYPE_BIN);
+#define _do_init \
+  hls_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_hls_sink_debug, "hlssink", 0, "HlsSink");
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (hlssink, "hlssink", GST_RANK_NONE,
+    GST_TYPE_HLS_SINK, _do_init);
 
 static void gst_hls_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -579,12 +585,4 @@ gst_hls_sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   gst_buffer_list_unref (list);
 
   return ret;
-}
-
-gboolean
-gst_hls_sink_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_hls_sink_debug, "hlssink", 0, "HlsSink");
-  return gst_element_register (plugin, "hlssink", GST_RANK_NONE,
-      gst_hls_sink_get_type ());
 }
