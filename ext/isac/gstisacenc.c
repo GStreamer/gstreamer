@@ -120,6 +120,8 @@ G_DEFINE_TYPE_WITH_CODE (GstIsacEnc, gst_isacenc,
     GST_TYPE_AUDIO_ENCODER,
     GST_DEBUG_CATEGORY_INIT (isacenc_debug, "isacenc", 0,
         "debug category for isacenc element"));
+GST_ELEMENT_REGISTER_DEFINE (isacenc, "isacenc", GST_RANK_PRIMARY,
+    GST_TYPE_ISACENC);
 
 static gboolean
 gst_isacenc_start (GstAudioEncoder * enc)

@@ -75,6 +75,8 @@ G_DEFINE_TYPE_WITH_CODE (GstIsacDec, gst_isacdec,
     GST_TYPE_AUDIO_DECODER,
     GST_DEBUG_CATEGORY_INIT (isacdec_debug, "isacdec", 0,
         "debug category for isacdec element"));
+GST_ELEMENT_REGISTER_DEFINE (isacdec, "isacdec", GST_RANK_PRIMARY,
+    GST_TYPE_ISACDEC);
 
 static gboolean
 gst_isacdec_start (GstAudioDecoder * dec)

@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 #define GST_TYPE_ISACENC gst_isacenc_get_type ()
 G_DECLARE_FINAL_TYPE(GstIsacEnc, gst_isacenc, GST, ISACENC, GstAudioEncoder)
 
+GST_ELEMENT_REGISTER_DECLARE (isacenc);
+
 G_END_DECLS
 
 #endif /* __GST_ISAC_ENC_H__ */

@@ -39,14 +39,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "isacenc", GST_RANK_PRIMARY,
-          GST_TYPE_ISACENC))
-    return FALSE;
-  if (!gst_element_register (plugin, "isacdec", GST_RANK_PRIMARY,
-          GST_TYPE_ISACDEC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (isacenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (isacdec, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
