@@ -69,6 +69,7 @@
 
 #include <kate/kate.h>
 
+#include "gstkateelements.h"
 #include "gstkatetag.h"
 
 
@@ -92,9 +93,15 @@ static void gst_kate_tag_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_kate_tag_dispose (GObject * object);
 
+GST_DEBUG_CATEGORY (gst_katetag_debug);
 #define gst_kate_tag_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstKateTag, gst_kate_tag, GST_TYPE_KATE_PARSE,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+#define _do_init \
+  kate_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_katetag_debug, "katetag", 0, "Kate tagger");
+GST_ELEMENT_REGISTER_DEFINE (katetag, "katetag", GST_RANK_NONE,
+    GST_TYPE_KATE_TAG);
 
 static void
 gst_kate_tag_class_init (GstKateTagClass * klass)

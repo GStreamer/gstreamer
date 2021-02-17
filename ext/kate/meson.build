@@ -1,5 +1,6 @@
 kate_sources = [
   'gstkate.c',
+  'gstkateelement.c',
   'gstkatedec.c',
   'gstkateenc.c',
   'gstkateparse.c',

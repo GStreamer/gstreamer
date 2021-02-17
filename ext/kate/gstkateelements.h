@@ -41,15 +41,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_KATE_H__
-#define __GST_KATE_H__
+#ifndef __GST_KATE_ELEMENT_H__
+#define __GST_KATE_ELEMENT_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-/* nothing here any more */
+void kate_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (katedec);
+GST_ELEMENT_REGISTER_DECLARE (kateenc);
+GST_ELEMENT_REGISTER_DECLARE (kateparse);
+GST_ELEMENT_REGISTER_DECLARE (tiger);
+GST_ELEMENT_REGISTER_DECLARE (katetag);
+
 
 G_END_DECLS
 
-#endif /* __GST_KATE_H__ */
+#endif /* __GST_KATE_ELEMENT_H__ */

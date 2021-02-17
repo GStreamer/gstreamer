@@ -83,7 +83,7 @@
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 
-#include "gstkate.h"
+#include "gstkateelements.h"
 #include "gstkateutil.h"
 #include "gstkatespu.h"
 #include "gstkateenc.h"
@@ -144,9 +144,16 @@ static gboolean gst_kate_enc_sink_event (GstPad * pad, GstObject * parent,
 static gboolean gst_kate_enc_source_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
+GST_DEBUG_CATEGORY (gst_kateenc_debug);
+
 #define gst_kate_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstKateEnc, gst_kate_enc, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+#define _do_init \
+  kate_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_kateenc_debug, "kateenc", 0, "Kate encoder");
+GST_ELEMENT_REGISTER_DEFINE (kateenc, "kateenc", GST_RANK_NONE,
+    GST_TYPE_KATE_ENC);
 
 /* initialize the plugin's class */
 static void

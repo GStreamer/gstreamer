@@ -80,7 +80,7 @@
 #include <gst/glib-compat-private.h>
 #include <gst/video/video.h>
 
-#include "gstkate.h"
+#include "gstkateelements.h"
 #include "gstkatetiger.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_katetiger_debug);
@@ -174,7 +174,15 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (TIGER_VIDEO_CAPS));
 
+GST_DEBUG_CATEGORY (gst_katetiger_debug);
+
 GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement, GST_TYPE_ELEMENT);
+#define _do_init \
+  kate_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_katetiger_debug, "tiger", 0, \
+        "Kate Tiger renderer");
+GST_ELEMENT_REGISTER_DEFINE (tiger, "tiger", GST_RANK_NONE,
+    GST_TYPE_KATE_TIGER);
 
 static GType
 gst_kate_tiger_font_effect_get_type (void)

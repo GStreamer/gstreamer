@@ -47,29 +47,26 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
+#include <gst/gst.h>
+
 #include "gstkateelements.h"
 
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (katedec, plugin);
-  ret |= GST_ELEMENT_REGISTER (kateenc, plugin);
-  ret |= GST_ELEMENT_REGISTER (kateparse, plugin);
-  ret |= GST_ELEMENT_REGISTER (katetag, plugin);
+#undef HAVE_TIGER
 #ifdef HAVE_TIGER
-  ret |= GST_ELEMENT_REGISTER (tiger, plugin);
+#include "gstkatetiger.h"
 #endif
 
-  return ret;
-}
+GST_DEBUG_CATEGORY (gst_kateutil_debug);
 
-/* this is the structure that gstreamer looks for to register plugins
- */
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    kate,
-    "Kate plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+void
+kate_element_init (GstPlugin * plugin)
+{
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (gst_kateutil_debug, "kateutil", 0,
+        "Kate utility functions");
+    g_once_init_leave (&res, TRUE);
+  }
+}

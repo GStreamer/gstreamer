@@ -79,7 +79,7 @@
 
 #include <gst/gst.h>
 
-#include "gstkate.h"
+#include "gstkateelements.h"
 #include "gstkatespu.h"
 #include "gstkatedec.h"
 
@@ -115,8 +115,15 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         GST_KATE_SPU_MIME_TYPE)
     );
 
+GST_DEBUG_CATEGORY (gst_katedec_debug);
+
 #define gst_kate_dec_parent_class parent_class
 G_DEFINE_TYPE (GstKateDec, gst_kate_dec, GST_TYPE_ELEMENT);
+#define _do_init \
+  kate_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_katedec_debug, "katedec", 0, "Kate decoder");
+GST_ELEMENT_REGISTER_DEFINE (katedec, "katedec", GST_RANK_PRIMARY,
+    GST_TYPE_KATE_DEC);
 
 static void gst_kate_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

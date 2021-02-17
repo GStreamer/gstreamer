@@ -57,7 +57,7 @@
 #  include "config.h"
 #endif
 
-#include "gstkate.h"
+#include "gstkateelements.h"
 #include "gstkateutil.h"
 #include "gstkateparse.h"
 
@@ -78,8 +78,15 @@ static GstStaticPadTemplate gst_kate_parse_src_factory =
     GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
+GST_DEBUG_CATEGORY (gst_kateparse_debug);
+
 #define gst_kate_parse_parent_class parent_class
 G_DEFINE_TYPE (GstKateParse, gst_kate_parse, GST_TYPE_ELEMENT);
+#define _do_init \
+  kate_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "kateparse", 0, "Kate parser");
+GST_ELEMENT_REGISTER_DEFINE (kateparse, "kateparse", GST_RANK_NONE,
+    GST_TYPE_KATE_PARSE);
 
 static GstFlowReturn gst_kate_parse_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);

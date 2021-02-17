@@ -28,7 +28,6 @@
 #include <tiger/tiger.h>
 #endif
 #include <gst/tag/tag.h>
-#include "gstkate.h"
 #include "gstkateutil.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_kateutil_debug);
