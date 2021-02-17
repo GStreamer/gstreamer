@@ -51,6 +51,8 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 
 #define gst_gme_dec_parent_class parent_class
 G_DEFINE_TYPE (GstGmeDec, gst_gme_dec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (gmedec, "gmedec", GST_RANK_PRIMARY,
+    GST_TYPE_GME_DEC);
 
 static GstFlowReturn gst_gme_dec_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
@@ -506,8 +508,7 @@ gst_gme_dec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "gmedec", GST_RANK_PRIMARY,
-      GST_TYPE_GME_DEC);
+  return GST_ELEMENT_REGISTER (gmedec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -65,6 +65,8 @@ struct _GstGmeDecClass
 
 GType gst_gme_dec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (gmedec);
+
 G_END_DECLS
 
 #endif /* __GST_GME_DEC_H__ */
