@@ -3,7 +3,7 @@ meta,
     args = {
         -t, video,
         --videosink, "$(videosink) name=videosink sync=true",
-        --video-caps, "video/x-raw,width=500,height=500,framerate=10/1,format=I420",
+        --video-caps, "video/x-raw,width=500,height=500,framerate=10/1,format=I420,colorimetry=(string)bt601,chroma-site=(string)jpeg",
     },
     handles-states=true,
     ignore-eos=true,
