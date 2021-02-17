@@ -44,6 +44,7 @@
 #include "config.h"
 #endif
 
+#include "gstcurlelements.h"
 #include "gstcurlsshsink.h"
 #include "gstcurlsftpsink.h"
 
@@ -92,6 +93,8 @@ static gboolean set_sftp_dynamic_options_unlocked (GstCurlBaseSink *
 
 #define gst_curl_sftp_sink_parent_class parent_class
 G_DEFINE_TYPE (GstCurlSftpSink, gst_curl_sftp_sink, GST_TYPE_CURL_SSH_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (curlsftpsink, "curlsftpsink",
+    GST_RANK_NONE, GST_TYPE_CURL_SFTP_SINK, curl_element_init (plugin));
 
 static void
 gst_curl_sftp_sink_class_init (GstCurlSftpSinkClass * klass)

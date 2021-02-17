@@ -64,6 +64,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "gstcurlelements.h"
 #include "gstcurltlssink.h"
 #include "gstcurlhttpsink.h"
 
@@ -111,7 +112,8 @@ static void gst_curl_http_sink_transfer_prepare_poll_wait
 
 #define gst_curl_http_sink_parent_class parent_class
 G_DEFINE_TYPE (GstCurlHttpSink, gst_curl_http_sink, GST_TYPE_CURL_TLS_SINK);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (curlhttpsink, "curlhttpsink",
+    GST_RANK_NONE, GST_TYPE_CURL_HTTP_SINK, curl_element_init (plugin));
 /* private functions */
 
 static gboolean proxy_setup (GstCurlBaseSink * bcsink);

@@ -1,6 +1,7 @@
 curl_sources = [
   'gstcurlbasesink.c',
   'gstcurl.c',
+  'gstcurlelement.c',
   'gstcurlfilesink.c',
   'gstcurlftpsink.c',
   'gstcurlhttpsink.c',

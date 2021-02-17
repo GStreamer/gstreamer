@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2011 Axis Communications <dev-gstreamer@axis.com>
+ * Copyright (C) <2020> The GStreamer Contributors.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,33 +16,24 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+
+#ifndef __GST_CURL_ELEMENTS_H__
+#define __GST_CURL_ELEMENTS_H__
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "gstcurlelements.h"
+#include <gst/gst.h>
 
+void curl_element_init (GstPlugin * plugin);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+GST_ELEMENT_REGISTER_DECLARE (curlfilesink);
+GST_ELEMENT_REGISTER_DECLARE (curlftpsink);
+GST_ELEMENT_REGISTER_DECLARE (curlhttpsink);
+GST_ELEMENT_REGISTER_DECLARE (curlhttpsrc);
+GST_ELEMENT_REGISTER_DECLARE (curlsftpsink);
+GST_ELEMENT_REGISTER_DECLARE (curlsmtpsink);
 
-  ret |= GST_ELEMENT_REGISTER (curlhttpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (curlfilesink, plugin);
-  ret |= GST_ELEMENT_REGISTER (curlftpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (curlsmtpsink, plugin);
-
-#ifdef HAVE_SSH2
-  ret |= GST_ELEMENT_REGISTER (curlsftpsink, plugin);
-#endif
-  ret |= GST_ELEMENT_REGISTER (curlhttpsrc, plugin);
-
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    curl,
-    "libcurl-based elements",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif /* __GST_CURL_ELEMENT_H__ */

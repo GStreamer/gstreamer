@@ -72,6 +72,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "gstcurlelements.h"
 #include "gstcurltlssink.h"
 #include "gstcurlsmtpsink.h"
 
@@ -134,6 +135,8 @@ static size_t transfer_payload_headers (GstCurlSmtpSink * sink, void *curl_ptr,
 
 #define gst_curl_smtp_sink_parent_class parent_class
 G_DEFINE_TYPE (GstCurlSmtpSink, gst_curl_smtp_sink, GST_TYPE_CURL_TLS_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (curlsmtpsink, "curlsmtpsink",
+    GST_RANK_NONE, GST_TYPE_CURL_SMTP_SINK, curl_element_init (plugin));
 
 static void
 gst_curl_smtp_sink_notify_transfer_end_unlocked (GstCurlSmtpSink * sink)

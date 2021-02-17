@@ -59,6 +59,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "gstcurlelements.h"
 #include "gstcurlbasesink.h"
 #include "gstcurlfilesink.h"
 
@@ -94,6 +95,8 @@ static gboolean gst_curl_file_sink_prepare_transfer (GstCurlBaseSink *
 
 #define gst_curl_file_sink_parent_class parent_class
 G_DEFINE_TYPE (GstCurlFileSink, gst_curl_file_sink, GST_TYPE_CURL_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (curlfilesink, "curlfilesink",
+    GST_RANK_NONE, GST_TYPE_CURL_FILE_SINK, curl_element_init (plugin));
 
 static void
 gst_curl_file_sink_class_init (GstCurlFileSinkClass * klass)

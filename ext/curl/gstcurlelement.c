@@ -20,29 +20,22 @@
 #include <config.h>
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstcurlelements.h"
 
-
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+curl_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (curlhttpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (curlfilesink, plugin);
-  ret |= GST_ELEMENT_REGISTER (curlftpsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (curlsmtpsink, plugin);
-
-#ifdef HAVE_SSH2
-  ret |= GST_ELEMENT_REGISTER (curlsftpsink, plugin);
-#endif
-  ret |= GST_ELEMENT_REGISTER (curlhttpsrc, plugin);
-
-  return ret;
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    curl,
-    "libcurl-based elements",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
