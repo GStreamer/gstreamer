@@ -74,6 +74,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 G_DEFINE_TYPE (GstGSMDec, gst_gsmdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (gsmdec, "gsmdec", GST_RANK_PRIMARY,
+    GST_TYPE_GSMDEC);
 
 static void
 gst_gsmdec_class_init (GstGSMDecClass * klass)

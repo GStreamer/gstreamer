@@ -68,6 +68,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 G_DEFINE_TYPE (GstGSMEnc, gst_gsmenc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (gsmenc, "gsmenc", GST_RANK_PRIMARY,
+    GST_TYPE_GSMENC);
 
 static void
 gst_gsmenc_class_init (GstGSMEncClass * klass)
