@@ -986,7 +986,7 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
     .surface_region = src_rect,
     .surface_color_standard = VAProcColorStandardNone,
     .output_region = dst_rect,
-    .output_background_color = 0xff000000,
+    .output_background_color = 0xff000000, /* ARGB black */
     .output_color_standard = VAProcColorStandardNone,
     .filters = filters,
     .num_filters = num_filters,
