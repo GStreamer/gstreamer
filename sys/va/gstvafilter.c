@@ -906,7 +906,7 @@ _destroy_filters_unlocked (GstVaFilter * self)
   gboolean ret = TRUE;
   guint i;
 
-  GST_TRACE_OBJECT (self, "Destroy filter buffers");
+  GST_TRACE_OBJECT (self, "Destroying %u filter buffers", self->filters->len);
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
@@ -1005,6 +1005,9 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
     return FALSE;
   }
 
+  GST_TRACE_OBJECT (self, "Created VABufferID %#x with %u filters", *buffer,
+      num_filters);
+
   return TRUE;
 }
 
@@ -1098,6 +1101,14 @@ bail:
   if (self->filters) {
     g_array_unref (self->filters);
     _destroy_filters_unlocked (self);
+  }
+
+  gst_va_display_lock (self->display);
+  status = vaDestroyBuffer (dpy, buffer);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_WARNING_OBJECT (self, "Failed to destroy pipeline buffer: %s",
+        vaErrorStr (status));
   }
   GST_OBJECT_UNLOCK (self);
 
