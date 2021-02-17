@@ -88,6 +88,8 @@ gst_avtp_aaf_timestamp_mode_get_type (void)
 
 #define gst_avtp_aaf_pay_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpAafPay, gst_avtp_aaf_pay, GST_TYPE_AVTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE (avtpaafpay, "avtpaafpay", GST_RANK_NONE,
+    GST_TYPE_AVTP_AAF_PAY);
 
 static void gst_avtp_aaf_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -390,11 +392,4 @@ gst_avtp_aaf_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       return GST_AVTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (pad,
           parent, event);
   }
-}
-
-gboolean
-gst_avtp_aaf_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpaafpay", GST_RANK_NONE,
-      GST_TYPE_AVTP_AAF_PAY);
 }

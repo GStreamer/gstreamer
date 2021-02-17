@@ -52,7 +52,7 @@ struct _GstAvtpCrfCheckClass
 
 GType gst_avtp_crf_check_get_type (void);
 
-gboolean gst_avtp_crf_check_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (avtpcrfcheck);
 
 G_END_DECLS
 #endif /* __GST_AVTP_CRF_CHECK_H__ */

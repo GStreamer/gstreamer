@@ -97,6 +97,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_avtp_cvf_pay_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpCvfPay, gst_avtp_cvf_pay, GST_TYPE_AVTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE (avtpcvfpay, "avtpcvfpay", GST_RANK_NONE,
+    GST_TYPE_AVTP_CVF_PAY);
 
 static void
 gst_avtp_cvf_pay_class_init (GstAvtpCvfPayClass * klass)
@@ -765,11 +767,4 @@ gst_avtp_cvf_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   return GST_AVTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (pad, parent,
       event);
-}
-
-gboolean
-gst_avtp_cvf_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpcvfpay", GST_RANK_NONE,
-      GST_TYPE_AVTP_CVF_PAY);
 }

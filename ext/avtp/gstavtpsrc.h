@@ -57,7 +57,7 @@ struct _GstAvtpSrcClass
 
 GType gst_avtp_src_get_type (void);
 
-gboolean gst_avtp_src_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (avtpsrc);
 
 G_END_DECLS
 

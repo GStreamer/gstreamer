@@ -54,7 +54,8 @@ GST_DEBUG_CATEGORY_STATIC (avtpcrfsync_debug);
 
 #define gst_avtp_crf_sync_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpCrfSync, gst_avtp_crf_sync, GST_TYPE_AVTP_CRF_BASE);
-
+GST_ELEMENT_REGISTER_DEFINE (avtpcrfsync, "avtpcrfsync", GST_RANK_NONE,
+    GST_TYPE_AVTP_CRF_SYNC);
 static GstFlowReturn gst_avtp_crf_sync_transform_ip (GstBaseTransform * parent,
     GstBuffer * buffer);
 
@@ -239,11 +240,4 @@ gst_avtp_crf_sync_transform_ip (GstBaseTransform * parent, GstBuffer * buffer)
 exit:
   gst_buffer_unmap (buffer, &info);
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_avtp_crf_sync_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpcrfsync", GST_RANK_NONE,
-      GST_TYPE_AVTP_CRF_SYNC);
 }

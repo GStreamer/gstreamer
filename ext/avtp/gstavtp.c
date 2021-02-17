@@ -249,24 +249,18 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_avtp_aaf_pay_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_aaf_depay_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_sink_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_src_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_cvf_pay_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_cvf_depay_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_crf_sync_plugin_init (plugin))
-    return FALSE;
-  if (!gst_avtp_crf_check_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (avtpaafpay, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpaafdepay, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpsink, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpcvfpay, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpcvfdepay, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpcrfsync, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtpcrfcheck, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,

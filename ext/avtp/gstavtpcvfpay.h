@@ -62,7 +62,7 @@ struct _GstAvtpCvfPayClass
 
 GType gst_avtp_cvf_pay_get_type (void);
 
-gboolean gst_avtp_cvf_pay_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (avtpcvfpay);
 
 G_END_DECLS
 

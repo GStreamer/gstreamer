@@ -83,6 +83,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_avtp_cvf_depay_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpCvfDepay, gst_avtp_cvf_depay,
     GST_TYPE_AVTP_BASE_DEPAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE (avtpcvfdepay, "avtpcvfdepay", GST_RANK_NONE,
+    GST_TYPE_AVTP_CVF_DEPAY);
 
 static void
 gst_avtp_cvf_depay_class_init (GstAvtpCvfDepayClass * klass)
@@ -726,11 +728,4 @@ end:
   gst_buffer_unref (buffer);
 
   return ret;
-}
-
-gboolean
-gst_avtp_cvf_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpcvfdepay", GST_RANK_NONE,
-      GST_TYPE_AVTP_CVF_DEPAY);
 }

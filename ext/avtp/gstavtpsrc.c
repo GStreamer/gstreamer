@@ -75,6 +75,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_avtp_src_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpSrc, gst_avtp_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE (avtpsrc, "avtpsrc", GST_RANK_NONE,
+    GST_TYPE_AVTP_SRC);
 
 static void gst_avtp_src_finalize (GObject * gobject);
 static void gst_avtp_src_set_property (GObject * object, guint prop_id,
@@ -303,11 +305,4 @@ retry:
   gst_buffer_unmap (buffer, &map);
 
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_avtp_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpsrc", GST_RANK_NONE,
-      GST_TYPE_AVTP_SRC);
 }

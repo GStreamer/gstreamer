@@ -58,7 +58,7 @@ struct _GstAvtpAafDepayClass
 
 GType gst_avtp_aaf_depay_get_type (void);
 
-gboolean gst_avtp_aaf_depay_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (avtpaafdepay);
 
 G_END_DECLS
 

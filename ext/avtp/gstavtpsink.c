@@ -84,7 +84,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_avtp_sink_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpSink, gst_avtp_sink, GST_TYPE_BASE_SINK);
-
+GST_ELEMENT_REGISTER_DEFINE (avtpsink, "avtpsink", GST_RANK_NONE,
+    GST_TYPE_AVTP_SINK);
 static void gst_avtp_sink_finalize (GObject * gobject);
 static void gst_avtp_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -474,11 +475,4 @@ gst_avtp_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
    */
   *start = GST_CLOCK_TIME_NONE;
   *end = GST_CLOCK_TIME_NONE;
-}
-
-gboolean
-gst_avtp_sink_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpsink", GST_RANK_NONE,
-      GST_TYPE_AVTP_SINK);
 }

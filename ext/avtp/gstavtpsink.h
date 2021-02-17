@@ -61,7 +61,7 @@ struct _GstAvtpSinkClass
 
 GType gst_avtp_sink_get_type (void);
 
-gboolean gst_avtp_sink_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (avtpsink);
 
 G_END_DECLS
 

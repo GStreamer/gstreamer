@@ -58,6 +58,8 @@ enum
 
 #define gst_avtp_crf_check_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpCrfCheck, gst_avtp_crf_check, GST_TYPE_AVTP_CRF_BASE);
+GST_ELEMENT_REGISTER_DEFINE (avtpcrfcheck, "avtpcrfcheck", GST_RANK_NONE,
+    GST_TYPE_AVTP_CRF_CHECK);
 
 static void gst_avtp_crf_check_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -253,11 +255,4 @@ gst_avtp_crf_check_transform_ip (GstBaseTransform * parent, GstBuffer * buffer)
 exit:
   gst_buffer_unmap (buffer, &info);
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_avtp_crf_check_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avtpcrfcheck", GST_RANK_NONE,
-      GST_TYPE_AVTP_CRF_CHECK);
 }

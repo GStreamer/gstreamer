@@ -50,7 +50,7 @@ struct _GstAvtpCrfSyncClass
 
 GType gst_avtp_crf_sync_get_type (void);
 
-gboolean gst_avtp_crf_sync_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (avtpcrfsync);
 
 G_END_DECLS
 #endif /* __GST_AVTP_CRF_SYNC_H__ */
