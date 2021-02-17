@@ -2026,12 +2026,14 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       crop_width = sps->width;
       crop_height = sps->height;
     }
+    if (gst_h265_parse_is_field_interlaced (h265parse)) {
+      crop_height *= 2;
+    }
 
     if (G_UNLIKELY (h265parse->width != crop_width ||
             h265parse->height != crop_height)) {
       h265parse->width = crop_width;
-      h265parse->height = gst_h265_parse_is_field_interlaced (h265parse) ?
-          crop_height * 2 : crop_height;
+      h265parse->height = crop_height;
       GST_INFO_OBJECT (h265parse, "resolution changed %dx%d",
           h265parse->width, h265parse->height);
       modified = TRUE;
