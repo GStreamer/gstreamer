@@ -59,6 +59,7 @@ struct _GstBz2decClass
 
 #define gst_bz2dec_parent_class parent_class
 G_DEFINE_TYPE (GstBz2dec, gst_bz2dec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (bz2dec, "bz2dec", GST_RANK_NONE, GST_TYPE_BZ2DEC);
 
 #define DEFAULT_FIRST_BUFFER_SIZE 1024
 #define DEFAULT_BUFFER_SIZE 1024

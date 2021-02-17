@@ -30,11 +30,12 @@
 static gboolean
 plugin_init (GstPlugin * p)
 {
-  if (!gst_element_register (p, "bz2enc", GST_RANK_NONE, GST_TYPE_BZ2ENC))
-    return FALSE;
-  if (!gst_element_register (p, "bz2dec", GST_RANK_NONE, GST_TYPE_BZ2DEC))
-    return FALSE;
-  return TRUE;
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (bz2enc, p);
+  ret |= GST_ELEMENT_REGISTER (bz2dec, p);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, bz2,

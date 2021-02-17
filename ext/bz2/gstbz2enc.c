@@ -67,6 +67,7 @@ struct _GstBz2encClass
 
 #define gst_bz2enc_parent_class parent_class
 G_DEFINE_TYPE (GstBz2enc, gst_bz2enc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (bz2enc, "bz2enc", GST_RANK_NONE, GST_TYPE_BZ2ENC);
 
 static void
 gst_bz2enc_compress_end (GstBz2enc * b)
