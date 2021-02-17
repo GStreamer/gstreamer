@@ -126,7 +126,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
-G_DEFINE_TYPE (GstDtsDec, gst_dtsdec, GST_TYPE_AUDIO_DECODER);
+
 
 static gboolean gst_dtsdec_start (GstAudioDecoder * dec);
 static gboolean gst_dtsdec_stop (GstAudioDecoder * dec);
@@ -143,6 +143,10 @@ static void gst_dtsdec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dtsdec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean dtsdec_element_init (GstPlugin * plugin);
+
+G_DEFINE_TYPE (GstDtsDec, gst_dtsdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (dtsdec, dtsdec_element_init);
 
 static void
 gst_dtsdec_class_init (GstDtsDecClass * klass)
@@ -784,7 +788,7 @@ gst_dtsdec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+dtsdec_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (dtsdec_debug, "dtsdec", 0, "DTS/DCA audio decoder");
 
@@ -792,11 +796,14 @@ plugin_init (GstPlugin * plugin)
   orc_init ();
 #endif
 
-  if (!gst_element_register (plugin, "dtsdec", GST_RANK_PRIMARY,
-          GST_TYPE_DTSDEC))
-    return FALSE;
+  return gst_element_register (plugin, "dtsdec", GST_RANK_PRIMARY,
+      GST_TYPE_DTSDEC);
+}
 
-  return TRUE;
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (dtsdec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -78,6 +78,8 @@ struct _GstDtsDecClass {
 
 GType gst_dtsdec_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (dtsdec);
+
 G_END_DECLS
 
 #endif /* __GST_DTSDEC_H__ */
