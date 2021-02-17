@@ -158,6 +158,7 @@ static void gst_lcms_process_rgb (GstLcms * lcms, GstVideoFrame * inframe,
     GstVideoFrame * outframe);
 
 G_DEFINE_TYPE (GstLcms, gst_lcms, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (lcms, "lcms", GST_RANK_NONE, GST_TYPE_LCMS);
 
 static void
 gst_lcms_class_init (GstLcmsClass * klass)

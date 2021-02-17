@@ -27,7 +27,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "lcms", GST_RANK_NONE, GST_TYPE_LCMS);
+  return GST_ELEMENT_REGISTER (lcms, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

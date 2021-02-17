@@ -98,5 +98,7 @@ struct _GstLcmsClass
 G_GNUC_INTERNAL GType gst_lcms_get_type (void);
 G_GNUC_INTERNAL GType gst_lcms_intent_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (lcms);
+
 G_END_DECLS
 #endif /* __GST_LCMS_H__ */
