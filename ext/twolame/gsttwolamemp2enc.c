@@ -201,8 +201,11 @@ static void gst_two_lame_set_property (GObject * object, guint prop_id,
 static void gst_two_lame_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_two_lame_setup (GstTwoLame * twolame);
+static gboolean two_lame_element_init (void);
 
 G_DEFINE_TYPE (GstTwoLame, gst_two_lame, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (twolamemp2enc, "twolamemp2enc",
+    GST_RANK_PRIMARY, GST_TYPE_TWO_LAME, two_lame_element_init (););
 
 static void
 gst_two_lame_release_memory (GstTwoLame * twolame)
@@ -868,7 +871,7 @@ gst_two_lame_get_default_settings (void)
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+two_lame_element_init (void)
 {
   GST_DEBUG_CATEGORY_INIT (debug, "twolame", 0, "twolame mp2 encoder");
 
@@ -881,12 +884,13 @@ plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
-
-  if (!gst_element_register (plugin, "twolamemp2enc", GST_RANK_PRIMARY,
-          GST_TYPE_TWO_LAME))
-    return FALSE;
-
   return TRUE;
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (twolamemp2enc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

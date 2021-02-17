@@ -65,6 +65,8 @@ struct _GstTwoLame {
   twolame_options *glopts;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (twolamemp2enc);
+
 G_END_DECLS
 
 
