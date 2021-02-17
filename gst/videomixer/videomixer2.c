@@ -22,6 +22,9 @@
  * SECTION:element-videomixer
  * @title: videomixer
  *
+ * IMPORTANT: #videomixer is deprecated in favor of #compositor, please do not
+ * use this element in newly-written code!
+ *
  * Videomixer can accept AYUV, ARGB and BGRA video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
  * output parameters. Indeed output video frames will have the geometry of the
@@ -2230,7 +2233,8 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
 
   gst_element_class_set_static_metadata (gstelement_class, "Video mixer 2",
       "Filter/Editor/Video/Compositor",
-      "Mix multiple video streams", "Wim Taymans <wim@fluendo.com>, "
+      "Deprecated by compositor. Mix multiple video streams",
+      "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   /* Register the pad class */
