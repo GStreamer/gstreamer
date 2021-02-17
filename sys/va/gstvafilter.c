@@ -1075,7 +1075,7 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
   gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
-    goto fail_end_pic;
+    return FALSE;
   }
 
   gst_va_display_lock (self->display);
