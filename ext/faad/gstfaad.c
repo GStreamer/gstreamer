@@ -104,6 +104,7 @@ static void gst_faad_close_decoder (GstFaad * faad);
 
 #define gst_faad_parent_class parent_class
 G_DEFINE_TYPE (GstFaad, gst_faad, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (faad, "faad", GST_RANK_SECONDARY, GST_TYPE_FAAD);
 
 static void
 gst_faad_class_init (GstFaadClass * klass)
@@ -840,8 +841,7 @@ gst_faad_close_decoder (GstFaad * faad)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "faad", GST_RANK_SECONDARY,
-      GST_TYPE_FAAD);
+  return GST_ELEMENT_REGISTER (faad, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
