@@ -68,6 +68,8 @@ static GstFlowReturn gst_fdkaacdec_handle_frame (GstAudioDecoder * dec,
 static void gst_fdkaacdec_flush (GstAudioDecoder * dec, gboolean hard);
 
 G_DEFINE_TYPE (GstFdkAacDec, gst_fdkaacdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (fdkaacdec, "fdkaacdec", GST_RANK_MARGINAL,
+    GST_TYPE_FDKAACDEC);
 
 static gboolean
 gst_fdkaacdec_start (GstAudioDecoder * dec)

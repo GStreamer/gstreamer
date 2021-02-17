@@ -59,6 +59,8 @@ struct _GstFdkAacEncClass {
 
 GType gst_fdkaacenc_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (fdkaacenc);
+
 G_END_DECLS
 
 #endif /* __GST_FDKAACENC_H__ */

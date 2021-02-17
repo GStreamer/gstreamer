@@ -95,6 +95,8 @@ static GstCaps *gst_fdkaacenc_get_caps (GstAudioEncoder * enc,
 static void gst_fdkaacenc_flush (GstAudioEncoder * enc);
 
 G_DEFINE_TYPE (GstFdkAacEnc, gst_fdkaacenc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (fdkaacenc, "fdkaacenc", GST_RANK_PRIMARY,
+    GST_TYPE_FDKAACENC);
 
 static void
 gst_fdkaacenc_set_property (GObject * object, guint prop_id,

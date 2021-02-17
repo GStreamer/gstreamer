@@ -14,7 +14,7 @@ if fdkaac_dep.found()
   endif
 
   gstfdkaac = library('gstfdkaac',
-    ['gstfdkaac.c', 'gstfdkaacenc.c', 'gstfdkaacdec.c'],
+    ['gstfdkaac.c', 'gstfdkaacenc.c', 'gstfdkaacdec.c','gstfdkaacplugin.c'],
     c_args : gst_plugins_bad_args + fdkaac_defines,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, gstpbutils_dep, fdkaac_dep],
