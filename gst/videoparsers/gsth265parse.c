@@ -1929,6 +1929,31 @@ ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps,
     gst_caps_unref (peer_caps);
 }
 
+static gboolean
+gst_h265_parse_is_field_interlaced (GstH265Parse * h265parse)
+{
+  /* FIXME: The SEI is optional, so theoretically there could be files with
+   * the interlaced_source_flag set to TRUE but no SEI present, or SEI present
+   * but no pic_struct. Haven't seen any such files in practice, and we don't
+   * know how to interpret the data without the pic_struct, so we'll treat
+   * them as progressive */
+
+  switch (h265parse->sei_pic_struct) {
+    case GST_H265_SEI_PIC_STRUCT_TOP_FIELD:
+    case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM:
+    case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP:
+      return TRUE;
+      break;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
 static void
 gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 {
@@ -2005,7 +2030,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     if (G_UNLIKELY (h265parse->width != crop_width ||
             h265parse->height != crop_height)) {
       h265parse->width = crop_width;
-      h265parse->height = sps->profile_tier_level.interlaced_source_flag ?
+      h265parse->height = gst_h265_parse_is_field_interlaced (h265parse) ?
           crop_height * 2 : crop_height;
       GST_INFO_OBJECT (h265parse, "resolution changed %dx%d",
           h265parse->width, h265parse->height);
@@ -2024,8 +2049,16 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
         fps_num = sps->vui_params.time_scale;
         fps_den = sps->vui_params.num_units_in_tick;
 
-        if (sps->profile_tier_level.interlaced_source_flag)
-          fps_num /= 2;
+        if (gst_h265_parse_is_field_interlaced (h265parse)
+            && h265parse->parsed_framerate) {
+          gint new_fps_num, new_fps_den;
+
+          gst_util_fraction_multiply (fps_num, fps_den, 1, 2, &new_fps_num,
+              &new_fps_den);
+          fps_num = new_fps_num;
+          fps_den = new_fps_den;
+          h265parse->parsed_framerate = FALSE;
+        }
       }
 
       if (G_UNLIKELY (h265parse->fps_num != fps_num
@@ -2340,11 +2373,10 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   gst_h265_parse_update_src_caps (h265parse, NULL);
 
   if (h265parse->fps_num > 0 && h265parse->fps_den > 0) {
-    GstH265SPS *sps = h265parse->nalparser->last_sps;
-    GstClockTime val;
+    GstClockTime val =
+        gst_h265_parse_is_field_interlaced (h265parse) ? GST_SECOND /
+        2 : GST_SECOND;
 
-    val = (sps != NULL && sps->profile_tier_level.interlaced_source_flag) ?
-        GST_SECOND / 2 : GST_SECOND;
     GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (val,
         h265parse->fps_den, h265parse->fps_num);
   }
@@ -2753,36 +2785,28 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
   }
 
-  if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME) {
-    if (h265parse->parsed_framerate) {
-      /* If the frame rate doesn't come from upstream (e.g. a muxer), it means
-       * we must double it, because it's now fields per second */
-      gint new_fps_n, new_fps_d;
-
-      gst_util_fraction_multiply (h265parse->fps_num, h265parse->fps_den, 2, 1,
-          &new_fps_n, &new_fps_d);
-      h265parse->fps_num = new_fps_n;
-      h265parse->fps_den = new_fps_d;
-      h265parse->parsed_framerate = FALSE;
-      /* We need to fix the duration of the first frame */
-      GST_BUFFER_DURATION (parse_buffer) /= 2;
-    }
-    GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
-    /* h265 doesn't support interleaved */
-    switch (h265parse->sei_pic_struct) {
-      case GST_H265_SEI_PIC_STRUCT_TOP_FIELD:
-      case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM:
-      case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM:
-        GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
-        break;
-      case GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD:
-      case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP:
-      case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP:
-        GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
-        break;
-      default:
-        break;
-    }
+  /* see section D.3.3 of the spec */
+  switch (h265parse->sei_pic_struct) {
+    case GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP:
+    case GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+      break;
+    case GST_H265_SEI_PIC_STRUCT_TOP_FIELD:
+    case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM:
+    case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM:
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
+      break;
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP:
+    case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP:
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
+      break;
+    default:
+      break;
   }
 
   {
@@ -2858,12 +2882,6 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
           seconds_value[i] : 0, n_frames, field_count);
     }
-  }
-
-  if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME) {
-    GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
-    if (h265parse->sei_pic_struct == GST_H265_SEI_PIC_STRUCT_TOP_FIELD)
-      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
   }
 
   gst_video_push_user_data ((GstElement *) h265parse, &h265parse->user_data,
