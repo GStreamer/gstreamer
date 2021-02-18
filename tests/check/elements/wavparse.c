@@ -23,24 +23,22 @@
 
 #define SIMPLE_WAV_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "audiotestsrc.wav"
 
-static void
-do_test_simple_file (GstPadMode mode)
+static GstElement *
+create_pipeline (GstPadMode mode)
 {
-  GstStateChangeReturn ret;
   GstElement *pipeline;
   GstElement *src, *q = NULL;
   GstElement *wavparse;
   GstElement *fakesink;
-  GstMessage *msg;
 
   pipeline = gst_pipeline_new ("testpipe");
-  src = gst_element_factory_make ("filesrc", NULL);
+  src = gst_element_factory_make ("filesrc", "filesrc");
   fail_if (src == NULL);
   if (mode == GST_PAD_MODE_PUSH)
-    q = gst_element_factory_make ("queue", NULL);
-  wavparse = gst_element_factory_make ("wavparse", NULL);
+    q = gst_element_factory_make ("queue", "queue");
+  wavparse = gst_element_factory_make ("wavparse", "wavparse");
   fail_if (wavparse == NULL);
-  fakesink = gst_element_factory_make ("fakesink", NULL);
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
   fail_if (fakesink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, wavparse, fakesink, q, NULL);
@@ -51,6 +49,18 @@ do_test_simple_file (GstPadMode mode)
     fail_unless (gst_element_link_many (src, q, wavparse, fakesink, NULL));
   else
     fail_unless (gst_element_link_many (src, wavparse, fakesink, NULL));
+
+  return pipeline;
+}
+
+static void
+do_test_simple_file (GstPadMode mode)
+{
+  GstStateChangeReturn ret;
+  GstElement *pipeline;
+  GstMessage *msg;
+
+  pipeline = create_pipeline (mode);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless_equals_int (ret, GST_STATE_CHANGE_ASYNC);
