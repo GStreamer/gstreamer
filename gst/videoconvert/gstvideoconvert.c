@@ -337,6 +337,31 @@ gst_video_convert_fixate_format (GstBaseTransform * base, GstCaps * caps,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
 }
 
+static gboolean
+subsampling_unchanged (GstVideoInfo * in_info, GstVideoInfo * out_info)
+{
+  gint i;
+  const GstVideoFormatInfo *in_format, *out_format;
+
+  if (GST_VIDEO_INFO_N_COMPONENTS (in_info) !=
+      GST_VIDEO_INFO_N_COMPONENTS (out_info))
+    return FALSE;
+
+  in_format = in_info->finfo;
+  out_format = out_info->finfo;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (in_info); i++) {
+    if (GST_VIDEO_FORMAT_INFO_W_SUB (in_format,
+            i) != GST_VIDEO_FORMAT_INFO_W_SUB (out_format, i))
+      return FALSE;
+    if (GST_VIDEO_FORMAT_INFO_H_SUB (in_format,
+            i) != GST_VIDEO_FORMAT_INFO_H_SUB (out_format, i))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
     GstCaps * out_caps)
@@ -397,12 +422,15 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
       }
     }
 
-    /* Only YUV output needs chroma-site. If the input was also YUV, transfer the siting */
+    /* Only YUV output needs chroma-site. If the input was also YUV and had the same chroma
+     * subsampling, transfer the siting. If the sub-sampling is changing, then the planes get
+     * scaled anyway so there's no real reason to prefer the input siting. */
     if (!have_chroma_site && GST_VIDEO_INFO_IS_YUV (&out_info)) {
       if (GST_VIDEO_INFO_IS_YUV (&in_info)) {
         const GValue *in_chroma_site =
             gst_structure_get_value (in_caps_s, "chroma-site");
-        if (in_chroma_site != NULL)
+        if (in_chroma_site != NULL
+            && subsampling_unchanged (&in_info, &out_info))
           gst_structure_set_value (out_caps_s, "chroma-site", in_chroma_site);
       }
     }
