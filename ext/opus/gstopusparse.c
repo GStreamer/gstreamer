@@ -45,6 +45,7 @@
 
 #include <gst/audio/audio.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY_STATIC (opusparse_debug);
 #define GST_CAT_DEFAULT opusparse_debug
@@ -65,7 +66,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-opus")
     );
 
-G_DEFINE_TYPE (GstOpusParse, gst_opus_parse, GST_TYPE_BASE_PARSE);
+
 
 static gboolean gst_opus_parse_start (GstBaseParse * parse);
 static gboolean gst_opus_parse_stop (GstBaseParse * parse);
@@ -73,6 +74,10 @@ static GstFlowReturn gst_opus_parse_handle_frame (GstBaseParse * base,
     GstBaseParseFrame * frame, gint * skip);
 static GstFlowReturn gst_opus_parse_parse_frame (GstBaseParse * base,
     GstBaseParseFrame * frame);
+static gboolean opusparse_element_init (GstPlugin * plugin);
+
+G_DEFINE_TYPE (GstOpusParse, gst_opus_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (opusparse, opusparse_element_init);
 
 static void
 gst_opus_parse_class_init (GstOpusParseClass * klass)
@@ -427,4 +432,15 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
   GST_BUFFER_OFFSET (frame->buffer) = parse->next_ts;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+opusparse_element_init (GstPlugin * plugin)
+{
+  if (!gst_element_register (plugin, "opusparse", GST_RANK_NONE,
+          GST_TYPE_OPUS_PARSE))
+    return FALSE;
+
+  gst_tag_register_musicbrainz_tags ();
+  return TRUE;
 }

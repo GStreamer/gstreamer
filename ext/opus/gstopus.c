@@ -23,18 +23,10 @@
 
 #include "gstopusparse.h"
 
-#include <gst/tag/tag.h>
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "opusparse", GST_RANK_NONE,
-          GST_TYPE_OPUS_PARSE))
-    return FALSE;
-
-  gst_tag_register_musicbrainz_tags ();
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (opusparse, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
