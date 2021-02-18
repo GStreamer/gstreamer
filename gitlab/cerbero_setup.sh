@@ -126,8 +126,7 @@ cerbero_script() {
 
     $CERBERO $CERBERO_ARGS fetch-cache --branch "${GST_UPSTREAM_BRANCH}"
 
-    if [[ -n ${CERBERO_OVERRIDDEN_DIST_DIR} ]]; then
-        test -d "${CERBERO_HOME}/dist/${ARCH}"
+    if [[ -n ${CERBERO_OVERRIDDEN_DIST_DIR} && -d "${CERBERO_HOME}/dist/${ARCH}" ]]; then
         mkdir -p "${CERBERO_OVERRIDDEN_DIST_DIR}"
         time rsync -aH "${CERBERO_HOME}/dist/${ARCH}/" "${CERBERO_OVERRIDDEN_DIST_DIR}"
     fi
