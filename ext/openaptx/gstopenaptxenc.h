@@ -39,6 +39,8 @@ struct _GstOpenaptxEnc {
   struct aptx_context *aptx_c;
 };
 
+GST_ELEMENT_REGISTER_DECLARE(openaptxenc);
+
 G_END_DECLS
 
 #endif /* __GST_OPENAPTXENC_H__ */

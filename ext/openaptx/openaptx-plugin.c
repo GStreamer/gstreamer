@@ -30,10 +30,9 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "openaptxdec", GST_RANK_NONE,
-      GST_TYPE_OPENAPTX_DEC);
-  gst_element_register (plugin, "openaptxenc", GST_RANK_NONE,
-      GST_TYPE_OPENAPTX_ENC);
+  gboolean ret = FALSE;
+  ret |= GST_ELEMENT_REGISTER (openaptxdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (openaptxenc, plugin);
   return TRUE;
 }
 

@@ -49,6 +49,8 @@ GST_DEBUG_CATEGORY_STATIC (openaptx_enc_debug);
 #define gst_openaptx_enc_parent_class parent_class
 
 G_DEFINE_TYPE (GstOpenaptxEnc, gst_openaptx_enc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (openaptxenc, "openaptxenc", GST_RANK_NONE,
+    GST_TYPE_OPENAPTX_ENC);
 
 static GstStaticPadTemplate openaptx_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
