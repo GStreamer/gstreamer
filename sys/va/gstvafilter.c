@@ -780,6 +780,9 @@ gst_va_filter_set_orientation (GstVaFilter * self,
   guint32 mirror = VA_MIRROR_NONE, rotation = VA_ROTATION_NONE;
   guint32 mirror_flags, rotation_flags;
 
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
   if (!_from_video_orientation_method (orientation, &mirror, &rotation))
     return FALSE;
 
