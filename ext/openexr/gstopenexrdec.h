@@ -58,6 +58,8 @@ struct _GstOpenEXRDecClass
 
 GType gst_openexr_dec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (openexrdec);
+
 G_END_DECLS
 
 #endif /* __GST_OPENEXR_DEC_H__ */
