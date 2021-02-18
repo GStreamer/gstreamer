@@ -117,6 +117,8 @@ typedef struct _GstMplexClass {
 
 GType    gst_mplex_get_type    (void);
 
+GST_ELEMENT_REGISTER_DECLARE (mplex);
+
 G_END_DECLS
 
 #endif /* __GST_MPLEX_H__ */

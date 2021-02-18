@@ -115,9 +115,11 @@ static void gst_mplex_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_mplex_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
+static gboolean mplex_element_init (GstPlugin * plugin);
 
 #define parent_class gst_mplex_parent_class
 G_DEFINE_TYPE (GstMplex, gst_mplex, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (mplex, mplex_element_init);
 
 static void
 gst_mplex_class_init (GstMplexClass * klass)
@@ -802,7 +804,7 @@ gst_mplex_log_callback (log_level_t level, const char *message)
 #endif
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+mplex_element_init (GstPlugin * plugin)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   old_handler = mjpeg_log_set_handler (gst_mplex_log_callback);
@@ -812,6 +814,12 @@ plugin_init (GstPlugin * plugin)
   mjpeg_default_handler_verbosity (0);
 
   return gst_element_register (plugin, "mplex", GST_RANK_NONE, GST_TYPE_MPLEX);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (mplex, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
