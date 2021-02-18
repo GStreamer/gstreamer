@@ -100,6 +100,8 @@ typedef struct _GstMpeg2encClass {
 
 GType    gst_mpeg2enc_get_type    (void);
 
+GST_ELEMENT_REGISTER_DECLARE (mpeg2enc);
+
 G_END_DECLS
 
 #endif /* __GST_MPEG2ENC_H__ */

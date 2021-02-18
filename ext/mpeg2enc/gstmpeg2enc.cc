@@ -106,10 +106,12 @@ static void gst_mpeg2enc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static gboolean gst_mpeg2enc_src_activate_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active);
+static gboolean mpeg2enc_element_init (GstPlugin * plugin);
 
 #define gst_mpeg2enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstMpeg2enc, gst_mpeg2enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (mpeg2enc, mpeg2enc_element_init);
 
 static void
 gst_mpeg2enc_class_init (GstMpeg2encClass * klass)
@@ -781,7 +783,7 @@ gst_mpeg2enc_log_callback (log_level_t level, const char *message)
 #endif
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+mpeg2enc_element_init (GstPlugin * plugin)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   old_handler = mjpeg_log_set_handler (gst_mpeg2enc_log_callback);
@@ -792,6 +794,12 @@ plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "mpeg2enc",
       GST_RANK_MARGINAL, GST_TYPE_MPEG2ENC);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (mpeg2enc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
