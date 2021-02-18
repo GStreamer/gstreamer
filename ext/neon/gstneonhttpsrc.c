@@ -109,7 +109,12 @@ static void oom_callback (void);
 #define parent_class gst_neonhttp_src_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstNeonhttpSrc, gst_neonhttp_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
-        gst_neonhttp_src_uri_handler_init));
+        gst_neonhttp_src_uri_handler_init);
+    GST_DEBUG_CATEGORY_INIT (neonhttpsrc_debug, "neonhttpsrc", 0,
+        "NEON HTTP src");
+    );
+GST_ELEMENT_REGISTER_DEFINE (neonhttpsrc, "neonhttpsrc", GST_RANK_NONE,
+    GST_TYPE_NEONHTTP_SRC);
 
 static void
 gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
@@ -1099,11 +1104,7 @@ gst_neonhttp_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (neonhttpsrc_debug, "neonhttpsrc", 0,
-      "NEON HTTP src");
-
-  return gst_element_register (plugin, "neonhttpsrc", GST_RANK_NONE,
-      GST_TYPE_NEONHTTP_SRC);
+  return GST_ELEMENT_REGISTER (neonhttpsrc, plugin);
 }
 
 /* this is the structure that gst-register looks for
