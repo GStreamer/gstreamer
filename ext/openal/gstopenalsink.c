@@ -61,6 +61,7 @@
 GST_DEBUG_CATEGORY_EXTERN (openal_debug);
 #define GST_CAT_DEFAULT openal_debug
 
+#include "gstopenalelements.h"
 #include "gstopenalsink.h"
 
 static void gst_openal_sink_dispose (GObject * object);
@@ -159,6 +160,8 @@ checkALError (const char *fname, unsigned int fline)
 #define checkALError() checkALError(__FILE__, __LINE__)
 
 G_DEFINE_TYPE (GstOpenALSink, gst_openal_sink, GST_TYPE_AUDIO_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (openalsink, "openalsink",
+    GST_RANK_SECONDARY, GST_TYPE_OPENAL_SINK, openal_element_init (plugin));
 
 static void
 gst_openal_sink_dispose (GObject * object)

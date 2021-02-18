@@ -81,6 +81,7 @@
 GST_DEBUG_CATEGORY_EXTERN (openal_debug);
 #define GST_CAT_DEFAULT openal_debug
 
+#include "gstopenalelements.h"
 #include "gstopenalsrc.h"
 
 static void gst_openal_src_dispose (GObject * object);
@@ -140,6 +141,8 @@ static GstStaticPadTemplate openalsrc_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 G_DEFINE_TYPE (GstOpenalSrc, gst_openal_src, GST_TYPE_AUDIO_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (openalsrc, "openalsrc",
+    GST_RANK_SECONDARY, GST_TYPE_OPENAL_SRC, openal_element_init (plugin));
 
 static void
 gst_openal_src_dispose (GObject * object)
