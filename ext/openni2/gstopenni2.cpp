@@ -48,10 +48,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_openni2src_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (openni2src, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

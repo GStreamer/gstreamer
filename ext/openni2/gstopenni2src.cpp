@@ -111,6 +111,8 @@ static GstFlowReturn openni2_read_gstbuffer (GstOpenni2Src * src,
 
 #define parent_class gst_openni2_src_parent_class
 G_DEFINE_TYPE (GstOpenni2Src, gst_openni2_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE (openni2src, "openni2src", GST_RANK_NONE,
+    GST_TYPE_OPENNI2_SRC);
 
 static void
 gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
@@ -511,14 +513,6 @@ gst_openni2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
-
-gboolean
-gst_openni2src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "openni2src", GST_RANK_NONE,
-      GST_TYPE_OPENNI2_SRC);
-}
-
 
 static gboolean
 openni2_initialise_library (void)
