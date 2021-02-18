@@ -129,6 +129,8 @@ static void gst_modplug_loop (GstModPlug * element);
 
 #define parent_class gst_modplug_parent_class
 G_DEFINE_TYPE (GstModPlug, gst_modplug, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (modplug, "modplug",
+    GST_RANK_PRIMARY, GST_TYPE_MODPLUG);
 
 static void
 gst_modplug_class_init (GstModPlugClass * klass)
@@ -902,8 +904,7 @@ gst_modplug_get_property (GObject * object, guint id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "modplug",
-      GST_RANK_PRIMARY, GST_TYPE_MODPLUG);
+  return GST_ELEMENT_REGISTER (modplug, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -84,6 +84,8 @@ typedef struct _GstModPlugClass GstModPlugClass;
 
 GType gst_modplug_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (modplug);
+
 G_END_DECLS
 
 #endif /* __GST_MODPLUG_H__ */
