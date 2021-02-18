@@ -32,47 +32,73 @@ endif
 
 have_msdk = false
 msdk_dep = []
+use_msdk = false
+use_onevpl = false
 
 msdk_option = get_option('msdk')
 if msdk_option.disabled()
   subdir_done()
 endif
 
-mfx_dep = dependency('libmfx', required: false)
-if mfx_dep.found()
-  mfx_incdir = mfx_dep.get_pkgconfig_variable('includedir')
-  mfx_inc = []
-else
-  # Old versions of MediaSDK don't provide a pkg-config file
-  mfx_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
+mfx_api = get_option('mfx_api')
 
-  if mfx_root != ''
-    mfx_libdir = [mfx_root + '/lib/lin_x64', mfx_root + '/lib/x64', mfx_root + '/lib64', mfx_root + '/lib']
-    if host_machine.system() == 'windows'
-      if host_machine.cpu_family() == 'x86'
-        mfx_libdir = [mfx_root + '/lib/win32']
-      else
-        mfx_libdir = [mfx_root + '/lib/x64']
+if mfx_api != 'oneVPL'
+  mfx_dep = dependency('libmfx', version: ['>= 1.0', '<= 1.99'], required: false)
+
+  if mfx_dep.found()
+    mfx_incdir = mfx_dep.get_pkgconfig_variable('includedir')
+    mfx_inc = []
+    use_msdk = true
+  else
+    # Old versions of MediaSDK don't provide a pkg-config file
+    mfx_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
+
+    if mfx_root != ''
+      mfx_libdir = [mfx_root + '/lib/lin_x64', mfx_root + '/lib/x64', mfx_root + '/lib64', mfx_root + '/lib']
+      if host_machine.system() == 'windows'
+        if host_machine.cpu_family() == 'x86'
+          mfx_libdir = [mfx_root + '/lib/win32']
+        else
+          mfx_libdir = [mfx_root + '/lib/x64']
+        endif
       endif
+      mfx_incdir = join_paths([mfx_root, 'include'])
+      mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir, required: msdk_option)
+      mfx_inc = include_directories(mfx_incdir)
+      mfx_dep = declare_dependency(include_directories: mfx_inc, dependencies: mfx_lib)
+      use_msdk = true
     endif
-    mfx_incdir = join_paths([mfx_root, 'include'])
-    mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir, required: msdk_option)
-    mfx_inc = include_directories(mfx_incdir)
-    mfx_dep = declare_dependency(include_directories: mfx_inc, dependencies: mfx_lib)
-  elif msdk_option.enabled()
-    error('msdk plugin enabled but Intel Media SDK not found: consider setting PKG_CONFIG_PATH, INTELMEDIASDKROOT or MFX_HOME')
+  endif
+endif
+
+if not use_msdk and mfx_api != 'MSDK'
+  mfx_dep = dependency('vpl', version: '>= 2.2', required: false)
+
+  if mfx_dep.found()
+    mfx_incdir = mfx_dep.get_pkgconfig_variable('includedir')
+    mfx_inc = []
+    use_onevpl = true
+  endif
+endif
+
+if not use_msdk and not use_onevpl
+  if msdk_option.enabled()
+    error('msdk plugin enabled but the Intel Media SDK or the oneVPL SDK not found: consider setting PKG_CONFIG_PATH, INTELMEDIASDKROOT or MFX_HOME')
   else
     subdir_done()
   endif
 endif
 
-# Old versions of MediaSDK don't have the 'mfx' directory prefix
-if cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
+# Check oneVPL firstly
+if use_onevpl
+  mfx_incdir = join_paths([mfx_incdir, 'vpl'])
+  mfx_inc = include_directories(mfx_incdir)
+elif cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
   mfx_incdir = join_paths([mfx_incdir, 'mfx'])
   mfx_inc = include_directories(mfx_incdir)
 endif
 
-if cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
+if use_onevpl or cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
   msdk_sources += [ 'gstmsdkvp9dec.c' ]
   cdata.set10('USE_MSDK_VP9_DEC', 1)
 endif

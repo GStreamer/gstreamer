@@ -186,6 +186,10 @@ option('hls-crypto', type : 'combo', value : 'auto', choices : ['auto', 'nettle'
 option('sctp-internal-usrsctp', type: 'feature', value : 'enabled',
        description: 'Whether to use the bundled usrsctp library or the system one')
 
+# MSDK plugin options
+option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 'auto',
+       description : 'Select MFX API to build against')
+
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
