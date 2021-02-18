@@ -83,7 +83,7 @@ struct _GstTemplateMatchClass
 
 GType gst_template_match_get_type (void);
 
-gboolean gst_template_match_plugin_init (GstPlugin * templatematch);
+GST_ELEMENT_REGISTER_DECLARE (templatematch);
 
 G_END_DECLS
 #endif /* __GST_TEMPLATE_MATCH_H__ */

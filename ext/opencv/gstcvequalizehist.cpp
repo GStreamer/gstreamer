@@ -75,8 +75,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY8")));
 
-G_DEFINE_TYPE (GstCvEqualizeHist, gst_cv_equalize_hist,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstCvEqualizeHist, gst_cv_equalize_hist,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_cv_equalize_hist_debug, "cvequalizehist", 0,
+        "cvequalizehist");
+    );
+GST_ELEMENT_REGISTER_DEFINE (cvequalizehist, "cvequalizehist", GST_RANK_NONE,
+    GST_TYPE_CV_EQUALIZE_HIST);
 
 static GstFlowReturn gst_cv_equalize_hist_transform (GstOpencvVideoFilter *
     filter, GstBuffer * buf, cv::Mat img, GstBuffer * outbuf, cv::Mat outimg);
@@ -114,13 +119,4 @@ gst_cv_equalize_hist_transform (GstOpencvVideoFilter * base,
 {
   cv::equalizeHist (img, outimg);
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_cv_equalize_hist_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_cv_equalize_hist_debug, "cvequalizehist", 0,
-      "cvequalizehist");
-  return gst_element_register (plugin, "cvequalizehist", GST_RANK_NONE,
-      GST_TYPE_CV_EQUALIZE_HIST);
 }

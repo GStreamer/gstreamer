@@ -88,7 +88,7 @@ struct _GstRetinexClass
 
 GType gst_retinex_get_type (void);
 
-gboolean gst_retinex_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (retinex);
 
 G_END_DECLS
 #endif /* __GST_RETINEX_H__ */

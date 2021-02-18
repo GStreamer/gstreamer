@@ -108,7 +108,7 @@ struct _GstDisparityClass
 
 GType gst_disparity_get_type (void);
 
-gboolean gst_disparity_plugin_init (GstPlugin * disparity);
+GST_ELEMENT_REGISTER_DECLARE (disparity);
 
 G_END_DECLS
 #endif /* __GST_DISPARITY_H__ */

@@ -143,7 +143,11 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstFaceBlur, gst_face_blur, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstFaceBlur, gst_face_blur,
+    GST_TYPE_OPENCV_VIDEO_FILTER, GST_DEBUG_CATEGORY_INIT (gst_face_blur_debug,
+        "faceblur", 0, "Blurs faces in images and videos"););
+GST_ELEMENT_REGISTER_DEFINE (faceblur, "faceblur", GST_RANK_NONE,
+    GST_TYPE_FACE_BLUR);
 
 static void gst_face_blur_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -385,20 +389,4 @@ gst_face_blur_load_profile (GstFaceBlur * filter, gchar * profile)
     return NULL;
   }
   return cascade;
-}
-
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_face_blur_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for filtering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_face_blur_debug, "faceblur",
-      0, "Blurs faces in images and videos");
-
-  return gst_element_register (plugin, "faceblur", GST_RANK_NONE,
-      GST_TYPE_FACE_BLUR);
 }

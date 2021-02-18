@@ -93,7 +93,7 @@ struct _GstFaceBlurClass
 
 GType gst_face_blur_get_type (void);
 
-gboolean gst_face_blur_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (faceblur);
 
 G_END_DECLS
 #endif /* __GST_FACE_BLUR_H__ */

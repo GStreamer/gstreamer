@@ -97,8 +97,13 @@ enum
   PROP_SETTINGS
 };
 
-G_DEFINE_TYPE (GstCameraUndistort, gst_camera_undistort,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstCameraUndistort, gst_camera_undistort,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_camera_undistort_debug, "cameraundistort", 0,
+        "Performs camera undistortion");
+    );
+GST_ELEMENT_REGISTER_DEFINE (cameraundistort, "cameraundistort", GST_RANK_NONE,
+    GST_TYPE_CAMERA_UNDISTORT);
 
 static void gst_camera_undistort_dispose (GObject * object);
 static void gst_camera_undistort_set_property (GObject * object, guint prop_id,
@@ -402,19 +407,4 @@ gst_camera_undistort_src_event (GstBaseTransform * trans, GstEvent * event)
   return
       GST_BASE_TRANSFORM_CLASS (gst_camera_undistort_parent_class)->src_event
       (trans, event);
-}
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_camera_undistort_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for filtering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_camera_undistort_debug, "cameraundistort",
-      0, "Performs camera undistortion");
-
-  return gst_element_register (plugin, "cameraundistort", GST_RANK_NONE,
-      GST_TYPE_CAMERA_UNDISTORT);
 }

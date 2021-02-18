@@ -135,7 +135,12 @@ gst_cv_smooth_type_get_type (void)
 #define DEFAULT_WIDTH G_MAXINT
 #define DEFAULT_HEIGHT G_MAXINT
 
-G_DEFINE_TYPE (GstCvSmooth, gst_cv_smooth, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstCvSmooth, gst_cv_smooth,
+    GST_TYPE_OPENCV_VIDEO_FILTER, GST_DEBUG_CATEGORY_INIT (gst_cv_smooth_debug,
+        "cvsmooth", 0, "cvsmooth");
+    );
+GST_ELEMENT_REGISTER_DEFINE (cvsmooth, "cvsmooth", GST_RANK_NONE,
+    GST_TYPE_CV_SMOOTH);
 
 static void gst_cv_smooth_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -422,13 +427,4 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
   }
 
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_cv_smooth_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_cv_smooth_debug, "cvsmooth", 0, "cvsmooth");
-
-  return gst_element_register (plugin, "cvsmooth", GST_RANK_NONE,
-      GST_TYPE_CV_SMOOTH);
 }

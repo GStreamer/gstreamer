@@ -95,7 +95,11 @@ enum
 #define DEFAULT_APERTURE_SIZE 3
 #define DEFAULT_MASK TRUE
 
-G_DEFINE_TYPE (GstCvSobel, gst_cv_sobel, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstCvSobel, gst_cv_sobel, GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_cv_sobel_debug, "cvsobel", 0, "cvsobel");
+    );
+GST_ELEMENT_REGISTER_DEFINE (cvsobel, "cvsobel", GST_RANK_NONE,
+    GST_TYPE_CV_SOBEL);
 
 static void gst_cv_sobel_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -268,13 +272,4 @@ gst_cv_sobel_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
   }
 
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_cv_sobel_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_cv_sobel_debug, "cvsobel", 0, "cvsobel");
-
-  return gst_element_register (plugin, "cvsobel", GST_RANK_NONE,
-      GST_TYPE_CV_SOBEL);
 }

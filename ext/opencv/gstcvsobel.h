@@ -83,7 +83,7 @@ struct _GstCvSobelClass
 
 GType gst_cv_sobel_get_type (void);
 
-gboolean gst_cv_sobel_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (cvsobel);
 
 G_END_DECLS
 

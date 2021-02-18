@@ -225,7 +225,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstFaceDetect, gst_face_detect, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstFaceDetect, gst_face_detect,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_face_detect_debug, "facedetect", 0,
+        "Performs face detection on videos and images, providing detected positions via bus messages"););
+GST_ELEMENT_REGISTER_DEFINE (facedetect, "facedetect", GST_RANK_NONE,
+    GST_TYPE_FACE_DETECT);
 
 static void gst_face_detect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -788,21 +793,4 @@ gst_face_detect_load_profile (GstFaceDetect * filter, gchar * profile)
   }
 
   return cascade;
-}
-
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_face_detect_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_face_detect_debug, "facedetect",
-      0,
-      "Performs face detection on videos and images, providing detected positions via bus messages");
-
-  return gst_element_register (plugin, "facedetect", GST_RANK_NONE,
-      GST_TYPE_FACE_DETECT);
 }

@@ -107,7 +107,12 @@ enum
 #define DEFAULT_TEST_MODE FALSE
 #define DEFAULT_SCALE 1.6
 
-G_DEFINE_TYPE (GstGrabcut, gst_grabcut, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstGrabcut, gst_grabcut, GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_grabcut_debug, "grabcut", 0,
+        "Grabcut image segmentation on either input alpha or input bounding box"););
+GST_ELEMENT_REGISTER_DEFINE (grabcut, "grabcut", GST_RANK_NONE,
+    GST_TYPE_GRABCUT);
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -353,23 +358,6 @@ gst_grabcut_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buffer,
   return GST_FLOW_OK;
 }
 
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_grabcut_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for fltering log messages
-   *
-   */
-  GST_DEBUG_CATEGORY_INIT (gst_grabcut_debug, "grabcut",
-      0,
-      "Grabcut image segmentation on either input alpha or input bounding box");
-
-  return gst_element_register (plugin, "grabcut", GST_RANK_NONE,
-      GST_TYPE_GRABCUT);
-}
 
 void
 compose_matrix_from_image (Mat output, Mat input)

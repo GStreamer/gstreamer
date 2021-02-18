@@ -139,7 +139,13 @@ gst_segmentation_method_get_type (void)
   return etype;
 }
 
-G_DEFINE_TYPE (GstSegmentation, gst_segmentation, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstSegmentation, gst_segmentation,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_segmentation_debug, "segmentation", 0,
+        "Performs Foreground/Background segmentation in video sequences");
+    );
+GST_ELEMENT_REGISTER_DEFINE (segmentation, "segmentation", GST_RANK_NONE,
+    GST_TYPE_SEGMENTATION);
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -449,21 +455,6 @@ gst_segmentation_transform_ip (GstOpencvVideoFilter * cvfilter,
 
   return GST_FLOW_OK;
 }
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_segmentation_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_segmentation_debug, "segmentation",
-      0, "Performs Foreground/Background segmentation in video sequences");
-
-  return gst_element_register (plugin, "segmentation", GST_RANK_NONE,
-      GST_TYPE_SEGMENTATION);
-}
-
 
 
 #ifdef CODE_FROM_OREILLY_BOOK   /* See license at the beginning of the page */

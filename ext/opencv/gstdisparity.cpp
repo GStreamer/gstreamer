@@ -176,7 +176,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstDisparity, gst_disparity, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstDisparity, gst_disparity, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_disparity_debug, "disparity", 0,
+        "Stereo image disparity (depth) map calculation");
+    );
+GST_ELEMENT_REGISTER_DEFINE (disparity, "disparity", GST_RANK_NONE,
+    GST_TYPE_DISPARITY);
 
 static void gst_disparity_finalize (GObject * object);
 static void gst_disparity_set_property (GObject * object, guint prop_id,
@@ -584,24 +589,6 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   ret = gst_pad_push (fs->srcpad, buffer);
   return ret;
 }
-
-
-
-
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_disparity_plugin_init (GstPlugin * disparity)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_disparity_debug, "disparity", 0,
-      "Stereo image disparity (depth) map calculation");
-  return gst_element_register (disparity, "disparity", GST_RANK_NONE,
-      GST_TYPE_DISPARITY);
-}
-
 
 static void
 initialise_disparity (GstDisparity * fs, int width, int height, int nchannels)

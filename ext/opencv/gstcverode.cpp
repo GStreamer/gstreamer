@@ -64,7 +64,11 @@
 GST_DEBUG_CATEGORY_STATIC (gst_cv_erode_debug);
 #define GST_CAT_DEFAULT gst_cv_erode_debug
 
-G_DEFINE_TYPE (GstCvErode, gst_cv_erode, GST_TYPE_CV_DILATE_ERODE);
+G_DEFINE_TYPE_WITH_CODE (GstCvErode, gst_cv_erode, GST_TYPE_CV_DILATE_ERODE,
+    GST_DEBUG_CATEGORY_INIT (gst_cv_erode_debug, "cverode", 0, "cverode");
+    );
+GST_ELEMENT_REGISTER_DEFINE (cverode, "cverode", GST_RANK_NONE,
+    GST_TYPE_CV_ERODE);
 
 static GstFlowReturn gst_cv_erode_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, cv::Mat img);
@@ -105,13 +109,4 @@ gst_cv_erode_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
   cv::erode (img, img, cv::Mat (), cv::Point (-1, -1), filter->iterations);
 
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_cv_erode_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_cv_erode_debug, "cverode", 0, "cverode");
-
-  return gst_element_register (plugin, "cverode", GST_RANK_NONE,
-      GST_TYPE_CV_ERODE);
 }

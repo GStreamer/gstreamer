@@ -77,7 +77,7 @@ struct _GstCvErodeClass
 
 GType gst_cv_erode_get_type (void);
 
-gboolean gst_cv_erode_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (cverode);
 
 G_END_DECLS
 

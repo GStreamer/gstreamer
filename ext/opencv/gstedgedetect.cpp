@@ -97,7 +97,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstEdgeDetect, gst_edge_detect, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstEdgeDetect, gst_edge_detect,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_edge_detect_debug, "edgedetect", 0,
+        "Performs canny edge detection on videos and images"););
+GST_ELEMENT_REGISTER_DEFINE (edgedetect, "edgedetect", GST_RANK_NONE,
+    GST_TYPE_EDGE_DETECT);
 
 static void gst_edge_detect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -268,19 +273,4 @@ gst_edge_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
   }
 
   return GST_FLOW_OK;
-}
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_edge_detect_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_edge_detect_debug, "edgedetect",
-      0, "Performs canny edge detection on videos and images");
-
-  return gst_element_register (plugin, "edgedetect", GST_RANK_NONE,
-      GST_TYPE_EDGE_DETECT);
 }

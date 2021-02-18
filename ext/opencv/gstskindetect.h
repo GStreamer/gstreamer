@@ -84,7 +84,7 @@ struct _GstSkinDetectClass
 
 GType gst_skin_detect_get_type (void);
 
-gboolean gst_skin_detect_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (skindetect);
 
 G_END_DECLS
 #endif /* __GST_SKIN_DETECT_H__ */

@@ -129,7 +129,11 @@ dewarp_interpolation_mode_get_type (void)
   return dewarp_interpolation_mode_type;
 }
 
-G_DEFINE_TYPE (GstDewarp, gst_dewarp, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstDewarp, gst_dewarp, GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_dewarp_debug, "dewarp", 0,
+        "Dewarp fisheye images");
+    );
+GST_ELEMENT_REGISTER_DEFINE (dewarp, "dewarp", GST_RANK_NONE, GST_TYPE_DEWARP);
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -713,14 +717,4 @@ gst_dewarp_transform_frame (GstOpencvVideoFilter * btrans, GstBuffer * buffer,
   GST_OBJECT_UNLOCK (filter);
 
   return ret;
-}
-
-gboolean
-gst_dewarp_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_dewarp_debug, "dewarp",
-      0, "Dewarp fisheye images");
-
-  return gst_element_register (plugin, "dewarp", GST_RANK_NONE,
-      GST_TYPE_DEWARP);
 }

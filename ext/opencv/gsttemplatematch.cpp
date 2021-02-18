@@ -99,8 +99,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGR"))
     );
 
-G_DEFINE_TYPE (GstTemplateMatch, gst_template_match,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstTemplateMatch, gst_template_match,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_template_match_debug, "templatematch", 0,
+        "Performs template matching on videos and images, providing detected positions via bus messages");
+    );
+GST_ELEMENT_REGISTER_DEFINE (templatematch, "templatematch",
+    GST_RANK_NONE, GST_TYPE_TEMPLATE_MATCH);
 
 static void gst_template_match_finalize (GObject * object);
 static void gst_template_match_set_property (GObject * object, guint prop_id,
@@ -378,20 +383,4 @@ gst_template_match_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     gst_element_post_message (GST_ELEMENT (filter), m);
   }
   return GST_FLOW_OK;
-}
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_template_match_plugin_init (GstPlugin * templatematch)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_template_match_debug, "templatematch",
-      0,
-      "Performs template matching on videos and images, providing detected positions via bus messages");
-
-  return gst_element_register (templatematch, "templatematch", GST_RANK_NONE,
-      GST_TYPE_TEMPLATE_MATCH);
 }

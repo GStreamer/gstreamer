@@ -111,8 +111,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-G_DEFINE_TYPE (GstOpencvTextOverlay, gst_opencv_text_overlay,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstOpencvTextOverlay, gst_opencv_text_overlay,
+    GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_opencv_text_overlay_debug, "opencvtextoverlay",
+        0, "Template opencvtextoverlay");
+    );
+GST_ELEMENT_REGISTER_DEFINE (opencvtextoverlay, "opencvtextoverlay",
+    GST_RANK_NONE, GST_TYPE_OPENCV_TEXT_OVERLAY);
 
 static void gst_opencv_text_overlay_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -335,23 +340,4 @@ gst_opencv_text_overlay_transform_ip (GstOpencvVideoFilter * base,
           filter->colorG, filter->colorB), filter->thickness);
 
   return GST_FLOW_OK;
-}
-
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_opencv_text_overlay_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for fltering log messages
-   *
-   * exchange the string 'Template opencvtextoverlay' with your description
-   */
-  GST_DEBUG_CATEGORY_INIT (gst_opencv_text_overlay_debug, "opencvtextoverlay",
-      0, "Template opencvtextoverlay");
-
-  return gst_element_register (plugin, "opencvtextoverlay", GST_RANK_NONE,
-      GST_TYPE_OPENCV_TEXT_OVERLAY);
 }

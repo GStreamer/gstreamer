@@ -75,7 +75,7 @@ struct _GstCvEqualizeHistClass
 
 GType gst_cv_equalize_hist_get_type (void);
 
-gboolean gst_cv_equalize_hist_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (cvequalizehist);
 
 G_END_DECLS
 

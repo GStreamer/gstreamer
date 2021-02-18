@@ -112,7 +112,13 @@ gst_retinex_method_get_type (void)
   return etype;
 }
 
-G_DEFINE_TYPE (GstRetinex, gst_retinex, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstRetinex, gst_retinex, GST_TYPE_OPENCV_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_retinex_debug, "retinex", 0,
+        "Multiscale retinex for colour image enhancement");
+    );
+GST_ELEMENT_REGISTER_DEFINE (retinex, "retinex", GST_RANK_NONE,
+    GST_TYPE_RETINEX);
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -403,21 +409,4 @@ gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
   }
 
   return GST_FLOW_OK;
-}
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_retinex_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for fltering log messages
-   *
-   */
-  GST_DEBUG_CATEGORY_INIT (gst_retinex_debug, "retinex",
-      0, "Multiscale retinex for colour image enhancement");
-
-  return gst_element_register (plugin, "retinex", GST_RANK_NONE,
-      GST_TYPE_RETINEX);
 }

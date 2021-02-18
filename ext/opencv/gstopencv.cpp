@@ -45,73 +45,35 @@
 #include "gstcameracalibrate.h"
 #include "gstcameraundistort.h"
 
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_cv_dilate_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_cv_equalize_hist_plugin_init (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (cvdilate, plugin);
+  ret |= GST_ELEMENT_REGISTER (cvequalizehist, plugin);
+  ret |= GST_ELEMENT_REGISTER (cverode, plugin);
+  ret |= GST_ELEMENT_REGISTER (cvlaplace, plugin);
+  ret |= GST_ELEMENT_REGISTER (cvsmooth, plugin);
+  ret |= GST_ELEMENT_REGISTER (cvsobel, plugin);
+  ret |= GST_ELEMENT_REGISTER (edgedetect, plugin);
+  ret |= GST_ELEMENT_REGISTER (faceblur, plugin);
+  ret |= GST_ELEMENT_REGISTER (facedetect, plugin);
+  ret |= GST_ELEMENT_REGISTER (motioncells, plugin);
+  ret |= GST_ELEMENT_REGISTER (templatematch, plugin);
+  ret |= GST_ELEMENT_REGISTER (opencvtextoverlay, plugin);
+  ret |= GST_ELEMENT_REGISTER (handdetect, plugin);
+  ret |= GST_ELEMENT_REGISTER (skindetect, plugin);
+  ret |= GST_ELEMENT_REGISTER (retinex, plugin);
+  ret |= GST_ELEMENT_REGISTER (segmentation, plugin);
+  ret |= GST_ELEMENT_REGISTER (grabcut, plugin);
+  ret |= GST_ELEMENT_REGISTER (disparity, plugin);
+  ret |= GST_ELEMENT_REGISTER (dewarp, plugin);
+  ret |= GST_ELEMENT_REGISTER (cameracalibrate, plugin);
+  ret |= GST_ELEMENT_REGISTER (cameraundistort, plugin);
 
-  if (!gst_cv_erode_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_cv_laplace_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_cv_smooth_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_cv_sobel_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_edge_detect_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_face_blur_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_face_detect_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_motion_cells_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_template_match_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_opencv_text_overlay_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_handdetect_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_skin_detect_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_retinex_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_segmentation_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_grabcut_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_disparity_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_dewarp_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_camera_calibrate_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_camera_undistort_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
