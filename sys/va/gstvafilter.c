@@ -40,6 +40,7 @@ struct _GstVaFilter
   VAConfigID config;
   VAContextID context;
 
+  /* hardware constraints */
   VAProcPipelineCaps pipeline_caps;
 
   guint32 mem_types;
@@ -48,14 +49,23 @@ struct _GstVaFilter
   gint min_height;
   gint max_height;
 
-  guint mirror;
-  guint rotation;
-  GstVideoOrientationMethod orientation;
-
   GArray *surface_formats;
   GArray *image_formats;
 
   GArray *available_filters;
+
+  /* stream information */
+  guint mirror;
+  guint rotation;
+  GstVideoOrientationMethod orientation;
+
+  VARectangle input_region;
+  VARectangle output_region;
+
+  VAProcColorStandardType input_color_standard;
+  VAProcColorProperties input_color_properties;
+  VAProcColorStandardType output_color_standard;
+  VAProcColorProperties output_color_properties;
 
   GArray *filters;
 };
@@ -900,6 +910,228 @@ fail:
   }
 }
 
+/* from va_vpp.h */
+/* *INDENT-OFF* */
+static const struct ColorPropertiesMap
+{
+  VAProcColorStandardType standard;
+  guint8 primaries;
+  guint8 transfer;
+  guint8 matrix;
+} color_properties_map[] = {
+  { VAProcColorStandardBT601, 5,  6,  5 },
+  { VAProcColorStandardBT601, 6,  6,  6 },
+  { VAProcColorStandardBT709, 1,  1,  1 },
+  { VAProcColorStandardBT470M, 4,  4,  4 },
+  { VAProcColorStandardBT470BG, 5,  5,  5 },
+  { VAProcColorStandardSMPTE170M, 6,  6,  6 },
+  { VAProcColorStandardSMPTE240M, 7,  7,  7 },
+  { VAProcColorStandardGenericFilm, 8,  1,  1 },
+  { VAProcColorStandardSRGB, 1, 13,  0 },
+  /* { VAProcColorStandardSTRGB, ?, ?, ? }, */
+  { VAProcColorStandardXVYCC601, 1, 11,  5 },
+  { VAProcColorStandardXVYCC709, 1, 11,  1 },
+  { VAProcColorStandardBT2020, 9, 14,  9 },
+};
+  /* *INDENT-ON* */
+
+static guint8
+_get_chroma_siting (GstVideoInfo * info)
+{
+  /* *INDENT-OFF* */
+  static const struct ChromaSiteMap {
+    GstVideoChromaSite gst;
+    guint8 va;
+  } chroma_site_map[] = {
+    { GST_VIDEO_CHROMA_SITE_UNKNOWN, VA_CHROMA_SITING_UNKNOWN },
+    { GST_VIDEO_CHROMA_SITE_NONE, VA_CHROMA_SITING_VERTICAL_CENTER
+                                  | VA_CHROMA_SITING_HORIZONTAL_CENTER },
+    { GST_VIDEO_CHROMA_SITE_H_COSITED, VA_CHROMA_SITING_VERTICAL_CENTER
+                                       | VA_CHROMA_SITING_HORIZONTAL_LEFT },
+    { GST_VIDEO_CHROMA_SITE_V_COSITED, VA_CHROMA_SITING_VERTICAL_TOP
+                                       | VA_CHROMA_SITING_VERTICAL_BOTTOM },
+    { GST_VIDEO_CHROMA_SITE_COSITED, VA_CHROMA_SITING_VERTICAL_CENTER
+                                     | VA_CHROMA_SITING_HORIZONTAL_LEFT
+                                     | VA_CHROMA_SITING_VERTICAL_TOP
+                                     | VA_CHROMA_SITING_VERTICAL_BOTTOM },
+    { GST_VIDEO_CHROMA_SITE_JPEG, VA_CHROMA_SITING_VERTICAL_CENTER
+                                  | VA_CHROMA_SITING_HORIZONTAL_CENTER  },
+    { GST_VIDEO_CHROMA_SITE_MPEG2, VA_CHROMA_SITING_VERTICAL_CENTER
+                                   | VA_CHROMA_SITING_HORIZONTAL_LEFT },
+    { GST_VIDEO_CHROMA_SITE_DV, VA_CHROMA_SITING_VERTICAL_TOP
+                                | VA_CHROMA_SITING_HORIZONTAL_LEFT },
+  };
+  /* *INDENT-ON* */
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (chroma_site_map); i++) {
+    if (GST_VIDEO_INFO_CHROMA_SITE (info) == chroma_site_map[i].gst)
+      return chroma_site_map[i].va;
+  }
+
+  return VA_CHROMA_SITING_UNKNOWN;
+}
+
+static guint8
+_get_color_range (GstVideoInfo * info)
+{
+  /* *INDENT-OFF* */
+  static const struct ColorRangeMap {
+    GstVideoColorRange gst;
+    guint8 va;
+  } color_range_map[] = {
+    { GST_VIDEO_COLOR_RANGE_UNKNOWN, VA_SOURCE_RANGE_UNKNOWN },
+    { GST_VIDEO_COLOR_RANGE_0_255, VA_SOURCE_RANGE_FULL },
+    { GST_VIDEO_COLOR_RANGE_16_235, VA_SOURCE_RANGE_REDUCED },
+  };
+  /* *INDENT-ON* */
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (color_range_map); i++) {
+    if (GST_VIDEO_INFO_COLORIMETRY (info).range == color_range_map[i].gst)
+      return color_range_map[i].va;
+  }
+
+  return VA_SOURCE_RANGE_UNKNOWN;
+}
+
+static guint8
+_get_color_matrix (GstVideoInfo * info)
+{
+  /* From ITU H.273, section 8.3, table 4 */
+  /* *INDENT-OFF* */
+  static const struct ColorMatrixMap {
+    GstVideoColorMatrix gst;
+    guint8 va;
+  } color_matrix_map[] = {
+    { GST_VIDEO_COLOR_MATRIX_FCC, 4 },
+    { GST_VIDEO_COLOR_MATRIX_BT709, 1 },
+    { GST_VIDEO_COLOR_MATRIX_BT601, 5 },
+    { GST_VIDEO_COLOR_MATRIX_SMPTE240M, 7 },
+    { GST_VIDEO_COLOR_MATRIX_BT2020, 9 },
+   };
+  /* *INDENT-ON* */
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (color_matrix_map); i++) {
+    if (GST_VIDEO_INFO_COLORIMETRY (info).matrix == color_matrix_map[i].gst)
+      return color_matrix_map[i].va;
+  }
+
+  return 0;
+}
+
+static void
+_config_color_properties (VAProcColorStandardType * std,
+    VAProcColorProperties * props, GstVideoInfo * info,
+    VAProcColorStandardType * standards, guint32 num_standards)
+{
+  GstVideoColorimetry colorimetry = GST_VIDEO_INFO_COLORIMETRY (info);
+  VAProcColorStandardType best = VAProcColorStandardNone;
+  guint i, j;
+  gint score, bestscore = -1, worstscore;
+  gint8 matrix = _get_color_matrix (info);
+
+  /* we prefer VAProcColorStandardExplicit */
+  for (i = 0; i < num_standards; i++) {
+    if (standards[i] == VAProcColorStandardExplicit) {
+
+      *std = VAProcColorStandardExplicit;
+
+      /* *INDENT-OFF* */
+      *props = (VAProcColorProperties) {
+        .chroma_sample_location = _get_chroma_siting (info),
+        .color_range = _get_color_range (info),
+        .colour_primaries = colorimetry.primaries,
+        .transfer_characteristics = colorimetry.transfer,
+        .matrix_coefficients = matrix,
+      };
+      /* *INDENT-ON* */
+
+      return;
+    }
+  }
+
+  worstscore = 4 * (colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN
+      && colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB)
+      + 2 * (colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN)
+      + (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN);
+
+  if (worstscore == 0) {
+    /* No properties specified, there's not a useful choice. */
+    *std = VAProcColorStandardNone;
+    *props = (VAProcColorProperties) {
+    };
+
+    return;
+  }
+
+  for (i = 0; i < num_standards; i++) {
+    for (j = 0; j < G_N_ELEMENTS (color_properties_map); j++) {
+      if (color_properties_map[j].standard != standards[i])
+        continue;
+
+      score = 0;
+      if (colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN
+          && colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB)
+        score += 4 * (matrix != color_properties_map[j].matrix);
+      if (colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN)
+        score += 2 * (colorimetry.transfer != color_properties_map[j].transfer);
+      if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
+        score += (colorimetry.primaries != color_properties_map[j].primaries);
+
+      if (score < worstscore && (bestscore == -1 || score < bestscore)) {
+        bestscore = score;
+        best = color_properties_map[j].standard;
+      }
+    }
+  }
+
+  *std = best;
+  /* *INDENT-OFF* */
+  *props = (VAProcColorProperties) {
+    .chroma_sample_location = _get_chroma_siting (info),
+    .color_range = _get_color_range (info),
+  };
+  /* *INDENT-ON* */
+}
+
+gboolean
+gst_va_filter_set_formats (GstVaFilter * self, GstVideoInfo * in_info,
+    GstVideoInfo * out_info)
+{
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+  g_return_val_if_fail (out_info && in_info, FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  GST_OBJECT_LOCK (self);
+  /* *INDENT-OFF* */
+  self->input_region = (VARectangle) {
+    .width = GST_VIDEO_INFO_WIDTH (in_info),
+    .height = GST_VIDEO_INFO_HEIGHT (in_info),
+  };
+
+  self->output_region = (VARectangle) {
+    .width = GST_VIDEO_INFO_WIDTH (out_info),
+    .height = GST_VIDEO_INFO_HEIGHT (out_info),
+  };
+  /* *INDENT-ON* */
+
+  _config_color_properties (&self->input_color_standard,
+      &self->input_color_properties, in_info,
+      self->pipeline_caps.input_color_standards,
+      self->pipeline_caps.num_input_color_standards);
+  _config_color_properties (&self->output_color_standard,
+      &self->output_color_properties, out_info,
+      self->pipeline_caps.output_color_standards,
+      self->pipeline_caps.num_output_color_standards);
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
 static gboolean
 _destroy_filters_unlocked (GstVaFilter * self)
 {
@@ -977,26 +1209,30 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
   guint32 num_filters = 0;
 
   GST_OBJECT_LOCK (self);
+
+  /* *INDENT-OFF* */
   if (self->filters) {
     num_filters = self->filters->len;
     filters = (num_filters > 0) ? (VABufferID *) self->filters->data : NULL;
   }
-  GST_OBJECT_UNLOCK (self);
 
-  /* *INDENT-OFF* */
   params = (VAProcPipelineParameterBuffer) {
     .surface = surface,
     .surface_region = src_rect,
-    .surface_color_standard = VAProcColorStandardNone,
+    .surface_color_standard = self->input_color_standard,
     .output_region = dst_rect,
     .output_background_color = 0xff000000, /* ARGB black */
-    .output_color_standard = VAProcColorStandardNone,
+    .output_color_standard = self->output_color_standard,
     .filters = filters,
     .num_filters = num_filters,
     .rotation_state = self->rotation,
     .mirror_state = self->mirror,
+    .input_color_properties = self->input_color_properties,
+    .output_color_properties = self->output_color_properties,
   };
   /* *INDENT-ON* */
+
+  GST_OBJECT_UNLOCK (self);
 
   dpy = gst_va_display_get_va_dpy (self->display);
   gst_va_display_lock (self->display);
@@ -1016,7 +1252,7 @@ _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
 
 gboolean
 gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
-    GstVideoInfo * in_info, VASurfaceID out_surface, GstVideoInfo * out_info)
+    VASurfaceID out_surface)
 {
   VABufferID buffer;
   VADisplay dpy;
@@ -1031,25 +1267,16 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
   g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
   g_return_val_if_fail (in_surface != VA_INVALID_ID
       && out_surface != VA_INVALID_ID, FALSE);
-  g_return_val_if_fail (out_info && in_info, FALSE);
 
   if (!gst_va_filter_is_open (self))
     return FALSE;
 
   GST_TRACE_OBJECT (self, "Processing %#x", in_surface);
 
-  /* *INDENT-OFF* */
-  src_rect = (VARectangle) {
-    .width = GST_VIDEO_INFO_WIDTH (in_info),
-    .height = GST_VIDEO_INFO_HEIGHT (in_info),
-  };
-  dst_rect = (VARectangle) {
-    .width = GST_VIDEO_INFO_WIDTH (out_info),
-    .height = GST_VIDEO_INFO_HEIGHT (out_info),
-  };
-  /* *INDENT-ON* */
-
   GST_OBJECT_LOCK (self);
+  src_rect = self->input_region;
+  dst_rect = self->output_region;
+
   if (self->filters) {
     g_array_ref (self->filters);
     num_filters = self->filters->len;

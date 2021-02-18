@@ -762,9 +762,10 @@ gst_va_vpp_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   self->in_info = in_info;
   self->out_info = out_info;
 
-  self->negotiated = TRUE;
+  self->negotiated =
+      gst_va_filter_set_formats (self->filter, &self->in_info, &self->out_info);
 
-  return TRUE;
+  return self->negotiated;
 
   /* ERRORS */
 invalid_caps:
@@ -1153,8 +1154,7 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   in_surface = gst_va_buffer_get_surface (buf);
   out_surface = gst_va_buffer_get_surface (outbuf);
 
-  if (!gst_va_filter_convert_surface (self->filter, in_surface, &self->in_info,
-          out_surface, &self->out_info)) {
+  if (!gst_va_filter_convert_surface (self->filter, in_surface, out_surface)) {
     gst_buffer_set_flags (outbuf, GST_BUFFER_FLAG_CORRUPTED);
   }
 
