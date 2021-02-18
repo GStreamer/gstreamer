@@ -47,10 +47,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "gstqroverlayelements.h"
 #include "gstqroverlay.h"
-
-GST_DEBUG_CATEGORY_STATIC (gst_qr_overlay_debug);
-#define GST_CAT_DEFAULT gst_qr_overlay_debug
 
 enum
 {
@@ -68,6 +66,8 @@ struct _GstQROverlay
 
 #define gst_qr_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstQROverlay, gst_qr_overlay, GST_TYPE_BASE_QR_OVERLAY);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (qroverlay, "qroverlay", GST_RANK_NONE,
+    GST_TYPE_QR_OVERLAY, qroverlay_element_init (plugin));
 
 static gchar *
 get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
@@ -156,25 +156,3 @@ static void
 gst_qr_overlay_init (GstQROverlay * filter)
 {
 }
-
-#include "gstdebugqroverlay.h"
-
-static gboolean
-qroverlay_init (GstPlugin * qroverlay)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_qr_overlay_debug, "qroverlay", 0,
-      "Qrcode overlay element");
-
-  if (gst_element_register (qroverlay, "debugqroverlay", GST_RANK_NONE,
-          GST_TYPE_DEBUG_QR_OVERLAY))
-    return gst_element_register (qroverlay, "qroverlay", GST_RANK_NONE,
-        GST_TYPE_QR_OVERLAY);
-
-  return FALSE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    qroverlay,
-    "libqrencode qroverlay plugin",
-    qroverlay_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)

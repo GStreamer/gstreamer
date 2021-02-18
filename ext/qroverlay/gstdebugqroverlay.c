@@ -54,7 +54,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "gstqroverlayelements.h"
 #include "gstdebugqroverlay.h"
+
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_qr_overlay_debug);
 #define GST_CAT_DEFAULT gst_debug_qr_overlay_debug
@@ -96,6 +98,9 @@ struct _GstDebugQROverlay
 #define gst_debug_qr_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstDebugQROverlay, gst_debug_qr_overlay,
     GST_TYPE_BASE_QR_OVERLAY);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (debugqroverlay, "debugqroverlay",
+    GST_RANK_NONE, GST_TYPE_DEBUG_QR_OVERLAY, qroverlay_element_init (plugin));
+
 
 static void gst_debug_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
