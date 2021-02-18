@@ -23,14 +23,14 @@
 
 #include "gstmicrodnsdevice.h"
 
+GST_DEVICE_PROVIDER_REGISTER_DECLARE (microdnsdeviceprovider);
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (microdnsdeviceprovider,
+    "microdnsdeviceprovider", GST_RANK_PRIMARY, GST_TYPE_MDNS_DEVICE_PROVIDER);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_device_provider_register (plugin, "microdnsdeviceprovider",
-          GST_RANK_PRIMARY, GST_TYPE_MDNS_DEVICE_PROVIDER))
-    return FALSE;
-
-  return TRUE;
+  return GST_DEVICE_PROVIDER_REGISTER (microdnsdeviceprovider, plugin);;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
