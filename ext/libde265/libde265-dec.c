@@ -47,6 +47,8 @@
 
 #define parent_class gst_libde265_dec_parent_class
 G_DEFINE_TYPE (GstLibde265Dec, gst_libde265_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (libde265dec, "libde265dec",
+    GST_RANK_SECONDARY, GST_TYPE_LIBDE265_DEC);
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -871,15 +873,4 @@ gst_libde265_dec_handle_frame (GstVideoDecoder * decoder,
 error_input:
   gst_buffer_unmap (frame->input_buffer, &info);
   return GST_FLOW_ERROR;
-}
-
-gboolean
-gst_libde265_dec_plugin_init (GstPlugin * plugin)
-{
-  /* create an elementfactory for the libde265 decoder element */
-  if (!gst_element_register (plugin, "libde265dec",
-          GST_RANK_SECONDARY, GST_TYPE_LIBDE265_DEC))
-    return FALSE;
-
-  return TRUE;
 }

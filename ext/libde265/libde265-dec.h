@@ -64,8 +64,8 @@ typedef struct _GstLibde265DecClass
 
 GType gst_libde265_dec_get_type (void);
 
-G_END_DECLS
+GST_ELEMENT_REGISTER_DECLARE (libde265dec)
 
-gboolean gst_libde265_dec_plugin_init (GstPlugin * plugin);
+G_END_DECLS
 
 #endif /* __GST_LIBDE265_DEC_H__ */
