@@ -27,8 +27,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "ldacenc", GST_RANK_NONE, GST_TYPE_LDAC_ENC);
-  return TRUE;
+  return GST_ELEMENT_REGISTER (ldacenc, plugin);;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

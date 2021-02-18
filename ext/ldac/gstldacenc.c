@@ -50,6 +50,8 @@ GST_DEBUG_CATEGORY_STATIC (ldac_enc_debug);
 
 #define parent_class gst_ldac_enc_parent_class
 G_DEFINE_TYPE (GstLdacEnc, gst_ldac_enc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (ldacenc, "ldacenc", GST_RANK_NONE,
+    GST_TYPE_LDAC_ENC);
 
 #define SAMPLE_RATES "44100, 48000, 88200, 96000"
 

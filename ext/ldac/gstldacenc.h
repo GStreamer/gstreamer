@@ -62,5 +62,6 @@ struct _GstLdacEncClass {
 };
 
 GType gst_ldac_enc_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ldacenc);
 
 G_END_DECLS
