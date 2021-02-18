@@ -1918,7 +1918,8 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
   g_assert (wav->caps != NULL);
 
   s = gst_caps_get_structure (wav->caps, 0);
-  if (s && gst_structure_has_name (s, "audio/x-raw") && buf != NULL) {
+  if (s && gst_structure_has_name (s, "audio/x-raw") && buf != NULL
+      && (GST_BUFFER_OFFSET (buf) == 0 || !GST_BUFFER_OFFSET_IS_VALID (buf))) {
     GstTypeFindProbability prob;
     GstCaps *tf_caps;
 
@@ -2926,7 +2927,6 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_wavparse_reset (wav);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
