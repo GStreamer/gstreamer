@@ -208,10 +208,10 @@ gst_wasapi2_device_provider_probe_internal (GstWasapi2DeviceProvider * self,
     }
 
     props = gst_structure_new ("wasapi2-proplist",
-        "device.api", G_TYPE_STRING, "wasapi",
+        "device.api", G_TYPE_STRING, "wasapi2",
         "device.id", G_TYPE_STRING, device_id,
         "device.default", G_TYPE_BOOLEAN, i == 0,
-        "wasapi.device.description", G_TYPE_STRING, device_name, NULL);
+        "wasapi2.device.description", G_TYPE_STRING, device_name, NULL);
 
     device = g_object_new (GST_TYPE_WASAPI2_DEVICE, "device", device_id,
         "display-name", device_name, "caps", caps,
