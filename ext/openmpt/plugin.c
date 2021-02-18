@@ -29,11 +29,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = TRUE;
-  ret = ret
-      && gst_element_register (plugin, "openmptdec", GST_RANK_PRIMARY + 2,
-      gst_openmpt_dec_get_type ());
-  return ret;
+  return GST_ELEMENT_REGISTER (openmptdec, plugin);
 }
 
 

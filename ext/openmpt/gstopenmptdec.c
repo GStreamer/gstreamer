@@ -95,7 +95,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE (GstOpenMptDec, gst_openmpt_dec,
     GST_TYPE_NONSTREAM_AUDIO_DECODER);
-
+GST_ELEMENT_REGISTER_DEFINE (openmptdec, "openmptdec", GST_RANK_PRIMARY + 2,
+    gst_openmpt_dec_get_type ());
 
 
 static void gst_openmpt_dec_finalize (GObject * object);
