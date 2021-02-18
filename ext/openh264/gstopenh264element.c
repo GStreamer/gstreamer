@@ -23,30 +23,34 @@
  * OF SUCH DAMAGE.
  */
 
-/*
- * Openh264 GStreamer plugin
- */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <gst/gst.h>
+#include <wels/codec_api.h>
+#include <wels/codec_ver.h>
+#include <string.h>
 #include "gstopenh264elements.h"
 
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+openh264_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (openh264dec, plugin);
-  ret |= GST_ELEMENT_REGISTER (openh264enc, plugin);
+  if (g_once_init_enter (&res)) {
+    gsize value;
+    OpenH264Version libver;
+    /* g_stCodecVersion is the version detected at build time as defined in the
+     * headers and WelsGetCodecVersion() is the version detected at runtime.
+     * This is a safeguard to avoid crashes since OpenH264  has been changing
+     * ABI without changing the SONAME.
+     */
+    libver = WelsGetCodecVersion ();
+    value = memcmp (&libver, &g_stCodecVersion, sizeof (libver)) == 0;
+    g_once_init_leave (&res, value);
+  }
 
-  return ret;
+  return res;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    openh264,
-    "OpenH264 encoder/decoder plugin",
-    plugin_init, VERSION, "BSD", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

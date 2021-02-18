@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include "gstopenh264elements.h"
 #include "gstopenh264enc.h"
 
 #include <gst/gst.h>
@@ -162,6 +163,7 @@ static void gst_openh264enc_set_usage_type (GstOpenh264Enc * openh264enc,
     gint usage_type);
 static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
     gint rc_mode);
+static gboolean openh264enc_element_init (GstPlugin * plugin);
 
 
 #define DEFAULT_BITRATE            (128000)
@@ -235,6 +237,7 @@ G_DEFINE_TYPE_WITH_CODE (GstOpenh264Enc, gst_openh264enc,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
     GST_DEBUG_CATEGORY_INIT (gst_openh264enc_debug_category, "openh264enc", 0,
         "debug category for openh264enc element"));
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (openh264enc, openh264enc_element_init);
 
 static void
 gst_openh264enc_class_init (GstOpenh264EncClass * klass)
@@ -1055,4 +1058,14 @@ gst_openh264enc_finish (GstVideoEncoder * encoder)
   while ((gst_openh264enc_handle_frame (encoder, NULL)) == GST_FLOW_OK);
 
   return GST_FLOW_OK;
+}
+static gboolean
+openh264enc_element_init (GstPlugin * plugin)
+{
+  if (openh264_element_init (plugin))
+    return gst_element_register (plugin, "openh264enc", GST_RANK_MARGINAL,
+                                 GST_TYPE_OPENH264ENC);
+
+ GST_ERROR ("Incorrect library version loaded, expecting %s", g_strCodecVer);
+ return FALSE;
 }
