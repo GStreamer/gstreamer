@@ -73,6 +73,7 @@ static gboolean gst_mms_uri_set_uri (GstURIHandler * handler,
 #define gst_mms_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstMMS, gst_mms, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_mms_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (mmssrc, "mmssrc", GST_RANK_NONE, GST_TYPE_MMS);
 
 /* initialize the plugin's class */
 static void
@@ -520,7 +521,7 @@ gst_mms_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "mmssrc", GST_RANK_NONE, GST_TYPE_MMS);
+  return GST_ELEMENT_REGISTER (mmssrc, plugin);
 }
 
 static GstURIType
@@ -626,7 +627,6 @@ gst_mms_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_mms_uri_get_uri;
   iface->set_uri = gst_mms_uri_set_uri;
 }
-
 
 /* this is the structure that gst-register looks for
  * so keep the name plugin_desc, or you cannot get your plug-in registered */

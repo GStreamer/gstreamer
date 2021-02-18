@@ -44,6 +44,8 @@ struct _GstMMSClass
 
 GType gst_mms_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (mmssrc);
+
 G_END_DECLS
 
 #endif /* __GST_MMS_H__ */
