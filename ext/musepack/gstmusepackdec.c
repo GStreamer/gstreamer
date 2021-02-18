@@ -74,8 +74,12 @@ static GstStateChangeReturn
 gst_musepackdec_change_state (GstElement * element, GstStateChange transition);
 
 #define parent_class gst_musepackdec_parent_class
-G_DEFINE_TYPE (GstMusepackDec, gst_musepackdec, GST_TYPE_ELEMENT);
-
+G_DEFINE_TYPE_WITH_CODE (GstMusepackDec, gst_musepackdec, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (musepackdec_debug, "musepackdec", 0,
+        "mpc decoder");
+    );
+GST_ELEMENT_REGISTER_DEFINE (musepackdec, "musepackdec",
+    GST_RANK_PRIMARY, GST_TYPE_MUSEPACK_DEC);
 static void
 gst_musepackdec_class_init (GstMusepackDecClass * klass)
 {
@@ -628,10 +632,7 @@ gst_musepackdec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (musepackdec_debug, "musepackdec", 0, "mpc decoder");
-
-  return gst_element_register (plugin, "musepackdec",
-      GST_RANK_PRIMARY, GST_TYPE_MUSEPACK_DEC);
+  return GST_ELEMENT_REGISTER (musepackdec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

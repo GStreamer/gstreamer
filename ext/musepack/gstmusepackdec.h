@@ -61,6 +61,8 @@ typedef struct _GstMusepackDecClass {
 
 GType gst_musepackdec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (musepackdec);
+
 G_END_DECLS
 
 #endif /* __GST_MUSEPACK_DEC_H__ */
