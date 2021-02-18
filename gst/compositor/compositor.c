@@ -1124,6 +1124,7 @@ _draw_background (GstCompositor * comp, GstVideoFrame * outframe,
         const GstVideoFormatInfo *info;
         guint8 *pdata;
         gsize rowsize, plane_stride;
+        gint yoffset;
 
         info = outframe->info.finfo;
         pdata = GST_VIDEO_FRAME_PLANE_DATA (outframe, plane);
@@ -1131,8 +1132,11 @@ _draw_background (GstCompositor * comp, GstVideoFrame * outframe,
         rowsize = GST_VIDEO_FRAME_COMP_WIDTH (outframe, plane)
             * GST_VIDEO_FRAME_COMP_PSTRIDE (outframe, plane);
         height =
-            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, plane, y_end - y_start);
-        pdata += y_start * plane_stride;
+            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, plane, (y_end - y_start));
+
+        yoffset = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, plane, y_start);
+
+        pdata += yoffset * plane_stride;
         for (i = 0; i < height; ++i) {
           memset (pdata, 0, rowsize);
           pdata += plane_stride;
