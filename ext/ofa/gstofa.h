@@ -74,6 +74,8 @@ struct _GstOFAClass
 
 GType gst_ofa_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (ofa);
+
 G_END_DECLS
 
 #endif /* __GST_OFA_H__ */

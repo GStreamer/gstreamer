@@ -42,8 +42,7 @@ enum
   PROP_FINGERPRINT,
 };
 
-#define parent_class gst_ofa_parent_class
-G_DEFINE_TYPE (GstOFA, gst_ofa, GST_TYPE_AUDIO_FILTER);
+
 
 static void gst_ofa_finalize (GObject * object);
 static void gst_ofa_get_property (GObject * object, guint prop_id,
@@ -51,6 +50,11 @@ static void gst_ofa_get_property (GObject * object, guint prop_id,
 static GstFlowReturn gst_ofa_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 static gboolean gst_ofa_sink_event (GstBaseTransform * trans, GstEvent * event);
+static gboolean ofa_element_init (GstPlugin * plugin);
+
+#define parent_class gst_ofa_parent_class
+G_DEFINE_TYPE (GstOFA, gst_ofa, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (ofa, ofa_element_init);
 
 static void
 gst_ofa_finalize (GObject * object)
@@ -249,7 +253,7 @@ gst_ofa_get_property (GObject * object, guint prop_id, GValue * value,
 
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+ofa_element_init (GstPlugin * plugin)
 {
   gboolean ret;
   int major, minor, rev;
@@ -269,6 +273,12 @@ plugin_init (GstPlugin * plugin)
   }
 
   return ret;
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (ofa, plugin);
 }
 
 /* FIXME: someone write a libofa replacement with an LGPL or BSD license */
