@@ -134,6 +134,8 @@ static GstStaticPadTemplate gst_openjpeg_enc_src_template =
 
 #define parent_class gst_openjpeg_enc_parent_class
 G_DEFINE_TYPE (GstOpenJPEGEnc, gst_openjpeg_enc, GST_TYPE_VIDEO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (openjpegenc, "openjpegenc",
+    GST_RANK_PRIMARY, GST_TYPE_OPENJPEG_ENC);
 
 static void
 gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)

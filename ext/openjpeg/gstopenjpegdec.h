@@ -72,6 +72,8 @@ struct _GstOpenJPEGDecClass
 
 GType gst_openjpeg_dec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (openjpegdec);
+
 G_END_DECLS
 
 #endif /* __GST_OPENJPEG_DEC_H__ */

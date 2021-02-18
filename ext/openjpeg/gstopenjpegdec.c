@@ -83,6 +83,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_openjpeg_dec_parent_class
 G_DEFINE_TYPE (GstOpenJPEGDec, gst_openjpeg_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (openjpegdec, "openjpegdec",
+    GST_RANK_PRIMARY, GST_TYPE_OPENJPEG_DEC);
 
 static void
 gst_openjpeg_dec_class_init (GstOpenJPEGDecClass * klass)
