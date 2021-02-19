@@ -56,4 +56,6 @@ struct _GstSbcDecClass {
 
 GType gst_sbc_dec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (sbcdec);
+
 G_END_DECLS

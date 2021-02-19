@@ -48,6 +48,8 @@ GST_DEBUG_CATEGORY_STATIC (sbc_dec_debug);
 
 #define parent_class gst_sbc_dec_parent_class
 G_DEFINE_TYPE (GstSbcDec, gst_sbc_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (sbcdec, "sbcdec", GST_RANK_PRIMARY,
+    GST_TYPE_SBC_DEC);
 
 static GstStaticPadTemplate sbc_dec_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,

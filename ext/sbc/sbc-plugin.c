@@ -24,14 +24,15 @@
 #include "gstsbcdec.h"
 #include "gstsbcenc.h"
 
-#include <string.h>
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "sbcdec", GST_RANK_PRIMARY, GST_TYPE_SBC_DEC);
-  gst_element_register (plugin, "sbcenc", GST_RANK_NONE, GST_TYPE_SBC_ENC);
-  return TRUE;
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (sbcdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (sbcenc, plugin);
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -58,4 +58,6 @@ struct _GstSbcEncClass {
 
 GType gst_sbc_enc_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (sbcenc);
+
 G_END_DECLS
