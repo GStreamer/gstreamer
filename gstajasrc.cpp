@@ -498,16 +498,11 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     if (::NTV2DeviceHasBiDirectionalSDI(self->device_id))
       self->device->device->SetSDITransmitEnable(self->channel, false);
 
-    self->device->device->SetEnableVANCData(false, false, self->channel);
-
-    CNTV2SignalRouter router;
-
-    self->device->device->GetRouting(router);
-
     // Always use the framebuffer associated with the channel
     NTV2InputCrosspointID framebuffer_id =
         ::GetFrameBufferInputXptFromChannel(self->channel, false);
 
+    NTV2VANCMode vanc_mode;
     NTV2InputSource input_source;
     NTV2OutputCrosspointID input_source_id;
     switch (self->input_source) {
@@ -515,58 +510,74 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
         input_source = ::NTV2ChannelToInputSource(self->channel);
         input_source_id =
             ::GetSDIInputOutputXptFromChannel(self->channel, false);
+        vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
+                        ? ::NTV2_VANCMODE_OFF
+                        : ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_ANALOG1:
         input_source = ::NTV2_INPUTSOURCE_ANALOG1;
         input_source_id = ::NTV2_XptAnalogIn;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_HDMI1:
         input_source = ::NTV2_INPUTSOURCE_HDMI1;
         input_source_id = ::NTV2_XptHDMIIn1;
+        vanc_mode = ::NTV2_VANCMODE_OFF;
         break;
       case GST_AJA_INPUT_SOURCE_HDMI2:
         input_source = ::NTV2_INPUTSOURCE_HDMI2;
         input_source_id = ::NTV2_XptHDMIIn2;
+        vanc_mode = ::NTV2_VANCMODE_OFF;
         break;
       case GST_AJA_INPUT_SOURCE_HDMI3:
         input_source = ::NTV2_INPUTSOURCE_HDMI3;
         input_source_id = ::NTV2_XptHDMIIn3;
+        vanc_mode = ::NTV2_VANCMODE_OFF;
         break;
       case GST_AJA_INPUT_SOURCE_HDMI4:
         input_source = ::NTV2_INPUTSOURCE_HDMI4;
         input_source_id = ::NTV2_XptHDMIIn4;
+        vanc_mode = ::NTV2_VANCMODE_OFF;
         break;
       case GST_AJA_INPUT_SOURCE_SDI1:
         input_source = ::NTV2_INPUTSOURCE_SDI1;
         input_source_id = ::NTV2_XptSDIIn1;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI2:
         input_source = ::NTV2_INPUTSOURCE_SDI2;
         input_source_id = ::NTV2_XptSDIIn2;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI3:
         input_source = ::NTV2_INPUTSOURCE_SDI3;
         input_source_id = ::NTV2_XptSDIIn3;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI4:
         input_source = ::NTV2_INPUTSOURCE_SDI4;
         input_source_id = ::NTV2_XptSDIIn4;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI5:
         input_source = ::NTV2_INPUTSOURCE_SDI5;
         input_source_id = ::NTV2_XptSDIIn5;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI6:
         input_source = ::NTV2_INPUTSOURCE_SDI6;
         input_source_id = ::NTV2_XptSDIIn6;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI7:
         input_source = ::NTV2_INPUTSOURCE_SDI7;
         input_source_id = ::NTV2_XptSDIIn7;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       case GST_AJA_INPUT_SOURCE_SDI8:
         input_source = ::NTV2_INPUTSOURCE_SDI8;
         input_source_id = ::NTV2_XptSDIIn8;
+        vanc_mode = ::NTV2_VANCMODE_TALL;
         break;
       default:
         g_assert_not_reached();
@@ -574,6 +585,15 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     }
 
     self->configured_input_source = input_source;
+
+    self->vanc_mode = vanc_mode;
+    self->device->device->SetEnableVANCData(NTV2_IS_VANCMODE_TALL(vanc_mode),
+                                            NTV2_IS_VANCMODE_TALLER(vanc_mode),
+                                            self->channel);
+
+    CNTV2SignalRouter router;
+
+    self->device->device->GetRouting(router);
 
     // Need to remove old routes for the output and framebuffer we're going to
     // use
@@ -748,7 +768,7 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
   }
 
   guint video_buffer_size = ::GetVideoActiveSize(
-      self->video_format, ::NTV2_FBF_10BIT_YCBCR, ::NTV2_VANCMODE_OFF);
+      self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
 
   self->buffer_pool = gst_buffer_pool_new();
   GstStructure *config = gst_buffer_pool_get_config(self->buffer_pool);
@@ -770,19 +790,21 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
 
   guint anc_buffer_size = 8 * 1024;
 
-  self->anc_buffer_pool = gst_buffer_pool_new();
-  config = gst_buffer_pool_get_config(self->anc_buffer_pool);
-  gst_buffer_pool_config_set_params(
-      config, NULL, anc_buffer_size,
-      (self->configured_info.interlace_mode ==
-               GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
-           ? 1
-           : 2) *
-          self->queue_size,
-      0);
-  gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
-  gst_buffer_pool_set_config(self->anc_buffer_pool, config);
-  gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
+  if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+    self->anc_buffer_pool = gst_buffer_pool_new();
+    config = gst_buffer_pool_get_config(self->anc_buffer_pool);
+    gst_buffer_pool_config_set_params(
+        config, NULL, anc_buffer_size,
+        (self->configured_info.interlace_mode ==
+                 GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+             ? 1
+             : 2) *
+            self->queue_size,
+        0);
+    gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
+    gst_buffer_pool_set_config(self->anc_buffer_pool, config);
+    gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
+  }
 
   self->capture_thread = new AJAThread();
   self->capture_thread->Attach(capture_thread_func, self);
@@ -987,6 +1009,7 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   }
 
   item = *(QueueItem *)gst_queue_array_pop_head_struct(self->queue);
+  g_mutex_unlock(&self->queue_lock);
 
   *buffer = item.video_buffer;
   gst_buffer_add_aja_audio_meta(*buffer, item.audio_buffer);
@@ -1044,8 +1067,9 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
     gst_buffer_add_video_time_code_meta(*buffer, &tc);
   }
 
+  AJAAncillaryList anc_packets;
+
   if (item.anc_buffer) {
-    AJAAncillaryList anc_packets;
     GstMapInfo map = GST_MAP_INFO_INIT;
     GstMapInfo map2 = GST_MAP_INFO_INIT;
 
@@ -1056,34 +1080,43 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
     NTV2_POINTER ptr2(map2.data, map2.size);
 
     AJAAncillaryList::SetFromDeviceAncBuffers(ptr1, ptr2, anc_packets);
-    // anc_packets.ParseAllAncillaryData();
-    // std::stringstream os;
-    // anc_packets.Print(os);
-    // GST_ERROR_OBJECT(self, "meh %u %lu\n%s",
-    // anc_packets.CountAncillaryData(),
-    //                 map.size, os.str().c_str());
-
-    if (anc_packets.CountAncillaryDataWithType(AJAAncillaryDataType_Cea708)) {
-      AJAAncillaryData packet =
-          anc_packets.GetAncillaryDataWithType(AJAAncillaryDataType_Cea708);
-
-      if (packet.GetPayloadData() && packet.GetPayloadByteCount() &&
-          AJA_SUCCESS(packet.ParsePayloadData())) {
-        gst_buffer_add_video_caption_meta(
-            *buffer, GST_VIDEO_CAPTION_TYPE_CEA708_CDP, packet.GetPayloadData(),
-            packet.GetPayloadByteCount());
-      }
-    }
-
-    // TODO: Add AFD/Bar meta
 
     if (item.anc_buffer2) gst_buffer_unmap(item.anc_buffer2, &map2);
     gst_buffer_unmap(item.anc_buffer, &map);
+  } else if (self->vanc_mode != ::NTV2_VANCMODE_OFF) {
+    GstMapInfo map;
+
+    NTV2FormatDescriptor format_desc(self->video_format, ::NTV2_FBF_10BIT_YCBCR,
+                                     self->vanc_mode);
+
+    gst_buffer_map(item.video_buffer, &map, GST_MAP_READ);
+    NTV2_POINTER ptr(map.data, map.size);
+    AJAAncillaryList::SetFromVANCData(ptr, format_desc, anc_packets);
+    gst_buffer_unmap(item.video_buffer, &map);
+
+    guint offset =
+        format_desc.RasterLineToByteOffset(format_desc.GetFirstActiveLine());
+    guint size = format_desc.GetVisibleRasterBytes();
+
+    gst_buffer_resize(item.video_buffer, offset, size);
   }
 
   gst_clear_buffer(&item.anc_buffer);
   gst_clear_buffer(&item.anc_buffer2);
-  g_mutex_unlock(&self->queue_lock);
+
+  if (anc_packets.CountAncillaryDataWithType(AJAAncillaryDataType_Cea708)) {
+    AJAAncillaryData packet =
+        anc_packets.GetAncillaryDataWithType(AJAAncillaryDataType_Cea708);
+
+    if (packet.GetPayloadData() && packet.GetPayloadByteCount() &&
+        AJA_SUCCESS(packet.ParsePayloadData())) {
+      gst_buffer_add_video_caption_meta(
+          *buffer, GST_VIDEO_CAPTION_TYPE_CEA708_CDP, packet.GetPayloadData(),
+          packet.GetPayloadByteCount());
+    }
+  }
+
+  // TODO: Add AFD/Bar meta
 
   if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self))) {
     gst_base_src_set_caps(GST_BASE_SRC_CAST(self), self->configured_caps);
@@ -1146,7 +1179,10 @@ restart:
     self->device->device->SubscribeInputVerticalEvent(self->channel);
     if (!self->device->device->AutoCirculateInitForInput(
             self->channel, self->queue_size / 2, self->audio_system,
-            AUTOCIRCULATE_WITH_RP188 | AUTOCIRCULATE_WITH_ANC, 1)) {
+            AUTOCIRCULATE_WITH_RP188 |
+                (self->vanc_mode == ::NTV2_VANCMODE_OFF ? AUTOCIRCULATE_WITH_ANC
+                                                        : 0),
+            1)) {
       GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
                         ("Failed to initialize autocirculate"));
       goto out;
@@ -1268,31 +1304,33 @@ restart:
         break;
       }
 
-      if (gst_buffer_pool_acquire_buffer(self->anc_buffer_pool, &anc_buffer,
-                                         NULL) != GST_FLOW_OK) {
-        gst_buffer_unref(audio_buffer);
-        gst_buffer_unref(video_buffer);
-        GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
-                          ("Failed to acquire anc buffer"));
-        break;
-      }
-
-      if (self->configured_info.interlace_mode !=
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
-        if (gst_buffer_pool_acquire_buffer(self->anc_buffer_pool, &anc_buffer2,
+      if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+        if (gst_buffer_pool_acquire_buffer(self->anc_buffer_pool, &anc_buffer,
                                            NULL) != GST_FLOW_OK) {
-          gst_buffer_unref(anc_buffer);
           gst_buffer_unref(audio_buffer);
           gst_buffer_unref(video_buffer);
           GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
                             ("Failed to acquire anc buffer"));
           break;
         }
+
+        if (self->configured_info.interlace_mode !=
+            GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+          if (gst_buffer_pool_acquire_buffer(
+                  self->anc_buffer_pool, &anc_buffer2, NULL) != GST_FLOW_OK) {
+            gst_buffer_unref(anc_buffer);
+            gst_buffer_unref(audio_buffer);
+            gst_buffer_unref(video_buffer);
+            GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                              ("Failed to acquire anc buffer"));
+            break;
+          }
+        }
       }
 
       gst_buffer_map(video_buffer, &video_map, GST_MAP_READWRITE);
       gst_buffer_map(audio_buffer, &audio_map, GST_MAP_READWRITE);
-      gst_buffer_map(anc_buffer, &anc_map, GST_MAP_READWRITE);
+      if (anc_buffer) gst_buffer_map(anc_buffer, &anc_map, GST_MAP_READWRITE);
       if (anc_buffer2)
         gst_buffer_map(anc_buffer2, &anc_map2, GST_MAP_READWRITE);
 
@@ -1313,7 +1351,7 @@ restart:
       }
 
       if (anc_buffer2) gst_buffer_unmap(anc_buffer2, &anc_map2);
-      gst_buffer_unmap(anc_buffer, &anc_map);
+      if (anc_buffer) gst_buffer_unmap(anc_buffer, &anc_map);
       gst_buffer_unmap(audio_buffer, &audio_map);
       gst_buffer_unmap(video_buffer, &video_map);
 
@@ -1328,7 +1366,9 @@ restart:
       }
 
       gst_buffer_set_size(audio_buffer, transfer.GetCapturedAudioByteCount());
-      gst_buffer_set_size(anc_buffer, transfer.GetCapturedAncByteCount(false));
+      if (anc_buffer)
+        gst_buffer_set_size(anc_buffer,
+                            transfer.GetCapturedAncByteCount(false));
       if (anc_buffer2)
         gst_buffer_set_size(anc_buffer2,
                             transfer.GetCapturedAncByteCount(true));
