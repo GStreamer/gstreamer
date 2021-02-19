@@ -79,7 +79,7 @@ struct _GstMssDemuxClass {
 };
 
 GType gst_mss_demux_get_type (void);
-
+GST_ELEMENT_REGISTER_DECLARE (mssdemux);
 G_END_DECLS
 
 #endif /* __GST_MSSDEMUX_H__ */
