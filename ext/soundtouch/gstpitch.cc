@@ -118,6 +118,8 @@ static gboolean gst_pitch_src_query (GstPad * pad, GstObject * parent,
 
 #define gst_pitch_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstPitch, gst_pitch, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (pitch, "pitch", GST_RANK_NONE,
+    GST_TYPE_PITCH);
 
 static void
 gst_pitch_class_init (GstPitchClass * klass)

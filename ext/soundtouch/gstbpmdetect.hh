@@ -51,6 +51,7 @@ struct _GstBPMDetectClass {
 };
 
 GType gst_bpm_detect_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (bpmdetect);
 
 
 G_END_DECLS

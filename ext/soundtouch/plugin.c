@@ -28,9 +28,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "pitch", GST_RANK_NONE, GST_TYPE_PITCH)
-      && gst_element_register (plugin, "bpmdetect", GST_RANK_NONE,
-      GST_TYPE_BPM_DETECT);
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (pitch, plugin);
+  ret |= GST_ELEMENT_REGISTER (bpmdetect, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
