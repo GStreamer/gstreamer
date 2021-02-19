@@ -369,6 +369,11 @@
                         "return-type": "GstFlowReturn",
                         "when": "last"
                     },
+                    "new-serialized-event": {
+                        "args": [],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    },
                     "pull-preroll": {
                         "action": true,
                         "args": [],
@@ -379,6 +384,17 @@
                         "action": true,
                         "args": [],
                         "return-type": "GstSample",
+                        "when": "last"
+                    },
+                    "try-pull-object": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint64"
+                            }
+                        ],
+                        "return-type": "GstMiniObject",
                         "when": "last"
                     },
                     "try-pull-preroll": {

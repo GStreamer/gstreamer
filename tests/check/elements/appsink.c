@@ -714,6 +714,197 @@ GST_START_TEST (test_pull_sample_refcounts)
 
 GST_END_TEST;
 
+static gboolean
+new_event_cb (GstAppSink * appsink, gpointer callback_data)
+{
+  guint *new_event_count = callback_data;
+  *new_event_count += 1;
+  return TRUE;
+}
+
+/* Verifies that the event callback is called */
+GST_START_TEST (test_event_callback)
+{
+  GstElement *sink;
+  GstPad *sinkpad;
+  GstBuffer *buffer;
+  guint new_event_count;
+  GstAppSinkCallbacks callbacks = { NULL };
+  GstMiniObject *object;
+  GstAppSink *app_sink;
+
+  sink = setup_appsink ();
+  app_sink = GST_APP_SINK (sink);
+
+  callbacks.new_event = new_event_cb;
+
+  gst_app_sink_set_callbacks (app_sink, &callbacks, &new_event_count, NULL);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  /* push a buffer so pending events are pushed */
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* flush pending events from the queue */
+  while ((object = gst_app_sink_try_pull_object (app_sink, 0)))
+    gst_mini_object_unref (object);
+  new_event_count = 0;
+
+  /* push a buffer */
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* push custom event */
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  fail_unless (sinkpad);
+  fail_unless (gst_pad_send_event (sinkpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new ("custom", NULL, NULL))));
+  fail_unless_equals_int (new_event_count, 1);
+  gst_object_unref (sinkpad);
+
+  /* push a second buffer */
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* check if the samples and events are pulled in the right order */
+  object = gst_app_sink_pull_object (app_sink);
+  fail_unless (GST_IS_SAMPLE (object));
+  gst_mini_object_unref (object);
+
+  object = gst_app_sink_pull_object (app_sink);
+  fail_unless (GST_IS_EVENT (object));
+  fail_unless_equals_int (GST_EVENT_TYPE (object), GST_EVENT_CUSTOM_DOWNSTREAM);
+  gst_mini_object_unref (object);
+
+  object = gst_app_sink_pull_object (app_sink);
+  fail_unless (GST_IS_SAMPLE (object));
+  gst_mini_object_unref (object);
+
+  GST_DEBUG ("cleaning up appsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_event_signals)
+{
+  GstElement *sink;
+  GstPad *sinkpad;
+  GstBuffer *buffer;
+  GstMiniObject *object;
+  GstAppSink *app_sink;
+  guint new_event_count = 0;
+
+  sink = setup_appsink ();
+  app_sink = GST_APP_SINK (sink);
+
+  g_object_set (sink, "emit-signals", TRUE, NULL);
+
+  g_signal_connect (sink, "new-serialized-event", G_CALLBACK (new_event_cb),
+      &new_event_count);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  /* push a buffer so pending events are pushed */
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* flush pending events from the queue */
+  while ((object = gst_app_sink_try_pull_object (app_sink, 0)))
+    gst_mini_object_unref (object);
+  new_event_count = 0;
+
+  /* push a buffer */
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* push custom event */
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  fail_unless (sinkpad);
+  fail_unless (gst_pad_send_event (sinkpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new ("custom", NULL, NULL))));
+  fail_unless_equals_int (new_event_count, 1);
+  gst_object_unref (sinkpad);
+
+  /* push a second buffer */
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* check if the buffers and events are pulled in the right order */
+  g_signal_emit_by_name (sink, "try-pull-object", GST_CLOCK_TIME_NONE, &object);
+  fail_unless (GST_IS_SAMPLE (object));
+  gst_mini_object_unref (object);
+
+  g_signal_emit_by_name (sink, "try-pull-object", GST_CLOCK_TIME_NONE, &object);
+  fail_unless (GST_IS_EVENT (object));
+  fail_unless_equals_int (GST_EVENT_TYPE (object), GST_EVENT_CUSTOM_DOWNSTREAM);
+  gst_mini_object_unref (object);
+
+  g_signal_emit_by_name (sink, "try-pull-object", GST_CLOCK_TIME_NONE, &object);
+  fail_unless (GST_IS_SAMPLE (object));
+  gst_mini_object_unref (object);
+
+  GST_DEBUG ("cleaning up appsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+
+}
+
+GST_END_TEST;
+
+/* try pulling events when appsink is in PAUSED */
+GST_START_TEST (test_event_paused)
+{
+  GstElement *sink;
+  guint new_event_count = 0;
+  GstAppSinkCallbacks callbacks = { NULL };
+  GstMiniObject *object;
+  GstAppSink *app_sink;
+  GstCaps *caps;
+
+  sink = setup_appsink ();
+  app_sink = GST_APP_SINK (sink);
+
+  callbacks.new_event = new_event_cb;
+
+  gst_app_sink_set_callbacks (app_sink, &callbacks, &new_event_count, NULL);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PAUSED, GST_STATE_CHANGE_ASYNC);
+
+  /* push a couple of events while in PAUSED */
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  caps = gst_caps_new_simple ("audio/x-raw", NULL, NULL);
+  gst_pad_push_event (mysrcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  fail_unless_equals_int (new_event_count, 2);
+
+  /* check pulled events */
+  object = gst_app_sink_pull_object (app_sink);
+  fail_unless (GST_IS_EVENT (object));
+  fail_unless_equals_int (GST_EVENT_TYPE (object), GST_EVENT_STREAM_START);
+  gst_mini_object_unref (object);
+
+  object = gst_app_sink_pull_object (app_sink);
+  fail_unless (GST_IS_EVENT (object));
+  fail_unless_equals_int (GST_EVENT_TYPE (object), GST_EVENT_CAPS);
+  gst_mini_object_unref (object);
+
+  object = gst_app_sink_try_pull_object (app_sink, 0);
+  fail_if (object);
+
+  GST_DEBUG ("cleaning up appsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -735,7 +926,9 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_pull_preroll);
   tcase_add_test (tc_chain, test_do_not_care_preroll);
   tcase_add_test (tc_chain, test_pull_sample_refcounts);
-
+  tcase_add_test (tc_chain, test_event_callback);
+  tcase_add_test (tc_chain, test_event_signals);
+  tcase_add_test (tc_chain, test_event_paused);
   return s;
 }
 
