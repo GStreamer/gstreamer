@@ -35,12 +35,13 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "sctpenc", GST_RANK_NONE,
-      GST_TYPE_SCTP_ENC)
-      && gst_element_register (plugin, "sctpdec", GST_RANK_NONE,
-      GST_TYPE_SCTP_DEC);
-}
+  gboolean ret = FALSE;
 
+  ret |= GST_ELEMENT_REGISTER (sctpenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (sctpdec, plugin);
+
+  return ret;
+}
 
 #ifndef PACKAGE
 #define PACKAGE "sctp"

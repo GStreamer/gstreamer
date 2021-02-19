@@ -72,6 +72,7 @@ struct _GstSctpEncClass
 };
 
 GType gst_sctp_enc_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (sctpenc);
 
 G_END_DECLS
 
