@@ -105,6 +105,9 @@ struct _GstVaVpp
   GstBufferPool *sinkpad_pool;
   GstVideoInfo sinkpad_info;
 
+  GstBufferPool *other_pool;
+  GstVideoInfo srcpad_info;
+
   guint op_flags;
 
   /* filters */
@@ -167,6 +170,11 @@ gst_va_vpp_dispose (GObject * object)
   if (self->sinkpad_pool) {
     gst_buffer_pool_set_active (self->sinkpad_pool, FALSE);
     gst_clear_object (&self->sinkpad_pool);
+  }
+
+  if (self->other_pool) {
+    gst_buffer_pool_set_active (self->other_pool, FALSE);
+    gst_clear_object (&self->other_pool);
   }
 
   gst_clear_caps (&self->incaps);
@@ -520,6 +528,25 @@ config_failed:
   }
 }
 
+static GstBufferPool *
+_create_other_pool (GstAllocator * allocator,
+    GstAllocationParams * params, GstCaps * caps, guint size)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+
+  pool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+  gst_buffer_pool_config_set_allocator (config, allocator, params);
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    gst_clear_object (&pool);
+  }
+
+  return pool;
+}
+
 /* configure the allocation query that was answered downstream, we can
  * configure some properties on it. Only called when not in
  * passthrough mode. */
@@ -527,33 +554,44 @@ static gboolean
 gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params;
-  GstBufferPool *pool = NULL;
+  GstAllocator *allocator = NULL, *other_allocator = NULL;
+  GstAllocationParams params, other_params;
+  GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *outcaps = NULL;
   GstStructure *config;
   guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
-  gboolean update_pool, update_allocator;
+  gboolean update_pool, update_allocator, has_videometa, copy_frames;
+  GstVideoInfo alloc_info;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
+  gst_allocation_params_init (&other_params);
+  gst_allocation_params_init (&params);
+
   if (gst_query_get_n_allocation_params (query) > 0) {
-    gst_query_parse_nth_allocation_param (query, 0, &allocator, NULL);
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &other_params);
     if (allocator && !(GST_IS_VA_DMABUF_ALLOCATOR (allocator)
-            || GST_IS_VA_ALLOCATOR (allocator)))
-      gst_clear_object (&allocator);
+            || GST_IS_VA_ALLOCATOR (allocator))) {
+      /* save the allocator for the other pool */
+      other_allocator = allocator;
+      allocator = NULL;
+    }
     update_allocator = TRUE;
   } else {
     update_allocator = FALSE;
   }
 
-  gst_allocation_params_init (&params);
-
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
-    if (pool && !GST_IS_VA_POOL (pool))
-      gst_clear_object (&pool);
+    if (pool) {
+      if (!GST_IS_VA_POOL (pool)) {
+        GST_DEBUG_OBJECT (self,
+            "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
+        other_pool = pool;
+        pool = NULL;
+      }
+    }
 
     update_pool = TRUE;
   } else {
@@ -565,6 +603,9 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     min = max = 0;
     update_pool = FALSE;
   }
+
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
 
   if (!allocator) {
     if (!(allocator = _create_allocator (self, outcaps, usage_hint)))
@@ -586,10 +627,34 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   else
     gst_query_add_allocation_param (query, allocator, &params);
 
+  alloc_info = self->out_info;
+  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
+    gst_va_dmabuf_allocator_get_format (allocator, &alloc_info, NULL);
+  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
+    gst_va_allocator_get_format (allocator, &alloc_info, NULL);
+  }
+  self->srcpad_info = alloc_info;
+
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  copy_frames = (!has_videometa && gst_va_pool_requires_video_meta (pool)
+      && gst_caps_is_raw (outcaps));
+  if (copy_frames) {
+    if (other_pool) {
+      gst_object_replace ((GstObject **) & self->other_pool,
+          (GstObject *) other_pool);
+    } else {
+      self->other_pool =
+          _create_other_pool (other_allocator, &other_params, outcaps, size);
+    }
+    GST_DEBUG_OBJECT (self, "Use the other pool for copy %" GST_PTR_FORMAT,
+        self->other_pool);
+  } else {
+    gst_clear_object (&self->other_pool);
+  }
 
   GST_DEBUG_OBJECT (self,
       "decided pool %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
@@ -597,6 +662,8 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   gst_object_unref (allocator);
   gst_object_unref (pool);
+  gst_clear_object (&other_allocator);
+  gst_clear_object (&other_pool);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
@@ -682,6 +749,11 @@ gst_va_vpp_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (self->sinkpad_pool) {
     gst_buffer_pool_set_active (self->sinkpad_pool, FALSE);
     gst_clear_object (&self->sinkpad_pool);
+  }
+
+  if (self->other_pool) {
+    gst_buffer_pool_set_active (self->other_pool, FALSE);
+    gst_clear_object (&self->other_pool);
   }
 
   gst_caps_replace (&self->incaps, incaps);
@@ -2105,6 +2177,64 @@ gst_va_vpp_sink_event (GstBaseTransform * trans, GstEvent * event)
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
+static GstFlowReturn
+gst_va_vpp_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
+{
+  GstVaVpp *self = GST_VA_VPP (trans);
+  GstVideoFrame src_frame;
+  GstVideoFrame dest_frame;
+  GstBuffer *buffer = NULL;
+  GstFlowReturn ret;
+
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
+      outbuf);
+
+  if (ret != GST_FLOW_OK || *outbuf == NULL)
+    return ret;
+
+  if (!self->other_pool)
+    return GST_FLOW_OK;
+
+  /* Now need to copy the output buffer */
+  ret = GST_FLOW_ERROR;
+
+  if (!gst_buffer_pool_set_active (self->other_pool, TRUE)) {
+    GST_WARNING_OBJECT (self, "failed to active the other pool %"
+        GST_PTR_FORMAT, self->other_pool);
+    goto out;
+  }
+
+  ret = gst_buffer_pool_acquire_buffer (self->other_pool, &buffer, NULL);
+  if (ret != GST_FLOW_OK)
+    goto out;
+
+  if (!gst_video_frame_map (&src_frame, &self->srcpad_info, *outbuf,
+          GST_MAP_READ))
+    goto out;
+
+  if (!gst_video_frame_map (&dest_frame, &self->out_info, buffer,
+          GST_MAP_WRITE)) {
+    gst_video_frame_unmap (&src_frame);
+    goto out;
+  }
+
+  if (!gst_video_frame_copy (&dest_frame, &src_frame)) {
+    gst_video_frame_unmap (&src_frame);
+    gst_video_frame_unmap (&dest_frame);
+    goto out;
+  }
+
+  gst_video_frame_unmap (&src_frame);
+  gst_video_frame_unmap (&dest_frame);
+
+  gst_buffer_replace (outbuf, buffer);
+  ret = GST_FLOW_OK;
+
+out:
+  gst_clear_buffer (&buffer);
+  return ret;
+}
+
 static void
 gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
 {
@@ -2183,6 +2313,7 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   trans_class->filter_meta = GST_DEBUG_FUNCPTR (gst_va_vpp_filter_meta);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_va_vpp_src_event);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_va_vpp_sink_event);
+  trans_class->generate_output = GST_DEBUG_FUNCPTR (gst_va_vpp_generate_output);
 
   trans_class->transform_ip_on_passthrough = FALSE;
 
