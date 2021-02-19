@@ -1,5 +1,6 @@
 rtmp_sources = [
   'gstrtmp.c',
+  'gstrtmpelement.c',
   'gstrtmpsink.c',
   'gstrtmpsrc.c',
 ]

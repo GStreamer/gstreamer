@@ -45,6 +45,7 @@
 
 #include <gst/gst-i18n-plugin.h>
 
+#include "gstrtmpelements.h"
 #include "gstrtmpsrc.h"
 
 #include <stdio.h>
@@ -104,6 +105,8 @@ static gboolean gst_rtmp_src_query (GstBaseSrc * src, GstQuery * query);
 G_DEFINE_TYPE_WITH_CODE (GstRTMPSrc, gst_rtmp_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_rtmp_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtmpsrc, "rtmpsrc", GST_RANK_PRIMARY,
+    GST_TYPE_RTMP_SRC, rtmp_element_init (plugin));
 
 static void
 gst_rtmp_src_class_init (GstRTMPSrcClass * klass)

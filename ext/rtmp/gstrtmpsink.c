@@ -41,6 +41,7 @@
 
 #include <gst/gst.h>
 
+#include "gstrtmpelements.h"
 #include "gstrtmpsink.h"
 
 #ifdef G_OS_WIN32
@@ -83,6 +84,8 @@ static GstFlowReturn gst_rtmp_sink_render (GstBaseSink * sink, GstBuffer * buf);
 G_DEFINE_TYPE_WITH_CODE (GstRTMPSink, gst_rtmp_sink, GST_TYPE_BASE_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_rtmp_sink_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtmpsink, "rtmpsink", GST_RANK_PRIMARY,
+    GST_TYPE_RTMP_SINK, rtmp_element_init (plugin));
 
 /* initialize the plugin's class */
 static void

@@ -31,87 +31,15 @@
 
 #include <gst/gst.h>
 
-#include "gstrtmpsrc.h"
-#include "gstrtmpsink.h"
-
-#ifndef GST_DISABLE_GST_DEBUG
-GST_DEBUG_CATEGORY_STATIC (rtmp_debug);
-
-static void
-gst_rtmp_log_callback (int level, const gchar * fmt, va_list vl)
-{
-  GstDebugLevel gst_level;
-
-  switch (level) {
-    case RTMP_LOGCRIT:
-    case RTMP_LOGERROR:
-      gst_level = GST_LEVEL_ERROR;
-      break;
-    case RTMP_LOGWARNING:
-      gst_level = GST_LEVEL_WARNING;
-      break;
-    case RTMP_LOGINFO:
-      gst_level = GST_LEVEL_INFO;
-      break;
-    case RTMP_LOGDEBUG:
-      gst_level = GST_LEVEL_DEBUG;
-      break;
-    case RTMP_LOGDEBUG2:
-      gst_level = GST_LEVEL_LOG;
-      break;
-    default:
-      gst_level = GST_LEVEL_TRACE;
-      break;
-  }
-
-  gst_debug_log_valist (rtmp_debug, gst_level, "", "", 0, NULL, fmt, vl);
-}
-
-static void
-_set_debug_level (void)
-{
-  GstDebugLevel gst_level;
-
-  RTMP_LogSetCallback (gst_rtmp_log_callback);
-  gst_level = gst_debug_category_get_threshold (rtmp_debug);
-
-  switch (gst_level) {
-    case GST_LEVEL_ERROR:
-      RTMP_LogSetLevel (RTMP_LOGERROR);
-      break;
-    case GST_LEVEL_WARNING:
-    case GST_LEVEL_FIXME:
-      RTMP_LogSetLevel (RTMP_LOGWARNING);
-      break;
-    case GST_LEVEL_INFO:
-      RTMP_LogSetLevel (RTMP_LOGINFO);
-      break;
-    case GST_LEVEL_DEBUG:
-      RTMP_LogSetLevel (RTMP_LOGDEBUG);
-      break;
-    case GST_LEVEL_LOG:
-      RTMP_LogSetLevel (RTMP_LOGDEBUG2);
-      break;
-    default:                   /* _TRACE and beyond */
-      RTMP_LogSetLevel (RTMP_LOGALL);
-  }
-}
-#endif
+#include "gstrtmpelements.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
 
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_DEBUG_CATEGORY_INIT (rtmp_debug, "rtmp", 0, "libRTMP logging");
-  _set_debug_level ();
-#endif
-
-  ret = gst_element_register (plugin, "rtmpsrc", GST_RANK_PRIMARY,
-      GST_TYPE_RTMP_SRC);
-  ret &= gst_element_register (plugin, "rtmpsink", GST_RANK_PRIMARY,
-      GST_TYPE_RTMP_SINK);
+  ret |= GST_ELEMENT_REGISTER (rtmpsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtmpsink, plugin);
 
   return ret;
 }

@@ -64,6 +64,7 @@ struct _GstRTMPSinkClass {
 
 GType gst_rtmp_sink_get_type (void);
 
+
 G_END_DECLS
 
 #endif /* __GST_RTMP_SINK_H__ */
