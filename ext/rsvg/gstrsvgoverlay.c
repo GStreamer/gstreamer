@@ -123,6 +123,8 @@ static GstStaticPadTemplate data_sink_template =
 
 #define gst_rsv_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstRsvgOverlay, gst_rsvg_overlay, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (rsvgoverlay, "rsvgoverlay", GST_RANK_NONE,
+    GST_TYPE_RSVG_OVERLAY);
 
 static void gst_rsvg_overlay_finalize (GObject * object);
 

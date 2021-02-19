@@ -59,6 +59,8 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 
 #define gst_rsv_dec_parent_class parent_class
 G_DEFINE_TYPE (GstRsvgDec, gst_rsvg_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (rsvgdec, "rsvgdec", GST_RANK_PRIMARY,
+    GST_TYPE_RSVG_DEC);
 
 static gboolean gst_rsvg_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_rsvg_dec_set_format (GstVideoDecoder * decoder,

@@ -70,6 +70,7 @@ struct _GstRsvgDecClass
 };
 
 GType gst_rsvg_dec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (rsvgdec);
 
 G_END_DECLS
 

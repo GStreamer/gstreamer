@@ -29,11 +29,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return (gst_element_register (plugin, "rsvgoverlay",
-          GST_RANK_NONE, GST_TYPE_RSVG_OVERLAY)
-      &&
-      gst_element_register (plugin, "rsvgdec", GST_RANK_PRIMARY,
-          GST_TYPE_RSVG_DEC));
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (rsvgoverlay, plugin);
+  ret |= GST_ELEMENT_REGISTER (rsvgdec, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
