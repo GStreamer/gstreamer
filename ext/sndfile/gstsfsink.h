@@ -66,6 +66,11 @@ struct _GstSFSinkClass {
   GstBaseSinkClass parent_class;
 };
 
+#define GST_TYPE_SF_MAJOR_TYPES (gst_sf_major_types_get_type())
+#define GST_TYPE_SF_MINOR_TYPES (gst_sf_minor_types_get_type())
+
+GType gst_sf_major_types_get_type (void);
+GType gst_sf_minor_types_get_type (void);
 
 G_END_DECLS
 

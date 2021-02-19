@@ -18,27 +18,21 @@
  */
 
 
-#ifndef __GST_SFSINK_H__
-#define __GST_SFSINK_H__
+#ifndef __GST_SFELEMENTS_H__
+#define __GST_SFELEMENTS_H__
 
 
 #include <gst/gst.h>
 #include <sndfile.h>
 
-
 G_BEGIN_DECLS
 
 GstCaps *gst_sf_create_audio_template_caps (void);
+void sf_element_init(GstPlugin * plugin);
 
-#define GST_TYPE_SF_MAJOR_TYPES (gst_sf_major_types_get_type())
-#define GST_TYPE_SF_MINOR_TYPES (gst_sf_minor_types_get_type())
-
-GType gst_sf_major_types_get_type (void);
-GType gst_sf_minor_types_get_type (void);
-
-GType gst_sf_dec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (sfdec);
 
 G_END_DECLS
 
 
-#endif /* __GST_SFSINK_H__ */
+#endif /* __GST_SFELEMENTS_H__ */
