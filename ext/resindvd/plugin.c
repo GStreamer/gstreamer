@@ -25,32 +25,12 @@
 
 #include "resindvdbin.h"
 #include "gstmpegdemux.h"
-#include <gst/gst-i18n-plugin.h>
 
-GST_DEBUG_CATEGORY (resindvd_debug);
-#define GST_CAT_DEFAULT resindvd_debug
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean result = TRUE;
-
-  GST_DEBUG_CATEGORY_INIT (resindvd_debug, "resindvd",
-      0, "DVD playback elements from resindvd");
-
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif
-
-  result &= gst_element_register (plugin, "rsndvdbin",
-      GST_RANK_PRIMARY, RESIN_TYPE_DVDBIN);
-
-  result &= gst_flups_demux_plugin_init (plugin);
-
-  return result;
+  return GST_ELEMENT_REGISTER (rsndvdbin, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

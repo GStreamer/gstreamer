@@ -28,6 +28,7 @@
 #include <gst/pbutils/missing-plugins.h>
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include "resindvdbin.h"
 #include "resindvdsrc.h"
@@ -84,10 +85,12 @@ GST_STATIC_PAD_TEMPLATE ("subpicture",
 
 static void rsn_dvdbin_finalize (GObject * object);
 static void rsn_dvdbin_uri_handler_init (gpointer g_iface, gpointer iface_data);
+static gboolean rsndvdbin_element_init (GstPlugin * plugin);
 
 #define rsn_dvdbin_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (RsnDvdBin, rsn_dvdbin, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, rsn_dvdbin_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (rsndvdbin, rsndvdbin_element_init);
 
 static void demux_pad_added (GstElement * element, GstPad * pad,
     RsnDvdBin * dvdbin);
@@ -99,6 +102,10 @@ static void rsn_dvdbin_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn rsn_dvdbin_change_state (GstElement * element,
     GstStateChange transition);
 static void rsn_dvdbin_no_more_pads (RsnDvdBin * dvdbin);
+
+
+GST_DEBUG_CATEGORY (resindvd_debug);
+#define GST_CAT_DEFAULT resindvd_debug
 
 static void
 rsn_dvdbin_class_init (RsnDvdBinClass * klass)
@@ -1028,4 +1035,27 @@ rsn_dvdbin_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static gboolean
+rsndvdbin_element_init (GstPlugin * plugin)
+{
+  gboolean result = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (resindvd_debug, "resindvd",
+      0, "DVD playback elements from resindvd");
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif
+
+  result &= gst_element_register (plugin, "rsndvdbin",
+      GST_RANK_PRIMARY, RESIN_TYPE_DVDBIN);
+
+  result &= gst_flups_demux_plugin_init (plugin);
+
+  return result;
 }

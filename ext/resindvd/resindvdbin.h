@@ -86,6 +86,8 @@ struct _RsnDvdBinClass
 
 GType rsn_dvdbin_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (rsndvdbin);
+
 G_END_DECLS
 
 #endif /* __RESINDVDBIN_H__ */
