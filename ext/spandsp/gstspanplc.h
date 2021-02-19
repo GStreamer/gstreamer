@@ -59,6 +59,7 @@ struct _GstSpanPlcClass
 };
 
 GType gst_span_plc_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (spanplc);
 
 G_END_DECLS
 

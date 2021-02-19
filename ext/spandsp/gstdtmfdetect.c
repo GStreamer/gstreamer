@@ -93,6 +93,8 @@ static gboolean gst_dtmf_detect_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 
 G_DEFINE_TYPE (GstDtmfDetect, gst_dtmf_detect, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (dtmfdetect, "dtmfdetect",
+    GST_RANK_MARGINAL, GST_TYPE_DTMF_DETECT);
 
 static void
 gst_dtmf_detect_class_init (GstDtmfDetectClass * klass)
@@ -277,12 +279,4 @@ gst_dtmf_detect_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   return GST_BASE_TRANSFORM_CLASS (gst_dtmf_detect_parent_class)->sink_event
       (trans, event);
-}
-
-
-gboolean
-gst_dtmf_detect_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "dtmfdetect",
-      GST_RANK_MARGINAL, GST_TYPE_DTMF_DETECT);
 }

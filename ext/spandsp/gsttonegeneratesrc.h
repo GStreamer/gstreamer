@@ -82,7 +82,7 @@ struct _GstToneGenerateSrcClass {
 };
 
 GType gst_tone_generate_src_get_type (void);
-gboolean gst_tone_generate_src_plugin_init (GstPlugin *plugin);
+GST_ELEMENT_REGISTER_DECLARE (tonegeneratesrc);
 
 G_END_DECLS
 

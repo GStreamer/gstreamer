@@ -38,6 +38,8 @@
 #include <gst/audio/audio.h>
 
 G_DEFINE_TYPE (GstSpanPlc, gst_span_plc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (spanplc, "spanplc", GST_RANK_PRIMARY,
+    GST_TYPE_SPAN_PLC);
 
 GST_DEBUG_CATEGORY_STATIC (gst_span_plc_debug);
 #define GST_CAT_DEFAULT gst_span_plc_debug
