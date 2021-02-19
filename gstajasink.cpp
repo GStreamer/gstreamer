@@ -60,7 +60,8 @@ typedef struct {
   QueueItemType type;
 
   // For FRAME
-  GstVideoFrame frame;
+  GstBuffer *video_buffer;
+  GstMapInfo video_map;
   GstBuffer *audio_buffer;
   GstMapInfo audio_map;
   NTV2_RP188 tc;
@@ -402,7 +403,9 @@ static gboolean gst_aja_sink_stop(GstAjaSink *self) {
 
   while ((item = (QueueItem *)gst_queue_array_pop_head_struct(self->queue))) {
     if (item->type == QUEUE_ITEM_TYPE_FRAME) {
-      gst_video_frame_unmap(&item->frame);
+      gst_buffer_unmap(item->video_buffer, &item->video_map);
+      gst_buffer_unref(item->video_buffer);
+
       if (item->audio_buffer) {
         gst_buffer_unmap(item->audio_buffer, &item->audio_map);
         gst_buffer_unref(item->audio_buffer);
@@ -631,19 +634,6 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
   if (::NTV2DeviceHasBiDirectionalSDI(self->device_id))
     self->device->device->SetSDITransmitEnable(self->channel, true);
 
-  const NTV2Standard standard(::GetNTV2StandardFromVideoFormat(video_format));
-  self->device->device->SetSDIOutputStandard(self->channel, standard);
-  const NTV2FrameGeometry geometry =
-      ::GetNTV2FrameGeometryFromVideoFormat(video_format);
-  self->device->device->SetVANCMode(::NTV2_VANCMODE_OFF, standard, geometry,
-                                    self->channel);
-
-  NTV2SmpteLineNumber smpte_line_num_info = ::GetSmpteLineNumber(standard);
-  self->f2_start_line =
-      (smpte_line_num_info.GetLastLine(
-           smpte_line_num_info.firstFieldTop ? NTV2_FIELD0 : NTV2_FIELD1) +
-       1);
-
   if (self->configured_audio_channels) {
     switch (self->audio_system_setting) {
       case GST_AJA_AUDIO_SYSTEM_1:
@@ -699,14 +689,11 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
     self->audio_system = ::NTV2_AUDIOSYSTEM_INVALID;
   }
 
-  CNTV2SignalRouter router;
-
-  self->device->device->GetRouting(router);
-
   // Always use the framebuffer associated with the channel
   NTV2OutputCrosspointID framebuffer_id =
       ::GetFrameBufferOutputXptFromChannel(self->channel, false, false);
 
+  NTV2VANCMode vanc_mode;
   NTV2TCIndex tc_indexes_vitc[2] = {::NTV2_TCINDEX_INVALID,
                                     ::NTV2_TCINDEX_INVALID};
   NTV2TCIndex tc_index_atc_ltc = ::NTV2_TCINDEX_INVALID;
@@ -720,60 +707,73 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
       tc_index_atc_ltc =
           ::NTV2ChannelToTimecodeIndex(self->channel, false, true);
       output_destination_id = ::GetSDIOutputInputXpt(self->channel, false);
+      vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
+                      ? ::NTV2_VANCMODE_OFF
+                      : ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI1:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI1;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI1_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI1_LTC;
       output_destination_id = ::NTV2_XptSDIOut1Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI2:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI2;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI2_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI2_LTC;
       output_destination_id = ::NTV2_XptSDIOut2Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI3:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI3;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI3_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI3_LTC;
       output_destination_id = ::NTV2_XptSDIOut3Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI4:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI4;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI4_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI4_LTC;
       output_destination_id = ::NTV2_XptSDIOut4Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI5:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI5;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI5_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI5_LTC;
       output_destination_id = ::NTV2_XptSDIOut5Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI6:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI6;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI6_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI6_LTC;
       output_destination_id = ::NTV2_XptSDIOut6Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI7:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI7;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI7_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI7_LTC;
       output_destination_id = ::NTV2_XptSDIOut7Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_SDI8:
       tc_indexes_vitc[0] = ::NTV2_TCINDEX_SDI8;
       tc_indexes_vitc[1] = ::NTV2_TCINDEX_SDI8_2;
       tc_index_atc_ltc = ::NTV2_TCINDEX_SDI8_LTC;
       output_destination_id = ::NTV2_XptSDIOut8Input;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_ANALOG:
       output_destination_id = ::NTV2_XptAnalogOutInput;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
       break;
     case GST_AJA_OUTPUT_DESTINATION_HDMI:
       output_destination_id = ::NTV2_XptHDMIOutInput;
+      vanc_mode = ::NTV2_VANCMODE_OFF;
       break;
     default:
       g_assert_not_reached();
@@ -802,6 +802,34 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
       g_assert_not_reached();
       break;
   }
+
+  const NTV2Standard standard(::GetNTV2StandardFromVideoFormat(video_format));
+  self->device->device->SetSDIOutputStandard(self->channel, standard);
+  const NTV2FrameGeometry geometry =
+      ::GetNTV2FrameGeometryFromVideoFormat(video_format);
+
+  self->vanc_mode =
+      ::HasVANCGeometries(geometry) ? vanc_mode : ::NTV2_VANCMODE_OFF;
+  if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+    self->device->device->SetVANCMode(self->vanc_mode, standard, geometry,
+                                      self->channel);
+  } else {
+    const NTV2FrameGeometry vanc_geometry =
+        ::GetVANCFrameGeometry(geometry, self->vanc_mode);
+
+    self->device->device->SetVANCMode(self->vanc_mode, standard, vanc_geometry,
+                                      self->channel);
+  }
+
+  NTV2SmpteLineNumber smpte_line_num_info = ::GetSmpteLineNumber(standard);
+  self->f2_start_line =
+      (smpte_line_num_info.GetLastLine(
+           smpte_line_num_info.firstFieldTop ? NTV2_FIELD0 : NTV2_FIELD1) +
+       1);
+
+  CNTV2SignalRouter router;
+
+  self->device->device->GetRouting(router);
 
   // Need to remove old routes for the output and framebuffer we're going to use
   NTV2ActualConnections connections = router.GetConnections();
@@ -884,7 +912,9 @@ static gboolean gst_aja_sink_event(GstBaseSink *bsink, GstEvent *event) {
       while (
           (item = (QueueItem *)gst_queue_array_pop_head_struct(self->queue))) {
         if (item->type == QUEUE_ITEM_TYPE_FRAME) {
-          gst_video_frame_unmap(&item->frame);
+          gst_buffer_unmap(item->video_buffer, &item->video_map);
+          gst_buffer_unref(item->video_buffer);
+
           if (item->audio_buffer) {
             gst_buffer_unmap(item->audio_buffer, &item->audio_map);
             gst_buffer_unref(item->audio_buffer);
@@ -941,10 +971,8 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
   GstVideoTimeCodeMeta *tc_meta;
   QueueItem item = {
       .type = QUEUE_ITEM_TYPE_FRAME,
-      .frame =
-          {
-              {0},
-          },
+      .video_buffer = NULL,
+      .video_map = GST_MAP_INFO_INIT,
       .audio_buffer = NULL,
       .audio_map = GST_MAP_INFO_INIT,
       .tc = NTV2_RP188(),
@@ -955,15 +983,20 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
   };
 
   guint video_buffer_size = ::GetVideoActiveSize(
-      self->video_format, ::NTV2_FBF_10BIT_YCBCR, ::NTV2_VANCMODE_OFF);
+      self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
+  NTV2FormatDescriptor format_desc(self->video_format, ::NTV2_FBF_10BIT_YCBCR,
+                                   self->vanc_mode);
 
   meta = gst_buffer_get_aja_audio_meta(buffer);
   tc_meta = gst_buffer_get_video_time_code_meta(buffer);
 
-  if (gst_buffer_n_memory(buffer) == 1) {
+  if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
+      gst_buffer_n_memory(buffer) == 1) {
     GstMemory *mem = gst_buffer_peek_memory(buffer, 0);
+    gsize offset;
 
-    if (gst_memory_get_sizes(mem, NULL, NULL) == video_buffer_size &&
+    if (gst_memory_get_sizes(mem, &offset, NULL) == video_buffer_size &&
+        offset == 0 &&
         strcmp(mem->allocator->mem_type, GST_AJA_ALLOCATOR_MEMTYPE) == 0 &&
         GST_AJA_ALLOCATOR(mem->allocator)->device->device->GetIndexNumber() ==
             self->device->device->GetIndexNumber()) {
@@ -1001,17 +1034,23 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
     item.type = QUEUE_ITEM_TYPE_FRAME;
 
-    gst_video_frame_map(&item.frame, &self->configured_info, item_buffer,
-                        GST_MAP_READWRITE);
-    gst_video_frame_copy(&item.frame, &in_frame);
+    item.video_buffer = item_buffer;
+    gst_buffer_map(item.video_buffer, &item.video_map, GST_MAP_WRITE);
+
+    guint offset =
+        format_desc.RasterLineToByteOffset(format_desc.GetFirstActiveLine());
+    guint size = format_desc.GetVisibleRasterBytes();
+
+    if (offset != 0) memset(item.video_map.data, 0, offset);
+    memcpy(item.video_map.data + offset,
+           GST_VIDEO_FRAME_PLANE_DATA(&in_frame, 0), size);
+
     gst_video_frame_unmap(&in_frame);
-    gst_buffer_unref(item_buffer);
   } else {
     item.type = QUEUE_ITEM_TYPE_FRAME;
 
-    gst_video_frame_map(&item.frame, &self->configured_info, item_buffer,
-                        GST_MAP_READ);
-    gst_buffer_unref(item_buffer);
+    item.video_buffer = item_buffer;
+    gst_buffer_map(item.video_buffer, &item.video_map, GST_MAP_READ);
   }
 
   if (meta) {
@@ -1046,7 +1085,8 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
       flow_ret = gst_buffer_pool_acquire_buffer(self->audio_buffer_pool,
                                                 &item_audio_buffer, NULL);
       if (flow_ret != GST_FLOW_OK) {
-        gst_video_frame_unmap(&item.frame);
+        gst_buffer_unmap(item.video_buffer, &item.video_map);
+        gst_buffer_unref(item.video_buffer);
         return flow_ret;
       }
 
@@ -1156,67 +1196,77 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
   }
 
   if (!anc_packet_list.IsEmpty()) {
-    if (!self->anc_buffer_pool) {
-      self->anc_buffer_pool = gst_buffer_pool_new();
-      GstStructure *config = gst_buffer_pool_get_config(self->anc_buffer_pool);
-      gst_buffer_pool_config_set_params(
-          config, NULL, 8 * 1024,
-          (self->configured_info.interlace_mode ==
-                   GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
-               ? 1
-               : 2) *
-              self->queue_size,
-          0);
-      gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
-      gst_buffer_pool_set_config(self->anc_buffer_pool, config);
-      gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
-    }
-
-    flow_ret = gst_buffer_pool_acquire_buffer(self->anc_buffer_pool,
-                                              &item.anc_buffer, NULL);
-    if (flow_ret != GST_FLOW_OK) {
-      gst_video_frame_unmap(&item.frame);
-
-      if (item.audio_buffer) {
-        gst_buffer_unmap(item.audio_buffer, &item.audio_map);
-        gst_buffer_unref(item.audio_buffer);
+    if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
+        ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
+      if (!self->anc_buffer_pool) {
+        self->anc_buffer_pool = gst_buffer_pool_new();
+        GstStructure *config =
+            gst_buffer_pool_get_config(self->anc_buffer_pool);
+        gst_buffer_pool_config_set_params(
+            config, NULL, 8 * 1024,
+            (self->configured_info.interlace_mode ==
+                     GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+                 ? 1
+                 : 2) *
+                self->queue_size,
+            0);
+        gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
+        gst_buffer_pool_set_config(self->anc_buffer_pool, config);
+        gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
       }
 
-      return flow_ret;
-    }
-    gst_buffer_map(item.anc_buffer, &item.anc_map, GST_MAP_READWRITE);
-
-    if (self->configured_info.interlace_mode !=
-        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
       flow_ret = gst_buffer_pool_acquire_buffer(self->anc_buffer_pool,
-                                                &item.anc_buffer2, NULL);
+                                                &item.anc_buffer, NULL);
       if (flow_ret != GST_FLOW_OK) {
-        gst_video_frame_unmap(&item.frame);
+        gst_buffer_unmap(item.video_buffer, &item.video_map);
+        gst_buffer_unref(item.video_buffer);
 
         if (item.audio_buffer) {
           gst_buffer_unmap(item.audio_buffer, &item.audio_map);
           gst_buffer_unref(item.audio_buffer);
         }
 
-        if (item.anc_buffer) {
-          gst_buffer_unmap(item.anc_buffer, &item.anc_map);
-          gst_buffer_unref(item.anc_buffer);
-        }
-
         return flow_ret;
       }
-      gst_buffer_map(item.anc_buffer2, &item.anc_map2, GST_MAP_READWRITE);
+      gst_buffer_map(item.anc_buffer, &item.anc_map, GST_MAP_READWRITE);
+
+      if (self->configured_info.interlace_mode !=
+          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+        flow_ret = gst_buffer_pool_acquire_buffer(self->anc_buffer_pool,
+                                                  &item.anc_buffer2, NULL);
+        if (flow_ret != GST_FLOW_OK) {
+          gst_buffer_unmap(item.video_buffer, &item.video_map);
+          gst_buffer_unref(item.video_buffer);
+
+          if (item.audio_buffer) {
+            gst_buffer_unmap(item.audio_buffer, &item.audio_map);
+            gst_buffer_unref(item.audio_buffer);
+          }
+
+          if (item.anc_buffer) {
+            gst_buffer_unmap(item.anc_buffer, &item.anc_map);
+            gst_buffer_unref(item.anc_buffer);
+          }
+
+          return flow_ret;
+        }
+        gst_buffer_map(item.anc_buffer2, &item.anc_map2, GST_MAP_READWRITE);
+      }
+
+      NTV2_POINTER anc_ptr1(item.anc_map.data, item.anc_map.size);
+      NTV2_POINTER anc_ptr2(item.anc_map2.data, item.anc_map2.size);
+
+      anc_ptr1.Fill(ULWord(0));
+      anc_ptr2.Fill(ULWord(0));
+      anc_packet_list.GetTransmitData(anc_ptr1, anc_ptr2,
+                                      self->configured_info.interlace_mode !=
+                                          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+                                      self->f2_start_line);
+    } else {
+      NTV2_POINTER ptr(item.video_map.data, item.video_map.size);
+
+      anc_packet_list.GetVANCTransmitData(ptr, format_desc);
     }
-
-    NTV2_POINTER anc_ptr1(item.anc_map.data, item.anc_map.size);
-    NTV2_POINTER anc_ptr2(item.anc_map2.data, item.anc_map2.size);
-
-    anc_ptr1.Fill(ULWord(0));
-    anc_ptr2.Fill(ULWord(0));
-    anc_packet_list.GetTransmitData(anc_ptr1, anc_ptr2,
-                                    self->configured_info.interlace_mode !=
-                                        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
-                                    self->f2_start_line);
   }
 
   g_mutex_lock(&self->queue_lock);
@@ -1228,12 +1278,13 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
       GstMessage *msg = gst_message_new_qos(
           GST_OBJECT_CAST(self), TRUE, GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE,
-          GST_BUFFER_PTS(tmp->frame.buffer),
+          GST_BUFFER_PTS(tmp->video_buffer),
           gst_util_uint64_scale(GST_SECOND, self->configured_info.fps_d,
                                 self->configured_info.fps_n));
       gst_element_post_message(GST_ELEMENT_CAST(self), msg);
 
-      gst_video_frame_unmap(&tmp->frame);
+      gst_buffer_unmap(tmp->video_buffer, &tmp->video_map);
+      gst_buffer_unref(tmp->video_buffer);
       if (tmp->audio_buffer) {
         gst_buffer_unmap(tmp->audio_buffer, &tmp->audio_map);
         gst_buffer_unref(tmp->audio_buffer);
@@ -1249,8 +1300,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
     }
   }
 
-  GST_TRACE_OBJECT(self, "Queuing frame video %p audio %p",
-                   GST_VIDEO_FRAME_PLANE_DATA(&item.frame, 0),
+  GST_TRACE_OBJECT(self, "Queuing frame video %p audio %p", item.video_map.data,
                    item.audio_buffer ? item.audio_map.data : NULL);
   gst_queue_array_push_tail_struct(self->queue, &item);
   GST_TRACE_OBJECT(self, "%u frames queued",
@@ -1317,7 +1367,10 @@ restart:
     self->device->device->SubscribeOutputVerticalEvent(self->channel);
     if (!self->device->device->AutoCirculateInitForOutput(
             self->channel, self->queue_size / 2, self->audio_system,
-            AUTOCIRCULATE_WITH_RP188 | AUTOCIRCULATE_WITH_ANC, 1)) {
+            AUTOCIRCULATE_WITH_RP188 |
+                (self->vanc_mode == ::NTV2_VANCMODE_OFF ? AUTOCIRCULATE_WITH_ANC
+                                                        : 0),
+            1)) {
       GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
                         ("Failed to initialize autocirculate"));
       goto out;
@@ -1392,7 +1445,9 @@ restart:
 
       if (!self->playing || self->shutdown || (!item_p && self->draining)) {
         if (item_p && item_p->type == QUEUE_ITEM_TYPE_FRAME) {
-          gst_video_frame_unmap(&item_p->frame);
+          gst_buffer_unmap(item_p->video_buffer, &item_p->video_map);
+          gst_buffer_unref(item_p->video_buffer);
+
           if (item_p->audio_buffer) {
             gst_buffer_unmap(item_p->audio_buffer, &item_p->audio_map);
             gst_buffer_unref(item_p->audio_buffer);
@@ -1425,8 +1480,7 @@ restart:
                        "Video %p %" G_GSIZE_FORMAT
                        " "
                        "Audio %p %" G_GSIZE_FORMAT,
-                       GST_VIDEO_FRAME_PLANE_DATA(&item.frame, 0),
-                       GST_VIDEO_FRAME_SIZE(&item.frame),
+                       item.video_map.data, item.video_map.size,
                        item.audio_buffer ? item.audio_map.data : NULL,
                        item.audio_buffer ? item.audio_map.size : 0);
 
@@ -1440,9 +1494,8 @@ restart:
         transfer.SetOutputTimeCodes(timecodes);
       }
 
-      transfer.SetVideoBuffer(
-          (ULWord *)GST_VIDEO_FRAME_PLANE_DATA(&item.frame, 0),
-          GST_VIDEO_FRAME_SIZE(&item.frame));
+      transfer.SetVideoBuffer((ULWord *)item.video_map.data,
+                              item.video_map.size);
       transfer.SetAudioBuffer((ULWord *)item.audio_map.data,
                               item.audio_map.size);
       transfer.SetAncBuffers((ULWord *)item.anc_map.data, item.anc_map.size,
@@ -1453,7 +1506,8 @@ restart:
         GST_WARNING_OBJECT(self, "Failed to transfer frame");
       }
 
-      gst_video_frame_unmap(&item.frame);
+      gst_buffer_unmap(item.video_buffer, &item.video_map);
+      gst_buffer_unref(item.video_buffer);
 
       if (item.audio_buffer) {
         gst_buffer_unmap(item.audio_buffer, &item.audio_map);
