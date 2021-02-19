@@ -854,45 +854,59 @@ flushing:
 }
 
 static GstMiniObject *
-dequeue_buffer (GstAppSink * appsink)
+dequeue_object (GstAppSink * appsink)
 {
   GstAppSinkPrivate *priv = appsink->priv;
   GstMiniObject *obj;
 
+  obj = gst_queue_array_pop_head (priv->queue);
+
+  if (GST_IS_BUFFER (obj) || GST_IS_BUFFER_LIST (obj)) {
+    GST_DEBUG_OBJECT (appsink, "dequeued buffer/list %p", obj);
+    priv->num_buffers--;
+  } else if (GST_IS_EVENT (obj)) {
+    GstEvent *event = GST_EVENT_CAST (obj);
+
+    switch (GST_EVENT_TYPE (obj)) {
+      case GST_EVENT_CAPS:
+      {
+        GstCaps *caps;
+
+        gst_event_parse_caps (event, &caps);
+        GST_DEBUG_OBJECT (appsink, "activating caps %" GST_PTR_FORMAT, caps);
+        gst_caps_replace (&priv->last_caps, caps);
+        priv->sample = gst_sample_make_writable (priv->sample);
+        gst_sample_set_caps (priv->sample, priv->last_caps);
+        break;
+      }
+      case GST_EVENT_SEGMENT:
+        gst_event_copy_segment (event, &priv->last_segment);
+        priv->sample = gst_sample_make_writable (priv->sample);
+        gst_sample_set_segment (priv->sample, &priv->last_segment);
+        GST_DEBUG_OBJECT (appsink, "activated segment %" GST_SEGMENT_FORMAT,
+            &priv->last_segment);
+        break;
+      default:
+        break;
+    }
+  }
+
+  return obj;
+}
+
+static GstMiniObject *
+dequeue_buffer (GstAppSink * appsink)
+{
+  GstMiniObject *obj;
+
   do {
-    obj = gst_queue_array_pop_head (priv->queue);
+    obj = dequeue_object (appsink);
 
     if (GST_IS_BUFFER (obj) || GST_IS_BUFFER_LIST (obj)) {
-      GST_DEBUG_OBJECT (appsink, "dequeued buffer/list %p", obj);
-      priv->num_buffers--;
       break;
-    } else if (GST_IS_EVENT (obj)) {
-      GstEvent *event = GST_EVENT_CAST (obj);
-
-      switch (GST_EVENT_TYPE (obj)) {
-        case GST_EVENT_CAPS:
-        {
-          GstCaps *caps;
-
-          gst_event_parse_caps (event, &caps);
-          GST_DEBUG_OBJECT (appsink, "activating caps %" GST_PTR_FORMAT, caps);
-          gst_caps_replace (&priv->last_caps, caps);
-          priv->sample = gst_sample_make_writable (priv->sample);
-          gst_sample_set_caps (priv->sample, priv->last_caps);
-          break;
-        }
-        case GST_EVENT_SEGMENT:
-          gst_event_copy_segment (event, &priv->last_segment);
-          priv->sample = gst_sample_make_writable (priv->sample);
-          gst_sample_set_segment (priv->sample, &priv->last_segment);
-          GST_DEBUG_OBJECT (appsink, "activated segment %" GST_SEGMENT_FORMAT,
-              &priv->last_segment);
-          break;
-        default:
-          break;
-      }
-      gst_mini_object_unref (obj);
     }
+
+    gst_mini_object_unref (obj);
   } while (TRUE);
 
   return obj;
