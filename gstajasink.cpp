@@ -948,7 +948,7 @@ static gboolean gst_aja_sink_propose_allocation(GstBaseSink *bsink,
                                                 GstQuery *query) {
   GstAjaSink *self = GST_AJA_SINK(bsink);
 
-  if (self->allocator) {
+  if (self->allocator && self->vanc_mode == ::NTV2_VANCMODE_OFF) {
     GstAllocationParams params;
 
     gst_allocation_params_init(&params);
