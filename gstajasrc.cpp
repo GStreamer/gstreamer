@@ -790,7 +790,8 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
 
   guint anc_buffer_size = 8 * 1024;
 
-  if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+  if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
+      ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
     self->anc_buffer_pool = gst_buffer_pool_new();
     config = gst_buffer_pool_get_config(self->anc_buffer_pool);
     gst_buffer_pool_config_set_params(
@@ -1304,7 +1305,8 @@ restart:
         break;
       }
 
-      if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+      if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
+          ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
         if (gst_buffer_pool_acquire_buffer(self->anc_buffer_pool, &anc_buffer,
                                            NULL) != GST_FLOW_OK) {
           gst_buffer_unref(audio_buffer);
