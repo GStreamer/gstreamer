@@ -159,8 +159,11 @@ gst_sdp_src_change_state (GstElement * element, GstStateChange transition)
       if (self->location && strcmp (self->location, "sdp://") != 0) {
         /* Do nothing */
       } else if (self->sdp) {
+        guint sdp_len = strlen (self->sdp);
+
         self->sdp_buffer =
-            gst_buffer_new_wrapped (self->sdp, strlen (self->sdp) + 1);
+            gst_buffer_new_wrapped (g_strndup (self->sdp, sdp_len),
+            sdp_len + 1);
       } else {
         ret = GST_STATE_CHANGE_FAILURE;
       }
