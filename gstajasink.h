@@ -63,6 +63,7 @@ struct _GstAjaSink {
   // Only allocated on demand
   GstBufferPool *buffer_pool;
   GstBufferPool *audio_buffer_pool;
+  GstBufferPool *anc_buffer_pool;
 
   // Properties
   gchar *device_identifier;

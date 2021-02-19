@@ -64,7 +64,10 @@ typedef struct {
   GstBuffer *audio_buffer;
   GstMapInfo audio_map;
   NTV2_RP188 tc;
-  AJAAncillaryList *anc_packet_list;
+  GstBuffer *anc_buffer;
+  GstMapInfo anc_map;
+  GstBuffer *anc_buffer2;
+  GstMapInfo anc_map2;
 } QueueItem;
 
 static void gst_aja_sink_set_property(GObject *object, guint property_id,
@@ -404,8 +407,13 @@ static gboolean gst_aja_sink_stop(GstAjaSink *self) {
         gst_buffer_unmap(item->audio_buffer, &item->audio_map);
         gst_buffer_unref(item->audio_buffer);
       }
-      if (item->anc_packet_list) {
-        delete item->anc_packet_list;
+      if (item->anc_buffer) {
+        gst_buffer_unmap(item->anc_buffer, &item->anc_map);
+        gst_buffer_unref(item->anc_buffer);
+      }
+      if (item->anc_buffer2) {
+        gst_buffer_unmap(item->anc_buffer2, &item->anc_map2);
+        gst_buffer_unref(item->anc_buffer2);
       }
     }
   }
@@ -418,6 +426,11 @@ static gboolean gst_aja_sink_stop(GstAjaSink *self) {
   if (self->audio_buffer_pool) {
     gst_buffer_pool_set_active(self->audio_buffer_pool, FALSE);
     gst_clear_object(&self->audio_buffer_pool);
+  }
+
+  if (self->anc_buffer_pool) {
+    gst_buffer_pool_set_active(self->anc_buffer_pool, FALSE);
+    gst_clear_object(&self->anc_buffer_pool);
   }
 
   if (self->tc_indexes) {
@@ -876,8 +889,14 @@ static gboolean gst_aja_sink_event(GstBaseSink *bsink, GstEvent *event) {
             gst_buffer_unmap(item->audio_buffer, &item->audio_map);
             gst_buffer_unref(item->audio_buffer);
           }
-          if (item->anc_packet_list) {
-            delete item->anc_packet_list;
+
+          if (item->anc_buffer) {
+            gst_buffer_unmap(item->anc_buffer, &item->anc_map);
+            gst_buffer_unref(item->anc_buffer);
+          }
+          if (item->anc_buffer2) {
+            gst_buffer_unmap(item->anc_buffer2, &item->anc_map2);
+            gst_buffer_unref(item->anc_buffer2);
           }
         }
       }
@@ -929,7 +948,10 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
       .audio_buffer = NULL,
       .audio_map = GST_MAP_INFO_INIT,
       .tc = NTV2_RP188(),
-      .anc_packet_list = NULL,
+      .anc_buffer = NULL,
+      .anc_map = GST_MAP_INFO_INIT,
+      .anc_buffer2 = NULL,
+      .anc_map2 = GST_MAP_INFO_INIT,
   };
 
   guint video_buffer_size = ::GetVideoActiveSize(
@@ -1078,6 +1100,8 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
     item.tc.fDBB = 0xffffffff;
   }
 
+  AJAAncillaryList anc_packet_list;
+
   // TODO: Handle AFD/Bar meta
 #if 0
     if (bar_meta || afd_meta) {
@@ -1094,12 +1118,12 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
       AJAAncillaryData pkt;
       pkt.SetFromSMPTE334(NULL, 0, kAFDBARLocF1);
-      item.anc_packet_list->AddAncillaryData(pkt);
+      anc_packet_list.AddAncillaryData(pkt);
 
       if (self->configured_info.interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
         AJAAncillaryData pkt2;
         pkt.SetFromSMPTE334(NULL, 0, kAFDBARLocF2);
-        item.anc_packet_list->AddAncillaryData(pkt);
+        anc_packet_list.AddAncillaryData(pkt);
       }
     }
 #endif
@@ -1109,8 +1133,6 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
   while (
       (caption_meta = (GstVideoCaptionMeta *)gst_buffer_iterate_meta_filtered(
            buffer, &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
-    if (!item.anc_packet_list) item.anc_packet_list = new AJAAncillaryList;
-
     if (caption_meta->caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_CDP) {
       const uint16_t kF1PktLineNumCEA708(9);
       const AJAAncillaryDataLocation kCEA708LocF1(
@@ -1126,11 +1148,75 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
       pkt.SetDataCoding(AJAAncillaryDataCoding_Digital);
       pkt.SetPayloadData(caption_meta->data, caption_meta->size);
 
-      item.anc_packet_list->AddAncillaryData(pkt);
+      anc_packet_list.AddAncillaryData(pkt);
     } else {
       GST_WARNING_OBJECT(self, "Unhandled caption type %d",
                          caption_meta->caption_type);
     }
+  }
+
+  if (!anc_packet_list.IsEmpty()) {
+    if (!self->anc_buffer_pool) {
+      self->anc_buffer_pool = gst_buffer_pool_new();
+      GstStructure *config = gst_buffer_pool_get_config(self->anc_buffer_pool);
+      gst_buffer_pool_config_set_params(
+          config, NULL, 8 * 1024,
+          (self->configured_info.interlace_mode ==
+                   GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+               ? 1
+               : 2) *
+              self->queue_size,
+          0);
+      gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
+      gst_buffer_pool_set_config(self->anc_buffer_pool, config);
+      gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
+    }
+
+    flow_ret = gst_buffer_pool_acquire_buffer(self->anc_buffer_pool,
+                                              &item.anc_buffer, NULL);
+    if (flow_ret != GST_FLOW_OK) {
+      gst_video_frame_unmap(&item.frame);
+
+      if (item.audio_buffer) {
+        gst_buffer_unmap(item.audio_buffer, &item.audio_map);
+        gst_buffer_unref(item.audio_buffer);
+      }
+
+      return flow_ret;
+    }
+    gst_buffer_map(item.anc_buffer, &item.anc_map, GST_MAP_READWRITE);
+
+    if (self->configured_info.interlace_mode !=
+        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+      flow_ret = gst_buffer_pool_acquire_buffer(self->anc_buffer_pool,
+                                                &item.anc_buffer2, NULL);
+      if (flow_ret != GST_FLOW_OK) {
+        gst_video_frame_unmap(&item.frame);
+
+        if (item.audio_buffer) {
+          gst_buffer_unmap(item.audio_buffer, &item.audio_map);
+          gst_buffer_unref(item.audio_buffer);
+        }
+
+        if (item.anc_buffer) {
+          gst_buffer_unmap(item.anc_buffer, &item.anc_map);
+          gst_buffer_unref(item.anc_buffer);
+        }
+
+        return flow_ret;
+      }
+      gst_buffer_map(item.anc_buffer2, &item.anc_map2, GST_MAP_READWRITE);
+    }
+
+    NTV2_POINTER anc_ptr1(item.anc_map.data, item.anc_map.size);
+    NTV2_POINTER anc_ptr2(item.anc_map2.data, item.anc_map2.size);
+
+    anc_ptr1.Fill(ULWord(0));
+    anc_ptr2.Fill(ULWord(0));
+    anc_packet_list.GetTransmitData(anc_ptr1, anc_ptr2,
+                                    self->configured_info.interlace_mode !=
+                                        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+                                    self->f2_start_line);
   }
 
   g_mutex_lock(&self->queue_lock);
@@ -1152,8 +1238,13 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
         gst_buffer_unmap(tmp->audio_buffer, &tmp->audio_map);
         gst_buffer_unref(tmp->audio_buffer);
       }
-      if (tmp->anc_packet_list) {
-        delete tmp->anc_packet_list;
+      if (tmp->anc_buffer) {
+        gst_buffer_unmap(tmp->anc_buffer, &tmp->anc_map);
+        gst_buffer_unref(tmp->anc_buffer);
+      }
+      if (tmp->anc_buffer2) {
+        gst_buffer_unmap(tmp->anc_buffer2, &tmp->anc_map2);
+        gst_buffer_unref(tmp->anc_buffer2);
       }
     }
   }
@@ -1240,11 +1331,6 @@ restart:
   frames_rendered_start_time = GST_CLOCK_TIME_NONE;
   frames_dropped_last = G_MAXUINT64;
 
-  transfer.acANCBuffer.Allocate(2048);
-  if (self->configured_info.interlace_mode !=
-      GST_VIDEO_INTERLACE_MODE_INTERLEAVED)
-    transfer.acANCField2Buffer.Allocate(2048);
-
   g_mutex_lock(&self->queue_lock);
   while (self->playing && !self->shutdown &&
          !(self->draining && gst_queue_array_get_length(self->queue) == 0)) {
@@ -1311,8 +1397,14 @@ restart:
             gst_buffer_unmap(item_p->audio_buffer, &item_p->audio_map);
             gst_buffer_unref(item_p->audio_buffer);
           }
-          if (item_p->anc_packet_list) {
-            delete item_p->anc_packet_list;
+
+          if (item_p->anc_buffer) {
+            gst_buffer_unmap(item_p->anc_buffer, &item_p->anc_map);
+            gst_buffer_unref(item_p->anc_buffer);
+          }
+          if (item_p->anc_buffer2) {
+            gst_buffer_unmap(item_p->anc_buffer2, &item_p->anc_map2);
+            gst_buffer_unref(item_p->anc_buffer2);
           }
         }
         break;
@@ -1349,24 +1441,12 @@ restart:
       }
 
       transfer.SetVideoBuffer(
-          (guint *)GST_VIDEO_FRAME_PLANE_DATA(&item.frame, 0),
+          (ULWord *)GST_VIDEO_FRAME_PLANE_DATA(&item.frame, 0),
           GST_VIDEO_FRAME_SIZE(&item.frame));
-      if (item.audio_buffer) {
-        transfer.SetAudioBuffer((guint *)item.audio_map.data,
-                                item.audio_map.size);
-      }
-
-      // Clear VANC and fill in captions as needed
-      transfer.acANCBuffer.Fill(ULWord(0));
-      transfer.acANCField2Buffer.Fill(ULWord(0));
-
-      if (item.anc_packet_list) {
-        item.anc_packet_list->GetTransmitData(
-            transfer.acANCBuffer, transfer.acANCField2Buffer,
-            self->configured_info.interlace_mode !=
-                GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
-            self->f2_start_line);
-      }
+      transfer.SetAudioBuffer((ULWord *)item.audio_map.data,
+                              item.audio_map.size);
+      transfer.SetAncBuffers((ULWord *)item.anc_map.data, item.anc_map.size,
+                             (ULWord *)item.anc_map2.data, item.anc_map2.size);
 
       if (!self->device->device->AutoCirculateTransfer(self->channel,
                                                        transfer)) {
@@ -1380,8 +1460,14 @@ restart:
         gst_buffer_unref(item.audio_buffer);
       }
 
-      if (item.anc_packet_list) {
-        delete item.anc_packet_list;
+      if (item.anc_buffer) {
+        gst_buffer_unmap(item.anc_buffer, &item.anc_map);
+        gst_buffer_unref(item.anc_buffer);
+      }
+
+      if (item.anc_buffer2) {
+        gst_buffer_unmap(item.anc_buffer2, &item.anc_map2);
+        gst_buffer_unref(item.anc_buffer2);
       }
 
       GST_TRACE_OBJECT(
