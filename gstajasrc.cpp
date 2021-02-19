@@ -772,8 +772,14 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
 
   self->anc_buffer_pool = gst_buffer_pool_new();
   config = gst_buffer_pool_get_config(self->anc_buffer_pool);
-  gst_buffer_pool_config_set_params(config, NULL, anc_buffer_size,
-                                    self->queue_size, 0);
+  gst_buffer_pool_config_set_params(
+      config, NULL, anc_buffer_size,
+      (self->configured_info.interlace_mode ==
+               GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+           ? 1
+           : 2) *
+          self->queue_size,
+      0);
   gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
   gst_buffer_pool_set_config(self->anc_buffer_pool, config);
   gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
