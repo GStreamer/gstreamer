@@ -37,6 +37,7 @@ enum
 {
   SIGNAL_POSITION_UPDATED,
   SIGNAL_DURATION_CHANGED,
+  SIGNAL_STATE_CHANGED,
   SIGNAL_DONE,
   SIGNAL_ERROR,
   SIGNAL_WARNING,
@@ -92,6 +93,13 @@ gst_transcoder_signal_adapter_emit (GstTranscoderSignalAdapter * self,
       gst_structure_get (message_data, GST_TRANSCODER_MESSAGE_DATA_DURATION,
           GST_TYPE_CLOCK_TIME, &duration, NULL);
       g_signal_emit (self, signals[SIGNAL_DURATION_CHANGED], 0, duration);
+      break;
+    }
+    case GST_TRANSCODER_MESSAGE_STATE_CHANGED:{
+      GstTranscoderState state;
+      gst_structure_get (message_data, GST_TRANSCODER_MESSAGE_DATA_STATE,
+          GST_TYPE_TRANSCODER_STATE, &state, NULL);
+      g_signal_emit (self, signals[SIGNAL_STATE_CHANGED], 0, state);
       break;
     }
     case GST_TRANSCODER_MESSAGE_DONE:
@@ -297,6 +305,11 @@ gst_transcoder_signal_adapter_class_init (GstTranscoderSignalAdapterClass *
       g_signal_new ("warning", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
       NULL, NULL, G_TYPE_NONE, 2, G_TYPE_ERROR, GST_TYPE_STRUCTURE);
+
+  signals[SIGNAL_STATE_CHANGED] =
+      g_signal_new ("state-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
+      NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_TRANSCODER_STATE);
 
   /**
    * GstTranscoderSignalAdapter:transcoder:

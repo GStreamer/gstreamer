@@ -90,6 +90,8 @@ struct _GstTranscoder
 
   GstClockTime last_duration;
 
+  GstTranscoderState app_state;
+
   GstBus *api_bus;
   GstTranscoderSignalAdapter *signal_adapter;
   GstTranscoderSignalAdapter *sync_signal_adapter;
@@ -590,6 +592,20 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
 }
 
 static void
+notify_state_changed (GstTranscoder * self, GstTranscoderState new_state)
+{
+  if (new_state == self->app_state)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Notifying new state: %s",
+      gst_transcoder_state_get_name (new_state));
+  self->app_state = new_state;
+  api_bus_post_message (self, GST_TRANSCODER_MESSAGE_STATE_CHANGED,
+      GST_TRANSCODER_MESSAGE_DATA_STATE, GST_TYPE_TRANSCODER_STATE, new_state,
+      NULL);
+}
+
+static void
 eos_cb (G_GNUC_UNUSED GstBus * bus, G_GNUC_UNUSED GstMessage * msg,
     gpointer user_data)
 {
@@ -602,6 +618,7 @@ eos_cb (G_GNUC_UNUSED GstBus * bus, G_GNUC_UNUSED GstMessage * msg,
   tick_cb (self);
   remove_tick_source (self);
 
+  notify_state_changed (self, GST_TRANSCODER_STATE_STOPPED);
   api_bus_post_message (self, GST_TRANSCODER_MESSAGE_DONE, NULL, NULL);
   self->is_eos = TRUE;
 }
@@ -654,9 +671,16 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 
     self->current_state = new_state;
 
+    if (new_state == GST_STATE_PAUSED
+        && pending_state == GST_STATE_VOID_PENDING) {
+      remove_tick_source (self);
+      notify_state_changed (self, GST_TRANSCODER_STATE_PAUSED);
+    }
+
     if (new_state == GST_STATE_PLAYING
         && pending_state == GST_STATE_VOID_PENDING) {
       add_tick_source (self);
+      notify_state_changed (self, GST_TRANSCODER_STATE_PLAYING);
     }
   }
 }
@@ -797,6 +821,7 @@ gst_transcoder_main (gpointer data)
   self->current_state = GST_STATE_NULL;
   self->is_eos = FALSE;
   self->is_live = FALSE;
+  self->app_state = GST_TRANSCODER_STATE_STOPPED;
 
   GST_TRACE_OBJECT (self, "Starting main loop");
   g_main_loop_run (self->loop);
@@ -1411,6 +1436,23 @@ gst_transcoder_message_parse_position (GstMessage * msg,
 }
 
 /**
+ * gst_transcoder_message_parse_state:
+ * @msg: A #GstMessage
+ * @state: (out): the resulting state
+ *
+ * Parse the given state @msg and extract the corresponding #GstTranscoderState
+ *
+ * Since: 1.20
+ */
+void
+gst_transcoder_message_parse_state (GstMessage * msg,
+    GstTranscoderState * state)
+{
+  PARSE_MESSAGE_FIELD (msg, GST_TRANSCODER_MESSAGE_DATA_STATE,
+      GST_TYPE_TRANSCODER_STATE, state);
+}
+
+/**
  * gst_transcoder_message_parse_error:
  * @msg: A #GstMessage
  * @error: (out): the resulting error
@@ -1448,4 +1490,30 @@ gst_transcoder_message_parse_warning (GstMessage * msg, GError * error,
       error);
   PARSE_MESSAGE_FIELD (msg, GST_TRANSCODER_MESSAGE_DATA_ISSUE_DETAILS,
       GST_TYPE_STRUCTURE, details);
+}
+
+/**
+ * gst_transcoder_state_get_name:
+ * @state: a #GstTranscoderState
+ *
+ * Gets a string representing the given state.
+ *
+ * Returns: (transfer none): a string with the name of the state.
+ *
+ * Since: 1.20
+ */
+const gchar *
+gst_transcoder_state_get_name (GstTranscoderState state)
+{
+  switch (state) {
+    case GST_TRANSCODER_STATE_STOPPED:
+      return "stopped";
+    case GST_TRANSCODER_STATE_PAUSED:
+      return "paused";
+    case GST_TRANSCODER_STATE_PLAYING:
+      return "playing";
+  }
+
+  g_assert_not_reached ();
+  return NULL;
 }

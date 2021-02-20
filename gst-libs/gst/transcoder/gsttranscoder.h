@@ -28,12 +28,35 @@ GQuark        gst_transcoder_error_quark    (void);
 GST_TRANSCODER_API
 const gchar * gst_transcoder_error_get_name (GstTranscoderError error);
 
+/*********** State definition ************/
+
+/**
+ * GstTranscoderState:
+ * @GST_TRANSCODER_STATE_STOPPED: the transcoder is stopped.
+ * @GST_TRANSCODER_STATE_PAUSED: the transcoder is paused.
+ * @GST_TRANSCODER_STATE_PLAYING: the transcoder is currently transcoding a
+ * stream.
+ *
+ * High level representation of the transcoder pipeline state.
+ *
+ * Since: 1.20
+ */
+typedef enum {
+    GST_TRANSCODER_STATE_STOPPED,
+    GST_TRANSCODER_STATE_PAUSED,
+    GST_TRANSCODER_STATE_PLAYING
+} GstTranscoderState;
+
+GST_TRANSCODER_API
+const gchar * gst_transcoder_state_get_name                (GstTranscoderState state);
+
 /*********** Messages types definitions ************/
 
 /**
  * GstTranscoderMessage:
  * @GST_TRANSCODER_MESSAGE_POSITION_UPDATED: Sink position changed
  * @GST_TRANSCODER_MESSAGE_DURATION_CHANGED: Duration of stream changed
+ * @GST_TRANSCODER_MESSAGE_STATE_CHANGED: Pipeline state changed
  * @GST_TRANSCODER_MESSAGE_DONE: Transcoding is done
  * @GST_TRANSCODER_MESSAGE_ERROR: Message contains an error
  * @GST_TRANSCODER_MESSAGE_WARNING: Message contains an error
@@ -48,6 +71,7 @@ typedef enum
 {
   GST_TRANSCODER_MESSAGE_POSITION_UPDATED,
   GST_TRANSCODER_MESSAGE_DURATION_CHANGED,
+  GST_TRANSCODER_MESSAGE_STATE_CHANGED,
   GST_TRANSCODER_MESSAGE_DONE,
   GST_TRANSCODER_MESSAGE_ERROR,
   GST_TRANSCODER_MESSAGE_WARNING,
@@ -64,6 +88,9 @@ void           gst_transcoder_message_parse_position           (GstMessage * msg
 
 GST_TRANSCODER_API
 void           gst_transcoder_message_parse_duration           (GstMessage * msg, GstClockTime * duration);
+
+GST_TRANSCODER_API
+void           gst_transcoder_message_parse_state              (GstMessage * msg, GstTranscoderState * state);
 
 GST_TRANSCODER_API
 void           gst_transcoder_message_parse_error              (GstMessage * msg, GError * error, GstStructure ** details);
