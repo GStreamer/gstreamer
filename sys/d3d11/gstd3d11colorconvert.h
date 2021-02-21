@@ -26,31 +26,35 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_CONVERT             (gst_d3d11_convert_get_type())
-#define GST_D3D11_CONVERT(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_CONVERT,GstD3D11Convert))
-#define GST_D3D11_CONVERT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_D3D11_CONVERT,GstD3D11ConvertClass))
-#define GST_D3D11_CONVERT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_CONVERT,GstD3D11ConvertClass))
-#define GST_IS_D3D11_CONVERT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_CONVERT))
-#define GST_IS_D3D11_CONVERT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_CONVERT))
+#define GST_TYPE_D3D11_BASE_CONVERT             (gst_d3d11_base_convert_get_type())
+#define GST_D3D11_BASE_CONVERT(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_BASE_CONVERT,GstD3D11BaseConvert))
+#define GST_D3D11_BASE_CONVERT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_D3D11_BASE_CONVERT,GstD3D11BaseConvertClass))
+#define GST_D3D11_BASE_CONVERT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_BASE_CONVERT,GstD3D11BaseConvertClass))
+#define GST_IS_D3D11_BASE_CONVERT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_BASE_CONVERT))
+#define GST_IS_D3D11_BASE_CONVERT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_BASE_CONVERT))
 
-typedef struct _GstD3D11Convert GstD3D11Convert;
-typedef struct _GstD3D11ConvertClass GstD3D11ConvertClass;
+typedef struct _GstD3D11BaseConvert GstD3D11BaseConvert;
+typedef struct _GstD3D11BaseConvertClass GstD3D11BaseConvertClass;
 
-struct _GstD3D11ConvertClass
+struct _GstD3D11BaseConvertClass
 {
   GstD3D11BaseFilterClass parent_class;
 };
 
-GType gst_d3d11_convert_get_type (void);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstD3D11Convert, gst_object_unref)
+GType gst_d3d11_base_convert_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstD3D11BaseConvert, gst_object_unref)
+
+#define GST_TYPE_D3D11_CONVERT (gst_d3d11_convert_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11Convert, gst_d3d11_convert,
+    GST, D3D11_CONVERT, GstD3D11BaseConvert)
 
 #define GST_TYPE_D3D11_COLOR_CONVERT (gst_d3d11_color_convert_get_type())
 G_DECLARE_FINAL_TYPE (GstD3D11ColorConvert, gst_d3d11_color_convert,
-    GST, D3D11_COLOR_CONVERT, GstD3D11Convert)
+    GST, D3D11_COLOR_CONVERT, GstD3D11BaseConvert)
 
 #define GST_TYPE_D3D11_SCALE (gst_d3d11_scale_get_type())
 G_DECLARE_FINAL_TYPE (GstD3D11Scale, gst_d3d11_scale,
-    GST, D3D11_SCALE, GstD3D11Convert)
+    GST, D3D11_SCALE, GstD3D11BaseConvert)
 
 G_END_DECLS
 
