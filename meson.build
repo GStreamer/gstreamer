@@ -12,6 +12,7 @@ gst_version = '>= @0@'.format(meson.project_version())
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
+fs = import('fs')
 gnome = import('gnome')
 pkgconfig = import('pkgconfig')
 python3 = import('python').find_installation()
@@ -219,12 +220,23 @@ if documented_projects != ''
 endif
 
 all_plugins_paths = []
+all_plugins_dirs = []
 foreach plugin: all_plugins
   all_plugins_paths += plugin.full_path()
+  all_plugins_dirs += fs.parent(plugin.full_path())
 endforeach
 # Work around meson bug: https://github.com/mesonbuild/meson/pull/6770
 pathsep = host_machine.system() == 'windows' ? ';' : ':'
 all_plugins_paths = pathsep.join(all_plugins_paths)
+
+devenv = environment()
+devenv.set('GST_PLUGIN_PATH', all_plugins_dirs)
+devenv.set('CURRENT_GST', meson.current_source_dir())
+devenv.set('GST_VERSION', meson.project_version())
+devenv.set('GST_ENV', 'gst-' + meson.project_version())
+devenv.set('GST_REGISTRY', meson.current_build_dir() / 'registry.dat')
+devenv.set('GST_PLUGIN_SYSTEM_PATH', '')
+meson.add_devenv(devenv)
 
 generate_plugins_paths = find_program('scripts/generate_plugins_path.py')
 configure_file(
