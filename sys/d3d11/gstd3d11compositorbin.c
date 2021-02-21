@@ -19,6 +19,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11compositor
+ * @title: d3d11compositor
+ *
+ * A convenient bin which wraps #d3d11compositorelement for video composition
+ * with other helper elements to handle color conversion and memory transfer
+ * between Direct3D11 and system memory space.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 d3d11compositor name=c ! d3d11videosink \
+ *     videotestsrc ! video/x-raw,width=320,height=240 ! c. \
+ *     videotestsrc pattern=ball ! video/x-raw,width=100,height=100 ! c.
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -54,6 +73,11 @@ enum
 
 static guint gst_d3d11_compositor_bin_pad_signals[SIGNAL_PAD_LAST] = { 0 };
 
+/**
+ * GstD3D11CompositorBinPad:
+ *
+ * Since: 1.20
+ */
 struct _GstD3D11CompositorBinPad
 {
   GstGhostPad parent;
@@ -225,6 +249,11 @@ enum
 #define DEFAULT_INPUT_BLEND_DEST_RGB GST_D3D11_COMPOSITOR_BLEND_INV_SRC_ALPHA
 #define DEFAULT_INPUT_BLEND_DEST_ALPHA GST_D3D11_COMPOSITOR_BLEND_INV_SRC_ALPHA
 
+/**
+ * GstD3D11CompositorBinInput:
+ *
+ * Since: 1.20
+ */
 struct _GstD3D11CompositorBinInput
 {
   GstD3D11CompositorBinPad parent;
@@ -544,8 +573,7 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 Compositor Bin",
       "Filter/Editor/Video/Compositor",
-      "Composite multiple video streams via D3D11 API",
-      "Seungha Yang <seungha@centricular.com>");
+      "A Direct3D11 compositor bin", "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -612,6 +640,9 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
       g_param_spec_enum ("background", "Background", "Background type",
           GST_TYPE_COMPOSITOR_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BIN_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BIN_INPUT, 0);
 }
 
 static void

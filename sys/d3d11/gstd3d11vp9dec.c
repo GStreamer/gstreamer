@@ -47,6 +47,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION:element-d3d11vp9dec
+ * @title: d3d11vp9dec
+ *
+ * A Direct3D11/DXVA based VP9 video decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/vp9/file ! parsebin ! d3d11vp9dec ! d3d11videosink
+ * ```
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -180,10 +195,10 @@ gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass, gpointer data)
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_set_context);
 
-  long_name = g_strdup_printf ("Direct3D11 VP9 %s Decoder", cdata->description);
+  long_name =
+      g_strdup_printf ("Direct3D11/DXVA VP9 %s Decoder", cdata->description);
   gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Decoder/Video/Hardware",
-      "A Direct3D11 based VP9 video decoder",
+      "Codec/Decoder/Video/Hardware", "A Direct3D11/DXVA VP9 video decoder",
       "Seungha Yang <seungha.yang@navercorp.com>");
   g_free (long_name);
 

@@ -22,15 +22,14 @@
  * SECTION:element-d3d11desktopdupsrc
  * @title: d3d11desktopdupsrc
  *
- * This element uses DXGI Desktop Duplication API.
- * The default is capturing the whole desktop, but #GstD3D11DesktopDupSrc:x,
- * #GstD3D11DesktopDupSrc:y, #GstD3D11DesktopDupSrc:width and
- * #GstD3D11DesktopDupSrc:height can be used to select a particular region.
+ * A DXGI Desktop Duplication API based screen capture element
  *
- * ## Example pipelines
- * |[
+ * ## Example launch line
+ * ```
  * gst-launch-1.0 d3d11desktopdupsrc ! queue ! d3d11videosink
- * ]| Capture the desktop and display it.
+ * ```
+ *
+ * Since: 1.20
  */
 
 #ifdef HAVE_CONFIG_H

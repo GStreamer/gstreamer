@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11h265dec
+ * @title: d3d11h265dec
+ *
+ * A Direct3D11/DXVA based H.265 video decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/hevc/file ! parsebin ! d3d11h265dec ! d3d11videosink
+ * ```
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -174,11 +189,11 @@ gst_d3d11_h265_dec_class_init (GstD3D11H265DecClass * klass, gpointer data)
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_set_context);
 
-  long_name = g_strdup_printf ("Direct3D11 H.265 %s Decoder",
+  long_name = g_strdup_printf ("Direct3D11/DXVA H.265 %s Decoder",
       cdata->description);
   gst_element_class_set_metadata (element_class, long_name,
       "Codec/Decoder/Video/Hardware",
-      "A Direct3D11 based H.265 video decoder",
+      "A Direct3D11/DXVA H.265 video decoder",
       "Seungha Yang <seungha.yang@navercorp.com>");
   g_free (long_name);
 

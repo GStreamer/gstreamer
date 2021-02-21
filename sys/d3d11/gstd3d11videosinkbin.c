@@ -18,6 +18,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11videosink
+ * @title: d3d11videosink
+ *
+ * Direct3D11 based video render element
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! d3d11videosink
+ * ```
+ * This pipeline will display test video stream on screen via #d3d11videosink
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -264,6 +280,22 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
+
+  /**
+   * GstD3D11VideoSinkBin:draw-on-shared-texture:
+   *
+   * Instruct the sink to draw on a shared texture provided by user.
+   * User must watch #d3d11videosink::begin-draw signal and should call
+   * #d3d11videosink::draw method on the #d3d11videosink::begin-draw
+   * signal handler.
+   *
+   * Currently supported formats for user texture are:
+   * - DXGI_FORMAT_R8G8B8A8_UNORM
+   * - DXGI_FORMAT_B8G8R8A8_UNORM
+   * - DXGI_FORMAT_R10G10B10A2_UNORM
+   *
+   * Since: 1.20
+   */
   g_object_class_install_property (gobject_class, PROP_DRAW_ON_SHARED_TEXTURE,
       g_param_spec_boolean ("draw-on-shared-texture",
           "Draw on shared texture",
@@ -278,11 +310,40 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstD3D11VideoSinkBin::begin-draw:
+   * @videosink: the #d3d11videosink
+   *
+   * Emitted when sink has a texture to draw. Application needs to invoke
+   * #d3d11videosink::draw action signal before returning from
+   * #d3d11videosink::begin-draw signal handler.
+   *
+   * Since: 1.20
+   */
   gst_d3d11_video_sink_bin_signals[SIGNAL_BEGIN_DRAW] =
       g_signal_new ("begin-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstD3D11VideoSinkBinClass, begin_draw),
       NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
+  /**
+   * GstD3D11VideoSinkBin::draw:
+   * @videosink: the #d3d11videosink
+   * @shard_handle: a pointer to HANDLE
+   * @texture_misc_flags: a D3D11_RESOURCE_MISC_FLAG value
+   * @acquire_key: a key value used for IDXGIKeyedMutex::AcquireSync
+   * @release_key: a key value used for IDXGIKeyedMutex::ReleaseSync
+   *
+   * Draws on a shared texture. @shard_handle must be a valid pointer to
+   * a HANDLE which was obtained via IDXGIResource::GetSharedHandle or
+   * IDXGIResource1::CreateSharedHandle.
+   *
+   * If the texture was created with D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX flag,
+   * caller must specify valid @acquire_key and @release_key.
+   * Otherwise (i.e., created with D3D11_RESOURCE_MISC_SHARED flag),
+   * @acquire_key and @release_key will be ignored.
+   *
+   * Since: 1.20
+   */
   gst_d3d11_video_sink_bin_signals[SIGNAL_DRAW] =
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
@@ -294,7 +355,7 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 video sink bin", "Sink/Video",
-      "A Direct3D11 based videosink",
+      "A Direct3D11 based videosink bin",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&pad_template_caps);

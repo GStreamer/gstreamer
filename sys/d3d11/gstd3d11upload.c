@@ -17,6 +17,23 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11upload
+ * @title: d3d11upload
+ *
+ * Upload video frame to Direct3D11 texture memory
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! d3d11upload ! d3d11videosinkelement
+ * ```
+ *   This pipeline will upload video test frame (system memory) into Direct3D11
+ * textures and d3d11videosinkelement will display frames on screen.
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -102,7 +119,7 @@ gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 uploader", "Filter/Video",
-      "Uploads data into D3D11 texture memory",
+      "Uploads data into Direct3D11 texture memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
   trans_class->passthrough_on_same_caps = TRUE;

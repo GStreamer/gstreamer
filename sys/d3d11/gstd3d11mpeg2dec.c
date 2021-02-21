@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11mpeg2dec
+ * @title: d3d11mpeg2dec
+ *
+ * A Direct3D11/DXVA based MPEG-2 video decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/mpeg2/file ! parsebin ! d3d11mpeg2dec ! d3d11videosink
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -167,9 +182,9 @@ gst_d3d11_mpeg2_dec_class_init (GstD3D11Mpeg2DecClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_d3d11_mpeg2_dec_set_context);
 
   long_name =
-      g_strdup_printf ("Direct3D11 MPEG2 %s Decoder", cdata->description);
+      g_strdup_printf ("Direct3D11/DXVA MPEG2 %s Decoder", cdata->description);
   gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Decoder/Video/Hardware", "A Direct3D11 based MPEG2 video decoder",
+      "Codec/Decoder/Video/Hardware", "A Direct3D11/DXVA MPEG2 video decoder",
       "Seungha Yang <seungha@centricular.com>");
   g_free (long_name);
 
@@ -606,6 +621,7 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
       break;
   }
 
+  /* *INDENT-OFF* */
   pic_params.wPicWidthInMBminus1 = self->width_in_mb - 1;
   pic_params.wPicHeightInMBminus1 = (self->height_in_mb >> is_field) - 1;
   pic_params.bMacroblockWidthMinus1 = 15;
@@ -624,6 +640,7 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   pic_params.bPicScanMethod = slice->pic_ext->alternate_scan;
   pic_params.wBitstreamFcodes = _pack_f_codes (slice->pic_ext->f_code);
   pic_params.wBitstreamPCEelements = _pack_pce_elements (slice);
+  /* *INDENT-ON* */
 
   GST_TRACE_OBJECT (self, "Getting picture param decoder buffer");
   if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,

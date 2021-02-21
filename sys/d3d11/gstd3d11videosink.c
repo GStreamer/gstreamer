@@ -18,6 +18,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11videosinkelement
+ * @title: d3d11videosinkelement
+ *
+ * Direct3D11 based video render element. This element allows only Direct3D11
+ * textures as a input. Use #d3d11videosink instead which is a convenient
+ * wrapper of #d3d11videosinkelement with #d3d11upload.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! d3d11upload ! d3d11videosinkelement
+ * ```
+ * This pipeline will display test video stream on screen via d3d11videosinkelement
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -221,9 +239,10 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
   /**
    * GstD3D11VideoSink:draw-on-shared-texture:
    *
-   * Instrcut the sink to draw on a shared texture provided by user.
-   * User must watch "begin-draw" signal and should call "draw" method
-   * on the "begin-draw" signal handler.
+   * Instruct the sink to draw on a shared texture provided by user.
+   * User must watch #d3d11videosinkelement::begin-draw signal and should call
+   * #d3d11videosinkelement::draw method on the #d3d11videosinkelement::begin-draw
+   * signal handler.
    *
    * Currently supported formats for user texture are:
    * - DXGI_FORMAT_R8G8B8A8_UNORM
@@ -247,11 +266,12 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstD3D11VideoSink:begin-draw:
-   * @videosink: the d3d11videosink
+   * GstD3D11VideoSink::begin-draw:
+   * @videosink: the #d3d11videosinkelement
    *
-   * Signal that sink has a texture to draw. Application needs to invoke "draw"
-   * action signal before returning from "begin-draw" signal handler.
+   * Emitted when sink has a texture to draw. Application needs to invoke
+   * #d3d11videosinkelement::draw action signal before returning from
+   * #d3d11videosinkelement::begin-draw signal handler.
    *
    * Since: 1.20
    */
@@ -261,18 +281,18 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstD3D11VideoSink:draw:
-   * @videosink: the d3d11videosink
+   * GstD3D11VideoSink::draw:
+   * @videosink: the #d3d11videosinkelement
    * @shard_handle: a pointer to HANDLE
    * @texture_misc_flags: a D3D11_RESOURCE_MISC_FLAG value
    * @acquire_key: a key value used for IDXGIKeyedMutex::AcquireSync
    * @release_key: a key value used for IDXGIKeyedMutex::ReleaseSync
    *
-   * Draws on shared texture. @shard_handle must be a valid pointer to HANDLE
-   * which was obtained via IDXGIResource::GetSharedHandle or
+   * Draws on a shared texture. @shard_handle must be a valid pointer to
+   * a HANDLE which was obtained via IDXGIResource::GetSharedHandle or
    * IDXGIResource1::CreateSharedHandle.
    *
-   * If texture was created with D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX flag,
+   * If the texture was created with D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX flag,
    * caller must specify valid @acquire_key and @release_key.
    * Otherwise (i.e., created with D3D11_RESOURCE_MISC_SHARED flag),
    * @acquire_key and @release_key will be ignored.

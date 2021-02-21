@@ -17,6 +17,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11deinterlaceelement
+ * @title: d3d11deinterlaceelement
+ *
+ * Deinterlacing interlaced video frames to progressive video frames by using
+ * ID3D11VideoProcessor API. Depending on the hardware it runs on,
+ * this element will only support a very limited set of video formats.
+ * Use #d3d11deinterlace instead, which will take care of conversion.
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -101,6 +114,13 @@ typedef enum
   /* TODO: INVERSE_TELECINE */
 } GstD3D11DeinterlaceMethod;
 
+/**
+ * GstD3D11DeinterlaceMethod:
+ *
+ * Deinterlacing method
+ *
+ * Since: 1.20
+ */
 #define GST_TYPE_D3D11_DEINTERLACE_METHOD (gst_d3d11_deinterlace_method_type())
 
 static GType
@@ -400,6 +420,9 @@ gst_d3d11_deinterlace_class_init (GstD3D11DeinterlaceClass * klass,
   klass->device_caps = cdata->device_caps;
 
   gst_d3d11_deinterlace_class_data_unref (cdata);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_DEINTERLACE_METHOD,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -1853,6 +1876,23 @@ done:
   return ret;
 }
 
+/**
+ * SECTION:element-d3d11deinterlace
+ * @title: d3d11deinterlace
+ * @short_description: A Direct3D11 based deinterlace element
+ *
+ * Deinterlacing interlaced video frames to progressive video frames by using
+ * ID3D11VideoProcessor API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/h264/file ! parsebin ! d3d11h264dec ! d3d11deinterlace ! d3d11videosink
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
 /* GstD3D11DeinterlaceBin */
 enum
 {
@@ -1999,7 +2039,7 @@ gst_d3d11_deinterlace_bin_class_init (GstD3D11DeinterlaceBinClass * klass,
       cdata->description);
   gst_element_class_set_metadata (element_class, long_name,
       "Filter/Effect/Video/Deinterlace/Hardware",
-      "A Direct3D11 based deinterlacer",
+      "A Direct3D11 based deinterlacer bin",
       "Seungha Yang <seungha@centricular.com>");
   g_free (long_name);
 

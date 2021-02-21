@@ -81,12 +81,6 @@ plugin_init (GstPlugin * plugin)
   D3D_FEATURE_LEVEL max_feature_level = D3D_FEATURE_LEVEL_9_3;
   guint i;
 
-  /**
-   * plugin-d3d11:
-   *
-   * Since: 1.18
-   */
-
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug, "d3d11", 0, "direct3d 11 plugin");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_shader_debug,
       "d3d11shader", 0, "d3d11shader");

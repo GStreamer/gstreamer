@@ -17,6 +17,28 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11download
+ * @title: d3d11download
+ * @short_description: Downloads Direct3D11 texture memory into system memory
+ *
+ * Downloads Direct3D11 texture memory into system memory
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=test_h264.mp4 ! parsebin ! d3d11h264dec ! \
+ *   d3d11convert ! d3d11download ! video/x-raw,width=640,height=480 ! mfh264enc ! \
+ *   h264parse ! mp4mux ! filesink location=output.mp4
+ * ```
+ * This pipeline will resize decoded (by #d3d11h264dec) frames to 640x480
+ * resolution by using #d3d11convert. Then it will be copied into system memory
+ * by d3d11download. Finally downloaded frames will be encoded as a new
+ * H.264 stream via #mfh264enc and muxed via mp4mux
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -102,7 +124,7 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 downloader", "Filter/Video",
-      "Downloads D3D11 texture memory into system memory",
+      "Downloads Direct3D11 texture memory into system memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
   trans_class->passthrough_on_same_caps = TRUE;

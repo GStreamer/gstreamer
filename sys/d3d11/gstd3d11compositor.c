@@ -22,6 +22,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d11compositorelement
+ * @title: d3d11compositorelement
+ *
+ * A Direct3D11 based video compositing element.
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -47,6 +57,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_compositor_debug);
  *      Find the minimum of source 1 and source 2
  * @GST_D3D11_COMPOSITOR_BLEND_OP_MAX:
  *      Find the maximum of source 1 and source 2
+ *
+ * Since: 1.20
  */
 GType
 gst_d3d11_compositor_blend_operation_get_type (void)
@@ -167,6 +179,8 @@ gst_d3d11_compositor_blend_operation_to_native (GstD3D11CompositorBlendOperation
  *      ID3D11DeviceContext::OMSetBlendState.
  *      The pre-blend operation inverts the blend factor,
  *      generating 1 - blend_factor.
+ *
+ * Since: 1.20
  */
 GType
 gst_d3d11_compositor_blend_get_type (void)
@@ -290,6 +304,13 @@ gst_d3d11_compositor_blend_to_native (GstD3D11CompositorBlend blend)
   return D3D11_BLEND_ZERO;
 }
 
+/**
+ * GstD3D11CompositorBackground:
+ *
+ * Background mode
+ *
+ * Since: 1.20
+ */
 GType
 gst_d3d11_compositor_background_get_type (void)
 {
@@ -359,6 +380,11 @@ static const gchar checker_ps_src[] =
     "}\n";
 /* *INDENT-ON* */
 
+/**
+ * GstD3D11CompositorPad:
+ *
+ * Since: 1.20
+ */
 struct _GstD3D11CompositorPad
 {
   GstVideoAggregatorConvertPad parent;
@@ -566,6 +592,9 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_pad_prepare_frame);
   vaggpadclass->clean_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_pad_clean_frame);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BLEND, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BLEND_OPERATION, 0);
 }
 
 static void
@@ -1329,8 +1358,10 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
 
   gst_element_class_set_static_metadata (element_class, "Direct3D11 Compositor",
       "Filter/Editor/Video/Compositor",
-      "Composite multiple video streams via D3D11 API",
-      "Seungha Yang <seungha@centricular.com>");
+      "A Direct3D11 compositor", "Seungha Yang <seungha@centricular.com>");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_BACKGROUND, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_PAD, 0);
 }
 
 static void
