@@ -557,7 +557,8 @@ static void
 gst_audio_resample_dump_drain (GstAudioResample * resample, guint history_len)
 {
   gsize out_len, outsize;
-  gpointer out[1];
+  GstBuffer *outbuf;
+  GstAudioBuffer abuf;
 
   out_len =
       gst_audio_converter_get_out_frames (resample->converter, history_len);
@@ -565,11 +566,19 @@ gst_audio_resample_dump_drain (GstAudioResample * resample, guint history_len)
     return;
 
   outsize = out_len * resample->out.bpf;
+  outbuf = gst_buffer_new_and_alloc (outsize);
 
-  out[0] = g_malloc (outsize);
+  if (GST_AUDIO_INFO_LAYOUT (&resample->out) ==
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    gst_buffer_add_audio_meta (outbuf, &resample->out, out_len, NULL);
+  }
+
+  gst_audio_buffer_map (&abuf, &resample->out, outbuf, GST_MAP_WRITE);
   gst_audio_converter_samples (resample->converter, 0, NULL, history_len,
-      out, out_len);
-  g_free (out[0]);
+      abuf.planes, out_len);
+  gst_audio_buffer_unmap (&abuf);
+
+  gst_buffer_unref (outbuf);
 }
 
 static void
