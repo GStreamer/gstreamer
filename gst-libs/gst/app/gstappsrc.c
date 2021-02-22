@@ -1014,6 +1014,17 @@ gst_app_src_send_event (GstElement * element, GstEvent * event)
       g_mutex_unlock (&priv->mutex);
       break;
     default:
+      if (GST_EVENT_IS_SERIALIZED (event)) {
+        GST_DEBUG_OBJECT (appsrc, "queue event: %" GST_PTR_FORMAT, event);
+        g_mutex_lock (&priv->mutex);
+        gst_queue_array_push_tail (priv->queue, event);
+
+        if ((priv->wait_status & STREAM_WAITING))
+          g_cond_broadcast (&priv->cond);
+
+        g_mutex_unlock (&priv->mutex);
+        return TRUE;
+      }
       break;
   }
 
@@ -1596,6 +1607,11 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
   }
 
   while (TRUE) {
+    /* Our lock may have been release to push events or caps, check out
+     * state in case we are now flushing. */
+    if (G_UNLIKELY (priv->flushing))
+      goto flushing;
+
     /* return data as long as we have some */
     if (!gst_queue_array_is_empty (priv->queue)) {
       GstMiniObject *obj = gst_queue_array_pop_head (priv->queue);
@@ -1617,13 +1633,6 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
 
         if (caps_changed)
           gst_app_src_do_negotiate (bsrc);
-
-        /* Lock has released so now may need
-         *- flushing
-         *- new caps change
-         *- check queue has data */
-        if (G_UNLIKELY (priv->flushing))
-          goto flushing;
 
         /* Continue checks caps and queue */
         continue;
@@ -1661,24 +1670,56 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         *buf = NULL;
       } else if (GST_IS_EVENT (obj)) {
         GstEvent *event = GST_EVENT (obj);
-        const GstSegment *segment = NULL;
 
-        gst_event_parse_segment (event, &segment);
-        g_assert (segment != NULL);
+        GST_DEBUG_OBJECT (appsrc, "pop event %" GST_PTR_FORMAT, event);
 
-        if (!gst_segment_is_equal (&priv->current_segment, segment)) {
-          GST_DEBUG_OBJECT (appsrc,
-              "Update new segment %" GST_PTR_FORMAT, event);
-          if (!gst_base_src_new_segment (bsrc, segment)) {
-            GST_ERROR_OBJECT (appsrc,
-                "Couldn't set new segment %" GST_PTR_FORMAT, event);
-            gst_event_unref (event);
-            goto invalid_segment;
+        if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+          const GstSegment *segment = NULL;
+
+          gst_event_parse_segment (event, &segment);
+          g_assert (segment != NULL);
+
+          if (!gst_segment_is_equal (&priv->current_segment, segment)) {
+            GST_DEBUG_OBJECT (appsrc,
+                "Update new segment %" GST_PTR_FORMAT, event);
+            if (!gst_base_src_new_segment (bsrc, segment)) {
+              GST_ERROR_OBJECT (appsrc,
+                  "Couldn't set new segment %" GST_PTR_FORMAT, event);
+              gst_event_unref (event);
+              goto invalid_segment;
+            }
+            gst_segment_copy_into (segment, &priv->current_segment);
           }
-          gst_segment_copy_into (segment, &priv->current_segment);
-        }
 
-        gst_event_unref (event);
+          gst_event_unref (event);
+        } else {
+          GstEvent *seg_event;
+          GstSegment last_segment = priv->last_segment;
+
+          /* event is serialized with the buffers flow */
+
+          /* We are about to push an event, release out lock */
+          g_mutex_unlock (&priv->mutex);
+
+          seg_event =
+              gst_pad_get_sticky_event (GST_BASE_SRC_PAD (appsrc),
+              GST_EVENT_SEGMENT, 0);
+          if (!seg_event) {
+            seg_event = gst_event_new_segment (&last_segment);
+
+            GST_DEBUG_OBJECT (appsrc,
+                "received serialized event before first buffer, push default segment %"
+                GST_PTR_FORMAT, seg_event);
+
+            gst_pad_push_event (GST_BASE_SRC_PAD (appsrc), seg_event);
+          } else {
+            gst_event_unref (seg_event);
+          }
+
+          gst_pad_push_event (GST_BASE_SRC_PAD (appsrc), event);
+
+          g_mutex_lock (&priv->mutex);
+        }
         continue;
       } else {
         g_assert_not_reached ();

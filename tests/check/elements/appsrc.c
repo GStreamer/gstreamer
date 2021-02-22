@@ -1368,6 +1368,78 @@ GST_START_TEST (test_appsrc_limits)
 
 GST_END_TEST;
 
+static GstFlowReturn
+send_event_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buf)
+{
+  GST_LOG ("  buffer # %3u", (guint) GST_BUFFER_OFFSET (buf));
+
+  fail_unless_equals_int (GST_BUFFER_OFFSET (buf), expect_offset);
+  ++expect_offset;
+  gst_buffer_unref (buf);
+
+  if (expect_offset == 2) {
+    /* test is done */
+    g_mutex_lock (&check_mutex);
+    done = TRUE;
+    g_cond_signal (&check_cond);
+    g_mutex_unlock (&check_mutex);
+  }
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+send_event_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_LOG ("event %" GST_PTR_FORMAT, event);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM) {
+    /* this event should arrive after the first buffer */
+    fail_unless_equals_int (expect_offset, 1);
+  }
+  gst_event_unref (event);
+  return TRUE;
+}
+
+/* check that custom downstream events are properly serialized with buffers */
+GST_START_TEST (test_appsrc_send_custom_event)
+{
+  GstElement *src;
+  GstBuffer *buf;
+
+  src = setup_appsrc ();
+
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  expect_offset = 0;
+  gst_pad_set_chain_function (mysinkpad, send_event_chain_func);
+  gst_pad_set_event_function (mysinkpad, send_event_event_func);
+
+  /* send a buffer, a custom event and a second buffer */
+  buf = gst_buffer_new_and_alloc (1);
+  GST_BUFFER_OFFSET (buf) = 0;
+  fail_unless (gst_app_src_push_buffer (GST_APP_SRC_CAST (src),
+          buf) == GST_FLOW_OK);
+
+  gst_element_send_event (src,
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new ("custom", NULL, NULL)));
+
+  buf = gst_buffer_new_and_alloc (2);
+  GST_BUFFER_OFFSET (buf) = 1;
+  fail_unless (gst_app_src_push_buffer (GST_APP_SRC_CAST (src),
+          buf) == GST_FLOW_OK);
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsrc (src);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsrc_suite (void)
 {
@@ -1382,6 +1454,7 @@ appsrc_suite (void)
   tcase_add_test (tc_chain, test_appsrc_period_with_custom_segment);
   tcase_add_test (tc_chain, test_appsrc_custom_segment_twice);
   tcase_add_test (tc_chain, test_appsrc_limits);
+  tcase_add_test (tc_chain, test_appsrc_send_custom_event);
 
   if (RUNNING_ON_VALGRIND)
     tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 5);
