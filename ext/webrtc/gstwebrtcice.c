@@ -1056,11 +1056,15 @@ static void
 gst_webrtc_ice_constructed (GObject * object)
 {
   GstWebRTCICE *ice = GST_WEBRTC_ICE (object);
+  NiceAgentOption options = 0;
 
   _start_thread (ice);
 
+  options |= NICE_AGENT_OPTION_ICE_TRICKLE;
+  options |= NICE_AGENT_OPTION_REGULAR_NOMINATION;
+
   ice->priv->nice_agent = nice_agent_new_full (ice->priv->main_context,
-      NICE_COMPATIBILITY_RFC5245, NICE_AGENT_OPTION_ICE_TRICKLE);
+      NICE_COMPATIBILITY_RFC5245, options);
   g_signal_connect (ice->priv->nice_agent, "new-candidate-full",
       G_CALLBACK (_on_new_candidate), ice);
 
