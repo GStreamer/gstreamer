@@ -39,6 +39,15 @@
  * gst-launch-1.0 videotestsrc ! "video/x-raw,format=(string)NV12" ! vapostproc ! autovideosink
  * ```
  *
+ * Cropping is supported via buffers' crop meta. It's only done if the
+ * postproccessor is not in passthrough mode or if downstream doesn't
+ * support the crop meta API.
+ *
+ * ### Cropping example
+ * ```
+ * gst-launch-1.0 videotestsrc ! "video/x-raw,format=(string)NV12" ! videocrop bottom=50 left=100 ! vapostproc ! autovideosink
+ * ```
+ *
  * If the VA driver support color balance filter, with controls such
  * as hue, brightness, contrast, etc., those controls are exposed both
  * as element properties and through the #GstColorBalance interface.
@@ -114,6 +123,7 @@ struct _GstVaVpp
   GstVideoInfo srcpad_info;
 
   gboolean rebuild_filters;
+  gboolean forward_crop;
   guint op_flags;
 
   /* filters */
@@ -150,6 +160,7 @@ enum
   VPP_CONVERT_FILTERS = 1 << 2,
   VPP_CONVERT_DIRECTION = 1 << 3,
   VPP_CONVERT_FEATURE = 1 << 4,
+  VPP_CONVERT_CROP = 1 << 5,
 };
 
 extern GRecMutex GST_VA_SHARED_LOCK;
@@ -509,8 +520,15 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
   gst_clear_caps (&self->alloccaps);
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query))
+          decide_query, query)) {
+    self->forward_crop = FALSE;
     return FALSE;
+  }
+
+  self->forward_crop =
+      (gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
+          NULL)
+      && gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL));
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (caps == NULL)
@@ -569,6 +587,7 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
     gst_object_unref (pool);
 
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
   }
 
   return TRUE;
@@ -612,9 +631,9 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *outcaps = NULL;
   GstStructure *config;
+  GstVideoInfo alloc_info;
   guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
   gboolean update_pool, update_allocator, has_videometa, copy_frames;
-  GstVideoInfo alloc_info;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -658,9 +677,6 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     update_pool = FALSE;
   }
 
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, NULL);
-
   if (!allocator) {
     if (!(allocator = _create_allocator (self, outcaps, usage_hint)))
       return FALSE;
@@ -694,6 +710,9 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+
   copy_frames = (!has_videometa && gst_va_pool_requires_video_meta (pool)
       && gst_caps_is_raw (outcaps));
   if (copy_frames) {
@@ -719,6 +738,7 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   gst_clear_object (&other_allocator);
   gst_clear_object (&other_pool);
 
+  /* removes allocation metas */
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
 }
@@ -1019,6 +1039,22 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (self), stream_time);
 
+  GST_OBJECT_LOCK (self);
+  if (gst_buffer_get_video_crop_meta (inbuf)) {
+    /* enable cropping if either already do operations on frame or
+     * downstream doesn't support cropping */
+    if (self->op_flags == 0 && self->forward_crop) {
+      self->op_flags &= ~VPP_CONVERT_CROP;
+    } else {
+      self->op_flags |= VPP_CONVERT_CROP;
+    }
+  } else {
+    self->op_flags &= ~VPP_CONVERT_CROP;
+  }
+  gst_va_filter_enable_cropping (self->filter,
+      (self->op_flags & VPP_CONVERT_CROP));
+  GST_OBJECT_UNLOCK (self);
+
   gst_va_vpp_rebuild_filters (self);
   gst_va_vpp_update_passthrough (self, TRUE);
 }
@@ -1271,21 +1307,6 @@ unknown_format:
 }
 
 static gboolean
-gst_va_vpp_filter_meta (GstBaseTransform * trans, GstQuery * query,
-    GType api, const GstStructure * params)
-{
-  /* FIXME: This element cannot passthrough the crop meta, because it
-   * would convert the wrong sub-region of the image, and worst, our
-   * output image may not be large enough for the crop to be applied
-   * later */
-  if (api == GST_VIDEO_CROP_META_API_TYPE)
-    return FALSE;
-
-  /* propose all other metadata upstream */
-  return TRUE;
-}
-
-static gboolean
 gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
     GstMeta * meta, GstBuffer * outbuf)
 {
@@ -1302,7 +1323,7 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
   if ((self->op_flags & VPP_CONVERT_FORMAT)
       && gst_meta_api_type_has_tag (info->api, META_TAG_COLORSPACE))
     return FALSE;
-  else if ((self->op_flags & VPP_CONVERT_SIZE)
+  else if ((self->op_flags & (VPP_CONVERT_SIZE | VPP_CONVERT_CROP))
       && gst_meta_api_type_has_tag (info->api, META_TAG_SIZE))
     return FALSE;
   else if ((self->op_flags & VPP_CONVERT_DIRECTION)
@@ -2464,7 +2485,6 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_vpp_before_transform);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_va_vpp_transform);
   trans_class->transform_meta = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_meta);
-  trans_class->filter_meta = GST_DEBUG_FUNCPTR (gst_va_vpp_filter_meta);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_va_vpp_src_event);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_va_vpp_sink_event);
   trans_class->generate_output = GST_DEBUG_FUNCPTR (gst_va_vpp_generate_output);
