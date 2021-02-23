@@ -462,6 +462,7 @@ rtp_twcc_manager_add_fci (RTPTWCCManager * twcc, GstRTCPPacket * packet)
   guint symbol_size = 1;
   GstClockTimeDiff delta_ts;
   gint64 delta_ts_rounded;
+  guint8 fb_pkt_count;
 
   g_array_sort (twcc->recv_packets, _twcc_seqnum_sort);
 
@@ -473,19 +474,19 @@ rtp_twcc_manager_add_fci (RTPTWCCManager * twcc, GstRTCPPacket * packet)
 
   packet_count = last->seqnum - first->seqnum + 1;
   base_time = first->ts / REF_TIME_UNIT;
+  fb_pkt_count = (guint8) (twcc->fb_pkt_count % G_MAXUINT8);
 
   GST_WRITE_UINT16_BE (header.base_seqnum, first->seqnum);
   GST_WRITE_UINT16_BE (header.packet_count, packet_count);
   GST_WRITE_UINT24_BE (header.base_time, base_time);
-  GST_WRITE_UINT8 (header.fb_pkt_count, twcc->fb_pkt_count % G_MAXUINT8);
+  GST_WRITE_UINT8 (header.fb_pkt_count, fb_pkt_count);
 
   base_time *= REF_TIME_UNIT;
   ts_rounded = base_time;
 
   GST_DEBUG ("Created TWCC feedback: base_seqnum: #%u, packet_count: %u, "
       "base_time %" GST_TIME_FORMAT " fb_pkt_count: %u",
-      first->seqnum, packet_count, GST_TIME_ARGS (base_time),
-      twcc->fb_pkt_count % G_MAXUINT8);
+      first->seqnum, packet_count, GST_TIME_ARGS (base_time), fb_pkt_count);
 
   twcc->fb_pkt_count++;
   twcc->expected_recv_seqnum = first->seqnum + packet_count;
