@@ -1381,7 +1381,10 @@ gst_va_allocator_alloc (GstAllocator * allocator)
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  g_return_val_if_fail (self->rt_format != 0, NULL);
+  if (self->fourcc == 0 || self->rt_format == 0) {
+    GST_ERROR_OBJECT (self, "Unknown fourcc or chroma format");
+    return NULL;
+  }
 
   if (!_create_surfaces (self->display, self->rt_format, self->fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
