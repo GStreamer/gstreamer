@@ -571,6 +571,9 @@ gboolean
 gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
 {
   guint i;
+  const GParamFlags common_flags = G_PARAM_READWRITE
+      | GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS
+      | GST_PARAM_MUTABLE_PLAYING | GST_PARAM_CONTROLLABLE;
 
   g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
 
@@ -583,9 +586,6 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
   for (i = 0; i < self->available_filters->len; i++) {
     const struct VaFilter *filter =
         &g_array_index (self->available_filters, struct VaFilter, i);
-    const GParamFlags common_flags = G_PARAM_READWRITE
-        | GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS
-        | GST_PARAM_DOC_SHOW_DEFAULT;
 
     switch (filter->type) {
       case VAProcFilterNoiseReduction:{
@@ -659,8 +659,7 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
         g_param_spec_enum ("video-direction", "Video Direction",
             "Video direction: rotation and flipping",
             GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
-            G_PARAM_READWRITE | GST_PARAM_CONDITIONALLY_AVAILABLE
-            | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT));
+            common_flags));
   }
 
   return TRUE;
