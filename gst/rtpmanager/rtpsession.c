@@ -117,9 +117,6 @@ enum
   else                                  \
    (avg) = ((val) + (15 * (avg))) >> 4;
 
-
-#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
-
 /* GObject vmethods */
 static void rtp_session_finalize (GObject * object);
 static void rtp_session_set_property (GObject * object, guint prop_id,
@@ -2196,22 +2193,6 @@ clean_packet_info (RTPPacketInfo * pinfo)
     g_bytes_unref (pinfo->header_ext);
 }
 
-static gint32
-packet_info_get_twcc_seqnum (RTPPacketInfo * pinfo, guint8 ext_id)
-{
-  gint32 val = -1;
-  gpointer data;
-  guint size;
-
-  if (pinfo->header_ext &&
-      gst_rtp_buffer_get_extension_onebyte_header_from_bytes (pinfo->header_ext,
-          pinfo->header_ext_bit_pattern, ext_id, 0, &data, &size)) {
-    if (size == 2)
-      val = GST_READ_UINT16_BE (data);
-  }
-  return val;
-}
-
 static gboolean
 source_update_active (RTPSession * sess, RTPSource * source,
     gboolean prevactive)
@@ -2237,16 +2218,7 @@ source_update_active (RTPSession * sess, RTPSource * source,
 static void
 process_twcc_packet (RTPSession * sess, RTPPacketInfo * pinfo)
 {
-  gint32 twcc_seqnum;
-
-  if (sess->twcc_recv_ext_id == 0)
-    return;
-
-  twcc_seqnum = packet_info_get_twcc_seqnum (pinfo, sess->twcc_recv_ext_id);
-  if (twcc_seqnum == -1)
-    return;
-
-  if (rtp_twcc_manager_recv_packet (sess->twcc, twcc_seqnum, pinfo)) {
+  if (rtp_twcc_manager_recv_packet (sess->twcc, pinfo)) {
     RTP_SESSION_UNLOCK (sess);
 
     /* TODO: find a better rational for this number, and possibly tune it based
@@ -3151,29 +3123,6 @@ invalid_packet:
   }
 }
 
-static guint8
-_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
-{
-  guint i;
-  guint8 extmap_id = 0;
-  guint n_fields = gst_structure_n_fields (s);
-
-  for (i = 0; i < n_fields; i++) {
-    const gchar *field_name = gst_structure_nth_field_name (s, i);
-    if (g_str_has_prefix (field_name, "extmap-")) {
-      const gchar *str = gst_structure_get_string (s, field_name);
-      if (str && g_strcmp0 (str, ext_name) == 0) {
-        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
-        if (id > 0 && id < 15) {
-          extmap_id = id;
-          break;
-        }
-      }
-    }
-  }
-  return extmap_id;
-}
-
 /**
  * rtp_session_update_send_caps:
  * @sess: an #RTPSession
@@ -3229,28 +3178,8 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     sess->internal_ssrc_from_caps_or_property = FALSE;
   }
 
-  sess->twcc_send_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
-  if (sess->twcc_send_ext_id > 0) {
-    GST_INFO ("TWCC enabled for send using extension id: %u",
-        sess->twcc_send_ext_id);
-  }
+  rtp_twcc_manager_parse_send_ext_id (sess->twcc, s);
 }
-
-static void
-send_twcc_packet (RTPSession * sess, RTPPacketInfo * pinfo)
-{
-  gint32 twcc_seqnum;
-
-  if (sess->twcc_send_ext_id == 0)
-    return;
-
-  twcc_seqnum = packet_info_get_twcc_seqnum (pinfo, sess->twcc_send_ext_id);
-  if (twcc_seqnum == -1)
-    return;
-
-  rtp_twcc_manager_send_packet (sess->twcc, twcc_seqnum, pinfo);
-}
-
 
 /**
  * rtp_session_send_rtp:
@@ -3286,7 +3215,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
           current_time, running_time, -1))
     goto invalid_packet;
 
-  send_twcc_packet (sess, &pinfo);
+  rtp_twcc_manager_send_packet (sess->twcc, &pinfo);
 
   source = obtain_internal_source (sess, pinfo.ssrc, &created, current_time);
   if (created)
@@ -4947,10 +4876,5 @@ void
 rtp_session_update_recv_caps_structure (RTPSession * sess,
     const GstStructure * s)
 {
-  guint8 ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
-  if (ext_id > 0) {
-    sess->twcc_recv_ext_id = ext_id;
-    GST_INFO ("TWCC enabled for recv using extension id: %u",
-        sess->twcc_recv_ext_id);
-  }
+  rtp_twcc_manager_parse_recv_ext_id (sess->twcc, s);
 }

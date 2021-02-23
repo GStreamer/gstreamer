@@ -25,6 +25,8 @@
 GST_DEBUG_CATEGORY_EXTERN (rtp_session_debug);
 #define GST_CAT_DEFAULT rtp_session_debug
 
+#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
 #define REF_TIME_UNIT (64 * GST_MSECOND)
 #define DELTA_UNIT (250 * GST_USECOND)
 #define MAX_TS_DELTA (0xff * DELTA_UNIT)
@@ -70,6 +72,10 @@ typedef struct
 struct _RTPTWCCManager
 {
   GObject object;
+
+  guint8 send_ext_id;
+  guint8 recv_ext_id;
+  guint16 send_seqnum;
 
   guint mtu;
   guint max_packets_per_rtcp;
@@ -155,6 +161,51 @@ recv_packet_init (RecvPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo)
   packet->ts = pinfo->running_time;
 }
 
+static guint8
+_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
+{
+  guint i;
+  guint8 extmap_id = 0;
+  guint n_fields = gst_structure_n_fields (s);
+
+  for (i = 0; i < n_fields; i++) {
+    const gchar *field_name = gst_structure_nth_field_name (s, i);
+    if (g_str_has_prefix (field_name, "extmap-")) {
+      const gchar *str = gst_structure_get_string (s, field_name);
+      if (str && g_strcmp0 (str, ext_name) == 0) {
+        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
+        if (id > 0 && id < 15) {
+          extmap_id = id;
+          break;
+        }
+      }
+    }
+  }
+  return extmap_id;
+}
+
+void
+rtp_twcc_manager_parse_recv_ext_id (RTPTWCCManager * twcc,
+    const GstStructure * s)
+{
+  twcc->recv_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+  if (twcc->recv_ext_id > 0) {
+    GST_INFO ("TWCC enabled for recv using extension id: %u",
+        twcc->recv_ext_id);
+  }
+}
+
+void
+rtp_twcc_manager_parse_send_ext_id (RTPTWCCManager * twcc,
+    const GstStructure * s)
+{
+  twcc->send_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+  if (twcc->send_ext_id > 0) {
+    GST_INFO ("TWCC enabled for send using extension id: %u",
+        twcc->send_ext_id);
+  }
+}
+
 void
 rtp_twcc_manager_set_mtu (RTPTWCCManager * twcc, guint mtu)
 {
@@ -178,6 +229,63 @@ GstClockTime
 rtp_twcc_manager_get_feedback_interval (RTPTWCCManager * twcc)
 {
   return twcc->feedback_interval;
+}
+
+static gboolean
+_get_twcc_seqnum_data (RTPPacketInfo * pinfo, guint8 ext_id, gpointer * data)
+{
+  gboolean ret = FALSE;
+  guint size;
+
+  if (pinfo->header_ext &&
+      gst_rtp_buffer_get_extension_onebyte_header_from_bytes (pinfo->header_ext,
+          pinfo->header_ext_bit_pattern, ext_id, 0, data, &size)) {
+    if (size == 2)
+      ret = TRUE;
+  }
+  return ret;
+}
+
+static void
+_set_twcc_seqnum_data (GstBuffer * buf, guint8 ext_id, guint16 seqnum)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  gpointer data;
+
+  if (gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp)) {
+    if (gst_rtp_buffer_get_extension_onebyte_header (&rtp,
+            ext_id, 0, &data, NULL)) {
+      GST_WRITE_UINT16_BE (data, seqnum);
+    }
+    gst_rtp_buffer_unmap (&rtp);
+  }
+}
+
+static guint16
+rtp_twcc_manager_set_send_twcc_seqnum (RTPTWCCManager * twcc,
+    RTPPacketInfo * pinfo)
+{
+  guint16 seqnum = twcc->send_seqnum++;
+  pinfo->data = gst_buffer_make_writable (pinfo->data);
+  _set_twcc_seqnum_data (pinfo->data, twcc->send_ext_id, seqnum);
+  return seqnum;
+}
+
+static gint32
+rtp_twcc_manager_get_recv_twcc_seqnum (RTPTWCCManager * twcc,
+    RTPPacketInfo * pinfo)
+{
+  gint32 val = -1;
+  gpointer data;
+
+  if (twcc->recv_ext_id == 0)
+    return val;
+
+  if (_get_twcc_seqnum_data (pinfo, twcc->recv_ext_id, &data)) {
+    val = GST_READ_UINT16_BE (data);
+  }
+
+  return val;
 }
 
 static gint
@@ -621,12 +729,16 @@ _many_packets_some_lost (RTPTWCCManager * twcc, guint16 seqnum)
 }
 
 gboolean
-rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
-    guint16 seqnum, RTPPacketInfo * pinfo)
+rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
 {
   gboolean send_feedback = FALSE;
   RecvPacket packet;
+  gint32 seqnum;
   gint diff;
+
+  seqnum = rtp_twcc_manager_get_recv_twcc_seqnum (twcc, pinfo);
+  if (seqnum == -1)
+    return FALSE;
 
   /* if this packet would exceed the capacity of our MTU, we create a feedback
      with the current packets, and start over with this one */
@@ -666,8 +778,10 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
   recv_packet_init (&packet, seqnum, pinfo);
   g_array_append_val (twcc->recv_packets, packet);
   twcc->last_seqnum = seqnum;
-  GST_LOG ("Receive: twcc-seqnum: %u, marker: %d, ts: %" GST_TIME_FORMAT,
-      seqnum, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
+
+  GST_LOG ("Receive: twcc-seqnum: %u, pt: %u, marker: %d, ts: %"
+      GST_TIME_FORMAT, seqnum, pinfo->pt, pinfo->marker,
+      GST_TIME_ARGS (pinfo->running_time));
 
   if (!pinfo->marker)
     twcc->packet_count_no_marker++;
@@ -732,15 +846,22 @@ sent_packet_init (SentPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo)
 }
 
 void
-rtp_twcc_manager_send_packet (RTPTWCCManager * twcc,
-    guint16 seqnum, RTPPacketInfo * pinfo)
+rtp_twcc_manager_send_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
 {
   SentPacket packet;
+  guint16 seqnum;
+
+  if (twcc->send_ext_id == 0)
+    return;
+
+  seqnum = rtp_twcc_manager_set_send_twcc_seqnum (twcc, pinfo);
+
   sent_packet_init (&packet, seqnum, pinfo);
   g_array_append_val (twcc->sent_packets, packet);
 
-  GST_LOG ("Send: twcc-seqnum: %u, marker: %d, ts: %" GST_TIME_FORMAT,
-      seqnum, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
+
+  GST_LOG ("Send: twcc-seqnum: %u, pt: %u, marker: %d, ts: %" GST_TIME_FORMAT,
+      seqnum, pinfo->pt, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
 }
 
 static void
