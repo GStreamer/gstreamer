@@ -42,6 +42,7 @@
 #include <config.h>
 #endif
 
+#include "gstsrtelements.h"
 #include "gstsrtsink.h"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -78,6 +79,8 @@ G_DEFINE_TYPE_WITH_CODE (GstSRTSink, gst_srt_sink,
     GST_TYPE_BASE_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_srt_sink_uri_handler_init)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "srtsink", 0, "SRT Sink"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (srtsink, "srtsink", GST_RANK_PRIMARY,
+    GST_TYPE_SRT_SINK, srt_element_init (plugin));
 
 static gboolean
 default_caller_connecting (GstSRTSink * self,

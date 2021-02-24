@@ -45,6 +45,7 @@
 #include <config.h>
 #endif
 
+#include "gstsrtelements.h"
 #include "gstsrtsrc.h"
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -81,6 +82,8 @@ G_DEFINE_TYPE_WITH_CODE (GstSRTSrc, gst_srt_src,
     GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_srt_src_uri_handler_init)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "srtsrc", 0, "SRT Source"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (srtsrc, "srtsrc", GST_RANK_PRIMARY,
+    GST_TYPE_SRT_SRC, srt_element_init (plugin));
 
 static gboolean
 src_default_caller_connecting (GstSRTSrc * self,
