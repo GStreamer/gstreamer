@@ -95,8 +95,6 @@ struct _GstSrtpEncClass
 
 GType gst_srtp_enc_get_type (void);
 
-gboolean gst_srtp_enc_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 
 #endif /* __GST_SRTPENC_H__ */

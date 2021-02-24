@@ -106,6 +106,7 @@
  * will be added to every buffer.
  */
 
+#include "gstsrtpelements.h"
 #include "gstsrtpenc.h"
 
 #include <gst/rtp/gstrtpbuffer.h>
@@ -201,7 +202,10 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_src_%u",
     GST_STATIC_CAPS ("application/x-srtcp")
     );
 
-G_DEFINE_TYPE (GstSrtpEnc, gst_srtp_enc, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstSrtpEnc, gst_srtp_enc, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_srtp_enc_debug, "srtpenc", 0, "SRTP Enc"););
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (srtpenc, "srtpenc", GST_RANK_NONE,
+    GST_TYPE_SRTP_ENC, srtp_element_init (plugin));
 
 static guint gst_srtp_enc_signals[LAST_SIGNAL] = { 0 };
 
@@ -1491,17 +1495,4 @@ gst_srtp_enc_sink_event_rtcp (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   return gst_srtp_enc_sink_event (pad, parent, event, TRUE);
-}
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-gboolean
-gst_srtp_enc_plugin_init (GstPlugin * srtpenc)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_srtp_enc_debug, "srtpenc", 0, "SRTP Enc");
-
-  return gst_element_register (srtpenc, "srtpenc", GST_RANK_NONE,
-      GST_TYPE_SRTP_ENC);
 }

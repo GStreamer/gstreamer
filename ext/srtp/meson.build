@@ -1,5 +1,7 @@
 srtp_sources = [
   'gstsrtp.c',
+  'gstsrtpelement.c',
+  'gstsrtpplugin.c',
   'gstsrtpdec.c',
   'gstsrtpenc.c',
 ]

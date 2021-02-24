@@ -1,8 +1,7 @@
 /*
- * GStreamer - GStreamer SRTP decoder
+ * GStreamer - GStreamer SRTP encoder
  *
- * Copyright 2009 Collabora Ltd.
- *  @author: Gabriel Millaire <gabriel.millaire@collabora.co.uk>
+ * Copyright 2011-2013 Collabora Ltd.
  *  @author: Olivier Crete <olivier.crete@collabora.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -43,62 +42,22 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifndef __GST_SRTP_ELEMENTS_H__
+#define __GST_SRTP_ELEMENTS_H__
 
-#ifndef __GST_SRTPDEC_H__
-#define __GST_SRTPDEC_H__
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "gstsrtp.h"
+#include "gstsrtpenums.h"
+#include "gstsrtp-enumtypes.h"
 
-G_BEGIN_DECLS
+#include <gst/gst.h>
 
-#define GST_TYPE_SRTP_DEC \
-  (gst_srtp_dec_get_type())
-#define GST_SRTP_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SRTP_DEC,GstSrtpDec))
-#define GST_SRTP_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SRTP_DEC,GstSrtpDecClass))
-#define GST_IS_SRTP_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SRTP_DEC))
-#define GST_IS_SRTP_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SRTP_DEC))
+void srtp_element_init (GstPlugin * plugin);
 
-typedef struct _GstSrtpDec      GstSrtpDec;
-typedef struct _GstSrtpDecClass GstSrtpDecClass;
-typedef struct _GstSrtpDecSsrcStream GstSrtpDecSsrcStream;
+GST_ELEMENT_REGISTER_DECLARE (srtpdec);
+GST_ELEMENT_REGISTER_DECLARE (srtpenc);
 
-struct _GstSrtpDec
-{
-  GstElement element;
-
-  guint replay_window_size;
-
-  GstPad *rtp_sinkpad, *rtp_srcpad;
-  GstPad *rtcp_sinkpad, *rtcp_srcpad;
-
-  gboolean ask_update;
-  srtp_t session;
-  gboolean first_session;
-  GHashTable *streams;
-
-  gboolean rtp_has_segment;
-  gboolean rtcp_has_segment;
-
-#ifndef HAVE_SRTP2
-  GHashTable *streams_roc_changed;
-#endif
-};
-
-struct _GstSrtpDecClass
-{
-  GstElementClass parent_class;
-
-  void (*clear_streams) (GstSrtpDec * filter);
-  void (*remove_stream) (GstSrtpDec * filter, guint ssrc);
-};
-
-GType gst_srtp_dec_get_type (void);
-
-
-G_END_DECLS
-
-#endif /* __GST_SRTPDEC_H__ */
+#endif /* __GST_SRTP_ELEMENTS_H__ */

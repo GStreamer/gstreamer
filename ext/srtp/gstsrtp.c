@@ -297,26 +297,3 @@ cipher_key_size (GstSrtpCipherType cipher)
 
   return size;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  srtp_init ();
-
-  if (!gst_srtp_enc_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_srtp_dec_plugin_init (plugin))
-    return FALSE;
-
-  gst_type_mark_as_plugin_api (GST_TYPE_SRTP_AUTH_TYPE, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_SRTP_CIPHER_TYPE, 0);
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    srtp,
-    "GStreamer SRTP",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
