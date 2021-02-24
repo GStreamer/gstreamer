@@ -26,8 +26,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "voaacenc",
-      GST_RANK_SECONDARY, GST_TYPE_VOAACENC);
+  return GST_ELEMENT_REGISTER (voaacenc, plugin);
 }
 
 

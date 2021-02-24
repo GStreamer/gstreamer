@@ -107,6 +107,8 @@ static GstFlowReturn gst_voaacenc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 
 G_DEFINE_TYPE (GstVoAacEnc, gst_voaacenc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (voaacenc, "voaacenc",
+    GST_RANK_SECONDARY, GST_TYPE_VOAACENC);
 
 static void
 gst_voaacenc_set_property (GObject * object, guint prop_id,
