@@ -122,6 +122,8 @@ G_DEFINE_TYPE_WITH_CODE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK,
         gst_wayland_sink_videooverlay_init)
     G_IMPLEMENT_INTERFACE (GST_TYPE_WAYLAND_VIDEO,
         gst_wayland_sink_waylandvideo_init));
+GST_ELEMENT_REGISTER_DEFINE (waylandsink, "waylandsink", GST_RANK_MARGINAL,
+    GST_TYPE_WAYLAND_SINK);
 
 /* A tiny GstVideoBufferPool subclass that modify the options to remove
  * VideoAlignment. To support VideoAlignment we would need to pass the padded
@@ -1054,8 +1056,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_wl_shm_allocator_register ();
 
-  return gst_element_register (plugin, "waylandsink", GST_RANK_MARGINAL,
-      GST_TYPE_WAYLAND_SINK);
+  return GST_ELEMENT_REGISTER (waylandsink, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
