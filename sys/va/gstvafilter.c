@@ -26,7 +26,6 @@
 
 #include <gst/video/video.h>
 
-#include <va/va_vpp.h>
 #include <va/va_drmcommon.h>
 
 #include "gstvacaps.h"
@@ -663,6 +662,30 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
   }
 
   return TRUE;
+}
+
+gboolean
+gst_va_filter_has_filter (GstVaFilter * self, VAProcFilterType type)
+{
+  guint i;
+
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  if (!gst_va_filter_ensure_filters (self))
+    return FALSE;
+
+  for (i = 0; i < self->available_filters->len; i++) {
+    const struct VaFilter *filter =
+        &g_array_index (self->available_filters, struct VaFilter, i);
+
+    if (filter->type == type)
+      return TRUE;
+  }
+
+  return FALSE;
 }
 
 const gpointer

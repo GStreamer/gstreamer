@@ -24,6 +24,8 @@
 
 #include <gst/video/video.h>
 
+#include <va/va_vpp.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VA_FILTER (gst_va_filter_get_type())
@@ -48,6 +50,8 @@ GstVaFilter *         gst_va_filter_new                   (GstVaDisplay * displa
 gboolean              gst_va_filter_open                  (GstVaFilter * self);
 gboolean              gst_va_filter_close                 (GstVaFilter * self);
 gboolean              gst_va_filter_is_open               (GstVaFilter * self);
+gboolean              gst_va_filter_has_filter            (GstVaFilter * self,
+                                                           VAProcFilterType type);
 gboolean              gst_va_filter_install_properties    (GstVaFilter * self,
                                                            GObjectClass * klass);
 gboolean              gst_va_filter_set_orientation       (GstVaFilter * self,

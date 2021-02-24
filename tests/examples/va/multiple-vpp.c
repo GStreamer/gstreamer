@@ -1,15 +1,19 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 static gint num_buffers = 50;
 static gboolean camera = FALSE;
+static gboolean randomcb = FALSE;
 
 static GOptionEntry entries[] = {
   {"num-buffers", 'n', 0, G_OPTION_ARG_INT, &num_buffers,
       "Number of buffers (<= 0 : forever)", "N"},
   {"camera", 'c', 0, G_OPTION_ARG_NONE, &camera, "Use v4l2src as video source",
       NULL},
+  {"random-cb", 'r', 0, G_OPTION_ARG_NONE, &randomcb,
+      "Change colorbalance randomly every second", NULL},
   {NULL},
 };
 
@@ -18,6 +22,7 @@ struct _app
   GMainLoop *loop;
   GstObject *display;
   GstElement *pipeline;
+  GstElement *vpp;
   GstElement *caps;
   GMutex mutex;
 };
@@ -156,7 +161,7 @@ config_vpp (GstElement * vpp)
 static gboolean
 build_pipeline (struct _app *app)
 {
-  GstElement *vpp, *src;
+  GstElement *src;
   GstBus *bus;
   GError *err = NULL;
   GString *cmd = g_string_new (NULL);
@@ -180,9 +185,9 @@ build_pipeline (struct _app *app)
     gst_object_unref (src);
   }
 
-  vpp = gst_bin_get_by_name (GST_BIN (app->pipeline), "vpp");
-  config_vpp (vpp);
-  gst_object_unref (vpp);
+  app->vpp = gst_bin_get_by_name (GST_BIN (app->pipeline), "vpp");
+  if (!randomcb)
+    config_vpp (app->vpp);
 
   app->caps = gst_bin_get_by_name (GST_BIN (app->pipeline), "caps");
 
@@ -192,6 +197,29 @@ build_pipeline (struct _app *app)
   gst_object_unref (bus);
 
   return TRUE;
+}
+
+static gboolean
+change_cb_randomly (gpointer data)
+{
+  struct _app *app = data;
+  GstColorBalance *cb;
+  GList *channels;
+
+  if (!GST_COLOR_BALANCE_GET_INTERFACE (app->vpp))
+    return G_SOURCE_REMOVE;
+
+  cb = GST_COLOR_BALANCE (app->vpp);
+  channels = (GList *) gst_color_balance_list_channels (cb);
+  for (; channels && channels->data; channels = channels->next) {
+    GstColorBalanceChannel *channel = channels->data;
+    gint value =
+        g_random_int_range (channel->min_value, channel->max_value + 1);
+
+    gst_color_balance_set_value (cb, channel, value);
+  }
+
+  return G_SOURCE_CONTINUE;
 }
 
 static gboolean
@@ -231,6 +259,9 @@ main (int argc, char **argv)
   if (!build_pipeline (&app))
     goto gst_failed;
 
+  if (randomcb)
+    g_timeout_add_seconds (1, change_cb_randomly, &app);
+
   gst_element_set_state (app.pipeline, GST_STATE_PLAYING);
 
   g_main_loop_run (app.loop);
@@ -246,6 +277,7 @@ main (int argc, char **argv)
   ret = EXIT_SUCCESS;
 
   gst_clear_object (&app.caps);
+  gst_clear_object (&app.vpp);
   gst_clear_object (&app.pipeline);
 
 gst_failed:

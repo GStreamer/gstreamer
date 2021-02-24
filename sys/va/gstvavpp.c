@@ -124,6 +124,8 @@ struct _GstVaVpp
   GstVideoOrientationMethod direction;
   GstVideoOrientationMethod prev_direction;
   GstVideoOrientationMethod tag_direction;
+
+  GList *channels;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -162,10 +164,15 @@ static GQuark meta_tag_orientation_quark;
 #define META_TAG_VIDEO meta_tag_video_quark
 static GQuark meta_tag_video_quark;
 
+static void gst_va_vpp_colorbalance_init (gpointer iface, gpointer data);
+
 static void
 gst_va_vpp_dispose (GObject * object)
 {
   GstVaVpp *self = GST_VA_VPP (object);
+
+  if (self->channels)
+    g_list_free_full (g_steal_pointer (&self->channels), g_object_unref);
 
   if (self->sinkpad_pool) {
     gst_buffer_pool_set_active (self->sinkpad_pool, FALSE);
@@ -2327,6 +2334,19 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   gst_object_unref (display);
 }
 
+static inline void
+_create_colorbalance_channel (GstVaVpp * self, const gchar * label)
+{
+  GstColorBalanceChannel *channel;
+
+  channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+  channel->label = g_strdup_printf ("VA-%s", label);
+  channel->min_value = -1000;
+  channel->max_value = 1000;
+
+  self->channels = g_list_append (self->channels, channel);
+}
+
 static void
 gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
 {
@@ -2359,17 +2379,23 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
   if (pspec) {
     self->brightness =
         g_value_get_float (g_param_spec_get_default_value (pspec));
+    _create_colorbalance_channel (self, "BRIGHTNESS");
   }
   pspec = g_object_class_find_property (g_class, "contrast");
-  if (pspec)
+  if (pspec) {
     self->contrast = g_value_get_float (g_param_spec_get_default_value (pspec));
+    _create_colorbalance_channel (self, "CONTRAST");
+  }
   pspec = g_object_class_find_property (g_class, "hue");
-  if (pspec)
+  if (pspec) {
     self->hue = g_value_get_float (g_param_spec_get_default_value (pspec));
+    _create_colorbalance_channel (self, "HUE");
+  }
   pspec = g_object_class_find_property (g_class, "saturation");
   if (pspec) {
     self->saturation =
         g_value_get_float (g_param_spec_get_default_value (pspec));
+    _create_colorbalance_channel (self, "SATURATION");
   }
 
   /* enable QoS */
@@ -2442,10 +2468,136 @@ gst_va_vpp_register (GstPlugin * plugin, GstVaDevice * device, guint rank)
   type = g_type_register_static (GST_TYPE_BASE_TRANSFORM, type_name, &type_info,
       0);
 
+  {
+    GstVaFilter *filter = gst_va_filter_new (device->display);
+    if (gst_va_filter_open (filter)
+        && gst_va_filter_has_filter (filter, VAProcFilterColorBalance)) {
+      const GInterfaceInfo info = { gst_va_vpp_colorbalance_init, NULL, NULL };
+      g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE, &info);
+    }
+    gst_object_unref (filter);
+  }
+
   ret = gst_element_register (plugin, feature_name, rank, type);
 
   g_free (type_name);
   g_free (feature_name);
 
   return ret;
+}
+
+/* Color Balance interface */
+static const GList *
+gst_va_vpp_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstVaVpp *self = GST_VA_VPP (balance);
+
+  return self->channels;
+}
+
+static gboolean
+_set_cb_val (GstVaVpp * self, const gchar * name,
+    GstColorBalanceChannel * channel, gint value, gfloat * cb)
+{
+  GObjectClass *klass = G_OBJECT_CLASS (GST_VA_VPP_GET_CLASS (self));
+  GParamSpec *pspec;
+  GParamSpecFloat *fpspec;
+  gfloat new_value;
+  gboolean changed;
+
+  pspec = g_object_class_find_property (klass, name);
+  if (!pspec)
+    return FALSE;
+
+  fpspec = G_PARAM_SPEC_FLOAT (pspec);
+  new_value = (value - channel->min_value) * (fpspec->maximum - fpspec->minimum)
+      / (channel->max_value - channel->min_value) + fpspec->minimum;
+
+  GST_OBJECT_LOCK (self);
+  changed = new_value != *cb;
+  *cb = new_value;
+  value = (*cb + fpspec->minimum) * (channel->max_value - channel->min_value)
+      / (fpspec->maximum - fpspec->minimum) + channel->min_value;
+  GST_OBJECT_UNLOCK (self);
+
+  if (changed) {
+    GST_INFO_OBJECT (self, "%s: %d / %f", channel->label, value, new_value);
+    gst_color_balance_value_changed (GST_COLOR_BALANCE (self), channel, value);
+  }
+
+  return TRUE;
+}
+
+static void
+gst_va_vpp_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstVaVpp *self = GST_VA_VPP (balance);
+
+  if (g_str_has_suffix (channel->label, "HUE"))
+    _set_cb_val (self, "hue", channel, value, &self->hue);
+  else if (g_str_has_suffix (channel->label, "BRIGHTNESS"))
+    _set_cb_val (self, "brightness", channel, value, &self->brightness);
+  else if (g_str_has_suffix (channel->label, "CONTRAST"))
+    _set_cb_val (self, "contrast", channel, value, &self->contrast);
+  else if (g_str_has_suffix (channel->label, "SATURATION"))
+    _set_cb_val (self, "saturation", channel, value, &self->saturation);
+}
+
+static gboolean
+_get_cb_val (GstVaVpp * self, const gchar * name,
+    GstColorBalanceChannel * channel, gfloat * cb, gint * val)
+{
+  GObjectClass *klass = G_OBJECT_CLASS (GST_VA_VPP_GET_CLASS (self));
+  GParamSpec *pspec;
+  GParamSpecFloat *fpspec;
+
+  pspec = g_object_class_find_property (klass, name);
+  if (!pspec)
+    return FALSE;
+
+  fpspec = G_PARAM_SPEC_FLOAT (pspec);
+
+  GST_OBJECT_LOCK (self);
+  *val = (*cb + fpspec->minimum) * (channel->max_value - channel->min_value)
+      / (fpspec->maximum - fpspec->minimum) + channel->min_value;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
+static gint
+gst_va_vpp_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstVaVpp *self = GST_VA_VPP (balance);
+  gint value = 0;
+
+  if (g_str_has_suffix (channel->label, "HUE"))
+    _get_cb_val (self, "hue", channel, &self->hue, &value);
+  else if (g_str_has_suffix (channel->label, "BRIGHTNESS"))
+    _get_cb_val (self, "brightness", channel, &self->brightness, &value);
+  else if (g_str_has_suffix (channel->label, "CONTRAST"))
+    _get_cb_val (self, "contrast", channel, &self->contrast, &value);
+  else if (g_str_has_suffix (channel->label, "SATURATION"))
+    _get_cb_val (self, "saturation", channel, &self->saturation, &value);
+
+  return value;
+}
+
+static GstColorBalanceType
+gst_va_vpp_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_va_vpp_colorbalance_init (gpointer iface, gpointer data)
+{
+  GstColorBalanceInterface *cbiface = iface;
+
+  cbiface->list_channels = gst_va_vpp_colorbalance_list_channels;
+  cbiface->set_value = gst_va_vpp_colorbalance_set_value;
+  cbiface->get_value = gst_va_vpp_colorbalance_get_value;
+  cbiface->get_balance_type = gst_va_vpp_colorbalance_get_balance_type;
 }
