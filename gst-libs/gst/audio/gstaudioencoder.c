@@ -937,16 +937,16 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       /* FIXME ? lookahead could lead to weird ts and duration ?
        * (particularly if not in perfect mode) */
       /* mind sample rounding and produce perfect output */
-      GST_BUFFER_TIMESTAMP (buf) = priv->base_ts +
+      GST_BUFFER_PTS (buf) = priv->base_ts +
           gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
           ctx->info.rate);
-      GST_BUFFER_DTS (buf) = GST_BUFFER_TIMESTAMP (buf);
+      GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf);
       GST_DEBUG_OBJECT (enc, "out samples %d", samples);
       if (G_LIKELY (samples > 0)) {
         priv->samples += samples;
         GST_BUFFER_DURATION (buf) = priv->base_ts +
             gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
-            ctx->info.rate) - GST_BUFFER_TIMESTAMP (buf);
+            ctx->info.rate) - GST_BUFFER_PTS (buf);
         priv->last_duration = GST_BUFFER_DURATION (buf);
       } else {
         /* duration forecast in case of handling remainder;
@@ -1008,7 +1008,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
     GST_LOG_OBJECT (enc,
         "pushing buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
         ", duration %" GST_TIME_FORMAT, size,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
     ret = gst_pad_push (enc->srcpad, buf);
@@ -1236,7 +1236,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_LOG_OBJECT (enc,
       "received buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, size,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   /* input should be whole number of sample frames */
@@ -1282,11 +1282,11 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_LOG_OBJECT (enc,
       "buffer after segment clipping has size %" G_GSIZE_FORMAT " with ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, size,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   if (!GST_CLOCK_TIME_IS_VALID (priv->base_ts)) {
-    priv->base_ts = GST_BUFFER_TIMESTAMP (buffer);
+    priv->base_ts = GST_BUFFER_PTS (buffer);
     GST_DEBUG_OBJECT (enc, "new base ts %" GST_TIME_FORMAT,
         GST_TIME_ARGS (priv->base_ts));
     gst_audio_encoder_set_base_gp (enc);
@@ -1298,7 +1298,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GstClockTimeDiff diff = 0;
     GstClockTime next_ts = 0;
 
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+    if (GST_BUFFER_PTS_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (priv->base_ts)) {
       guint64 samples;
 
@@ -1310,7 +1310,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           " samples past base_ts %" GST_TIME_FORMAT
           ", expected ts %" GST_TIME_FORMAT, samples,
           GST_TIME_ARGS (priv->base_ts), GST_TIME_ARGS (next_ts));
-      diff = GST_CLOCK_DIFF (next_ts, GST_BUFFER_TIMESTAMP (buffer));
+      diff = GST_CLOCK_DIFF (next_ts, GST_BUFFER_PTS (buffer));
       GST_LOG_OBJECT (enc, "ts diff %d ms", (gint) (diff / GST_MSECOND));
       /* if within tolerance,
        * discard buffer ts and carry on producing perfect stream,
@@ -1339,7 +1339,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         buffer = gst_buffer_make_writable (buffer);
         gst_buffer_resize (buffer, diff_bytes, size - diff_bytes);
 
-        GST_BUFFER_TIMESTAMP (buffer) += diff;
+        GST_BUFFER_PTS (buffer) += diff;
         /* care even less about duration after this */
       } else {
         /* drain stuff prior to resync */
@@ -1352,13 +1352,13 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           gst_util_uint64_scale (gst_adapter_available (priv->adapter),
           GST_SECOND, ctx->info.rate * ctx->info.bpf);
 
-      if (G_UNLIKELY (shift > GST_BUFFER_TIMESTAMP (buffer))) {
+      if (G_UNLIKELY (shift > GST_BUFFER_PTS (buffer))) {
         /* ERROR */
         goto wrong_time;
       }
       /* arrange for newly added samples to come out with the ts
        * of the incoming buffer that adds these */
-      priv->base_ts = GST_BUFFER_TIMESTAMP (buffer) - shift;
+      priv->base_ts = GST_BUFFER_PTS (buffer) - shift;
       priv->samples = 0;
       gst_audio_encoder_set_base_gp (enc);
       priv->discont |= discont;

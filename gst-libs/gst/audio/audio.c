@@ -91,7 +91,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
       segment->format == GST_FORMAT_DEFAULT, buffer);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
-  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+  if (!GST_BUFFER_PTS_IS_VALID (buffer))
     /* No timestamp - assume the buffer is completely in the segment */
     return buffer;
 
@@ -109,7 +109,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
   if (!size)
     return buffer;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp = GST_BUFFER_PTS (buffer);
   GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
   if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
     duration = GST_BUFFER_DURATION (buffer);
@@ -214,9 +214,9 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
   if (trim == 0 && size == osize) {
     ret = buffer;
 
-    if (GST_BUFFER_TIMESTAMP (ret) != timestamp) {
+    if (GST_BUFFER_PTS (ret) != timestamp) {
       ret = gst_buffer_make_writable (ret);
-      GST_BUFFER_TIMESTAMP (ret) = timestamp;
+      GST_BUFFER_PTS (ret) = timestamp;
     }
     if (GST_BUFFER_DURATION (ret) != duration) {
       ret = gst_buffer_make_writable (ret);
@@ -229,7 +229,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
 
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
     if (ret) {
-      GST_BUFFER_TIMESTAMP (ret) = timestamp;
+      GST_BUFFER_PTS (ret) = timestamp;
 
       if (change_duration)
         GST_BUFFER_DURATION (ret) = duration;

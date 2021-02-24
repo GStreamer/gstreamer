@@ -1027,7 +1027,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 no_sync:
   GST_OBJECT_UNLOCK (src);
 
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_PTS (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
   GST_BUFFER_OFFSET (buf) = sample;
   GST_BUFFER_OFFSET_END (buf) = sample + samples;
@@ -1035,7 +1035,7 @@ no_sync:
   *outbuf = buf;
 
   GST_LOG_OBJECT (src, "Pushed buffer timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
   return GST_FLOW_OK;
 

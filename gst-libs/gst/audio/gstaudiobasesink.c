@@ -1864,7 +1864,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   samples = size / bpf;
 
-  time = GST_BUFFER_TIMESTAMP (buf);
+  time = GST_BUFFER_PTS (buf);
 
   /* Last ditch attempt to ensure that we only play silence if
    * we are in trickmode no-audio mode (or if a buffer is marked as a GAP)

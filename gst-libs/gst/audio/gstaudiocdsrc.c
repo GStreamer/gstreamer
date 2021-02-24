@@ -1764,7 +1764,7 @@ gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
         GST_SECOND, 44100);
   }
 
-  GST_BUFFER_TIMESTAMP (buf) = position;
+  GST_BUFFER_PTS (buf) = position;
   GST_BUFFER_DURATION (buf) = duration;
 
   GST_LOG_OBJECT (src, "pushing sector %d with timestamp %" GST_TIME_FORMAT,
