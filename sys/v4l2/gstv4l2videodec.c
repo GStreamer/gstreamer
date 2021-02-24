@@ -697,6 +697,10 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     if (!gst_v4l2_object_acquire_format (self->v4l2capture, &info))
       goto not_negotiated;
 
+    /* gst_v4l2_object_acquire_format() does not set fps, copy from sink */
+    info.fps_n = self->v4l2output->info.fps_n;
+    info.fps_d = self->v4l2output->info.fps_d;
+
     /* Create caps from the acquired format, remove the format field */
     acquired_caps = gst_video_info_to_caps (&info);
     GST_DEBUG_OBJECT (self, "Acquired caps: %" GST_PTR_FORMAT, acquired_caps);
