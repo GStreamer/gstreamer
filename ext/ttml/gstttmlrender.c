@@ -48,6 +48,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "gstttmlelements.h"
 #include "gstttmlrender.h"
 #include "subtitle.h"
 #include "subtitlemeta.h"
@@ -196,6 +197,7 @@ static GstTtmlRenderRenderedImage *gst_ttml_render_stitch_images (GPtrArray *
     images, GstTtmlDirection direction);
 
 static gboolean gst_ttml_render_color_is_transparent (GstSubtitleColor * color);
+static gboolean gst_element_ttmlrender_init (GstPlugin * plugin);
 
 GType
 gst_ttml_render_get_type (void)
@@ -221,6 +223,8 @@ gst_ttml_render_get_type (void)
 
   return type;
 }
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (ttmlrender, gst_element_ttmlrender_init);
 
 static void
 gst_ttml_render_base_init (gpointer g_class)
@@ -3058,4 +3062,23 @@ gst_ttml_render_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static gboolean
+gst_element_ttmlrender_init (GstPlugin * plugin)
+{
+  guint rank = GST_RANK_NONE;
+
+  ttml_element_init (plugin);
+
+  /* We don't want this autoplugged by default yet for now */
+  if (g_getenv ("GST_TTML_AUTOPLUG")) {
+    GST_INFO_OBJECT (plugin, "Registering ttml elements with primary rank.");
+    rank = GST_RANK_PRIMARY;
+  }
+
+  GST_DEBUG_CATEGORY_INIT (ttmlrender_debug, "ttmlrender", 0, "TTML renderer");
+
+  return gst_element_register (plugin, "ttmlrender", rank,
+      GST_TYPE_TTML_RENDER);
 }

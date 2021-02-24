@@ -1,8 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2004 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
- * Copyright (C) <2015> British Broadcasting Corporation <dash@rd.bbc.co.uk>
+ * Copyright (C) <2020> The GStreamer Contributors.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,26 +17,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+
+#ifndef __GST_TTML_ELEMENTS_H__
+#define __GST_TTML_ELEMENTS_H__
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "gstttmlelements.h"
+#include <gst/gst.h>
 
+void ttml_element_init (GstPlugin * plugin);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+GST_ELEMENT_REGISTER_DECLARE (ttmlparse);
+GST_ELEMENT_REGISTER_DECLARE (ttmlrender);
 
-  ret |= GST_ELEMENT_REGISTER (ttmlparse, plugin);
-  ret |= GST_ELEMENT_REGISTER (ttmlrender, plugin);
-
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    ttmlsubs,
-    "TTML subtitle handling",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif /* __GST_TTML_ELEMENTS_H__ */

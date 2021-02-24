@@ -27,19 +27,16 @@
 #include "gstttmlelements.h"
 
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+GST_DEBUG_CATEGORY (ttmlrender_debug);
+
+void
+ttml_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (ttmlparse, plugin);
-  ret |= GST_ELEMENT_REGISTER (ttmlrender, plugin);
-
-  return ret;
+  if (g_once_init_enter (&res)) {
+    gst_plugin_add_dependency_simple (plugin, "GST_TTML_AUTOPLUG", NULL, NULL,
+        GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    ttmlsubs,
-    "TTML subtitle handling",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

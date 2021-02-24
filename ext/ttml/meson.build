@@ -10,6 +10,7 @@ if libxml_dep.found() and pango_dep.found() and cairo_dep.found() and pangocairo
      'gstttmlparse.c',
      'ttmlparse.c',
      'gstttmlrender.c',
+     'gstttmlelement.c',
      'gstttmlplugin.c'],
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],

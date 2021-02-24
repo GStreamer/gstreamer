@@ -50,11 +50,13 @@
 #include <sys/types.h>
 #include <glib.h>
 
+#include "gstttmlelements.h"
 #include "gstttmlparse.h"
 #include "ttmlparse.h"
 
-GST_DEBUG_CATEGORY_EXTERN (ttmlparse_debug);
+GST_DEBUG_CATEGORY (ttmlparse_debug);
 #define GST_CAT_DEFAULT ttmlparse_debug
+
 
 #define DEFAULT_ENCODING   NULL
 
@@ -82,9 +84,11 @@ static GstStateChangeReturn gst_ttml_parse_change_state (GstElement * element,
 
 static GstFlowReturn gst_ttml_parse_chain (GstPad * sinkpad, GstObject * parent,
     GstBuffer * buf);
+static gboolean gst_element_ttmlparse_init (GstPlugin * plugin);
 
 #define gst_ttml_parse_parent_class parent_class
 G_DEFINE_TYPE (GstTtmlParse, gst_ttml_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (ttmlparse, gst_element_ttmlparse_init);
 
 static void
 gst_ttml_parse_dispose (GObject * object)
@@ -595,4 +599,22 @@ gst_ttml_parse_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static gboolean
+gst_element_ttmlparse_init (GstPlugin * plugin)
+{
+  guint rank = GST_RANK_NONE;
+
+  ttml_element_init (plugin);
+
+  /* We don't want this autoplugged by default yet for now */
+  if (g_getenv ("GST_TTML_AUTOPLUG")) {
+    GST_INFO_OBJECT (plugin, "Registering ttml elements with primary rank.");
+    rank = GST_RANK_PRIMARY;
+  }
+
+  GST_DEBUG_CATEGORY_INIT (ttmlparse_debug, "ttmlparse", 0, "TTML parser");
+
+  return gst_element_register (plugin, "ttmlparse", rank, GST_TYPE_TTML_PARSE);
 }
