@@ -895,7 +895,7 @@ gst_vulkan_color_convert_class_init (GstVulkanColorConvertClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class, "Vulkan Uploader",
+  gst_element_class_set_metadata (gstelement_class, "Vulkan Color Convert",
       "Filter/Video/Convert", "A Vulkan Color Convert",
       "Matthew Waters <matthew@centricular.com>");
 
