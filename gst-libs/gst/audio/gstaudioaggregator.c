@@ -900,7 +900,8 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
   gboolean downstream_supports_rate = TRUE;
 
   if (!gst_audio_info_from_caps (&info, caps)) {
-    GST_WARNING_OBJECT (agg, "Rejecting invalid caps: %" GST_PTR_FORMAT, caps);
+    GST_WARNING_OBJECT (aaggpad, "Rejecting invalid caps: %" GST_PTR_FORMAT,
+        caps);
     return FALSE;
   }
 
@@ -933,6 +934,10 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
 
   if (!downstream_supports_rate || (first_configured_pad
           && info.rate != first_configured_pad->info.rate)) {
+    GST_WARNING_OBJECT (aaggpad,
+        "Sample rate %d can't be configured (downstream supported: %d, configured rate: %d)",
+        info.rate, downstream_supports_rate,
+        first_configured_pad ? first_configured_pad->info.rate : 0);
     gst_pad_push_event (GST_PAD (aaggpad), gst_event_new_reconfigure ());
     ret = FALSE;
   } else {
