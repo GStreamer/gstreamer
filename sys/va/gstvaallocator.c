@@ -1394,7 +1394,7 @@ gst_va_allocator_alloc (GstAllocator * allocator)
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  if (self->fourcc == 0 || self->rt_format == 0) {
+  if (self->rt_format == 0) {
     GST_ERROR_OBJECT (self, "Unknown fourcc or chroma format");
     return NULL;
   }
@@ -1666,7 +1666,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   } else if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
     GstVaAllocator *self = GST_VA_ALLOCATOR (mem->allocator);
 
-    if (self->fourcc == 0 || self->rt_format == 0) {
+    if (self->rt_format == 0) {
       GST_ERROR_OBJECT (self, "Unknown fourcc or chroma format");
       return FALSE;
     }
