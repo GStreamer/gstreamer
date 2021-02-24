@@ -4026,7 +4026,8 @@ gst_vaapi_encoder_h264_class_init (GstVaapiEncoderH264Class * klass)
   properties[ENCODER_H264_PROP_AUD] =
       g_param_spec_boolean ("aud", "AU delimiter",
       "Use AU (Access Unit) delimeter", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   /**
    * GstVaapiEncoderH264:Compliance Mode:
