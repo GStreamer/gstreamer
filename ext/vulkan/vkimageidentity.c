@@ -31,6 +31,7 @@
 
 #include <string.h>
 
+#include "gstvulkanelements.h"
 #include "vkimageidentity.h"
 
 #include "shaders/identity.vert.h"
@@ -83,6 +84,9 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanImageIdentity, gst_vulkan_image_identity,
     GST_TYPE_VULKAN_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_image_identity,
         "vulkanimageidentity", 0, "Vulkan Image identity"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkanimageidentity,
+    "vulkanimageidentity", GST_RANK_NONE, GST_TYPE_VULKAN_IMAGE_IDENTITY,
+    vulkan_element_init (plugin));
 
 static void
 gst_vulkan_image_identity_class_init (GstVulkanImageIdentityClass * klass)

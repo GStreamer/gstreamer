@@ -43,6 +43,8 @@
 #include "shaders/rgb_to_yuy2.frag.h"
 #include "shaders/rgb_to_nv12.frag.h"
 
+#include "gstvulkanelements.h"
+
 GST_DEBUG_CATEGORY (gst_debug_vulkan_color_convert);
 #define GST_CAT_DEFAULT gst_debug_vulkan_color_convert
 
@@ -795,6 +797,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanColorConvert, gst_vulkan_color_convert,
     GST_TYPE_VULKAN_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_color_convert,
         "vulkancolorconvert", 0, "Vulkan Color Convert"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkancolorconvert, "vulkancolorconvert",
+    GST_RANK_NONE, GST_TYPE_VULKAN_COLOR_CONVERT, vulkan_element_init (plugin));
 
 struct yuv_info
 {

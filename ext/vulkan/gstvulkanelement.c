@@ -29,40 +29,18 @@
 #include "config.h"
 #endif
 
-#include "vksink.h"
-#include "vkupload.h"
-#include "vkimageidentity.h"
-#include "vkcolorconvert.h"
-#include "vkdownload.h"
-#include "vkviewconvert.h"
-#include "vkdeviceprovider.h"
 #include "gstvulkanelements.h"
 
+#define GST_CAT_DEFAULT gst_vulkan_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+vulkan_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
 
-  ret |= GST_DEVICE_PROVIDER_REGISTER (vulkandeviceprovider, plugin);
-
-  ret |= GST_ELEMENT_REGISTER (vulkansink, plugin);
-
-  ret |= GST_ELEMENT_REGISTER (vulkanupload, plugin);
-
-  ret |= GST_ELEMENT_REGISTER (vulkandownload, plugin);
-
-  ret |= GST_ELEMENT_REGISTER (vulkancolorconvert, plugin);
-
-  ret |= GST_ELEMENT_REGISTER (vulkanimageidentity, plugin);
-
-  ret |= GST_ELEMENT_REGISTER (vulkanviewconvert, plugin);
-
-  return ret;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (gst_vulkan_debug, "vulkan", 0, "vulkan");
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    vulkan,
-    "Vulkan plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

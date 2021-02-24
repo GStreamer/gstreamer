@@ -31,6 +31,7 @@
 
 #include <string.h>
 
+#include "gstvulkanelements.h"
 #include "vkdownload.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_download);
@@ -470,6 +471,8 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDownload, gst_vulkan_download,
     GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_download,
         "vulkandownload", 0, "Vulkan Downloader"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkandownload, "vulkandownload",
+    GST_RANK_NONE, GST_TYPE_VULKAN_DOWNLOAD, vulkan_element_init (plugin));
 
 static void
 gst_vulkan_download_class_init (GstVulkanDownloadClass * klass)

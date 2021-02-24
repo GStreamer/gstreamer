@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include "gstvulkanelements.h"
 #include "vkdeviceprovider.h"
 
 #include <string.h>
@@ -39,7 +40,10 @@ static GstDevice *gst_vulkan_device_object_new (GstVulkanPhysicalDevice *
 
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDeviceProvider, gst_vulkan_device_provider,
     GST_TYPE_DEVICE_PROVIDER, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
-        "vulkandevice", 0, "Vulkan Device"););
+        "vulkandevice", 0, "Vulkan Device");
+    );
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (vulkandeviceprovider,
+    "vulkandeviceprovider", GST_RANK_MARGINAL, GST_TYPE_VULKAN_DEVICE_PROVIDER);
 
 static void gst_vulkan_device_provider_finalize (GObject * object);
 static void gst_vulkan_device_provider_set_property (GObject * object,

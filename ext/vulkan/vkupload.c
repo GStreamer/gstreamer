@@ -30,7 +30,7 @@
 #endif
 
 #include <string.h>
-
+#include "gstvulkanelements.h"
 #include "vkupload.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_upload);
@@ -1164,6 +1164,8 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstVulkanUpload, gst_vulkan_upload,
     GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_upload,
         "vulkanupload", 0, "Vulkan Uploader"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkanupload, "vulkanupload",
+    GST_RANK_NONE, GST_TYPE_VULKAN_UPLOAD, vulkan_element_init (plugin));
 
 static void
 gst_vulkan_upload_class_init (GstVulkanUploadClass * klass)

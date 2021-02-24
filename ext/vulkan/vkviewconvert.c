@@ -31,6 +31,7 @@
 
 #include <string.h>
 
+#include "gstvulkanelements.h"
 #include "vkviewconvert.h"
 
 #include "shaders/identity.vert.h"
@@ -561,6 +562,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanViewConvert, gst_vulkan_view_convert,
     GST_TYPE_VULKAN_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_view_convert,
         "vulkanviewconvert", 0, "Vulkan View Convert"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkanviewconvert, "vulkanviewconvert",
+    GST_RANK_NONE, GST_TYPE_VULKAN_VIEW_CONVERT, vulkan_element_init (plugin));
 
 static void
 gst_vulkan_view_convert_class_init (GstVulkanViewConvertClass * klass)

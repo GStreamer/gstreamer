@@ -32,6 +32,7 @@
 
 //#include <gst/video/videooverlay.h>
 
+#include "gstvulkanelements.h"
 #include "vksink.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_sink);
@@ -108,6 +109,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanSink, gst_vulkan_sink,
         gst_vulkan_sink_video_overlay_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_vulkan_sink_navigation_interface_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkansink, "vulkansink", GST_RANK_NONE,
+    GST_TYPE_VULKAN_SINK, vulkan_element_init (plugin));
 
 static void
 gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
