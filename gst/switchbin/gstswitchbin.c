@@ -824,6 +824,8 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
 
   guint i;
   GstCaps *total_path_caps;
+  gboolean is_sink_pad =
+      (gst_pad_get_direction (switch_bin_pad) == GST_PAD_SINK);
 
   /* The allowed caps are a combination of the caps of all paths, the
    * filter caps, and the allowed caps as indicated by the result
@@ -859,14 +861,21 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
       caps_query = gst_query_new_caps (NULL);
 
       /* Query the path element for allowed caps. If this is
-       * successful, intersect the returned caps with the path caps,
-       * and append the result of the intersection to the total_path_caps. */
+       * successful, intersect the returned caps with the path caps for the sink pad,
+       * and append the result of the intersection to the total_path_caps,
+       * or just append the result to the total_path_caps if collecting srcpad caps. */
       if (gst_pad_query (pad, caps_query)) {
         gst_query_parse_caps_result (caps_query, &caps);
-        intersected_caps = gst_caps_intersect (caps, path->caps);
+        if (is_sink_pad) {
+          intersected_caps = gst_caps_intersect (caps, path->caps);
+        } else {
+          intersected_caps = gst_caps_copy (caps);
+        }
         gst_caps_append (total_path_caps, intersected_caps);
-      } else
+      } else if (is_sink_pad) {
+        /* Just assume the sink pad has the path caps if the query failed */
         gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
+      }
 
       gst_object_unref (GST_OBJECT (pad));
       gst_query_unref (caps_query);
@@ -874,7 +883,7 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
       /* This is a path with no element (= is a dropping path),
        * If querying the sink caps, append the path
        * input caps, otherwise the output caps can be ANY */
-      if (gst_pad_get_direction (switch_bin_pad) == GST_PAD_SINK)
+      if (is_sink_pad)
         gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
       else
         gst_caps_append (total_path_caps, gst_caps_new_any ());
