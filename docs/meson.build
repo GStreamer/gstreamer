@@ -84,8 +84,7 @@ excludes = []
 foreach f: [
         'gst/frei0r/frei0r.h',
         'gst/mxf/mxful.c',
-        'gst-libs/gst/mpegts/gstmpegts-private.h',
-        'gst-libs/gst/player/*-private.h',
+        'gst-libs/gst/*/*-private.h',
         'gst-libs/gst/codecparsers/nalutils.h',
         'ext/closedcaption/bcd.h',
         'ext/closedcaption/bit_slicer.[ch]',

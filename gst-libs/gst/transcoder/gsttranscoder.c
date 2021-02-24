@@ -813,8 +813,6 @@ gst_transcoder_main (gpointer data)
 static gpointer
 gst_transcoder_init_once (G_GNUC_UNUSED gpointer user_data)
 {
-  gst_init (NULL, NULL);
-
   GST_DEBUG_CATEGORY_INIT (gst_transcoder_debug, "gst-transcoder", 0,
       "GstTranscoder");
   gst_transcoder_error_quark ();
