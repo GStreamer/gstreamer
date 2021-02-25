@@ -67,6 +67,8 @@ struct _GstZBarClass
 
 GType gst_zbar_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (zbar);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_ZBAR_H__ */

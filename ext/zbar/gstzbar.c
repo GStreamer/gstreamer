@@ -110,7 +110,9 @@ static GstFlowReturn gst_zbar_transform_frame_ip (GstVideoFilter * vfilter,
     GstVideoFrame * frame);
 
 #define gst_zbar_parent_class parent_class
-G_DEFINE_TYPE (GstZBar, gst_zbar, GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstZBar, gst_zbar, GST_TYPE_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (zbar_debug, "zbar", 0, "zbar"););
+GST_ELEMENT_REGISTER_DEFINE (zbar, "zbar", GST_RANK_NONE, GST_TYPE_ZBAR);
 
 static void
 gst_zbar_class_init (GstZBarClass * g_class)
@@ -361,9 +363,7 @@ gst_zbar_stop (GstBaseTransform * base)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (zbar_debug, "zbar", 0, "zbar");
-
-  return gst_element_register (plugin, "zbar", GST_RANK_NONE, GST_TYPE_ZBAR);
+  return GST_ELEMENT_REGISTER (zbar, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
