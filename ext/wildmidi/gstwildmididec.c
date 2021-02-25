@@ -111,7 +111,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE (GstWildmidiDec, gst_wildmidi_dec,
     GST_TYPE_NONSTREAM_AUDIO_DECODER);
-
+GST_ELEMENT_REGISTER_DEFINE (wildmididec, "wildmididec", GST_RANK_MARGINAL,
+    gst_wildmidi_dec_get_type ());
 
 
 static void gst_wildmidi_dec_finalize (GObject * object);
@@ -677,8 +678,7 @@ gst_wildmidi_dec_update_options (GstWildmidiDec * wildmidi_dec)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "wildmididec", GST_RANK_MARGINAL,
-      gst_wildmidi_dec_get_type ());
+  return GST_ELEMENT_REGISTER (wildmididec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
