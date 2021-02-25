@@ -1905,7 +1905,7 @@ gst_rtsp_connection_send_messages_usec (GstRTSPConnection * conn,
       memset (&serialized_messages[i], 0, sizeof (serialized_messages[i]));
 
       serialized_messages[i].data = (guint8 *) base64_buffer;
-      serialized_messages[i].data_size = (out_buffer - base64_buffer) + 1;
+      serialized_messages[i].data_size = (out_buffer - base64_buffer);
       n_vectors++;
     } else {
       n_vectors++;
