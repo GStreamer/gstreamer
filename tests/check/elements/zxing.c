@@ -21,27 +21,24 @@
 #include <gst/check/gstcheck.h>
 
 static GstElement *
-setup_pipeline (void)
+setup_pipeline (const gchar * in_format)
 {
-  GstElement *pipeline, *src, *dec, *csp, *zxing, *sink;
+  GstElement *pipeline;
   gchar *path;
-
-  pipeline = gst_pipeline_new ("pipeline");
-
-  src = gst_element_factory_make ("filesrc", NULL);
-  /* Test file must have size < 4096 otherwise pngparse will be necessary before pngdec. */
-  dec = gst_element_factory_make ("pngdec", NULL);
-  csp = gst_element_factory_make ("videoconvert", NULL);
-  zxing = gst_element_factory_make ("zxing", "zxing");
-  sink = gst_element_factory_make ("fakesink", NULL);
+  gchar *pipeline_str;
 
   path = g_build_filename (GST_TEST_FILES_PATH, "barcode.png", NULL);
   GST_LOG ("reading file '%s'", path);
-  g_object_set (src, "location", path, NULL);
-  g_free (path);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, dec, csp, zxing, sink, NULL);
-  fail_unless (gst_element_link_many (src, dec, csp, zxing, sink, NULL));
+  pipeline_str =
+      g_strdup_printf ("filesrc location=%s ! "
+      "pngdec ! videoconvert ! video/x-raw,format=%s ! zxing name=zxing"
+      " ! fakesink", path, in_format);
+  GST_LOG ("Running pipeline: %s", pipeline_str);
+  pipeline = gst_parse_launch (pipeline_str, NULL);
+  fail_unless (pipeline != NULL);
+  g_free (pipeline_str);
+  g_free (path);
 
   return pipeline;
 }
@@ -83,7 +80,7 @@ GST_START_TEST (test_still_image)
   GstElement *pipeline;
   const gchar *type, *symbol;
 
-  pipeline = setup_pipeline ();
+  pipeline = setup_pipeline ("ARGB");
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
       GST_STATE_CHANGE_ASYNC);
@@ -101,7 +98,7 @@ GST_START_TEST (test_still_image)
   fail_unless (gst_structure_has_field (s, "type"));
   fail_unless (gst_structure_has_field (s, "symbol"));
   type = gst_structure_get_string (s, "type");
-  fail_unless_equals_string (type, "EAN_13");
+  fail_unless_equals_string (type, "EAN-13");
   symbol = gst_structure_get_string (s, "symbol");
   fail_unless_equals_string (symbol, "9876543210128");
 
@@ -123,7 +120,7 @@ GST_START_TEST (test_still_image_with_sample)
   GstElement *pipeline;
   GstSample *sample;
 
-  pipeline = setup_pipeline ();
+  pipeline = setup_pipeline ("ARGB");
   gst_child_proxy_set ((GstChildProxy *) pipeline, "zxing::attach-frame", TRUE,
       NULL);
 

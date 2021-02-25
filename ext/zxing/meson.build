@@ -2,7 +2,7 @@ zxing_sources = [
   'gstzxing.cpp',
   'gstzxingplugin.c',
 ]
-zxing_dep = dependency('zxing', version : '>= 0.9', required : get_option('zxing'))
+zxing_dep = dependency('zxing', version : '>= 1.1.1', required : get_option('zxing'))
 if zxing_dep.found()
 	gstzxing = library('gstzxing',
 	  zxing_sources,

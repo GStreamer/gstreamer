@@ -36,6 +36,9 @@
  * * #GstSample `frame`: the frame in which the barcode message was detected, if
  *   the .#GstZXing:attach-frame property was set to %TRUE (Since 1.18)
  *
+ *   This element is based on the c++ implementation of zxing which can found
+ *   at https://github.com/nu-book/zxing-cpp.
+ *
  * ## Example launch lines
  * |[
  * gst-launch-1.0 -m v4l2src ! videoconvert ! zxing ! videoconvert ! xvimagesink
@@ -137,9 +140,8 @@ gst_barcode_format_get_type (void)
   return barcode_format_type;
 }
 
-
 #define ZXING_YUV_CAPS \
-    "{ Y800, I420, YV12, NV12, NV21, Y41B, Y42B, YUV9, YVU9 }"
+    "{ARGB, xRGB, Y444, Y42B, I420, Y41B, YUV9, YV12}"
 
 
 static GstStaticPadTemplate gst_zxing_src_template =
@@ -171,13 +173,16 @@ struct _GstZXing
   gboolean attach_frame;
   gboolean rotate;
   gboolean faster;
-  guint format;
+  ImageFormat image_format;
+  guint barcode_format;
 };
 
 static void gst_zxing_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_zxing_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean gst_zxing_set_info (GstVideoFilter * vfilter, GstCaps * in,
+    GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info);
 static GstFlowReturn gst_zxing_transform_frame_ip (GstVideoFilter * vfilter,
     GstVideoFrame * frame);
 
@@ -239,6 +244,8 @@ gst_zxing_class_init (GstZXingClass * g_class)
 
   vfilter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_zxing_transform_frame_ip);
+  vfilter_class->set_info =
+      GST_DEBUG_FUNCPTR (gst_zxing_set_info);
 }
 
 static void
@@ -248,7 +255,8 @@ gst_zxing_init (GstZXing * zxing)
   zxing->attach_frame = DEFAULT_ATTACH_FRAME;
   zxing->rotate = DEFAULT_TRY_ROTATE;
   zxing->faster = DEFAULT_TRY_FASTER;
-  zxing->format = BARCODE_FORMAT_ALL;
+  zxing->image_format = ImageFormat::None;
+  zxing->barcode_format = BARCODE_FORMAT_ALL;
 }
 
 static void
@@ -274,7 +282,7 @@ gst_zxing_set_property (GObject * object, guint prop_id, const GValue * value,
       zxing->faster = g_value_get_boolean (value);
       break;
     case PROP_FORMAT:
-      zxing->format = g_value_get_enum (value);
+      zxing->barcode_format = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -305,12 +313,37 @@ gst_zxing_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, zxing->faster);
       break;
     case PROP_FORMAT:
-      g_value_set_enum (value, zxing->format);
+      g_value_set_enum (value, zxing->barcode_format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_zxing_set_info (GstVideoFilter * vfilter, GstCaps * in,
+    GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info)
+{
+  GstZXing *zxing = GST_ZXING (vfilter);
+  switch (in_info->finfo->format) {
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      zxing->image_format = ImageFormat::XRGB;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YV12:
+      zxing->image_format = ImageFormat::Lum;
+      break;
+    default:
+      zxing->image_format = ImageFormat::None;
+      GST_WARNING_OBJECT (zxing, "This format is not supported %s", gst_video_format_to_string(in_info->finfo->format));
+  }
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -319,6 +352,11 @@ gst_zxing_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   GstZXing *zxing = GST_ZXING (vfilter);
   gpointer data;
   gint height, width;
+  DecodeHints hints;
+
+  hints.setTryRotate(zxing->rotate);
+  hints.setTryHarder(!zxing->faster);
+  hints.setFormats(BarcodeFormatFromString (barcode_formats[zxing->barcode_format].value_name));
 
   /* all formats we support start with an 8-bit Y plane. zxing doesn't need
    * to know about the chroma plane(s) */
@@ -326,10 +364,7 @@ gst_zxing_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   width = GST_VIDEO_FRAME_WIDTH (frame);
   height = GST_VIDEO_FRAME_HEIGHT (frame);
 
-  /*Init a grayscale source */
-  auto result = ReadBarcode (width, height, (unsigned char *) data, width,
-      { BarcodeFormatFromString (barcode_formats[zxing->format].value_name) },
-      zxing->rotate, !zxing->faster);
+  auto result = ReadBarcode ({(unsigned char *)data, width, height, zxing->image_format}, hints);
   if (result.isValid ()) {
     GST_DEBUG_OBJECT (zxing, "Symbol found. Text: %s Format: %s",
         TextUtfEncoding::ToUtf8 (result.text ()).c_str (),
