@@ -224,6 +224,7 @@ void    tsmux_set_bitrate       (TsMux *mux, guint64 bitrate);
 /* pid/program management */
 TsMuxProgram *	tsmux_program_new 		(TsMux *mux, gint prog_id);
 void 		tsmux_program_free 		(TsMuxProgram *program);
+void 		tsmux_program_set_pmt_pid (TsMuxProgram *program, guint16 pmt_pid);
 void 		tsmux_set_pmt_interval          (TsMuxProgram *program, guint interval);
 guint 		tsmux_get_pmt_interval   	(TsMuxProgram *program);
 void 		tsmux_resend_pmt                (TsMuxProgram *program);

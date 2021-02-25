@@ -729,12 +729,20 @@ not_negotiated:
   }
 }
 
+static gboolean
+is_valid_pmt_pid (guint16 pmt_pid)
+{
+  if (pmt_pid < 0x0010 || pmt_pid > 0x1ffe)
+    return FALSE;
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
 {
   GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (pad);
   gchar *name = NULL;
-  gchar *pcr_name;
+  gchar *prop_name;
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (ts_pad->prog_id == -1) {
@@ -771,6 +779,25 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
     tsmux_program_set_scte35_interval (ts_pad->prog, mux->scte35_null_interval);
     g_hash_table_insert (mux->programs, GINT_TO_POINTER (ts_pad->prog_id),
         ts_pad->prog);
+
+    /* Check for user-specified PMT PID */
+    prop_name = g_strdup_printf ("PMT_%d", ts_pad->prog->pgm_number);
+    if (mux->prog_map && gst_structure_has_field (mux->prog_map, prop_name)) {
+      guint pmt_pid;
+
+      if (gst_structure_get_uint (mux->prog_map, prop_name, &pmt_pid)) {
+        if (is_valid_pmt_pid (pmt_pid)) {
+          GST_DEBUG_OBJECT (mux, "User specified pid=%u as PMT for "
+              "program (prog_id = %d)", pmt_pid, ts_pad->prog->pgm_number);
+          tsmux_program_set_pmt_pid (ts_pad->prog, pmt_pid);
+        } else {
+          GST_ELEMENT_WARNING (mux, LIBRARY, SETTINGS,
+              ("User specified PMT pid %u for program %d is not valid.",
+                  pmt_pid, ts_pad->prog->pgm_number), (NULL));
+        }
+      }
+    }
+    g_free (prop_name);
   }
 
   if (ts_pad->stream == NULL) {
@@ -789,9 +816,10 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
   }
 
   /* Check for user-specified PCR PID */
-  pcr_name = g_strdup_printf ("PCR_%d", ts_pad->prog->pgm_number);
-  if (mux->prog_map && gst_structure_has_field (mux->prog_map, pcr_name)) {
-    const gchar *sink_name = gst_structure_get_string (mux->prog_map, pcr_name);
+  prop_name = g_strdup_printf ("PCR_%d", ts_pad->prog->pgm_number);
+  if (mux->prog_map && gst_structure_has_field (mux->prog_map, prop_name)) {
+    const gchar *sink_name =
+        gst_structure_get_string (mux->prog_map, prop_name);
 
     if (!g_strcmp0 (name, sink_name)) {
       GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
@@ -799,7 +827,7 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
       tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
     }
   }
-  g_free (pcr_name);
+  g_free (prop_name);
 
   return ret;
 

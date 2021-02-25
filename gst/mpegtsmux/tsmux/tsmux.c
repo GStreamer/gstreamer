@@ -1652,6 +1652,17 @@ tsmux_program_free (TsMuxProgram * program)
   g_slice_free (TsMuxProgram, program);
 }
 
+/**
+ * tsmux_program_set_pmt_pid:
+ * @program: A #TsmuxProgram
+ * @pmt_pid: PID to write PMT for this program
+ */
+void
+tsmux_program_set_pmt_pid (TsMuxProgram * program, guint16 pmt_pid)
+{
+  program->pmt_pid = pmt_pid;
+}
+
 static gboolean
 tsmux_write_pat (TsMux * mux)
 {
