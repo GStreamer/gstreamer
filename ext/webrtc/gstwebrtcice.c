@@ -237,7 +237,7 @@ _create_nice_stream_item (GstWebRTCICE * ice, guint session_id)
   struct NiceStreamItem item;
 
   item.session_id = session_id;
-  item.nice_stream_id = nice_agent_add_stream (ice->priv->nice_agent, 2);
+  item.nice_stream_id = nice_agent_add_stream (ice->priv->nice_agent, 1);
   item.stream = gst_webrtc_ice_stream_new (ice, item.nice_stream_id);
   g_array_append_val (ice->priv->nice_stream_map, item);
 
