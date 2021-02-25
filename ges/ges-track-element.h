@@ -64,31 +64,26 @@ struct _GESTrackElement {
 
 /**
  * GESTrackElementClass:
- * @nleobject_factorytype: The name of the #GstElementFactory to use to
- * create the underlying nleobject of a track element
- * @create_gnl_object: Method to create the underlying nleobject of the
- * track element. The default implementation will use the factory given by
- * @nleobject_factorytype to created the nleobject and will give it
- * the #GstElement returned by @create_element.
- * @active_changed: Method to be called when the #GESTrackElement:active
- * property changes.
- * @list_children_properties: Deprecated: Listing children properties is
- * handled by ges_timeline_element_list_children_properties() instead.
- * @lookup_child: Deprecated: Use #GESTimelineElement.lookup_child()
- * instead.
- * @default_has_internal_source: What the default
- * #GESTrackElement:has-internal-source value should be for new elements
- * from this class.
- * @default_track_type: What the default #GESTrackElement:track-type value
- * should be for new elements from this class.
  */
 struct _GESTrackElementClass {
   /*< private >*/
   GESTimelineElementClass parent_class;
 
   /*< public >*/
-  /* virtual methods for subclasses */
+  /**
+   * GESTrackElementClass::nleobject_factorytype:
+   *
+   * The name of the #GstElementFactory to use to create the underlying
+   *   nleobject of a track element
+   */
   const gchar  *nleobject_factorytype;
+
+  /**
+   * GESTrackElementClass::create_gnl_object:
+   * @object: The #GESTrackElement
+   *
+   * Returns: (transfer floating): the #NLEObject to use in the #nlecomposition
+   */
   GstElement*  (*create_gnl_object)        (GESTrackElement * object);
 
   /**
@@ -100,16 +95,42 @@ struct _GESTrackElementClass {
    */
   GstElement*  (*create_element)           (GESTrackElement * object);
 
+  /**
+   * GESTrackElementClass::active_changed:
+   * @object: A #GESTrackElement
+   * @active: Whether the element is active or not inside the #nlecomposition
+   *
+   * Notify when the #GESTrackElement:active property changes
+   */
   void (*active_changed)       (GESTrackElement *object, gboolean active);
 
   /*< private >*/
   /* signals (currently unused) */
+  /**
+   * GESTrackElementClass::changed:
+   *
+   * Deprecated:
+   */
   void  (*changed)  (GESTrackElement * object);
 
-  /*< public >*/
-  /* virtual methods for subclasses */
+  /**
+   * GESTrackElementClass::list_children_properties:
+   *
+   * Listing children properties is handled by
+   * ges_timeline_element_list_children_properties() instead.
+   *
+   * Deprecated: 1.14: Use #GESTimelineElementClass::list_children_properties
+   * instead
+   */
   GParamSpec** (*list_children_properties) (GESTrackElement * object,
               guint *n_properties);
+
+  /**
+   * GESTrackElementClass::lookup_child:
+   *
+   * Deprecated: 1.14: Use #GESTimelineElementClass::lookup_child
+   * instead
+   */
   gboolean (*lookup_child)                 (GESTrackElement *object,
                                             const gchar *prop_name,
                                             GstElement **element,
