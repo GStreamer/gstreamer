@@ -142,7 +142,10 @@ static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
 
 #define gst_wpe_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWpeSrc, gst_wpe_src, GST_TYPE_GL_BASE_SRC,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_wpe_src_uri_handler_init));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_wpe_src_uri_handler_init);
+    GST_DEBUG_CATEGORY_INIT (wpe_src_debug, "wpesrc", 0, "WPE Source"););
+GST_ELEMENT_REGISTER_DEFINE (wpesrc, "wpesrc", GST_RANK_NONE,
+      GST_TYPE_WPE_SRC);
 
 #if ENABLE_SHM_BUFFER_SUPPORT
 #define WPE_RAW_CAPS "; video/x-raw, "          \
@@ -767,10 +770,9 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (wpe_src_debug, "wpesrc", 0, "WPE Source");
 
-  return gst_element_register (plugin, "wpesrc", GST_RANK_NONE,
-      GST_TYPE_WPE_SRC);
+
+  return GST_ELEMENT_REGISTER (wpesrc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,

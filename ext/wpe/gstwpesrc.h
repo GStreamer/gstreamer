@@ -41,6 +41,8 @@ struct _GstWpeSrcClass
 
 GType gst_wpe_src_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (wpesrc);
+
 void gst_wpe_src_configure_web_view(GstWpeSrc * src, WebKitWebView * webview);
 
 G_END_DECLS
