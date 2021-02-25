@@ -87,6 +87,8 @@ struct _GstWebrtcEchoProbeClass
 
 GType gst_webrtc_echo_probe_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (webrtcechoprobe);
+
 GstWebrtcEchoProbe *gst_webrtc_acquire_echo_probe (const gchar * name);
 void gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe);
 gint gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self,

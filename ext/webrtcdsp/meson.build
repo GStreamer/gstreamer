@@ -1,6 +1,7 @@
 webrtc_sources = [
   'gstwebrtcdsp.cpp',
-  'gstwebrtcechoprobe.cpp'
+  'gstwebrtcechoprobe.cpp',
+  'gstwebrtcdspplugin.cpp'
 ]
 
 webrtc_dep = dependency('webrtc-audio-processing', version : ['>= 0.2', '< 0.4'],

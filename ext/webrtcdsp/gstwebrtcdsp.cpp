@@ -274,7 +274,11 @@ struct _GstWebrtcDsp
   webrtc::VoiceDetection::Likelihood voice_detection_likelihood;
 };
 
-G_DEFINE_TYPE (GstWebrtcDsp, gst_webrtc_dsp, GST_TYPE_AUDIO_FILTER);
+G_DEFINE_TYPE_WITH_CODE (GstWebrtcDsp, gst_webrtc_dsp, GST_TYPE_AUDIO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (webrtc_dsp_debug, "webrtcdsp", 0,
+        "libwebrtcdsp wrapping elements"););
+GST_ELEMENT_REGISTER_DEFINE (webrtcdsp, "webrtcdsp", GST_RANK_NONE,
+    GST_TYPE_WEBRTC_DSP);
 
 static const gchar *
 webrtc_error_to_string (gint err)
@@ -1118,27 +1122,3 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_ECHO_SUPPRESSION_LEVEL, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_VOICE_DETECTION_LIKELIHOOD, (GstPluginAPIFlags) 0);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT
-      (webrtc_dsp_debug, "webrtcdsp", 0, "libwebrtcdsp wrapping elements");
-
-  if (!gst_element_register (plugin, "webrtcdsp", GST_RANK_NONE,
-          GST_TYPE_WEBRTC_DSP)) {
-    return FALSE;
-  }
-  if (!gst_element_register (plugin, "webrtcechoprobe", GST_RANK_NONE,
-          GST_TYPE_WEBRTC_ECHO_PROBE)) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    webrtcdsp,
-    "Voice pre-processing using WebRTC Audio Processing Library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

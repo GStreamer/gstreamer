@@ -52,6 +52,8 @@ struct _GstWebrtcDspClass
 
 GType gst_webrtc_dsp_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (webrtcdsp);
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_DSP_H__ */
