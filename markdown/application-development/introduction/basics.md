@@ -21,7 +21,7 @@ can do a specific task, for example media playback or capture. GStreamer
 ships with a large collection of elements by default, making the
 development of a large variety of media applications possible. If
 needed, you can also write new elements. That topic is explained in
-great deal in the *GStreamer Plugin Writer's Guide*.
+greater detail in the *GStreamer Plugin Writer's Guide*.
 
 ## Pads
 
