@@ -79,6 +79,8 @@ static gboolean gst_webp_dec_reset_frame (GstWebPDec * webpdec);
 
 #define gst_webp_dec_parent_class parent_class
 G_DEFINE_TYPE (GstWebPDec, gst_webp_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (webpdec, "webpdec",
+    GST_RANK_PRIMARY, GST_TYPE_WEBP_DEC);
 
 static void
 gst_webp_dec_class_init (GstWebPDecClass * klass)
@@ -488,11 +490,4 @@ gst_webp_dec_handle_frame (GstVideoDecoder * decoder,
 
 done:
   return ret;
-}
-
-gboolean
-gst_webp_dec_register (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "webpdec",
-      GST_RANK_PRIMARY, GST_TYPE_WEBP_DEC);
 }

@@ -69,7 +69,8 @@ struct _GstWebPDecClass {
 };
 
 GType gst_webp_dec_get_type (void);
-gboolean gst_webp_dec_register (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (webpdec);
 
 G_END_DECLS
 

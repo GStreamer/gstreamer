@@ -107,6 +107,8 @@ gst_webp_enc_preset_get_type (void)
 
 #define gst_webp_enc_parent_class parent_class
 G_DEFINE_TYPE (GstWebpEnc, gst_webp_enc, GST_TYPE_VIDEO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (webpenc, "webpenc",
+    GST_RANK_PRIMARY, GST_TYPE_WEBP_ENC);
 
 static void
 gst_webp_enc_class_init (GstWebpEncClass * klass)
@@ -397,11 +399,4 @@ gst_webp_enc_stop (GstVideoEncoder * benc)
   if (enc->input_state)
     gst_video_codec_state_unref (enc->input_state);
   return TRUE;
-}
-
-gboolean
-gst_webp_enc_register (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "webpenc",
-      GST_RANK_PRIMARY, GST_TYPE_WEBP_ENC);
 }
