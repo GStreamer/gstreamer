@@ -191,6 +191,7 @@ G_DEFINE_TYPE_WITH_CODE (GstZXing, gst_zxing,
     GST_TYPE_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (zxing_debug, "zxing", 0,
         "debug category for zxing element"));
+GST_ELEMENT_REGISTER_DEFINE (zxing, "zxing", GST_RANK_MARGINAL, GST_TYPE_ZXING);
 
 static void
 gst_zxing_class_init (GstZXingClass * g_class)

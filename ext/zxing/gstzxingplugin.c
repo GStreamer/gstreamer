@@ -32,7 +32,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "zxing", GST_RANK_MARGINAL, GST_TYPE_ZXING);
+  GST_ELEMENT_REGISTER (zxing, plugin);
 
   return TRUE;
 }

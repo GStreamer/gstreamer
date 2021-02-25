@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_ZXING gst_zxing_get_type ()
 G_DECLARE_FINAL_TYPE(GstZXing, gst_zxing, GST, ZXING, GstVideoFilter)
-
+GST_ELEMENT_REGISTER_DECLARE (zxing);
 G_END_DECLS
 
 #endif /* __GST_VIDEO_ZXING_H__ */
