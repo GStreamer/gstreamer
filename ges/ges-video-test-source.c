@@ -65,7 +65,7 @@ G_DEFINE_TYPE_WITH_CODE (GESVideoTestSource, ges_video_test_source,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
-static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
+static GstElement *ges_video_test_source_create_source (GESSource * source);
 
 static gboolean
 get_natural_size (GESVideoSource * source, gint * width, gint * height)
@@ -161,10 +161,11 @@ static void
 ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
+  GESVideoSourceClass *vsource_class = GES_VIDEO_SOURCE_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   source_class->create_source = ges_video_test_source_create_source;
-  source_class->ABI.abi.get_natural_size = get_natural_size;
+  vsource_class->ABI.abi.get_natural_size = get_natural_size;
 
   object_class->dispose = dispose;
 
@@ -218,7 +219,7 @@ ges_video_test_source_create_overlay (GESVideoTestSource * self)
 }
 
 static GstElement *
-ges_video_test_source_create_source (GESTrackElement * element)
+ges_video_test_source_create_source (GESSource * source)
 {
   GstCaps *caps;
   gint pattern;
@@ -227,9 +228,10 @@ ges_video_test_source_create_source (GESTrackElement * element)
   const gchar *props[] =
       { "pattern", "background-color", "foreground-color", NULL };
   GPtrArray *elements;
-  GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (element);
+  GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (source);
+  GESTrackElement *element = GES_TRACK_ELEMENT (source);
 
-  g_assert (!GES_TIMELINE_ELEMENT_PARENT (element));
+  g_assert (!GES_TIMELINE_ELEMENT_PARENT (source));
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
   self->priv->capsfilter = gst_element_factory_make ("capsfilter", NULL);
   pattern = self->priv->pattern;

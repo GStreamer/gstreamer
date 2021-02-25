@@ -49,16 +49,21 @@ struct _GESAudioSource {
 
 /**
  * GESAudioSourceClass:
- * @create_source: method to return the GstElement to put in the source topbin.
- * Other elements will be queued, like a volume.
- * In the case of a AudioUriSource, for example, the subclass will return a decodebin,
- * and we will append a volume.
  */
 struct _GESAudioSourceClass {
   /*< private >*/
   GESSourceClass parent_class;
 
   /*< public >*/
+  /**
+   * GESAudioSource::create_element:
+   * @object: The #GESTrackElement
+   *
+   * Returns: (transfer floating): the #GstElement that the underlying nleobject
+   * controls.
+   *
+   * Deprecated: 1.20: Use #GESSourceClass::create_element instead.
+   */
   GstElement*  (*create_source)           (GESTrackElement * object);
 
   /*< private >*/

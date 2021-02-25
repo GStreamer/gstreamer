@@ -57,13 +57,13 @@ static void ges_audio_test_source_get_property (GObject * object, guint
 static void ges_audio_test_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_audio_test_source_create_source (GESTrackElement * self);
+static GstElement *ges_audio_test_source_create_source (GESSource * source);
 
 static void
 ges_audio_test_source_class_init (GESAudioTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_audio_test_source_get_property;
   object_class->set_property = ges_audio_test_source_set_property;
@@ -100,18 +100,19 @@ ges_audio_test_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_audio_test_source_create_source (GESTrackElement * trksrc)
+ges_audio_test_source_create_source (GESSource * source)
 {
   GESAudioTestSource *self;
   GstElement *ret;
   const gchar *props[] = { "volume", "freq", NULL };
 
-  self = (GESAudioTestSource *) trksrc;
+  self = (GESAudioTestSource *) source;
   ret = gst_element_factory_make ("audiotestsrc", NULL);
   g_object_set (ret, "volume", (gdouble) self->priv->volume, "freq", (gdouble)
       self->priv->freq, NULL);
 
-  ges_track_element_add_children_props (trksrc, ret, NULL, NULL, props);
+  ges_track_element_add_children_props (GES_TRACK_ELEMENT (self), ret, NULL,
+      NULL, props);
 
   return ret;
 }

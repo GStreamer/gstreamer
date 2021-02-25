@@ -59,6 +59,15 @@ struct _GESVideoSourceClass {
   GESSourceClass parent_class;
 
   /*< public >*/
+  /**
+   * GESVideoSource::create_element:
+   * @object: The #GESTrackElement
+   *
+   * Returns: (transfer floating): the #GstElement that the underlying nleobject
+   * controls.
+   *
+   * Deprecated: 1.20: Use #GESSourceClass::create_element instead.
+   */
   GstElement*  (*create_source)           (GESTrackElement * object);
 
   /*< private >*/

@@ -174,7 +174,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 {
   GstElement *topbin;
   GstElement *sub_element;
-  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
+  GESVideoSourceClass *vsource_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
+  GESSourceClass *source_class = GES_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
   gboolean needs_converters = TRUE;
   GPtrArray *elements;
@@ -182,15 +183,15 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   if (!source_class->create_source)
     return NULL;
 
-  sub_element = source_class->create_source (trksrc);
+  sub_element = source_class->create_source (GES_SOURCE (trksrc));
 
   self = (GESVideoSource *) trksrc;
-  if (source_class->ABI.abi.needs_converters)
-    needs_converters = source_class->ABI.abi.needs_converters (self);
+  if (vsource_class->ABI.abi.needs_converters)
+    needs_converters = vsource_class->ABI.abi.needs_converters (self);
 
   elements = g_ptr_array_new ();
-  g_assert (source_class->ABI.abi.create_filters);
-  if (!source_class->ABI.abi.create_filters (self, elements, needs_converters)) {
+  g_assert (vsource_class->ABI.abi.create_filters);
+  if (!vsource_class->ABI.abi.create_filters (self, elements, needs_converters)) {
     g_ptr_array_free (elements, TRUE);
 
     return NULL;
@@ -248,7 +249,6 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
   track_element_class->create_element = ges_video_source_create_element;
   track_element_class->ABI.abi.default_track_type = GES_TRACK_TYPE_VIDEO;
 
-  video_source_class->create_source = NULL;
   video_source_class->ABI.abi.create_filters = ges_video_source_create_filters;
 }
 

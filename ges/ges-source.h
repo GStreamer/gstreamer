@@ -48,7 +48,6 @@ struct _GESSource {
 
 /**
  * GESSourceClass:
- * @create_source: method to return the GstElement to put in the source topbin.
  */
 
 struct _GESSourceClass {
@@ -68,8 +67,22 @@ struct _GESSourceClass {
    */
   gboolean (*select_pad)(GESSource *source, GstPad *pad);
 
+  /**
+   * GESSourceClass::create_source:
+   * @source: The #GESAudioSource
+   *
+   * Creates the GstElement to put in the source topbin. Other elements will be
+   * queued, like a volume. In the case of a AudioUriSource, for example, the
+   * subclass will return a decodebin, and we will append a volume.
+   *
+   * Returns: (transfer floating): The source element to use.
+   *
+   * Since: 1.20
+   */
+  GstElement*  (*create_source)           (GESSource * source);
+
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING - 1];
+  gpointer _ges_reserved[GES_PADDING - 2];
 };
 
 G_END_DECLS

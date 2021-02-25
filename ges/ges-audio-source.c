@@ -126,14 +126,13 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GstElement *topbin;
   GstElement *sub_element;
   GPtrArray *elements;
-  GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_GET_CLASS (trksrc);
+  GESSourceClass *source_class = GES_SOURCE_GET_CLASS (trksrc);
   const gchar *props[] = { "volume", "mute", NULL };
   GESAudioSource *self = GES_AUDIO_SOURCE (trksrc);
 
-  if (!source_class->create_source)
-    return NULL;
+  g_assert (source_class->create_source);
 
-  sub_element = source_class->create_source (trksrc);
+  sub_element = source_class->create_source (GES_SOURCE (trksrc));
 
   GST_DEBUG_OBJECT (trksrc, "Creating a bin sub_element ! volume");
   vbin =
@@ -177,13 +176,11 @@ ges_audio_source_class_init (GESAudioSourceClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
-  GESAudioSourceClass *audio_source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
   gobject_class->dispose = ges_audio_source_dispose;
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_audio_source_create_element;
   track_class->ABI.abi.default_track_type = GES_TRACK_TYPE_AUDIO;
-  audio_source_class->create_source = NULL;
 }
 
 static void

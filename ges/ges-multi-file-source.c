@@ -173,7 +173,7 @@ ges_multi_file_uri_new (const gchar * uri)
 }
 
 static GstElement *
-ges_multi_file_source_create_source (GESTrackElement * track_element)
+ges_multi_file_source_create_source (GESSource * source)
 {
   GESMultiFileSource *self;
   GstElement *bin, *src, *decodebin;
@@ -184,7 +184,7 @@ ges_multi_file_source_create_source (GESTrackElement * track_element)
   GESUriSourceAsset *asset;
   GESMultiFileURI *uri_data;
 
-  self = (GESMultiFileSource *) track_element;
+  self = (GESMultiFileSource *) source;
 
   asset =
       GES_URI_SOURCE_ASSET (ges_extractable_get_asset (GES_EXTRACTABLE (self)));
@@ -230,7 +230,7 @@ static void
 ges_multi_file_source_class_init (GESMultiFileSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_multi_file_source_get_property;
   object_class->set_property = ges_multi_file_source_set_property;

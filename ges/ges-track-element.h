@@ -70,8 +70,6 @@ struct _GESTrackElement {
  * track element. The default implementation will use the factory given by
  * @nleobject_factorytype to created the nleobject and will give it
  * the #GstElement returned by @create_element.
- * @create_element: Method to create the #GstElement that the underlying
- * nleobject controls.
  * @active_changed: Method to be called when the #GESTrackElement:active
  * property changes.
  * @list_children_properties: Deprecated: Listing children properties is
@@ -92,6 +90,14 @@ struct _GESTrackElementClass {
   /* virtual methods for subclasses */
   const gchar  *nleobject_factorytype;
   GstElement*  (*create_gnl_object)        (GESTrackElement * object);
+
+  /**
+   * GESTrackElementClass::create_element:
+   * @object: The #GESTrackElement
+   *
+   * Returns: (transfer floating): the #GstElement that the underlying nleobject
+   * controls.
+   */
   GstElement*  (*create_element)           (GESTrackElement * object);
 
   void (*active_changed)       (GESTrackElement *object, gboolean active);

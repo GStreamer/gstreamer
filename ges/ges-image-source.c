@@ -118,20 +118,20 @@ pad_added_cb (GstElement * source, GstPad * pad, GstElement * scale)
 }
 
 static GstElement *
-ges_image_source_create_source (GESTrackElement * track_element)
+ges_image_source_create_source (GESSource * source)
 {
-  GstElement *bin, *source, *scale, *freeze, *iconv;
-  GstPad *src, *target;
+  GstElement *bin, *src, *scale, *freeze, *iconv;
+  GstPad *srcpad, *target;
 
   bin = GST_ELEMENT (gst_bin_new ("still-image-bin"));
-  source = gst_element_factory_make ("uridecodebin", NULL);
+  src = gst_element_factory_make ("uridecodebin", NULL);
   scale = gst_element_factory_make ("videoscale", NULL);
   freeze = gst_element_factory_make ("imagefreeze", NULL);
   iconv = gst_element_factory_make ("videoconvert", NULL);
 
   g_object_set (scale, "add-borders", TRUE, NULL);
 
-  gst_bin_add_many (GST_BIN (bin), source, scale, freeze, iconv, NULL);
+  gst_bin_add_many (GST_BIN (bin), src, scale, freeze, iconv, NULL);
 
   gst_element_link_pads_full (scale, "src", iconv, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
@@ -142,13 +142,13 @@ ges_image_source_create_source (GESTrackElement * track_element)
 
   target = gst_element_get_static_pad (freeze, "src");
 
-  src = gst_ghost_pad_new ("src", target);
-  gst_element_add_pad (bin, src);
+  srcpad = gst_ghost_pad_new ("src", target);
+  gst_element_add_pad (bin, srcpad);
   gst_object_unref (target);
 
-  g_object_set (source, "uri", ((GESImageSource *) track_element)->uri, NULL);
+  g_object_set (src, "uri", ((GESImageSource *) source)->uri, NULL);
 
-  g_signal_connect (G_OBJECT (source), "pad-added",
+  g_signal_connect (G_OBJECT (src), "pad-added",
       G_CALLBACK (pad_added_cb), scale);
 
   return bin;
@@ -158,7 +158,8 @@ static void
 ges_image_source_class_init (GESImageSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
+  GESVideoSourceClass *vsource_class = GES_VIDEO_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_image_source_get_property;
   object_class->set_property = ges_image_source_set_property;
@@ -174,7 +175,7 @@ ges_image_source_class_init (GESImageSourceClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   source_class->create_source = ges_image_source_create_source;
-  source_class->ABI.abi.get_natural_size =
+  vsource_class->ABI.abi.get_natural_size =
       ges_video_uri_source_get_natural_size;
 
   GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = FALSE;

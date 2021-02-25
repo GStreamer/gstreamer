@@ -51,7 +51,7 @@ enum
 
 /* GESSource VMethod */
 static GstElement *
-ges_video_uri_source_create_source (GESTrackElement * element)
+ges_video_uri_source_create_source (GESSource * element)
 {
   return ges_uri_source_create_source (GES_VIDEO_URI_SOURCE (element)->priv);
 }
@@ -315,7 +315,7 @@ ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
 
   src_class->select_pad = ges_uri_source_select_pad;
 
-  video_src_class->create_source = ges_video_uri_source_create_source;
+  src_class->create_source = ges_video_uri_source_create_source;
   video_src_class->ABI.abi.needs_converters =
       ges_video_uri_source_needs_converters;
   video_src_class->ABI.abi.get_natural_size =
