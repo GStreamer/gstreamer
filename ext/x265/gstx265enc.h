@@ -84,5 +84,7 @@ struct _GstX265EncClass
 
 GType gst_x265_enc_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (x265enc);
+
 G_END_DECLS
 #endif /* __GST_X265_ENC_H__ */

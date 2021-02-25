@@ -197,10 +197,12 @@ static void gst_x265_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_x265_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean x265enc_element_init (GstPlugin * plugin);
 
 #define gst_x265_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstX265Enc, gst_x265_enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (x265enc, x265enc_element_init);
 
 static gboolean
 gst_x265_enc_add_x265_chroma_format (GstStructure * s,
@@ -1732,7 +1734,7 @@ gst_x265_enc_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+x265enc_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (x265_enc_debug, "x265enc", 0,
       "h265 encoding element");
@@ -1771,6 +1773,12 @@ plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "x265enc",
       GST_RANK_PRIMARY, GST_TYPE_X265_ENC);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (x265enc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
