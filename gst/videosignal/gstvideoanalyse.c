@@ -87,6 +87,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVideoAnalyse, gst_video_analyse,
     GST_TYPE_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_video_analyse_debug_category, "videoanalyse",
         0, "debug category for videoanalyse element"));
+GST_ELEMENT_REGISTER_DEFINE (videoanalyse, "videoanalyse",
+    GST_RANK_NONE, GST_TYPE_VIDEO_ANALYSE);
 
 static void
 gst_video_analyse_class_init (GstVideoAnalyseClass * klass)

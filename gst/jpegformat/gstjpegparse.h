@@ -87,6 +87,8 @@ struct _GstJpegParseClass {
 
 GType gst_jpeg_parse_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (jpegparse);
+
 G_END_DECLS
 
 #endif /* __GST_JPEG_PARSE_H__ */

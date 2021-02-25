@@ -83,6 +83,9 @@ enum
 
 #define gst_twirl_parent_class parent_class
 G_DEFINE_TYPE (GstTwirl, gst_twirl, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (twirl, "twirl", GST_RANK_NONE,
+    GST_TYPE_TWIRL, GST_DEBUG_CATEGORY_INIT (gst_twirl_debug, "twirl", 0,
+        "twirl"));
 
 static void
 gst_twirl_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -197,12 +200,4 @@ gst_twirl_init (GstTwirl * filter)
 
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->angle = DEFAULT_ANGLE;
-}
-
-gboolean
-gst_twirl_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_twirl_debug, "twirl", 0, "twirl");
-
-  return gst_element_register (plugin, "twirl", GST_RANK_NONE, GST_TYPE_TWIRL);
 }

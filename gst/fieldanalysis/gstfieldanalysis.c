@@ -108,6 +108,12 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,Y42B,I420,YV12}")));
 
 G_DEFINE_TYPE (GstFieldAnalysis, gst_field_analysis, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (fieldanalysis, "fieldanalysis",
+    GST_RANK_NONE, GST_TYPE_FIELDANALYSIS,
+    GST_DEBUG_CATEGORY_INIT (gst_field_analysis_debug, "fieldanalysis", 0,
+        "Video field analysis");
+    );
+
 #define parent_class gst_field_analysis_parent_class
 
 static void gst_field_analysis_set_property (GObject * object, guint prop_id,
@@ -1840,13 +1846,9 @@ gst_field_analysis_finalize (GObject * object)
 
 
 static gboolean
-fieldanalysis_init (GstPlugin * fieldanalysis)
+fieldanalysis_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_field_analysis_debug, "fieldanalysis",
-      0, "Video field analysis");
-
-  return gst_element_register (fieldanalysis, "fieldanalysis", GST_RANK_NONE,
-      GST_TYPE_FIELDANALYSIS);
+  return GST_ELEMENT_REGISTER (fieldanalysis, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

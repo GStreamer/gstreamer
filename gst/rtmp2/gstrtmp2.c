@@ -23,24 +23,18 @@
 #include "config.h"
 #endif
 
-#include "gstrtmp2src.h"
-#include "gstrtmp2sink.h"
+#include "gstrtmp2elements.h"
 
-#include "rtmp/rtmpclient.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "rtmp2src", GST_RANK_PRIMARY + 1,
-      GST_TYPE_RTMP2_SRC);
-  gst_element_register (plugin, "rtmp2sink", GST_RANK_PRIMARY + 1,
-      GST_TYPE_RTMP2_SINK);
+  gboolean ret = FALSE;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_SCHEME, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_AUTHMOD, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_RTMP_STOP_COMMANDS, 0);
+  ret |= GST_ELEMENT_REGISTER (rtmp2src, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtmp2sink, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

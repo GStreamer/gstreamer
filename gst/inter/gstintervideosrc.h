@@ -56,6 +56,7 @@ struct _GstInterVideoSrcClass
 };
 
 GType gst_inter_video_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (intervideosrc);
 
 G_END_DECLS
 

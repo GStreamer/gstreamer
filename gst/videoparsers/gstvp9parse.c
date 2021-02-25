@@ -23,6 +23,7 @@
 
 #include <gst/codecparsers/gstvp9parser.h>
 #include <gst/video/video.h>
+#include "gstvideoparserselements.h"
 #include "gstvp9parse.h"
 
 #include <string.h>
@@ -74,6 +75,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_vp9_parse_parent_class
 G_DEFINE_TYPE (GstVp9Parse, gst_vp9_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vp9parse, "vp9parse", GST_RANK_SECONDARY,
+    GST_TYPE_VP9_PARSE, videoparsers_element_init (plugin));
 
 static gboolean gst_vp9_parse_start (GstBaseParse * parse);
 static gboolean gst_vp9_parse_stop (GstBaseParse * parse);

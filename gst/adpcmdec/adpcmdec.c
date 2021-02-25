@@ -81,7 +81,12 @@ typedef struct _ADPCMDec
 } ADPCMDec;
 
 GType adpcmdec_get_type (void);
-G_DEFINE_TYPE (ADPCMDec, adpcmdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DECLARE (adpcmdec);
+G_DEFINE_TYPE_WITH_CODE (ADPCMDec, adpcmdec, GST_TYPE_AUDIO_DECODER,
+    GST_DEBUG_CATEGORY_INIT (adpcmdec_debug, "adpcmdec", 0, "ADPCM Decoders");
+    );
+GST_ELEMENT_REGISTER_DEFINE (adpcmdec, "adpcmdec", GST_RANK_PRIMARY,
+    GST_TYPE_ADPCM_DEC);
 
 static gboolean
 adpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * in_caps)
@@ -485,12 +490,7 @@ adpcmdec_class_init (ADPCMDecClass * klass)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (adpcmdec_debug, "adpcmdec", 0, "ADPCM Decoders");
-  if (!gst_element_register (plugin, "adpcmdec", GST_RANK_PRIMARY,
-          GST_TYPE_ADPCM_DEC)) {
-    return FALSE;
-  }
-  return TRUE;
+  return GST_ELEMENT_REGISTER (adpcmdec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, adpcmdec,

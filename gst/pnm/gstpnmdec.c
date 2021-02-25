@@ -56,6 +56,8 @@ static GstFlowReturn
 gst_pnmdec_parse_ascii (GstPnmdec * s, const guint8 * b, guint bs);
 
 G_DEFINE_TYPE (GstPnmdec, gst_pnmdec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (pnmdec, "pnmdec", GST_RANK_PRIMARY,
+    GST_TYPE_PNMDEC);
 
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",

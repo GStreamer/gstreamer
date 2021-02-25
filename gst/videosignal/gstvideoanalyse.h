@@ -52,6 +52,8 @@ struct _GstVideoAnalyseClass
 
 GType gst_video_analyse_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (videoanalyse);
+
 G_END_DECLS
 
 #endif

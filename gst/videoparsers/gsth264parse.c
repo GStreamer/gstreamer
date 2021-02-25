@@ -29,6 +29,7 @@
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
+#include "gstvideoparserselements.h"
 #include "gsth264parse.h"
 
 #include <string.h>
@@ -98,6 +99,9 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_h264_parse_parent_class
 G_DEFINE_TYPE (GstH264Parse, gst_h264_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (h264parse, "h264parse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_H264_PARSE,
+    videoparsers_element_init (plugin));
 
 static void gst_h264_parse_finalize (GObject * object);
 

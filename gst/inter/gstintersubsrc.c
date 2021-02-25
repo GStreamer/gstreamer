@@ -82,6 +82,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 /* class initialization */
 #define parent_class gst_inter_sub_src_parent_class
 G_DEFINE_TYPE (GstInterSubSrc, gst_inter_sub_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE (intersubsrc, "intersubsrc", GST_RANK_NONE,
+    GST_TYPE_INTER_SUB_SRC);
 
 static void
 gst_inter_sub_src_class_init (GstInterSubSrcClass * klass)

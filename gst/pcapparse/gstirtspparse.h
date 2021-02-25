@@ -76,6 +76,7 @@ struct _GstIRTSPParseClass
 };
 
 GType gst_irtsp_parse_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (irtspparse);
 
 G_END_DECLS
 #endif /* __GST_IRTSP_PARSE_H__ */

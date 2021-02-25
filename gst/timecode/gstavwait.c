@@ -84,6 +84,7 @@ GST_STATIC_PAD_TEMPLATE ("vsrc",
 
 #define parent_class gst_avwait_parent_class
 G_DEFINE_TYPE (GstAvWait, gst_avwait, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (avwait, "avwait", GST_RANK_NONE, GST_TYPE_AVWAIT);
 
 enum
 {

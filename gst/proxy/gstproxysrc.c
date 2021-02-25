@@ -100,6 +100,8 @@ enum
  * element */
 #define parent_class gst_proxy_src_parent_class
 G_DEFINE_TYPE (GstProxySrc, gst_proxy_src, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (proxysrc, "proxysrc", GST_RANK_NONE,
+    GST_TYPE_PROXY_SRC);
 
 static gboolean gst_proxy_src_internal_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);

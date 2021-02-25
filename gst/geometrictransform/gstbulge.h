@@ -78,7 +78,7 @@ struct _GstBulgeClass
 
 GType gst_bulge_get_type (void);
 
-gboolean gst_bulge_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (bulge);
 
 G_END_DECLS
 #endif /* __GST_BULGE_H__ */

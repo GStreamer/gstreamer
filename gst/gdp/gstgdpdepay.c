@@ -40,6 +40,7 @@
 
 #include "dataprotocol.h"
 
+#include "gstgdpelements.h"
 #include "gstgdpdepay.h"
 
 enum
@@ -69,6 +70,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_gdp_depay_debug);
 #define gst_gdp_depay_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGDPDepay, gst_gdp_depay,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gdpdepay, "gdpdepay", GST_RANK_NONE,
+    GST_TYPE_GDP_DEPAY, gdp_element_init (plugin));
 
 static gboolean gst_gdp_depay_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -585,14 +588,4 @@ gst_gdp_depay_decide_allocation (GstGDPDepay * gdpdepay)
 
   gst_caps_unref (caps);
   gst_query_unref (query);
-}
-
-gboolean
-gst_gdp_depay_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "gdpdepay", GST_RANK_NONE,
-          GST_TYPE_GDP_DEPAY))
-    return FALSE;
-
-  return TRUE;
 }

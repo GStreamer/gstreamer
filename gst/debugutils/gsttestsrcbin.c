@@ -39,6 +39,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstflowcombiner.h>
 #include <gst/app/gstappsink.h>
+#include "gstdebugutilsbadelements.h"
 
 static GstStaticPadTemplate video_src_template =
 GST_STATIC_PAD_TEMPLATE ("video_src_%u",
@@ -376,6 +377,9 @@ gst_test_src_bin_uri_handler_init (gpointer g_iface, gpointer unused)
 G_DEFINE_TYPE_WITH_CODE (GstTestSrcBin, gst_test_src_bin, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_test_src_bin_uri_handler_init))
 /* *INDENT-ON* */
+
+GST_ELEMENT_REGISTER_DEFINE (testsrcbin, "testsrcbin",
+    GST_RANK_NONE, gst_test_src_bin_get_type ());
 
 static void
 gst_test_src_bin_set_property (GObject * object, guint prop_id,

@@ -79,7 +79,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_audiolatency_parent_class parent_class
-G_DEFINE_TYPE (GstAudioLatency, gst_audiolatency, GST_TYPE_BIN);
+G_DEFINE_TYPE_WITH_CODE (GstAudioLatency, gst_audiolatency, GST_TYPE_BIN,
+    GST_DEBUG_CATEGORY_INIT (gst_audiolatency_debug, "audiolatency", 0,
+        "audiolatency"););
+GST_ELEMENT_REGISTER_DEFINE (audiolatency, "audiolatency", GST_RANK_PRIMARY,
+    GST_TYPE_AUDIOLATENCY);
 
 #define DEFAULT_PRINT_LATENCY   FALSE
 enum
@@ -422,11 +426,7 @@ out:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_audiolatency_debug, "audiolatency", 0,
-      "audiolatency");
-
-  return gst_element_register (plugin, "audiolatency", GST_RANK_PRIMARY,
-      GST_TYPE_AUDIOLATENCY);
+  return GST_ELEMENT_REGISTER (audiolatency, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

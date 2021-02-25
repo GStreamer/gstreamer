@@ -41,55 +41,26 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_circle_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_diffuse_plugin_init (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (circle, plugin);
+  ret |= GST_ELEMENT_REGISTER (diffuse, plugin);
+  ret |= GST_ELEMENT_REGISTER (kaleidoscope, plugin);
+  ret |= GST_ELEMENT_REGISTER (marble, plugin);
+  ret |= GST_ELEMENT_REGISTER (pinch, plugin);
+  ret |= GST_ELEMENT_REGISTER (rotate, plugin);
+  ret |= GST_ELEMENT_REGISTER (sphere, plugin);
+  ret |= GST_ELEMENT_REGISTER (twirl, plugin);
+  ret |= GST_ELEMENT_REGISTER (waterripple, plugin);
+  ret |= GST_ELEMENT_REGISTER (stretch, plugin);
+  ret |= GST_ELEMENT_REGISTER (bulge, plugin);
+  ret |= GST_ELEMENT_REGISTER (tunnel, plugin);
+  ret |= GST_ELEMENT_REGISTER (square, plugin);
+  ret |= GST_ELEMENT_REGISTER (mirror, plugin);
+  ret |= GST_ELEMENT_REGISTER (fisheye, plugin);
+  ret |= GST_ELEMENT_REGISTER (perspective, plugin);
 
-  if (!gst_kaleidoscope_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_marble_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_pinch_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rotate_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_sphere_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_twirl_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_water_ripple_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_stretch_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_bulge_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_tunnel_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_square_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_mirror_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_fisheye_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_perspective_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -1,5 +1,6 @@
 vparse_sources = [
   'plugin.c',
+  'gstvideoparserselement.c',
   'h263parse.c',
   'gsth263parse.c',
   'gstdiracparse.c',

@@ -62,6 +62,7 @@ struct _GstFreeverbClass {
 };
 
 GType gst_freeverb_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (freeverb);
 
 G_END_DECLS
 

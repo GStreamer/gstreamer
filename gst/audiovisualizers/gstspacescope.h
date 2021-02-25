@@ -56,7 +56,8 @@ struct _GstSpaceScopeClass
 };
 
 GType gst_space_scope_get_type (void);
-gboolean gst_space_scope_plugin_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DECLARE (spacescope);
 
 G_END_DECLS
 #endif /* __GST_SPACE_SCOPE_H__ */

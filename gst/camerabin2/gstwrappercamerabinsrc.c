@@ -52,6 +52,8 @@ GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
 #define gst_wrapper_camera_bin_src_parent_class parent_class
 G_DEFINE_TYPE (GstWrapperCameraBinSrc, gst_wrapper_camera_bin_src,
     GST_TYPE_BASE_CAMERA_SRC);
+GST_ELEMENT_REGISTER_DEFINE (wrappercamerabinsrc, "wrappercamerabinsrc",
+    GST_RANK_NONE, gst_wrapper_camera_bin_src_get_type ());
 
 static GstStaticPadTemplate vfsrc_template =
 GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
@@ -1168,11 +1170,4 @@ gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self)
   self->image_renegotiate = TRUE;
   self->mode = GST_BASE_CAMERA_SRC_CAST (self)->mode;
   self->app_vid_filter = NULL;
-}
-
-gboolean
-gst_wrapper_camera_bin_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "wrappercamerabinsrc", GST_RANK_NONE,
-      gst_wrapper_camera_bin_src_get_type ());
 }

@@ -65,7 +65,7 @@ struct _GstSmoothClass {
 };
 
 GType gst_smooth_get_type(void);
-
+GST_ELEMENT_REGISTER_DECLARE (smooth);
 
 #ifdef __cplusplus
 }

@@ -125,6 +125,11 @@ static gboolean push_event (MpegTSBase * base, GstEvent * event);
 
 #define mpegts_parse_parent_class parent_class
 G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tsparse, "tsparse",
+    GST_RANK_NONE, GST_TYPE_MPEGTS_PARSE,
+    GST_DEBUG_CATEGORY_INIT (mpegts_parse_debug, "tsparse", 0,
+        "MPEG transport stream parser"));
+
 static void mpegts_parse_reset (MpegTSBase * base);
 static GstFlowReturn mpegts_parse_input_done (MpegTSBase * base);
 static GstFlowReturn
@@ -1205,14 +1210,4 @@ mpegts_parse_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       res = gst_pad_query_default (pad, parent, query);
   }
   return res;
-}
-
-gboolean
-gst_mpegtsparse_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (mpegts_parse_debug, "tsparse", 0,
-      "MPEG transport stream parser");
-
-  return gst_element_register (plugin, "tsparse",
-      GST_RANK_NONE, GST_TYPE_MPEGTS_PARSE);
 }

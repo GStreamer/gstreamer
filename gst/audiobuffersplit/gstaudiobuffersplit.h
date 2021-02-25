@@ -74,6 +74,7 @@ struct _GstAudioBufferSplitClass {
 };
 
 GType gst_audio_buffer_split_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (audiobuffersplit);
 
 G_END_DECLS
 

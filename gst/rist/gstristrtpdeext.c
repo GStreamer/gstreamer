@@ -76,6 +76,8 @@ struct _GstRistRtpDeext
 G_DEFINE_TYPE_WITH_CODE (GstRistRtpDeext, gst_rist_rtp_deext, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_rist_rtp_deext_debug, "ristrtpdeext", 0,
         "RIST RTP De-extension"));
+GST_ELEMENT_REGISTER_DEFINE (ristrtpdeext, "ristrtpdeext", GST_RANK_NONE,
+    GST_TYPE_RIST_RTP_DEEXT);
 
 static guint8
 bit_count (guint8 value)

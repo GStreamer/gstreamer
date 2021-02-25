@@ -247,9 +247,13 @@ static GstStateChangeReturn gst_interlace_change_state (GstElement * element,
 static GstCaps *gst_interlace_caps_double_framerate (GstCaps * caps,
     gboolean half, gboolean skip_progressive);
 
+GST_ELEMENT_REGISTER_DECLARE (interlace);
+
 #define gst_interlace_parent_class parent_class
 G_DEFINE_TYPE (GstInterlace, gst_interlace, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (interlace, "interlace", GST_RANK_NONE,
+    GST_TYPE_INTERLACE, GST_DEBUG_CATEGORY_INIT (gst_interlace_debug,
+        "interlace", 0, "interlace element"));
 static void
 gst_interlace_class_init (GstInterlaceClass * klass)
 {
@@ -1492,11 +1496,7 @@ gst_interlace_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_interlace_debug, "interlace", 0,
-      "interlace element");
-
-  return gst_element_register (plugin, "interlace", GST_RANK_NONE,
-      GST_TYPE_INTERLACE);
+  return GST_ELEMENT_REGISTER (interlace, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

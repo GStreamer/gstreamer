@@ -40,6 +40,7 @@
 
 #include <gst/gst.h>
 
+#include "gstdebugutilsbadelements.h"
 #include "gstdebugspy.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_spy_debug);
@@ -96,6 +97,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 G_DEFINE_TYPE (GstDebugSpy, gst_debug_spy, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (debugspy, "debugspy",
+    GST_RANK_NONE, gst_debug_spy_get_type ());
 
 static void gst_debug_spy_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

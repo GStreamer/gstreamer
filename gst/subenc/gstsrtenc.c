@@ -57,6 +57,7 @@ static void gst_srt_enc_set_property (GObject * object, guint prop_id,
 
 #define parent_class gst_srt_enc_parent_class
 G_DEFINE_TYPE (GstSrtEnc, gst_srt_enc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (srtenc, "srtenc", GST_RANK_NONE, GST_TYPE_SRT_ENC);
 
 static void
 gst_srt_enc_append_timestamp_to_string (GstClockTime timestamp, GString * str)

@@ -79,6 +79,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 G_DEFINE_TYPE (GstVMncDec, gst_vmnc_dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (vmncdec, "vmncdec", GST_RANK_PRIMARY,
+    GST_TYPE_VMNC_DEC);
 
 static void
 gst_vmnc_dec_class_init (GstVMncDecClass * klass)
@@ -957,10 +959,7 @@ gst_vmnc_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "vmncdec", GST_RANK_PRIMARY,
-          GST_TYPE_VMNC_DEC))
-    return FALSE;
-  return TRUE;
+  return GST_ELEMENT_REGISTER (vmncdec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

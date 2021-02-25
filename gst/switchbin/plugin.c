@@ -28,13 +28,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = TRUE;
-  ret = ret
-      && gst_element_register (plugin, "switchbin", GST_RANK_NONE,
-      gst_switch_bin_get_type ());
-  return ret;
+  return GST_ELEMENT_REGISTER (switchbin, plugin);
 }
-
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,

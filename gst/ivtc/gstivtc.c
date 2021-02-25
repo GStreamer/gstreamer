@@ -110,6 +110,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE_WITH_CODE (GstIvtc, gst_ivtc, GST_TYPE_BASE_TRANSFORM,
     GST_DEBUG_CATEGORY_INIT (gst_ivtc_debug_category, "ivtc", 0,
         "debug category for ivtc element"));
+GST_ELEMENT_REGISTER_DEFINE (ivtc, "ivtc", GST_RANK_NONE, GST_TYPE_IVTC);
 
 static void
 gst_ivtc_class_init (GstIvtcClass * klass)
@@ -681,9 +682,8 @@ get_comb_score (GstVideoFrame * top, GstVideoFrame * bottom)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "ivtc", GST_RANK_NONE, GST_TYPE_IVTC);
-  gst_element_register (plugin, "combdetect", GST_RANK_NONE,
-      GST_TYPE_COMB_DETECT);
+  GST_ELEMENT_REGISTER (ivtc, plugin);
+  GST_ELEMENT_REGISTER (combdetect, plugin);
 
   return TRUE;
 }

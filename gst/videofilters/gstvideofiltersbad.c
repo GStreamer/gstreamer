@@ -31,15 +31,13 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean ret = FALSE;
 
-  gst_element_register (plugin, "scenechange", GST_RANK_NONE,
-      gst_scene_change_get_type ());
-  gst_element_register (plugin, "zebrastripe", GST_RANK_NONE,
-      gst_zebra_stripe_get_type ());
-  return gst_element_register (plugin, "videodiff", GST_RANK_NONE,
-      GST_TYPE_VIDEO_DIFF);
+  ret |= GST_ELEMENT_REGISTER (scenechange, plugin);
+  ret |= GST_ELEMENT_REGISTER (zebrastripe, plugin);
+  ret |= GST_ELEMENT_REGISTER (videodiff, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -86,6 +86,8 @@ GST_STATIC_PAD_TEMPLATE ("vsrc",
 #define parent_class gst_videoframe_audiolevel_parent_class
 G_DEFINE_TYPE (GstVideoFrameAudioLevel, gst_videoframe_audiolevel,
     GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (videoframe_audiolevel, "videoframe-audiolevel",
+    GST_RANK_NONE, GST_TYPE_VIDEOFRAME_AUDIOLEVEL);
 
 static GstFlowReturn gst_videoframe_audiolevel_asink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * inbuf);
@@ -777,8 +779,7 @@ out:
 static gboolean
 gst_videoframe_audiolevel_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "videoframe-audiolevel",
-      GST_RANK_NONE, GST_TYPE_VIDEOFRAME_AUDIOLEVEL);
+  return GST_ELEMENT_REGISTER (videoframe_audiolevel, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

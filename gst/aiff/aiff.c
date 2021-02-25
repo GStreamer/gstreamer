@@ -22,41 +22,16 @@
 #include "config.h"
 #endif
 
-#include <gst/tag/tag.h>
+#include "aiffelements.h"
 
-#include <gst/gst-i18n-plugin.h>
-
-#include "aiffparse.h"
-#include "aiffmux.h"
-
-GST_DEBUG_CATEGORY_STATIC (aiff_debug);
-#define GST_CAT_DEFAULT (aiff_debug)
-
-GST_DEBUG_CATEGORY_EXTERN (aiffparse_debug);
-GST_DEBUG_CATEGORY_EXTERN (aiffmux_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (aiff_debug, "aiff", 0, "AIFF plugin");
-  GST_DEBUG_CATEGORY_INIT (aiffparse_debug, "aiffparse", 0, "AIFF parser");
-  GST_DEBUG_CATEGORY_INIT (aiffmux_debug, "aiffmux", 0, "AIFF muxer");
-
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-#endif
-
-  ret = gst_element_register (plugin, "aiffparse", GST_RANK_PRIMARY,
-      GST_TYPE_AIFF_PARSE);
-  ret &= gst_element_register (plugin, "aiffmux", GST_RANK_PRIMARY,
-      GST_TYPE_AIFF_MUX);
-
-  gst_tag_register_musicbrainz_tags ();
+  ret |= GST_ELEMENT_REGISTER (aiffparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (aiffmux, plugin);
 
   return ret;
 }

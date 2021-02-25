@@ -118,6 +118,7 @@ struct GstMpegTsMuxClass {
 };
 
 GType gst_mpeg_ts_mux_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (mpegtsmux);
 
 G_END_DECLS
 

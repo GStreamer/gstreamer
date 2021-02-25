@@ -84,6 +84,9 @@ enum
 
 #define gst_rotate_parent_class parent_class
 G_DEFINE_TYPE (GstRotate, gst_rotate, GST_TYPE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rotate, "rotate", GST_RANK_NONE,
+    GST_TYPE_ROTATE, GST_DEBUG_CATEGORY_INIT (gst_rotate_debug, "rotate", 0,
+        "rotate"));
 
 static void
 gst_rotate_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -211,13 +214,4 @@ static void
 gst_rotate_init (GstRotate * filter)
 {
   filter->angle = DEFAULT_ANGLE;
-}
-
-gboolean
-gst_rotate_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rotate_debug, "rotate", 0, "rotate");
-
-  return gst_element_register (plugin, "rotate", GST_RANK_NONE,
-      GST_TYPE_ROTATE);
 }

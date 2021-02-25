@@ -93,6 +93,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE_WITH_CODE (GstCombDetect, gst_comb_detect, GST_TYPE_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_comb_detect_debug_category, "combdetect", 0,
         "debug category for combdetect element"));
+GST_ELEMENT_REGISTER_DEFINE (combdetect, "combdetect", GST_RANK_NONE,
+    GST_TYPE_COMB_DETECT);
 
 static void
 gst_comb_detect_class_init (GstCombDetectClass * klass)

@@ -188,6 +188,8 @@ gst_rist_bonding_method_get_type (void)
 
 G_DEFINE_TYPE_WITH_CODE (GstRistSink, gst_rist_sink, GST_TYPE_BIN,
     GST_DEBUG_CATEGORY_INIT (gst_rist_sink_debug, "ristsink", 0, "RIST Sink"));
+GST_ELEMENT_REGISTER_DEFINE (ristsink, "ristsink", GST_RANK_PRIMARY,
+    GST_TYPE_RIST_SINK);
 
 GQuark session_id_quark = 0;
 

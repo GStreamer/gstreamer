@@ -95,6 +95,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 /* class initialization */
 #define parent_class gst_inter_audio_src_parent_class
 G_DEFINE_TYPE (GstInterAudioSrc, gst_inter_audio_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE (interaudiosrc, "interaudiosrc",
+    GST_RANK_NONE, GST_TYPE_INTER_AUDIO_SRC);
 
 static void
 gst_inter_audio_src_class_init (GstInterAudioSrcClass * klass)

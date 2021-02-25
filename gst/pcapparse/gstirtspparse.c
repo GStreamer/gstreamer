@@ -80,6 +80,8 @@ static void gst_irtsp_parse_get_property (GObject * object,
 
 #define parent_class gst_irtsp_parse_parent_class
 G_DEFINE_TYPE (GstIRTSPParse, gst_irtsp_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (irtspparse, "irtspparse", GST_RANK_NONE,
+    GST_TYPE_IRTSP_PARSE);
 
 static void
 gst_irtsp_parse_class_init (GstIRTSPParseClass * klass)

@@ -152,8 +152,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY (gst_mpeg_ts_mux_debug);
 #define GST_CAT_DEFAULT gst_mpeg_ts_mux_debug
 
-G_DEFINE_TYPE (GstMpegTsMux, gst_mpeg_ts_mux, GST_TYPE_BASE_TS_MUX);
 #define parent_class gst_mpeg_ts_mux_parent_class
+G_DEFINE_TYPE (GstMpegTsMux, gst_mpeg_ts_mux, GST_TYPE_BASE_TS_MUX);
+GST_ELEMENT_REGISTER_DEFINE (mpegtsmux, "mpegtsmux", GST_RANK_PRIMARY,
+    gst_mpeg_ts_mux_get_type ());
 
 /* Internals */
 

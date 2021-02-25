@@ -78,6 +78,7 @@ struct _GstDodgeClass
 };
 
 GType gst_dodge_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dodge);
 
 G_END_DECLS
 

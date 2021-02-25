@@ -29,6 +29,7 @@
 #include <gst/base/gstcollectpads.h>
 #include <gst/video/video.h>
 
+#include "gstdebugutilsbadelements.h"
 #include "gstcompare.h"
 
 GST_DEBUG_CATEGORY_STATIC (compare_debug);
@@ -117,6 +118,8 @@ static GstStateChangeReturn gst_compare_change_state (GstElement * element,
 
 #define gst_compare_parent_class parent_class
 G_DEFINE_TYPE (GstCompare, gst_compare, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (compare, "compare",
+    GST_RANK_NONE, gst_compare_get_type ());
 
 static void
 gst_compare_finalize (GObject * object)

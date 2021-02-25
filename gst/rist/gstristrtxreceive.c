@@ -91,6 +91,8 @@ static void gst_rist_rtx_receive_get_property (GObject * object, guint prop_id,
 G_DEFINE_TYPE_WITH_CODE (GstRistRtxReceive, gst_rist_rtx_receive,
     GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (gst_rist_rtx_receive_debug,
         "ristrtxreceive", 0, "RIST retransmission receiver"));
+GST_ELEMENT_REGISTER_DEFINE (ristrtxreceive, "ristrtxreceive",
+    GST_RANK_NONE, GST_TYPE_RIST_RTX_RECEIVE);
 
 static void
 gst_rist_rtx_receive_class_init (GstRistRtxReceiveClass * klass)

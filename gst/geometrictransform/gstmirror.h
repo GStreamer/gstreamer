@@ -96,7 +96,7 @@ struct _GstMirrorClass
 
 GType gst_mirror_get_type (void);
 
-gboolean gst_mirror_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (mirror);
 
 G_END_DECLS
 #endif /* __GST_MIRROR_H__ */

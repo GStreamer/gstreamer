@@ -1,4 +1,6 @@
 gsttranscoder_plugin = library('gsttranscode',
+  'gsttranscodeelement.c',
+  'gsttranscodeplugin.c',
   'gsttranscodebin.c',
   'gst-cpu-throttling-clock.c',
   'gsturitranscodebin.c',

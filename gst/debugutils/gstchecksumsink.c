@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
+#include "gstdebugutilsbadelements.h"
 #include "gstchecksumsink.h"
 
 static void gst_checksum_sink_set_property (GObject * object, guint prop_id,
@@ -73,6 +74,8 @@ gst_checksum_sink_hash_get_type (void)
 
 #define gst_checksum_sink_parent_class parent_class
 G_DEFINE_TYPE (GstChecksumSink, gst_checksum_sink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE (checksumsink, "checksumsink",
+    GST_RANK_NONE, gst_checksum_sink_get_type ());
 
 static void
 gst_checksum_sink_class_init (GstChecksumSinkClass * klass)

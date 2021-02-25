@@ -38,6 +38,7 @@
 #include "config.h"
 #endif
 
+#include "gstdebugutilsbadelements.h"
 #include "gsterrorignore.h"
 
 #define GST_CAT_DEFAULT gst_error_ignore_debug
@@ -69,6 +70,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_error_ignore_parent_class
 G_DEFINE_TYPE (GstErrorIgnore, gst_error_ignore, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (errorignore, "errorignore",
+    GST_RANK_NONE, gst_error_ignore_get_type ());
 
 static GstFlowReturn gst_error_ignore_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * inbuf);

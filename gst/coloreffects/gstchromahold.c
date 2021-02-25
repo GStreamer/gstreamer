@@ -111,6 +111,8 @@ static void gst_chroma_hold_finalize (GObject * object);
 
 #define gst_chroma_hold_parent_class parent_class
 G_DEFINE_TYPE (GstChromaHold, gst_chroma_hold, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (chromahold, "chromahold",
+    GST_RANK_NONE, gst_chroma_hold_get_type ());
 
 static void
 gst_chroma_hold_class_init (GstChromaHoldClass * klass)

@@ -118,6 +118,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_midi_parse_parent_class
 G_DEFINE_TYPE (GstMidiParse, gst_midi_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (midiparse, "midiparse", GST_RANK_PRIMARY,
+    GST_TYPE_MIDI_PARSE);
 
 /* initialize the plugin's class */
 static void

@@ -51,6 +51,10 @@ enum
 
 #define gst_dvb_sub_enc_parent_class parent_class
 G_DEFINE_TYPE (GstDvbSubEnc, gst_dvb_sub_enc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dvbsubenc, "dvbsubenc", GST_RANK_NONE,
+    GST_TYPE_DVB_SUB_ENC, GST_DEBUG_CATEGORY_INIT (gst_dvb_sub_enc_debug,
+        "dvbsubenc", 0, "DVB subtitle encoder");
+    );
 
 static void gst_dvb_sub_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -591,15 +595,7 @@ gst_dvb_sub_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "dvbsubenc", GST_RANK_NONE,
-          GST_TYPE_DVB_SUB_ENC)) {
-    return FALSE;
-  }
-
-  GST_DEBUG_CATEGORY_INIT (gst_dvb_sub_enc_debug, "dvbsubenc", 0,
-      "DVB subtitle encoder");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (dvbsubenc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

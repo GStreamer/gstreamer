@@ -90,6 +90,10 @@ enum
 #define gst_kaleidoscope_parent_class parent_class
 G_DEFINE_TYPE (GstKaleidoscope, gst_kaleidoscope,
     GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (kaleidoscope, "kaleidoscope",
+    GST_RANK_NONE, GST_TYPE_KALEIDOSCOPE,
+    GST_DEBUG_CATEGORY_INIT (gst_kaleidoscope_debug, "kaleidoscope", 0,
+        "kaleidoscope"));
 
 static void
 gst_kaleidoscope_set_property (GObject * object, guint prop_id,
@@ -237,14 +241,4 @@ gst_kaleidoscope_init (GstKaleidoscope * filter)
   filter->angle = DEFAULT_ANGLE;
   filter->angle2 = DEFAULT_ANGLE2;
   filter->sides = DEFAULT_SIDES;
-}
-
-gboolean
-gst_kaleidoscope_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_kaleidoscope_debug, "kaleidoscope", 0,
-      "kaleidoscope");
-
-  return gst_element_register (plugin, "kaleidoscope", GST_RANK_NONE,
-      GST_TYPE_KALEIDOSCOPE);
 }

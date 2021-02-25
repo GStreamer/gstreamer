@@ -56,6 +56,8 @@ struct _GstSimpleVideoMarkClass
 
 GType gst_video_mark_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (simplevideomark);
+
 G_END_DECLS
 
 #endif

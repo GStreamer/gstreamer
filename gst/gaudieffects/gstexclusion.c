@@ -64,7 +64,6 @@
 #include <gst/gst.h>
 #include <math.h>
 
-#include "gstplugin.h"
 #include "gstexclusion.h"
 
 #include <gst/video/video.h>
@@ -115,6 +114,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_exclusion_parent_class parent_class
 G_DEFINE_TYPE (GstExclusion, gst_exclusion, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (exclusion, "exclusion", GST_RANK_NONE,
+    GST_TYPE_EXCLUSION, GST_DEBUG_CATEGORY_INIT (gst_exclusion_debug,
+        "exclusion", 0, "Template exclusion"));
 
 static void gst_exclusion_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -246,19 +248,6 @@ gst_exclusion_transform_frame (GstVideoFilter * vfilter,
   transform (src, dest, video_size, factor);
 
   return GST_FLOW_OK;
-}
-
-/* Entry point to initialize the plug-in.
- * Register the element factories and other features. */
-gboolean
-gst_exclusion_plugin_init (GstPlugin * exclusion)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_exclusion_debug, "exclusion",
-      0, "Template exclusion");
-
-  return gst_element_register (exclusion, "exclusion", GST_RANK_NONE,
-      GST_TYPE_EXCLUSION);
 }
 
 /*** Now the image processing work.... ***/

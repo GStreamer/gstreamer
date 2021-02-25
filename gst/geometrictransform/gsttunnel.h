@@ -76,7 +76,7 @@ struct _GstTunnelClass
 
 GType gst_tunnel_get_type (void);
 
-gboolean gst_tunnel_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (tunnel);
 
 G_END_DECLS
 #endif /* __GST_TUNNEL_H__ */

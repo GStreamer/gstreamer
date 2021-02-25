@@ -49,7 +49,14 @@
 
 #include <gst/gst.h>
 
-#include "gstplugin.h"
+#include "gstburn.h"
+#include "gstchromium.h"
+#include "gstdilate.h"
+#include "gstdodge.h"
+#include "gstexclusion.h"
+#include "gstgaussblur.h"
+#include "gstsolarize.h"
+
 
 /* PACKAGE: this is usually set by autotools depending on some _INIT macro
  * in configure.ac and then written into and defined in config.h, but we can
@@ -63,15 +70,15 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
-  ret &= gst_burn_plugin_init (plugin);
-  ret &= gst_chromium_plugin_init (plugin);
-  ret &= gst_dilate_plugin_init (plugin);
-  ret &= gst_dodge_plugin_init (plugin);
-  ret &= gst_exclusion_plugin_init (plugin);
-  ret &= gst_solarize_plugin_init (plugin);
-  ret &= gst_gauss_blur_plugin_init (plugin);
+  ret |= GST_ELEMENT_REGISTER (burn, plugin);
+  ret |= GST_ELEMENT_REGISTER (chromium, plugin);
+  ret |= GST_ELEMENT_REGISTER (dilate, plugin);
+  ret |= GST_ELEMENT_REGISTER (dodge, plugin);
+  ret |= GST_ELEMENT_REGISTER (exclusion, plugin);
+  ret |= GST_ELEMENT_REGISTER (solarize, plugin);
+  ret |= GST_ELEMENT_REGISTER (gaussianblur, plugin);
 
   return ret;
 }

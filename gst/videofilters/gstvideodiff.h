@@ -52,6 +52,7 @@ struct _GstVideoDiffClass
 };
 
 GType gst_video_diff_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (videodiff);
 
 G_END_DECLS
 

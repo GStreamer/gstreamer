@@ -72,8 +72,6 @@ enum
   PROP_LAST_TRACK
 };
 
-#define parent_class gst_accurip_parent_class
-G_DEFINE_TYPE (GstAccurip, gst_accurip, GST_TYPE_AUDIO_FILTER);
 
 
 
@@ -86,6 +84,11 @@ static GstFlowReturn gst_accurip_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 static gboolean gst_accurip_sink_event (GstBaseTransform * trans,
     GstEvent * event);
+static gboolean accurip_element_init (GstPlugin * plugin);
+
+#define parent_class gst_accurip_parent_class
+G_DEFINE_TYPE (GstAccurip, gst_accurip, GST_TYPE_AUDIO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (accurip, accurip_element_init);
 
 static void
 gst_accurip_class_init (GstAccuripClass * klass)
@@ -342,7 +345,7 @@ gst_accurip_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+accurip_element_init (GstPlugin * plugin)
 {
   gboolean ret;
 
@@ -360,6 +363,12 @@ plugin_init (GstPlugin * plugin)
   }
 
   return ret;
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (accurip, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

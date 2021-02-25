@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
+#include "gstbayerelements.h"
 #include "gstrgb2bayer.h"
 
 #define GST_CAT_DEFAULT gst_rgb2bayer_debug
@@ -76,6 +77,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_rgb2bayer_parent_class parent_class
 G_DEFINE_TYPE (GstRGB2Bayer, gst_rgb2bayer, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (rgb2bayer, "rgb2bayer", GST_RANK_NONE,
+    gst_rgb2bayer_get_type ());
 
 static void
 gst_rgb2bayer_class_init (GstRGB2BayerClass * klass)

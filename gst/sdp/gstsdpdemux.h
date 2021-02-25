@@ -113,6 +113,7 @@ struct _GstSDPDemuxClass {
 };
 
 GType gst_sdp_demux_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (sdpdemux);
 
 G_END_DECLS
 

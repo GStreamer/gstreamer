@@ -32,16 +32,13 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_asf_mux_plugin_init (plugin)) {
-    return FALSE;
-  }
-  if (!gst_rtp_asf_pay_plugin_init (plugin)) {
-    return FALSE;
-  }
-  if (!gst_asf_parse_plugin_init (plugin)) {
-    return FALSE;
-  }
-  return TRUE;
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (asfmux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpasfpay, plugin);
+  ret |= GST_ELEMENT_REGISTER (asfparse, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

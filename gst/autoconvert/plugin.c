@@ -28,13 +28,10 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  ret = gst_element_register (plugin, "autoconvert",
-      GST_RANK_NONE, GST_TYPE_AUTO_CONVERT);
-
-  ret &= gst_element_register (plugin, "autovideoconvert",
-      GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_CONVERT);
+  ret |= GST_ELEMENT_REGISTER (autoconvert, plugin);
+  ret |= GST_ELEMENT_REGISTER (autovideoconvert, plugin);
 
   return ret;
 }

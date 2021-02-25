@@ -37,6 +37,7 @@
  * Since: 1.20
  */
 
+#include "gstdebugutilsbadelements.h"
 #include "gstfakeaudiosink.h"
 
 #include <gst/audio/audio.h>
@@ -57,6 +58,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE_WITH_CODE (GstFakeAudioSink, gst_fake_audio_sink, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL););
+GST_ELEMENT_REGISTER_DEFINE (fakeaudiosink, "fakeaudiosink",
+    GST_RANK_NONE, gst_fake_audio_sink_get_type ());
 
 /* TODO complete the types and make this an utility */
 static void

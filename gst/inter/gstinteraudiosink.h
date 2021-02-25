@@ -51,6 +51,7 @@ struct _GstInterAudioSinkClass
 };
 
 GType gst_inter_audio_sink_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (interaudiosink);
 
 G_END_DECLS
 

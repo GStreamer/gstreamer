@@ -80,6 +80,8 @@ struct _GstAccuripClass
 
 GType gst_accurip_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (accurip);
+
 G_END_DECLS
 
 #endif /* __GST_ACCURIP_H__ */

@@ -23,13 +23,13 @@
 #endif
 
 #include "gsttranscoding.h"
+#include "gsttranscodeelements.h"
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
 #include <gst/pbutils/missing-plugins.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_transcodebin_debug);
-#define GST_CAT_DEFAULT gst_transcodebin_debug
+
 
 /**
  * GstTranscodeBin!sink_%u:
@@ -123,7 +123,10 @@ typedef struct
 
 #define DEFAULT_AVOID_REENCODING   FALSE
 
-G_DEFINE_TYPE (GstTranscodeBin, gst_transcode_bin, GST_TYPE_BIN)
+G_DEFINE_TYPE (GstTranscodeBin, gst_transcode_bin, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (transcodebin, "transcodebin", GST_RANK_NONE,
+      GST_TYPE_TRANSCODE_BIN, transcodebin_element_init (plugin));
+
 enum
 {
  PROP_0,
@@ -1011,27 +1014,3 @@ gst_transcode_bin_init (GstTranscodeBin * self)
 
   make_decodebin (self);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean res = TRUE;
-  gst_pb_utils_init ();
-
-  GST_DEBUG_CATEGORY_INIT (gst_transcodebin_debug, "transcodebin", 0,
-      "Transcodebin element");
-
-  res &= gst_element_register (plugin, "transcodebin", GST_RANK_NONE,
-      GST_TYPE_TRANSCODE_BIN);
-
-  res &= gst_element_register (plugin, "uritranscodebin", GST_RANK_NONE,
-      gst_uri_transcode_bin_get_type ());
-
-  return res;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    transcode,
-    "A plugin containing elements for transcoding", plugin_init, VERSION,
-    GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

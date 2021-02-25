@@ -39,6 +39,7 @@
 
 #include "dataprotocol.h"
 
+#include "gstgdpelements.h"
 #include "gstgdppay.h"
 
 static GstStaticPadTemplate gdp_pay_sink_template =
@@ -71,6 +72,8 @@ enum
     "GDP payloader");
 #define gst_gdp_pay_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGDPPay, gst_gdp_pay, GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gdppay, "gdppay", GST_RANK_NONE,
+    GST_TYPE_GDP_PAY, gdp_element_init (plugin));
 
 static void gst_gdp_pay_reset (GstGDPPay * this);
 
@@ -707,13 +710,4 @@ gst_gdp_pay_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-gboolean
-gst_gdp_pay_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "gdppay", GST_RANK_NONE, GST_TYPE_GDP_PAY))
-    return FALSE;
-
-  return TRUE;
 }

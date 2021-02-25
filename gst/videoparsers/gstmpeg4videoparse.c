@@ -33,6 +33,7 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
 
+#include "gstvideoparserselements.h"
 #include "gstmpeg4videoparse.h"
 
 GST_DEBUG_CATEGORY (mpeg4v_parse_debug);
@@ -71,6 +72,9 @@ enum
 
 #define gst_mpeg4vparse_parent_class parent_class
 G_DEFINE_TYPE (GstMpeg4VParse, gst_mpeg4vparse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (mpeg4videoparse, "mpeg4videoparse",
+    GST_RANK_PRIMARY + 1, GST_TYPE_MPEG4VIDEO_PARSE,
+    videoparsers_element_init (plugin));
 
 static gboolean gst_mpeg4vparse_start (GstBaseParse * parse);
 static gboolean gst_mpeg4vparse_stop (GstBaseParse * parse);

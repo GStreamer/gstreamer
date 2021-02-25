@@ -72,6 +72,8 @@ struct _GstAudioMixMatrixClass
 
 GType gst_audio_mix_matrix_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiomixmatrix);
+
 GType gst_audio_mix_matrix_mode_get_type (void);
 
 G_END_DECLS

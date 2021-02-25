@@ -58,6 +58,8 @@ static void gst_webvtt_enc_set_property (GObject * object, guint prop_id,
 
 #define parent_class gst_webvtt_enc_parent_class
 G_DEFINE_TYPE (GstWebvttEnc, gst_webvtt_enc, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (webvttenc, "webvttenc", GST_RANK_NONE,
+    GST_TYPE_WEBVTT_ENC);
 
 static void
 gst_webvtt_enc_append_timestamp_to_string (GstClockTime timestamp,

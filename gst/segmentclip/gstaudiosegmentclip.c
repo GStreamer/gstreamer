@@ -45,6 +45,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_audio_segment_clip_debug);
 
 G_DEFINE_TYPE (GstAudioSegmentClip, gst_audio_segment_clip,
     GST_TYPE_SEGMENT_CLIP);
+GST_ELEMENT_REGISTER_DEFINE (audiosegmentclip, "audiosegmentclip",
+    GST_RANK_NONE, GST_TYPE_AUDIO_SEGMENT_CLIP);
 
 static void
 gst_audio_segment_clip_class_init (GstAudioSegmentClipClass * klass)

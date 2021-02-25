@@ -91,6 +91,8 @@ static void gst_rtp_src_uri_handler_init (gpointer g_iface,
 G_DEFINE_TYPE_WITH_CODE (GstRtpSrc, gst_rtp_src, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtp_src_uri_handler_init);
     GST_DEBUG_CATEGORY_INIT (gst_rtp_src_debug, "rtpsrc", 0, "RTP Source"));
+GST_ELEMENT_REGISTER_DEFINE (rtpsrc, "rtpsrc", GST_RANK_PRIMARY + 1,
+    GST_TYPE_RTP_SRC);
 
 #define GST_RTP_SRC_GET_LOCK(obj) (&((GstRtpSrc*)(obj))->lock)
 #define GST_RTP_SRC_LOCK(obj) (g_mutex_lock (GST_RTP_SRC_GET_LOCK(obj)))

@@ -80,7 +80,7 @@ struct _GstSquareClass
 
 GType gst_square_get_type (void);
 
-gboolean gst_square_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (square);
 
 G_END_DECLS
 #endif /* __GST_SQUARE_H__ */

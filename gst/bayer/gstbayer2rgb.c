@@ -86,6 +86,7 @@
 #include <stdint.h>
 #endif
 
+#include "gstbayerelements.h"
 #include "gstbayerorc.h"
 
 #define GST_CAT_DEFAULT gst_bayer2rgb_debug
@@ -145,6 +146,8 @@ GType gst_bayer2rgb_get_type (void);
 
 #define gst_bayer2rgb_parent_class parent_class
 G_DEFINE_TYPE (GstBayer2RGB, gst_bayer2rgb, GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (bayer2rgb, "bayer2rgb", GST_RANK_NONE,
+    gst_bayer2rgb_get_type ());
 
 static void gst_bayer2rgb_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

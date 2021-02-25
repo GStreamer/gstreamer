@@ -64,6 +64,7 @@ static void gst_smooth_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 G_DEFINE_TYPE (GstSmooth, gst_smooth, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE (smooth, "smooth", GST_RANK_NONE, GST_TYPE_SMOOTH);
 
 static void
 gst_smooth_class_init (GstSmoothClass * klass)
@@ -277,8 +278,7 @@ gst_smooth_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "smooth",
-      GST_RANK_NONE, GST_TYPE_SMOOTH);
+  return GST_ELEMENT_REGISTER (smooth, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

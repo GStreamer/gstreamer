@@ -71,6 +71,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_tunnel_debug);
 
 #define gst_tunnel_parent_class parent_class
 G_DEFINE_TYPE (GstTunnel, gst_tunnel, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tunnel, "tunnel", GST_RANK_NONE,
+    GST_TYPE_TUNNEL, GST_DEBUG_CATEGORY_INIT (gst_tunnel_debug, "tunnel", 0,
+        "tunnel"));
 
 static gboolean
 tunnel_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
@@ -134,13 +137,4 @@ gst_tunnel_init (GstTunnel * filter)
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
-}
-
-gboolean
-gst_tunnel_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_tunnel_debug, "tunnel", 0, "tunnel");
-
-  return gst_element_register (plugin, "tunnel", GST_RANK_NONE,
-      GST_TYPE_TUNNEL);
 }

@@ -173,6 +173,7 @@ struct _GstPsDemuxClass
 };
 
 GType gst_ps_demux_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (mpegpsdemux);
 
 G_END_DECLS
 #endif /* __GST_PS_DEMUX_H__ */

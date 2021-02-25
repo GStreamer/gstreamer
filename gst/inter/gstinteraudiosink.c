@@ -89,6 +89,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 /* class initialization */
 #define parent_class gst_inter_audio_sink_parent_class
 G_DEFINE_TYPE (GstInterAudioSink, gst_inter_audio_sink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE (interaudiosink, "interaudiosink",
+    GST_RANK_NONE, GST_TYPE_INTER_AUDIO_SINK);
 
 static void
 gst_inter_audio_sink_class_init (GstInterAudioSinkClass * klass)

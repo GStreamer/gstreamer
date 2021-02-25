@@ -22,6 +22,7 @@
 #  include "config.h"
 #endif
 
+#include "gstvideoparserselements.h"
 #include "gstjpeg2000parse.h"
 #include <gst/base/base.h>
 
@@ -117,6 +118,9 @@ static GstStaticPadTemplate sinktemplate =
 
 #define parent_class gst_jpeg2000_parse_parent_class
 G_DEFINE_TYPE (GstJPEG2000Parse, gst_jpeg2000_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (jpeg2000parse, "jpeg2000parse",
+    GST_RANK_PRIMARY, GST_TYPE_JPEG2000_PARSE,
+    videoparsers_element_init (plugin));
 
 static gboolean gst_jpeg2000_parse_start (GstBaseParse * parse);
 static gboolean gst_jpeg2000_parse_event (GstBaseParse * parse,

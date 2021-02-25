@@ -66,6 +66,7 @@ struct _GstIvfParseClass
 };
 
 GType gst_ivf_parse_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ivfparse);
 
 G_END_DECLS
 

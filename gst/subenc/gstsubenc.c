@@ -27,11 +27,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "srtenc", GST_RANK_NONE, GST_TYPE_SRT_ENC);
-  gst_element_register (plugin, "webvttenc", GST_RANK_NONE,
-      GST_TYPE_WEBVTT_ENC);
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (srtenc, plugin);
+  ret |= GST_ELEMENT_REGISTER (webvttenc, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

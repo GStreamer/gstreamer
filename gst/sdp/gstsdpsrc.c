@@ -45,6 +45,7 @@ static void gst_sdp_src_handler_init (gpointer g_iface, gpointer iface_data);
 #define gst_sdp_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstSdpSrc, gst_sdp_src, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_sdp_src_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (sdpsrc, "sdpsrc", GST_RANK_NONE, GST_TYPE_SDP_SRC);
 
 static void
 gst_sdp_src_finalize (GObject * object)

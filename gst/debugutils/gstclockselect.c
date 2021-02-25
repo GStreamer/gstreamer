@@ -39,6 +39,7 @@
 
 #include <gst/gst.h>
 #include <gst/net/net.h>
+#include "gstdebugutilsbadelements.h"
 #include "gstclockselect.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_clock_select_debug_category);
@@ -94,6 +95,8 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstClockSelect, gst_clock_select, GST_TYPE_PIPELINE,
     GST_DEBUG_CATEGORY_INIT (gst_clock_select_debug_category, "clockselect", 0,
         "debug category for clockselect element"));
+GST_ELEMENT_REGISTER_DEFINE (clockselect, "clockselect",
+    GST_RANK_NONE, gst_clock_select_get_type ());
 
 static void
 gst_clock_select_class_init (GstClockSelectClass * klass)

@@ -52,6 +52,7 @@ struct _GstZebraStripeClass
 };
 
 GType gst_zebra_stripe_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (zebrastripe);
 
 G_END_DECLS
 

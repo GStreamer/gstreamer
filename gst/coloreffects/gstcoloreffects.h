@@ -87,6 +87,7 @@ struct _GstColorEffectsClass
 };
 
 GType gst_color_effects_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (coloreffects);
 
 G_END_DECLS
 #endif /* __GST_COLOR_EFFECTS_H__ */

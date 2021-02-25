@@ -106,6 +106,8 @@ G_DEFINE_TYPE_WITH_CODE (GstSimpleVideoMark, gst_video_mark,
     GST_TYPE_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_video_mark_debug_category, "simplevideomark",
         0, "debug category for simplevideomark element"));
+GST_ELEMENT_REGISTER_DEFINE (simplevideomark, "simplevideomark",
+    GST_RANK_NONE, GST_TYPE_SIMPLE_VIDEO_MARK);
 
 static void
 gst_video_mark_class_init (GstSimpleVideoMarkClass * klass)

@@ -90,7 +90,9 @@ enum
 
 #define gst_marble_parent_class parent_class
 G_DEFINE_TYPE (GstMarble, gst_marble, GST_TYPE_GEOMETRIC_TRANSFORM);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (marble, "marble", GST_RANK_NONE,
+    GST_TYPE_MARBLE, GST_DEBUG_CATEGORY_INIT (gst_marble_debug, "marble", 0,
+        "marble"));
 static void
 gst_marble_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
@@ -281,13 +283,4 @@ gst_marble_init (GstMarble * filter)
   filter->yscale = DEFAULT_YSCALE;
   filter->amount = DEFAULT_AMOUNT;
   filter->turbulence = DEFAULT_TURBULENCE;
-}
-
-gboolean
-gst_marble_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_marble_debug, "marble", 0, "marble");
-
-  return gst_element_register (plugin, "marble", GST_RANK_NONE,
-      GST_TYPE_MARBLE);
 }

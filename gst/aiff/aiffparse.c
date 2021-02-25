@@ -52,6 +52,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "aiffelements.h"
 #include "aiffparse.h"
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
@@ -104,7 +105,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
 #define MAX_BUFFER_SIZE 4096
 
 #define gst_aiff_parse_parent_class parent_class
-G_DEFINE_TYPE (GstAiffParse, gst_aiff_parse, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstAiffParse, gst_aiff_parse, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (aiffparse_debug, "aiffparse", 0, "AIFF parser"));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (aiffparse, "aiffparse", GST_RANK_PRIMARY,
+    GST_TYPE_AIFF_PARSE, aiff_element_init (plugin));
 
 static void
 gst_aiff_parse_class_init (GstAiffParseClass * klass)

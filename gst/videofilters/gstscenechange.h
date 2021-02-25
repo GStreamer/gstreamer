@@ -53,6 +53,7 @@ struct _GstSceneChangeClass
 };
 
 GType gst_scene_change_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (scenechange);
 
 G_END_DECLS
 

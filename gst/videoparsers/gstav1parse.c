@@ -73,6 +73,7 @@
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/video/video.h>
+#include "gstvideoparserselements.h"
 #include "gstav1parse.h"
 
 #include <string.h>
@@ -137,6 +138,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define parent_class gst_av1_parse_parent_class
 G_DEFINE_TYPE (GstAV1Parse, gst_av1_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (av1parse, "av1parse", GST_RANK_SECONDARY,
+    GST_TYPE_AV1_PARSE, videoparsers_element_init (plugin));
 
 static void
 remove_fields (GstCaps * caps, gboolean all)

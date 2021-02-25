@@ -23,21 +23,16 @@
 #include "gstpnmdec.h"
 #include "gstpnmenc.h"
 
-#include <gst/gst.h>
-
-#include <string.h>
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "pnmdec", GST_RANK_PRIMARY,
-          GST_TYPE_PNMDEC))
-    return FALSE;
-  if (!gst_element_register (plugin, "pnmenc", GST_RANK_PRIMARY,
-          GST_TYPE_PNMENC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (pnmdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (pnmenc, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, pnm,

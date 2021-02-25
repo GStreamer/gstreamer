@@ -51,6 +51,7 @@ struct _GstPnmencClass
 };
 
 GType gst_pnmenc_get_type (void) G_GNUC_CONST;
+GST_ELEMENT_REGISTER_DECLARE (pnmenc);
 
 G_END_DECLS
 

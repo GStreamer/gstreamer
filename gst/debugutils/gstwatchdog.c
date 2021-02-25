@@ -46,6 +46,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include "gstdebugutilsbadelements.h"
 #include "gstwatchdog.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_watchdog_debug_category);
@@ -83,6 +84,8 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstWatchdog, gst_watchdog, GST_TYPE_BASE_TRANSFORM,
     GST_DEBUG_CATEGORY_INIT (gst_watchdog_debug_category, "watchdog", 0,
         "debug category for watchdog element"));
+GST_ELEMENT_REGISTER_DEFINE (watchdog, "watchdog", GST_RANK_NONE,
+    gst_watchdog_get_type ());
 
 static void
 gst_watchdog_class_init (GstWatchdogClass * klass)

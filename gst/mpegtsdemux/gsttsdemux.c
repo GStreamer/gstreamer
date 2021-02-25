@@ -31,14 +31,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_mpegts_initialize ();
-  if (!gst_mpegtsbase_plugin_init (plugin))
-    return FALSE;
-  if (!gst_mpegtsparse_plugin_init (plugin))
-    return FALSE;
-  if (!gst_ts_demux_plugin_init (plugin))
-    return FALSE;
-  return TRUE;
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (tsparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (tsdemux, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

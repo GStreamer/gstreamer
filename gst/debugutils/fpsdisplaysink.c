@@ -47,6 +47,7 @@
 #include "config.h"
 #endif
 
+#include "gstdebugutilsbadelements.h"
 #include "fpsdisplaysink.h"
 
 #define DEFAULT_SIGNAL_FPS_MEASUREMENTS FALSE
@@ -723,3 +724,6 @@ fps_display_sink_get_type (void)
 
   return fps_display_sink_type;
 }
+
+GST_ELEMENT_REGISTER_DEFINE (fpsdisplaysink, "fpsdisplaysink",
+    GST_RANK_NONE, fps_display_sink_get_type ());

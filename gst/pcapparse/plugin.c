@@ -27,12 +27,10 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
 
-  ret = gst_element_register (plugin, "pcapparse",
-      GST_RANK_NONE, GST_TYPE_PCAP_PARSE);
-  ret &= gst_element_register (plugin, "irtspparse",
-      GST_RANK_NONE, GST_TYPE_IRTSP_PARSE);
+  ret |= GST_ELEMENT_REGISTER (pcapparse, plugin);
+  ret |= GST_ELEMENT_REGISTER (irtspparse, plugin);
 
   return ret;
 }

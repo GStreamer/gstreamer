@@ -81,6 +81,7 @@ struct _GstExclusionClass
 };
 
 GType gst_exclusion_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (exclusion);
 
 G_END_DECLS
 

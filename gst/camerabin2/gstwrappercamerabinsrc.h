@@ -124,7 +124,7 @@ struct _GstWrapperCameraBinSrcClass
   GstBaseCameraSrcClass parent;
 };
 
-gboolean gst_wrapper_camera_bin_src_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (wrappercamerabinsrc);
 
 G_END_DECLS
 

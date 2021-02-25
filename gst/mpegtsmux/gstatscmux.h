@@ -40,6 +40,7 @@ struct GstATSCMuxClass {
 };
 
 GType gst_atsc_mux_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (atscmux);
 
 G_END_DECLS
 

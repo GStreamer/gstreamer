@@ -122,7 +122,11 @@ static gboolean gst_wave_scope_render (GstAudioVisualizer * base,
     GstBuffer * audio, GstVideoFrame * video);
 
 #define gst_wave_scope_parent_class parent_class
-G_DEFINE_TYPE (GstWaveScope, gst_wave_scope, GST_TYPE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE_WITH_CODE (GstWaveScope, gst_wave_scope,
+    GST_TYPE_AUDIO_VISUALIZER, GST_DEBUG_CATEGORY_INIT (wave_scope_debug,
+        "wavescope", 0, "wavescope"););
+GST_ELEMENT_REGISTER_DEFINE (wavescope, "wavescope", GST_RANK_NONE,
+    GST_TYPE_WAVE_SCOPE);
 
 static void
 gst_wave_scope_class_init (GstWaveScopeClass * g_class)
@@ -421,13 +425,4 @@ gst_wave_scope_render (GstAudioVisualizer * base, GstBuffer * audio,
   gst_buffer_unmap (audio, &amap);
 
   return TRUE;
-}
-
-gboolean
-gst_wave_scope_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (wave_scope_debug, "wavescope", 0, "wavescope");
-
-  return gst_element_register (plugin, "wavescope", GST_RANK_NONE,
-      GST_TYPE_WAVE_SCOPE);
 }

@@ -81,7 +81,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3"));
 
-G_DEFINE_TYPE (GstId3Mux, gst_id3_mux, GST_TYPE_TAG_MUX);
+G_DEFINE_TYPE_WITH_CODE (GstId3Mux, gst_id3_mux, GST_TYPE_TAG_MUX,
+    GST_DEBUG_CATEGORY_INIT (gst_id3_mux_debug, "id3mux", 0,
+        "ID3 v1 and v2 tag muxer");
+    );
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (id3mux, "id3mux", GST_RANK_PRIMARY,
+    GST_TYPE_ID3_MUX, gst_tag_register_musicbrainz_tags ());
 
 static GstBuffer *gst_id3_mux_render_v2_tag (GstTagMux * mux,
     const GstTagList * taglist);
@@ -211,16 +216,7 @@ gst_id3_mux_render_v1_tag (GstTagMux * mux, const GstTagList * taglist)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_id3_mux_debug, "id3mux", 0,
-      "ID3 v1 and v2 tag muxer");
-
-  if (!gst_element_register (plugin, "id3mux", GST_RANK_PRIMARY,
-          GST_TYPE_ID3_MUX))
-    return FALSE;
-
-  gst_tag_register_musicbrainz_tags ();
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (id3mux, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

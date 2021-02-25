@@ -236,7 +236,8 @@ typedef struct
   GstBuffer *buffer;
 } StreamData;
 
-G_DEFINE_TYPE (GstBaseTsMux, gst_base_ts_mux, GST_TYPE_AGGREGATOR);
+G_DEFINE_TYPE_WITH_CODE (GstBaseTsMux, gst_base_ts_mux, GST_TYPE_AGGREGATOR,
+    gst_mpegts_initialize ());
 
 /* Internals */
 

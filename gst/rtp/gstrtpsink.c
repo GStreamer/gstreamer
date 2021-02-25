@@ -81,6 +81,8 @@ static void gst_rtp_sink_uri_handler_init (gpointer g_iface,
 G_DEFINE_TYPE_WITH_CODE (GstRtpSink, gst_rtp_sink, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtp_sink_uri_handler_init);
     GST_DEBUG_CATEGORY_INIT (gst_rtp_sink_debug, "rtpsink", 0, "RTP Sink"));
+GST_ELEMENT_REGISTER_DEFINE (rtpsink, "rtpsink", GST_RANK_PRIMARY + 1,
+    GST_TYPE_RTP_SINK);
 
 #define GST_RTP_SINK_GET_LOCK(obj) (&((GstRtpSink*)(obj))->lock)
 #define GST_RTP_SINK_LOCK(obj) (g_mutex_lock (GST_RTP_SINK_GET_LOCK(obj)))

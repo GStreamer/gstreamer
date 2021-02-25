@@ -37,6 +37,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "gstmxfelements.h"
 #include "mxfmux.h"
 
 #ifdef HAVE_SYS_UTSNAME_H
@@ -120,6 +121,8 @@ enum
 
 #define gst_mxf_mux_parent_class parent_class
 G_DEFINE_TYPE (GstMXFMux, gst_mxf_mux, GST_TYPE_AGGREGATOR);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (mxfmux, "mxfmux", GST_RANK_PRIMARY,
+    GST_TYPE_MXF_MUX, mxf_element_init (plugin));
 
 static void gst_mxf_mux_finalize (GObject * object);
 

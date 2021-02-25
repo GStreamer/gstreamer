@@ -80,7 +80,7 @@ struct _GstSphereClass
 
 GType gst_sphere_get_type (void);
 
-gboolean gst_sphere_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (sphere);
 
 G_END_DECLS
 

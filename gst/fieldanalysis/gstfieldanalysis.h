@@ -143,6 +143,7 @@ struct _GstFieldAnalysisClass
 };
 
 GType gst_field_analysis_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (fieldanalysis);
 
 G_END_DECLS
 #endif /* __GST_FIELDANALYSIS_H__ */

@@ -47,19 +47,10 @@
 
 #include "gstmpegdemux.h"
 
-GST_DEBUG_CATEGORY_EXTERN (mpegpspesfilter_debug);
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (mpegpspesfilter_debug, "mpegpspesfilter", 0,
-      "MPEG-PS PES filter");
-
-  if (!gst_element_register (plugin, "mpegpsdemux", GST_RANK_PRIMARY,
-          GST_TYPE_PS_DEMUX))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (mpegpsdemux, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

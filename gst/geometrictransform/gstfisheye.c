@@ -70,6 +70,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_fisheye_debug);
 
 #define gst_fisheye_parent_class parent_class
 G_DEFINE_TYPE (GstFisheye, gst_fisheye, GST_TYPE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (fisheye, "fisheye", GST_RANK_NONE,
+    GST_TYPE_FISHEYE, GST_DEBUG_CATEGORY_INIT (gst_fisheye_debug, "fisheye", 0,
+        "fisheye"));
 
 static gboolean
 fisheye_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
@@ -145,13 +148,4 @@ gst_fisheye_init (GstFisheye * filter)
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
-}
-
-gboolean
-gst_fisheye_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_fisheye_debug, "fisheye", 0, "fisheye");
-
-  return gst_element_register (plugin, "fisheye", GST_RANK_NONE,
-      GST_TYPE_FISHEYE);
 }

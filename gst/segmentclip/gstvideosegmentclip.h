@@ -54,6 +54,7 @@ struct _GstVideoSegmentClipClass
 };
 
 GType gst_video_segment_clip_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (videosegmentclip);
 
 G_END_DECLS
 

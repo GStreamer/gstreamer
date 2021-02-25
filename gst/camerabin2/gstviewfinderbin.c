@@ -63,6 +63,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 /* class initialization */
 #define gst_viewfinder_bin_parent_class parent_class
 G_DEFINE_TYPE (GstViewfinderBin, gst_viewfinder_bin, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (viewfinderbin, "viewfinderbin",
+    GST_RANK_NONE, gst_viewfinder_bin_get_type (),
+    GST_DEBUG_CATEGORY_INIT (gst_viewfinder_bin_debug, "viewfinderbin", 0,
+        "ViewFinderBin");
+    );
 
 static void gst_viewfinder_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -357,13 +362,4 @@ gst_viewfinder_bin_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_viewfinder_bin_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_viewfinder_bin_debug, "viewfinderbin", 0,
-      "ViewFinderBin");
-  return gst_element_register (plugin, "viewfinderbin", GST_RANK_NONE,
-      gst_viewfinder_bin_get_type ());
 }

@@ -51,6 +51,7 @@
 #include "config.h"
 #endif
 
+#include "gstmxfelements.h"
 #include "mxfdemux.h"
 #include "mxfessence.h"
 
@@ -128,6 +129,8 @@ static gboolean gst_mxf_demux_src_query (GstPad * pad, GstObject * parent,
 
 #define gst_mxf_demux_parent_class parent_class
 G_DEFINE_TYPE (GstMXFDemux, gst_mxf_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (mxfdemux, "mxfdemux", GST_RANK_PRIMARY,
+    GST_TYPE_MXF_DEMUX, mxf_element_init (plugin));
 
 static void
 gst_mxf_demux_remove_pad (GstMXFDemuxPad * pad, GstMXFDemux * demux)

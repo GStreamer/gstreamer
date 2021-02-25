@@ -30,5 +30,6 @@ typedef struct {
   GstElementClass parent;
 } GstRoundRobinClass;
 GType gst_round_robin_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (roundrobin);
 
 #endif

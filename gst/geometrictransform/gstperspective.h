@@ -81,7 +81,7 @@ struct _GstPerspectiveClass
 
 GType gst_perspective_get_type (void);
 
-gboolean gst_perspective_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (perspective);
 
 G_END_DECLS
 

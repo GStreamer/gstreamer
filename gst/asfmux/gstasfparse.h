@@ -71,7 +71,7 @@ struct _GstAsfParseClass {
 };
 
 GType gst_asf_parse_get_type(void);
-gboolean gst_asf_parse_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (asfparse);
 
 G_END_DECLS
 

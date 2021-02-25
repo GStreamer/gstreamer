@@ -57,6 +57,8 @@ gst_rtp_asf_pay_set_caps (GstRTPBasePayload * rtppay, GstCaps * caps);
 
 #define gst_rtp_asf_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpAsfPay, gst_rtp_asf_pay, GST_TYPE_RTP_BASE_PAYLOAD);
+GST_ELEMENT_REGISTER_DEFINE (rtpasfpay, "rtpasfpay",
+    GST_RANK_NONE, GST_TYPE_RTP_ASF_PAY);
 
 static void
 gst_rtp_asf_pay_init (GstRtpAsfPay * rtpasfpay)
@@ -459,11 +461,4 @@ gst_rtp_asf_pay_handle_buffer (GstRTPBasePayload * rtppay, GstBuffer * buffer)
 
   gst_buffer_unref (buffer);
   return GST_FLOW_OK;
-}
-
-gboolean
-gst_rtp_asf_pay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpasfpay",
-      GST_RANK_NONE, GST_TYPE_RTP_ASF_PAY);
 }

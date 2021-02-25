@@ -109,8 +109,7 @@ struct _GstTSDemuxClass
 };
 
 G_GNUC_INTERNAL GType gst_ts_demux_get_type (void);
-
-G_GNUC_INTERNAL gboolean gst_ts_demux_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (tsdemux);
 
 G_END_DECLS
 #endif /* GST_TS_DEMUX_H */

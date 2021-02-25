@@ -65,8 +65,11 @@ static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
-G_DEFINE_TYPE (GstPnmenc, gst_pnmenc, GST_TYPE_VIDEO_ENCODER);
 #define parent_class gst_pnmenc_parent_class
+G_DEFINE_TYPE (GstPnmenc, gst_pnmenc, GST_TYPE_VIDEO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (pnmenc, "pnmenc", GST_RANK_PRIMARY,
+    GST_TYPE_PNMENC);
+
 
 static GstFlowReturn
 gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame);

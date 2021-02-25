@@ -78,7 +78,7 @@ struct _GstStretchClass
 
 GType gst_stretch_get_type (void);
 
-gboolean gst_stretch_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (stretch);
 
 G_END_DECLS
 #endif /* __GST_STRETCH_H__ */

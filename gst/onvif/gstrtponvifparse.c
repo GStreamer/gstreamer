@@ -48,6 +48,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 G_DEFINE_TYPE (GstRtpOnvifParse, gst_rtp_onvif_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtponvifparse, "rtponvifparse",
+    GST_RANK_NONE, GST_TYPE_RTP_ONVIF_PARSE);
 
 static void
 gst_rtp_onvif_parse_class_init (GstRtpOnvifParseClass * klass)

@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+GST_ELEMENT_REGISTER_DECLARE (ivtc);
+
 #define GST_TYPE_IVTC   (gst_ivtc_get_type())
 #define GST_IVTC(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IVTC,GstIvtc))
 #define GST_IVTC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_IVTC,GstIvtcClass))

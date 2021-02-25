@@ -107,6 +107,8 @@ static gboolean gst_pcap_sink_event (GstPad * pad,
 
 #define parent_class gst_pcap_parse_parent_class
 G_DEFINE_TYPE (GstPcapParse, gst_pcap_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (pcapparse, "pcapparse", GST_RANK_NONE,
+    GST_TYPE_PCAP_PARSE);
 
 static void
 gst_pcap_parse_class_init (GstPcapParseClass * klass)

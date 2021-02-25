@@ -145,6 +145,8 @@ static GQuark internal_sinkpad_quark = 0;
 static GQuark parent_quark = 0;
 
 G_DEFINE_TYPE (GstAutoConvert, gst_auto_convert, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (autoconvert, "autoconvert",
+    GST_RANK_NONE, GST_TYPE_AUTO_CONVERT);
 
 static void
 gst_auto_convert_class_init (GstAutoConvertClass * klass)

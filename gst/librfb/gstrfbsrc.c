@@ -82,6 +82,7 @@ static GstFlowReturn gst_rfb_src_fill (GstPushSrc * psrc, GstBuffer * outbuf);
 
 #define gst_rfb_src_parent_class parent_class
 G_DEFINE_TYPE (GstRfbSrc, gst_rfb_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE (rfbsrc, "rfbsrc", GST_RANK_NONE, GST_TYPE_RFB_SRC);
 
 static void
 gst_rfb_src_class_init (GstRfbSrcClass * klass)
@@ -632,8 +633,7 @@ gst_rfb_src_unlock (GstBaseSrc * bsrc)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rfbsrc", GST_RANK_NONE,
-      GST_TYPE_RFB_SRC);
+  return GST_ELEMENT_REGISTER (rfbsrc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

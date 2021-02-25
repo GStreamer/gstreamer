@@ -111,6 +111,8 @@ G_DEFINE_TYPE_WITH_CODE (GstSwitchBin,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_switch_bin_child_proxy_iface_init)
     );
+GST_ELEMENT_REGISTER_DEFINE (switchbin, "switchbin", GST_RANK_NONE,
+    gst_switch_bin_get_type ());
 
 static void gst_switch_bin_unlock_paths_and_notify (GstSwitchBin * switchbin);
 

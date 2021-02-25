@@ -161,6 +161,8 @@ static void gst_timecodestamper_update_drop_frame (GstTimeCodeStamper *
 
 G_DEFINE_TYPE (GstTimeCodeStamper, gst_timecodestamper,
     GST_TYPE_BASE_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE (timecodestamper, "timecodestamper",
+    GST_RANK_NONE, GST_TYPE_TIME_CODE_STAMPER);
 
 GType
 gst_timecodestamper_source_get_type (void)

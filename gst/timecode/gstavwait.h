@@ -98,6 +98,7 @@ struct _GstAvWaitClass
 };
 
 GType gst_avwait_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (avwait);
 
 G_END_DECLS
 #endif /* __GST_AVWAIT_H__ */

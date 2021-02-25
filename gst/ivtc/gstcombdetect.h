@@ -48,6 +48,8 @@ struct _GstCombDetectClass
 
 GType gst_comb_detect_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (combdetect);
+
 G_END_DECLS
 
 #endif

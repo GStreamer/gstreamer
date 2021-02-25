@@ -122,6 +122,8 @@ gst_audio_parse_format_get_type (void)
 
 #define gst_audio_parse_parent_class parent_class
 G_DEFINE_TYPE (GstAudioParse, gst_audio_parse, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (audioparse, "audioparse", GST_RANK_NONE,
+    gst_audio_parse_get_type ());
 
 static void
 gst_audio_parse_class_init (GstAudioParseClass * klass)

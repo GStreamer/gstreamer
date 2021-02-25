@@ -72,6 +72,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_ivf_parse_parent_class parent_class
 G_DEFINE_TYPE (GstIvfParse, gst_ivf_parse, GST_TYPE_BASE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE (ivfparse, "ivfparse", GST_RANK_PRIMARY,
+    GST_TYPE_IVF_PARSE);
 
 static void gst_ivf_parse_finalize (GObject * object);
 static gboolean gst_ivf_parse_start (GstBaseParse * parse);
@@ -397,14 +399,9 @@ gst_ivf_parse_handle_frame (GstBaseParse * parse,
 
 /* entry point to initialize the plug-in */
 static gboolean
-ivfparse_init (GstPlugin * ivfparse)
+ivfparse_init (GstPlugin * plugin)
 {
-  /* register parser element */
-  if (!gst_element_register (ivfparse, "ivfparse", GST_RANK_PRIMARY,
-          GST_TYPE_IVF_PARSE))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (ivfparse, plugin);
 }
 
 /* gstreamer looks for this structure to register plugins */

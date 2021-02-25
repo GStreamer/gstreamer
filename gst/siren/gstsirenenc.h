@@ -60,8 +60,7 @@ struct _GstSirenEncClass
 };
 
 GType gst_siren_enc_get_type (void);
-
-gboolean gst_siren_enc_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (sirenenc);
 
 G_END_DECLS
 #endif /* __GST_SIREN_ENC_H__ */

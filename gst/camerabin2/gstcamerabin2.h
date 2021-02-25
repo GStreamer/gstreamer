@@ -161,7 +161,7 @@ struct _GstCameraBin2Class
 };
 
 GType gst_camera_bin2_get_type (void);
-gboolean gst_camera_bin2_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (camerabin);
 
 G_END_DECLS
 

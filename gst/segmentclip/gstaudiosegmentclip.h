@@ -55,6 +55,7 @@ struct _GstAudioSegmentClipClass
 };
 
 GType gst_audio_segment_clip_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (audiosegmentclip);
 
 G_END_DECLS
 

@@ -88,6 +88,7 @@ struct _GstFaceOverlayClass
 };
 
 GType gst_face_overlay_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (faceoverlay);
 
 G_END_DECLS
 

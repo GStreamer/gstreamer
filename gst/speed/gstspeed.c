@@ -95,6 +95,10 @@ static gboolean speed_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
 G_DEFINE_TYPE (GstSpeed, gst_speed, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (speed, "speed", GST_RANK_NONE,
+    GST_TYPE_SPEED, GST_DEBUG_CATEGORY_INIT (speed_debug, "speed", 0,
+        "speed element");
+    );
 
 static gboolean
 speed_setcaps (GstPad * pad, GstCaps * caps)
@@ -690,9 +694,7 @@ speed_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (speed_debug, "speed", 0, "speed element");
-
-  return gst_element_register (plugin, "speed", GST_RANK_NONE, GST_TYPE_SPEED);
+  return GST_ELEMENT_REGISTER (speed, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

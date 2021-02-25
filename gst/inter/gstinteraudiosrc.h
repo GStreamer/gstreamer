@@ -54,7 +54,7 @@ struct _GstInterAudioSrcClass
 };
 
 GType gst_inter_audio_src_get_type (void);
-
+GST_ELEMENT_REGISTER_DECLARE (interaudiosrc);
 G_END_DECLS
 
 #endif

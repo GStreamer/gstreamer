@@ -80,7 +80,7 @@ struct _GstPinchClass
 
 GType gst_pinch_get_type (void);
 
-gboolean gst_pinch_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (pinch);
 
 G_END_DECLS
 

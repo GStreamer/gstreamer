@@ -26,8 +26,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "audiochannelmix", GST_RANK_NONE,
-      GST_TYPE_AUDIO_CHANNEL_MIX);
+  return GST_ELEMENT_REGISTER (audiochannelmix, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

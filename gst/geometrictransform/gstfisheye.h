@@ -77,7 +77,7 @@ struct _GstFisheyeClass
 
 GType gst_fisheye_get_type (void);
 
-gboolean gst_fisheye_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (fisheye);
 
 G_END_DECLS
 #endif /* __GST_FISHEYE_H__ */

@@ -1,5 +1,6 @@
 mxf_sources = [
   'mxf.c',
+  'gstmxfelement.c',
   'mxful.c',
   'mxftypes.c',
   'mxfmetadata.c',

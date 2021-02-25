@@ -110,6 +110,8 @@ static GstStateChangeReturn gst_jif_mux_change_state (GstElement * element,
 G_DEFINE_TYPE_WITH_CODE (GstJifMux, gst_jif_mux, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_XMP_WRITER, NULL));
+GST_ELEMENT_REGISTER_DEFINE (jifmux, "jifmux", GST_RANK_SECONDARY,
+    GST_TYPE_JIF_MUX);
 
 static void
 gst_jif_mux_class_init (GstJifMuxClass * klass)

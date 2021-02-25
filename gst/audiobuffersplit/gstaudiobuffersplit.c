@@ -63,7 +63,11 @@ enum
 #define DEFAULT_MAX_SILENCE_TIME (0)
 
 #define parent_class gst_audio_buffer_split_parent_class
-G_DEFINE_TYPE (GstAudioBufferSplit, gst_audio_buffer_split, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstAudioBufferSplit, gst_audio_buffer_split,
+    GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (gst_audio_buffer_split_debug,
+        "audiobuffersplit", 0, "Audio buffer splitter"););
+GST_ELEMENT_REGISTER_DEFINE (audiobuffersplit, "audiobuffersplit",
+    GST_RANK_NONE, GST_TYPE_AUDIO_BUFFER_SPLIT);
 
 static GstFlowReturn gst_audio_buffer_split_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
@@ -923,13 +927,7 @@ gst_audio_buffer_split_src_query (GstPad * pad,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_audio_buffer_split_debug, "audiobuffersplit",
-      0, "Audio buffer splitter");
-
-  gst_element_register (plugin, "audiobuffersplit", GST_RANK_NONE,
-      GST_TYPE_AUDIO_BUFFER_SPLIT);
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (audiobuffersplit, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

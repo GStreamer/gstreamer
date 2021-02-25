@@ -56,7 +56,7 @@ struct _GstId3MuxClass {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3_MUX))
 
 GType gst_id3_mux_get_type (void);
-
+GST_ELEMENT_REGISTER_DECLARE (id3mux);
 G_END_DECLS
 
 #endif /* GST_ID3_MUX_H */

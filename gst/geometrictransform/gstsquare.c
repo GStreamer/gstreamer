@@ -81,6 +81,9 @@ enum
 
 #define gst_square_parent_class parent_class
 G_DEFINE_TYPE (GstSquare, gst_square, GST_TYPE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (square, "square", GST_RANK_NONE,
+    GST_TYPE_SQUARE, GST_DEBUG_CATEGORY_INIT (gst_square_debug, "square", 0,
+        "square"));
 
 /* GObject vmethod implementations */
 
@@ -236,13 +239,4 @@ gst_square_init (GstSquare * filter)
   filter->height = DEFAULT_HEIGHT;
   filter->zoom = DEFAULT_ZOOM;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
-}
-
-gboolean
-gst_square_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_square_debug, "square", 0, "square");
-
-  return gst_element_register (plugin, "square", GST_RANK_NONE,
-      GST_TYPE_SQUARE);
 }

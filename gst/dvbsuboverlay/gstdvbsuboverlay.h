@@ -76,6 +76,7 @@ struct _GstDVBSubOverlayClass
 };
 
 GType gst_dvbsub_overlay_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dvbsuboverlay);
 
 G_END_DECLS
 

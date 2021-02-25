@@ -30,6 +30,7 @@ typedef struct {
   GstElementClass parent_class;
 } GstRistRtxReceiveClass;
 GType gst_rist_rtx_receive_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ristrtxreceive);
 
 #define GST_TYPE_RIST_RTX_SEND (gst_rist_rtx_send_get_type())
 #define GST_RIST_RTX_SEND(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_RTX_SEND, GstRistRtxSend))
@@ -38,6 +39,7 @@ typedef struct {
   GstElementClass parent_class;
 } GstRistRtxSendClass;
 GType gst_rist_rtx_send_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ristrtxsend);
 
 #define GST_TYPE_RIST_SRC          (gst_rist_src_get_type())
 #define GST_RIST_SRC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_SRC,GstRistSrc))
@@ -46,7 +48,7 @@ typedef struct {
   GstBinClass parent;
 } GstRistSrcClass;
 GType gst_rist_src_get_type (void);
-
+GST_ELEMENT_REGISTER_DECLARE (ristsrc);
 
 #define GST_TYPE_RIST_SINK          (gst_rist_sink_get_type())
 #define GST_RIST_SINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_SINK,GstRistSink))
@@ -55,6 +57,7 @@ typedef struct {
   GstBinClass parent;
 } GstRistSinkClass;
 GType gst_rist_sink_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ristsink);
 
 #define GST_TYPE_RIST_RTP_EXT      (gst_rist_rtp_ext_get_type())
 #define GST_RIST_RTP_EXT(obj)      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_RTP_EXT,GstRistRtpExt))
@@ -63,6 +66,7 @@ typedef struct {
   GstElementClass parent;
 } GstRistRtpExtClass;
 GType gst_rist_rtp_ext_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ristrtpext);
 
 #define GST_TYPE_RIST_RTP_DEEXT      (gst_rist_rtp_deext_get_type())
 #define GST_RIST_RTP_DEEXT(obj)      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_RTP_DEEXT,GstRistRtpDeext))
@@ -71,6 +75,7 @@ typedef struct {
   GstElementClass parent;
 } GstRistRtpDeextClass;
 GType gst_rist_rtp_deext_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ristrtpdeext);
 
 guint32 gst_rist_rtp_ext_seq (guint32 * extseqnum, guint16 seqnum);
 

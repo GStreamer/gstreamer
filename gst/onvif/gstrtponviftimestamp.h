@@ -75,6 +75,7 @@ struct _GstRtpOnvifTimestampClass {
 };
 
 GType gst_rtp_onvif_timestamp_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (rtponviftimestamp);
 
 #ifdef __cplusplus
 }

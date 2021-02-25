@@ -28,16 +28,9 @@
 
 #include "midiparse.h"
 
-GST_DEBUG_CATEGORY_STATIC (midi_debug);
-#define GST_CAT_DEFAULT (midi_debug)
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
-
-  GST_DEBUG_CATEGORY_INIT (midi_debug, "midi", 0, "MIDI plugin");
-
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
@@ -45,10 +38,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  ret = gst_element_register (plugin, "midiparse", GST_RANK_PRIMARY,
-      GST_TYPE_MIDI_PARSE);
-
-  return ret;
+  return GST_ELEMENT_REGISTER (midiparse, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

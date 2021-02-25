@@ -45,6 +45,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_video_segment_clip_debug);
 
 G_DEFINE_TYPE (GstVideoSegmentClip, gst_video_segment_clip,
     GST_TYPE_SEGMENT_CLIP);
+GST_ELEMENT_REGISTER_DEFINE (videosegmentclip, "videosegmentclip",
+    GST_RANK_NONE, GST_TYPE_VIDEO_SEGMENT_CLIP);
 
 static void
 gst_video_segment_clip_class_init (GstVideoSegmentClipClass * klass)

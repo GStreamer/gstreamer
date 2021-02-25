@@ -54,6 +54,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 /* Unlink proxysrc, we don't contain any elements so our parent is GstElement */
 #define parent_class gst_proxy_sink_parent_class
 G_DEFINE_TYPE (GstProxySink, gst_proxy_sink, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (proxysink, "proxysink", GST_RANK_NONE,
+    GST_TYPE_PROXY_SINK);
 
 static gboolean gst_proxy_sink_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);

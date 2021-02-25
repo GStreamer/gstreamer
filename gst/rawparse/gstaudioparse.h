@@ -50,5 +50,6 @@ struct _GstAudioParseClass
 };
 
 GType gst_audio_parse_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (audioparse);
 
 #endif /*  __GST_AUDIO_PARSE_H__ */

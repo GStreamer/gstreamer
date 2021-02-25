@@ -88,6 +88,10 @@ enum
 
 #define gst_perspective_parent_class parent_class
 G_DEFINE_TYPE (GstPerspective, gst_perspective, GST_TYPE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (perspective, "perspective",
+    GST_RANK_NONE, GST_TYPE_PERSPECTIVE,
+    GST_DEBUG_CATEGORY_INIT (gst_perspective_debug, "perspective", 0,
+        "perspective"));
 
 static GValueArray *
 get_array_from_matrix (GstPerspective * self)
@@ -254,14 +258,4 @@ gst_perspective_init (GstPerspective * filter)
   filter->matrix[6] = 0;
   filter->matrix[7] = 0;
   filter->matrix[8] = 1;
-}
-
-gboolean
-gst_perspective_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_perspective_debug, "perspective", 0,
-      "perspective");
-
-  return gst_element_register (plugin, "perspective", GST_RANK_NONE,
-      GST_TYPE_PERSPECTIVE);
 }

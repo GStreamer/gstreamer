@@ -24,20 +24,19 @@
 #include "config.h"
 #endif
 
+#include "gstsiren.h"
 #include "gstsirendec.h"
 #include "gstsirenenc.h"
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_siren_dec_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_siren_enc_plugin_init (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (sirendec, plugin);
+  ret |= GST_ELEMENT_REGISTER (sirenenc, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

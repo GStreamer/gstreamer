@@ -38,6 +38,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtmp2elements.h"
 #include "gstrtmp2sink.h"
 
 #include "gstrtmp2locationhandler.h"
@@ -167,6 +168,8 @@ G_DEFINE_TYPE_WITH_CODE (GstRtmp2Sink, gst_rtmp2_sink, GST_TYPE_BASE_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_rtmp2_sink_uri_handler_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_RTMP_LOCATION_HANDLER, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtmp2sink, "rtmp2sink",
+    GST_RANK_PRIMARY + 1, GST_TYPE_RTMP2_SINK, rtmp2_element_init (plugin));
 
 static void
 gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)

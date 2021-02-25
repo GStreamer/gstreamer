@@ -82,6 +82,8 @@ enum
 
 #define gst_video_parse_parent_class parent_class
 G_DEFINE_TYPE (GstVideoParse, gst_video_parse, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (videoparse, "videoparse", GST_RANK_NONE,
+    gst_video_parse_get_type ());
 
 static void
 gst_video_parse_class_init (GstVideoParseClass * klass)

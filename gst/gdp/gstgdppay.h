@@ -72,8 +72,6 @@ struct _GstGDPPayClass
   GstElementClass parent_class;
 };
 
-gboolean gst_gdp_pay_plugin_init (GstPlugin * plugin);
-
 GType gst_gdp_pay_get_type (void);
 
 G_END_DECLS

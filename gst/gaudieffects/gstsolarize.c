@@ -64,7 +64,6 @@
 #include <gst/gst.h>
 #include <math.h>
 
-#include "gstplugin.h"
 #include "gstsolarize.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_solarize_debug);
@@ -117,6 +116,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_solarize_parent_class parent_class
 G_DEFINE_TYPE (GstSolarize, gst_solarize, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (solarize, "solarize", GST_RANK_NONE,
+    GST_TYPE_SOLARIZE, GST_DEBUG_CATEGORY_INIT (gst_solarize_debug, "solarize",
+        0, "Template solarize"));
 
 static void gst_solarize_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -276,19 +278,6 @@ gst_solarize_transform_frame (GstVideoFilter * vfilter,
   transform (src, dest, video_size, threshold, start, end);
 
   return GST_FLOW_OK;
-}
-
-/* Entry point to initialize the plug-in.
- * Register the element factories and other features. */
-gboolean
-gst_solarize_plugin_init (GstPlugin * solarize)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_solarize_debug, "solarize",
-      0, "Template solarize");
-
-  return gst_element_register (solarize, "solarize", GST_RANK_NONE,
-      GST_TYPE_SOLARIZE);
 }
 
 /*** Now the image processing work.... ***/

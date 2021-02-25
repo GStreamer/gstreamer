@@ -1,5 +1,5 @@
 aiff_sources = [
-  'aiff.c', 'aiffmux.c', 'aiffparse.c',
+  'aiff.c', 'aiffmux.c', 'aiffparse.c', 'gstaiffelement.c'
 ]
 
 gstaiff = library('gstaiff',

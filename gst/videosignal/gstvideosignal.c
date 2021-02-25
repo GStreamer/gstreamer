@@ -28,22 +28,16 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean res;
+  gboolean ret = FALSE;
 
-  res = gst_element_register (plugin, "videoanalyse", GST_RANK_NONE,
-      GST_TYPE_VIDEO_ANALYSE);
-
+  ret |= GST_ELEMENT_REGISTER (videoanalyse, plugin);
   /* FIXME under no circumstances is anyone allowed to revive the
    * element formerly known as simplevideomarkdetect without changing the name
    * first.  XOXO  --ds  */
+  ret |= GST_ELEMENT_REGISTER (simplevideomarkdetect, plugin);
+  ret |= GST_ELEMENT_REGISTER (simplevideomark, plugin);
 
-  res &= gst_element_register (plugin, "simplevideomarkdetect", GST_RANK_NONE,
-      GST_TYPE_SIMPLE_VIDEO_MARK_DETECT);
-
-  res &= gst_element_register (plugin, "simplevideomark", GST_RANK_NONE,
-      GST_TYPE_SIMPLE_VIDEO_MARK);
-
-  return res;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

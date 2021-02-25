@@ -63,6 +63,7 @@ struct _GstProxySrcClass {
 };
 
 GType gst_proxy_src_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (proxysrc);
 
 G_END_DECLS
 

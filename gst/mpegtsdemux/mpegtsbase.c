@@ -108,6 +108,9 @@ _extra_init (void)
   QUARK_PCR_PID = g_quark_from_string ("pcr-pid");
   QUARK_STREAMS = g_quark_from_string ("streams");
   QUARK_STREAM_TYPE = g_quark_from_string ("stream-type");
+  GST_DEBUG_CATEGORY_INIT (mpegts_base_debug, "mpegtsbase", 0,
+      "MPEG transport stream base class");
+  gst_mpegts_initialize ();
 }
 
 #define mpegts_base_parent_class parent_class

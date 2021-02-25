@@ -81,7 +81,7 @@ struct _GstSwitchBinPath
 
 GType gst_switch_bin_get_type(void);
 GType gst_switch_bin_path_get_type(void);
-
+GST_ELEMENT_REGISTER_DECLARE (switchbin);
 
 G_END_DECLS
 

@@ -51,6 +51,7 @@ struct _GstJP2kDecimatorClass
 };
 
 GType gst_jp2k_decimator_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (jp2kdecimator);
 
 G_END_DECLS
 

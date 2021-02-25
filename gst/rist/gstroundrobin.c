@@ -53,6 +53,8 @@ struct _GstRoundRobin
 G_DEFINE_TYPE_WITH_CODE (GstRoundRobin, gst_round_robin,
     GST_TYPE_ELEMENT, GST_DEBUG_CATEGORY_INIT (gst_round_robin_debug,
         "roundrobin", 0, "Round Robin"));
+GST_ELEMENT_REGISTER_DEFINE (roundrobin, "roundrobin", GST_RANK_NONE,
+    GST_TYPE_ROUND_ROBIN);
 
 static GstFlowReturn
 gst_round_robin_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)

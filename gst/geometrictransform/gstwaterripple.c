@@ -88,6 +88,10 @@ enum
 #define gst_water_ripple_parent_class parent_class
 G_DEFINE_TYPE (GstWaterRipple, gst_water_ripple,
     GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (waterripple, "waterripple",
+    GST_RANK_NONE, GST_TYPE_WATER_RIPPLE,
+    GST_DEBUG_CATEGORY_INIT (gst_water_ripple_debug, "waterripple", 0,
+        "waterripple"));
 
 static void
 gst_water_ripple_set_property (GObject * object, guint prop_id,
@@ -235,14 +239,4 @@ gst_water_ripple_init (GstWaterRipple * filter)
   filter->amplitude = DEFAULT_AMPLITUDE;
   filter->phase = DEFAULT_PHASE;
   filter->wavelength = DEFAULT_WAVELENGTH;
-}
-
-gboolean
-gst_water_ripple_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_water_ripple_debug, "waterripple", 0,
-      "waterripple");
-
-  return gst_element_register (plugin, "waterripple", GST_RANK_NONE,
-      GST_TYPE_WATER_RIPPLE);
 }

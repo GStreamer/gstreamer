@@ -57,6 +57,8 @@ static GstFlowReturn gst_video_diff_transform_frame (GstVideoFilter * filter,
 G_DEFINE_TYPE_WITH_CODE (GstVideoDiff, gst_video_diff, GST_TYPE_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_video_diff_debug_category, "videodiff", 0,
         "debug category for videodiff element"));
+GST_ELEMENT_REGISTER_DEFINE (videodiff, "videodiff",
+    GST_RANK_NONE, GST_TYPE_VIDEO_DIFF);
 
 static void
 gst_video_diff_class_init (GstVideoDiffClass * klass)

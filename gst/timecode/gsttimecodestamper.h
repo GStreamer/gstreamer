@@ -161,6 +161,7 @@ struct _GstTimeCodeStamperClass
 };
 
 GType gst_timecodestamper_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (timecodestamper);
 
 GType gst_timecodestamper_source_get_type (void);
 GType gst_timecodestamper_set_get_type (void);

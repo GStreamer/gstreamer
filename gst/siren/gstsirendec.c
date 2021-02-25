@@ -65,6 +65,8 @@ static GstFlowReturn gst_siren_dec_handle_frame (GstAudioDecoder * dec,
 
 
 G_DEFINE_TYPE (GstSirenDec, gst_siren_dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (sirendec, "sirendec",
+    GST_RANK_MARGINAL, GST_TYPE_SIREN_DEC);
 
 static void
 gst_siren_dec_class_init (GstSirenDecClass * klass)
@@ -247,11 +249,4 @@ decode_error:
     gst_buffer_unref (out_buf);
     goto done;
   }
-}
-
-gboolean
-gst_siren_dec_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "sirendec",
-      GST_RANK_MARGINAL, GST_TYPE_SIREN_DEC);
 }

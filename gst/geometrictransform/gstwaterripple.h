@@ -82,7 +82,7 @@ struct _GstWaterRippleClass
 
 GType gst_water_ripple_get_type (void);
 
-gboolean gst_water_ripple_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (waterripple);
 
 G_END_DECLS
 

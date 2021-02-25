@@ -54,7 +54,7 @@ struct _GstPnmdecClass
 };
 
 GType gst_pnmdec_get_type (void) G_GNUC_CONST;
-
+GST_ELEMENT_REGISTER_DECLARE (pnmdec);
 G_END_DECLS
 
 #endif /* __GST_PNMDEC_H__ */

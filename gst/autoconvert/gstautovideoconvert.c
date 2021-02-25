@@ -131,6 +131,8 @@ gst_auto_video_convert_update_factory_list (GstAutoVideoConvert *
 }
 
 G_DEFINE_TYPE (GstAutoVideoConvert, gst_auto_video_convert, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (autovideoconvert, "autovideoconvert",
+    GST_RANK_NONE, GST_TYPE_AUTO_VIDEO_CONVERT);
 
 static void
 gst_auto_video_convert_class_init (GstAutoVideoConvertClass * klass)

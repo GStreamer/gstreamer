@@ -78,6 +78,8 @@ enum
 /*static guint gst_rtp_onvif_timestamp_signals[LAST_SIGNAL] = { 0 }; */
 
 G_DEFINE_TYPE (GstRtpOnvifTimestamp, gst_rtp_onvif_timestamp, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rtponviftimestamp, "rtponviftimestamp",
+    GST_RANK_NONE, GST_TYPE_RTP_ONVIF_TIMESTAMP);
 
 static void
 gst_rtp_onvif_timestamp_get_property (GObject * object,

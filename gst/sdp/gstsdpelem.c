@@ -27,13 +27,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "sdpdemux", GST_RANK_NONE,
-          GST_TYPE_SDP_DEMUX))
-    return FALSE;
-  if (!gst_element_register (plugin, "sdpsrc", GST_RANK_NONE, GST_TYPE_SDP_SRC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  return TRUE;
+  ret |= GST_ELEMENT_REGISTER (sdpdemux, plugin);
+  ret |= GST_ELEMENT_REGISTER (sdpsrc, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

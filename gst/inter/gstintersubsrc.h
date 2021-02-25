@@ -51,6 +51,7 @@ struct _GstInterSubSrcClass
 };
 
 GType gst_inter_sub_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (intersubsrc);
 
 G_END_DECLS
 

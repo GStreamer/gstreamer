@@ -84,6 +84,9 @@ enum
 
 #define gst_diffuse_parent_class parent_class
 G_DEFINE_TYPE (GstDiffuse, gst_diffuse, GST_TYPE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (diffuse, "diffuse", GST_RANK_NONE,
+    GST_TYPE_DIFFUSE, GST_DEBUG_CATEGORY_INIT (gst_diffuse_debug, "diffuse", 0,
+        "diffuse"));
 
 static void
 gst_diffuse_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -225,13 +228,4 @@ gst_diffuse_init (GstDiffuse * filter)
 
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->scale = DEFAULT_SCALE;
-}
-
-gboolean
-gst_diffuse_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_diffuse_debug, "diffuse", 0, "diffuse");
-
-  return gst_element_register (plugin, "diffuse", GST_RANK_NONE,
-      GST_TYPE_DIFFUSE);
 }

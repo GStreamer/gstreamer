@@ -173,6 +173,8 @@ static GstElementClass *parent_class = NULL;
 
 G_DEFINE_TYPE_WITH_CODE (GstAsfMux, gst_asf_mux, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+GST_ELEMENT_REGISTER_DEFINE (asfmux, "asfmux",
+    GST_RANK_PRIMARY, GST_TYPE_ASF_MUX);
 
 static void
 gst_asf_mux_reset (GstAsfMux * asfmux)
@@ -2454,11 +2456,4 @@ gst_asf_mux_change_state (GstElement * element, GstStateChange transition)
 
 done:
   return ret;
-}
-
-gboolean
-gst_asf_mux_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "asfmux",
-      GST_RANK_PRIMARY, GST_TYPE_ASF_MUX);
 }

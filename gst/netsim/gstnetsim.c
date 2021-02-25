@@ -93,6 +93,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 G_DEFINE_TYPE (GstNetSim, gst_net_sim, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (netsim, "netsim",
+    GST_RANK_MARGINAL, GST_TYPE_NET_SIM);
 
 static gboolean
 gst_net_sim_source_dispatch (GSource * source,
@@ -763,8 +765,7 @@ gst_net_sim_class_init (GstNetSimClass * klass)
 static gboolean
 gst_net_sim_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "netsim",
-      GST_RANK_MARGINAL, GST_TYPE_NET_SIM);
+  return GST_ELEMENT_REGISTER (netsim, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

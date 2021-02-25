@@ -36,6 +36,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtmp2elements.h"
 #include "gstrtmp2src.h"
 
 #include "gstrtmp2locationhandler.h"
@@ -157,6 +158,8 @@ G_DEFINE_TYPE_WITH_CODE (GstRtmp2Src, gst_rtmp2_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_rtmp2_src_uri_handler_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_RTMP_LOCATION_HANDLER, NULL));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtmp2src, "rtmp2src",
+    GST_RANK_PRIMARY + 1, GST_TYPE_RTMP2_SRC, rtmp2_element_init (plugin));
 
 static void
 gst_rtmp2_src_class_init (GstRtmp2SrcClass * klass)

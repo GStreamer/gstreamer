@@ -122,6 +122,8 @@ static void gst_rist_rtx_send_finalize (GObject * object);
 G_DEFINE_TYPE_WITH_CODE (GstRistRtxSend, gst_rist_rtx_send, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_rist_rtx_send_debug, "ristrtxsend", 0,
         "RIST retransmission sender"));
+GST_ELEMENT_REGISTER_DEFINE (ristrtxsend, "ristrtxsend", GST_RANK_NONE,
+    GST_TYPE_RIST_RTX_SEND);
 
 typedef struct
 {

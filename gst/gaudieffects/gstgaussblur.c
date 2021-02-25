@@ -66,7 +66,6 @@
 #include <math.h>
 #include <gst/gst.h>
 
-#include "gstplugin.h"
 #include "gstgaussblur.h"
 
 static void gst_gaussianblur_finalize (GObject * object);
@@ -120,7 +119,10 @@ static void gaussian_smooth (GstGaussianBlur * gb, guint8 * image,
 
 #define gst_gaussianblur_parent_class parent_class
 G_DEFINE_TYPE (GstGaussianBlur, gst_gaussianblur, GST_TYPE_VIDEO_FILTER);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gaussianblur, "gaussianblur",
+    GST_RANK_NONE, GST_TYPE_GAUSSIANBLUR,
+    GST_DEBUG_CATEGORY_INIT (gst_gauss_blur_debug, "gaussianblur", 0,
+        "Gaussian Blur video effect"));
 #define DEFAULT_SIGMA 1.2
 
 /* Initialize the gaussianblur's class. */
@@ -451,16 +453,4 @@ gst_gaussianblur_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-/* Register the element factories and other features. */
-gboolean
-gst_gauss_blur_plugin_init (GstPlugin * plugin)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_gauss_blur_debug, "gaussianblur",
-      0, "Gaussian Blur video effect");
-
-  return gst_element_register (plugin, "gaussianblur", GST_RANK_NONE,
-      GST_TYPE_GAUSSIANBLUR);
 }

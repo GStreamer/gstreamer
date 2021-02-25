@@ -85,7 +85,8 @@ struct _GstRistRtpExt
 G_DEFINE_TYPE_WITH_CODE (GstRistRtpExt, gst_rist_rtp_ext, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_rist_rtp_ext_debug, "ristrtpext", 0,
         "RIST RTP Extension"));
-
+GST_ELEMENT_REGISTER_DEFINE (ristrtpext, "ristrtpext", GST_RANK_NONE,
+    GST_TYPE_RIST_RTP_EXT);
 
 static GstFlowReturn
 gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)

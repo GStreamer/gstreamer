@@ -81,6 +81,8 @@ typedef enum
 GST_DEBUG_CATEGORY_STATIC (gstflupsdemux_debug);
 #define GST_CAT_DEFAULT (gstflupsdemux_debug)
 
+GST_DEBUG_CATEGORY_EXTERN (mpegpspesfilter_debug);
+
 /* MPEG2Demux signals and args */
 enum
 {
@@ -217,6 +219,11 @@ gst_ps_demux_get_type (void)
 
   return ps_demux_type;
 }
+
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (mpegpsdemux, "mpegpsdemux",
+    GST_RANK_PRIMARY, GST_TYPE_PS_DEMUX,
+    GST_DEBUG_CATEGORY_INIT (mpegpspesfilter_debug, "mpegpspesfilter", 0,
+        "MPEG-PS PES filter"));
 
 static void
 gst_ps_demux_base_init (GstPsDemuxClass * klass)

@@ -50,6 +50,7 @@ struct _GstAutoVideoConvertClass
 };
 
 GType gst_auto_video_convert_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (autovideoconvert);
 
 G_END_DECLS
 #endif /* __GST_AUTO_VIDEO_CONVERT_H__ */

@@ -78,8 +78,6 @@ struct _GstGDPDepayClass
   GstElementClass parent_class;
 };
 
-gboolean gst_gdp_depay_plugin_init (GstPlugin * plugin);
-
 GType gst_gdp_depay_get_type (void);
 
 G_END_DECLS

@@ -4,6 +4,7 @@ rist_sources = [
   'gstristrtxreceive.c',
   'gstristsrc.c',
   'gstristsink.c',
+  'gstrist.c',
   'gstristplugin.c',
   'gstristrtpext.c',
   'gstristrtpdeext.c'

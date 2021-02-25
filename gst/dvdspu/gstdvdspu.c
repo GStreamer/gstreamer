@@ -75,8 +75,11 @@ static GstStaticPadTemplate subpic_sink_factory =
     GST_STATIC_CAPS ("subpicture/x-dvd; subpicture/x-pgs")
     );
 
+static gboolean dvd_spu_element_init (GstPlugin * plugin);
+
 #define gst_dvd_spu_parent_class parent_class
 G_DEFINE_TYPE (GstDVDSpu, gst_dvd_spu, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (dvdspu, dvd_spu_element_init);
 
 static void gst_dvd_spu_dispose (GObject * object);
 static void gst_dvd_spu_finalize (GObject * object);
@@ -1238,7 +1241,7 @@ gst_dvd_spu_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_dvd_spu_plugin_init (GstPlugin * plugin)
+dvd_spu_element_init (GstPlugin * plugin)
 {
   const gchar *env;
 
@@ -1258,6 +1261,12 @@ gst_dvd_spu_plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "dvdspu",
       GST_RANK_PRIMARY, GST_TYPE_DVD_SPU);
+}
+
+static gboolean
+gst_dvd_spu_plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (dvdspu, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

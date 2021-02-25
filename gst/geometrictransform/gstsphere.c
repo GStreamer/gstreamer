@@ -83,6 +83,9 @@ enum
 
 #define gst_sphere_parent_class parent_class
 G_DEFINE_TYPE (GstSphere, gst_sphere, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (sphere, "sphere", GST_RANK_NONE,
+    GST_TYPE_SPHERE, GST_DEBUG_CATEGORY_INIT (gst_sphere_debug, "sphere", 0,
+        "sphere"));
 
 static void
 gst_sphere_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -218,13 +221,4 @@ gst_sphere_init (GstSphere * filter)
 
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->refraction = DEFAULT_REFRACTION;
-}
-
-gboolean
-gst_sphere_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_sphere_debug, "sphere", 0, "sphere");
-
-  return gst_element_register (plugin, "sphere", GST_RANK_NONE,
-      GST_TYPE_SPHERE);
 }

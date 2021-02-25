@@ -89,6 +89,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 /* class initialization */
 #define parent_class gst_inter_video_src_parent_class
 G_DEFINE_TYPE (GstInterVideoSrc, gst_inter_video_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE (intervideosrc, "intervideosrc",
+    GST_RANK_NONE, GST_TYPE_INTER_VIDEO_SRC);
 
 static void
 gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)

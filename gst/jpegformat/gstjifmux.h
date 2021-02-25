@@ -61,6 +61,8 @@ struct _GstJifMuxClass {
 
 GType gst_jif_mux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (jifmux);
+
 G_END_DECLS
 
 #endif /* __GST_JFIF_MUX_H__ */

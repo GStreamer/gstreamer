@@ -23,6 +23,7 @@
 #endif
 
 #include "gsttranscoding.h"
+#include "gsttranscodeelements.h"
 #if HAVE_GETRUSAGE
 #include "gst-cpu-throttling-clock.h"
 #endif
@@ -73,7 +74,10 @@ typedef struct
 
 #define DEFAULT_AVOID_REENCODING   FALSE
 
-G_DEFINE_TYPE (GstUriTranscodeBin, gst_uri_transcode_bin, GST_TYPE_PIPELINE)
+G_DEFINE_TYPE (GstUriTranscodeBin, gst_uri_transcode_bin, GST_TYPE_PIPELINE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (uritranscodebin, "uritranscodebin", GST_RANK_NONE,
+    gst_uri_transcode_bin_get_type (), transcodebin_element_init (plugin));
+
 enum
 {
  PROP_0,

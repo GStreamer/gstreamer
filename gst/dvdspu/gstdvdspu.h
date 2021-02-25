@@ -123,6 +123,7 @@ struct _GstDVDSpuClass {
 };
 
 GType gst_dvd_spu_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dvdspu);
 
 typedef enum {
   GST_DVD_SPU_DEBUG_RENDER_RECTANGLE = (1 << 0),

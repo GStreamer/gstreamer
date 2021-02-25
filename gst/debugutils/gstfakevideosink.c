@@ -37,6 +37,7 @@
  * Since 1.14
  */
 
+#include "gstdebugutilsbadelements.h"
 #include "gstfakevideosink.h"
 
 #include <gst/video/video.h>
@@ -84,6 +85,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
             GST_VIDEO_FORMATS_ALL)));
 
 G_DEFINE_TYPE (GstFakeVideoSink, gst_fake_video_sink, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (fakevideosink, "fakevideosink",
+    GST_RANK_NONE, gst_fake_video_sink_get_type ());
 
 static gboolean
 gst_fake_video_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)

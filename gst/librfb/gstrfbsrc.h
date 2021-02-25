@@ -68,6 +68,7 @@ struct _GstRfbSrc
 };
 
 GType gst_rfb_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (rfbsrc);
 
 G_END_DECLS
 #endif

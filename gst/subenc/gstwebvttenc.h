@@ -60,6 +60,7 @@ struct _GstWebvttEnc
 };
 
 GType gst_webvtt_enc_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (webvttenc);
 
 G_END_DECLS
 #endif

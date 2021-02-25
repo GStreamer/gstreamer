@@ -1,5 +1,6 @@
 gdp_sources = [
   'dataprotocol.c',
+  'gstgdpelement.c',
   'gstgdp.c',
   'gstgdppay.c',
   'gstgdpdepay.c',

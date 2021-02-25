@@ -356,6 +356,12 @@ _extra_init (void)
 #define gst_ts_demux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE,
     _extra_init ());
+#define _do_element_init \
+  GST_DEBUG_CATEGORY_INIT (ts_demux_debug, "tsdemux", 0, \
+      "MPEG transport stream demuxer");\
+  init_pes_parser ();
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tsdemux, "tsdemux",
+    GST_RANK_PRIMARY, GST_TYPE_TS_DEMUX, _do_element_init);
 
 static void
 gst_ts_demux_dispose (GObject * object)
@@ -3419,15 +3425,4 @@ gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     }
   }
   return res;
-}
-
-gboolean
-gst_ts_demux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (ts_demux_debug, "tsdemux", 0,
-      "MPEG transport stream demuxer");
-  init_pes_parser ();
-
-  return gst_element_register (plugin, "tsdemux",
-      GST_RANK_PRIMARY, GST_TYPE_TS_DEMUX);
 }

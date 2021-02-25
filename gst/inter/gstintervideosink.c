@@ -82,6 +82,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 /* class initialization */
 G_DEFINE_TYPE (GstInterVideoSink, gst_inter_video_sink, GST_TYPE_VIDEO_SINK);
+GST_ELEMENT_REGISTER_DEFINE (intervideosink, "intervideosink",
+    GST_RANK_NONE, GST_TYPE_INTER_VIDEO_SINK);
 
 static void
 gst_inter_video_sink_class_init (GstInterVideoSinkClass * klass)

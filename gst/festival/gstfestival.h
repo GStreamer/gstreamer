@@ -116,6 +116,7 @@ struct _GstFestivalClass {
 };
 
 GType gst_festival_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (festival);
 
 #ifdef __cplusplus
 }

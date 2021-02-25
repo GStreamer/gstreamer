@@ -81,6 +81,7 @@ struct _GstSolarizeClass
 };
 
 GType gst_solarize_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (solarize);
 
 G_END_DECLS
 

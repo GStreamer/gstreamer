@@ -62,7 +62,8 @@ static GstFlowReturn gst_siren_enc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 
 G_DEFINE_TYPE (GstSirenEnc, gst_siren_enc, GST_TYPE_AUDIO_ENCODER);
-
+GST_ELEMENT_REGISTER_DEFINE (sirenenc, "sirenenc",
+    GST_RANK_MARGINAL, GST_TYPE_SIREN_ENC);
 
 static void
 gst_siren_enc_class_init (GstSirenEncClass * klass)
@@ -227,11 +228,4 @@ encode_error:
     gst_buffer_unref (out_buf);
     goto done;
   }
-}
-
-gboolean
-gst_siren_enc_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "sirenenc",
-      GST_RANK_MARGINAL, GST_TYPE_SIREN_ENC);
 }

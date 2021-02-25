@@ -25,6 +25,8 @@ GST_DEBUG_CATEGORY (gst_atsc_mux_debug);
 #define GST_CAT_DEFAULT gst_atsc_mux_debug
 
 G_DEFINE_TYPE (GstATSCMux, gst_atsc_mux, GST_TYPE_BASE_TS_MUX);
+GST_ELEMENT_REGISTER_DEFINE (atscmux, "atscmux", GST_RANK_PRIMARY,
+    gst_atsc_mux_get_type ());
 
 #define parent_class gst_atsc_mux_parent_class
 #define ATSCMUX_ST_PS_AUDIO_EAC3 0x87

@@ -80,7 +80,7 @@ struct _GstRotateClass
 
 GType gst_rotate_get_type (void);
 
-gboolean gst_rotate_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (rotate);
 
 G_END_DECLS
 

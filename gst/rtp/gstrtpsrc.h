@@ -72,6 +72,7 @@ struct _GstRtpSrcClass
 };
 
 GType gst_rtp_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (rtpsrc);
 
 G_END_DECLS
 #endif /* __GST_RTP_SRC_H__ */

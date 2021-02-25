@@ -1,5 +1,6 @@
 rtmp2_sources = [
   'gstrtmp2.c',
+  'gstrtmp2element.c',
   'gstrtmp2locationhandler.c',
   'gstrtmp2sink.c',
   'gstrtmp2src.c',

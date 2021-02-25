@@ -64,14 +64,16 @@
 #include <math.h>
 #include <gst/gst.h>
 
-#include "gstplugin.h"
 #include "gstchromium.h"
-
-#define gst_chromium_parent_class parent_class
-G_DEFINE_TYPE (GstChromium, gst_chromium, GST_TYPE_VIDEO_FILTER);
 
 GST_DEBUG_CATEGORY_STATIC (gst_chromium_debug);
 #define GST_CAT_DEFAULT gst_chromium_debug
+
+#define gst_chromium_parent_class parent_class
+G_DEFINE_TYPE (GstChromium, gst_chromium, GST_TYPE_VIDEO_FILTER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (chromium, "chromium", GST_RANK_NONE,
+    GST_TYPE_CHROMIUM, GST_DEBUG_CATEGORY_INIT (gst_chromium_debug, "chromium",
+        0, "Template chromium"));
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  BGRx, RGBx }")
@@ -273,19 +275,6 @@ gst_chromium_transform_frame (GstVideoFilter * vfilter,
   transform (src, dest, video_size, edge_a, edge_b);
 
   return GST_FLOW_OK;
-}
-
-/* Entry point to initialize the plug-in.
- * Register the element factories and other features. */
-gboolean
-gst_chromium_plugin_init (GstPlugin * chromium)
-{
-  /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_chromium_debug, "chromium", 0,
-      "Template chromium");
-
-  return gst_element_register (chromium, "chromium", GST_RANK_NONE,
-      GST_TYPE_CHROMIUM);
 }
 
 /*** Now the image processing work.... ***/

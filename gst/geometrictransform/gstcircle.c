@@ -90,6 +90,9 @@ enum
 
 #define gst_circle_parent_class parent_class
 G_DEFINE_TYPE (GstCircle, gst_circle, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (circle, "circle", GST_RANK_NONE,
+    GST_TYPE_CIRCLE, GST_DEBUG_CATEGORY_INIT (gst_circle_debug, "circle", 0,
+        "circle"));
 
 static void
 gst_circle_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -230,13 +233,4 @@ gst_circle_init (GstCircle * filter)
   filter->angle = DEFAULT_ANGLE;
   filter->spread_angle = DEFAULT_SPREAD_ANGLE;
   filter->height = DEFAULT_HEIGHT;
-}
-
-gboolean
-gst_circle_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_circle_debug, "circle", 0, "circle");
-
-  return gst_element_register (plugin, "circle", GST_RANK_NONE,
-      GST_TYPE_CIRCLE);
 }

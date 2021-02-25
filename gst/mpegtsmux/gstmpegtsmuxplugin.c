@@ -2,23 +2,18 @@
 #include "config.h"
 #endif
 
-#include "gstmpegtsmux.h"
 #include "gstatscmux.h"
+#include "gstmpegtsmux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_mpegts_initialize ();
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "mpegtsmux", GST_RANK_PRIMARY,
-          gst_mpeg_ts_mux_get_type ()))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (mpegtsmux, plugin);
+  ret |= GST_ELEMENT_REGISTER (atscmux, plugin);
 
-  if (!gst_element_register (plugin, "atscmux", GST_RANK_PRIMARY,
-          gst_atsc_mux_get_type ()))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,

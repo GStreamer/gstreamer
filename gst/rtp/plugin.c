@@ -9,14 +9,10 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
   gboolean ret = FALSE;
 
-  ret |= gst_element_register (plugin, "rtpsrc",
-      GST_RANK_PRIMARY + 1, GST_TYPE_RTP_SRC);
-
-  ret |= gst_element_register (plugin, "rtpsink",
-      GST_RANK_PRIMARY + 1, GST_TYPE_RTP_SINK);
+  ret |= GST_ELEMENT_REGISTER (rtpsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtpsink, plugin);
 
   return ret;
 }

@@ -104,6 +104,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_remove_silence_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRemoveSilence, gst_remove_silence,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT (0));
+GST_ELEMENT_REGISTER_DEFINE (removesilence, "removesilence", GST_RANK_NONE,
+    gst_remove_silence_get_type ());
 
 static void gst_remove_silence_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -427,8 +429,7 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "removesilence", GST_RANK_NONE,
-      gst_remove_silence_get_type ());
+  return GST_ELEMENT_REGISTER (removesilence, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

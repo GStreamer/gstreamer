@@ -112,6 +112,8 @@ G_DEFINE_TYPE_WITH_CODE (GstSceneChange, gst_scene_change,
     GST_TYPE_VIDEO_FILTER,
     GST_DEBUG_CATEGORY_INIT (gst_scene_change_debug_category, "scenechange", 0,
         "debug category for scenechange element"));
+GST_ELEMENT_REGISTER_DEFINE (scenechange, "scenechange",
+    GST_RANK_NONE, gst_scene_change_get_type ());
 
 static void
 gst_scene_change_class_init (GstSceneChangeClass * klass)

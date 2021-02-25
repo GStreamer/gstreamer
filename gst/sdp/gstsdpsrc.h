@@ -57,6 +57,7 @@ struct _GstSdpSrcClass
 };
 
 GType gst_sdp_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (sdpsrc);
 
 G_END_DECLS
 #endif /* __GST_SDP_SRC_H__ */

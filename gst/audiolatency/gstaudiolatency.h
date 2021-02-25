@@ -65,5 +65,7 @@ struct _GstAudioLatencyClass
 
 GType gst_audiolatency_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (audiolatency);
+
 G_END_DECLS
 #endif /* __GST_AUDIOLATENCY_H__ */

@@ -79,6 +79,9 @@ enum
 
 #define gst_bulge_parent_class parent_class
 G_DEFINE_TYPE (GstBulge, gst_bulge, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (bulge, "bulge", GST_RANK_NONE,
+    GST_TYPE_BULGE, GST_DEBUG_CATEGORY_INIT (gst_bulge_debug, "bulge", 0,
+        "bulge"));
 
 static void
 gst_bulge_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -207,12 +210,4 @@ gst_bulge_init (GstBulge * filter)
 
   filter->zoom = DEFAULT_ZOOM;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
-}
-
-gboolean
-gst_bulge_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_bulge_debug, "bulge", 0, "bulge");
-
-  return gst_element_register (plugin, "bulge", GST_RANK_NONE, GST_TYPE_BULGE);
 }

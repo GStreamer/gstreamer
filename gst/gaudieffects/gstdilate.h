@@ -81,6 +81,7 @@ struct _GstDilateClass
 };
 
 GType gst_dilate_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dilate);
 
 G_END_DECLS
 

@@ -92,7 +92,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 /* class initialization */
 #define gst_y4m_dec_parent_class parent_class
 G_DEFINE_TYPE (GstY4mDec, gst_y4m_dec, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (y4mdec, "y4mdec", GST_RANK_SECONDARY,
+    gst_y4m_dec_get_type (), GST_DEBUG_CATEGORY_INIT (y4mdec_debug, "y4mdec", 0,
+        "y4mdec element"));
 static void
 gst_y4m_dec_class_init (GstY4mDecClass * klass)
 {
@@ -894,15 +896,8 @@ gst_y4m_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
-  gst_element_register (plugin, "y4mdec", GST_RANK_SECONDARY,
-      gst_y4m_dec_get_type ());
-
-  GST_DEBUG_CATEGORY_INIT (y4mdec_debug, "y4mdec", 0, "y4mdec element");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (y4mdec, plugin);
 }
-
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,

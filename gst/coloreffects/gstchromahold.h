@@ -74,6 +74,7 @@ struct _GstChromaHoldClass
 };
 
 GType gst_chroma_hold_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (chromahold);
 
 G_END_DECLS
 #endif /* __GST_CHROMA_HOLD_H__ */

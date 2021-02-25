@@ -108,7 +108,9 @@ static GstStateChangeReturn mpegpsmux_change_state (GstElement * element,
 
 #define parent_class mpegpsmux_parent_class
 G_DEFINE_TYPE (MpegPsMux, mpegpsmux, GST_TYPE_ELEMENT);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (mpegpsmux, "mpegpsmux", GST_RANK_PRIMARY,
+    mpegpsmux_get_type (), GST_DEBUG_CATEGORY_INIT (mpegpsmux_debug,
+        "mpegpsmux", 0, "MPEG Program Stream muxer"));
 static void
 mpegpsmux_class_init (MpegPsMuxClass * klass)
 {
@@ -774,14 +776,7 @@ mpegpsmux_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mpegpsmux", GST_RANK_PRIMARY,
-          mpegpsmux_get_type ()))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (mpegpsmux_debug, "mpegpsmux", 0,
-      "MPEG Program Stream muxer");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (mpegpsmux, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,

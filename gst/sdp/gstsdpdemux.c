@@ -110,6 +110,8 @@ static GstFlowReturn gst_sdp_demux_sink_chain (GstPad * pad, GstObject * parent,
 
 #define gst_sdp_demux_parent_class parent_class
 G_DEFINE_TYPE (GstSDPDemux, gst_sdp_demux, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE (sdpdemux, "sdpdemux", GST_RANK_NONE,
+    GST_TYPE_SDP_DEMUX);
 
 static void
 gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
