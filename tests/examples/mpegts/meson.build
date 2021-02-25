@@ -1,4 +1,4 @@
-foreach fname : ['ts-parser.c', 'ts-section-writer.c', 'ts-scte-writer.c']
+foreach fname : ['ts-parser.c', 'ts-section-writer.c', 'ts-scte-writer.c', 'tsmux-prog-map.c']
   exe_name = fname.split('.').get(0).underscorify()
 
   executable(exe_name,
