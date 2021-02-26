@@ -6703,6 +6703,16 @@ error_response:
       case GST_RTSP_STS_NOT_ACCEPTABLE:
       case GST_RTSP_STS_NOT_IMPLEMENTED:
       case GST_RTSP_STS_METHOD_NOT_ALLOWED:
+        /* Some cameras (e.g. HikVision DS-2CD2732F-IS) return "551
+         * Option not supported" when a command is sent that is not implemented
+         * (e.g. PAUSE). Instead; it should return "501 Not Implemented".
+         *
+         * This is wrong, as previously, the camera did announce support
+         * for PAUSE in the OPTIONS.
+         *
+         * In this case, handle the 551 as if it was 501 to avoid throwing
+         * errors to application level. */
+      case GST_RTSP_STS_OPTION_NOT_SUPPORTED:
         GST_WARNING_OBJECT (src, "got NOT IMPLEMENTED, disable method %s",
             gst_rtsp_method_as_text (method));
         src->methods &= ~method;
