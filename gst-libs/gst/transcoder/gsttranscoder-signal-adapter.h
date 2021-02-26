@@ -49,12 +49,6 @@ GST_TRANSCODER_API
 G_DECLARE_FINAL_TYPE(GstTranscoderSignalAdapter, gst_transcoder_signal_adapter, GST, TRANSCODER_SIGNAL_ADAPTER, GObject)
 
 GST_TRANSCODER_API
-GstTranscoderSignalAdapter * gst_transcoder_signal_adapter_new_sync_emit (GstTranscoder * transcoder);
-
-GST_TRANSCODER_API
-GstTranscoderSignalAdapter * gst_transcoder_signal_adapter_new           (GstTranscoder * transcoder, GMainContext * context);
-
-GST_TRANSCODER_API
 GstTranscoder * gst_transcoder_signal_adapter_get_transcoder             (GstTranscoderSignalAdapter * self);
 
 

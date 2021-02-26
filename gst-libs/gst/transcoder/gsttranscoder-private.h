@@ -28,3 +28,16 @@
 #define GST_TRANSCODER_MESSAGE_DATA_ERROR "error"
 #define GST_TRANSCODER_MESSAGE_DATA_WARNING "warning"
 #define GST_TRANSCODER_MESSAGE_DATA_ISSUE_DETAILS "issue-details"
+
+struct _GstTranscoderSignalAdapter
+{
+  GObject parent;
+  GstBus *bus;
+  GSource *source;
+
+  GWeakRef transcoder;
+};
+
+
+GstTranscoderSignalAdapter * gst_transcoder_signal_adapter_new_sync_emit (GstTranscoder * transcoder);
+GstTranscoderSignalAdapter * gst_transcoder_signal_adapter_new           (GstTranscoder * transcoder, GMainContext * context);

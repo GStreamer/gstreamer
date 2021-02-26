@@ -376,7 +376,7 @@ main (int argc, char *argv[])
   gst_transcoder_set_avoid_reencoding (transcoder, TRUE);
   gst_transcoder_set_cpu_usage (transcoder, settings.cpu_usage);
 
-  signal_adapter = gst_transcoder_signal_adapter_new (transcoder, NULL);
+  signal_adapter = gst_transcoder_get_signal_adapter (transcoder, NULL);
   g_signal_connect_swapped (signal_adapter, "position-updated",
       G_CALLBACK (position_updated_cb), transcoder);
   g_signal_connect_swapped (signal_adapter, "warning", G_CALLBACK (_warning_cb),

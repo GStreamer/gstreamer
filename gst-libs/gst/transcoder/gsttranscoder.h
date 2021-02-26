@@ -138,6 +138,14 @@ void gst_transcoder_set_avoid_reencoding                  (GstTranscoder * self,
 
 #include "gsttranscoder-signal-adapter.h"
 
+GST_TRANSCODER_API
+GstTranscoderSignalAdapter*
+gst_transcoder_get_signal_adapter                         (GstTranscoder * self,
+                                                           GMainContext *context);
+GST_TRANSCODER_API
+GstTranscoderSignalAdapter*
+gst_transcoder_get_sync_signal_adapter                    (GstTranscoder * self);
+
 G_END_DECLS
 
 #endif

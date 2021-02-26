@@ -26,7 +26,7 @@
 #include "gsttranscoder.h"
 #include "gsttranscoder-signal-adapter.h"
 
-#include "gsttranscoder-message-private.h"
+#include "gsttranscoder-private.h"
 
 #include <gst/gst.h>
 
@@ -51,15 +51,6 @@ enum
 };
 
 static GParamSpec *param_specs[PROP_LAST] = { NULL, };
-
-struct _GstTranscoderSignalAdapter
-{
-  GObject parent;
-  GstBus *bus;
-  GSource *source;
-
-  GstTranscoder *transcoder;
-};
 
 struct _GstTranscoderSignalAdapterClass
 {
@@ -189,10 +180,6 @@ gst_transcoder_signal_adapter_new (GstTranscoder * transcoder,
 
   g_return_val_if_fail (GST_IS_TRANSCODER (transcoder), NULL);
 
-  if (!context) {
-    context = g_main_context_get_thread_default ();
-  }
-
   self = g_object_new (GST_TYPE_TRANSCODER_SIGNAL_ADAPTER, NULL);
   self->bus = gst_transcoder_get_message_bus (transcoder);
   self->source = gst_bus_create_watch (self->bus);
@@ -205,6 +192,7 @@ gst_transcoder_signal_adapter_new (GstTranscoder * transcoder,
     return NULL;
   }
 
+  g_weak_ref_set (&self->transcoder, transcoder);
   g_source_attach (self->source, context);
   g_source_set_callback (self->source,
       (GSourceFunc) gst_transcoder_signal_adapter_on_message, self, NULL);
@@ -256,7 +244,6 @@ gst_transcoder_signal_adapter_dispose (GObject * object)
   }
 
   gst_clear_object (&self->bus);
-  gst_clear_object (&self->transcoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -269,7 +256,7 @@ gst_transcoder_signal_adapter_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_TRANSCODER:
-      g_value_set_object (value, self->transcoder);
+      g_value_take_object (value, g_weak_ref_get (&self->transcoder));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -331,12 +318,12 @@ gst_transcoder_signal_adapter_class_init (GstTranscoderSignalAdapterClass *
  * gst_transcoder_signal_adapter_get_transcoder:
  * @self: The #GstTranscoderSignalAdapter
  *
- * Returns: (transfer full): The #GstTranscoder @self is tracking
+ * Returns: (transfer full)(nullable): The #GstTranscoder @self is tracking
  *
  * Since: 1.20
  */
 GstTranscoder *
 gst_transcoder_signal_adapter_get_transcoder (GstTranscoderSignalAdapter * self)
 {
-  return gst_object_ref (self->transcoder);
+  return g_weak_ref_get (&self->transcoder);
 }

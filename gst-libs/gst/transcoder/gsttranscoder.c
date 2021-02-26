@@ -28,7 +28,7 @@
  */
 
 #include "gsttranscoder.h"
-#include "gsttranscoder-message-private.h"
+#include "gsttranscoder-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_transcoder_debug);
 #define GST_CAT_DEFAULT gst_transcoder_debug
@@ -89,6 +89,8 @@ struct _GstTranscoder
   GstClockTime last_duration;
 
   GstBus *api_bus;
+  GstTranscoderSignalAdapter *signal_adapter;
+  GstTranscoderSignalAdapter *sync_signal_adapter;
 };
 
 struct _GstTranscoderClass
@@ -220,10 +222,14 @@ gst_transcoder_dispose (GObject * object)
 
   GST_TRACE_OBJECT (self, "Stopping main thread");
 
+  GST_OBJECT_LOCK (self);
   if (self->loop) {
     g_main_loop_quit (self->loop);
+    GST_OBJECT_UNLOCK (self);
 
     g_thread_join (self->thread);
+
+    GST_OBJECT_LOCK (self);
     self->thread = NULL;
 
     g_main_loop_unref (self->loop);
@@ -232,6 +238,9 @@ gst_transcoder_dispose (GObject * object)
     g_main_context_unref (self->context);
     self->context = NULL;
 
+    gst_clear_object (&self->signal_adapter);
+    gst_clear_object (&self->sync_signal_adapter);
+    GST_OBJECT_UNLOCK (self);
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -927,7 +936,7 @@ gst_transcoder_run (GstTranscoder * self, GError ** error)
 {
   RunSyncData data = { 0, };
   GstTranscoderSignalAdapter *signal_adapter =
-      gst_transcoder_signal_adapter_new (self, NULL);
+      gst_transcoder_get_signal_adapter (self, NULL);
 
   data.loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect_swapped (signal_adapter, "error", G_CALLBACK (_error_cb),
@@ -1231,6 +1240,76 @@ GstBus *
 gst_transcoder_get_message_bus (GstTranscoder * self)
 {
   return g_object_ref (self->api_bus);
+}
+
+/**
+ * gst_transcoder_get_sync_signal_adapter:
+ * @self: (transfer none): #GstTranscoder instance to emit signals synchronously
+ * for.
+ *
+ * Gets the #GstTranscoderSignalAdapter attached to @self to emit signals from
+ * its thread of emission.
+ *
+ * Returns: (transfer full): The #GstTranscoderSignalAdapter to connect signal
+ * handlers to.
+ *
+ * Since: 1.20
+ */
+GstTranscoderSignalAdapter *
+gst_transcoder_get_sync_signal_adapter (GstTranscoder * self)
+{
+  g_return_val_if_fail (GST_IS_TRANSCODER (self), NULL);
+
+  GST_OBJECT_LOCK (self);
+  if (!self->sync_signal_adapter)
+    self->sync_signal_adapter =
+        gst_transcoder_signal_adapter_new_sync_emit (self);
+  GST_OBJECT_UNLOCK (self);
+
+  return g_object_ref (self->sync_signal_adapter);
+}
+
+/**
+ * gst_transcoder_get_signal_adapter:
+ * @self: (transfer none): #GstTranscoder instance to emit signals for.
+ * @context: (nullable): A #GMainContext on which the main-loop will process
+ *                       transcoder bus messages on. Can be NULL (thread-default
+ *                       context will be used then).
+ *
+ * Gets the #GstTranscoderSignalAdapter attached to @self if it is attached to
+ * the right #GMainContext. If no #GstTranscoderSignalAdapter has been created
+ * yet, it will be created and returned, other calls will return that same
+ * adapter until it is destroyed, at which point, a new one can be attached the
+ * same way.
+ *
+ * Returns: (transfer full)(nullable): The #GstTranscoderSignalAdapter to
+ * connect signal handlers to.
+ *
+ * Since: 1.20
+ */
+GstTranscoderSignalAdapter *
+gst_transcoder_get_signal_adapter (GstTranscoder * self, GMainContext * context)
+{
+  g_return_val_if_fail (GST_IS_TRANSCODER (self), NULL);
+
+  if (!context)
+    context = g_main_context_get_thread_default ();
+  if (!context)
+    context = g_main_context_default ();
+
+  GST_OBJECT_LOCK (self);
+  if (!self->signal_adapter) {
+    self->signal_adapter = gst_transcoder_signal_adapter_new (self, context);
+  } else if (g_source_get_context (self->signal_adapter->source) != context) {
+    GST_WARNING_OBJECT (self, "Trying to get an adapter for a different "
+        "GMainContext than the one attached, this is not possible");
+    GST_OBJECT_UNLOCK (self);
+
+    return NULL;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  return g_object_ref (self->signal_adapter);
 }
 
 /**
