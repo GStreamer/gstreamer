@@ -99,7 +99,7 @@ gst_transcoder_signal_adapter_emit (GstTranscoderSignalAdapter * self,
       break;
     case GST_TRANSCODER_MESSAGE_ERROR:{
       GError *error = NULL;
-      GstStructure *details;
+      GstStructure *details = NULL;
 
       gst_structure_get (message_data, GST_TRANSCODER_MESSAGE_DATA_ERROR,
           G_TYPE_ERROR, &error, GST_TYPE_STRUCTURE, &details, NULL);
@@ -110,7 +110,7 @@ gst_transcoder_signal_adapter_emit (GstTranscoderSignalAdapter * self,
       break;
     }
     case GST_TRANSCODER_MESSAGE_WARNING:{
-      GstStructure *details;
+      GstStructure *details = NULL;
       GError *error = NULL;
 
       gst_structure_get (message_data, GST_TRANSCODER_MESSAGE_DATA_WARNING,
