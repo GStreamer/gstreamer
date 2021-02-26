@@ -43,6 +43,18 @@ SHAREDLIB_REG = re.compile(r'\.so|\.dylib|\.dll')
 GSTPLUGIN_FILEPATH_REG_TEMPLATE = r'.*/{libdir}/gstreamer-1.0/[^/]+$'
 GSTPLUGIN_FILEPATH_REG = None
 
+BC_RC =  '''
+BASH_COMPLETION_SCRIPTS="{bash_completions}"
+BASH_COMPLETION_PATHS="{bash_completions_paths}"
+for p in $BASH_COMPLETION_PATHS; do
+for f in $BASH_COMPLETION_SCRIPTS; do
+  [ -f "$p/$f" ] && . "$p/$f"
+done
+done
+'''
+BASH_COMPLETION_PATHS = [SCRIPTDIR + '/subprojects/gstreamer/data/bash-completion/completions']
+BASH_COMPLETION_PATHS += [SCRIPTDIR + '/subprojects/gst-devtools/validate/data/bash-completion/completions']
+
 def listify(o):
     if isinstance(o, str):
         return [o]
@@ -219,6 +231,8 @@ def setup_gdb(options):
 
     return python_paths
 
+def is_bash_completion_available (options):
+    return  os.path.exists(os.path.join(options.builddir, 'subprojects/gstreamer/data/bash-completion/helpers/gst'))
 
 def get_subprocess_env(options, gst_version):
     env = os.environ.copy()
@@ -504,6 +518,14 @@ if __name__ == "__main__":
                     shutil.copyfileobj(src, tmprc)
             tmprc.write('\nexport PS1="[gst-%s] $PS1"' % gst_version)
             tmprc.flush()
+            if is_bash_completion_available(options):
+                bash_completions_files = []
+                for p in BASH_COMPLETION_PATHS:
+                    if os.path.exists(p):
+                        bash_completions_files +=  os.listdir(path=p)
+                bc_rc = BC_RC.format(bash_completions=' '.join(bash_completions_files), bash_completions_paths=' '.join(BASH_COMPLETION_PATHS))
+                tmprc.write(bc_rc)
+                tmprc.flush()
             args.append("--rcfile")
             args.append(tmprc.name)
         elif args[0].endswith('fish'):
