@@ -579,6 +579,10 @@ pkgconfig_variables = ['exec_prefix=${prefix}',
     'typelibdir=${libdir}/girepository-1.0',
     'libexecdir=${prefix}/libexec',
     'pluginscannerdir=${libexecdir}/gstreamer-1.0']
+pkgconfig_uninstalled_variables = ['exec_prefix=${prefix}',
+	'gstreamerdir=${prefix}/subprojects/gstreamer',
+    'bashhelpersdir=${gstreamerdir}/data/bash-completion/helpers',
+    'helpersdir=${gstreamerdir}/libs/gst/helpers']
 pkgconfig_subdirs = ['gstreamer-1.0']
 
 subdir('gst')
