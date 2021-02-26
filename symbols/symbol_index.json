@@ -15281,6 +15281,7 @@
   "GstTranscoder:profile",
   "GstTranscoder:signal-dispatcher",
   "GstTranscoder:src-uri",
+  "GstTranscoderClass.parent_class",
   "GstTranscoderError",
   "GstTranscoderGMainContextSignalDispatcher",
   "GstTranscoderGMainContextSignalDispatcher:application-context",
