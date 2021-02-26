@@ -20,7 +20,7 @@
 
 _GST_HELPERDIR="${BASH_SOURCE[0]%/*}/../helpers"
 
-if [[ ! -d "$_GST_HELPERDIR"  ]]; then
+if [[ ! -f $_GST_HELPERDIR/gst ]]; then
 	_GST_HELPERDIR="$(pkg-config --variable=bashhelpersdir gstreamer-1.0)"
 else
 	_GST_HELPERDIR=`cd "$_GST_HELPERDIR"; pwd`

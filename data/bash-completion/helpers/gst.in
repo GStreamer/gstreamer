@@ -23,7 +23,7 @@ if [[ ! -x "$_GST_HELPER" ]]
 then
         helper="$(pkg-config --variable=helpersdir gstreamer-@GST_API_VERSION@)/gst-completion-helper"
 
-        if [ -x "$helper" ]
+        if [ -x "$helper" ]
         then
           _GST_HELPER=$helper
         fi
