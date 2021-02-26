@@ -30,6 +30,8 @@
 #include "gsttranscoder.h"
 #include "gsttranscoder-private.h"
 
+static GOnce once = G_ONCE_INIT;
+
 GST_DEBUG_CATEGORY_STATIC (gst_transcoder_debug);
 #define GST_CAT_DEFAULT gst_transcoder_debug
 
@@ -865,6 +867,12 @@ gst_transcoder_new (const gchar * source_uri,
 {
   GstEncodingProfile *profile;
 
+  g_once (&once, gst_transcoder_init_once, NULL);
+
+  g_return_val_if_fail (source_uri, NULL);
+  g_return_val_if_fail (dest_uri, NULL);
+  g_return_val_if_fail (encoding_profile, NULL);
+
   profile = create_encoding_profile (encoding_profile);
 
   return gst_transcoder_new_full (source_uri, dest_uri, profile);
@@ -884,8 +892,6 @@ GstTranscoder *
 gst_transcoder_new_full (const gchar * source_uri,
     const gchar * dest_uri, GstEncodingProfile * profile)
 {
-  static GOnce once = G_ONCE_INIT;
-
   g_once (&once, gst_transcoder_init_once, NULL);
 
   g_return_val_if_fail (source_uri, NULL);
@@ -935,8 +941,11 @@ gboolean
 gst_transcoder_run (GstTranscoder * self, GError ** error)
 {
   RunSyncData data = { 0, };
-  GstTranscoderSignalAdapter *signal_adapter =
-      gst_transcoder_get_signal_adapter (self, NULL);
+  GstTranscoderSignalAdapter *signal_adapter;
+
+  g_return_val_if_fail (GST_IS_TRANSCODER (self), FALSE);
+
+  signal_adapter = gst_transcoder_get_signal_adapter (self, NULL);
 
   data.loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect_swapped (signal_adapter, "error", G_CALLBACK (_error_cb),
@@ -974,6 +983,8 @@ void
 gst_transcoder_run_async (GstTranscoder * self)
 {
   GstStateChangeReturn state_ret;
+
+  g_return_if_fail (GST_IS_TRANSCODER (self));
 
   GST_DEBUG_OBJECT (self, "Play");
 
@@ -1239,6 +1250,8 @@ gst_transcoder_error_get_name (GstTranscoderError error)
 GstBus *
 gst_transcoder_get_message_bus (GstTranscoder * self)
 {
+  g_return_val_if_fail (GST_IS_TRANSCODER (self), NULL);
+
   return g_object_ref (self->api_bus);
 }
 
