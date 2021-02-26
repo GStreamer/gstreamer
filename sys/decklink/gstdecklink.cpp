@@ -1023,6 +1023,41 @@ public:
 
     if (clock) {
       capture_time = gst_clock_get_time (clock);
+      if (video_frame) {
+	// If we have the actual capture time for the frame, compensate the
+	// capture time accordingly.
+	//
+	// We do this by subtracting the belay between "now" in hardware
+	// reference clock and the time when the frame was finished being
+	// capture based on the same hardware reference clock.
+	//
+	// We then subtract that difference from the "now" on the gst clock.
+	//
+	// *Technically* we should be compensating that difference for the
+	// difference in clock rate between the "hardware reference clock" and
+	// the GStreamer clock. But since the values are quite small this has
+	// very little impact.
+	BMDTimeValue hardware_now;
+	res = m_input->input->GetHardwareReferenceClock (GST_SECOND, &hardware_now, NULL, NULL);
+	if (res == S_OK) {
+	  res =
+	    video_frame->GetHardwareReferenceTimestamp (GST_SECOND,
+							&hardware_time, &hardware_duration);
+	  if (res != S_OK) {
+	    GST_ERROR ("Failed to get hardware time: 0x%08lx", (unsigned long) res);
+	    hardware_time = GST_CLOCK_TIME_NONE;
+	    hardware_duration = GST_CLOCK_TIME_NONE;
+	  } else {
+	    GstClockTime hardware_diff = hardware_now - hardware_time;
+	    GST_LOG ("Compensating capture time by %" GST_TIME_FORMAT,
+		     GST_TIME_ARGS (hardware_diff));
+	    if (capture_time > hardware_diff)
+	      capture_time -= hardware_diff;
+	    else
+	      capture_time = 0;
+	  }
+	}
+      }
       if (capture_time > base_time)
         capture_time -= base_time;
       else
