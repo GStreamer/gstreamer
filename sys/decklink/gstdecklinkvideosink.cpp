@@ -823,7 +823,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstDecklinkVideoSink * self,
     gst_byte_writer_put_uint8_unchecked (&bw, 0x2f);
   } else if (mode->fps_n == 25 && mode->fps_d == 1) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x3f);
-  } else if (mode->fps_n == 30 && mode->fps_d == 1001) {
+  } else if (mode->fps_n == 30000 && mode->fps_d == 1001) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x4f);
   } else if (mode->fps_n == 30 && mode->fps_d == 1) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x5f);
