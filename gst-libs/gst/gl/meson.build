@@ -923,8 +923,17 @@ if host_system == 'android' and need_win_android != 'no' and need_platform_egl !
   endif
 endif
 
-# TODO: Add rest of gl config here.
-# iOS, specific support
+if egl_dep.found()
+  # XXX: provide options for this?
+  # c_args and c_link_args can also cover this case just fine e.g.:
+  # -Dc_args='-I/usr/src/jetson_multimedia_api/include' -Dc_link_args='-L/usr/lib/aarch64-linux-gnu/tegra/'
+  nvbuf_utils_dep = cc.find_library('nvbuf_utils', required : false)
+  nvbuf_utils_h = cc.has_header('nvbuf_utils.h')
+  if nvbuf_utils_dep.found() and nvbuf_utils_h
+    gl_misc_deps += [nvbuf_utils_dep]
+    gl_cpp_args += ['-DHAVE_NVMM']
+  endif
+endif
 
 build_gstgl = true
 if enabled_gl_apis.length() == 0
