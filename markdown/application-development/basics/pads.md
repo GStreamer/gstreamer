@@ -41,7 +41,7 @@ stream in the Ogg stream. Likewise, it will delete the pad when the
 stream ends. This principle is very useful for demuxer elements, for
 example.
 
-Running gst-inspect oggdemux will show that the element has only one
+Running `gst-inspect-1.0 oggdemux` will show that the element has only one
 pad: a sink pad called 'sink'. The other pads are “dormant”. You can see
 this in the pad template because there is an “Exists: Sometimes”
 property. Depending on the type of Ogg file you play, the pads will be
