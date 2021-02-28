@@ -102,6 +102,7 @@ struct _GstVaVpp
 
   GstCaps *incaps;
   GstCaps *outcaps;
+  GstCaps *alloccaps;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
   gboolean negotiated;
@@ -192,6 +193,7 @@ gst_va_vpp_dispose (GObject * object)
 
   gst_clear_caps (&self->incaps);
   gst_clear_caps (&self->outcaps);
+  gst_clear_caps (&self->alloccaps);
 
   gst_clear_object (&self->filter);
   gst_clear_object (&self->display);
@@ -504,21 +506,23 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
   GstCaps *caps;
   guint size;
 
+  gst_clear_caps (&self->alloccaps);
+
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
     return FALSE;
 
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (caps == NULL)
+    return FALSE;
+  if (!gst_video_info_from_caps (&info, caps))
+    return FALSE;
+
+  self->alloccaps = gst_caps_ref (caps);
+
   /* passthrough, we're done */
   if (decide_query == NULL)
     return TRUE;
-
-  gst_query_parse_allocation (query, &caps, NULL);
-
-  if (caps == NULL)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
@@ -1101,7 +1105,8 @@ _get_sinkpad_pool (GstVaVpp * self)
 {
   GstAllocator *allocator;
   GstAllocationParams params;
-  GstVideoInfo alloc_info;
+  GstCaps *caps;
+  GstVideoInfo alloc_info, in_info;
   guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
 
   if (self->sinkpad_pool)
@@ -1109,19 +1114,27 @@ _get_sinkpad_pool (GstVaVpp * self)
 
   gst_allocation_params_init (&params);
 
-  size = GST_VIDEO_INFO_SIZE (&self->in_info);
+  if (self->alloccaps) {
+    caps = self->alloccaps;
+    gst_video_info_from_caps (&in_info, caps);
+  } else {
+    caps = self->incaps;
+    in_info = self->in_info;
+  }
 
-  allocator = _create_allocator (self, self->incaps, usage_hint);
+  size = GST_VIDEO_INFO_SIZE (&in_info);
 
-  self->sinkpad_pool = _create_sinkpad_bufferpool (self->incaps, size, 1, 0,
-      usage_hint, allocator, &params);
+  allocator = _create_allocator (self, caps, usage_hint);
+
+  self->sinkpad_pool = _create_sinkpad_bufferpool (caps, size, 1, 0, usage_hint,
+      allocator, &params);
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
     if (!gst_va_dmabuf_allocator_get_format (allocator, &alloc_info, NULL))
-      alloc_info = self->in_info;
+      alloc_info = in_info;
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     if (!gst_va_allocator_get_format (allocator, &alloc_info, NULL))
-      alloc_info = self->in_info;
+      alloc_info = in_info;
   }
 
   gst_object_unref (allocator);
