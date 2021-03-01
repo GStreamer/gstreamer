@@ -315,17 +315,80 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   GstMsdkContext *obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
   GstMsdkContextPrivate *priv = obj->priv;
   GstMsdkContextPrivate *parent_priv = parent->priv;
+  mfxVersion version;
+  mfxIMPL impl;
+  MsdkSession child_msdk_session;
+  mfxHandleType handle_type = 0;
+  mfxHDL handle = NULL;
 
-  status =
-      MFXCloneSession (parent_priv->session.session, &priv->session.session);
+  status = MFXQueryIMPL (parent_priv->session.session, &impl);
+
+  if (status == MFX_ERR_NONE)
+    status = MFXQueryVersion (parent_priv->session.session, &version);
+
   if (status != MFX_ERR_NONE) {
-    GST_ERROR ("Failed to clone mfx session");
+    GST_ERROR ("Failed to query the session attributes (%s)",
+        msdk_status_to_string (status));
     g_object_unref (obj);
     return NULL;
   }
 
+  if (MFX_IMPL_VIA_VAAPI == (0x0f00 & (impl)))
+    handle_type = MFX_HANDLE_VA_DISPLAY;
+
+  if (handle_type) {
+    status =
+        MFXVideoCORE_GetHandle (parent_priv->session.session, handle_type,
+        &handle);
+
+    if (status != MFX_ERR_NONE || !handle) {
+      GST_ERROR ("Failed to get session handle (%s)",
+          msdk_status_to_string (status));
+      g_object_unref (obj);
+      return NULL;
+    }
+  }
+
+  child_msdk_session.loader = parent_priv->session.loader;
+  child_msdk_session.session = NULL;
+  status = msdk_init_msdk_session (impl, &version, &child_msdk_session);
+
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to create a child mfx session (%s)",
+        msdk_status_to_string (status));
+    g_object_unref (obj);
+    return NULL;
+  }
+
+  if (handle) {
+    status =
+        MFXVideoCORE_SetHandle (child_msdk_session.session, handle_type,
+        handle);
+
+    if (status != MFX_ERR_NONE) {
+      GST_ERROR ("Failed to set a HW handle (%s)",
+          msdk_status_to_string (status));
+      MFXClose (child_msdk_session.session);
+      g_object_unref (obj);
+      return NULL;
+    }
+  }
+#if (MFX_VERSION >= 1025)
+  status =
+      MFXJoinSession (parent_priv->session.session, child_msdk_session.session);
+
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to join two sessions (%s)",
+        msdk_status_to_string (status));
+    MFXClose (child_msdk_session.session);
+    g_object_unref (obj);
+    return NULL;
+  }
+#endif
+
   /* Set loader to NULL for child session */
   priv->session.loader = NULL;
+  priv->session.session = child_msdk_session.session;
   priv->is_joined = TRUE;
   priv->hardware = parent_priv->hardware;
   priv->job_type = parent_priv->job_type;
@@ -334,20 +397,6 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
 #ifndef _WIN32
   priv->dpy = parent_priv->dpy;
   priv->fd = parent_priv->fd;
-
-  if (priv->hardware) {
-    status =
-        MFXVideoCORE_SetHandle (priv->session.session, MFX_HANDLE_VA_DISPLAY,
-        (mfxHDL) parent_priv->dpy);
-
-    if (status != MFX_ERR_NONE) {
-      GST_ERROR ("Setting VA handle failed (%s)",
-          msdk_status_to_string (status));
-      g_object_unref (obj);
-      return NULL;
-    }
-
-  }
 #endif
 
   return obj;
