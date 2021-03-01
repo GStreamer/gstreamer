@@ -209,8 +209,11 @@ gst_gl_download_element_transform_caps (GstBaseTransform * bt,
   GstCaps *result, *tmp;
 
   if (direction == GST_PAD_SRC) {
-    tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-    tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
+    GstCaps *sys_caps = gst_caps_simplify (_set_caps_features (caps,
+            GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
+
+    tmp = _set_caps_features (sys_caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+    tmp = gst_caps_merge (tmp, sys_caps);
   } else {
     GstCaps *newcaps;
     tmp = gst_caps_ref (caps);
