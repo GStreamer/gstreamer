@@ -2980,9 +2980,11 @@ gst_ps_demux_loop (GstPad * pad)
     offset += size;
     gst_segment_set_position (&demux->sink_segment, GST_FORMAT_BYTES, offset);
     /* check EOS condition */
+    /* FIXME: The src_segment.stop is not including the SCR after seek(set) */
     if ((demux->sink_segment.position >= demux->sink_segment.stop) ||
         (demux->src_segment.stop != (guint64) - 1 &&
-            demux->src_segment.position >= demux->src_segment.stop)) {
+            demux->src_segment.position >=
+            demux->src_segment.stop + demux->base_time)) {
       GST_DEBUG_OBJECT (demux,
           "forward mode using segment reached end of " "segment pos %"
           GST_TIME_FORMAT " stop %" GST_TIME_FORMAT " pos in bytes %"
