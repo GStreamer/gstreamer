@@ -1278,7 +1278,7 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  ret = gst_va_vpp_caps_remove_format_and_rangify_size_info (caps);
+  caps = gst_va_vpp_caps_remove_format_and_rangify_size_info (caps);
 
   if (direction == GST_PAD_SINK) {
     tmpl_caps =
@@ -1287,7 +1287,9 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     tmpl_caps =
         gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
   }
-  gst_caps_append (ret, tmpl_caps);
+
+  ret = gst_caps_intersect_full (tmpl_caps, caps, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (tmpl_caps);
 
   if (filter) {
     GstCaps *intersection;
