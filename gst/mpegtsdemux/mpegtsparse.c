@@ -809,8 +809,8 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   }
 
   /* Copy over input PTS/DTS (if present) */
-  GST_BUFFER_DTS (buf) = base->packetizer->last_pts;
-  GST_BUFFER_PTS (buf) = base->packetizer->last_dts;
+  GST_BUFFER_DTS (buf) = base->packetizer->last_dts;
+  GST_BUFFER_PTS (buf) = base->packetizer->last_pts;
   ret = mpegts_parse_have_buffer (base, gst_buffer_ref (buf));
 
   while (pad && !done) {
