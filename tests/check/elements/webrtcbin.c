@@ -2945,6 +2945,98 @@ GST_START_TEST (test_renego_lose_media_fails)
 
 GST_END_TEST;
 
+static void
+on_sdp_media_no_duplicate_payloads (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GArray *media_formats = g_array_new (FALSE, FALSE, sizeof (int));
+  int i, j, k;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+
+    for (j = 0; j < gst_sdp_media_formats_len (media); j++) {
+      int pt = atoi (gst_sdp_media_get_format (media, j));
+      for (k = 0; k < media_formats->len; k++) {
+        int val = g_array_index (media_formats, int, k);
+        if (pt == val)
+          fail ("found an unexpected duplicate payload type %u within media %u",
+              pt, i);
+      }
+      g_array_append_val (media_formats, pt);
+    }
+  }
+
+  g_array_free (media_formats, TRUE);
+}
+
+static void
+on_sdp_media_count_formats (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  guint *expected_n_media_formats = user_data;
+  int i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+    fail_unless_equals_int (gst_sdp_media_formats_len (media),
+        expected_n_media_formats[i]);
+  }
+}
+
+GST_START_TEST (test_bundle_codec_preferences_rtx_no_duplicate_payloads)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiver *trans;
+  const gchar *expected_offer[] = { "recvonly" };
+  const gchar *expected_answer[] = { "sendonly" };
+  guint offer_media_format_count[] = { 2, };
+  guint answer_media_format_count[] = { 1, };
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, NULL);
+  VAL_SDP_INIT (offer_media_formats, on_sdp_media_count_formats,
+      offer_media_format_count, &payloads);
+  VAL_SDP_INIT (answer_media_formats, on_sdp_media_count_formats,
+      answer_media_format_count, &payloads);
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer,
+      &offer_media_formats);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer,
+      &answer_media_formats);
+  GstCaps *caps;
+  GstHarness *h;
+
+  /* add a transceiver that will only receive an opus stream and check that
+   * the created offer is marked as recvonly */
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
+  gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
+      "max-bundle");
+
+  /* setup recvonly transceiver */
+  caps = gst_caps_from_string (VP8_RTP_CAPS (96));
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  g_object_set (GST_OBJECT (trans), "do-nack", TRUE, NULL);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+  gst_object_unref (trans);
+
+  /* setup sendonly peer */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_video_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -2987,6 +3079,8 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_max_compat_max_bundle_renego_add_stream);
     tcase_add_test (tc, test_renego_transceiver_set_direction);
     tcase_add_test (tc, test_renego_lose_media_fails);
+    tcase_add_test (tc,
+        test_bundle_codec_preferences_rtx_no_duplicate_payloads);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);

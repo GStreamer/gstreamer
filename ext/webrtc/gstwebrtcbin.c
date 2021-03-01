@@ -2641,6 +2641,7 @@ gather_pad_pt (GstWebRTCBinPad * pad, GArray * reserved_pts)
     gint pt;
 
     if (gst_structure_get_int (s, "payload", &pt)) {
+      GST_TRACE_OBJECT (pad, "have reserved pt %u from received caps", pt);
       g_array_append_val (reserved_pts, pt);
     }
   }
@@ -2651,11 +2652,32 @@ gather_reserved_pts (GstWebRTCBin * webrtc)
 {
   GstElement *element = GST_ELEMENT (webrtc);
   GArray *reserved_pts = g_array_new (FALSE, FALSE, sizeof (guint));
+  guint i;
 
   GST_OBJECT_LOCK (webrtc);
   g_list_foreach (element->sinkpads, (GFunc) gather_pad_pt, reserved_pts);
   g_list_foreach (webrtc->priv->pending_pads, (GFunc) gather_pad_pt,
       reserved_pts);
+
+  for (i = 0; i < webrtc->priv->transceivers->len; i++) {
+    GstWebRTCRTPTransceiver *trans;
+
+    trans = g_ptr_array_index (webrtc->priv->transceivers, i);
+    if (trans->codec_preferences) {
+      guint j, n;
+      gint pt;
+
+      n = gst_caps_get_size (trans->codec_preferences);
+      for (j = 0; j < n; j++) {
+        GstStructure *s = gst_caps_get_structure (trans->codec_preferences, j);
+        if (gst_structure_get_int (s, "payload", &pt)) {
+          GST_TRACE_OBJECT (trans, "have reserved pt %u from codec preferences",
+              pt);
+          g_array_append_val (reserved_pts, pt);
+        }
+      }
+    }
+  }
   GST_OBJECT_UNLOCK (webrtc);
 
   return reserved_pts;
