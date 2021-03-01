@@ -1214,7 +1214,8 @@ gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
       continue;
     }
 
-    if (cdata->codec != NULL) {
+    if (cdata->codec != NULL && cdata->codec != gst_v4l2_vp8_get_codec ()
+        && cdata->codec != gst_v4l2_vp9_get_codec ()) {
       GValue value = G_VALUE_INIT;
 
       if (gst_v4l2_codec_probe_levels (cdata->codec, video_fd, &value)) {
