@@ -310,9 +310,8 @@ _set_render_rectangle (gpointer data)
   GST_LOG_OBJECT (render->window_egl, "setting render rectangle %i,%i+%ix%i",
       render->rect.x, render->rect.y, render->rect.w, render->rect.h);
 
-  window_resize (render->window_egl, render->rect.w, render->rect.h, TRUE);
-
   render->window_egl->render_rect = render->rect;
+  window_resize (render->window_egl, render->rect.w, render->rect.h, TRUE);
 }
 
 static gboolean
