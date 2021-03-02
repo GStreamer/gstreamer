@@ -484,6 +484,7 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
     } else {
       GstCaps *src_caps;
       GstCapsFeatures *features;
+      gboolean ret;
 
       src_caps = gst_pad_get_current_caps (bt->srcpad);
       src_caps = gst_caps_make_writable (src_caps);
@@ -492,7 +493,10 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
       g_atomic_int_set (&dl->try_dmabuf_exports, FALSE);
       dl->mode = GST_GL_DOWNLOAD_MODE_PBO_TRANSFERS;
 
-      if (!gst_base_transform_update_src_caps (bt, src_caps)) {
+      ret = gst_base_transform_update_src_caps (bt, src_caps);
+      gst_caps_unref (src_caps);
+
+      if (!ret) {
         GST_ERROR_OBJECT (bt, "DMABuf exportation didn't work and system "
             "memory is not supported.");
         return GST_FLOW_NOT_NEGOTIATED;
