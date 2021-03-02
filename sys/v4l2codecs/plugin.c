@@ -27,7 +27,6 @@
 #include "gstv4l2codecvp8dec.h"
 #include "gstv4l2decoder.h"
 #include "linux/v4l2-controls.h"
-#include "linux/vp8-ctrls.h"
 #include "linux/media.h"
 
 #define GST_CAT_DEFAULT gstv4l2codecs_debug

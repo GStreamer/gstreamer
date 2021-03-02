@@ -25,7 +25,6 @@
 #include "gstv4l2codecalphadecodebin.h"
 #include "gstv4l2codecpool.h"
 #include "gstv4l2codecvp8dec.h"
-#include "linux/vp8-ctrls.h"
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_vp8dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp8dec_debug
@@ -70,7 +69,7 @@ struct _GstV4l2CodecVp8Dec
   gboolean need_negotiation;
   gboolean copy_frames;
 
-  struct v4l2_ctrl_vp8_frame_header frame_header;
+  struct v4l2_ctrl_vp8_frame frame_header;
 
   GstMemory *bitstream;
   GstMapInfo bitstream_map;
@@ -163,7 +162,7 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
     {
-      .id = V4L2_CID_MPEG_VIDEO_VP8_FRAME_HEADER,
+      .id = V4L2_CID_STATELESS_VP8_FRAME,
       .ptr = &self->frame_header,
       .size = sizeof (self->frame_header),
     },
@@ -288,57 +287,57 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
 }
 
 static void
-gst_v4l2_codec_vp8_dec_fill_segment_header (struct v4l2_vp8_segment_header
-    *segment_header, const GstVp8Segmentation * segmentation)
+gst_v4l2_codec_vp8_dec_fill_segment (struct v4l2_vp8_segment
+    *segment, const GstVp8Segmentation * segmentation)
 {
   gint i;
 
   /* *INDENT-OFF* */
-  segment_header->flags =
-    (segmentation->segmentation_enabled ? V4L2_VP8_SEGMENT_HEADER_FLAG_ENABLED : 0) |
-    (segmentation->update_mb_segmentation_map ? V4L2_VP8_SEGMENT_HEADER_FLAG_UPDATE_MAP : 0) |
-    (segmentation->update_segment_feature_data ? V4L2_VP8_SEGMENT_HEADER_FLAG_UPDATE_FEATURE_DATA : 0) |
-    (segmentation->segment_feature_mode ? 0 : V4L2_VP8_SEGMENT_HEADER_FLAG_DELTA_VALUE_MODE);
+  segment->flags =
+    (segmentation->segmentation_enabled ? V4L2_VP8_SEGMENT_FLAG_ENABLED : 0) |
+    (segmentation->update_mb_segmentation_map ? V4L2_VP8_SEGMENT_FLAG_UPDATE_MAP : 0) |
+    (segmentation->update_segment_feature_data ? V4L2_VP8_SEGMENT_FLAG_UPDATE_FEATURE_DATA : 0) |
+    (segmentation->segment_feature_mode ? 0 : V4L2_VP8_SEGMENT_FLAG_DELTA_VALUE_MODE);
   /* *INDENT-ON* */
 
   for (i = 0; i < 4; i++) {
-    segment_header->quant_update[i] = segmentation->quantizer_update_value[i];
-    segment_header->lf_update[i] = segmentation->lf_update_value[i];
+    segment->quant_update[i] = segmentation->quantizer_update_value[i];
+    segment->lf_update[i] = segmentation->lf_update_value[i];
   }
 
   for (i = 0; i < 3; i++)
-    segment_header->segment_probs[i] = segmentation->segment_prob[i];
+    segment->segment_probs[i] = segmentation->segment_prob[i];
 
-  segment_header->padding = 0;
+  segment->padding = 0;
 }
 
 static void
-gst_v4l2_codec_vp8_dec_fill_lf_header (struct v4l2_vp8_loopfilter_header
-    *lf_header, const GstVp8MbLfAdjustments * lf_adj)
+gst_v4l2_codec_vp8_dec_fill_lf (struct v4l2_vp8_loop_filter
+    *lf, const GstVp8MbLfAdjustments * lf_adj)
 {
   gint i;
 
-  lf_header->flags |=
-      (lf_adj->loop_filter_adj_enable ? V4L2_VP8_LF_HEADER_ADJ_ENABLE : 0) |
-      (lf_adj->mode_ref_lf_delta_update ? V4L2_VP8_LF_HEADER_DELTA_UPDATE : 0);
+  lf->flags |=
+      (lf_adj->loop_filter_adj_enable ? V4L2_VP8_LF_ADJ_ENABLE : 0) |
+      (lf_adj->mode_ref_lf_delta_update ? V4L2_VP8_LF_DELTA_UPDATE : 0);
 
   for (i = 0; i < 4; i++) {
-    lf_header->ref_frm_delta[i] = lf_adj->ref_frame_delta[i];
-    lf_header->mb_mode_delta[i] = lf_adj->mb_mode_delta[i];
+    lf->ref_frm_delta[i] = lf_adj->ref_frame_delta[i];
+    lf->mb_mode_delta[i] = lf_adj->mb_mode_delta[i];
   }
 }
 
 static void
-gst_v4l2_codec_vp8_dec_fill_entropy_header (struct v4l2_vp8_entropy_header
-    *entropy_header, const GstVp8FrameHdr * frame_hdr)
+gst_v4l2_codec_vp8_dec_fill_entropy (struct v4l2_vp8_entropy
+    *entropy, const GstVp8FrameHdr * frame_hdr)
 {
-  memcpy (entropy_header->coeff_probs, frame_hdr->token_probs.prob,
+  memcpy (entropy->coeff_probs, frame_hdr->token_probs.prob,
       sizeof (frame_hdr->token_probs.prob));
-  memcpy (entropy_header->y_mode_probs, frame_hdr->mode_probs.y_prob,
+  memcpy (entropy->y_mode_probs, frame_hdr->mode_probs.y_prob,
       sizeof (frame_hdr->mode_probs.y_prob));
-  memcpy (entropy_header->uv_mode_probs, frame_hdr->mode_probs.uv_prob,
+  memcpy (entropy->uv_mode_probs, frame_hdr->mode_probs.uv_prob,
       sizeof (frame_hdr->mode_probs.uv_prob));
-  memcpy (entropy_header->mv_probs, frame_hdr->mv_probs.prob,
+  memcpy (entropy->mv_probs, frame_hdr->mv_probs.prob,
       sizeof (frame_hdr->mv_probs.prob));
 }
 
@@ -349,13 +348,13 @@ gst_v4l2_codec_vp8_dec_fill_frame_header (GstV4l2CodecVp8Dec * self,
   gint i;
 
   /* *INDENT-OFF* */
-  self->frame_header = (struct v4l2_ctrl_vp8_frame_header) {
-    .lf_header = (struct v4l2_vp8_loopfilter_header) {
+  self->frame_header = (struct v4l2_ctrl_vp8_frame) {
+    .lf = (struct v4l2_vp8_loop_filter) {
       .sharpness_level = frame_hdr->sharpness_level,
       .level = frame_hdr->loop_filter_level,
       .flags = (frame_hdr->filter_type == 1 ? V4L2_VP8_LF_FILTER_TYPE_SIMPLE : 0)
     },
-    .quant_header = (struct v4l2_vp8_quantization_header) {
+    .quant = (struct v4l2_vp8_quantization) {
       .y_ac_qi = frame_hdr->quant_indices.y_ac_qi,
       .y_dc_delta = frame_hdr->quant_indices.y_dc_delta,
       .y2_dc_delta = frame_hdr->quant_indices.y2_dc_delta,
@@ -385,19 +384,18 @@ gst_v4l2_codec_vp8_dec_fill_frame_header (GstV4l2CodecVp8Dec * self,
     .first_part_size = frame_hdr->first_part_size,
     .first_part_header_bits = frame_hdr->header_size,
 
-    .flags = (frame_hdr->key_frame ? V4L2_VP8_FRAME_HEADER_FLAG_KEY_FRAME : 0) |
-             (frame_hdr->show_frame ? V4L2_VP8_FRAME_HEADER_FLAG_SHOW_FRAME : 0) |
-             (frame_hdr->mb_no_skip_coeff ? V4L2_VP8_FRAME_HEADER_FLAG_MB_NO_SKIP_COEFF : 0) |
-             (frame_hdr->sign_bias_golden ? V4L2_VP8_FRAME_HEADER_FLAG_SIGN_BIAS_GOLDEN : 0) |
-             (frame_hdr->sign_bias_alternate ? V4L2_VP8_FRAME_HEADER_FLAG_SIGN_BIAS_ALT : 0),
+    .flags = (frame_hdr->key_frame ? V4L2_VP8_FRAME_FLAG_KEY_FRAME : 0) |
+             (frame_hdr->show_frame ? V4L2_VP8_FRAME_FLAG_SHOW_FRAME : 0) |
+             (frame_hdr->mb_no_skip_coeff ? V4L2_VP8_FRAME_FLAG_MB_NO_SKIP_COEFF : 0) |
+             (frame_hdr->sign_bias_golden ? V4L2_VP8_FRAME_FLAG_SIGN_BIAS_GOLDEN : 0) |
+             (frame_hdr->sign_bias_alternate ? V4L2_VP8_FRAME_FLAG_SIGN_BIAS_ALT : 0),
   };
   /* *INDENT-ON* */
 
   for (i = 0; i < 8; i++)
     self->frame_header.dct_part_sizes[i] = frame_hdr->partition_size[i];
 
-  gst_v4l2_codec_vp8_dec_fill_entropy_header (&self->
-      frame_header.entropy_header, frame_hdr);
+  gst_v4l2_codec_vp8_dec_fill_entropy (&self->frame_header.entropy, frame_hdr);
 }
 
 static void
@@ -524,9 +522,9 @@ gst_v4l2_codec_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   }
 
   gst_v4l2_codec_vp8_dec_fill_frame_header (self, &picture->frame_hdr);
-  gst_v4l2_codec_vp8_dec_fill_segment_header (&self->
-      frame_header.segment_header, &parser->segmentation);
-  gst_v4l2_codec_vp8_dec_fill_lf_header (&self->frame_header.lf_header,
+  gst_v4l2_codec_vp8_dec_fill_segment (&self->frame_header.seg,
+      &parser->segmentation);
+  gst_v4l2_codec_vp8_dec_fill_lf (&self->frame_header.lf,
       &parser->mb_lf_adjust);
   gst_v4l2_codec_vp8_dec_fill_references (self);
 
@@ -561,7 +559,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
     {
-      .id = V4L2_CID_MPEG_VIDEO_VP8_FRAME_HEADER,
+      .id = V4L2_CID_STATELESS_VP8_FRAME,
       .ptr = &self->frame_header,
       .size = sizeof(self->frame_header),
     },
