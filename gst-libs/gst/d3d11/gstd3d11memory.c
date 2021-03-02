@@ -1164,9 +1164,9 @@ gst_d3d11_allocator_get_texture_array_size (GstD3D11Allocator * allocator,
 
   /* For non-array-texture memory, the size is 1 */
   if (array_size)
-    *array_size = 1;
+    *array_size = priv->array_texture_size;
   if (num_texture_in_use)
-    *num_texture_in_use = priv->array_texture_size;
+    *num_texture_in_use = 1;
 
   /* size == 1 means we are not texture pool allocator */
   if (priv->array_texture_size == 1)
@@ -1174,7 +1174,7 @@ gst_d3d11_allocator_get_texture_array_size (GstD3D11Allocator * allocator,
 
   if (num_texture_in_use) {
     GST_D3D11_ALLOCATOR_LOCK (allocator);
-    *num_texture_in_use = priv->array_texture_size;
+    *num_texture_in_use = priv->num_array_textures_in_use;
     GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
