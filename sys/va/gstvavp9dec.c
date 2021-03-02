@@ -78,7 +78,7 @@ extern gpointer gst_va_base_dec_parent_class;
 
 /* *INDENT-OFF* */
 static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
-            "{ NV12, P010_10LE }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }");
+            "{ NV12 }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12 }");
 /* *INDENT-ON* */
 
 static const gchar *sink_caps_str = "video/x-vp9";
