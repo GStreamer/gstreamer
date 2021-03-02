@@ -66,6 +66,7 @@ struct _GstD3D11BaseConvert
 
   GstD3D11ColorConverter *converter;
   GstD3D11VideoProcessor *processor;
+  gboolean processor_in_use;
 
   /* used for fallback texture copy */
   D3D11_BOX in_src_box;
@@ -309,6 +310,8 @@ gst_d3d11_base_convert_clear_shader_resource (GstD3D11BaseConvert * self)
 
   g_clear_pointer (&self->converter, gst_d3d11_color_converter_free);
   g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
+
+  self->processor_in_use = FALSE;
 }
 
 static void
@@ -1598,7 +1601,8 @@ gst_d3d11_base_convert_prefer_video_processor (GstD3D11BaseConvert * self,
   /* If we can use shader, we prefer to use shader instead of video processor
    * because video processor implementation is vendor dependent
    * and not flexible */
-  if (gst_d3d11_memory_get_shader_resource_view_size (dmem))
+  if (!self->processor_in_use &&
+      gst_d3d11_memory_get_shader_resource_view_size (dmem))
     return FALSE;
 
   if (!gst_d3d11_video_processor_get_input_view (self->processor, dmem))
@@ -1694,6 +1698,8 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       GST_ERROR_OBJECT (self, "Couldn't convert using video processor");
       goto conversion_failed;
     }
+
+    self->processor_in_use = TRUE;
 
     gst_d3d11_buffer_unmap (inbuf, in_map);
     gst_d3d11_buffer_unmap (outbuf, out_map);
