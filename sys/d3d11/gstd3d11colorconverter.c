@@ -82,6 +82,13 @@ typedef struct
     "  return saturate(yuv);\n" \
     "}\n"
 
+#define HLSL_PS_OUTPUT_ONE_PLANE_BODY \
+    "  float4 Plane_0: SV_TARGET0;"
+
+#define HLSL_PS_OUTPUT_TWO_PLANES_BODY \
+    "  float4 Plane_0: SV_TARGET0;\n" \
+    "  float4 Plane_1: SV_TARGET1;"
+
 static const PixelShaderTemplate templ_REORDER =
     { NULL, NULL };
 
@@ -270,8 +277,7 @@ static const gchar templ_pixel_shader[] =
     "\n"
     "struct PS_OUTPUT\n"
     "{\n"
-    "  float4 Plane_0: SV_TARGET0;\n"
-    "  float4 Plane_1: SV_TARGET1;\n"
+    "  %s\n"
     "};\n"
     "\n"
     /* rgb <-> yuv function */
@@ -307,6 +313,7 @@ typedef struct
 {
   const PixelShaderTemplate *templ;
   gchar *ps_body[CONVERTER_MAX_QUADS];
+  const gchar *ps_output[CONVERTER_MAX_QUADS];
   PixelShaderColorTransform transform;
 } ConvertInfo;
 
@@ -577,6 +584,7 @@ setup_convert_info_rgb_to_rgb (GstD3D11ColorConverter * self,
 
   convert_info->templ = &templ_REORDER;
   convert_info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY, self->alpha);
+  convert_info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   return TRUE;
 }
@@ -644,6 +652,7 @@ setup_convert_info_yuv_to_rgb (GstD3D11ColorConverter * self,
   ConvertInfo *info = &self->convert_info;
 
   info->templ = &templ_YUV_to_RGB;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_VUYA:
@@ -695,6 +704,7 @@ setup_convert_info_rgb_to_yuv (GstD3D11ColorConverter * self,
   ConvertInfo *info = &self->convert_info;
 
   info->templ = &templ_RGB_to_YUV;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   switch (GST_VIDEO_INFO_FORMAT (out_info)) {
     case GST_VIDEO_FORMAT_VUYA:
@@ -705,16 +715,19 @@ setup_convert_info_rgb_to_yuv (GstD3D11ColorConverter * self,
     case GST_VIDEO_FORMAT_P016_LE:
       info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 1);
       info->ps_body[1] = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_CHROMA_BODY);
+      info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
       break;
     case GST_VIDEO_FORMAT_I420:
       info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 1);
       info->ps_body[1] =
           g_strdup_printf (templ_RGB_to_PLANAR_CHROMA_BODY, 1, 1);
+      info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
       info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 64);
       info->ps_body[1] =
           g_strdup_printf (templ_RGB_to_PLANAR_CHROMA_BODY, 64, 64);
+      info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
       break;
     default:
       GST_FIXME_OBJECT (self,
@@ -735,6 +748,8 @@ setup_convert_info_planar_to_planar (GstD3D11ColorConverter * self,
   gint div = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
 
   if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_I420_10LE)
     mul = 64;
@@ -758,6 +773,8 @@ setup_convert_info_planar_to_semi_planar (GstD3D11ColorConverter * self,
   gint div = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_I420_10LE)
     mul = 64;
@@ -778,6 +795,8 @@ setup_convert_info_semi_planar_to_planar (GstD3D11ColorConverter * self,
   gint div = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
 
   if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420_10LE)
     div = 64;
@@ -798,6 +817,8 @@ setup_convert_info_semi_planar_to_semi_planar (GstD3D11ColorConverter * self,
   gint div = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   info->ps_body[0] = g_strdup_printf (templ_LUMA_to_LUMA_BODY, mul, div);
   info->ps_body[1] =
@@ -813,6 +834,7 @@ setup_convert_info_vuya_to_vuya (GstD3D11ColorConverter * self,
   ConvertInfo *info = &self->convert_info;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY, self->alpha);
 
@@ -827,6 +849,8 @@ setup_convert_info_vuya_to_planar (GstD3D11ColorConverter * self,
   gint div = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
 
   if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420_10LE)
     div = 64;
@@ -846,6 +870,8 @@ setup_convert_info_vuya_to_semi_planar (GstD3D11ColorConverter * self,
   gint div = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   info->ps_body[0] = g_strdup_printf (templ_VUYA_to_LUMA_BODY, div);
   info->ps_body[1] = g_strdup_printf (templ_VUYA_TO_SEMI_PLANAR_CHROMA_BODY);
@@ -861,6 +887,7 @@ setup_convert_info_planar_to_vuya (GstD3D11ColorConverter * self,
   gint mul = 1;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_I420_10LE)
     mul = 64;
@@ -878,6 +905,7 @@ setup_convert_info_packed_yuv_to_vuya (GstD3D11ColorConverter * self,
   gchar y, u, v;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
           &y, &u, &v)) {
@@ -896,6 +924,7 @@ setup_convert_info_semi_planar_to_vuya (GstD3D11ColorConverter * self,
   ConvertInfo *info = &self->convert_info;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   info->ps_body[0] = g_strdup_printf (templ_SEMI_PLANAR_to_VUYA_BODY);
 
@@ -911,6 +940,8 @@ setup_convert_info_packed_yuv_to_planar (GstD3D11ColorConverter * self,
   gchar y, u, v;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
 
   if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_I420_10LE)
     div = 64;
@@ -936,6 +967,8 @@ setup_convert_info_packed_yuv_to_semi_planar (GstD3D11ColorConverter * self,
   gchar y, u, v;
 
   info->templ = &templ_REORDER;
+  info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
+  info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   if (!get_packed_yuv_components (self, GST_VIDEO_INFO_FORMAT (in_info),
           &y, &u, &v)) {
@@ -1056,9 +1089,12 @@ gst_d3d11_color_convert_setup_shader (GstD3D11ColorConverter * self,
     gchar *shader_code = NULL;
 
     if (convert_info->ps_body[i]) {
+      g_assert (convert_info->ps_output[i] != NULL);
+
       shader_code = g_strdup_printf (templ_pixel_shader,
           convert_info->templ->constant_buffer ?
           convert_info->templ->constant_buffer : "",
+          convert_info->ps_output[i],
           convert_info->templ->func ? convert_info->templ->func : "",
           convert_info->ps_body[i]);
 
