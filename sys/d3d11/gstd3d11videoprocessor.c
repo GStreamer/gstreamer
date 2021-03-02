@@ -130,6 +130,13 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
   }
 #endif
 
+  /* Setting up default options */
+  gst_d3d11_device_lock (self->device);
+  /* We don't want auto processing by driver */
+  ID3D11VideoContext_VideoProcessorSetStreamAutoProcessingMode
+      (self->video_context, self->processor, 0, FALSE);
+  gst_d3d11_device_unlock (self->device);
+
   return self;
 
 fail:
