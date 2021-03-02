@@ -39,6 +39,10 @@
  * gst-launch-1.0 videotestsrc ! "video/x-raw,format=(string)NV12" ! vapostproc ! autovideosink
  * ```
  *
+ * If the VA driver support color balance filter, with controls such
+ * as hue, brightness, contrast, etc., those controls are exposed both
+ * as element properties and through the #GstColorBalance interface.
+ *
  * Since: 1.20
  *
  */
