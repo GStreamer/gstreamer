@@ -1710,6 +1710,9 @@ gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
     return FALSE;
   }
 
+  GST_TRACE_OBJECT (decoder, "textures-in-use/array-size: %d/%d",
+      num_texture_in_use, array_size);
+
   /* DPB pool is full now */
   if (num_texture_in_use >= array_size)
     return FALSE;
